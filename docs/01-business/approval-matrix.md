@@ -30,6 +30,16 @@ Quick Estimate ใช้การตรวจภายในก่อนแช�
 
 การมี `quick-estimates.share` ไม่ได้ข้าม Share Policy และเมื่อ Policy บังคับ Maker–Checker ผู้จัดทำต้องไม่เป็นผู้ Review รายการของตนเอง
 
+ระบบต้องคืนผล Share Decision หนึ่งค่าเสมอ:
+
+| ผล | ตัวอย่าง | การดำเนินการ |
+| --- | --- | --- |
+| `Blocked` | Required Evidence ไม่ครบ, Unit/Rate ผิด, Template ใช้ไม่ได้ หรือไม่มีสิทธิ์ | เก็บ Draft ได้ แต่ห้าม Share/Convert |
+| `PendingReview` | Custom/Provisional Rate, Override, เกิน Authority หรือ Template อยู่ใน Calibration | ส่ง Reviewer ที่ไม่ใช่ผู้จัดทำ |
+| `Shareable` | Active Template, ข้อมูลครบ, อยู่ใน Direct-share Limit และไม่มี Risk Trigger | สร้าง Preliminary Summary ได้ |
+
+Template ที่อยู่ใน `Calibration` ต้อง Review ทุกการแชร์ ส่วน Template ที่ `Active` ใช้ Risk-based Review เพื่อให้งานทั่วไปเร็วและงานเสี่ยงยังถูกควบคุม
+
 ## Decision Record ขั้นต่ำ
 
 - ผู้ขออนุมัติและเวลาส่ง

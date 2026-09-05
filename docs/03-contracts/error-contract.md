@@ -48,6 +48,10 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `QUICK_ESTIMATE_TEMPLATE_EXPIRED` | 409 | Template Version ใช้แชร์ไม่ได้แล้ว; เลือก Version ปัจจุบันและ Recalculate |
 | `QUICK_ESTIMATE_VERSION_CONFLICT` | 409 | มีการแก้ Version เดียวกันจากอีก Request; ให้ Reload/Compare |
 | `QUICK_ESTIMATE_ALREADY_CONVERTED` | 409 | Source Version นี้เชื่อมกับ Official Estimate อยู่แล้ว; เปิดรายการเดิมแทน |
+| `QUICK_ESTIMATE_UNIT_MISMATCH` | 422 | Unit ของ Input ไม่ตรงกับ Measurement Rule/Reference Rate; ให้แก้ Field หรือเลือก Template ใหม่ |
+| `QUICK_ESTIMATE_RATE_UNAVAILABLE` | 409 | ไม่มี Reference Rate ที่ใช้ได้ ณ วันที่คำนวณ; เก็บ Draft และให้ผู้ดูแลราคาแก้ไข |
+| `PRICING_TEMPLATE_INVALID` | 422 | Formula, Field, Unit หรือ Test Case ไม่ผ่าน; ห้าม Submit/Publish |
+| `PRICING_TEMPLATE_NOT_USABLE` | 409 | Template อยู่ใน Draft, Superseded หรือ Disabled จึงเริ่มคำนวณ/แชร์ใหม่ไม่ได้; Calibration ยังใช้ได้โดยบังคับ Review |
 
 การ Retry Convert ด้วย **Idempotency Key เดิม** ต้องคืนผล Conversion เดิม ไม่คืน `QUICK_ESTIMATE_ALREADY_CONVERTED` รหัสนี้ใช้เมื่อเป็นคำขอใหม่ที่พยายาม Convert Source Version เดิมอีกครั้งโดยไม่ได้ระบุเจตนาสร้าง Revision ใหม่
 

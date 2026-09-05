@@ -2,6 +2,8 @@
 
 **สถานะ:** Draft — สูตรสุดท้ายต้องยืนยันกับฝ่ายประเมินราคาและบัญชี
 
+เอกสารนี้เป็นกฎคำนวณของ **Official Estimate** ซึ่งแตกต้นทุนจริง สำหรับสูตร Rate/Factor ของราคาหน้างานให้อ่าน [Quick Estimate Pricing Rules](quick-estimate-pricing-rules.md) ทั้งสอง Flow ใช้กฎคนละชุดและ Quick Estimate Price Range เป็นข้อมูลอ้างอิงเท่านั้น
+
 ## ลำดับคำนวณที่แนะนำ
 
 ```text

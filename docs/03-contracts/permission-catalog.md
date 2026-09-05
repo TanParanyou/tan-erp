@@ -22,7 +22,14 @@
 | Quick Estimate | `quick-estimates.convert` | Convert Source Version เป็น Official Estimate Draft | Branch/Opportunity/Own |
 | Quick Estimate | `quick-estimates.close` | ปิดรายการพร้อมเหตุผล | Branch/Opportunity/Own |
 | Pricing Template | `pricing-templates.read` | ดู Template Version ที่เผยแพร่และอยู่ใน Scope | Organization/Branch |
-| Pricing Template | `pricing-templates.manage` | สร้าง เผยแพร่ แทนที่ และปิดใช้ Template Version | Organization/Branch |
+| Pricing Template | `pricing-templates.create` | สร้าง Template Draft | Organization/Branch |
+| Pricing Template | `pricing-templates.update` | แก้ Template ที่ยังเป็น Draft/Returned | Organization/Branch |
+| Pricing Template | `pricing-templates.submit` | ส่ง Template และ Test Case ให้ตรวจ | Organization/Branch |
+| Pricing Template | `pricing-templates.approve` | อนุมัติสูตร Unit, Rate Source และ Test Matrix ตาม Maker–Checker | Organization/Branch |
+| Pricing Template | `pricing-templates.publish` | เผยแพร่ Version ที่อนุมัติเข้าสู่ Calibration | Organization/Branch |
+| Pricing Template | `pricing-templates.activate` | เปิดใช้ Version หลังเจ้าของธุรกิจอนุมัติผล Pilot | Organization/Branch |
+| Pricing Template | `pricing-templates.disable` | หยุดใช้ Version ใหม่ทันทีโดยเก็บเหตุผล | Organization/Branch |
+| Pricing Template | `pricing-templates.override-rate` | กำหนด Branch Rate Override พร้อม Effective Period และเหตุผล | Organization/Branch |
 | Estimation | `estimates.read` | ดู Estimate | Organization/Branch/Project/Own |
 | Estimation | `estimates.create` | สร้าง Estimate | Branch/Project/Own |
 | Estimation | `estimates.update` | แก้ Draft/Returned Estimate | Branch/Project/Own |
@@ -35,3 +42,5 @@
 การตรวจวงเงิน กำไรขั้นต่ำ และ Maker–Checker เป็น Policy เพิ่มจาก Permission; การมี `estimates.approve` ไม่ได้แปลว่าอนุมัติได้ทุกยอดหรืออนุมัติงานตนเองได้
 
 เช่นเดียวกัน การมี `quick-estimates.share` ไม่ได้ข้าม Share Policy และการมี `quick-estimates.review` ไม่ได้อนุญาตให้ตรวจงานของตนเองเมื่อ Maker–Checker มีผล Backend ต้องตรวจ Permission พร้อม Organization, Branch, Opportunity และ Own Scope ทุกครั้ง
+
+การมี `pricing-templates.publish` ไม่ข้ามสถานะ Approval และการมี `pricing-templates.activate` ไม่ข้ามเกณฑ์ผ่าน Pilot ผู้แก้ Template ห้ามอนุมัติ Version เดียวกันเมื่อ Maker–Checker มีผล การ Override Rate ต้องอยู่ในขอบเขต Branch และไม่แก้ Standard Rate ของ Organization

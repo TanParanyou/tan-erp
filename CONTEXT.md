@@ -38,6 +38,22 @@ _Avoid_: Quotation, Invoice, Budget
 ช่วงราคาที่คำนวณอย่างรวดเร็วจากข้อมูลหน้างาน Template และสมมติฐาน เพื่อช่วยสนทนากับลูกค้าโดยยังไม่ใช่ราคาที่อนุมัติหรือผูกพันทางการค้า
 _Avoid_: Estimate, Quotation, Approved Price
 
+**Pricing Template (แม่แบบประเมินราคา)**:
+ชุดกฎของประเภทงานที่กำหนดข้อมูล หน่วย ราคาอ้างอิง ตัวคูณ ช่วงราคา และหลักฐานสำหรับสร้าง Quick Estimate
+_Avoid_: Quotation Template, Free-form Formula
+
+**Pricing Template Version (รุ่นแม่แบบประเมินราคา)**:
+ฉบับที่มีผลตามช่วงเวลาและไม่แก้ย้อนหลังหลังเผยแพร่ เพื่อให้ Quick Estimate คำนวณซ้ำจากกฎเดิมได้
+_Avoid_: Draft Template, Current Settings
+
+**Reference Rate (ราคาอ้างอิง)**:
+ราคาฐานที่มีแหล่งที่มาและช่วงเวลามีผล ใช้เป็นข้อมูลคำนวณ Quick Estimate แต่ไม่ใช่ต้นทุนจริงของ Official Estimate
+_Avoid_: Actual Cost, Approved Selling Price
+
+**Billable Quantity (ปริมาณคิดราคา)**:
+ปริมาณที่ได้หลังใช้ Measurement Rule ของ Pricing Template กับข้อมูลหน้างาน และนำไปคูณ Reference Rate
+_Avoid_: Raw Measurement, Estimate Quantity
+
 **Official Estimate (ประมาณการทางการ)**:
 Estimate ที่มีรายการต้นทุนและกฎคำนวณครบตามเกณฑ์ พร้อมเข้าสู่การตรวจทานและอนุมัติก่อนออก Quotation
 _Avoid_: Quick Estimate, Quotation

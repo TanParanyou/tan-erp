@@ -33,7 +33,11 @@
       "icon": "project",
       "phase": "phase-2",
       "status": "draft",
-      "document": "../01-business/quick-estimate-flow.md"
+      "document": "../01-business/quick-estimate-pricing-rules.md",
+      "details": [
+        { "th": "Template ใหม่ต้องผ่าน Draft และ Calibration ก่อนเป็น Active", "en": "A new template moves through Draft and Calibration before becoming Active." },
+        { "th": "Published Version แก้ย้อนหลังไม่ได้", "en": "A published version cannot be edited retroactively." }
+      ]
     },
     {
       "id": "measurement",
@@ -44,7 +48,11 @@
       "icon": "survey",
       "phase": "phase-2",
       "status": "draft",
-      "document": "../01-business/quick-estimate-flow.md"
+      "document": "../01-business/quick-estimate-pricing-rules.md",
+      "details": [
+        { "th": "Built-in, ผ้าม่าน และ Wallpaper ใช้ Field/Unit ตาม Template", "en": "Built-in, curtain and wallpaper templates define their own fields and units." },
+        { "th": "Unit ต้องตรงกับ Measurement Rule และ Reference Rate", "en": "The unit must match the measurement rule and reference rate." }
+      ]
     },
     {
       "id": "price-range",
@@ -54,8 +62,12 @@
       "summary": { "th": "ใช้ Template Snapshot คำนวณ Lower/Upper Bound พร้อม Currency และ Validity", "en": "Use the template snapshot to calculate lower and upper bounds with currency and validity." },
       "icon": "estimate",
       "phase": "phase-2",
-      "status": "draft",
-      "document": "../01-business/quick-estimate-flow.md"
+      "status": "accepted",
+      "document": "../01-business/quick-estimate-pricing-rules.md",
+      "details": [
+        { "th": "ช่วงพื้นฐานขยายตาม Risk Modifier และไม่เกิน Max Range", "en": "The base range widens through risk modifiers without exceeding the maximum range." },
+        { "th": "Lower ปัดลงและ Upper ปัดขึ้นตาม Rounding Step", "en": "The lower bound rounds down and the upper bound rounds up by the rounding step." }
+      ]
     },
     {
       "id": "evidence",
@@ -77,7 +89,11 @@
       "icon": "shield",
       "phase": "phase-2",
       "status": "accepted",
-      "document": "../01-business/approval-matrix.md"
+      "document": "../01-business/approval-matrix.md",
+      "details": [
+        { "th": "ผลต้องเป็น Blocked, PendingReview หรือ Shareable พร้อมเหตุผล", "en": "The decision is Blocked, PendingReview or Shareable with reasons." },
+        { "th": "Permission ไม่สามารถข้าม Share Policy", "en": "Permission cannot bypass the share policy." }
+      ]
     },
     {
       "id": "internal-review",
@@ -88,7 +104,11 @@
       "icon": "approval",
       "phase": "phase-2",
       "status": "draft",
-      "document": "../01-business/approval-matrix.md"
+      "document": "../01-business/approval-matrix.md",
+      "details": [
+        { "th": "Calibration, Custom, Override และรายการเกิน Authority ต้อง Review", "en": "Calibration, custom, overridden and over-authority estimates require review." },
+        { "th": "Reviewer ต้องแยกจากผู้จัดทำเมื่อ Maker–Checker มีผล", "en": "The reviewer must differ from the maker when maker-checker applies." }
+      ]
     },
     {
       "id": "preliminary-summary",

@@ -22,6 +22,10 @@
 | FR-QEST-005 | การเปลี่ยนเนื้อหาสำคัญหลังแชร์ต้องสร้าง Quick Estimate Version ใหม่ | 2 | Accepted principle |
 | FR-QEST-006 | Convert Quick Estimate Version เป็น Official Estimate Draft แบบ Idempotent | 2 | Accepted principle |
 | FR-QEST-007 | Autosave และกู้ Draft หน้างานที่ยัง Sync ไม่สำเร็จได้อย่างปลอดภัย | 2 | Accepted principle |
+| FR-QEST-008 | คำนวณ Amount/Price Range แบบ Deterministic จาก Template และ Calculation Snapshot พร้อม Outward Rounding/Tax Display Policy | 2 | Accepted principle; ค่าจริงมาจาก Pilot |
+| FR-QEST-009 | Pricing Template Version ใช้ Lifecycle Draft, Calibration, Active, Superseded และ Disabled โดย Published Version แก้ย้อนหลังไม่ได้ | 2 | Accepted principle |
+| FR-QEST-010 | Measurement Rule รองรับ Built-in, ผ้าม่าน และ Wallpaper ด้วย Field/Unit ตาม Template | 2 | Accepted direction; Field จริงมาจาก Pilot |
+| FR-QEST-011 | Share Policy คืนผล Blocked, PendingReview หรือ Shareable พร้อม Stable Reason | 2 | Accepted principle; Threshold มาจาก Pilot |
 | FR-EST-001 | Estimate แบ่งพื้นที่/หมวดงาน/Work Item ได้ | 2 | Draft |
 | FR-EST-002 | คำนวณต้นทุน ราคาขาย ส่วนลด ภาษี และกำไรอย่างตรวจสอบได้ | 2 | Draft |
 | FR-EST-003 | การเปลี่ยนสาระสำคัญสร้าง Estimate Revision ใหม่ | 2 | Accepted principle |
@@ -45,6 +49,7 @@
 | NFR-PERF-001 | Critical queries ผ่าน SLO ที่ธุรกิจอนุมัติ | Load test ด้วยข้อมูลใกล้จริง |
 | NFR-MNT-001 | Dependency Direction และ Module Boundary ตรวจอัตโนมัติ | Architecture tests |
 | NFR-QEST-001 | Flow ขั้นต่ำของ Quick Estimate ใช้งานบนมือถือได้ มีสถานะบันทึกชัดเจน และ Touch Target ไม่น้อยกว่า 44px | Mobile viewport, keyboard และ accessibility test |
+| NFR-QEST-002 | Calculation Snapshot เดิมต้องคำนวณซ้ำได้ผลเดิม และ Template Publish ไม่ได้จนกว่า Test Matrix ผ่าน | Deterministic calculation และ template contract tests |
 
 ## การเปลี่ยน Requirement
 

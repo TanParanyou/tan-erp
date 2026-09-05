@@ -8,6 +8,8 @@
 
 **Tech Stack:** Markdown, JSON, JSON Schema และ Static Documentation Portal เดิม
 
+> เอกสารนี้เป็น Execution Record ของ Baseline เดิม ชื่อ Permission ปัจจุบันให้ยึด [Permission Catalog](../../03-contracts/permission-catalog.md) เป็นแหล่งอ้างอิงหลัก
+
 ## Global Constraints
 
 - Repository อยู่ใน Documentation Foundation; ไม่มี Frontend/Backend ERP, Database หรือ Cloud Resource ในแผนนี้

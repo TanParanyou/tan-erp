@@ -7,3 +7,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0003 — EF Core Write และ Dapper Read](0003-ef-core-write-dapper-read.md)
 - [0004 — Firebase Identity และ Backend RBAC](0004-firebase-identity-backend-rbac.md)
 - [0005 — Markdown และ JSON-driven Portal](0005-json-driven-documentation-portal.md)
+- [0006 — Versioned Hybrid Quick Estimate Pricing](0006-versioned-hybrid-quick-estimate-pricing.md)

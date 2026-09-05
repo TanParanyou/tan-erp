@@ -3,7 +3,7 @@
 ## 1. สถานะเอกสาร
 
 - วันที่ออกแบบ: 6 กันยายน 2026
-- สถานะ: Accepted from Workshop — พร้อมจัดทำ Implementation Plan ด้านเอกสารหลังผู้ใช้ตรวจฉบับนี้
+- สถานะ: Accepted — นำแนวทางไปใช้ใน [Quick Estimate Pricing Rules](../../01-business/quick-estimate-pricing-rules.md) แล้ว
 - ระบบ: `tan-erp` Project ERP
 - ขอบเขต: สูตรและกฎธุรกิจของ Quick Estimate สำหรับ Built-in, ผ้าม่าน และ Wallpaper
 - เอกสารที่เกี่ยวข้อง: [Quick Estimate Workflow Design](2026-09-06-quick-estimate-workflow-design.md)

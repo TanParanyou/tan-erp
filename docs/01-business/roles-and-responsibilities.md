@@ -8,6 +8,8 @@
 | Designer | จัด Scope และข้อมูลออกแบบ | เปลี่ยนราคาที่อนุมัติแล้วโดยไม่สร้าง Revision |
 | Surveyor | เก็บข้อมูล Site Survey | ประกาศว่าราคาพร้อมเสนอโดยไม่มี Estimate |
 | Field Estimator | สร้าง คำนวณ และแชร์ Quick Estimate ภายใน Permission, Scope และ Share Policy | แชร์รายการที่ต้อง Review หรือออก Quotation จาก Quick Estimate โดยตรง |
+| Pricing Template Owner | จัด Measurement Rule, Reference Rate, Factor, Checklist และ Test Case | อนุมัติหรือ Publish Version ที่ตนแก้เมื่อ Maker–Checker มีผล |
+| Pricing Template Approver | ตรวจสูตร Unit, Rate Source, Range, Test Case และผล Calibration | แก้ Template แทน Owner แล้วอนุมัติเอง |
 | Estimator | จัดทำ Estimate และตรวจต้นทุน | อนุมัติ Estimate ของตนเองเมื่อ Maker–Checker บังคับ |
 | Approver | ตรวจราคา กำไร ส่วนลด และความเสี่ยง | แก้ข้อมูลแทนผู้จัดทำโดยไม่ส่งกลับ |
 | Project Manager | รับมอบขอบเขตและบริหาร Project | เปลี่ยน Baseline โดยไม่มี Change Order |

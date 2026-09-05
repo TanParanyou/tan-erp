@@ -32,6 +32,8 @@ Customer/Opportunity → Work Type → Pricing Template → Measurement
 7. หากผ่านจึงแสดงหรือส่ง Preliminary Summary; หากไม่ผ่านให้เก็บ Draft หรือส่งตรวจภายใน
 8. บันทึก Customer Interest และ Follow-up หรือ Convert เป็น Official Estimate Draft
 
+สูตร Measurement, Factor, Risk Range, Template Lifecycle และกฎการปัดราคาอยู่ที่ [Quick Estimate Pricing Rules](quick-estimate-pricing-rules.md)
+
 ## Lifecycle (วงจรสถานะ)
 
 ```text
@@ -97,6 +99,8 @@ Calculated/Shared → Expired → New Version/Recalculate
 
 Lifecycle, Audit, Versioning, Organization Scope, Permission และความหมายของเอกสารทางการเป็นข้อบังคับ ไม่ใช่ค่าที่ผู้ใช้ทั่วไปแก้ได้
 
+Pricing Template ใหม่เริ่มที่ `Draft` ผ่าน `Calibration` ก่อนเป็น `Active` และทุกการแชร์ระหว่าง Calibration ต้องผ่าน Review รายละเอียดสถานะและเกณฑ์ Pilot อยู่ที่ [Quick Estimate Pricing Rules](quick-estimate-pricing-rules.md)
+
 ## Reliability and Recovery (ความน่าเชื่อถือและการกู้คืน)
 
 Release แรกใช้ Online-first พร้อมกลไกต่อไปนี้:
@@ -113,15 +117,13 @@ Release แรกใช้ Online-first พร้อมกลไกต่อไ�
 
 API ในอนาคตใช้ RFC 9457 Problem Details, Stable Error Code, Trace ID และข้อความตามภาษาผู้ใช้ โดยไม่ส่งรายละเอียดภายในระบบออกไป
 
-| Error Code | HTTP | การตอบสนองของผู้ใช้ |
-| --- | ---: | --- |
-| `QUICK_ESTIMATE_INCOMPLETE` | 422 | แสดง Field หรือ Assumption ที่ต้องกรอก โดยรักษาข้อมูลเดิม |
-| `QUICK_ESTIMATE_REVIEW_REQUIRED` | 422 | แจ้งว่าต้องส่งตรวจภายในก่อนแชร์ |
-| `QUICK_ESTIMATE_TEMPLATE_EXPIRED` | 409 | ให้เลือก Template Version ที่ใช้ได้และ Recalculate |
-| `QUICK_ESTIMATE_VERSION_CONFLICT` | 409 | ให้ Reload/Compare ก่อนแก้ต่อ |
-| `QUICK_ESTIMATE_ALREADY_CONVERTED` | 409 | เปิด Official Estimate เดิม; Retry ด้วย Idempotency Key เดิมคืนผลเดิม |
+- Field/Unit ผิดต้องชี้ Field และรักษาข้อมูลอื่นไว้
+- Template/Rate ใช้ไม่ได้ต้องเก็บ Draft และให้ Recalculate หลังแก้ต้นเหตุ
+- รายการต้อง Review ต้องอธิบาย Trigger โดยไม่เปิดข้อมูลภายใน
+- Version Conflict ต้องให้ Reload/Compare
+- Retry Share/Convert ต้องไม่สร้างข้อมูลซ้ำ
 
-รายละเอียดสัญญากลางอยู่ที่ [Error Contract](../03-contracts/error-contract.md)
+รหัสและ HTTP Status ที่เป็นแหล่งอ้างอิงหลักอยู่ที่ [Error Contract](../03-contracts/error-contract.md)
 
 ## Audit and Metrics (ประวัติและตัวชี้วัด)
 
@@ -159,13 +161,11 @@ Metrics ต้องไม่เก็บ PII เกินความจำเ�
 - ลูกค้าแก้ Work Scope หรือราคาผ่าน Public Portal
 - แปลง Price Range เป็น Approved Selling Price อัตโนมัติ
 
-## Validation Questions (คำถามที่ต้องยืนยัน)
+## Validation Questions (คำถามที่ต้องยืนยันจาก Pilot)
 
-- Work Type และ Property Type ใดต้องมีใน Release แรก
-- Measurement Rule และสูตรของแต่ละ Work Type คืออะไร
-- Reference Rate และ Grade/Complexity Factor มาจากใคร และทบทวนบ่อยเพียงใด
-- Range Percentage และ Validity Period ของแต่ละประเภทงานเป็นเท่าใด
-- หลักฐานขั้นต่ำก่อนแชร์มีอะไรบ้าง เช่น รูป จำนวนจุด หรือหมายเหตุ
-- มูลค่า ความกว้างของช่วงราคา Manual Override หรือความเสี่ยงระดับใดต้องส่งตรวจ
-- ใครเป็น Reviewer สำรอง และ SLA การตรวจหน้างานควรเป็นเท่าใด
+- Property Type ใดต้องมีใน Release แรก นอกเหนือจาก Work Type ที่อนุมัติแล้ว ได้แก่ Built-in, ผ้าม่าน และ Wallpaper
+- Reference Rate, Factor, Base/Max Range, Rounding Step และ Validity จริงของแต่ละ Template เป็นเท่าใด
+- หลักฐานขั้นต่ำของแต่ละ Work Type ต้องมีกี่รูปและมุมใดบ้าง
+- Direct-share Authority Limit, Reviewer สำรอง และ SLA ของแต่ละ Branch เป็นเท่าใด
+- Calibration ใช้เกณฑ์ความแม่นยำและจำนวนกรณีระดับใดจึงเปลี่ยน Template เป็น Active
 - Preliminary Summary ส่งผ่านช่องทางใด และต้องเก็บ Delivery Status ระดับใด

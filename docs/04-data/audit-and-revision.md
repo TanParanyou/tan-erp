@@ -43,9 +43,21 @@ Audit ตอบว่า “ใครทำอะไรเมื่อใด” 
 อย่างน้อยต้องบันทึก:
 
 - `quick-estimate.created`, `calculated`, `reviewed`, `shared`, `versioned`, `converted`, `closed` และ `expired`
-- `pricing-template.created`, `published`, `superseded` และ `disabled`
+- `pricing-template.created`, `submitted`, `approved`, `calibrated`, `activated`, `superseded` และ `disabled`
 - Manual Override พร้อมค่าก่อน/หลังและเหตุผล
 - Preliminary Summary share attempt, ผลสำเร็จ/ล้มเหลว, ช่องทาง และ Source Version โดยไม่เก็บข้อมูลผู้รับเกินจำเป็น
 - Conversion result, Official Estimate ID และ Idempotency Key fingerprint ที่ปลอดภัย
 
 Audit Event บอกเหตุการณ์ ส่วน Quick Estimate Version และ Official Estimate Revision เป็น Business Snapshot ที่ใช้อ่านเนื้อหา ณ เวลานั้น
+
+## Calculation Snapshot ขั้นต่ำ
+
+- Pricing Template/Rate Source ID และ Version
+- Measurement Input, Unit และ Billable Quantity
+- Grade/Complexity Factor, Risk Modifier และ Checklist Result
+- Add-on, Minimum Charge และ Published Promotion/Adjustment
+- Net, Tax, Gross, Validity และ Tax Display Policy
+- Raw/Displayed Bounds และ Rounding Step
+- Formula/Rule Version และผล Share Decision พร้อม Reason Codes
+
+Calculation Snapshot ต้อง Immutable หลังสร้าง Version และต้องเพียงพอให้คำนวณซ้ำได้ผลเดิม แม้ Pricing Template ปัจจุบันเปลี่ยนแล้ว

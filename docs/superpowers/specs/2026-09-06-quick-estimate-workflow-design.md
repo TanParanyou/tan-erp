@@ -193,7 +193,14 @@ Core Lifecycle, Audit, Versioning, Organization Scope, Permission และค�
 - `quick-estimates.convert`
 - `quick-estimates.close`
 - `pricing-templates.read`
-- `pricing-templates.manage`
+- `pricing-templates.create`
+- `pricing-templates.update`
+- `pricing-templates.submit`
+- `pricing-templates.approve`
+- `pricing-templates.publish`
+- `pricing-templates.activate`
+- `pricing-templates.disable`
+- `pricing-templates.override-rate`
 
 ทุก Permission ใช้ร่วมกับ Organization, Branch, Project/Opportunity หรือ Own Scope ตาม Membership ผู้สร้างห้าม Review รายการของตนเองเมื่อ Share Policy กำหนด Maker–Checker
 
@@ -224,7 +231,7 @@ Error ใช้ RFC 9457 Problem Details, Stable Code, Trace ID และข้�
 Audit Events สำคัญ:
 
 - Quick Estimate created, calculated, reviewed, shared, versioned, converted, closed และ expired
-- Pricing Template created, published, superseded และ disabled
+- Pricing Template created, submitted, approved, calibrated, activated, superseded และ disabled
 - Manual Override พร้อมค่าก่อน/หลังและเหตุผล
 
 Business Metrics ที่ควรวัด:

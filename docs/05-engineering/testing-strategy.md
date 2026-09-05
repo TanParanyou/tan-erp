@@ -22,3 +22,21 @@
 - เวลาทดสอบใช้ Clock ที่ควบคุมได้
 
 ทุก Bug สำคัญต้องมี Regression Test ในระดับต่ำที่สุดที่พิสูจน์ปัญหาได้อย่างน่าเชื่อถือ
+
+## Quick Estimate Pricing Test Matrix
+
+Template Version ต้องผ่าน Test Matrix ก่อน Publish:
+
+| กลุ่มทดสอบ | กรณีขั้นต่ำ |
+| --- | --- |
+| Measurement | Built-in, ผ้าม่าน, Wallpaper, หน่วยถูก/ผิด, ค่าต่ำสุด/สูงสุด และค่าศูนย์/ติดลบ |
+| Calculation | Grade/Complexity Factor, Add-on, Minimum Charge, Promotion และหลาย Line |
+| Price Range | Base/Max Range, Risk Modifier หลายตัว และห้ามผู้ใช้ลดช่วงโดยไม่มีสิทธิ์ |
+| Rounding/Tax | Lower ปัดลง, Upper ปัดขึ้น, รวม/ไม่รวม VAT และ Rate Effective Date |
+| Template Lifecycle | Draft/Disabled ใช้ไม่ได้, Calibration ต้อง Review, Active ใช้ Risk-based Policy และ Published Version แก้ไม่ได้ |
+| Share Policy | Blocked, PendingReview, Shareable พร้อม Reason Code ทุก Trigger |
+| Security | Permission/Scope, Maker–Checker, Branch Rate Override และ Cross-organization denial |
+| Reproducibility | Calculation Snapshot เดิมคำนวณซ้ำได้ผลเดิมหลัง Template/Rate ปัจจุบันเปลี่ยน |
+| Recovery | Autosave, Retry share, Version Conflict และ Idempotent conversion |
+
+Limited Pilot ต้องเปรียบเทียบ Quick Estimate Range กับ Official Estimate/Quotation และเก็บ Root Cause เมื่อราคาทางการหลุดช่วง โดยไม่ใช้ข้อมูลลูกค้าจริงใน Automated Test

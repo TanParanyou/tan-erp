@@ -8,12 +8,14 @@ Organization ─┬─ Branch
               ├─ Customer ─ Contact
               ├─ Item Master ─ Reference Cost
               ├─ Pricing Template ─ Pricing Template Version
+              │                         ├─ Measurement Rule
+              │                         └─ Reference Rate Source
               └─ Opportunity ─ Site Survey
 
 Pricing Template Version ─► Quick Estimate Version
-Quick Estimate ─► Quick Estimate Version ─► Preliminary Summary
-                              │
-                              └─ snapshot convert ─► Estimate (Official Estimate Draft)
+Quick Estimate ─► Quick Estimate Version ─┬─ Calculation Snapshot
+                                         ├─ Preliminary Summary
+                                         └─ snapshot convert ─► Estimate (Official Estimate Draft)
                                                          ├─ Estimate Revision
                                                          │    ├─ Section
                                                          │    │    └─ Work Item ─ Cost Components
@@ -37,6 +39,7 @@ Site Survey ─► Quick Estimate หรือ Estimate (Official Estimate Draft
 | Pricing Template Version | Measurement Rule, Rate, Factor, Range, Defaults และ Effective Period ที่เผยแพร่แล้ว |
 | Quick Estimate | Identity, Ownership และ Lifecycle ของการประเมินหน้างาน |
 | Quick Estimate Version | Input, Template snapshot, Price Range, Assumptions/Exclusions และ Customer-safe content ของแต่ละฉบับ |
+| Calculation Snapshot | Measurement Input/Unit, Billable Quantity, Rate/Factor/Risk, Tax/Rounding และผลก่อน/หลังปัดที่ใช้คำนวณซ้ำ |
 | Preliminary Summary | สิ่งที่แสดงหรือส่งให้ลูกค้าจาก Quick Estimate Version หนึ่งฉบับ |
 | Estimate | Revision sequence และ Lifecycle |
 | Estimate Revision | Work Items, calculation snapshot และ immutable after approval |
@@ -48,6 +51,8 @@ Site Survey ─► Quick Estimate หรือ Estimate (Official Estimate Draft
 - CRM เป็นเจ้าของ Customer/Opportunity; Module อื่นอ้างด้วย ID และ Snapshot เท่าที่จำเป็น
 - Item Master เป็นเจ้าของรายการมาตรฐาน แต่ Estimate Revision เก็บค่าที่ใช้คำนวณเป็น Snapshot
 - Pricing Template Version เป็นต้นทางกฎคำนวณ แต่ Quick Estimate Version ต้องเก็บ Template/Input/Factor/Result Snapshot เพื่อคำนวณย้อนหลังได้
+- Published Pricing Template Version เป็น Immutable; Lifecycle คือ Draft, Calibration, Active, Superseded และ Disabled
+- Standard Rate เป็นของ Organization; Branch Rate Override ต้องมี Effective Period, Reason และ Approval โดยไม่แก้ Standard Rate เดิม
 - Quick Estimate เป็นเจ้าของ Version และ Preliminary Summary; หนึ่ง Version Convert ไป Official Estimate Draft ได้หนึ่งรายการต่อเจตนาที่ระบุ
 - Estimation เป็นเจ้าของ Estimate/Revision/Approval; Quotation ไม่ย้อนมาแก้ Revision
 - Project รับ Baseline จาก Commercial แล้วเปลี่ยนผ่าน Change Order
