@@ -7,18 +7,23 @@ Organization ─┬─ Branch
               ├─ Membership ─ Role ─ Permission
               ├─ Customer ─ Contact
               ├─ Item Master ─ Reference Cost
+              ├─ Pricing Template ─ Pricing Template Version
               └─ Opportunity ─ Site Survey
-                               │
-                               ▼
-                          Estimate
-                               ├─ Estimate Revision
-                               │    ├─ Section
-                               │    │    └─ Work Item ─ Cost Components
-                               │    └─ Approval Decision
-                               └─ Quotation ─ Customer Acceptance
-                                                   │
-                                                   ▼
-                                                Project
+
+Pricing Template Version ─► Quick Estimate Version
+Quick Estimate ─► Quick Estimate Version ─► Preliminary Summary
+                              │
+                              └─ snapshot convert ─► Estimate (Official Estimate Draft)
+                                                         ├─ Estimate Revision
+                                                         │    ├─ Section
+                                                         │    │    └─ Work Item ─ Cost Components
+                                                         │    └─ Approval Decision
+                                                         └─ Quotation ─ Customer Acceptance
+                                                                              │
+                                                                              ▼
+                                                                           Project
+
+Site Survey ─► Quick Estimate หรือ Estimate (Official Estimate Draft)
 ```
 
 ## Aggregate Candidates
@@ -28,6 +33,11 @@ Organization ─┬─ Branch
 | Organization | Membership และ Business Setting อยู่ใน Organization เดียวกัน |
 | Item | Code/Unit/Status และประวัติต้นทุนอ้างอิง |
 | Site Survey | Evidence และ Readiness ก่อน Estimate |
+| Pricing Template | Work Type และชุด Version ที่ใช้คำนวณ Price Range |
+| Pricing Template Version | Measurement Rule, Rate, Factor, Range, Defaults และ Effective Period ที่เผยแพร่แล้ว |
+| Quick Estimate | Identity, Ownership และ Lifecycle ของการประเมินหน้างาน |
+| Quick Estimate Version | Input, Template snapshot, Price Range, Assumptions/Exclusions และ Customer-safe content ของแต่ละฉบับ |
+| Preliminary Summary | สิ่งที่แสดงหรือส่งให้ลูกค้าจาก Quick Estimate Version หนึ่งฉบับ |
 | Estimate | Revision sequence และ Lifecycle |
 | Estimate Revision | Work Items, calculation snapshot และ immutable after approval |
 | Quotation | อ้างอิง Approved Revision และ document lifecycle |
@@ -37,6 +47,8 @@ Organization ─┬─ Branch
 
 - CRM เป็นเจ้าของ Customer/Opportunity; Module อื่นอ้างด้วย ID และ Snapshot เท่าที่จำเป็น
 - Item Master เป็นเจ้าของรายการมาตรฐาน แต่ Estimate Revision เก็บค่าที่ใช้คำนวณเป็น Snapshot
+- Pricing Template Version เป็นต้นทางกฎคำนวณ แต่ Quick Estimate Version ต้องเก็บ Template/Input/Factor/Result Snapshot เพื่อคำนวณย้อนหลังได้
+- Quick Estimate เป็นเจ้าของ Version และ Preliminary Summary; หนึ่ง Version Convert ไป Official Estimate Draft ได้หนึ่งรายการต่อเจตนาที่ระบุ
 - Estimation เป็นเจ้าของ Estimate/Revision/Approval; Quotation ไม่ย้อนมาแก้ Revision
 - Project รับ Baseline จาก Commercial แล้วเปลี่ยนผ่าน Change Order
 - Audit Record อ้าง Resource แต่ไม่เป็นเจ้าของ Business State

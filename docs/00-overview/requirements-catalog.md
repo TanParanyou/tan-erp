@@ -15,6 +15,13 @@
 | FR-CRM-001 | จัดเก็บ Customer, Contact และ Opportunity ขั้นพื้นฐาน | 2 | Draft |
 | FR-SRV-001 | Site Survey เก็บขนาด รูป และเงื่อนไขหน้างาน | 2 | Draft |
 | FR-ITEM-001 | Item Master มี Code, Type, Unit, Cost, Effective Date และ Status | 2 | Draft |
+| FR-QEST-001 | สร้าง Quick Estimate จาก Pricing Template ที่มี Version | 2 | Accepted principle; Template จริงเป็น Draft |
+| FR-QEST-002 | คำนวณและแสดง Price Range จากข้อมูลขั้นต่ำตาม Template | 2 | Accepted principle; สูตรและช่วงเป็น Draft |
+| FR-QEST-003 | บังคับ Share Policy ก่อนแสดงหรือส่งข้อมูลให้ลูกค้า | 2 | Accepted principle; Threshold เป็น Draft |
+| FR-QEST-004 | แชร์ Preliminary Summary ที่มีเฉพาะข้อมูล Customer-safe | 2 | Accepted principle; รูปแบบเอกสารเป็น Draft |
+| FR-QEST-005 | การเปลี่ยนเนื้อหาสำคัญหลังแชร์ต้องสร้าง Quick Estimate Version ใหม่ | 2 | Accepted principle |
+| FR-QEST-006 | Convert Quick Estimate Version เป็น Official Estimate Draft แบบ Idempotent | 2 | Accepted principle |
+| FR-QEST-007 | Autosave และกู้ Draft หน้างานที่ยัง Sync ไม่สำเร็จได้อย่างปลอดภัย | 2 | Accepted principle |
 | FR-EST-001 | Estimate แบ่งพื้นที่/หมวดงาน/Work Item ได้ | 2 | Draft |
 | FR-EST-002 | คำนวณต้นทุน ราคาขาย ส่วนลด ภาษี และกำไรอย่างตรวจสอบได้ | 2 | Draft |
 | FR-EST-003 | การเปลี่ยนสาระสำคัญสร้าง Estimate Revision ใหม่ | 2 | Accepted principle |
@@ -37,6 +44,7 @@
 | NFR-I18N-001 | ทุก Message Key สำคัญมีไทยและอังกฤษ | Automated catalog check |
 | NFR-PERF-001 | Critical queries ผ่าน SLO ที่ธุรกิจอนุมัติ | Load test ด้วยข้อมูลใกล้จริง |
 | NFR-MNT-001 | Dependency Direction และ Module Boundary ตรวจอัตโนมัติ | Architecture tests |
+| NFR-QEST-001 | Flow ขั้นต่ำของ Quick Estimate ใช้งานบนมือถือได้ มีสถานะบันทึกชัดเจน และ Touch Target ไม่น้อยกว่า 44px | Mobile viewport, keyboard และ accessibility test |
 
 ## การเปลี่ยน Requirement
 

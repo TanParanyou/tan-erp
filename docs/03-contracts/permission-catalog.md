@@ -14,6 +14,15 @@
 | Item Master | `items.read` | ดูรายการมาตรฐานและต้นทุนตามสิทธิ์ | Organization |
 | Item Master | `items.manage` | สร้าง แก้ และปิดใช้ Item | Organization |
 | Survey | `surveys.manage` | สร้างและแก้ Site Survey | Branch/Project/Own |
+| Quick Estimate | `quick-estimates.read` | ดู Quick Estimate ตามขอบเขตที่ได้รับ | Organization/Branch/Opportunity/Own |
+| Quick Estimate | `quick-estimates.create` | สร้าง Quick Estimate | Branch/Opportunity/Own |
+| Quick Estimate | `quick-estimates.update` | แก้ Draft/Calculated หรือสร้าง Version ใหม่ตามกฎ | Branch/Opportunity/Own |
+| Quick Estimate | `quick-estimates.review` | ตรวจรายการที่เข้า Share Policy | Organization/Branch/Opportunity |
+| Quick Estimate | `quick-estimates.share` | แสดงหรือส่ง Preliminary Summary ที่ผ่าน Policy | Branch/Opportunity/Own |
+| Quick Estimate | `quick-estimates.convert` | Convert Source Version เป็น Official Estimate Draft | Branch/Opportunity/Own |
+| Quick Estimate | `quick-estimates.close` | ปิดรายการพร้อมเหตุผล | Branch/Opportunity/Own |
+| Pricing Template | `pricing-templates.read` | ดู Template Version ที่เผยแพร่และอยู่ใน Scope | Organization/Branch |
+| Pricing Template | `pricing-templates.manage` | สร้าง เผยแพร่ แทนที่ และปิดใช้ Template Version | Organization/Branch |
 | Estimation | `estimates.read` | ดู Estimate | Organization/Branch/Project/Own |
 | Estimation | `estimates.create` | สร้าง Estimate | Branch/Project/Own |
 | Estimation | `estimates.update` | แก้ Draft/Returned Estimate | Branch/Project/Own |
@@ -24,3 +33,5 @@
 | Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
 
 การตรวจวงเงิน กำไรขั้นต่ำ และ Maker–Checker เป็น Policy เพิ่มจาก Permission; การมี `estimates.approve` ไม่ได้แปลว่าอนุมัติได้ทุกยอดหรืออนุมัติงานตนเองได้
+
+เช่นเดียวกัน การมี `quick-estimates.share` ไม่ได้ข้าม Share Policy และการมี `quick-estimates.review` ไม่ได้อนุญาตให้ตรวจงานของตนเองเมื่อ Maker–Checker มีผล Backend ต้องตรวจ Permission พร้อม Organization, Branch, Opportunity และ Own Scope ทุกครั้ง

@@ -8,6 +8,8 @@
 - Customer และ Opportunity ขั้นพื้นฐาน
 - Item Master, หน่วยนับ, หมวดหมู่ และต้นทุนอ้างอิง
 - Site Survey และไฟล์แนบ
+- Quick Estimate, Pricing Template Version, Price Range และ Preliminary Summary
+- Share Policy และการ Convert Quick Estimate Version เป็น Official Estimate Draft
 - Estimate, Work Item, Revision, Markup/Margin, Discount และ Tax
 - Approval, Audit Trail และ Quotation
 - ภาษาไทย/อังกฤษและ Error Contract กลาง
@@ -28,6 +30,9 @@
 - ไม่สร้าง MRP ก่อนข้อมูล Item, BOM, Inventory และ Production พร้อม
 - ไม่ให้ Firebase เป็นแหล่งเก็บ Role/Permission
 - ไม่ทำ Workflow Builder ที่ผู้ใช้ปรับได้ทุกอย่าง
+- ไม่ทำ Offline-first synchronization หลายอุปกรณ์ใน Release แรก
+- ไม่ออก Quotation ที่อนุมัติแล้วจาก Quick Estimate ณ หน้างาน
+- ไม่ใช้ AI ประเมินราคาจากภาพเพียงอย่างเดียวโดยไม่มี Template และการตรวจของคน
 - ไม่คัดลอก Source Code จากโครงการอื่นทั้งชุด
 
 ## สมมติฐานที่ต้องยืนยัน

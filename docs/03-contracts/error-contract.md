@@ -39,6 +39,18 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 - System Error Translation ไม่เก็บใน JSONB และไม่มี Runtime Editor ระยะแรก เพื่อลดความไม่ตรงกันและ Bug
 - Log เก็บ Error Code และ Trace ID; ไม่จำเป็นต้องเก็บข้อความแปลเป็นตัวตัดสิน
 
+## Quick Estimate Error Codes
+
+| Code | HTTP | ความหมาย/การกู้คืน |
+| --- | ---: | --- |
+| `QUICK_ESTIMATE_INCOMPLETE` | 422 | ข้อมูลหรือ Assumption ที่ Template บังคับยังไม่ครบ; ระบุ Field ที่ต้องแก้ |
+| `QUICK_ESTIMATE_REVIEW_REQUIRED` | 422 | Share Policy บังคับ Internal Review ก่อนแชร์ |
+| `QUICK_ESTIMATE_TEMPLATE_EXPIRED` | 409 | Template Version ใช้แชร์ไม่ได้แล้ว; เลือก Version ปัจจุบันและ Recalculate |
+| `QUICK_ESTIMATE_VERSION_CONFLICT` | 409 | มีการแก้ Version เดียวกันจากอีก Request; ให้ Reload/Compare |
+| `QUICK_ESTIMATE_ALREADY_CONVERTED` | 409 | Source Version นี้เชื่อมกับ Official Estimate อยู่แล้ว; เปิดรายการเดิมแทน |
+
+การ Retry Convert ด้วย **Idempotency Key เดิม** ต้องคืนผล Conversion เดิม ไม่คืน `QUICK_ESTIMATE_ALREADY_CONVERTED` รหัสนี้ใช้เมื่อเป็นคำขอใหม่ที่พยายาม Convert Source Version เดิมอีกครั้งโดยไม่ได้ระบุเจตนาสร้าง Revision ใหม่
+
 ## Validation Errors
 
 `errors` เป็น Object ที่ Key ตรงกับ API field และ Value เป็น Array ของข้อความ เช่น `{"customerId":["กรุณาเลือกลูกค้า"]}`

@@ -26,3 +26,26 @@ Estimate Revision คือ Snapshot ทางธุรกิจ ไม่ใช
 - การเปรียบเทียบ Revision แสดงรายการเพิ่ม ลบ และเปลี่ยนค่า
 
 Audit ตอบว่า “ใครทำอะไรเมื่อใด” ส่วน Revision ตอบว่า “เนื้อหาแต่ละฉบับคืออะไร” จึงต้องมีทั้งสองอย่าง
+
+## Quick Estimate Version และ Official Estimate Revision
+
+สองคำนี้มีหน้าที่ต่างกันและห้ามใช้แทนกัน:
+
+| Record | ใช้เมื่อ | สิ่งที่ Snapshot | กฎหลังเผยแพร่ |
+| --- | --- | --- | --- |
+| Quick Estimate Version | ประเมินช่วงราคาหน้างานและออก Preliminary Summary | Template Version, Input, Factor, Price Range, Assumptions, Exclusions และข้อมูลที่ลูกค้าเห็น | เมื่อแชร์แล้ว การเปลี่ยนเนื้อหาสำคัญต้องสร้าง Version ใหม่ |
+| Official Estimate Revision | คำนวณต้นทุนและราคาขายทางการเพื่ออนุมัติและออก Quotation | Work Item, Cost Component, Calculation Rule, Tax, Discount และ Approval context | เมื่อ Approved/Quoted แล้วห้ามแก้ ต้องสร้าง Revision ใหม่ |
+
+การ Convert ต้องบันทึก `sourceQuickEstimateId` และ `sourceQuickEstimateVersion` บน Official Estimate Draft พร้อม Snapshot ของข้อมูลที่รับมา Price Range เป็น Reference เท่านั้น ไม่ใช่ Approved Selling Price
+
+## Quick Estimate Audit Events
+
+อย่างน้อยต้องบันทึก:
+
+- `quick-estimate.created`, `calculated`, `reviewed`, `shared`, `versioned`, `converted`, `closed` และ `expired`
+- `pricing-template.created`, `published`, `superseded` และ `disabled`
+- Manual Override พร้อมค่าก่อน/หลังและเหตุผล
+- Preliminary Summary share attempt, ผลสำเร็จ/ล้มเหลว, ช่องทาง และ Source Version โดยไม่เก็บข้อมูลผู้รับเกินจำเป็น
+- Conversion result, Official Estimate ID และ Idempotency Key fingerprint ที่ปลอดภัย
+
+Audit Event บอกเหตุการณ์ ส่วน Quick Estimate Version และ Official Estimate Revision เป็น Business Snapshot ที่ใช้อ่านเนื้อหา ณ เวลานั้น
