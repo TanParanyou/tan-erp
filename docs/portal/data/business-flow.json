@@ -1,0 +1,31 @@
+{
+  "$schema": "../schema/flow.schema.json",
+  "version": 1,
+  "id": "business",
+  "title": { "th": "ภาพรวมธุรกิจตั้งแต่ลูกค้าถึงบริการหลังการขาย", "en": "Business flow from customer to after-sales" },
+  "description": { "th": "แสดงการส่งต่อข้อมูลที่ควรเกิดขึ้นครั้งเดียวและตรวจย้อนกลับได้", "en": "Shows traceable handoffs where information should be captured once and reused." },
+  "document": "../01-business/end-to-end-business-flow.md",
+  "illustration": { "src": "assets/project.svg", "alt": { "th": "ภาพลายเส้นแสดงบ้าน แบบงาน และขั้นตอนโครงการ", "en": "Line illustration of a home, plans and project stages" } },
+  "groups": [
+    { "id": "commercial", "label": { "th": "ก่อนขาย", "en": "Pre-sales" } },
+    { "id": "delivery", "label": { "th": "ส่งมอบงาน", "en": "Delivery" } },
+    { "id": "service", "label": { "th": "หลังส่งมอบ", "en": "After-sales" } }
+  ],
+  "nodes": [
+    { "id": "customer", "group": "commercial", "order": 1, "title": { "th": "ลูกค้าและความต้องการ", "en": "Customer & Need" }, "summary": { "th": "สร้าง Customer และ Opportunity จากความต้องการที่ผ่านการคัดกรอง", "en": "Create a customer and qualified opportunity." }, "icon": "customer", "phase": "phase-2", "status": "draft", "document": "../01-business/end-to-end-business-flow.md" },
+    { "id": "survey", "group": "commercial", "order": 2, "title": { "th": "สำรวจหน้างาน", "en": "Site Survey" }, "summary": { "th": "เก็บขนาด ภาพถ่าย เงื่อนไข และขอบเขตเบื้องต้น", "en": "Capture dimensions, photos, constraints and initial scope." }, "icon": "survey", "phase": "phase-2", "status": "draft", "document": "../01-business/estimation-flow.md" },
+    { "id": "estimate", "group": "commercial", "order": 3, "title": { "th": "ประเมินและอนุมัติ", "en": "Estimate & Approve" }, "summary": { "th": "คำนวณต้นทุน ราคาขาย กำไร และผ่าน Maker–Checker", "en": "Calculate cost, selling price and margin, then run maker-checker." }, "icon": "estimate", "phase": "phase-2", "status": "draft", "document": "../01-business/estimation-flow.md" },
+    { "id": "quotation", "group": "commercial", "order": 4, "title": { "th": "ใบเสนอราคา", "en": "Quotation" }, "summary": { "th": "ออกข้อเสนอจาก Estimate Revision ที่อนุมัติแล้ว", "en": "Issue an offer from an approved estimate revision." }, "icon": "approval", "phase": "phase-2", "status": "draft", "document": "../01-business/end-to-end-business-flow.md" },
+    { "id": "project", "group": "delivery", "order": 5, "title": { "th": "เปิดและควบคุมโครงการ", "en": "Open & Control Project" }, "summary": { "th": "รับขอบเขต งบตั้งต้น ผู้รับผิดชอบ และแผนเวลา", "en": "Establish scope, baseline budget, ownership and schedule." }, "icon": "project", "phase": "future", "status": "future", "document": "../01-business/project-lifecycle.md" },
+    { "id": "operations", "group": "delivery", "order": 6, "title": { "th": "จัดซื้อ ผลิต ติดตั้ง", "en": "Buy, Build & Install" }, "summary": { "th": "เชื่อม Project กับ Supplier, Inventory, Production และหน้างาน", "en": "Connect the project to suppliers, inventory, production and site work." }, "icon": "architecture", "phase": "future", "status": "future", "document": "../02-architecture/module-boundaries.md" },
+    { "id": "handover", "group": "service", "order": 7, "title": { "th": "ส่งมอบและรับประกัน", "en": "Handover & Warranty" }, "summary": { "th": "ตรวจรับ ส่งมอบ และบันทึกเงื่อนไขบริการหลังการขาย", "en": "Inspect, hand over and record after-sales obligations." }, "icon": "approval", "phase": "future", "status": "future", "document": "../01-business/project-lifecycle.md" }
+  ],
+  "edges": [
+    { "from": "customer", "to": "survey", "label": { "th": "นัดสำรวจ", "en": "Survey booked" }, "type": "required" },
+    { "from": "survey", "to": "estimate", "label": { "th": "ข้อมูลพร้อม", "en": "Survey ready" }, "type": "required" },
+    { "from": "estimate", "to": "quotation", "label": { "th": "อนุมัติแล้ว", "en": "Approved" }, "type": "approval" },
+    { "from": "quotation", "to": "project", "label": { "th": "ลูกค้ายืนยัน", "en": "Accepted" }, "type": "approval" },
+    { "from": "project", "to": "operations", "label": { "th": "แผนพร้อม", "en": "Plan ready" }, "type": "required" },
+    { "from": "operations", "to": "handover", "label": { "th": "งานพร้อมตรวจ", "en": "Ready to inspect" }, "type": "required" }
+  ]
+}

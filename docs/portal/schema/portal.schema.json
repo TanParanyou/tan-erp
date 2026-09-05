@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tan-erp.local/schemas/portal.schema.json",
+  "title": "tan-erp documentation portal catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "product", "defaultLocale", "locales", "flows", "phases"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "integer", "const": 1 },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "eyebrow", "title", "description"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "eyebrow": { "$ref": "flow.schema.json#/$defs/localizedText" },
+        "title": { "$ref": "flow.schema.json#/$defs/localizedText" },
+        "description": { "$ref": "flow.schema.json#/$defs/localizedText" }
+      }
+    },
+    "defaultLocale": { "enum": ["th", "en"] },
+    "locales": { "type": "array", "items": { "enum": ["th", "en"] }, "minItems": 2, "uniqueItems": true },
+    "flows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "file", "title", "shortTitle", "icon"],
+        "properties": {
+          "id": { "$ref": "flow.schema.json#/$defs/id" },
+          "file": { "type": "string", "pattern": "^[a-z0-9-]+\\.json$" },
+          "title": { "$ref": "flow.schema.json#/$defs/localizedText" },
+          "shortTitle": { "$ref": "flow.schema.json#/$defs/localizedText" },
+          "icon": { "$ref": "flow.schema.json#/$defs/id" }
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "enum": ["phase-0", "phase-1", "phase-2", "future"] },
+          "label": { "$ref": "flow.schema.json#/$defs/localizedText" }
+        }
+      }
+    }
+  }
+}

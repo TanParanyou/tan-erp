@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">Role-based access illustration</title>
+  <desc id="desc">Line drawing of a user passing through identity, permission and scope checks into a protected resource.</desc>
+  <g fill="none" stroke="#18323a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="92" cy="132" r="34"/><path d="M38 244c0-50 24-78 54-78s54 28 54 78"/>
+    <path d="M154 180h64M422 180h72"/>
+    <rect x="218" y="74" width="204" height="212"/><path d="M252 118h136M252 168h136M252 218h136"/>
+    <circle cx="274" cy="118" r="13"/><circle cx="274" cy="168" r="13"/><circle cx="274" cy="218" r="13"/>
+    <path d="m267 168 6 6 12-14"/>
+    <path d="M530 92 592 116v66c0 56-28 88-62 105-34-17-62-49-62-105v-66zM504 181l19 19 38-44"/>
+  </g>
+  <circle cx="274" cy="168" r="22" fill="#159a8c" opacity=".18"/>
+  <path d="M218 48h118" stroke="#159a8c" stroke-width="10"/>
+</svg>

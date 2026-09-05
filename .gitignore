@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+.env
+.env.*
+!.env.example
+node_modules/
+bin/
+obj/
+.next/
+coverage/
+playwright-report/
+test-results/

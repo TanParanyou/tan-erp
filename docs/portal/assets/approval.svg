@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">Approval and error illustration</title>
+  <desc id="desc">Line drawing of a document, approval stamp, language selector and trace identifier.</desc>
+  <g fill="none" stroke="#18323a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M100 48h256l78 78v184H100zM356 48v78h78"/>
+    <path d="M144 112h134M144 154h214M144 196h154M144 238h112"/>
+    <circle cx="430" cy="230" r="78"/><path d="m392 230 25 25 54-60" stroke-width="9"/>
+    <rect x="476" y="64" width="104" height="62"/><path d="M496 86h18M505 78v26M536 80l22 32M558 80l-22 32"/>
+  </g>
+  <circle cx="430" cy="230" r="58" fill="#159a8c" opacity=".14"/>
+  <path d="M100 30h132" stroke="#159a8c" stroke-width="10"/>
+</svg>

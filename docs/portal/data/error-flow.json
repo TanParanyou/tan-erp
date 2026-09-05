@@ -1,0 +1,29 @@
+{
+  "$schema": "../schema/flow.schema.json",
+  "version": 1,
+  "id": "errors",
+  "title": { "th": "การส่ง Error ตามภาษาผู้ใช้", "en": "Localized error delivery" },
+  "description": { "th": "Stable Code ใช้ตัดสินใจ ส่วนข้อความแปลเพื่อให้ผู้ใช้เข้าใจ", "en": "Stable codes drive behavior while localized messages help people understand." },
+  "document": "../03-contracts/error-contract.md",
+  "illustration": { "src": "assets/approval.svg", "alt": { "th": "ภาพข้อความแจ้งเตือน ภาษา และรหัสติดตาม", "en": "Alert, language and trace-code illustration" } },
+  "groups": [
+    { "id": "request", "label": { "th": "คำขอ", "en": "Request" } },
+    { "id": "server", "label": { "th": "Backend", "en": "Backend" } },
+    { "id": "experience", "label": { "th": "ผู้ใช้", "en": "Experience" } }
+  ],
+  "nodes": [
+    { "id": "locale", "group": "request", "order": 1, "title": { "th": "ส่งภาษาที่เลือก", "en": "Send Locale" }, "summary": { "th": "Frontend ส่ง Accept-Language เป็น th หรือ en", "en": "Frontend sends Accept-Language as th or en." }, "icon": "customer", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/error-contract.md" },
+    { "id": "failure", "group": "server", "order": 2, "title": { "th": "ตรวจพบปัญหา", "en": "Detect Failure" }, "summary": { "th": "Validation, Authorization, Business Rule หรือ System Failure", "en": "Validation, authorization, business rule or system failure." }, "icon": "approval", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/error-contract.md" },
+    { "id": "code", "group": "server", "order": 3, "title": { "th": "เลือกรหัสคงที่", "en": "Select Stable Code" }, "summary": { "th": "เช่น ESTIMATE_INVALID_STATE ซึ่งไม่เปลี่ยนตามภาษา", "en": "For example ESTIMATE_INVALID_STATE, unchanged by locale." }, "icon": "estimate", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/error-contract.md" },
+    { "id": "translate", "group": "server", "order": 4, "title": { "th": "แปลข้อความ", "en": "Localize Message" }, "summary": { "th": "Backend ใช้ .resx และ fallback เป็นภาษาไทย", "en": "Backend uses .resx with Thai fallback." }, "icon": "architecture", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/error-contract.md" },
+    { "id": "problem", "group": "server", "order": 5, "title": { "th": "ส่ง Problem Details", "en": "Return Problem Details" }, "summary": { "th": "ส่ง status, code, title, detail, errors และ traceId", "en": "Return status, code, title, detail, errors and traceId." }, "icon": "project", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/error-contract.md" },
+    { "id": "display", "group": "experience", "order": 6, "title": { "th": "แสดงผลเหมาะกับบริบท", "en": "Present in Context" }, "summary": { "th": "ผูก Field Error หรือแสดงหน้า Error พร้อม Trace ID", "en": "Map field errors or show a page-level error with Trace ID." }, "icon": "customer", "phase": "phase-1", "status": "accepted", "document": "../02-architecture/frontend-architecture.md" }
+  ],
+  "edges": [
+    { "from": "locale", "to": "failure", "label": { "th": "Request", "en": "Request" }, "type": "required" },
+    { "from": "failure", "to": "code", "label": { "th": "จัดประเภท", "en": "Classify" }, "type": "required" },
+    { "from": "code", "to": "translate", "label": { "th": "หา Message Key", "en": "Resolve key" }, "type": "required" },
+    { "from": "translate", "to": "problem", "label": { "th": "ประกอบ Response", "en": "Build response" }, "type": "required" },
+    { "from": "problem", "to": "display", "label": { "th": "Typed ApiError", "en": "Typed ApiError" }, "type": "required" }
+  ]
+}

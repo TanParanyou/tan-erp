@@ -1,0 +1,64 @@
+{
+  "$schema": "../schema/portal.schema.json",
+  "version": 1,
+  "product": {
+    "name": "tan-erp",
+    "eyebrow": {
+      "th": "PROJECT ERP · DOCUMENTATION FOUNDATION",
+      "en": "PROJECT ERP · DOCUMENTATION FOUNDATION"
+    },
+    "title": {
+      "th": "เห็นภาพธุรกิจก่อนเริ่มสร้างระบบ",
+      "en": "See the business before building the system"
+    },
+    "description": {
+      "th": "แผนผังที่แก้ไขได้จาก JSON เชื่อมกระบวนการประเมินราคา สถาปัตยกรรม Error และสิทธิ์เข้าด้วยกัน",
+      "en": "JSON-driven diagrams connect estimation, architecture, errors and access control."
+    }
+  },
+  "defaultLocale": "th",
+  "locales": ["th", "en"],
+  "flows": [
+    {
+      "id": "business",
+      "file": "business-flow.json",
+      "title": { "th": "ภาพรวมธุรกิจ", "en": "Business Flow" },
+      "shortTitle": { "th": "ธุรกิจ", "en": "Business" },
+      "icon": "project"
+    },
+    {
+      "id": "estimation",
+      "file": "estimation-flow.json",
+      "title": { "th": "กระบวนการประเมินราคา", "en": "Estimation Flow" },
+      "shortTitle": { "th": "ประเมินราคา", "en": "Estimation" },
+      "icon": "estimate"
+    },
+    {
+      "id": "architecture",
+      "file": "architecture-flow.json",
+      "title": { "th": "สถาปัตยกรรมระบบ", "en": "System Architecture" },
+      "shortTitle": { "th": "ระบบ", "en": "Architecture" },
+      "icon": "architecture"
+    },
+    {
+      "id": "errors",
+      "file": "error-flow.json",
+      "title": { "th": "การจัดการ Error หลายภาษา", "en": "Localized Error Flow" },
+      "shortTitle": { "th": "Error", "en": "Errors" },
+      "icon": "approval"
+    },
+    {
+      "id": "rbac",
+      "file": "rbac-flow.json",
+      "title": { "th": "การตรวจสิทธิ์ RBAC", "en": "RBAC Decision Flow" },
+      "shortTitle": { "th": "สิทธิ์", "en": "Access" },
+      "icon": "shield"
+    }
+  ],
+  "phases": [
+    { "id": "phase-0", "label": { "th": "ระยะ 0 · เอกสาร", "en": "Phase 0 · Documentation" } },
+    { "id": "phase-1", "label": { "th": "ระยะ 1 · Foundation", "en": "Phase 1 · Foundation" } },
+    { "id": "phase-2", "label": { "th": "ระยะ 2 · Estimation", "en": "Phase 2 · Estimation" } },
+    { "id": "future", "label": { "th": "อนาคต", "en": "Future" } }
+  ]
+}

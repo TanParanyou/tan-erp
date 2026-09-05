@@ -1,0 +1,29 @@
+{
+  "$schema": "../schema/flow.schema.json",
+  "version": 1,
+  "id": "rbac",
+  "title": { "th": "การตัดสินสิทธิ์แบบ RBAC + Scope", "en": "RBAC and scope decision" },
+  "description": { "th": "การเห็นปุ่มในหน้าจอไม่ใช่หลักฐานสิทธิ์ Backend ต้องตรวจทุกขั้น", "en": "Seeing a UI action is not authorization; the backend enforces every decision." },
+  "document": "../03-contracts/rbac.md",
+  "illustration": { "src": "assets/shield.svg", "alt": { "th": "ภาพโล่ ผู้ใช้ และชั้นตรวจสิทธิ์", "en": "Shield, user and access-check layers illustration" } },
+  "groups": [
+    { "id": "identity", "label": { "th": "ตัวตน", "en": "Identity" } },
+    { "id": "authorization", "label": { "th": "สิทธิ์", "en": "Authorization" } },
+    { "id": "decision", "label": { "th": "ผลลัพธ์", "en": "Decision" } }
+  ],
+  "nodes": [
+    { "id": "identity-check", "group": "identity", "order": 1, "title": { "th": "Identity ถูกต้อง?", "en": "Valid Identity?" }, "summary": { "th": "ตรวจ Firebase ID Token และเวลาหมดอายุ", "en": "Verify Firebase ID token and expiry." }, "icon": "customer", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/authentication.md" },
+    { "id": "membership", "group": "identity", "order": 2, "title": { "th": "Membership ใช้งานได้?", "en": "Active Membership?" }, "summary": { "th": "Map ผู้ใช้กับ Organization/Branch ที่เปิดใช้งาน", "en": "Map the user to an active organization/branch membership." }, "icon": "project", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/rbac.md" },
+    { "id": "permission", "group": "authorization", "order": 3, "title": { "th": "มี Permission?", "en": "Has Permission?" }, "summary": { "th": "ตรวจ resource.action จาก Role ที่มีผล", "en": "Check resource.action across effective roles." }, "icon": "shield", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/rbac.md" },
+    { "id": "scope", "group": "authorization", "order": 4, "title": { "th": "Resource อยู่ใน Scope?", "en": "Resource in Scope?" }, "summary": { "th": "ตรวจ Organization, Branch, Project หรือ Own", "en": "Check organization, branch, project or own scope." }, "icon": "architecture", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/rbac.md" },
+    { "id": "maker-checker", "group": "authorization", "order": 5, "title": { "th": "ผ่าน Maker–Checker?", "en": "Maker–Checker Passes?" }, "summary": { "th": "แยกผู้จัดทำจากผู้อนุมัติเมื่อกฎกำหนด", "en": "Separate maker from checker when required." }, "icon": "approval", "phase": "phase-1", "status": "accepted", "document": "../01-business/approval-matrix.md" },
+    { "id": "allow", "group": "decision", "order": 6, "title": { "th": "อนุญาตและ Audit", "en": "Allow & Audit" }, "summary": { "th": "ดำเนิน Use Case และบันทึก Sensitive Action", "en": "Run the use case and audit sensitive actions." }, "icon": "approval", "phase": "phase-1", "status": "accepted", "document": "../04-data/audit-and-revision.md" }
+  ],
+  "edges": [
+    { "from": "identity-check", "to": "membership", "label": { "th": "ผ่าน · ไม่ผ่านเป็น 401", "en": "Pass · otherwise 401" }, "type": "approval" },
+    { "from": "membership", "to": "permission", "label": { "th": "ผ่าน · ไม่ผ่านเป็น 403", "en": "Pass · otherwise 403" }, "type": "approval" },
+    { "from": "permission", "to": "scope", "label": { "th": "ผ่าน · ไม่ผ่านเป็น 403", "en": "Pass · otherwise 403" }, "type": "approval" },
+    { "from": "scope", "to": "maker-checker", "label": { "th": "ผ่าน · นอก Scope เป็น 404", "en": "Pass · outside scope is 404" }, "type": "approval" },
+    { "from": "maker-checker", "to": "allow", "label": { "th": "ผ่าน · ฝ่าฝืนกฎเป็น 422/403", "en": "Pass · rule failure is 422/403" }, "type": "approval" }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "../schema/flow.schema.json",
+  "version": 1,
+  "id": "estimation",
+  "title": { "th": "กระบวนการประเมินราคา", "en": "Estimation workflow" },
+  "description": { "th": "จากข้อมูลสำรวจถึงใบเสนอราคา โดยทุกการแก้ไขสำคัญมี Revision", "en": "From site evidence to quotation, preserving every material revision." },
+  "document": "../01-business/estimation-flow.md",
+  "illustration": { "src": "assets/estimate.svg", "alt": { "th": "ภาพเครื่องคิดเลข รายการวัสดุ และแบบงาน", "en": "Calculator, material list and plan illustration" } },
+  "groups": [
+    { "id": "input", "label": { "th": "ข้อมูลนำเข้า", "en": "Inputs" } },
+    { "id": "calculation", "label": { "th": "คำนวณ", "en": "Calculation" } },
+    { "id": "governance", "label": { "th": "ควบคุม", "en": "Governance" } }
+  ],
+  "nodes": [
+    { "id": "survey-ready", "group": "input", "order": 1, "title": { "th": "ข้อมูลสำรวจพร้อม", "en": "Survey Ready" }, "summary": { "th": "ขนาด รูปถ่าย ขอบเขต และสมมติฐานครบขั้นต่ำ", "en": "Dimensions, photos, scope and assumptions meet the minimum." }, "icon": "survey", "phase": "phase-2", "status": "draft", "document": "../01-business/estimation-flow.md" },
+    { "id": "scope-work", "group": "input", "order": 2, "title": { "th": "จัดหมวดงาน", "en": "Structure Work" }, "summary": { "th": "แยกพื้นที่ หมวดงาน และ Work Item ให้ตรวจง่าย", "en": "Organize areas, work categories and work items." }, "icon": "project", "phase": "phase-2", "status": "draft", "document": "../01-business/estimation-flow.md" },
+    { "id": "cost", "group": "calculation", "order": 3, "title": { "th": "คำนวณต้นทุน", "en": "Calculate Cost" }, "summary": { "th": "วัสดุ แรงงาน ผู้รับเหมา และค่าใช้จ่าย พร้อมแหล่งราคา", "en": "Materials, labor, subcontracting and overhead with cost sources." }, "icon": "estimate", "phase": "phase-2", "status": "draft", "document": "../04-data/master-data.md" },
+    { "id": "price", "group": "calculation", "order": 4, "title": { "th": "กำหนดราคาขาย", "en": "Set Selling Price" }, "summary": { "th": "ใช้กฎ Markup/Margin ส่วนลด ภาษี และการปัดเศษ", "en": "Apply markup/margin, discount, tax and rounding rules." }, "icon": "estimate", "phase": "phase-2", "status": "draft", "document": "../01-business/estimation-flow.md" },
+    { "id": "review", "group": "governance", "order": 5, "title": { "th": "ตรวจความพร้อม", "en": "Readiness Review" }, "summary": { "th": "จับข้อมูลขาด ราคาหมดอายุ กำไรต่ำ และ Manual Override", "en": "Detect missing data, stale costs, low margins and overrides." }, "icon": "approval", "phase": "phase-2", "status": "draft", "document": "../01-business/approval-matrix.md" },
+    { "id": "approve", "group": "governance", "order": 6, "title": { "th": "อนุมัติ", "en": "Approve" }, "summary": { "th": "เลือกผู้อนุมัติตามวงเงิน ความเสี่ยง และ Maker–Checker", "en": "Route by authority, risk and maker-checker rules." }, "icon": "shield", "phase": "phase-2", "status": "draft", "document": "../01-business/approval-matrix.md" },
+    { "id": "quote", "group": "governance", "order": 7, "title": { "th": "ออกใบเสนอราคา", "en": "Issue Quotation" }, "summary": { "th": "สร้างจาก Revision ที่อนุมัติและล็อกความเชื่อมโยง", "en": "Generate from the approved revision and preserve the link." }, "icon": "approval", "phase": "phase-2", "status": "draft", "document": "../03-contracts/api-conventions.md" }
+  ],
+  "edges": [
+    { "from": "survey-ready", "to": "scope-work", "label": { "th": "เริ่มถอดงาน", "en": "Start takeoff" }, "type": "required" },
+    { "from": "scope-work", "to": "cost", "label": { "th": "รายการครบ", "en": "Items ready" }, "type": "required" },
+    { "from": "cost", "to": "price", "label": { "th": "ต้นทุนพร้อม", "en": "Costed" }, "type": "required" },
+    { "from": "price", "to": "review", "label": { "th": "ส่งตรวจ", "en": "Submit" }, "type": "required" },
+    { "from": "review", "to": "approve", "label": { "th": "ผ่านเงื่อนไข", "en": "Checks pass" }, "type": "approval" },
+    { "from": "approve", "to": "quote", "label": { "th": "อนุมัติแล้ว", "en": "Approved" }, "type": "approval" },
+    { "from": "review", "to": "scope-work", "label": { "th": "ส่งกลับแก้ไข", "en": "Return for revision" }, "type": "return" }
+  ]
+}

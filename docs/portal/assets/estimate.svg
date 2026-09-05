@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">Estimation illustration</title>
+  <desc id="desc">Line drawing of a calculator beside a material list and floor plan.</desc>
+  <g fill="none" stroke="#18323a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="72" y="54" width="210" height="252"/>
+    <rect x="98" y="84" width="158" height="48"/>
+    <path d="M104 170h30v30h-30zM160 170h30v30h-30zM216 170h30v30h-30zM104 222h30v30h-30zM160 222h30v30h-30zM216 222h30v82h-30zM104 274h86v30h-86z"/>
+    <path d="M328 72h236v234H328zM360 112h86v70h-86zM446 112h84v124M360 182v76h170M396 258v48"/>
+    <path d="M342 92h208" stroke-dasharray="8 10"/>
+  </g>
+  <circle cx="231" cy="185" r="9" fill="#159a8c"/>
+  <path d="M330 52h136" stroke="#159a8c" stroke-width="10"/>
+</svg>

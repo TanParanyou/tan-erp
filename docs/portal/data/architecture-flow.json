@@ -1,0 +1,31 @@
+{
+  "$schema": "../schema/flow.schema.json",
+  "version": 1,
+  "id": "architecture",
+  "title": { "th": "สถาปัตยกรรม Project ERP", "en": "Project ERP architecture" },
+  "description": { "th": "Backend เป็นขอบเขตความเชื่อถือหลัก และแยก Business Rule ออกจากเทคโนโลยี", "en": "The backend is the trust boundary and keeps business rules separate from technology." },
+  "document": "../02-architecture/system-context.md",
+  "illustration": { "src": "assets/architecture.svg", "alt": { "th": "ภาพ Browser, API, ชั้นระบบ และฐานข้อมูล", "en": "Browser, API, application layers and database illustration" } },
+  "groups": [
+    { "id": "client", "label": { "th": "ผู้ใช้", "en": "Client" } },
+    { "id": "core", "label": { "th": "ระบบหลัก", "en": "Core" } },
+    { "id": "services", "label": { "th": "บริการภายนอก", "en": "Services" } }
+  ],
+  "nodes": [
+    { "id": "web", "group": "client", "order": 1, "title": { "th": "Next.js Web", "en": "Next.js Web" }, "summary": { "th": "แสดง UI ส่ง Token/ภาษา และช่วย UX เรื่องสิทธิ์", "en": "Renders UI, sends token/locale and improves permission UX." }, "icon": "project", "phase": "phase-1", "status": "accepted", "document": "../02-architecture/frontend-architecture.md" },
+    { "id": "api", "group": "core", "order": 2, "title": { "th": "ASP.NET Core API", "en": "ASP.NET Core API" }, "summary": { "th": "ตรวจ HTTP, Identity, RBAC, Scope และ Problem Details", "en": "Enforces HTTP contracts, identity, RBAC, scope and Problem Details." }, "icon": "shield", "phase": "phase-1", "status": "accepted", "document": "../02-architecture/backend-architecture.md" },
+    { "id": "application", "group": "core", "order": 3, "title": { "th": "Application Use Cases", "en": "Application Use Cases" }, "summary": { "th": "Command, Query, Validation และ Interface ของระบบภายนอก", "en": "Commands, queries, validation and external interfaces." }, "icon": "architecture", "phase": "phase-1", "status": "accepted", "document": "../02-architecture/backend-architecture.md" },
+    { "id": "domain", "group": "core", "order": 4, "title": { "th": "Domain Rules", "en": "Domain Rules" }, "summary": { "th": "Aggregate, Value Object และกฎธุรกิจที่ไม่ขึ้นกับ Framework", "en": "Framework-independent aggregates, value objects and business rules." }, "icon": "estimate", "phase": "phase-1", "status": "accepted", "document": "../02-architecture/backend-architecture.md" },
+    { "id": "infrastructure", "group": "core", "order": 5, "title": { "th": "Infrastructure", "en": "Infrastructure" }, "summary": { "th": "EF Core, Dapper, Files, Firebase และ Integration", "en": "EF Core, Dapper, files, Firebase and integrations." }, "icon": "architecture", "phase": "phase-1", "status": "accepted", "document": "../04-data/raw-sql-policy.md" },
+    { "id": "postgres", "group": "services", "order": 6, "title": { "th": "PostgreSQL", "en": "PostgreSQL" }, "summary": { "th": "ข้อมูลธุรกิจ Transaction, RBAC และ Audit", "en": "Business transactions, RBAC and audit data." }, "icon": "project", "phase": "phase-1", "status": "accepted", "document": "../04-data/database-standards.md" },
+    { "id": "firebase", "group": "services", "order": 7, "title": { "th": "Firebase Identity", "en": "Firebase Identity" }, "summary": { "th": "ยืนยันตัวตนเท่านั้น ไม่เป็นเจ้าของ Business Permission", "en": "Authenticates identity only; it does not own business permissions." }, "icon": "customer", "phase": "phase-1", "status": "accepted", "document": "../03-contracts/authentication.md" }
+  ],
+  "edges": [
+    { "from": "web", "to": "api", "label": { "th": "HTTPS + Token + Locale", "en": "HTTPS + token + locale" }, "type": "required" },
+    { "from": "api", "to": "application", "label": { "th": "Typed request", "en": "Typed request" }, "type": "required" },
+    { "from": "application", "to": "domain", "label": { "th": "ใช้กฎธุรกิจ", "en": "Apply rules" }, "type": "required" },
+    { "from": "application", "to": "infrastructure", "label": { "th": "ผ่าน Interface", "en": "Through interfaces" }, "type": "required" },
+    { "from": "infrastructure", "to": "postgres", "label": { "th": "EF/Dapper", "en": "EF/Dapper" }, "type": "required" },
+    { "from": "api", "to": "firebase", "label": { "th": "ตรวจ Identity", "en": "Verify identity" }, "type": "approval" }
+  ]
+}

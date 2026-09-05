@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f3f0e8">
+    <meta name="description" content="tan-erp JSON-driven documentation and flow portal">
+    <title>tan-erp · Documentation Portal</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content" data-i18n="skipToContent">ข้ามไปเนื้อหาหลัก</a>
+
+    <header class="site-header">
+      <div class="shell header-grid">
+        <a class="brand" href="#business" aria-label="tan-erp documentation home">
+          <span class="brand-mark" aria-hidden="true">T</span>
+          <span>
+            <strong>tan-erp</strong>
+            <small>Documentation Portal</small>
+          </span>
+        </a>
+        <div class="header-actions">
+          <span class="phase-badge" data-i18n="docsOnly">DOCUMENTS ONLY · NO ERP CODE</span>
+          <div class="language-switch" role="group" aria-label="เลือกภาษา" data-i18n-aria="chooseLanguage">
+            <button type="button" data-locale="th" aria-pressed="true">ไทย</button>
+            <button type="button" data-locale="en" aria-pressed="false">EN</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="shell hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow" id="product-eyebrow">PROJECT ERP · DOCUMENTATION FOUNDATION</p>
+            <h1 id="hero-title">เห็นภาพธุรกิจก่อนเริ่มสร้างระบบ</h1>
+            <p class="hero-description" id="product-description">กำลังโหลดคำอธิบาย…</p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#flow-workspace" data-i18n="viewFlows">ดูแผนผัง</a>
+              <a class="button button-secondary" href="../README.md" data-i18n="readHandbook">เปิดคู่มือทั้งหมด</a>
+            </div>
+          </div>
+          <figure class="hero-figure">
+            <img id="hero-illustration" src="assets/project.svg" alt="ภาพลายเส้นแสดงวงจรโครงการ">
+            <figcaption data-i18n="illustrationCaption">ภาพประกอบเปลี่ยนตาม Flow ที่เลือก</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="workspace" id="flow-workspace" aria-labelledby="workspace-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow" data-i18n="interactiveMap">INTERACTIVE MAP</p>
+              <h2 id="workspace-title" data-i18n="chooseFlow">เลือกเรื่องที่ต้องการทำความเข้าใจ</h2>
+            </div>
+            <p class="section-note" data-i18n="jsonNote">ข้อมูลทุกกล่องและเส้นเชื่อมมาจาก JSON</p>
+          </div>
+
+          <nav class="flow-tabs" id="flow-tabs" role="tablist" aria-label="แผนผังเอกสาร" data-i18n-aria="diagramNav"></nav>
+
+          <div class="controls" aria-label="ตัวกรองแผนผัง" data-i18n-aria="flowFilters">
+            <label class="search-field">
+              <span data-i18n="searchLabel">ค้นหาใน Flow</span>
+              <input id="flow-search" type="search" autocomplete="off" placeholder="เช่น อนุมัติ, RBAC, Estimate">
+            </label>
+            <label class="phase-field">
+              <span data-i18n="phaseLabel">ระยะพัฒนา</span>
+              <select id="phase-filter">
+                <option value="all" data-i18n="allPhases">ทุกระยะ</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="loading-state" id="loading-state" role="status">กำลังโหลดแผนผัง…</div>
+          <div class="error-state" id="error-state" hidden role="alert"></div>
+
+          <article class="flow-panel" id="flow-panel" role="tabpanel" hidden aria-live="polite">
+            <header class="flow-header">
+              <div>
+                <p class="flow-index" id="flow-index">FLOW 01</p>
+                <h2 id="flow-title"></h2>
+                <p id="flow-description"></p>
+              </div>
+              <dl class="flow-stats" aria-label="สรุปแผนผัง" data-i18n-aria="flowSummary">
+                <div><dt data-i18n="steps">ขั้นตอน</dt><dd id="node-count">0</dd></div>
+                <div><dt data-i18n="connections">จุดเชื่อม</dt><dd id="edge-count">0</dd></div>
+                <div><dt data-i18n="schemaVersion">Schema</dt><dd id="schema-version">v1</dd></div>
+              </dl>
+            </header>
+
+            <figure class="diagram" aria-labelledby="flow-title" aria-describedby="flow-description">
+              <div class="group-legend" id="group-legend"></div>
+              <ol class="flow-grid" id="flow-grid"></ol>
+              <figcaption data-i18n="diagramHelp">เลือกกล่องเพื่ออ่านคำอธิบายและเปิดเอกสารที่เกี่ยวข้อง</figcaption>
+            </figure>
+
+            <div class="empty-state" id="empty-state" hidden>
+              <strong data-i18n="noResults">ไม่พบขั้นตอนที่ตรงกับตัวกรอง</strong>
+              <button class="text-button" id="clear-filters" type="button" data-i18n="clearFilters">ล้างตัวกรอง</button>
+            </div>
+
+            <details class="text-alternative">
+              <summary data-i18n="textAlternative">ดู Flow แบบข้อความและตาราง</summary>
+              <div class="text-alternative-grid">
+                <section aria-labelledby="sequence-title">
+                  <h3 id="sequence-title" data-i18n="sequence">ลำดับขั้นตอน</h3>
+                  <ol id="sequence-list"></ol>
+                </section>
+                <section aria-labelledby="connections-title">
+                  <h3 id="connections-title" data-i18n="connectionRules">เงื่อนไขการเชื่อม</h3>
+                  <div class="table-scroll">
+                    <table>
+                      <thead><tr><th data-i18n="from">จาก</th><th data-i18n="condition">เงื่อนไข</th><th data-i18n="to">ไปยัง</th></tr></thead>
+                      <tbody id="connection-table"></tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+            </details>
+
+            <footer class="flow-footer">
+              <p data-i18n="sourceOfTruth">รายละเอียดฉบับเต็มอยู่ใน Markdown ซึ่งเป็นแหล่งอ้างอิงหลัก</p>
+              <a class="document-link" id="flow-document" href="../README.md" data-i18n="openDocument">เปิดเอกสารหลัก →</a>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <section class="principles" aria-labelledby="principles-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">PRODUCTION DIRECTION</p>
+              <h2 id="principles-title" data-i18n="principlesTitle">รากฐานที่ยืดหยุ่น แต่ไม่ปล่อยให้คลุมเครือ</h2>
+            </div>
+          </div>
+          <div class="principle-grid">
+            <article><span>01</span><h3>Project ERP</h3><p data-i18n="principleErp">เริ่มจากการประเมินราคา แล้วต่อยอดเป็นโครงการ จัดซื้อ คลัง ผลิต และ MRP</p></article>
+            <article><span>02</span><h3>Typed boundaries</h3><p data-i18n="principleTyped">API, Error และ Query มีสัญญาชัดเจน ลดการเดาและลด Bug</p></article>
+            <article><span>03</span><h3>Secure by scope</h3><p data-i18n="principleSecure">Backend ตรวจ Role, Permission และขอบเขต Resource ทุกครั้ง</p></article>
+            <article><span>04</span><h3>Traceable change</h3><p data-i18n="principleTrace">Revision, Approval และ Audit ทำให้ตามเหตุผลย้อนหลังได้</p></article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <p><strong>tan-erp</strong> · <span data-i18n="footerText">Documentation foundation for a production-ready Project ERP.</span></p>
+        <a href="../README.md" data-i18n="documentIndex">ดัชนีเอกสาร</a>
+      </div>
+    </footer>
+
+    <dialog id="node-dialog" aria-labelledby="dialog-title">
+      <div class="dialog-header">
+        <span class="node-icon" id="dialog-icon" aria-hidden="true"></span>
+        <button class="icon-button" id="close-dialog" type="button" aria-label="ปิด">×</button>
+      </div>
+      <p class="node-meta" id="dialog-meta"></p>
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-summary"></p>
+      <ul id="dialog-details"></ul>
+      <a class="button button-primary" id="dialog-document" href="../README.md" data-i18n="openRelatedDocument">เปิดเอกสารที่เกี่ยวข้อง</a>
+    </dialog>
+
+    <noscript>
+      <div class="noscript">Portal ต้องใช้ JavaScript เพื่ออ่าน JSON กรุณาเปิด JavaScript หรืออ่าน <a href="../README.md">Markdown Documentation</a></div>
+    </noscript>
+  </body>
+</html>
