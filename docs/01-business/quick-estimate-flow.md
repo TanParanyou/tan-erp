@@ -34,6 +34,8 @@ Customer/Opportunity → Work Type → Pricing Template → Measurement
 
 สูตร Measurement, Factor, Risk Range, Template Lifecycle และกฎการปัดราคาอยู่ที่ [Quick Estimate Pricing Rules](quick-estimate-pricing-rules.md)
 
+รายการ Field และตัวอย่างของ Built-in, ผ้าม่าน และ Wallpaper อยู่ที่ [Quick Estimate Template Catalog](quick-estimate-template-catalog.md)
+
 ## Lifecycle (วงจรสถานะ)
 
 ```text

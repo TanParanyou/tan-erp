@@ -53,6 +53,8 @@ Displayed Upper Bound = Round Up(Raw Display Upper Bound, Rounding Step)
 
 Template แสดงเฉพาะ Field ที่ต้องใช้ หาก Wallpaper คิดเป็นม้วน ต้องปัดจำนวนม้วนขึ้นหลังคำนวณ Coverage/Waste แล้วจึงคำนวณราคา
 
+Field, Template Code, ตัวอย่างคำนวณ และ Test Case ที่เป็น Baseline อยู่ที่ [Quick Estimate Template Catalog](quick-estimate-template-catalog.md)
+
 ## Material Grade และ Complexity
 
 - Material Grade แยกตาม Template เช่น Standard/Premium และเชื่อมกับ Factor หรือ Rate Set ที่มี Version

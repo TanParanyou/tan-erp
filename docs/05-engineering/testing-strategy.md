@@ -27,6 +27,8 @@
 
 Template Version ต้องผ่าน Test Matrix ก่อน Publish:
 
+Business Fixture และ Expected Result กลางอยู่ที่ [Quick Estimate Template Catalog](../01-business/quick-estimate-template-catalog.md) Test อัตโนมัติต้องใช้ค่าเดียวกันเพื่อป้องกันสูตรในเอกสารกับระบบไม่ตรงกัน
+
 | กลุ่มทดสอบ | กรณีขั้นต่ำ |
 | --- | --- |
 | Measurement | Built-in, ผ้าม่าน, Wallpaper, หน่วยถูก/ผิด, ค่าต่ำสุด/สูงสุด และค่าศูนย์/ติดลบ |

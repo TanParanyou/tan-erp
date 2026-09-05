@@ -33,7 +33,7 @@
       "icon": "project",
       "phase": "phase-2",
       "status": "draft",
-      "document": "../01-business/quick-estimate-pricing-rules.md",
+      "document": "../01-business/quick-estimate-template-catalog.md",
       "details": [
         { "th": "Template ใหม่ต้องผ่าน Draft และ Calibration ก่อนเป็น Active", "en": "A new template moves through Draft and Calibration before becoming Active." },
         { "th": "Published Version แก้ย้อนหลังไม่ได้", "en": "A published version cannot be edited retroactively." }
@@ -48,7 +48,7 @@
       "icon": "survey",
       "phase": "phase-2",
       "status": "draft",
-      "document": "../01-business/quick-estimate-pricing-rules.md",
+      "document": "../01-business/quick-estimate-template-catalog.md",
       "details": [
         { "th": "Built-in, ผ้าม่าน และ Wallpaper ใช้ Field/Unit ตาม Template", "en": "Built-in, curtain and wallpaper templates define their own fields and units." },
         { "th": "Unit ต้องตรงกับ Measurement Rule และ Reference Rate", "en": "The unit must match the measurement rule and reference rate." }
