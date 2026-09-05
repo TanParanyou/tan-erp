@@ -3,7 +3,7 @@
 ## 1. สถานะเอกสาร
 
 - วันที่ออกแบบ: 6 กันยายน 2026
-- สถานะ: Approved concept; pending written-spec review
+- สถานะ: Accepted
 - ขอบเขต: ราคาประเมินเบื้องต้น ณ หน้างาน และการส่งต่อเป็น Official Estimate
 - ระบบ: `tan-erp` Project ERP
 
