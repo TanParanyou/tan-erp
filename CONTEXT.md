@@ -34,6 +34,14 @@ _Avoid_: Estimate, Inspection
 แบบคำนวณต้นทุน ค่าแรง ค่าใช้จ่าย และกำไรที่ใช้ภายในก่อนออกเอกสารขาย
 _Avoid_: Quotation, Invoice, Budget
 
+**Quick Estimate (ราคาประเมินเบื้องต้น)**:
+ช่วงราคาที่คำนวณอย่างรวดเร็วจากข้อมูลหน้างาน Template และสมมติฐาน เพื่อช่วยสนทนากับลูกค้าโดยยังไม่ใช่ราคาที่อนุมัติหรือผูกพันทางการค้า
+_Avoid_: Estimate, Quotation, Approved Price
+
+**Official Estimate (ประมาณการทางการ)**:
+Estimate ที่มีรายการต้นทุนและกฎคำนวณครบตามเกณฑ์ พร้อมเข้าสู่การตรวจทานและอนุมัติก่อนออก Quotation
+_Avoid_: Quick Estimate, Quotation
+
 **Estimate Revision (ฉบับแก้ไขประมาณการ)**:
 สำเนาที่มีหมายเลขฉบับและคงประวัติการเปลี่ยนแปลงของ Estimate
 _Avoid_: Overwrite, Draft Copy
