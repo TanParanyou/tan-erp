@@ -284,17 +284,80 @@ Item Master เป็นเจ้าของรหัส ชื่อ ประ
 
 ## 12. Error Handling
 
-- API ใช้ RFC Problem Details เป็น Response มาตรฐาน
+- API ใช้ RFC 9457 Problem Details และ `application/problem+json` เป็น Response มาตรฐาน
 - Validation Error ตอบ HTTP 400 พร้อม Field Error
 - ไม่พบข้อมูลตอบ HTTP 404
 - Revision หรือ Concurrency Conflict ตอบ HTTP 409
+- Business Rule ที่ประมวลผลไม่ได้ตอบ HTTP 422
 - Permission ไม่ผ่านตอบ HTTP 403
-- Error Response ต้องมี Stable Error Code และ Trace ID
+- Error Response ต้องมี Stable Error Code, Localized Message และ Trace ID
 - ห้ามส่ง Stack Trace, SQL, Connection String หรือ Database Detail ให้ Client
 
 Raw SQL exception ต้องถูกแปลงที่ Infrastructure/Application boundary และ Log ด้วย Trace ID โดยไม่ Log Parameter ที่เป็นข้อมูลลับ
 
-## 13. Transaction และ Connection
+รูปแบบกลาง:
+
+```json
+{
+  "type": "https://tan-erp/errors/item-code-already-exists",
+  "title": "ไม่สามารถบันทึกสินค้าได้",
+  "status": 409,
+  "code": "ITEM_CODE_ALREADY_EXISTS",
+  "detail": "รหัสสินค้า MAT-001 ถูกใช้งานแล้ว",
+  "traceId": "00-a12b...",
+  "errors": {
+    "code": ["รหัสสินค้านี้ถูกใช้งานแล้ว"]
+  }
+}
+```
+
+Frontend ต้องตัดสินใจจาก HTTP Status และ `code` ห้าม Parse หรือเปรียบเทียบ `title` และ `detail`
+
+### Error Localization
+
+- Frontend ส่งภาษาที่ผู้ใช้เลือกผ่าน `Accept-Language`
+- Backend ใช้ `.resx` และ `IStringLocalizer` สำหรับข้อความ Error ที่ผู้ใช้เห็น
+- รองรับ `th` และ `en` ใน Release แรก โดยมีภาษาไทยเป็นค่าเริ่มต้น
+- `code`, `type`, Permission Key และ Field Name ห้ามเปลี่ยนตามภาษา
+- ถ้าไม่มีคำแปล ให้ Fallback เป็นภาษาไทย
+- Frontend เป็นเจ้าของข้อความ UI-only เช่น Browser Offline
+- Backend เป็นเจ้าของข้อความ Validation, Business Rule, Authorization และ Server Error
+- ไม่เก็บ System Error Translation ใน PostgreSQL หรือ JSONB
+- ไม่รองรับ Organization-specific Error Override ใน Release แรก
+- Error ที่ไม่คาดคิดตอบข้อความกลางที่ปลอดภัยและ Trace ID เท่านั้น
+
+รูปแบบนี้ทำให้ Error ยังถูกสร้างได้เมื่อ PostgreSQL ใช้งานไม่ได้ ลดการ Query/Cache และทำให้ตรวจคำแปลที่ขาดจาก Source Code และ Automated Test ได้
+
+## 13. Authentication และ RBAC
+
+Firebase Authentication ยืนยันว่า User เป็นใครเท่านั้น ส่วนสิทธิ์การใช้งานจริงเป็นข้อมูลของ `tan-erp` ใน PostgreSQL
+
+```text
+Firebase ID Token
+    -> Backend validates identity
+    -> Resolve Internal User and Organization Membership
+    -> Evaluate Role, Permission and Resource Scope
+    -> Allow or deny operation
+```
+
+ใช้ **RBAC with Scope**:
+
+- Role รวม Permission หลายรายการ เช่น Estimator, Approver และ Administrator
+- Permission ใช้ชื่อคงที่แบบ `resource.action` เช่น `items.read`, `estimates.create`, `estimates.approve` และ `costs.view`
+- Scope จำกัดขอบเขต Organization, Branch, Project หรือ Own Record
+- ห้ามตรวจสิทธิ์จากชื่อ Role ใน Controller หรือ Business Logic โดยตรง
+- Backend Authorization Policy เป็น Authority ตัวจริง
+- Frontend รับ Effective Permissions เพื่อซ่อนหรือ Disable Control สำหรับ UX เท่านั้น
+- ทุก Query ทั้ง EF Core และ Raw SQL ต้องบังคับ Organization Scope
+- การเข้าถึง Resource ต่าง Organization ตอบ HTTP 404 เพื่อไม่เปิดเผยว่าข้อมูลมีอยู่
+- User ที่ยังไม่ Authentication ตอบ 401 พร้อม `AUTHENTICATION_REQUIRED`
+- User ที่ Authentication แล้วแต่ไม่มี Permission ตอบ 403 พร้อม `PERMISSION_DENIED`
+- การเปลี่ยน Role, Permission, Membership และ Approval Authority ต้องสร้าง Audit Trail
+- Workflow สำคัญรองรับ Maker–Checker เช่น ผู้สร้าง Estimate ไม่อนุมัติรายการของตนเองเมื่อ Policy บังคับ
+
+Authorization Error ใช้ Error Localization เดียวกับ Error อื่น แต่ `code` และ Permission Key ต้องคงที่ทุกภาษา
+
+## 14. Transaction และ Connection
 
 - EF Core เป็นเจ้าของ Write Transaction หลัก
 - เมื่อ Dapper ต้องทำงานใน Transaction เดียวกับ EF Core ให้ใช้ `DbConnection` และ `DbTransaction` จาก `AppDbContext`
@@ -302,7 +365,7 @@ Raw SQL exception ต้องถูกแปลงที่ Infrastructure/Appl
 - Query ปกติใช้ Connection Factory ที่ Infrastructure เป็นเจ้าของ
 - Application และ Domain ห้ามรู้จัก `NpgsqlConnection`
 
-## 14. Testing Strategy
+## 15. Testing Strategy
 
 ### Unit Tests
 
@@ -315,6 +378,8 @@ Raw SQL exception ต้องถูกแปลงที่ Infrastructure/Appl
 - EF Core Mapping และ Migration
 - Dapper/Raw SQL Mapping
 - Organization Isolation
+- RBAC Policy และ Resource Scope
+- Error Contract และภาษาไทย/อังกฤษ
 - Transaction ร่วมระหว่าง EF Core และ Dapper
 - Pagination และ Sorting
 - Concurrency และ Outbox
@@ -330,8 +395,9 @@ Raw SQL exception ต้องถูกแปลงที่ Infrastructure/Appl
 - Controller ไม่เรียก EF Core หรือ Dapper โดยตรง
 - Raw SQL อยู่ใน Infrastructure เท่านั้น
 - Infrastructure-specific type ไม่รั่วผ่าน Application Interface
+- Controller ใช้ Authorization Policy และไม่ตรวจชื่อ Role แบบ Hard-coded
 
-## 15. Dependency Direction
+## 16. Dependency Direction
 
 ```text
 TanErp.Domain
@@ -349,7 +415,7 @@ TanErp.Api
     -> TanErp.Infrastructure only at Composition Root
 ```
 
-## 16. แนวทางการขยาย Module
+## 17. แนวทางการขยาย Module
 
 เริ่มด้วย 4 Projects หลักและแบ่ง Module ด้วย Folder/Namespace ก่อน จะแยก Module เป็น Assembly เพิ่มเมื่อมีหลักฐานอย่างน้อยหนึ่งข้อ:
 
@@ -361,7 +427,7 @@ TanErp.Api
 
 การมีชื่อ Module อย่างเดียวไม่ใช่เหตุผลให้สร้าง Project ใหม่
 
-## 17. Non-goals ระยะแรก
+## 18. Non-goals ระยะแรก
 
 - ไม่สร้าง Microservices
 - ไม่ใช้ Event Sourcing
@@ -371,9 +437,14 @@ TanErp.Api
 - ไม่สร้าง Stored Procedure เป็น Business Logic หลัก
 - ไม่แยก Database ต่อ Module
 - ไม่เพิ่ม Message Broker ก่อนมี Use Case ที่ต้องใช้
+- ไม่เก็บ System Error Translation ใน JSONB
+- ไม่สร้างหน้าจอให้แก้ข้อความ System Error
+- ไม่ใช้ Frontend Permission แทน Backend Authorization
 
-## 18. ข้อสรุป
+## 19. ข้อสรุป
 
 Backend ของ `tan-erp` ใช้ Clean Architecture 4 Projects และ Feature Folders เพื่อให้ทีมเข้าใจง่าย ใช้ EF Core เป็นหลักสำหรับ Write และ Query ทั่วไป และใช้ Dapper/Raw SQL สำหรับ Read Model, Report หรือ Query ที่ต้องควบคุม SQL โดยตรง
 
 การรองรับ Raw SQL เป็นความสามารถที่ออกแบบไว้ตั้งแต่ต้น แต่ต้องเข้าผ่าน Typed Query Interface, อยู่ใน Infrastructure, บังคับ Parameter และ Organization Scope และมี Integration Test กับ PostgreSQL จริงทุกครั้ง
+
+Error ใช้ Problem Details พร้อม Stable Code, ข้อความจาก `.resx` ตาม `Accept-Language` และ Trace ID โดยไม่พึ่ง JSONB ส่วน RBAC ถูกบังคับที่ Backend ด้วย Role, Permission และ Resource Scope ที่เก็บใน PostgreSQL
