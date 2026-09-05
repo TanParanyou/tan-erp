@@ -1,0 +1,140 @@
+{
+  "$schema": "../schema/flow.schema.json",
+  "version": 1,
+  "id": "quick-estimate",
+  "title": { "th": "ประเมินราคาด่วนหน้างาน", "en": "On-site Quick Estimate" },
+  "description": { "th": "เก็บข้อมูลขั้นต่ำ คำนวณช่วงราคา แชร์อย่างปลอดภัย และส่งต่อเป็นประมาณการทางการโดยไม่คีย์ซ้ำ", "en": "Capture minimum inputs, calculate a price range, share safely and convert without re-entry." },
+  "document": "../01-business/quick-estimate-flow.md",
+  "illustration": { "src": "assets/estimate.svg", "alt": { "th": "ภาพเครื่องคิดเลข รายการวัสดุ และแบบงานสำหรับประเมินราคาหน้างาน", "en": "Calculator, material list and plan for an on-site estimate" } },
+  "groups": [
+    { "id": "capture", "label": { "th": "เก็บข้อมูล", "en": "Capture" } },
+    { "id": "calculate", "label": { "th": "คำนวณ", "en": "Calculate" } },
+    { "id": "governance", "label": { "th": "ตรวจและแชร์", "en": "Govern & Share" } },
+    { "id": "conversion", "label": { "th": "ต่อยอด", "en": "Convert" } }
+  ],
+  "nodes": [
+    {
+      "id": "customer-context",
+      "group": "capture",
+      "order": 1,
+      "title": { "th": "เลือกลูกค้าและโอกาสการขาย", "en": "Select Customer and Opportunity" },
+      "summary": { "th": "ผูกงานหน้างานกับลูกค้า ผู้ติดต่อ และ Opportunity ที่อยู่ใน Scope", "en": "Link the site visit to an in-scope customer, contact and opportunity." },
+      "icon": "customer",
+      "phase": "phase-2",
+      "status": "draft",
+      "document": "../01-business/quick-estimate-flow.md"
+    },
+    {
+      "id": "work-template",
+      "group": "capture",
+      "order": 2,
+      "title": { "th": "เลือกประเภทงานและ Template", "en": "Choose Work Type and Template" },
+      "summary": { "th": "เลือก Property Type, Work Type และ Pricing Template Version ที่ยังมีผล", "en": "Choose the property type, work type and an effective pricing template version." },
+      "icon": "project",
+      "phase": "phase-2",
+      "status": "draft",
+      "document": "../01-business/quick-estimate-flow.md"
+    },
+    {
+      "id": "measurement",
+      "group": "capture",
+      "order": 3,
+      "title": { "th": "กรอกขนาดและตัวเลือก", "en": "Enter Measurements and Options" },
+      "summary": { "th": "กรอก Area/Room, Measurement หรือ Quantity และ Material Grade ขั้นต่ำ", "en": "Enter the minimum area, room, measurement or quantity and material grade." },
+      "icon": "survey",
+      "phase": "phase-2",
+      "status": "draft",
+      "document": "../01-business/quick-estimate-flow.md"
+    },
+    {
+      "id": "price-range",
+      "group": "calculate",
+      "order": 4,
+      "title": { "th": "คำนวณช่วงราคา", "en": "Calculate Price Range" },
+      "summary": { "th": "ใช้ Template Snapshot คำนวณ Lower/Upper Bound พร้อม Currency และ Validity", "en": "Use the template snapshot to calculate lower and upper bounds with currency and validity." },
+      "icon": "estimate",
+      "phase": "phase-2",
+      "status": "draft",
+      "document": "../01-business/quick-estimate-flow.md"
+    },
+    {
+      "id": "evidence",
+      "group": "calculate",
+      "order": 5,
+      "title": { "th": "ยืนยันหลักฐานและสมมติฐาน", "en": "Confirm Evidence and Assumptions" },
+      "summary": { "th": "แนบรูป หมายเหตุ Assumptions และ Exclusions ที่ลูกค้าต้องเข้าใจ", "en": "Attach photos, notes, assumptions and exclusions the customer must understand." },
+      "icon": "survey",
+      "phase": "phase-2",
+      "status": "draft",
+      "document": "../01-business/quick-estimate-flow.md"
+    },
+    {
+      "id": "share-policy",
+      "group": "governance",
+      "order": 6,
+      "title": { "th": "ตรวจเงื่อนไขการแชร์", "en": "Evaluate Share Policy" },
+      "summary": { "th": "Backend ตรวจข้อมูล Template, Permission, Scope, Threshold และ Maker–Checker", "en": "The backend checks inputs, template, permission, scope, thresholds and maker-checker." },
+      "icon": "shield",
+      "phase": "phase-2",
+      "status": "accepted",
+      "document": "../01-business/approval-matrix.md"
+    },
+    {
+      "id": "internal-review",
+      "group": "governance",
+      "order": 7,
+      "title": { "th": "ตรวจภายในเมื่อมีความเสี่ยง", "en": "Run Internal Review When Required" },
+      "summary": { "th": "Reviewer ตรวจช่วงราคา หลักฐาน และ Override โดยแยกผู้จัดทำ–ผู้ตรวจ", "en": "A separate reviewer checks the range, evidence and overrides." },
+      "icon": "approval",
+      "phase": "phase-2",
+      "status": "draft",
+      "document": "../01-business/approval-matrix.md"
+    },
+    {
+      "id": "preliminary-summary",
+      "group": "governance",
+      "order": 8,
+      "title": { "th": "แสดงหรือส่งสรุปเบื้องต้น", "en": "Present or Share Preliminary Summary" },
+      "summary": { "th": "แสดงเฉพาะช่วงราคา Scope, Assumptions, Exclusions, Validity และคำเตือนว่าไม่ใช่ Quotation", "en": "Show only the range, scope, assumptions, exclusions, validity and a clear non-quotation notice." },
+      "icon": "estimate",
+      "phase": "phase-2",
+      "status": "accepted",
+      "document": "../01-business/quick-estimate-flow.md"
+    },
+    {
+      "id": "customer-interest",
+      "group": "conversion",
+      "order": 9,
+      "title": { "th": "บันทึกความสนใจและติดตาม", "en": "Record Interest and Follow Up" },
+      "summary": { "th": "เลือกไม่สนใจ นัดติดตาม สนใจทำต่อ หรือขอปรับข้อมูล โดยเก็บผู้รับผิดชอบและเหตุผล", "en": "Record no interest, follow-up, intent to proceed or a revision request with owner and reason." },
+      "icon": "customer",
+      "phase": "phase-2",
+      "status": "draft",
+      "document": "../01-business/quick-estimate-flow.md"
+    },
+    {
+      "id": "official-conversion",
+      "group": "conversion",
+      "order": 10,
+      "title": { "th": "สร้างประมาณการทางการฉบับร่าง", "en": "Create Official Estimate Draft" },
+      "summary": { "th": "Convert Source Version แบบ Snapshot และ Idempotent แล้วคำนวณราคาทางการใหม่", "en": "Convert the source version idempotently as a snapshot, then recalculate the official price." },
+      "icon": "estimate",
+      "phase": "phase-2",
+      "status": "accepted",
+      "document": "../01-business/estimation-flow.md"
+    }
+  ],
+  "edges": [
+    { "from": "customer-context", "to": "work-template", "label": { "th": "มีบริบทงาน", "en": "Context ready" }, "type": "required" },
+    { "from": "work-template", "to": "measurement", "label": { "th": "Template พร้อม", "en": "Template selected" }, "type": "required" },
+    { "from": "measurement", "to": "price-range", "label": { "th": "ข้อมูลขั้นต่ำครบ", "en": "Minimum inputs complete" }, "type": "required" },
+    { "from": "price-range", "to": "evidence", "label": { "th": "คำนวณสำเร็จ", "en": "Range calculated" }, "type": "required" },
+    { "from": "evidence", "to": "share-policy", "label": { "th": "พร้อมตรวจการแชร์", "en": "Ready for share checks" }, "type": "required" },
+    { "from": "share-policy", "to": "preliminary-summary", "label": { "th": "ผ่านนโยบาย", "en": "Policy passed" }, "type": "optional" },
+    { "from": "share-policy", "to": "internal-review", "label": { "th": "ต้องตรวจภายใน", "en": "Review required" }, "type": "approval" },
+    { "from": "internal-review", "to": "preliminary-summary", "label": { "th": "อนุมัติให้แชร์", "en": "Approved to share" }, "type": "approval" },
+    { "from": "preliminary-summary", "to": "customer-interest", "label": { "th": "แชร์แล้ว", "en": "Shared" }, "type": "required" },
+    { "from": "customer-interest", "to": "official-conversion", "label": { "th": "สนใจทำต่อ", "en": "Interested" }, "type": "required" },
+    { "from": "customer-interest", "to": "measurement", "label": { "th": "ขอปรับข้อมูล", "en": "Revision requested" }, "type": "return" }
+  ]
+}

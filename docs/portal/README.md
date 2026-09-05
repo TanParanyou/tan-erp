@@ -2,6 +2,8 @@
 
 Portal นี้เป็นหน้า HTML สำหรับอ่าน Flow จาก JSON ไม่มี Framework, Package Dependency, Analytics หรือการเชื่อม Internet และไม่ใช่ Frontend ของ ERP
 
+Flow ที่มีใน Catalog ได้แก่ ภาพรวมธุรกิจ, Quick Estimate (ราคาประเมินเบื้องต้นหน้างาน), Official Estimation, Architecture, Error และ RBAC โดย Markdown เป็นแหล่งอ้างอิงหลัก ส่วน JSON ใช้จัดแสดงภาพและลำดับอ่าน
+
 ## วิธีเปิด
 
 Browser ส่วนใหญ่ไม่อนุญาตให้หน้า `file://` โหลด JSON ด้วย `fetch` จึงต้องเปิดผ่าน Local HTTP Server
@@ -16,7 +18,7 @@ python3 -m http.server 8080 --bind 127.0.0.1 --directory docs/portal
 
 ## วิธีแก้ Flow เดิม
 
-1. เปิดไฟล์ใน `data/` เช่น `estimation-flow.json`
+1. เปิดไฟล์ใน `data/` เช่น `quick-estimate-flow.json` หรือ `estimation-flow.json`
 2. เพิ่มหรือแก้ `nodes` และ `edges`
 3. ให้ `node.id` ไม่ซ้ำ และ `edge.from/to` ตรงกับ ID ที่มีอยู่
 4. ใส่ข้อความทั้ง `th` และ `en`
@@ -37,6 +39,8 @@ python3 -m http.server 8080 --bind 127.0.0.1 --directory docs/portal
   "document": "../04-data/master-data.md"
 }
 ```
+
+ตัวอย่าง Quick Estimate: Node `share-policy` เชื่อมตรงไป `preliminary-summary` เมื่อผ่าน Policy หรือแยกไป `internal-review` เมื่อเข้าเกณฑ์ตรวจภายใน ข้อความบน Edge ต้องอธิบายเงื่อนไขได้โดยไม่อาศัยสี
 
 ## วิธีเพิ่ม Flow ใหม่
 
