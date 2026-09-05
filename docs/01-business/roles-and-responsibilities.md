@@ -7,6 +7,7 @@
 | Sales | ดูแล Customer, Opportunity และ Quotation | อนุมัติส่วนลดเกินเกณฑ์ของตนเอง |
 | Designer | จัด Scope และข้อมูลออกแบบ | เปลี่ยนราคาที่อนุมัติแล้วโดยไม่สร้าง Revision |
 | Surveyor | เก็บข้อมูล Site Survey | ประกาศว่าราคาพร้อมเสนอโดยไม่มี Estimate |
+| Field Estimator | สร้าง คำนวณ และแชร์ Quick Estimate ภายใน Permission, Scope และ Share Policy | แชร์รายการที่ต้อง Review หรือออก Quotation จาก Quick Estimate โดยตรง |
 | Estimator | จัดทำ Estimate และตรวจต้นทุน | อนุมัติ Estimate ของตนเองเมื่อ Maker–Checker บังคับ |
 | Approver | ตรวจราคา กำไร ส่วนลด และความเสี่ยง | แก้ข้อมูลแทนผู้จัดทำโดยไม่ส่งกลับ |
 | Project Manager | รับมอบขอบเขตและบริหาร Project | เปลี่ยน Baseline โดยไม่มี Change Order |

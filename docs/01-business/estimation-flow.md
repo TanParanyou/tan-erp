@@ -6,6 +6,8 @@
 
 เปลี่ยนข้อมูลสำรวจและขอบเขตงานให้เป็นราคาที่ตรวจสอบที่มา อนุมัติ และออกใบเสนอราคาได้ โดยไม่ลบประวัติฉบับก่อนหน้า
 
+Official Estimate Draft เริ่มได้จาก Site Survey โดยตรง หรือจาก `Quick Estimate Convert` แบบ Snapshot ระบบต้องเก็บ Source Quick Estimate ID และ Version เพื่อสอบกลับได้ แต่ต้องคำนวณต้นทุนและราคาทางการใหม่ตามกฎของ Official Estimate
+
 ## State Flow
 
 ```text
@@ -17,7 +19,7 @@ Draft → Ready for Review → In Review → Approved → Quoted
 
 ## ขั้นตอนมาตรฐาน
 
-1. เลือก Customer, Opportunity และ Site Survey
+1. เลือก Customer, Opportunity และ Site Survey หรือ Convert จาก [Quick Estimate](quick-estimate-flow.md)
 2. แบ่ง Scope เป็นพื้นที่หรือหมวดงาน เช่น Built-in, Electrical, Curtain
 3. เพิ่ม Work Item จาก Item Master หรือรายการเฉพาะงาน
 4. ระบุปริมาณ หน่วย ต้นทุนวัสดุ ค่าแรง ผู้รับเหมา และค่าใช้จ่าย
@@ -35,6 +37,8 @@ Draft → Ready for Review → In Review → Approved → Quoted
 - ผู้จัดทำห้ามอนุมัติรายการของตนเองเมื่อ Maker–Checker บังคับใช้
 - Revision ที่อนุมัติแล้วเป็น Immutable Business Record
 - Quotation หนึ่งฉบับอ้างอิง Estimate Revision เดียว
+- Quick Estimate Price Range เป็นข้อมูลอ้างอิงเท่านั้น ห้ามนำไปเป็น Approved Selling Price อัตโนมัติ
+- การ Convert คำขอเดิมซ้ำต้องคืน Official Estimate Draft เดิม ไม่สร้างรายการซ้ำ
 
 ## ตัวอย่างสั้น
 

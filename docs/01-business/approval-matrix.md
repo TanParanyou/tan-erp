@@ -15,6 +15,21 @@
 | Stale Cost | ราคาต้นทุนหมดอายุ | ตรวจราคาก่อนส่งอนุมัติ |
 | Sensitive Project | โครงการถูกกำหนดความเสี่ยงสูง | เพิ่มผู้อนุมัติหรือเอกสาร |
 
+## Quick Estimate Share Policy
+
+Quick Estimate ใช้การตรวจภายในก่อนแชร์เมื่อเข้าเงื่อนไขต่อไปนี้อย่างน้อยหนึ่งข้อ โดยค่าจริงต้องกำหนดแยกตาม Organization/Branch และยืนยันกับเจ้าของกระบวนการ:
+
+| เงื่อนไข | ตัวอย่าง Trigger | ผลลัพธ์ |
+| --- | --- | --- |
+| Wide Price Range | ช่วงราคากว้างเกินเกณฑ์ของ Work Type | ส่ง Reviewer ตรวจ Assumptions และ Range |
+| High Value | Upper Bound เกินวงเงินของผู้จัดทำ | ส่งผู้ตรวจตามระดับวงเงิน |
+| Custom Material | ใช้วัสดุเฉพาะที่ไม่มี Reference Rate มาตรฐาน | บังคับหลักฐานราคาและตรวจภายใน |
+| Manual Override | แก้ Rate, Factor หรือผลคำนวณเอง | บันทึกเหตุผลและค่าก่อน/หลัง |
+| Stale Template | Template พ้น Effective Period หรือถูกแทนที่ | ห้ามแชร์และให้ Recalculate |
+| Missing Evidence | รูปหรือข้อมูลหน้างานไม่ครบตาม Checklist | เก็บ Draft หรือส่งกลับให้เติมข้อมูล |
+
+การมี `quick-estimates.share` ไม่ได้ข้าม Share Policy และเมื่อ Policy บังคับ Maker–Checker ผู้จัดทำต้องไม่เป็นผู้ Review รายการของตนเอง
+
 ## Decision Record ขั้นต่ำ
 
 - ผู้ขออนุมัติและเวลาส่ง

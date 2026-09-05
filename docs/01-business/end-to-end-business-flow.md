@@ -5,11 +5,19 @@
 ## ภาพรวม
 
 ```text
-Customer → Opportunity → Site Survey → Estimate → Approval
-         → Quotation → Customer Acceptance → Project
-         → Procurement / Production / Installation
-         → Handover → Warranty / After-sales
+Customer → Opportunity → Site Survey
+    ├─ Quick Estimate → Preliminary Summary → Follow-up
+    │                                      └─ Convert
+    └───────────────────────────────────────────► Official Estimate
+                                                   ↓
+                                      Approval → Quotation → Project
+                                                   ↓
+                           Procurement / Production / Installation
+                                                   ↓
+                                    Handover → Warranty / After-sales
 ```
+
+[Quick Estimate](quick-estimate-flow.md) เป็นทางลัดเสริมสำหรับแจ้งช่วงราคาหน้างาน ไม่ใช่ขั้นตอนบังคับและไม่ใช่ Quotation ทุกงานยังต้องมี [Official Estimate](estimation-flow.md) ที่ผ่านการตรวจและอนุมัติก่อนออก Quotation
 
 ## ขั้นตอน
 
@@ -18,17 +26,19 @@ Customer → Opportunity → Site Survey → Estimate → Approval
 | 1 | รับลูกค้าและความต้องการ | Customer และ Opportunity | Sales |
 | 2 | นัดและสำรวจหน้างาน | Site Survey พร้อมรูปและขนาด | Surveyor/Designer |
 | 3 | ออกแบบขอบเขตเบื้องต้น | Work Items และสมมติฐาน | Designer |
-| 4 | ประเมินราคา | Estimate Revision | Estimator |
-| 5 | ตรวจและอนุมัติ | Approval Decision | Approver |
-| 6 | ออกใบเสนอราคา | Quotation | Sales |
-| 7 | ลูกค้ายืนยันหรือขอแก้ไข | Acceptance หรือ Revision ใหม่ | Sales/Customer |
-| 8 | เปิดโครงการ | Project และ Baseline Budget | Project Manager |
-| 9 | จัดซื้อ ผลิต และติดตั้ง | PO, Production/Installation Progress | Operations |
-| 10 | ส่งมอบและรับประกัน | Handover และ Warranty Record | Project/Service Team |
+| 4 | ประเมินราคาด่วน (ถ้าต้องใช้) | Quick Estimate และ Preliminary Summary | Field Estimator |
+| 5 | จัดทำประมาณการทางการ | Official Estimate Revision | Estimator |
+| 6 | ตรวจและอนุมัติ | Approval Decision | Approver |
+| 7 | ออกใบเสนอราคา | Quotation | Sales |
+| 8 | ลูกค้ายืนยันหรือขอแก้ไข | Acceptance หรือ Revision ใหม่ | Sales/Customer |
+| 9 | เปิดโครงการ | Project และ Baseline Budget | Project Manager |
+| 10 | จัดซื้อ ผลิต และติดตั้ง | PO, Production/Installation Progress | Operations |
+| 11 | ส่งมอบและรับประกัน | Handover และ Warranty Record | Project/Service Team |
 
 ## กฎการส่งต่อ
 
 - Quotation ต้องอ้างอิง Estimate Revision ที่อนุมัติ
+- Quick Estimate ที่ Convert ต้องสร้าง Official Estimate Draft ใหม่จาก Snapshot; ห้ามออก Quotation โดยอ้าง Quick Estimate โดยตรง
 - การแก้ราคาหลังอนุมัติต้องสร้าง Revision ใหม่
 - Project ต้องรับข้อมูลจากเอกสารที่ลูกค้ายืนยัน ไม่คีย์ใหม่โดยไม่มีเหตุผล
 - เอกสารและเหตุการณ์สำคัญต้องมีผู้ทำ เวลา และเหตุผล

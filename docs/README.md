@@ -5,7 +5,7 @@
 ## ทางลัดตามผู้อ่าน
 
 - ผู้บริหาร/เจ้าของงาน: [Product Vision](00-overview/product-vision.md) → [Scope](00-overview/scope-and-non-goals.md) → [Roadmap](00-overview/implementation-roadmap.md)
-- ฝ่ายประเมินราคา: [End-to-End Flow](01-business/end-to-end-business-flow.md) → [Estimation Flow](01-business/estimation-flow.md) → [Approval Matrix](01-business/approval-matrix.md)
+- ฝ่ายประเมินราคา: [End-to-End Flow](01-business/end-to-end-business-flow.md) → [Quick Estimate Flow](01-business/quick-estimate-flow.md) → [Estimation Flow](01-business/estimation-flow.md) → [Approval Matrix](01-business/approval-matrix.md)
 - นักพัฒนา: [System Context](02-architecture/system-context.md) → [Module Boundaries](02-architecture/module-boundaries.md) → [Contracts](03-contracts/api-conventions.md)
 - ผู้ดูแลระบบ: [Environments](06-operations/environments.md) → [Observability](06-operations/observability.md) → [Backup](06-operations/backup-and-restore.md)
 - ทุกคนที่อยากเห็นภาพ: [Documentation Portal](portal/README.md)
@@ -18,6 +18,7 @@
 | ขอบเขต Release | [Scope and Non-goals](00-overview/scope-and-non-goals.md) |
 | ลำดับการพัฒนา | [Implementation Roadmap](00-overview/implementation-roadmap.md) |
 | รายการ Requirement | [Requirements Catalog](00-overview/requirements-catalog.md) |
+| ราคาประเมินเบื้องต้นหน้างาน | [Quick Estimate Flow](01-business/quick-estimate-flow.md) |
 | กระบวนการประเมินราคา | [Estimation Flow](01-business/estimation-flow.md) |
 | สูตรประเมินราคา | [Estimation Calculation](01-business/estimation-calculation-rules.md) |
 | คำศัพท์ธุรกิจ | [CONTEXT.md](../CONTEXT.md) |
