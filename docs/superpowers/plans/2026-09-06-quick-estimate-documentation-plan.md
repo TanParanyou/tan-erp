@@ -66,7 +66,7 @@ docs/
 - Consumes: `CONTEXT.md` and `docs/superpowers/specs/2026-09-06-quick-estimate-workflow-design.md`
 - Produces: One authoritative business guide that later requirements, data model and Portal nodes link to
 
-- [ ] **Step 1: Prove the authoritative guide is not published yet**
+- [x] **Step 1: Prove the authoritative guide is not published yet**
 
 Run:
 
@@ -76,7 +76,7 @@ test -f docs/01-business/quick-estimate-flow.md
 
 Expected: exit code `1`, proving the planned guide is absent before this task.
 
-- [ ] **Step 2: Create the Quick Estimate source-of-truth guide**
+- [x] **Step 2: Create the Quick Estimate source-of-truth guide**
 
 Create `docs/01-business/quick-estimate-flow.md` with these exact sections and decisions:
 
@@ -122,7 +122,7 @@ On-site approved Quotation, free-form workflow builder, offline-first multi-devi
 
 Expand each section using the accepted spec; mark unresolved business values as `Validation Questions` and never invent company rates, thresholds or validity periods.
 
-- [ ] **Step 3: Connect the master business flow**
+- [x] **Step 3: Connect the master business flow**
 
 Update `docs/01-business/end-to-end-business-flow.md` so the pre-sales path reads:
 
@@ -137,15 +137,15 @@ Customer → Opportunity → Site Survey
 
 State that Quick Estimate is an optional fast path and Official Estimate remains required before Quotation.
 
-- [ ] **Step 4: Connect Official Estimate and operating roles**
+- [x] **Step 4: Connect Official Estimate and operating roles**
 
 Update `docs/01-business/estimation-flow.md` with `Quick Estimate Convert` as an accepted source of a new Official Estimate Draft. Add a `Field Estimator` row to `roles-and-responsibilities.md` and state that the role may create/calculate/share only within its permission and Share Policy. Add Quick Estimate triggers to `approval-matrix.md`: wide price range, high value, custom material, manual override, stale template and missing evidence.
 
-- [ ] **Step 5: Add the documentation entry point**
+- [x] **Step 5: Add the documentation entry point**
 
 Add `Quick Estimate Flow` to the business-reader path and authoritative-document table in `docs/README.md`. Link to `01-business/quick-estimate-flow.md` instead of duplicating its rules.
 
-- [ ] **Step 6: Verify Task 1 and commit**
+- [x] **Step 6: Verify Task 1 and commit**
 
 Run:
 
@@ -178,7 +178,7 @@ git commit -m "docs: publish quick estimate business flow"
 - Consumes: `docs/01-business/quick-estimate-flow.md`
 - Produces: Traceable requirement IDs, permission keys, aggregate ownership and version rules for future implementation planning
 
-- [ ] **Step 1: Add functional requirements**
+- [x] **Step 1: Add functional requirements**
 
 Add these identifiers to `requirements-catalog.md` without changing existing IDs:
 
@@ -195,11 +195,11 @@ NFR-QEST-001 Complete the minimum mobile flow with clear save state and 44px tou
 
 Mark business-specific thresholds and formulas as Draft while keeping separation, versioning, security and conversion principles Accepted.
 
-- [ ] **Step 2: Update scope and non-goals**
+- [x] **Step 2: Update scope and non-goals**
 
 Add Quick Estimate, Pricing Template, Preliminary Summary and Conversion to Phase Estimation. Add Offline-first multi-device sync, on-site approved Quotation and image-only AI pricing to Non-goals.
 
-- [ ] **Step 3: Publish the permission keys**
+- [x] **Step 3: Publish the permission keys**
 
 Add these keys to `permission-catalog.md`:
 
@@ -217,7 +217,7 @@ pricing-templates.manage
 
 Document expected Organization/Branch/Opportunity/Own scopes and state that `quick-estimates.share` is still constrained by Share Policy and Maker–Checker.
 
-- [ ] **Step 4: Update conceptual ownership and history**
+- [x] **Step 4: Update conceptual ownership and history**
 
 Add `Quick Estimate`, `Quick Estimate Version`, `Pricing Template Version` and `Preliminary Summary` to `conceptual-data-model.md`. Show the relationship:
 
@@ -230,7 +230,7 @@ Quick Estimate ─► Quick Estimate Version ─► Preliminary Summary
 
 Update `audit-and-revision.md` to distinguish a Quick Estimate Version from an Official Estimate Revision and enumerate shared/versioned/converted audit events.
 
-- [ ] **Step 5: Define stable Quick Estimate errors**
+- [x] **Step 5: Define stable Quick Estimate errors**
 
 Add this table to `error-contract.md`:
 
@@ -244,7 +244,7 @@ QUICK_ESTIMATE_ALREADY_CONVERTED  409  Same source version points to an existing
 
 State that an idempotent retry with the same idempotency key returns the original conversion result instead of `QUICK_ESTIMATE_ALREADY_CONVERTED`.
 
-- [ ] **Step 6: Verify Task 2 and commit**
+- [x] **Step 6: Verify Task 2 and commit**
 
 Run:
 
@@ -276,7 +276,7 @@ git commit -m "docs: trace quick estimate controls"
 - Consumes: `docs/portal/schema/flow.schema.json`, `docs/01-business/quick-estimate-flow.md` and the accepted Quick Estimate spec
 - Produces: Flow catalog entry `quick-estimate` and a schema-compatible bilingual diagram rendered by the existing Portal
 
-- [ ] **Step 1: Prove the catalog and data file do not exist**
+- [x] **Step 1: Prove the catalog and data file do not exist**
 
 Run:
 
@@ -287,7 +287,7 @@ rg -n '"id": "quick-estimate"' docs/portal/data/portal.json
 
 Expected: both commands exit `1` before the diagram is added.
 
-- [ ] **Step 2: Create the bilingual diagram data**
+- [x] **Step 2: Create the bilingual diagram data**
 
 Create `quick-estimate-flow.json` with `version: 1`, document link `../01-business/quick-estimate-flow.md`, illustration `assets/estimate.svg`, and these groups:
 
@@ -315,7 +315,7 @@ official-conversion
 
 Every node must contain `title.th`, `title.en`, `summary.th`, `summary.en`, `phase: phase-2`, an allowed `status`, an existing icon key and a valid Markdown document link.
 
-- [ ] **Step 3: Encode success and branch edges**
+- [x] **Step 3: Encode success and branch edges**
 
 Add the primary sequence from `customer-context` through `official-conversion`. Add branch edges:
 
@@ -327,7 +327,7 @@ customer-interest → measurement       type return, label ขอปรับข
 
 The visible primary order remains understandable without interpreting color; labels carry the decision meaning.
 
-- [ ] **Step 4: Register and document the flow**
+- [x] **Step 4: Register and document the flow**
 
 Insert a `quick-estimate` entry in `portal.json` immediately before the existing `estimation` entry:
 
@@ -343,7 +343,7 @@ Insert a `quick-estimate` entry in `portal.json` immediately before the existing
 
 Update `docs/portal/README.md` so the listed Flow set and editing example include Quick Estimate.
 
-- [ ] **Step 5: Validate JSON structure and references**
+- [x] **Step 5: Validate JSON structure and references**
 
 Run:
 
@@ -353,7 +353,7 @@ node -e 'const fs=require("fs"),path=require("path");const catalog=JSON.parse(fs
 
 Expected: `Quick Estimate JSON OK`.
 
-- [ ] **Step 6: Verify Portal behavior**
+- [x] **Step 6: Verify Portal behavior**
 
 Serve locally using the documented command:
 
@@ -372,7 +372,7 @@ Open `http://127.0.0.1:8765/#quick-estimate` and verify:
 - Print Preview includes the flow and text alternative
 - Browser console has zero errors and warnings
 
-- [ ] **Step 7: Commit Task 3**
+- [x] **Step 7: Commit Task 3**
 
 ```bash
 git add docs/portal/data/quick-estimate-flow.json docs/portal/data/portal.json docs/portal/README.md
@@ -394,7 +394,7 @@ git commit -m "docs: visualize quick estimate workflow"
 - Consumes: Deliverables from Tasks 1–3
 - Produces: Evidence that terminology, links, JSON and repository scope are consistent
 
-- [ ] **Step 1: Check terminology and forbidden ambiguity**
+- [x] **Step 1: Check terminology and forbidden ambiguity**
 
 Run:
 
@@ -405,13 +405,13 @@ rg -n "Quick Estimate.*Quotation|Quotation.*Quick Estimate" docs/01-business doc
 
 Review every match and confirm no sentence treats Quick Estimate as Quotation or Approved Price.
 
-- [ ] **Step 2: Check every Markdown link and JSON document reference**
+- [x] **Step 2: Check every Markdown link and JSON document reference**
 
 Run the repository link checker pattern already used by the Documentation Portal verification: recursively inspect relative Markdown links, JSON `document` fields and JSON `illustration.src` values, resolving Portal references from `docs/portal/`.
 
 Expected: zero broken links or assets.
 
-- [ ] **Step 3: Check placeholders and formatting**
+- [x] **Step 3: Check placeholders and formatting**
 
 Run:
 
@@ -423,7 +423,7 @@ git diff --check
 
 Expected: all commands exit `0` and print no findings.
 
-- [ ] **Step 4: Confirm only intended files are staged or committed**
+- [x] **Step 4: Confirm only intended files are staged or committed**
 
 Run:
 
@@ -434,7 +434,7 @@ git log --oneline -5
 
 Expected: Quick Estimate work is represented by the Task commits. Pre-existing untracked `design.md`, `preview.html`, `.agents/` and `.codex/` remain unstaged and untouched.
 
-- [ ] **Step 5: Record verification outcome**
+- [x] **Step 5: Record verification outcome**
 
 Update the execution checklist in this plan from `[ ]` to `[x]` only for completed steps, then commit the plan/checklist change separately:
 
