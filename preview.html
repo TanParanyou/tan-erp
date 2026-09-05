@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tan-erp — Atelier ERP Workspace (Non-AI Slop Professional UI)</title>
+  <style>
+    /* ==========================================================================
+       CSS RESET & BASE CRAFT RULES (WCAG 2.1 AA, 0px Radius, Precision Grid)
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      border-radius: 0 !important; /* Zero corner radius: 100% architectural discipline */
+    }
+
+    ::selection {
+      background-color: #0B3056;
+      color: #FFFFFF;
+    }
+
+    :root {
+      --font-ui: "Prompt", "Sarabun", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      --transition: 0.12s ease;
+    }
+
+    /* LIGHT MODE (Architectural Solid Navy) */
+    body[data-theme="light"] {
+      --canvas: #F4F6F9;
+      --surface: #FFFFFF;
+      --surface-elevated: #F8FAFC;
+      --surface-subtle: #EBF1F7;
+      --text-main: #0A192F;
+      --text-muted: #536B88;
+      --text-subtle: #7E95B0;
+      --border-strong: #0B3056;
+      --border-rule: #D1DEEC;
+      --border-hairline: #E2EBF4;
+      --navy-primary: #0B3056;
+      --navy-hover: #071F38;
+      --navy-selected: #E7EFF7;
+      --navy-active-bar: #0B3056;
+      --accent-target: #1D518A;
+      /* Status Semantics */
+      --status-ok-bg: #EBF7F0;
+      --status-ok-tx: #14532D;
+      --status-ok-bd: #A7F3D0;
+      --status-pend-bg: #FFFBEB;
+      --status-pend-tx: #92400E;
+      --status-pend-bd: #FDE68A;
+      --status-alert-bg: #FEF2F2;
+      --status-alert-tx: #991B1B;
+      --status-alert-bd: #FECACA;
+      --scroll-thumb: #CBD5E1;
+      --scroll-track: #F1F5F9;
+    }
+
+    /* DARK MODE (Midnight Architectural Navy) */
+    body[data-theme="dark"] {
+      --canvas: #050E1A;
+      --surface: #0B1728;
+      --surface-elevated: #0F2038;
+      --surface-subtle: #142742;
+      --text-main: #F0F5FA;
+      --text-muted: #9BB0C9;
+      --text-subtle: #6882A0;
+      --border-strong: #1F3D68;
+      --border-rule: #1B355A;
+      --border-hairline: #12243D;
+      --navy-primary: #2563EB;
+      --navy-hover: #3B82F6;
+      --navy-selected: #162C4E;
+      --navy-active-bar: #38BDF8;
+      --accent-target: #60A5FA;
+      /* Status Semantics Dark */
+      --status-ok-bg: rgba(20, 83, 45, 0.35);
+      --status-ok-tx: #4ADE80;
+      --status-ok-bd: rgba(74, 222, 128, 0.3);
+      --status-pend-bg: rgba(146, 64, 14, 0.35);
+      --status-pend-tx: #FBBF24;
+      --status-pend-bd: rgba(251, 191, 36, 0.3);
+      --status-alert-bg: rgba(153, 27, 27, 0.35);
+      --status-alert-tx: #F87171;
+      --status-alert-bd: rgba(248, 113, 113, 0.3);
+      --scroll-thumb: #1E3A5F;
+      --scroll-track: #0B1728;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--scroll-track); }
+    ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--navy-primary); }
+
+    body {
+      font-family: var(--font-ui);
+      font-size: 14px;
+      background-color: var(--canvas);
+      color: var(--text-main);
+      line-height: 1.5;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
+
+    /* SVG Icon Utility */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke-width: 1.6;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+
+    /* ==========================================================================
+       APP SHELL: QUIET UTILITY HEADER
+       ========================================================================== */
+    .app-header {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border-strong);
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .app-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 100%;
+    }
+
+    .brand-mark {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 16px;
+      border-right: 1px solid var(--border-rule);
+      height: 100%;
+    }
+
+    .brand-pill {
+      background-color: var(--navy-primary);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .nav-breadcrumbs a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .nav-breadcrumbs a:hover {
+      color: var(--text-main);
+    }
+
+    .nav-breadcrumbs .sep {
+      color: var(--border-rule);
+    }
+
+    .nav-breadcrumbs .current {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .app-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 100%;
+    }
+
+    .user-session-chip {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-session-chip strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .theme-toggle-btn {
+      appearance: none;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-rule);
+      color: var(--text-main);
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition);
+      min-height: 36px;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--border-strong);
+      background-color: var(--surface);
+    }
+
+    /* ==========================================================================
+       WORKSPACE METRIC & CONTROL BANNER (NON-HERO, TASK-ORIENTED)
+       ========================================================================== */
+    /* ==========================================================================
+       WORKSPACE METRIC & CONTROL BANNER (2-TIER ARCHITECTURAL TITLE & HUD)
+       ========================================================================== */
+    .project-control-banner {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border-strong);
+      padding: 22px 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .project-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .project-identity {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .document-title-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .document-h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .title-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .revision-tag {
+      background-color: var(--surface-subtle);
+      border: 1px solid var(--border-strong);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 10px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .status-badge {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .project-meta-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+    }
+
+    .project-meta-desc span {
+      white-space: nowrap;
+    }
+
+    .project-meta-desc .meta-label {
+      color: var(--text-subtle);
+      font-weight: 600;
+      margin-right: 3px;
+    }
+
+    .project-meta-desc .dot {
+      color: var(--border-rule);
+    }
+
+    .header-workflow-stamp {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .header-workflow-stamp .stamp-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .header-workflow-stamp .stamp-label {
+      color: var(--text-subtle);
+    }
+
+    .header-workflow-stamp .stamp-val {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .header-workflow-stamp .stamp-val.status-pend {
+      color: var(--status-pend-tx);
+      font-weight: 700;
+    }
+
+    /* Operational Financial Summary HUD: Spacious 3-Column Architectural Bar */
+    .financial-hud {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr 1.45fr;
+      border: 1px solid var(--border-strong);
+      background-color: var(--surface);
+      width: 100%;
+    }
+
+    .hud-cell {
+      padding: 12px 22px;
+      border-right: 1px solid var(--border-rule);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      gap: 3px;
+    }
+
+    .hud-cell.target-cell {
+      background-color: var(--navy-selected);
+      border-left: 2px solid var(--navy-primary);
+      min-width: 0;
+    }
+    body[data-theme="dark"] .hud-cell.target-cell {
+      background-color: var(--surface-subtle);
+      border-left: 2px solid var(--navy-active-bar);
+    }
+
+    .hud-cell:last-child {
+      border-right: none;
+    }
+
+    .hud-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .hud-cell.target-cell .hud-label {
+      color: var(--navy-primary);
+    }
+    body[data-theme="dark"] .hud-cell.target-cell .hud-label {
+      color: #93C5FD;
+    }
+
+    .hud-num-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      white-space: nowrap;
+      flex-wrap: wrap;
+    }
+
+    .hud-num {
+      font-family: var(--font-mono);
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .hud-currency {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .hud-num.target {
+      color: var(--navy-primary);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    body[data-theme="dark"] .hud-num.target {
+      color: #60A5FA;
+    }
+
+    .hud-currency.target {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy-primary);
+    }
+    body[data-theme="dark"] .hud-currency.target {
+      color: #60A5FA;
+    }
+
+    .hud-num.gp {
+      color: var(--status-ok-tx);
+      font-size: 19px;
+      font-weight: 800;
+    }
+    .hud-currency.gp {
+      color: var(--status-ok-tx);
+      font-weight: 700;
+    }
+
+    .gp-benchmark-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 7px;
+      background-color: var(--status-ok-bg);
+      border: 1px solid var(--status-ok-bd);
+      color: var(--status-ok-tx);
+      white-space: nowrap;
+      margin-left: 4px;
+    }
+
+    .hud-subtext {
+      font-size: 11px;
+      color: var(--text-subtle);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ==========================================================================
+       WORKSPACE TOOLBAR: FILTERS, SEARCH, PRIMARY ACTION BUTTONS
+       ========================================================================== */
+    .workspace-subbar {
+      background-color: var(--canvas);
+      border-bottom: 1px solid var(--border-rule);
+      padding: 10px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .category-filter-group {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border-rule);
+      background-color: var(--surface);
+    }
+
+    .filter-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-right: 1px solid var(--border-hairline);
+      transition: all var(--transition);
+    }
+
+    .filter-btn:last-child {
+      border-right: none;
+    }
+
+    .filter-btn:hover {
+      color: var(--text-main);
+      background-color: var(--surface-subtle);
+    }
+
+    .filter-btn.active {
+      background-color: var(--navy-primary);
+      color: #FFFFFF;
+    }
+
+    .subbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-box-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box-wrapper .icon {
+      position: absolute;
+      left: 10px;
+      color: var(--text-subtle);
+      pointer-events: none;
+    }
+
+    .search-input {
+      appearance: none;
+      border: 1px solid var(--border-rule);
+      background-color: var(--surface);
+      color: var(--text-main);
+      padding: 8px 12px 8px 32px;
+      font-family: inherit;
+      font-size: 12px;
+      min-width: 260px;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .search-input:focus {
+      border-color: var(--border-strong);
+    }
+
+    /* Sharp Button Primitives */
+    .btn-action {
+      appearance: none;
+      border: 1px solid var(--border-strong);
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      transition: all var(--transition);
+      letter-spacing: 0.01em;
+    }
+
+    .btn-action:focus-visible {
+      outline: 2px solid var(--navy-primary);
+      outline-offset: 1px;
+    }
+
+    .btn-action-primary {
+      background-color: var(--navy-primary);
+      color: #FFFFFF;
+      border-color: var(--navy-primary);
+    }
+
+    .btn-action-primary:hover {
+      background-color: var(--navy-hover);
+    }
+
+    .btn-action-outline {
+      background-color: var(--surface);
+      color: var(--text-main);
+      border-color: var(--border-rule);
+    }
+
+    .btn-action-outline:hover {
+      border-color: var(--border-strong);
+      background-color: var(--surface-subtle);
+    }
+
+    /* ==========================================================================
+       SPLIT WORKSPACE LAYOUT (MASTER-DETAIL FOR INTERIOR ARCHITECTURE)
+       ========================================================================== */
+    .atelier-workspace {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      min-height: calc(100vh - 160px);
+      background-color: var(--canvas);
+    }
+
+    /* Left Pane: Dense Spec Sheet Table */
+    .spec-table-pane {
+      border-right: 1px solid var(--border-strong);
+      background-color: var(--surface);
+      overflow-x: auto;
+    }
+
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    .spec-table th {
+      background-color: var(--surface-subtle);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 11.5px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-strong);
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .spec-table th.num, .spec-table td.num {
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    .spec-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-hairline);
+      color: var(--text-main);
+      vertical-align: middle;
+      height: 52px;
+      cursor: pointer;
+      transition: background-color var(--transition);
+    }
+
+    .spec-table tbody tr:hover td {
+      background-color: var(--surface-elevated);
+    }
+
+    /* Active Selected Row: Prominent left bar & distinct background */
+    .spec-table tbody tr.active-row td {
+      background-color: var(--navy-selected);
+      border-bottom-color: var(--border-rule);
+    }
+
+    .spec-table tbody tr.active-row td:first-child {
+      border-left: 4px solid var(--navy-active-bar);
+    }
+
+    .item-title-bold {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 3px;
+    }
+
+    .item-specs-quiet {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Important Data Columns */
+    .col-selling-price {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy-primary);
+      font-family: var(--font-mono);
+    }
+    body[data-theme="dark"] .col-selling-price {
+      color: #60A5FA;
+    }
+
+    .table-gp-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 12px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+    .table-gp-pill.ok {
+      background-color: var(--status-ok-bg);
+      color: var(--status-ok-tx);
+      border: 1px solid var(--status-ok-bd);
+    }
+    .table-gp-pill.alert {
+      background-color: var(--status-alert-bg);
+      color: var(--status-alert-tx);
+      border: 1px solid var(--status-alert-bd);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .status-badge.ok {
+      background-color: var(--status-ok-bg);
+      color: var(--status-ok-tx);
+      border-color: var(--status-ok-bd);
+    }
+
+    .status-badge.pending {
+      background-color: var(--status-pend-bg);
+      color: var(--status-pend-tx);
+      border-color: var(--status-pend-bd);
+    }
+
+    .category-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-left: 2px solid var(--border-strong);
+      padding-left: 7px;
+    }
+
+    /* ==========================================================================
+       RIGHT PANE: LIVE BILL-OF-MATERIALS (BOM) & CUTLIST LEDGER
+       ========================================================================== */
+    .detail-inspector-pane {
+      background-color: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .inspector-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-strong);
+      background-color: var(--surface-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .inspector-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .inspector-code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--navy-primary);
+      font-weight: 800;
+    }
+    body[data-theme="dark"] .inspector-code {
+      color: #60A5FA;
+    }
+
+    .inspector-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex: 1;
+    }
+
+    /* Prominent Hero Summary of Selected Work Item */
+    .inspector-hero-card {
+      background-color: var(--surface-elevated);
+      border: 1px solid var(--border-rule);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .hero-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-code-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      background-color: var(--navy-primary);
+      color: #FFFFFF;
+      padding: 2px 7px;
+      letter-spacing: 0.04em;
+    }
+    body[data-theme="dark"] .hero-code-badge {
+      background-color: #2563EB;
+    }
+
+    .hero-item-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.35;
+    }
+
+    .hero-cost-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-hairline);
+    }
+
+    .hero-cost-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-cost-value {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--navy-primary);
+    }
+    body[data-theme="dark"] .hero-cost-value {
+      color: #60A5FA;
+    }
+
+    .inspector-section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Sub-items / Constituent Materials List */
+    .bom-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bom-item {
+      padding: 10px 12px;
+      background-color: var(--surface-elevated);
+      border: 1px solid var(--border-hairline);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .bom-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .bom-calc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .bom-cost {
+      font-family: var(--font-mono);
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-align: right;
+    }
+
+    /* Maker-Checker Audit Trail Section */
+    .audit-box {
+      border: 1px solid var(--border-rule);
+      background-color: var(--surface-elevated);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .audit-step-row {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .audit-step-row .icon {
+      margin-top: 2px;
+    }
+
+    .audit-meta-text {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE ADAPTATIONS (MOBILE, TABLET, LAPTOP, ULTRA-WIDE)
+       ========================================================================== */
+
+    /* Common elements hidden on desktop */
+    .mobile-workspace-tabs { display: none; }
+    .mobile-inspector-backbar { display: none; }
+    .mobile-table-hint { display: none; }
+    .action-buttons-group { display: flex; align-items: center; gap: 8px; }
+
+    /* 1. Ultra-wide screens (1600px+) */
+    @media (min-width: 1600px) {
+      .app-header,
+      .project-control-banner,
+      .workspace-subbar,
+      .atelier-workspace {
+        max-width: 1720px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .app-header {
+        border-left: 1px solid var(--border-rule);
+        border-right: 1px solid var(--border-rule);
+      }
+      .project-control-banner,
+      .workspace-subbar {
+        border-left: 1px solid var(--border-strong);
+        border-right: 1px solid var(--border-strong);
+      }
+      .atelier-workspace {
+        border-left: 1px solid var(--border-strong);
+        border-right: 1px solid var(--border-strong);
+        grid-template-columns: 1fr 420px;
+      }
+    }
+
+    /* 2. Tablet Landscape & Small Laptop (992px - 1199px) */
+    @media (max-width: 1199px) and (min-width: 992px) {
+      .atelier-workspace {
+        grid-template-columns: 1fr 340px;
+      }
+      .project-control-banner {
+        gap: 14px;
+        padding: 18px 20px 16px;
+      }
+      .header-workflow-stamp {
+        display: none;
+      }
+      .hud-cell {
+        padding: 10px 16px;
+      }
+      .hud-num {
+        font-size: 17px;
+      }
+      .hud-num.target {
+        font-size: 24px;
+      }
+      .search-input {
+        min-width: 180px;
+      }
+    }
+
+    /* 3. Tablet Portrait (769px - 991px) */
+    @media (max-width: 991px) and (min-width: 769px) {
+      .project-control-banner {
+        gap: 14px;
+        padding: 16px 20px;
+      }
+      .header-workflow-stamp {
+        display: none;
+      }
+      .financial-hud {
+        grid-template-columns: 1fr 1.2fr 1.3fr;
+      }
+      .hud-cell {
+        padding: 10px 14px;
+      }
+      .hud-num {
+        font-size: 16px;
+      }
+      .hud-num.target {
+        font-size: 22px;
+      }
+      .workspace-subbar {
+        padding: 10px 20px;
+      }
+      .atelier-workspace {
+        grid-template-columns: 1fr;
+      }
+      .detail-inspector-pane {
+        border-right: none;
+        border-top: 1px solid var(--border-strong);
+        min-height: auto;
+      }
+      .search-input {
+        min-width: 200px;
+      }
+    }
+
+    /* 4. Mobile Screens (<= 768px) */
+    @media (max-width: 768px) {
+      /* App Header */
+      .app-header {
+        padding: 0 14px;
+        height: 50px;
+      }
+      .brand-mark {
+        font-size: 12px;
+        padding-right: 10px;
+        gap: 6px;
+      }
+      .brand-sub-title {
+        display: none;
+      }
+      .nav-breadcrumbs a {
+        display: none;
+      }
+      .nav-breadcrumbs .sep:not(:last-of-type) {
+        display: none;
+      }
+      .nav-breadcrumbs .sep:last-of-type {
+        margin: 0 4px;
+      }
+      .user-session-chip {
+        display: none;
+      }
+      .theme-toggle-btn {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+
+      /* Project Control Banner */
+      .project-control-banner {
+        padding: 14px;
+        gap: 12px;
+      }
+      .project-header-top {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .header-workflow-stamp {
+        display: none;
+      }
+      .document-title-row {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .document-h1 {
+        font-size: 18px;
+        white-space: normal;
+        line-height: 1.3;
+      }
+      .project-meta-desc {
+        font-size: 11.5px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      /* Financial HUD (Reorganized into 2-row structured grid) */
+      .financial-hud {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+      }
+      .financial-hud .hud-cell:nth-child(1) {
+        border-right: 1px solid var(--border-rule);
+        border-bottom: 1px solid var(--border-rule);
+        padding: 8px 12px;
+      }
+      .financial-hud .hud-cell:nth-child(2) {
+        border-right: none;
+        border-bottom: 1px solid var(--border-rule);
+        padding: 8px 12px;
+      }
+      .financial-hud .hud-cell:nth-child(3) {
+        grid-column: span 2;
+        border-right: none;
+        border-left: none;
+        border-top: 2px solid var(--navy-primary);
+        background-color: var(--navy-selected);
+        padding: 10px 12px;
+      }
+      body[data-theme="dark"] .financial-hud .hud-cell:nth-child(3) {
+        background-color: var(--surface-subtle);
+        border-top: 2px solid var(--navy-active-bar);
+      }
+      .hud-num {
+        font-size: 15px;
+      }
+      .hud-num.target {
+        font-size: 20px;
+      }
+      .hud-currency.target {
+        font-size: 13px;
+      }
+
+      /* Workspace Subbar */
+      .workspace-subbar {
+        padding: 10px 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .category-filter-group {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        width: 100%;
+      }
+      .category-filter-group::-webkit-scrollbar {
+        display: none;
+      }
+      .filter-btn {
+        flex-shrink: 0;
+        padding: 8px 12px;
+        min-height: 40px;
+      }
+      .subbar-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .search-box-wrapper {
+        width: 100%;
+      }
+      .search-input {
+        width: 100%;
+        min-width: 0;
+        min-height: 42px;
+      }
+      .action-buttons-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+      }
+      .action-buttons-group .btn-submit-main {
+        grid-column: span 2;
+      }
+      .btn-action {
+        min-height: 44px;
+        justify-content: center;
+      }
+
+      /* Mobile Segmented Tab Switcher */
+      .mobile-workspace-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-strong);
+        background-color: var(--surface);
+        position: sticky;
+        top: 50px;
+        z-index: 30;
+      }
+      .mobile-tab-btn {
+        flex: 1;
+        appearance: none;
+        border: none;
+        background: var(--surface-subtle);
+        color: var(--text-muted);
+        padding: 12px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all var(--transition);
+        min-height: 46px;
+      }
+      .mobile-tab-btn.active {
+        background: var(--surface);
+        color: var(--navy-primary);
+        border-bottom-color: var(--navy-primary);
+      }
+
+      /* Atelier Workspace Split/Switch behavior on mobile */
+      .atelier-workspace {
+        display: block;
+        min-height: auto;
+      }
+      .spec-table-pane {
+        border-right: none;
+        width: 100%;
+      }
+      .detail-inspector-pane {
+        border-right: none;
+        border-top: none;
+        width: 100%;
+      }
+
+      /* Dynamic Tab Visibility via body class */
+      body.view-mobile-bom .spec-table-pane {
+        display: none !important;
+      }
+      body.view-mobile-bom .detail-inspector-pane {
+        display: flex !important;
+      }
+      body:not(.view-mobile-bom) .detail-inspector-pane {
+        display: none !important;
+      }
+      body:not(.view-mobile-bom) .spec-table-pane {
+        display: block !important;
+      }
+
+      /* Mobile Inspector Backbar */
+      .mobile-inspector-backbar {
+        display: block;
+        padding: 12px 14px 0;
+        background-color: var(--surface-subtle);
+      }
+
+      /* Horizontal table scroll hint & Sticky Code Column */
+      .mobile-table-hint {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        background-color: var(--surface-subtle);
+        border-bottom: 1px solid var(--border-hairline);
+        font-size: 10px;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+      .spec-table {
+        min-width: 820px;
+      }
+      .spec-table th:nth-child(2),
+      .spec-table td:nth-child(2) {
+        position: sticky;
+        left: 0;
+        background-color: var(--surface);
+        z-index: 2;
+        border-right: 1px solid var(--border-hairline);
+      }
+      .spec-table th:nth-child(2) {
+        background-color: var(--surface-subtle);
+      }
+      .spec-table tbody tr.active-row td:nth-child(2) {
+        background-color: var(--navy-selected);
+      }
+      .spec-table td {
+        padding: 12px 10px;
+        height: 48px;
+      }
+    }
+
+    /* 5. Small Mobile Phones (<= 480px) */
+    @media (max-width: 480px) {
+      .app-header {
+        padding: 0 10px;
+      }
+      .brand-mark {
+        font-size: 11px;
+      }
+      .nav-breadcrumbs {
+        font-size: 11px;
+      }
+      .project-control-banner {
+        padding: 12px 10px;
+      }
+      .workspace-subbar {
+        padding: 8px 10px;
+      }
+      .inspector-body {
+        padding: 12px;
+      }
+    }
+
+    /* Non-intrusive Mobile Toast Notification */
+    .mobile-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: var(--navy-primary);
+      color: #FFFFFF;
+      padding: 10px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.22s ease-out;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .mobile-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- QUIET UTILITY APP HEADER -->
+  <header class="app-header">
+    <div class="app-header-left">
+      <div class="brand-mark">
+        <span class="brand-pill">ERP</span>
+        <span>We Cover <span class="brand-sub-title">Atelier</span></span>
+      </div>
+
+      <nav class="nav-breadcrumbs" aria-label="Breadcrumb">
+        <a href="#projects">Projects</a>
+        <span class="sep">/</span>
+        <a href="#vittorio">Vittorio Sukhumvit 39</a>
+        <span class="sep">/</span>
+        <span class="current">EST-2026-0042 (Rev 02)</span>
+      </nav>
+    </div>
+
+    <div class="app-header-right">
+      <div class="user-session-chip">
+        <span><span class="op-prefix">Operator: </span><strong>Somchai M.</strong> (Maker)</span>
+      </div>
+
+      <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle Theme">
+        <svg class="icon" viewBox="0 0 24 24" id="themeSvg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <span id="themeToggleLabel">Dark</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- OPERATIONAL DOCUMENT HEADER -->
+  <section class="project-control-banner">
+    <div class="project-header-top">
+      <div class="project-identity">
+        <div class="document-title-row">
+          <h1 class="document-h1">คอนโดมิเนียม Vittorio Sukhumvit 39</h1>
+          <div class="title-badge-group">
+            <span class="revision-tag">EST-2026-0042 • REV.02</span>
+            <span class="status-badge pending">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Pending Checker
+            </span>
+          </div>
+        </div>
+        <div class="project-meta-desc">
+          <span><strong class="meta-label">ลูกค้า:</strong> คุณกานดา เจริญกิจ</span>
+          <span class="dot">•</span>
+          <span><strong class="meta-label">ขอบเขต:</strong> 2 Bedrooms (140 m²)</span>
+          <span class="dot">•</span>
+          <span><strong class="meta-label">มัณฑนากร:</strong> We Cover Interior Team</span>
+          <span class="dot">•</span>
+          <span><strong class="meta-label">ประเภท:</strong> Built-in Fit-out</span>
+        </div>
+      </div>
+
+      <div class="header-workflow-stamp">
+        <div class="stamp-item">
+          <span class="stamp-label">สถานะการส่งตรวจ:</span>
+          <span class="stamp-val status-pend">รอบตรวจทาน Rev.02 (Maker-Checker)</span>
+        </div>
+        <div class="stamp-item">
+          <span class="stamp-label">จัดทำโดย:</span>
+          <span class="stamp-val">สมชาย ม. (05/09/2026 16:45)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Financial Summary HUD: Spacious 3-Column Architectural Bar -->
+    <div class="financial-hud">
+      <div class="hud-cell">
+        <span class="hud-label">ต้นทุนประเมินภายใน (BOQ Cost)</span>
+        <div class="hud-num-wrap">
+          <span class="hud-num" id="hudCost">433,150.00</span>
+          <span class="hud-currency">THB</span>
+        </div>
+        <span class="hud-subtext">วัสดุ & ค่าแรงช่างบิวต์อิน 61.13%</span>
+      </div>
+      <div class="hud-cell">
+        <span class="hud-label">กำไรขั้นต้นคาดการณ์ (Gross Profit)</span>
+        <div class="hud-num-wrap gp">
+          <span class="hud-num gp" id="hudGp">+168,350.00</span>
+          <span class="hud-currency gp">THB</span>
+          <span class="gp-benchmark-tag">▲ GP 38.87% (เป้าหมาย ≥30%)</span>
+        </div>
+        <span class="hud-subtext">สูงกว่าเกณฑ์ขั้นต่ำ +8.87%</span>
+      </div>
+      <div class="hud-cell target-cell">
+        <span class="hud-label">ยอดเสนอราคารวมสุทธิ (Quotation Total)</span>
+        <div class="hud-num-wrap target">
+          <span class="hud-num target" id="hudSelling">601,500.00</span>
+          <span class="hud-currency target">THB</span>
+        </div>
+        <span class="hud-subtext">รวมภาษีมูลค่าเพิ่ม 7% (ยังไม่รวมส่วนลดท้ายบิล)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKSPACE TOOLBAR -->
+  <div class="workspace-subbar">
+    <div class="category-filter-group" role="tablist">
+      <button class="filter-btn active" onclick="filterCategory('all', this)">All Items (6)</button>
+      <button class="filter-btn" onclick="filterCategory('builtin', this)">งานบิวต์อิน (3)</button>
+      <button class="filter-btn" onclick="filterCategory('wall', this)">ตกแต่งผนัง & ไฟ (1)</button>
+      <button class="filter-btn" onclick="filterCategory('curtain', this)">ผ้าม่าน & วอลล์ (2)</button>
+    </div>
+
+    <div class="subbar-actions">
+      <div class="search-box-wrapper">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" class="search-input" placeholder="Filter line items by material, spec..." id="tableSearchInput" oninput="handleSearch(this.value)">
+      </div>
+
+      <div class="action-buttons-group">
+        <button class="btn-action btn-action-outline">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Item
+        </button>
+
+        <button class="btn-action btn-action-outline" onclick="openDiffModal()">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Diff Rev 01
+        </button>
+
+        <button class="btn-action btn-action-primary btn-submit-main" onclick="submitToChecker()">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Submit to Checker
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE VIEW SWITCHER TABS (Visible only on screens <= 768px) -->
+  <div class="mobile-workspace-tabs" id="mobileTabNav" role="tablist">
+    <button class="mobile-tab-btn active" id="tabSpecBtn" role="tab" aria-selected="true" onclick="switchMobileView('spec')">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      <span>ตารางสเปก (Spec Sheet)</span>
+    </button>
+    <button class="mobile-tab-btn" id="tabBomBtn" role="tab" aria-selected="false" onclick="switchMobileView('bom')">
+      <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+      <span>ชิ้นส่วน BOM (<strong id="mobileTabItemCode">WI-001</strong>)</span>
+    </button>
+  </div>
+
+  <!-- SPLIT MASTER-DETAIL WORKSPACE -->
+  <main class="atelier-workspace">
+
+    <!-- LEFT PANE: HIGH DENSITY SPEC SHEET -->
+    <div class="spec-table-pane" id="specTablePane">
+      <div class="mobile-table-hint">
+        <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        <span>เลื่อนตารางแนวนอนเพื่อดูต้นทุนและราคาขายครบถ้วน (Swipe horizontally)</span>
+      </div>
+      <table class="spec-table" id="specTable">
+        <thead>
+          <tr>
+            <th style="width: 32px;"><input type="checkbox" checked></th>
+            <th style="width: 80px;">Code</th>
+            <th>Item Description & Architectural Finishes</th>
+            <th style="width: 120px;">Category</th>
+            <th style="width: 100px;">Status</th>
+            <th class="num" style="width: 60px;">Qty</th>
+            <th style="width: 50px;">Unit</th>
+            <th class="num" style="width: 110px;">Unit Cost</th>
+            <th class="num" style="width: 110px;">Total Cost</th>
+            <th class="num" style="width: 120px;">ราคาเสนอ (THB)</th>
+            <th class="num" style="width: 75px;">GP%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Row 1 (Active by default) -->
+          <tr class="active-row" data-category="builtin" onclick="selectRow('WI-001', this)">
+            <td><input type="checkbox" checked onclick="event.stopPropagation()"></td>
+            <td class="num" style="font-weight: 700;">WI-001</td>
+            <td>
+              <div class="item-title-bold">ตู้เสื้อผ้า Walk-in Closet ไม้โอ๊กลามิเนตนำเข้า</div>
+              <div class="item-specs-quiet">โครงไม้อัด HMR 18mm กันชื้น ผิว Formica Oak Matte, บานพับ Blum Soft-close</div>
+            </td>
+            <td><span class="category-label">บิวต์อินห้องนอน</span></td>
+            <td><span class="status-badge ok">Approved</span></td>
+            <td class="num">1.00</td>
+            <td>ชุด</td>
+            <td class="num">180,000.00</td>
+            <td class="num">180,000.00</td>
+            <td class="num col-selling-price">245,000.00</td>
+            <td class="num"><span class="table-gp-pill ok">36.1%</span></td>
+          </tr>
+
+          <!-- Row 2 -->
+          <tr data-category="builtin" onclick="selectRow('WI-002', this)">
+            <td><input type="checkbox" checked onclick="event.stopPropagation()"></td>
+            <td class="num" style="font-weight: 700;">WI-002</td>
+            <td>
+              <div class="item-title-bold">เคาน์เตอร์ครัวไอแลนด์ Top หินสังเคราะห์ Quartz Pure White</div>
+              <div class="item-specs-quiet">ท็อปหนา 20mm ขอบ Bevel ตู้ล่างไม้อัดกันชื้น พ่นไฮกลอสสีเทาหม่น 60% Matt</div>
+            </td>
+            <td><span class="category-label">บิวต์อินครัว</span></td>
+            <td><span class="status-badge ok">Approved</span></td>
+            <td class="num">1.00</td>
+            <td>ตัว</td>
+            <td class="num">115,000.00</td>
+            <td class="num">115,000.00</td>
+            <td class="num col-selling-price">165,000.00</td>
+            <td class="num"><span class="table-gp-pill ok">30.3%</span></td>
+          </tr>
+
+          <!-- Row 3 -->
+          <tr data-category="wall" onclick="selectRow('WI-003', this)">
+            <td><input type="checkbox" checked onclick="event.stopPropagation()"></td>
+            <td class="num" style="font-weight: 700;">WI-003</td>
+            <td>
+              <div class="item-title-bold">ผนังกรุเซาะร่อง Acoustic Headboard หัวเตียง Master</div>
+              <div class="item-specs-quiet">โครง MDF E1 เซาะร่อง CNC ลายโมเดิร์น บุผ้าสังเคราะห์กันลามไฟ + รางไฟ LED Warm 3000K</div>
+            </td>
+            <td><span class="category-label">ตกแต่งผนัง</span></td>
+            <td><span class="status-badge ok">Approved</span></td>
+            <td class="num">18.00</td>
+            <td>m²</td>
+            <td class="num">2,800.00</td>
+            <td class="num">50,400.00</td>
+            <td class="num col-selling-price">68,000.00</td>
+            <td class="num"><span class="table-gp-pill ok">34.9%</span></td>
+          </tr>
+
+          <!-- Row 4 -->
+          <tr data-category="curtain" onclick="selectRow('WI-004', this)">
+            <td><input type="checkbox" checked onclick="event.stopPropagation()"></td>
+            <td class="num" style="font-weight: 700;">WI-004</td>
+            <td>
+              <div class="item-title-bold">ผ้าม่านลอน 2 ชั้น (Blackout ทึบแสง 100% + ผ้าโปร่ง Sheer)</div>
+              <div class="item-specs-quiet">ผ้านำเข้าจากเบลเยียม กันรังสี UV รางอะลูมิเนียมดัดโค้งพิเศษตามแนวแปลนกระจก</div>
+            </td>
+            <td><span class="category-label">ผ้าม่าน & วอลล์</span></td>
+            <td><span class="status-badge ok">Approved</span></td>
+            <td class="num">1.00</td>
+            <td>ห้อง</td>
+            <td class="num">42,000.00</td>
+            <td class="num">42,000.00</td>
+            <td class="num col-selling-price">62,000.00</td>
+            <td class="num"><span class="table-gp-pill ok">32.3%</span></td>
+          </tr>
+
+          <!-- Row 5 -->
+          <tr data-category="curtain" onclick="selectRow('WI-005', this)">
+            <td><input type="checkbox" checked onclick="event.stopPropagation()"></td>
+            <td class="num" style="font-weight: 700;">WI-005</td>
+            <td>
+              <div class="item-title-bold">วอลเปเปอร์ไวนิลนำเข้า ลาย Texture ผ้าลินินรอบห้อง Living</div>
+              <div class="item-specs-quiet">กาวเกรด Eco ปลอดภัย ไร้กลิ่นฉุน ติดตั้งพร้อมเก็บบัวพื้น รับประกันงาน 2 ปี</div>
+            </td>
+            <td><span class="category-label">ผ้าม่าน & วอลล์</span></td>
+            <td><span class="status-badge pending">Pending Spec</span></td>
+            <td class="num">65.00</td>
+            <td>m²</td>
+            <td class="num">242.30</td>
+            <td class="num">15,750.00</td>
+            <td class="num col-selling-price">26,500.00</td>
+            <td class="num"><span class="table-gp-pill ok">40.6%</span></td>
+          </tr>
+
+          <!-- Row 6 -->
+          <tr data-category="builtin" onclick="selectRow('WI-006', this)">
+            <td><input type="checkbox" checked onclick="event.stopPropagation()"></td>
+            <td class="num" style="font-weight: 700;">WI-006</td>
+            <td>
+              <div class="item-title-bold">ค่าแรงทีมช่างติดตั้งงานบิวต์อินและดูแลความสะอาดส่งมอบห้อง</div>
+              <div class="item-specs-quiet">ทีมช่างประจำ 4 นาย รวม 14 วันทำการ ซีลกันรอยพื้น ดูดฝุ่นละอองก่อนส่งมอบ</div>
+            </td>
+            <td><span class="category-label">บริการหน้างาน</span></td>
+            <td><span class="status-badge ok">Approved</span></td>
+            <td class="num">1.00</td>
+            <td>เหมา</td>
+            <td class="num">30,000.00</td>
+            <td class="num">30,000.00</td>
+            <td class="num col-selling-price">35,000.00</td>
+            <td class="num"><span class="table-gp-pill alert">14.3%</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RIGHT PANE: REAL TIME BILL-OF-MATERIALS (BOM) & AUDIT TRAIL -->
+    <aside class="detail-inspector-pane" id="detailInspectorPane">
+      <div class="mobile-inspector-backbar">
+        <button class="btn-action btn-action-outline" style="width: 100%; justify-content: center; margin-bottom: 8px;" onclick="switchMobileView('spec')">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          กลับไปดูตารางรายการสเปก (Back to Table)
+        </button>
+      </div>
+
+      <div class="inspector-header">
+        <span class="inspector-title">
+          <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          Material BOM Breakdown
+        </span>
+        <span class="inspector-code" id="detailItemCode">WI-001</span>
+      </div>
+
+      <div class="inspector-body">
+        <div class="inspector-hero-card">
+          <div class="hero-card-header">
+            <span class="hero-code-badge" id="detailItemCodeBadge">WI-001</span>
+            <h3 class="hero-item-title" id="detailItemName">ตู้เสื้อผ้า Walk-in Closet ไม้โอ๊กลามิเนตนำเข้า</h3>
+          </div>
+          <div class="hero-cost-strip">
+            <span class="hero-cost-label">ประมาณการต้นทุนรวม (Est. BOQ Cost)</span>
+            <span class="hero-cost-value" id="detailItemCost">฿180,000.00</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="inspector-section-label">
+            <span>รายการชิ้นส่วนวัสดุ (Constituent Materials)</span>
+            <span>รายการคำนวณ</span>
+          </div>
+
+          <!-- Constituent Materials List -->
+          <ul class="bom-list" id="bomListContainer">
+            <li class="bom-item">
+              <div>
+                <div class="bom-name">ไม้อัด HMR กันชื้น 18mm (Grade E1)</div>
+                <div class="bom-calc">14 แผ่น @ ฿680.00 (โครงสร้างหลัก)</div>
+              </div>
+              <div class="bom-cost">฿9,520</div>
+            </li>
+
+            <li class="bom-item">
+              <div>
+                <div class="bom-name">ลามิเนต Formica Natural Oak Matte</div>
+                <div class="bom-calc">12 แผ่น @ ฿1,250.00 (ปิดผิวภายนอก/ใน)</div>
+              </div>
+              <div class="bom-cost">฿15,000</div>
+            </li>
+
+            <li class="bom-item">
+              <div>
+                <div class="bom-name">ชุดฟิตติ้ง Blum Tandembox & Hinges</div>
+                <div class="bom-calc">8 รางลิ้นชัก + 16 บานพับ Soft-close แท้</div>
+              </div>
+              <div class="bom-cost">฿28,400</div>
+            </li>
+
+            <li class="bom-item">
+              <div>
+                <div class="bom-name">กระจกเงา Euro Gray 5mm Safety Cut</div>
+                <div class="bom-calc">2 บานเต็มความสูง 2.6m เจียริมขัดเงา</div>
+              </div>
+              <div class="bom-cost">฿14,200</div>
+            </li>
+
+            <li class="bom-item">
+              <div>
+                <div class="bom-name">ค่าช่างไม้ประกอบโรงงาน & ทำสี</div>
+                <div class="bom-calc">ช่าง 2 นาย x 10 วันทำการ</div>
+              </div>
+              <div class="bom-cost">฿32,000</div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Maker-Checker Lifecycle Log -->
+        <div>
+          <div class="inspector-section-label">
+            <span>Governance Audit Trail</span>
+            <span>Rev.02</span>
+          </div>
+
+          <div class="audit-box">
+            <div class="audit-step-row">
+              <svg class="icon" style="color: var(--status-ok-tx);" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <div>
+                <strong>Rev 01 Created</strong> by Somchai M.
+                <div class="audit-meta-text">28 Aug 2026, 11:15 • Initial Estimate ฿580,000</div>
+              </div>
+            </div>
+
+            <div class="audit-step-row">
+              <svg class="icon" style="color: var(--status-alert-tx);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              <div>
+                <strong>Rev 01 Returned</strong> by Supachai (Checker)
+                <div class="audit-meta-text">29 Aug 2026, 16:40 • "Quartz Island GP 24% is below 30% threshold."</div>
+              </div>
+            </div>
+
+            <div class="audit-step-row">
+              <svg class="icon" style="color: var(--navy-primary);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <div>
+                <strong>Rev 02 Resubmitted</strong> with adjusted Quartz pricing
+                <div class="audit-meta-text">05 Sep 2026, 14:30 • Ready for Checker Approval</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Quick-sign -->
+        <div style="margin-top: auto; padding-top: 10px;">
+          <button class="btn-action btn-action-primary" style="width: 100%; justify-content: center;" onclick="alert('ระบบ Maker-Checker: ส่งแจ้งเตือนไปยังผู้อนุมัติ (Checker) เรียบร้อยแล้ว')">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Sign-off Item Spec
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <script>
+    // Selected Item Data Store
+    const itemData = {
+      'WI-001': {
+        code: 'WI-001',
+        title: 'ตู้เสื้อผ้า Walk-in Closet ไม้โอ๊กลามิเนตนำเข้า',
+        cost: '฿180,000.00',
+        boms: [
+          { name: 'ไม้อัด HMR กันชื้น 18mm (Grade E1)', calc: '14 แผ่น @ ฿680.00 (โครงสร้างหลัก)', cost: '฿9,520' },
+          { name: 'ลามิเนต Formica Natural Oak Matte', calc: '12 แผ่น @ ฿1,250.00 (ปิดผิวภายนอก/ใน)', cost: '฿15,000' },
+          { name: 'ชุดฟิตติ้ง Blum Tandembox & Hinges', calc: '8 รางลิ้นชัก + 16 บานพับ Soft-close แท้', cost: '฿28,400' },
+          { name: 'กระจกเงา Euro Gray 5mm Safety Cut', calc: '2 บานเต็มความสูง 2.6m เจียริมขัดเงา', cost: '฿14,200' },
+          { name: 'ค่าช่างไม้ประกอบโรงงาน & ทำสี', calc: 'ช่าง 2 นาย x 10 วันทำการ', cost: '฿32,000' }
+        ]
+      },
+      'WI-002': {
+        code: 'WI-002',
+        title: 'เคาน์เตอร์ครัวไอแลนด์ Top หินสังเคราะห์ Quartz Pure White',
+        cost: '฿115,000.00',
+        boms: [
+          { name: 'แผ่นหินสังเคราะห์ Quartz Pure White 20mm', calc: '1.2 x 2.8m พร้อมเจาะรู Sink & Hob', cost: '฿52,000' },
+          { name: 'โครงตู้ไม้อัดกันชื้น พ่นสีไฮกลอส 60%', calc: 'ชุดตู้บิวต์อินพร้อมช่องวางเครื่องล้างจาน', cost: '฿38,000' },
+          { name: 'ฟิตติ้ง Blum Aventos & Soft-close', calc: 'ระบบยกบานเปิดและรางรับน้ำหนัก 50kg', cost: '฿16,500' }
+        ]
+      },
+      'WI-003': {
+        code: 'WI-003',
+        title: 'ผนังกรุเซาะร่อง Acoustic Headboard หัวเตียง Master',
+        cost: '฿50,400.00',
+        boms: [
+          { name: 'แผ่น MDF E1 เซาะร่อง CNC ลายสั่งทำ', calc: '18 ตร.ม. พร้อมโครงเคร่าไม้เนื้อแข็ง', cost: '฿22,000' },
+          { name: 'ผ้าสังเคราะห์กันลามไฟ นำเข้าจากยุโรป', calc: 'ผ้าบุเก็บเสียงพร้อมฟองน้ำกันยุบ 10mm', cost: '฿18,400' },
+          { name: 'ชุดรางไฟ LED Linear Warm White 3000K', calc: 'ความยาว 12 เมตร พร้อม Driver Meanwell', cost: '฿10,000' }
+        ]
+      },
+      'WI-004': {
+        code: 'WI-004',
+        title: 'ผ้าม่านลอน 2 ชั้น (Blackout ทึบแสง 100% + ผ้าโปร่ง Sheer)',
+        cost: '฿42,000.00',
+        boms: [
+          { name: 'ผ้า Blackout ทึบแสง 100% (Belgium Fabric)', calc: 'ผ้าทอน้ำหนักทิ้งตัวสวย 32 เมตร', cost: '฿24,000' },
+          { name: 'ผ้าโปร่ง Sheer สีขาวนวลกรองแสง', calc: 'ผ้าโปร่งพริ้วไหว 30 เมตร', cost: '฿11,500' },
+          { name: 'รางม่านดัดโค้งอะลูมิเนียม & ลูกล้อลูกปืน', calc: '2 ชุดรางคู่ พร้อมติดตั้งบนฝ้าดรอป', cost: '฿6,500' }
+        ]
+      },
+      'WI-005': {
+        code: 'WI-005',
+        title: 'วอลเปเปอร์ไวนิลนำเข้า ลาย Texture ผ้าลินินรอบห้อง Living',
+        cost: '฿15,750.00',
+        boms: [
+          { name: 'ม้วนวอลเปเปอร์ไวนิลเกรดพรีเมียม (Japan)', calc: '12 ม้วน (พื้นที่ 65 ตร.ม.)', cost: '฿10,800' },
+          { name: 'กาวสูตร Eco ไร้กลิ่นฉุน & ช่างติดวอลล์', calc: 'ทีมช่างชำนาญการ 1 วัน', cost: '฿4,950' }
+        ]
+      },
+      'WI-006': {
+        code: 'WI-006',
+        title: 'ค่าแรงทีมช่างติดตั้งงานบิวต์อินและดูแลความสะอาดส่งมอบห้อง',
+        cost: '฿30,000.00',
+        boms: [
+          { name: 'ทีมช่างติดตั้งประจำ 4 นาย (14 วัน)', calc: 'ควบคุมงานโดยโฟร์แมน We Cover', cost: '฿26,000' },
+          { name: 'วัสดุโพรเทกต์พื้นและเครื่องดูดฝุ่น HEPA', calc: 'พลาสติกฟิวเจอร์บอร์ดกันรอยพื้นหินอ่อน', cost: '฿4,000' }
+        ]
+      }
+    };
+
+    function selectRow(code, rowEl) {
+      document.querySelectorAll('#specTable tbody tr').forEach(tr => tr.classList.remove('active-row'));
+      rowEl.classList.add('active-row');
+
+      const data = itemData[code];
+      if (!data) return;
+
+      document.getElementById('detailItemCode').textContent = data.code;
+      const codeBadge = document.getElementById('detailItemCodeBadge');
+      if (codeBadge) codeBadge.textContent = data.code;
+      document.getElementById('detailItemName').textContent = data.title;
+      const costEl = document.getElementById('detailItemCost');
+      if (costEl) costEl.textContent = data.cost;
+      
+      const mobileBadge = document.getElementById('mobileTabItemCode');
+      if (mobileBadge) mobileBadge.textContent = data.code;
+
+      const container = document.getElementById('bomListContainer');
+      container.innerHTML = '';
+      data.boms.forEach(b => {
+        const li = document.createElement('li');
+        li.className = 'bom-item';
+        li.innerHTML = `
+          <div>
+            <div class="bom-name">${b.name}</div>
+            <div class="bom-calc">${b.calc}</div>
+          </div>
+          <div class="bom-cost">${b.cost}</div>
+        `;
+        container.appendChild(li);
+      });
+
+      // Mobile feedback notification
+      if (window.innerWidth <= 768) {
+        showMobileToast(`เลือก ${data.code} แล้ว • แตะแท็บ "ชิ้นส่วน BOM" เพื่อตรวจเช็กสเปก`);
+      }
+    }
+
+    // Mobile Responsive View Switcher
+    function switchMobileView(view) {
+      const tabSpec = document.getElementById('tabSpecBtn');
+      const tabBom = document.getElementById('tabBomBtn');
+
+      if (view === 'bom') {
+        document.body.classList.add('view-mobile-bom');
+        document.body.classList.remove('view-mobile-spec');
+        if (tabBom) { tabBom.classList.add('active'); tabBom.setAttribute('aria-selected', 'true'); }
+        if (tabSpec) { tabSpec.classList.remove('active'); tabSpec.setAttribute('aria-selected', 'false'); }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        document.body.classList.remove('view-mobile-bom');
+        document.body.classList.add('view-mobile-spec');
+        if (tabSpec) { tabSpec.classList.add('active'); tabSpec.setAttribute('aria-selected', 'true'); }
+        if (tabBom) { tabBom.classList.remove('active'); tabBom.setAttribute('aria-selected', 'false'); }
+      }
+    }
+
+    // Non-intrusive Mobile Toast Notification
+    function showMobileToast(msg) {
+      let toast = document.getElementById('mobileToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'mobileToast';
+        toast.className = 'mobile-toast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    function filterCategory(cat, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      document.querySelectorAll('#specTable tbody tr').forEach(tr => {
+        if (cat === 'all' || tr.getAttribute('data-category') === cat) {
+          tr.style.display = '';
+        } else {
+          tr.style.display = 'none';
+        }
+      });
+    }
+
+    function handleSearch(val) {
+      const q = val.toLowerCase().trim();
+      document.querySelectorAll('#specTable tbody tr').forEach(tr => {
+        const text = tr.innerText.toLowerCase();
+        tr.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function toggleTheme() {
+      const current = document.body.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', next);
+      
+      const label = document.getElementById('themeToggleLabel');
+      const svg = document.getElementById('themeSvg');
+      if (next === 'dark') {
+        label.textContent = 'Light';
+        svg.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+      } else {
+        label.textContent = 'Dark';
+        svg.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+      }
+    }
+
+    function submitToChecker() {
+      alert('บันทึกและส่งประมาณการ EST-2026-0042 (Rev 02) เข้าคิวตรวจอนุมัติ (Maker-Checker Workflow) เรียบร้อยแล้ว');
+    }
+
+    function openDiffModal() {
+      alert('กำลังเปรียบเทียบความแตกต่างระหว่าง Rev 01 และ Rev 02:\n• ปรับสเปกและราคาเคาน์เตอร์ Quartz (WI-002) จากเดิม GP 24% เป็น 30.3%\n• ยอดรวมประมาณการปรับขึ้น +฿21,500 THB');
+    }
+  </script>
+</body>
+</html>
