@@ -18,3 +18,5 @@
 | Auditor | อ่าน Audit Trail และรายงานควบคุม | แก้ Business Record |
 
 Role เป็นชุด Permission ไม่ควรผูก Business Logic กับชื่อ Role โดยตรง เพราะองค์กรอาจตั้งชื่อหรือจัดหน้าที่ใหม่ในอนาคต
+
+Workflow และข้อห้ามของ Pricing Template Owner/Approver อยู่ที่ [Pricing Template Governance](pricing-template-governance.md)

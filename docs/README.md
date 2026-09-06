@@ -5,7 +5,7 @@
 ## ทางลัดตามผู้อ่าน
 
 - ผู้บริหาร/เจ้าของงาน: [Product Vision](00-overview/product-vision.md) → [Scope](00-overview/scope-and-non-goals.md) → [Roadmap](00-overview/implementation-roadmap.md)
-- ฝ่ายประเมินราคา: [End-to-End Flow](01-business/end-to-end-business-flow.md) → [Quick Estimate Flow](01-business/quick-estimate-flow.md) → [Quick Estimate Pricing](01-business/quick-estimate-pricing-rules.md) → [Template Catalog](01-business/quick-estimate-template-catalog.md) → [Estimation Flow](01-business/estimation-flow.md) → [Approval Matrix](01-business/approval-matrix.md)
+- ฝ่ายประเมินราคา: [End-to-End Flow](01-business/end-to-end-business-flow.md) → [Quick Estimate Flow](01-business/quick-estimate-flow.md) → [Quick Estimate Pricing](01-business/quick-estimate-pricing-rules.md) → [Template Catalog](01-business/quick-estimate-template-catalog.md) → [Template Governance](01-business/pricing-template-governance.md) → [Estimation Flow](01-business/estimation-flow.md) → [Approval Matrix](01-business/approval-matrix.md)
 - นักพัฒนา: [System Context](02-architecture/system-context.md) → [Module Boundaries](02-architecture/module-boundaries.md) → [Contracts](03-contracts/api-conventions.md)
 - ผู้ดูแลระบบ: [Environments](06-operations/environments.md) → [Observability](06-operations/observability.md) → [Backup](06-operations/backup-and-restore.md)
 - ทุกคนที่อยากเห็นภาพ: [Documentation Portal](portal/README.md)
@@ -21,6 +21,7 @@
 | ราคาประเมินเบื้องต้นหน้างาน | [Quick Estimate Flow](01-business/quick-estimate-flow.md) |
 | สูตร Quick Estimate และ Pricing Template | [Quick Estimate Pricing Rules](01-business/quick-estimate-pricing-rules.md) |
 | Field, ตัวอย่าง และ Test Case ของ Quick Estimate | [Quick Estimate Template Catalog](01-business/quick-estimate-template-catalog.md) |
+| การสร้าง อนุมัติ เปิดใช้ และเปลี่ยน Pricing Template/Rate | [Pricing Template Governance](01-business/pricing-template-governance.md) |
 | กระบวนการประเมินราคา | [Estimation Flow](01-business/estimation-flow.md) |
 | สูตรประเมินราคา | [Estimation Calculation](01-business/estimation-calculation-rules.md) |
 | คำศัพท์ธุรกิจ | [CONTEXT.md](../CONTEXT.md) |

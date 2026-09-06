@@ -84,13 +84,16 @@ Permission Key และ Scope ที่เป็น Contract อยู่ที
 ## Pricing Template Lifecycle
 
 ```text
-Draft → Calibration → Active → Superseded
-                         └────→ Disabled
+Draft → Submitted → Approved → Calibration → Active → Superseded
+  ↑         │                                   └────→ Disabled
+  └─Returned┘
 ```
 
 | สถานะ | ใช้เมื่อ |
 | --- | --- |
 | `Draft` | กำลังจัดกฎและยังใช้ประเมินไม่ได้ |
+| `Submitted` | รอผู้ตรวจ; ผู้จัดทำต้องรอ Return ก่อนแก้ |
+| `Approved` | ผ่าน Maker–Checker แต่ยังไม่เปิด Calibration |
 | `Calibration` | ทดลองกับกรณีควบคุมหรือ Pilot; ทุกการแชร์ต้อง Review |
 | `Active` | ใช้คำนวณและแชร์ตาม Risk-based Policy |
 | `Superseded` | มี Version ใหม่แทน แต่ Snapshot เก่ายังอ่านได้ |
@@ -99,6 +102,8 @@ Draft → Calibration → Active → Superseded
 Template Version ต้องเก็บ Work Type, Measurement Rule, Unit, Rate Source, Factor, Add-on, Minimum Charge, Range, Rounding, Required Field/Evidence, Assumption, Exclusion, Validity, Effective Period, Creator และ Approver
 
 เมื่อ Rate, Formula, Unit หรือ Policy ที่มีผลต่อราคาเปลี่ยน ต้องสร้าง Version ใหม่ Organization เป็นเจ้าของ Standard Rate และ Branch Override ได้เมื่อมี Permission, Reason, Effective Period และ Approval
+
+Field, Validation Gate, Maker–Checker, Branch Override และ Test Case ของการบริหาร Version อยู่ที่ [Pricing Template Governance](pricing-template-governance.md)
 
 ## Validity, Rounding, Tax และ Discount
 

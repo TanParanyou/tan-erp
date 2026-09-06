@@ -52,6 +52,11 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `QUICK_ESTIMATE_RATE_UNAVAILABLE` | 409 | ไม่มี Reference Rate ที่ใช้ได้ ณ วันที่คำนวณ; เก็บ Draft และให้ผู้ดูแลราคาแก้ไข |
 | `PRICING_TEMPLATE_INVALID` | 422 | Formula, Field, Unit หรือ Test Case ไม่ผ่าน; ห้าม Submit/Publish |
 | `PRICING_TEMPLATE_NOT_USABLE` | 409 | Template อยู่ใน Draft, Superseded หรือ Disabled จึงเริ่มคำนวณ/แชร์ใหม่ไม่ได้; Calibration ยังใช้ได้โดยบังคับ Review |
+| `PRICING_TEMPLATE_INVALID_STATE` | 409 | Action ใช้กับสถานะปัจจุบันไม่ได้ เช่น Publish ก่อน Approve |
+| `PRICING_TEMPLATE_VERSION_CONFLICT` | 409 | `rowVersion` ไม่ตรงเพราะมีผู้แก้ข้อมูลใหม่กว่า; ให้ Reload/Compare |
+| `PRICING_RATE_PERIOD_OVERLAP` | 409 | Rate/Branch Override ของ Item, Unit และ Scope เดียวกันมี Effective Period ซ้อนกัน |
+| `PRICING_TEMPLATE_PILOT_NOT_PASSED` | 422 | Calibration/Pilot ยังไม่ผ่านเกณฑ์ จึง Activate ไม่ได้ |
+| `MAKER_CHECKER_VIOLATION` | 403 | ผู้จัดทำหรือผู้แก้ล่าสุดพยายามอนุมัติรายการที่ต้องแยกผู้ตรวจ |
 
 การ Retry Convert ด้วย **Idempotency Key เดิม** ต้องคืนผล Conversion เดิม ไม่คืน `QUICK_ESTIMATE_ALREADY_CONVERTED` รหัสนี้ใช้เมื่อเป็นคำขอใหม่ที่พยายาม Convert Source Version เดิมอีกครั้งโดยไม่ได้ระบุเจตนาสร้าง Revision ใหม่
 

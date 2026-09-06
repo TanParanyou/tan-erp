@@ -35,7 +35,7 @@
       "status": "draft",
       "document": "../01-business/quick-estimate-template-catalog.md",
       "details": [
-        { "th": "Template ใหม่ต้องผ่าน Draft และ Calibration ก่อนเป็น Active", "en": "A new template moves through Draft and Calibration before becoming Active." },
+        { "th": "Template ใหม่ต้องผ่าน Draft, Submitted, Approved และ Calibration ก่อนเป็น Active", "en": "A new template moves through Draft, Submitted, Approved and Calibration before becoming Active." },
         { "th": "Published Version แก้ย้อนหลังไม่ได้", "en": "A published version cannot be edited retroactively." }
       ]
     },

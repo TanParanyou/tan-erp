@@ -114,7 +114,7 @@ img { display: block; max-width: 100%; }
 .language-switch { display: flex; border: 1px solid var(--ink-faint); background: #FFFFFF; }
 .language-switch button {
   min-width: 44px;
-  min-height: 36px;
+  min-height: 44px;
   border: 0;
   border-right: 1px solid var(--ink-faint);
   background: transparent;
@@ -183,7 +183,7 @@ h1 { margin: 0; max-width: 16ch; font-size: clamp(2.2rem, 5vw, 4rem); font-weigh
 
 .controls { display: grid; grid-template-columns: 2fr 1fr; gap: 1px; margin-top: var(--space-3); background: var(--ink-faint); border: 1px solid var(--ink-faint); }
 .controls label { display: grid; gap: 0.4rem; padding: var(--space-2); background: #FFFFFF; color: var(--ink-soft); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; }
-.controls input, .controls select { min-height: 40px; width: 100%; border: 0; border-bottom: 2px solid var(--accent); background: transparent; color: var(--ink); font-size: 13px; }
+.controls input, .controls select { min-height: 44px; width: 100%; border: 0; border-bottom: 2px solid var(--accent); background: transparent; color: var(--ink); font-size: 13px; }
 
 .loading-state, .error-state { padding: var(--space-6) 0; color: var(--ink-soft); }
 .error-state { margin-top: var(--space-3); padding: var(--space-3); border-left: 4px solid #991B1B; background: #FEF2F2; color: #991B1B; white-space: pre-line; }

@@ -12,6 +12,8 @@ Master Data ที่ Phase Estimation ต้องมีอย่างน้�
 - Document Numbering Rule
 - Organization และ Branch
 
+Pricing Template และ Reference Rate เป็น Versioned Master Data ที่มีกระบวนการอนุมัติเพิ่มเติม รายละเอียดอยู่ที่ [Pricing Template Governance](../01-business/pricing-template-governance.md)
+
 ## Data Quality Rules
 
 - Code ต้องไม่ซ้ำภายใน Organization ตามขอบเขตที่กำหนด
