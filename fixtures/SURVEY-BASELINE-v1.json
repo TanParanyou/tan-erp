@@ -1,0 +1,13 @@
+{
+  "templateCode": "SURVEY-BASELINE-v1",
+  "owner": "system",
+  "classification": "TEST_ONLY",
+  "status": "baseline",
+  "requiredSections": [
+    "site",
+    "measurement",
+    "checklist",
+    "evidence"
+  ],
+  "businessApproved": false
+}

@@ -1,0 +1,16 @@
+{
+  "name": "tan-erp",
+  "private": true,
+  "engines": {
+    "node": "24.20.x"
+  },
+  "devDependencies": {
+    "ajv": "8.17.1"
+  },
+  "scripts": {
+    "test:fixtures": "node --test fixtures/survey-baseline.test.mjs",
+    "verify:backend": "dotnet restore backend/TanErp.slnx && dotnet build backend/TanErp.slnx --no-restore && dotnet test backend/TanErp.slnx --no-build",
+    "verify:frontend": "npm --prefix frontend run verify",
+    "verify": "npm run test:fixtures && npm run verify:backend && npm run verify:frontend"
+  }
+}

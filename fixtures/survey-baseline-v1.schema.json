@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SurveyBaselineV1Schema",
+  "description": "Schema for system-owned deterministic survey baseline fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "templateCode",
+    "owner",
+    "classification",
+    "status",
+    "requiredSections",
+    "businessApproved"
+  ],
+  "properties": {
+    "templateCode": {
+      "type": "string",
+      "const": "SURVEY-BASELINE-v1"
+    },
+    "owner": {
+      "type": "string",
+      "const": "system"
+    },
+    "classification": {
+      "type": "string",
+      "const": "TEST_ONLY"
+    },
+    "status": {
+      "type": "string",
+      "const": "baseline"
+    },
+    "requiredSections": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "businessApproved": {
+      "type": "boolean",
+      "const": false
+    }
+  }
+}
