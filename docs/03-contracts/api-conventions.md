@@ -26,6 +26,8 @@ Action endpoint ใช้เมื่อเป็น Business Transition ที�
 
 Endpoint และ Payload เฉพาะ Mobile Quick Estimate อยู่ที่ [Quick Estimate API Contract](quick-estimate-api-contract.md)
 
+Endpoint และ Payload ของ Official Estimate/BOQ อยู่ที่ [Official Estimate API Contract](official-estimate-api-contract.md)
+
 ## Contract Rules
 
 - OpenAPI เป็น Machine-readable contract สำหรับสร้าง Type ฝั่ง Frontend

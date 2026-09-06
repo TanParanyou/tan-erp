@@ -58,6 +58,10 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `PRICING_TEMPLATE_PILOT_NOT_PASSED` | 422 | Calibration/Pilot ยังไม่ผ่านเกณฑ์ จึง Activate ไม่ได้ |
 | `MAKER_CHECKER_VIOLATION` | 403 | ผู้จัดทำหรือผู้แก้ล่าสุดพยายามอนุมัติรายการที่ต้องแยกผู้ตรวจ |
 | `IDEMPOTENCY_KEY_REUSED` | 409 | ใช้ Idempotency Key เดิมกับ Payload ต่างจากคำขอแรก; ต้องสร้าง Key ใหม่เมื่อเป็นเจตนาใหม่ |
+| `ESTIMATE_VERSION_CONFLICT` | 409 | ETag/Revision ที่ส่งมาเก่ากว่าข้อมูลปัจจุบัน; ให้ Reload/Compare |
+| `ESTIMATE_CALCULATION_OUTDATED` | 409 | Draft เปลี่ยนหลังคำนวณ; ต้อง Calculate ใหม่ก่อน Submit |
+| `ESTIMATE_INVALID_STATE` | 409 | Action ไม่รองรับสถานะปัจจุบัน เช่น แก้ Approved Revision หรือออก Quotation จาก Draft |
+| `ESTIMATE_COST_INCOMPLETE` | 422 | Work Item มี Cost Component หรือ Cost Source ไม่ครบ; ระบุ Field/Item ที่ต้องแก้ |
 
 การ Retry Convert ด้วย **Idempotency Key เดิม** ต้องคืนผล Conversion เดิม ไม่คืน `QUICK_ESTIMATE_ALREADY_CONVERTED` รหัสนี้ใช้เมื่อเป็นคำขอใหม่ที่พยายาม Convert Source Version เดิมอีกครั้งโดยไม่ได้ระบุเจตนาสร้าง Revision ใหม่
 
