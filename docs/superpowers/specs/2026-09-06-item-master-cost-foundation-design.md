@@ -1,0 +1,193 @@
+# Item Master and Cost Foundation Design
+
+**สถานะ:** Approved Design Direction  
+**ขอบเขต:** Documentation Foundation เท่านั้น
+
+## เป้าหมาย
+
+สร้างรากฐานข้อมูลสินค้า วัสดุ แรงงาน บริการ ผู้รับเหมา หน่วยนับ และต้นทุนอ้างอิงที่ Official Estimate ใช้ได้อย่างตรวจสอบย้อนหลัง พร้อมรองรับการต่อยอด Procurement, Inventory, Production และ MRP โดยไม่สร้างโมดูลเหล่านั้นก่อนเวลา
+
+## แนวทางที่เลือก
+
+ใช้ **Typed Item + Capability Flags + Versioned Cost Records**:
+
+- `itemType` อธิบายธรรมชาติของรายการ: material, labor, service, subcontract หรือ other
+- Capability ระบุการใช้งาน: `canSell`, `canCost`, `canPurchase`, `canStock`, `canProduce`
+- Item Master เก็บ Identity/Classification/Default Unit; ไม่เก็บ Current Cost ก้อนเดียวบน Item
+- Cost Record แยกเป็น Versioned Record ที่มี Source, Unit, Currency, Quantity Break, Branch Scope และ Effective Period
+- Estimate เก็บ Cost Snapshot ที่ใช้จริง จึงไม่เปลี่ยนตาม Master Data ภายหลัง
+- Phase แรกไม่สร้าง BOM, Stock Balance, Supplier Contract หรือ General-purpose Workflow Builder
+
+แนวทางนี้ยืดหยุ่นกว่าการใช้ Item Type เป็นตัวกำหนดทุกพฤติกรรม และปลอดภัยกว่าการเก็บราคาเดียวบน Item ส่วนการสร้าง Generic Product Model เต็มรูปแบบถูกเลื่อนไปจนมีข้อมูล Procurement/Inventory/Production จริง
+
+## Domain Boundaries
+
+- Item Master เป็นข้อมูลมาตรฐานที่นำกลับมาใช้ ไม่ใช่ Work Item ใน Estimate
+- Work Item เป็นขอบเขตงาน/ผลส่งมอบ และอาจอ้าง Item ที่ `canSell=true`
+- Cost Component อ้าง Item ที่ `canCost=true` พร้อม Cost Record/Snapshot
+- Unit Conversion เป็นของ Item เมื่อการแปลงขึ้นกับขนาด/บรรจุภัณฑ์; Conversion กลางใช้เฉพาะมิติเดียวกันและ Exact เท่านั้น
+- Cost Source บอกที่มา/หลักฐาน ส่วน Cost Record บอกค่าต้นทุนที่ใช้ได้ใน Scope/ช่วงเวลา
+- Reference Rate ของ Quick Estimate ไม่ใช่ Cost Record ของ Official Estimate
+
+## Item Lifecycle
+
+```text
+Draft → Active → Inactive
+```
+
+- Draft เก็บข้อมูลไม่ครบได้แต่ใช้ใน Estimate ใหม่ไม่ได้
+- Active ต้องผ่าน Required Field/Unit/Capability Validation
+- Inactive ห้ามเลือกใหม่แต่ Historical Snapshot ยังอ่านได้
+- Item ที่เคยถูกใช้งานห้าม Hard Delete
+- Code เปลี่ยนไม่ได้หลัง Active ครั้งแรก; Name/Category/Capability เปลี่ยนได้พร้อม Audit และ ETag
+
+## Cost Lifecycle
+
+```text
+Draft → Submitted → Approved → Published → Superseded
+   └──── Returned ─────┘          └──────→ Disabled
+```
+
+- Published Cost Record แก้ย้อนหลังไม่ได้
+- Cost Version ใหม่อาจกำหนด Effective From ในอนาคต
+- Period ที่ชนกันใน Item/Unit/Currency/Quantity Range/Branch Scope เดียวกันต้อง Reject
+- Branch Override เป็น Cost Record ที่ Scope แคบกว่า ไม่แก้ Organization Default
+- Disable หยุดการเลือกสำหรับ Estimate ใหม่ แต่ไม่กระทบ Snapshot เดิม
+
+## Deterministic Cost Resolution
+
+เลือก Cost ตามลำดับ:
+
+1. Organization, Item, Unit, Currency และ Estimate Date ต้องตรง
+2. Branch-specific Record ชนะ Organization Default
+3. Quantity ต้องอยู่ใน Quantity Break
+4. Source Priority มาจาก Versioned Cost Policy
+5. Effective From ใหม่ที่สุดชนะ
+6. หากยังเหลือหลายรายการระดับเดียวกัน ให้ Block `ITEM_COST_AMBIGUOUS` แทนการสุ่มเลือก
+
+หากไม่พบ Cost ให้ผู้มีสิทธิ์ใช้ Provisional Cost พร้อมเหตุผลและ Approval Trigger หรือหยุดไว้เป็น Draft
+
+## Unit Model
+
+- Unit มี Code, Name TH/EN, Symbol, Dimension และ Decimal Scale
+- Base Unit อยู่บน Item และทุก Cost Record ระบุ Unit ชัดเจน
+- Conversion Factor ใช้ Decimal และมี Direction/Effective Period
+- Exact Conversion กลางใช้ได้เฉพาะ Dimension เดียวกัน เช่น cm ↔ m
+- Packaging/Size Conversion เช่น sheet ↔ m² ต้องผูก Item/Variant และมี Rounding Rule
+- ห้ามแปลงข้าม Dimension โดยเดา Factor
+
+## Import Model
+
+Import ใช้ Two-phase Batch:
+
+```text
+Upload → Parse → Preview/Validate → Commit หรือ Reject
+```
+
+- รองรับ CSV/XLSX แบบ Data-only; ไม่รัน Macro/Formula/External Link
+- Item และ Cost ใช้ Sheet/Template แยกกัน
+- Preview แสดง Create/Update/Skip/Error ก่อน Commit
+- แถว Error ไม่ถูก Commit แบบ Partial โดยค่าเริ่มต้น
+- Commit เป็น Atomic ต่อ Batch และใช้ Idempotency Key
+- Duplicate ตรวจด้วย Organization + Item Code และ Cost Natural Key
+- Export Error Report มี Row, Field, Stable Code และข้อความไทย/อังกฤษ
+
+## Responsive UX
+
+- Desktop: Master table + filter + Inspector; Cost History/Branch Override อยู่ใน Detail
+- Tablet: table/card hybrid + Side Sheet
+- Mobile: search/list → item detail; แก้ Field สำคัญและดู Current Cost ได้ แต่ Bulk Import เป็น Desktop/Tablet workflow
+- ทุกขนาดแสดง Active/Inactive, Missing Cost, Stale Cost, Future Cost และ Branch Override โดยไม่ใช้สีอย่างเดียว
+- Touch Target ≥44px, Input Mobile ≥48px, Keyboard/Screen Reader, Zoom 200%, ไทย/อังกฤษ และ Reduced Motion
+
+## API Direction
+
+Resource API:
+
+```text
+GET/POST        /api/v1/items
+GET/PATCH       /api/v1/items/{id}
+POST            /api/v1/items/{id}/activate
+POST            /api/v1/items/{id}/deactivate
+GET/POST        /api/v1/items/{id}/cost-records
+POST            /api/v1/cost-records/{id}/submit
+POST            /api/v1/cost-records/{id}/review-decisions
+POST            /api/v1/cost-records/{id}/publish
+GET/POST        /api/v1/units
+GET/POST        /api/v1/item-unit-conversions
+POST            /api/v1/item-import-batches
+POST            /api/v1/item-import-batches/{id}/commit
+```
+
+- Firebase ให้ Identity; PostgreSQL ตรวจ Membership/Permission/Scope
+- Draft mutation ใช้ ETag/If-Match
+- Activate/Publish/Import Commit ใช้ Idempotency Key
+- List ใช้ Cursor Pagination และ Stable Sort
+- Import Upload ส่งผ่าน File Service Contract; API ไม่รับ Base64 file ใน JSON
+- Error ใช้ RFC 9457 + Stable Code + Field/Row Pointer
+
+## Data Direction
+
+Relational Core:
+
+- items, item_categories, item_capabilities
+- units, unit_conversions, item_unit_conversions
+- cost_sources, cost_records, cost_record_reviews
+- item_import_batches, item_import_rows
+- audit events และ estimate cost snapshots
+
+JSONB ใช้เฉพาะ Import Raw Row/Validation Metadata และ Versioned Cost Policy Snapshot ห้ามเก็บ Item/Unit/Cost Core เป็น JSONB ก้อนเดียว
+
+## Permission Direction
+
+- `items.read`, `items.create`, `items.update`, `items.activate`, `items.deactivate`
+- `cost-records.read`, `cost-records.create`, `cost-records.submit`, `cost-records.approve`, `cost-records.publish`, `cost-records.disable`
+- `units.read`, `units.manage`
+- `item-imports.create`, `item-imports.commit`
+
+การมี Permission ไม่ข้าม Scope, State, Maker–Checker หรือ Cost Authority
+
+## Documents to Deliver
+
+1. `docs/01-business/item-master-flow.md`
+2. `docs/01-business/item-master-field-catalog.md`
+3. `docs/01-business/item-master-governance.md`
+4. `docs/01-business/item-master-responsive-wireframe.md`
+5. `docs/portal/assets/item-master-responsive-wireframe.svg`
+6. `docs/03-contracts/item-master-api-contract.md`
+7. `docs/04-data/item-master-data-contract.md`
+8. `docs/05-engineering/item-master-uat-scenarios.md`
+9. `docs/portal/data/item-master-flow.json`
+10. ADR สำหรับ Typed Item/Capability และ Versioned Cost Record
+11. Cross-links ใน Requirement, Permission, Error, Master Data, Conceptual Model, Documentation Map และ Portal Catalog
+
+## Test Coverage
+
+- Item lifecycle, duplicate code และ inactive historical reference
+- Capability/Unit validation และ invalid conversion
+- Cost effective period overlap, branch precedence, quantity break และ ambiguous cost
+- Provisional cost, stale cost, maker–checker และ published immutability
+- ETag conflict, idempotent publish/import และ cross-organization denial
+- Import preview/atomic commit/error report
+- Estimate snapshot ไม่เปลี่ยนเมื่อ Item/Cost รุ่นใหม่ถูก Publish
+- Responsive/keyboard/Thai-English/customer-safe display
+
+## Out of Scope
+
+- Supplier onboarding, Purchase Order และ Contract Management
+- Stock on Hand, Warehouse, Lot/Serial และ Valuation
+- BOM/Recipe, Routing, Work Center และ Production Planning
+- Multi-level Variant/Configurator และ Product Rules Engine
+- Automatic currency conversion
+- การนำ Demo Cost ไปใช้ Production โดยไม่อนุมัติ
+
+## Acceptance Criteria
+
+- Item/Work Item/Cost Component/Cost Source/Cost Record ใช้ความหมายไม่ปะปนกัน
+- Cost Resolution ให้ผลเดิมจาก Item/Unit/Currency/Date/Quantity/Branch/Policy Version เดิม
+- Published Cost และ Historical Estimate Snapshot แก้ย้อนหลังไม่ได้
+- Import ไม่ Commit ข้อมูลบางส่วนโดยไม่ตั้งใจและ Error ชี้ Row/Field ได้
+- Desktop/Tablet/Mobile Wireframe แสดง State/Error/Permission ครบ
+- API/Data/RBAC/Error/JSON Flow ใช้ชื่อและ Lifecycle เดียวกัน
+- ไม่มี Threshold/Cost จริงที่ไม่ได้ติด `TEST_ONLY`
+- ไม่มี Application Code หรือ Dependency ใหม่
