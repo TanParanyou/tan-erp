@@ -18,7 +18,8 @@
 POST   /api/v1/estimates
 GET    /api/v1/estimates/{estimateId}
 POST   /api/v1/estimates/{estimateId}/submit
-POST   /api/v1/estimates/{estimateId}/approve
+POST   /api/v1/estimates/{estimateId}/review-decisions
+POST   /api/v1/estimates/{estimateId}/cancel
 POST   /api/v1/estimates/{estimateId}/revisions
 ```
 

@@ -10,7 +10,7 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 {
   "type": "https://tan-erp.local/problems/estimate-invalid-state",
   "title": "ไม่สามารถอนุมัติประมาณการได้",
-  "status": 422,
+  "status": 409,
   "code": "ESTIMATE_INVALID_STATE",
   "detail": "ประมาณการต้องอยู่ในสถานะรอตรวจสอบก่อนอนุมัติ",
   "traceId": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
@@ -56,12 +56,26 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `PRICING_TEMPLATE_VERSION_CONFLICT` | 409 | `rowVersion` ไม่ตรงเพราะมีผู้แก้ข้อมูลใหม่กว่า; ให้ Reload/Compare |
 | `PRICING_RATE_PERIOD_OVERLAP` | 409 | Rate/Branch Override ของ Item, Unit และ Scope เดียวกันมี Effective Period ซ้อนกัน |
 | `PRICING_TEMPLATE_PILOT_NOT_PASSED` | 422 | Calibration/Pilot ยังไม่ผ่านเกณฑ์ จึง Activate ไม่ได้ |
+
+## Shared Control Error Codes
+
+| Code | HTTP | ความหมาย/การกู้คืน |
+| --- | ---: | --- |
 | `MAKER_CHECKER_VIOLATION` | 403 | ผู้จัดทำหรือผู้แก้ล่าสุดพยายามอนุมัติรายการที่ต้องแยกผู้ตรวจ |
 | `IDEMPOTENCY_KEY_REUSED` | 409 | ใช้ Idempotency Key เดิมกับ Payload ต่างจากคำขอแรก; ต้องสร้าง Key ใหม่เมื่อเป็นเจตนาใหม่ |
+
+## Official Estimate Error Codes
+
+| Code | HTTP | ความหมาย/การกู้คืน |
+| --- | ---: | --- |
 | `ESTIMATE_VERSION_CONFLICT` | 409 | ETag/Revision ที่ส่งมาเก่ากว่าข้อมูลปัจจุบัน; ให้ Reload/Compare |
 | `ESTIMATE_CALCULATION_OUTDATED` | 409 | Draft เปลี่ยนหลังคำนวณ; ต้อง Calculate ใหม่ก่อน Submit |
 | `ESTIMATE_INVALID_STATE` | 409 | Action ไม่รองรับสถานะปัจจุบัน เช่น แก้ Approved Revision หรือออก Quotation จาก Draft |
 | `ESTIMATE_COST_INCOMPLETE` | 422 | Work Item มี Cost Component หรือ Cost Source ไม่ครบ; ระบุ Field/Item ที่ต้องแก้ |
+| `ESTIMATE_FIELD_REQUIRED` | 422 | Field ที่ Gate ปัจจุบันบังคับยังว่าง; คืน Field Pointer ที่แก้ได้ |
+| `ESTIMATE_UNIT_INVALID` | 422 | Unit ไม่ Active หรือไม่เข้ากับ Item/Cost Source |
+| `ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED` | 422 | ใช้ต้นทุนชั่วคราวแต่ยังไม่มี Reason Code/คำอธิบายที่บังคับ |
+| `ESTIMATE_POLICY_UNAVAILABLE` | 409 | Resolve Published Calculation/Tax/Approval Policy หรือ Independent Checker ไม่ได้; ห้าม Calculate/Submit ตาม Gate |
 
 การ Retry Convert ด้วย **Idempotency Key เดิม** ต้องคืนผล Conversion เดิม ไม่คืน `QUICK_ESTIMATE_ALREADY_CONVERTED` รหัสนี้ใช้เมื่อเป็นคำขอใหม่ที่พยายาม Convert Source Version เดิมอีกครั้งโดยไม่ได้ระบุเจตนาสร้าง Revision ใหม่
 

@@ -30,8 +30,16 @@
 | FR-EST-002 | คำนวณต้นทุน ราคาขาย ส่วนลด ภาษี และกำไรอย่างตรวจสอบได้ | 2 | Draft |
 | FR-EST-003 | การเปลี่ยนสาระสำคัญสร้าง Estimate Revision ใหม่ | 2 | Accepted principle |
 | FR-EST-004 | ตรวจ Missing Data, Stale Cost, Low Margin และ Override ก่อนอนุมัติ | 2 | Draft |
-| FR-APP-001 | Routing การอนุมัติพิจารณาวงเงิน Margin Discount และ Risk | 2 | Draft |
+| FR-EST-005 | Field Catalog กำหนด Required Gate, Validation, Permission และ Customer Visibility | 2 | Accepted direction |
+| FR-EST-006 | Calculation Policy มี Version/Effective Period และทุกผลมี Calculation Snapshot ที่ทำซ้ำได้ | 2 | Accepted direction |
+| FR-EST-007 | Client เขียน Derived Total, Margin, Tax หรือ Approval State โดยตรงไม่ได้ | 2 | Accepted principle |
+| FR-EST-008 | Approved, Quoted และ Cancelled Revision แก้ย้อนหลังไม่ได้ | 2 | Accepted principle |
+| FR-APP-001 | Routing การอนุมัติพิจารณาวงเงิน Margin Discount และ Risk | 2 | Accepted direction |
+| FR-APP-002 | ไม่มี Policy/Checker ที่ใช้ได้ต้อง Fail-closed และทุก Estimate ใช้ Maker–Checker จนยืนยันวงเงินจริง | 2 | Accepted direction |
+| FR-APP-003 | Approval Route และ Threshold ถูก Freeze ตอน Submit และ Policy ใหม่ไม่แก้ Route เดิม | 2 | Accepted direction |
+| FR-APP-004 | Permission, Resource Scope และ Approval Authority ต้องผ่านพร้อมกัน | 2 | Accepted direction |
 | FR-QUO-001 | Quotation อ้างอิง Estimate Revision ที่อนุมัติ | 2–3 | Accepted principle |
+| FR-QUO-002 | Customer-facing Output ใช้ Allowlist และไม่เผย Cost, Margin, Internal Note หรือ Approval Detail | 2–3 | Accepted direction |
 | FR-PRJ-001 | Quotation ที่ยืนยันแล้วส่งต่อเป็น Project/Baseline ได้ | 3–4 | Future |
 | FR-MRP-001 | MRP คำนวณความต้องการวัสดุจาก BOM, Inventory และ Production Plan | 5 | Future |
 
@@ -48,6 +56,10 @@
 | NFR-I18N-001 | ทุก Message Key สำคัญมีไทยและอังกฤษ | Automated catalog check |
 | NFR-PERF-001 | Critical queries ผ่าน SLO ที่ธุรกิจอนุมัติ | Load test ด้วยข้อมูลใกล้จริง |
 | NFR-MNT-001 | Dependency Direction และ Module Boundary ตรวจอัตโนมัติ | Architecture tests |
+| NFR-EST-001 | Calculation เดิมให้ผลซ้ำจาก Input/Cost/Policy Snapshot เดิม | Deterministic calculation contract tests |
+| NFR-EST-002 | State, Field Gate และ Reason Code ตรงกันระหว่าง Business, API, Data และ UI | Contract/document consistency check |
+| NFR-EST-003 | Critical Official Estimate flow ผ่าน UAT พร้อม Business/Finance/Security Sign-off | Official Estimate UAT evidence |
+| NFR-EST-004 | Customer-facing Projection ไม่มีข้อมูลต้นทุนหรือกฎอนุมัติภายใน | Projection allowlist security tests |
 | NFR-QEST-001 | Flow ขั้นต่ำของ Quick Estimate ใช้งานบนมือถือได้ มีสถานะบันทึกชัดเจน และ Touch Target ไม่น้อยกว่า 44px | Mobile viewport, keyboard และ accessibility test |
 | NFR-QEST-002 | Calculation Snapshot เดิมต้องคำนวณซ้ำได้ผลเดิม และ Template Publish ไม่ได้จนกว่า Test Matrix ผ่าน | Deterministic calculation และ template contract tests |
 

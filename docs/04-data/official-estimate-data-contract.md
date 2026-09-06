@@ -15,7 +15,7 @@ Estimate
      └─ QuotationLink ─► Quotation
 ```
 
-Estimate เป็น Identity/Lifecycle ส่วน Revision เป็น Business Snapshot ที่เป็น Draft ได้หนึ่งฉบับตาม Policy และ Immutable เมื่อ Approved/Quoted
+Estimate เป็น Identity/Lifecycle ส่วน Revision เป็น Business Snapshot ที่เป็น Draft ได้หนึ่งฉบับตาม Policy และ Immutable เมื่อ Approved/Quoted/Cancelled
 
 ## Relational Core
 
@@ -30,7 +30,7 @@ Estimate เป็น Identity/Lifecycle ส่วน Revision เป็น Busi
 | `site_survey_id` | UUID/null | Optional Source ใน Scope |
 | `source_quick_estimate_version_id` | UUID/null | Optional เท่านั้น |
 | `owner_user_id` | UUID | ผู้รับผิดชอบ |
-| `status` | Enum | draft/submitted/returned/approved/quoted/accepted/expired/cancelled |
+| `status` | Enum | draft/submitted/returned/approved/quoted/cancelled; mirror Current Revision |
 | `current_revision_no` | Integer | ตั้งแต่ 1 |
 | `row_version` | Token | เปลี่ยนทุก Write |
 | `created_at_utc`, `updated_at_utc` | UTC | Server-owned |
@@ -44,8 +44,9 @@ Estimate เป็น Identity/Lifecycle ส่วน Revision เป็น Busi
 | `revision_no` | Integer | Unique `(estimate_id, revision_no)` |
 | `parent_revision_id` | UUID/null | Revision 1 เป็น null |
 | `change_reason_code`, `change_reason` | String/null | บังคับตั้งแต่ Revision 2 |
-| `status` | Enum | draft/submitted/returned/approved/quoted |
+| `status` | Enum | draft/submitted/returned/approved/quoted/cancelled |
 | `currency` | ISO Code | Currency เดียวต่อ Revision ระยะแรก |
+| `calculation_policy_version_id`, `tax_policy_version_id` | UUID/null | Resolve ตอน Calculate และ Freeze ใน Snapshot |
 | `calculation_version` | Integer | เพิ่มเมื่อ Calculate สำเร็จ |
 | `calculation_outdated` | Boolean | true เมื่อ Financial Input เปลี่ยน |
 | `net_cost`, `selling_before_discount` | Decimal Money | Server-derived |
@@ -60,13 +61,26 @@ Estimate เป็น Identity/Lifecycle ส่วน Revision เป็น Busi
 
 | Entity | Typed Field สำคัญ | Constraint |
 | --- | --- | --- |
-| `estimate_sections` | revision, code, nameTh/nameEn, sortOrder, subtotal | Unique code/sort ต่อ Revision |
-| `estimate_work_items` | section, code, description, quantity, unit, sellingRuleType/value, cost/selling/margin, sortOrder | Quantity > 0; Unit Active; totals Server-derived |
-| `estimate_cost_components` | workItem, type, item/service ID, description, quantity, unit, unitCost, currency, costSource, effectiveAt | Type material/labor/service/other; Amount ≥0 |
+| `estimate_sections` | revision, code, nameTh/nameEn, description, sortOrder, subtotal | Unique code/sort ต่อ Revision |
+| `estimate_work_items` | section, code, itemId, descriptionTh/En, scopeNote, quantity, unit, sellingRuleType/value, cost/selling/margin, sortOrder | Quantity > 0; Unit Active; totals Server-derived |
+| `estimate_cost_components` | workItem, type, item/service ID, description, quantity, unit, unitCost, currency, costSource, effectiveAt, provisional flag/reason | Type material/labor/subcontract/service/other-direct; Amount ≥0 |
 | `estimate_adjustments` | revision/workItem scope, type, basis, value, reason, permission context | Published rule หรือ authorized override |
 | `estimate_tax_lines` | revision, taxCode, rate, taxableBase, amount, effectiveAt | Server-derived จาก Tax Policy |
 
 Core BOQ ต้องเป็น Relational Rows ห้ามเก็บ Sections/Work Items/Cost Components เป็น JSONB ก้อนเดียว เพราะต้อง Constraint, Query, Diff และ Report
+
+Type/Precision/Required Gate/Visibility ของ Field อ้าง [Official Estimate Field Catalog](../01-business/official-estimate-field-catalog.md) เพื่อไม่กำหนด Business Rule ซ้ำใน Physical Model
+
+## Versioned Policies
+
+| Entity | Field สำคัญ | Rule |
+| --- | --- | --- |
+| `calculation_policy_versions` | organization/branch scope, code, version, effective period, pricing/overhead/rounding config, status, hash | Published Version immutable; Effective Period ไม่ซ้อนใน Scope เดียวกัน |
+| `tax_policy_versions` | organization/branch scope, code, version, effective period, tax/display config, status, hash | Published Version immutable; Rate ไม่ Hard-code ใน Estimate Logic |
+| `approval_policy_versions` | organization/branch scope, code, version, effective period, trigger/authority/route config, status, hash | Published Version immutable; Production Bootstrap แยกเป็น System Policy |
+| `approval_authorities` | policy version, subject/permission/scope, amount/margin/discount limits, effective period | Permission ไม่แทน Authority; Query ต้องใช้ Decimal/Currency เดียวกับ Policy |
+
+Policy Configuration ใช้ Typed Header/Scope/Status/Effective Period และ JSONB เฉพาะ Versioned Rule Payload ที่ Validate Schema แล้ว ระบบต้องอ่าน Version เก่าได้ตลอด Retention ของ Estimate ที่อ้าง
 
 ## Approval and Quotation
 
@@ -78,6 +92,8 @@ Core BOQ ต้องเป็น Relational Rows ห้ามเก็บ Secti
 | `estimate_approval_snapshots` | revision, calculation hash, policy version, JSONB | Freeze ตอน Approved |
 | `estimate_quotation_links` | revision, quotation ID, issuedAt, snapshot hash | Quotation อ้าง Approved Revision |
 | `customer_acceptances` | quotation, decision, channel, occurredAt, evidenceFileId | Append-only ตาม Retention Policy |
+
+`estimate_approval_requests` ต้องอ้าง `approval_policy_version_id`, Calculation Snapshot Hash และ Frozen Route Hash ส่วน `In Review` derive จาก Open Request/Active Step ไม่เก็บเป็น Revision Status
 
 ## JSONB Boundary
 
@@ -110,6 +126,8 @@ JSONB ที่อนุญาต:
   "capturedAtUtc": "2026-09-06T04:20:00Z",
   "data": {
     "ruleVersion": "estimate-pricing-v1",
+    "calculationPolicyVersionId": "EST-CALC-TH-v1",
+    "taxPolicyVersionId": "TAX-TH-v1",
     "revision": 2,
     "costSourceVersions": ["COST-HMR-18-v3", "LABOR-CARPENTER-v2"],
     "totals": {
@@ -123,7 +141,7 @@ JSONB ที่อนุญาต:
     },
     "marginRate": "0.3081",
     "roundingRule": "currency-2dp",
-    "approvalReasons": ["COST_COMPONENT_MISSING"]
+    "approvalReasons": ["PROVISIONAL_COST"]
   }
 }
 ```
@@ -133,6 +151,7 @@ JSONB ที่อนุญาต:
 ## Invariants
 
 - Work Item/Cost Component/Adjustment ต้องอยู่ Revision และ Organization เดียวกัน
+- Quantity ใช้ Decimal(18,4), Unit Cost Decimal(19,4), Rate Decimal(12,6) และ Money Decimal(19,2)
 - Client เขียน Total, Margin, Tax หรือ Approval State โดยตรงไม่ได้
 - Draft เปลี่ยน Financial Input ต้องตั้ง `calculation_outdated=true`
 - Submit ต้องอ้าง Calculation Version ล่าสุดและผ่าน Blocking Validation
@@ -140,6 +159,8 @@ JSONB ที่อนุญาต:
 - Revision ใหม่ Clone เนื้อหาผ่าน Application Use Case และอ้าง Parent; ไม่ Share Row ระหว่าง Revision
 - Quotation ต้องอ้าง Approved Revision และ Snapshot Hash ตรงกัน
 - Delete Item ที่ถูกใช้ใน Published Revision ให้ Inactive ที่ Master Data ไม่ Cascade ลบประวัติ
+- Customer-facing Projection ต้องใช้ Allowlist; ห้ามรวม Cost, Margin/Markup, Internal Note, Trigger, Threshold หรือ Approval Detail
+- Cancelled Revision แก้ไม่ได้; Cancel Submitted ต้องปิด Open Route และเปลี่ยน State แบบ Atomic
 
 ## Index Baseline
 
@@ -150,6 +171,8 @@ JSONB ที่อนุญาต:
 - `estimate_work_items (revision_id, section_id, sort_order, id)`
 - `estimate_cost_components (work_item_id, type, id)`
 - `estimate_approval_requests (organization_id, status, requested_at_utc, id)`
+- `calculation_policy_versions (organization_id, branch_id, status, effective_from, effective_to, id)`
+- `approval_policy_versions (organization_id, branch_id, status, effective_from, effective_to, id)`
 - Unique Idempotency Fingerprint ต่อ Organization + Operation
 
 ทุก Business Access Path ต้องรวม `organization_id` ที่ Boundary และทดสอบ Query Plan กับข้อมูลใกล้ Production ก่อนเพิ่ม Index ซ้ำ
@@ -160,6 +183,7 @@ JSONB ที่อนุญาต:
 - Calculate: resolve Effective Cost/Rule → insert Snapshot → update derived totals/version ใน Transaction เดียว
 - Submit: validate latest calculation → create frozen Approval Route → change state
 - Approve: lock active step → enforce Maker–Checker → append decision/snapshot → change revision state
+- Cancel: lock Revision/Open Route → validate Authority/Reason → close Route → change Revision/Header state
 - New Revision: clone approved/quoted source + parent link + change reason ใน Transaction เดียว
 - Issue Quotation: validate Approved Revision → create Quotation/Snapshot/Link แบบ Idempotent
 
@@ -181,10 +205,14 @@ JSONB ที่อนุญาต:
 | `TC-DATA-EST-012` | Quotation อ้าง Draft Revision | Reject |
 | `TC-DATA-EST-013` | Retry Quotation Key เดิม | ไม่สร้าง Quotation/Link ซ้ำ |
 | `TC-DATA-EST-014` | Query Branch A | ไม่คืน Branch B/Organization อื่น |
+| `TC-DATA-EST-015` | Effective Policy Version ซ้อน Scope/Period | Reject |
+| `TC-DATA-EST-016` | แก้ Published Policy Version | Reject Immutable |
+| `TC-DATA-EST-017` | Submit แล้ว Publish Policy ใหม่ | Approval Request เดิมอ้าง Frozen Version/Route เดิม |
+| `TC-DATA-EST-018` | Customer Projection จาก Approved Revision | ไม่มี Internal Cost/Margin/Threshold/Note |
+| `TC-DATA-EST-019` | Cancel Submitted ระหว่าง Review | Route ปิดและ Revision Cancelled ใน Transaction เดียว |
 
 ## Open Physical Decisions
 
-- Precision/Scale จริงของ Quantity, Rate, Money, Margin และ Tax
 - PostgreSQL mechanism ของ `row_version` และ Effective-period exclusion
 - Approval Route storage เมื่อมีหลายขั้น/หลายผู้อนุมัติ
 - Snapshot Schema Registry, Retention และ Migration Window

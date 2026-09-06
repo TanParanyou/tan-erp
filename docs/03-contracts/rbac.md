@@ -12,6 +12,7 @@
 - `estimates.create`
 - `estimates.submit`
 - `estimates.approve`
+- `estimates.cancel`
 - `quotations.issue`
 - `roles.manage`
 
@@ -35,7 +36,7 @@ Valid identity?
       No → 403
       Yes → resource in scope?
         No → 404
-        Yes → business rule/maker-checker passes?
+        Yes → business policy/authority/maker-checker passes?
           No → 422 or 403
           Yes → allow + audit when sensitive
 ```
@@ -47,3 +48,4 @@ Valid identity?
 - Role เป็นข้อมูลปรับได้ แต่ Permission Key เป็น Contract ที่ควบคุมเวอร์ชัน
 - การแก้ Role Assignment และ Approval Permission ต้องมี Audit Trail
 - Sensitive Action ต้องประเมิน Maker–Checker เพิ่มจาก Permission ปกติ
+- การ Approve/Cancel Submitted Estimate ต้องผ่าน Approval Authority ตาม [Approval Matrix](../01-business/approval-matrix.md); Permission อย่างเดียวไม่เพียงพอ

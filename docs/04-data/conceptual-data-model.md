@@ -7,6 +7,9 @@ Organization ─┬─ Branch
               ├─ Membership ─ Role ─ Permission
               ├─ Customer ─ Contact
               ├─ Item Master ─ Reference Cost
+              ├─ Calculation Policy Version
+              ├─ Tax Policy Version
+              ├─ Approval Policy Version ─ Approval Authority
               ├─ Pricing Template ─ Pricing Template Version
               │                         ├─ Measurement Rule
               │                         └─ Reference Rate Source
@@ -19,7 +22,8 @@ Quick Estimate ─► Quick Estimate Version ─┬─ Calculation Snapshot
                                                          ├─ Estimate Revision
                                                          │    ├─ Section
                                                          │    │    └─ Work Item ─ Cost Components
-                                                         │    └─ Approval Decision
+                                                         │    ├─ Calculation Snapshot
+                                                         │    └─ Approval Route ─ Approval Decision
                                                          └─ Quotation ─ Customer Acceptance
                                                                               │
                                                                               ▼
@@ -47,6 +51,8 @@ Logical Schema ของ Official Estimate/BOQ, Approval และ Quotation Lin
 | Preliminary Summary | สิ่งที่แสดงหรือส่งให้ลูกค้าจาก Quick Estimate Version หนึ่งฉบับ |
 | Estimate | Revision sequence และ Lifecycle |
 | Estimate Revision | Work Items, calculation snapshot และ immutable after approval |
+| Calculation Policy | รุ่นกฎ Pricing, Overhead, Discount และ Rounding ของ Official Estimate |
+| Approval Policy | รุ่น Trigger, Authority และ Route ของ Official Estimate |
 | Quotation | อ้างอิง Approved Revision และ document lifecycle |
 | Project | Baseline, scope change และ project lifecycle |
 
@@ -59,9 +65,10 @@ Logical Schema ของ Official Estimate/BOQ, Approval และ Quotation Lin
 - Standard Rate เป็นของ Organization; Branch Rate Override ต้องมี Effective Period, Reason และ Approval โดยไม่แก้ Standard Rate เดิม
 - Quick Estimate เป็นเจ้าของ Version และ Preliminary Summary; หนึ่ง Version Convert ไป Official Estimate Draft ได้หนึ่งรายการต่อเจตนาที่ระบุ
 - Estimation เป็นเจ้าของ Estimate/Revision/Approval; Quotation ไม่ย้อนมาแก้ Revision
+- Published Calculation/Tax/Approval Policy Version เป็น Immutable และ Estimate Snapshot ต้องอ้าง Version ที่ใช้จริง
 - Project รับ Baseline จาก Commercial แล้วเปลี่ยนผ่าน Change Order
 - Audit Record อ้าง Resource แต่ไม่เป็นเจ้าของ Business State
 
 ## สิ่งที่ยังไม่สรุป
 
-ความสัมพันธ์ Address/Contact หลายประเภท, Unit Conversion, Cost Source, Tax Model, BOQ/BOM และ Document Numbering ต้องผ่าน Workshop ก่อนออก Logical/Physical Schema
+ความสัมพันธ์ Address/Contact หลายประเภท, Unit Conversion, Cost Source, BOQ/BOM และ Document Numbering ต้องผ่าน Workshop ก่อนออก Logical/Physical Schema ค่า Tax/Approval Threshold จริงต้องผ่าน Business Owner และ Finance Sign-off ก่อน Publish

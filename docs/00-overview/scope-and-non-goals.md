@@ -8,8 +8,8 @@
 - Customer และ Opportunity ขั้นพื้นฐาน
 - Item Master, หน่วยนับ, หมวดหมู่ และต้นทุนอ้างอิง
 - Site Survey และไฟล์แนบ
-- Estimate, Work Item, Revision, Markup/Margin, Discount และ Tax
-- Approval, Audit Trail และ Quotation
+- Estimate, Work Item, Revision, Versioned Calculation/Tax Policy, Margin/Markup, Discount และ Customer-safe Output
+- Versioned Approval Policy, Maker–Checker, Audit Trail และ Quotation
 - ภาษาไทย/อังกฤษและ Error Contract กลาง
 
 ## Phase ถัดไป
@@ -36,8 +36,8 @@
 
 ## สมมติฐานที่ต้องยืนยัน
 
-- วิธีคิดราคาใช้ Markup, Margin หรือทั้งสองแบบ
-- ลำดับและวงเงินอนุมัติจริง
-- VAT, หัก ณ ที่จ่าย และรูปแบบเลขเอกสาร
+- Default Margin/Markup และ Overhead ต่อ Work Type; Baseline รองรับทั้งสองวิธี
+- ลำดับ ผู้ดำรง Authority และวงเงินจริง; ระหว่างรอใช้ Production Bootstrap แบบ Fail-closed
+- Tax Rate/Display Policy, หัก ณ ที่จ่าย และรูปแบบเลขเอกสาร
 - หน่วยนับ การแปลงหน่วย และอายุราคาวัสดุ
-- เงื่อนไขที่อนุญาตให้แก้ Estimate หลังอนุมัติ
+- Customer-facing Field/Description ที่อนุญาตใน Quotation

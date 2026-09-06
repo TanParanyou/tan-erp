@@ -36,10 +36,11 @@
 | Estimation | `estimates.submit` | ส่งขออนุมัติ | Branch/Project/Own |
 | Estimation | `estimates.approve` | อนุมัติตาม Authority Matrix | Organization/Branch/Project |
 | Estimation | `estimates.override-price` | Override ราคาตามกฎ | Organization/Branch/Project |
+| Estimation | `estimates.cancel` | ยกเลิก Draft/Returned; Submitted ต้องผ่าน Cancel Authority | Branch/Project/Own |
 | Quotation | `quotations.issue` | ออกใบเสนอราคาจาก Approved Revision | Branch/Project |
 | Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
 
-การตรวจวงเงิน กำไรขั้นต่ำ และ Maker–Checker เป็น Policy เพิ่มจาก Permission; การมี `estimates.approve` ไม่ได้แปลว่าอนุมัติได้ทุกยอดหรืออนุมัติงานตนเองได้
+การตรวจวงเงิน กำไรขั้นต่ำ Discount, Exception และ Maker–Checker เป็น Approval Policy เพิ่มจาก Permission; การมี `estimates.approve` ไม่ได้แปลว่าอนุมัติได้ทุกยอดหรืออนุมัติงานตนเองได้ หากยังไม่มี Published Policy/Independent Checker ระบบต้อง Fail-closed ตาม [Approval Matrix](../01-business/approval-matrix.md)
 
 เช่นเดียวกัน การมี `quick-estimates.share` ไม่ได้ข้าม Share Policy และการมี `quick-estimates.review` ไม่ได้อนุญาตให้ตรวจงานของตนเองเมื่อ Maker–Checker มีผล Backend ต้องตรวจ Permission พร้อม Organization, Branch, Opportunity และ Own Scope ทุกครั้ง
 

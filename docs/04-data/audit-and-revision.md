@@ -38,6 +38,8 @@ Audit ตอบว่า “ใครทำอะไรเมื่อใด” 
 
 การ Convert ต้องบันทึก `sourceQuickEstimateId` และ `sourceQuickEstimateVersion` บน Official Estimate Draft พร้อม Snapshot ของข้อมูลที่รับมา Price Range เป็น Reference เท่านั้น ไม่ใช่ Approved Selling Price
 
+Official Estimate ต้องบันทึก Calculation/Tax/Approval Policy Version และ Snapshot Hash ที่ใช้จริง การเปลี่ยน Published Policy ห้ามแก้ผลของ Revision เดิม การ Cancel Submitted ต้องปิด Open Approval Route และบันทึกผู้สั่ง เหตุผล Permission/Authority และเวลาใน Transaction เดียว
+
 ## Quick Estimate Audit Events
 
 อย่างน้อยต้องบันทึก:

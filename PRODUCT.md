@@ -40,8 +40,8 @@ tan-erp เป็น Project ERP สำหรับธุรกิจออก�
 - ไทยเป็นภาษาหลักและรองรับอังกฤษ
 - รองรับหลาย Organization/Branch และ RBAC ตาม Resource Scope
 - Firebase ให้ Identity เท่านั้น; PostgreSQL เป็นเจ้าของ Membership, Permission และ Scope
-- Backend เป็นเจ้าของ Calculation, State Transition, Share Policy และ Maker–Checker
-- Pricing Template, Rate และ Calculation Snapshot มี Version และ Effective Period
+- Backend เป็นเจ้าของ Calculation, State Transition, Approval Policy และ Maker–Checker; Share Policy ใช้เมื่อเพิ่ม Quick Estimate ในอนาคต
+- Calculation/Tax/Approval Policy และ Snapshot มี Version และ Effective Period
 - Release แรกไม่ใช่ Offline-first; Offline เก็บ Draft ชั่วคราวได้แต่ Calculate/Share ต้องผ่าน Server
 - MRP เป็นโมดูลอนาคตภายใน ERP ไม่ใช่ชื่อผลิตภัณฑ์
 - ราคา, Threshold, VAT และ Authority จริงยังต้องยืนยันจาก Pilot/Business Workshop
