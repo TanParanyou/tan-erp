@@ -2,6 +2,8 @@
 
 **สถานะ:** Draft — เป็น Baseline มืออาชีพที่ต้องทดสอบกับเคสจริง
 
+Responsive UX สำหรับ Desktop, Tablet และ Mobile อยู่ที่ [Official Estimate Responsive Wireframe](official-estimate-responsive-wireframe.md)
+
 ## เป้าหมาย
 
 เปลี่ยนข้อมูลสำรวจและขอบเขตงานให้เป็นราคาที่ตรวจสอบที่มา อนุมัติ และออกใบเสนอราคาได้ โดยไม่ลบประวัติฉบับก่อนหน้า

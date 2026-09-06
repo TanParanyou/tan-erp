@@ -8,14 +8,13 @@
 - Customer และ Opportunity ขั้นพื้นฐาน
 - Item Master, หน่วยนับ, หมวดหมู่ และต้นทุนอ้างอิง
 - Site Survey และไฟล์แนบ
-- Quick Estimate สำหรับ Built-in, ผ้าม่าน และ Wallpaper พร้อม Pricing Template Version, Price Range และ Preliminary Summary
-- Share Policy และการ Convert Quick Estimate Version เป็น Official Estimate Draft
 - Estimate, Work Item, Revision, Markup/Margin, Discount และ Tax
 - Approval, Audit Trail และ Quotation
 - ภาษาไทย/อังกฤษและ Error Contract กลาง
 
 ## Phase ถัดไป
 
+- Quick Estimate สำหรับ Built-in, ผ้าม่าน และ Wallpaper เป็น Optional Module หลัง Official Estimate Foundation พร้อม
 - Project Planning และ Budget Control
 - Procurement และ Supplier
 - Inventory/Warehouse

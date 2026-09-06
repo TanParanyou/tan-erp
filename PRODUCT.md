@@ -25,14 +25,15 @@ tan-erp เป็น Project ERP สำหรับธุรกิจออก�
 
 ## Positioning
 
-เริ่มจาก Quick Estimate ที่ควบคุมด้วย Pricing Template Version และแปลงเป็น Official Estimate Draft ได้โดยคง Source Snapshot จึงให้ความเร็วหน้างานโดยไม่ลดมาตรฐานการอนุมัติราคา
+เริ่มจาก Official Estimate ที่แตก BOQ/ต้นทุน ตรวจ Margin และอนุมัติเป็น Revision ก่อนออก Quotation ส่วน Quick Estimate เป็น Optional Module ที่ต่อเพิ่มภายหลังได้
 
 ## Operating Context
 
 - ใช้งานระหว่างสำรวจบ้าน คอนโด และสำนักงาน รวมถึงพื้นที่ที่สัญญาณเครือข่ายไม่เสถียร
 - งานเริ่มต้นคือ Built-in, ผ้าม่าน และ Wallpaper
 - ผู้ใช้ต้องวัดพื้นที่ เลือกวัสดุ ตอบ Checklist ความซับซ้อน ถ่ายรูป และอธิบาย Assumption/Exclusion
-- Quick Estimate เป็นช่วงราคาเบื้องต้น ไม่ใช่ Quotation หรือ Approved Price
+- Official Estimate สร้างตรงจาก Customer/Opportunity/Site Survey ได้โดยไม่ต้องผ่าน Quick Estimate
+- Quick Estimate เป็น Optional Source และไม่ใช่ Quotation หรือ Approved Price
 
 ## Capabilities and Constraints
 

@@ -15,17 +15,17 @@
 | FR-CRM-001 | จัดเก็บ Customer, Contact และ Opportunity ขั้นพื้นฐาน | 2 | Draft |
 | FR-SRV-001 | Site Survey เก็บขนาด รูป และเงื่อนไขหน้างาน | 2 | Draft |
 | FR-ITEM-001 | Item Master มี Code, Type, Unit, Cost, Effective Date และ Status | 2 | Draft |
-| FR-QEST-001 | สร้าง Quick Estimate จาก Pricing Template ที่มี Version | 2 | Accepted principle; Template จริงเป็น Draft |
-| FR-QEST-002 | คำนวณและแสดง Price Range จากข้อมูลขั้นต่ำตาม Template | 2 | Accepted principle; สูตรและช่วงเป็น Draft |
-| FR-QEST-003 | บังคับ Share Policy ก่อนแสดงหรือส่งข้อมูลให้ลูกค้า | 2 | Accepted principle; Threshold เป็น Draft |
-| FR-QEST-004 | แชร์ Preliminary Summary ที่มีเฉพาะข้อมูล Customer-safe | 2 | Accepted principle; รูปแบบเอกสารเป็น Draft |
-| FR-QEST-005 | การเปลี่ยนเนื้อหาสำคัญหลังแชร์ต้องสร้าง Quick Estimate Version ใหม่ | 2 | Accepted principle |
-| FR-QEST-006 | Convert Quick Estimate Version เป็น Official Estimate Draft แบบ Idempotent | 2 | Accepted principle |
-| FR-QEST-007 | Autosave และกู้ Draft หน้างานที่ยัง Sync ไม่สำเร็จได้อย่างปลอดภัย | 2 | Accepted principle |
-| FR-QEST-008 | คำนวณ Amount/Price Range แบบ Deterministic จาก Template และ Calculation Snapshot พร้อม Outward Rounding/Tax Display Policy | 2 | Accepted principle; ค่าจริงมาจาก Pilot |
-| FR-QEST-009 | Pricing Template Version ใช้ Lifecycle Draft, Calibration, Active, Superseded และ Disabled โดย Published Version แก้ย้อนหลังไม่ได้ | 2 | Accepted principle |
-| FR-QEST-010 | Measurement Rule รองรับ Built-in, ผ้าม่าน และ Wallpaper ด้วย Field/Unit ตาม Template | 2 | Accepted direction; Field จริงมาจาก Pilot |
-| FR-QEST-011 | Share Policy คืนผล Blocked, PendingReview หรือ Shareable พร้อม Stable Reason | 2 | Accepted principle; Threshold มาจาก Pilot |
+| FR-QEST-001 | สร้าง Quick Estimate จาก Pricing Template ที่มี Version | Future | Deferred optional module |
+| FR-QEST-002 | คำนวณและแสดง Price Range จากข้อมูลขั้นต่ำตาม Template | Future | Deferred optional module |
+| FR-QEST-003 | บังคับ Share Policy ก่อนแสดงหรือส่งข้อมูลให้ลูกค้า | Future | Deferred optional module |
+| FR-QEST-004 | แชร์ Preliminary Summary ที่มีเฉพาะข้อมูล Customer-safe | Future | Deferred optional module |
+| FR-QEST-005 | การเปลี่ยนเนื้อหาสำคัญหลังแชร์ต้องสร้าง Quick Estimate Version ใหม่ | Future | Deferred optional module |
+| FR-QEST-006 | Convert Quick Estimate Version เป็น Official Estimate Draft แบบ Idempotent | Future | Deferred optional module |
+| FR-QEST-007 | Autosave และกู้ Draft หน้างานที่ยัง Sync ไม่สำเร็จได้อย่างปลอดภัย | Future | Deferred optional module |
+| FR-QEST-008 | คำนวณ Amount/Price Range แบบ Deterministic จาก Template และ Calculation Snapshot พร้อม Outward Rounding/Tax Display Policy | Future | Deferred optional module |
+| FR-QEST-009 | Pricing Template Version ใช้ Lifecycle ที่อนุมัติและ Published Version แก้ย้อนหลังไม่ได้ | Future | Deferred optional module |
+| FR-QEST-010 | Measurement Rule รองรับ Built-in, ผ้าม่าน และ Wallpaper ด้วย Field/Unit ตาม Template | Future | Deferred optional module |
+| FR-QEST-011 | Share Policy คืนผล Blocked, PendingReview หรือ Shareable พร้อม Stable Reason | Future | Deferred optional module |
 | FR-EST-001 | Estimate แบ่งพื้นที่/หมวดงาน/Work Item ได้ | 2 | Draft |
 | FR-EST-002 | คำนวณต้นทุน ราคาขาย ส่วนลด ภาษี และกำไรอย่างตรวจสอบได้ | 2 | Draft |
 | FR-EST-003 | การเปลี่ยนสาระสำคัญสร้าง Estimate Revision ใหม่ | 2 | Accepted principle |
