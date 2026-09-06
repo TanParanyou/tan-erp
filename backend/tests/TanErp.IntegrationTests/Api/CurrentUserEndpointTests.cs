@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
 using TanErp.Api.Contracts.IdentityAccess;
@@ -44,6 +45,7 @@ public class CurrentUserEndpointTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
+        Environment.SetEnvironmentVariable("ConnectionStrings__Database", _postgres.GetConnectionString());
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
@@ -104,6 +106,7 @@ public class CurrentUserEndpointTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
+        Environment.SetEnvironmentVariable("ConnectionStrings__Database", null);
         _client.Dispose();
         await _factory.DisposeAsync();
         await _postgres.DisposeAsync();
@@ -231,5 +234,60 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         Assert.NotNull(problem);
         Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", problem.Code);
         Assert.Contains(expectedTitleSubstring, problem.Title);
+    }
+
+    [Fact]
+    public async Task FirebaseTokenVerifier_Cancellation_ThrowsOperationCanceledException()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Firebase:ProjectId"] = "tan-erp-test"
+            })
+            .Build();
+
+        var verifier = new FirebaseTokenVerifier(config);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            verifier.VerifyTokenAsync("test-token", cancellation.Token));
+    }
+
+    [Fact]
+    public void AppDbContextFactory_Configuration_MissingDatabaseConnectionString_ThrowsInvalidOperationException()
+    {
+        var factory = new AppDbContextFactory();
+        var prev = Environment.GetEnvironmentVariable("ConnectionStrings__Database");
+        try
+        {
+            Environment.SetEnvironmentVariable("ConnectionStrings__Database", null);
+            var ex = Assert.Throws<InvalidOperationException>(() => factory.CreateDbContext([]));
+            Assert.Contains("ConnectionStrings__Database", ex.Message);
+            Assert.DoesNotContain("Password", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ConnectionStrings__Database", prev);
+        }
+    }
+
+    [Fact]
+    public void Startup_Configuration_MissingDatabaseConnectionString_ThrowsInvalidOperationException()
+    {
+        var prev = Environment.GetEnvironmentVariable("ConnectionStrings__Database");
+        try
+        {
+            Environment.SetEnvironmentVariable("ConnectionStrings__Database", null);
+            using var factory = new WebApplicationFactory<Program>();
+            var ex = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
+            var message = ex.ToString();
+            Assert.Contains("ConnectionStrings:Database", message);
+            Assert.DoesNotContain("Password", message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ConnectionStrings__Database", prev);
+        }
     }
 }

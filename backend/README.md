@@ -47,11 +47,11 @@ node scripts/seed-emulator-users.mjs
 dotnet ef database update --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api
 
 # 5. สตาร์ต Backend API ด้วยโหมด Test (พอร์ต 5005 หรือรัน 'make dev-backend')
+test -n "$ConnectionStrings__Database"
 ASPNETCORE_ENVIRONMENT=Test \
 SeedTestData=true \
 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
 Firebase__ProjectId=tan-erp-test-only \
-ConnectionStrings__Database="Host=localhost;Database=tan_erp;Username=postgres;Password=postgres" \
 dotnet run --project backend/src/TanErp.Api --urls http://localhost:5005
 
 # 6. หยุดการทำงานของ Container โดยไม่ลบ Volume (หรือรัน 'make stop')

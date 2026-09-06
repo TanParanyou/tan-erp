@@ -32,6 +32,14 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
                     ProjectId = projectId
                 });
             }
+            else if (!isProduction)
+            {
+                FirebaseApp.Create(new AppOptions
+                {
+                    Credential = GoogleCredential.FromAccessToken("owner"),
+                    ProjectId = projectId
+                });
+            }
             else
             {
                 FirebaseApp.Create(new AppOptions
@@ -47,14 +55,18 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
 
     public async Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var decoded = await _auth.VerifyIdTokenAsync(idToken, cancellationToken);
             return decoded?.Uid;
         }
-        catch (Exception ex)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            Console.WriteLine($"[FirebaseTokenVerifier] Verification failed: {ex.GetType().Name}: {ex.Message}");
+            throw;
+        }
+        catch (FirebaseAuthException)
+        {
             return null;
         }
     }

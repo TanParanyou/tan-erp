@@ -47,7 +47,8 @@ builder.Services.AddCors(options =>
 
 // Database Context
 var connectionString = builder.Configuration.GetConnectionString("Database")
-    ?? "Host=localhost;Database=tan_erp;Username=postgres;Password=postgres";
+    ?? throw new InvalidOperationException(
+        "Required configuration 'ConnectionStrings:Database' is missing.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));

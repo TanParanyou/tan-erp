@@ -17,10 +17,11 @@ docker compose -f deploy/compose.yml ps
 node scripts/seed-emulator-users.mjs
 
 # 4. อัปเดตโครงสร้างฐานข้อมูลด้วย EF Core Migration
+test -n "$ConnectionStrings__Database"
 dotnet ef database update \
   --project backend/src/TanErp.Infrastructure \
   --startup-project backend/src/TanErp.Api \
-  --connection "Host=localhost;Database=tan_erp;Username=postgres;Password=postgres"
+  --connection "$ConnectionStrings__Database"
 ```
 
 ## 2. การทดสอบ Migration Apply และ Rollback (Rehearsal)
@@ -31,17 +32,18 @@ dotnet ef database update \
 # ตรวจสอบประวัติ Migration
 dotnet ef migrations list --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api
 
+test -n "$ConnectionStrings__Database"
 # ทดสอบ Rollback กลับสู่จุดเริ่มต้น (0)
 dotnet ef database update 0 \
   --project backend/src/TanErp.Infrastructure \
   --startup-project backend/src/TanErp.Api \
-  --connection "Host=localhost;Database=tan_erp;Username=postgres;Password=postgres"
+  --connection "$ConnectionStrings__Database"
 
 # ทำการ Re-apply กลับมาเป็นรุ่นล่าสุด
 dotnet ef database update \
   --project backend/src/TanErp.Infrastructure \
   --startup-project backend/src/TanErp.Api \
-  --connection "Host=localhost;Database=tan_erp;Username=postgres;Password=postgres"
+  --connection "$ConnectionStrings__Database"
 ```
 
 ## 3. การรัน Backend API และ Frontend สำหรับการพัฒนา
@@ -50,11 +52,11 @@ dotnet ef database update \
 
 ### Backend API (โหมด Test พร้อม SeedTestData - พอร์ต 5005)
 ```bash
+test -n "$ConnectionStrings__Database"
 ASPNETCORE_ENVIRONMENT=Test \
 SeedTestData=true \
 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
 Firebase__ProjectId=tan-erp-test-only \
-ConnectionStrings__Database="Host=localhost;Database=tan_erp;Username=postgres;Password=postgres" \
 dotnet run --no-launch-profile --project backend/src/TanErp.Api --urls http://localhost:5005
 ```
 
