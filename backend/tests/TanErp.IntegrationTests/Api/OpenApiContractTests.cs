@@ -1,0 +1,113 @@
+using System.Net;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using TanErp.Api;
+using TanErp.Infrastructure.Identity;
+using TanErp.Infrastructure.Persistence;
+using Testcontainers.PostgreSql;
+using Xunit;
+
+namespace TanErp.IntegrationTests.Api;
+
+public class OpenApiContractTests : IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
+        .Build();
+
+    private WebApplicationFactory<Program> _factory = null!;
+    private HttpClient _client = null!;
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Test");
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+                if (descriptor != null) services.Remove(descriptor);
+
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseNpgsql(_postgres.GetConnectionString()));
+            });
+        });
+
+        _client = _factory.CreateClient();
+    }
+
+    public async Task DisposeAsync()
+    {
+        _client.Dispose();
+        await _factory.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task OpenApi_MeEndpoint_And_Schemas_Exist_And_Are_Committed()
+    {
+        var response = await _client.GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        var doc = JsonNode.Parse(jsonString);
+        Assert.NotNull(doc);
+
+        // 1. Assert path /api/v1/me exists
+        var paths = doc["paths"]?.AsObject();
+        Assert.NotNull(paths);
+        Assert.True(paths.ContainsKey("/api/v1/me"), "OpenAPI must contain path /api/v1/me");
+
+        var mePath = paths["/api/v1/me"]?["get"]?.AsObject();
+        Assert.NotNull(mePath);
+
+        // 2. Assert operation responses 200, 401, 403
+        var responses = mePath["responses"]?.AsObject();
+        Assert.NotNull(responses);
+        Assert.True(responses.ContainsKey("200"), "Must have 200 response");
+        Assert.True(responses.ContainsKey("401"), "Must have 401 response");
+        Assert.True(responses.ContainsKey("403"), "Must have 403 response");
+
+        // 3. Assert bearer security scheme
+        var components = doc["components"]?.AsObject();
+        Assert.NotNull(components);
+        var securitySchemes = components["securitySchemes"]?.AsObject();
+        Assert.NotNull(securitySchemes);
+        Assert.True(securitySchemes.ContainsKey("Bearer"), "Must define Bearer security scheme");
+
+        // 4. Assert schemas CurrentUserResponse and ApiProblemDetails
+        var schemas = components["schemas"]?.AsObject();
+        Assert.NotNull(schemas);
+        Assert.True(schemas.ContainsKey("CurrentUserResponse"), "Must define CurrentUserResponse schema");
+        Assert.True(schemas.ContainsKey("ApiProblemDetails"), "Must define ApiProblemDetails schema");
+
+        // 5. Ensure contracts/openapi/tan-erp.v1.json exists and matches
+        var contractsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../contracts/openapi"));
+        Directory.CreateDirectory(contractsDir);
+        var contractPath = Path.Combine(contractsDir, "tan-erp.v1.json");
+
+        // Pretty print JSON
+        var formattedJson = JsonSerializer.Serialize(doc, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        if (!File.Exists(contractPath))
+        {
+            await File.WriteAllTextAsync(contractPath, formattedJson);
+        }
+
+        var committedContent = await File.ReadAllTextAsync(contractPath);
+        var committedDoc = JsonNode.Parse(committedContent);
+
+        // Assert structural equality
+        Assert.Equal(
+            JsonSerializer.Serialize(doc),
+            JsonSerializer.Serialize(committedDoc));
+    }
+}

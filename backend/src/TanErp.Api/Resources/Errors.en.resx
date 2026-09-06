@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="0" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AUTHENTICATION_REQUIRED_TITLE" xml:space="preserve">
+    <value>Authentication Required</value>
+  </data>
+  <data name="AUTHENTICATION_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Bearer token is missing</value>
+  </data>
+  <data name="AUTHENTICATION_INVALID_TITLE" xml:space="preserve">
+    <value>Authentication Invalid</value>
+  </data>
+  <data name="AUTHENTICATION_INVALID_DETAIL" xml:space="preserve">
+    <value>Token cannot be verified, has expired, or belongs to another Firebase project</value>
+  </data>
+  <data name="USER_ACCESS_DISABLED_TITLE" xml:space="preserve">
+    <value>User Access Disabled</value>
+  </data>
+  <data name="USER_ACCESS_DISABLED_DETAIL" xml:space="preserve">
+    <value>Internal User is disabled</value>
+  </data>
+  <data name="ACTIVE_MEMBERSHIP_REQUIRED_TITLE" xml:space="preserve">
+    <value>Active Membership Required</value>
+  </data>
+  <data name="ACTIVE_MEMBERSHIP_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Authentication succeeded but no active organization membership was found.</value>
+  </data>
+  <data name="PERMISSION_DENIED_TITLE" xml:space="preserve">
+    <value>Permission Denied</value>
+  </data>
+  <data name="PERMISSION_DENIED_DETAIL" xml:space="preserve">
+    <value>Active Membership exists but the requested permission is absent</value>
+  </data>
+</root>
