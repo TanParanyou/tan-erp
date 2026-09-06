@@ -11,6 +11,7 @@ public class BranchConfiguration : IEntityTypeConfiguration<Branch>
         builder.ToTable("branches", "organization");
 
         builder.HasKey(x => x.Id);
+        builder.HasAlternateKey(x => new { x.Id, x.OrganizationId });
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
         builder.Property(x => x.Code).HasColumnName("branch_code").HasMaxLength(50).IsRequired();

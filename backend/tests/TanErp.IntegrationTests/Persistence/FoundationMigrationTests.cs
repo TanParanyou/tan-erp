@@ -151,11 +151,23 @@ public class FoundationMigrationTests : IAsyncLifetime
         var rolePermB = new RolePermission(Guid.NewGuid(), roleB.Id, perm.Id, PermissionScope.Organization, orgB.Id);
         db.RolePermissions.AddRange(rolePermA, rolePermB);
 
-        var memberRoleA = new MembershipRole(memberA.Id, roleA.Id);
-        var memberRoleB = new MembershipRole(memberB.Id, roleB.Id);
+        var memberRoleA = new MembershipRole(memberA.Id, roleA.Id, orgA.Id);
+        var memberRoleB = new MembershipRole(memberB.Id, roleB.Id, orgB.Id);
         db.MembershipRoles.AddRange(memberRoleA, memberRoleB);
 
         await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var crossBranchMembership = new Membership(
+            Guid.NewGuid(), orgA.Id, branchB.Id, userA.Id);
+        db.Memberships.Add(crossBranchMembership);
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+
+        var crossRoleAssignment = new MembershipRole(
+            memberA.Id, roleB.Id, orgA.Id);
+        db.MembershipRoles.Add(crossRoleAssignment);
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
         db.ChangeTracker.Clear();
 
         // Assert joins for Org A never return Membership, Role or Permission assignment from Org B

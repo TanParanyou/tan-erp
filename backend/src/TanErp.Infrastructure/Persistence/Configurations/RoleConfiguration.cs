@@ -11,6 +11,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.ToTable("roles", "identity_access");
 
         builder.HasKey(x => x.Id);
+        builder.HasAlternateKey(x => new { x.Id, x.OrganizationId });
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
         builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
@@ -27,11 +28,6 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
             .WithMany(x => x.Roles)
             .HasForeignKey(x => x.OrganizationId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany(x => x.MembershipRoles)
-            .WithOne(x => x.Role)
-            .HasForeignKey(x => x.RoleId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(x => x.RolePermissions)
             .WithOne(x => x.Role)

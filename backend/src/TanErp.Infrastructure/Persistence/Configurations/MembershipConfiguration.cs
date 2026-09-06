@@ -11,6 +11,7 @@ public class MembershipConfiguration : IEntityTypeConfiguration<Membership>
         builder.ToTable("memberships", "organization");
 
         builder.HasKey(x => x.Id);
+        builder.HasAlternateKey(x => new { x.Id, x.OrganizationId });
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
         builder.Property(x => x.BranchId).HasColumnName("branch_id");
@@ -27,17 +28,13 @@ public class MembershipConfiguration : IEntityTypeConfiguration<Membership>
 
         builder.HasOne(x => x.Branch)
             .WithMany(x => x.Memberships)
-            .HasForeignKey(x => x.BranchId)
+            .HasForeignKey(x => new { x.BranchId, x.OrganizationId })
+            .HasPrincipalKey(x => new { x.Id, x.OrganizationId })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.User)
             .WithMany(x => x.Memberships)
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany(x => x.MembershipRoles)
-            .WithOne(x => x.Membership)
-            .HasForeignKey(x => x.MembershipId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

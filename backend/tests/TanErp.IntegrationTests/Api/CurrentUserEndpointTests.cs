@@ -88,7 +88,7 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         var permission = Permission.Create("organizations.read");
 
         var rolePermission = new RolePermission(Guid.NewGuid(), role.Id, permission.Id, PermissionScope.Organization, orgId);
-        var membershipRole = new MembershipRole(membershipId, role.Id);
+        var membershipRole = new MembershipRole(membershipId, role.Id, orgId);
 
         db.Organizations.Add(org);
         db.Branches.Add(branch);

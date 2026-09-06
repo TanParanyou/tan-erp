@@ -77,7 +77,7 @@ public static class TestOnlyDataSeeder
             var rolePermission = new RolePermission(Guid.NewGuid(), role.Id, permission.Id, PermissionScope.Organization, TestOrgId);
             db.RolePermissions.Add(rolePermission);
 
-            var membershipRole = new MembershipRole(TestMembershipId, role.Id);
+            var membershipRole = new MembershipRole(TestMembershipId, role.Id, TestOrgId);
             db.MembershipRoles.Add(membershipRole);
         }
 
