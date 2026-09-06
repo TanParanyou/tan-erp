@@ -4,6 +4,8 @@ Thumbs.db
 *.tsbuildinfo
 .idea/
 .vscode/
+.agents/
+.codex/
 .worktrees/
 .worktrees
 worktrees/

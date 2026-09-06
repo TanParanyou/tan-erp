@@ -71,6 +71,9 @@
 | เหตุผลเลือก Versioned Policy/Snapshot | [ADR 0007](adr/0007-versioned-official-estimate-policies.md) |
 | เหตุผลเลือก Typed Item/Versioned Cost | [ADR 0008](adr/0008-typed-items-versioned-cost-records.md) |
 | เหตุผลเลือก Immutable Ready Survey Revision | [ADR 0009](adr/0009-versioned-site-survey-revisions.md) |
+| เหตุผลเลือก Foundation Application Runtime | [ADR 0010](adr/0010-foundation-application-runtime.md) |
+| คู่มือปฏิบัติการ Foundation Login | [Foundation Login Runbook](05-engineering/foundation-login-runbook.md) |
+| บันทึกผลการตรวจสอบ Foundation Login | [Foundation Login Verification](05-engineering/foundation-login-verification.md) |
 
 ## สถานะเอกสาร
 

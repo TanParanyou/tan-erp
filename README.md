@@ -51,3 +51,5 @@ npm run verify
 4. [กระบวนการธุรกิจตั้งแต่ต้นจนจบ](docs/01-business/end-to-end-business-flow.md)
 5. [Architecture Decision Records](docs/adr/README.md)
 6. [Documentation Portal](docs/portal/README.md)
+7. [คู่มือปฏิบัติการ Foundation Login](docs/05-engineering/foundation-login-runbook.md)
+8. [บันทึกผลการตรวจสอบ Foundation Login](docs/05-engineering/foundation-login-verification.md)
