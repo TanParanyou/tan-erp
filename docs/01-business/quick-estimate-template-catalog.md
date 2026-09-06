@@ -39,7 +39,7 @@
 | `customerId` | ลูกค้า | ID | Draft | ต้องอยู่ใน Organization Scope | ชื่อที่อนุญาต |
 | `opportunityId` | โอกาสการขาย | ID | Draft | ต้องเป็นของ Customer/Branch เดียวกัน | ไม่แสดง ID |
 | `contactId` | ผู้ติดต่อ | ID | Share | ต้องมีช่องทางผู้รับที่ตรวจสอบได้ | ชื่อ/ช่องทางตาม Consent |
-| `siteSurveyId` | ข้อมูลสำรวจหน้างาน | ID | Optional | อ้าง Site Survey ที่อยู่ใน Scope | ไม่แสดง ID |
+| `siteSurveyRevisionId` | ฉบับข้อมูลสำรวจหน้างาน | ID | Optional | อ้าง Ready/Superseded Revision ที่อยู่ใน Scope | ไม่แสดง ID |
 | `propertyType` | ประเภทสถานที่ | Enum | Calculate | ค่าจาก Catalog เช่น House/Condo/Office | แสดงชื่อ |
 | `roomOrArea` | ห้องหรือพื้นที่ | Text | Calculate | 1–120 ตัวอักษรหลัง Trim | แสดง |
 | `templateVersionId` | รุ่นแม่แบบ | ID | Calculate | ต้องเป็น Calibration/Active และ Effective | แสดง Reference เท่านั้น |

@@ -11,7 +11,7 @@
 ## End-to-End Flow
 
 ```text
-Customer + Opportunity + Site Survey (optional at Draft)
+Customer + Opportunity + Ready Site Survey Revision (optional at Draft)
   → Create Official Estimate Draft
   → Structure Sections and Work Items
   → Add Cost Components and Sources
@@ -64,7 +64,7 @@ Approved/Quoted ──new revision──> Draft (Revision ถัดไป)
 
 ## Standard Working Sequence
 
-1. สร้าง Draft จาก Customer + Opportunity และเลือก Site Survey เมื่อมี
+1. สร้าง Draft จาก Customer + Opportunity และเลือก Ready Site Survey Revision เมื่อมี
 2. แบ่ง Section ตามพื้นที่หรือหมวด เช่น Built-in, Electrical, Curtain
 3. เพิ่ม Work Item จาก Item Master หรือ Custom Work Item พร้อมเหตุผล
 4. ระบุ Quantity/Unit และ Material/Labor/Subcontract/Service/Other Cost

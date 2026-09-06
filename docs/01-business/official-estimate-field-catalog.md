@@ -24,7 +24,8 @@ Frontend อาจซ่อน Field ตาม Permission แต่ Backend ต�
 | `branchId` | UUID | D | ต้องอยู่ Organization Scope | Estimator | Internal |
 | `customerId` | UUID | D | Active Customer ใน Scope | Estimator | Customer ผ่าน Snapshot |
 | `opportunityId` | UUID | D | ต้องสัมพันธ์กับ Customer/Branch | Estimator | Internal |
-| `siteSurveyId` | UUID/null | S | Optional ตอน Draft; หากไม่มีต้องมี Scope Evidence ตาม Policy | Estimator | Internal |
+| `siteSurveyRevisionId` | UUID/null | S | Ready/Superseded Revision ใน Scope; หากไม่มีต้องมี Scope Evidence ตาม Policy | Estimator/System | Internal |
+| `siteSurveySnapshotHash` | String/null | System | Freeze คู่กับ Revision ที่ใช้; null เมื่อไม่มี Survey | System | Internal |
 | `ownerUserId` | UUID | D | ค่าเริ่มต้นเป็นผู้สร้าง; ต้องมี `estimates.update` ใน Scope | Estimator/Manager | Internal |
 | `currency` | ISO 4217 | D | Phase 1 ใช้ `THB`; Currency เดียวต่อ Revision | System/Policy | Customer |
 | `customerReference` | String ≤100 | Optional | เลขอ้างอิงลูกค้า; Trim และ Normalize | Estimator | Customer |

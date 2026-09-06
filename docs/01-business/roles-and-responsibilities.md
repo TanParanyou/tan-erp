@@ -4,7 +4,7 @@
 
 | บทบาท | หน้าที่หลัก | สิ่งที่ไม่ควรทำคนเดียว |
 | --- | --- | --- |
-| Sales | ดูแล Customer, Opportunity และ Quotation | อนุมัติส่วนลดเกินเกณฑ์ของตนเอง |
+| Sales | ดูแล Customer, Contact, Opportunity, Site และ Quotation | อ่านข้อมูลข้าม Scope หรือปิดงานโดยไม่มีเหตุผล |
 | Designer | จัด Scope และข้อมูลออกแบบ | เปลี่ยนราคาที่อนุมัติแล้วโดยไม่สร้าง Revision |
 | Surveyor | เก็บข้อมูล Site Survey | ประกาศว่าราคาพร้อมเสนอโดยไม่มี Estimate |
 | Field Estimator | สร้าง คำนวณ และแชร์ Quick Estimate ภายใน Permission, Scope และ Share Policy | แชร์รายการที่ต้อง Review หรือออก Quotation จาก Quick Estimate โดยตรง |
@@ -28,3 +28,5 @@ Approval Policy ต้อง Resolve ผู้อนุมัติจาก Per
 Workflow และข้อห้ามของ Pricing Template Owner/Approver อยู่ที่ [Pricing Template Governance](pricing-template-governance.md)
 
 Workflow ของ Item/Data Steward/Cost Owner/Approver อยู่ที่ [Item Master Governance](item-master-governance.md)
+
+Lifecycle และข้อควบคุมของ Sales/Surveyor อยู่ที่ [CRM and Site Survey Governance](crm-site-survey-governance.md)

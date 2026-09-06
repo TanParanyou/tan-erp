@@ -5,7 +5,7 @@
 ## ภาพรวม
 
 ```text
-Customer → Opportunity → Site Survey
+Customer → Opportunity → Site → Ready Site Survey Revision
     ├─ Quick Estimate → Preliminary Summary → Follow-up
     │                                      └─ Convert
     └───────────────────────────────────────────► Official Estimate
@@ -17,14 +17,14 @@ Customer → Opportunity → Site Survey
                                     Handover → Warranty / After-sales
 ```
 
-[Quick Estimate](quick-estimate-flow.md) เป็นทางลัดเสริมสำหรับแจ้งช่วงราคาหน้างาน ไม่ใช่ขั้นตอนบังคับและไม่ใช่ Quotation ทุกงานยังต้องมี [Official Estimate](estimation-flow.md) ที่ผ่านการตรวจและอนุมัติก่อนออก Quotation
+[Quick Estimate](quick-estimate-flow.md) เป็นทางลัดเสริมสำหรับแจ้งช่วงราคาหน้างาน ไม่ใช่ขั้นตอนบังคับและไม่ใช่ Quotation ทุกงานยังต้องมี [Official Estimate](estimation-flow.md) ที่ผ่านการตรวจและอนุมัติก่อนออก Quotation ข้อมูลต้นทางอ้าง [CRM and Site Survey Flow](crm-site-survey-flow.md)
 
 ## ขั้นตอน
 
 | ลำดับ | ขั้นตอน | ผลลัพธ์ที่ต้องมี | ผู้รับผิดชอบตัวอย่าง |
 | ---: | --- | --- | --- |
 | 1 | รับลูกค้าและความต้องการ | Customer และ Opportunity | Sales |
-| 2 | นัดและสำรวจหน้างาน | Site Survey พร้อมรูปและขนาด | Surveyor/Designer |
+| 2 | นัดและสำรวจหน้างาน | Ready Site Survey Revision พร้อม Measurement/Evidence | Surveyor/Designer |
 | 3 | ออกแบบขอบเขตเบื้องต้น | Work Items และสมมติฐาน | Designer |
 | 4 | ประเมินราคาด่วน (ถ้าต้องใช้) | Quick Estimate และ Preliminary Summary | Field Estimator |
 | 5 | จัดทำประมาณการทางการ | Official Estimate Revision | Estimator |
@@ -38,6 +38,7 @@ Customer → Opportunity → Site Survey
 ## กฎการส่งต่อ
 
 - Quotation ต้องอ้างอิง Estimate Revision ที่อนุมัติ
+- Official Estimate ที่ใช้ Survey ต้องอ้าง Ready Site Survey Revision ID/Hash ที่แน่นอน
 - Quick Estimate ที่ Convert ต้องสร้าง Official Estimate Draft ใหม่จาก Snapshot; ห้ามออก Quotation โดยอ้าง Quick Estimate โดยตรง
 - การแก้ราคาหลังอนุมัติต้องสร้าง Revision ใหม่
 - Project ต้องรับข้อมูลจากเอกสารที่ลูกค้ายืนยัน ไม่คีย์ใหม่โดยไม่มีเหตุผล

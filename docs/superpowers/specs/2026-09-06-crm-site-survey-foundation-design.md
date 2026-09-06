@@ -15,7 +15,7 @@
 - Contact และ Address แยกจาก Customer เพื่อรองรับหลายผู้ติดต่อ/หลายสถานที่
 - Opportunity เป็นงานขายหนึ่งเรื่องของ Customer และ Branch มี Owner/Stage/Outcome ของตนเอง
 - Site เป็นสถานที่จริงที่ Opportunity ใช้งาน และ Site Survey เป็นกิจกรรมสำรวจที่ Site นั้น
-- Site Survey แยก Identity ออกจาก Revision; Draft แก้ได้ แต่ Ready Revision เป็น Immutable
+- Site Survey แยก Identity ออกจาก Revision; Draft แก้ได้ แต่ Business Content ของ Ready Revision เป็น Immutable
 - Official Estimate อ้าง `siteSurveyRevisionId` ที่แน่นอนและเก็บ Source Snapshot ที่จำเป็น
 - Firebase ให้ Identity เท่านั้น; PostgreSQL เป็นเจ้าของ Membership, RBAC และข้อมูลธุรกิจ
 
@@ -53,6 +53,7 @@ Relational Core:
 - opportunities, opportunity_stage_history
 - sites
 - site_surveys, site_survey_revisions
+- survey_template_versions (System-owned/read-only ใน Phase แรก)
 - site_survey_areas, site_survey_measurements, site_survey_evidence
 - site_survey_checklist_results
 

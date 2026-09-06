@@ -12,8 +12,14 @@
 | FR-ORG-001 | ข้อมูลธุรกิจแยกตาม Organization และรองรับ Branch | 1 | Accepted direction |
 | FR-I18N-001 | UI และ Error รองรับไทย/อังกฤษ โดยไทยเป็นค่าเริ่มต้น | 1 | Accepted |
 | FR-AUD-001 | การแก้สิทธิ์ อนุมัติ Override และเปลี่ยนสถานะสำคัญมี Audit | 1 | Accepted |
-| FR-CRM-001 | จัดเก็บ Customer, Contact และ Opportunity ขั้นพื้นฐาน | 2 | Draft |
-| FR-SRV-001 | Site Survey เก็บขนาด รูป และเงื่อนไขหน้างาน | 2 | Draft |
+| FR-CRM-001 | Customer แยก Contact, Address และ Site พร้อม Lifecycle/Audit | 2 | Accepted direction |
+| FR-CRM-002 | Opportunity ผูก Customer, Branch, Owner, Site และใช้ Controlled Stage Transition | 2 | Accepted direction |
+| FR-CRM-003 | Duplicate Customer ใช้ Candidate Review แบบ Mask และไม่ Auto-merge | 2 | Accepted direction |
+| FR-CRM-004 | Personal Data ใช้ Field Allowlist, Permission, Mask และไม่รั่วใน Log/Export | 2 | Accepted direction |
+| FR-SRV-001 | Site Survey เก็บ Area, Measurement, Checklist, Evidence, Assumption และ Constraint | 2 | Accepted direction |
+| FR-SRV-002 | Draft Survey แก้ด้วย ETag; Ready Revision เป็น Immutable และวัดใหม่ด้วย Revision ใหม่ | 2 | Accepted direction |
+| FR-SRV-003 | Mark Ready ใช้ Versioned Template/Readiness Gate และ Fail-closed เมื่อข้อมูลหรือไฟล์ไม่ครบ | 2 | Accepted direction |
+| FR-SRV-004 | Official Estimate อ้าง Ready Site Survey Revision ID/Hash โดยไม่เปลี่ยนตาม Revision ใหม่ | 2 | Accepted principle |
 | FR-ITEM-001 | Item Master มี Code, Type, Category, Capability, Base Unit และ Lifecycle | 2 | Accepted direction |
 | FR-ITEM-002 | Cost แยกเป็น Versioned Record ที่มี Source, Scope, Unit, Currency, Quantity Break และ Effective Period | 2 | Accepted direction |
 | FR-ITEM-003 | Cost Record ใช้ Maker–Checker และ Published Version แก้ย้อนหลังไม่ได้ | 2 | Accepted direction |
@@ -71,6 +77,9 @@
 | NFR-ITEM-001 | Cost Resolve Input เดิมให้ผล Candidate เดิม หรือ Fail ด้วย Stable Ambiguity Code | Deterministic resolver contract tests |
 | NFR-ITEM-002 | Item/Unit/Cost/Import ป้องกัน Cross-organization, Concurrency และ Partial Commit | Security/concurrency/integration tests |
 | NFR-ITEM-003 | Critical Item Master flow ใช้ได้บน Desktop/Tablet/Mobile และ Keyboard/Screen Reader | Item Master UAT evidence |
+| NFR-CRM-001 | Customer/Contact/Search/Export ป้องกัน PII leakage และ Cross-organization access | Security/privacy integration tests |
+| NFR-SRV-001 | Ready Survey Revision และ Estimate Source Snapshot ทำซ้ำ/ตรวจย้อนหลังได้ | Revision/hash contract tests |
+| NFR-SRV-002 | Survey Flow ใช้ได้ที่ 320px/Zoom 200% พร้อม Save/Upload/Error State ชัดเจน | Responsive/accessibility UAT |
 
 ## การเปลี่ยน Requirement
 

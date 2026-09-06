@@ -5,9 +5,9 @@
 ## Phase 1: Estimation Foundation
 
 - Organization, Branch, User, Role, Permission และ Scope
-- Customer และ Opportunity ขั้นพื้นฐาน
-- Item Master, หน่วยนับ, หมวดหมู่ และต้นทุนอ้างอิง
-- Site Survey และไฟล์แนบ
+- Customer, Contact, Address, Site และ Opportunity ขั้นพื้นฐาน
+- Item Master, หน่วยนับ, หมวดหมู่ และ Versioned Cost Record
+- Versioned Site Survey, Measurement, Checklist และ Evidence Reference
 - Estimate, Work Item, Revision, Versioned Calculation/Tax Policy, Margin/Markup, Discount และ Customer-safe Output
 - Versioned Approval Policy, Maker–Checker, Audit Trail และ Quotation
 - ภาษาไทย/อังกฤษและ Error Contract กลาง

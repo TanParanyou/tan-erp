@@ -6,9 +6,10 @@
 | --- | --- | --- | --- |
 | Identity & Access | User Mapping, Role, Permission, Scope | Firebase Identity | ทุก Module |
 | Organization | Organization, Branch, Membership | Administration | ทุก Module |
-| CRM | Customer, Contact, Opportunity | Sales | Estimation, Project |
+| CRM | Customer, Contact, Address, Site, Opportunity และ Stage History | Sales | Site Survey, Estimation, Project |
 | Item Master | Item, Category, Capability, Unit/Conversion, Cost Source และ Versioned Cost Record | Item/Data Steward/Cost Owner | Estimation, Procurement, Inventory |
-| Estimation | Survey, Estimate, Revision, Approval | CRM, Item Master | Quotation, Project |
+| Site Survey | Survey Identity/Revision, Area, Measurement, Checklist และ Evidence Reference | CRM/Sales/Surveyor | Estimation |
+| Estimation | Estimate, Revision, Calculation/Approval Snapshot | CRM, Site Survey, Item Master | Quotation, Project |
 | Commercial | Quotation, Customer Acceptance | Estimation | Project, Finance |
 | Project Control | Project, Budget, Change Order, Progress | Commercial | Procurement, Production, Installation |
 | Procurement | Supplier, Purchase Request, PO, Receipt | Project, Item Master | Inventory, Finance |
