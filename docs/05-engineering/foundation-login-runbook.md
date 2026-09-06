@@ -46,28 +46,30 @@ dotnet ef database update \
 
 ## 3. การรัน Backend API และ Frontend สำหรับการพัฒนา
 
-### Backend API (โหมด Test พร้อม SeedTestData)
+> 💡 **ทางลัดด้วย Make:** สามารถสั่งรันทั้งระบบพร้อมกันได้ง่าย ๆ ด้วย `make dev` (หรือแยกเฉพาะส่วนด้วย `make dev-backend` และ `make dev-frontend`)
+
+### Backend API (โหมด Test พร้อม SeedTestData - พอร์ต 5005)
 ```bash
 ASPNETCORE_ENVIRONMENT=Test \
 SeedTestData=true \
 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
 Firebase__ProjectId=tan-erp-test-only \
 ConnectionStrings__Database="Host=localhost;Database=tan_erp;Username=postgres;Password=postgres" \
-dotnet run --no-launch-profile --project backend/src/TanErp.Api --urls http://localhost:5000
+dotnet run --no-launch-profile --project backend/src/TanErp.Api --urls http://localhost:5005
 ```
 
-### Frontend Next.js Server
+### Frontend Next.js Server (พอร์ต 3005)
 ```bash
 cp frontend/.env.example frontend/.env.local
-npm --prefix frontend run dev
+npm --prefix frontend run dev -- -p 3005
 ```
 
 ## 4. การตรวจสอบความพร้อมใช้งาน (Health & Readiness Checks)
 
 - **PostgreSQL 17**: `docker exec tan-erp-postgres pg_isready -U postgres -d tan_erp`
 - **Firebase Auth Emulator**: `curl -s http://127.0.0.1:9099/` (ต้องได้ `{"authEmulator":{"ready":true}}`)
-- **Backend API Unauthorized Challenge**: `curl -s -i http://localhost:5000/api/v1/me` (ต้องได้ `401 Unauthorized` ในรูปแบบ RFC 9457 Problem Details)
-- **Frontend Server**: `curl -s -i http://localhost:3000/th/login` (ต้องได้ `200 OK` พร้อม Login Form)
+- **Backend API Unauthorized Challenge**: `curl -s -i http://localhost:5005/api/v1/me` (ต้องได้ `401 Unauthorized` ในรูปแบบ RFC 9457 Problem Details)
+- **Frontend Server**: `curl -s -i http://localhost:3005/th/login` (ต้องได้ `200 OK` พร้อม Login Form)
 
 ## 5. การวิเคราะห์ปัญหาด้วย Trace ID (Trace-ID Troubleshooting)
 

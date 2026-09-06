@@ -49,14 +49,14 @@ npm run verify
 ## การรัน End-to-End (E2E) Acceptance ร่วมกับ Local Stack
 
 ```bash
-# 1. คัดลอก .env.example เป็น .env.local
+# 1. คัดลอก .env.example เป็น .env.local (หรือรัน 'make dev-env')
 cp frontend/.env.example frontend/.env.local
 
-# 2. เริ่มต้นการทำงานของ Frontend Dev Server
-npm --prefix frontend run dev
+# 2. เริ่มต้นการทำงานของ Frontend Dev Server บนพอร์ต 3005 (หรือรัน 'make dev-frontend')
+npm --prefix frontend run dev -- -p 3005
 
-# 3. รัน Playwright Test (เมื่อ Local Stack และ Backend พร้อมแล้ว)
-npm --prefix frontend run test:e2e
+# 3. รัน Playwright Test ชี้ไปที่พอร์ต 3005 (หรือรัน 'make test-e2e')
+PLAYWRIGHT_TEST_BASE_URL="http://localhost:3005" npm --prefix frontend run test:e2e
 ```
 
 ## ตัวแปรสภาพแวดล้อม (Environment Variables)

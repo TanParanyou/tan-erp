@@ -84,3 +84,5 @@ make dev
 6. [Documentation Portal](docs/portal/README.md)
 7. [คู่มือปฏิบัติการ Foundation Login](docs/05-engineering/foundation-login-runbook.md)
 8. [บันทึกผลการตรวจสอบ Foundation Login](docs/05-engineering/foundation-login-verification.md)
+9. [คู่มือและกฎการพัฒนาสำหรับ Agent](AGENTS.md)
+10. [มาตรฐานหน้าฟอร์ม ERP (Building ERP Forms)](.agents/skills/building-erp-forms/SKILL.md)
