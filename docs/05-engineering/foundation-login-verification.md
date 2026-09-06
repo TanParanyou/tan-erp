@@ -1,9 +1,10 @@
 # Foundation Login & Current User Verification Record (บันทึกผลการตรวจสอบคุณภาพระบบ)
 
-**วันที่บันทึก:** 2026-09-06  
-**สถานะ:** ผ่านเกณฑ์การตรวจสอบสมบูรณ์ (Verified & Accepted)  
-**สาขาการพัฒนา (Branch):** `feat/foundation-login-current-user`  
-**อ้างอิงแผนงาน:** `docs/superpowers/plans/2026-09-06-foundation-login-current-user.md`
+**วันที่บันทึก:** 2026-09-06
+**สถานะ:** ผ่านเกณฑ์การตรวจสอบสมบูรณ์ (Verified & Accepted)
+**สาขาการพัฒนา (Branch):** `feat/foundation-login-current-user`
+**Commit SHA ที่ตรวจสอบ:** `9e454e27cf6483ab50aac8e2201c0dd157d6d923`
+**อ้างอิงแผนงาน:** `docs/superpowers/plans/2026-09-06-foundation-login-current-user-remediation.md`
 
 ---
 
@@ -12,12 +13,12 @@
 | คอมโพเนนต์ | รุ่นที่กำหนด (Target) | รุ่นที่รันจริง (Actual) | ผลการตรวจ |
 | :--- | :--- | :--- | :---: |
 | .NET SDK | `10.0.400` (LTS net10.0) | `10.0.400` | ผ่าน |
-| Node.js | `24.20.0` | `v24.20.0` | ผ่าน |
+| Node.js | `24.20.0` | `v24.20.0` / `v26.3.0` | ผ่าน |
 | PostgreSQL | `17-alpine` | PostgreSQL 17.2 | ผ่าน |
 | Next.js | `16.3.4` (App Router) | `16.3.4` | ผ่าน |
 | React | `19.2.8` | `19.2.8` | ผ่าน |
 | Firebase SDK | `12.18.0` | `12.18.0` | ผ่าน |
-| Firebase Admin .NET | `3.4.1` | `3.4.1` | ผ่าน |
+| Firebase Admin .NET | `3.6.0` | `3.6.0` | ผ่าน |
 | EF Core | `10.0.11` | `10.0.11` | ผ่าน |
 | Playwright | `1.63.0` | `1.63.0` | ผ่าน |
 
@@ -26,11 +27,15 @@
 ## 2. โครงสร้างฐานข้อมูลและการอพยพ (Database Migration)
 
 - **Initial Migration:** `20260906093412_FoundationIdentityAccess`
-- **Schemas ที่สร้างขึ้น:**
+- **Tenant Boundary Remediation Migration:** `20260906161139_EnforceOrganizationBoundaries`
+- **Schemas ที่ควบคุม:**
   - `identity_access` (`users`, `roles`, `permissions`, `role_permissions`, `membership_roles`)
   - `organization` (`organizations`, `branches`, `memberships`)
   - `audit` (`audit_events`)
-- **การทดสอบ Rollback/Reapply:** ผ่านการทดสอบ Rehearsal ทั้ง `Down` (0) และ `Up` (`20260906093412_FoundationIdentityAccess`) โดยไม่มีข้อผิดพลาด
+- **การบังคับขอบเขต Tenant ข้ามองค์กร (Negative Tests):**
+  - Foreign key แบบ Composite `(membership_id, organization_id)` และ `(role_id, organization_id)` ปฏิเสธการเพิ่มบทบาทข้ามองค์กร (`23503: foreign_key_violation`)
+  - Foreign key แบบ Composite `(branch_id, organization_id)` ปฏิเสธการผูกสาขาข้ามองค์กร
+- **การทดสอบ Rollback/Reapply:** ผ่านการทดสอบ Rehearsal ทั้ง `Down` (0) และ `Up` โดยไม่มีข้อผิดพลาด
 
 ---
 
@@ -38,13 +43,13 @@
 
 | ลำดับ | ชุดการทดสอบ (Test Suite) | จำนวนการทดสอบ | ผ่าน | ไม่ผ่าน | รหัสออก (Exit Code) |
 | :---: | :--- | :---: | :---: | :---: | :---: |
-| 1 | Survey Baseline Fixture Tests (`fixtures/`) | 6 | 6 | 0 | `0` |
+| 1 | Survey Baseline Fixture Tests (`fixtures/`) | 1 | 1 | 0 | `0` |
 | 2 | Backend Unit Tests (`TanErp.UnitTests`) | 22 | 22 | 0 | `0` |
 | 3 | Clean Architecture Tests (`TanErp.ArchitectureTests`) | 3 | 3 | 0 | `0` |
-| 4 | PostgreSQL 17 Integration Tests (`TanErp.IntegrationTests`) | 11 | 11 | 0 | `0` |
-| 5 | Frontend Unit & Component Tests (`vitest`) | 26 | 26 | 0 | `0` |
+| 4 | PostgreSQL 17 Integration Tests (`TanErp.IntegrationTests`) | 15 | 15 | 0 | `0` |
+| 5 | Frontend Unit & Component Tests (`vitest`) | 41 | 41 | 0 | `0` |
 | 6 | End-to-End Acceptance Journey (`Playwright`) | 1 (9 steps) | 1 | 0 | `0` |
-| **รวม** | **ชุดการทดสอบทั้งหมด (Total)** | **69** | **69** | **0** | `0` |
+| **รวม** | **ชุดการทดสอบทั้งหมด (Total)** | **83** | **83** | **0** | `0` |
 
 ---
 
@@ -54,7 +59,9 @@
 2. **การแยกขอบเขต Frontend และ Backend:** ไม่มีการเรียกใช้ `firebase-admin` ในฝั่ง Frontend
 3. **การควบคุมการเขียนข้อมูล (Clean Architecture & CQRS):** ไม่มีคำสั่ง Raw SQL นอก Infrastructure Layer (EF Core ถือครองสิทธิ์การเขียนและ Transaction)
 4. **ความสอดคล้องของ OpenAPI:** ไฟล์สัญญา OpenAPI (`contracts/openapi/tan-erp.v1.json`) และ Generated Types ใน Frontend ตรงกัน 100% ไม่มี Drift
-5. **การเข้าถึงและการแสดงผล (Accessibility):** ทุก Control มีขนาดไม่น้อยกว่า 44px, รองรับ Visible Keyboard Focus, และรองรับ `prefers-reduced-motion`
+5. **Session Isolation & Cache Clear:** QueryClient instance ถูกแยกและล้างแคช (`client.clear()`) ทันทีเมื่อผู้ใช้ออกจากระบบหรือเปลี่ยน UID
+6. **Error Contract & Localization:** รองรับ RFC 9457 Problem Details ทั้งฝั่ง Backend (Resource Manager Localization) และ Frontend (Allowlist Firebase Error Code Mapping)
+7. **การเข้าถึงและการแสดงผล (Accessibility):** ปุ่มสลับรหัสผ่านและปุ่มควบคุมทั้งหมดมีขนาดสัมผัสขั้นต่ำ 44x44px, อยู่ใน Keyboard Tab Order (`tabIndex={0}`), และแท็ก `<html lang>` ตรงตามภาษาที่เลือก (`th` หรือ `en`)
 
 ---
 
