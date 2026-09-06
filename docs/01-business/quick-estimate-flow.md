@@ -36,6 +36,8 @@ Customer/Opportunity → Work Type → Pricing Template → Measurement
 
 รายการ Field และตัวอย่างของ Built-in, ผ้าม่าน และ Wallpaper อยู่ที่ [Quick Estimate Template Catalog](quick-estimate-template-catalog.md)
 
+โครงหน้าจอมือถือ 5 ขั้นและ UX State อยู่ที่ [Quick Estimate Mobile Wireframe](quick-estimate-mobile-wireframe.md)
+
 ## Lifecycle (วงจรสถานะ)
 
 ```text
