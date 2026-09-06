@@ -38,5 +38,109 @@
     "switchLanguage": "English",
     "home": "หน้าหลัก",
     "scope": "ขอบเขต"
+  },
+  "common": {
+    "actions": {
+      "save": "บันทึก",
+      "cancel": "ยกเลิก",
+      "confirm": "ยืนยัน",
+      "delete": "ลบ",
+      "edit": "แก้ไข",
+      "create": "สร้าง",
+      "add": "เพิ่ม",
+      "back": "ย้อนกลับ",
+      "close": "ปิด",
+      "search": "ค้นหา",
+      "reset": "ล้างข้อมูล",
+      "refresh": "รีเฟรช",
+      "filter": "ตัวกรอง",
+      "clearFilters": "ล้างตัวกรอง",
+      "export": "ส่งออก",
+      "import": "นำเข้า",
+      "upload": "อัปโหลด",
+      "download": "ดาวน์โหลด",
+      "view": "ดูรายละเอียด",
+      "copy": "คัดลอก",
+      "retry": "ลองใหม่อีกครั้ง",
+      "submit": "ส่งข้อมูล",
+      "approve": "อนุมัติ",
+      "reject": "ปฏิเสธ",
+      "void": "ยกเลิกเอกสาร"
+    },
+    "status": {
+      "active": "ใช้งานอยู่",
+      "inactive": "ไม่ได้ใช้งาน",
+      "draft": "ฉบับร่าง",
+      "pending": "รอดำเนินการ",
+      "approved": "อนุมัติแล้ว",
+      "rejected": "ปฏิเสธแล้ว",
+      "completed": "เสร็จสมบูรณ์",
+      "cancelled": "ยกเลิกแล้ว",
+      "disabled": "ระงับการใช้งาน",
+      "all": "ทั้งหมด"
+    },
+    "feedback": {
+      "createSuccess": "บันทึกข้อมูลสำเร็จ",
+      "updateSuccess": "บันทึกการแก้ไขสำเร็จ",
+      "deleteSuccess": "ลบข้อมูลสำเร็จ",
+      "operationSuccess": "ดำเนินการสำเร็จ",
+      "operationFailed": "เกิดข้อผิดพลาดในการดำเนินการ",
+      "deleteFailed": "ไม่สามารถลบข้อมูลได้",
+      "unsavedChanges": "คุณมีข้อมูลที่ยังไม่ได้บันทึก",
+      "unsavedChangesWarning": "มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการออกจากหน้านี้หรือไม่?",
+      "noData": "ไม่พบข้อมูล",
+      "noResults": "ไม่พบผลการค้นหา"
+    },
+    "dialog": {
+      "confirmDeleteTitle": "ยืนยันการลบข้อมูล",
+      "confirmDeleteDesc": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "confirmCancelTitle": "ละทิ้งการเปลี่ยนแปลง",
+      "confirmCancelDesc": "ข้อมูลที่คุณกรอกไว้จะไม่ถูกบันทึก คุณแน่ใจหรือไม่ว่าต้องการยกเลิก?"
+    },
+    "form": {
+      "selectPlaceholder": "กรุณาเลือก...",
+      "searchPlaceholder": "พิมพ์เพื่อค้นหา...",
+      "notesPlaceholder": "ระบุหมายเหตุเพิ่มเติม (ถ้ามี)...",
+      "optional": "(ไม่บังคับ)",
+      "required": "(จำเป็น)"
+    },
+    "validation": {
+      "required": "กรุณากรอกข้อมูลในช่องนี้",
+      "invalidFormat": "รูปแบบข้อมูลไม่ถูกต้อง",
+      "invalidEmail": "รูปแบบอีเมลไม่ถูกต้อง",
+      "invalidNumber": "กรุณาระบุเป็นตัวเลขที่ถูกต้อง",
+      "positiveNumber": "ต้องเป็นตัวเลขมากกว่า 0"
+    },
+    "table": {
+      "rowsPerPage": "จำนวนแถวต่อหน้า",
+      "page": "หน้า",
+      "of": "จาก",
+      "total": "รวมทั้งหมด",
+      "showing": "กำลังแสดง",
+      "previous": "ก่อนหน้า",
+      "next": "ถัดไป",
+      "emptyTable": "ไม่มีรายการข้อมูลแสดงในตาราง"
+    },
+    "fields": {
+      "code": "รหัส",
+      "name": "ชื่อ",
+      "description": "รายละเอียด",
+      "status": "สถานะ",
+      "createdAt": "วันที่สร้าง",
+      "updatedAt": "แก้ไขล่าสุด",
+      "createdBy": "ผู้สร้าง",
+      "updatedBy": "ผู้แก้ไข",
+      "actions": "จัดการ",
+      "remark": "หมายเหตุ",
+      "attachment": "เอกสารแนบ",
+      "date": "วันที่"
+    },
+    "states": {
+      "loading": "กำลังโหลด...",
+      "processing": "กำลังประมวลผล...",
+      "saving": "กำลังบันทึก...",
+      "deleting": "กำลังลบ...",
+      "uploading": "กำลังอัปโหลด..."
+    }
   }
 }

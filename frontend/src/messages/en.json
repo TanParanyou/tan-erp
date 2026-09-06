@@ -38,5 +38,109 @@
     "switchLanguage": "ภาษาไทย",
     "home": "Home",
     "scope": "Scope"
+  },
+  "common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "delete": "Delete",
+      "edit": "Edit",
+      "create": "Create",
+      "add": "Add",
+      "back": "Back",
+      "close": "Close",
+      "search": "Search",
+      "reset": "Reset",
+      "refresh": "Refresh",
+      "filter": "Filter",
+      "clearFilters": "Clear Filters",
+      "export": "Export",
+      "import": "Import",
+      "upload": "Upload",
+      "download": "Download",
+      "view": "View",
+      "copy": "Copy",
+      "retry": "Retry",
+      "submit": "Submit",
+      "approve": "Approve",
+      "reject": "Reject",
+      "void": "Void"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "draft": "Draft",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "disabled": "Disabled",
+      "all": "All"
+    },
+    "feedback": {
+      "createSuccess": "Created successfully",
+      "updateSuccess": "Updated successfully",
+      "deleteSuccess": "Deleted successfully",
+      "operationSuccess": "Operation completed successfully",
+      "operationFailed": "Operation failed",
+      "deleteFailed": "Failed to delete",
+      "unsavedChanges": "You have unsaved changes",
+      "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave?",
+      "noData": "No data found",
+      "noResults": "No results found"
+    },
+    "dialog": {
+      "confirmDeleteTitle": "Confirm Deletion",
+      "confirmDeleteDesc": "Are you sure you want to delete this item? This action cannot be undone.",
+      "confirmCancelTitle": "Discard Changes",
+      "confirmCancelDesc": "Any unsaved changes will be lost. Are you sure you want to cancel?"
+    },
+    "form": {
+      "selectPlaceholder": "Please select...",
+      "searchPlaceholder": "Type to search...",
+      "notesPlaceholder": "Enter additional notes (optional)...",
+      "optional": "(Optional)",
+      "required": "(Required)"
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidFormat": "Invalid format",
+      "invalidEmail": "Invalid email address",
+      "invalidNumber": "Please enter a valid number",
+      "positiveNumber": "Must be greater than 0"
+    },
+    "table": {
+      "rowsPerPage": "Rows per page",
+      "page": "Page",
+      "of": "of",
+      "total": "Total",
+      "showing": "Showing",
+      "previous": "Previous",
+      "next": "Next",
+      "emptyTable": "No records to display"
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "status": "Status",
+      "createdAt": "Created Date",
+      "updatedAt": "Last Modified",
+      "createdBy": "Created By",
+      "updatedBy": "Modified By",
+      "actions": "Actions",
+      "remark": "Remarks",
+      "attachment": "Attachment",
+      "date": "Date"
+    },
+    "states": {
+      "loading": "Loading...",
+      "processing": "Processing...",
+      "saving": "Saving...",
+      "deleting": "Deleting...",
+      "uploading": "Uploading..."
+    }
   }
 }
