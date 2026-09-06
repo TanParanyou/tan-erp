@@ -2,4 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TanErp.Domain\TanErp.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
 </Project>
