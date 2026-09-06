@@ -1,17 +1,24 @@
 @import "../styles/erp-theme.css";
 
 :root {
-  --color-primary: #0B3056;
-  --color-primary-hover: #082442;
-  --color-bg: #F9FAFB;
-  --color-surface: #FFFFFF;
-  --color-border: #D1D5DB;
-  --color-text-main: #111827;
-  --color-text-muted: #4B5563;
+  --color-primary: var(--erp-navy);
+  --color-primary-hover: var(--erp-navy-hover);
+  --color-bg: var(--erp-canvas);
+  --color-surface: var(--erp-surface);
+  --color-border: var(--erp-border);
+  --color-text-main: var(--erp-text-main);
+  --color-text-muted: var(--erp-text-muted);
   --color-error: #DC2626;
   --color-warning: #D97706;
   --color-success: #16A34A;
 }
+
+[data-theme="dark"] {
+  --color-error: #F87171;
+  --color-warning: #FBBF24;
+  --color-success: #4ADE80;
+}
+
 
 * {
   box-sizing: border-box;

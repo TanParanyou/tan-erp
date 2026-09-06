@@ -41,7 +41,13 @@
     "home": "หน้าหลัก",
     "scope": "ขอบเขต",
     "toggleMenu": "เปิด/ปิดเมนู",
-    "closeMenu": "ปิดเมนู"
+    "closeMenu": "ปิดเมนู",
+    "collapseMenu": "ย่อแถบเมนู",
+    "expandMenu": "ขยายแถบเมนู",
+    "toggleTheme": "เปลี่ยนธีม",
+    "lightMode": "โหมดสว่าง",
+    "darkMode": "โหมดมืด",
+    "systemMode": "ตามระบบ"
   },
   "common": {
     "actions": {

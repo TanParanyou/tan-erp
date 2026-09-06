@@ -41,7 +41,13 @@
     "home": "Home",
     "scope": "Scope",
     "toggleMenu": "Toggle menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "collapseMenu": "Collapse sidebar",
+    "expandMenu": "Expand sidebar",
+    "toggleTheme": "Toggle theme",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "systemMode": "System mode"
   },
   "common": {
     "actions": {

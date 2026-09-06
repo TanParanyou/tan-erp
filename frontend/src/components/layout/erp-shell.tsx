@@ -7,8 +7,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 import { signOutSession } from "@/lib/auth/auth-session";
 import { useTranslations, useLocale } from "next-intl";
-import { IconClose } from "@/components/common/Icons";
+import { IconClose, IconMenu, IconHome, IconChevronLeft, IconChevronRight, IconLogOut, IconGlobe } from "@/components/common/Icons";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 interface ErpShellProps {
   currentUser: CurrentUserResponse;
@@ -16,6 +17,7 @@ interface ErpShellProps {
 
 export function ErpShell({ currentUser }: ErpShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const tShell = useTranslations("shell");
   const tAuth = useTranslations("auth");
   const tApp = useTranslations("app");
@@ -37,49 +39,34 @@ export function ErpShell({ currentUser }: ErpShellProps) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "#F9FAFB" }}>
-      {/* Top Application Bar */}
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "var(--erp-canvas)" }}>
+      {/* Architectural Shell Header */}
       <header
         role="banner"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 1rem",
-          height: "64px",
-          backgroundColor: "#0B3056",
-          color: "#FFFFFF",
-          borderBottom: "1px solid #082442",
-          position: "sticky",
-          top: 0,
-          zIndex: 1020,
-        }}
+        className="erp-header"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          {/* Mobile menu hamburger toggle */}
+        <div className="erp-header-left">
+          {/* Responsive Sidebar/Drawer toggle */}
           <button
             type="button"
-            className="erp-mobile-menu-btn"
-            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-            aria-label={isMobileMenuOpen ? tShell("closeMenu") : tShell("toggleMenu")}
+            className="erp-header-toggle-btn"
+            onClick={() => {
+              setIsMobileMenuOpen((prev) => !prev);
+              setIsSidebarCollapsed((prev) => !prev);
+            }}
+            aria-label={tShell("toggleMenu")}
             aria-expanded={isMobileMenuOpen}
+            title={tShell("toggleMenu")}
+            style={{ minHeight: "44px", minWidth: "44px" }}
           >
-            {isMobileMenuOpen ? (
-              <IconClose size={22} />
-            ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            )}
+            <IconMenu size={20} />
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* Local SVG logo icon */}
             <svg
-              width="28"
-              height="28"
+              width="26"
+              height="26"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#FFFFFF"
@@ -87,12 +74,13 @@ export function ErpShell({ currentUser }: ErpShellProps) {
               strokeLinecap="square"
               strokeLinejoin="miter"
               aria-hidden="true"
+              style={{ flexShrink: 0 }}
             >
               <rect x="3" y="3" width="18" height="18" />
               <line x1="3" y1="9" x2="21" y2="9" />
               <line x1="9" y1="21" x2="9" y2="9" />
             </svg>
-            <span style={{ fontSize: "1.25rem", fontWeight: 700, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>
+            <span className="erp-header-title">
               {tApp("title")}
             </span>
           </div>
@@ -110,20 +98,9 @@ export function ErpShell({ currentUser }: ErpShellProps) {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          {/* User information (desktop/tablet) */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              fontSize: "0.8125rem",
-              maxWidth: "180px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+        <div className="erp-header-right">
+          {/* User information (desktop/tablet only) */}
+          <div className="erp-header-user-info">
             <span style={{ fontWeight: 600, color: "#FFFFFF", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}>
               {user?.displayName || user?.email || tShell("user")}
             </span>
@@ -134,25 +111,22 @@ export function ErpShell({ currentUser }: ErpShellProps) {
             )}
           </div>
 
+          {/* Theme switcher toggle */}
+          <ThemeToggle />
+
           {/* Locale switcher link */}
           <Link
             href={`/${targetLocale}`}
+            className="erp-header-lang-btn"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
               minHeight: "44px",
-              minWidth: "44px",
-              padding: "0 0.75rem",
-              color: "#FFFFFF",
-              backgroundColor: "transparent",
-              border: "1px solid rgba(255, 255, 255, 0.3)",
-              fontSize: "0.875rem",
-              fontWeight: 500,
             }}
             aria-label={`Switch to ${targetLocale === "th" ? "Thai" : "English"}`}
+            title={`Switch to ${targetLocale === "th" ? "Thai" : "English"}`}
           >
-            {tShell("switchLanguage")}
+            <IconGlobe size={16} />
+            <span className="erp-lang-full">{tShell("switchLanguage")}</span>
+            <span className="erp-lang-short">{targetLocale.toUpperCase()}</span>
           </Link>
 
           {/* Sign out button */}
@@ -161,14 +135,15 @@ export function ErpShell({ currentUser }: ErpShellProps) {
             variant="outline"
             size="md"
             onClick={handleSignOut}
+            className="erp-header-logout-btn"
             style={{
               minHeight: "44px",
-              borderColor: "rgba(255, 255, 255, 0.4)",
-              color: "#FFFFFF",
-              backgroundColor: "transparent",
             }}
+            aria-label={tAuth("logout")}
+            title={tAuth("logout")}
           >
-            {tAuth("logout")}
+            <IconLogOut size={16} />
+            <span className="erp-header-btn-text">{tAuth("logout")}</span>
           </Button>
         </div>
       </header>
@@ -184,55 +159,96 @@ export function ErpShell({ currentUser }: ErpShellProps) {
           />
         )}
 
-        {/* Navigation Sidebar */}
+        {/* Navigation Sidebar / Mobile Drawer */}
         <aside
-          className={`erp-sidebar ${isMobileMenuOpen ? "erp-sidebar-open" : ""}`}
+          className={`erp-sidebar ${isMobileMenuOpen ? "erp-sidebar-open" : ""} ${isSidebarCollapsed ? "erp-sidebar-collapsed" : ""}`}
           role="navigation"
           aria-label="Main Navigation"
         >
-          {/* Mobile-only header context info inside drawer */}
-          <div
-            style={{
-              padding: "0 1rem 1rem 1rem",
-              marginBottom: "1rem",
-              borderBottom: "1px solid var(--erp-border-subtle)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.375rem",
-              fontSize: "0.8125rem",
-            }}
-          >
-            <div>
-              <strong style={{ color: "var(--erp-text-muted)" }}>{tShell("organization")}:</strong>{" "}
-              <span style={{ color: "var(--erp-text-main)", fontWeight: 600 }}>{orgName}</span>
+          {/* Mobile Drawer Header */}
+          <div className="erp-drawer-header">
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="square">
+                <rect x="3" y="3" width="18" height="18" />
+                <line x1="3" y1="9" x2="21" y2="9" />
+                <line x1="9" y1="21" x2="9" y2="9" />
+              </svg>
+              <span style={{ fontWeight: 700, fontSize: "1rem" }}>{tApp("title")}</span>
             </div>
+            <button
+              type="button"
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#FFFFFF",
+                cursor: "pointer",
+                padding: "0.5rem",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: "44px",
+                minWidth: "44px",
+              }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label={tShell("closeMenu")}
+            >
+              <IconClose size={20} />
+            </button>
+          </div>
+
+          {/* Mobile-only Context & User Info */}
+          <div className="erp-drawer-context">
             <div>
-              <strong style={{ color: "var(--erp-text-muted)" }}>{tShell("branch")}:</strong>{" "}
-              <span style={{ color: "var(--erp-text-main)", fontWeight: 600 }}>{branchName}</span>
+              <span style={{ color: "var(--erp-text-muted)", fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 700 }}>
+                {tShell("user")}
+              </span>
+              <div style={{ fontWeight: 600, color: "var(--erp-text-main)", marginTop: "0.125rem" }}>
+                {user?.displayName || user?.email || "-"}
+              </div>
+              {user?.email && user?.displayName && (
+                <div style={{ color: "var(--erp-text-muted)", fontSize: "0.75rem" }}>
+                  {user.email}
+                </div>
+              )}
+            </div>
+
+            <div style={{ borderTop: "1px dashed var(--erp-border)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
+              <div>
+                <strong style={{ color: "var(--erp-text-muted)" }}>{tShell("organization")}:</strong>{" "}
+                <span style={{ color: "var(--erp-text-main)", fontWeight: 600 }}>{orgName}</span>
+              </div>
+              <div>
+                <strong style={{ color: "var(--erp-text-muted)" }}>{tShell("branch")}:</strong>{" "}
+                <span style={{ color: "var(--erp-text-main)", fontWeight: 600 }}>{branchName}</span>
+              </div>
             </div>
           </div>
 
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          <ul style={{ listStyle: "none", padding: "0.5rem 0", margin: 0, flex: 1 }}>
             <li>
               <Link
                 href={`/${locale}`}
                 onClick={() => setIsMobileMenuOpen(false)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  minHeight: "44px",
-                  padding: "0 1.25rem",
-                  color: "#0B3056",
-                  fontWeight: 600,
-                  fontSize: "0.9375rem",
-                  backgroundColor: "#EFF6FF",
-                  borderLeft: "4px solid #0B3056",
-                }}
+                className="erp-nav-link erp-nav-link-active"
+                title={tShell("home")}
               >
-                {tShell("home")}
+                <IconHome size={20} />
+                <span className="erp-nav-text">{tShell("home")}</span>
               </Link>
             </li>
           </ul>
+
+          {/* Desktop Bottom Sidebar Collapse/Expand Toggle */}
+          <button
+            type="button"
+            className="erp-sidebar-bottom-toggle"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            aria-label={isSidebarCollapsed ? tShell("expandMenu") : tShell("collapseMenu")}
+            title={isSidebarCollapsed ? tShell("expandMenu") : tShell("collapseMenu")}
+          >
+            {isSidebarCollapsed ? <IconChevronRight size={18} /> : <IconChevronLeft size={18} />}
+            <span>{tShell("collapseMenu")}</span>
+          </button>
         </aside>
 
         {/* Content Area */}
@@ -241,92 +257,117 @@ export function ErpShell({ currentUser }: ErpShellProps) {
           role="main"
           className="erp-main-content"
         >
-          <div style={{ marginBottom: "2rem" }}>
-            <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0B3056", margin: "0 0 0.5rem 0" }}>
+          <div style={{ marginBottom: "1.75rem", borderBottom: "1px solid var(--erp-border)", paddingBottom: "1.25rem" }}>
+            <h1 style={{ fontSize: "1.625rem", fontWeight: 700, color: "var(--erp-navy)", margin: "0 0 0.375rem 0", letterSpacing: "-0.01em" }}>
               {tApp("title")}
             </h1>
-            <p style={{ fontSize: "1rem", color: "#4B5563", margin: 0 }}>
+            <p style={{ fontSize: "0.9375rem", color: "var(--erp-text-muted)", margin: 0, lineHeight: 1.4 }}>
               {tApp("subtitle")}
             </p>
           </div>
 
-          {/* User Profile and Context Card */}
-          <section
-            aria-labelledby="user-profile-heading"
-            className="erp-card"
-            style={{ marginBottom: "1.5rem" }}
-          >
-            <div className="erp-card-header">
-              <h2 id="user-profile-heading" className="erp-card-title">
-                {tShell("user")}
-              </h2>
-            </div>
-            <dl style={{ display: "grid", gridTemplateColumns: "minmax(80px, 140px) 1fr", rowGap: "0.75rem", fontSize: "0.9375rem" }}>
-              <dt style={{ fontWeight: 600, color: "var(--erp-text-muted)" }}>ID:</dt>
-              <dd style={{ fontFamily: "monospace", color: "var(--erp-text-main)", wordBreak: "break-all" }}>{user?.id || "-"}</dd>
-
-              <dt style={{ fontWeight: 600, color: "var(--erp-text-muted)" }}>{tAuth("emailLabel")}:</dt>
-              <dd style={{ color: "var(--erp-text-main)", wordBreak: "break-all" }}>{user?.email || "-"}</dd>
-
-              <dt style={{ fontWeight: 600, color: "var(--erp-text-muted)" }}>Name:</dt>
-              <dd style={{ color: "var(--erp-text-main)", wordBreak: "break-word" }}>{user?.displayName || "-"}</dd>
-            </dl>
-          </section>
-
-          {/* Memberships and Permissions Card */}
-          <section
-            aria-labelledby="permissions-heading"
-            className="erp-card"
-          >
-            <div className="erp-card-header">
-              <h2 id="permissions-heading" className="erp-card-title">
-                {tShell("permissions")}
-              </h2>
-            </div>
-
-            {memberships.map((membership, idx) => (
-              <div
-                key={membership.id || idx}
-                style={{
-                  padding: "1rem",
-                  marginBottom: idx < memberships.length - 1 ? "1rem" : 0,
-                  backgroundColor: "var(--erp-surface-muted)",
-                  border: "1px solid var(--erp-border)",
-                }}
-              >
-                <div style={{ fontWeight: 600, color: "var(--erp-navy)", marginBottom: "0.5rem" }}>
-                  {membership.organization?.name || "-"} — {membership.branch?.name || tShell("noBranch")}
-                </div>
-
-                {membership.permissions && membership.permissions.length > 0 ? (
-                  <ul
-                    style={{
-                      listStyle: "disc",
-                      paddingLeft: "1.5rem",
-                      margin: 0,
-                      fontSize: "0.875rem",
-                      color: "var(--erp-text-body)",
-                    }}
-                  >
-                    {membership.permissions.map((perm, pIdx) => (
-                      <li key={pIdx} style={{ margin: "0.25rem 0" }}>
-                        <code style={{ fontFamily: "monospace", fontWeight: 600 }}>{perm.key}</code>
-                        {perm.scope && (
-                          <span style={{ color: "var(--erp-text-muted)", marginLeft: "0.5rem" }}>
-                            ({tShell("scope")}: {perm.scope})
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p style={{ fontSize: "0.875rem", color: "var(--erp-text-muted)", margin: 0 }}>
-                    -
-                  </p>
-                )}
+          <div className="erp-dashboard-grid">
+            {/* User Profile and Context Card */}
+            <section
+              aria-labelledby="user-profile-heading"
+              className="erp-card"
+            >
+              <div className="erp-card-header">
+                <h2 id="user-profile-heading" className="erp-card-title">
+                  {tShell("user")}
+                </h2>
+                <span className="erp-badge erp-badge-success">ACTIVE</span>
               </div>
-            ))}
-          </section>
+              <dl className="erp-dl">
+                <dt>ID:</dt>
+                <dd style={{ fontFamily: "monospace", fontSize: "0.8125rem" }}>{user?.id || "-"}</dd>
+
+                <dt>{tAuth("emailLabel")}:</dt>
+                <dd>{user?.email || "-"}</dd>
+
+                <dt>Name:</dt>
+                <dd style={{ fontWeight: 600 }}>{user?.displayName || "-"}</dd>
+              </dl>
+            </section>
+
+            {/* Memberships and Permissions Card */}
+            <section
+              aria-labelledby="permissions-heading"
+              className="erp-card"
+            >
+              <div className="erp-card-header">
+                <h2 id="permissions-heading" className="erp-card-title">
+                  {tShell("permissions")}
+                </h2>
+                <span className="erp-badge erp-badge-info">
+                  {memberships.reduce((acc, m) => acc + (m.permissions?.length || 0), 0)} PERMISSIONS
+                </span>
+              </div>
+
+              {memberships.map((membership, idx) => (
+                <div
+                  key={membership.id || idx}
+                  style={{
+                    padding: "1rem",
+                    marginBottom: idx < memberships.length - 1 ? "1rem" : 0,
+                    backgroundColor: "var(--erp-surface-muted)",
+                    border: "1px solid var(--erp-border)",
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: "var(--erp-navy)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <span>{membership.organization?.name || "-"}</span>
+                    <span style={{ color: "var(--erp-border)" }}>•</span>
+                    <span style={{ color: "var(--erp-text-muted)", fontSize: "0.875rem" }}>
+                      {membership.branch?.name || tShell("noBranch")}
+                    </span>
+                  </div>
+
+                  {membership.permissions && membership.permissions.length > 0 ? (
+                    <ul
+                      style={{
+                        listStyle: "none",
+                        padding: 0,
+                        margin: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      {membership.permissions.map((perm, pIdx) => (
+                        <li
+                          key={pIdx}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexWrap: "wrap",
+                            gap: "0.5rem",
+                            padding: "0.5rem 0.75rem",
+                            backgroundColor: "var(--erp-surface)",
+                            border: "1px solid var(--erp-border-subtle)",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          <code style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--erp-navy)" }}>
+                            {perm.key}
+                          </code>
+                          {perm.scope && (
+                            <span className="erp-badge erp-badge-neutral" style={{ fontSize: "0.6875rem" }}>
+                              {tShell("scope")}: {perm.scope}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ fontSize: "0.875rem", color: "var(--erp-text-muted)", margin: 0 }}>
+                      -
+                    </p>
+                  )}
+                </div>
+              ))}
+            </section>
+          </div>
         </main>
       </div>
     </div>
