@@ -59,4 +59,10 @@
   <data name="PERMISSION_DENIED_DETAIL" xml:space="preserve">
     <value>มีสมาชิกภาพในองค์กรแต่ไม่มีสิทธิ์สำหรับปฏิบัติการนี้</value>
   </data>
+  <data name="INTERNAL_SERVER_ERROR_TITLE" xml:space="preserve">
+    <value>ข้อผิดพลาดภายในระบบ</value>
+  </data>
+  <data name="INTERNAL_SERVER_ERROR_DETAIL" xml:space="preserve">
+    <value>เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้งในภายหลัง</value>
+  </data>
 </root>

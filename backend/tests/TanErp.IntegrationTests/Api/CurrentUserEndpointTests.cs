@@ -9,6 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
 using TanErp.Api.Contracts.IdentityAccess;
 using TanErp.Api.ErrorHandling;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.CurrentUser.GetCurrentUser;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
@@ -216,10 +219,13 @@ public class CurrentUserEndpointTests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("th", "จำเป็นต้องมีสมาชิกภาพ")]
-    [InlineData("en", "Active Membership")]
-    [InlineData("fr", "จำเป็นต้องมีสมาชิกภาพ")] // French falls back to default Thai
-    public async Task GetCurrentUser_Localization_HonorsAcceptLanguageHeader(string locale, string expectedTitleSubstring)
+    [InlineData("th", "จำเป็นต้องมีสมาชิกภาพ", "ไม่พบสมาชิกภาพที่ใช้งานอยู่")]
+    [InlineData("en", "Active Membership", "no active organization membership")]
+    [InlineData("fr", "จำเป็นต้องมีสมาชิกภาพ", "ไม่พบสมาชิกภาพที่ใช้งานอยู่")]
+    public async Task GetCurrentUser_Localization_HonorsAcceptLanguageHeader(
+        string locale,
+        string expectedTitleSubstring,
+        string expectedDetailSubstring)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-no-membership");
@@ -234,6 +240,47 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         Assert.NotNull(problem);
         Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", problem.Code);
         Assert.Contains(expectedTitleSubstring, problem.Title);
+        Assert.Contains(expectedDetailSubstring, problem.Detail);
+    }
+
+    private class FaultyCurrentUserReader : ICurrentUserReader
+    {
+        public Task<Result<GetCurrentUserResult>> GetAsync(string firebaseUid, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("Unexpected database connection drop");
+        }
+    }
+
+    [Fact]
+    public async Task GetCurrentUser_UnexpectedException_Returns500ProblemDetails()
+    {
+        using var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICurrentUserReader));
+                if (descriptor != null) services.Remove(descriptor);
+
+                services.AddScoped<ICurrentUserReader, FaultyCurrentUserReader>();
+            });
+        });
+
+        using var client = factory.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-valid-active");
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+
+        var body = await response.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ApiProblemDetails>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(problem);
+        Assert.Equal("INTERNAL_SERVER_ERROR", problem.Code);
+        Assert.False(string.IsNullOrWhiteSpace(problem.TraceId));
+        Assert.DoesNotContain("InvalidOperationException", body);
     }
 
     [Fact]

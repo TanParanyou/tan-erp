@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using TanErp.Api.Authentication;
+using TanErp.Api.ErrorHandling;
 using TanErp.Api.OpenApi;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.IdentityAccess.CurrentUser.GetCurrentUser;
@@ -65,6 +66,8 @@ builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
         FirebaseAuthenticationHandler.SchemeName, null);
 
 builder.Services.AddAuthorization();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 var app = builder.Build();
 
@@ -81,6 +84,7 @@ localizationOptions.RequestCultureProviders = new List<IRequestCultureProvider>
     new AcceptLanguageHeaderRequestCultureProvider()
 };
 app.UseRequestLocalization(localizationOptions);
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Test"))
 {

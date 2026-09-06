@@ -36,7 +36,7 @@ public class CurrentUserController : ControllerBase
 
         if (result.IsFailure)
         {
-            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext, result.Error.Message);
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         }
 
         var data = result.Value!;

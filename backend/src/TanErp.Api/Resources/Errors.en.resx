@@ -59,4 +59,10 @@
   <data name="PERMISSION_DENIED_DETAIL" xml:space="preserve">
     <value>Active Membership exists but the requested permission is absent</value>
   </data>
+  <data name="INTERNAL_SERVER_ERROR_TITLE" xml:space="preserve">
+    <value>Internal Server Error</value>
+  </data>
+  <data name="INTERNAL_SERVER_ERROR_DETAIL" xml:space="preserve">
+    <value>An unexpected error occurred. Please try again later.</value>
+  </data>
 </root>
