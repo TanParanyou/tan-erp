@@ -32,13 +32,13 @@ FRONTEND_DIR  := frontend
 .PHONY: help \
         check-ports kill-ports \
         dev dev-setup dev-backend dev-frontend dev-env \
-        up down stop logs ps db-up db-stop emulator-up \
-        db-wait db-migrate db-rollback db-status db-seed \
+        up down stop restart logs ps db-up db-stop emulator-up \
+        db-wait db-migrate db-rollback db-status db-seed seed seed-users db-reset fresh \
         api-gen api-check \
         verify verify-backend verify-frontend \
-        test test-backend test-frontend test-e2e test-fixtures \
+        test test-backend test-frontend test-e2e e2e test-fixtures \
         lint typecheck \
-        build clean clean-all
+        build clean clean-all deps install open
 
 # -----------------------------------------------------------------
 # 1. แสดงคู่มือและรายการคำสั่งทั้งหมด (Help)
@@ -56,6 +56,8 @@ help:
 	@echo "    make dev-frontend   - รันเฉพาะ Next.js Frontend บนพอร์ต $(FE_PORT)"
 	@echo "    make dev-backend    - รันเฉพาะ Backend API บนพอร์ต $(BE_PORT)"
 	@echo "    make dev-env        - เตรียมไฟล์ frontend/.env.local จาก .env.example (หากยังไม่มี)"
+	@echo "    make deps / install - ติดตั้ง dependencies ทั้งหมดในโปรเจกต์ (npm + dotnet restore)"
+	@echo "    make open           - เปิดเบราว์เซอร์ไปยังหน้า Login (http://localhost:$(FE_PORT)/th/login)"
 	@echo ""
 	@echo "  🔌 การจัดการพอร์ต (Port Management):"
 	@echo "    make check-ports    - ตรวจสอบสถานะของพอร์ต $(FE_PORT), $(BE_PORT), $(EMULATOR_PORT), $(DB_PORT)"
@@ -65,6 +67,7 @@ help:
 	@echo "    make up             - สตาร์ตคอนเทนเนอร์ PostgreSQL และ Firebase Emulator ในโหมด Background"
 	@echo "    make down           - หยุดและลบคอนเทนเนอร์ Docker ทั้งหมด"
 	@echo "    make stop           - หยุดคอนเทนเนอร์ชั่วคราว (เก็บรักษาข้อมูลใน Volume ไว้)"
+	@echo "    make restart        - รีสตาร์ตคอนเทนเนอร์ Docker ทั้งหมด"
 	@echo "    make logs           - แสดงและติดตาม Logs ของคอนเทนเนอร์ Docker แบบเรียลไทม์"
 	@echo "    make ps             - แสดงสถานะการทำงานของคอนเทนเนอร์ทั้งหมด"
 	@echo "    make db-up          - สตาร์ตเฉพาะคอนเทนเนอร์ PostgreSQL (:$(DB_PORT))"
@@ -75,7 +78,8 @@ help:
 	@echo "    make db-migrate     - Apply EF Core Migration รุ่นล่าสุดเข้าสู่ฐานข้อมูล PostgreSQL"
 	@echo "    make db-rollback    - Rollback โครงสร้างตารางกลับสู่จุดเริ่มต้น (0)"
 	@echo "    make db-status      - แสดงรายการและประวัติสถานะของ EF Core Migration"
-	@echo "    make db-seed        - เพิ่มข้อมูลผู้ใช้ทดสอบเข้าสู่ Firebase Auth Emulator"
+	@echo "    make db-seed / seed - เพิ่มข้อมูลผู้ใช้ทดสอบเข้าสู่ Firebase Auth Emulator"
+	@echo "    make db-reset/fresh - รีเซ็ตฐานข้อมูลใหม่หมด (Rollback -> Migrate -> Seed)"
 	@echo ""
 	@echo "  📜 สัญญาเชื่อมต่อ API (API Contracts):"
 	@echo "    make api-gen        - เจนเนอเรต TypeScript API Client จากสเปก OpenAPI ล่าสุด"
@@ -86,7 +90,7 @@ help:
 	@echo "    make test           - รัน Unit / Integration Tests ทั้งหมด (Fixtures + Backend + Frontend)"
 	@echo "    make test-backend   - รันการทดสอบฝั่ง Backend (.NET Test Suite)"
 	@echo "    make test-frontend  - รันการทดสอบฝั่ง Frontend (Vitest)"
-	@echo "    make test-e2e       - รันการทดสอบ End-to-End (Playwright) ชี้ไปยังพอร์ต $(FE_PORT)"
+	@echo "    make test-e2e / e2e - รันการทดสอบ End-to-End (Playwright) ชี้ไปยังพอร์ต $(FE_PORT)"
 	@echo "    make test-fixtures  - รันการทดสอบตรวจสอบ Baseline Fixtures"
 	@echo "    make lint           - ตรวจสอบรูปแบบและความสะอาดของโค้ด Frontend ด้วย ESLint"
 	@echo "    make typecheck      - ตรวจสอบความถูกต้องของ Type ด้วย TypeScript Compiler"
@@ -144,6 +148,11 @@ stop:
 	@echo "กำลังหยุดการทำงานของคอนเทนเนอร์ (รักษาข้อมูลใน Volume)..."
 	docker compose -f $(COMPOSE_FILE) stop
 
+# รีสตาร์ตคอนเทนเนอร์ Docker ทั้งหมด
+restart:
+	@echo "กำลังรีสตาร์ตคอนเทนเนอร์ทั้งหมด..."
+	docker compose -f $(COMPOSE_FILE) restart
+
 # ดู Log สดของ Docker
 logs:
 	docker compose -f $(COMPOSE_FILE) logs -f
@@ -198,6 +207,13 @@ db-seed:
 	@echo "กำลัง Seed ข้อมูลผู้ใช้ทดสอบเข้าสู่ Firebase Auth Emulator..."
 	FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:$(EMULATOR_PORT)" node scripts/seed-emulator-users.mjs
 
+# Alias สำหรับ Seed ผู้ใช้ทดสอบ
+seed seed-users: db-seed
+
+# ล้างและตั้งค่าฐานข้อมูลใหม่ทั้งหมด (Rollback -> Migrate -> Seed)
+db-reset fresh: db-rollback db-migrate db-seed
+	@echo "รีเซ็ตฐานข้อมูลและข้อมูลผู้ใช้ทดสอบเรียบร้อยแล้ว"
+
 # -----------------------------------------------------------------
 # 5. สภาพแวดล้อมและรันระบบพัฒนา (Development Runtime)
 # -----------------------------------------------------------------
@@ -238,6 +254,19 @@ dev: kill-ports up db-wait dev-env
 	(make dev-backend) & \
 	(make dev-frontend) & \
 	wait
+
+# ติดตั้ง dependencies ทั้งหมดในโปรเจกต์
+deps install:
+	@echo "กำลังติดตั้ง dependencies ทั้งหมด..."
+	npm ci
+	npm --prefix $(FRONTEND_DIR) ci --legacy-peer-deps
+	$(DOTNET) restore $(BACKEND_SLN)
+	@echo "ติดตั้ง dependencies สำเร็จเรียบร้อย"
+
+# เปิดหน้าจอเว็บในเบราว์เซอร์
+open:
+	@echo "กำลังเปิดเบราว์เซอร์ไปที่ http://localhost:$(FE_PORT)/th/login ..."
+	@open http://localhost:$(FE_PORT)/th/login 2>/dev/null || xdg-open http://localhost:$(FE_PORT)/th/login 2>/dev/null || true
 
 # -----------------------------------------------------------------
 # 6. สัญญาเชื่อมต่อ API (API Contracts)
@@ -283,6 +312,9 @@ test-frontend:
 # รันเฉพาะ Playwright End-to-End Tests
 test-e2e:
 	PLAYWRIGHT_TEST_BASE_URL="http://localhost:$(FE_PORT)" npm --prefix $(FRONTEND_DIR) run test:e2e
+
+# Alias สำหรับ Playwright E2E
+e2e: test-e2e
 
 # รันการทดสอบ Baseline Schema Fixtures
 test-fixtures:

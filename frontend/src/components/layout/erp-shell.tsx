@@ -7,6 +7,7 @@ import type { CurrentUserResponse } from "@/lib/api/api-client";
 import { signOutSession } from "@/lib/auth/auth-session";
 import { useTranslations, useLocale } from "next-intl";
 import { IconClose } from "@/components/common/Icons";
+import { Button } from "@/components/ui/Button";
 
 interface ErpShellProps {
   currentUser: CurrentUserResponse;
@@ -134,7 +135,6 @@ export function ErpShell({ currentUser }: ErpShellProps) {
           {/* Locale switcher link */}
           <Link
             href={`/${targetLocale}`}
-            locale={false}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -154,25 +154,20 @@ export function ErpShell({ currentUser }: ErpShellProps) {
           </Link>
 
           {/* Sign out button */}
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="md"
             onClick={handleSignOut}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
               minHeight: "44px",
-              padding: "0 1rem",
-              backgroundColor: "transparent",
+              borderColor: "rgba(255, 255, 255, 0.4)",
               color: "#FFFFFF",
-              border: "1px solid rgba(255, 255, 255, 0.4)",
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              cursor: "pointer",
+              backgroundColor: "transparent",
             }}
           >
             {tAuth("logout")}
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -256,58 +251,48 @@ export function ErpShell({ currentUser }: ErpShellProps) {
           {/* User Profile and Context Card */}
           <section
             aria-labelledby="user-profile-heading"
-            style={{
-              backgroundColor: "#FFFFFF",
-              border: "1px solid #E5E7EB",
-              padding: "1.5rem",
-              marginBottom: "1.5rem",
-            }}
+            className="erp-card"
+            style={{ marginBottom: "1.5rem" }}
           >
-            <h2
-              id="user-profile-heading"
-              style={{ fontSize: "1.25rem", fontWeight: 600, color: "#111827", margin: "0 0 1rem 0" }}
-            >
-              {tShell("user")}
-            </h2>
+            <div className="erp-card-header">
+              <h2 id="user-profile-heading" className="erp-card-title">
+                {tShell("user")}
+              </h2>
+            </div>
             <dl style={{ display: "grid", gridTemplateColumns: "minmax(80px, 140px) 1fr", rowGap: "0.75rem", fontSize: "0.9375rem" }}>
-              <dt style={{ fontWeight: 600, color: "#4B5563" }}>ID:</dt>
-              <dd style={{ fontFamily: "monospace", color: "#111827", wordBreak: "break-all" }}>{user?.id || "-"}</dd>
+              <dt style={{ fontWeight: 600, color: "var(--erp-text-muted)" }}>ID:</dt>
+              <dd style={{ fontFamily: "monospace", color: "var(--erp-text-main)", wordBreak: "break-all" }}>{user?.id || "-"}</dd>
 
-              <dt style={{ fontWeight: 600, color: "#4B5563" }}>{tAuth("emailLabel")}:</dt>
-              <dd style={{ color: "#111827", wordBreak: "break-all" }}>{user?.email || "-"}</dd>
+              <dt style={{ fontWeight: 600, color: "var(--erp-text-muted)" }}>{tAuth("emailLabel")}:</dt>
+              <dd style={{ color: "var(--erp-text-main)", wordBreak: "break-all" }}>{user?.email || "-"}</dd>
 
-              <dt style={{ fontWeight: 600, color: "#4B5563" }}>Name:</dt>
-              <dd style={{ color: "#111827", wordBreak: "break-word" }}>{user?.displayName || "-"}</dd>
+              <dt style={{ fontWeight: 600, color: "var(--erp-text-muted)" }}>Name:</dt>
+              <dd style={{ color: "var(--erp-text-main)", wordBreak: "break-word" }}>{user?.displayName || "-"}</dd>
             </dl>
           </section>
 
           {/* Memberships and Permissions Card */}
           <section
             aria-labelledby="permissions-heading"
-            style={{
-              backgroundColor: "#FFFFFF",
-              border: "1px solid #E5E7EB",
-              padding: "1.5rem",
-            }}
+            className="erp-card"
           >
-            <h2
-              id="permissions-heading"
-              style={{ fontSize: "1.25rem", fontWeight: 600, color: "#111827", margin: "0 0 1rem 0" }}
-            >
-              {tShell("permissions")}
-            </h2>
+            <div className="erp-card-header">
+              <h2 id="permissions-heading" className="erp-card-title">
+                {tShell("permissions")}
+              </h2>
+            </div>
 
             {memberships.map((membership, idx) => (
               <div
                 key={membership.id || idx}
                 style={{
                   padding: "1rem",
-                  marginBottom: "1rem",
-                  backgroundColor: "#F9FAFB",
-                  border: "1px solid #E5E7EB",
+                  marginBottom: idx < memberships.length - 1 ? "1rem" : 0,
+                  backgroundColor: "var(--erp-surface-muted)",
+                  border: "1px solid var(--erp-border)",
                 }}
               >
-                <div style={{ fontWeight: 600, color: "#0B3056", marginBottom: "0.5rem" }}>
+                <div style={{ fontWeight: 600, color: "var(--erp-navy)", marginBottom: "0.5rem" }}>
                   {membership.organization?.name || "-"} — {membership.branch?.name || tShell("noBranch")}
                 </div>
 
@@ -318,14 +303,14 @@ export function ErpShell({ currentUser }: ErpShellProps) {
                       paddingLeft: "1.5rem",
                       margin: 0,
                       fontSize: "0.875rem",
-                      color: "#374151",
+                      color: "var(--erp-text-body)",
                     }}
                   >
                     {membership.permissions.map((perm, pIdx) => (
                       <li key={pIdx} style={{ margin: "0.25rem 0" }}>
                         <code style={{ fontFamily: "monospace", fontWeight: 600 }}>{perm.key}</code>
                         {perm.scope && (
-                          <span style={{ color: "#6B7280", marginLeft: "0.5rem" }}>
+                          <span style={{ color: "var(--erp-text-muted)", marginLeft: "0.5rem" }}>
                             ({tShell("scope")}: {perm.scope})
                           </span>
                         )}
@@ -333,7 +318,7 @@ export function ErpShell({ currentUser }: ErpShellProps) {
                     ))}
                   </ul>
                 ) : (
-                  <p style={{ fontSize: "0.875rem", color: "#6B7280", margin: 0 }}>
+                  <p style={{ fontSize: "0.875rem", color: "var(--erp-text-muted)", margin: 0 }}>
                     -
                   </p>
                 )}

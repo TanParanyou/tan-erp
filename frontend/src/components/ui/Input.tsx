@@ -123,11 +123,20 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         </div>
 
         {error ? (
-          <p className="erp-error-text" role="alert">
+          <p
+            id={generatedId ? `${generatedId}-error` : undefined}
+            className="erp-error-text"
+            role="alert"
+          >
             {error}
           </p>
         ) : helperText ? (
-          <p className="erp-helper-text">{helperText}</p>
+          <p
+            id={generatedId ? `${generatedId}-helper` : undefined}
+            className="erp-helper-text"
+          >
+            {helperText}
+          </p>
         ) : null}
       </div>
     );

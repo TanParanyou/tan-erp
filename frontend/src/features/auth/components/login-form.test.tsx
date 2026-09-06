@@ -24,12 +24,12 @@ describe("LoginForm Component", () => {
     render(<LoginForm />);
 
     const emailLabel = screen.getByText("อีเมล");
-    const emailInput = screen.getByLabelText("อีเมล");
+    const emailInput = screen.getByLabelText(/อีเมล/, { selector: "input" });
     expect(emailLabel).toBeDefined();
     expect(emailInput).toBeDefined();
 
     const passwordLabel = screen.getByText("รหัสผ่าน");
-    const passwordInput = screen.getByLabelText("รหัสผ่าน");
+    const passwordInput = screen.getByLabelText(/รหัสผ่าน/, { selector: "input" });
     expect(passwordLabel).toBeDefined();
     expect(passwordInput).toBeDefined();
 
@@ -45,8 +45,8 @@ describe("LoginForm Component", () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      const emailInput = screen.getByLabelText("อีเมล");
-      const passwordInput = screen.getByLabelText("รหัสผ่าน");
+      const emailInput = screen.getByLabelText(/อีเมล/, { selector: "input" });
+      const passwordInput = screen.getByLabelText(/รหัสผ่าน/, { selector: "input" });
 
       expect(emailInput.getAttribute("aria-invalid")).toBe("true");
       expect(emailInput.getAttribute("aria-describedby")).toBe("email-error");
@@ -63,8 +63,8 @@ describe("LoginForm Component", () => {
   it("shows error for invalid email format", async () => {
     render(<LoginForm />);
 
-    const emailInput = screen.getByLabelText("อีเมล");
-    const passwordInput = screen.getByLabelText("รหัสผ่าน");
+    const emailInput = screen.getByLabelText(/อีเมล/, { selector: "input" });
+    const passwordInput = screen.getByLabelText(/รหัสผ่าน/, { selector: "input" });
     const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
 
     fireEvent.change(emailInput, { target: { value: "invalid-email" } });
@@ -86,8 +86,8 @@ describe("LoginForm Component", () => {
 
     render(<LoginForm />);
 
-    const emailInput = screen.getByLabelText("อีเมล");
-    const passwordInput = screen.getByLabelText("รหัสผ่าน");
+    const emailInput = screen.getByLabelText(/อีเมล/, { selector: "input" });
+    const passwordInput = screen.getByLabelText(/รหัสผ่าน/, { selector: "input" });
     const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
 
     fireEvent.change(emailInput, { target: { value: "test@example.test" } });
@@ -110,8 +110,8 @@ describe("LoginForm Component", () => {
 
     render(<LoginForm />);
 
-    const emailInput = screen.getByLabelText("อีเมล");
-    const passwordInput = screen.getByLabelText("รหัสผ่าน");
+    const emailInput = screen.getByLabelText(/อีเมล/, { selector: "input" });
+    const passwordInput = screen.getByLabelText(/รหัสผ่าน/, { selector: "input" });
     const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
 
     fireEvent.change(emailInput, { target: { value: "test@example.test" } });

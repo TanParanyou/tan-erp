@@ -8,6 +8,8 @@ import { useCurrentUser } from "@/features/auth/api/current-user-query";
 import { useTranslations, useLocale } from "next-intl";
 import { ApiError } from "@/lib/api/api-error";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
+import { Button } from "@/components/ui/Button";
+import { MonoSpinner } from "@/components/ui/MonoSpinner";
 
 interface AccessGateProps {
   children: (currentUser: CurrentUserResponse) => React.ReactNode;
@@ -58,20 +60,14 @@ export function AccessGate({ children }: AccessGateProps) {
   if (firebaseUser === undefined) {
     return (
       <div
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           minHeight: "60vh",
-          fontSize: "1.125rem",
-          color: "#0B3056",
-          fontWeight: 500,
         }}
       >
-        {tGate("authLoading")}
+        <MonoSpinner size="md" label={tGate("authLoading")} aria-busy="true" />
       </div>
     );
   }
@@ -85,29 +81,14 @@ export function AccessGate({ children }: AccessGateProps) {
   if (isProfileLoading) {
     return (
       <div
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
         style={{
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           minHeight: "60vh",
-          gap: "1rem",
         }}
       >
-        <div
-          style={{
-            width: "200px",
-            height: "20px",
-            backgroundColor: "#E5E7EB",
-            animation: "pulse 1.5s infinite",
-          }}
-        />
-        <span style={{ fontSize: "1rem", color: "#4B5563" }}>
-          {tGate("profileLoading")}
-        </span>
+        <MonoSpinner size="lg" label={tGate("profileLoading")} aria-busy="true" />
       </div>
     );
   }
@@ -124,13 +105,13 @@ export function AccessGate({ children }: AccessGateProps) {
       return (
         <div
           role="alert"
+          className="erp-card"
           style={{
             maxWidth: "500px",
             margin: "4rem auto",
             padding: "2rem",
-            border: "1px solid #D97706",
-            backgroundColor: "#FFFBEB",
-            borderRadius: 0,
+            borderColor: "var(--erp-warning)",
+            backgroundColor: "var(--erp-warning-bg)",
           }}
         >
           <h2 style={{ color: "#B45309", fontSize: "1.25rem", marginTop: 0 }}>
@@ -140,21 +121,13 @@ export function AccessGate({ children }: AccessGateProps) {
             {tGate("noMembershipDetail")}
           </p>
           <div style={{ marginTop: "1.5rem" }}>
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={() => signOutSession().then(() => router.push(`/${locale}/login`))}
-              style={{
-                height: "44px",
-                padding: "0 1.5rem",
-                backgroundColor: "#0B3056",
-                color: "#ffffff",
-                border: "none",
-                fontWeight: 600,
-                cursor: "pointer",
-                borderRadius: 0,
-              }}
             >
               {tAuth("logout")}
-            </button>
+            </Button>
           </div>
         </div>
       );
@@ -165,13 +138,13 @@ export function AccessGate({ children }: AccessGateProps) {
       return (
         <div
           role="alert"
+          className="erp-card"
           style={{
             maxWidth: "500px",
             margin: "4rem auto",
             padding: "2rem",
-            border: "1px solid #DC2626",
-            backgroundColor: "#FEF2F2",
-            borderRadius: 0,
+            borderColor: "var(--erp-danger)",
+            backgroundColor: "var(--erp-danger-bg)",
           }}
         >
           <h2 style={{ color: "#991B1B", fontSize: "1.25rem", marginTop: 0 }}>
@@ -181,21 +154,13 @@ export function AccessGate({ children }: AccessGateProps) {
             {tGate("userDisabledDetail")}
           </p>
           <div style={{ marginTop: "1.5rem" }}>
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={() => signOutSession().then(() => router.push(`/${locale}/login`))}
-              style={{
-                height: "44px",
-                padding: "0 1.5rem",
-                backgroundColor: "#0B3056",
-                color: "#ffffff",
-                border: "none",
-                fontWeight: 600,
-                cursor: "pointer",
-                borderRadius: 0,
-              }}
             >
               {tAuth("logout")}
-            </button>
+            </Button>
           </div>
         </div>
       );
@@ -205,58 +170,41 @@ export function AccessGate({ children }: AccessGateProps) {
     return (
       <div
         role="alert"
+        className="erp-card"
         style={{
           maxWidth: "500px",
           margin: "4rem auto",
           padding: "2rem",
-          border: "1px solid #DC2626",
-          backgroundColor: "#ffffff",
-          borderRadius: 0,
+          borderColor: "var(--erp-danger)",
         }}
       >
-        <h2 style={{ color: "#DC2626", fontSize: "1.25rem", marginTop: 0 }}>
+        <h2 style={{ color: "var(--erp-danger)", fontSize: "1.25rem", marginTop: 0 }}>
           {tGate("serverErrorTitle")}
         </h2>
-        <p style={{ color: "#4B5563", lineHeight: 1.5 }}>
+        <p style={{ color: "var(--erp-text-muted)", lineHeight: 1.5 }}>
           {apiError?.message || tGate("serverErrorDetail")}
         </p>
         {apiError?.traceId && (
-          <p style={{ fontSize: "0.8125rem", color: "#6B7280", fontFamily: "monospace" }}>
+          <p style={{ fontSize: "0.8125rem", color: "var(--erp-text-muted)", fontFamily: "monospace", marginTop: "0.5rem" }}>
             {tGate("traceId")}
             {apiError.traceId}
           </p>
         )}
         <div style={{ marginTop: "1.5rem", display: "flex", gap: "1rem" }}>
-          <button
+          <Button
+            variant="primary"
+            size="md"
             onClick={() => refetch()}
-            style={{
-              height: "44px",
-              padding: "0 1.5rem",
-              backgroundColor: "#0B3056",
-              color: "#ffffff",
-              border: "none",
-              fontWeight: 600,
-              cursor: "pointer",
-              borderRadius: 0,
-            }}
           >
             {tGate("retry")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="md"
             onClick={() => signOutSession().then(() => router.push(`/${locale}/login`))}
-            style={{
-              height: "44px",
-              padding: "0 1.5rem",
-              backgroundColor: "transparent",
-              color: "#0B3056",
-              border: "1px solid #0B3056",
-              fontWeight: 600,
-              cursor: "pointer",
-              borderRadius: 0,
-            }}
           >
             {tAuth("logout")}
-          </button>
+          </Button>
         </div>
       </div>
     );
