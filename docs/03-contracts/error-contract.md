@@ -82,6 +82,26 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `ITEM_IMPORT_INVALID` | 422 | Template/Row/Field ของ Import ไม่ผ่าน Validation |
 | `ITEM_IMPORT_NOT_READY` | 409 | Batch ยัง Parse อยู่ มี Error หรือ Commit ไปแล้ว |
 
+## CRM and Site Survey Error Codes
+
+| Code | HTTP | ความหมาย/การกู้คืน |
+| --- | ---: | --- |
+| `CUSTOMER_VERSION_CONFLICT` | 409 | Customer ETag เก่า; ให้ Reload/Compare |
+| `CUSTOMER_INVALID_STATE` | 409 | Customer Status ไม่รองรับ Action หรือใช้สร้างงานใหม่ไม่ได้ |
+| `CUSTOMER_FIELD_REQUIRED` | 422 | Activation Gate ยังไม่ครบ |
+| `CONTACT_FIELD_REQUIRED` | 422 | Contact ไม่มีช่องทางติดต่อขั้นต่ำหรือ Field บังคับ |
+| `OPPORTUNITY_VERSION_CONFLICT` | 409 | Opportunity ETag เก่า |
+| `OPPORTUNITY_FIELD_REQUIRED` | 422 | Field ของ Stage เป้าหมายยังไม่ครบ |
+| `OPPORTUNITY_INVALID_TRANSITION` | 409 | Stage Transition ไม่อยู่ใน Allowlist |
+| `SITE_VERSION_CONFLICT` | 409 | Site ETag เก่า |
+| `SURVEY_VERSION_CONFLICT` | 409 | Draft Revision ETag เก่า |
+| `SURVEY_NOT_READY` | 422 | Measurement/Checklist/Evidence/Required Field ยังไม่ผ่าน Gate |
+| `SURVEY_INVALID_STATE` | 409 | Action ไม่รองรับสถานะ เช่น Patch Ready Revision |
+| `SURVEY_MEASUREMENT_INVALID` | 422 | Value/Unit/Derivation ไม่ถูกหรือมี Cycle |
+| `SURVEY_FILE_NOT_READY` | 409 | Evidence File ยัง Upload/Validate ไม่เสร็จหรืออยู่นอก Scope |
+| `SURVEY_REVISION_NOT_USABLE` | 422 | Revision ยัง Draft/Void หรือไม่ผ่าน Policy สำหรับ Estimate |
+| `SURVEY_TEMPLATE_UNAVAILABLE` | 409 | ไม่มี Published Survey Template Version ที่ตรง Work Type/วันที่ |
+
 ## Official Estimate Error Codes
 
 | Code | HTTP | ความหมาย/การกู้คืน |

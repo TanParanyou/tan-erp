@@ -5,7 +5,10 @@
 ```text
 Organization ─┬─ Branch
               ├─ Membership ─ Role ─ Permission
-              ├─ Customer ─ Contact
+              ├─ Customer ─┬─ Contact
+              │            ├─ Address
+              │            ├─ Site
+              │            └─ Opportunity ─ Stage History
               ├─ Item Category
               ├─ Unit ─ Unit Conversion
               ├─ Cost Source
@@ -17,7 +20,10 @@ Organization ─┬─ Branch
               ├─ Pricing Template ─ Pricing Template Version
               │                         ├─ Measurement Rule
               │                         └─ Reference Rate Source
-              └─ Opportunity ─ Site Survey
+              └─ Site Survey ─ Site Survey Revision
+                                  ├─ Area ─ Measurement
+                                  ├─ Checklist Result
+                                  └─ Evidence Reference
 
 Pricing Template Version ─► Quick Estimate Version
 Quick Estimate ─► Quick Estimate Version ─┬─ Calculation Snapshot
@@ -33,7 +39,7 @@ Quick Estimate ─► Quick Estimate Version ─┬─ Calculation Snapshot
                                                                               ▼
                                                                            Project
 
-Site Survey ─► Quick Estimate หรือ Estimate (Official Estimate Draft)
+Ready Site Survey Revision ─► Quick Estimate หรือ Estimate (Official Estimate Draft)
 ```
 
 Logical Field, Constraint, JSONB Boundary และ Index ของ Quick Estimate อยู่ที่ [Quick Estimate Data Contract](quick-estimate-data-contract.md)
@@ -41,6 +47,8 @@ Logical Field, Constraint, JSONB Boundary และ Index ของ Quick Estima
 Logical Schema ของ Official Estimate/BOQ, Approval และ Quotation Link อยู่ที่ [Official Estimate Data Contract](official-estimate-data-contract.md)
 
 Logical Schema ของ Item, Unit, Cost Source และ Versioned Cost Record อยู่ที่ [Item Master Data Contract](item-master-data-contract.md)
+
+Logical Schema ของ Customer, Opportunity, Site และ Site Survey Revision อยู่ที่ [CRM and Site Survey Data Contract](crm-site-survey-data-contract.md)
 
 ## Aggregate Candidates
 
@@ -51,7 +59,10 @@ Logical Schema ของ Item, Unit, Cost Source และ Versioned Cost Record
 | Unit/Conversion | Dimension, Precision และ Exact/Item-specific Conversion ที่ไม่มี Cycle |
 | Cost Source | หลักฐาน Supplier Quote/Price List/Contract/Historical/Manual |
 | Cost Record | Source, Scope, Unit, Currency, Quantity Break, Effective Period และ Approval Lifecycle |
-| Site Survey | Evidence และ Readiness ก่อน Estimate |
+| Customer | Identity/Lifecycle พร้อม Contact, Address และ Site โดยไม่ผูกกับงานขายเดียว |
+| Opportunity | Customer/Branch/Owner, Controlled Stage และ Append-only Stage History |
+| Site Survey | Identity/Assignment และลำดับ Revision ของ Site/Opportunity |
+| Site Survey Revision | Area, Measurement, Checklist, Evidence Manifest และ Immutable Ready Snapshot |
 | Pricing Template | Work Type และชุด Version ที่ใช้คำนวณ Price Range |
 | Pricing Template Version | Measurement Rule, Rate, Factor, Range, Defaults และ Effective Period ที่เผยแพร่แล้ว |
 | Quick Estimate | Identity, Ownership และ Lifecycle ของการประเมินหน้างาน |
@@ -67,7 +78,8 @@ Logical Schema ของ Item, Unit, Cost Source และ Versioned Cost Record
 
 ## Ownership Rules
 
-- CRM เป็นเจ้าของ Customer/Opportunity; Module อื่นอ้างด้วย ID และ Snapshot เท่าที่จำเป็น
+- CRM เป็นเจ้าของ Customer/Contact/Address/Site/Opportunity; Module อื่นอ้างด้วย ID และ Snapshot เท่าที่จำเป็น
+- Site Survey เป็นเจ้าของ Survey/Revision/Area/Measurement/Checklist/Evidence Reference; Estimate อ้าง Ready Revision ID/Hash และไม่แก้ Source
 - Item Master เป็นเจ้าของ Item/Unit/Cost Source/Cost Record แต่ Estimate Revision เก็บ Cost Record, Conversion และ Policy ที่ใช้จริงเป็น Snapshot
 - Published Cost Record แก้ย้อนหลังไม่ได้; Branch Override ชนะ Organization Default ตาม Versioned Cost Resolution Policy
 - Pricing Template Version เป็นต้นทางกฎคำนวณ แต่ Quick Estimate Version ต้องเก็บ Template/Input/Factor/Result Snapshot เพื่อคำนวณย้อนหลังได้
@@ -81,4 +93,4 @@ Logical Schema ของ Item, Unit, Cost Source และ Versioned Cost Record
 
 ## สิ่งที่ยังไม่สรุป
 
-ความสัมพันธ์ Address/Contact หลายประเภท, BOQ/BOM และ Document Numbering ต้องผ่าน Workshop ก่อนออก Logical/Physical Schema ค่า Cost Source Priority/Staleness/Exception และ Tax/Approval Threshold จริงต้องผ่าน Business Owner/Finance Sign-off ก่อน Publish
+ความสัมพันธ์ Contact ข้าม Customer, Customer Merge, BOQ/BOM และ Document Numbering ขั้นสูงต้องผ่าน Workshop ก่อนขยาย Schema ค่า Survey Template/Readiness, Retention/Redaction, Cost Source Priority/Staleness/Exception และ Tax/Approval Threshold จริงต้องผ่าน Owner ที่เกี่ยวข้องก่อน Production

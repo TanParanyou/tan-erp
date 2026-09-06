@@ -8,9 +8,18 @@
 | Organization | `branches.manage` | จัดการสาขา | Organization |
 | Access | `users.manage` | เชิญ ปิดใช้งาน และจัด Membership | Organization/Branch |
 | Access | `roles.manage` | จัด Role และ Permission | Organization |
-| CRM | `customers.read` | ดูลูกค้า | Organization/Branch/Own |
-| CRM | `customers.manage` | สร้างและแก้ลูกค้า | Organization/Branch/Own |
-| CRM | `opportunities.manage` | จัดการโอกาสการขาย | Organization/Branch/Own |
+| CRM | `customers.read` | ดู Customer และข้อมูลที่ Allowlist อนุญาต | Organization/Branch/Own |
+| CRM | `customers.create` | สร้าง Customer Draft | Organization/Branch |
+| CRM | `customers.update` | แก้ Customer ตาม Scope/State | Organization/Branch/Own |
+| CRM | `customers.activate` | เปิดใช้ Customer ที่ผ่าน Gate | Organization/Branch |
+| CRM | `customers.deactivate` | ปิดใช้ Customer พร้อมเหตุผล | Organization/Branch |
+| CRM | `customer-contacts.manage` | จัด Contact/Address และข้อมูลส่วนบุคคล | Organization/Branch/Own |
+| CRM | `sites.read` | ดู Site ตาม Data Allowlist | Organization/Branch/Own |
+| CRM | `sites.manage` | สร้าง/แก้/ปิดใช้ Site | Organization/Branch/Own |
+| CRM | `opportunities.read` | ดู Opportunity ตาม Scope | Organization/Branch/Own |
+| CRM | `opportunities.create` | สร้าง Opportunity | Organization/Branch/Own |
+| CRM | `opportunities.update` | แก้ Open Opportunity | Organization/Branch/Own |
+| CRM | `opportunities.transition` | เปลี่ยน Stage/Close/Reopen ตาม Policy | Organization/Branch/Own |
 | Item Master | `items.read` | ดู Item ตาม Scope และ Cost ตามสิทธิ์แยก | Organization/Branch |
 | Item Master | `items.create` | สร้าง Item Draft | Organization |
 | Item Master | `items.update` | แก้ Item Draft/Active ที่อนุญาต | Organization |
@@ -26,7 +35,13 @@
 | Unit | `units.manage` | จัดการ Unit/Conversion ตาม Governance | Organization/Shared |
 | Item Import | `item-imports.create` | Upload/Preview/Validate Import Batch | Organization |
 | Item Import | `item-imports.commit` | Commit Batch ที่พร้อมแบบ Atomic | Organization |
-| Survey | `surveys.manage` | สร้างและแก้ Site Survey | Branch/Project/Own |
+| Survey | `surveys.read` | ดู Survey/Revision/Evidence Metadata | Organization/Branch/Opportunity/Own |
+| Survey | `surveys.create` | สร้าง Survey + Draft Revision | Branch/Opportunity/Own |
+| Survey | `surveys.update` | แก้ Draft Revision | Branch/Opportunity/Own |
+| Survey | `surveys.mark-ready` | ตรวจและล็อก Ready Revision | Branch/Opportunity/Own |
+| Survey | `surveys.create-revision` | Clone เป็น Draft Revision ใหม่ | Branch/Opportunity/Own |
+| Survey | `surveys.void` | Void Revision พร้อมเหตุผล | Organization/Branch/Opportunity |
+| Survey | `surveys.export` | Export Survey/Evidence ตาม Allowlist | Organization/Branch/Opportunity |
 | Quick Estimate | `quick-estimates.read` | ดู Quick Estimate ตามขอบเขตที่ได้รับ | Organization/Branch/Opportunity/Own |
 | Quick Estimate | `quick-estimates.create` | สร้าง Quick Estimate | Branch/Opportunity/Own |
 | Quick Estimate | `quick-estimates.update` | แก้ Draft/Calculated หรือสร้าง Version ใหม่ตามกฎ | Branch/Opportunity/Own |
@@ -60,3 +75,5 @@
 การมี `pricing-templates.publish` ไม่ข้ามสถานะ Approval และการมี `pricing-templates.activate` ไม่ข้ามเกณฑ์ผ่าน Pilot ผู้แก้ Template ห้ามอนุมัติ Version เดียวกันเมื่อ Maker–Checker มีผล การ Override Rate ต้องอยู่ในขอบเขต Branch และไม่แก้ Standard Rate ของ Organization
 
 การมี `cost-records.approve` ไม่อนุญาตให้อนุมัติ Cost ที่ตนสร้างหรือแก้ Financial Field ล่าสุด และ `cost-records.publish` ไม่ข้าม Approved State/Overlap/Effective Policy การ Commit Import ที่มี Cost Update ไม่เท่ากับ Publish Cost รายละเอียดอยู่ที่ [Item Master Governance](../01-business/item-master-governance.md)
+
+การมี `opportunities.transition` ไม่อนุญาตให้ข้าม Stage/Required Field หรือ Patch Won โดยตรง และ `surveys.mark-ready` ไม่ข้าม Readiness/File/Scope Check การ Export/Reveal Personal Data ต้องตรวจ Permission แยกและ Audit ตาม [CRM and Site Survey Governance](../01-business/crm-site-survey-governance.md)

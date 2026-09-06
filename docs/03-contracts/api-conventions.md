@@ -31,6 +31,8 @@ Endpoint และ Payload ของ Official Estimate/BOQ อยู่ที่
 
 Endpoint, Lifecycle และ Cost Resolver ของ Item/Unit/Cost อยู่ที่ [Item Master API Contract](item-master-api-contract.md)
 
+Endpoint, Stage และ Ready Survey Revision ของ Customer/Opportunity/Site Survey อยู่ที่ [CRM and Site Survey API Contract](crm-site-survey-api-contract.md)
+
 ## Contract Rules
 
 - OpenAPI เป็น Machine-readable contract สำหรับสร้าง Type ฝั่ง Frontend

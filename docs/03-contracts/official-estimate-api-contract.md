@@ -35,7 +35,7 @@ Backend สร้าง Organization/Branch Scope จาก PostgreSQL Membershi
 {
   "customerId": "5d70e0d5-f894-4da7-a591-90c81419855a",
   "opportunityId": "9c5ae5f9-f02d-40ef-bd62-678a4631cd10",
-  "siteSurveyId": "e4a8d0bd-c464-44c4-b0fa-eac3de2869b1",
+  "siteSurveyRevisionId": "e4a8d0bd-c464-44c4-b0fa-eac3de2869b1",
   "branchId": "6493ddaf-284b-4a98-b1c2-f715fe5c971a",
   "currency": "THB",
   "sourceQuickEstimateVersionId": null
@@ -52,7 +52,7 @@ Backend สร้าง Organization/Branch Scope จาก PostgreSQL Membershi
 }
 ```
 
-`sourceQuickEstimateVersionId` เป็น Optional Official Estimate เริ่มจาก Customer/Opportunity/Site Survey โดยตรงได้
+`sourceQuickEstimateVersionId` เป็น Optional Official Estimate เริ่มจาก Customer/Opportunity/Ready Site Survey Revision โดยตรงได้
 
 ## Autosave Draft
 
@@ -199,7 +199,7 @@ POST /api/v1/estimates/{id}/quotation
 | ID | Case | Expected |
 | --- | --- | --- |
 | `TC-API-EST-001` | Create จาก Customer/Opportunity โดยไม่มี Quick Estimate | 201 |
-| `TC-API-EST-002` | Create อ้าง Site Survey นอก Scope | 404 |
+| `TC-API-EST-002` | Create อ้าง Site Survey Revision นอก Scope หรือยังไม่ Ready | 404/422 ตาม Scope/State |
 | `TC-API-EST-003` | Patch ด้วย ETag ล่าสุด | 200 + ETag ใหม่ |
 | `TC-API-EST-004` | Patch ด้วย ETag เก่า | 409; Draft ไม่เปลี่ยน |
 | `TC-API-EST-005` | Client ส่ง Total ปลอม | ไม่ใช้ค่า Client |

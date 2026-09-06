@@ -14,6 +14,9 @@
 - `estimates.approve`
 - `estimates.cancel`
 - `quotations.issue`
+- `customers.read`
+- `opportunities.transition`
+- `surveys.mark-ready`
 - `roles.manage`
 
 ## Scope
@@ -49,3 +52,4 @@ Valid identity?
 - การแก้ Role Assignment และ Approval Permission ต้องมี Audit Trail
 - Sensitive Action ต้องประเมิน Maker–Checker เพิ่มจาก Permission ปกติ
 - การ Approve/Cancel Submitted Estimate ต้องผ่าน Approval Authority ตาม [Approval Matrix](../01-business/approval-matrix.md); Permission อย่างเดียวไม่เพียงพอ
+- การ Transition Opportunity, Mark Ready/Void Survey และ Export Personal Data ต้องผ่าน State/Scope/Privacy Policy ตาม [CRM and Site Survey Governance](../01-business/crm-site-survey-governance.md)

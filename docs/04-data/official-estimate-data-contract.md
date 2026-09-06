@@ -27,7 +27,7 @@ Estimate เป็น Identity/Lifecycle ส่วน Revision เป็น Busi
 | `organization_id`, `branch_id` | UUID | Trusted Scope; FK ต้องสัมพันธ์กัน |
 | `number` | String | Unique `(organization_id, number)` |
 | `customer_id`, `opportunity_id` | UUID | Customer/Opportunity/Branch เดียวกัน |
-| `site_survey_id` | UUID/null | Optional Source ใน Scope |
+| `site_survey_revision_id`, `site_survey_snapshot_hash` | UUID/String/null | Optional Ready/Superseded Source ใน Scope; Freeze Revision ที่ใช้ |
 | `source_quick_estimate_version_id` | UUID/null | Optional เท่านั้น |
 | `owner_user_id` | UUID | ผู้รับผิดชอบ |
 | `status` | Enum | draft/submitted/returned/approved/quoted/cancelled; mirror Current Revision |

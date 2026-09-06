@@ -21,6 +21,8 @@ Relational BOQ, Revision Snapshot และ Approval/Quotation Integrity อย�
 
 Relational Item/Unit/Cost Record, Import Staging JSONB และ Cost Resolve Index อยู่ที่ [Item Master Data Contract](item-master-data-contract.md)
 
+Relational Customer/Opportunity/Survey Revision, Personal Data Boundary และ Survey Answer JSONB อยู่ที่ [CRM and Site Survey Data Contract](crm-site-survey-data-contract.md)
+
 Precision ของ Quantity, Rate และ Money รวมถึง Required Gate อ้าง [Official Estimate Field Catalog](../01-business/official-estimate-field-catalog.md) และ [Calculation Rules](../01-business/estimation-calculation-rules.md) ห้ามกำหนดค่าคนละชุดซ้ำใน Migration โดยไม่มี Contract Change
 
 ## Multi-organization
