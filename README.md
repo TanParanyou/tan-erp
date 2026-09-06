@@ -29,27 +29,44 @@ npm run verify
 
 ## การเริ่มต้นระบบอย่างรวดเร็วด้วย Make (Quickstart with Make)
 
-ระบบมี `Makefile` สำหรับบริหารจัดการ Service และ Lifecycle ต่างๆ (ล็อกพอร์ต Frontend `3005` และ Backend `5005` เพื่อเลี่ยงการชนกับระบบอื่นหรือ macOS AirPlay):
+ระบบมี `Makefile` สำหรับบริหารจัดการ Service, Lifecycle และแก้ปัญหาพอร์ตชน (ล็อกพอร์ต Frontend `3005` และ Backend `5005` เพื่อเลี่ยงการชนกับระบบอื่นหรือ macOS AirPlay):
 
 ```bash
-# 1. ดูคำสั่งทั้งหมดในระบบ
+# ดูรายการคำสั่งทั้งหมดพร้อมคำอธิบายภาษาไทย
 make help
 
-# 2. ติดตั้งและเตรียม Environment ในคำสั่งเดียว (Docker -> Wait DB -> Seed Emulator -> Migrations -> .env)
+# เซ็ตอัปสภาพแวดล้อมครบวงจรในคำสั่งเดียว (Docker Up -> รอ DB พร้อม -> Seed Auth -> EF Migration -> สร้าง .env)
 make dev-setup
 
-# 3. รันทั้ง Backend (:5005) และ Frontend (:3005) พร้อมกัน (มี Auto-kill port ค้าง + Trap Ctrl+C ปิดทั้งคู่)
+# รันทั้ง Backend (:5005) และ Frontend (:3005) พร้อมกัน (Auto-kill พอร์ตค้าง + Trap Ctrl+C ปิดทั้งคู่)
 make dev
-
-# ตรวจสอบ / เคลียร์พอร์ต
-make check-ports
-make kill-ports
-
-# ตรวจสอบคุณภาพทั้งหมด (Verification Gates)
-make verify
 ```
 
-## ลำดับการเริ่มต้นระบบในเครื่องพัฒนาแบบ Manual (Manual Startup Order)
+### สรุปคำสั่งสำคัญแยกตามหมวดหมู่
+
+| หมวดหมู่ | คำสั่ง | คำอธิบาย |
+| :--- | :--- | :--- |
+| **Development** | `make dev` | รัน Backend (:5005) และ Frontend (:3005) ขนานกัน พร้อมเคลียร์พอร์ตค้าง |
+| | `make dev-setup` | เซ็ตอัปทั้ง Docker, Seed และ Migration ให้อัตโนมัติในคำสั่งเดียว |
+| | `make dev-backend` | รันเฉพาะ Backend API บนพอร์ต 5005 (โหมด Test + SeedTestData) |
+| | `make dev-frontend` | รันเฉพาะ Frontend Next.js บนพอร์ต 3005 |
+| **Port Management** | `make check-ports` | ตรวจสอบสถานะพอร์ต 3005, 5005, 9099, 5432 ว่าว่างหรือถูกใช้งาน |
+| | `make kill-ports` | ปิด Process ที่ตกค้างบนพอร์ต 3005 และ 5005 เพื่อไม่ให้พอร์ตชน |
+| **Docker Containers** | `make up` / `make down` | สตาร์ต / หยุดและลบคอนเทนเนอร์ PostgreSQL 17 และ Firebase Emulator |
+| | `make stop` / `make logs` | หยุดคอนเทนเนอร์ชั่วคราว (เก็บข้อมูลไว้) / ติดตาม Logs แบบสด |
+| | `make db-up` | สตาร์ตเฉพาะ PostgreSQL Container (พอร์ต 5432) |
+| **Database & Migration**| `make db-migrate` | รัน EF Core Migration ล่าสุดเข้าสู่ PostgreSQL |
+| | `make db-rollback` | Rollback โครงสร้างตารางกลับสู่จุดเริ่มต้น (0) |
+| | `make db-status` | ดูประวัติและสถานะของ EF Core Migrations |
+| | `make db-seed` | เพิ่มข้อมูลผู้ใช้ทดสอบเข้าสู่ Firebase Auth Emulator (พอร์ต 9099) |
+| **API Contract** | `make api-gen` | เจนเนอเรต TypeScript API Client จากสเปก OpenAPI ล่าสุด |
+| | `make api-check` | ตรวจสอบว่าโค้ด TypeScript API ตรงกับ OpenAPI spec หรือไม่ |
+| **Quality & Tests** | `make verify` | รัน Verification Gates ครบทั้งระบบตาม Definition of Done |
+| | `make test` | รัน Unit / Integration Tests ทั้งหมด (Fixtures, Backend, Frontend) |
+| | `make lint` / `typecheck`| ตรวจสอบ ESLint และ TypeScript Types ฝั่ง Frontend |
+| **Build & Cleanup** | `make build` | คอมไพล์และบิลด์ทั้งฝั่ง Backend และ Frontend |
+| | `make clean` | ลบไฟล์ Build/Cache ชั่วคราว (`bin/`, `obj/`, `.next/`) |
+| | `make clean-all` | ล้างไฟล์ทั้งหมดรวมถึง `node_modules` และ Docker Containers |
 
 ## ความปลอดภัยและการถือครองข้อมูล (Safe Configuration and Ownership)
 
