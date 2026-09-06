@@ -1,0 +1,47 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "24.20.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "generate:api": "openapi-typescript ../contracts/openapi/tan-erp.v1.json -o src/generated/api/tan-erp.v1.ts",
+    "check:api": "npm run generate:api && git diff --exit-code -- src/generated/api/tan-erp.v1.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "postinstall": "cd node_modules/openapi-typescript 2>/dev/null && npm install --no-save typescript@5.9.3 || true",
+    "verify": "npm run check:api && npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.102.8",
+    "firebase": "12.18.0",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "10.10.0",
+    "jsdom": "^26.0.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "^5.9.3"
+    }
+  }
+}
