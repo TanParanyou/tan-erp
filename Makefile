@@ -190,17 +190,17 @@ db-wait:
 # อัปเดต Schema ฐานข้อมูลด้วย EF Core Migration
 db-migrate:
 	@echo "กำลัง Apply EF Core Migrations เข้าสู่ PostgreSQL..."
-	$(DOTNET) ef database update --project $(BACKEND_INFRA) --startup-project $(BACKEND_API) --connection $(DB_CONN)
+	ConnectionStrings__Database=$(DB_CONN) $(DOTNET) ef database update --project $(BACKEND_INFRA) --startup-project $(BACKEND_API) --connection $(DB_CONN)
 
 # ย้อนกลับ Schema ฐานข้อมูลสู่จุดเริ่มต้น
 db-rollback:
 	@echo "กำลังย้อนกลับฐานข้อมูลสู่จุดเริ่มต้น (Migration 0)..."
-	$(DOTNET) ef database update 0 --project $(BACKEND_INFRA) --startup-project $(BACKEND_API) --connection $(DB_CONN)
+	ConnectionStrings__Database=$(DB_CONN) $(DOTNET) ef database update 0 --project $(BACKEND_INFRA) --startup-project $(BACKEND_API) --connection $(DB_CONN)
 
 # ดูประวัติรายการ Migration ทั้งหมด
 db-status:
 	@echo "กำลังตรวจสอบประวัติและสถานะ EF Core Migrations..."
-	$(DOTNET) ef migrations list --project $(BACKEND_INFRA) --startup-project $(BACKEND_API) --connection $(DB_CONN)
+	ConnectionStrings__Database=$(DB_CONN) $(DOTNET) ef migrations list --project $(BACKEND_INFRA) --startup-project $(BACKEND_API) --connection $(DB_CONN)
 
 # เพิ่มข้อมูลผู้ใช้ทดสอบเข้า Firebase Emulator
 db-seed:

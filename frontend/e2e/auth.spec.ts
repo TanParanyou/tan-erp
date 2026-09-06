@@ -5,6 +5,10 @@ test.describe("Foundation Login and Current User Journey", () => {
     // 1. open /th/login
     await page.goto("/th/login");
     await expect(page.locator("html")).toHaveAttribute("lang", "th");
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      "content",
+      "ระบบบริหารจัดการโครงการและงานผลิต"
+    );
     await expect(page.getByRole("heading", { name: "เข้าสู่ระบบ Project ERP" })).toBeVisible();
 
     // 2. sign in through Firebase Auth Emulator with seeded test user
@@ -29,6 +33,10 @@ test.describe("Foundation Login and Current User Journey", () => {
     await page.getByRole("link", { name: /Switch to English/i }).click();
     await page.waitForURL("**/en");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      "content",
+      "Project & Manufacturing ERP"
+    );
     await expect(page.locator('[data-testid="org-name"]')).toHaveText("TEST_ONLY Project ERP");
     await expect(page.locator('[data-testid="branch-name"]')).toHaveText("สาขาทดสอบ");
     await expect(page.getByRole("button", { name: "Sign Out" })).toBeVisible();

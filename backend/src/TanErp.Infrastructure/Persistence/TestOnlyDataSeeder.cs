@@ -74,7 +74,7 @@ public static class TestOnlyDataSeeder
             role = new Role(Guid.NewGuid(), TestOrgId, "Test Admin", "Test Admin Role", isActive: true);
             db.Roles.Add(role);
 
-            var rolePermission = new RolePermission(Guid.NewGuid(), role.Id, permission.Id, PermissionScope.Organization, TestOrgId);
+            var rolePermission = new RolePermission(Guid.NewGuid(), role.Id, TestOrgId, permission.Id, PermissionScope.Organization, TestOrgId);
             db.RolePermissions.Add(rolePermission);
 
             var membershipRole = new MembershipRole(TestMembershipId, role.Id, TestOrgId);

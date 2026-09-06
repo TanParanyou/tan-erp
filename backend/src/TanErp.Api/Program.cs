@@ -8,6 +8,7 @@ using TanErp.Api.OpenApi;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.IdentityAccess.CurrentUser.GetCurrentUser;
 using TanErp.Infrastructure.Common;
+using TanErp.Infrastructure.Configuration;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
 
@@ -47,12 +48,20 @@ builder.Services.AddCors(options =>
 });
 
 // Database Context
-var connectionString = builder.Configuration.GetConnectionString("Database")
-    ?? throw new InvalidOperationException(
-        "Required configuration 'ConnectionStrings:Database' is missing.");
+var connectionString = builder.Configuration.GetConnectionString("Database");
+if (!builder.Environment.IsEnvironment("Test"))
+{
+    RequiredConfiguration.Require(connectionString, "ConnectionStrings:Database");
+}
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    var resolvedConnectionString = RequiredConfiguration.Require(
+        sp.GetRequiredService<IConfiguration>().GetConnectionString("Database") ?? connectionString,
+        "ConnectionStrings:Database");
+
+    options.UseNpgsql(resolvedConnectionString);
+});
 
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddSingleton<IClock, TanErp.Infrastructure.Common.SystemClock>();

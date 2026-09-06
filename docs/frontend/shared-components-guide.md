@@ -32,26 +32,32 @@
 ### 2.1 Buttons (`Button`)
 ```tsx
 import { Button } from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
+
+const t = useTranslations("auth");
 
 // ปุ่มหลักพร้อมสถานะ Loading (ปิดการคลิกซ้ำอัตโนมัติ)
 <Button variant="primary" isLoading={isSubmitting} type="submit">
-  เข้าสู่ระบบ
+  {t("submitButton")}
 </Button>
 
 // ปุ่มขนาดสัมผัส 44px
 <Button variant="outline" onClick={handleAction}>
-  ดำเนินการ
+  {t("logout")}
 </Button>
 ```
 
 ### 2.2 Inputs (`Input`)
 ```tsx
 import { Input } from "@/components/ui/Input";
+import { useTranslations } from "next-intl";
+
+const t = useTranslations("auth");
 
 // อินพุตข้อความทั่วไป
 <Input
   id="email"
-  label="อีเมล"
+  label={t("emailLabel")}
   required
   error={fieldErrors.email}
   value={email}
@@ -62,7 +68,7 @@ import { Input } from "@/components/ui/Input";
 <Input
   id="password"
   type="password"
-  label="รหัสผ่าน"
+  label={t("passwordLabel")}
   required
   value={password}
   onChange={(e) => setPassword(e.target.value)}

@@ -16,7 +16,9 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
 
     public FirebaseTokenVerifier(IConfiguration configuration)
     {
-        var projectId = configuration["Firebase:ProjectId"] ?? "tan-erp-test-only";
+        var projectId = configuration["Firebase:ProjectId"]
+            ?? throw new InvalidOperationException(
+                "Required configuration 'Firebase:ProjectId' is missing.");
         var envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
             ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
         var isProduction = string.Equals(envName, "Production", StringComparison.OrdinalIgnoreCase);
@@ -24,16 +26,14 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
         if (FirebaseApp.DefaultInstance == null)
         {
             var emulatorHost = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
-            if (!string.IsNullOrEmpty(emulatorHost) && !isProduction)
+            if (!string.IsNullOrEmpty(emulatorHost))
             {
-                FirebaseApp.Create(new AppOptions
+                if (isProduction)
                 {
-                    Credential = GoogleCredential.FromAccessToken("owner"),
-                    ProjectId = projectId
-                });
-            }
-            else if (!isProduction)
-            {
+                    throw new InvalidOperationException(
+                        "FIREBASE_AUTH_EMULATOR_HOST must not be set in production.");
+                }
+
                 FirebaseApp.Create(new AppOptions
                 {
                     Credential = GoogleCredential.FromAccessToken("owner"),

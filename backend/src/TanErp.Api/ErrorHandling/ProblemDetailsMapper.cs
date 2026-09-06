@@ -16,28 +16,40 @@ public static class ProblemDetailsMapper
         "ACTIVE_MEMBERSHIP_REQUIRED" => StatusCodes.Status403Forbidden,
         "PERMISSION_DENIED" => StatusCodes.Status403Forbidden,
         "INTERNAL_SERVER_ERROR" => StatusCodes.Status500InternalServerError,
-        _ => StatusCodes.Status400BadRequest
+        _ => StatusCodes.Status500InternalServerError
+    };
+
+    private static string GetKnownCode(string code) => GetStatus(code) switch
+    {
+        StatusCodes.Status401Unauthorized => code,
+        StatusCodes.Status403Forbidden => code,
+        StatusCodes.Status500InternalServerError when code == "INTERNAL_SERVER_ERROR" => code,
+        _ => "INTERNAL_SERVER_ERROR"
     };
 
     public static ApiProblemDetails CreateProblem(string code, HttpContext context)
     {
-        var status = GetStatus(code);
+        var knownCode = GetKnownCode(code);
+        var status = GetStatus(knownCode);
         return new ApiProblemDetails
         {
-            Type = $"https://tan-erp.local/problems/{code.ToLowerInvariant().Replace('_', '-')}",
-            Title = ResourceManager.GetString($"{code}_TITLE") ?? code,
-            Detail = ResourceManager.GetString($"{code}_DETAIL") ?? code,
+            Type = $"https://tan-erp.local/problems/{knownCode.ToLowerInvariant().Replace('_', '-')}",
+            Title = ResourceManager.GetString($"{knownCode}_TITLE") ?? knownCode,
+            Detail = ResourceManager.GetString($"{knownCode}_DETAIL") ?? knownCode,
             Status = status,
-            Code = code,
+            Code = knownCode,
             TraceId = Activity.Current?.Id ?? context.TraceIdentifier,
             Instance = context.Request.Path
         };
     }
 
-    public static ObjectResult CreateProblemResult(string code, HttpContext context) =>
-        new(CreateProblem(code, context))
+    public static ObjectResult CreateProblemResult(string code, HttpContext context)
+    {
+        var problem = CreateProblem(code, context);
+        return new ObjectResult(problem)
         {
-            StatusCode = GetStatus(code),
+            StatusCode = problem.Status,
             ContentTypes = { "application/problem+json" }
         };
+    }
 }

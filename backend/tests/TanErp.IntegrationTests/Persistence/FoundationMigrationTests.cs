@@ -147,8 +147,8 @@ public class FoundationMigrationTests : IAsyncLifetime
         var perm = Permission.Create("organizations.read");
         db.Permissions.Add(perm);
 
-        var rolePermA = new RolePermission(Guid.NewGuid(), roleA.Id, perm.Id, PermissionScope.Organization, orgA.Id);
-        var rolePermB = new RolePermission(Guid.NewGuid(), roleB.Id, perm.Id, PermissionScope.Organization, orgB.Id);
+        var rolePermA = new RolePermission(Guid.NewGuid(), roleA.Id, orgA.Id, perm.Id, PermissionScope.Organization, orgA.Id);
+        var rolePermB = new RolePermission(Guid.NewGuid(), roleB.Id, orgB.Id, perm.Id, PermissionScope.Organization, orgB.Id);
         db.RolePermissions.AddRange(rolePermA, rolePermB);
 
         var memberRoleA = new MembershipRole(memberA.Id, roleA.Id, orgA.Id);
@@ -167,6 +167,20 @@ public class FoundationMigrationTests : IAsyncLifetime
         var crossRoleAssignment = new MembershipRole(
             memberA.Id, roleB.Id, orgA.Id);
         db.MembershipRoles.Add(crossRoleAssignment);
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+
+        // Negative test: RolePermission with branch from a different organization
+        var crossBranchRolePerm = new RolePermission(
+            Guid.NewGuid(), roleA.Id, orgA.Id, perm.Id, PermissionScope.Branch, branchB.Id, branchB.Id);
+        db.RolePermissions.Add(crossBranchRolePerm);
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+
+        // Negative test: RolePermission with organizationId that does not match role's organizationId
+        var crossOrgRolePerm = new RolePermission(
+            Guid.NewGuid(), roleB.Id, orgA.Id, perm.Id, PermissionScope.Organization, orgA.Id);
+        db.RolePermissions.Add(crossOrgRolePerm);
         await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
         db.ChangeTracker.Clear();
 

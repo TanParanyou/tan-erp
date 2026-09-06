@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,7 @@ using TanErp.Application.IdentityAccess.CurrentUser.GetCurrentUser;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
+using TanErp.Infrastructure.Configuration;
 using TanErp.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -53,6 +55,13 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Test");
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ConnectionStrings:Database"] = _postgres.GetConnectionString()
+                });
+            });
             builder.ConfigureServices(services =>
             {
                 // Replace DbContext with Testcontainers connection string
@@ -81,8 +90,10 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         var membershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a11");
         var orgId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a12");
         var branchId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a13");
+        var foreignOrganizationId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a14");
 
         var org = new Organization(orgId, "TEST_ONLY Project ERP");
+        var foreignOrganization = new Organization(foreignOrganizationId, "TEST_ONLY Foreign Organization");
         var branch = new Branch(branchId, orgId, "B01", "สาขาทดสอบ");
         var userActive = new User(userId, "uid-active", "ผู้ใช้ TEST_ONLY", "foundation-user@example.test");
         var userDisabled = new User(Guid.NewGuid(), "uid-disabled", "ผู้ใช้ถูกระงับ", "disabled@example.test", isActive: false);
@@ -92,10 +103,10 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         var role = new Role(Guid.NewGuid(), orgId, "Admin");
         var permission = Permission.Create("organizations.read");
 
-        var rolePermission = new RolePermission(Guid.NewGuid(), role.Id, permission.Id, PermissionScope.Organization, orgId);
+        var rolePermission = new RolePermission(Guid.NewGuid(), role.Id, orgId, permission.Id, PermissionScope.Organization, orgId);
         var membershipRole = new MembershipRole(membershipId, role.Id, orgId);
 
-        db.Organizations.Add(org);
+        db.Organizations.AddRange(org, foreignOrganization);
         db.Branches.Add(branch);
         db.Users.AddRange(userActive, userDisabled, userNoMembership);
         db.Memberships.Add(membership);
@@ -115,10 +126,18 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
-    [Fact]
-    public async Task GetCurrentUser_NoAuthorizationHeader_Returns401AuthenticationRequired()
+    [Theory]
+    [InlineData("th", "จำเป็นต้องยืนยันตัวตน", "ไม่พบ Authorization Bearer token")]
+    [InlineData("en", "Authentication Required", "Bearer token is missing")]
+    [InlineData("fr", "จำเป็นต้องยืนยันตัวตน", "ไม่พบ Authorization Bearer token")]
+    public async Task GetCurrentUser_NoAuthorizationHeader_ReturnsLocalized401(
+        string locale,
+        string expectedTitleSubstring,
+        string expectedDetailSubstring)
     {
-        var response = await _client.GetAsync("/api/v1/me");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Add("Accept-Language", locale);
+        var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -129,6 +148,8 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         Assert.NotNull(problem);
         Assert.Equal("AUTHENTICATION_REQUIRED", problem.Code);
         Assert.False(string.IsNullOrWhiteSpace(problem.TraceId));
+        Assert.Contains(expectedTitleSubstring, problem.Title);
+        Assert.Contains(expectedDetailSubstring, problem.Detail);
         Assert.DoesNotContain("Exception", body, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("SELECT", body, StringComparison.OrdinalIgnoreCase);
     }
@@ -251,8 +272,14 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         }
     }
 
-    [Fact]
-    public async Task GetCurrentUser_UnexpectedException_Returns500ProblemDetails()
+    [Theory]
+    [InlineData("th", "ข้อผิดพลาดภายในระบบ", "เกิดข้อผิดพลาดที่ไม่คาดคิด")]
+    [InlineData("en", "Internal Server Error", "An unexpected error occurred")]
+    [InlineData("fr", "ข้อผิดพลาดภายในระบบ", "เกิดข้อผิดพลาดที่ไม่คาดคิด")]
+    public async Task GetCurrentUser_UnexpectedException_ReturnsLocalized500ProblemDetails(
+        string locale,
+        string expectedTitleSubstring,
+        string expectedDetailSubstring)
     {
         using var factory = _factory.WithWebHostBuilder(builder =>
         {
@@ -268,6 +295,7 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         using var client = factory.CreateClient();
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-valid-active");
+        request.Headers.Add("Accept-Language", locale);
 
         var response = await client.SendAsync(request);
 
@@ -280,7 +308,31 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         Assert.NotNull(problem);
         Assert.Equal("INTERNAL_SERVER_ERROR", problem.Code);
         Assert.False(string.IsNullOrWhiteSpace(problem.TraceId));
+        Assert.Contains(expectedTitleSubstring, problem.Title);
+        Assert.Contains(expectedDetailSubstring, problem.Detail);
         Assert.DoesNotContain("InvalidOperationException", body);
+    }
+
+    [Fact]
+    public void ProblemDetailsMapper_UnknownCode_UsesLocalizedInternalServerError()
+    {
+        var context = new DefaultHttpContext();
+        var problem = ProblemDetailsMapper.CreateProblem("UNKNOWN_CODE", context);
+
+        Assert.Equal("INTERNAL_SERVER_ERROR", problem.Code);
+        Assert.Equal(StatusCodes.Status500InternalServerError, problem.Status);
+        Assert.DoesNotContain("UNKNOWN_CODE", problem.Title);
+        Assert.DoesNotContain("UNKNOWN_CODE", problem.Detail);
+    }
+
+    [Fact]
+    public void FirebaseTokenVerifier_MissingProjectId_ThrowsInvalidOperationException()
+    {
+        var config = new ConfigurationBuilder().Build();
+
+        var ex = Assert.Throws<InvalidOperationException>(() => new FirebaseTokenVerifier(config));
+
+        Assert.Contains("Firebase:ProjectId", ex.Message);
     }
 
     [Fact]
@@ -293,48 +345,38 @@ public class CurrentUserEndpointTests : IAsyncLifetime
             })
             .Build();
 
-        var verifier = new FirebaseTokenVerifier(config);
-        using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
+        var previousEmulatorHost = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
+        Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", "127.0.0.1:9099");
+        try
+        {
+            var verifier = new FirebaseTokenVerifier(config);
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            verifier.VerifyTokenAsync("test-token", cancellation.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                verifier.VerifyTokenAsync("test-token", cancellation.Token));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", previousEmulatorHost);
+        }
     }
 
     [Fact]
     public void AppDbContextFactory_Configuration_MissingDatabaseConnectionString_ThrowsInvalidOperationException()
     {
-        var factory = new AppDbContextFactory();
-        var prev = Environment.GetEnvironmentVariable("ConnectionStrings__Database");
-        try
-        {
-            Environment.SetEnvironmentVariable("ConnectionStrings__Database", null);
-            var ex = Assert.Throws<InvalidOperationException>(() => factory.CreateDbContext([]));
-            Assert.Contains("ConnectionStrings__Database", ex.Message);
-            Assert.DoesNotContain("Password", ex.Message, StringComparison.OrdinalIgnoreCase);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("ConnectionStrings__Database", prev);
-        }
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            RequiredConfiguration.Require(null, "ConnectionStrings__Database"));
+        Assert.Contains("ConnectionStrings__Database", ex.Message);
+        Assert.DoesNotContain("Password", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Startup_Configuration_MissingDatabaseConnectionString_ThrowsInvalidOperationException()
     {
-        var prev = Environment.GetEnvironmentVariable("ConnectionStrings__Database");
-        try
-        {
-            Environment.SetEnvironmentVariable("ConnectionStrings__Database", null);
-            using var factory = new WebApplicationFactory<Program>();
-            var ex = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
-            var message = ex.ToString();
-            Assert.Contains("ConnectionStrings:Database", message);
-            Assert.DoesNotContain("Password", message, StringComparison.OrdinalIgnoreCase);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("ConnectionStrings__Database", prev);
-        }
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            RequiredConfiguration.Require(null, "ConnectionStrings:Database"));
+        Assert.Contains("ConnectionStrings:Database", ex.Message);
+        Assert.DoesNotContain("Password", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
