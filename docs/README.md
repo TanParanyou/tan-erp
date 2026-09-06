@@ -45,6 +45,8 @@
 | Backend | [Backend Architecture](02-architecture/backend-architecture.md) |
 | Frontend | [Frontend Architecture](02-architecture/frontend-architecture.md) |
 | UI/UX Design System | [Design System (Atelier Navy Sharp)](../design.md) |
+| มาตรฐานฟอร์ม ERP | [Building ERP Forms](../.agents/skills/building-erp-forms/SKILL.md) |
+| คู่มือ Agent และกฎการพัฒนา | [AGENTS.md](../AGENTS.md) |
 | API | [API Conventions](03-contracts/api-conventions.md) |
 | API ของ Quick Estimate | [Quick Estimate API Contract](03-contracts/quick-estimate-api-contract.md) |
 | API ของ Official Estimate | [Official Estimate API Contract](03-contracts/official-estimate-api-contract.md) |
@@ -71,6 +73,11 @@
 | เหตุผลเลือก Versioned Policy/Snapshot | [ADR 0007](adr/0007-versioned-official-estimate-policies.md) |
 | เหตุผลเลือก Typed Item/Versioned Cost | [ADR 0008](adr/0008-typed-items-versioned-cost-records.md) |
 | เหตุผลเลือก Immutable Ready Survey Revision | [ADR 0009](adr/0009-versioned-site-survey-revisions.md) |
+| เหตุผลเลือก Foundation Application Runtime | [ADR 0010](adr/0010-foundation-application-runtime.md) |
+| แผนแก้ไข Foundation Login จาก Code Review | [Foundation Login Remediation Plan](superpowers/plans/2026-09-06-foundation-login-current-user-remediation.md) |
+| คู่มือปฏิบัติการ Foundation Login | [Foundation Login Runbook](05-engineering/foundation-login-runbook.md) |
+| บันทึกผลการตรวจสอบ Foundation Login | [Foundation Login Verification](05-engineering/foundation-login-verification.md) |
+| คำสั่งและ Workflow การพัฒนา (Makefile) | [Quickstart with Make](../README.md#การเริ่มต้นระบบอย่างรวดเร็วด้วย-make-quickstart-with-make) |
 
 ## สถานะเอกสาร
 

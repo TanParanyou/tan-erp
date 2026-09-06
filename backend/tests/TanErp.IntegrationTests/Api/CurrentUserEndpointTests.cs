@@ -1,0 +1,382 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using TanErp.Api;
+using TanErp.Api.Contracts.IdentityAccess;
+using TanErp.Api.ErrorHandling;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.CurrentUser.GetCurrentUser;
+using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Organization;
+using TanErp.Infrastructure.Identity;
+using TanErp.Infrastructure.Configuration;
+using TanErp.Infrastructure.Persistence;
+using Testcontainers.PostgreSql;
+using Xunit;
+
+namespace TanErp.IntegrationTests.Api;
+
+public class CurrentUserEndpointTests : IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
+        .Build();
+
+    private WebApplicationFactory<Program> _factory = null!;
+    private HttpClient _client = null!;
+
+    private class TestFirebaseTokenVerifier : IFirebaseTokenVerifier
+    {
+        public Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default)
+        {
+            var uid = idToken switch
+            {
+                "token-valid-active" => "uid-active",
+                "token-disabled" => "uid-disabled",
+                "token-no-membership" => "uid-no-membership",
+                _ => null
+            };
+
+            return Task.FromResult(uid);
+        }
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        Environment.SetEnvironmentVariable("ConnectionStrings__Database", _postgres.GetConnectionString());
+
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Test");
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ConnectionStrings:Database"] = _postgres.GetConnectionString()
+                });
+            });
+            builder.ConfigureServices(services =>
+            {
+                // Replace DbContext with Testcontainers connection string
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+                if (descriptor != null) services.Remove(descriptor);
+
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseNpgsql(_postgres.GetConnectionString()));
+
+                // Replace IFirebaseTokenVerifier with test verifier
+                var tokenDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IFirebaseTokenVerifier));
+                if (tokenDescriptor != null) services.Remove(tokenDescriptor);
+
+                services.AddSingleton<IFirebaseTokenVerifier, TestFirebaseTokenVerifier>();
+            });
+        });
+
+        _client = _factory.CreateClient();
+
+        // Apply migrations and seed data
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+
+        var userId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a10");
+        var membershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a11");
+        var orgId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a12");
+        var branchId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a13");
+        var foreignOrganizationId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a14");
+
+        var org = new Organization(orgId, "TEST_ONLY Project ERP");
+        var foreignOrganization = new Organization(foreignOrganizationId, "TEST_ONLY Foreign Organization");
+        var branch = new Branch(branchId, orgId, "B01", "สาขาทดสอบ");
+        var userActive = new User(userId, "uid-active", "ผู้ใช้ TEST_ONLY", "foundation-user@example.test");
+        var userDisabled = new User(Guid.NewGuid(), "uid-disabled", "ผู้ใช้ถูกระงับ", "disabled@example.test", isActive: false);
+        var userNoMembership = new User(Guid.NewGuid(), "uid-no-membership", "ผู้ใช้ไม่มีสมาชิก", "nomember@example.test");
+
+        var membership = new Membership(membershipId, orgId, branchId, userId);
+        var role = new Role(Guid.NewGuid(), orgId, "Admin");
+        var permission = Permission.Create("organizations.read");
+
+        var rolePermission = new RolePermission(Guid.NewGuid(), role.Id, orgId, permission.Id, PermissionScope.Organization, orgId);
+        var membershipRole = new MembershipRole(membershipId, role.Id, orgId);
+
+        db.Organizations.AddRange(org, foreignOrganization);
+        db.Branches.Add(branch);
+        db.Users.AddRange(userActive, userDisabled, userNoMembership);
+        db.Memberships.Add(membership);
+        db.Roles.Add(role);
+        db.Permissions.Add(permission);
+        db.RolePermissions.Add(rolePermission);
+        db.MembershipRoles.Add(membershipRole);
+
+        await db.SaveChangesAsync();
+    }
+
+    public async Task DisposeAsync()
+    {
+        Environment.SetEnvironmentVariable("ConnectionStrings__Database", null);
+        _client.Dispose();
+        await _factory.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    [Theory]
+    [InlineData("th", "จำเป็นต้องยืนยันตัวตน", "ไม่พบ Authorization Bearer token")]
+    [InlineData("en", "Authentication Required", "Bearer token is missing")]
+    [InlineData("fr", "จำเป็นต้องยืนยันตัวตน", "ไม่พบ Authorization Bearer token")]
+    public async Task GetCurrentUser_NoAuthorizationHeader_ReturnsLocalized401(
+        string locale,
+        string expectedTitleSubstring,
+        string expectedDetailSubstring)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Add("Accept-Language", locale);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+
+        var body = await response.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ApiProblemDetails>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(problem);
+        Assert.Equal("AUTHENTICATION_REQUIRED", problem.Code);
+        Assert.False(string.IsNullOrWhiteSpace(problem.TraceId));
+        Assert.Contains(expectedTitleSubstring, problem.Title);
+        Assert.Contains(expectedDetailSubstring, problem.Detail);
+        Assert.DoesNotContain("Exception", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("SELECT", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task GetCurrentUser_MalformedOrExpiredToken_Returns401AuthenticationInvalid()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "malformed-expired-token");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ApiProblemDetails>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(problem);
+        Assert.Equal("AUTHENTICATION_INVALID", problem.Code);
+        Assert.False(string.IsNullOrWhiteSpace(problem.TraceId));
+    }
+
+    [Fact]
+    public async Task GetCurrentUser_ValidToken_DisabledUser_Returns403UserAccessDisabled()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-disabled");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ApiProblemDetails>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(problem);
+        Assert.Equal("USER_ACCESS_DISABLED", problem.Code);
+        Assert.False(string.IsNullOrWhiteSpace(problem.TraceId));
+    }
+
+    [Fact]
+    public async Task GetCurrentUser_ValidToken_NoMembership_Returns403ActiveMembershipRequired()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-no-membership");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ApiProblemDetails>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(problem);
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", problem.Code);
+        Assert.False(string.IsNullOrWhiteSpace(problem.TraceId));
+    }
+
+    [Fact]
+    public async Task GetCurrentUser_ValidToken_ActiveMembership_Returns200DocumentedResponse()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-valid-active");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<CurrentUserResponse>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(result);
+        Assert.Equal(Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a10"), result.User.Id);
+        Assert.Equal("ผู้ใช้ TEST_ONLY", result.User.DisplayName);
+        Assert.Equal("foundation-user@example.test", result.User.Email);
+
+        Assert.Single(result.Memberships);
+        var member = result.Memberships[0];
+        Assert.Equal(Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a11"), member.Id);
+        Assert.Equal("TEST_ONLY Project ERP", member.Organization.Name);
+        Assert.Equal("สาขาทดสอบ", member.Branch?.Name);
+
+        Assert.Single(member.Permissions);
+        var perm = member.Permissions[0];
+        Assert.Equal("organizations.read", perm.Key);
+        Assert.Equal("organization", perm.Scope);
+        Assert.Equal(Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a12"), perm.ScopeId);
+
+        // Assert security rules: no Firebase UID or Role names leaked
+        Assert.DoesNotContain("uid-active", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Admin", body);
+    }
+
+    [Theory]
+    [InlineData("th", "จำเป็นต้องมีสมาชิกภาพ", "ไม่พบสมาชิกภาพที่ใช้งานอยู่")]
+    [InlineData("en", "Active Membership", "no active organization membership")]
+    [InlineData("fr", "จำเป็นต้องมีสมาชิกภาพ", "ไม่พบสมาชิกภาพที่ใช้งานอยู่")]
+    public async Task GetCurrentUser_Localization_HonorsAcceptLanguageHeader(
+        string locale,
+        string expectedTitleSubstring,
+        string expectedDetailSubstring)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-no-membership");
+        request.Headers.Add("Accept-Language", locale);
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ApiProblemDetails>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(problem);
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", problem.Code);
+        Assert.Contains(expectedTitleSubstring, problem.Title);
+        Assert.Contains(expectedDetailSubstring, problem.Detail);
+    }
+
+    private class FaultyCurrentUserReader : ICurrentUserReader
+    {
+        public Task<Result<GetCurrentUserResult>> GetAsync(string firebaseUid, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("Unexpected database connection drop");
+        }
+    }
+
+    [Theory]
+    [InlineData("th", "ข้อผิดพลาดภายในระบบ", "เกิดข้อผิดพลาดที่ไม่คาดคิด")]
+    [InlineData("en", "Internal Server Error", "An unexpected error occurred")]
+    [InlineData("fr", "ข้อผิดพลาดภายในระบบ", "เกิดข้อผิดพลาดที่ไม่คาดคิด")]
+    public async Task GetCurrentUser_UnexpectedException_ReturnsLocalized500ProblemDetails(
+        string locale,
+        string expectedTitleSubstring,
+        string expectedDetailSubstring)
+    {
+        using var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICurrentUserReader));
+                if (descriptor != null) services.Remove(descriptor);
+
+                services.AddScoped<ICurrentUserReader, FaultyCurrentUserReader>();
+            });
+        });
+
+        using var client = factory.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-valid-active");
+        request.Headers.Add("Accept-Language", locale);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+
+        var body = await response.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ApiProblemDetails>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(problem);
+        Assert.Equal("INTERNAL_SERVER_ERROR", problem.Code);
+        Assert.False(string.IsNullOrWhiteSpace(problem.TraceId));
+        Assert.Contains(expectedTitleSubstring, problem.Title);
+        Assert.Contains(expectedDetailSubstring, problem.Detail);
+        Assert.DoesNotContain("InvalidOperationException", body);
+    }
+
+    [Fact]
+    public void ProblemDetailsMapper_UnknownCode_UsesLocalizedInternalServerError()
+    {
+        var context = new DefaultHttpContext();
+        var problem = ProblemDetailsMapper.CreateProblem("UNKNOWN_CODE", context);
+
+        Assert.Equal("INTERNAL_SERVER_ERROR", problem.Code);
+        Assert.Equal(StatusCodes.Status500InternalServerError, problem.Status);
+        Assert.DoesNotContain("UNKNOWN_CODE", problem.Title);
+        Assert.DoesNotContain("UNKNOWN_CODE", problem.Detail);
+    }
+
+    [Fact]
+    public void FirebaseTokenVerifier_MissingProjectId_ThrowsInvalidOperationException()
+    {
+        var config = new ConfigurationBuilder().Build();
+
+        var ex = Assert.Throws<InvalidOperationException>(() => new FirebaseTokenVerifier(config));
+
+        Assert.Contains("Firebase:ProjectId", ex.Message);
+    }
+
+    [Fact]
+    public async Task FirebaseTokenVerifier_Cancellation_ThrowsOperationCanceledException()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Firebase:ProjectId"] = "tan-erp-test"
+            })
+            .Build();
+
+        var previousEmulatorHost = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
+        Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", "127.0.0.1:9099");
+        try
+        {
+            var verifier = new FirebaseTokenVerifier(config);
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                verifier.VerifyTokenAsync("test-token", cancellation.Token));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", previousEmulatorHost);
+        }
+    }
+
+    [Fact]
+    public void AppDbContextFactory_Configuration_MissingDatabaseConnectionString_ThrowsInvalidOperationException()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            RequiredConfiguration.Require(null, "ConnectionStrings__Database"));
+        Assert.Contains("ConnectionStrings__Database", ex.Message);
+        Assert.DoesNotContain("Password", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Startup_Configuration_MissingDatabaseConnectionString_ThrowsInvalidOperationException()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            RequiredConfiguration.Require(null, "ConnectionStrings:Database"));
+        Assert.Contains("ConnectionStrings:Database", ex.Message);
+        Assert.DoesNotContain("Password", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+}

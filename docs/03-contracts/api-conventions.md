@@ -25,6 +25,50 @@ POST   /api/v1/estimates/{estimateId}/revisions
 
 Action endpoint ใช้เมื่อเป็น Business Transition ที่ไม่ควรสื่อเป็น CRUD ธรรมดา
 
+## Current User (`GET /api/v1/me`)
+
+Endpoint สำหรับส่งมอบบริบทผู้ใช้หลังยืนยันตัวตนด้วย Firebase Token โดย Backend จะค้นหาข้อมูลผู้ใช้ภายใน, Membership, Organization, Branch และสิทธิ์ที่มีผล (Effective Permissions) จาก PostgreSQL
+
+### Success Response (`200 OK`)
+
+```json
+{
+  "user": {
+    "id": "019a3cf8-96f0-7c9f-b207-93aa818f4a10",
+    "displayName": "ผู้ใช้ TEST_ONLY",
+    "email": "foundation-user@example.test"
+  },
+  "memberships": [
+    {
+      "id": "019a3cf8-96f0-7c9f-b207-93aa818f4a11",
+      "organization": {
+        "id": "019a3cf8-96f0-7c9f-b207-93aa818f4a12",
+        "name": "TEST_ONLY Project ERP"
+      },
+      "branch": {
+        "id": "019a3cf8-96f0-7c9f-b207-93aa818f4a13",
+        "name": "สาขาทดสอบ"
+      },
+      "permissions": [
+        {
+          "key": "organizations.read",
+          "scope": "organization",
+          "scopeId": "019a3cf8-96f0-7c9f-b207-93aa818f4a12"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Contract Rules ของ `GET /api/v1/me`
+
+- คืนเฉพาะข้อมูลที่ Active เท่านั้น: User ที่ active, Membership ที่ active ในช่วงเวลาปัจจุบัน, Organization ที่ active, Branch ที่ active และ Role/Permission ที่ active
+- เรียงลำดับ deterministic: เรียง `memberships` ตามชื่อ Organization แล้วตาม Membership ID; เรียง `permissions` ตาม `key`, `scope` และ `scopeId`
+- ยุบรวม (Collapse/Deduplicate) Permission ที่ซ้ำกันจากหลาย Role ด้วย `(key, scope, scopeId)`
+- **ห้าม** ส่งคืน Firebase UID, ชื่อ Role หรือ Custom Claims กลับไปยัง Client; สิทธิ์และบริบททั้งหมดต้องมาจาก PostgreSQL
+
+
 Endpoint และ Payload เฉพาะ Mobile Quick Estimate อยู่ที่ [Quick Estimate API Contract](quick-estimate-api-contract.md)
 
 Endpoint และ Payload ของ Official Estimate/BOQ อยู่ที่ [Official Estimate API Contract](official-estimate-api-contract.md)

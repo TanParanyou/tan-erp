@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TanErp.Domain\TanErp.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TanErp.Application\TanErp.Application.csproj" />
+    <ProjectReference Include="..\..\src\TanErp.Infrastructure\TanErp.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\TanErp.Api\TanErp.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TngTech.ArchUnitNET.xUnit" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+</Project>
