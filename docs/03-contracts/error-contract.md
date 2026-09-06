@@ -57,6 +57,7 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `PRICING_RATE_PERIOD_OVERLAP` | 409 | Rate/Branch Override ของ Item, Unit และ Scope เดียวกันมี Effective Period ซ้อนกัน |
 | `PRICING_TEMPLATE_PILOT_NOT_PASSED` | 422 | Calibration/Pilot ยังไม่ผ่านเกณฑ์ จึง Activate ไม่ได้ |
 | `MAKER_CHECKER_VIOLATION` | 403 | ผู้จัดทำหรือผู้แก้ล่าสุดพยายามอนุมัติรายการที่ต้องแยกผู้ตรวจ |
+| `IDEMPOTENCY_KEY_REUSED` | 409 | ใช้ Idempotency Key เดิมกับ Payload ต่างจากคำขอแรก; ต้องสร้าง Key ใหม่เมื่อเป็นเจตนาใหม่ |
 
 การ Retry Convert ด้วย **Idempotency Key เดิม** ต้องคืนผล Conversion เดิม ไม่คืน `QUICK_ESTIMATE_ALREADY_CONVERTED` รหัสนี้ใช้เมื่อเป็นคำขอใหม่ที่พยายาม Convert Source Version เดิมอีกครั้งโดยไม่ได้ระบุเจตนาสร้าง Revision ใหม่
 

@@ -24,6 +24,8 @@ POST   /api/v1/estimates/{estimateId}/revisions
 
 Action endpoint ใช้เมื่อเป็น Business Transition ที่ไม่ควรสื่อเป็น CRUD ธรรมดา
 
+Endpoint และ Payload เฉพาะ Mobile Quick Estimate อยู่ที่ [Quick Estimate API Contract](quick-estimate-api-contract.md)
+
 ## Contract Rules
 
 - OpenAPI เป็น Machine-readable contract สำหรับสร้าง Type ฝั่ง Frontend
