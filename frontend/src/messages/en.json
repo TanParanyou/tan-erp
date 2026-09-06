@@ -1,0 +1,42 @@
+{
+  "app": {
+    "title": "Project ERP",
+    "subtitle": "Project & Manufacturing ERP"
+  },
+  "auth": {
+    "loginTitle": "Sign in to Project ERP",
+    "loginNotice": "This test system uses Firebase Auth for local development.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your-email@example.test",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submitButton": "Sign In",
+    "submitting": "Signing In...",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "passwordRequired": "Password is required",
+    "logout": "Sign Out"
+  },
+  "gate": {
+    "authLoading": "Verifying identity...",
+    "profileLoading": "Loading profile and permissions...",
+    "noMembershipTitle": "No Active Membership",
+    "noMembershipDetail": "You have signed in, but do not have active membership in any organization. Please contact your administrator.",
+    "userDisabledTitle": "Account Disabled",
+    "userDisabledDetail": "Your user account has been disabled. Please contact your administrator.",
+    "serverErrorTitle": "Connection Error",
+    "serverErrorDetail": "Unable to connect to the backend service at this moment.",
+    "retry": "Try Again",
+    "traceId": "Reference ID: "
+  },
+  "shell": {
+    "organization": "Organization",
+    "branch": "Branch",
+    "user": "User",
+    "permissions": "Effective Permissions",
+    "noBranch": "No branch specified (Org level)",
+    "switchLanguage": "ภาษาไทย",
+    "home": "Home",
+    "scope": "Scope"
+  }
+}

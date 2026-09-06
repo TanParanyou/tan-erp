@@ -1,0 +1,42 @@
+{
+  "app": {
+    "title": "Project ERP",
+    "subtitle": "ระบบบริหารจัดการโครงการและงานผลิต"
+  },
+  "auth": {
+    "loginTitle": "เข้าสู่ระบบ Project ERP",
+    "loginNotice": "ระบบทดสอบนี้ใช้การยืนยันตัวตนผ่าน Firebase Auth สำหรับเครื่องพัฒนา",
+    "emailLabel": "อีเมล",
+    "emailPlaceholder": "your-email@example.test",
+    "passwordLabel": "รหัสผ่าน",
+    "passwordPlaceholder": "••••••••",
+    "submitButton": "เข้าสู่ระบบ",
+    "submitting": "กำลังเข้าสู่ระบบ...",
+    "emailRequired": "กรุณากรอกอีเมล",
+    "emailInvalid": "รูปแบบอีเมลไม่ถูกต้อง",
+    "passwordRequired": "กรุณากรอกรหัสผ่าน",
+    "logout": "ออกจากระบบ"
+  },
+  "gate": {
+    "authLoading": "กำลังตรวจสอบตัวตน...",
+    "profileLoading": "กำลังโหลดข้อมูลผู้ใช้และสิทธิ์...",
+    "noMembershipTitle": "ไม่พบสมาชิกภาพที่ใช้งานได้",
+    "noMembershipDetail": "คุณได้ยืนยันตัวตนสำเร็จ แต่ยังไม่มีสมาชิกภาพในองค์กรใด กรุณาติดต่อผู้ดูแลระบบ",
+    "userDisabledTitle": "บัญชีผู้ใช้ถูกระงับ",
+    "userDisabledDetail": "บัญชีผู้ใช้ของคุณถูกระงับการเข้าถึงระบบ กรุณาติดต่อผู้ดูแลระบบ",
+    "serverErrorTitle": "เกิดข้อผิดพลาดในการเชื่อมต่อ",
+    "serverErrorDetail": "ไม่สามารถเชื่อมต่อระบบหลังบ้านได้ในขณะนี้",
+    "retry": "ลองใหม่อีกครั้ง",
+    "traceId": "รหัสอ้างอิง: "
+  },
+  "shell": {
+    "organization": "องค์กร",
+    "branch": "สาขา",
+    "user": "ผู้ใช้งาน",
+    "permissions": "สิทธิ์การใช้งานที่มีผล",
+    "noBranch": "ไม่ระบุสาขา (ระดับองค์กร)",
+    "switchLanguage": "English",
+    "home": "หน้าหลัก",
+    "scope": "ขอบเขต"
+  }
+}

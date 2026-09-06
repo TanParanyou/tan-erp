@@ -1,3 +1,11 @@
+import "./globals.css";
+import { AppProviders } from "@/providers/app-providers";
+
+export const metadata = {
+  title: "Project ERP",
+  description: "Project & Manufacturing ERP",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -5,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th">
-      <body>{children}</body>
+      <body>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }
