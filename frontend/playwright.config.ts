@@ -7,7 +7,7 @@ export default defineConfig({
   retries: 0,
   timeout: 30000,
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || "http://localhost:3000",
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || "http://localhost:3005",
     trace: "retain-on-failure",
   },
   projects: [

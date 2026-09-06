@@ -27,15 +27,29 @@ npm run verify:frontend
 npm run verify
 ```
 
-## ลำดับการเริ่มต้นระบบในเครื่องพัฒนา (Local Startup Order)
+## การเริ่มต้นระบบอย่างรวดเร็วด้วย Make (Quickstart with Make)
 
-1. เริ่มต้น PostgreSQL 17 และ Firebase Auth Emulator ผ่าน Docker Compose:
-   ```bash
-   docker compose -f deploy/compose.yml up -d
-   ```
-2. รัน EF Core Migration บน Backend
-3. เริ่มต้น Backend API (`TanErp.Api`)
-4. เริ่มต้น Frontend Next.js (`npm --prefix frontend run dev`)
+ระบบมี `Makefile` สำหรับบริหารจัดการ Service และ Lifecycle ต่างๆ (ล็อกพอร์ต Frontend `3005` และ Backend `5005` เพื่อเลี่ยงการชนกับระบบอื่นหรือ macOS AirPlay):
+
+```bash
+# 1. ดูคำสั่งทั้งหมดในระบบ
+make help
+
+# 2. ติดตั้งและเตรียม Environment ในคำสั่งเดียว (Docker -> Wait DB -> Seed Emulator -> Migrations -> .env)
+make dev-setup
+
+# 3. รันทั้ง Backend (:5005) และ Frontend (:3005) พร้อมกัน (มี Auto-kill port ค้าง + Trap Ctrl+C ปิดทั้งคู่)
+make dev
+
+# ตรวจสอบ / เคลียร์พอร์ต
+make check-ports
+make kill-ports
+
+# ตรวจสอบคุณภาพทั้งหมด (Verification Gates)
+make verify
+```
+
+## ลำดับการเริ่มต้นระบบในเครื่องพัฒนาแบบ Manual (Manual Startup Order)
 
 ## ความปลอดภัยและการถือครองข้อมูล (Safe Configuration and Ownership)
 
