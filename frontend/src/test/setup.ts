@@ -1,3 +1,4 @@
+import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 import { createTranslator } from "next-intl";
 import thMessages from "@/messages/th.json";

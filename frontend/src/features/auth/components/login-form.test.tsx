@@ -13,6 +13,8 @@ vi.mock("@/lib/auth/auth-session", () => ({
   signInWithEmail: vi.fn(),
 }));
 
+import { FirebaseError } from "firebase/app";
+
 import { signInWithEmail } from "@/lib/auth/auth-session";
 
 describe("LoginForm Component", () => {
@@ -79,10 +81,9 @@ describe("LoginForm Component", () => {
   });
 
   it("displays authentication error inside aria-live polite region on login failure", async () => {
-    vi.mocked(signInWithEmail).mockRejectedValueOnce({
-      code: "auth/invalid-credential",
-      message: "Invalid credentials",
-    });
+    vi.mocked(signInWithEmail).mockRejectedValueOnce(
+      new FirebaseError("auth/invalid-credential", "Invalid credentials")
+    );
 
     render(<LoginForm />);
 
@@ -131,5 +132,34 @@ describe("LoginForm Component", () => {
     await waitFor(() => {
       expect(form?.getAttribute("aria-busy")).toBe("false");
     });
+  });
+
+  it("maps unknown or non-allowlisted Firebase errors to generic localized message", async () => {
+    vi.mocked(signInWithEmail).mockRejectedValueOnce(
+      new Error("Firebase internal project detail")
+    );
+
+    render(<LoginForm />);
+
+    const emailInput = screen.getByLabelText(/อีเมล/, { selector: "input" });
+    const passwordInput = screen.getByLabelText(/รหัสผ่าน/, { selector: "input" });
+    const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
+
+    fireEvent.change(emailInput, { target: { value: "test@example.test" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.click(submitButton);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง");
+    expect(screen.queryByText(/Firebase internal project detail/)).toBeNull();
+  });
+
+  it("ensures password reveal button is accessible via keyboard and has min 44x44px target", () => {
+    render(<LoginForm />);
+
+    const reveal = screen.getByRole("button", { name: "แสดงรหัสผ่าน" });
+    expect(reveal.tabIndex).toBe(0);
+    expect(reveal.style.minWidth).toBe("44px");
+    expect(reveal.style.minHeight).toBe("44px");
   });
 });

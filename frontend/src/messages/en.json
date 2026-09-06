@@ -16,7 +16,7 @@
     "emailInvalid": "Invalid email format",
     "passwordRequired": "Password is required",
     "invalidCredentials": "Invalid email or password",
-    "signInFailed": "Sign in failed",
+    "signInFailed": "Unable to sign in. Please try again.",
     "logout": "Sign Out"
   },
   "gate": {

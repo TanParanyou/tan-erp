@@ -2,10 +2,23 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { FirebaseError } from "firebase/app";
 import { signInWithEmail } from "@/lib/auth/auth-session";
 import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+
+function getFirebaseAuthErrorKey(error: unknown): "invalidCredentials" | "signInFailed" {
+  if (!(error instanceof FirebaseError)) return "signInFailed";
+
+  return [
+    "auth/invalid-credential",
+    "auth/user-not-found",
+    "auth/wrong-password",
+  ].includes(error.code)
+    ? "invalidCredentials"
+    : "signInFailed";
+}
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -54,12 +67,7 @@ export function LoginForm({ onSuccess }: LoginFormProps = {}) {
         router.push(`/${locale}`);
       }
     } catch (err: unknown) {
-      const firebaseError = err as { code?: string; message?: string };
-      if (firebaseError.code === "auth/invalid-credential" || firebaseError.code === "auth/user-not-found" || firebaseError.code === "auth/wrong-password") {
-        setErrorMessage(t("invalidCredentials"));
-      } else {
-        setErrorMessage(firebaseError.message || t("signInFailed"));
-      }
+      setErrorMessage(t(getFirebaseAuthErrorKey(err)));
     } finally {
       setIsSubmitting(false);
     }

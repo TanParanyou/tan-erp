@@ -4,6 +4,7 @@ test.describe("Foundation Login and Current User Journey", () => {
   test("complete auth lifecycle with localized ERP shell and membership states", async ({ page }) => {
     // 1. open /th/login
     await page.goto("/th/login");
+    await expect(page.locator("html")).toHaveAttribute("lang", "th");
     await expect(page.getByRole("heading", { name: "เข้าสู่ระบบ Project ERP" })).toBeVisible();
 
     // 2. sign in through Firebase Auth Emulator with seeded test user
@@ -27,6 +28,7 @@ test.describe("Foundation Login and Current User Journey", () => {
     // 5. switch to /en and assert English shell labels while data remains unchanged
     await page.getByRole("link", { name: /Switch to English/i }).click();
     await page.waitForURL("**/en");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator('[data-testid="org-name"]')).toHaveText("TEST_ONLY Project ERP");
     await expect(page.locator('[data-testid="branch-name"]')).toHaveText("สาขาทดสอบ");
     await expect(page.getByRole("button", { name: "Sign Out" })).toBeVisible();

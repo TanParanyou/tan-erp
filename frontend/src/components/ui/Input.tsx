@@ -91,18 +91,19 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              tabIndex={-1}
               aria-label={showPassword ? t("hidePassword") : t("showPassword")}
               style={{
                 position: "absolute",
-                right: "0.75rem",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                padding: "0.25rem",
-                color: "var(--erp-text-muted)",
-                display: "flex",
+                right: 0,
+                minWidth: "44px",
+                minHeight: "44px",
+                display: "inline-flex",
                 alignItems: "center",
+                justifyContent: "center",
+                background: "transparent",
+                border: 0,
+                cursor: "pointer",
+                color: "var(--erp-text-muted)",
               }}
             >
               {showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />}
