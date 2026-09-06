@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TanErp.Api/TanErp.Api.csproj" />
+    <Project Path="src/TanErp.Application/TanErp.Application.csproj" />
+    <Project Path="src/TanErp.Domain/TanErp.Domain.csproj" />
+    <Project Path="src/TanErp.Infrastructure/TanErp.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TanErp.ArchitectureTests/TanErp.ArchitectureTests.csproj" />
+    <Project Path="tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj" />
+    <Project Path="tests/TanErp.UnitTests/TanErp.UnitTests.csproj" />
+  </Folder>
+</Solution>
