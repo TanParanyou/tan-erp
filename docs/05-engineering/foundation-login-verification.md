@@ -1,9 +1,8 @@
 # Foundation Login & Current User Verification Record (บันทึกผลการตรวจสอบคุณภาพระบบ)
 
-**วันที่บันทึก:** 2026-09-06
-**สถานะ:** ผ่านเกณฑ์การตรวจสอบสมบูรณ์ (Verified & Accepted)
+**วันที่บันทึก:** 2026-09-07
+**สถานะ:** ผ่านการตรวจสอบคุณภาพระบบครบถ้วนสมบูรณ์ (Passed Quality Gate)
 **สาขาการพัฒนา (Branch):** `feat/foundation-login-current-user`
-**Commit SHA ที่ตรวจสอบ:** `9e454e27cf6483ab50aac8e2201c0dd157d6d923`
 **อ้างอิงแผนงาน:** `docs/superpowers/plans/2026-09-06-foundation-login-current-user-remediation.md`
 
 ---
@@ -28,6 +27,7 @@
 
 - **Initial Migration:** `20260906093412_FoundationIdentityAccess`
 - **Tenant Boundary Remediation Migration:** `20260906161139_EnforceOrganizationBoundaries`
+- **RolePermission Scope Boundary Migration:** `20260906171716_EnforceRolePermissionOrganizationBoundaries`
 - **Schemas ที่ควบคุม:**
   - `identity_access` (`users`, `roles`, `permissions`, `role_permissions`, `membership_roles`)
   - `organization` (`organizations`, `branches`, `memberships`)
@@ -35,6 +35,8 @@
 - **การบังคับขอบเขต Tenant ข้ามองค์กร (Negative Tests):**
   - Foreign key แบบ Composite `(membership_id, organization_id)` และ `(role_id, organization_id)` ปฏิเสธการเพิ่มบทบาทข้ามองค์กร (`23503: foreign_key_violation`)
   - Foreign key แบบ Composite `(branch_id, organization_id)` ปฏิเสธการผูกสาขาข้ามองค์กร
+  - Foreign key แบบ Composite `(role_id, organization_id)` และ `(branch_id, organization_id)` บน `role_permissions` ปฏิเสธการผูกสิทธิ์หรือขอบเขตสาขาข้ามองค์กรที่ระดับ PostgreSQL (`23503: foreign_key_violation`)
+  - PostgreSQL CHECK Constraints บังคับให้ `scope_id = organization_id` สำหรับ Scope องค์กร, `scope_id = branch_id` สำหรับ Scope สาขา, และไม่อนุญาตให้มี ScopeId/BranchId สำหรับ Scope ตนเอง (`own`)
 - **การทดสอบ Rollback/Reapply:** ผ่านการทดสอบ Rehearsal ทั้ง `Down` (0) และ `Up` โดยไม่มีข้อผิดพลาด
 
 ---
@@ -44,12 +46,12 @@
 | ลำดับ | ชุดการทดสอบ (Test Suite) | จำนวนการทดสอบ | ผ่าน | ไม่ผ่าน | รหัสออก (Exit Code) |
 | :---: | :--- | :---: | :---: | :---: | :---: |
 | 1 | Survey Baseline Fixture Tests (`fixtures/`) | 1 | 1 | 0 | `0` |
-| 2 | Backend Unit Tests (`TanErp.UnitTests`) | 22 | 22 | 0 | `0` |
+| 2 | Backend Unit Tests (`TanErp.UnitTests`) | 34 | 34 | 0 | `0` |
 | 3 | Clean Architecture Tests (`TanErp.ArchitectureTests`) | 3 | 3 | 0 | `0` |
-| 4 | PostgreSQL 17 Integration Tests (`TanErp.IntegrationTests`) | 15 | 15 | 0 | `0` |
+| 4 | PostgreSQL 17 Integration Tests (`TanErp.IntegrationTests`) | 21 | 21 | 0 | `0` |
 | 5 | Frontend Unit & Component Tests (`vitest`) | 41 | 41 | 0 | `0` |
 | 6 | End-to-End Acceptance Journey (`Playwright`) | 1 (9 steps) | 1 | 0 | `0` |
-| **รวม** | **ชุดการทดสอบทั้งหมด (Total)** | **83** | **83** | **0** | `0` |
+| **รวม** | **ชุดการทดสอบทั้งหมด (Total)** | **101** | **101** | **0** | `0` |
 
 ---
 
