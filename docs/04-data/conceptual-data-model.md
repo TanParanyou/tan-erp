@@ -6,7 +6,11 @@
 Organization ─┬─ Branch
               ├─ Membership ─ Role ─ Permission
               ├─ Customer ─ Contact
-              ├─ Item Master ─ Reference Cost
+              ├─ Item Category
+              ├─ Unit ─ Unit Conversion
+              ├─ Cost Source
+              ├─ Item ─┬─ Item Unit Conversion
+              │        └─ Cost Record ─ Cost Review
               ├─ Calculation Policy Version
               ├─ Tax Policy Version
               ├─ Approval Policy Version ─ Approval Authority
@@ -36,12 +40,17 @@ Logical Field, Constraint, JSONB Boundary และ Index ของ Quick Estima
 
 Logical Schema ของ Official Estimate/BOQ, Approval และ Quotation Link อยู่ที่ [Official Estimate Data Contract](official-estimate-data-contract.md)
 
+Logical Schema ของ Item, Unit, Cost Source และ Versioned Cost Record อยู่ที่ [Item Master Data Contract](item-master-data-contract.md)
+
 ## Aggregate Candidates
 
 | Aggregate | Boundary/Invariants สำคัญ |
 | --- | --- |
 | Organization | Membership และ Business Setting อยู่ใน Organization เดียวกัน |
-| Item | Code/Unit/Status และประวัติต้นทุนอ้างอิง |
+| Item | Identity, Type, Category, Capability, Base Unit และ Lifecycle; ไม่มี Current Cost Field |
+| Unit/Conversion | Dimension, Precision และ Exact/Item-specific Conversion ที่ไม่มี Cycle |
+| Cost Source | หลักฐาน Supplier Quote/Price List/Contract/Historical/Manual |
+| Cost Record | Source, Scope, Unit, Currency, Quantity Break, Effective Period และ Approval Lifecycle |
 | Site Survey | Evidence และ Readiness ก่อน Estimate |
 | Pricing Template | Work Type และชุด Version ที่ใช้คำนวณ Price Range |
 | Pricing Template Version | Measurement Rule, Rate, Factor, Range, Defaults และ Effective Period ที่เผยแพร่แล้ว |
@@ -59,7 +68,8 @@ Logical Schema ของ Official Estimate/BOQ, Approval และ Quotation Lin
 ## Ownership Rules
 
 - CRM เป็นเจ้าของ Customer/Opportunity; Module อื่นอ้างด้วย ID และ Snapshot เท่าที่จำเป็น
-- Item Master เป็นเจ้าของรายการมาตรฐาน แต่ Estimate Revision เก็บค่าที่ใช้คำนวณเป็น Snapshot
+- Item Master เป็นเจ้าของ Item/Unit/Cost Source/Cost Record แต่ Estimate Revision เก็บ Cost Record, Conversion และ Policy ที่ใช้จริงเป็น Snapshot
+- Published Cost Record แก้ย้อนหลังไม่ได้; Branch Override ชนะ Organization Default ตาม Versioned Cost Resolution Policy
 - Pricing Template Version เป็นต้นทางกฎคำนวณ แต่ Quick Estimate Version ต้องเก็บ Template/Input/Factor/Result Snapshot เพื่อคำนวณย้อนหลังได้
 - Published Pricing Template Version เป็น Immutable; Lifecycle คือ Draft, Submitted, Approved, Calibration, Active, Superseded และ Disabled
 - Standard Rate เป็นของ Organization; Branch Rate Override ต้องมี Effective Period, Reason และ Approval โดยไม่แก้ Standard Rate เดิม
@@ -71,4 +81,4 @@ Logical Schema ของ Official Estimate/BOQ, Approval และ Quotation Lin
 
 ## สิ่งที่ยังไม่สรุป
 
-ความสัมพันธ์ Address/Contact หลายประเภท, Unit Conversion, Cost Source, BOQ/BOM และ Document Numbering ต้องผ่าน Workshop ก่อนออก Logical/Physical Schema ค่า Tax/Approval Threshold จริงต้องผ่าน Business Owner และ Finance Sign-off ก่อน Publish
+ความสัมพันธ์ Address/Contact หลายประเภท, BOQ/BOM และ Document Numbering ต้องผ่าน Workshop ก่อนออก Logical/Physical Schema ค่า Cost Source Priority/Staleness/Exception และ Tax/Approval Threshold จริงต้องผ่าน Business Owner/Finance Sign-off ก่อน Publish

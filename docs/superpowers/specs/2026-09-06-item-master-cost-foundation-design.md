@@ -130,7 +130,7 @@ POST            /api/v1/item-import-batches/{id}/commit
 
 Relational Core:
 
-- items, item_categories, item_capabilities
+- items (รวม Typed Capability Columns), item_categories
 - units, unit_conversions, item_unit_conversions
 - cost_sources, cost_records, cost_record_reviews
 - item_import_batches, item_import_rows
@@ -153,13 +153,13 @@ JSONB ใช้เฉพาะ Import Raw Row/Validation Metadata และ Vers
 2. `docs/01-business/item-master-field-catalog.md`
 3. `docs/01-business/item-master-governance.md`
 4. `docs/01-business/item-master-responsive-wireframe.md`
-5. `docs/portal/assets/item-master-responsive-wireframe.svg`
-6. `docs/03-contracts/item-master-api-contract.md`
-7. `docs/04-data/item-master-data-contract.md`
-8. `docs/05-engineering/item-master-uat-scenarios.md`
-9. `docs/portal/data/item-master-flow.json`
-10. ADR สำหรับ Typed Item/Capability และ Versioned Cost Record
-11. Cross-links ใน Requirement, Permission, Error, Master Data, Conceptual Model, Documentation Map และ Portal Catalog
+5. `docs/03-contracts/item-master-api-contract.md`
+6. `docs/04-data/item-master-data-contract.md`
+7. `docs/05-engineering/item-master-uat-scenarios.md`
+8. ADR สำหรับ Typed Item/Capability และ Versioned Cost Record
+9. Cross-links ใน Requirement, Permission, Error, Master Data, Conceptual Model และ Documentation Map
+
+Static HTML Portal, SVG และ JSON Flow ถูกพักตามคำสั่งผู้ใช้วันที่ 2026-09-06; Text Wireframe ใน Markdown เป็นเอกสารภาพหน้าจอหลักของรอบนี้
 
 ## Test Coverage
 
@@ -188,6 +188,6 @@ JSONB ใช้เฉพาะ Import Raw Row/Validation Metadata และ Vers
 - Published Cost และ Historical Estimate Snapshot แก้ย้อนหลังไม่ได้
 - Import ไม่ Commit ข้อมูลบางส่วนโดยไม่ตั้งใจและ Error ชี้ Row/Field ได้
 - Desktop/Tablet/Mobile Wireframe แสดง State/Error/Permission ครบ
-- API/Data/RBAC/Error/JSON Flow ใช้ชื่อและ Lifecycle เดียวกัน
+- API/Data/RBAC/Error/Markdown Flow ใช้ชื่อและ Lifecycle เดียวกัน
 - ไม่มี Threshold/Cost จริงที่ไม่ได้ติด `TEST_ONLY`
 - ไม่มี Application Code หรือ Dependency ใหม่

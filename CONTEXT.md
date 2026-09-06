@@ -96,6 +96,26 @@ _Avoid_: Opportunity, Job เมื่อหมายถึงโครงกา
 รายการมาตรฐานที่นำกลับมาใช้ในประมาณการ จัดซื้อ คลัง หรือการผลิต พร้อมหน่วยและสถานะใช้งาน
 _Avoid_: Estimate Line, Free-text Item
 
+**Item Capability (ความสามารถของรายการ)**:
+ขอบเขตการนำ Item ไปใช้ เช่น ขาย คิดต้นทุน จัดซื้อ เก็บคลัง หรือผลิต โดยไม่เปลี่ยนความหมายของประเภท Item
+_Avoid_: Item Type, Permission
+
+**Unit of Measure (หน่วยนับ)**:
+หน่วยมาตรฐานที่ใช้บอกปริมาณของ Item, Work Item หรือต้นทุน
+_Avoid_: Package Size, Conversion Factor
+
+**Unit Conversion (การแปลงหน่วย)**:
+ความสัมพันธ์ที่ยืนยันแล้วสำหรับแปลงปริมาณระหว่างสองหน่วย โดยอาจใช้ร่วมกันหรือเฉพาะ Item
+_Avoid_: Estimate Formula, Assumed Factor
+
+**Cost Source (แหล่งต้นทุน)**:
+หลักฐานหรือที่มาของต้นทุน เช่น ใบเสนอราคาผู้ขาย รายการราคา สัญญา หรือข้อมูลที่บันทึกด้วยเหตุผล
+_Avoid_: Cost Record, Reference Rate
+
+**Cost Record (รายการต้นทุนอ้างอิง)**:
+ต้นทุนภายในที่มีหน่วย สกุลเงิน ขอบเขต และช่วงเวลามีผลสำหรับใช้สร้าง Official Estimate
+_Avoid_: Actual Purchase Cost, Reference Rate, Selling Price
+
 **Work Item (รายการงาน)**:
 งานหรือผลส่งมอบหนึ่งรายการภายใน Estimate หรือ Project ซึ่งอาจประกอบด้วยวัสดุและแรงงาน
 _Avoid_: Item Master, Task

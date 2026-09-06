@@ -9,3 +9,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0005 — Markdown และ JSON-driven Portal](0005-json-driven-documentation-portal.md)
 - [0006 — Versioned Hybrid Quick Estimate Pricing](0006-versioned-hybrid-quick-estimate-pricing.md)
 - [0007 — Versioned Official Estimate Policies](0007-versioned-official-estimate-policies.md)
+- [0008 — Typed Items และ Versioned Cost Records](0008-typed-items-versioned-cost-records.md)

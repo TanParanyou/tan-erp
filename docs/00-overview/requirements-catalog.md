@@ -14,7 +14,13 @@
 | FR-AUD-001 | การแก้สิทธิ์ อนุมัติ Override และเปลี่ยนสถานะสำคัญมี Audit | 1 | Accepted |
 | FR-CRM-001 | จัดเก็บ Customer, Contact และ Opportunity ขั้นพื้นฐาน | 2 | Draft |
 | FR-SRV-001 | Site Survey เก็บขนาด รูป และเงื่อนไขหน้างาน | 2 | Draft |
-| FR-ITEM-001 | Item Master มี Code, Type, Unit, Cost, Effective Date และ Status | 2 | Draft |
+| FR-ITEM-001 | Item Master มี Code, Type, Category, Capability, Base Unit และ Lifecycle | 2 | Accepted direction |
+| FR-ITEM-002 | Cost แยกเป็น Versioned Record ที่มี Source, Scope, Unit, Currency, Quantity Break และ Effective Period | 2 | Accepted direction |
+| FR-ITEM-003 | Cost Record ใช้ Maker–Checker และ Published Version แก้ย้อนหลังไม่ได้ | 2 | Accepted direction |
+| FR-ITEM-004 | Cost Resolver เลือก Branch/Organization, Quantity, Source Priority และ Effective Date แบบ Deterministic | 2 | Accepted direction |
+| FR-ITEM-005 | Unit รองรับ Exact และ Item-specific Conversion พร้อมป้องกัน Dimension ผิดและ Cycle | 2 | Accepted direction |
+| FR-ITEM-006 | Import Item/Unit/Cost ใช้ Preview/Validate ก่อน Commit แบบ Atomic และไม่ Auto-publish Cost | 2 | Accepted direction |
+| FR-ITEM-007 | Estimate เก็บ Cost Record/Conversion/Policy Snapshot ที่ใช้จริงเพื่อไม่ให้ราคาปัจจุบันแก้อดีต | 2 | Accepted principle |
 | FR-QEST-001 | สร้าง Quick Estimate จาก Pricing Template ที่มี Version | Future | Deferred optional module |
 | FR-QEST-002 | คำนวณและแสดง Price Range จากข้อมูลขั้นต่ำตาม Template | Future | Deferred optional module |
 | FR-QEST-003 | บังคับ Share Policy ก่อนแสดงหรือส่งข้อมูลให้ลูกค้า | Future | Deferred optional module |
@@ -62,6 +68,9 @@
 | NFR-EST-004 | Customer-facing Projection ไม่มีข้อมูลต้นทุนหรือกฎอนุมัติภายใน | Projection allowlist security tests |
 | NFR-QEST-001 | Flow ขั้นต่ำของ Quick Estimate ใช้งานบนมือถือได้ มีสถานะบันทึกชัดเจน และ Touch Target ไม่น้อยกว่า 44px | Mobile viewport, keyboard และ accessibility test |
 | NFR-QEST-002 | Calculation Snapshot เดิมต้องคำนวณซ้ำได้ผลเดิม และ Template Publish ไม่ได้จนกว่า Test Matrix ผ่าน | Deterministic calculation และ template contract tests |
+| NFR-ITEM-001 | Cost Resolve Input เดิมให้ผล Candidate เดิม หรือ Fail ด้วย Stable Ambiguity Code | Deterministic resolver contract tests |
+| NFR-ITEM-002 | Item/Unit/Cost/Import ป้องกัน Cross-organization, Concurrency และ Partial Commit | Security/concurrency/integration tests |
+| NFR-ITEM-003 | Critical Item Master flow ใช้ได้บน Desktop/Tablet/Mobile และ Keyboard/Screen Reader | Item Master UAT evidence |
 
 ## การเปลี่ยน Requirement
 
