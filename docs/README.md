@@ -74,6 +74,7 @@
 | เหตุผลเลือก Typed Item/Versioned Cost | [ADR 0008](adr/0008-typed-items-versioned-cost-records.md) |
 | เหตุผลเลือก Immutable Ready Survey Revision | [ADR 0009](adr/0009-versioned-site-survey-revisions.md) |
 | เหตุผลเลือก Foundation Application Runtime | [ADR 0010](adr/0010-foundation-application-runtime.md) |
+| แผนแก้ไข Foundation Login จาก Code Review | [Foundation Login Remediation Plan](superpowers/plans/2026-09-06-foundation-login-current-user-remediation.md) |
 | คู่มือปฏิบัติการ Foundation Login | [Foundation Login Runbook](05-engineering/foundation-login-runbook.md) |
 | บันทึกผลการตรวจสอบ Foundation Login | [Foundation Login Verification](05-engineering/foundation-login-verification.md) |
 | คำสั่งและ Workflow การพัฒนา (Makefile) | [Quickstart with Make](../README.md#การเริ่มต้นระบบอย่างรวดเร็วด้วย-make-quickstart-with-make) |
