@@ -4,11 +4,11 @@ Portal นี้เป็นหน้า HTML สำหรับอ่าน Flo
 
 Flow ที่มีใน Catalog ได้แก่ ภาพรวมธุรกิจ, Quick Estimate (ราคาประเมินเบื้องต้นหน้างาน), Official Estimation, Architecture, Error และ RBAC โดย Markdown เป็นแหล่งอ้างอิงหลัก ส่วน JSON ใช้จัดแสดงภาพและลำดับอ่าน
 
-Template/Field ของ Node `work-template` และ `measurement` อ้างอิง [Quick Estimate Template Catalog](../01-business/quick-estimate-template-catalog.md), Lifecycle/Approval อ้างอิง [Pricing Template Governance](../01-business/pricing-template-governance.md), สูตรของ `price-range` อ้างอิง [Quick Estimate Pricing Rules](../01-business/quick-estimate-pricing-rules.md) และการตัดสินก่อนแชร์อ้างอิง [Approval Matrix](../01-business/approval-matrix.md)
+Template/Field ของ Node `work-template` และ `measurement` อ้างอิง [Quick Estimate Template Catalog](../01-business/quick-estimate-template-catalog.md), Lifecycle/Approval อ้างอิง [Pricing Template Governance](../01-business/pricing-template-governance.md) และสูตร/การตัดสินก่อนแชร์อ้างอิง [Quick Estimate Pricing Rules](../01-business/quick-estimate-pricing-rules.md)
 
 รายละเอียดสำหรับนำ Flow ไปพัฒนาต่ออ่านตามลำดับ [Mobile Wireframe](../01-business/quick-estimate-mobile-wireframe.md) → [API Contract](../03-contracts/quick-estimate-api-contract.md) → [Data Contract](../04-data/quick-estimate-data-contract.md)
 
-เส้นทางหลักปัจจุบันของ Official Estimate อ่าน [Responsive Wireframe](../01-business/official-estimate-responsive-wireframe.md) → [API Contract](../03-contracts/official-estimate-api-contract.md) → [Data Contract](../04-data/official-estimate-data-contract.md)
+เส้นทางหลักปัจจุบันของ Official Estimate อ่าน [Flow](../01-business/estimation-flow.md) → [Responsive Wireframe](../01-business/official-estimate-responsive-wireframe.md) → [Field Catalog](../01-business/official-estimate-field-catalog.md) → [Calculation Rules](../01-business/estimation-calculation-rules.md) → [Approval Matrix](../01-business/approval-matrix.md) → [API Contract](../03-contracts/official-estimate-api-contract.md) → [Data Contract](../04-data/official-estimate-data-contract.md) → [UAT](../05-engineering/official-estimate-uat-scenarios.md)
 
 ## วิธีเปิด
 

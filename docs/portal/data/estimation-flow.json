@@ -3,7 +3,7 @@
   "version": 1,
   "id": "estimation",
   "title": { "th": "กระบวนการประเมินราคา", "en": "Estimation workflow" },
-  "description": { "th": "จากข้อมูลสำรวจถึงใบเสนอราคา โดยทุกการแก้ไขสำคัญมี Revision", "en": "From site evidence to quotation, preserving every material revision." },
+  "description": { "th": "จาก Draft ผ่านการคำนวณและ Approval Route ที่ตรึงไว้จนออกใบเสนอราคา", "en": "From draft through reproducible calculation and a frozen approval route to quotation." },
   "document": "../01-business/estimation-flow.md",
   "illustration": { "src": "assets/estimate.svg", "alt": { "th": "ภาพเครื่องคิดเลข รายการวัสดุ และแบบงาน", "en": "Calculator, material list and plan illustration" } },
   "groups": [
@@ -14,19 +14,20 @@
   "nodes": [
     { "id": "survey-ready", "group": "input", "order": 1, "title": { "th": "ข้อมูลสำรวจพร้อม", "en": "Survey Ready" }, "summary": { "th": "ขนาด รูปถ่าย ขอบเขต และสมมติฐานครบขั้นต่ำ", "en": "Dimensions, photos, scope and assumptions meet the minimum." }, "icon": "survey", "phase": "phase-2", "status": "draft", "document": "../01-business/estimation-flow.md" },
     { "id": "scope-work", "group": "input", "order": 2, "title": { "th": "จัดหมวดงาน", "en": "Structure Work" }, "summary": { "th": "แยกพื้นที่ หมวดงาน และ Work Item ให้ตรวจง่าย", "en": "Organize areas, work categories and work items." }, "icon": "project", "phase": "phase-2", "status": "draft", "document": "../01-business/estimation-flow.md" },
-    { "id": "cost", "group": "calculation", "order": 3, "title": { "th": "คำนวณต้นทุน", "en": "Calculate Cost" }, "summary": { "th": "วัสดุ แรงงาน ผู้รับเหมา และค่าใช้จ่าย พร้อมแหล่งราคา", "en": "Materials, labor, subcontracting and overhead with cost sources." }, "icon": "estimate", "phase": "phase-2", "status": "draft", "document": "../04-data/master-data.md" },
-    { "id": "price", "group": "calculation", "order": 4, "title": { "th": "กำหนดราคาขาย", "en": "Set Selling Price" }, "summary": { "th": "ใช้กฎ Markup/Margin ส่วนลด ภาษี และการปัดเศษ", "en": "Apply markup/margin, discount, tax and rounding rules." }, "icon": "estimate", "phase": "phase-2", "status": "draft", "document": "../01-business/estimation-flow.md" },
-    { "id": "review", "group": "governance", "order": 5, "title": { "th": "ตรวจความพร้อม", "en": "Readiness Review" }, "summary": { "th": "จับข้อมูลขาด ราคาหมดอายุ กำไรต่ำ และ Manual Override", "en": "Detect missing data, stale costs, low margins and overrides." }, "icon": "approval", "phase": "phase-2", "status": "draft", "document": "../01-business/approval-matrix.md" },
-    { "id": "approve", "group": "governance", "order": 6, "title": { "th": "อนุมัติ", "en": "Approve" }, "summary": { "th": "เลือกผู้อนุมัติตามวงเงิน ความเสี่ยง และ Maker–Checker", "en": "Route by authority, risk and maker-checker rules." }, "icon": "shield", "phase": "phase-2", "status": "draft", "document": "../01-business/approval-matrix.md" },
-    { "id": "quote", "group": "governance", "order": 7, "title": { "th": "ออกใบเสนอราคา", "en": "Issue Quotation" }, "summary": { "th": "สร้างจาก Revision ที่อนุมัติและล็อกความเชื่อมโยง", "en": "Generate from the approved revision and preserve the link." }, "icon": "approval", "phase": "phase-2", "status": "draft", "document": "../03-contracts/api-conventions.md" }
+    { "id": "cost", "group": "calculation", "order": 3, "title": { "th": "จัดต้นทุน", "en": "Build Cost" }, "summary": { "th": "วัสดุ แรงงาน ผู้รับเหมา และบริการต้องมี Unit แหล่งราคา หรือเหตุผลต้นทุนชั่วคราว", "en": "Materials, labor, subcontract and services require units, sources, or provisional-cost reasons." }, "icon": "estimate", "phase": "phase-2", "status": "accepted", "document": "../01-business/official-estimate-field-catalog.md" },
+    { "id": "price", "group": "calculation", "order": 4, "title": { "th": "คำนวณราคา", "en": "Calculate Price" }, "summary": { "th": "ใช้ Calculation/Tax Policy ที่มี Version และเก็บ Snapshot ก่อน–หลังปัด", "en": "Apply versioned calculation and tax policies with a reproducible rounding snapshot." }, "icon": "estimate", "phase": "phase-2", "status": "accepted", "document": "../01-business/estimation-calculation-rules.md" },
+    { "id": "review", "group": "governance", "order": 5, "title": { "th": "ตรวจความพร้อมและส่ง", "en": "Validate and Submit" }, "summary": { "th": "บล็อกข้อมูลผิด แสดง Exception และตรึง Approval Route ตอน Submit", "en": "Block invalid data, surface exceptions, and freeze the approval route on submit." }, "icon": "approval", "phase": "phase-2", "status": "accepted", "document": "../01-business/estimation-flow.md" },
+    { "id": "approve", "group": "governance", "order": 6, "title": { "th": "ตรวจตามเส้นทางอนุมัติ", "en": "Review Approval Route" }, "summary": { "th": "ตรวจ Permission, Scope, Authority และ Maker–Checker ก่อน Approve หรือ Return", "en": "Check permission, scope, authority, and maker-checker before approval or return." }, "icon": "shield", "phase": "phase-2", "status": "accepted", "document": "../01-business/approval-matrix.md" },
+    { "id": "quote", "group": "governance", "order": 7, "title": { "th": "ออกใบเสนอราคา", "en": "Issue Quotation" }, "summary": { "th": "สร้าง Customer-safe Snapshot จาก Approved Revision และไม่เผยต้นทุนภายใน", "en": "Create a customer-safe snapshot from an approved revision without exposing internal costs." }, "icon": "approval", "phase": "phase-2", "status": "accepted", "document": "../03-contracts/official-estimate-api-contract.md" }
   ],
   "edges": [
     { "from": "survey-ready", "to": "scope-work", "label": { "th": "เริ่มถอดงาน", "en": "Start takeoff" }, "type": "required" },
     { "from": "scope-work", "to": "cost", "label": { "th": "รายการครบ", "en": "Items ready" }, "type": "required" },
     { "from": "cost", "to": "price", "label": { "th": "ต้นทุนพร้อม", "en": "Costed" }, "type": "required" },
-    { "from": "price", "to": "review", "label": { "th": "ส่งตรวจ", "en": "Submit" }, "type": "required" },
-    { "from": "review", "to": "approve", "label": { "th": "ผ่านเงื่อนไข", "en": "Checks pass" }, "type": "approval" },
+    { "from": "price", "to": "review", "label": { "th": "ได้ Snapshot ล่าสุด", "en": "Latest snapshot" }, "type": "required" },
+    { "from": "review", "to": "approve", "label": { "th": "Submit และตรึง Route", "en": "Submit and freeze route" }, "type": "approval" },
     { "from": "approve", "to": "quote", "label": { "th": "อนุมัติแล้ว", "en": "Approved" }, "type": "approval" },
-    { "from": "review", "to": "scope-work", "label": { "th": "ส่งกลับแก้ไข", "en": "Return for revision" }, "type": "return" }
+    { "from": "review", "to": "scope-work", "label": { "th": "ข้อมูลยังไม่พร้อม", "en": "Not ready" }, "type": "return" },
+    { "from": "approve", "to": "scope-work", "label": { "th": "Return พร้อมเหตุผล", "en": "Return with reason" }, "type": "return" }
   ]
 }

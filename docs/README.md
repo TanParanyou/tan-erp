@@ -5,8 +5,8 @@
 ## ทางลัดตามผู้อ่าน
 
 - ผู้บริหาร/เจ้าของงาน: [Product Vision](00-overview/product-vision.md) → [Scope](00-overview/scope-and-non-goals.md) → [Roadmap](00-overview/implementation-roadmap.md)
-- ฝ่ายประเมินราคา: [End-to-End Flow](01-business/end-to-end-business-flow.md) → [Estimation Flow](01-business/estimation-flow.md) → [Responsive Wireframe](01-business/official-estimate-responsive-wireframe.md) → [Approval Matrix](01-business/approval-matrix.md)
-- ทีมพัฒนา Official Estimate: [Responsive Wireframe](01-business/official-estimate-responsive-wireframe.md) → [API Contract](03-contracts/official-estimate-api-contract.md) → [Data Contract](04-data/official-estimate-data-contract.md)
+- ฝ่ายประเมินราคา: [Estimation Flow](01-business/estimation-flow.md) → [Field Catalog](01-business/official-estimate-field-catalog.md) → [Calculation Rules](01-business/estimation-calculation-rules.md) → [Approval Matrix](01-business/approval-matrix.md)
+- ทีมพัฒนา Official Estimate: [Responsive Wireframe](01-business/official-estimate-responsive-wireframe.md) → [Field Catalog](01-business/official-estimate-field-catalog.md) → [API Contract](03-contracts/official-estimate-api-contract.md) → [Data Contract](04-data/official-estimate-data-contract.md) → [UAT](05-engineering/official-estimate-uat-scenarios.md)
 - ทีมออกแบบ/พัฒนา Quick Estimate: [Mobile Wireframe](01-business/quick-estimate-mobile-wireframe.md) → [API Contract](03-contracts/quick-estimate-api-contract.md) → [Data Contract](04-data/quick-estimate-data-contract.md)
 - นักพัฒนา: [System Context](02-architecture/system-context.md) → [Module Boundaries](02-architecture/module-boundaries.md) → [Contracts](03-contracts/api-conventions.md)
 - ผู้ดูแลระบบ: [Environments](06-operations/environments.md) → [Observability](06-operations/observability.md) → [Backup](06-operations/backup-and-restore.md)
@@ -27,7 +27,9 @@
 | Mobile Wireframe ของ Quick Estimate | [Quick Estimate Mobile Wireframe](01-business/quick-estimate-mobile-wireframe.md) |
 | กระบวนการประเมินราคา | [Estimation Flow](01-business/estimation-flow.md) |
 | Responsive Wireframe ของ Official Estimate | [Official Estimate Responsive Wireframe](01-business/official-estimate-responsive-wireframe.md) |
+| Field และ Required Gate ของ Official Estimate | [Official Estimate Field Catalog](01-business/official-estimate-field-catalog.md) |
 | สูตรประเมินราคา | [Estimation Calculation](01-business/estimation-calculation-rules.md) |
+| กฎและ Route การอนุมัติ | [Approval Matrix](01-business/approval-matrix.md) |
 | คำศัพท์ธุรกิจ | [CONTEXT.md](../CONTEXT.md) |
 | ขอบเขต Module | [Module Boundaries](02-architecture/module-boundaries.md) |
 | Backend | [Backend Architecture](02-architecture/backend-architecture.md) |
@@ -45,9 +47,11 @@
 | ข้อมูล BOQ/Revision ของ Official Estimate | [Official Estimate Data Contract](04-data/official-estimate-data-contract.md) |
 | Raw SQL | [Raw SQL Policy](04-data/raw-sql-policy.md) |
 | Testing | [Testing Strategy](05-engineering/testing-strategy.md) |
+| สถานการณ์ UAT ของ Official Estimate | [Official Estimate UAT](05-engineering/official-estimate-uat-scenarios.md) |
 | เกณฑ์ส่งมอบ | [Definition of Done](05-engineering/definition-of-done.md) |
 | Production Operations | [Operations](06-operations/observability.md) |
 | ความพร้อมก่อน Release | [Release Readiness](06-operations/release-readiness.md) |
+| เหตุผลเลือก Versioned Policy/Snapshot | [ADR 0007](adr/0007-versioned-official-estimate-policies.md) |
 
 ## สถานะเอกสาร
 

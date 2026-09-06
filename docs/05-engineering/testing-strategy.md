@@ -23,6 +23,12 @@
 
 ทุก Bug สำคัญต้องมี Regression Test ในระดับต่ำที่สุดที่พิสูจน์ปัญหาได้อย่างน่าเชื่อถือ
 
+## Official Estimate UAT and Contract Matrix
+
+Business/Finance/Security Workshop ใช้ [Official Estimate UAT Scenarios](official-estimate-uat-scenarios.md) เป็น Baseline โดยต้องพิสูจน์ Field Gate, Deterministic Calculation, Policy Version/Snapshot, Maker–Checker, Organization/Branch Scope, Concurrency, Revision/Immutability และ Customer-safe Projection
+
+Automated Test ต้องใช้ Fixture เดียวกับ Deterministic Example ที่ติด `TEST_ONLY` ใน [Calculation Rules](../01-business/estimation-calculation-rules.md) แต่ห้าม Activate Demo Approval/Tax Threshold เป็น Production Policy
+
 ## Quick Estimate Pricing Test Matrix
 
 Template Version ต้องผ่าน Test Matrix ก่อน Publish:
