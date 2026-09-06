@@ -1,6 +1,6 @@
 # Quick Estimate Mobile Wireframe and Contracts Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** สร้างเอกสาร Mobile Wireframe, API Contract และ Data Contract ของ Quick Estimate ที่เชื่อมกันและพร้อมใช้เป็นรากฐานพัฒนา Production
 
@@ -31,24 +31,24 @@
 - Consumes: Field/Required At จาก `quick-estimate-template-catalog.md` และ Share Decision จาก `quick-estimate-pricing-rules.md`
 - Produces: Screen/Action/State names ที่ API Contract ต้องรองรับ
 
-- [ ] **Step 1: สร้าง Wireframe 5 ขั้น**
+- [x] **Step 1: สร้าง Wireframe 5 ขั้น**
 
 ระบุ Screen: `job`, `measurements`, `options`, `evidence-price`, `review-share` พร้อม Sticky Save/Price/Primary Action
 
-- [ ] **Step 2: กำหนด State และ Interaction**
+- [x] **Step 2: กำหนด State และ Interaction**
 
 ครอบคลุม loading, empty, validation, autosaving, saved, offline, conflict, calculating, blocked, pending-review, shareable และ shared
 
-- [ ] **Step 3: สร้าง SVG Low-fidelity**
+- [x] **Step 3: สร้าง SVG Low-fidelity**
 
 วาด Mobile Frame หลักอย่างน้อย 5 จอด้วย local SVG และใส่คำอธิบายลำดับอ่านใน Markdown
 
-- [ ] **Step 4: ตรวจเอกสาร**
+- [x] **Step 4: ตรวจเอกสาร**
 
 Run: `git diff --check`
 Expected: exit 0 และไม่มี whitespace error
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/01-business/quick-estimate-mobile-wireframe.md docs/portal/assets/quick-estimate-mobile-wireframe.svg docs/01-business/quick-estimate-flow.md
@@ -66,23 +66,23 @@ git commit -m "docs: define quick estimate mobile wireframe"
 - Consumes: Screen actions from Task 1, Permission keys from `permission-catalog.md`, errors from `error-contract.md`
 - Produces: Endpoint, request/response, status and idempotency contracts used by Data Contract
 
-- [ ] **Step 1: กำหนด Resource และ Command Endpoints**
+- [x] **Step 1: กำหนด Resource และ Command Endpoints**
 
 กำหนด create/read/patch/calculate/submit-review/review/share/convert/effective-template/upload-session พร้อม HTTP status
 
-- [ ] **Step 2: เพิ่ม JSON Examples**
+- [x] **Step 2: เพิ่ม JSON Examples**
 
 มีตัวอย่าง Create Draft, Patch with `If-Match`, Calculate Result, Review Decision, Share และ Conversion
 
-- [ ] **Step 3: กำหนด Cross-cutting Rules**
+- [x] **Step 3: กำหนด Cross-cutting Rules**
 
 ระบุ Authentication, RBAC/Scope, localization, validation, concurrency, idempotency และ retry behavior ต่อ Endpoint
 
-- [ ] **Step 4: เพิ่ม Contract Test Matrix**
+- [x] **Step 4: เพิ่ม Contract Test Matrix**
 
 กำหนดอย่างน้อย Happy Path, invalid field, out-of-scope, maker-checker, stale token และ repeated idempotency key
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/03-contracts/quick-estimate-api-contract.md docs/03-contracts/api-conventions.md docs/03-contracts/error-contract.md
@@ -103,27 +103,27 @@ git commit -m "docs: define quick estimate api contract"
 - Consumes: Request/response fields and state transitions from Tasks 1–2
 - Produces: Entity ownership, typed fields, JSONB schemas, keys, constraints and indexes for future persistence work
 
-- [ ] **Step 1: กำหนด Aggregate และ Entity**
+- [x] **Step 1: กำหนด Aggregate และ Entity**
 
 กำหนด QuickEstimate, Version, MeasurementLine, Evidence, Review, ShareAttempt และ ConversionLink พร้อม key/scope/lifecycle ownership
 
-- [ ] **Step 2: กำหนด Relational Field Contract**
+- [x] **Step 2: กำหนด Relational Field Contract**
 
 ระบุ type, nullability, constraint, immutable rule และ index ของ Identity, Scope, Money, Status, Effective Date และ Concurrency Token
 
-- [ ] **Step 3: กำหนด JSONB Contract**
+- [x] **Step 3: กำหนด JSONB Contract**
 
 ระบุ `schemaVersion`, envelope, validation, immutability และตัวอย่าง template/input/calculation/customer-summary snapshot
 
-- [ ] **Step 4: เพิ่ม Data Integrity Test Cases**
+- [x] **Step 4: เพิ่ม Data Integrity Test Cases**
 
 ครอบคลุม FK/scope, duplicate version, money precision, cross-organization reference, immutable shared version และ schema mismatch
 
-- [ ] **Step 5: เชื่อม Documentation Map**
+- [x] **Step 5: เชื่อม Documentation Map**
 
 เพิ่มลิงก์จาก Flow, API/Data Standards, Portal README และ `docs/README.md` โดยไม่ทำซ้ำกฎ
 
-- [ ] **Step 6: ตรวจ Acceptance ทั้งชุด**
+- [x] **Step 6: ตรวจ Acceptance ทั้งชุด**
 
 Run: `git diff --check`
 Expected: exit 0
@@ -131,7 +131,7 @@ Expected: exit 0
 Run: `node -e "JSON.parse(require('fs').readFileSync('docs/portal/data/quick-estimate-flow.json'))"`
 Expected: exit 0
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add docs/04-data/quick-estimate-data-contract.md docs/04-data/conceptual-data-model.md docs/04-data/database-standards.md docs/04-data/audit-and-revision.md docs/README.md docs/portal/README.md

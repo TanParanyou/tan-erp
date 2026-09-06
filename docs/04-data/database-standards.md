@@ -15,6 +15,8 @@
 - Soft Delete ใช้เฉพาะเมื่อมีความต้องการกู้คืนหรืออ้างอิงประวัติ ไม่ใช้เป็นค่าเริ่มต้นทุกตาราง
 - JSONB ใช้กับข้อมูลธุรกิจที่ Schema ยืดหยุ่นและมี Ownership ชัด ไม่ใช้เก็บ Error Translation, Permission หรือโครงสร้างหลักที่ต้อง Join/Constraint
 
+Relational/JSONB Boundary และ Logical Schema ของราคาหน้างานอยู่ที่ [Quick Estimate Data Contract](quick-estimate-data-contract.md)
+
 ## Multi-organization
 
 - Query ข้อมูลธุรกิจต้องมี Organization Scope

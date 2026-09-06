@@ -28,6 +28,8 @@ Quick Estimate ─► Quick Estimate Version ─┬─ Calculation Snapshot
 Site Survey ─► Quick Estimate หรือ Estimate (Official Estimate Draft)
 ```
 
+Logical Field, Constraint, JSONB Boundary และ Index ของ Quick Estimate อยู่ที่ [Quick Estimate Data Contract](quick-estimate-data-contract.md)
+
 ## Aggregate Candidates
 
 | Aggregate | Boundary/Invariants สำคัญ |
@@ -51,7 +53,7 @@ Site Survey ─► Quick Estimate หรือ Estimate (Official Estimate Draft
 - CRM เป็นเจ้าของ Customer/Opportunity; Module อื่นอ้างด้วย ID และ Snapshot เท่าที่จำเป็น
 - Item Master เป็นเจ้าของรายการมาตรฐาน แต่ Estimate Revision เก็บค่าที่ใช้คำนวณเป็น Snapshot
 - Pricing Template Version เป็นต้นทางกฎคำนวณ แต่ Quick Estimate Version ต้องเก็บ Template/Input/Factor/Result Snapshot เพื่อคำนวณย้อนหลังได้
-- Published Pricing Template Version เป็น Immutable; Lifecycle คือ Draft, Calibration, Active, Superseded และ Disabled
+- Published Pricing Template Version เป็น Immutable; Lifecycle คือ Draft, Submitted, Approved, Calibration, Active, Superseded และ Disabled
 - Standard Rate เป็นของ Organization; Branch Rate Override ต้องมี Effective Period, Reason และ Approval โดยไม่แก้ Standard Rate เดิม
 - Quick Estimate เป็นเจ้าของ Version และ Preliminary Summary; หนึ่ง Version Convert ไป Official Estimate Draft ได้หนึ่งรายการต่อเจตนาที่ระบุ
 - Estimation เป็นเจ้าของ Estimate/Revision/Approval; Quotation ไม่ย้อนมาแก้ Revision
