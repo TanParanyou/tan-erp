@@ -11,8 +11,21 @@
 | CRM | `customers.read` | ดูลูกค้า | Organization/Branch/Own |
 | CRM | `customers.manage` | สร้างและแก้ลูกค้า | Organization/Branch/Own |
 | CRM | `opportunities.manage` | จัดการโอกาสการขาย | Organization/Branch/Own |
-| Item Master | `items.read` | ดูรายการมาตรฐานและต้นทุนตามสิทธิ์ | Organization |
-| Item Master | `items.manage` | สร้าง แก้ และปิดใช้ Item | Organization |
+| Item Master | `items.read` | ดู Item ตาม Scope และ Cost ตามสิทธิ์แยก | Organization/Branch |
+| Item Master | `items.create` | สร้าง Item Draft | Organization |
+| Item Master | `items.update` | แก้ Item Draft/Active ที่อนุญาต | Organization |
+| Item Master | `items.activate` | เปิดใช้ Item ที่ผ่าน Gate | Organization |
+| Item Master | `items.deactivate` | ปิดใช้ Item พร้อมเหตุผล | Organization |
+| Item Cost | `cost-records.read` | ดูต้นทุน/Evidence ตาม Scope | Organization/Branch |
+| Item Cost | `cost-records.create` | สร้าง Cost Record Draft | Organization/Branch |
+| Item Cost | `cost-records.submit` | ส่ง Cost Record ให้ตรวจ | Organization/Branch |
+| Item Cost | `cost-records.approve` | Approve/Return ตาม Cost Authority | Organization/Branch |
+| Item Cost | `cost-records.publish` | Publish Cost ที่อนุมัติแล้ว | Organization/Branch |
+| Item Cost | `cost-records.disable` | ปิดใช้ Published Cost พร้อมเหตุผล | Organization/Branch |
+| Unit | `units.read` | ดู Unit/Conversion ที่ใช้ได้ | Organization/Shared |
+| Unit | `units.manage` | จัดการ Unit/Conversion ตาม Governance | Organization/Shared |
+| Item Import | `item-imports.create` | Upload/Preview/Validate Import Batch | Organization |
+| Item Import | `item-imports.commit` | Commit Batch ที่พร้อมแบบ Atomic | Organization |
 | Survey | `surveys.manage` | สร้างและแก้ Site Survey | Branch/Project/Own |
 | Quick Estimate | `quick-estimates.read` | ดู Quick Estimate ตามขอบเขตที่ได้รับ | Organization/Branch/Opportunity/Own |
 | Quick Estimate | `quick-estimates.create` | สร้าง Quick Estimate | Branch/Opportunity/Own |
@@ -45,3 +58,5 @@
 เช่นเดียวกัน การมี `quick-estimates.share` ไม่ได้ข้าม Share Policy และการมี `quick-estimates.review` ไม่ได้อนุญาตให้ตรวจงานของตนเองเมื่อ Maker–Checker มีผล Backend ต้องตรวจ Permission พร้อม Organization, Branch, Opportunity และ Own Scope ทุกครั้ง
 
 การมี `pricing-templates.publish` ไม่ข้ามสถานะ Approval และการมี `pricing-templates.activate` ไม่ข้ามเกณฑ์ผ่าน Pilot ผู้แก้ Template ห้ามอนุมัติ Version เดียวกันเมื่อ Maker–Checker มีผล การ Override Rate ต้องอยู่ในขอบเขต Branch และไม่แก้ Standard Rate ของ Organization
+
+การมี `cost-records.approve` ไม่อนุญาตให้อนุมัติ Cost ที่ตนสร้างหรือแก้ Financial Field ล่าสุด และ `cost-records.publish` ไม่ข้าม Approved State/Overlap/Effective Policy การ Commit Import ที่มี Cost Update ไม่เท่ากับ Publish Cost รายละเอียดอยู่ที่ [Item Master Governance](../01-business/item-master-governance.md)

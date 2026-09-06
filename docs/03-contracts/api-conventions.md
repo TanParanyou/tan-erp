@@ -29,6 +29,8 @@ Endpoint และ Payload เฉพาะ Mobile Quick Estimate อยู่ท
 
 Endpoint และ Payload ของ Official Estimate/BOQ อยู่ที่ [Official Estimate API Contract](official-estimate-api-contract.md)
 
+Endpoint, Lifecycle และ Cost Resolver ของ Item/Unit/Cost อยู่ที่ [Item Master API Contract](item-master-api-contract.md)
+
 ## Contract Rules
 
 - OpenAPI เป็น Machine-readable contract สำหรับสร้าง Type ฝั่ง Frontend

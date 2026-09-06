@@ -29,6 +29,10 @@ Business/Finance/Security Workshop ใช้ [Official Estimate UAT Scenarios](o
 
 Automated Test ต้องใช้ Fixture เดียวกับ Deterministic Example ที่ติด `TEST_ONLY` ใน [Calculation Rules](../01-business/estimation-calculation-rules.md) แต่ห้าม Activate Demo Approval/Tax Threshold เป็น Production Policy
 
+## Item Master UAT and Contract Matrix
+
+[Item Master UAT Scenarios](item-master-uat-scenarios.md) เป็น Baseline สำหรับ Item Lifecycle, Unit/Conversion, Maker–Checker Cost, Deterministic Resolution, Import Atomicity, Organization Scope, Snapshot Reproducibility และ Responsive Accessibility ตัวอย่างราคาในเอกสารต้องติด `TEST_ONLY` และไม่ถูก Seed เป็น Production Master Data
+
 ## Quick Estimate Pricing Test Matrix
 
 Template Version ต้องผ่าน Test Matrix ก่อน Publish:

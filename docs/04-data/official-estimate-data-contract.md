@@ -63,13 +63,15 @@ Estimate เป็น Identity/Lifecycle ส่วน Revision เป็น Busi
 | --- | --- | --- |
 | `estimate_sections` | revision, code, nameTh/nameEn, description, sortOrder, subtotal | Unique code/sort ต่อ Revision |
 | `estimate_work_items` | section, code, itemId, descriptionTh/En, scopeNote, quantity, unit, sellingRuleType/value, cost/selling/margin, sortOrder | Quantity > 0; Unit Active; totals Server-derived |
-| `estimate_cost_components` | workItem, type, item/service ID, description, quantity, unit, unitCost, currency, costSource, effectiveAt, provisional flag/reason | Type material/labor/subcontract/service/other-direct; Amount ≥0 |
+| `estimate_cost_components` | workItem, type, item/service ID, description, quantity, unit, unitCost, currency, costRecord ID/version, costSource snapshot, conversion snapshot, cost policy version, effectiveAt, provisional flag/reason | Type material/labor/subcontract/service/other-direct; Amount ≥0; Master Data เปลี่ยนแล้ว Snapshot เดิมไม่เปลี่ยน |
 | `estimate_adjustments` | revision/workItem scope, type, basis, value, reason, permission context | Published rule หรือ authorized override |
 | `estimate_tax_lines` | revision, taxCode, rate, taxableBase, amount, effectiveAt | Server-derived จาก Tax Policy |
 
 Core BOQ ต้องเป็น Relational Rows ห้ามเก็บ Sections/Work Items/Cost Components เป็น JSONB ก้อนเดียว เพราะต้อง Constraint, Query, Diff และ Report
 
 Type/Precision/Required Gate/Visibility ของ Field อ้าง [Official Estimate Field Catalog](../01-business/official-estimate-field-catalog.md) เพื่อไม่กำหนด Business Rule ซ้ำใน Physical Model
+
+Cost Record/Conversion/Resolver Source of Truth อยู่ที่ [Item Master Data Contract](item-master-data-contract.md) Estimate เก็บเฉพาะ Reference + Frozen Snapshot ที่ใช้คำนวณ ไม่เป็นเจ้าของ Current Cost
 
 ## Versioned Policies
 

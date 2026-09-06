@@ -85,14 +85,15 @@ If-Match: "est-rv-7"
         "quantity": "6.00",
         "unitCode": "sheet",
         "unitCost": { "amount": "1250.00", "currency": "THB" },
-        "costSourceId": "88baa450-333a-4e19-9d1e-ca32d4dc8c15"
+        "costRecordId": "fae18682-d1d2-4700-902e-d46717c2b04a",
+        "costRecordVersion": 3
       }]
     }]
   }]
 }
 ```
 
-Client ห้ามส่ง Total/GP เป็นค่าที่เชื่อถือได้ Server คำนวณและคืน ETag ใหม่ `If-Match` เก่าคืน 409 `ESTIMATE_VERSION_CONFLICT`
+ตัวอย่างตัวเลขเป็น `TEST_ONLY` `unitCost` ที่ Client ส่งเป็น Draft Input เท่านั้น Server ต้อง Resolve/Validate Cost Record และสร้าง Cost/Source/Conversion/Policy Snapshot ตอน Calculate; Provisional Cost ใช้ Workflow/Reason แยกตาม Policy Client ห้ามส่ง Total/GP เป็นค่าที่เชื่อถือได้ Server คำนวณและคืน ETag ใหม่ `If-Match` เก่าคืน 409 `ESTIMATE_VERSION_CONFLICT`
 
 Field, Required Gate, Precision และ Customer Visibility อ้าง [Official Estimate Field Catalog](../01-business/official-estimate-field-catalog.md) Request ที่ส่ง Derived Total, Margin, Tax หรือ Approval State ให้ Reject/Ignore ตาม Contract โดยห้ามใช้เป็นค่าจริง
 
@@ -219,4 +220,4 @@ POST /api/v1/estimates/{id}/quotation
 
 ## Data Mapping
 
-อ่าน [Official Estimate Data Contract](../04-data/official-estimate-data-contract.md)
+อ่าน [Official Estimate Data Contract](../04-data/official-estimate-data-contract.md) และ [Item Master API Contract](item-master-api-contract.md)

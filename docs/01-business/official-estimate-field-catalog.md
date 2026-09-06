@@ -72,13 +72,17 @@ Custom Work Item ต้องมี `overrideReasonCode`, `overrideReason` แ�
 | `unitCode` | String ≤20 | C | ต้องเข้ากับ Cost Source | Estimator | Internal |
 | `unitCost` | Decimal(19,4) | C | ≥0; Client ส่ง Total ไม่ได้ | Estimator/Cost Resolver | Internal |
 | `currency` | ISO 4217 | C | ต้องตรง Revision ใน Phase 1 | System | Internal |
-| `costSourceId` | UUID/null | S | null ได้เฉพาะ Provisional Cost | Estimator/Cost Resolver | Internal |
+| `costRecordId` | UUID/null | S | Published Cost ที่ Resolver เลือก; null ได้เฉพาะ Provisional Cost | Cost Resolver | Internal |
+| `costRecordVersion` | Integer/null | S | Freeze คู่กับ Cost Record | Cost Resolver | Internal |
+| `costSourceId` | UUID/null | S | Snapshot จาก Cost Record; null ได้เฉพาะ Provisional Cost | Cost Resolver | Internal |
+| `costResolutionPolicyVersion` | String/null | S | Version ที่ใช้ Resolve; null ได้เฉพาะ Provisional Cost | Cost Resolver | Internal |
+| `conversionSnapshot` | Object/null | Conditional S | บังคับเมื่อ Unit ที่ขอกับ Cost Record ต่างกัน | Cost Resolver | Internal |
 | `effectiveAt` | UTC/null | S | ใช้ตรวจ Stale Cost ตาม Policy | System/Estimator | Internal |
 | `isProvisional` | Boolean | S | true เมื่อ Source ไม่สมบูรณ์ | System | Internal |
 | `provisionalReasonCode` | Stable Code/null | Conditional S | บังคับเมื่อ `isProvisional=true` | Estimator | Internal |
 | `provisionalReason` | String ≤500/null | Conditional S | บังคับเมื่อ `isProvisional=true` | Estimator | Internal |
 
-Cost Component ว่างทุกประเภททำให้ Work Item ไม่พร้อม Submit แต่ Zero Cost อนุญาตได้เมื่อมี Reason และ Policy ยอมรับ
+Cost Component ว่างทุกประเภททำให้ Work Item ไม่พร้อม Submit แต่ Zero Cost อนุญาตได้เมื่อมี Reason และ Policy ยอมรับ Resolver/Version/Snapshot อ้าง [Item Master Governance](item-master-governance.md)
 
 ## Adjustment, Discount and Tax
 

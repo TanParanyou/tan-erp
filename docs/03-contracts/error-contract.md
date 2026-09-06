@@ -64,6 +64,24 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `MAKER_CHECKER_VIOLATION` | 403 | ผู้จัดทำหรือผู้แก้ล่าสุดพยายามอนุมัติรายการที่ต้องแยกผู้ตรวจ |
 | `IDEMPOTENCY_KEY_REUSED` | 409 | ใช้ Idempotency Key เดิมกับ Payload ต่างจากคำขอแรก; ต้องสร้าง Key ใหม่เมื่อเป็นเจตนาใหม่ |
 
+## Item Master Error Codes
+
+| Code | HTTP | ความหมาย/การกู้คืน |
+| --- | ---: | --- |
+| `ITEM_CODE_CONFLICT` | 409 | Code หลัง Normalize ซ้ำใน Organization เดียวกัน |
+| `ITEM_VERSION_CONFLICT` | 409 | ETag เก่า; ให้ Reload/Compare ก่อนบันทึก |
+| `ITEM_INVALID_STATE` | 409 | Action ไม่รองรับสถานะ เช่นแก้ Code หลังเคย Active |
+| `ITEM_FIELD_REQUIRED` | 422 | Field ที่ Activation/Transition Gate บังคับยังไม่ครบ |
+| `ITEM_UNIT_INVALID` | 422 | Unit ไม่ Active, คนละ Dimension หรือใช้กับ Item ไม่ได้ |
+| `ITEM_CONVERSION_INVALID` | 422 | Factor/Period/Dimension ไม่ถูกหรือทำให้เกิด Cycle |
+| `ITEM_COST_NOT_FOUND` | 404 | ไม่มี Published Cost ตรง Scope/Unit/Currency/Quantity/วันที่ |
+| `ITEM_COST_AMBIGUOUS` | 409 | Candidate ยังเสมอกันหลัง Cost Resolution Rule ทุกข้อ |
+| `ITEM_COST_PERIOD_OVERLAP` | 409 | Published Cost ใน Natural Key เดียวกันมี Period/Quantity Range ซ้อน |
+| `ITEM_COST_VERSION_CONFLICT` | 409 | Cost Record ETag เก่า; ให้ Reload/Compare |
+| `ITEM_COST_INVALID_STATE` | 409 | Cost Action ไม่ตรง Lifecycle เช่น Publish ก่อน Approve |
+| `ITEM_IMPORT_INVALID` | 422 | Template/Row/Field ของ Import ไม่ผ่าน Validation |
+| `ITEM_IMPORT_NOT_READY` | 409 | Batch ยัง Parse อยู่ มี Error หรือ Commit ไปแล้ว |
+
 ## Official Estimate Error Codes
 
 | Code | HTTP | ความหมาย/การกู้คืน |
