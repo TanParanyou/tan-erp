@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 import { signOutSession } from "@/lib/auth/auth-session";
 import { useTranslations, useLocale } from "next-intl";
@@ -20,6 +21,7 @@ export function ErpShell({ currentUser }: ErpShellProps) {
   const tApp = useTranslations("app");
   const locale = useLocale();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const user = currentUser.user;
   const memberships = currentUser.memberships || [];
@@ -30,7 +32,7 @@ export function ErpShell({ currentUser }: ErpShellProps) {
   const targetLocale = locale === "th" ? "en" : "th";
 
   const handleSignOut = async () => {
-    await signOutSession();
+    await signOutSession(queryClient);
     router.push(`/${locale}/login`);
   };
 

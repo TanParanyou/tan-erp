@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import { subscribeToAuthChanges, signOutSession } from "@/lib/auth/auth-session";
 import { useCurrentUser } from "@/features/auth/api/current-user-query";
 import { useTranslations, useLocale } from "next-intl";
@@ -16,6 +17,7 @@ interface AccessGateProps {
 }
 
 export function AccessGate({ children }: AccessGateProps) {
+  const queryClient = useQueryClient();
   const tGate = useTranslations("gate");
   const tAuth = useTranslations("auth");
   const locale = useLocale();
@@ -23,11 +25,11 @@ export function AccessGate({ children }: AccessGateProps) {
   const [firebaseUser, setFirebaseUser] = useState<User | null | undefined>(undefined);
 
   useEffect(() => {
-    const unsubscribe = subscribeToAuthChanges((user) => {
+    const unsubscribe = subscribeToAuthChanges(queryClient, (user) => {
       setFirebaseUser(user);
     });
     return () => unsubscribe();
-  }, []);
+  }, [queryClient]);
 
   const {
     data: currentUser,
@@ -50,11 +52,11 @@ export function AccessGate({ children }: AccessGateProps) {
   // Effect: Sign out and redirect to login on 401 / invalid authentication
   useEffect(() => {
     if (isUnauthorized) {
-      signOutSession().then(() => {
+      signOutSession(queryClient).then(() => {
         router.push(`/${locale}/login`);
       });
     }
-  }, [isUnauthorized, locale, router]);
+  }, [isUnauthorized, locale, router, queryClient]);
 
   // 1. Firebase session loading
   if (firebaseUser === undefined) {
@@ -124,7 +126,7 @@ export function AccessGate({ children }: AccessGateProps) {
             <Button
               variant="primary"
               size="md"
-              onClick={() => signOutSession().then(() => router.push(`/${locale}/login`))}
+              onClick={() => signOutSession(queryClient).then(() => router.push(`/${locale}/login`))}
             >
               {tAuth("logout")}
             </Button>
@@ -157,7 +159,7 @@ export function AccessGate({ children }: AccessGateProps) {
             <Button
               variant="primary"
               size="md"
-              onClick={() => signOutSession().then(() => router.push(`/${locale}/login`))}
+              onClick={() => signOutSession(queryClient).then(() => router.push(`/${locale}/login`))}
             >
               {tAuth("logout")}
             </Button>
@@ -201,7 +203,7 @@ export function AccessGate({ children }: AccessGateProps) {
           <Button
             variant="outline"
             size="md"
-            onClick={() => signOutSession().then(() => router.push(`/${locale}/login`))}
+            onClick={() => signOutSession(queryClient).then(() => router.push(`/${locale}/login`))}
           >
             {tAuth("logout")}
           </Button>

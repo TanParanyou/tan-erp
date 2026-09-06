@@ -94,7 +94,7 @@ describe("auth-session", () => {
     } as unknown as QueryClient;
 
     const outerCallback = vi.fn();
-    subscribeToAuthChanges(outerCallback, mockQueryClient);
+    subscribeToAuthChanges(mockQueryClient, outerCallback);
 
     expect(authCallback).not.toBeNull();
 

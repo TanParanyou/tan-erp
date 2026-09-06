@@ -6,6 +6,8 @@ import { ApiError } from "@/lib/api/api-error";
 import type { User } from "firebase/auth";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -15,7 +17,7 @@ vi.mock("next/navigation", () => ({
 
 let mockAuthStateCallback: ((user: User | null) => void) | null = null;
 vi.mock("@/lib/auth/auth-session", () => ({
-  subscribeToAuthChanges: vi.fn((cb) => {
+  subscribeToAuthChanges: vi.fn((_client, cb) => {
     mockAuthStateCallback = cb;
     return vi.fn();
   }),
@@ -41,8 +43,13 @@ vi.mock("@/features/auth/api/current-user-query", () => ({
 import { signOutSession } from "@/lib/auth/auth-session";
 
 describe("AccessGate Component", () => {
+  let testQueryClient: QueryClient;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    testQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
     mockAuthStateCallback = null;
     mockQueryResult = {
       data: undefined,
@@ -52,8 +59,11 @@ describe("AccessGate Component", () => {
     };
   });
 
+  const renderWithClient = (ui: React.ReactElement) =>
+    render(<QueryClientProvider client={testQueryClient}>{ui}</QueryClientProvider>);
+
   it("1. renders loading status with aria-busy while Firebase session is resolving", () => {
-    render(
+    renderWithClient(
       <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
@@ -65,7 +75,7 @@ describe("AccessGate Component", () => {
   });
 
   it("2. redirects to /th/login when no Firebase session exists", async () => {
-    render(
+    renderWithClient(
       <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
@@ -89,7 +99,7 @@ describe("AccessGate Component", () => {
       refetch: vi.fn(),
     };
 
-    render(
+    renderWithClient(
       <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
@@ -117,7 +127,7 @@ describe("AccessGate Component", () => {
       refetch: vi.fn(),
     };
 
-    render(
+    renderWithClient(
       <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
@@ -128,7 +138,7 @@ describe("AccessGate Component", () => {
     });
 
     await waitFor(() => {
-      expect(signOutSession).toHaveBeenCalled();
+      expect(signOutSession).toHaveBeenCalledWith(testQueryClient);
       expect(mockPush).toHaveBeenCalledWith("/th/login");
     });
   });
@@ -145,7 +155,7 @@ describe("AccessGate Component", () => {
       refetch: vi.fn(),
     };
 
-    render(
+    renderWithClient(
       <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
@@ -173,7 +183,7 @@ describe("AccessGate Component", () => {
       refetch: vi.fn(),
     };
 
-    render(
+    renderWithClient(
       <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
@@ -202,7 +212,7 @@ describe("AccessGate Component", () => {
       refetch: mockRefetch,
     };
 
-    render(
+    renderWithClient(
       <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
@@ -242,7 +252,7 @@ describe("AccessGate Component", () => {
       refetch: vi.fn(),
     };
 
-    render(
+    renderWithClient(
       <AccessGate>
         {(currentUser) => (
           <div data-testid="protected-content">

@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ErpShell } from "./erp-shell";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
@@ -16,6 +16,8 @@ vi.mock("@/lib/auth/auth-session", () => ({
 }));
 
 import { signOutSession } from "@/lib/auth/auth-session";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const mockCurrentUser: CurrentUserResponse = {
   user: {
@@ -46,8 +48,20 @@ const mockCurrentUser: CurrentUserResponse = {
 };
 
 describe("ErpShell Component", () => {
+  let testQueryClient: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    testQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+  });
+
+  const renderWithClient = (ui: React.ReactElement) =>
+    render(<QueryClientProvider client={testQueryClient}>{ui}</QueryClientProvider>);
+
   it("renders Organization, Branch, User details and permissions accurately", () => {
-    render(<ErpShell currentUser={mockCurrentUser} />);
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
 
     expect(screen.getByTestId("org-name").textContent).toBe("TEST_ONLY Project ERP");
     expect(screen.getByTestId("branch-name").textContent).toBe("สาขาทดสอบ");
@@ -56,7 +70,7 @@ describe("ErpShell Component", () => {
   });
 
   it("has interactive controls with at least 44px touch targets", () => {
-    render(<ErpShell currentUser={mockCurrentUser} />);
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
 
     const languageLink = screen.getByRole("link", { name: /Switch to English/i });
     const logoutButton = screen.getByRole("button", { name: "ออกจากระบบ" });
@@ -66,16 +80,16 @@ describe("ErpShell Component", () => {
   });
 
   it("calls signOutSession and navigates to login when sign out clicked", async () => {
-    render(<ErpShell currentUser={mockCurrentUser} />);
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
 
     const logoutButton = screen.getByRole("button", { name: "ออกจากระบบ" });
     fireEvent.click(logoutButton);
 
-    expect(signOutSession).toHaveBeenCalled();
+    expect(signOutSession).toHaveBeenCalledWith(testQueryClient);
   });
 
   it("toggles mobile navigation menu when hamburger button is clicked", () => {
-    render(<ErpShell currentUser={mockCurrentUser} />);
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
 
     const menuButton = screen.getByRole("button", { name: "เปิด/ปิดเมนู" });
     expect(menuButton.getAttribute("aria-expanded")).toBe("false");
