@@ -12,12 +12,36 @@ using TanErp.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Production safety guardrails
+if (builder.Environment.IsProduction())
+{
+    if (builder.Configuration.GetValue<bool>("SeedTestData"))
+    {
+        throw new InvalidOperationException("SeedTestData must not be enabled in production.");
+    }
+    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST")))
+    {
+        throw new InvalidOperationException("FIREBASE_AUTH_EMULATOR_HOST must not be set in production.");
+    }
+}
+
 // Localization configuration: default 'th', supported 'th', 'en'
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(OpenApiConfiguration.ConfigureSwaggerGen);
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://127.0.0.1:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 // Database Context
 var connectionString = builder.Configuration.GetConnectionString("Database")
@@ -61,12 +85,24 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Test"))
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors();
+
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Test"))
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+if (app.Environment.IsEnvironment("Test") && app.Configuration.GetValue<bool>("SeedTestData"))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await TestOnlyDataSeeder.SeedAsync(db, app.Environment.EnvironmentName, true);
+}
 
 app.Run();
 

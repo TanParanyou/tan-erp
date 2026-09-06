@@ -28,6 +28,7 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
             {
                 FirebaseApp.Create(new AppOptions
                 {
+                    Credential = GoogleCredential.FromAccessToken("owner"),
                     ProjectId = projectId
                 });
             }
@@ -51,8 +52,9 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
             var decoded = await _auth.VerifyIdTokenAsync(idToken, cancellationToken);
             return decoded?.Uid;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[FirebaseTokenVerifier] Verification failed: {ex.GetType().Name}: {ex.Message}");
             return null;
         }
     }

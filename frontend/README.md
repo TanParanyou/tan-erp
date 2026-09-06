@@ -46,6 +46,19 @@ npm run check:api
 npm run verify
 ```
 
+## การรัน End-to-End (E2E) Acceptance ร่วมกับ Local Stack
+
+```bash
+# 1. คัดลอก .env.example เป็น .env.local
+cp frontend/.env.example frontend/.env.local
+
+# 2. เริ่มต้นการทำงานของ Frontend Dev Server
+npm --prefix frontend run dev
+
+# 3. รัน Playwright Test (เมื่อ Local Stack และ Backend พร้อมแล้ว)
+npm --prefix frontend run test:e2e
+```
+
 ## ตัวแปรสภาพแวดล้อม (Environment Variables)
 
 *หมายเหตุ: ระบุเฉพาะชื่อตัวแปร ห้ามใส่ค่าจริงหรือข้อมูลลับ*
