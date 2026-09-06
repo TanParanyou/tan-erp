@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -43,6 +43,12 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                 type: "uuid",
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+
+            migrationBuilder.Sql(
+                @"UPDATE identity_access.membership_roles mr
+                  SET organization_id = m.organization_id
+                  FROM organization.memberships m
+                  WHERE mr.membership_id = m.id;");
 
             migrationBuilder.AddUniqueConstraint(
                 name: "AK_roles_id_organization_id",

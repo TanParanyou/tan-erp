@@ -7,7 +7,7 @@ export { useTranslations, useLocale } from "next-intl";
 
 /**
  * Hook to safely retrieve active locale from next-intl, falling back to defaultLocale if outside provider.
- * Used by current-user-query and formatters which may be called outside the NextIntlClientProvider tree.
+ * Used by current-user-query which may be called outside the NextIntlClientProvider tree.
  */
 export function useSafeLocale(): SupportedLocale {
   try {

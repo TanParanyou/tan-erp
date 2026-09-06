@@ -9,7 +9,7 @@ test.describe("Foundation Login and Current User Journey", () => {
 
     // 2. sign in through Firebase Auth Emulator with seeded test user
     const emailInput = page.getByLabel("อีเมล");
-    const passwordInput = page.getByLabel("รหัสผ่าน");
+    const passwordInput = page.locator('input#password');
     await emailInput.fill("foundation-user@example.test");
     await passwordInput.fill("TestPassword123!");
 
@@ -44,7 +44,7 @@ test.describe("Foundation Login and Current User Journey", () => {
 
     // 8. sign in as a valid Firebase user with no Membership
     const emailInputNomember = page.getByLabel("Email");
-    const passwordInputNomember = page.getByLabel("Password");
+    const passwordInputNomember = page.locator('input#password');
     await emailInputNomember.fill("nomember-user@example.test");
     await passwordInputNomember.fill("TestPassword123!");
     await page.getByRole("button", { name: "Sign In" }).click();
