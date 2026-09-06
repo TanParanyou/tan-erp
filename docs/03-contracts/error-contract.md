@@ -39,6 +39,44 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 - System Error Translation ไม่เก็บใน JSONB และไม่มี Runtime Editor ระยะแรก เพื่อลดความไม่ตรงกันและ Bug
 - Log เก็บ Error Code และ Trace ID; ไม่จำเป็นต้องเก็บข้อความแปลเป็นตัวตัดสิน
 
+## Authentication and Access Error Codes
+
+| Code | HTTP | Meaning / ความหมาย |
+| --- | ---: | --- |
+| `AUTHENTICATION_REQUIRED` | 401 | Bearer token is missing / ไม่พบ Authorization Bearer token |
+| `AUTHENTICATION_INVALID` | 401 | Token cannot be verified, has expired, or belongs to another Firebase project / Token ไม่ถูกต้อง หมดอายุ หรือมาจาก Firebase Project อื่น |
+| `USER_ACCESS_DISABLED` | 403 | Internal User is disabled / บัญชีผู้ใช้ภายในระบบถูกระงับการใช้งาน |
+| `ACTIVE_MEMBERSHIP_REQUIRED` | 403 | Identity is valid but no active Membership is available / ยืนยันตัวตนสำเร็จแต่ไม่มีสมาชิกภาพที่ Active ในองค์กรใด |
+| `PERMISSION_DENIED` | 403 | Active Membership exists but the requested permission is absent / มีสมาชิกภาพในองค์กรแต่ไม่มีสิทธิ์สำหรับปฏิบัติการนี้ |
+
+### ตัวอย่าง Problem Details ภาษาไทย (Thai Example)
+
+```json
+{
+  "type": "https://tan-erp.local/problems/active-membership-required",
+  "title": "จำเป็นต้องมีสมาชิกภาพที่ใช้งานได้",
+  "status": 403,
+  "code": "ACTIVE_MEMBERSHIP_REQUIRED",
+  "detail": "ยืนยันตัวตนสำเร็จแต่ไม่พบสมาชิกภาพที่ใช้งานอยู่ในองค์กรใด",
+  "traceId": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+  "errors": {}
+}
+```
+
+### ตัวอย่าง Problem Details ภาษาอังกฤษ (English Example)
+
+```json
+{
+  "type": "https://tan-erp.local/problems/active-membership-required",
+  "title": "Active Membership Required",
+  "status": 403,
+  "code": "ACTIVE_MEMBERSHIP_REQUIRED",
+  "detail": "Authentication succeeded but no active organization membership was found.",
+  "traceId": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+  "errors": {}
+}
+```
+
 ## Quick Estimate Error Codes
 
 | Code | HTTP | ความหมาย/การกู้คืน |

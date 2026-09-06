@@ -11,3 +11,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0007 — Versioned Official Estimate Policies](0007-versioned-official-estimate-policies.md)
 - [0008 — Typed Items และ Versioned Cost Records](0008-typed-items-versioned-cost-records.md)
 - [0009 — Immutable Ready Site Survey Revisions](0009-versioned-site-survey-revisions.md)
+- [0010 — Foundation Application Runtime](0010-foundation-application-runtime.md)

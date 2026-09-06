@@ -6,7 +6,7 @@ Read `CONTEXT.md` for canonical business terms and `docs/README.md` for the docu
 
 ## Current phase
 
-This repository is in Documentation Foundation. Create or refine Markdown, JSON diagrams, SVG illustrations, and the static documentation portal only. Start application implementation only after an approved implementation task explicitly changes the phase.
+This repository is in **Application Implementation**. The authorized implementation boundary is the Foundation Login and Current User vertical slice documented in `docs/superpowers/plans/2026-09-06-foundation-login-current-user.md`. Do not add CRM, Survey, Estimation, Item, Commercial, Project, Procurement, Inventory, Production, or MRP behavior without a separately approved implementation task.
 
 ## Product boundaries
 
