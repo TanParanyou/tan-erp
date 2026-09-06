@@ -72,7 +72,9 @@ describe("AccessGate Component", () => {
     );
 
     // Simulate Firebase reporting no user
-    mockAuthStateCallback!(null);
+    act(() => {
+      mockAuthStateCallback!(null);
+    });
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/th/login");

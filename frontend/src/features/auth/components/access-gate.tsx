@@ -33,6 +33,26 @@ export function AccessGate({ locale, children }: AccessGateProps) {
     refetch,
   } = useCurrentUser(firebaseUser?.uid, locale);
 
+  const apiError = error instanceof ApiError ? error : null;
+  const errorCode = apiError?.code;
+  const isUnauthorized = apiError?.status === 401 || errorCode === "AUTHENTICATION_INVALID";
+
+  // Effect: Redirect to login when there is no Firebase session
+  useEffect(() => {
+    if (firebaseUser === null) {
+      router.push(`/${locale}/login`);
+    }
+  }, [firebaseUser, locale, router]);
+
+  // Effect: Sign out and redirect to login on 401 / invalid authentication
+  useEffect(() => {
+    if (isUnauthorized) {
+      signOutSession().then(() => {
+        router.push(`/${locale}/login`);
+      });
+    }
+  }, [isUnauthorized, locale, router]);
+
   // 1. Firebase session loading
   if (firebaseUser === undefined) {
     return (
@@ -55,11 +75,8 @@ export function AccessGate({ locale, children }: AccessGateProps) {
     );
   }
 
-  // 2. No Firebase session -> redirect to login
+  // 2. No Firebase session -> redirect to login (handled in useEffect)
   if (firebaseUser === null) {
-    if (typeof window !== "undefined") {
-      router.push(`/${locale}/login`);
-    }
     return null;
   }
 
@@ -96,14 +113,8 @@ export function AccessGate({ locale, children }: AccessGateProps) {
 
   // 4. Error states
   if (error) {
-    const apiError = error instanceof ApiError ? error : null;
-    const errorCode = apiError?.code;
-
-    // 4a. 401 AUTHENTICATION_INVALID -> sign out and return to login
-    if (apiError?.status === 401 || errorCode === "AUTHENTICATION_INVALID") {
-      signOutSession().then(() => {
-        router.push(`/${locale}/login`);
-      });
+    // 4a. 401 AUTHENTICATION_INVALID -> sign out and return to login (handled in useEffect)
+    if (isUnauthorized) {
       return null;
     }
 
