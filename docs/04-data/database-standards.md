@@ -17,6 +17,8 @@
 
 Relational/JSONB Boundary และ Logical Schema ของราคาหน้างานอยู่ที่ [Quick Estimate Data Contract](quick-estimate-data-contract.md)
 
+Relational BOQ, Revision Snapshot และ Approval/Quotation Integrity อยู่ที่ [Official Estimate Data Contract](official-estimate-data-contract.md)
+
 ## Multi-organization
 
 - Query ข้อมูลธุรกิจต้องมี Organization Scope

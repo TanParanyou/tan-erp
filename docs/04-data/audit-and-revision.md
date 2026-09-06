@@ -63,3 +63,5 @@ Audit Event บอกเหตุการณ์ ส่วน Quick Estimate Ver
 Calculation Snapshot ต้อง Immutable หลังสร้าง Version และต้องเพียงพอให้คำนวณซ้ำได้ผลเดิม แม้ Pricing Template ปัจจุบันเปลี่ยนแล้ว
 
 Entity, Snapshot Envelope และ Immutability Constraint อยู่ที่ [Quick Estimate Data Contract](quick-estimate-data-contract.md)
+
+Entity และ Constraint ของ Official Estimate Revision อยู่ที่ [Official Estimate Data Contract](official-estimate-data-contract.md)

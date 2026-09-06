@@ -30,6 +30,8 @@ Site Survey ─► Quick Estimate หรือ Estimate (Official Estimate Draft
 
 Logical Field, Constraint, JSONB Boundary และ Index ของ Quick Estimate อยู่ที่ [Quick Estimate Data Contract](quick-estimate-data-contract.md)
 
+Logical Schema ของ Official Estimate/BOQ, Approval และ Quotation Link อยู่ที่ [Official Estimate Data Contract](official-estimate-data-contract.md)
+
 ## Aggregate Candidates
 
 | Aggregate | Boundary/Invariants สำคัญ |

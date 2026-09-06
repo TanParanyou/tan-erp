@@ -8,6 +8,8 @@ Template/Field ของ Node `work-template` และ `measurement` อ้า�
 
 รายละเอียดสำหรับนำ Flow ไปพัฒนาต่ออ่านตามลำดับ [Mobile Wireframe](../01-business/quick-estimate-mobile-wireframe.md) → [API Contract](../03-contracts/quick-estimate-api-contract.md) → [Data Contract](../04-data/quick-estimate-data-contract.md)
 
+เส้นทางหลักปัจจุบันของ Official Estimate อ่าน [Responsive Wireframe](../01-business/official-estimate-responsive-wireframe.md) → [API Contract](../03-contracts/official-estimate-api-contract.md) → [Data Contract](../04-data/official-estimate-data-contract.md)
+
 ## วิธีเปิด
 
 Browser ส่วนใหญ่ไม่อนุญาตให้หน้า `file://` โหลด JSON ด้วย `fetch` จึงต้องเปิดผ่าน Local HTTP Server
