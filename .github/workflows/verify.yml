@@ -154,13 +154,20 @@ jobs:
           NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL: "http://127.0.0.1:9099"
           NEXT_PUBLIC_API_BASE_URL: "http://localhost:5000"
         run: |
-          npm --prefix frontend run dev &
-          until curl -s http://localhost:3000/th/login > /dev/null; do
-            echo "Waiting for Frontend Server..."
+          npm --prefix frontend run dev -- -p 3005 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:3005/th/login > /dev/null; then
+              echo "Frontend is ready on port 3005."
+              exit 0
+            fi
             sleep 1
           done
+          echo "Frontend did not become ready on port 3005"
+          exit 1
 
       - name: Run Playwright E2E Acceptance Journey
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: "http://localhost:3005"
         run: npm --prefix frontend run test:e2e
 
       - name: Upload Playwright test results on failure
