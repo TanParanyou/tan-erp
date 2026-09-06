@@ -85,7 +85,8 @@ Work Item Detail เรียง Scope → Quantity/Unit → Cost Components →
 | Low Margin/High Discount | แสดง Trigger ไม่เผย Threshold เกินสิทธิ์ | ส่ง Approval Route |
 | Conflict | Compare Server/Local | ไม่ Merge Financial Result อัตโนมัติ |
 | Submitted | Read-only สำหรับ Maker | รอ Reviewer/Withdraw ตาม Policy |
-| Approved/Quoted | Immutable | สร้าง Revision ใหม่ |
+| Returned | แก้ไขตามเหตุผล; Calculation อาจ Outdated | คำนวณและ Submit ใหม่ |
+| Approved/Quoted/Cancelled | Immutable | Approved/Quoted สร้าง Revision ใหม่ได้ |
 
 ## Approval UX
 
@@ -104,6 +105,7 @@ Work Item Detail เรียง Scope → Quantity/Unit → Cost Components →
 ## Source Documents
 
 - [Estimation Flow](estimation-flow.md)
+- [Official Estimate Field Catalog](official-estimate-field-catalog.md)
 - [Estimation Calculation Rules](estimation-calculation-rules.md)
 - [Approval Matrix](approval-matrix.md)
 - [Official Estimate API Contract](../03-contracts/official-estimate-api-contract.md)

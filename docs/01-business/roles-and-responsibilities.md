@@ -11,12 +11,14 @@
 | Pricing Template Owner | จัด Measurement Rule, Reference Rate, Factor, Checklist และ Test Case | อนุมัติหรือ Publish Version ที่ตนแก้เมื่อ Maker–Checker มีผล |
 | Pricing Template Approver | ตรวจสูตร Unit, Rate Source, Range, Test Case และผล Calibration | แก้ Template แทน Owner แล้วอนุมัติเอง |
 | Estimator | จัดทำ Estimate และตรวจต้นทุน | อนุมัติ Estimate ของตนเองเมื่อ Maker–Checker บังคับ |
-| Approver | ตรวจราคา กำไร ส่วนลด และความเสี่ยง | แก้ข้อมูลแทนผู้จัดทำโดยไม่ส่งกลับ |
+| Approver | ตรวจราคา กำไร ส่วนลด และความเสี่ยงภายใน Permission, Scope และ Approval Authority | แก้ข้อมูลแทนผู้จัดทำหรืออนุมัติงานตนเอง |
 | Project Manager | รับมอบขอบเขตและบริหาร Project | เปลี่ยน Baseline โดยไม่มี Change Order |
 | Procurement | จัดหาและออกคำสั่งซื้อ | อนุมัติ Supplier/PO ของตนเองเกินวงเงิน |
 | Administrator | จัด User, Role และ Scope | อ่านข้อมูลธุรกิจนอก Scope โดยอัตโนมัติ |
 | Auditor | อ่าน Audit Trail และรายงานควบคุม | แก้ Business Record |
 
 Role เป็นชุด Permission ไม่ควรผูก Business Logic กับชื่อ Role โดยตรง เพราะองค์กรอาจตั้งชื่อหรือจัดหน้าที่ใหม่ในอนาคต
+
+Approval Policy ต้อง Resolve ผู้อนุมัติจาก Permission + Scope + Authority ไม่ใช้ชื่อ Role เป็นเงื่อนไข Hard-code และ Production Bootstrap ต้องมี Independent Checker อย่างน้อยหนึ่งคน
 
 Workflow และข้อห้ามของ Pricing Template Owner/Approver อยู่ที่ [Pricing Template Governance](pricing-template-governance.md)

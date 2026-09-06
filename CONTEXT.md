@@ -62,6 +62,26 @@ _Avoid_: Quick Estimate, Quotation
 สำเนาที่มีหมายเลขฉบับและคงประวัติการเปลี่ยนแปลงของ Estimate
 _Avoid_: Overwrite, Draft Copy
 
+**Calculation Policy (นโยบายคำนวณ)**:
+ชุดกฎที่มีรุ่นและช่วงเวลามีผลสำหรับคำนวณต้นทุน ราคาขาย ส่วนลด ภาษี และการปัดเศษของ Official Estimate
+_Avoid_: Formula Setting, Pricing Template
+
+**Calculation Snapshot (ภาพบันทึกการคำนวณ)**:
+หลักฐานที่ตรึงข้อมูลนำเข้า รุ่นกฎ ขั้นตอนคำนวณ และผลลัพธ์ของ Official Estimate ณ การคำนวณหนึ่งครั้ง
+_Avoid_: Current Total, Cache
+
+**Approval Policy (นโยบายอนุมัติ)**:
+ชุดกฎที่มีรุ่นและขอบเขตสำหรับตัดสินว่าประมาณการถูกบล็อก ต้องผ่านใครบ้าง หรือพร้อมให้ผู้มีอำนาจอนุมัติ
+_Avoid_: Permission, Role
+
+**Approval Route (เส้นทางอนุมัติ)**:
+ลำดับผู้ตรวจและเงื่อนไขที่ถูกตรึงให้กับ Estimate Revision เมื่อส่งอนุมัติ
+_Avoid_: Role List, Permission Set
+
+**Provisional Cost (ต้นทุนชั่วคราว)**:
+ต้นทุนที่ยังไม่มีแหล่งราคาอ้างอิงสมบูรณ์และใช้ได้ชั่วคราวเมื่อมีเหตุผลพร้อมการตรวจอนุมัติ
+_Avoid_: Actual Cost, Standard Cost
+
 **Quotation (ใบเสนอราคา)**:
 ข้อเสนอเชิงพาณิชย์ที่ออกให้ลูกค้า โดยอ้างอิง Estimate ฉบับที่อนุมัติ
 _Avoid_: Estimate, Invoice
