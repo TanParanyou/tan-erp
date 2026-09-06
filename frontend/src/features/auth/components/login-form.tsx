@@ -3,16 +3,16 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmail } from "@/lib/auth/auth-session";
-import { getMessages, type SupportedLocale } from "@/lib/i18n/locales";
+import { useTranslations, useLocale } from "next-intl";
 
 interface LoginFormProps {
-  locale: SupportedLocale;
   onSuccess?: () => void;
 }
 
-export function LoginForm({ locale, onSuccess }: LoginFormProps) {
+export function LoginForm({ onSuccess }: LoginFormProps = {}) {
   const router = useRouter();
-  const m = getMessages(locale);
+  const t = useTranslations("auth");
+  const locale = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,13 +23,13 @@ export function LoginForm({ locale, onSuccess }: LoginFormProps) {
     const errors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      errors.email = m.auth.emailRequired;
+      errors.email = t("emailRequired");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      errors.email = m.auth.emailInvalid;
+      errors.email = t("emailInvalid");
     }
 
     if (!password) {
-      errors.password = m.auth.passwordRequired;
+      errors.password = t("passwordRequired");
     }
 
     setFieldErrors(errors);
@@ -54,9 +54,9 @@ export function LoginForm({ locale, onSuccess }: LoginFormProps) {
     } catch (err: unknown) {
       const firebaseError = err as { code?: string; message?: string };
       if (firebaseError.code === "auth/invalid-credential" || firebaseError.code === "auth/user-not-found" || firebaseError.code === "auth/wrong-password") {
-        setErrorMessage(locale === "th" ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง" : "Invalid email or password");
+        setErrorMessage(t("invalidCredentials"));
       } else {
-        setErrorMessage(firebaseError.message || (locale === "th" ? "เกิดข้อผิดพลาดในการเข้าสู่ระบบ" : "Sign in failed"));
+        setErrorMessage(firebaseError.message || t("signInFailed"));
       }
     } finally {
       setIsSubmitting(false);
@@ -67,10 +67,10 @@ export function LoginForm({ locale, onSuccess }: LoginFormProps) {
     <div className="login-card" style={{ maxWidth: "420px", width: "100%", margin: "0 auto", padding: "2rem", border: "1px solid #0B3056", borderRadius: 0, backgroundColor: "#ffffff" }}>
       <header style={{ marginBottom: "1.5rem" }}>
         <h1 style={{ fontSize: "1.5rem", color: "#0B3056", margin: "0 0 0.5rem 0", fontWeight: 700 }}>
-          {m.auth.loginTitle}
+          {t("loginTitle")}
         </h1>
         <p style={{ fontSize: "0.875rem", color: "#4B5563", margin: 0, lineHeight: 1.4 }}>
-          {m.auth.loginNotice}
+          {t("loginNotice")}
         </p>
       </header>
 
@@ -98,7 +98,7 @@ export function LoginForm({ locale, onSuccess }: LoginFormProps) {
             htmlFor="email"
             style={{ display: "block", marginBottom: "0.375rem", fontSize: "0.875rem", fontWeight: 600, color: "#1F2937" }}
           >
-            {m.auth.emailLabel}
+            {t("emailLabel")}
           </label>
           <input
             id="email"
@@ -110,7 +110,7 @@ export function LoginForm({ locale, onSuccess }: LoginFormProps) {
             disabled={isSubmitting}
             aria-invalid={Boolean(fieldErrors.email)}
             aria-describedby={fieldErrors.email ? "email-error" : undefined}
-            placeholder={m.auth.emailPlaceholder}
+            placeholder={t("emailPlaceholder")}
             style={{
               width: "100%",
               height: "44px",
@@ -134,7 +134,7 @@ export function LoginForm({ locale, onSuccess }: LoginFormProps) {
             htmlFor="password"
             style={{ display: "block", marginBottom: "0.375rem", fontSize: "0.875rem", fontWeight: 600, color: "#1F2937" }}
           >
-            {m.auth.passwordLabel}
+            {t("passwordLabel")}
           </label>
           <input
             id="password"
@@ -146,7 +146,7 @@ export function LoginForm({ locale, onSuccess }: LoginFormProps) {
             disabled={isSubmitting}
             aria-invalid={Boolean(fieldErrors.password)}
             aria-describedby={fieldErrors.password ? "password-error" : undefined}
-            placeholder={m.auth.passwordPlaceholder}
+            placeholder={t("passwordPlaceholder")}
             style={{
               width: "100%",
               height: "44px",
@@ -181,7 +181,7 @@ export function LoginForm({ locale, onSuccess }: LoginFormProps) {
             transition: "background-color 0.15s ease",
           }}
         >
-          {isSubmitting ? m.auth.submitting : m.auth.submitButton}
+          {isSubmitting ? t("submitting") : t("submitButton")}
         </button>
       </form>
     </div>

@@ -21,7 +21,7 @@ describe("LoginForm Component", () => {
   });
 
   it("renders email and password inputs with visible labels and 44px submit button", () => {
-    render(<LoginForm locale="th" />);
+    render(<LoginForm />);
 
     const emailLabel = screen.getByText("อีเมล");
     const emailInput = screen.getByLabelText("อีเมล");
@@ -39,7 +39,7 @@ describe("LoginForm Component", () => {
   });
 
   it("shows validation error and sets aria-invalid and aria-describedby when submitted empty", async () => {
-    render(<LoginForm locale="th" />);
+    render(<LoginForm />);
 
     const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
     fireEvent.click(submitButton);
@@ -61,18 +61,18 @@ describe("LoginForm Component", () => {
   });
 
   it("shows error for invalid email format", async () => {
-    render(<LoginForm locale="en" />);
+    render(<LoginForm />);
 
-    const emailInput = screen.getByLabelText("Email");
-    const passwordInput = screen.getByLabelText("Password");
-    const submitButton = screen.getByRole("button", { name: "Sign In" });
+    const emailInput = screen.getByLabelText("อีเมล");
+    const passwordInput = screen.getByLabelText("รหัสผ่าน");
+    const submitButton = screen.getByRole("button", { name: "เข้าสู่ระบบ" });
 
     fireEvent.change(emailInput, { target: { value: "invalid-email" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Invalid email format")).toBeDefined();
+      expect(screen.getByText("รูปแบบอีเมลไม่ถูกต้อง")).toBeDefined();
     });
 
     expect(signInWithEmail).not.toHaveBeenCalled();
@@ -84,7 +84,7 @@ describe("LoginForm Component", () => {
       message: "Invalid credentials",
     });
 
-    render(<LoginForm locale="th" />);
+    render(<LoginForm />);
 
     const emailInput = screen.getByLabelText("อีเมล");
     const passwordInput = screen.getByLabelText("รหัสผ่าน");
@@ -108,7 +108,7 @@ describe("LoginForm Component", () => {
     });
     vi.mocked(signInWithEmail).mockReturnValueOnce(loginPromise);
 
-    render(<LoginForm locale="th" />);
+    render(<LoginForm />);
 
     const emailInput = screen.getByLabelText("อีเมล");
     const passwordInput = screen.getByLabelText("รหัสผ่าน");

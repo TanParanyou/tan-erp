@@ -1,28 +1,32 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 import { signOutSession } from "@/lib/auth/auth-session";
-import { getMessages, type SupportedLocale } from "@/lib/i18n/locales";
+import { useTranslations, useLocale } from "next-intl";
+import { IconClose } from "@/components/common/Icons";
 
 interface ErpShellProps {
-  locale: SupportedLocale;
   currentUser: CurrentUserResponse;
 }
 
-export function ErpShell({ locale, currentUser }: ErpShellProps) {
-  const m = getMessages(locale);
+export function ErpShell({ currentUser }: ErpShellProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const tShell = useTranslations("shell");
+  const tAuth = useTranslations("auth");
+  const tApp = useTranslations("app");
+  const locale = useLocale();
   const router = useRouter();
 
   const user = currentUser.user;
   const memberships = currentUser.memberships || [];
   const primaryMembership = memberships[0];
   const orgName = primaryMembership?.organization?.name || "-";
-  const branchName = primaryMembership?.branch?.name || m.shell.noBranch;
+  const branchName = primaryMembership?.branch?.name || tShell("noBranch");
 
-  const targetLocale: SupportedLocale = locale === "th" ? "en" : "th";
+  const targetLocale = locale === "th" ? "en" : "th";
 
   const handleSignOut = async () => {
     await signOutSession();
@@ -38,14 +42,36 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 1.5rem",
+          padding: "0 1rem",
           height: "64px",
           backgroundColor: "#0B3056",
           color: "#FFFFFF",
           borderBottom: "1px solid #082442",
+          position: "sticky",
+          top: 0,
+          zIndex: 1020,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          {/* Mobile menu hamburger toggle */}
+          <button
+            type="button"
+            className="erp-mobile-menu-btn"
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            aria-label={isMobileMenuOpen ? tShell("closeMenu") : tShell("toggleMenu")}
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? (
+              <IconClose size={22} />
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
+
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* Local SVG logo icon */}
             <svg
@@ -63,41 +89,45 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
               <line x1="3" y1="9" x2="21" y2="9" />
               <line x1="9" y1="21" x2="9" y2="9" />
             </svg>
-            <span style={{ fontSize: "1.25rem", fontWeight: 700, letterSpacing: "0.02em" }}>
-              {m.app.title}
+            <span style={{ fontSize: "1.25rem", fontWeight: 700, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>
+              {tApp("title")}
             </span>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.75rem",
-              fontSize: "0.875rem",
-              paddingLeft: "1.5rem",
-              borderLeft: "1px solid rgba(255, 255, 255, 0.2)",
-            }}
-          >
+          <div className="erp-header-context-info">
             <span style={{ color: "#E5E7EB" }}>
-              <strong>{m.shell.organization}:</strong>{" "}
+              <strong>{tShell("organization")}:</strong>{" "}
               <span data-testid="org-name">{orgName}</span>
             </span>
             <span style={{ color: "rgba(255, 255, 255, 0.4)" }}>|</span>
             <span style={{ color: "#E5E7EB" }}>
-              <strong>{m.shell.branch}:</strong>{" "}
+              <strong>{tShell("branch")}:</strong>{" "}
               <span data-testid="branch-name">{branchName}</span>
             </span>
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          {/* User information */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: "0.8125rem" }}>
-            <span style={{ fontWeight: 600, color: "#FFFFFF" }}>
-              {user?.displayName || user?.email || m.shell.user}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          {/* User information (desktop/tablet) */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              fontSize: "0.8125rem",
+              maxWidth: "180px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ fontWeight: 600, color: "#FFFFFF", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {user?.displayName || user?.email || tShell("user")}
             </span>
             {user?.displayName && user?.email && (
-              <span style={{ color: "#D1D5DB" }}>{user.email}</span>
+              <span style={{ color: "#D1D5DB", fontSize: "0.75rem", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {user.email}
+              </span>
             )}
           </div>
 
@@ -120,7 +150,7 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
             }}
             aria-label={`Switch to ${targetLocale === "th" ? "Thai" : "English"}`}
           >
-            {m.shell.switchLanguage}
+            {tShell("switchLanguage")}
           </Link>
 
           {/* Sign out button */}
@@ -141,28 +171,55 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
               cursor: "pointer",
             }}
           >
-            {m.auth.logout}
+            {tAuth("logout")}
           </button>
         </div>
       </header>
 
       {/* Main Workspace Layout */}
-      <div style={{ display: "flex", flex: 1 }}>
+      <div style={{ display: "flex", flex: 1, position: "relative" }}>
+        {/* Mobile Backdrop Overlay */}
+        {isMobileMenuOpen && (
+          <div
+            className="erp-sidebar-backdrop"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Navigation Sidebar */}
-        <nav
+        <aside
+          className={`erp-sidebar ${isMobileMenuOpen ? "erp-sidebar-open" : ""}`}
           role="navigation"
           aria-label="Main Navigation"
-          style={{
-            width: "220px",
-            backgroundColor: "#FFFFFF",
-            borderRight: "1px solid #E5E7EB",
-            padding: "1rem 0",
-          }}
         >
+          {/* Mobile-only header context info inside drawer */}
+          <div
+            style={{
+              padding: "0 1rem 1rem 1rem",
+              marginBottom: "1rem",
+              borderBottom: "1px solid var(--erp-border-subtle)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.375rem",
+              fontSize: "0.8125rem",
+            }}
+          >
+            <div>
+              <strong style={{ color: "var(--erp-text-muted)" }}>{tShell("organization")}:</strong>{" "}
+              <span style={{ color: "var(--erp-text-main)", fontWeight: 600 }}>{orgName}</span>
+            </div>
+            <div>
+              <strong style={{ color: "var(--erp-text-muted)" }}>{tShell("branch")}:</strong>{" "}
+              <span style={{ color: "var(--erp-text-main)", fontWeight: 600 }}>{branchName}</span>
+            </div>
+          </div>
+
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             <li>
               <Link
                 href={`/${locale}`}
+                onClick={() => setIsMobileMenuOpen(false)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -175,28 +232,24 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
                   borderLeft: "4px solid #0B3056",
                 }}
               >
-                {m.shell.home}
+                {tShell("home")}
               </Link>
             </li>
           </ul>
-        </nav>
+        </aside>
 
         {/* Content Area */}
         <main
           id="main-content"
           role="main"
-          style={{
-            flex: 1,
-            padding: "2rem",
-            maxWidth: "1200px",
-          }}
+          className="erp-main-content"
         >
           <div style={{ marginBottom: "2rem" }}>
             <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0B3056", margin: "0 0 0.5rem 0" }}>
-              {m.app.title}
+              {tApp("title")}
             </h1>
             <p style={{ fontSize: "1rem", color: "#4B5563", margin: 0 }}>
-              {m.app.subtitle}
+              {tApp("subtitle")}
             </p>
           </div>
 
@@ -214,17 +267,17 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
               id="user-profile-heading"
               style={{ fontSize: "1.25rem", fontWeight: 600, color: "#111827", margin: "0 0 1rem 0" }}
             >
-              {m.shell.user}
+              {tShell("user")}
             </h2>
-            <dl style={{ display: "grid", gridTemplateColumns: "140px 1fr", rowGap: "0.75rem", fontSize: "0.9375rem" }}>
+            <dl style={{ display: "grid", gridTemplateColumns: "minmax(80px, 140px) 1fr", rowGap: "0.75rem", fontSize: "0.9375rem" }}>
               <dt style={{ fontWeight: 600, color: "#4B5563" }}>ID:</dt>
-              <dd style={{ fontFamily: "monospace", color: "#111827" }}>{user?.id || "-"}</dd>
+              <dd style={{ fontFamily: "monospace", color: "#111827", wordBreak: "break-all" }}>{user?.id || "-"}</dd>
 
-              <dt style={{ fontWeight: 600, color: "#4B5563" }}>{m.auth.emailLabel}:</dt>
-              <dd style={{ color: "#111827" }}>{user?.email || "-"}</dd>
+              <dt style={{ fontWeight: 600, color: "#4B5563" }}>{tAuth("emailLabel")}:</dt>
+              <dd style={{ color: "#111827", wordBreak: "break-all" }}>{user?.email || "-"}</dd>
 
               <dt style={{ fontWeight: 600, color: "#4B5563" }}>Name:</dt>
-              <dd style={{ color: "#111827" }}>{user?.displayName || "-"}</dd>
+              <dd style={{ color: "#111827", wordBreak: "break-word" }}>{user?.displayName || "-"}</dd>
             </dl>
           </section>
 
@@ -241,7 +294,7 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
               id="permissions-heading"
               style={{ fontSize: "1.25rem", fontWeight: 600, color: "#111827", margin: "0 0 1rem 0" }}
             >
-              {m.shell.permissions}
+              {tShell("permissions")}
             </h2>
 
             {memberships.map((membership, idx) => (
@@ -255,7 +308,7 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
                 }}
               >
                 <div style={{ fontWeight: 600, color: "#0B3056", marginBottom: "0.5rem" }}>
-                  {membership.organization?.name || "-"} — {membership.branch?.name || m.shell.noBranch}
+                  {membership.organization?.name || "-"} — {membership.branch?.name || tShell("noBranch")}
                 </div>
 
                 {membership.permissions && membership.permissions.length > 0 ? (
@@ -273,7 +326,7 @@ export function ErpShell({ locale, currentUser }: ErpShellProps) {
                         <code style={{ fontFamily: "monospace", fontWeight: 600 }}>{perm.key}</code>
                         {perm.scope && (
                           <span style={{ color: "#6B7280", marginLeft: "0.5rem" }}>
-                            ({m.shell.scope}: {perm.scope})
+                            ({tShell("scope")}: {perm.scope})
                           </span>
                         )}
                       </li>

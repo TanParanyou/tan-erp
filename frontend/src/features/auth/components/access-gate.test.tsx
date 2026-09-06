@@ -54,7 +54,7 @@ describe("AccessGate Component", () => {
 
   it("1. renders loading status with aria-busy while Firebase session is resolving", () => {
     render(
-      <AccessGate locale="th">
+      <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
     );
@@ -66,7 +66,7 @@ describe("AccessGate Component", () => {
 
   it("2. redirects to /th/login when no Firebase session exists", async () => {
     render(
-      <AccessGate locale="th">
+      <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
     );
@@ -90,7 +90,7 @@ describe("AccessGate Component", () => {
     };
 
     render(
-      <AccessGate locale="th">
+      <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
     );
@@ -118,7 +118,7 @@ describe("AccessGate Component", () => {
     };
 
     render(
-      <AccessGate locale="th">
+      <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
     );
@@ -146,7 +146,7 @@ describe("AccessGate Component", () => {
     };
 
     render(
-      <AccessGate locale="th">
+      <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
     );
@@ -174,7 +174,7 @@ describe("AccessGate Component", () => {
     };
 
     render(
-      <AccessGate locale="th">
+      <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
     );
@@ -203,7 +203,7 @@ describe("AccessGate Component", () => {
     };
 
     render(
-      <AccessGate locale="th">
+      <AccessGate>
         {() => <div>Protected Content</div>}
       </AccessGate>
     );
@@ -243,7 +243,7 @@ describe("AccessGate Component", () => {
     };
 
     render(
-      <AccessGate locale="th">
+      <AccessGate>
         {(currentUser) => (
           <div data-testid="protected-content">
             Welcome {currentUser.user?.displayName}

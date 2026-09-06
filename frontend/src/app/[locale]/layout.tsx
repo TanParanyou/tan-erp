@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
-import { isSupportedLocale, supportedLocales } from "@/lib/i18n/locales";
+import { setRequestLocale, getMessages } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { routing } from "@/i18n/routing";
 
 export function generateStaticParams() {
-  return supportedLocales.map((locale) => ({ locale }));
+  return routing.locales.map((locale) => ({ locale }));
 }
 
 interface LocaleLayoutProps {
@@ -16,9 +18,16 @@ export default async function LocaleLayout({
 }: LocaleLayoutProps) {
   const { locale } = await params;
 
-  if (!isSupportedLocale(locale)) {
+  if (!routing.locales.includes(locale as "th" | "en")) {
     notFound();
   }
 
-  return <>{children}</>;
+  setRequestLocale(locale);
+  const messages = await getMessages();
+
+  return (
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      {children}
+    </NextIntlClientProvider>
+  );
 }

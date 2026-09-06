@@ -15,6 +15,8 @@
     "emailRequired": "กรุณากรอกอีเมล",
     "emailInvalid": "รูปแบบอีเมลไม่ถูกต้อง",
     "passwordRequired": "กรุณากรอกรหัสผ่าน",
+    "invalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+    "signInFailed": "เกิดข้อผิดพลาดในการเข้าสู่ระบบ",
     "logout": "ออกจากระบบ"
   },
   "gate": {
@@ -37,7 +39,9 @@
     "noBranch": "ไม่ระบุสาขา (ระดับองค์กร)",
     "switchLanguage": "English",
     "home": "หน้าหลัก",
-    "scope": "ขอบเขต"
+    "scope": "ขอบเขต",
+    "toggleMenu": "เปิด/ปิดเมนู",
+    "closeMenu": "ปิดเมนู"
   },
   "common": {
     "actions": {
@@ -65,7 +69,9 @@
       "submit": "ส่งข้อมูล",
       "approve": "อนุมัติ",
       "reject": "ปฏิเสธ",
-      "void": "ยกเลิกเอกสาร"
+      "void": "ยกเลิกเอกสาร",
+      "saveChanges": "บันทึกการเปลี่ยนแปลง",
+      "clearSelection": "ล้างค่าที่เลือก"
     },
     "status": {
       "active": "ใช้งานอยู่",
@@ -89,9 +95,14 @@
       "unsavedChanges": "คุณมีข้อมูลที่ยังไม่ได้บันทึก",
       "unsavedChangesWarning": "มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการออกจากหน้านี้หรือไม่?",
       "noData": "ไม่พบข้อมูล",
-      "noResults": "ไม่พบผลการค้นหา"
+      "noResults": "ไม่พบผลการค้นหา",
+      "fileTooLarge": "ขนาดไฟล์เกินกำหนด",
+      "invalidFileType": "ประเภทไฟล์ไม่ถูกต้อง",
+      "processingError": "เกิดข้อผิดพลาดในการประมวลผล"
     },
     "dialog": {
+      "confirmTitle": "ยืนยันการดำเนินการ",
+      "confirmGenericDesc": "คุณแน่ใจหรือไม่ว่าต้องการดำเนินการนี้?",
       "confirmDeleteTitle": "ยืนยันการลบข้อมูล",
       "confirmDeleteDesc": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
       "confirmCancelTitle": "ละทิ้งการเปลี่ยนแปลง",
@@ -102,7 +113,10 @@
       "searchPlaceholder": "พิมพ์เพื่อค้นหา...",
       "notesPlaceholder": "ระบุหมายเหตุเพิ่มเติม (ถ้ามี)...",
       "optional": "(ไม่บังคับ)",
-      "required": "(จำเป็น)"
+      "required": "(จำเป็น)",
+      "showPassword": "แสดงรหัสผ่าน",
+      "hidePassword": "ซ่อนรหัสผ่าน",
+      "unspecified": "-- ไม่ระบุ --"
     },
     "validation": {
       "required": "กรุณากรอกข้อมูลในช่องนี้",
@@ -117,8 +131,14 @@
       "of": "จาก",
       "total": "รวมทั้งหมด",
       "showing": "กำลังแสดง",
+      "items": "รายการ",
+      "itemsPerPage": "รายการ/หน้า",
       "previous": "ก่อนหน้า",
       "next": "ถัดไป",
+      "firstPage": "หน้าแรก",
+      "lastPage": "หน้าสุดท้าย",
+      "selectAll": "เลือกทั้งหมดในหน้านี้",
+      "selectRow": "เลือกรายการแถวที่",
       "emptyTable": "ไม่มีรายการข้อมูลแสดงในตาราง"
     },
     "fields": {
@@ -136,7 +156,7 @@
       "date": "วันที่"
     },
     "states": {
-      "loading": "กำลังโหลด...",
+      "loading": "กำลังโหลดข้อมูล...",
       "processing": "กำลังประมวลผล...",
       "saving": "กำลังบันทึก...",
       "deleting": "กำลังลบ...",

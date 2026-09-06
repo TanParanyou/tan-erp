@@ -5,17 +5,18 @@ import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import { subscribeToAuthChanges, signOutSession } from "@/lib/auth/auth-session";
 import { useCurrentUser } from "@/features/auth/api/current-user-query";
-import { getMessages, type SupportedLocale } from "@/lib/i18n/locales";
+import { useTranslations, useLocale } from "next-intl";
 import { ApiError } from "@/lib/api/api-error";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 
 interface AccessGateProps {
-  locale: SupportedLocale;
   children: (currentUser: CurrentUserResponse) => React.ReactNode;
 }
 
-export function AccessGate({ locale, children }: AccessGateProps) {
-  const m = getMessages(locale);
+export function AccessGate({ children }: AccessGateProps) {
+  const tGate = useTranslations("gate");
+  const tAuth = useTranslations("auth");
+  const locale = useLocale();
   const router = useRouter();
   const [firebaseUser, setFirebaseUser] = useState<User | null | undefined>(undefined);
 
@@ -31,7 +32,7 @@ export function AccessGate({ locale, children }: AccessGateProps) {
     isLoading: isProfileLoading,
     error,
     refetch,
-  } = useCurrentUser(firebaseUser?.uid, locale);
+  } = useCurrentUser(firebaseUser?.uid, locale === "en" ? "en" : "th");
 
   const apiError = error instanceof ApiError ? error : null;
   const errorCode = apiError?.code;
@@ -70,7 +71,7 @@ export function AccessGate({ locale, children }: AccessGateProps) {
           fontWeight: 500,
         }}
       >
-        {m.gate.authLoading}
+        {tGate("authLoading")}
       </div>
     );
   }
@@ -105,7 +106,7 @@ export function AccessGate({ locale, children }: AccessGateProps) {
           }}
         />
         <span style={{ fontSize: "1rem", color: "#4B5563" }}>
-          {m.gate.profileLoading}
+          {tGate("profileLoading")}
         </span>
       </div>
     );
@@ -133,10 +134,10 @@ export function AccessGate({ locale, children }: AccessGateProps) {
           }}
         >
           <h2 style={{ color: "#B45309", fontSize: "1.25rem", marginTop: 0 }}>
-            {m.gate.noMembershipTitle}
+            {tGate("noMembershipTitle")}
           </h2>
           <p style={{ color: "#78350F", lineHeight: 1.5 }}>
-            {m.gate.noMembershipDetail}
+            {tGate("noMembershipDetail")}
           </p>
           <div style={{ marginTop: "1.5rem" }}>
             <button
@@ -152,7 +153,7 @@ export function AccessGate({ locale, children }: AccessGateProps) {
                 borderRadius: 0,
               }}
             >
-              {m.auth.logout}
+              {tAuth("logout")}
             </button>
           </div>
         </div>
@@ -174,10 +175,10 @@ export function AccessGate({ locale, children }: AccessGateProps) {
           }}
         >
           <h2 style={{ color: "#991B1B", fontSize: "1.25rem", marginTop: 0 }}>
-            {m.gate.userDisabledTitle}
+            {tGate("userDisabledTitle")}
           </h2>
           <p style={{ color: "#7F1D1D", lineHeight: 1.5 }}>
-            {m.gate.userDisabledDetail}
+            {tGate("userDisabledDetail")}
           </p>
           <div style={{ marginTop: "1.5rem" }}>
             <button
@@ -193,7 +194,7 @@ export function AccessGate({ locale, children }: AccessGateProps) {
                 borderRadius: 0,
               }}
             >
-              {m.auth.logout}
+              {tAuth("logout")}
             </button>
           </div>
         </div>
@@ -214,14 +215,14 @@ export function AccessGate({ locale, children }: AccessGateProps) {
         }}
       >
         <h2 style={{ color: "#DC2626", fontSize: "1.25rem", marginTop: 0 }}>
-          {m.gate.serverErrorTitle}
+          {tGate("serverErrorTitle")}
         </h2>
         <p style={{ color: "#4B5563", lineHeight: 1.5 }}>
-          {apiError?.message || m.gate.serverErrorDetail}
+          {apiError?.message || tGate("serverErrorDetail")}
         </p>
         {apiError?.traceId && (
           <p style={{ fontSize: "0.8125rem", color: "#6B7280", fontFamily: "monospace" }}>
-            {m.gate.traceId}
+            {tGate("traceId")}
             {apiError.traceId}
           </p>
         )}
@@ -239,7 +240,7 @@ export function AccessGate({ locale, children }: AccessGateProps) {
               borderRadius: 0,
             }}
           >
-            {m.gate.retry}
+            {tGate("retry")}
           </button>
           <button
             onClick={() => signOutSession().then(() => router.push(`/${locale}/login`))}
@@ -254,7 +255,7 @@ export function AccessGate({ locale, children }: AccessGateProps) {
               borderRadius: 0,
             }}
           >
-            {m.auth.logout}
+            {tAuth("logout")}
           </button>
         </div>
       </div>

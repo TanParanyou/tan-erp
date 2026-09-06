@@ -47,7 +47,7 @@ const mockCurrentUser: CurrentUserResponse = {
 
 describe("ErpShell Component", () => {
   it("renders Organization, Branch, User details and permissions accurately", () => {
-    render(<ErpShell locale="th" currentUser={mockCurrentUser} />);
+    render(<ErpShell currentUser={mockCurrentUser} />);
 
     expect(screen.getByTestId("org-name").textContent).toBe("TEST_ONLY Project ERP");
     expect(screen.getByTestId("branch-name").textContent).toBe("สาขาทดสอบ");
@@ -56,7 +56,7 @@ describe("ErpShell Component", () => {
   });
 
   it("has interactive controls with at least 44px touch targets", () => {
-    render(<ErpShell locale="th" currentUser={mockCurrentUser} />);
+    render(<ErpShell currentUser={mockCurrentUser} />);
 
     const languageLink = screen.getByRole("link", { name: /Switch to English/i });
     const logoutButton = screen.getByRole("button", { name: "ออกจากระบบ" });
@@ -66,11 +66,24 @@ describe("ErpShell Component", () => {
   });
 
   it("calls signOutSession and navigates to login when sign out clicked", async () => {
-    render(<ErpShell locale="th" currentUser={mockCurrentUser} />);
+    render(<ErpShell currentUser={mockCurrentUser} />);
 
     const logoutButton = screen.getByRole("button", { name: "ออกจากระบบ" });
     fireEvent.click(logoutButton);
 
     expect(signOutSession).toHaveBeenCalled();
+  });
+
+  it("toggles mobile navigation menu when hamburger button is clicked", () => {
+    render(<ErpShell currentUser={mockCurrentUser} />);
+
+    const menuButton = screen.getByRole("button", { name: "เปิด/ปิดเมนู" });
+    expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.click(menuButton);
+    expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(menuButton);
+    expect(menuButton.getAttribute("aria-expanded")).toBe("false");
   });
 });

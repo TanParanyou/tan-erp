@@ -1,0 +1,626 @@
+/* Atelier Architectural Navy Sharp - Centralized ERP Design System */
+
+:root {
+  /* Navy Brand Tokens */
+  --erp-navy: #0B3056;
+  --erp-navy-hover: #082442;
+  --erp-navy-light: #EBF3FA;
+  --erp-navy-border: #0B3056;
+
+  /* Neutral Surface & Canvas */
+  --erp-canvas: #F9FAFB;
+  --erp-surface: #FFFFFF;
+  --erp-surface-muted: #F3F4F6;
+  --erp-border: #D1D5DB;
+  --erp-border-subtle: #E5E7EB;
+
+  /* Typography Colors */
+  --erp-text-main: #111827;
+  --erp-text-body: #374151;
+  --erp-text-muted: #6B7280;
+  --erp-text-on-navy: #FFFFFF;
+
+  /* Status Colors */
+  --erp-success: #16A34A;
+  --erp-success-bg: #F0FDF4;
+  --erp-warning: #D97706;
+  --erp-warning-bg: #FFFBEB;
+  --erp-danger: #DC2626;
+  --erp-danger-bg: #FEF2F2;
+  --erp-info: #2563EB;
+  --erp-info-bg: #EFF6FF;
+
+  /* Architectural Constraints */
+  --erp-radius: 0px;
+  --erp-min-touch: 44px;
+  --erp-focus-ring: 2px solid var(--erp-navy);
+}
+
+/* ==========================================================================
+   Base Buttons (.erp-btn)
+   ========================================================================== */
+.erp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--erp-min-touch);
+  padding: 0.5rem 1rem;
+  border-radius: 0 !important;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  cursor: pointer;
+  text-decoration: none;
+  background: transparent;
+  color: var(--erp-text-main);
+  transition: background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.erp-btn:focus-visible {
+  outline: 2px solid var(--erp-navy);
+  outline-offset: 2px;
+}
+
+.erp-btn:disabled,
+.erp-btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Button Variants */
+.erp-btn-primary {
+  background-color: var(--erp-navy);
+  color: var(--erp-text-on-navy);
+  border-color: var(--erp-navy);
+}
+.erp-btn-primary:hover:not(:disabled) {
+  background-color: var(--erp-navy-hover);
+  border-color: var(--erp-navy-hover);
+}
+
+.erp-btn-secondary {
+  background-color: var(--erp-surface-muted);
+  color: var(--erp-text-main);
+  border-color: var(--erp-border);
+}
+.erp-btn-secondary:hover:not(:disabled) {
+  background-color: #E5E7EB;
+  border-color: #9CA3AF;
+}
+
+.erp-btn-danger {
+  background-color: var(--erp-danger);
+  color: #FFFFFF;
+  border-color: var(--erp-danger);
+}
+.erp-btn-danger:hover:not(:disabled) {
+  background-color: #B91C1C;
+  border-color: #B91C1C;
+}
+
+.erp-btn-outline {
+  background-color: var(--erp-surface);
+  color: var(--erp-text-main);
+  border-color: var(--erp-border);
+}
+.erp-btn-outline:hover:not(:disabled) {
+  background-color: var(--erp-surface-muted);
+  border-color: var(--erp-text-muted);
+}
+
+.erp-btn-ghost {
+  background-color: transparent;
+  color: var(--erp-text-body);
+  border-color: transparent;
+}
+.erp-btn-ghost:hover:not(:disabled) {
+  background-color: var(--erp-surface-muted);
+  color: var(--erp-text-main);
+}
+
+/* Button Sizes */
+.erp-btn-sm {
+  min-height: 36px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.erp-btn-md {
+  min-height: var(--erp-min-touch);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.erp-btn-lg {
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.erp-btn-icon {
+  min-height: var(--erp-min-touch);
+  min-width: var(--erp-min-touch);
+  padding: 0.5rem;
+}
+
+/* ==========================================================================
+   Form Inputs & Controls (.erp-input, .erp-select, .erp-textarea)
+   ========================================================================== */
+.erp-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.erp-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--erp-text-main);
+}
+
+.erp-label-required {
+  color: var(--erp-danger);
+}
+
+.erp-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.erp-input,
+.erp-select,
+.erp-textarea {
+  width: 100%;
+  border-radius: 0 !important;
+  border: 1px solid var(--erp-border);
+  background-color: var(--erp-surface);
+  color: var(--erp-text-main);
+  font-family: inherit;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  transition: border-color 150ms ease, outline-color 150ms ease;
+}
+
+.erp-input {
+  min-height: var(--erp-min-touch);
+  padding: 0.5rem 0.75rem;
+}
+
+.erp-select {
+  min-height: var(--erp-min-touch);
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234B5563' stroke-width='2' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+
+.erp-textarea {
+  min-height: 80px;
+  padding: 0.625rem 0.75rem;
+  resize: vertical;
+}
+
+.erp-input:focus,
+.erp-select:focus,
+.erp-textarea:focus {
+  outline: 2px solid var(--erp-navy);
+  outline-offset: 1px;
+  border-color: var(--erp-navy);
+}
+
+.erp-input-error,
+.erp-input-error:focus,
+.erp-select-error,
+.erp-select-error:focus,
+.erp-textarea-error,
+.erp-textarea-error:focus {
+  border-color: var(--erp-danger);
+  outline-color: var(--erp-danger);
+}
+
+.erp-input:disabled,
+.erp-select:disabled,
+.erp-textarea:disabled,
+.erp-input-readonly,
+.erp-textarea-readonly {
+  background-color: var(--erp-surface-muted);
+  color: var(--erp-text-muted);
+  border-color: var(--erp-border);
+  cursor: not-allowed;
+}
+
+.erp-input-readonly,
+.erp-textarea-readonly {
+  cursor: default;
+}
+
+.erp-helper-text {
+  font-size: 0.75rem;
+  color: var(--erp-text-muted);
+  margin-top: 0.25rem;
+}
+
+.erp-error-text {
+  font-size: 0.75rem;
+  color: var(--erp-danger);
+  margin-top: 0.25rem;
+}
+
+/* Checkbox & Switch */
+.erp-checkbox-label,
+.erp-switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--erp-text-main);
+  cursor: pointer;
+  user-select: none;
+  min-height: 32px;
+}
+
+.erp-checkbox-label-disabled,
+.erp-switch-label-disabled {
+  opacity: 0.55;
+  cursor: not-allowed !important;
+}
+
+.erp-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 0 !important;
+  border: 1.5px solid var(--erp-border);
+  background-color: var(--erp-surface);
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: background-color 120ms ease, border-color 120ms ease;
+  margin: 0;
+}
+
+.erp-checkbox:checked {
+  background-color: var(--erp-navy);
+  border-color: var(--erp-navy);
+}
+
+.erp-checkbox:checked::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #FFFFFF;
+  border-bottom: 2px solid #FFFFFF;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.erp-checkbox:indeterminate {
+  background-color: var(--erp-navy);
+  border-color: var(--erp-navy);
+}
+
+.erp-checkbox:indeterminate::after {
+  content: "";
+  width: 8px;
+  height: 2px;
+  background-color: #FFFFFF;
+}
+
+.erp-checkbox:focus-visible {
+  outline: 2px solid var(--erp-navy);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Table (.erp-table-wrapper, .erp-table, .erp-th, .erp-td)
+   ========================================================================== */
+.erp-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--erp-border);
+  background-color: var(--erp-surface);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.erp-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.erp-th {
+  background-color: var(--erp-surface-muted);
+  color: var(--erp-text-main);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--erp-border);
+  white-space: nowrap;
+}
+
+.erp-th-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.erp-th-sortable:hover {
+  background-color: #E5E7EB;
+}
+
+.erp-td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--erp-border-subtle);
+  color: var(--erp-text-body);
+  vertical-align: middle;
+}
+
+.erp-tr:hover .erp-td {
+  background-color: #F9FAFB;
+}
+
+.erp-tr-selected .erp-td {
+  background-color: var(--erp-navy-light) !important;
+}
+
+/* ==========================================================================
+   Status Badges (.erp-badge)
+   ========================================================================== */
+.erp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0 !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+
+.erp-badge-success {
+  background-color: var(--erp-success-bg);
+  color: var(--erp-success);
+  border-color: #BBF7D0;
+}
+
+.erp-badge-warning {
+  background-color: var(--erp-warning-bg);
+  color: var(--erp-warning);
+  border-color: #FDE68A;
+}
+
+.erp-badge-danger {
+  background-color: var(--erp-danger-bg);
+  color: var(--erp-danger);
+  border-color: #FECACA;
+}
+
+.erp-badge-info {
+  background-color: var(--erp-info-bg);
+  color: var(--erp-info);
+  border-color: #BFDBFE;
+}
+
+.erp-badge-neutral {
+  background-color: var(--erp-surface-muted);
+  color: var(--erp-text-body);
+  border-color: var(--erp-border);
+}
+
+/* ==========================================================================
+   Cards, Panels & Containers (.erp-card)
+   ========================================================================== */
+.erp-card {
+  background-color: var(--erp-surface);
+  border: 1px solid var(--erp-border);
+  border-radius: 0 !important;
+  padding: 1.5rem;
+}
+
+.erp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--erp-border-subtle);
+}
+
+.erp-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--erp-text-main);
+}
+
+/* ==========================================================================
+   Overlays (Modals & Drawers)
+   ========================================================================== */
+.erp-modal-overlay,
+.erp-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(11, 48, 86, 0.45);
+  backdrop-filter: blur(1px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.erp-modal-window {
+  background-color: var(--erp-surface);
+  border: 1px solid var(--erp-border);
+  border-radius: 0 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.erp-drawer-window {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--erp-surface);
+  border-left: 1px solid var(--erp-border);
+  border-radius: 0 !important;
+  box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+/* ==========================================================================
+   Form Sticky Action Bar (.erp-action-bar)
+   ========================================================================== */
+.erp-action-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--erp-surface);
+  border-top: 1px solid var(--erp-border);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  z-index: 100;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.erp-action-bar-dirty-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--erp-warning);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Responsive Adaptations & Mobile Drawer/Sidebar Layout
+   ========================================================================== */
+.erp-mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+  padding: 0.5rem;
+  min-height: var(--erp-min-touch);
+  min-width: var(--erp-min-touch);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.erp-header-context-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.erp-sidebar {
+  width: 220px;
+  background-color: var(--erp-surface);
+  border-right: 1px solid var(--erp-border-subtle);
+  padding: 1rem 0;
+  flex-shrink: 0;
+}
+
+.erp-main-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  min-width: 0;
+  width: 100%;
+}
+
+.erp-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .erp-mobile-menu-btn {
+    display: inline-flex;
+  }
+
+  .erp-header-context-info {
+    display: none;
+  }
+
+  .erp-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    z-index: 1050;
+    box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.2);
+    transform: translateX(-100%);
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .erp-sidebar-open {
+    transform: translateX(0);
+  }
+
+  .erp-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(11, 48, 86, 0.45);
+    backdrop-filter: blur(1px);
+    z-index: 1040;
+  }
+
+  .erp-main-content {
+    padding: 1rem;
+  }
+
+  .erp-action-bar {
+    padding: 0.75rem 1rem;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .erp-action-bar > div:last-child {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .erp-action-bar > div:last-child > * {
+    flex: 1;
+  }
+
+  .erp-modal-window {
+    width: 95vw !important;
+    margin: 0.5rem;
+  }
+
+  .erp-drawer-window {
+    width: 100vw !important;
+  }
+}

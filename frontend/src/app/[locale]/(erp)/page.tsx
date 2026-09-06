@@ -4,7 +4,7 @@ import React, { use } from "react";
 import { notFound } from "next/navigation";
 import { AccessGate } from "@/features/auth";
 import { ErpShell } from "@/components/layout/erp-shell";
-import { isSupportedLocale, type SupportedLocale } from "@/lib/i18n/locales";
+import { isSupportedLocale } from "@/lib/i18n/locales";
 
 interface ErpHomePageProps {
   params: Promise<{ locale: string }>;
@@ -18,9 +18,9 @@ export default function ErpHomePage({ params }: ErpHomePageProps) {
   }
 
   return (
-    <AccessGate locale={locale as SupportedLocale}>
+    <AccessGate>
       {(currentUser) => (
-        <ErpShell locale={locale as SupportedLocale} currentUser={currentUser} />
+        <ErpShell currentUser={currentUser} />
       )}
     </AccessGate>
   );

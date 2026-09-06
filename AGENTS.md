@@ -2,7 +2,14 @@
 
 ## Start here
 
-Read `CONTEXT.md` for canonical business terms and `docs/README.md` for the documentation map before changing this repository.
+> ⚠️ **กฎเหล็กก่อนเริ่มงาน (Mandatory Pre-work & Development Rules):**
+> - **ก่อนทำให้อ่าน `AGENTS.md` และ `design.md` เสมอ:** เพื่อเข้าใจกฎระเบียบของระบบ ข้อจำกัดทางสถาปัตยกรรม และมาตรฐาน Design System *Atelier Architectural Navy Sharp*
+> - **ห้ามใช้ type `any`, `as any` หรือ `@ts-ignore` เด็ดขาด:** ให้ใช้ strict types, interfaces หรือ `unknown` แล้ว narrow อย่างรัดกุม
+> - **ห้าม Hardcode ข้อความและค่าคงที่:** ข้อความที่แสดงบนหน้าจอทั้งหมดต้องดึงผ่านระบบแปลภาษา (i18n) เสมอ
+> - **แปลภาษาให้ครบทั้งสองภาษา (`th` และ `en`):** ภาษาไทยเป็นค่าเริ่มต้น และต้องมีคู่เทียบภาษาอังกฤษเสมอใน `messages/` (`th.json` และ `en.json`) ห้ามตกหล่น
+> - **Reuse First & Global Reuse Proposal:** ส่วนไหนที่มี components, hooks, หรือ functions กลางอยู่แล้วให้นำมาใช้เสมอ หากไม่มี ให้เสนอแนะในการทำ Global Reuse แก่ผู้ใช้ก่อนเริ่มลงมือสร้าง
+
+อ่าน `CONTEXT.md` สำหรับคำศัพท์ธุรกิจที่เป็นทางการ และ `docs/README.md` สำหรับแผนที่เอกสารทั้งหมดก่อนเริ่มแก้ไขโค้ดใน Repository นี้
 
 ## Current phase
 
@@ -20,16 +27,18 @@ This repository is in **Application Implementation**. The authorized implementat
 ## 1. Language & Communication (ภาษาและการสื่อสาร)
 
 - **ตอบกลับผู้ใช้เป็นภาษาไทยเสมอ** ทุกครั้งโดยไม่มีข้อยกเว้น
+- **ห้าม Hardcode ข้อความบน UI:** ข้อความทั้งหมดต้องดึงผ่านระบบ i18n จาก `messages/th.json` และ `messages/en.json`
+- **แปลภาษาให้ครบถ้วน:** เมื่อเพิ่มข้อความใหม่ ต้องเพิ่มทั้งภาษาไทย (`th`) และภาษาอังกฤษ (`en`) ให้ครบทุกคู่เสมอ
 - Comment ในโค้ดใช้ **ภาษาอังกฤษ** (ยกเว้น Business Logic เฉพาะทางที่ซับซ้อน สามารถใช้ภาษาไทยกำกับได้)
 - ชื่อตัวแปร, Function, Method, Class, DTO, Type และ Interface ใช้ **ภาษาอังกฤษ** เสมอตามแบบแผนสากล
 
 ---
 
-## 2. Reuse First Policy (ใช้ของเดิมก่อนเสมอ)
+## 2. Reuse First Policy (ใช้ของเดิมก่อนเสมอ & Global Reuse)
 
-- **ค้นหาก่อนเขียนใหม่:** ก่อนสร้าง Component, Hook, Helper, Utility function, DTO หรือ Service ใหม่ ให้ตรวจสอบในโปรเจกต์ก่อนเสมอว่ามีอยู่แล้วหรือไม่
+- **สำรวจของกลางก่อนเสมอ:** หากส่วนไหนที่มี Components, Hooks, Helper functions, หรือ Utility กลางอยู่แล้ว ให้นำมาใช้ทันที ห้ามเขียนโค้ดซ้ำซ้อน (No Duplicate Logic)
+- **เสนอแนะเพื่อทำ Global Reuse:** หากจำเป็นต้องสร้างฟังก์ชัน, Hook หรือ Component ที่ยังไม่มีในระบบ และมีโอกาสนำไปใช้ซ้ำในจุดอื่นได้ ให้เสนอแนะแนวทางการทำเป็น Global Reusable แก่ผู้ใช้ทราบก่อนลงมือสร้าง
 - **ห้าม Duplicate Logic:** หากมีโค้ดหรือคอมโพเนนต์ที่ทำงานใกล้เคียงกัน ให้พิจารณา Reuse หรือ Extend จากของเดิม
-- **ต้องเสนอขอสร้างใหม่:** หากจำเป็นต้องสร้าง Component / Hook / Utility ใหม่ที่ยังไม่มีในระบบ ให้แจ้งเหตุผลและโครงสร้างให้ผู้ใช้ทราบก่อนลงมือสร้าง
 
 ---
 
@@ -68,7 +77,7 @@ This repository is in **Application Implementation**. The authorized implementat
 
 ## 6. ERP Form & UX Standards (Atelier Architectural Navy Sharp)
 
-> ศึกษาคู่มือละเอียดเพิ่มเติมได้ที่ `.agents/skills/building-erp-forms/SKILL.md`
+> ศึกษาคู่มือละเอียดเพิ่มเติมได้ที่ `.agents/skills/building-erp-forms/SKILL.md` และข้อกำหนดด้านการออกแบบที่ `design.md`
 
 - **Visual Theme:** ยึดมั่นตาม **Atelier Architectural Navy Sharp**
   - `border-radius: 0px !important` (คม เหลี่ยม ปราศจากความโค้งมน)
@@ -99,6 +108,7 @@ This repository is in **Application Implementation**. The authorized implementat
 - ทุก Error Response ต้องเป็นไปตาม RFC 7807 Problem Details
 
 ### Frontend (Next.js App Router + TypeScript)
+- **Strict TypeScript:** ห้ามใช้ type `any`, `as any` หรือ `@ts-ignore` เด็ดขาด กำหนด DTO / Interface ให้ครบถ้วน หรือใช้ `unknown` แล้ว narrow
 - จัดโครงสร้างตาม Business Feature (`src/features/<feature>/`)
 - TanStack Query เป็นเจ้าของ Server State; ห้าม fetch API ใน `useEffect` โดยตรง
 - ห้ามเรียก Database ตรงจาก Frontend Code; ทุกอย่างต้องผ่าน API Client

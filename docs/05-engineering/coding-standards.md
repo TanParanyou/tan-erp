@@ -6,7 +6,8 @@
 
 ## หลักทั่วไป
 
-- **Reuse First Policy:** ค้นหา Component, Hook, Helper, Utility, DTO หรือ Service ในระบบก่อนสร้างใหม่เสมอ ห้าม Duplicate Logic
+- **อ่านเอกสารหลักก่อนเริ่มงาน:** อ่าน `AGENTS.md` และ `design.md` ก่อนลงมือทำทุกครั้ง เพื่อเข้าใจสถาปัตยกรรมและข้อกำหนดของ Design System
+- **Reuse First & Global Reuse:** ค้นหา Component, Hook, Helper, Utility, DTO หรือ Service ในระบบก่อนสร้างใหม่เสมอ หากไม่มีและมีโอกาสใช้ซ้ำ ให้เสนอแนะในการทำ Global Reuse แก่ผู้ใช้ก่อนลงมือสร้าง
 - **Minimal Blast Radius:** แตะเฉพาะไฟล์ที่เกี่ยวกับ Task โดยตรง ห้ามแตะต้องหรือ Reformat ไฟล์นอกขอบเขตงาน
 - ชื่อใน Code ตรงกับ `CONTEXT.md` และ Module Boundary
 - File หนึ่งมีความรับผิดชอบหลักหนึ่งเรื่อง; เก็บไฟล์ที่เปลี่ยนพร้อมกันไว้ใกล้กัน
@@ -26,6 +27,8 @@
 
 ## Frontend
 
+- **Strict TypeScript:** ห้ามใช้ type `any`, `as any` หรือ `@ts-ignore` กำหนด Type ให้ชัดเจน หรือใช้ `unknown` แล้ว narrow
+- **No Hardcoding & Complete i18n:** ห้าม Hardcode ข้อความบน UI และต้องแปลภาษาให้ครบถ้วนทั้งไทย (`th`) และอังกฤษ (`en`) ใน `messages/` เสมอ
 - Route ประกอบ Page; Business UI อยู่ใน Feature
 - Central API Client เป็นทางออก HTTP เดียว
 - Server State อยู่ TanStack Query; Form State อยู่ใกล้ Form

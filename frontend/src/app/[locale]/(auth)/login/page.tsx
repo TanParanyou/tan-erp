@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { LoginForm } from "@/features/auth";
-import { isSupportedLocale, type SupportedLocale } from "@/lib/i18n/locales";
+import { isSupportedLocale } from "@/lib/i18n/locales";
 
 interface LoginPageProps {
   params: Promise<{ locale: string }>;
@@ -24,7 +24,7 @@ export default async function LoginPage({ params }: LoginPageProps) {
         backgroundColor: "#F9FAFB",
       }}
     >
-      <LoginForm locale={locale as SupportedLocale} />
+      <LoginForm />
     </main>
   );
 }
