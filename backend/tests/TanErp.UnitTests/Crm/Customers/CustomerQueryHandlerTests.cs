@@ -1,0 +1,151 @@
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Models;
+using TanErp.Application.Common.Results;
+using TanErp.Application.Crm.Customers;
+using TanErp.Application.Crm.Customers.GetCustomer;
+using TanErp.Application.Crm.Customers.ListCustomers;
+using Xunit;
+
+namespace TanErp.UnitTests.Crm.Customers;
+
+public class CustomerQueryHandlerTests
+{
+    private class FakeRequestAccessResolver : IRequestAccessResolver
+    {
+        public HashSet<string> GrantedPermissions { get; } = new(StringComparer.Ordinal);
+        public Guid OrgId { get; set; } = Guid.NewGuid();
+        public Guid UserId { get; set; } = Guid.NewGuid();
+
+        public Task<Result<RequestAccessContext>> ResolveAsync(
+            string firebaseUid,
+            Guid membershipId,
+            string permissionKey,
+            CancellationToken cancellationToken = default)
+        {
+            if (GrantedPermissions.Contains(permissionKey))
+            {
+                return Task.FromResult(Result<RequestAccessContext>.Success(
+                    new RequestAccessContext(UserId, membershipId, OrgId, null, permissionKey, "organization")));
+            }
+
+            return Task.FromResult(Result<RequestAccessContext>.Failure(
+                new Error("PERMISSION_DENIED", "Permission denied.")));
+        }
+    }
+
+    private class FakeCustomerReadStore : ICustomerReadStore
+    {
+        public CustomerProjection? SingleResult { get; set; }
+        public CustomerPage ListResult { get; set; } = new(Array.Empty<CustomerProjection>(), null);
+        public CustomerListFilter? LastListFilter { get; private set; }
+        public bool? LastIncludePii { get; private set; }
+
+        public Task<CustomerPage> ListAsync(
+            Guid organizationId,
+            CustomerListFilter filter,
+            bool includeContactPii,
+            CancellationToken cancellationToken = default)
+        {
+            LastListFilter = filter;
+            LastIncludePii = includeContactPii;
+            return Task.FromResult(ListResult);
+        }
+
+        public Task<CustomerProjection?> GetAsync(
+            Guid organizationId,
+            Guid customerId,
+            bool includeContactPii,
+            CancellationToken cancellationToken = default)
+        {
+            LastIncludePii = includeContactPii;
+            return Task.FromResult(SingleResult);
+        }
+    }
+
+    [Fact]
+    public async Task ListCustomers_WhenMissingCustomersRead_ReturnsPermissionDenied()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        var store = new FakeCustomerReadStore();
+        var handler = new ListCustomersHandler(resolver, store);
+
+        var query = new ListCustomersQuery("uid-1", Guid.NewGuid());
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PERMISSION_DENIED", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task ListCustomers_WhenMalformedCursor_ReturnsCustomerCursorInvalid()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.read");
+        var store = new FakeCustomerReadStore();
+        var handler = new ListCustomersHandler(resolver, store);
+
+        var query = new ListCustomersQuery("uid-1", Guid.NewGuid(), Cursor: "invalid-not-base64!!!");
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("CUSTOMER_CURSOR_INVALID", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task ListCustomers_WhenValidWithoutManagePermission_CallsStoreWithIncludePiiFalse()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.read");
+        var store = new FakeCustomerReadStore();
+        var handler = new ListCustomersHandler(resolver, store);
+
+        var query = new ListCustomersQuery("uid-1", Guid.NewGuid(), Search: "  บริษัท  ", Limit: 30);
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(store.LastIncludePii);
+        Assert.NotNull(store.LastListFilter);
+        Assert.Equal(30, store.LastListFilter.Limit);
+    }
+
+    [Fact]
+    public async Task GetCustomer_WhenCustomerNotFound_ReturnsResourceNotFound()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.read");
+        var store = new FakeCustomerReadStore();
+        store.SingleResult = null;
+        var handler = new GetCustomerHandler(resolver, store);
+
+        var query = new GetCustomerQuery("uid-1", Guid.NewGuid(), Guid.NewGuid());
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("RESOURCE_NOT_FOUND", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task GetCustomer_WhenFound_ReturnsCustomerResult()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.read");
+        resolver.GrantedPermissions.Add("customer-contacts.manage");
+        var customerId = Guid.NewGuid();
+
+        var store = new FakeCustomerReadStore();
+        store.SingleResult = new CustomerProjection(
+            customerId, "CUS-123456789012", "organization", "บริษัท ก", null, "th", "draft",
+            new CustomerContactProjection("คุณ ก", null, "+66812345678", null, "phone", IsMasked: false),
+            Guid.NewGuid(), DateTimeOffset.UtcNow);
+
+        var handler = new GetCustomerHandler(resolver, store);
+
+        var query = new GetCustomerQuery("uid-1", Guid.NewGuid(), customerId);
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(customerId, result.Value.Customer.Id);
+        Assert.True(store.LastIncludePii);
+    }
+}
