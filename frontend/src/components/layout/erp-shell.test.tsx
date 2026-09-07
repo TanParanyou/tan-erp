@@ -3,12 +3,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ErpShell } from "./erp-shell";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
+import { SelectedMembershipProvider } from "@/lib/membership/selected-membership-context";
 
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+  usePathname: () => "/th",
 }));
 
 vi.mock("@/lib/auth/auth-session", () => ({
@@ -39,7 +41,12 @@ const mockCurrentUser: CurrentUserResponse = {
       permissions: [
         {
           key: "organizations.read",
-          scope: "Organization",
+          scope: "organization",
+          scopeId: "20000000-0000-0000-0000-000000000001",
+        },
+        {
+          key: "customers.read",
+          scope: "organization",
           scopeId: "20000000-0000-0000-0000-000000000001",
         },
       ],
@@ -58,7 +65,13 @@ describe("ErpShell Component", () => {
   });
 
   const renderWithClient = (ui: React.ReactElement) =>
-    render(<QueryClientProvider client={testQueryClient}>{ui}</QueryClientProvider>);
+    render(
+      <QueryClientProvider client={testQueryClient}>
+        <SelectedMembershipProvider currentUser={mockCurrentUser}>
+          {ui}
+        </SelectedMembershipProvider>
+      </QueryClientProvider>
+    );
 
   it("renders Organization, Branch, User details and permissions accurately", () => {
     renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
@@ -67,6 +80,14 @@ describe("ErpShell Component", () => {
     expect(screen.getByTestId("branch-name").textContent).toBe("สาขาทดสอบ");
     expect(screen.getAllByText("สมชาย รักสงบ").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("organizations.read")).toBeDefined();
+  });
+
+  it("renders Customers navigation link when customers.read permission is present", () => {
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
+
+    const customerLink = screen.getByRole("link", { name: "ข้อมูลลูกค้า" });
+    expect(customerLink).toBeDefined();
+    expect(customerLink.getAttribute("href")).toBe("/th/customers");
   });
 
   it("has interactive controls with at least 44px touch targets", () => {

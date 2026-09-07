@@ -47,7 +47,8 @@
     "toggleTheme": "เปลี่ยนธีม",
     "lightMode": "โหมดสว่าง",
     "darkMode": "โหมดมืด",
-    "systemMode": "ตามระบบ"
+    "systemMode": "ตามระบบ",
+    "customers": "ข้อมูลลูกค้า"
   },
   "common": {
     "actions": {
@@ -168,5 +169,44 @@
       "deleting": "กำลังลบ...",
       "uploading": "กำลังอัปโหลด..."
     }
+  },
+  "customers": {
+    "title": "ข้อมูลลูกค้า",
+    "subtitle": "จัดการรายชื่อลูกค้าและผู้ติดต่อหลัก",
+    "createCustomer": "เพิ่มลูกค้าใหม่",
+    "editCustomer": "แก้ไขข้อมูลลูกค้า",
+    "customerDetail": "รายละเอียดลูกค้า",
+    "customerList": "รายชื่อลูกค้า",
+    "searchPlaceholder": "ค้นหาด้วยชื่อ รหัส หรือผู้ติดต่อ...",
+    "emptyTitle": "ไม่พบข้อมูลลูกค้า",
+    "emptyDetail": "ยังไม่มีข้อมูลลูกค้าในองค์กรนี้ หรือไม่ตรงกับเงื่อนไขการค้นหา",
+    "code": "รหัสลูกค้า",
+    "customerType": "ประเภทลูกค้า",
+    "corporate": "นิติบุคคล (Corporate)",
+    "individual": "บุคคลธรรมดา (Individual)",
+    "displayNameTh": "ชื่อลูกค้า (ภาษาไทย)",
+    "displayNameEn": "ชื่อลูกค้า (English)",
+    "preferredLocale": "ภาษาที่ต้องการติดต่อ",
+    "status": "สถานะ",
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน",
+    "primaryContact": "ผู้ติดต่อหลัก",
+    "contactName": "ชื่อผู้ติดต่อ",
+    "roleTitle": "ตำแหน่ง / แผนก",
+    "phone": "เบอร์โทรศัพท์",
+    "email": "อีเมล",
+    "preferredChannel": "ช่องทางติดต่อที่สะดวก",
+    "channelPhone": "โทรศัพท์ (Phone)",
+    "channelEmail": "อีเมล (Email)",
+    "channelLine": "LINE",
+    "channelOther": "อื่นๆ",
+    "duplicateCandidates": "รายชื่อที่อาจซ้ำซ้อนในระบบ",
+    "duplicateNotice": "พบข้อมูลลูกค้าที่มีเบอร์โทรหรืออีเมลใกล้เคียงกัน กรุณาตรวจสอบก่อนดำเนินการต่อ",
+    "backToList": "กลับหน้ารายการลูกค้า",
+    "saveSuccess": "บันทึกข้อมูลลูกค้าเรียบร้อยแล้ว",
+    "saveCustomer": "บันทึกข้อมูลลูกค้า",
+    "loadMore": "โหลดข้อมูลเพิ่มเติม",
+    "loadingMore": "กำลังโหลด...",
+    "noMoreItems": "แสดงข้อมูลทั้งหมดแล้ว"
   }
 }

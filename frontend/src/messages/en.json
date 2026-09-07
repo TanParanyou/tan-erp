@@ -47,7 +47,8 @@
     "toggleTheme": "Toggle theme",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
-    "systemMode": "System mode"
+    "systemMode": "System mode",
+    "customers": "Customers"
   },
   "common": {
     "actions": {
@@ -168,5 +169,44 @@
       "deleting": "Deleting...",
       "uploading": "Uploading..."
     }
+  },
+  "customers": {
+    "title": "Customers",
+    "subtitle": "Manage customers and primary contacts",
+    "createCustomer": "New Customer",
+    "editCustomer": "Edit Customer",
+    "customerDetail": "Customer Details",
+    "customerList": "Customer List",
+    "searchPlaceholder": "Search by name, code or contact...",
+    "emptyTitle": "No customers found",
+    "emptyDetail": "No customer records in this organization, or none match the search criteria.",
+    "code": "Customer Code",
+    "customerType": "Customer Type",
+    "corporate": "Corporate",
+    "individual": "Individual",
+    "displayNameTh": "Customer Name (Thai)",
+    "displayNameEn": "Customer Name (English)",
+    "preferredLocale": "Preferred Language",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "primaryContact": "Primary Contact",
+    "contactName": "Contact Name",
+    "roleTitle": "Role / Department",
+    "phone": "Phone Number",
+    "email": "Email",
+    "preferredChannel": "Preferred Channel",
+    "channelPhone": "Phone",
+    "channelEmail": "Email",
+    "channelLine": "LINE",
+    "channelOther": "Other",
+    "duplicateCandidates": "Potential Duplicate Customers",
+    "duplicateNotice": "Found customer records with matching phone or email. Please review carefully.",
+    "backToList": "Back to Customer List",
+    "saveSuccess": "Customer saved successfully",
+    "saveCustomer": "Save Customer",
+    "loadMore": "Load More",
+    "loadingMore": "Loading...",
+    "noMoreItems": "All items loaded"
   }
 }

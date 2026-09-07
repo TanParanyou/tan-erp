@@ -2,20 +2,32 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 import { signOutSession } from "@/lib/auth/auth-session";
 import { useTranslations, useLocale } from "next-intl";
-import { IconClose, IconMenu, IconHome, IconChevronLeft, IconChevronRight, IconLogOut, IconGlobe } from "@/components/common/Icons";
+import {
+  IconClose,
+  IconMenu,
+  IconHome,
+  IconUsers,
+  IconChevronLeft,
+  IconChevronRight,
+  IconLogOut,
+  IconGlobe,
+} from "@/components/common/Icons";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { can } from "@/lib/permissions/can";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 
 interface ErpShellProps {
   currentUser: CurrentUserResponse;
+  children?: React.ReactNode;
 }
 
-export function ErpShell({ currentUser }: ErpShellProps) {
+export function ErpShell({ currentUser, children }: ErpShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const tShell = useTranslations("shell");
@@ -23,13 +35,18 @@ export function ErpShell({ currentUser }: ErpShellProps) {
   const tApp = useTranslations("app");
   const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
+
+  const { selectedMembership } = useSelectedMembership();
 
   const user = currentUser.user;
   const memberships = currentUser.memberships || [];
-  const primaryMembership = memberships[0];
-  const orgName = primaryMembership?.organization?.name || "-";
-  const branchName = primaryMembership?.branch?.name || tShell("noBranch");
+  const activeMembership = selectedMembership || memberships[0];
+  const orgName = activeMembership?.organization?.name || "-";
+  const branchName = activeMembership?.branch?.name || tShell("noBranch");
+
+  const hasCustomersRead = can(activeMembership, "customers.read");
 
   const targetLocale = locale === "th" ? "en" : "th";
 
@@ -37,6 +54,9 @@ export function ErpShell({ currentUser }: ErpShellProps) {
     await signOutSession(queryClient);
     router.push(`/${locale}/login`);
   };
+
+  const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/`;
+  const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "var(--erp-canvas)" }}>
@@ -229,13 +249,26 @@ export function ErpShell({ currentUser }: ErpShellProps) {
               <Link
                 href={`/${locale}`}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="erp-nav-link erp-nav-link-active"
+                className={`erp-nav-link ${isHomeActive ? "erp-nav-link-active" : ""}`}
                 title={tShell("home")}
               >
                 <IconHome size={20} />
                 <span className="erp-nav-text">{tShell("home")}</span>
               </Link>
             </li>
+            {hasCustomersRead && (
+              <li>
+                <Link
+                  href={`/${locale}/customers`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`erp-nav-link ${isCustomersActive ? "erp-nav-link-active" : ""}`}
+                  title={tShell("customers")}
+                >
+                  <IconUsers size={20} />
+                  <span className="erp-nav-text">{tShell("customers")}</span>
+                </Link>
+              </li>
+            )}
           </ul>
 
           {/* Desktop Bottom Sidebar Collapse/Expand Toggle */}
@@ -257,117 +290,123 @@ export function ErpShell({ currentUser }: ErpShellProps) {
           role="main"
           className="erp-main-content"
         >
-          <div style={{ marginBottom: "1.75rem", borderBottom: "1px solid var(--erp-border)", paddingBottom: "1.25rem" }}>
-            <h1 style={{ fontSize: "1.625rem", fontWeight: 700, color: "var(--erp-navy)", margin: "0 0 0.375rem 0", letterSpacing: "-0.01em" }}>
-              {tApp("title")}
-            </h1>
-            <p style={{ fontSize: "0.9375rem", color: "var(--erp-text-muted)", margin: 0, lineHeight: 1.4 }}>
-              {tApp("subtitle")}
-            </p>
-          </div>
-
-          <div className="erp-dashboard-grid">
-            {/* User Profile and Context Card */}
-            <section
-              aria-labelledby="user-profile-heading"
-              className="erp-card"
-            >
-              <div className="erp-card-header">
-                <h2 id="user-profile-heading" className="erp-card-title">
-                  {tShell("user")}
-                </h2>
-                <span className="erp-badge erp-badge-success">ACTIVE</span>
-              </div>
-              <dl className="erp-dl">
-                <dt>ID:</dt>
-                <dd style={{ fontFamily: "monospace", fontSize: "0.8125rem" }}>{user?.id || "-"}</dd>
-
-                <dt>{tAuth("emailLabel")}:</dt>
-                <dd>{user?.email || "-"}</dd>
-
-                <dt>Name:</dt>
-                <dd style={{ fontWeight: 600 }}>{user?.displayName || "-"}</dd>
-              </dl>
-            </section>
-
-            {/* Memberships and Permissions Card */}
-            <section
-              aria-labelledby="permissions-heading"
-              className="erp-card"
-            >
-              <div className="erp-card-header">
-                <h2 id="permissions-heading" className="erp-card-title">
-                  {tShell("permissions")}
-                </h2>
-                <span className="erp-badge erp-badge-info">
-                  {memberships.reduce((acc, m) => acc + (m.permissions?.length || 0), 0)} PERMISSIONS
-                </span>
+          {children ? (
+            children
+          ) : (
+            <>
+              <div style={{ marginBottom: "1.75rem", borderBottom: "1px solid var(--erp-border)", paddingBottom: "1.25rem" }}>
+                <h1 style={{ fontSize: "1.625rem", fontWeight: 700, color: "var(--erp-navy)", margin: "0 0 0.375rem 0", letterSpacing: "-0.01em" }}>
+                  {tApp("title")}
+                </h1>
+                <p style={{ fontSize: "0.9375rem", color: "var(--erp-text-muted)", margin: 0, lineHeight: 1.4 }}>
+                  {tApp("subtitle")}
+                </p>
               </div>
 
-              {memberships.map((membership, idx) => (
-                <div
-                  key={membership.id || idx}
-                  style={{
-                    padding: "1rem",
-                    marginBottom: idx < memberships.length - 1 ? "1rem" : 0,
-                    backgroundColor: "var(--erp-surface-muted)",
-                    border: "1px solid var(--erp-border)",
-                  }}
+              <div className="erp-dashboard-grid">
+                {/* User Profile and Context Card */}
+                <section
+                  aria-labelledby="user-profile-heading"
+                  className="erp-card"
                 >
-                  <div style={{ fontWeight: 600, color: "var(--erp-navy)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                    <span>{membership.organization?.name || "-"}</span>
-                    <span style={{ color: "var(--erp-border)" }}>•</span>
-                    <span style={{ color: "var(--erp-text-muted)", fontSize: "0.875rem" }}>
-                      {membership.branch?.name || tShell("noBranch")}
+                  <div className="erp-card-header">
+                    <h2 id="user-profile-heading" className="erp-card-title">
+                      {tShell("user")}
+                    </h2>
+                    <span className="erp-badge erp-badge-success">ACTIVE</span>
+                  </div>
+                  <dl className="erp-dl">
+                    <dt>ID:</dt>
+                    <dd style={{ fontFamily: "monospace", fontSize: "0.8125rem" }}>{user?.id || "-"}</dd>
+
+                    <dt>{tAuth("emailLabel")}:</dt>
+                    <dd>{user?.email || "-"}</dd>
+
+                    <dt>Name:</dt>
+                    <dd style={{ fontWeight: 600 }}>{user?.displayName || "-"}</dd>
+                  </dl>
+                </section>
+
+                {/* Memberships and Permissions Card */}
+                <section
+                  aria-labelledby="permissions-heading"
+                  className="erp-card"
+                >
+                  <div className="erp-card-header">
+                    <h2 id="permissions-heading" className="erp-card-title">
+                      {tShell("permissions")}
+                    </h2>
+                    <span className="erp-badge erp-badge-info">
+                      {memberships.reduce((acc, m) => acc + (m.permissions?.length || 0), 0)} PERMISSIONS
                     </span>
                   </div>
 
-                  {membership.permissions && membership.permissions.length > 0 ? (
-                    <ul
+                  {memberships.map((membership, idx) => (
+                    <div
+                      key={membership.id || idx}
                       style={{
-                        listStyle: "none",
-                        padding: 0,
-                        margin: 0,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.5rem",
+                        padding: "1rem",
+                        marginBottom: idx < memberships.length - 1 ? "1rem" : 0,
+                        backgroundColor: "var(--erp-surface-muted)",
+                        border: "1px solid var(--erp-border)",
                       }}
                     >
-                      {membership.permissions.map((perm, pIdx) => (
-                        <li
-                          key={pIdx}
+                      <div style={{ fontWeight: 600, color: "var(--erp-navy)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <span>{membership.organization?.name || "-"}</span>
+                        <span style={{ color: "var(--erp-border)" }}>•</span>
+                        <span style={{ color: "var(--erp-text-muted)", fontSize: "0.875rem" }}>
+                          {membership.branch?.name || tShell("noBranch")}
+                        </span>
+                      </div>
+
+                      {membership.permissions && membership.permissions.length > 0 ? (
+                        <ul
                           style={{
+                            listStyle: "none",
+                            padding: 0,
+                            margin: 0,
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexWrap: "wrap",
+                            flexDirection: "column",
                             gap: "0.5rem",
-                            padding: "0.5rem 0.75rem",
-                            backgroundColor: "var(--erp-surface)",
-                            border: "1px solid var(--erp-border-subtle)",
-                            fontSize: "0.875rem",
                           }}
                         >
-                          <code style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--erp-navy)" }}>
-                            {perm.key}
-                          </code>
-                          {perm.scope && (
-                            <span className="erp-badge erp-badge-neutral" style={{ fontSize: "0.6875rem" }}>
-                              {tShell("scope")}: {perm.scope}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p style={{ fontSize: "0.875rem", color: "var(--erp-text-muted)", margin: 0 }}>
-                      -
-                    </p>
-                  )}
-                </div>
-              ))}
-            </section>
-          </div>
+                          {membership.permissions.map((perm, pIdx) => (
+                            <li
+                              key={pIdx}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                flexWrap: "wrap",
+                                gap: "0.5rem",
+                                padding: "0.5rem 0.75rem",
+                                backgroundColor: "var(--erp-surface)",
+                                border: "1px solid var(--erp-border-subtle)",
+                                fontSize: "0.875rem",
+                              }}
+                            >
+                              <code style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--erp-navy)" }}>
+                                {perm.key}
+                              </code>
+                              {perm.scope && (
+                                <span className="erp-badge erp-badge-neutral" style={{ fontSize: "0.6875rem" }}>
+                                  {tShell("scope")}: {perm.scope}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p style={{ fontSize: "0.875rem", color: "var(--erp-text-muted)", margin: 0 }}>
+                          -
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </section>
+              </div>
+            </>
+          )}
         </main>
       </div>
     </div>

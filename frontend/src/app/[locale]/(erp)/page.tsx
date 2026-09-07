@@ -2,8 +2,6 @@
 
 import React, { use } from "react";
 import { notFound } from "next/navigation";
-import { AccessGate } from "@/features/auth";
-import { ErpShell } from "@/components/layout/erp-shell";
 import { isSupportedLocale } from "@/lib/i18n/locales";
 
 interface ErpHomePageProps {
@@ -17,11 +15,6 @@ export default function ErpHomePage({ params }: ErpHomePageProps) {
     notFound();
   }
 
-  return (
-    <AccessGate>
-      {(currentUser) => (
-        <ErpShell currentUser={currentUser} />
-      )}
-    </AccessGate>
-  );
+  // Children is null here because default dashboard view is rendered by ErpShell when children is empty/null
+  return null;
 }
