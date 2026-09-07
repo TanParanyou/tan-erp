@@ -30,6 +30,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       isReadOnly,
       leftIcon,
       rightIcon,
+      "aria-describedby": ariaDescribedByProp,
       ...props
     },
     ref
@@ -41,6 +42,17 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const isActuallyReadOnly = readOnly || isReadOnly;
 
     const generatedId = id || (label ? `input-${label.replace(/\s+/g, "-").toLowerCase()}` : undefined);
+    const errorId = generatedId ? `${generatedId}-error` : undefined;
+    const helperId = generatedId ? `${generatedId}-helper` : undefined;
+
+    // Deduplicate IDs
+    const tokens = new Set<string>();
+    if (error && errorId) tokens.add(errorId);
+    if (helperText && helperId) tokens.add(helperId);
+    if (ariaDescribedByProp) {
+      ariaDescribedByProp.split(/\s+/).filter(Boolean).forEach((token) => tokens.add(token));
+    }
+    const describedByIds = Array.from(tokens).join(" ");
 
     return (
       <div className="erp-form-group">
@@ -74,6 +86,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             readOnly={isActuallyReadOnly}
             required={required}
+            aria-invalid={Boolean(error)}
+            aria-describedby={describedByIds || undefined}
             className={cn(
               "erp-input",
               error && "erp-input-error",
@@ -125,7 +139,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         {error ? (
           <p
-            id={generatedId ? `${generatedId}-error` : undefined}
+            id={errorId}
             className="erp-error-text"
             role="alert"
           >
@@ -133,7 +147,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </p>
         ) : helperText ? (
           <p
-            id={generatedId ? `${generatedId}-helper` : undefined}
+            id={helperId}
             className="erp-helper-text"
           >
             {helperText}

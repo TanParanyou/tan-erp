@@ -77,6 +77,88 @@ describe("ApiClient", () => {
     expect(result).toEqual(mockUserResponse);
   });
 
+  it("sends GET /api/v1/customers with X-Membership-Id and query params", async () => {
+    const mockListResponse = {
+      items: [],
+      nextCursor: null,
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockListResponse,
+    });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    const result = await client.listCustomers(
+      {
+        token: "sample-token",
+        membershipId: "mem-123",
+        locale: "th",
+      },
+      {
+        search: "บริษัท",
+        limit: 10,
+      }
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://localhost:5000/api/v1/customers?search=%E0%B8%9A%E0%B8%A3%E0%B8%B4%E0%B8%A9%E0%B8%B1%E0%B8%97&limit=10");
+    expect(init.method).toBe("GET");
+    expect(init.headers["Authorization"]).toBe("Bearer sample-token");
+    expect(init.headers["X-Membership-Id"]).toBe("mem-123");
+    expect(init.headers["Accept-Language"]).toBe("th");
+
+    expect(result).toEqual(mockListResponse);
+  });
+
+  it("sends POST /api/v1/customers with Idempotency-Key and payload", async () => {
+    const mockCustomer = {
+      id: "019a3cf8-96f0-7c9f-b207-93aa818f4a20",
+      code: "CUST-0001",
+      displayNameTh: "บริษัท ทดสอบ จำกัด",
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => mockCustomer,
+    });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    const payload = {
+      customerType: "corporate",
+      displayNameTh: "บริษัท ทดสอบ จำกัด",
+      preferredLocale: "th",
+      primaryContact: {
+        name: "สมศรี ใจดี",
+        phone: "0812345678",
+      },
+    };
+
+    const result = await client.createCustomer(payload, {
+      token: "sample-token",
+      membershipId: "mem-123",
+      idempotencyKey: "idem-key-abc",
+      locale: "th",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://localhost:5000/api/v1/customers");
+    expect(init.method).toBe("POST");
+    expect(init.headers["Authorization"]).toBe("Bearer sample-token");
+    expect(init.headers["X-Membership-Id"]).toBe("mem-123");
+    expect(init.headers["Idempotency-Key"]).toBe("idem-key-abc");
+    expect(init.headers["Content-Type"]).toBe("application/json");
+    expect(JSON.parse(init.body as string)).toEqual(payload);
+
+    expect(result).toEqual(mockCustomer);
+  });
+
   it("converts RFC 9457 Problem Details into typed ApiError", async () => {
     const problemDetails = {
       type: "https://tan-erp.local/problems/active-membership-required",
