@@ -69,6 +69,8 @@ builder.Services.AddSingleton<IFirebaseTokenVerifier, FirebaseTokenVerifier>();
 builder.Services.AddScoped<ICurrentUserReader, CurrentUserReader>();
 builder.Services.AddScoped<IRequestAccessResolver, RequestAccessResolver>();
 builder.Services.AddScoped<GetCurrentUserHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerCreationStore, TanErp.Infrastructure.Persistence.Crm.CustomerCreationStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.CreateCustomer.CreateCustomerHandler>();
 
 // Authentication & Authorization
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
