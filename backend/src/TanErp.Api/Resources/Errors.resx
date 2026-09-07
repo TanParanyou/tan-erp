@@ -65,4 +65,52 @@
   <data name="INTERNAL_SERVER_ERROR_DETAIL" xml:space="preserve">
     <value>เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้งในภายหลัง</value>
   </data>
+  <data name="MEMBERSHIP_CONTEXT_REQUIRED_TITLE" xml:space="preserve">
+    <value>จำเป็นต้องระบุสมาชิกภาพ</value>
+  </data>
+  <data name="MEMBERSHIP_CONTEXT_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ไม่มีส่วนหัว X-Membership-Id หรือรูปแบบไม่ใช่ UUID</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_REQUIRED_TITLE" xml:space="preserve">
+    <value>จำเป็นต้องระบุคีย์ Idempotency</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ส่วนหัว Idempotency-Key จำเป็นต้องระบุสำหรับการสร้างข้อมูล</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_INVALID_TITLE" xml:space="preserve">
+    <value>คีย์ Idempotency ไม่ถูกต้อง</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_INVALID_DETAIL" xml:space="preserve">
+    <value>ส่วนหัว Idempotency-Key ต้องมีความยาวระหว่าง 16 ถึง 128 ตัวอักษร</value>
+  </data>
+  <data name="CUSTOMER_CURSOR_INVALID_TITLE" xml:space="preserve">
+    <value>เคอร์เซอร์ข้อมูลไม่ถูกต้อง</value>
+  </data>
+  <data name="CUSTOMER_CURSOR_INVALID_DETAIL" xml:space="preserve">
+    <value>เคอร์เซอร์สำหรับการแบ่งหน้าไม่ถูกต้องหรือไม่สามารถถอดรหัสได้</value>
+  </data>
+  <data name="RESOURCE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบข้อมูลที่ต้องการ</value>
+  </data>
+  <data name="RESOURCE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบข้อมูลลูกค้าหรือข้อมูลอยู่นอกขอบเขตองค์กรที่เลือก</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_REUSED_TITLE" xml:space="preserve">
+    <value>คีย์ Idempotency ถูกใช้งานแล้ว</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_REUSED_DETAIL" xml:space="preserve">
+    <value>คีย์ Idempotency เดิมถูกใช้ไปแล้วกับชุดข้อมูลคนละชุด</value>
+  </data>
+  <data name="CUSTOMER_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>ข้อมูลลูกค้าไม่ผ่านเกณฑ์</value>
+  </data>
+  <data name="CUSTOMER_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ข้อมูลจำเป็นของลูกค้าไม่ถูกต้องหรือไม่ครบถ้วน</value>
+  </data>
+  <data name="CONTACT_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>ข้อมูลผู้ติดต่อไม่ผ่านเกณฑ์</value>
+  </data>
+  <data name="CONTACT_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ต้องระบุชื่อและเบอร์โทรศัพท์หรืออีเมลอย่างน้อยหนึ่งค่า</value>
+  </data>
 </root>

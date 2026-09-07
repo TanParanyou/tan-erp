@@ -63,6 +63,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    limit?: number;
+                    cursor?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CustomerListResponse"];
+                        "application/json": components["schemas"]["CustomerListResponse"];
+                        "text/json": components["schemas"]["CustomerListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateCustomerRequest"];
+                    "text/json": components["schemas"]["CreateCustomerRequest"];
+                    "application/*+json": components["schemas"]["CreateCustomerRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CustomerResponse"];
+                        "application/json": components["schemas"]["CustomerResponse"];
+                        "text/json": components["schemas"]["CustomerResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CustomerResponse"];
+                        "application/json": components["schemas"]["CustomerResponse"];
+                        "text/json": components["schemas"]["CustomerResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -87,9 +327,70 @@ export interface components {
             id?: string;
             name?: string | null;
         };
+        CreateCustomerRequest: {
+            customerType?: string | null;
+            displayNameTh?: string | null;
+            displayNameEn?: string | null;
+            preferredLocale?: string | null;
+            primaryContact?: components["schemas"]["CreatePrimaryContactRequest"];
+        };
+        CreatePrimaryContactRequest: {
+            name?: string | null;
+            roleTitle?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            preferredChannel?: string | null;
+        };
         CurrentUserResponse: {
             user?: components["schemas"]["UserDto"];
             memberships?: components["schemas"]["MembershipDto"][] | null;
+        };
+        CustomerContactResponse: {
+            name?: string | null;
+            roleTitle?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            preferredChannel?: string | null;
+            isMasked?: boolean;
+        };
+        CustomerListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            customerType?: string | null;
+            displayNameTh?: string | null;
+            displayNameEn?: string | null;
+            preferredLocale?: string | null;
+            status?: string | null;
+            primaryContact?: components["schemas"]["CustomerContactResponse"];
+        };
+        CustomerListResponse: {
+            items?: components["schemas"]["CustomerListItemResponse"][] | null;
+            nextCursor?: string | null;
+        };
+        CustomerResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            customerType?: string | null;
+            displayNameTh?: string | null;
+            displayNameEn?: string | null;
+            preferredLocale?: string | null;
+            status?: string | null;
+            primaryContact?: components["schemas"]["CustomerContactResponse"];
+            duplicateCandidates?: components["schemas"]["DuplicateCustomerResponse"][] | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        DuplicateCustomerResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            displayNameTh?: string | null;
+            maskedPhone?: string | null;
+            maskedEmail?: string | null;
         };
         MembershipDto: {
             /** Format: uuid */

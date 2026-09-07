@@ -65,4 +65,52 @@
   <data name="INTERNAL_SERVER_ERROR_DETAIL" xml:space="preserve">
     <value>An unexpected error occurred. Please try again later.</value>
   </data>
+  <data name="MEMBERSHIP_CONTEXT_REQUIRED_TITLE" xml:space="preserve">
+    <value>Membership Context Required</value>
+  </data>
+  <data name="MEMBERSHIP_CONTEXT_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Missing X-Membership-Id header or invalid UUID format.</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_REQUIRED_TITLE" xml:space="preserve">
+    <value>Idempotency Key Required</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Header Idempotency-Key is required for mutation requests.</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_INVALID_TITLE" xml:space="preserve">
+    <value>Idempotency Key Invalid</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_INVALID_DETAIL" xml:space="preserve">
+    <value>Header Idempotency-Key must be between 16 and 128 characters.</value>
+  </data>
+  <data name="CUSTOMER_CURSOR_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Pagination Cursor</value>
+  </data>
+  <data name="CUSTOMER_CURSOR_INVALID_DETAIL" xml:space="preserve">
+    <value>The pagination cursor is invalid or could not be decoded.</value>
+  </data>
+  <data name="RESOURCE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Resource Not Found</value>
+  </data>
+  <data name="RESOURCE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>The requested customer was not found in the selected organization.</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_REUSED_TITLE" xml:space="preserve">
+    <value>Idempotency Key Reused</value>
+  </data>
+  <data name="IDEMPOTENCY_KEY_REUSED_DETAIL" xml:space="preserve">
+    <value>The idempotency key has already been used with a different payload.</value>
+  </data>
+  <data name="CUSTOMER_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>Customer Field Required</value>
+  </data>
+  <data name="CUSTOMER_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Required customer fields are invalid or missing.</value>
+  </data>
+  <data name="CONTACT_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>Contact Field Required</value>
+  </data>
+  <data name="CONTACT_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Contact must have a name and at least a phone number or email.</value>
+  </data>
 </root>

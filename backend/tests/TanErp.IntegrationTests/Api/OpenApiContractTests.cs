@@ -70,9 +70,20 @@ public class OpenApiContractTests : IAsyncLifetime
         var paths = doc["paths"]?.AsObject();
         Assert.NotNull(paths);
         Assert.True(paths.ContainsKey("/api/v1/me"), "OpenAPI must contain path /api/v1/me");
+        Assert.True(paths.ContainsKey("/api/v1/customers"), "OpenAPI must contain path /api/v1/customers");
+        Assert.True(paths.ContainsKey("/api/v1/customers/{id}"), "OpenAPI must contain path /api/v1/customers/{id}");
 
         var mePath = paths["/api/v1/me"]?["get"]?.AsObject();
         Assert.NotNull(mePath);
+
+        var listCustomerPath = paths["/api/v1/customers"]?["get"]?.AsObject();
+        Assert.NotNull(listCustomerPath);
+
+        var createCustomerPath = paths["/api/v1/customers"]?["post"]?.AsObject();
+        Assert.NotNull(createCustomerPath);
+
+        var getCustomerPath = paths["/api/v1/customers/{id}"]?["get"]?.AsObject();
+        Assert.NotNull(getCustomerPath);
 
         // 2. Assert operation responses 200, 401, 403
         var responses = mePath["responses"]?.AsObject();
@@ -88,10 +99,13 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.NotNull(securitySchemes);
         Assert.True(securitySchemes.ContainsKey("Bearer"), "Must define Bearer security scheme");
 
-        // 4. Assert schemas CurrentUserResponse and ApiProblemDetails
+        // 4. Assert schemas
         var schemas = components["schemas"]?.AsObject();
         Assert.NotNull(schemas);
         Assert.True(schemas.ContainsKey("CurrentUserResponse"), "Must define CurrentUserResponse schema");
+        Assert.True(schemas.ContainsKey("CustomerResponse"), "Must define CustomerResponse schema");
+        Assert.True(schemas.ContainsKey("CustomerListResponse"), "Must define CustomerListResponse schema");
+        Assert.True(schemas.ContainsKey("CreateCustomerRequest"), "Must define CreateCustomerRequest schema");
         Assert.True(schemas.ContainsKey("ApiProblemDetails"), "Must define ApiProblemDetails schema");
 
         // 5. Ensure contracts/openapi/tan-erp.v1.json exists and matches
@@ -105,7 +119,7 @@ public class OpenApiContractTests : IAsyncLifetime
             WriteIndented = true
         });
 
-        if (!File.Exists(contractPath))
+        if (!File.Exists(contractPath) || Environment.GetEnvironmentVariable("UPDATE_OPENAPI") == "1")
         {
             await File.WriteAllTextAsync(contractPath, formattedJson);
         }

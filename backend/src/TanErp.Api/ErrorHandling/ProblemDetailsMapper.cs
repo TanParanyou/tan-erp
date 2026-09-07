@@ -12,17 +12,29 @@ public static class ProblemDetailsMapper
     {
         "AUTHENTICATION_REQUIRED" => StatusCodes.Status401Unauthorized,
         "AUTHENTICATION_INVALID" => StatusCodes.Status401Unauthorized,
+        "MEMBERSHIP_CONTEXT_REQUIRED" => StatusCodes.Status400BadRequest,
+        "IDEMPOTENCY_KEY_REQUIRED" => StatusCodes.Status400BadRequest,
+        "IDEMPOTENCY_KEY_INVALID" => StatusCodes.Status400BadRequest,
+        "CUSTOMER_CURSOR_INVALID" => StatusCodes.Status400BadRequest,
         "USER_ACCESS_DISABLED" => StatusCodes.Status403Forbidden,
         "ACTIVE_MEMBERSHIP_REQUIRED" => StatusCodes.Status403Forbidden,
         "PERMISSION_DENIED" => StatusCodes.Status403Forbidden,
+        "RESOURCE_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "IDEMPOTENCY_KEY_REUSED" => StatusCodes.Status409Conflict,
+        "CUSTOMER_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "CONTACT_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "INTERNAL_SERVER_ERROR" => StatusCodes.Status500InternalServerError,
         _ => StatusCodes.Status500InternalServerError
     };
 
     private static string GetKnownCode(string code) => GetStatus(code) switch
     {
+        StatusCodes.Status400BadRequest => code,
         StatusCodes.Status401Unauthorized => code,
         StatusCodes.Status403Forbidden => code,
+        StatusCodes.Status404NotFound => code,
+        StatusCodes.Status409Conflict => code,
+        StatusCodes.Status422UnprocessableEntity => code,
         StatusCodes.Status500InternalServerError when code == "INTERNAL_SERVER_ERROR" => code,
         _ => "INTERNAL_SERVER_ERROR"
     };
