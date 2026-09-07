@@ -21,6 +21,9 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<MembershipRole> MembershipRoles => Set<MembershipRole>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<TanErp.Domain.Crm.Customers.Customer> Customers => Set<TanErp.Domain.Crm.Customers.Customer>();
+    public DbSet<TanErp.Domain.Crm.Customers.CustomerContact> CustomerContacts => Set<TanErp.Domain.Crm.Customers.CustomerContact>();
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
     public void AddAuditEvent(AuditEvent auditEvent)
     {
