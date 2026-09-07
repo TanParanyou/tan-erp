@@ -41,17 +41,65 @@ Resource นอก Scope คืน 404 รายการค้นหาใช�
 {
   "customerType": "organization",
   "displayNameTh": "บริษัท ตัวอย่าง จำกัด TEST_ONLY",
+  "displayNameEn": null,
   "preferredLocale": "th",
   "primaryContact": {
     "name": "คุณตัวอย่าง TEST_ONLY",
-    "phone": "+66XXXXXXXXX",
-    "email": null,
+    "roleTitle": null,
+    "phone": "+66812345678",
+    "email": "sample@example.test",
     "preferredChannel": "phone"
   }
 }
 ```
 
 Response 201 คืน Customer Draft, generated code และ ETag พร้อม `duplicateCandidates` ที่ Mask แล้วเมื่อผู้ใช้มี Permission ระบบไม่ Auto-merge
+
+## Customer + Contact Slice 1 Specification
+
+### Headers and Scopes
+```text
+Required business header: X-Membership-Id: <membership UUID>
+Required create header: Idempotency-Key: <opaque 16-128 characters>
+Supported permission scope in Slice 1: organization only
+List sort: normalizedDisplayName ASC, id ASC
+List defaults: limit=25; allowed range 1..100
+Create result: Customer status=draft, one active primaryContact, ETag="<rowVersion>"
+Duplicate signal: exact normalized name/phone/email inside the selected Organization only
+```
+
+### Request Body Rules
+Request body มีเฉพาะ `customerType`, `displayNameTh`, `displayNameEn`, `preferredLocale` และ `primaryContact.{name,roleTitle,phone,email,preferredChannel}`; ห้ามมี `organizationId`, `branchId`, `status`, `code`, `rowVersion` หรือ actor ID
+
+### Exact List Response Shape
+```json
+{
+  "items": [
+    {
+      "id": "019a3cf8-96f0-7c9f-b207-93aa818f4b10",
+      "code": "CUS-019A3CF896F0",
+      "customerType": "organization",
+      "displayNameTh": "บริษัท ตัวอย่าง จำกัด TEST_ONLY",
+      "displayNameEn": null,
+      "preferredLocale": "th",
+      "status": "draft",
+      "primaryContact": {
+        "name": "คุณตัวอย่าง TEST_ONLY",
+        "phone": "+66******123",
+        "email": "t***@example.test",
+        "isMasked": true
+      }
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+### Exact Detail & Create Response Shape
+Detail และ Create response ส่งคืน Customer object พร้อม `ETag: "<rowVersion>"` header
+สำหรับ Create response เพิ่ม `duplicateCandidates: [...]`
+เมื่อผู้ใช้มี `customer-contacts.manage` ให้ `primaryContact.isMasked = false` และคืนค่าเบอร์โทรศัพท์และอีเมลเต็ม; เมื่อมีเฉพาะ `customers.read` จะคืนเฉพาะค่าที่ Mask แล้ว (`isMasked = true`)
+
 
 ## Opportunity Example
 

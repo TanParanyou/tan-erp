@@ -38,4 +38,15 @@
 - Official Estimate Integration ยืนยัน Ready Revision ID/hash และ Historical Reproducibility
 - ตัวอย่าง `TEST_ONLY` ไม่ถูกนำไป Seed เป็น Production Data
 
+## Customer + Contact Slice 1 Exit Criteria
+
+สำหรับ Slice 1 (Customer + Contact Vertical Slice) จะถือว่าผ่านเกณฑ์เมื่อ:
+1. **`UAT-CRM-001` (Subset):** สร้าง Customer Draft พร้อม Primary Contact และค้นหาได้ตาม Scope (ส่วนการ Activate เลื่อนไปอยู่ใน Slice ถัดไป)
+2. **`UAT-CRM-002`:** ตรวจจับชื่อ/เบอร์ตรงกันภายใน Organization เดียวกัน และแสดง Candidate แบบ Mask โดยไม่ Auto-merge
+3. **`UAT-SEC-001`:** สมาชิกภาพต่าง Organization ไม่สามารถเปิดดูหรือค้นหา Customer ของอีก Organization ได้ (`404 Not Found`)
+4. **`UAT-SEC-002`:** Log, Audit Trail และ Problem Details ปราศจาก Phone, Email, Tax ID หรือ Authorization Bearer Token
+5. **`UAT-UX-001`:** ฟอร์มและหน้าจอแสดงผลถูกต้องบนขนาด 320px และ Zoom 200%, Touch target ≥ 44px, Keyboard accessible, ไม่ใช้สีเพียงอย่างเดียวในการสื่อสาร
+6. **`UAT-I18N-001`:** ระบบแปลภาษาครบถ้วนทั้ง `th` และ `en` เมื่อเกิดข้อผิดพลาดคืน Error Code เดิมพร้อมคำอธิบายตามภาษา
+7. **Idempotency Verification:** การส่ง Request ซ้ำด้วย `Idempotency-Key` เดิมและ Payload เดิม ต้องไม่สร้างข้อมูลซ้ำและคืน Response เดิม; หาก Payload ต่างกันต้องคืน `409 IDEMPOTENCY_KEY_REUSED`
+
 อ้างอิง [Flow](../01-business/crm-site-survey-flow.md), [API Contract](../03-contracts/crm-site-survey-api-contract.md) และ [Data Contract](../04-data/crm-site-survey-data-contract.md)

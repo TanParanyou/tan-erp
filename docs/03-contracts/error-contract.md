@@ -45,9 +45,11 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | --- | ---: | --- |
 | `AUTHENTICATION_REQUIRED` | 401 | Bearer token is missing / ไม่พบ Authorization Bearer token |
 | `AUTHENTICATION_INVALID` | 401 | Token cannot be verified, has expired, or belongs to another Firebase project / Token ไม่ถูกต้อง หมดอายุ หรือมาจาก Firebase Project อื่น |
+| `MEMBERSHIP_CONTEXT_REQUIRED` | 400 | Missing X-Membership-Id header or invalid UUID format / ไม่มี X-Membership-Id หรือรูปแบบไม่ใช่ UUID |
 | `USER_ACCESS_DISABLED` | 403 | Internal User is disabled / บัญชีผู้ใช้ภายในระบบถูกระงับการใช้งาน |
 | `ACTIVE_MEMBERSHIP_REQUIRED` | 403 | Identity is valid but no active Membership is available / ยืนยันตัวตนสำเร็จแต่ไม่มีสมาชิกภาพที่ Active ในองค์กรใด |
 | `PERMISSION_DENIED` | 403 | Active Membership exists but the requested permission is absent / มีสมาชิกภาพในองค์กรแต่ไม่มีสิทธิ์สำหรับปฏิบัติการนี้ |
+| `RESOURCE_NOT_FOUND` | 404 | Requested resource not found or belongs to another organization scope / ไม่พบ Resource หรืออยู่นอก Organization scope |
 
 ### ตัวอย่าง Problem Details ภาษาไทย (Thai Example)
 
@@ -124,10 +126,11 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 
 | Code | HTTP | ความหมาย/การกู้คืน |
 | --- | ---: | --- |
+| `CUSTOMER_CURSOR_INVALID` | 400 | Cursor ถอดรหัสหรือ validate ไม่ได้ |
 | `CUSTOMER_VERSION_CONFLICT` | 409 | Customer ETag เก่า; ให้ Reload/Compare |
 | `CUSTOMER_INVALID_STATE` | 409 | Customer Status ไม่รองรับ Action หรือใช้สร้างงานใหม่ไม่ได้ |
-| `CUSTOMER_FIELD_REQUIRED` | 422 | Activation Gate ยังไม่ครบ |
-| `CONTACT_FIELD_REQUIRED` | 422 | Contact ไม่มีช่องทางติดต่อขั้นต่ำหรือ Field บังคับ |
+| `CUSTOMER_FIELD_REQUIRED` | 422 | ข้อมูลบังคับของ Customer (เช่น customerType/displayNameTh/preferredLocale) ไม่ผ่านกฎ |
+| `CONTACT_FIELD_REQUIRED` | 422 | Contact ไม่มีช่องทางติดต่อขั้นต่ำ (ต้องมี phone หรือ email อย่างน้อยหนึ่งค่า) หรือ Field บังคับ |
 | `OPPORTUNITY_VERSION_CONFLICT` | 409 | Opportunity ETag เก่า |
 | `OPPORTUNITY_FIELD_REQUIRED` | 422 | Field ของ Stage เป้าหมายยังไม่ครบ |
 | `OPPORTUNITY_INVALID_TRANSITION` | 409 | Stage Transition ไม่อยู่ใน Allowlist |

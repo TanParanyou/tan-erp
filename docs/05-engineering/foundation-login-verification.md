@@ -86,3 +86,5 @@
 การเริ่มต้นพัฒนาสไลซ์ถัดไป (**Customer + Contact**) จะกระทำได้ก็ต่อเมื่อ:
 - มีการอนุมัติ Implementation Plan และ Contract เฉพาะของ Customer + Contact
 - กำหนด Permission Keys, Audit Events และ Acceptance Journey อย่างชัดเจน
+
+**สถานะปัจจุบัน:** ได้รับการอนุมัติแผนการดำเนินงานและข้อตกลงสัญญา (Implementation Plan & Contract Approved) ผ่านเอกสาร `docs/superpowers/plans/2026-09-07-customer-contact-vertical-slice.md` เมื่อ 2026-09-07 และอนุญาตให้เริ่มการพัฒนาสไลซ์ Customer + Contact ได้อย่างเป็นทางการ
