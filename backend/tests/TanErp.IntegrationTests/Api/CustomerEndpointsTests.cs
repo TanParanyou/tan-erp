@@ -504,4 +504,64 @@ public class CustomerEndpointsTests : IAsyncLifetime
         Assert.Contains("******", detail.PrimaryContact.Phone ?? "");
         Assert.Contains("***@", detail.PrimaryContact.Email ?? "");
     }
+
+    [Fact]
+    public async Task CreateCustomer_WithLeadSourceAndLineId_ReturnsCreatedAndPersists()
+    {
+        var request = new CreateCustomerRequest(
+            "organization",
+            "บริษัท นวัตกรรมโซลูชันส์ จำกัด TEST_ONLY",
+            "Innovation Solutions Ltd TEST_ONLY",
+            "th",
+            new CreatePrimaryContactRequest(
+                "คุณ นวัตกรรม",
+                "หัวหน้าฝ่ายไอที",
+                "+66817778899",
+                "inno@example.test",
+                "phone",
+                "inno_line_id_101"),
+            "facebook_ads");
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-lead-source-001");
+        msg.Content = JsonContent.Create(request);
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var created = await response.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(created);
+        Assert.Equal("facebook_ads", created.LeadSource);
+        Assert.Equal("inno_line_id_101", created.PrimaryContact.LineId);
+        Assert.False(created.PrimaryContact.IsMasked);
+
+        // Verify with read-only user: line ID must be masked
+        var getMsg = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/customers/{created.Id}");
+        getMsg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-read-only");
+        getMsg.Headers.Add("X-Membership-Id", MembershipReadOnlyId.ToString());
+
+        var getResponse = await _client.SendAsync(getMsg);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+        var detail = await getResponse.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(detail);
+        Assert.Equal("facebook_ads", detail.LeadSource);
+        Assert.True(detail.PrimaryContact.IsMasked);
+        Assert.Contains("****", detail.PrimaryContact.LineId ?? "");
+        Assert.NotEqual("inno_line_id_101", detail.PrimaryContact.LineId);
+    }
+
+    [Fact]
+    public void MaskLineId_HandlesEdgeCasesProperly()
+    {
+        Assert.Null(CustomerCreationStore.MaskLineId(null));
+        Assert.Null(CustomerCreationStore.MaskLineId(""));
+        Assert.Null(CustomerCreationStore.MaskLineId("   "));
+        Assert.Equal("****", CustomerCreationStore.MaskLineId("a"));
+        Assert.Equal("****", CustomerCreationStore.MaskLineId("abcd"));
+        Assert.Equal("ab****de", CustomerCreationStore.MaskLineId("abcde"));
+        Assert.Equal("li****99", CustomerCreationStore.MaskLineId("line_lead_99"));
+    }
 }

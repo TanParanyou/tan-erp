@@ -12,6 +12,7 @@ public class Customer : Entity
     public string NormalizedDisplayName { get; private set; } = string.Empty;
     public string Status { get; private set; } = CustomerStatus.Draft;
     public string PreferredLocale { get; private set; } = TanErp.Domain.Crm.Customers.PreferredLocale.Thai;
+    public string? LeadSource { get; private set; }
     public Guid RowVersion { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid CreatedByUserId { get; private set; }
@@ -29,6 +30,7 @@ public class Customer : Entity
         string displayNameTh,
         string? displayNameEn,
         string preferredLocale,
+        string? leadSource,
         DateTimeOffset createdAtUtc) : base(id)
     {
         if (string.IsNullOrWhiteSpace(displayNameTh))
@@ -46,6 +48,11 @@ public class Customer : Entity
             throw new ArgumentException($"Invalid preferred locale: '{preferredLocale}'.", nameof(preferredLocale));
         }
 
+        if (!string.IsNullOrWhiteSpace(leadSource) && !CustomerLeadSource.IsValid(leadSource))
+        {
+            throw new ArgumentException($"Invalid lead source: '{leadSource}'.", nameof(leadSource));
+        }
+
         OrganizationId = organizationId;
         CreatedByUserId = createdByUserId;
         CustomerType = customerType.Trim();
@@ -55,6 +62,7 @@ public class Customer : Entity
         Code = GenerateCustomerCode(id);
         Status = CustomerStatus.Draft;
         PreferredLocale = preferredLocale.Trim();
+        LeadSource = string.IsNullOrWhiteSpace(leadSource) ? null : leadSource.Trim();
         RowVersion = Guid.NewGuid();
         CreatedAtUtc = createdAtUtc;
     }
@@ -68,7 +76,8 @@ public class Customer : Entity
         string? displayNameEn,
         string preferredLocale,
         PrimaryContactInput primaryContact,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        string? leadSource = null)
     {
         if (primaryContact == null)
         {
@@ -83,6 +92,7 @@ public class Customer : Entity
             displayNameTh,
             displayNameEn,
             preferredLocale,
+            leadSource,
             now);
 
         var contact = new CustomerContact(
@@ -93,6 +103,7 @@ public class Customer : Entity
             primaryContact.RoleTitle,
             primaryContact.Phone,
             primaryContact.Email,
+            primaryContact.LineId,
             primaryContact.PreferredChannel,
             isPrimary: true,
             createdByUserId: createdByUserId,

@@ -6,7 +6,8 @@ public sealed record CustomerContactProjection(
     string? Phone,
     string? Email,
     string PreferredChannel,
-    bool IsMasked);
+    bool IsMasked,
+    string? LineId = null);
 
 public sealed record CustomerProjection(
     Guid Id,
@@ -18,7 +19,8 @@ public sealed record CustomerProjection(
     string Status,
     CustomerContactProjection PrimaryContact,
     Guid RowVersion,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    string? LeadSource = null);
 
 public sealed record DuplicateCustomerProjection(
     Guid Id,

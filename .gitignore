@@ -31,3 +31,4 @@ worktrees
 **/test-results/
 **/test-results
 **/service-account*.json
+graphify-out/

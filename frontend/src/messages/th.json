@@ -188,6 +188,14 @@
     "displayNameTh": "ชื่อลูกค้า (ภาษาไทย)",
     "displayNameEn": "ชื่อลูกค้า (English)",
     "preferredLocale": "ภาษาที่ต้องการติดต่อ",
+    "leadSource": "แหล่งที่มาของลูกค้า",
+    "leadSourceSelect": "-- เลือกแหล่งที่มา --",
+    "leadSourceWalkIn": "ลูกค้าหน้าร้าน (Walk-in)",
+    "leadSourceFacebookAds": "โฆษณา Facebook (Facebook Ads)",
+    "leadSourceReferral": "การแนะนำต่อ (Referral)",
+    "leadSourceProjectDeveloper": "ผู้พัฒนาโครงการ (Project Developer)",
+    "leadSourceWebsite": "เว็บไซต์ (Website)",
+    "leadSourceOther": "อื่นๆ (Other)",
     "status": "สถานะ",
     "active": "ใช้งาน",
     "inactive": "ไม่ใช้งาน",
@@ -196,6 +204,7 @@
     "roleTitle": "ตำแหน่ง / แผนก",
     "phone": "เบอร์โทรศัพท์",
     "email": "อีเมล",
+    "lineId": "LINE ID",
     "preferredChannel": "ช่องทางติดต่อที่สะดวก",
     "channelPhone": "โทรศัพท์ (Phone)",
     "channelEmail": "อีเมล (Email)",
@@ -225,6 +234,14 @@
     "telLabel": "โทร",
     "emailLabel": "อีเมล",
     "localeThai": "ไทย (Thai)",
-    "localeEnglish": "อังกฤษ (English)"
+    "localeEnglish": "อังกฤษ (English)",
+    "noPrimaryContact": "ไม่มีข้อมูลผู้ติดต่อหลัก",
+    "displayNameThPlaceholder": "เช่น บริษัท สยามเทคโนโลยี จำกัด หรือ นายสมชาย ใจดี",
+    "displayNameEnPlaceholder": "เช่น Siam Technology Co., Ltd. หรือ Somchai Jaidee",
+    "contactNamePlaceholder": "เช่น สมศรี มีสุข",
+    "roleTitlePlaceholder": "เช่น ผู้จัดการฝ่ายจัดซื้อ",
+    "phonePlaceholder": "เช่น 081-234-5678",
+    "emailPlaceholder": "เช่น contact@example.com",
+    "lineIdPlaceholder": "เช่น @company หรือ somchai"
   }
 }

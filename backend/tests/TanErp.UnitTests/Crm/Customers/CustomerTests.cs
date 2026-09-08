@@ -133,4 +133,90 @@ public class CustomerTests
         Assert.DoesNotContain("+66812345678", contactString);
         Assert.DoesNotContain("secret-email@example.com", contactString);
     }
+
+    [Fact]
+    public void CreateDraft_WhenLeadSourceAndLineIdProvided_SetsPropertiesCorrectly()
+    {
+        var contactInput = new PrimaryContactInput(
+            "คุณวิชัย",
+            "ผู้จัดการทั่วไป",
+            "0891234567",
+            "wichai@example.test",
+            "phone",
+            LineId: "wichai_line_01");
+
+        var customer = Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "คุณวิชัย ใจมั่น",
+            null,
+            PreferredLocale.Thai,
+            contactInput,
+            DateTimeOffset.UtcNow,
+            leadSource: CustomerLeadSource.Referral);
+
+        Assert.Equal(CustomerLeadSource.Referral, customer.LeadSource);
+        var contact = customer.Contacts.First();
+        Assert.Equal("wichai_line_01", contact.LineId);
+    }
+
+    [Fact]
+    public void CreateDraft_WhenInvalidLeadSource_ThrowsArgumentException()
+    {
+        var contactInput = new PrimaryContactInput("คุณสมชาย", null, "0812345678", null, "phone");
+
+        Assert.Throws<ArgumentException>(() => Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "สมชาย ใจดี",
+            null,
+            PreferredLocale.Thai,
+            contactInput,
+            DateTimeOffset.UtcNow,
+            leadSource: "invalid_source"));
+    }
+
+    [Fact]
+    public void CreateDraft_WhenLineIdExceeds100Chars_ThrowsArgumentException()
+    {
+        var longLineId = new string('x', 101);
+        var contactInput = new PrimaryContactInput("คุณสมชาย", null, "0812345678", null, "phone", LineId: longLineId);
+
+        Assert.Throws<ArgumentException>(() => Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "สมชาย ใจดี",
+            null,
+            PreferredLocale.Thai,
+            contactInput,
+            DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public void CustomerLeadSource_IsValid_HandlesNullAndWhitespaceSafely()
+    {
+        Assert.False(CustomerLeadSource.IsValid(null));
+        Assert.False(CustomerLeadSource.IsValid(""));
+        Assert.False(CustomerLeadSource.IsValid("   "));
+        Assert.False(CustomerLeadSource.IsValid("unknown"));
+        Assert.True(CustomerLeadSource.IsValid("walk_in"));
+        Assert.True(CustomerLeadSource.IsValid("  referral  "));
+    }
+
+    [Fact]
+    public void ContactChannel_IsValid_HandlesNullAndWhitespaceSafely()
+    {
+        Assert.False(ContactChannel.IsValid(null));
+        Assert.False(ContactChannel.IsValid(""));
+        Assert.False(ContactChannel.IsValid("   "));
+        Assert.False(ContactChannel.IsValid("telegram"));
+        Assert.True(ContactChannel.IsValid("phone"));
+        Assert.True(ContactChannel.IsValid("line"));
+    }
 }

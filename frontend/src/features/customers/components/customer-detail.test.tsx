@@ -18,11 +18,13 @@ const organizationDraftCustomer = {
   displayNameEn: "Example Co.",
   preferredLocale: "th",
   status: "draft",
+  leadSource: "referral",
   primaryContact: {
     name: "คุณตัวอย่าง",
     roleTitle: null,
     phone: "081-***-5678",
     email: null,
+    lineId: "line_mock_id",
     preferredChannel: "phone",
     isMasked: true,
   },
@@ -60,5 +62,7 @@ describe("CustomerDetail canonical labels", () => {
     expect(screen.getByText("นิติบุคคล")).toBeDefined();
     expect(screen.getByText("ฉบับร่าง")).toBeDefined();
     expect(screen.getByText("โทรศัพท์ (Phone)")).toBeDefined();
+    expect(screen.getByText("การแนะนำต่อ (Referral)")).toBeDefined();
+    expect(screen.getByText("line_mock_id")).toBeDefined();
   });
 });

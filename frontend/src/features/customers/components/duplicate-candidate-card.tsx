@@ -26,42 +26,19 @@ export function DuplicateCandidateCard({
     <div
       role="region"
       aria-label={t("duplicateCandidates")}
-      className="erp-card"
-      style={{
-        padding: "1.25rem",
-        borderColor: "var(--erp-warning-border)",
-        backgroundColor: "var(--erp-warning-bg)",
-      }}
+      className="erp-card p-5 border-erp-warning-border bg-erp-warning-bg"
     >
-      <h3
-        style={{ fontSize: "1rem", fontWeight: 700, color: "var(--erp-warning)", margin: "0 0 0.5rem 0" }}
-      >
+      <h3 className="text-base font-bold text-erp-warning mb-2">
         {t("duplicateCandidates")}
       </h3>
-      <p style={{ fontSize: "0.875rem", color: "#78350F", margin: "0 0 0.75rem 0" }}>
+      <p className="text-sm text-erp-warning-text mb-3">
         {t("duplicateNotice")}
       </p>
-      <ul
-        style={{
-          listStyle: "none",
-          padding: 0,
-          margin: 0,
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-        }}
-      >
+      <ul className="list-none p-0 m-0 flex flex-col gap-2">
         {candidates.map((candidate) => (
           <li
             key={candidate.id}
-            style={{
-              padding: "0.5rem 0.75rem",
-              backgroundColor: "var(--erp-surface)",
-              border: "1px solid var(--erp-border)",
-              fontSize: "0.8125rem",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
+            className="px-3 py-2 bg-erp-surface border border-erp-border text-[0.8125rem] flex justify-between"
           >
             <strong>
               {candidate.code} - {candidate.displayNameTh}
@@ -73,13 +50,7 @@ export function DuplicateCandidateCard({
       {createdCustomerHref ? (
         <Link
           href={createdCustomerHref}
-          style={{
-            display: "inline-block",
-            marginTop: "0.75rem",
-            color: "var(--erp-navy)",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-          }}
+          className="inline-block mt-3 text-erp-navy text-sm font-semibold hover:underline"
         >
           {t("viewCreatedCustomer")}
         </Link>

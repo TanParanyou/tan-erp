@@ -188,6 +188,14 @@
     "displayNameTh": "Customer Name (Thai)",
     "displayNameEn": "Customer Name (English)",
     "preferredLocale": "Preferred Language",
+    "leadSource": "Lead Source",
+    "leadSourceSelect": "-- Select Lead Source --",
+    "leadSourceWalkIn": "Walk-in",
+    "leadSourceFacebookAds": "Facebook Ads",
+    "leadSourceReferral": "Referral",
+    "leadSourceProjectDeveloper": "Project Developer",
+    "leadSourceWebsite": "Website",
+    "leadSourceOther": "Other",
     "status": "Status",
     "active": "Active",
     "inactive": "Inactive",
@@ -196,6 +204,7 @@
     "roleTitle": "Role / Department",
     "phone": "Phone Number",
     "email": "Email",
+    "lineId": "LINE ID",
     "preferredChannel": "Preferred Channel",
     "channelPhone": "Phone",
     "channelEmail": "Email",
@@ -225,6 +234,14 @@
     "telLabel": "Tel",
     "emailLabel": "Email",
     "localeThai": "Thai (ไทย)",
-    "localeEnglish": "English"
+    "localeEnglish": "English",
+    "noPrimaryContact": "No primary contact information",
+    "displayNameThPlaceholder": "e.g., Siam Technology Co., Ltd. or Somchai Jaidee",
+    "displayNameEnPlaceholder": "e.g., Siam Technology Co., Ltd. or Somchai Jaidee",
+    "contactNamePlaceholder": "e.g., Jane Smith",
+    "roleTitlePlaceholder": "e.g., Procurement Manager",
+    "phonePlaceholder": "e.g., 081-234-5678",
+    "emailPlaceholder": "e.g., contact@example.com",
+    "lineIdPlaceholder": "e.g., @company or somchai"
   }
 }

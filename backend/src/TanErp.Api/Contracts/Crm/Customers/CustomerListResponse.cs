@@ -8,7 +8,8 @@ public sealed record CustomerListItemResponse(
     string? DisplayNameEn,
     string PreferredLocale,
     string Status,
-    CustomerContactResponse PrimaryContact);
+    CustomerContactResponse PrimaryContact,
+    string? LeadSource = null);
 
 public sealed record CustomerListResponse(
     IReadOnlyList<CustomerListItemResponse> Items,

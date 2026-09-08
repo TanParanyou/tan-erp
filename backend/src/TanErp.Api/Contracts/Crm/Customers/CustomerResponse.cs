@@ -6,7 +6,8 @@ public sealed record CustomerContactResponse(
     string? Phone,
     string? Email,
     string PreferredChannel,
-    bool IsMasked);
+    bool IsMasked,
+    string? LineId = null);
 
 public sealed record DuplicateCustomerResponse(
     Guid Id,
@@ -26,4 +27,5 @@ public sealed record CustomerResponse(
     CustomerContactResponse PrimaryContact,
     IReadOnlyList<DuplicateCustomerResponse>? DuplicateCandidates,
     Guid RowVersion,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    string? LeadSource = null);

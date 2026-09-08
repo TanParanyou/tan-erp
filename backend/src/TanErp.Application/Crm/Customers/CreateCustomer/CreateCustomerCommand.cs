@@ -5,7 +5,8 @@ public sealed record CreatePrimaryContact(
     string? RoleTitle,
     string? Phone,
     string? Email,
-    string PreferredChannel);
+    string PreferredChannel,
+    string? LineId = null);
 
 public sealed record CreateCustomerCommand(
     string FirebaseUid,
@@ -16,4 +17,5 @@ public sealed record CreateCustomerCommand(
     string? DisplayNameEn,
     string PreferredLocale,
     CreatePrimaryContact PrimaryContact,
-    string TraceId);
+    string TraceId,
+    string? LeadSource = null);

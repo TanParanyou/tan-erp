@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { IconSave, IconAlertCircle } from "@/components/common/Icons";
 import { ApiError } from "@/lib/api/api-error";
 import { DuplicateCandidateCard } from "./duplicate-candidate-card";
+import { cn } from "@/lib/utils/cn";
 import type { CustomerResponse } from "@/lib/api/api-client";
 
 export function CustomerEditor() {
@@ -46,7 +47,7 @@ export function CustomerEditor() {
   const customerFormSchema = useMemo(
     () =>
       createCustomerFormSchema((key) =>
-        tValidation(key as "required" | "invalidEmail" | "phoneOrEmailRequired"),
+        tValidation(key as "required" | "invalidEmail" | "phoneOrEmailRequired" | "invalidFormat"),
       ),
     [tValidation],
   );
@@ -62,11 +63,13 @@ export function CustomerEditor() {
       displayNameTh: "",
       displayNameEn: "",
       preferredLocale: locale === "en" ? "en" : "th",
+      leadSource: "",
       primaryContact: {
         name: "",
         roleTitle: "",
         phone: "",
         email: "",
+        lineId: "",
         preferredChannel: "phone",
       },
     },
@@ -101,11 +104,13 @@ export function CustomerEditor() {
           displayNameTh: values.displayNameTh,
           displayNameEn: values.displayNameEn || undefined,
           preferredLocale: values.preferredLocale,
+          leadSource: values.leadSource || undefined,
           primaryContact: {
             name: values.primaryContact.name,
             roleTitle: values.primaryContact.roleTitle || undefined,
             phone: values.primaryContact.phone,
             email: values.primaryContact.email || undefined,
+            lineId: values.primaryContact.lineId || undefined,
             preferredChannel: values.primaryContact.preferredChannel || undefined,
           },
         },
@@ -141,21 +146,13 @@ export function CustomerEditor() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: "800px" }}>
+    <div className="flex flex-col gap-6 max-w-[800px]">
       {/* Header */}
-      <div style={{ borderBottom: "1px solid var(--erp-border)", paddingBottom: "1.25rem" }}>
-        <h1
-          style={{
-            fontSize: "1.5rem",
-            fontWeight: 700,
-            color: "var(--erp-navy)",
-            margin: "0 0 0.25rem 0",
-            letterSpacing: "-0.01em",
-          }}
-        >
+      <div className="border-b border-erp-border pb-5">
+        <h1 className="text-2xl font-bold text-erp-navy mb-1 tracking-tight">
           {t("createCustomer")}
         </h1>
-        <p style={{ fontSize: "0.875rem", color: "var(--erp-text-muted)", margin: 0 }}>
+        <p className="text-sm text-erp-text-muted m-0">
           {t("subtitle")}
         </p>
       </div>
@@ -164,18 +161,10 @@ export function CustomerEditor() {
         <div
           role="alert"
           aria-live="polite"
-          className="erp-card"
-          style={{
-            padding: "1rem 1.25rem",
-            borderColor: "var(--erp-danger-border)",
-            backgroundColor: "var(--erp-danger-bg)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-          }}
+          className="erp-card p-4 md:px-5 border-erp-danger-border bg-erp-danger-bg flex items-center gap-3"
         >
-          <IconAlertCircle size={20} style={{ color: "var(--erp-danger)", flexShrink: 0 }} />
-          <span style={{ color: "var(--erp-danger)", fontSize: "0.875rem", fontWeight: 500 }}>
+          <IconAlertCircle size={20} className="text-erp-danger shrink-0" />
+          <span className="text-erp-danger text-sm font-medium">
             {submitError}
           </span>
         </div>
@@ -190,14 +179,14 @@ export function CustomerEditor() {
       )}
 
       {/* Form */}
-      <form onChange={handleFormChange} onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <form onChange={handleFormChange} onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
         {/* Customer Base Info Section */}
-        <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0, borderBottom: "1px solid var(--erp-border-subtle)", paddingBottom: "0.75rem" }}>
+        <div className="erp-card p-6 flex flex-col gap-5">
+          <h2 className="text-lg font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3">
             {t("title")}
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Customer Type */}
             <div className="erp-form-group">
               <label htmlFor="customerType" className="erp-label">
@@ -253,6 +242,7 @@ export function CustomerEditor() {
               <Input
                 id="displayNameTh"
                 label={t("displayNameTh")}
+                placeholder={t("displayNameThPlaceholder")}
                 required
                 disabled={isSubmitting || isCreateComplete}
                 error={errors.displayNameTh?.message}
@@ -269,21 +259,55 @@ export function CustomerEditor() {
               <Input
                 id="displayNameEn"
                 label={t("displayNameEn")}
+                placeholder={t("displayNameEnPlaceholder")}
                 disabled={isSubmitting || isCreateComplete}
                 error={errors.displayNameEn?.message}
                 {...field}
               />
             )}
           />
+
+          {/* Lead Source */}
+          <div className="erp-form-group">
+            <label htmlFor="leadSource" className="erp-label">
+              {t("leadSource")}
+            </label>
+            <Controller
+              name="leadSource"
+              control={control}
+              render={({ field }) => (
+                <select
+                  id="leadSource"
+                  className={cn("erp-input", errors.leadSource && "erp-input-error")}
+                  aria-invalid={Boolean(errors.leadSource)}
+                  disabled={isSubmitting || isCreateComplete}
+                  {...field}
+                >
+                  <option value="">{t("leadSourceSelect")}</option>
+                  <option value="walk_in">{t("leadSourceWalkIn")}</option>
+                  <option value="facebook_ads">{t("leadSourceFacebookAds")}</option>
+                  <option value="referral">{t("leadSourceReferral")}</option>
+                  <option value="project_developer">{t("leadSourceProjectDeveloper")}</option>
+                  <option value="website">{t("leadSourceWebsite")}</option>
+                  <option value="other">{t("leadSourceOther")}</option>
+                </select>
+              )}
+            />
+            {errors.leadSource?.message && (
+              <p className="erp-error-text" role="alert">
+                {errors.leadSource.message}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Primary Contact Section */}
-        <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0, borderBottom: "1px solid var(--erp-border-subtle)", paddingBottom: "0.75rem" }}>
+        <div className="erp-card p-6 flex flex-col gap-5">
+          <h2 className="text-lg font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3">
             {t("primaryContact")}
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Contact Name */}
             <Controller
               name="primaryContact.name"
@@ -292,6 +316,7 @@ export function CustomerEditor() {
                 <Input
                   id="primaryContactName"
                   label={t("contactName")}
+                  placeholder={t("contactNamePlaceholder")}
                   required
                   disabled={isSubmitting || isCreateComplete}
                   error={errors.primaryContact?.name?.message}
@@ -308,6 +333,7 @@ export function CustomerEditor() {
                 <Input
                   id="primaryContactRoleTitle"
                   label={t("roleTitle")}
+                  placeholder={t("roleTitlePlaceholder")}
                   disabled={isSubmitting || isCreateComplete}
                   error={errors.primaryContact?.roleTitle?.message}
                   {...field}
@@ -316,7 +342,7 @@ export function CustomerEditor() {
             />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Phone */}
             <Controller
               name="primaryContact.phone"
@@ -325,6 +351,7 @@ export function CustomerEditor() {
                 <Input
                   id="primaryContactPhone"
                   label={t("phone")}
+                  placeholder={t("phonePlaceholder")}
                   disabled={isSubmitting || isCreateComplete}
                   error={errors.primaryContact?.phone?.message}
                   {...field}
@@ -341,6 +368,7 @@ export function CustomerEditor() {
                   id="primaryContactEmail"
                   label={t("email")}
                   type="email"
+                  placeholder={t("emailPlaceholder")}
                   disabled={isSubmitting || isCreateComplete}
                   error={errors.primaryContact?.email?.message}
                   {...field}
@@ -349,40 +377,58 @@ export function CustomerEditor() {
             />
           </div>
 
-          {/* Preferred Channel */}
-          <div className="erp-form-group">
-            <label htmlFor="preferredChannel" className="erp-label">
-              {t("preferredChannel")}
-            </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* LINE ID */}
+            <Controller
+              name="primaryContact.lineId"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="primaryContactLineId"
+                  label={t("lineId")}
+                  placeholder={t("lineIdPlaceholder")}
+                  disabled={isSubmitting || isCreateComplete}
+                  error={errors.primaryContact?.lineId?.message}
+                  {...field}
+                />
+              )}
+            />
+
+            {/* Preferred Channel */}
             <Controller
               name="primaryContact.preferredChannel"
               control={control}
               render={({ field }) => (
-                <select
-                  id="preferredChannel"
-                  className="erp-input"
-                  disabled={isSubmitting}
-                  {...field}
-                >
-                  <option value="phone">{t("channelPhone")}</option>
-                  <option value="email">{t("channelEmail")}</option>
-                  <option value="line">{t("channelLine")}</option>
-                  <option value="other">{t("channelOther")}</option>
-                </select>
+                <div className="erp-form-group">
+                  <label htmlFor="preferredChannel" className="erp-label">
+                    {t("preferredChannel")}
+                  </label>
+                  <select
+                    id="preferredChannel"
+                    className="erp-input"
+                    disabled={isSubmitting || isCreateComplete}
+                    {...field}
+                  >
+                    <option value="phone">{t("channelPhone")}</option>
+                    <option value="email">{t("channelEmail")}</option>
+                    <option value="line">{t("channelLine")}</option>
+                    <option value="other">{t("channelOther")}</option>
+                  </select>
+                </div>
               )}
             />
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "0.5rem" }}>
+        {/* Sticky Action Buttons Bar */}
+        <div className="erp-form-actions-sticky">
           <Button
             type="button"
             variant="outline"
             size="md"
             disabled={isSubmitting || isCreateComplete}
             onClick={() => router.push(`/${locale}/customers`)}
-            style={{ minHeight: "44px" }}
+            className="min-h-[44px]"
           >
             {tCommon("actions.cancel")}
           </Button>
@@ -394,7 +440,7 @@ export function CustomerEditor() {
             isLoading={isSubmitting}
             disabled={isCreateComplete}
             icon={<IconSave size={16} />}
-            style={{ minHeight: "44px", minWidth: "140px" }}
+            className="min-h-[44px] min-w-[140px]"
           >
             {t("saveCustomer")}
           </Button>

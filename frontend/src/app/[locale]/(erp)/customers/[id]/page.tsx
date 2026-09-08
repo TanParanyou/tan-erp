@@ -47,7 +47,7 @@ export default function CustomerDynamicPage({ params }: CustomerDynamicPageProps
           <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-warning)", margin: "0 0 0.5rem 0" }}>
             {t("errors.accessDeniedTitle")}
           </h2>
-          <p style={{ color: "#78350F", margin: 0, fontSize: "0.875rem" }}>
+          <p style={{ color: "var(--erp-warning-text)", margin: 0, fontSize: "0.875rem" }}>
             {t("errors.createAccessDeniedDetail")}
           </p>
         </div>

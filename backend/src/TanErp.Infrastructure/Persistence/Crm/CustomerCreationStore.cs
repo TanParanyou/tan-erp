@@ -172,8 +172,9 @@ public class CustomerCreationStore : ICustomerCreationStore
                 includeContactPii ? contact.Phone : MaskPhone(contact.Phone),
                 includeContactPii ? contact.Email : MaskEmail(contact.Email),
                 contact.PreferredChannel,
-                IsMasked: !includeContactPii)
-            : new CustomerContactProjection(string.Empty, null, null, null, ContactChannel.Phone, IsMasked: false);
+                IsMasked: !includeContactPii,
+                includeContactPii ? contact.LineId : MaskLineId(contact.LineId))
+            : new CustomerContactProjection(string.Empty, null, null, null, ContactChannel.Phone, IsMasked: false, null);
 
         return new CustomerProjection(
             customer.Id,
@@ -185,7 +186,8 @@ public class CustomerCreationStore : ICustomerCreationStore
             customer.Status,
             contactProjection,
             customer.RowVersion,
-            customer.CreatedAtUtc);
+            customer.CreatedAtUtc,
+            customer.LeadSource);
     }
 
     public static string? MaskPhone(string? phone)
@@ -209,5 +211,15 @@ public class CustomerCreationStore : ICustomerCreationStore
         if (atIndex <= 1) return "***" + trimmed[atIndex..];
         var domain = trimmed[atIndex..];
         return $"{trimmed[0]}***{domain}";
+    }
+
+    public static string? MaskLineId(string? lineId)
+    {
+        if (string.IsNullOrWhiteSpace(lineId)) return null;
+        var trimmed = lineId.Trim();
+        if (trimmed.Length <= 4) return "****";
+        var prefix = trimmed[..2];
+        var suffix = trimmed[^2..];
+        return $"{prefix}****{suffix}";
     }
 }

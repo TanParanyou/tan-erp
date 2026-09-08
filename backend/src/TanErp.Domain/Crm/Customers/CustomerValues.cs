@@ -61,7 +61,29 @@ public static class ContactChannel
         Other
     };
 
-    public static bool IsValid(string value) => All.Contains(value.Trim());
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}
+
+public static class CustomerLeadSource
+{
+    public const string WalkIn = "walk_in";
+    public const string FacebookAds = "facebook_ads";
+    public const string Referral = "referral";
+    public const string ProjectDeveloper = "project_developer";
+    public const string Website = "website";
+    public const string Other = "other";
+
+    public static readonly HashSet<string> All = new(StringComparer.Ordinal)
+    {
+        WalkIn,
+        FacebookAds,
+        Referral,
+        ProjectDeveloper,
+        Website,
+        Other
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
 }
 
 public static class CustomerNormalizer
@@ -104,4 +126,5 @@ public sealed record PrimaryContactInput(
     string? RoleTitle,
     string? Phone,
     string? Email,
-    string PreferredChannel);
+    string PreferredChannel,
+    string? LineId = null);

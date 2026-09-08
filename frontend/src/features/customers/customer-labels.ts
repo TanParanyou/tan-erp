@@ -32,3 +32,30 @@ export function getContactChannelLabelKey(value: string | null | undefined): Con
       return null;
   }
 }
+
+export type CustomerLeadSourceKey =
+  | "leadSourceWalkIn"
+  | "leadSourceFacebookAds"
+  | "leadSourceReferral"
+  | "leadSourceProjectDeveloper"
+  | "leadSourceWebsite"
+  | "leadSourceOther";
+
+export function getCustomerLeadSourceLabelKey(value: string | null | undefined): CustomerLeadSourceKey | null {
+  switch (value) {
+    case "walk_in":
+      return "leadSourceWalkIn";
+    case "facebook_ads":
+      return "leadSourceFacebookAds";
+    case "referral":
+      return "leadSourceReferral";
+    case "project_developer":
+      return "leadSourceProjectDeveloper";
+    case "website":
+      return "leadSourceWebsite";
+    case "other":
+      return "leadSourceOther";
+    default:
+      return null;
+  }
+}

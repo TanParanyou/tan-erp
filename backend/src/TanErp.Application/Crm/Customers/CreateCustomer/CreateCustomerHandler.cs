@@ -92,6 +92,16 @@ public class CreateCustomerHandler
             return Result<CreateCustomerResult>.Failure(new Error("CONTACT_FIELD_REQUIRED", $"Invalid preferred channel: '{command.PrimaryContact.PreferredChannel}'."));
         }
 
+        if (!string.IsNullOrWhiteSpace(command.LeadSource) && !CustomerLeadSource.IsValid(command.LeadSource))
+        {
+            return Result<CreateCustomerResult>.Failure(new Error("CUSTOMER_FIELD_REQUIRED", $"Invalid lead source: '{command.LeadSource}'."));
+        }
+
+        if (command.PrimaryContact.LineId?.Trim().Length > 100)
+        {
+            return Result<CreateCustomerResult>.Failure(new Error("CONTACT_FIELD_REQUIRED", "Line ID cannot exceed 100 characters."));
+        }
+
         var now = _clock.UtcNow;
         var customerId = Guid.NewGuid();
 
@@ -109,18 +119,21 @@ public class CreateCustomerHandler
                 command.PrimaryContact.RoleTitle,
                 command.PrimaryContact.Phone,
                 command.PrimaryContact.Email,
-                command.PrimaryContact.PreferredChannel),
-            now);
+                command.PrimaryContact.PreferredChannel,
+                command.PrimaryContact.LineId),
+            now,
+            command.LeadSource);
 
         var primaryContactEntity = customer.Contacts.First();
 
         // 5. Create deterministic hashes
         var keyHash = ComputeSha256Hex(command.IdempotencyKey);
-        var canonicalPayload = $"{command.CustomerType}|{CustomerNormalizer.CollapseWhitespace(command.DisplayNameTh)}|{CustomerNormalizer.CollapseWhitespace(command.DisplayNameEn ?? "")}|{command.PreferredLocale}|{CustomerNormalizer.CollapseWhitespace(command.PrimaryContact.Name)}|{CustomerNormalizer.CollapseWhitespace(command.PrimaryContact.RoleTitle ?? "")}|{normalizedPhone ?? ""}|{normalizedEmail ?? ""}|{command.PrimaryContact.PreferredChannel}";
+        var canonicalPayload = $"{command.CustomerType}|{CustomerNormalizer.CollapseWhitespace(command.DisplayNameTh)}|{CustomerNormalizer.CollapseWhitespace(command.DisplayNameEn ?? "")}|{command.PreferredLocale}|{command.LeadSource?.Trim() ?? ""}|{CustomerNormalizer.CollapseWhitespace(command.PrimaryContact.Name)}|{CustomerNormalizer.CollapseWhitespace(command.PrimaryContact.RoleTitle ?? "")}|{normalizedPhone ?? ""}|{normalizedEmail ?? ""}|{command.PrimaryContact.LineId?.Trim() ?? ""}|{command.PrimaryContact.PreferredChannel}";
         var payloadHash = ComputeSha256Hex(canonicalPayload);
 
         // 6. Audit Events (Changed fields only, never raw PII)
-        const string changesJson = "{\"changedFields\":[\"customerType\",\"displayNameTh\",\"displayNameEn\",\"preferredLocale\",\"primaryContact\"]}";
+        const string customerChangesJson = "{\"changedFields\":[\"customerType\",\"displayNameTh\",\"displayNameEn\",\"preferredLocale\",\"leadSource\",\"primaryContact\"]}";
+        const string contactChangesJson = "{\"changedFields\":[\"name\",\"roleTitle\",\"phone\",\"email\",\"lineId\",\"preferredChannel\"]}";
 
         var auditEvents = new List<AuditEvent>
         {
@@ -133,7 +146,7 @@ public class CreateCustomerHandler
                 customerId.ToString(),
                 now,
                 command.TraceId,
-                changesJson),
+                customerChangesJson),
             new(
                 Guid.NewGuid(),
                 access.OrganizationId,
@@ -143,7 +156,7 @@ public class CreateCustomerHandler
                 primaryContactEntity.Id.ToString(),
                 now,
                 command.TraceId,
-                changesJson)
+                contactChangesJson)
         };
 
         // 7. Persist via Store

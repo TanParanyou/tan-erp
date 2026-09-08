@@ -1,5 +1,9 @@
 @import "../styles/erp-theme.css";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --color-primary: var(--erp-navy);
   --color-primary-hover: var(--erp-navy-hover);

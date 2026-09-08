@@ -62,8 +62,10 @@ public class CustomersController : ControllerBase
                 request.PrimaryContact.RoleTitle,
                 request.PrimaryContact.Phone,
                 request.PrimaryContact.Email,
-                request.PrimaryContact.PreferredChannel),
-            traceId);
+                request.PrimaryContact.PreferredChannel,
+                request.PrimaryContact.LineId),
+            traceId,
+            request.LeadSource);
 
         var result = await _createHandler.Handle(command, cancellationToken);
         if (result.IsFailure)
@@ -126,7 +128,9 @@ public class CustomersController : ControllerBase
                 c.PrimaryContact.Phone,
                 c.PrimaryContact.Email,
                 c.PrimaryContact.PreferredChannel,
-                c.PrimaryContact.IsMasked))).ToList();
+                c.PrimaryContact.IsMasked,
+                c.PrimaryContact.LineId),
+            c.LeadSource)).ToList();
 
         var response = new CustomerListResponse(items, result.Value.NextCursor);
         return Ok(response);
@@ -182,9 +186,11 @@ public class CustomersController : ControllerBase
                 customer.PrimaryContact.Phone,
                 customer.PrimaryContact.Email,
                 customer.PrimaryContact.PreferredChannel,
-                customer.PrimaryContact.IsMasked),
+                customer.PrimaryContact.IsMasked,
+                customer.PrimaryContact.LineId),
             duplicates,
             customer.RowVersion,
-            customer.CreatedAtUtc);
+            customer.CreatedAtUtc,
+            customer.LeadSource);
     }
 }

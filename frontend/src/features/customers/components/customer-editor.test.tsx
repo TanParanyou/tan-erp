@@ -197,4 +197,53 @@ describe("CustomerEditor create intent", () => {
       expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("customer-clean")),
     );
   });
+
+  it("submits leadSource and lineId when provided", async () => {
+    mockedCreate.mockResolvedValue({
+      id: "customer-quick-intake",
+      code: "CUS-0102",
+      customerType: "organization",
+      displayNameTh: "บริษัท ตัวอย่าง จำกัด",
+      status: "draft",
+      leadSource: "referral",
+      primaryContact: {
+        name: "คุณตัวอย่าง",
+        roleTitle: null,
+        phone: "0812345678",
+        email: null,
+        lineId: "line_lead_99",
+        preferredChannel: "phone",
+        isMasked: false,
+      },
+      duplicateCandidates: null,
+    });
+
+    renderEditor(client);
+    fillValidForm(document.body as unknown as HTMLElement);
+
+    const leadSourceSelect = document.body.querySelector("#leadSource") as HTMLSelectElement;
+    fireEvent.change(leadSourceSelect, { target: { value: "referral" } });
+
+    const lineIdInput = document.body.querySelector("#primaryContactLineId") as HTMLInputElement;
+    fireEvent.change(lineIdInput, { target: { value: "line_lead_99" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" }));
+
+    await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(1));
+    const payload = mockedCreate.mock.calls[0][0];
+    expect(payload.leadSource).toBe("referral");
+    expect(payload.primaryContact?.lineId).toBe("line_lead_99");
+  });
+
+  it("renders translated placeholders on all inputs", () => {
+    renderEditor(client);
+
+    expect(screen.getByPlaceholderText(thMessages.customers.displayNameThPlaceholder)).toBeDefined();
+    expect(screen.getByPlaceholderText(thMessages.customers.displayNameEnPlaceholder)).toBeDefined();
+    expect(screen.getByPlaceholderText(thMessages.customers.contactNamePlaceholder)).toBeDefined();
+    expect(screen.getByPlaceholderText(thMessages.customers.roleTitlePlaceholder)).toBeDefined();
+    expect(screen.getByPlaceholderText(thMessages.customers.phonePlaceholder)).toBeDefined();
+    expect(screen.getByPlaceholderText(thMessages.customers.emailPlaceholder)).toBeDefined();
+    expect(screen.getByPlaceholderText(thMessages.customers.lineIdPlaceholder)).toBeDefined();
+  });
 });

@@ -25,6 +25,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(x => x.NormalizedDisplayName).HasColumnName("normalized_display_name").HasMaxLength(255).IsRequired();
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32).IsRequired();
         builder.Property(x => x.PreferredLocale).HasColumnName("preferred_locale").HasMaxLength(10).IsRequired();
+        builder.Property(x => x.LeadSource).HasColumnName("lead_source").HasMaxLength(50);
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();

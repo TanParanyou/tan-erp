@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createCustomerFormSchema } from "./customer-form-schema";
 
-const t = (key: "required" | "invalidEmail" | "phoneOrEmailRequired"): string =>
-  `validation.${key}`;
+const t = (
+  key: "required" | "invalidEmail" | "phoneOrEmailRequired" | "invalidFormat",
+): string => `validation.${key}`;
 
 const schema = createCustomerFormSchema(t);
 
@@ -79,5 +80,37 @@ describe("createCustomerFormSchema", () => {
       },
     });
     expect(result.success).toBe(false);
+  });
+
+  it("accepts valid leadSource and lineId", () => {
+    const result = schema.safeParse({
+      ...validOrganizationWithPhone,
+      leadSource: "facebook_ads",
+      primaryContact: {
+        ...validOrganizationWithPhone.primaryContact,
+        lineId: "line_user_123",
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid leadSource", () => {
+    const result = schema.safeParse({
+      ...validOrganizationWithPhone,
+      leadSource: "unknown_channel",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects lineId exceeding 100 characters with localized invalidFormat", () => {
+    const result = schema.safeParse({
+      ...validOrganizationWithPhone,
+      primaryContact: {
+        ...validOrganizationWithPhone.primaryContact,
+        lineId: "a".repeat(101),
+      },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("validation.invalidFormat");
   });
 });

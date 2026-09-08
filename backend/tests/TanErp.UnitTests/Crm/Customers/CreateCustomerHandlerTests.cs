@@ -198,15 +198,59 @@ public class CreateCustomerHandlerTests
         Assert.Equal("Customer", customerAudit.ResourceType);
         Assert.Equal(store.LastRequest.Customer.Id.ToString(), customerAudit.ResourceId);
         Assert.Equal("trace-1", customerAudit.TraceId);
-        Assert.Equal("{\"changedFields\":[\"customerType\",\"displayNameTh\",\"displayNameEn\",\"preferredLocale\",\"primaryContact\"]}", customerAudit.ChangesJson);
+        Assert.Equal("{\"changedFields\":[\"customerType\",\"displayNameTh\",\"displayNameEn\",\"preferredLocale\",\"leadSource\",\"primaryContact\"]}", customerAudit.ChangesJson);
 
         var contactAudit = auditEvents.First(a => a.Action == "contact.created");
         Assert.Equal("CustomerContact", contactAudit.ResourceType);
         Assert.Equal("trace-1", contactAudit.TraceId);
+        Assert.Equal("{\"changedFields\":[\"name\",\"roleTitle\",\"phone\",\"email\",\"lineId\",\"preferredChannel\"]}", contactAudit.ChangesJson);
 
         // Verify hashes
         Assert.False(string.IsNullOrWhiteSpace(store.LastRequest.IdempotencyKeyHash));
         Assert.False(string.IsNullOrWhiteSpace(store.LastRequest.PayloadHash));
         Assert.NotEqual("key-1234567890123456", store.LastRequest.IdempotencyKeyHash);
+    }
+
+    [Fact]
+    public async Task Handle_WhenInvalidLeadSource_ReturnsCustomerFieldRequired()
+    {
+        var accessResolver = new FakeRequestAccessResolver();
+        accessResolver.GrantedPermissions.Add("customers.create");
+        accessResolver.GrantedPermissions.Add("customer-contacts.manage");
+        var store = new FakeCustomerCreationStore();
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+
+        var command = new CreateCustomerCommand(
+            "uid-1", Guid.NewGuid(), "key-1234567890123456",
+            "organization", "บริษัท ตัวอย่าง จำกัด", null, "th",
+            new CreatePrimaryContact("คุณตัวอย่าง", null, "0812345678", null, "phone"),
+            "trace-1",
+            LeadSource: "invalid_lead_source");
+
+        var result = await handler.Handle(command);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("CUSTOMER_FIELD_REQUIRED", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Handle_WhenLineIdExceeds100Chars_ReturnsContactFieldRequired()
+    {
+        var accessResolver = new FakeRequestAccessResolver();
+        accessResolver.GrantedPermissions.Add("customers.create");
+        accessResolver.GrantedPermissions.Add("customer-contacts.manage");
+        var store = new FakeCustomerCreationStore();
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+
+        var command = new CreateCustomerCommand(
+            "uid-1", Guid.NewGuid(), "key-1234567890123456",
+            "organization", "บริษัท ตัวอย่าง จำกัด", null, "th",
+            new CreatePrimaryContact("คุณตัวอย่าง", null, "0812345678", null, "phone", LineId: new string('x', 101)),
+            "trace-1");
+
+        var result = await handler.Handle(command);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("CONTACT_FIELD_REQUIRED", result.Error.Code);
     }
 }

@@ -12,6 +12,7 @@ public class CustomerContact : Entity
     public string? NormalizedPhone { get; private set; }
     public string? Email { get; private set; }
     public string? NormalizedEmail { get; private set; }
+    public string? LineId { get; private set; }
     public string PreferredChannel { get; private set; } = ContactChannel.Phone;
     public bool IsPrimary { get; private set; }
     public string Status { get; private set; } = "active";
@@ -30,6 +31,7 @@ public class CustomerContact : Entity
         string? roleTitle,
         string? phone,
         string? email,
+        string? lineId,
         string preferredChannel,
         bool isPrimary,
         Guid createdByUserId,
@@ -53,6 +55,11 @@ public class CustomerContact : Entity
             throw new ArgumentException($"Invalid preferred channel: '{preferredChannel}'.", nameof(preferredChannel));
         }
 
+        if (lineId?.Trim().Length > 100)
+        {
+            throw new ArgumentException("Contact LineId cannot exceed 100 characters.", nameof(lineId));
+        }
+
         CustomerId = customerId;
         OrganizationId = organizationId;
         Name = CustomerNormalizer.CollapseWhitespace(name);
@@ -61,6 +68,7 @@ public class CustomerContact : Entity
         NormalizedPhone = normalizedPhone;
         Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
         NormalizedEmail = normalizedEmail;
+        LineId = string.IsNullOrWhiteSpace(lineId) ? null : lineId.Trim();
         PreferredChannel = preferredChannel.Trim();
         IsPrimary = isPrimary;
         Status = "active";

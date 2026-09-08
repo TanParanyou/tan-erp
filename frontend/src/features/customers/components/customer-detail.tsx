@@ -8,7 +8,7 @@ import { DuplicateCandidateCard } from "./duplicate-candidate-card";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
 import { IconChevronLeft, IconAlertCircle, IconFileText } from "@/components/common/Icons";
-import { getContactChannelLabelKey, getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
+import { getContactChannelLabelKey, getCustomerLeadSourceLabelKey, getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
 
 interface CustomerDetailProps {
   customerId: string;
@@ -21,12 +21,12 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
   const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
     const key = getCustomerTypeLabelKey(value);
-    return key ? t(key) : tCommon("feedback.operationFailed");
+    return key ? t(key) : "-";
   };
 
   const resolveCustomerStatusLabel = (value: string | null | undefined): string => {
     const key = getCustomerStatusLabelKey(value);
-    return key ? tCommon(`status.${key}`) : tCommon("feedback.operationFailed");
+    return key ? tCommon(`status.${key}`) : "-";
   };
 
   const resolveDetailErrorMessage = (error: Error | null): string => {
@@ -43,16 +43,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
   if (isLoading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "300px",
-          backgroundColor: "var(--erp-surface)",
-          border: "1px solid var(--erp-border)",
-        }}
-      >
+      <div className="flex items-center justify-center min-h-[300px] bg-erp-surface border border-erp-border">
         <MonoSpinner size="lg" label={tCommon("states.loading")} aria-busy="true" />
       </div>
     );
@@ -61,31 +52,21 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   if (isError || !customer) {
     return (
       <div
-          role="alert"
-          aria-live="polite"
-        className="erp-card"
-        style={{
-          padding: "2rem",
-          borderColor: "var(--erp-danger-border)",
-          backgroundColor: "var(--erp-danger-bg)",
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "1rem",
-        }}
+        role="alert"
+        aria-live="polite"
+        className="erp-card p-8 border-erp-danger-border bg-erp-danger-bg text-center flex flex-col items-center gap-4"
       >
-        <IconAlertCircle size={32} style={{ color: "var(--erp-danger)" }} />
+        <IconAlertCircle size={32} className="text-erp-danger" />
         <div>
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-danger)", margin: "0 0 0.5rem 0" }}>
+          <h2 className="text-lg font-bold text-erp-danger mb-2">
             {resolveDetailErrorMessage(error)}
           </h2>
         </div>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <Button variant="outline" size="md" onClick={() => refetch()} style={{ minHeight: "44px" }}>
-            {tCommon("actions.cancel")}
+        <div className="flex gap-4">
+          <Button variant="outline" size="md" onClick={() => refetch()} className="min-h-[44px]">
+            {tCommon("actions.retry")}
           </Button>
-          <Button href={`/${locale}/customers`} variant="primary" size="md" style={{ minHeight: "44px" }}>
+          <Button href={`/${locale}/customers`} variant="primary" size="md" className="min-h-[44px]">
             {t("backToList")}
           </Button>
         </div>
@@ -101,29 +82,21 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const contact = customer.primaryContact;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: "800px" }}>
+    <div className="flex flex-col gap-6 max-w-[800px]">
       {/* Top Header & Back link */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", borderBottom: "1px solid var(--erp-border)", paddingBottom: "1.25rem" }}>
+      <div className="flex flex-col gap-3 border-b border-erp-border pb-5">
         <Link
           href={`/${locale}/customers`}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.25rem",
-            color: "var(--erp-navy)",
-            textDecoration: "none",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-          }}
+          className="inline-flex items-center gap-1 text-erp-navy no-underline text-sm font-semibold hover:underline"
         >
           <IconChevronLeft size={16} />
           <span>{t("backToList")}</span>
         </Link>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0 }}>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-erp-navy m-0">
                 {displayName}
               </h1>
               <span
@@ -134,7 +107,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
                 {resolveCustomerStatusLabel(customer.status)}
               </span>
             </div>
-            <span style={{ fontFamily: "monospace", color: "var(--erp-text-muted)", fontSize: "0.875rem" }}>
+            <span className="font-mono text-erp-text-muted text-sm">
               {customer.code}
             </span>
           </div>
@@ -147,14 +120,14 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
       )}
 
       {/* Detail Content */}
-      <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-        <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0, borderBottom: "1px solid var(--erp-border-subtle)", paddingBottom: "0.75rem" }}>
+      <div className="erp-card p-6 flex flex-col gap-5">
+        <h2 className="text-lg font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3">
           {t("title")}
         </h2>
 
         <dl className="erp-dl">
           <dt>{t("code")}:</dt>
-          <dd style={{ fontFamily: "monospace", fontWeight: 600 }}>{customer.code || "-"}</dd>
+          <dd className="font-mono font-semibold">{customer.code || "-"}</dd>
 
           <dt>{t("customerType")}:</dt>
           <dd>
@@ -164,35 +137,52 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           </dd>
 
           <dt>{t("displayNameTh")}:</dt>
-          <dd style={{ fontWeight: 600 }}>{customer.displayNameTh || "-"}</dd>
+          <dd className="font-semibold">{customer.displayNameTh || "-"}</dd>
 
           <dt>{t("displayNameEn")}:</dt>
           <dd>{customer.displayNameEn || "-"}</dd>
 
           <dt>{t("preferredLocale")}:</dt>
           <dd>{customer.preferredLocale === "en" ? t("localeEnglish") : t("localeThai")}</dd>
+
+          <dt>{t("leadSource")}:</dt>
+          <dd>
+            {customer.leadSource ? (
+              <span className="erp-badge erp-badge-neutral">
+                {(() => {
+                  const key = getCustomerLeadSourceLabelKey(customer.leadSource);
+                  return key ? t(key) : customer.leadSource;
+                })()}
+              </span>
+            ) : (
+              "-"
+            )}
+          </dd>
         </dl>
       </div>
 
       {/* Primary Contact Section */}
-      <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-        <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0, borderBottom: "1px solid var(--erp-border-subtle)", paddingBottom: "0.75rem" }}>
+      <div className="erp-card p-6 flex flex-col gap-5">
+        <h2 className="text-lg font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3">
           {t("primaryContact")}
         </h2>
 
         {contact ? (
           <dl className="erp-dl">
             <dt>{t("contactName")}:</dt>
-            <dd style={{ fontWeight: 600 }}>{contact.name || "-"}</dd>
+            <dd className="font-semibold">{contact.name || "-"}</dd>
 
             <dt>{t("roleTitle")}:</dt>
             <dd>{contact.roleTitle || "-"}</dd>
 
             <dt>{t("phone")}:</dt>
-            <dd style={{ fontFamily: "monospace" }}>{contact.phone || "-"}</dd>
+            <dd className="font-mono">{contact.phone || "-"}</dd>
 
             <dt>{t("email")}:</dt>
             <dd>{contact.email || "-"}</dd>
+
+            <dt>{t("lineId")}:</dt>
+            <dd className="font-mono">{contact.lineId || "-"}</dd>
 
             <dt>{t("preferredChannel")}:</dt>
             <dd>
@@ -205,8 +195,8 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
             </dd>
           </dl>
         ) : (
-          <p style={{ color: "var(--erp-text-muted)", fontSize: "0.875rem", margin: 0 }}>
-            -
+          <p className="text-erp-text-muted text-sm m-0">
+            {t("noPrimaryContact")}
           </p>
         )}
       </div>

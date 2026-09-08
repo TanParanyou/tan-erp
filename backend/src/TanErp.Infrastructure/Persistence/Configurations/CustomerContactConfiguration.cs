@@ -23,6 +23,7 @@ public class CustomerContactConfiguration : IEntityTypeConfiguration<CustomerCon
         builder.Property(x => x.NormalizedPhone).HasColumnName("normalized_phone").HasMaxLength(50);
         builder.Property(x => x.Email).HasColumnName("email").HasMaxLength(255);
         builder.Property(x => x.NormalizedEmail).HasColumnName("normalized_email").HasMaxLength(255);
+        builder.Property(x => x.LineId).HasColumnName("line_id").HasMaxLength(100);
         builder.Property(x => x.PreferredChannel).HasColumnName("preferred_channel").HasMaxLength(32).IsRequired();
         builder.Property(x => x.IsPrimary).HasColumnName("is_primary").IsRequired();
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32).IsRequired();

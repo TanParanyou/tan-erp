@@ -88,8 +88,9 @@ public class CustomerReadStore : ICustomerReadStore
                 includeContactPii ? contact.Phone : CustomerCreationStore.MaskPhone(contact.Phone),
                 includeContactPii ? contact.Email : CustomerCreationStore.MaskEmail(contact.Email),
                 contact.PreferredChannel,
-                IsMasked: !includeContactPii)
-            : new CustomerContactProjection(string.Empty, null, null, null, ContactChannel.Phone, IsMasked: false);
+                IsMasked: !includeContactPii,
+                includeContactPii ? contact.LineId : CustomerCreationStore.MaskLineId(contact.LineId))
+            : new CustomerContactProjection(string.Empty, null, null, null, ContactChannel.Phone, IsMasked: false, null);
 
         return new CustomerProjection(
             customer.Id,
@@ -101,6 +102,7 @@ public class CustomerReadStore : ICustomerReadStore
             customer.Status,
             contactProjection,
             customer.RowVersion,
-            customer.CreatedAtUtc);
+            customer.CreatedAtUtc,
+            customer.LeadSource);
     }
 }

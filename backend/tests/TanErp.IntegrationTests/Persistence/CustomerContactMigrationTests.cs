@@ -66,8 +66,10 @@ public class CustomerContactMigrationTests : IAsyncLifetime
 
         Assert.True(await ColumnExists("identity_access", "permissions", "is_active"));
         Assert.True(await ColumnExists("crm", "customers", "id"));
+        Assert.True(await ColumnExists("crm", "customers", "lead_source"));
         Assert.True(await ColumnExists("crm", "customer_contacts", "normalized_phone"));
         Assert.True(await ColumnExists("crm", "customer_contacts", "normalized_email"));
+        Assert.True(await ColumnExists("crm", "customer_contacts", "line_id"));
         Assert.True(await ColumnExists("audit", "idempotency_records", "key_hash"));
     }
 
