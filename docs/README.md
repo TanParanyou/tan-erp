@@ -47,6 +47,7 @@
 | Frontend | [Frontend Architecture](02-architecture/frontend-architecture.md) |
 | UI/UX Design System | [Design System (Atelier Navy Sharp)](../design.md) |
 | มาตรฐานฟอร์ม ERP | [Building ERP Forms](../.agents/skills/building-erp-forms/SKILL.md) |
+| คอมโพเนนต์และ Hooks กลาง | [Shared Components Guide](frontend/shared-components-guide.md) |
 | คู่มือ Agent และกฎการพัฒนา | [AGENTS.md](../AGENTS.md) |
 | API | [API Conventions](03-contracts/api-conventions.md) |
 | API ของ Quick Estimate | [Quick Estimate API Contract](03-contracts/quick-estimate-api-contract.md) |

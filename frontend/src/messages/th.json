@@ -123,7 +123,8 @@
       "required": "(จำเป็น)",
       "showPassword": "แสดงรหัสผ่าน",
       "hidePassword": "ซ่อนรหัสผ่าน",
-      "unspecified": "-- ไม่ระบุ --"
+      "unspecified": "-- ไม่ระบุ --",
+      "imagePreview": "ดูตัวอย่างรูปภาพ"
     },
     "validation": {
       "required": "กรุณากรอกข้อมูลในช่องนี้",
@@ -147,7 +148,10 @@
       "lastPage": "หน้าสุดท้าย",
       "selectAll": "เลือกทั้งหมดในหน้านี้",
       "selectRow": "เลือกรายการแถวที่",
-      "emptyTable": "ไม่มีรายการข้อมูลแสดงในตาราง"
+      "emptyTable": "ไม่มีรายการข้อมูลแสดงในตาราง",
+      "to": "ถึง",
+      "entries": "รายการ",
+      "noEntries": "ไม่มีรายการ"
     },
     "fields": {
       "code": "รหัส",
@@ -169,6 +173,13 @@
       "saving": "กำลังบันทึก...",
       "deleting": "กำลังลบ...",
       "uploading": "กำลังอัปโหลด..."
+    },
+    "security": {
+      "sessionTimeoutWarningTitle": "การแจ้งเตือนหมดเวลาการใช้งาน",
+      "sessionTimeoutWarningDesc": "คุณไม่ได้ทำรายการใดๆ ในระบบมาระยะหนึ่ง เพื่อความปลอดภัย ระบบจะออกจากระบบอัตโนมัติ",
+      "autoLogoutIn": "จะออกจากระบบโดยอัตโนมัติในอีก {seconds} วินาที",
+      "logoutNow": "ออกจากระบบทันที",
+      "stayLoggedIn": "ใช้งานต่อ"
     }
   },
   "customers": {

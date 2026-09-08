@@ -123,7 +123,8 @@
       "required": "(Required)",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
-      "unspecified": "-- Not specified --"
+      "unspecified": "-- Not specified --",
+      "imagePreview": "Image Preview"
     },
     "validation": {
       "required": "This field is required",
@@ -147,7 +148,10 @@
       "lastPage": "Last page",
       "selectAll": "Select all on this page",
       "selectRow": "Select row",
-      "emptyTable": "No records to display"
+      "emptyTable": "No records to display",
+      "to": "to",
+      "entries": "entries",
+      "noEntries": "No entries"
     },
     "fields": {
       "code": "Code",
@@ -169,6 +173,13 @@
       "saving": "Saving...",
       "deleting": "Deleting...",
       "uploading": "Uploading..."
+    },
+    "security": {
+      "sessionTimeoutWarningTitle": "Session Timeout Warning",
+      "sessionTimeoutWarningDesc": "You have been inactive for a while. For security reasons, you will be logged out automatically.",
+      "autoLogoutIn": "Automatic logout in {seconds} seconds",
+      "logoutNow": "Log Out Now",
+      "stayLoggedIn": "Stay Logged In"
     }
   },
   "customers": {
