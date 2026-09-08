@@ -37,11 +37,15 @@ vi.mock("@/lib/api/api-client", async (importOriginal) => {
 
 const mockedCreate = vi.mocked(apiClient.createCustomer);
 
+import { ToastProvider } from "@/hooks/useToast";
+
 function renderEditor(client: QueryClient): void {
   render(
     <QueryClientProvider client={client}>
       <NextIntlClientProvider locale="th" messages={thMessages}>
-        <CustomerEditor />
+        <ToastProvider>
+          <CustomerEditor />
+        </ToastProvider>
       </NextIntlClientProvider>
     </QueryClientProvider>,
   );
@@ -245,5 +249,34 @@ describe("CustomerEditor create intent", () => {
     expect(screen.getByPlaceholderText(thMessages.customers.phonePlaceholder)).toBeDefined();
     expect(screen.getByPlaceholderText(thMessages.customers.emailPlaceholder)).toBeDefined();
     expect(screen.getByPlaceholderText(thMessages.customers.lineIdPlaceholder)).toBeDefined();
+  });
+
+  it("navigates immediately on cancel when form is pristine", () => {
+    renderEditor(client);
+
+    const cancelButton = screen.getByRole("button", { name: "ยกเลิก" });
+    fireEvent.click(cancelButton);
+
+    expect(mockPush).toHaveBeenCalledWith("/th/customers");
+  });
+
+  it("shows confirmation modal on cancel when form is dirty, then navigates on confirm", async () => {
+    renderEditor(client);
+
+    const nameInput = document.body.querySelector("#displayNameTh") as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: "ลูกค้าใหม่" } });
+
+    const cancelButton = screen.getByRole("button", { name: "ยกเลิก" });
+    fireEvent.click(cancelButton);
+
+    // Modal should be visible
+    expect(screen.getByText(thMessages.common.dialog.confirmCancelTitle)).toBeDefined();
+    expect(mockPush).not.toHaveBeenCalled();
+
+    // Confirm navigation
+    const confirmButton = screen.getByRole("button", { name: thMessages.common.actions.confirm });
+    fireEvent.click(confirmButton);
+
+    expect(mockPush).toHaveBeenCalledWith("/th/customers");
   });
 });

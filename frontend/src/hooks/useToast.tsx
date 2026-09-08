@@ -43,11 +43,10 @@ const DEFAULT_DURATION: Record<ToastType, number> = {
   warning: 4500,
 };
 
+let toastCounter = 0;
 const createId = () => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  toastCounter += 1;
+  return `toast-${Date.now()}-${toastCounter}`;
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {

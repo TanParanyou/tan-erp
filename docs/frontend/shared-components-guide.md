@@ -70,6 +70,13 @@
 - **Memory Safe:** มีการจัดการ `URL.revokeObjectURL()` อัตโนมัติเมื่อเปลี่ยนรูปหรือ unmount คอมโพเนนต์
 - **Image Preview:** มี Modal แสดงตัวอย่างภาพขนาดใหญ่
 
+### 3.4 `FormContainer` (Unified Layout Wrapper)
+คอมโพเนนต์ห่อหุ้มฟอร์มมาตรฐานของระบบ เพื่อความเป็นเอกภาพของโครงสร้างหน้าจอ Layout:
+- จัดสรรพื้นที่แบ่งเป็น 5 ส่วนชัดเจน: `header` (PageHeader), `errorBanner`, `topAlert` (คำเตือนเพิ่มเติม เช่น รายการซ้ำ), `children` (ฟิลด์ข้อมูลในฟอร์ม), และ `actionBar` (FormActionBar ติดหนึบด้านล่าง)
+- รองรับการทำงานแบบ Native Form (`asForm={true}` หรือส่ง `onSubmit`, `onChange`) ทำให้ปุ่มบันทึกใน `FormActionBar` ทำงานสอดคล้องกับ Form Validation และการ Submit ได้ทันที
+- ขจัดปัญหาระยะขอบ `main-content` ทับซ้อนหรือกินพื้นที่ของ `FormActionBar` โดยจัดช่องวาง `actionBar` ให้ชิดขอบล่างของหน้าต่าง Viewport อย่างแนบเนียน
+- กำหนดความกว้างมาตรฐานด้วย `maxWidth` (`sm`, `md` [800px - ค่าเริ่มต้น], `lg`, `xl`, `full`)
+
 ---
 
 ## 🌐 4. Shared Utilities & Global Widgets (`@/components/common` & `@/components/layout`)

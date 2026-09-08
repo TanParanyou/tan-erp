@@ -802,10 +802,13 @@
 
 .erp-main-content {
   flex: 1;
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 2rem 0 2rem;
   max-width: 1400px;
   min-width: 0;
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* Sticky Form Action Bar */
@@ -993,7 +996,7 @@
   }
 
   .erp-main-content {
-    padding: 1.25rem 1rem;
+    padding: 1.25rem 1rem 0 1rem;
   }
 
   .erp-action-bar {
