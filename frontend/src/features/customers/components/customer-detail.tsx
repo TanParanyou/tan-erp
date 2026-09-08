@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useCustomerDetail } from "../api/customer-queries";
+import { DuplicateCandidateCard } from "./duplicate-candidate-card";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
 import { IconChevronLeft, IconAlertCircle, IconFileText } from "@/components/common/Icons";
@@ -137,43 +138,9 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         </div>
       </div>
 
-      {/* Duplicate Candidates Warning Banner if present in response */}
+      {/* Duplicate Candidates reuse shared card; masked values only */}
       {customer.duplicateCandidates && customer.duplicateCandidates.length > 0 && (
-        <div
-          role="region"
-          aria-label={t("duplicateCandidates")}
-          className="erp-card"
-          style={{
-            padding: "1.25rem",
-            borderColor: "var(--erp-warning-border)",
-            backgroundColor: "var(--erp-warning-bg)",
-          }}
-        >
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--erp-warning)", margin: "0 0 0.5rem 0" }}>
-            {t("duplicateCandidates")}
-          </h3>
-          <p style={{ fontSize: "0.875rem", color: "#78350F", margin: "0 0 0.75rem 0" }}>
-            {t("duplicateNotice")}
-          </p>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {customer.duplicateCandidates.map((dup) => (
-              <li
-                key={dup.id}
-                style={{
-                  padding: "0.5rem 0.75rem",
-                  backgroundColor: "var(--erp-surface)",
-                  border: "1px solid var(--erp-border)",
-                  fontSize: "0.8125rem",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <strong>{dup.code} - {dup.displayNameTh}</strong>
-                <span>{dup.maskedPhone || dup.maskedEmail}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <DuplicateCandidateCard candidates={customer.duplicateCandidates} />
       )}
 
       {/* Detail Content */}

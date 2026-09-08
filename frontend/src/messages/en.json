@@ -210,6 +210,7 @@
     "loadingMore": "Loading...",
     "noMoreItems": "All items loaded",
     "organization": "Organization",
-    "person": "Person"
+    "person": "Person",
+    "viewCreatedCustomer": "View the created customer"
   }
 }

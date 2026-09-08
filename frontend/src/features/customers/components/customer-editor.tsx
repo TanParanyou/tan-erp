@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { IconSave, IconAlertCircle } from "@/components/common/Icons";
 import { ApiError } from "@/lib/api/api-error";
+import { DuplicateCandidateCard } from "./duplicate-candidate-card";
 import type { CustomerResponse } from "@/lib/api/api-client";
 
 export function CustomerEditor() {
@@ -27,9 +28,19 @@ export function CustomerEditor() {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [duplicateCandidates, setDuplicateCandidates] = useState<CustomerResponse["duplicateCandidates"]>(null);
+  const [createdCustomerId, setCreatedCustomerId] = useState<string | null>(null);
 
-  // Maintain stable Idempotency-Key across retries for the same form creation session
-  const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
+  // One idempotency key per create intent: reuse for retries of the same payload,
+  // rotate only after a failed submission followed by a field change.
+  const idempotencyKeyRef = useRef<string | null>(null);
+  const failedSubmissionRef = useRef(false);
+
+  const handleFormChange = (): void => {
+    if (failedSubmissionRef.current) {
+      idempotencyKeyRef.current = null;
+      failedSubmissionRef.current = false;
+    }
+  };
 
   const customerFormSchema = useMemo(
     () =>
@@ -63,6 +74,7 @@ export function CustomerEditor() {
   const onSubmit = async (values: CustomerFormValues) => {
     setSubmitError(null);
     setDuplicateCandidates(null);
+    setCreatedCustomerId(null);
 
     const token = await getAuthToken();
     if (!token) {
@@ -77,6 +89,7 @@ export function CustomerEditor() {
     }
 
     try {
+      idempotencyKeyRef.current ??= crypto.randomUUID();
       const created = await apiClient.createCustomer(
         {
           customerType: values.customerType,
@@ -102,9 +115,16 @@ export function CustomerEditor() {
       // Invalidate customer lists
       await queryClient.invalidateQueries({ queryKey: ["customers"] });
 
+      if (created.duplicateCandidates?.length) {
+        setDuplicateCandidates(created.duplicateCandidates);
+        setCreatedCustomerId(created.id ?? null);
+        return;
+      }
+
       // Navigate to detail view of created customer
       router.push(`/${locale}/customers/${created.id}`);
     } catch (err: unknown) {
+      failedSubmissionRef.current = true;
       if (err instanceof ApiError) {
         setSubmitError(err.message);
       } else if (err instanceof Error) {
@@ -155,47 +175,16 @@ export function CustomerEditor() {
         </div>
       )}
 
-      {/* Duplicate warning card if any */}
+      {/* Duplicate result preserved after create */}
       {duplicateCandidates && duplicateCandidates.length > 0 && (
-        <div
-          role="region"
-          aria-label={t("duplicateCandidates")}
-          className="erp-card"
-          style={{
-            padding: "1.25rem",
-            borderColor: "var(--erp-warning-border)",
-            backgroundColor: "var(--erp-warning-bg)",
-          }}
-        >
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--erp-warning)", margin: "0 0 0.5rem 0" }}>
-            {t("duplicateCandidates")}
-          </h3>
-          <p style={{ fontSize: "0.875rem", color: "#78350F", margin: "0 0 0.75rem 0" }}>
-            {t("duplicateNotice")}
-          </p>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {duplicateCandidates.map((dup) => (
-              <li
-                key={dup.id}
-                style={{
-                  padding: "0.5rem 0.75rem",
-                  backgroundColor: "var(--erp-surface)",
-                  border: "1px solid var(--erp-border)",
-                  fontSize: "0.8125rem",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <strong>{dup.code} - {dup.displayNameTh}</strong>
-                <span>{dup.maskedPhone || dup.maskedEmail}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <DuplicateCandidateCard
+          candidates={duplicateCandidates}
+          createdCustomerHref={createdCustomerId ? `/${locale}/customers/${createdCustomerId}` : undefined}
+        />
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <form onChange={handleFormChange} onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         {/* Customer Base Info Section */}
         <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0, borderBottom: "1px solid var(--erp-border-subtle)", paddingBottom: "0.75rem" }}>
