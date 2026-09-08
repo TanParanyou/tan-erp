@@ -13,6 +13,7 @@ using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
+using TanErp.Infrastructure.Persistence.Crm;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -177,6 +178,65 @@ public class CustomerEndpointsTests : IAsyncLifetime
         var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
         Assert.NotNull(problem);
         Assert.Equal("IDEMPOTENCY_KEY_REQUIRED", problem.Code);
+    }
+
+    [Fact]
+    public async Task CreateCustomer_WhenRequestModelIsInvalid_ReturnsStableProblemDetails()
+    {
+        var msg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", "invalid-request-key-001");
+        msg.Content = JsonContent.Create(new
+        {
+            customerType = "organization",
+            displayNameTh = "",
+            preferredLocale = "th",
+            primaryContact = new
+            {
+                name = "คุณทดสอบ",
+                phone = "0812345678",
+                preferredChannel = "phone"
+            }
+        });
+
+        var response = await _client.SendAsync(msg);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", problem.Code);
+        Assert.Equal("รูปแบบคำขอไม่ถูกต้อง", problem.Title);
+        Assert.NotEmpty(problem.Errors);
+        Assert.All(problem.Errors.Values.SelectMany(messages => messages), message =>
+            Assert.Equal("ข้อมูลคำขอไม่ครบถ้วนหรือมีรูปแบบไม่ถูกต้อง", message));
+    }
+
+    [Fact]
+    public async Task CreateCustomer_WhenContactEmailIsMalformed_Returns422()
+    {
+        var request = new CreateCustomerRequest("organization", "บริษัท อีเมลไม่ถูกต้อง TEST_ONLY", null, "th",
+            new CreatePrimaryContactRequest("คุณทดสอบ", null, null, "not-an-email", "email"));
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", "invalid-email-key-0001");
+        msg.Content = JsonContent.Create(request);
+
+        var response = await _client.SendAsync(msg);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("CONTACT_FIELD_REQUIRED", problem.Code);
+    }
+
+    [Fact]
+    public void MaskEmail_WhenStoredValueHasNoAtSign_ReturnsMaskedFallback()
+    {
+        Assert.Equal("***", CustomerCreationStore.MaskEmail("not-an-email"));
     }
 
     [Fact]

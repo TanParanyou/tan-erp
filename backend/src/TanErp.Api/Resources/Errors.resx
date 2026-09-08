@@ -101,6 +101,12 @@
   <data name="IDEMPOTENCY_KEY_REUSED_DETAIL" xml:space="preserve">
     <value>คีย์ Idempotency เดิมถูกใช้ไปแล้วกับชุดข้อมูลคนละชุด</value>
   </data>
+  <data name="REQUEST_VALIDATION_FAILED_TITLE" xml:space="preserve">
+    <value>รูปแบบคำขอไม่ถูกต้อง</value>
+  </data>
+  <data name="REQUEST_VALIDATION_FAILED_DETAIL" xml:space="preserve">
+    <value>ข้อมูลคำขอไม่ครบถ้วนหรือมีรูปแบบไม่ถูกต้อง</value>
+  </data>
   <data name="CUSTOMER_FIELD_REQUIRED_TITLE" xml:space="preserve">
     <value>ข้อมูลลูกค้าไม่ผ่านเกณฑ์</value>
   </data>

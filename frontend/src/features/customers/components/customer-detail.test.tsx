@@ -59,5 +59,6 @@ describe("CustomerDetail canonical labels", () => {
 
     expect(screen.getByText("นิติบุคคล")).toBeDefined();
     expect(screen.getByText("ฉบับร่าง")).toBeDefined();
+    expect(screen.getByText("โทรศัพท์ (Phone)")).toBeDefined();
   });
 });

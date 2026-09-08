@@ -29,6 +29,7 @@ export function CustomerEditor() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [duplicateCandidates, setDuplicateCandidates] = useState<CustomerResponse["duplicateCandidates"]>(null);
   const [createdCustomerId, setCreatedCustomerId] = useState<string | null>(null);
+  const [isCreateComplete, setIsCreateComplete] = useState(false);
 
   // One idempotency key per create intent: reuse for retries of the same payload,
   // rotate only after a failed submission followed by a field change.
@@ -72,6 +73,10 @@ export function CustomerEditor() {
   });
 
   const onSubmit = async (values: CustomerFormValues) => {
+    if (isCreateComplete) {
+      return;
+    }
+
     setSubmitError(null);
     setDuplicateCandidates(null);
     setCreatedCustomerId(null);
@@ -114,10 +119,12 @@ export function CustomerEditor() {
 
       // Invalidate customer lists
       await queryClient.invalidateQueries({ queryKey: ["business"] });
+      failedSubmissionRef.current = false;
 
       if (created.duplicateCandidates?.length) {
         setDuplicateCandidates(created.duplicateCandidates);
         setCreatedCustomerId(created.id ?? null);
+        setIsCreateComplete(true);
         return;
       }
 
@@ -126,8 +133,6 @@ export function CustomerEditor() {
     } catch (err: unknown) {
       failedSubmissionRef.current = true;
       if (err instanceof ApiError) {
-        setSubmitError(err.message);
-      } else if (err instanceof Error) {
         setSubmitError(err.message);
       } else {
         setSubmitError(t("errors.saveUnexpected"));
@@ -158,6 +163,7 @@ export function CustomerEditor() {
       {submitError && (
         <div
           role="alert"
+          aria-live="polite"
           className="erp-card"
           style={{
             padding: "1rem 1.25rem",
@@ -205,7 +211,7 @@ export function CustomerEditor() {
                   <select
                     id="customerType"
                     className="erp-input"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isCreateComplete}
                     {...field}
                   >
                     <option value="organization">{t("organization")}</option>
@@ -228,7 +234,7 @@ export function CustomerEditor() {
                   <select
                     id="preferredLocale"
                     className="erp-input"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isCreateComplete}
                     {...field}
                   >
                     <option value="th">{t("localeThai")}</option>
@@ -248,7 +254,7 @@ export function CustomerEditor() {
                 id="displayNameTh"
                 label={t("displayNameTh")}
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCreateComplete}
                 error={errors.displayNameTh?.message}
                 {...field}
               />
@@ -263,7 +269,7 @@ export function CustomerEditor() {
               <Input
                 id="displayNameEn"
                 label={t("displayNameEn")}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCreateComplete}
                 error={errors.displayNameEn?.message}
                 {...field}
               />
@@ -287,7 +293,7 @@ export function CustomerEditor() {
                   id="primaryContactName"
                   label={t("contactName")}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isCreateComplete}
                   error={errors.primaryContact?.name?.message}
                   {...field}
                 />
@@ -302,7 +308,7 @@ export function CustomerEditor() {
                 <Input
                   id="primaryContactRoleTitle"
                   label={t("roleTitle")}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isCreateComplete}
                   error={errors.primaryContact?.roleTitle?.message}
                   {...field}
                 />
@@ -319,7 +325,7 @@ export function CustomerEditor() {
                 <Input
                   id="primaryContactPhone"
                   label={t("phone")}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isCreateComplete}
                   error={errors.primaryContact?.phone?.message}
                   {...field}
                 />
@@ -335,7 +341,7 @@ export function CustomerEditor() {
                   id="primaryContactEmail"
                   label={t("email")}
                   type="email"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isCreateComplete}
                   error={errors.primaryContact?.email?.message}
                   {...field}
                 />
@@ -374,7 +380,7 @@ export function CustomerEditor() {
             type="button"
             variant="outline"
             size="md"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isCreateComplete}
             onClick={() => router.push(`/${locale}/customers`)}
             style={{ minHeight: "44px" }}
           >
@@ -386,6 +392,7 @@ export function CustomerEditor() {
             variant="primary"
             size="md"
             isLoading={isSubmitting}
+            disabled={isCreateComplete}
             icon={<IconSave size={16} />}
             style={{ minHeight: "44px", minWidth: "140px" }}
           >

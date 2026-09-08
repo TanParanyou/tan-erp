@@ -109,14 +109,9 @@ describe("CustomerEditor create intent", () => {
     mockedCreate.mockRejectedValueOnce(
       new ApiError({ status: 500, code: "UNKNOWN_ERROR", message: "boom" }),
     );
-    mockedCreate.mockResolvedValueOnce({
-      id: "customer-2",
-      code: "CUS-0002",
-      customerType: "organization",
-      displayNameTh: "บริษัท ตัวอย่าง จำกัด",
-      status: "draft",
-      duplicateCandidates: null,
-    });
+    mockedCreate.mockRejectedValueOnce(
+      new ApiError({ status: 500, code: "UNKNOWN_ERROR", message: "boom-again" }),
+    );
     mockedCreate.mockResolvedValueOnce({
       id: "customer-3",
       code: "CUS-0003",
@@ -132,26 +127,22 @@ describe("CustomerEditor create intent", () => {
     fireEvent.click(screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" }));
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(1));
     expect(mockedCreate.mock.calls[0][1].idempotencyKey).toBe("key-1");
+    await waitFor(() => expect(screen.getByText("boom")).toBeDefined());
 
     // Retry without changing fields reuses key-1
     fireEvent.click(screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" }));
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(2));
     expect(mockedCreate.mock.calls[1][1].idempotencyKey).toBe("key-1");
+    await waitFor(() => expect(screen.getByText("boom-again")).toBeDefined());
 
-    // Simulate failure then field change: force next failure first
-    mockedCreate.mockRejectedValueOnce(
-      new ApiError({ status: 500, code: "UNKNOWN_ERROR", message: "boom-2" }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" }));
-    await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(3));
-
+    // A field change after a failed submission starts a new create intent.
     const nameInput = document.body.querySelector("#displayNameTh") as HTMLInputElement;
     fireEvent.change(nameInput, { target: { value: "บริษัท ตัวอย่าง จำกัด แก้ไข" } });
 
     fireEvent.click(screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" }));
-    await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(4));
-    expect(mockedCreate.mock.calls[3][1].idempotencyKey).toBe("key-2");
-    await waitFor(() => expect(mockPush).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(3));
+    expect(mockedCreate.mock.calls[2][1].idempotencyKey).toBe("key-2");
+    await waitFor(() => expect(mockPush).toHaveBeenCalledTimes(1));
   });
 
   it("preserves masked duplicate candidate with link instead of navigating", async () => {
@@ -183,6 +174,8 @@ describe("CustomerEditor create intent", () => {
     expect(screen.getByRole("link", { name: /ดูข้อมูลลูกค้าที่สร้างแล้ว/ }).getAttribute("href")).toContain(
       "customer-created",
     );
+    expect(screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" })).toBeDisabled();
+    expect(document.body.querySelector("#displayNameTh")).toBeDisabled();
   });
 
   it("navigates to detail when no duplicate candidate", async () => {

@@ -68,6 +68,7 @@ public static class CustomerNormalizer
 {
     private static readonly Regex MultipleWhitespaceRegex = new(@"\s+", RegexOptions.Compiled);
     private static readonly Regex DigitsOnlyRegex = new(@"\D", RegexOptions.Compiled);
+    private static readonly Regex EmailRegex = new(@"^[^\s@]+@[^\s@]+\.[^\s@]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public static string NormalizeName(string value)
     {
@@ -94,6 +95,8 @@ public static class CustomerNormalizer
         var normalized = email.Trim().ToLowerInvariant();
         return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
     }
+
+    public static bool IsValidEmail(string email) => EmailRegex.IsMatch(email);
 }
 
 public sealed record PrimaryContactInput(

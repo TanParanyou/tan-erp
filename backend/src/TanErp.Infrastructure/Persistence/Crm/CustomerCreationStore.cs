@@ -205,6 +205,7 @@ public class CustomerCreationStore : ICustomerCreationStore
         if (string.IsNullOrWhiteSpace(email)) return null;
         var trimmed = email.Trim();
         var atIndex = trimmed.IndexOf('@');
+        if (atIndex < 0) return "***";
         if (atIndex <= 1) return "***" + trimmed[atIndex..];
         var domain = trimmed[atIndex..];
         return $"{trimmed[0]}***{domain}";

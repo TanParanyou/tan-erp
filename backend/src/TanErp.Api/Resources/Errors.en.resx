@@ -101,6 +101,12 @@
   <data name="IDEMPOTENCY_KEY_REUSED_DETAIL" xml:space="preserve">
     <value>The idempotency key has already been used with a different payload.</value>
   </data>
+  <data name="REQUEST_VALIDATION_FAILED_TITLE" xml:space="preserve">
+    <value>Invalid Request</value>
+  </data>
+  <data name="REQUEST_VALIDATION_FAILED_DETAIL" xml:space="preserve">
+    <value>The request is missing required data or contains invalid values.</value>
+  </data>
   <data name="CUSTOMER_FIELD_REQUIRED_TITLE" xml:space="preserve">
     <value>Customer Field Required</value>
   </data>

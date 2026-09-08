@@ -14,7 +14,7 @@ async function signIn(page: Page): Promise<void> {
 async function gotoCreate(page: Page): Promise<void> {
   await page.getByRole("link", { name: "ข้อมูลลูกค้า" }).click();
   await page.waitForURL("**/th/customers");
-  await page.getByRole("button", { name: "เพิ่มลูกค้าใหม่" }).click();
+  await page.getByRole("link", { name: "เพิ่มลูกค้าใหม่" }).click();
   await page.waitForURL("**/th/customers/create");
 }
 
@@ -122,7 +122,7 @@ test.describe("Customer and Contact Management Journey", () => {
     await expect(page.getByRole("heading", { name: "ข้อมูลลูกค้า" })).toBeVisible();
 
     // Click Create Customer button
-    const createBtn = page.getByRole("button", { name: "เพิ่มลูกค้าใหม่" });
+    const createBtn = page.getByRole("link", { name: "เพิ่มลูกค้าใหม่" });
     await expect(createBtn).toBeVisible();
     await createBtn.click();
 
@@ -222,7 +222,7 @@ test.describe("Customer and Contact Management Journey", () => {
 
     await page.getByRole("link", { name: "กลับหน้ารายการลูกค้า" }).click();
     await page.waitForURL("**/th/customers");
-    await page.getByRole("button", { name: "เพิ่มลูกค้าใหม่" }).click();
+    await page.getByRole("link", { name: "เพิ่มลูกค้าใหม่" }).click();
     await page.waitForURL("**/th/customers/create");
 
     await fillCreateForm(page, {
@@ -236,13 +236,11 @@ test.describe("Customer and Contact Management Journey", () => {
     await page.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" }).click();
     const created = await (await secondResponse).json();
 
-    if (created.duplicateCandidates?.length) {
-      await expect(page.getByText("รายชื่อที่อาจซ้ำซ้อนในระบบ")).toBeVisible();
-      await expect(page.getByRole("link", { name: "ดูข้อมูลลูกค้าที่สร้างแล้ว" })).toBeVisible();
-      // Full phone must never leak in the duplicate region
-      await expect(page.getByText(sharedPhone, { exact: false })).toHaveCount(0);
-    } else {
-      await page.waitForURL(`**/th/customers/${created.id}`);
-    }
+    expect(created.duplicateCandidates).toHaveLength(1);
+    await expect(page.getByText("รายชื่อที่อาจซ้ำซ้อนในระบบ")).toBeVisible();
+    await expect(page.getByRole("link", { name: "ดูข้อมูลลูกค้าที่สร้างแล้ว" })).toBeVisible();
+    // Full phone must never leak in the duplicate region.
+    await expect(page.getByText(sharedPhone, { exact: false })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" })).toBeDisabled();
   });
 });

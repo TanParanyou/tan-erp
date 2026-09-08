@@ -149,6 +149,26 @@ public class CreateCustomerHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenContactEmailIsMalformed_ReturnsContactFieldRequiredWithoutWriting()
+    {
+        var accessResolver = new FakeRequestAccessResolver();
+        accessResolver.GrantedPermissions.Add("customers.create");
+        accessResolver.GrantedPermissions.Add("customer-contacts.manage");
+        var store = new FakeCustomerCreationStore();
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+
+        var result = await handler.Handle(new CreateCustomerCommand(
+            "uid-1", Guid.NewGuid(), "key-1234567890123456",
+            "organization", "บริษัท ก", null, "th",
+            new CreatePrimaryContact("นาย ก", null, null, "not-an-email", "email"),
+            "trace-1"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("CONTACT_FIELD_REQUIRED", result.Error.Code);
+        Assert.Null(store.LastRequest);
+    }
+
+    [Fact]
     public async Task Handle_WhenValid_PersistsCustomerWithAuditEventsAndHashes()
     {
         var accessResolver = new FakeRequestAccessResolver();

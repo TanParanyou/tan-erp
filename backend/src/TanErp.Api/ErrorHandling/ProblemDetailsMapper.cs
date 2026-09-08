@@ -13,6 +13,7 @@ public static class ProblemDetailsMapper
         "AUTHENTICATION_REQUIRED" => StatusCodes.Status401Unauthorized,
         "AUTHENTICATION_INVALID" => StatusCodes.Status401Unauthorized,
         "MEMBERSHIP_CONTEXT_REQUIRED" => StatusCodes.Status400BadRequest,
+        "REQUEST_VALIDATION_FAILED" => StatusCodes.Status400BadRequest,
         "IDEMPOTENCY_KEY_REQUIRED" => StatusCodes.Status400BadRequest,
         "IDEMPOTENCY_KEY_INVALID" => StatusCodes.Status400BadRequest,
         "CUSTOMER_CURSOR_INVALID" => StatusCodes.Status400BadRequest,

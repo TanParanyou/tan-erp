@@ -126,6 +126,7 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 
 | Code | HTTP | ความหมาย/การกู้คืน |
 | --- | ---: | --- |
+| `REQUEST_VALIDATION_FAILED` | 400 | Request body หรือ required field ไม่ผ่าน transport validation; ใช้ `errors` ระบุ field ที่เกี่ยวข้อง |
 | `CUSTOMER_CURSOR_INVALID` | 400 | Cursor ถอดรหัสหรือ validate ไม่ได้ |
 | `CUSTOMER_VERSION_CONFLICT` | 409 | Customer ETag เก่า; ให้ Reload/Compare |
 | `CUSTOMER_INVALID_STATE` | 409 | Customer Status ไม่รองรับ Action หรือใช้สร้างงานใหม่ไม่ได้ |

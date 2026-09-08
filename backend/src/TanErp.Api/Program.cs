@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TanErp.Api.Authentication;
 using TanErp.Api.ErrorHandling;
@@ -31,6 +32,26 @@ if (builder.Environment.IsProduction())
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = actionContext =>
+    {
+        var problem = ProblemDetailsMapper.CreateProblem("REQUEST_VALIDATION_FAILED", actionContext.HttpContext);
+        problem.Errors = actionContext.ModelState
+            .Where(entry => entry.Value is { Errors.Count: > 0 })
+            .ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value!.Errors
+                    .Select(_ => problem.Detail ?? "")
+                    .ToArray());
+
+        return new ObjectResult(problem)
+        {
+            StatusCode = problem.Status,
+            ContentTypes = { "application/problem+json" }
+        };
+    };
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(OpenApiConfiguration.ConfigureSwaggerGen);
 

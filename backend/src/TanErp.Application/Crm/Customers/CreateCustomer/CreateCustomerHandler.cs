@@ -77,6 +77,11 @@ public class CreateCustomerHandler
         var normalizedPhone = CustomerNormalizer.NormalizePhone(command.PrimaryContact.Phone);
         var normalizedEmail = CustomerNormalizer.NormalizeEmail(command.PrimaryContact.Email);
 
+        if (normalizedEmail is not null && !CustomerNormalizer.IsValidEmail(normalizedEmail))
+        {
+            return Result<CreateCustomerResult>.Failure(new Error("CONTACT_FIELD_REQUIRED", "Contact email address is invalid."));
+        }
+
         if (string.IsNullOrWhiteSpace(normalizedPhone) && string.IsNullOrWhiteSpace(normalizedEmail))
         {
             return Result<CreateCustomerResult>.Failure(new Error("CONTACT_FIELD_REQUIRED", "Contact must provide at least a phone number or an email address."));

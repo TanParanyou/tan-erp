@@ -217,7 +217,10 @@
       "loadDetail": "Unable to load customer details",
       "authenticationRequired": "Please sign in to continue",
       "membershipRequired": "Please select an active membership",
-      "saveUnexpected": "An unexpected error occurred while saving the customer"
+      "saveUnexpected": "An unexpected error occurred while saving the customer",
+      "accessDeniedTitle": "Access Denied",
+      "createAccessDeniedDetail": "You do not have permission to create customers and contacts in this organization.",
+      "readAccessDeniedDetail": "You do not have permission to view this customer."
     },
     "telLabel": "Tel",
     "emailLabel": "Email",

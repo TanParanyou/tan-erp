@@ -7,6 +7,7 @@ import { CustomerEditor } from "@/features/customers/components/customer-editor"
 import { CustomerDetail } from "@/features/customers/components/customer-detail";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { useTranslations } from "next-intl";
 
 interface CustomerDynamicPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -20,15 +21,19 @@ export default function CustomerDynamicPage({ params }: CustomerDynamicPageProps
   }
 
   const { selectedMembership } = useSelectedMembership();
+  const t = useTranslations("customers");
 
   const isCreateMode = id === "create" || id === "add";
 
   if (isCreateMode) {
-    const hasCreateAccess = can(selectedMembership, "customers.create");
+    const hasCreateAccess =
+      can(selectedMembership, "customers.create") &&
+      can(selectedMembership, "customer-contacts.manage");
     if (!hasCreateAccess) {
       return (
         <div
           role="alert"
+          aria-live="polite"
           className="erp-card"
           style={{
             padding: "2rem",
@@ -40,10 +45,10 @@ export default function CustomerDynamicPage({ params }: CustomerDynamicPageProps
           }}
         >
           <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-warning)", margin: "0 0 0.5rem 0" }}>
-            Access Denied
+            {t("errors.accessDeniedTitle")}
           </h2>
           <p style={{ color: "#78350F", margin: 0, fontSize: "0.875rem" }}>
-            You do not have permission to create customers in this organization.
+            {t("errors.createAccessDeniedDetail")}
           </p>
         </div>
       );
@@ -57,6 +62,7 @@ export default function CustomerDynamicPage({ params }: CustomerDynamicPageProps
     return (
       <div
         role="alert"
+        aria-live="polite"
         className="erp-card"
         style={{
           padding: "2rem",
@@ -68,10 +74,10 @@ export default function CustomerDynamicPage({ params }: CustomerDynamicPageProps
         }}
       >
         <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-warning)", margin: "0 0 0.5rem 0" }}>
-          Access Denied
+          {t("errors.accessDeniedTitle")}
         </h2>
         <p style={{ color: "#78350F", margin: 0, fontSize: "0.875rem" }}>
-          You do not have permission to view this customer.
+          {t("errors.readAccessDeniedDetail")}
         </p>
       </div>
     );

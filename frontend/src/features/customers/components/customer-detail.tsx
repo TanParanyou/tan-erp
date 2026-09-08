@@ -8,6 +8,7 @@ import { DuplicateCandidateCard } from "./duplicate-candidate-card";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
 import { IconChevronLeft, IconAlertCircle, IconFileText } from "@/components/common/Icons";
+import { getContactChannelLabelKey, getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
 
 interface CustomerDetailProps {
   customerId: string;
@@ -18,21 +19,14 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
 
-  const customerTypeKey = { organization: "organization", person: "person" } as const;
-  const customerStatusKey = { draft: "draft", active: "active", inactive: "inactive" } as const;
-
   const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
-    if (value === "organization" || value === "person") {
-      return t(customerTypeKey[value]);
-    }
-    return tCommon("feedback.operationFailed");
+    const key = getCustomerTypeLabelKey(value);
+    return key ? t(key) : tCommon("feedback.operationFailed");
   };
 
   const resolveCustomerStatusLabel = (value: string | null | undefined): string => {
-    if (value === "draft" || value === "active" || value === "inactive") {
-      return tCommon(`status.${customerStatusKey[value]}`);
-    }
-    return tCommon("feedback.operationFailed");
+    const key = getCustomerStatusLabelKey(value);
+    return key ? tCommon(`status.${key}`) : tCommon("feedback.operationFailed");
   };
 
   const resolveDetailErrorMessage = (error: Error | null): string => {
@@ -67,7 +61,8 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   if (isError || !customer) {
     return (
       <div
-        role="alert"
+          role="alert"
+          aria-live="polite"
         className="erp-card"
         style={{
           padding: "2rem",
@@ -90,11 +85,9 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           <Button variant="outline" size="md" onClick={() => refetch()} style={{ minHeight: "44px" }}>
             {tCommon("actions.cancel")}
           </Button>
-          <Link href={`/${locale}/customers`} style={{ textDecoration: "none" }}>
-            <Button variant="primary" size="md" style={{ minHeight: "44px" }}>
-              {t("backToList")}
-            </Button>
-          </Link>
+          <Button href={`/${locale}/customers`} variant="primary" size="md" style={{ minHeight: "44px" }}>
+            {t("backToList")}
+          </Button>
         </div>
       </div>
     );
@@ -204,7 +197,10 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
             <dt>{t("preferredChannel")}:</dt>
             <dd>
               <span className="erp-badge erp-badge-neutral">
-                {contact.preferredChannel?.toUpperCase() || "-"}
+                {(() => {
+                  const key = getContactChannelLabelKey(contact.preferredChannel);
+                  return key ? t(key) : "-";
+                })()}
               </span>
             </dd>
           </dl>

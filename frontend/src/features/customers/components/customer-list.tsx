@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { IconSearch, IconPlus, IconAlertCircle, IconFileText } from "@/components/common/Icons";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
 
 export function CustomerList() {
   const t = useTranslations("customers");
@@ -17,27 +18,22 @@ export function CustomerList() {
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
 
-  const customerTypeKey = { organization: "organization", person: "person" } as const;
-  const customerStatusKey = { draft: "draft", active: "active", inactive: "inactive" } as const;
-
   const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
-    if (value === "organization" || value === "person") {
-      return t(customerTypeKey[value]);
-    }
-    return tCommon("feedback.operationFailed");
+    const key = getCustomerTypeLabelKey(value);
+    return key ? t(key) : tCommon("feedback.operationFailed");
   };
 
   const resolveCustomerStatusLabel = (value: string | null | undefined): string => {
-    if (value === "draft" || value === "active" || value === "inactive") {
-      return tCommon(`status.${customerStatusKey[value]}`);
-    }
-    return tCommon("feedback.operationFailed");
+    const key = getCustomerStatusLabelKey(value);
+    return key ? tCommon(`status.${key}`) : tCommon("feedback.operationFailed");
   };
 
   const [searchInput, setSearchInput] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
 
-  const canCreate = can(selectedMembership, "customers.create");
+  const canCreate =
+    can(selectedMembership, "customers.create") &&
+    can(selectedMembership, "customer-contacts.manage");
 
   const resolveListErrorMessage = (error: Error | null): string => {
     if (error?.message === "No authentication token available") {
@@ -101,16 +97,15 @@ export function CustomerList() {
         </div>
 
         {canCreate && (
-          <Link href={`/${locale}/customers/create`} style={{ textDecoration: "none" }}>
-            <Button
-              variant="primary"
-              size="md"
-              icon={<IconPlus size={16} />}
-              style={{ minHeight: "44px" }}
-            >
-              {t("createCustomer")}
-            </Button>
-          </Link>
+          <Button
+            href={`/${locale}/customers/create`}
+            variant="primary"
+            size="md"
+            icon={<IconPlus size={16} />}
+            style={{ minHeight: "44px" }}
+          >
+            {t("createCustomer")}
+          </Button>
         )}
       </div>
 
@@ -168,6 +163,7 @@ export function CustomerList() {
       ) : isError ? (
         <div
           role="alert"
+          aria-live="polite"
           className="erp-card"
           style={{
             padding: "2rem",
@@ -230,16 +226,15 @@ export function CustomerList() {
             </p>
           </div>
           {canCreate && (
-            <Link href={`/${locale}/customers/create`} style={{ textDecoration: "none", marginTop: "0.5rem" }}>
-              <Button
-                variant="primary"
-                size="md"
-                icon={<IconPlus size={16} />}
-                style={{ minHeight: "44px" }}
-              >
-                {t("createCustomer")}
-              </Button>
-            </Link>
+            <Button
+              href={`/${locale}/customers/create`}
+              variant="primary"
+              size="md"
+              icon={<IconPlus size={16} />}
+              style={{ minHeight: "44px", marginTop: "0.5rem" }}
+            >
+              {t("createCustomer")}
+            </Button>
           )}
         </div>
       ) : (
