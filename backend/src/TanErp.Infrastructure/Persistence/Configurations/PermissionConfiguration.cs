@@ -14,6 +14,7 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.Key).HasColumnName("key").HasMaxLength(100).IsRequired();
         builder.Property(x => x.Description).HasColumnName("description").HasMaxLength(500);
+        builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
 
         builder.HasIndex(x => x.Key)
             .IsUnique()

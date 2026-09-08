@@ -34,12 +34,13 @@ public class RequestAccessResolver : IRequestAccessResolver
             .AsNoTracking()
             .Where(m => m.Id == membershipId && m.User!.FirebaseUid == firebaseUid)
             .Where(m => m.IsActive && m.User!.IsActive && m.Organization!.IsActive)
+            .Where(m => m.BranchId == null || m.Branch!.IsActive)
             .Where(m => m.StartsAtUtc == null || m.StartsAtUtc <= now)
             .Where(m => m.ExpiresAtUtc == null || m.ExpiresAtUtc > now)
             .SelectMany(m => m.MembershipRoles
                 .Where(mr => mr.Role!.IsActive)
                 .SelectMany(mr => mr.Role!.RolePermissions
-                    .Where(rp => rp.Permission != null
+                    .Where(rp => rp.Permission!.IsActive
                         && rp.Permission.Key == permissionKey
                         && rp.Scope == PermissionScope.Organization
                         && rp.ScopeId == m.OrganizationId)

@@ -86,6 +86,25 @@ public class CreateCustomerHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenMissingContactManagePermission_ReturnsPermissionDeniedWithoutWriting()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.create");
+        var store = new FakeCustomerCreationStore();
+        var handler = new CreateCustomerHandler(resolver, store, new FakeClock());
+
+        var result = await handler.Handle(new CreateCustomerCommand(
+            "uid-1", Guid.NewGuid(), "key-1234567890123456",
+            "organization", "บริษัท ก", null, "th",
+            new CreatePrimaryContact("นาย ก", null, "0812345678", null, "phone"),
+            "trace-1"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PERMISSION_DENIED", result.Error.Code);
+        Assert.Null(store.LastRequest);
+    }
+
+    [Fact]
     public async Task Handle_WhenBlankDisplayNameTh_ReturnsCustomerFieldRequired()
     {
         var accessResolver = new FakeRequestAccessResolver();

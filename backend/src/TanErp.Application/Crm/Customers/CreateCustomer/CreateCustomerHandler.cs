@@ -41,14 +41,17 @@ public class CreateCustomerHandler
 
         var access = accessResult.Value!;
 
-        // 2. Resolve optional customer-contacts.manage permission for PII visibility
+        // 2. Resolve required customer-contacts.manage permission for contact creation (fail closed)
         var manageContactResult = await _accessResolver.ResolveAsync(
             command.FirebaseUid,
             command.MembershipId,
             "customer-contacts.manage",
             cancellationToken);
 
-        var includeContactPii = manageContactResult.IsSuccess;
+        if (manageContactResult.IsFailure)
+            return Result<CreateCustomerResult>.Failure(manageContactResult.Error);
+
+        const bool includeContactPii = true;
 
         // 3. Validation
         if (string.IsNullOrWhiteSpace(command.DisplayNameTh))

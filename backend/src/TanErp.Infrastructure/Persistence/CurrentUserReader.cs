@@ -56,12 +56,12 @@ public class CurrentUserReader : ICurrentUserReader
                 RolePermissions = m.MembershipRoles
                     .Where(mr => mr.Role!.IsActive)
                     .SelectMany(mr => mr.Role!.RolePermissions)
-                    .Where(rp =>
-                        (rp.Scope == PermissionScope.Organization && rp.ScopeId == m.OrganizationId)
+                    .Where(rp => rp.Permission!.IsActive &&
+                        ((rp.Scope == PermissionScope.Organization && rp.ScopeId == m.OrganizationId)
                         || (rp.Scope == PermissionScope.Branch
                             && m.BranchId.HasValue
                             && rp.ScopeId == m.BranchId)
-                        || (rp.Scope == PermissionScope.Own && rp.ScopeId == null))
+                        || (rp.Scope == PermissionScope.Own && rp.ScopeId == null)))
                     .Select(rp => new
                     {
                         rp.Permission!.Key,

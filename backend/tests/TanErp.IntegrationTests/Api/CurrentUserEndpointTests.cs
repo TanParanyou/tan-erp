@@ -239,6 +239,25 @@ public class CurrentUserEndpointTests : IAsyncLifetime
         Assert.DoesNotContain("Admin", body);
     }
 
+    [Fact]
+    public async Task GetCurrentUser_WhenPermissionInactive_OmitsPermissionButReturns200()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var permission = await db.Permissions.FirstAsync(p => p.Key == "organizations.read");
+        permission.Deactivate();
+        await db.SaveChangesAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-valid-active");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("organizations.read", body);
+    }
+
     [Theory]
     [InlineData("th", "จำเป็นต้องมีสมาชิกภาพ", "ไม่พบสมาชิกภาพที่ใช้งานอยู่")]
     [InlineData("en", "Active Membership", "no active organization membership")]

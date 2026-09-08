@@ -109,4 +109,42 @@ public class RequestAccessResolverTests : IAsyncLifetime
         Assert.True(result.IsFailure);
         Assert.Equal("PERMISSION_DENIED", result.Error.Code);
     }
+
+    [Fact]
+    public async Task ResolveAsync_WhenPermissionInactive_ReturnsPermissionDenied()
+    {
+        var permission = await _db.Permissions.FirstAsync(p => p.Key == "organizations.read");
+        permission.Deactivate();
+        await _db.SaveChangesAsync();
+
+        var result = await _resolver.ResolveAsync(
+            TestOnlyDataSeeder.TestFirebaseUid,
+            TestOnlyDataSeeder.TestMembershipId,
+            "organizations.read");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PERMISSION_DENIED", result.Error.Code);
+
+        var membership = await _db.Memberships.FirstAsync(m => m.Id == TestOnlyDataSeeder.TestMembershipId);
+        Assert.True(membership.IsActive);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_WhenBranchInactive_ReturnsPermissionDenied()
+    {
+        var branch = await _db.Branches.FirstAsync(b => b.Id == TestOnlyDataSeeder.TestBranchId);
+        branch.Deactivate();
+        await _db.SaveChangesAsync();
+
+        var result = await _resolver.ResolveAsync(
+            TestOnlyDataSeeder.TestFirebaseUid,
+            TestOnlyDataSeeder.TestMembershipId,
+            "organizations.read");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PERMISSION_DENIED", result.Error.Code);
+
+        var membership = await _db.Memberships.FirstAsync(m => m.Id == TestOnlyDataSeeder.TestMembershipId);
+        Assert.True(membership.IsActive);
+    }
 }
