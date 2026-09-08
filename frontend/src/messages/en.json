@@ -130,7 +130,8 @@
       "invalidFormat": "Invalid format",
       "invalidEmail": "Invalid email address",
       "invalidNumber": "Please enter a valid number",
-      "positiveNumber": "Must be greater than 0"
+      "positiveNumber": "Must be greater than 0",
+      "phoneOrEmailRequired": "Provide at least a phone number or an email address"
     },
     "table": {
       "rowsPerPage": "Rows per page",
@@ -207,6 +208,8 @@
     "saveCustomer": "Save Customer",
     "loadMore": "Load More",
     "loadingMore": "Loading...",
-    "noMoreItems": "All items loaded"
+    "noMoreItems": "All items loaded",
+    "organization": "Organization",
+    "person": "Person"
   }
 }

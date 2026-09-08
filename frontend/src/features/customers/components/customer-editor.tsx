@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations, useLocale } from "next-intl";
-import { customerFormSchema, type CustomerFormValues } from "../schemas/customer-form-schema";
+import { createCustomerFormSchema, type CustomerFormValues } from "../schemas/customer-form-schema";
 import { apiClient } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -19,6 +19,7 @@ import type { CustomerResponse } from "@/lib/api/api-client";
 export function CustomerEditor() {
   const t = useTranslations("customers");
   const tCommon = useTranslations("common");
+  const tValidation = useTranslations("common.validation");
   const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -30,6 +31,14 @@ export function CustomerEditor() {
   // Maintain stable Idempotency-Key across retries for the same form creation session
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
 
+  const customerFormSchema = useMemo(
+    () =>
+      createCustomerFormSchema((key) =>
+        tValidation(key as "required" | "invalidEmail" | "phoneOrEmailRequired"),
+      ),
+    [tValidation],
+  );
+
   const {
     control,
     handleSubmit,
@@ -37,7 +46,7 @@ export function CustomerEditor() {
   } = useForm<CustomerFormValues>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
-      customerType: "corporate",
+      customerType: "organization",
       displayNameTh: "",
       displayNameEn: "",
       preferredLocale: locale === "en" ? "en" : "th",
@@ -210,8 +219,8 @@ export function CustomerEditor() {
                     disabled={isSubmitting}
                     {...field}
                   >
-                    <option value="corporate">{t("corporate")}</option>
-                    <option value="individual">{t("individual")}</option>
+                    <option value="organization">{t("organization")}</option>
+                    <option value="person">{t("person")}</option>
                   </select>
                 )}
               />
@@ -251,7 +260,7 @@ export function CustomerEditor() {
                 label={t("displayNameTh")}
                 required
                 disabled={isSubmitting}
-                error={errors.displayNameTh?.message ? tCommon(errors.displayNameTh.message as "validation.required") : undefined}
+                error={errors.displayNameTh?.message}
                 {...field}
               />
             )}
@@ -266,7 +275,7 @@ export function CustomerEditor() {
                 id="displayNameEn"
                 label={t("displayNameEn")}
                 disabled={isSubmitting}
-                error={errors.displayNameEn?.message ? tCommon(errors.displayNameEn.message as "validation.required") : undefined}
+                error={errors.displayNameEn?.message}
                 {...field}
               />
             )}
@@ -290,7 +299,7 @@ export function CustomerEditor() {
                   label={t("contactName")}
                   required
                   disabled={isSubmitting}
-                  error={errors.primaryContact?.name?.message ? tCommon(errors.primaryContact.name.message as "validation.required") : undefined}
+                  error={errors.primaryContact?.name?.message}
                   {...field}
                 />
               )}
@@ -305,7 +314,7 @@ export function CustomerEditor() {
                   id="primaryContactRoleTitle"
                   label={t("roleTitle")}
                   disabled={isSubmitting}
-                  error={errors.primaryContact?.roleTitle?.message ? tCommon(errors.primaryContact.roleTitle.message as "validation.required") : undefined}
+                  error={errors.primaryContact?.roleTitle?.message}
                   {...field}
                 />
               )}
@@ -321,9 +330,8 @@ export function CustomerEditor() {
                 <Input
                   id="primaryContactPhone"
                   label={t("phone")}
-                  required
                   disabled={isSubmitting}
-                  error={errors.primaryContact?.phone?.message ? tCommon(errors.primaryContact.phone.message as "validation.required") : undefined}
+                  error={errors.primaryContact?.phone?.message}
                   {...field}
                 />
               )}
@@ -339,7 +347,7 @@ export function CustomerEditor() {
                   label={t("email")}
                   type="email"
                   disabled={isSubmitting}
-                  error={errors.primaryContact?.email?.message ? tCommon(errors.primaryContact.email.message as "validation.invalidEmail") : undefined}
+                  error={errors.primaryContact?.email?.message}
                   {...field}
                 />
               )}

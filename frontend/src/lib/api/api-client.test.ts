@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { ApiClient } from "./api-client";
+import { ApiClient, type ListCustomersParams } from "./api-client";
 import { ApiError } from "./api-error";
 
 describe("ApiClient", () => {
@@ -91,21 +91,19 @@ describe("ApiClient", () => {
     global.fetch = fetchMock;
 
     const client = new ApiClient("http://localhost:5000");
+    const params: ListCustomersParams = { search: "บริษัท", status: "draft", limit: 10 };
     const result = await client.listCustomers(
       {
         token: "sample-token",
         membershipId: "mem-123",
         locale: "th",
       },
-      {
-        search: "บริษัท",
-        limit: 10,
-      }
+      params
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("http://localhost:5000/api/v1/customers?search=%E0%B8%9A%E0%B8%A3%E0%B8%B4%E0%B8%A9%E0%B8%B1%E0%B8%97&limit=10");
+    expect(url).toBe("http://localhost:5000/api/v1/customers?search=%E0%B8%9A%E0%B8%A3%E0%B8%B4%E0%B8%A9%E0%B8%B1%E0%B8%97&status=draft&limit=10");
     expect(init.method).toBe("GET");
     expect(init.headers["Authorization"]).toBe("Bearer sample-token");
     expect(init.headers["X-Membership-Id"]).toBe("mem-123");
@@ -130,7 +128,7 @@ describe("ApiClient", () => {
 
     const client = new ApiClient("http://localhost:5000");
     const payload = {
-      customerType: "corporate",
+      customerType: "organization",
       displayNameTh: "บริษัท ทดสอบ จำกัด",
       preferredLocale: "th",
       primaryContact: {

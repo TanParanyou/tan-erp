@@ -1,24 +1,32 @@
 import { z } from "zod";
 
-export const customerFormSchema = z.object({
-  customerType: z.enum(["corporate", "individual"]),
-  displayNameTh: z.string().trim().min(1, "validation.required"),
-  displayNameEn: z.string().trim().optional().or(z.literal("")),
-  preferredLocale: z.enum(["th", "en"]),
-  primaryContact: z.object({
-    name: z.string().trim().min(1, "validation.required"),
-    roleTitle: z.string().trim().optional().or(z.literal("")),
-    phone: z.string().trim().min(1, "validation.required"),
-    email: z
-      .string()
-      .trim()
-      .optional()
-      .or(z.literal(""))
-      .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
-        message: "validation.invalidEmail",
-      }),
-    preferredChannel: z.enum(["phone", "email", "line", "other"]).optional(),
-  }),
-});
+type ValidationTranslator = (
+  key: "required" | "invalidEmail" | "phoneOrEmailRequired",
+) => string;
 
-export type CustomerFormValues = z.infer<typeof customerFormSchema>;
+export const createCustomerFormSchema = (t: ValidationTranslator) =>
+  z.object({
+    customerType: z.enum(["organization", "person"]),
+    displayNameTh: z.string().trim().min(1, t("required")),
+    displayNameEn: z.string().trim().optional().or(z.literal("")),
+    preferredLocale: z.enum(["th", "en"]),
+    primaryContact: z
+      .object({
+        name: z.string().trim().min(1, t("required")),
+        roleTitle: z.string().trim().optional().or(z.literal("")),
+        phone: z.string().trim().optional().or(z.literal("")),
+        email: z
+          .string()
+          .trim()
+          .email(t("invalidEmail"))
+          .optional()
+          .or(z.literal("")),
+        preferredChannel: z.enum(["phone", "email", "line", "other"]),
+      })
+      .refine((value) => Boolean(value.phone || value.email), {
+        message: t("phoneOrEmailRequired"),
+        path: ["phone"],
+      }),
+  });
+
+export type CustomerFormValues = z.infer<ReturnType<typeof createCustomerFormSchema>>;

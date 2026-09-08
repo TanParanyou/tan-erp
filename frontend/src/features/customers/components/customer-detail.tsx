@@ -17,6 +17,23 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
 
+  const customerTypeKey = { organization: "organization", person: "person" } as const;
+  const customerStatusKey = { draft: "draft", active: "active", inactive: "inactive" } as const;
+
+  const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
+    if (value === "organization" || value === "person") {
+      return t(customerTypeKey[value]);
+    }
+    return tCommon("feedback.operationFailed");
+  };
+
+  const resolveCustomerStatusLabel = (value: string | null | undefined): string => {
+    if (value === "draft" || value === "active" || value === "inactive") {
+      return tCommon(`status.${customerStatusKey[value]}`);
+    }
+    return tCommon("feedback.operationFailed");
+  };
+
   const { data: customer, isLoading, isError, error, refetch } = useCustomerDetail(customerId);
 
   if (isLoading) {
@@ -110,7 +127,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
                   customer.status === "active" ? "erp-badge-success" : "erp-badge-neutral"
                 }`}
               >
-                {customer.status === "active" ? t("active") : t("inactive")}
+                {resolveCustomerStatusLabel(customer.status)}
               </span>
             </div>
             <span style={{ fontFamily: "monospace", color: "var(--erp-text-muted)", fontSize: "0.875rem" }}>
@@ -172,7 +189,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           <dt>{t("customerType")}:</dt>
           <dd>
             <span className="erp-badge erp-badge-neutral">
-              {customer.customerType === "corporate" ? t("corporate") : t("individual")}
+              {resolveCustomerTypeLabel(customer.customerType)}
             </span>
           </dd>
 

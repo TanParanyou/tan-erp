@@ -17,6 +17,23 @@ export function CustomerList() {
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
 
+  const customerTypeKey = { organization: "organization", person: "person" } as const;
+  const customerStatusKey = { draft: "draft", active: "active", inactive: "inactive" } as const;
+
+  const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
+    if (value === "organization" || value === "person") {
+      return t(customerTypeKey[value]);
+    }
+    return tCommon("feedback.operationFailed");
+  };
+
+  const resolveCustomerStatusLabel = (value: string | null | undefined): string => {
+    if (value === "draft" || value === "active" || value === "inactive") {
+      return tCommon(`status.${customerStatusKey[value]}`);
+    }
+    return tCommon("feedback.operationFailed");
+  };
+
   const [searchInput, setSearchInput] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
 
@@ -303,7 +320,7 @@ export function CustomerList() {
                       </td>
                       <td style={{ padding: "0.75rem 1rem" }}>
                         <span className="erp-badge erp-badge-neutral">
-                          {customer.customerType === "corporate" ? t("corporate") : t("individual")}
+                          {resolveCustomerTypeLabel(customer.customerType)}
                         </span>
                       </td>
                       <td style={{ padding: "0.75rem 1rem", color: "var(--erp-text-muted)", fontSize: "0.8125rem" }}>
@@ -315,7 +332,7 @@ export function CustomerList() {
                             customer.status === "active" ? "erp-badge-success" : "erp-badge-neutral"
                           }`}
                         >
-                          {customer.status === "active" ? t("active") : t("inactive")}
+                          {resolveCustomerStatusLabel(customer.status)}
                         </span>
                       </td>
                     </tr>

@@ -1,4 +1,4 @@
-import type { components } from "@/generated/api/tan-erp.v1";
+import type { components, paths } from "@/generated/api/tan-erp.v1";
 import { ApiError } from "./api-error";
 import type { ProblemDetails } from "./problem-details";
 
@@ -15,12 +15,9 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
-export interface ListCustomersParams {
-  search?: string;
-  status?: string;
-  limit?: number;
-  cursor?: string;
-}
+export type ListCustomersParams = NonNullable<
+  paths["/api/v1/customers"]["get"]["parameters"]["query"]
+>;
 
 export class ApiClient {
   private readonly baseUrl: string;
