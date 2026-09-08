@@ -212,12 +212,13 @@ export function CustomerEditor() {
         />
       }
     >
-      <div className="flex flex-col gap-6">
-        {/* Customer Base Info Section */}
-        <div className="erp-card p-6 flex flex-col gap-5">
-          <h2 className="text-lg font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3">
-            {t("title")}
-          </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Customer Information */}
+        <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-6">
+          <div className="erp-card p-6 flex flex-col gap-5">
+            <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
+              {t("title")}
+            </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Customer Type */}
@@ -316,10 +317,12 @@ export function CustomerEditor() {
             )}
           />
         </div>
+      </div>
 
-        {/* Primary Contact Section */}
+      {/* Right Column: Primary Contact Section */}
+      <div className="lg:col-span-5 xl:col-span-5 flex flex-col gap-6">
         <div className="erp-card p-6 flex flex-col gap-5">
-          <h2 className="text-lg font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3">
+          <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
             {t("primaryContact")}
           </h2>
 
@@ -432,6 +435,7 @@ export function CustomerEditor() {
           </div>
         </div>
       </div>
+    </div>
 
       {/* Safety Confirmation Modal for Cancel when isDirty */}
       <ConfirmationModal

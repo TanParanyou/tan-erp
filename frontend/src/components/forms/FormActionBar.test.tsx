@@ -22,4 +22,16 @@ describe("FormActionBar component", () => {
     render(<FormActionBar isDirty={true} unsavedText="Changes not saved yet" />);
     expect(screen.getByText("Changes not saved yet")).toBeInTheDocument();
   });
+
+  it("applies sticky positioning and flush negative margins by default", () => {
+    const { container, rerender } = render(<FormActionBar />);
+    const bar = container.firstChild as HTMLElement;
+    expect(bar.className).toContain("sticky");
+    expect(bar.className).toContain("bottom-0");
+    expect(bar.className).toContain("-mx-4");
+
+    rerender(<FormActionBar sticky={false} />);
+    const nonStickyBar = container.firstChild as HTMLElement;
+    expect(nonStickyBar.className).not.toContain("sticky");
+  });
 });

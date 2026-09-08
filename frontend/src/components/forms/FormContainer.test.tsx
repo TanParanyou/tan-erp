@@ -30,7 +30,7 @@ describe("FormContainer component", () => {
       </FormContainer>
     );
 
-    expect(container.querySelector(".max-w-4xl")).not.toBeNull();
+    expect(container.querySelector(".max-w-5xl")).not.toBeNull();
 
     rerender(
       <FormContainer maxWidth="sm">
@@ -50,5 +50,15 @@ describe("FormContainer component", () => {
     const formEl = container.querySelector("form");
     expect(formEl).not.toBeNull();
     expect(formEl?.getAttribute("data-testid")).toBe("form-root");
+  });
+
+  it("renders actionBar slot directly without unnecessary wrappers", () => {
+    render(
+      <FormContainer actionBar={<div data-testid="direct-action-bar">Bar</div>}>
+        <div>Content</div>
+      </FormContainer>
+    );
+
+    expect(screen.getByTestId("direct-action-bar")).toBeInTheDocument();
   });
 });

@@ -14,6 +14,8 @@ export interface FormContainerProps extends React.FormHTMLAttributes<HTMLFormEle
   children: React.ReactNode;
   /** Sticky action bar slot, typically FormActionBar */
   actionBar?: React.ReactNode;
+  /** Whether the action bar slot should stick to the bottom of the viewport. Defaults to true */
+  stickyActionBar?: boolean;
   /** Maximum width of the form body */
   maxWidth?: "sm" | "md" | "lg" | "xl" | "full" | string;
   className?: string;
@@ -24,10 +26,10 @@ export interface FormContainerProps extends React.FormHTMLAttributes<HTMLFormEle
 
 const maxWidthMap: Record<string, string> = {
   sm: "max-w-xl",
-  md: "max-w-[800px]",
-  lg: "max-w-4xl",
-  xl: "max-w-6xl",
-  full: "max-w-full",
+  md: "max-w-3xl",
+  lg: "max-w-5xl",
+  xl: "max-w-7xl",
+  full: "w-full",
 };
 
 export function FormContainer({
@@ -36,7 +38,8 @@ export function FormContainer({
   topAlert,
   children,
   actionBar,
-  maxWidth = "md",
+  stickyActionBar = true,
+  maxWidth = "xl",
   className,
   contentClassName,
   asForm = false,
@@ -49,7 +52,7 @@ export function FormContainer({
       {/* Form Body Area */}
       <div
         className={cn(
-          "w-full mx-auto pb-12 flex flex-col gap-6",
+          "w-full mx-auto flex-1 flex flex-col gap-6 mb-8",
           resolvedMaxWidth,
           contentClassName
         )}
@@ -60,17 +63,13 @@ export function FormContainer({
         {children}
       </div>
 
-      {/* Action Bar Slot (Flush to edges and bottom) */}
-      {actionBar && (
-        <div className="-mx-4 sm:-mx-8">
-          {actionBar}
-        </div>
-      )}
+      {/* Action Bar Slot */}
+      {actionBar}
     </>
   );
 
   const containerClassName = cn(
-    "flex-1 flex flex-col justify-between w-full min-h-[calc(100vh-64px)]",
+    "flex-1 flex flex-col justify-between w-full min-h-[calc(100vh-7rem)]",
     className
   );
 

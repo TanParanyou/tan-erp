@@ -56,7 +56,9 @@
 ## 📝 3. ERP Form Workflows (`@/components/forms`)
 
 ### 3.1 `FormActionBar`
-แถบเครื่องมือบันทึกฟอร์มแบบติดหนึบด้านล่าง (`sticky bottom-0`)
+แถบเครื่องมือบันทึกฟอร์มแบบติดหนึบด้านล่าง (`sticky bottom-0 z-40`)
+- **Container-Aligned Flush Margins:** ใช้ `-mx-4 -mb-4 mt-8 sm:-mx-6 sm:-mb-6` เพื่อหักล้าง padding ของคอนเทนเนอร์หลัก (`p-4 sm:p-6`) แนบสนิทกับขอบซ้าย ขวา และล่างของหน้าจออย่างพอดีเป๊ะ
+- **Harmonized Inner Padding:** กำหนด padding ด้านในเป็น `px-4 py-3 sm:px-6 sm:py-4` ทำให้ป้ายสถานะทางซ้ายและปุ่มคำสั่งทางขวาตรงแนว (align) กับขอบเนื้อหาฟอร์มด้านบนอย่างเป็นระเบียบ
 - **Unsaved Changes Pulse:** แสดงตัวเตือน `isDirty` เมื่อมีข้อมูลค้างยังไม่ได้บันทึก
 - **Double Submit Protection:** ปุ่มบันทึกมีสถานะ `isLoading` ปิดการกดซ้ำขณะยิง API
 - **Extra Actions:** ช่องเสียบปุ่มเพิ่มเติม เช่น ปุ่มลบ (Delete), ยกเลิกเอกสาร (Void)
@@ -72,10 +74,10 @@
 
 ### 3.4 `FormContainer` (Unified Layout Wrapper)
 คอมโพเนนต์ห่อหุ้มฟอร์มมาตรฐานของระบบ เพื่อความเป็นเอกภาพของโครงสร้างหน้าจอ Layout:
-- จัดสรรพื้นที่แบ่งเป็น 5 ส่วนชัดเจน: `header` (PageHeader), `errorBanner`, `topAlert` (คำเตือนเพิ่มเติม เช่น รายการซ้ำ), `children` (ฟิลด์ข้อมูลในฟอร์ม), และ `actionBar` (FormActionBar ติดหนึบด้านล่าง)
+- จัดสรรพื้นที่แบ่งเป็นส่วนชัดเจน: `header` (PageHeader), `errorBanner`, `topAlert` (คำเตือนเพิ่มเติม เช่น รายการซ้ำ), `children` (ฟิลด์ข้อมูลในฟอร์ม), และ `actionBar` (FormActionBar ติดหนึบด้านล่าง)
 - รองรับการทำงานแบบ Native Form (`asForm={true}` หรือส่ง `onSubmit`, `onChange`) ทำให้ปุ่มบันทึกใน `FormActionBar` ทำงานสอดคล้องกับ Form Validation และการ Submit ได้ทันที
-- ขจัดปัญหาระยะขอบ `main-content` ทับซ้อนหรือกินพื้นที่ของ `FormActionBar` โดยจัดช่องวาง `actionBar` ให้ชิดขอบล่างของหน้าต่าง Viewport อย่างแนบเนียน
-- กำหนดความกว้างมาตรฐานด้วย `maxWidth` (`sm`, `md` [800px - ค่าเริ่มต้น], `lg`, `xl`, `full`)
+- ใช้ `min-h-[calc(100vh-7rem)] flex flex-col justify-between` และ `flex-1 mb-8` ดัน `actionBar` ลงไปอยู่ด้านล่างสุดของฟอร์มอย่างมั่นคง ไม่ซ้อน wrapper ซ้ำซ้อน
+- กำหนดความกว้างมาตรฐานด้วย `maxWidth` (`sm`: max-w-xl, `md`: max-w-3xl, `lg`: max-w-5xl, `xl`: max-w-7xl [ค่าเริ่มต้น], `full`: w-full) ไม่บีบแคบจนเสียสัดส่วนเหมือนเดิม
 
 ---
 
