@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 import type { MembershipDto } from "@/lib/permissions/can";
@@ -8,7 +8,7 @@ import type { MembershipDto } from "@/lib/permissions/can";
 interface SelectedMembershipContextType {
   selectedMembership: MembershipDto | null;
   memberships: MembershipDto[];
-  setSelectedMembershipId: (id: string) => void;
+  setSelectedMembershipId: (id: string) => Promise<void>;
 }
 
 const SelectedMembershipContext = createContext<SelectedMembershipContextType | undefined>(undefined);
@@ -25,31 +25,21 @@ export function SelectedMembershipProvider({
   const queryClient = useQueryClient();
   const memberships = (currentUser.memberships || []) as MembershipDto[];
 
-  const [selectedId, setSelectedId] = useState<string | null>(() => {
-    return memberships.length > 0 && memberships[0].id ? memberships[0].id : null;
-  });
-
-  // Ensure selectedId stays valid if memberships change
-  useEffect(() => {
-    if (memberships.length > 0) {
-      if (!selectedId || !memberships.some((m) => m.id === selectedId)) {
-        setSelectedId(memberships[0].id || null);
-      }
-    } else {
-      setSelectedId(null);
-    }
-  }, [memberships, selectedId]);
-
-  const handleSelectMembershipId = (newId: string) => {
-    if (newId !== selectedId) {
-      // Invalidate business query caches when switching active membership
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      setSelectedId(newId);
-    }
-  };
-
+  const [requestedId, setRequestedId] = useState<string | null>(null);
   const selectedMembership =
-    memberships.find((m) => m.id === selectedId) || (memberships.length > 0 ? memberships[0] : null);
+    memberships.find((membership) => membership.id === requestedId) ?? memberships[0] ?? null;
+
+  const handleSelectMembershipId = async (newId: string): Promise<void> => {
+    if (!memberships.some((membership) => membership.id === newId)) {
+      return;
+    }
+    if (newId === selectedMembership?.id) {
+      return;
+    }
+    await queryClient.cancelQueries({ queryKey: ["business"] });
+    queryClient.removeQueries({ queryKey: ["business"] });
+    setRequestedId(newId);
+  };
 
   return (
     <SelectedMembershipContext.Provider

@@ -4,23 +4,41 @@ import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 
-export function customerListQueryKey(membershipId: string | null | undefined, params?: ListCustomersParams) {
-  return ["customers", "list", membershipId, params?.search, params?.status] as const;
+export function customerListQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  params?: ListCustomersParams,
+): readonly ["business", string | null | undefined, "th" | "en", "customers", "list", string | null, string | null, number] {
+  return [
+    "business",
+    membershipId,
+    locale,
+    "customers",
+    "list",
+    params?.search ?? null,
+    params?.status ?? null,
+    params?.limit ?? 25,
+  ] as const;
 }
 
-export function customerDetailQueryKey(membershipId: string | null | undefined, customerId: string | null | undefined) {
-  return ["customers", "detail", membershipId, customerId] as const;
+export function customerDetailQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  customerId: string | null | undefined,
+): readonly ["business", string | null | undefined, "th" | "en", "customers", "detail", string | null | undefined] {
+  return ["business", membershipId, locale, "customers", "detail", customerId] as const;
 }
 
 export function useCustomerList(
   params?: ListCustomersParams
 ): UseInfiniteQueryResult<{ pages: CustomerListResponse[]; pageParams: (string | undefined)[] }, Error> {
   const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
   const { selectedMembership } = useSelectedMembership();
   const membershipId = selectedMembership?.id;
 
   return useInfiniteQuery({
-    queryKey: customerListQueryKey(membershipId, params),
+    queryKey: customerListQueryKey(membershipId, normalizedLocale, params),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam, signal }) => {
       const token = await getAuthToken();
@@ -35,7 +53,7 @@ export function useCustomerList(
         {
           token,
           membershipId,
-          locale: locale === "en" ? "en" : "th",
+          locale: normalizedLocale,
           signal,
         },
         {
@@ -53,11 +71,12 @@ export function useCustomerDetail(
   customerId: string | null | undefined
 ): UseQueryResult<CustomerResponse, Error> {
   const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
   const { selectedMembership } = useSelectedMembership();
   const membershipId = selectedMembership?.id;
 
   return useQuery({
-    queryKey: customerDetailQueryKey(membershipId, customerId),
+    queryKey: customerDetailQueryKey(membershipId, normalizedLocale, customerId),
     queryFn: async ({ signal }) => {
       const token = await getAuthToken();
       if (!token) {
@@ -73,7 +92,7 @@ export function useCustomerDetail(
       return apiClient.getCustomer(customerId, {
         token,
         membershipId,
-        locale: locale === "en" ? "en" : "th",
+        locale: normalizedLocale,
         signal,
       });
     },

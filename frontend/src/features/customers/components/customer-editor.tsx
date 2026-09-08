@@ -113,7 +113,7 @@ export function CustomerEditor() {
       );
 
       // Invalidate customer lists
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      await queryClient.invalidateQueries({ queryKey: ["business"] });
 
       if (created.duplicateCandidates?.length) {
         setDuplicateCandidates(created.duplicateCandidates);
