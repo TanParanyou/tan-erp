@@ -47,13 +47,28 @@ public class CustomerContactMigrationTests : IAsyncLifetime
             .FirstAsync();
         Assert.False(exists);
 
-        // Reapply
+        // Reapply (CustomerContactSlice + EnforceCustomerAccessActivation)
         await _db.Database.MigrateAsync();
 
         var reapplyExists = await _db.Database
             .SqlQueryRaw<bool>(@"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'crm' AND table_name = 'customers') AS ""Value""")
             .FirstAsync();
         Assert.True(reapplyExists);
+    }
+
+    [Fact]
+    public async Task Migration_AfterReapply_ExposesActivationAndCanonicalColumns()
+    {
+        async Task<bool> ColumnExists(string schema, string table, string column) =>
+            await _db.Database
+                .SqlQueryRaw<bool>(@"SELECT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = {0} AND table_name = {1} AND column_name = {2}) AS ""Value""", schema, table, column)
+                .FirstAsync();
+
+        Assert.True(await ColumnExists("identity_access", "permissions", "is_active"));
+        Assert.True(await ColumnExists("crm", "customers", "id"));
+        Assert.True(await ColumnExists("crm", "customer_contacts", "normalized_phone"));
+        Assert.True(await ColumnExists("crm", "customer_contacts", "normalized_email"));
+        Assert.True(await ColumnExists("audit", "idempotency_records", "key_hash"));
     }
 
     [Fact]

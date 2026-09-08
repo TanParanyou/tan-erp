@@ -31,11 +31,8 @@ public static class TestOnlyDataSeeder
         // Ensure database schema is migrated
         await db.Database.MigrateAsync();
 
-        // Check if already seeded (idempotency)
-        if (await db.Users.AnyAsync(u => u.FirebaseUid == TestFirebaseUid))
-        {
-            return;
-        }
+        // NOTE: no early return here; every block below is find-or-create so
+        // restarts backfill permission keys/links added after the first seed.
 
         // Seed Organization
         var org = await db.Organizations.FindAsync(TestOrgId);
@@ -54,8 +51,12 @@ public static class TestOnlyDataSeeder
         }
 
         // Seed User
-        var user = new User(TestUserId, TestFirebaseUid, TestUserDisplayName, TestUserEmail, isActive: true);
-        db.Users.Add(user);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.FirebaseUid == TestFirebaseUid);
+        if (user == null)
+        {
+            user = new User(TestUserId, TestFirebaseUid, TestUserDisplayName, TestUserEmail, isActive: true);
+            db.Users.Add(user);
+        }
 
         // Seed Membership
         var membership = await db.Memberships.FindAsync(TestMembershipId);
@@ -86,21 +87,26 @@ public static class TestOnlyDataSeeder
             seededPerms.Add(perm);
         }
 
-        // Seed Role for Org A
+        // Seed Role for Org A (backfill new permission links for roles seeded before CRM keys existed)
         var role = await db.Roles.FirstOrDefaultAsync(r => r.OrganizationId == TestOrgId && r.Name == "Test Admin");
         if (role == null)
         {
             role = new Role(Guid.NewGuid(), TestOrgId, "Test Admin", "Test Admin Role", isActive: true);
             db.Roles.Add(role);
 
-            foreach (var perm in seededPerms)
-            {
-                var rolePermission = new RolePermission(Guid.NewGuid(), role.Id, TestOrgId, perm.Id, PermissionScope.Organization, TestOrgId);
-                db.RolePermissions.Add(rolePermission);
-            }
-
             var membershipRole = new MembershipRole(TestMembershipId, role.Id, TestOrgId);
             db.MembershipRoles.Add(membershipRole);
+        }
+
+        foreach (var perm in seededPerms)
+        {
+            var exists = await db.RolePermissions.AnyAsync(rp =>
+                rp.RoleId == role.Id && rp.PermissionId == perm.Id
+                && rp.Scope == PermissionScope.Organization && rp.ScopeId == TestOrgId);
+            if (!exists)
+            {
+                db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), role.Id, TestOrgId, perm.Id, PermissionScope.Organization, TestOrgId));
+            }
         }
 
         // Seed Deterministic Org B Fixture
@@ -131,14 +137,19 @@ public static class TestOnlyDataSeeder
             roleB = new Role(Guid.NewGuid(), TestOrgBId, "Test Admin B", "Test Admin Role B", isActive: true);
             db.Roles.Add(roleB);
 
-            foreach (var perm in seededPerms)
-            {
-                var rolePermB = new RolePermission(Guid.NewGuid(), roleB.Id, TestOrgBId, perm.Id, PermissionScope.Organization, TestOrgBId);
-                db.RolePermissions.Add(rolePermB);
-            }
-
             var membershipRoleB = new MembershipRole(TestMembershipBId, roleB.Id, TestOrgBId);
             db.MembershipRoles.Add(membershipRoleB);
+        }
+
+        foreach (var perm in seededPerms)
+        {
+            var existsB = await db.RolePermissions.AnyAsync(rp =>
+                rp.RoleId == roleB.Id && rp.PermissionId == perm.Id
+                && rp.Scope == PermissionScope.Organization && rp.ScopeId == TestOrgBId);
+            if (!existsB)
+            {
+                db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), roleB.Id, TestOrgBId, perm.Id, PermissionScope.Organization, TestOrgBId));
+            }
         }
 
         await db.SaveChangesAsync();

@@ -37,6 +37,9 @@ public class CustomerEndpointsTests : IAsyncLifetime
     private const string UidReadOnly = "uid-read-only-test";
     private static readonly Guid MembershipReadOnlyId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b31");
 
+    private const string UidCreateOnly = "uid-create-only-test";
+    private static readonly Guid MembershipCreateOnlyId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b32");
+
     private class TestFirebaseTokenVerifier : IFirebaseTokenVerifier
     {
         public Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default)
@@ -46,6 +49,7 @@ public class CustomerEndpointsTests : IAsyncLifetime
                 "token-org-a" => UidA,
                 "token-org-b" => UidB,
                 "token-read-only" => UidReadOnly,
+                "token-create-only" => UidCreateOnly,
                 "token-no-membership" => "uid-no-membership",
                 _ => null
             };
@@ -102,6 +106,20 @@ public class CustomerEndpointsTests : IAsyncLifetime
         var readPerm = await db.Permissions.FirstAsync(p => p.Key == "customers.read");
         db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), roleReadOnly.Id, OrgAId, readPerm.Id, PermissionScope.Organization, OrgAId));
         db.MembershipRoles.Add(new MembershipRole(MembershipReadOnlyId, roleReadOnly.Id, OrgAId));
+
+        // Seed create-only user (has customers.create, but lacks customer-contacts.manage)
+        var userCreateOnly = new User(Guid.NewGuid(), UidCreateOnly, "Create Only User", "createonly@example.test", isActive: true);
+        db.Users.Add(userCreateOnly);
+
+        var membershipCreateOnly = new Membership(MembershipCreateOnlyId, OrgAId, null, userCreateOnly.Id, isActive: true);
+        db.Memberships.Add(membershipCreateOnly);
+
+        var roleCreateOnly = new Role(Guid.NewGuid(), OrgAId, "Create Only Role", "Create only role", isActive: true);
+        db.Roles.Add(roleCreateOnly);
+
+        var createPerm = await db.Permissions.FirstAsync(p => p.Key == "customers.create");
+        db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), roleCreateOnly.Id, OrgAId, createPerm.Id, PermissionScope.Organization, OrgAId));
+        db.MembershipRoles.Add(new MembershipRole(MembershipCreateOnlyId, roleCreateOnly.Id, OrgAId));
 
         await db.SaveChangesAsync();
     }
@@ -295,6 +313,88 @@ public class CustomerEndpointsTests : IAsyncLifetime
         Assert.NotNull(resultB);
         // Org B must NOT see Org A's customer in duplicate candidates
         Assert.True(resultB.DuplicateCandidates == null || resultB.DuplicateCandidates.Count == 0);
+    }
+
+    [Fact]
+    public async Task CreateCustomer_WithoutContactManagePermission_Returns403WithoutWriting()
+    {
+        var request = new CreateCustomerRequest("organization", "บริษัท ไร้สิทธิ์ติดต่อ TEST_ONLY", null, "th",
+            new CreatePrimaryContactRequest("นาย ไร้สิทธิ์", null, "+66810001001", null, "phone"));
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-create-only");
+        msg.Headers.Add("X-Membership-Id", MembershipCreateOnlyId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-create-only-denied-01");
+        msg.Content = JsonContent.Create(request);
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("PERMISSION_DENIED", problem.Code);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var exists = await db.Customers.AnyAsync(c =>
+            c.OrganizationId == OrgAId && c.DisplayNameTh == "บริษัท ไร้สิทธิ์ติดต่อ TEST_ONLY");
+        Assert.False(exists);
+    }
+
+    [Fact]
+    public async Task CreateCustomer_WhenPermissionInactive_Returns403()
+    {
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var permission = await db.Permissions.FirstAsync(p => p.Key == "customers.create");
+            permission.Deactivate();
+            await db.SaveChangesAsync();
+        }
+
+        var request = new CreateCustomerRequest("organization", "บริษัท สิทธิ์ถูกระงับ TEST_ONLY", null, "th",
+            new CreatePrimaryContactRequest("นาย ถูกระงับ", null, "+66810001002", null, "phone"));
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-inactive-perm-01");
+        msg.Content = JsonContent.Create(request);
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("PERMISSION_DENIED", problem.Code);
+    }
+
+    [Fact]
+    public async Task CreateCustomer_WhenBranchInactive_Returns403()
+    {
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var branch = await db.Branches.FirstAsync(b => b.Id == TestOnlyDataSeeder.TestBranchId);
+            branch.Deactivate();
+            await db.SaveChangesAsync();
+        }
+
+        var request = new CreateCustomerRequest("organization", "บริษัท สาขาถูกระงับ TEST_ONLY", null, "th",
+            new CreatePrimaryContactRequest("นาย สาขาระงับ", null, "+66810001003", null, "phone"));
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-inactive-branch-01");
+        msg.Content = JsonContent.Create(request);
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("PERMISSION_DENIED", problem.Code);
     }
 
     [Fact]

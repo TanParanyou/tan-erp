@@ -290,9 +290,10 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           role="main"
           className="erp-main-content"
         >
-          {children ? (
-            children
-          ) : (
+          {/* Home route renders the default dashboard: route pages return null
+              children, which is still a truthy element, so truthiness alone
+              can never select the dashboard. */}
+          {isHomeActive ? (
             <>
               <div style={{ marginBottom: "1.75rem", borderBottom: "1px solid var(--erp-border)", paddingBottom: "1.25rem" }}>
                 <h1 style={{ fontSize: "1.625rem", fontWeight: 700, color: "var(--erp-navy)", margin: "0 0 0.375rem 0", letterSpacing: "-0.01em" }}>
@@ -406,6 +407,8 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
                 </section>
               </div>
             </>
+          ) : (
+            children
           )}
         </main>
       </div>
