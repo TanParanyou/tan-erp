@@ -39,6 +39,16 @@ export function CustomerList() {
 
   const canCreate = can(selectedMembership, "customers.create");
 
+  const resolveListErrorMessage = (error: Error | null): string => {
+    if (error?.message === "No authentication token available") {
+      return t("errors.authenticationRequired");
+    }
+    if (error?.message === "No active membership selected") {
+      return t("errors.membershipRequired");
+    }
+    return t("errors.loadList");
+  };
+
   const {
     data,
     isLoading,
@@ -173,7 +183,7 @@ export function CustomerList() {
           <IconAlertCircle size={32} style={{ color: "var(--erp-danger)" }} />
           <div>
             <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-danger)", margin: "0 0 0.5rem 0" }}>
-              {error?.message || "Failed to load customers"}
+              {resolveListErrorMessage(error)}
             </h2>
           </div>
           <Button
@@ -279,8 +289,8 @@ export function CustomerList() {
                   const contact = customer.primaryContact;
                   const contactDetails = [
                     contact?.name,
-                    contact?.phone ? `Tel: ${contact.phone}` : null,
-                    contact?.email ? `Email: ${contact.email}` : null,
+                    contact?.phone ? `${t("telLabel")}: ${contact.phone}` : null,
+                    contact?.email ? `${t("emailLabel")}: ${contact.email}` : null,
                   ]
                     .filter(Boolean)
                     .join(" • ");

@@ -78,13 +78,13 @@ export function CustomerEditor() {
 
     const token = await getAuthToken();
     if (!token) {
-      setSubmitError("No authentication token available");
+      setSubmitError(t("errors.authenticationRequired"));
       return;
     }
 
     const membershipId = selectedMembership?.id;
     if (!membershipId) {
-      setSubmitError("No active membership selected");
+      setSubmitError(t("errors.membershipRequired"));
       return;
     }
 
@@ -130,7 +130,7 @@ export function CustomerEditor() {
       } else if (err instanceof Error) {
         setSubmitError(err.message);
       } else {
-        setSubmitError("An unexpected error occurred while saving customer");
+        setSubmitError(t("errors.saveUnexpected"));
       }
     }
   };
@@ -231,8 +231,8 @@ export function CustomerEditor() {
                     disabled={isSubmitting}
                     {...field}
                   >
-                    <option value="th">ไทย (Thai)</option>
-                    <option value="en">English</option>
+                    <option value="th">{t("localeThai")}</option>
+                    <option value="en">{t("localeEnglish")}</option>
                   </select>
                 )}
               />

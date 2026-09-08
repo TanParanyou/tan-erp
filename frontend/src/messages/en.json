@@ -211,6 +211,17 @@
     "noMoreItems": "All items loaded",
     "organization": "Organization",
     "person": "Person",
-    "viewCreatedCustomer": "View the created customer"
+    "viewCreatedCustomer": "View the created customer",
+    "errors": {
+      "loadList": "Unable to load the customer list",
+      "loadDetail": "Unable to load customer details",
+      "authenticationRequired": "Please sign in to continue",
+      "membershipRequired": "Please select an active membership",
+      "saveUnexpected": "An unexpected error occurred while saving the customer"
+    },
+    "telLabel": "Tel",
+    "emailLabel": "Email",
+    "localeThai": "Thai (ไทย)",
+    "localeEnglish": "English"
   }
 }

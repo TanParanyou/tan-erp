@@ -101,6 +101,7 @@ describe("CustomerEditor create intent", () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledTimes(1));
     void root;
   });
 
@@ -150,7 +151,7 @@ describe("CustomerEditor create intent", () => {
     fireEvent.click(screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" }));
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(4));
     expect(mockedCreate.mock.calls[3][1].idempotencyKey).toBe("key-2");
-    await waitFor(() => expect(mockPush).toHaveBeenCalled());
+    await waitFor(() => expect(mockPush).toHaveBeenCalledTimes(2));
   });
 
   it("preserves masked duplicate candidate with link instead of navigating", async () => {

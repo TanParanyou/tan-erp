@@ -211,6 +211,17 @@
     "noMoreItems": "แสดงข้อมูลทั้งหมดแล้ว",
     "organization": "นิติบุคคล",
     "person": "บุคคลธรรมดา",
-    "viewCreatedCustomer": "ดูข้อมูลลูกค้าที่สร้างแล้ว"
+    "viewCreatedCustomer": "ดูข้อมูลลูกค้าที่สร้างแล้ว",
+    "errors": {
+      "loadList": "ไม่สามารถโหลดรายชื่อลูกค้าได้",
+      "loadDetail": "ไม่สามารถโหลดรายละเอียดลูกค้าได้",
+      "authenticationRequired": "กรุณาเข้าสู่ระบบก่อนใช้งาน",
+      "membershipRequired": "กรุณาเลือกสมาชิกภาพที่ใช้งานอยู่",
+      "saveUnexpected": "เกิดข้อผิดพลาดที่ไม่คาดคิดขณะบันทึกข้อมูลลูกค้า"
+    },
+    "telLabel": "โทร",
+    "emailLabel": "อีเมล",
+    "localeThai": "ไทย (Thai)",
+    "localeEnglish": "อังกฤษ (English)"
   }
 }

@@ -5,7 +5,7 @@ export type PermissionDto = components["schemas"]["PermissionDto"];
 
 /**
  * Checks if the given membership has the specified permission key.
- * 
+ *
  * Rules:
  * - Returns true ONLY if the permission key matches AND the scope is "organization".
  * - Scopes of "branch" or "own" must return false in this foundation phase.

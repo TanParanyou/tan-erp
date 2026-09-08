@@ -35,6 +35,16 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
     return tCommon("feedback.operationFailed");
   };
 
+  const resolveDetailErrorMessage = (error: Error | null): string => {
+    if (error?.message === "No authentication token available") {
+      return t("errors.authenticationRequired");
+    }
+    if (error?.message === "No active membership selected") {
+      return t("errors.membershipRequired");
+    }
+    return t("errors.loadDetail");
+  };
+
   const { data: customer, isLoading, isError, error, refetch } = useCustomerDetail(customerId);
 
   if (isLoading) {
@@ -73,7 +83,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         <IconAlertCircle size={32} style={{ color: "var(--erp-danger)" }} />
         <div>
           <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-danger)", margin: "0 0 0.5rem 0" }}>
-            {error?.message || "Customer not found"}
+            {resolveDetailErrorMessage(error)}
           </h2>
         </div>
         <div style={{ display: "flex", gap: "1rem" }}>
@@ -167,7 +177,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           <dd>{customer.displayNameEn || "-"}</dd>
 
           <dt>{t("preferredLocale")}:</dt>
-          <dd>{customer.preferredLocale === "en" ? "English" : "ไทย (Thai)"}</dd>
+          <dd>{customer.preferredLocale === "en" ? t("localeEnglish") : t("localeThai")}</dd>
         </dl>
       </div>
 
