@@ -333,6 +333,7 @@ export interface components {
             displayNameEn?: string | null;
             preferredLocale?: string | null;
             primaryContact?: components["schemas"]["CreatePrimaryContactRequest"];
+            leadSource?: string | null;
         };
         CreatePrimaryContactRequest: {
             name?: string | null;
@@ -340,6 +341,7 @@ export interface components {
             phone?: string | null;
             email?: string | null;
             preferredChannel?: string | null;
+            lineId?: string | null;
         };
         CurrentUserResponse: {
             user?: components["schemas"]["UserDto"];
@@ -352,6 +354,7 @@ export interface components {
             email?: string | null;
             preferredChannel?: string | null;
             isMasked?: boolean;
+            lineId?: string | null;
         };
         CustomerListItemResponse: {
             /** Format: uuid */
@@ -363,6 +366,7 @@ export interface components {
             preferredLocale?: string | null;
             status?: string | null;
             primaryContact?: components["schemas"]["CustomerContactResponse"];
+            leadSource?: string | null;
         };
         CustomerListResponse: {
             items?: components["schemas"]["CustomerListItemResponse"][] | null;
@@ -383,6 +387,7 @@ export interface components {
             rowVersion?: string;
             /** Format: date-time */
             createdAtUtc?: string;
+            leadSource?: string | null;
         };
         DuplicateCustomerResponse: {
             /** Format: uuid */

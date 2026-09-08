@@ -38,6 +38,7 @@
 | Responsive UX ของ Item Master | [Item Master Responsive Wireframe](01-business/item-master-responsive-wireframe.md) |
 | Flow ของ Customer/Opportunity/Site Survey | [CRM and Site Survey Flow](01-business/crm-site-survey-flow.md) |
 | Field และ Gate ของ CRM/Survey | [CRM and Site Survey Field Catalog](01-business/crm-site-survey-field-catalog.md) |
+| ระยะการเก็บข้อมูลลูกค้า (Customer Phases) | [Customer Field Expansion Phases](01-business/customer-field-expansion-phases.md) |
 | Lifecycle, Privacy และ Survey Readiness | [CRM and Site Survey Governance](01-business/crm-site-survey-governance.md) |
 | Responsive UX ของ CRM/Survey | [CRM and Site Survey Responsive Wireframe](01-business/crm-site-survey-responsive-wireframe.md) |
 | คำศัพท์ธุรกิจ | [CONTEXT.md](../CONTEXT.md) |
@@ -80,6 +81,7 @@
 | แผนพัฒนา Customer + Contact Vertical Slice | [Customer + Contact Vertical Slice Plan](superpowers/plans/2026-09-07-customer-contact-vertical-slice.md) |
 | แผนแก้ไข Customer + Contact จาก Code Review | [Customer + Contact Remediation Plan](superpowers/plans/2026-09-08-customer-contact-remediation.md) |
 | บันทึกผลการตรวจสอบ Customer + Contact Slice | [Customer + Contact Verification](05-engineering/customer-contact-verification.md) |
+| แผนพัฒนา Customer Activation + Opportunity + Site Slice | [Opportunity + Site Vertical Slice Plan](superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md) |
 | คำสั่งและ Workflow การพัฒนา (Makefile) | [Quickstart with Make](../README.md#การเริ่มต้นระบบอย่างรวดเร็วด้วย-make-quickstart-with-make) |
 
 ## สถานะเอกสาร

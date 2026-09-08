@@ -545,6 +545,10 @@
           },
           "primaryContact": {
             "$ref": "#/components/schemas/CreatePrimaryContactRequest"
+          },
+          "leadSource": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -569,6 +573,10 @@
             "nullable": true
           },
           "preferredChannel": {
+            "type": "string",
+            "nullable": true
+          },
+          "lineId": {
             "type": "string",
             "nullable": true
           }
@@ -616,6 +624,10 @@
           },
           "isMasked": {
             "type": "boolean"
+          },
+          "lineId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -653,6 +665,10 @@
           },
           "primaryContact": {
             "$ref": "#/components/schemas/CustomerContactResponse"
+          },
+          "leadSource": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -722,6 +738,10 @@
           "createdAtUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "leadSource": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
