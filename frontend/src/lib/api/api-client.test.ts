@@ -237,4 +237,105 @@ describe("ApiClient", () => {
       expect(apiError.code).toBe("REQUEST_ABORTED");
     }
   });
+
+  it("sends POST /api/v1/customers/:id/activate with quoted If-Match header and idempotency key", async () => {
+    const mockCustomer = {
+      id: "cust-1",
+      status: "active",
+      rowVersion: "version-2",
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockCustomer,
+    });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    const result = await client.activateCustomer("cust-1", {
+      token: "sample-token",
+      membershipId: "mem-1",
+      idempotencyKey: "idemp-key-1234567890",
+      ifMatch: "version-1",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://localhost:5000/api/v1/customers/cust-1/activate");
+    expect(init.method).toBe("POST");
+    expect(init.headers["Authorization"]).toBe("Bearer sample-token");
+    expect(init.headers["X-Membership-Id"]).toBe("mem-1");
+    expect(init.headers["Idempotency-Key"]).toBe("idemp-key-1234567890");
+    expect(init.headers["If-Match"]).toBe('"version-1"');
+    expect(result).toEqual(mockCustomer);
+  });
+
+  it("sends POST /api/v1/customers/:customerId/sites and encodes customerId properly", async () => {
+    const mockSite = {
+      id: "site-1",
+      code: "SITE-01",
+      label: "บ้านพัก",
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => mockSite,
+    });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    const payload = {
+      label: "บ้านพัก",
+      addressLine1: "123",
+      subdistrict: "ต",
+      district: "อ",
+      province: "จ",
+      postalCode: "10000",
+      countryCode: "TH",
+    };
+
+    const result = await client.createSite("cust-123", payload, {
+      token: "sample-token",
+      membershipId: "mem-1",
+      idempotencyKey: "site-key-1234567890",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://localhost:5000/api/v1/customers/cust-123/sites");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual(payload);
+    expect(result).toEqual(mockSite);
+  });
+
+  it("sends GET /api/v1/opportunities with encoded query parameters", async () => {
+    const mockOppList = {
+      items: [],
+      nextCursor: null,
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockOppList,
+    });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    const result = await client.listOpportunities(
+      { token: "sample-token", membershipId: "mem-1" },
+      { search: "งาน Built-in", stage: "draft", limit: 10 }
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain("/api/v1/opportunities?");
+    expect(url).toContain("search=%E0%B8%87%E0%B8%B2%E0%B8%99+Built-in");
+    expect(url).toContain("stage=draft");
+    expect(url).toContain("limit=10");
+    expect(init.method).toBe("GET");
+    expect(result).toEqual(mockOppList);
+  });
 });

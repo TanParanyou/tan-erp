@@ -7,16 +7,29 @@ export type CustomerListResponse = components["schemas"]["CustomerListResponse"]
 export type CustomerResponse = components["schemas"]["CustomerResponse"];
 export type CreateCustomerRequest = components["schemas"]["CreateCustomerRequest"];
 
+export type SiteResponse = components["schemas"]["SiteResponse"];
+export type SiteListResponse = components["schemas"]["SiteListResponse"];
+export type CreateSiteRequest = components["schemas"]["CreateSiteRequest"];
+
+export type OpportunityResponse = components["schemas"]["OpportunityResponse"];
+export type OpportunityListResponse = components["schemas"]["OpportunityListResponse"];
+export type CreateOpportunityRequest = components["schemas"]["CreateOpportunityRequest"];
+
 export interface RequestOptions {
   token: string;
   membershipId?: string;
   idempotencyKey?: string;
+  ifMatch?: string;
   locale?: "th" | "en";
   signal?: AbortSignal;
 }
 
 export type ListCustomersParams = NonNullable<
   paths["/api/v1/customers"]["get"]["parameters"]["query"]
+>;
+
+export type ListOpportunitiesParams = NonNullable<
+  paths["/api/v1/opportunities"]["get"]["parameters"]["query"]
 >;
 
 export class ApiClient {
@@ -32,7 +45,7 @@ export class ApiClient {
     options: RequestOptions,
     body?: unknown
   ): Promise<T> {
-    const { token, membershipId, idempotencyKey, locale = "th", signal } = options;
+    const { token, membershipId, idempotencyKey, ifMatch, locale = "th", signal } = options;
 
     if (!token || token.trim() === "") {
       throw new ApiError({
@@ -54,6 +67,10 @@ export class ApiClient {
 
     if (idempotencyKey) {
       headers["Idempotency-Key"] = idempotencyKey;
+    }
+
+    if (ifMatch) {
+      headers["If-Match"] = ifMatch.startsWith('"') && ifMatch.endsWith('"') ? ifMatch : `"${ifMatch}"`;
     }
 
     if (body !== undefined) {
@@ -139,6 +156,58 @@ export class ApiClient {
     options: RequestOptions
   ): Promise<CustomerResponse> {
     return this.request<CustomerResponse>("/api/v1/customers", "POST", options, payload);
+  }
+
+  async activateCustomer(
+    id: string,
+    options: RequestOptions
+  ): Promise<CustomerResponse> {
+    return this.request<CustomerResponse>(`/api/v1/customers/${encodeURIComponent(id)}/activate`, "POST", options);
+  }
+
+  async listCustomerSites(
+    customerId: string,
+    options: RequestOptions
+  ): Promise<SiteListResponse> {
+    return this.request<SiteListResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/sites`, "GET", options);
+  }
+
+  async createSite(
+    customerId: string,
+    payload: CreateSiteRequest,
+    options: RequestOptions
+  ): Promise<SiteResponse> {
+    return this.request<SiteResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/sites`, "POST", options, payload);
+  }
+
+  async listOpportunities(
+    options: RequestOptions,
+    params?: ListOpportunitiesParams
+  ): Promise<OpportunityListResponse> {
+    const query = new URLSearchParams();
+    if (params?.search) query.set("search", params.search);
+    if (params?.customerId) query.set("customerId", params.customerId);
+    if (params?.stage) query.set("stage", params.stage);
+    if (params?.limit) query.set("limit", params.limit.toString());
+    if (params?.cursor) query.set("cursor", params.cursor);
+
+    const queryString = query.toString();
+    const endpoint = `/api/v1/opportunities${queryString ? `?${queryString}` : ""}`;
+    return this.request<OpportunityListResponse>(endpoint, "GET", options);
+  }
+
+  async getOpportunity(
+    id: string,
+    options: RequestOptions
+  ): Promise<OpportunityResponse> {
+    return this.request<OpportunityResponse>(`/api/v1/opportunities/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createOpportunity(
+    payload: CreateOpportunityRequest,
+    options: RequestOptions
+  ): Promise<OpportunityResponse> {
+    return this.request<OpportunityResponse>("/api/v1/opportunities", "POST", options, payload);
   }
 }
 

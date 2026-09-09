@@ -648,17 +648,17 @@ git commit -m "feat(api): publish opportunity site contract"
 - Consumes: generated `components`/`paths` only
 - Produces: API methods and business query keys scoped by Membership + locale + filters
 
-- [ ] **Step 1: Regenerate generated TypeScript**
+- [x] **Step 1: Regenerate generated TypeScript**
 
 Run: `npm --prefix frontend run generate:api`
 
 Do not edit `tan-erp.v1.ts` manually.
 
-- [ ] **Step 2: Write RED API client tests**
+- [x] **Step 2: Write RED API client tests**
 
 Assert activate sends quoted `If-Match`, Membership and idempotency headers; Site/Opportunity create send derived-field-free bodies; query params are encoded; non-2xx uses Problem Details.
 
-- [ ] **Step 3: Extend request options and methods**
+- [x] **Step 3: Extend request options and methods**
 
 ```ts
 export interface RequestOptions {
@@ -673,18 +673,18 @@ export interface RequestOptions {
 
 Export all DTO aliases from `components["schemas"]` and query params from `paths[...]`; add `activateCustomer`, `createSite`, `listCustomerSites`, `createOpportunity`, `listOpportunities`, `getOpportunity`.
 
-- [ ] **Step 4: Add query keys/hooks**
+- [x] **Step 4: Add query keys/hooks**
 
 All keys start `['business', membershipId, locale, ...]`. Mutations invalidate only affected customer/site/opportunity keys; Membership switching remains owned by selected-membership context.
 
-- [ ] **Step 5: Run and commit**
+- [x] **Step 5: Run and commit**
 
 Run: `npm --prefix frontend run test -- --run src/lib/api/api-client.test.ts src/features/sites/api/site-queries.test.tsx src/features/opportunities/api/opportunity-queries.test.tsx`
 
 Expected: all pass.
 
 ```bash
-git add frontend/src/generated/api/tan-erp.v1.ts frontend/src/lib/api frontend/src/features/sites/api frontend/src/features/opportunities/api
+git add frontend/src/generated/api/tan-erp.v1.ts frontend/src/lib/api frontend/src/features/sites/api frontend/src/features/opportunities/api docs/superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md
 git commit -m "feat(frontend): add opportunity site data layer"
 ```
 
