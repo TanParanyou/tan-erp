@@ -171,7 +171,7 @@ test.describe("Customer and Contact Management Journey", () => {
 
     // Search by code narrows the list
     await page.locator("input#customer-search-input").fill(responseData.code);
-    await page.getByRole("button", { name: "ยืนยัน" }).click();
+    await page.getByRole("button", { name: "ค้นหา" }).click();
     await expect(page.getByText(customerNameTh)).toBeVisible();
     await expect(page.getByText(responseData.code)).toBeVisible();
     await expect(page.getByText(contactName)).toBeVisible();

@@ -75,7 +75,7 @@ export function OpportunityEditor() {
   );
 
   const methods = useForm<OpportunityFormValues>({
-    resolver: zodResolver(oppFormSchema as any),
+    resolver: zodResolver(oppFormSchema),
     defaultValues: {
       customerId: "",
       primarySiteId: "",

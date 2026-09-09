@@ -203,9 +203,9 @@ public class SiteStoreTests : IAsyncLifetime
         customer.Activate(customer.RowVersion);
         _db.Customers.Add(customer);
 
-        var s1 = Site.CreateActive(Guid.NewGuid(), orgId, customer.Id, userId, "ไซต์แรก",
+        var s1 = Site.CreateActive(Guid.NewGuid(), orgId, customer.Id, userId, "Site A",
             new SiteAddressInput("1", "ต", "อ", "จ", "10000", "TH"), null, null, null, now.AddMinutes(-10));
-        var s2 = Site.CreateActive(Guid.NewGuid(), orgId, customer.Id, userId, "ไซต์สอง",
+        var s2 = Site.CreateActive(Guid.NewGuid(), orgId, customer.Id, userId, "Site B",
             new SiteAddressInput("2", "ต", "อ", "จ", "10000", "TH"), null, null, null, now);
         _db.Sites.AddRange(s1, s2);
         await _db.SaveChangesAsync();

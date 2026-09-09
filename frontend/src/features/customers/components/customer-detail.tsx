@@ -78,9 +78,11 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
     setIsActivating(true);
     try {
+      const idempotencyKey = `activate-${customer.id}-${Date.now()}`;
       await apiClient.activateCustomer(customer.id, {
         token,
         membershipId,
+        idempotencyKey,
         locale: locale === "en" ? "en" : "th",
         ifMatch: customer.rowVersion ?? "",
       });

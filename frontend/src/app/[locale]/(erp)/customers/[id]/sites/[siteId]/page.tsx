@@ -9,18 +9,18 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 import { useTranslations } from "next-intl";
 
 interface SiteDynamicPageProps {
-  params: Promise<{ locale: string; customerId: string; id: string }>;
+  params: Promise<{ locale: string; id: string; siteId: string }>;
 }
 
 export default function SiteDynamicPage({ params }: SiteDynamicPageProps) {
-  const { locale, customerId, id } = use(params);
+  const { locale, id: customerId, siteId } = use(params);
 
   if (!isSupportedLocale(locale)) {
     notFound();
   }
 
   // Slice 2 authorization guard: only create is allowed in this vertical slice
-  if (id !== "create") {
+  if (siteId !== "create") {
     notFound();
   }
 

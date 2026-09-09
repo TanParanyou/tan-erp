@@ -76,12 +76,16 @@ function renderList(locale: "th" | "en"): void {
   );
 }
 
+import { ToastProvider } from "@/hooks/useToast";
+
 function renderDetail(locale: "th" | "en"): void {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
       <NextIntlClientProvider locale={locale} messages={locale === "th" ? thMessages : enMessages}>
-        <CustomerDetail customerId="customer-1" />
+        <ToastProvider>
+          <CustomerDetail customerId="customer-1" />
+        </ToastProvider>
       </NextIntlClientProvider>
     </QueryClientProvider>,
   );
