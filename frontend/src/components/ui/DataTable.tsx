@@ -6,6 +6,8 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
+  IconArrowUp,
+  IconArrowDown,
   IconArrowUpDown,
 } from "@/components/common/Icons";
 import { Checkbox } from "./Checkbox";
@@ -187,36 +189,85 @@ export function DataTable<T>({
                 </th>
               )}
               {columns.map((col, idx) => {
-                const isSortable = col.sortable && col.accessorKey && onSort;
+                const isSortable = Boolean(col.sortable && col.accessorKey && onSort);
                 const isSorted = sortingState.key === col.accessorKey;
+                const isAsc = isSorted && sortingState.order === "asc";
+                const isDesc = isSorted && sortingState.order === "desc";
                 const stickyPos = getColumnStickyPosition(col, idx, columns.length);
                 const isStickyRight = stickyPos === "right";
                 const isStickyLeft = stickyPos === "left";
 
+                const sortTooltip = isSortable
+                  ? isSorted
+                    ? isAsc
+                      ? t("sortAscending")
+                      : t("sortDescending")
+                    : t("sortNone")
+                  : undefined;
+
                 return (
                   <th
                     key={idx}
+                    role={isSortable ? "button" : undefined}
+                    tabIndex={isSortable ? 0 : undefined}
+                    aria-sort={
+                      isSorted
+                        ? isAsc
+                          ? "ascending"
+                          : "descending"
+                        : isSortable
+                        ? "none"
+                        : undefined
+                    }
+                    title={sortTooltip}
                     className={cn(
-                      "erp-th",
-                      isSortable && "erp-th-sortable",
-                      isStickyRight && "sticky right-0 z-20 shadow-[-2px_0_4px_rgba(0,0,0,0.05)]",
-                      isStickyLeft && "sticky left-0 z-20 shadow-[2px_0_4px_rgba(0,0,0,0.05)]",
+                      "erp-th transition-colors duration-150 relative",
+                      isSortable &&
+                        "erp-th-sortable group/th select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-erp-navy",
+                      isSorted && "bg-[#EAF0F6] text-erp-navy border-b-2 border-b-erp-navy font-bold",
+                      isStickyRight &&
+                        "sticky right-0 z-20 shadow-[-2px_0_4px_rgba(0,0,0,0.08)] bg-erp-surface-subtle border-l border-erp-border",
+                      isStickyLeft &&
+                        "sticky left-0 z-20 shadow-[2px_0_4px_rgba(0,0,0,0.08)] bg-erp-surface-subtle border-r border-erp-border",
                       col.className
                     )}
                     onClick={() =>
                       isSortable && onSort?.(col.accessorKey as string)
                     }
+                    onKeyDown={(e) => {
+                      if (isSortable && (e.key === "Enter" || e.key === " ")) {
+                        e.preventDefault();
+                        onSort?.(col.accessorKey as string);
+                      }
+                    }}
                   >
-                    <div className="flex items-center gap-1.5">
-                      {col.header}
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={cn(
+                          "truncate",
+                          isSorted ? "text-erp-navy font-bold" : "text-erp-text-main"
+                        )}
+                      >
+                        {col.header}
+                      </span>
                       {isSortable && (
-                        <IconArrowUpDown
-                          size={14}
+                        <span
+                          aria-hidden="true"
                           className={cn(
-                            "shrink-0",
-                            isSorted ? "text-erp-navy" : "text-erp-text-muted opacity-40"
+                            "w-5 h-5 inline-flex items-center justify-center shrink-0 rounded-none border transition-all duration-150",
+                            isSorted
+                              ? "bg-erp-navy text-white border-erp-navy shadow-xs"
+                              : "border-transparent text-erp-text-muted/60 group-hover/th:border-erp-border group-hover/th:bg-white group-hover/th:text-erp-navy opacity-0 group-hover/th:opacity-100"
                           )}
-                        />
+                        >
+                          {isAsc ? (
+                            <IconArrowUp size={12} strokeWidth={2.5} />
+                          ) : isDesc ? (
+                            <IconArrowDown size={12} strokeWidth={2.5} />
+                          ) : (
+                            <IconArrowUpDown size={12} strokeWidth={2} />
+                          )}
+                        </span>
                       )}
                     </div>
                   </th>

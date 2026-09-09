@@ -32,9 +32,48 @@ describe("DataTable component", () => {
     const onSort = vi.fn();
     render(<DataTable columns={columns} data={data} onSort={onSort} />);
 
-    const codeHeader = screen.getByText("Code");
+    const codeHeader = screen.getByRole("button", { name: /code/i });
+    expect(codeHeader).toHaveAttribute("aria-sort", "none");
     fireEvent.click(codeHeader);
     expect(onSort).toHaveBeenCalledWith("code");
+  });
+
+  it("handles sorting trigger via keyboard Enter and Space", () => {
+    const onSort = vi.fn();
+    render(<DataTable columns={columns} data={data} onSort={onSort} />);
+
+    const codeHeader = screen.getByRole("button", { name: /code/i });
+    fireEvent.keyDown(codeHeader, { key: "Enter" });
+    expect(onSort).toHaveBeenCalledWith("code");
+
+    fireEvent.keyDown(codeHeader, { key: " " });
+    expect(onSort).toHaveBeenCalledTimes(2);
+  });
+
+  it("reflects active sort state with aria-sort and custom styling", () => {
+    const { rerender } = render(
+      <DataTable
+        columns={columns}
+        data={data}
+        onSort={vi.fn()}
+        sorting={{ key: "code", order: "asc" }}
+      />
+    );
+
+    const codeHeaderAsc = screen.getByRole("button", { name: /code/i });
+    expect(codeHeaderAsc).toHaveAttribute("aria-sort", "ascending");
+
+    rerender(
+      <DataTable
+        columns={columns}
+        data={data}
+        onSort={vi.fn()}
+        sorting={{ key: "code", order: "desc" }}
+      />
+    );
+
+    const codeHeaderDesc = screen.getByRole("button", { name: /code/i });
+    expect(codeHeaderDesc).toHaveAttribute("aria-sort", "descending");
   });
 
   it("handles selectable row clicks", () => {
