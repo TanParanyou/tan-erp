@@ -152,11 +152,11 @@ public class SiteStore : ISiteStore
             return null; // Signals customer not found / forbidden scope
         }
 
-        // 2. Fetch sites ordered by createdAtUtc ASC
+        // 2. Fetch sites ordered by normalized_label ASC, id ASC
         var sites = await _db.Sites
             .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId && s.CustomerId == customerId)
-            .OrderBy(s => s.CreatedAtUtc)
+            .OrderBy(s => s.NormalizedLabel)
             .ThenBy(s => s.Id)
             .Select(s => ToProjection(s))
             .ToListAsync(cancellationToken);
