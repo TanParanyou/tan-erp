@@ -1,5 +1,7 @@
 import type { components } from "@/generated/api/tan-erp.v1";
+import type { PermissionKey } from "./permissions";
 
+export { PERMISSIONS, type PermissionKey } from "./permissions";
 export type MembershipDto = components["schemas"]["MembershipDto"];
 export type PermissionDto = components["schemas"]["PermissionDto"];
 
@@ -13,7 +15,7 @@ export type PermissionDto = components["schemas"]["PermissionDto"];
  */
 export function can(
   membership: MembershipDto | null | undefined,
-  requiredPermission: string
+  requiredPermission: PermissionKey | string
 ): boolean {
   if (!membership || !membership.permissions || !Array.isArray(membership.permissions)) {
     return false;

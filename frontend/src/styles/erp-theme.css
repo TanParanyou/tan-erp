@@ -1,25 +1,50 @@
 /* Atelier Architectural Navy Sharp - Centralized ERP Design System */
 
 :root {
+  /* Atelier Architectural Navy Scale (50-950) */
+  --erp-navy-50: #F0F5FA;
+  --erp-navy-100: #E1EBF5;
+  --erp-navy-200: #C3D7EC;
+  --erp-navy-300: #98BCDF;
+  --erp-navy-400: #659BD0;
+  --erp-navy-500: #3D7BC0;
+  --erp-navy-600: #255FA3;
+  --erp-navy-700: #194B85;
+  --erp-navy-800: #123968;
+  --erp-navy-900: #0B3056;
+  --erp-navy-950: #071F38;
+
+  /* Architectural Ice Slate Scale (50-900) */
+  --erp-slate-50: #F8FAFC;
+  --erp-slate-100: #F1F5F9;
+  --erp-slate-200: #E2EBF4;
+  --erp-slate-300: #D1DEEC;
+  --erp-slate-400: #94A3B8;
+  --erp-slate-500: #64748B;
+  --erp-slate-600: #536B88;
+  --erp-slate-700: #334155;
+  --erp-slate-800: #1E293B;
+  --erp-slate-900: #0A192F;
+
   /* Navy Brand Tokens (Atelier Architectural Navy) */
-  --erp-navy: #0B3056;
-  --erp-navy-hover: #071F38;
-  --erp-navy-light: #EBF3FA;
-  --erp-navy-border: #0B3056;
+  --erp-navy: var(--erp-navy-900);
+  --erp-navy-hover: var(--erp-navy-950);
+  --erp-navy-light: var(--erp-navy-50);
+  --erp-navy-border: var(--erp-navy-900);
 
   /* Neutral Surface & Canvas (Architectural Drafting Colors) */
   --erp-canvas: #F4F6F9;
   --erp-surface: #FFFFFF;
-  --erp-surface-muted: #F8FAFC;
+  --erp-surface-muted: var(--erp-slate-50);
   --erp-surface-subtle: #EBF1F7;
-  --erp-border: #D1DEEC;
-  --erp-border-subtle: #E2EBF4;
-  --erp-border-strong: #0B3056;
+  --erp-border: var(--erp-slate-300);
+  --erp-border-subtle: var(--erp-slate-200);
+  --erp-border-strong: var(--erp-navy-900);
 
   /* Typography Colors */
-  --erp-text-main: #0A192F;
-  --erp-text-body: #334155;
-  --erp-text-muted: #536B88;
+  --erp-text-main: var(--erp-slate-900);
+  --erp-text-body: var(--erp-slate-700);
+  --erp-text-muted: var(--erp-slate-600);
   --erp-text-subtle: #7E95B0;
   --erp-text-on-navy: #FFFFFF;
 
@@ -391,7 +416,7 @@
 }
 
 .erp-th {
-  background-color: var(--erp-surface-muted);
+  background-color: var(--erp-surface-subtle);
   color: var(--erp-text-main);
   font-weight: 600;
   padding: 0.75rem 1rem;
@@ -404,7 +429,7 @@
   user-select: none;
 }
 .erp-th-sortable:hover {
-  background-color: #E5E7EB;
+  background-color: #DEE7F0;
 }
 
 .erp-td {
@@ -805,8 +830,6 @@
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
   min-width: 0;
   width: 100%;
   box-sizing: border-box;

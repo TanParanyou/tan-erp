@@ -16,12 +16,16 @@ export interface SelectProps
   options: SelectOption[];
   placeholder?: string;
   required?: boolean;
+  wrapperClassName?: string;
+  labelClassName?: string;
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   (
     {
       className,
+      wrapperClassName,
+      labelClassName,
       label,
       error,
       helperText,
@@ -40,9 +44,9 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const helperId = generatedId ? `${generatedId}-helper` : undefined;
 
     return (
-      <div className="erp-form-group">
+      <div className={cn("erp-form-group", wrapperClassName)}>
         {label && (
-          <label htmlFor={generatedId} className="erp-label">
+          <label htmlFor={generatedId} className={cn("erp-label", labelClassName)}>
             {label}
             {required && <span className="erp-label-required">*</span>}
           </label>

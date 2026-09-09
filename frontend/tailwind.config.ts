@@ -8,7 +8,36 @@ const config: Config = {
     extend: {
       colors: {
         erp: {
-          navy: "var(--erp-navy)",
+          // Brand Colors (Atelier Architectural Navy)
+          navy: {
+            DEFAULT: "var(--erp-navy)",
+            hover: "var(--erp-navy-hover)",
+            light: "var(--erp-navy-light)",
+            50: "var(--erp-navy-50)",
+            100: "var(--erp-navy-100)",
+            200: "var(--erp-navy-200)",
+            300: "var(--erp-navy-300)",
+            400: "var(--erp-navy-400)",
+            500: "var(--erp-navy-500)",
+            600: "var(--erp-navy-600)",
+            700: "var(--erp-navy-700)",
+            800: "var(--erp-navy-800)",
+            900: "var(--erp-navy-900)",
+            950: "var(--erp-navy-950)",
+          },
+          // Architectural Ice Slate Scale (50-900)
+          slate: {
+            50: "var(--erp-slate-50)",
+            100: "var(--erp-slate-100)",
+            200: "var(--erp-slate-200)",
+            300: "var(--erp-slate-300)",
+            400: "var(--erp-slate-400)",
+            500: "var(--erp-slate-500)",
+            600: "var(--erp-slate-600)",
+            700: "var(--erp-slate-700)",
+            800: "var(--erp-slate-800)",
+            900: "var(--erp-slate-900)",
+          },
           "navy-hover": "var(--erp-navy-hover)",
           "navy-light": "var(--erp-navy-light)",
           canvas: "var(--erp-canvas)",

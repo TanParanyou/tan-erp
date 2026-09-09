@@ -39,7 +39,7 @@ export function FormContainer({
   children,
   actionBar,
   stickyActionBar = true,
-  maxWidth = "xl",
+  maxWidth = "full",
   className,
   contentClassName,
   asForm = false,
@@ -52,7 +52,7 @@ export function FormContainer({
       {/* Form Body Area */}
       <div
         className={cn(
-          "w-full mx-auto flex-1 flex flex-col gap-6 mb-8",
+          "w-full mx-auto flex-1 flex flex-col gap-6 mb-8 pb-24",
           resolvedMaxWidth,
           contentClassName
         )}

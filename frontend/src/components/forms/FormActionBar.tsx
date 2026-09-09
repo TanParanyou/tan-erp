@@ -74,8 +74,8 @@ export function FormActionBar({
     <div
       className={cn(
         sticky
-          ? "sticky bottom-0 z-40 -mx-4 -mb-4 mt-8 sm:-mx-6 sm:-mb-6 px-4 py-3 sm:px-6 sm:py-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-4 border-t border-erp-border bg-erp-surface/95 backdrop-blur-md shadow-[0_-4px_16px_rgba(0,0,0,0.05)] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-          : "relative mt-8 p-4 border-t border-erp-border bg-erp-surface flex items-center justify-between",
+          ? "fixed bottom-0 left-0 right-0 z-40 w-full px-4 py-3 sm:px-6 sm:py-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-4 border-t border-erp-border bg-erp-surface shadow-[0_-4px_16px_rgba(0,0,0,0.05)] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+          : "relative mt-8 w-full p-4 border-t border-erp-border bg-erp-surface flex items-center justify-between",
         className
       )}
     >
