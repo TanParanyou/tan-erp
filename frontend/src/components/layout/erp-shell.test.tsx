@@ -64,10 +64,10 @@ describe("ErpShell Component", () => {
     });
   });
 
-  const renderWithClient = (ui: React.ReactElement) =>
+  const renderWithClient = (ui: React.ReactElement, user: CurrentUserResponse = mockCurrentUser) =>
     render(
       <QueryClientProvider client={testQueryClient}>
-        <SelectedMembershipProvider currentUser={mockCurrentUser}>
+        <SelectedMembershipProvider currentUser={user}>
           {ui}
         </SelectedMembershipProvider>
       </QueryClientProvider>
@@ -88,6 +88,35 @@ describe("ErpShell Component", () => {
     const customerLink = screen.getByRole("link", { name: "ข้อมูลลูกค้า" });
     expect(customerLink).toBeDefined();
     expect(customerLink.getAttribute("href")).toBe("/th/customers");
+  });
+
+  it("renders Opportunities navigation link when opportunities.read permission is present and hides when absent", () => {
+    const userWithOppPermission: CurrentUserResponse = {
+      ...mockCurrentUser,
+      memberships: [
+        {
+          ...mockCurrentUser.memberships![0],
+          permissions: [
+            ...mockCurrentUser.memberships![0].permissions!,
+            {
+              key: "opportunities.read",
+              scope: "organization",
+              scopeId: "20000000-0000-0000-0000-000000000001",
+            },
+          ],
+        },
+      ],
+    };
+
+    const { unmount } = renderWithClient(<ErpShell currentUser={userWithOppPermission} />, userWithOppPermission);
+    const oppLink = screen.getByRole("link", { name: "โอกาสทางการขาย" });
+    expect(oppLink).toBeDefined();
+    expect(oppLink.getAttribute("href")).toBe("/th/opportunities");
+    unmount();
+
+    // Without opportunities.read permission
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
+    expect(screen.queryByRole("link", { name: "โอกาสทางการขาย" })).toBeNull();
   });
 
   it("has interactive controls with at least 44px touch targets", () => {

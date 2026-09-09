@@ -16,6 +16,7 @@ import {
   IconChevronRight,
   IconLogOut,
   IconGlobe,
+  IconBriefcase,
 } from "@/components/common/Icons";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
@@ -47,6 +48,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
   const branchName = activeMembership?.branch?.name || tShell("noBranch");
 
   const hasCustomersRead = can(activeMembership, "customers.read");
+  const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
 
   const targetLocale = locale === "th" ? "en" : "th";
 
@@ -57,6 +59,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
 
   const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/`;
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
+  const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "var(--erp-canvas)" }}>
@@ -266,6 +269,19 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
                 >
                   <IconUsers size={20} />
                   <span className="erp-nav-text">{tShell("customers")}</span>
+                </Link>
+              </li>
+            )}
+            {hasOpportunitiesRead && (
+              <li>
+                <Link
+                  href={`/${locale}/opportunities`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`erp-nav-link ${isOpportunitiesActive ? "erp-nav-link-active" : ""}`}
+                  title={tShell("opportunities")}
+                >
+                  <IconBriefcase size={20} />
+                  <span className="erp-nav-text">{tShell("opportunities")}</span>
                 </Link>
               </li>
             )}

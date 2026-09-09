@@ -48,7 +48,8 @@
     "lightMode": "โหมดสว่าง",
     "darkMode": "โหมดมืด",
     "systemMode": "ตามระบบ",
-    "customers": "ข้อมูลลูกค้า"
+    "customers": "ข้อมูลลูกค้า",
+    "opportunities": "โอกาสทางการขาย"
   },
   "common": {
     "actions": {
@@ -78,7 +79,9 @@
       "reject": "ปฏิเสธ",
       "void": "ยกเลิกเอกสาร",
       "saveChanges": "บันทึกการเปลี่ยนแปลง",
-      "clearSelection": "ล้างค่าที่เลือก"
+      "clearSelection": "ล้างค่าที่เลือก",
+      "loadMore": "โหลดเพิ่มเติม",
+      "clear": "ล้างค่า"
     },
     "status": {
       "active": "ใช้งานอยู่",
@@ -132,7 +135,8 @@
       "invalidEmail": "รูปแบบอีเมลไม่ถูกต้อง",
       "invalidNumber": "กรุณาระบุเป็นตัวเลขที่ถูกต้อง",
       "positiveNumber": "ต้องเป็นตัวเลขมากกว่า 0",
-      "phoneOrEmailRequired": "กรุณาระบุเบอร์โทรศัพท์หรืออีเมลอย่างน้อยหนึ่งช่อง"
+      "phoneOrEmailRequired": "กรุณาระบุเบอร์โทรศัพท์หรืออีเมลอย่างน้อยหนึ่งช่อง",
+      "actionDateNotePairRequired": "หากระบุวันดำเนินการถัดไป ต้องระบุบันทึกการดำเนินการด้วย (และในทางกลับกัน)"
     },
     "table": {
       "rowsPerPage": "จำนวนแถวต่อหน้า",
@@ -298,6 +302,71 @@
       "createAccessDeniedDetail": "คุณไม่มีสิทธิ์สร้างสถานที่ตั้งในองค์กรนี้",
       "readAccessDeniedDetail": "คุณไม่มีสิทธิ์ดูรายการสถานที่ตั้งนี้",
       "customerInactive": "ไม่สามารถสร้างสถานที่ตั้งให้กับลูกค้าที่ยังไม่ได้เปิดใช้งานได้"
+    }
+  },
+  "opportunities": {
+    "title": "โอกาสทางการขาย (Opportunities)",
+    "subtitle": "จัดการและติดตามโอกาสทางการขาย งานโครงการ และข้อเสนอราคา",
+    "createOpportunity": "สร้างโอกาสทางการขาย",
+    "opportunityDetail": "รายละเอียดโอกาสทางการขาย",
+    "opportunityList": "รายการโอกาสทางการขาย",
+    "backToList": "กลับหน้ารายการโอกาสทางการขาย",
+    "emptyTitle": "ยังไม่มีโอกาสทางการขาย",
+    "emptyDetail": "ยังไม่มีการสร้างโอกาสทางการขายในระบบ",
+    "createFirstCta": "สร้างโอกาสทางการขายแรก",
+    "searchPlaceholder": "ค้นหาตามชื่อโครงการ หรือรหัส...",
+    "stageAll": "ทุกขั้นตอน",
+    "branchLabel": "สาขาที่ดูแล",
+    "ownerLabel": "ผู้รับผิดชอบ",
+    "customer": "ลูกค้า",
+    "customerPlaceholder": "-- เลือกลูกค้า (เฉพาะสถานะเปิดใช้งาน) --",
+    "primarySite": "สถานที่ตั้งหลัก (Site)",
+    "primarySitePlaceholder": "-- เลือกสถานที่ตั้งหลัก (ไม่บังคับ) --",
+    "noSitesForCustomer": "ลูกค้ายังไม่มีสถานที่ตั้ง",
+    "titleField": "ชื่อโอกาสทางการขาย / โครงการ",
+    "titlePlaceholder": "เช่น งานตกแต่งภายในอาคารสำนักงานชั้น 10",
+    "scopeSummary": "สรุปขอบเขตงาน",
+    "scopeSummaryPlaceholder": "สรุปรายละเอียดและขอบเขตงานโดยสังเขป...",
+    "workTypes": "ประเภทงาน",
+    "workTypeBuiltIn": "งานบิวท์อิน (Built-in)",
+    "workTypeInterior": "งานอินทีเรีย (Interior)",
+    "workTypeCurtain": "งานผ้าม่าน (Curtain)",
+    "workTypeWallpaper": "งานวอลเปเปอร์ (Wallpaper)",
+    "workTypeExterior": "งานภายนอก (Exterior)",
+    "workTypeOther": "งานอื่นๆ (Other)",
+    "sourceCode": "แหล่งที่มา",
+    "sourceCodePlaceholder": "เช่น แนะนำจากลูกค้าเก่า, งานอีเวนต์",
+    "expectedBudget": "งบประมาณที่คาดหวัง",
+    "currencyCode": "สกุลเงิน",
+    "targetDecisionDate": "วันที่คาดว่าจะตัดสินใจ",
+    "nextActionAt": "วัน-เวลาที่ต้องดำเนินการถัดไป",
+    "nextActionNote": "บันทึกการดำเนินการถัดไป",
+    "nextActionNotePlaceholder": "เช่น ส่งใบเสนอราคาฉบับแก้ไข, นัดพบบอร์ดบริหาร",
+    "stage": "ขั้นตอน / สถานะ",
+    "stageDraft": "ฉบับร่าง (Draft)",
+    "stageQualified": "ผ่านเกณฑ์ (Qualified)",
+    "stageEstimation": "ประเมินราคา (Estimation)",
+    "stageProposal": "เสนอราคา (Proposal)",
+    "stageWon": "ปิดการขายสำเร็จ (Won)",
+    "stageLost": "ไม่ผ่าน / ปิดการขายไม่สำเร็จ (Lost)",
+    "unknownStage": "ขั้นตอนที่ไม่รู้จัก",
+    "saveOpportunity": "บันทึกโอกาสทางการขาย",
+    "saveSuccess": "บันทึกโอกาสทางการขายเรียบร้อยแล้ว",
+    "createdAt": "วันที่สร้าง",
+    "code": "รหัสโอกาสทางการขาย",
+    "loadMore": "โหลดเพิ่มเติม",
+    "loadingMore": "กำลังโหลดเพิ่มเติม...",
+    "errors": {
+      "loadList": "ไม่สามารถโหลดรายการโอกาสทางการขายได้",
+      "loadDetail": "ไม่สามารถโหลดรายละเอียดโอกาสทางการขายได้",
+      "loadSites": "ไม่สามารถโหลดสถานที่ตั้งของลูกค้าได้",
+      "saveUnexpected": "เกิดข้อผิดพลาดที่ไม่คาดคิดขณะบันทึกโอกาสทางการขาย",
+      "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
+      "createAccessDeniedDetail": "คุณไม่มีสิทธิ์สร้างโอกาสทางการขายในองค์กรนี้",
+      "readAccessDeniedDetail": "คุณไม่มีสิทธิ์ดูรายการโอกาสทางการขายนี้",
+      "branchRequiredTitle": "ไม่สามารถสร้างโอกาสทางการขายได้",
+      "branchRequiredDetail": "คุณต้องมีสมาชิกภาพที่สังกัดสาขาที่ใช้งานได้เพื่อสร้างโอกาสทางการขาย",
+      "activeCustomerRequired": "โอกาสทางการขายต้องสร้างให้ลูกค้าที่มีสถานะเปิดใช้งานแล้วเท่านั้น"
     }
   }
 }

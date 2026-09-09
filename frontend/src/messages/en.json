@@ -48,7 +48,8 @@
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
     "systemMode": "System mode",
-    "customers": "Customers"
+    "customers": "Customers",
+    "opportunities": "Opportunities"
   },
   "common": {
     "actions": {
@@ -78,7 +79,9 @@
       "reject": "Reject",
       "void": "Void",
       "saveChanges": "Save Changes",
-      "clearSelection": "Clear selection"
+      "clearSelection": "Clear selection",
+      "loadMore": "Load More",
+      "clear": "Clear"
     },
     "status": {
       "active": "Active",
@@ -132,7 +135,8 @@
       "invalidEmail": "Invalid email address",
       "invalidNumber": "Please enter a valid number",
       "positiveNumber": "Must be greater than 0",
-      "phoneOrEmailRequired": "Provide at least a phone number or an email address"
+      "phoneOrEmailRequired": "Provide at least a phone number or an email address",
+      "actionDateNotePairRequired": "Next action note is required when next action date is set (and vice versa)"
     },
     "table": {
       "rowsPerPage": "Rows per page",
@@ -298,6 +302,71 @@
       "createAccessDeniedDetail": "You do not have permission to create sites in this organization.",
       "readAccessDeniedDetail": "You do not have permission to view this site list.",
       "customerInactive": "Cannot create a site for a customer that is not yet activated."
+    }
+  },
+  "opportunities": {
+    "title": "Opportunities",
+    "subtitle": "Manage and track sales opportunities, project pipelines, and quotes",
+    "createOpportunity": "Create Opportunity",
+    "opportunityDetail": "Opportunity Details",
+    "opportunityList": "Opportunity List",
+    "backToList": "Back to Opportunities",
+    "emptyTitle": "No Opportunities Found",
+    "emptyDetail": "No sales opportunities have been created yet.",
+    "createFirstCta": "Create the first opportunity",
+    "searchPlaceholder": "Search by project title or code...",
+    "stageAll": "All Stages",
+    "branchLabel": "Branch in Charge",
+    "ownerLabel": "Owner",
+    "customer": "Customer",
+    "customerPlaceholder": "-- Select customer (Active only) --",
+    "primarySite": "Primary Site",
+    "primarySitePlaceholder": "-- Select primary site (optional) --",
+    "noSitesForCustomer": "Customer has no sites yet",
+    "titleField": "Opportunity / Project Title",
+    "titlePlaceholder": "e.g., Office 10th Floor Interior Renovation",
+    "scopeSummary": "Scope Summary",
+    "scopeSummaryPlaceholder": "Briefly summarize the scope of work...",
+    "workTypes": "Work Types",
+    "workTypeBuiltIn": "Built-in",
+    "workTypeInterior": "Interior",
+    "workTypeCurtain": "Curtain",
+    "workTypeWallpaper": "Wallpaper",
+    "workTypeExterior": "Exterior",
+    "workTypeOther": "Other",
+    "sourceCode": "Lead Source",
+    "sourceCodePlaceholder": "e.g., Existing customer referral, Expo event",
+    "expectedBudget": "Expected Budget",
+    "currencyCode": "Currency",
+    "targetDecisionDate": "Target Decision Date",
+    "nextActionAt": "Next Action Date & Time",
+    "nextActionNote": "Next Action Note",
+    "nextActionNotePlaceholder": "e.g., Submit revised quotation, Meet board of directors",
+    "stage": "Stage / Status",
+    "stageDraft": "Draft",
+    "stageQualified": "Qualified",
+    "stageEstimation": "Estimation",
+    "stageProposal": "Proposal",
+    "stageWon": "Won",
+    "stageLost": "Lost",
+    "unknownStage": "Unknown Stage",
+    "saveOpportunity": "Save Opportunity",
+    "saveSuccess": "Opportunity saved successfully",
+    "createdAt": "Created Date",
+    "code": "Opportunity Code",
+    "loadMore": "Load More",
+    "loadingMore": "Loading more...",
+    "errors": {
+      "loadList": "Unable to load the opportunity list",
+      "loadDetail": "Unable to load opportunity details",
+      "loadSites": "Unable to load customer sites",
+      "saveUnexpected": "An unexpected error occurred while saving the opportunity",
+      "accessDeniedTitle": "Access Denied",
+      "createAccessDeniedDetail": "You do not have permission to create opportunities in this organization.",
+      "readAccessDeniedDetail": "You do not have permission to view this opportunity list.",
+      "branchRequiredTitle": "Cannot Create Opportunity",
+      "branchRequiredDetail": "You must have a membership affiliated with an active branch to create an opportunity.",
+      "activeCustomerRequired": "Opportunities can only be created for customers in Active status."
     }
   }
 }
