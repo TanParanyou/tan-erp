@@ -19,6 +19,8 @@ vi.mock("@/lib/auth/auth-session", () => ({
   getAuthToken: vi.fn(async () => "test-token"),
 }));
 
+import type { CurrentUserResponse } from "@/lib/api/api-client";
+
 const mockMembershipWithBranch = {
   id: "membership-1",
   organization: { id: "org-1", name: "Org 1" },
@@ -33,10 +35,20 @@ const mockMembershipWithoutBranch = {
   permissions: [{ key: "opportunities.create", scope: "organization" }],
 };
 
+const currentUser = {
+  user: {
+    id: "10000000-0000-0000-0000-000000000010",
+    displayName: "คุณเจ้าของโอกาส",
+    email: "owner@example.test",
+  },
+  memberships: [mockMembershipWithBranch],
+} satisfies CurrentUserResponse;
+
 let currentMembership: any = mockMembershipWithBranch;
 
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({
+    currentUser,
     selectedMembership: currentMembership,
   }),
 }));
@@ -122,6 +134,15 @@ describe("OpportunityEditor", () => {
 
     expect(screen.getByText("ไม่สามารถสร้างโอกาสทางการขายได้")).toBeDefined();
     expect(screen.getByText(/คุณต้องมีสมาชิกภาพที่สังกัดสาขาที่ใช้งานได้/)).toBeDefined();
+  });
+
+  it("displays read-only branch and owner context derived from selected membership and current user", () => {
+    renderEditor(client);
+
+    expect(screen.getByText("สาขาที่ดูแล:")).toBeInTheDocument();
+    expect(screen.getByText("สาขาใหญ่ (กรุงเทพ)")).toBeInTheDocument();
+    expect(screen.getByText("ผู้รับผิดชอบ:")).toBeInTheDocument();
+    expect(screen.getByText("คุณเจ้าของโอกาส")).toBeInTheDocument();
   });
 
   it("submits valid opportunity and navigates to detail on success", async () => {

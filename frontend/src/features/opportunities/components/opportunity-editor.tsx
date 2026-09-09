@@ -34,8 +34,10 @@ export function OpportunityEditor() {
   const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { selectedMembership } = useSelectedMembership();
+  const { currentUser, selectedMembership } = useSelectedMembership();
   const { toast } = useToast();
+
+  const ownerLabel = currentUser?.user?.displayName || currentUser?.user?.email || "-";
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -210,8 +212,20 @@ export function OpportunityEditor() {
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         <PageHeader
           title={t("createOpportunity")}
-          subtitle={`${t("branchLabel")}: ${activeBranch.name ?? "-"}`}
         />
+
+        <div className="erp-card p-4 bg-erp-surface-subtle border border-erp-border">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm m-0">
+            <div>
+              <dt className="text-erp-text-muted font-medium">{t("branchLabel")}:</dt>
+              <dd className="text-erp-text-main font-semibold mt-0.5 m-0">{activeBranch.name ?? "-"}</dd>
+            </div>
+            <div>
+              <dt className="text-erp-text-muted font-medium">{t("ownerLabel")}:</dt>
+              <dd className="text-erp-text-main font-semibold mt-0.5 m-0">{ownerLabel}</dd>
+            </div>
+          </dl>
+        </div>
 
         {submitError && (
           <div

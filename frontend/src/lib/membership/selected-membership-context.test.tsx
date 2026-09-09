@@ -22,10 +22,12 @@ const currentUser = {
 } as unknown as CurrentUserResponse;
 
 function Probe({ queryClient }: { queryClient: QueryClient }): React.JSX.Element {
-  const { selectedMembership, setSelectedMembershipId } = useSelectedMembership();
+  const { currentUser: probeUser, selectedMembership, setSelectedMembershipId } = useSelectedMembership();
   return (
     <div>
       <span data-testid="selected">{selectedMembership?.id ?? "none"}</span>
+      <span data-testid="user-name">{probeUser.user?.displayName ?? "none"}</span>
+      <span data-testid="user-email">{probeUser.user?.email ?? "none"}</span>
       <button type="button" onClick={() => void setSelectedMembershipId("membership-b")}>
         switch-to-b
       </button>
@@ -71,10 +73,14 @@ describe("SelectedMembershipProvider switch", () => {
     );
 
     expect(screen.getByTestId("selected").textContent).toBe("membership-a");
+    expect(screen.getByTestId("user-name").textContent).toBe("Test User");
+    expect(screen.getByTestId("user-email").textContent).toBe("test@example.test");
 
     fireEvent.click(screen.getByText("switch-to-b"));
 
     await waitFor(() => expect(screen.getByTestId("selected").textContent).toBe("membership-b"));
+    expect(screen.getByTestId("user-name").textContent).toBe("Test User");
+    expect(screen.getByTestId("user-email").textContent).toBe("test@example.test");
     expect(order).toEqual(["cancel", "remove"]);
     expect(queryClient.getQueryData(["business", "membership-a"])).toBeUndefined();
     expect(queryClient.getQueryData(["business", "membership-b"])).toBeUndefined();

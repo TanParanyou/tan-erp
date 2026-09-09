@@ -6,6 +6,7 @@ import type { CurrentUserResponse } from "@/lib/api/api-client";
 import type { MembershipDto } from "@/lib/permissions/can";
 
 interface SelectedMembershipContextType {
+  currentUser: CurrentUserResponse;
   selectedMembership: MembershipDto | null;
   memberships: MembershipDto[];
   setSelectedMembershipId: (id: string) => Promise<void>;
@@ -44,6 +45,7 @@ export function SelectedMembershipProvider({
   return (
     <SelectedMembershipContext.Provider
       value={{
+        currentUser,
         selectedMembership,
         memberships,
         setSelectedMembershipId: handleSelectMembershipId,
