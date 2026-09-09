@@ -1,104 +1,80 @@
 # Opportunity + Site Vertical Slice Verification Record (บันทึกผลการตรวจสอบคุณภาพระบบ)
 
-**วันที่บันทึก:** 2026-09-09 (ผลรันจริงทั้งหมดในวันนี้)
-**สถานะ:** ผ่านการตรวจสอบคุณภาพระบบครบถ้วนสมบูรณ์ (Passed Quality Gate 100%)
+**วันที่บันทึก:** 2026-09-09
+**สถานะ:** Passed (ผ่านการทดสอบทุกชุดครบถ้วนสมบูรณ์)
 **สาขาการพัฒนา (Branch):** `main`
-**อ้างอิงแผนงาน:** `docs/superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md`
+**Tested Commit SHA:** `b5f61a2ab289f4f1fa9ac48d33ec0df9f2c247cc`
+**อ้างอิงแผนงาน:** `docs/superpowers/plans/2026-09-09-opportunity-site-remediation.md`
 
 ---
 
 ## 1. สภาพแวดล้อมและรันไทม์ที่ใช้ตรวจสอบ (Verified Runtimes)
 
-| คอมโพเนนต์ | รุ่นที่กำหนด (Target) | รุ่นที่รันจริง (Actual) | ผลการตรวจ |
+| คอมโพเนนต์ | รุ่นที่กำหนด (Target) | รุ่นที่รันจริง (Actual) | สถานะ |
 | :--- | :--- | :--- | :---: |
 | .NET SDK | `10.0.400` | `10.0.400` (`$HOME/.dotnet`) | ผ่าน |
 | Node.js | `24.20.x` (engines) | `v26.3.0` | ผ่าน |
-| PostgreSQL | `17-alpine` | `PostgreSQL 17.11` (Docker `postgres:17-alpine`) | ผ่าน |
-| Firebase Auth Emulator | Local Docker | `spine3/firebase-emulator:latest` (:9099) | ผ่าน |
-| Next.js | `16.3.4` (App Router) | `16.3.4` | ผ่าน |
+| npm | - | `11.18.0` | ผ่าน |
+| PostgreSQL | `17-alpine` | `PostgreSQL 17.11` (Docker `postgres:17-alpine`, port 5432) | ผ่าน |
+| Firebase Auth Emulator | Local Docker | `spine3/firebase-emulator:latest` (port 9099) | ผ่าน |
+| Next.js | `16.3.4` (Turbopack, App Router) | `16.3.4` | ผ่าน |
 | React | `19.2.8` | `19.2.8` | ผ่าน |
 | EF Core | `10.0.11` | `10.0.11` (`Directory.Packages.props`) | ผ่าน |
 | Playwright | `1.63.0` | `1.63.0` | ผ่าน |
 
 ---
 
-## 2. โครงสร้างฐานข้อมูลและการอพยพ (Database Migration)
+## 2. ผลการรันคำสั่งตรวจสอบ (Verification Commands & Exit Codes)
 
-- **Migrations ที่ apply จริงใน Slice นี้:**
-  - `20260908160415_AddCustomerQuickIntakeFields`
-  - `20260909032349_OpportunitySiteSlice`
-- **Schemas ที่ควบคุม:** `crm` (`customers`, `sites`, `opportunities`, `customer_contacts`), `audit` (`idempotency_records`)
-- **Tables และ Constraints ที่เพิ่มและทดสอบจริง:**
-  - `crm.sites`:
-    - Columns: `id`, `organization_id`, `customer_id`, `code`, `label`, `normalized_label`, `address_line1`, `subdistrict`, `district`, `province`, `postal_code`, `country_code`, `latitude`, `longitude`, `access_note`, `status`, `created_by_user_id`, `created_at_utc`, `row_version`
-    - Foreign Keys: `FK_sites_customers_customer_id_organization_id` (Composite Tenant FK ป้องกันการข้าม Tenant)
-    - Indexes: Unique `IX_sites_organization_id_code`, Index `IX_sites_customer_id_normalized_label`
-  - `crm.opportunities`:
-    - Columns: `id`, `organization_id`, `branch_id`, `customer_id`, `primary_site_id`, `code`, `title`, `scope_summary`, `work_types` (`jsonb`), `source_code`, `stage`, `expected_budget`, `currency_code`, `target_decision_date`, `next_action_at_utc`, `next_action_note`, `created_by_user_id`, `created_at_utc`, `row_version`
-    - Foreign Keys: Composite FK ไปยัง `customers` และ `sites` ภายใต้ `organization_id` เดียวกัน
-    - Indexes: Unique `IX_opportunities_organization_id_code`, `IX_opportunities_customer_id`, `IX_opportunities_primary_site_id`
-  - Canonical Work Types ใน `work_types`: `built-in`, `interior`, `curtain`, `wallpaper`, `exterior`, `other` (ตรวจสอบความถูกต้องระดับ Domain & Application)
-- **Database update status:** ยืนยันด้วย `dotnet ef database update` สำเร็จครบถ้วน
+| คำสั่ง (Command) | ผลลัพธ์ / รายละเอียด | รหัสออก (Exit Code) | สถานะ |
+| :--- | :--- | :---: | :---: |
+| `npm run verify` | รัน Backend tests, Frontend check:api, lint, typecheck, vitest (241 tests) และ build | `0` | ผ่าน |
+| `dotnet test backend/TanErp.slnx` | Unit (110) + Arch (3) + Integration (101) tests | `0` | ผ่าน |
+| `npm run test:fixtures` | ตรวจสอบ schema และ invariant ของ survey-baseline fixture (1 test) | `0` | ผ่าน |
+| `npm --prefix frontend run test:e2e` | รัน Playwright browser tests ครบทั้ง 13 tests | `0` | ผ่าน |
+| `rg -n ':\s*any\b\|\bas\s+any\b\|@ts-ignore' frontend/src frontend/e2e --glob '*.{ts,tsx}'` | ไม่พบการใช้งาน explicit any หรือ ts-ignore ในโค้ด frontend และ E2E | `1` (no matches) | ผ่าน |
+| `git diff --check 808ddde..HEAD` | ไม่มีปัญหา whitespace errors หรือ trailing spaces | `0` | ผ่าน |
 
 ---
 
 ## 3. สรุปผลการทดสอบอัตโนมัติ (Automated Test Execution Summary)
 
-| ลำดับ | ชุดการทดสอบ (Test Suite) | จำนวนการทดสอบ | ผ่าน | ไม่ผ่าน | รหัสออก (Exit Code) |
-| :---: | :--- | :---: | :---: | :---: | :---: |
-| 1 | Backend Unit Tests (`TanErp.UnitTests`) | 108 | 108 | 0 | `0` |
-| 2 | Clean Architecture Tests (`TanErp.ArchitectureTests`) | 3 | 3 | 0 | `0` |
-| 3 | PostgreSQL 17 Integration Tests (`TanErp.IntegrationTests`) | 96 | 96 | 0 | `0` |
-| 4 | Frontend Unit & Component Tests (`vitest`, 70 files) | 239 | 239 | 0 | `0` |
-| 5 | Fixture Schema Tests (`node --test fixtures/survey-baseline.test.mjs`) | 1 | 1 | 0 | `0` |
-| 6 | End-to-End Acceptance Journeys (`Playwright`) | 9 | 9 | 0 | `0` |
-| **รวม** | **ชุดการทดสอบทั้งหมด (Total)** | **456** | **456** | **0** | **`0`** |
-
-### คำสั่งที่รันจริงและผลการตรวจสอบ:
-1. **Backend Verification:**
-   ```bash
-   dotnet build backend/TanErp.slnx   # Exit code 0
-   dotnet test backend/TanErp.slnx    # Exit code 0 (207 tests passed)
-   ```
-2. **Frontend Verification:**
-   ```bash
-   npm --prefix frontend run verify   # Exit code 0 (check:api + lint + typecheck + test + build)
-   ```
-3. **Fixture Test:**
-   ```bash
-   npm run test:fixtures              # Exit code 0 (1 pass)
-   ```
-4. **E2E Acceptance Test:**
-   ```bash
-   PLAYWRIGHT_TEST_BASE_URL=http://localhost:3005 npm --prefix frontend run test:e2e # Exit code 0 (9 passed)
-   ```
-5. **Git Whitespace & Policy Scan:**
-   ```bash
-   git diff --check                   # No whitespace errors (Exit 0)
-   rg -n "\bany\b|as any|@ts-ignore|BEGIN PRIVATE KEY|firebase-admin" frontend/src frontend/e2e
-   # ไม่พบ Type any / as any / @ts-ignore ละเมิดกฎในโค้ด Application
-   ```
-
-### Tested Commit and Verification Evidence
-- **Tested Base Commit SHA:** `b0d0d42e25b7a9db9d4aced0fc04e14084c915f5`
-- **Playwright Test Count:** 9 tests (1 `auth.spec.ts` + 6 `customer-contact.spec.ts` + 2 `opportunity-site.spec.ts`)
-- **Result:** 9 passed, 0 failed
-- **Exit Code:** `0`
+| ลำดับ | ชุดการทดสอบ (Test Suite) | ไฟล์ทดสอบ | จำนวนการทดสอบ (Total) | ผ่าน (Passed) | ไม่ผ่าน (Failed) | ข้าม (Skipped) | รหัสออก (Exit Code) |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| 1 | Backend Unit Tests (`TanErp.UnitTests`) | 12 | 110 | 110 | 0 | 0 | `0` |
+| 2 | Clean Architecture Tests (`TanErp.ArchitectureTests`) | 1 | 3 | 3 | 0 | 0 | `0` |
+| 3 | PostgreSQL 17 Integration Tests (`TanErp.IntegrationTests`) | 14 | 101 | 101 | 0 | 0 | `0` |
+| 4 | Frontend Unit & Component Tests (`vitest`) | 70 | 241 | 241 | 0 | 0 | `0` |
+| 5 | Fixture Schema Tests (`survey-baseline.test.mjs`) | 1 | 1 | 1 | 0 | 0 | `0` |
+| 6 | Playwright Acceptance Journeys (`Playwright E2E`) | 3 | 13 | 13 | 0 | 0 | `0` |
+| **รวม** | **ชุดการทดสอบทั้งหมด (Total)** | **101** | **469** | **469** | **0** | **0** | **`0`** |
 
 ---
 
-## 4. ผลการตรวจสอบความปลอดภัยและสถาปัตยกรรม (Security & Architecture Verification)
+## 4. รายการหลักฐานการทดสอบตามข้อกำหนด (Remediation Acceptance Mapping)
 
-1. **Authorization Boundary & Guardrails:**
-   - **Customer Activation:** ต้องการสิทธิ์ `customers.activate` (Scope: `organization`) ผ่าน Precondition `If-Match` และ Idempotency Header
-   - **Site Management:** ต้องการสิทธิ์ `sites.manage` และต้องสร้างภายใต้ Active Customer เท่านั้น
-   - **Opportunity Workspace:** ต้องการสิทธิ์ `opportunities.read` สำหรับการดู และ `opportunities.create` พร้อม Active Branch สำหรับการสร้าง (ป้องกันการสร้างข้ามสาขา)
-   - **Tenant Isolation:** ตรวจสอบผ่าน Integration Test ให้สิทธิ์เฉพาะสมาชิกภาพของ Tenant ที่ตรงกันเท่านั้น สมาชิกต่าง Tenant ไม่สามารถเข้าถึงหรือสร้างเชื่อมโยงข้าม Tenant ได้
-2. **ERP Form & UX Standards (Atelier Architectural Navy Sharp):**
-   - รูปแบบ Sharp Edges `border-radius: 0px`
-   - สีหลัก Solid Navy `#0B3056`
-   - ไอคอน pure SVG Stroke ไม่มีภายนอก
-   - การป้องกัน Double Submit (`isSubmitting` / `disabled`)
-   - Confirmation Modal สำหรับการ Activate Customer
-   - Minimal Mono Loading Spinner (ไม่ใช้ Skeleton Loader)
-   - ระบบแปลสองภาษา (i18n) ครบถ้วนทั้ง `th.json` และ `en.json`
+| ข้อกำหนด (Requirement) | ไฟล์และชื่อการทดสอบที่รองรับ (Test Case & File) | ผลการตรวจ |
+| :--- | :--- | :---: |
+| **Activation Retry Intent & Key Preservation** | `frontend/src/features/customers/components/customer-detail.test.tsx` (`preserves intent and idempotency key on retry with same payload`, `rotates key on new row version`) และ `frontend/e2e/opportunity-site.spec.ts` (`double-submit and retry behavior in the browser`) | ผ่าน |
+| **Derived Context (Branch & Owner)** | `frontend/src/features/opportunities/components/opportunity-editor.test.tsx` (`renders active branch and user display name as read-only context`) และ `backend/tests/TanErp.IntegrationTests/Api/OpportunitySiteEndpointsTests.cs` (`CreateOpportunity_DerivesBranchAndOwnerFromActiveMembership`) | ผ่าน |
+| **Concurrent Idempotency Winner Recovery** | `backend/tests/TanErp.IntegrationTests/Persistence/CrmStoreConcurrencyTests.cs` (`CreateSite_ConcurrentSamePayload_RecoversWinnerWithoutUniqueConstraintCrash`, `CreateOpportunity_ConcurrentSamePayload_RecoversWinnerWithoutUniqueConstraintCrash`) | ผ่าน |
+| **Controlled CRM Clock (`IClock`)** | `backend/tests/TanErp.IntegrationTests/Persistence/CrmStoreClockTests.cs` (`CreateSite_UsesProvidedClock`, `CreateOpportunity_UsesProvidedClock`) | ผ่าน |
+| **Shared Hash Helper (`Sha256Hex`)** | `backend/tests/TanErp.UnitTests/Common/Security/Sha256HexTests.cs` (`Compute_ReturnsLowercaseSha256`) | ผ่าน |
+| **Tenant Isolation (Org B)** | `backend/tests/TanErp.IntegrationTests/Api/OpportunitySiteEndpointsTests.cs` (`CreateSite_ForCustomerInOtherTenant_ReturnsNotFound`, `CreateOpportunity_ForCustomerInOtherTenant_ReturnsNotFound`) และ `frontend/e2e/opportunity-site.spec.ts` (`negative journeys: draft customer, org b isolation, stale etag, no branch`) | ผ่าน |
+| **Stale ETag Handling** | `frontend/e2e/opportunity-site.spec.ts` (asserts `409 CUSTOMER_VERSION_CONFLICT` and localized copy) และ `backend/tests/TanErp.IntegrationTests/Api/CustomerEndpointsTests.cs` | ผ่าน |
+| **No-Branch Active Membership Block** | `frontend/e2e/opportunity-site.spec.ts` (asserts localized banner without active branch and direct API `422 ACTIVE_BRANCH_REQUIRED`) | ผ่าน |
+| **Privacy Audit & PII Leak Prevention** | `backend/tests/TanErp.IntegrationTests/Api/OpportunitySiteEndpointsTests.cs` (`CreateSite_SensitiveData_NotExposedInProblemDetailsOrAuditLog`) ยืนยัน sentinel values ไม่อยู่ใน ProblemDetails, AuditEvent และ In-Memory Logs | ผ่าน |
+| **Accessibility & Keyboard Trap** | `frontend/e2e/opportunity-site.spec.ts` (`accessibility: keyboard trap and escape in confirmation modal` ยืนยัน Tab cyclic focus ภายใน confirmation dialog และ Escape key สำหรับปิด modal คืน focus สู่ trigger) | ผ่าน |
+| **Responsive Viewport & 200% Zoom** | `frontend/e2e/opportunity-site.spec.ts` (`responsive viewport 320x800 and 200 percent zoom` ยืนยันไม่มี horizontal scrollbar/overflow และปุ่มยกเลิก/บันทึกเข้าถึงได้ครบถ้วน) | ผ่าน |
+
+---
+
+## 5. ขอบเขตงานที่คงสถานะ Deferred (Remaining Deferred Scope)
+
+ตามที่กำหนดไว้ใน `docs/superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md` ขอบเขตที่ยังคงเลื่อนออกไป (Deferred) โดยไม่ได้เปิดให้ดำเนินการใน Slice นี้ ได้แก่:
+1. Customer lifecycle transitions หลังจาก Activate (เช่น Deactivate, Suspend, Blacklist)
+2. Customer Edit / Update ทั่วไปนอกเหนือจาก Intake และ Activation
+3. Site Edit และ Site Deactivation
+4. Opportunity Qualification และ Stage transitions (เช่น Propose, Win, Lose, Cancel)
+5. Survey, Estimation, Item Master, Commercial / Quotation
+6. Project, Procurement, Inventory, Production และ MRP Modules
