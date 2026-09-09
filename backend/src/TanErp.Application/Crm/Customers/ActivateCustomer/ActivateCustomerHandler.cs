@@ -1,7 +1,6 @@
-using System.Security.Cryptography;
-using System.Text;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Common.Security;
 
 namespace TanErp.Application.Crm.Customers.ActivateCustomer;
 
@@ -35,9 +34,9 @@ public class ActivateCustomerHandler
 
         var access = accessResult.Value!;
 
-        var keyHash = ComputeSha256(command.IdempotencyKey);
+        var keyHash = Sha256Hex.Compute(command.IdempotencyKey);
         var canonicalPayload = $"{command.CustomerId:D}|{command.ExpectedRowVersion:D}|activate";
-        var payloadHash = ComputeSha256(canonicalPayload);
+        var payloadHash = Sha256Hex.Compute(canonicalPayload);
 
         return await _store.ActivateAsync(
             access,
@@ -47,11 +46,5 @@ public class ActivateCustomerHandler
             payloadHash,
             command.TraceId,
             cancellationToken);
-    }
-
-    private static string ComputeSha256(string raw)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }

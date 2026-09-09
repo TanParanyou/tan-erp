@@ -1,7 +1,6 @@
-using System.Security.Cryptography;
-using System.Text;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Common.Security;
 using TanErp.Domain.Crm.Opportunities;
 
 namespace TanErp.Application.Crm.Opportunities.CreateOpportunity;
@@ -82,7 +81,7 @@ public class CreateOpportunityHandler
         }
 
         // 4. Compute deterministic hashes
-        var keyHash = ComputeSha256Hex(command.IdempotencyKey);
+        var keyHash = Sha256Hex.Compute(command.IdempotencyKey);
         var normTitle = OpportunityNormalizer.CollapseWhitespace(command.Title);
         var normScope = command.ScopeSummary != null ? OpportunityNormalizer.CollapseWhitespace(command.ScopeSummary) : "";
         var distinctWorkTypes = command.WorkTypes.Select(w => w.Trim().ToLowerInvariant()).Distinct().OrderBy(w => w).ToList();
@@ -95,15 +94,9 @@ public class CreateOpportunityHandler
         var nextNote = command.NextActionNote != null ? OpportunityNormalizer.CollapseWhitespace(command.NextActionNote) : "";
 
         var canonicalPayload = $"{command.CustomerId}|{command.PrimarySiteId?.ToString() ?? ""}|{normTitle}|{normScope}|{workTypesJoined}|{sourceCode}|{budgetStr}|{currCode}|{targetDate}|{nextActionAt}|{nextNote}";
-        var payloadHash = ComputeSha256Hex(canonicalPayload);
+        var payloadHash = Sha256Hex.Compute(canonicalPayload);
 
         // 5. Delegate to atomic store
         return await _store.CreateAsync(access, command, keyHash, payloadHash, cancellationToken);
-    }
-
-    private static string ComputeSha256Hex(string input)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }

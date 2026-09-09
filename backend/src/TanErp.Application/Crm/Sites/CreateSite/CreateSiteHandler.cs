@@ -1,7 +1,6 @@
-using System.Security.Cryptography;
-using System.Text;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Common.Security;
 using TanErp.Domain.Crm.Sites;
 
 namespace TanErp.Application.Crm.Sites.CreateSite;
@@ -68,7 +67,7 @@ public class CreateSiteHandler
         }
 
         // 3. Compute key hash and canonical payload hash
-        var keyHash = ComputeSha256Hex(command.IdempotencyKey);
+        var keyHash = Sha256Hex.Compute(command.IdempotencyKey);
         var normLabel = SiteNormalizer.CollapseWhitespace(command.Label);
         var normAddr = SiteNormalizer.CollapseWhitespace(command.AddressLine1);
         var normSub = SiteNormalizer.CollapseWhitespace(command.Subdistrict);
@@ -81,15 +80,9 @@ public class CreateSiteHandler
         var normNote = command.AccessNote != null ? SiteNormalizer.CollapseWhitespace(command.AccessNote) : "";
 
         var canonicalPayload = $"{command.CustomerId}|{normLabel}|{normAddr}|{normSub}|{normDist}|{normProv}|{normPost}|{normCountry}|{latStr}|{lngStr}|{normNote}";
-        var payloadHash = ComputeSha256Hex(canonicalPayload);
+        var payloadHash = Sha256Hex.Compute(canonicalPayload);
 
         // 4. Delegate to atomic store
         return await _store.CreateAsync(access, command, keyHash, payloadHash, cancellationToken);
-    }
-
-    private static string ComputeSha256Hex(string input)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }
