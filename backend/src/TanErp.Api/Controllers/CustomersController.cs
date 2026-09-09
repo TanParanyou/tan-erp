@@ -98,6 +98,10 @@ public class CustomersController : ControllerBase
     public async Task<IActionResult> List(
         [FromQuery] string? search,
         [FromQuery] string? status,
+        [FromQuery] string? customerType = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = null,
+        [FromQuery] int? page = null,
         [FromQuery] int limit = 25,
         [FromQuery] string? cursor = null,
         CancellationToken cancellationToken = default)
@@ -109,7 +113,7 @@ public class CustomersController : ControllerBase
         }
 
         var auth = contextResult.Value!;
-        var query = new ListCustomersQuery(auth.FirebaseUid, auth.MembershipId, search, status, limit, cursor);
+        var query = new ListCustomersQuery(auth.FirebaseUid, auth.MembershipId, search, status, customerType, sortBy, sortOrder, page, limit, cursor);
 
         var result = await _listHandler.Handle(query, cancellationToken);
         if (result.IsFailure)
@@ -135,7 +139,18 @@ public class CustomersController : ControllerBase
                 c.PrimaryContact.LineId),
             c.LeadSource)).ToList();
 
-        var response = new CustomerListResponse(items, result.Value.NextCursor);
+        var totalCount = result.Value.TotalCount;
+        var pageSize = result.Value.PageSize;
+        var currentPage = result.Value.Page;
+        var totalPages = pageSize > 0 ? (int)Math.Ceiling((double)totalCount / pageSize) : 1;
+
+        var response = new CustomerListResponse(
+            items,
+            result.Value.NextCursor,
+            totalCount,
+            currentPage,
+            pageSize,
+            totalPages);
         return Ok(response);
     }
 

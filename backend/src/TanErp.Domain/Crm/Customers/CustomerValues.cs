@@ -32,6 +32,40 @@ public static class CustomerStatus
     public static bool IsValid(string value) => All.Contains(value.Trim());
 }
 
+public static class CustomerSortKey
+{
+    public const string Code = "code";
+    public const string DisplayName = "displayNameTh";
+    public const string Status = "status";
+    public const string CustomerType = "customerType";
+    public const string CreatedAt = "createdAt";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Code,
+        DisplayName,
+        Status,
+        CustomerType,
+        CreatedAt
+    };
+
+    public static bool IsValid(string value) => All.Contains(value.Trim());
+}
+
+public static class CustomerSortOrder
+{
+    public const string Asc = "asc";
+    public const string Desc = "desc";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Asc,
+        Desc
+    };
+
+    public static bool IsValid(string value) => All.Contains(value.Trim());
+}
+
 public static class PreferredLocale
 {
     public const string Thai = "th";

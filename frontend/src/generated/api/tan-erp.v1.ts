@@ -75,6 +75,10 @@ export interface paths {
                 query?: {
                     search?: string;
                     status?: string;
+                    customerType?: string;
+                    sortBy?: string;
+                    sortOrder?: string;
+                    page?: number;
                     limit?: number;
                     cursor?: string;
                 };
@@ -938,6 +942,10 @@ export interface components {
         CustomerListResponse: {
             items?: components["schemas"]["CustomerListItemResponse"][] | null;
             nextCursor?: string | null;
+            totalCount?: number;
+            page?: number;
+            pageSize?: number;
+            totalPages?: number;
         };
         CustomerResponse: {
             /** Format: uuid */

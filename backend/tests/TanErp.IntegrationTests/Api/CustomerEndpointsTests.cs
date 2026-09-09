@@ -749,4 +749,71 @@ public class CustomerEndpointsTests : IAsyncLifetime
 
         return await _client.SendAsync(msg);
     }
+
+    [Fact]
+    public async Task ListCustomers_WithCustomerTypeFilter_ReturnsOnlyMatchingCustomers()
+    {
+        var orgRequest = new CreateCustomerRequest(
+            "organization",
+            "บริษัท กรองประเภท องค์กร TEST_ONLY",
+            null,
+            "th",
+            new CreatePrimaryContactRequest("คุณหนึ่ง", "ผู้จัดการ", "+66810009901", null, "phone"));
+        var personRequest = new CreateCustomerRequest(
+            "person",
+            "นาย กรองประเภท บุคคล TEST_ONLY",
+            null,
+            "th",
+            new CreatePrimaryContactRequest("นายหนึ่ง", null, "+66810009902", null, "phone"));
+
+        var orgMsg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        orgMsg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        orgMsg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        orgMsg.Headers.Add("Idempotency-Key", $"key-filter-org-{Guid.NewGuid():N}");
+        orgMsg.Content = JsonContent.Create(orgRequest);
+        var orgResp = await _client.SendAsync(orgMsg);
+        Assert.Equal(HttpStatusCode.Created, orgResp.StatusCode);
+
+        var personMsg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        personMsg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        personMsg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        personMsg.Headers.Add("Idempotency-Key", $"key-filter-person-{Guid.NewGuid():N}");
+        personMsg.Content = JsonContent.Create(personRequest);
+        var personResp = await _client.SendAsync(personMsg);
+        Assert.Equal(HttpStatusCode.Created, personResp.StatusCode);
+
+        // Query only person
+        var listMsg = new HttpRequestMessage(HttpMethod.Get, "/api/v1/customers?customerType=person&search=กรองประเภท");
+        listMsg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        listMsg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+
+        var listResp = await _client.SendAsync(listMsg);
+        Assert.Equal(HttpStatusCode.OK, listResp.StatusCode);
+
+        var list = await listResp.Content.ReadFromJsonAsync<CustomerListResponse>();
+        Assert.NotNull(list);
+        Assert.All(list.Items, item => Assert.Equal("person", item.CustomerType));
+        Assert.Contains(list.Items, item => item.DisplayNameTh.Contains("นาย กรองประเภท บุคคล"));
+    }
+
+    [Fact]
+    public async Task ListCustomers_WithSortByAndOrder_ReturnsSortedItems()
+    {
+        var msg = new HttpRequestMessage(HttpMethod.Get, "/api/v1/customers?sortBy=code&sortOrder=desc&limit=10");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+
+        var resp = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var list = await resp.Content.ReadFromJsonAsync<CustomerListResponse>();
+        Assert.NotNull(list);
+        if (list.Items.Count >= 2)
+        {
+            for (int i = 0; i < list.Items.Count - 1; i++)
+            {
+                Assert.True(string.Compare(list.Items[i].Code, list.Items[i + 1].Code, StringComparison.Ordinal) >= 0);
+            }
+        }
+    }
 }

@@ -29,6 +29,11 @@ public class CustomerReadStore : ICustomerReadStore
             query = query.Where(c => c.Status == filter.Status);
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.CustomerType))
+        {
+            query = query.Where(c => c.CustomerType == filter.CustomerType);
+        }
+
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var search = filter.Search.Trim();
@@ -45,23 +50,59 @@ public class CustomerReadStore : ICustomerReadStore
                 (c.NormalizedDisplayName == cursorData.Name && c.Id.CompareTo(cursorData.Id) > 0));
         }
 
-        var limit = filter.Limit;
-        var rawItems = await query
-            .OrderBy(c => c.NormalizedDisplayName)
-            .ThenBy(c => c.Id)
-            .Take(limit + 1)
-            .ToListAsync(cancellationToken);
+        var isDesc = string.Equals(filter.SortOrder, CustomerSortOrder.Desc, StringComparison.OrdinalIgnoreCase);
+        var sortBy = filter.SortBy?.ToLowerInvariant();
 
-        string? nextCursor = null;
-        if (rawItems.Count > limit)
+        query = sortBy switch
         {
-            rawItems.RemoveAt(rawItems.Count - 1);
-            var last = rawItems[^1];
-            nextCursor = CustomerCursor.Encode(last.NormalizedDisplayName, last.Id);
+            "code" => isDesc
+                ? query.OrderByDescending(c => c.Code).ThenBy(c => c.Id)
+                : query.OrderBy(c => c.Code).ThenBy(c => c.Id),
+            "status" => isDesc
+                ? query.OrderByDescending(c => c.Status).ThenBy(c => c.NormalizedDisplayName).ThenBy(c => c.Id)
+                : query.OrderBy(c => c.Status).ThenBy(c => c.NormalizedDisplayName).ThenBy(c => c.Id),
+            "customertype" => isDesc
+                ? query.OrderByDescending(c => c.CustomerType).ThenBy(c => c.NormalizedDisplayName).ThenBy(c => c.Id)
+                : query.OrderBy(c => c.CustomerType).ThenBy(c => c.NormalizedDisplayName).ThenBy(c => c.Id),
+            "createdat" => isDesc
+                ? query.OrderByDescending(c => c.CreatedAtUtc).ThenBy(c => c.Id)
+                : query.OrderBy(c => c.CreatedAtUtc).ThenBy(c => c.Id),
+            _ => isDesc
+                ? query.OrderByDescending(c => c.NormalizedDisplayName).ThenBy(c => c.Id)
+                : query.OrderBy(c => c.NormalizedDisplayName).ThenBy(c => c.Id)
+        };
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var limit = filter.Limit;
+        List<Customer> rawItems;
+        string? nextCursor = null;
+        int currentPage = filter.Page ?? 1;
+
+        if (filter.Page.HasValue)
+        {
+            var skip = (currentPage - 1) * limit;
+            rawItems = await query
+                .Skip(skip)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            rawItems = await query
+                .Take(limit + 1)
+                .ToListAsync(cancellationToken);
+
+            if (rawItems.Count > limit)
+            {
+                rawItems.RemoveAt(rawItems.Count - 1);
+                var last = rawItems[^1];
+                nextCursor = CustomerCursor.Encode(last.NormalizedDisplayName, last.Id);
+            }
         }
 
         var projected = rawItems.Select(c => ProjectCustomer(c, includeContactPii)).ToList();
-        return new CustomerPage(projected, nextCursor);
+        return new CustomerPage(projected, nextCursor, totalCount, currentPage, limit);
     }
 
     public async Task<CustomerProjection?> GetAsync(

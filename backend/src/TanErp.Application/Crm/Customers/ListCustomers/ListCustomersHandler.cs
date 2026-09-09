@@ -53,7 +53,51 @@ public class ListCustomersHandler
 
         var includeContactPii = manageContactResult.IsSuccess;
 
-        // 4. Validate limit
+        // 4. Validate customerType if provided
+        string? customerType = null;
+        if (!string.IsNullOrWhiteSpace(query.CustomerType))
+        {
+            var trimmedType = query.CustomerType.Trim();
+            if (!TanErp.Domain.Crm.Customers.CustomerType.IsValid(trimmedType))
+            {
+                return Result<ListCustomersResult>.Failure(
+                    new Error("CUSTOMER_TYPE_INVALID", "Invalid customer type filter."));
+            }
+            customerType = trimmedType;
+        }
+
+        // 5. Validate sortBy and sortOrder
+        string? sortBy = null;
+        if (!string.IsNullOrWhiteSpace(query.SortBy))
+        {
+            var trimmedSortBy = query.SortBy.Trim();
+            if (!TanErp.Domain.Crm.Customers.CustomerSortKey.IsValid(trimmedSortBy))
+            {
+                return Result<ListCustomersResult>.Failure(
+                    new Error("CUSTOMER_SORT_INVALID", "Invalid customer sort key."));
+            }
+            sortBy = trimmedSortBy;
+        }
+
+        string? sortOrder = null;
+        if (!string.IsNullOrWhiteSpace(query.SortOrder))
+        {
+            var trimmedOrder = query.SortOrder.Trim();
+            if (!TanErp.Domain.Crm.Customers.CustomerSortOrder.IsValid(trimmedOrder))
+            {
+                return Result<ListCustomersResult>.Failure(
+                    new Error("CUSTOMER_SORT_ORDER_INVALID", "Invalid customer sort order."));
+            }
+            sortOrder = trimmedOrder.ToLowerInvariant();
+        }
+
+        // 6. Validate page and limit
+        int? pageNumber = query.Page;
+        if (pageNumber.HasValue && pageNumber.Value < 1)
+        {
+            pageNumber = 1;
+        }
+
         var limit = query.Limit;
         if (limit < 1) limit = 25;
         if (limit > 100) limit = 100;
@@ -61,10 +105,14 @@ public class ListCustomersHandler
         var filter = new CustomerListFilter(
             string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
             string.IsNullOrWhiteSpace(query.Status) ? null : query.Status.Trim(),
+            customerType,
+            sortBy,
+            sortOrder,
+            pageNumber,
             limit,
             query.Cursor);
 
         var page = await _store.ListAsync(access.OrganizationId, filter, includeContactPii, cancellationToken);
-        return Result<ListCustomersResult>.Success(new ListCustomersResult(page.Items, page.NextCursor));
+        return Result<ListCustomersResult>.Success(new ListCustomersResult(page.Items, page.NextCursor, page.TotalCount, page.Page, page.PageSize));
     }
 }

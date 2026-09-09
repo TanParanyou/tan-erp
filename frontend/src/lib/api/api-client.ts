@@ -4,6 +4,7 @@ import type { ProblemDetails } from "./problem-details";
 
 export type CurrentUserResponse = components["schemas"]["CurrentUserResponse"];
 export type CustomerListResponse = components["schemas"]["CustomerListResponse"];
+export type CustomerListItemResponse = components["schemas"]["CustomerListItemResponse"];
 export type CustomerResponse = components["schemas"]["CustomerResponse"];
 export type CreateCustomerRequest = components["schemas"]["CreateCustomerRequest"];
 
@@ -136,6 +137,10 @@ export class ApiClient {
     const query = new URLSearchParams();
     if (params?.search) query.set("search", params.search);
     if (params?.status) query.set("status", params.status);
+    if (params?.customerType) query.set("customerType", params.customerType);
+    if (params?.sortBy) query.set("sortBy", params.sortBy);
+    if (params?.sortOrder) query.set("sortOrder", params.sortOrder);
+    if (params?.page !== undefined && params?.page !== null) query.set("page", params.page.toString());
     if (params?.limit) query.set("limit", params.limit.toString());
     if (params?.cursor) query.set("cursor", params.cursor);
 

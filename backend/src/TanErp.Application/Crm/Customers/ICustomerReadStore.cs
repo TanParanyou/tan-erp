@@ -3,12 +3,19 @@ namespace TanErp.Application.Crm.Customers;
 public sealed record CustomerListFilter(
     string? Search,
     string? Status,
+    string? CustomerType = null,
+    string? SortBy = null,
+    string? SortOrder = null,
+    int? Page = null,
     int Limit = 25,
     string? Cursor = null);
 
 public sealed record CustomerPage(
     IReadOnlyList<CustomerProjection> Items,
-    string? NextCursor);
+    string? NextCursor,
+    int TotalCount,
+    int Page,
+    int PageSize);
 
 public interface ICustomerReadStore
 {

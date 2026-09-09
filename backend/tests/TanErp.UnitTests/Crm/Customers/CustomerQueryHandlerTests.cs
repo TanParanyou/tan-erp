@@ -36,7 +36,7 @@ public class CustomerQueryHandlerTests
     private class FakeCustomerReadStore : ICustomerReadStore
     {
         public CustomerProjection? SingleResult { get; set; }
-        public CustomerPage ListResult { get; set; } = new(Array.Empty<CustomerProjection>(), null);
+        public CustomerPage ListResult { get; set; } = new(Array.Empty<CustomerProjection>(), null, 0, 1, 25);
         public CustomerListFilter? LastListFilter { get; private set; }
         public bool? LastIncludePii { get; private set; }
 
@@ -89,6 +89,78 @@ public class CustomerQueryHandlerTests
 
         Assert.True(result.IsFailure);
         Assert.Equal("CUSTOMER_CURSOR_INVALID", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task ListCustomers_WhenInvalidCustomerType_ReturnsCustomerTypeInvalid()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.read");
+        var store = new FakeCustomerReadStore();
+        var handler = new ListCustomersHandler(resolver, store);
+
+        var query = new ListCustomersQuery("uid-1", Guid.NewGuid(), CustomerType: "invalid_type");
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("CUSTOMER_TYPE_INVALID", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task ListCustomers_WhenInvalidSortBy_ReturnsCustomerSortInvalid()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.read");
+        var store = new FakeCustomerReadStore();
+        var handler = new ListCustomersHandler(resolver, store);
+
+        var query = new ListCustomersQuery("uid-1", Guid.NewGuid(), SortBy: "dangerous_sql_field");
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("CUSTOMER_SORT_INVALID", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task ListCustomers_WhenInvalidSortOrder_ReturnsCustomerSortOrderInvalid()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.read");
+        var store = new FakeCustomerReadStore();
+        var handler = new ListCustomersHandler(resolver, store);
+
+        var query = new ListCustomersQuery("uid-1", Guid.NewGuid(), SortOrder: "ascending_unknown");
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("CUSTOMER_SORT_ORDER_INVALID", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task ListCustomers_WhenValidWithFiltersAndSort_PassesToStore()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.read");
+        var store = new FakeCustomerReadStore();
+        var handler = new ListCustomersHandler(resolver, store);
+
+        var query = new ListCustomersQuery(
+            "uid-1",
+            Guid.NewGuid(),
+            Search: "  บริษัท  ",
+            CustomerType: "organization",
+            SortBy: "code",
+            SortOrder: "desc",
+            Limit: 30);
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(store.LastIncludePii);
+        Assert.NotNull(store.LastListFilter);
+        Assert.Equal(30, store.LastListFilter.Limit);
+        Assert.Equal("organization", store.LastListFilter.CustomerType);
+        Assert.Equal("code", store.LastListFilter.SortBy);
+        Assert.Equal("desc", store.LastListFilter.SortOrder);
     }
 
     [Fact]
