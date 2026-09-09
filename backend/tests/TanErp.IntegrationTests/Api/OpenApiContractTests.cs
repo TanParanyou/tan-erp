@@ -72,6 +72,9 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(paths.ContainsKey("/api/v1/me"), "OpenAPI must contain path /api/v1/me");
         Assert.True(paths.ContainsKey("/api/v1/customers"), "OpenAPI must contain path /api/v1/customers");
         Assert.True(paths.ContainsKey("/api/v1/customers/{id}"), "OpenAPI must contain path /api/v1/customers/{id}");
+        Assert.True(paths.ContainsKey("/api/v1/customers/{customerId}/sites"), "OpenAPI must contain path /api/v1/customers/{customerId}/sites");
+        Assert.True(paths.ContainsKey("/api/v1/opportunities"), "OpenAPI must contain path /api/v1/opportunities");
+        Assert.True(paths.ContainsKey("/api/v1/opportunities/{id}"), "OpenAPI must contain path /api/v1/opportunities/{id}");
 
         var mePath = paths["/api/v1/me"]?["get"]?.AsObject();
         Assert.NotNull(mePath);
@@ -84,6 +87,21 @@ public class OpenApiContractTests : IAsyncLifetime
 
         var getCustomerPath = paths["/api/v1/customers/{id}"]?["get"]?.AsObject();
         Assert.NotNull(getCustomerPath);
+
+        var listSitesPath = paths["/api/v1/customers/{customerId}/sites"]?["get"]?.AsObject();
+        Assert.NotNull(listSitesPath);
+
+        var createSitePath = paths["/api/v1/customers/{customerId}/sites"]?["post"]?.AsObject();
+        Assert.NotNull(createSitePath);
+
+        var listOpportunitiesPath = paths["/api/v1/opportunities"]?["get"]?.AsObject();
+        Assert.NotNull(listOpportunitiesPath);
+
+        var createOpportunityPath = paths["/api/v1/opportunities"]?["post"]?.AsObject();
+        Assert.NotNull(createOpportunityPath);
+
+        var getOpportunityPath = paths["/api/v1/opportunities/{id}"]?["get"]?.AsObject();
+        Assert.NotNull(getOpportunityPath);
 
         // 2. Assert operation responses 200, 401, 403
         var responses = mePath["responses"]?.AsObject();
@@ -106,6 +124,12 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("CustomerResponse"), "Must define CustomerResponse schema");
         Assert.True(schemas.ContainsKey("CustomerListResponse"), "Must define CustomerListResponse schema");
         Assert.True(schemas.ContainsKey("CreateCustomerRequest"), "Must define CreateCustomerRequest schema");
+        Assert.True(schemas.ContainsKey("SiteResponse"), "Must define SiteResponse schema");
+        Assert.True(schemas.ContainsKey("SiteListResponse"), "Must define SiteListResponse schema");
+        Assert.True(schemas.ContainsKey("CreateSiteRequest"), "Must define CreateSiteRequest schema");
+        Assert.True(schemas.ContainsKey("OpportunityResponse"), "Must define OpportunityResponse schema");
+        Assert.True(schemas.ContainsKey("OpportunityListResponse"), "Must define OpportunityListResponse schema");
+        Assert.True(schemas.ContainsKey("CreateOpportunityRequest"), "Must define CreateOpportunityRequest schema");
         Assert.True(schemas.ContainsKey("ApiProblemDetails"), "Must define ApiProblemDetails schema");
 
         // 5. Ensure contracts/openapi/tan-erp.v1.json exists and matches

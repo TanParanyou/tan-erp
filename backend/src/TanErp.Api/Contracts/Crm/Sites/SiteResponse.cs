@@ -1,0 +1,22 @@
+namespace TanErp.Api.Contracts.Crm.Sites;
+
+public sealed record SiteResponse(
+    Guid Id,
+    Guid CustomerId,
+    string Code,
+    string Label,
+    string AddressLine1,
+    string Subdistrict,
+    string District,
+    string Province,
+    string PostalCode,
+    string CountryCode,
+    decimal? Latitude,
+    decimal? Longitude,
+    string? AccessNote,
+    string Status,
+    Guid RowVersion,
+    DateTimeOffset CreatedAtUtc);
+
+public sealed record SiteListResponse(
+    IReadOnlyList<SiteResponse> Items);

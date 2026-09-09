@@ -137,4 +137,28 @@
   <data name="IF_MATCH_REQUIRED_DETAIL" xml:space="preserve">
     <value>ต้องระบุส่วนหัว If-Match ที่เป็น UUID ในเครื่องหมายคำพูดคู่</value>
   </data>
+  <data name="ACTIVE_BRANCH_REQUIRED_TITLE" xml:space="preserve">
+    <value>จำเป็นต้องระบุสาขาที่เปิดใช้งาน</value>
+  </data>
+  <data name="ACTIVE_BRANCH_REQUIRED_DETAIL" xml:space="preserve">
+    <value>สมาชิกภาพที่เลือกไม่มีสาขาที่เปิดใช้งานอยู่สำหรับสร้างงานขาย</value>
+  </data>
+  <data name="SITE_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>ข้อมูลสถานที่ติดตั้งไม่ผ่านเกณฑ์</value>
+  </data>
+  <data name="SITE_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ข้อมูลบังคับของสถานที่ติดตั้งไม่ครบถ้วน หรือพิกัดละติจูด/ลองจิจูดไม่เป็นคู่สมบูรณ์</value>
+  </data>
+  <data name="OPPORTUNITY_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>ข้อมูลงานขายไม่ผ่านเกณฑ์</value>
+  </data>
+  <data name="OPPORTUNITY_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ข้อมูลบังคับของงานขายไม่ครบถ้วน หรือรูปแบบงบประมาณไม่ถูกต้อง</value>
+  </data>
+  <data name="INVALID_CURSOR_TITLE" xml:space="preserve">
+    <value>เคอร์เซอร์สำหรับการแบ่งหน้าไม่ถูกต้อง</value>
+  </data>
+  <data name="INVALID_CURSOR_DETAIL" xml:space="preserve">
+    <value>เคอร์เซอร์สำหรับการแบ่งหน้าไม่ถูกต้องหรือไม่สามารถถอดรหัสได้</value>
+  </data>
 </root>

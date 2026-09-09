@@ -602,34 +602,34 @@ git commit -m "feat(crm): create and query opportunities"
 **Interfaces:**
 - Produces: exact HTTP paths and generated-schema source consumed by Frontend
 
-- [ ] **Step 1: Write RED endpoint tests**
+- [x] **Step 1: Write RED endpoint tests**
 
 Test every success status/location/ETag and stable failure code. Include Org A/B isolation, inactive Customer, no active branch, missing permissions, exact replay, changed payload and assert address/access note never appears in Problem Details or audit JSON.
 
-- [ ] **Step 2: Add request/response records and controllers**
+- [x] **Step 2: Add request/response records and controllers**
 
 Controllers only parse request context, map generated HTTP records to commands, invoke handlers, set Location/ETag and map failures via `ProblemDetailsMapper`. Do not put cross-resource rules in controllers.
 
-- [ ] **Step 3: Register services and localized errors**
+- [x] **Step 3: Register services and localized errors**
 
 Register lifecycle/site/opportunity handlers and stores. Add Thai/English title/detail pairs for all new stable codes and map `IF_MATCH_REQUIRED` to 428, `ACTIVE_BRANCH_REQUIRED`/`SITE_FIELD_REQUIRED` to 422.
 
-- [ ] **Step 4: Seed test permissions safely**
+- [x] **Step 4: Seed test permissions safely**
 
 Extend find-or-create permission list with `customers.activate`, `sites.read`, `sites.manage`, `opportunities.read`, `opportunities.create` and backfill Org A/B test roles. Do not seed Site/Opportunity in production paths.
 
-- [ ] **Step 5: Regenerate OpenAPI**
+- [x] **Step 5: Regenerate OpenAPI**
 
 Use the existing OpenAPI export workflow documented in `frontend/README.md`; inspect diff for only Slice 2 endpoints/schemas and status responses.
 
-- [ ] **Step 6: Run and commit**
+- [x] **Step 6: Run and commit**
 
 Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "OpportunitySiteEndpointsTests|OpenApiContractTests"`
 
 Expected: all endpoint and contract tests pass.
 
 ```bash
-git add backend/src/TanErp.Api backend/src/TanErp.Infrastructure/Persistence/TestOnlyDataSeeder.cs backend/tests/TanErp.IntegrationTests/Api contracts/openapi/tan-erp.v1.json
+git add backend/src/TanErp.Api backend/src/TanErp.Infrastructure/Persistence/TestOnlyDataSeeder.cs backend/tests/TanErp.IntegrationTests/Api contracts/openapi/tan-erp.v1.json docs/superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md
 git commit -m "feat(api): publish opportunity site contract"
 ```
 

@@ -73,7 +73,11 @@ public static class TestOnlyDataSeeder
             ("customers.read", "Read Customers"),
             ("customers.create", "Create Customers"),
             ("customer-contacts.manage", "Manage Customer Contacts"),
-            ("customers.activate", "Activate Customers")
+            ("customers.activate", "Activate Customers"),
+            ("sites.read", "Read Sites"),
+            ("sites.manage", "Manage Sites"),
+            ("opportunities.read", "Read Opportunities"),
+            ("opportunities.create", "Create Opportunities")
         };
 
         var seededPerms = new List<Permission>();

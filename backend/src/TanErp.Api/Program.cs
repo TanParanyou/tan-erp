@@ -97,6 +97,13 @@ builder.Services.AddScoped<TanErp.Application.Crm.Customers.ListCustomers.ListCu
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.GetCustomer.GetCustomerHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerLifecycleStore, TanErp.Infrastructure.Persistence.Crm.CustomerLifecycleStore>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Sites.ISiteStore, TanErp.Infrastructure.Persistence.Crm.SiteStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Sites.CreateSite.CreateSiteHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Sites.ListSites.ListSitesHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.IOpportunityStore, TanErp.Infrastructure.Persistence.Crm.OpportunityStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.CreateOpportunity.CreateOpportunityHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.ListOpportunities.ListOpportunitiesHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.GetOpportunity.GetOpportunityHandler>();
 
 // Authentication & Authorization
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
