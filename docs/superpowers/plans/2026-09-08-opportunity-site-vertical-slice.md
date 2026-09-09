@@ -535,11 +535,11 @@ git commit -m "feat(crm): create scoped customer sites"
 - Consumes: selected Membership branch, authenticated user, active Customer, optional same-customer Active Site
 - Produces: create/list/get projections with organization-scoped cursor reads
 
-- [ ] **Step 1: Write RED tests**
+- [x] **Step 1: Write RED tests**
 
 Cover permissions, no branch → `ACTIVE_BRANCH_REQUIRED`, inactive Customer → `CUSTOMER_INVALID_STATE`, foreign IDs → `RESOURCE_NOT_FOUND`, Site belongs to another Customer → `RESOURCE_NOT_FOUND`, invalid business fields → `OPPORTUNITY_FIELD_REQUIRED`, create/replay/conflict, cursor stability and tenant isolation.
 
-- [ ] **Step 2: Define store interface**
+- [x] **Step 2: Define store interface**
 
 ```csharp
 public sealed record OpportunityListFilter(
@@ -559,15 +559,15 @@ public interface IOpportunityStore
 }
 ```
 
-- [ ] **Step 3: Implement handlers**
+- [x] **Step 3: Implement handlers**
 
 Create handler derives branch from `access.BranchId` and owner from `access.ActorUserId`; it never trusts body values. List/get resolve `opportunities.read`; create resolves `opportunities.create`. Validate cursor before store call.
 
-- [ ] **Step 4: Implement EF store**
+- [x] **Step 4: Implement EF store**
 
 Validate Active Customer, Active Branch, actor's Active Membership and optional Active Site in the same Organization/Customer. Persist Opportunity + idempotency + `opportunity.created` audit atomically. List uses EF keyset pagination ordered `next_action_at_utc ASC NULLS LAST, id ASC` and projects only allowlisted fields.
 
-- [ ] **Step 5: Run and commit**
+- [x] **Step 5: Run and commit**
 
 Run: `dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter OpportunityHandlerTests`
 
@@ -576,7 +576,7 @@ Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.
 Expected: all pass.
 
 ```bash
-git add backend/src/TanErp.Application/Crm/Opportunities backend/src/TanErp.Infrastructure/Persistence/Crm/OpportunityStore.cs backend/tests/TanErp.UnitTests/Crm/Opportunities backend/tests/TanErp.IntegrationTests/Persistence/OpportunityStoreTests.cs
+git add backend/src/TanErp.Application/Crm/Opportunities backend/src/TanErp.Infrastructure/Persistence/Crm/OpportunityStore.cs backend/tests/TanErp.UnitTests/Crm/Opportunities backend/tests/TanErp.IntegrationTests/Persistence/OpportunityStoreTests.cs docs/superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md
 git commit -m "feat(crm): create and query opportunities"
 ```
 
