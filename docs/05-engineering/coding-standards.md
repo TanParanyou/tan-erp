@@ -29,6 +29,7 @@
 
 - **Strict TypeScript:** ห้ามใช้ type `any`, `as any` หรือ `@ts-ignore` กำหนด Type ให้ชัดเจน หรือใช้ `unknown` แล้ว narrow
 - **No Hardcoding & Complete i18n:** ห้าม Hardcode ข้อความบน UI และต้องแปลภาษาให้ครบถ้วนทั้งไทย (`th`) และอังกฤษ (`en`) ใน `messages/` เสมอ
+- **Tailwind-first:** ใช้ Tailwind utilities และ semantic `erp-*` tokens เป็นค่าเริ่มต้นสำหรับ Styling; ใช้ CSS แยกหรือ inline style เฉพาะข้อยกเว้นใน [Design System](../../design.md#30-tailwind-first-implementation-standard)
 - Route ประกอบ Page; Business UI อยู่ใน Feature
 - Central API Client เป็นทางออก HTTP เดียว
 - Server State อยู่ TanStack Query; Form State อยู่ใกล้ Form

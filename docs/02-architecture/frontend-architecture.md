@@ -23,6 +23,7 @@ frontend/src/
 - Frontend Permission Guard ช่วย UX แต่ Backend เป็น Security Authority
 - Form ตรวจรูปแบบฝั่ง Browser เพื่อ Feedback และ Backend ตรวจซ้ำเสมอ
 - ภาษาไทยเป็นค่าเริ่มต้น; Message Key ใหม่ต้องมีไทยและอังกฤษ
+- Styling ใช้ Tailwind CSS utilities และ semantic `erp-*` tokens เป็นหลัก; ข้อยกเว้นสำหรับ CSS แยกและ inline style ยึด [Tailwind-first Implementation Standard](../../design.md#30-tailwind-first-implementation-standard)
 - ยึดมาตรฐาน UI/UX ตาม **Atelier Architectural Navy Sharp (`border-radius: 0px !important`, Solid Navy `#0B3056`, Pure SVG Stroke Icons)**
 
 ## มาตรฐาน UI/UX และหน้าจอต้นแบบ

@@ -83,6 +83,7 @@
 | แผนแก้ไข Customer + Contact จาก Code Review | [Customer + Contact Remediation Plan](superpowers/plans/2026-09-08-customer-contact-remediation.md) |
 | บันทึกผลการตรวจสอบ Customer + Contact Slice | [Customer + Contact Verification](05-engineering/customer-contact-verification.md) |
 | แผนพัฒนา Customer Activation + Opportunity + Site Slice | [Opportunity + Site Vertical Slice Plan](superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md) |
+| แผนแก้ไข Opportunity + Site จาก Code Review | [Opportunity + Site Remediation Plan](superpowers/plans/2026-09-09-opportunity-site-remediation.md) |
 | บันทึกผลการตรวจสอบ Opportunity + Site Slice | [Opportunity + Site Verification](05-engineering/opportunity-site-verification.md) |
 | คำสั่งและ Workflow การพัฒนา (Makefile) | [Quickstart with Make](../README.md#การเริ่มต้นระบบอย่างรวดเร็วด้วย-make-quickstart-with-make) |
 

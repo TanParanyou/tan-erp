@@ -49,6 +49,30 @@
 
 ## 3. ระบบชุดสี (Design Tokens)
 
+### 3.0 Tailwind-first Implementation Standard
+
+มาตรฐานนี้ใช้กับ Application UI ภายใต้ `frontend/` โดยให้ **Tailwind CSS เป็นวิธี Styling หลัก**:
+
+- เขียน Layout, spacing, typography, color, border, responsive behavior และ interaction states ด้วย Tailwind utilities ใน `className` เป็นค่าเริ่มต้น
+- ใช้ semantic tokens ที่ประกาศใน `frontend/tailwind.config.ts` เช่น `bg-erp-navy`, `text-erp-text-main`, `border-erp-border` ก่อนใช้ arbitrary values (`[...]`) หรือสี Hex โดยตรง
+- ใช้ responsive/state variants ของ Tailwind เช่น `sm:`, `md:`, `lg:`, `hover:`, `focus-visible:`, `disabled:` และ `dark:` เพื่อให้พฤติกรรมอยู่ใกล้ markup ที่ใช้งาน
+- รวม class แบบมีเงื่อนไขด้วย `cn` จาก `frontend/src/lib/utils` และย้ายชุด utilities ที่เกิดซ้ำเป็น reusable component หรือ variant ของ component กลาง
+- เก็บ CSS แยกไว้เฉพาะ Tailwind directives, reset/base styles, CSS custom properties ของ design tokens, browser-specific behavior หรือรูปแบบซับซ้อนที่ Tailwind อธิบายได้ไม่เหมาะสม โดยต้องจำกัด scope และระบุเหตุผลในโค้ด
+- Inline `style` ใช้เฉพาะค่าที่คำนวณแบบ runtime และแทนด้วย Tailwind class/token ไม่ได้; ห้ามใช้เพื่อเลี่ยงระบบ tokens
+
+กฎนี้ไม่ครอบคลุม Documentation Portal ใน `docs/portal/` ซึ่งยังคงเป็น semantic HTML, CSS และ JavaScript แบบ dependency-free ตาม `AGENTS.md`
+
+### 3.0.1 Numeric Color Scales (-50 ถึง -950)
+
+เพื่อความยืดหยุ่นในการปรับระดับความเข้ม-อ่อนเฉพาะจุด (เช่น hover backgrounds, subtle borders, zebra stripes) ระบบรองรับ Scale ตัวเลขที่แมปกับ CSS Variables:
+
+- **Atelier Architectural Navy (`erp-navy-{50..950}`)**:
+  - `50` (`#F0F5FA`), `100` (`#E1EBF5`), `200` (`#C3D7EC`), `300` (`#98BCDF`), `400` (`#659BD0`)
+  - `500` (`#3D7BC0`), `600` (`#255FA3`), `700` (`#194B85`), `800` (`#123968`), `900` (`#0B3056` สีหลัก), `950` (`#071F38` hover)
+- **Architectural Ice Slate (`erp-slate-{50..900}`)**:
+  - `50` (`#F8FAFC`), `100` (`#F1F5F9`), `200` (`#E2EBF4`), `300` (`#D1DEEC` border), `400` (`#94A3B8`)
+  - `500` (`#64748B`), `600` (`#536B88` muted), `700` (`#334155` body), `800` (`#1E293B`), `900` (`#0A192F` text main)
+
 ### 3.1 โหมดสว่าง (Light Mode — Solid Architectural Navy)
 
 | โทเค็น (Token) | รหัสสี (Hex) | วัตถุประสงค์และการใช้งาน |

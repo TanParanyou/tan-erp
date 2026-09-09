@@ -9,7 +9,8 @@ Frontend ของ `tan-erp` พัฒนาด้วย Next.js App Router, Rea
 3. **TanStack Query ถือครอง Server State:** ข้อมูลทางธุรกิจและ Server State เป็นกรรมสิทธิ์ของ TanStack Query เท่านั้น ห้ามนำไปเก็บซ้ำซ้อนใน React State
 4. **ห้ามใช้ useEffect สำหรับ Derived State (No Effect for Derived State):** ห้ามใช้ `useEffect` เพื่อ Sync State หรือคำนวณค่าจาก State อื่น ให้คำนวณระหว่าง Render หรือใช้ Memoization เท่าที่จำเป็น
 5. **Thai/English Key Parity:** ข้อความ UI ทั้งหมดต้องเก็บใน `messages/th.json` และ `messages/en.json` โดยทุก Key ในไฟล์ภาษาไทยต้องมี Key คู่ขนานในไฟล์ภาษาอังกฤษเสมอ (ห้ามมี Key ตกหล่น)
-6. **Semantic Controls และ Accessibility:**
+6. **Tailwind-first Styling:** อ่านหัวข้อ **Tailwind-first Implementation Standard** ใน `../design.md` ก่อนสร้างหรือแก้ UI ตรวจ reusable primitives ใน `src/components/ui/` ก่อนเขียนชุด utilities ซ้ำ ใช้ Tailwind CSS utilities ใน `className` เป็นทางหลักและใช้ semantic classes จาก `tailwind.config.ts` เช่น `bg-erp-navy`, `text-erp-text-main`, `border-erp-border` ก่อน arbitrary values หรือสี Hex โดยตรง รวม class แบบมีเงื่อนไขด้วย `cn` จาก `src/lib/utils`; สร้างหรือแก้ CSS แยกเฉพาะข้อยกเว้นที่ `design.md` ระบุ
+7. **Semantic Controls และ Accessibility:**
    - ใช้ Semantic HTML (`<button>`, `<a>`, `<input>`, `<label>`) เสมอ
    - Target Size ของ Control ที่กดได้ต้องสูงอย่างน้อย 44px
    - มี Visible Keyboard Focus สำหรับผู้ใช้คีย์บอร์ด
