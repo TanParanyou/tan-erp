@@ -37,33 +37,10 @@ public class SiteStore : ISiteStore
             await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
 
             // 1. Check idempotency record
-            var existingRecord = await _db.IdempotencyRecords
-                .AsNoTracking()
-                .FirstOrDefaultAsync(r =>
-                    r.OrganizationId == orgId &&
-                    r.Operation == operation &&
-                    r.KeyHash == keyHash,
-                    cancellationToken);
-
-            if (existingRecord != null)
+            var existingReplay = await TryLoadReplayAsync(orgId, operation, keyHash, payloadHash, cancellationToken);
+            if (existingReplay is not null)
             {
-                if (existingRecord.PayloadHash != payloadHash)
-                {
-                    return Result<SiteProjection>.Failure(
-                        new Error("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload."));
-                }
-
-                if (Guid.TryParse(existingRecord.ResourceId, out var existingSiteId))
-                {
-                    var existingSite = await _db.Sites
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(s => s.Id == existingSiteId && s.OrganizationId == orgId, cancellationToken);
-
-                    if (existingSite != null)
-                    {
-                        return Result<SiteProjection>.Success(ToProjection(existingSite));
-                    }
-                }
+                return existingReplay;
             }
 
             // 2. Validate Customer exists, belongs to organization, and is Active
@@ -133,11 +110,52 @@ public class SiteStore : ISiteStore
                 auditChanges);
             _db.AddAuditEvent(auditEvent);
 
-            await _db.SaveChangesAsync(cancellationToken);
-            await tx.CommitAsync(cancellationToken);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+                var replay = await TryLoadReplayAsync(
+                    orgId, operation, keyHash, payloadHash, cancellationToken);
+                if (replay is not null) return replay;
+                throw;
+            }
 
             return Result<SiteProjection>.Success(ToProjection(site));
         });
+    }
+
+    private async Task<Result<SiteProjection>?> TryLoadReplayAsync(
+        Guid organizationId,
+        string operation,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken)
+    {
+        var record = await _db.IdempotencyRecords
+            .AsNoTracking()
+            .SingleOrDefaultAsync(row =>
+                row.OrganizationId == organizationId &&
+                row.Operation == operation &&
+                row.KeyHash == keyHash,
+                cancellationToken);
+
+        if (record is null) return null;
+        if (record.PayloadHash != payloadHash)
+            return Result<SiteProjection>.Failure(new Error(
+                "IDEMPOTENCY_KEY_REUSED",
+                "The idempotency key has already been used with a different payload."));
+
+        if (!Guid.TryParse(record.ResourceId, out var siteId)) return null;
+        var site = await _db.Sites.AsNoTracking().SingleOrDefaultAsync(
+            candidate => candidate.Id == siteId && candidate.OrganizationId == organizationId,
+            cancellationToken);
+        return site is null ? null : Result<SiteProjection>.Success(ToProjection(site));
     }
 
     public async Task<IReadOnlyList<SiteProjection>?> ListByCustomerAsync(

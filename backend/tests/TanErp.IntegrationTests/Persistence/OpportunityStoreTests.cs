@@ -275,4 +275,121 @@ public class OpportunityStoreTests : IAsyncLifetime
 
         Assert.Null(result);
     }
+
+    private sealed class CoordinatedSaveChangesInterceptor : Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesInterceptor
+    {
+        private readonly Barrier _barrier = new(2);
+        public bool Enabled { get; set; }
+
+        public override async ValueTask<Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int>> SavingChangesAsync(
+            Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData eventData,
+            Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (Enabled)
+            {
+                await Task.Run(() => _barrier.SignalAndWait(cancellationToken), cancellationToken);
+            }
+            return result;
+        }
+    }
+
+    [Fact]
+    public async Task Create_ConcurrentSamePayload_BothSucceedAndShareSingleResource()
+    {
+        var orgId = TestOnlyDataSeeder.TestOrgId;
+        var branchId = TestOnlyDataSeeder.TestBranchId;
+        var userId = TestOnlyDataSeeder.TestUserId;
+        var now = DateTimeOffset.UtcNow;
+
+        var customer = Customer.CreateDraft(Guid.NewGuid(), orgId, userId, "organization", "บริษัท แข่งออป", null, "th",
+            new PrimaryContactInput("นาย แข่งออป", null, "0812345678", null, "phone"), now);
+        customer.Activate(customer.RowVersion);
+        _db.Customers.Add(customer);
+        await _db.SaveChangesAsync();
+
+        var interceptor = new CoordinatedSaveChangesInterceptor();
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .AddInterceptors(interceptor)
+            .Options;
+
+        await using var db1 = new AppDbContext(options);
+        await using var db2 = new AppDbContext(options);
+        var store1 = new OpportunityStore(db1, new FixedClock());
+        var store2 = new OpportunityStore(db2, new FixedClock());
+
+        var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, branchId, "opportunities.create", "branch");
+        var cmd = new CreateOpportunityCommand("uid", Guid.NewGuid(), customer.Id, null, "ออปแข่ง", null, new[] { "built-in" }, null, null, null, null, null, null, "key-opp-conc-1", "trace-opp-conc-1");
+        const string keyHash = "opp-conc-key-hash-1";
+        const string payloadHash = "opp-conc-payload-hash-1";
+
+        interceptor.Enabled = true;
+
+        var task1 = store1.CreateAsync(access, cmd, keyHash, payloadHash);
+        var task2 = store2.CreateAsync(access, cmd, keyHash, payloadHash);
+
+        var results = await Task.WhenAll(task1, task2);
+
+        Assert.All(results, result => Assert.True(result.IsSuccess));
+        Assert.Single(results.Select(result => result.Value!.Id).Distinct());
+
+        await using var verificationDb = new AppDbContext(options);
+        Assert.Equal(1, await verificationDb.IdempotencyRecords.CountAsync(
+            row => row.OrganizationId == orgId && row.Operation == "opportunities.create" && row.KeyHash == keyHash));
+        Assert.Equal(1, await verificationDb.AuditEvents.CountAsync(
+            row => row.OrganizationId == orgId && row.Action == "opportunity.created"));
+        Assert.Equal(1, await verificationDb.Opportunities.CountAsync(
+            row => row.Id == results[0].Value!.Id));
+    }
+
+    [Fact]
+    public async Task Create_ConcurrentDifferentPayload_OneSucceedsOneFailsWithConflict()
+    {
+        var orgId = TestOnlyDataSeeder.TestOrgId;
+        var branchId = TestOnlyDataSeeder.TestBranchId;
+        var userId = TestOnlyDataSeeder.TestUserId;
+        var now = DateTimeOffset.UtcNow;
+
+        var customer = Customer.CreateDraft(Guid.NewGuid(), orgId, userId, "organization", "บริษัท แข่งออปต่าง", null, "th",
+            new PrimaryContactInput("นาย แข่งออปสอง", null, "0812345678", null, "phone"), now);
+        customer.Activate(customer.RowVersion);
+        _db.Customers.Add(customer);
+        await _db.SaveChangesAsync();
+
+        var interceptor = new CoordinatedSaveChangesInterceptor();
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .AddInterceptors(interceptor)
+            .Options;
+
+        await using var db1 = new AppDbContext(options);
+        await using var db2 = new AppDbContext(options);
+        var store1 = new OpportunityStore(db1, new FixedClock());
+        var store2 = new OpportunityStore(db2, new FixedClock());
+
+        var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, branchId, "opportunities.create", "branch");
+        var cmd1 = new CreateOpportunityCommand("uid", Guid.NewGuid(), customer.Id, null, "ออปแข่ง 1", null, new[] { "built-in" }, null, null, null, null, null, null, "key-opp-conc-diff", "trace-opp-diff-1");
+        var cmd2 = new CreateOpportunityCommand("uid", Guid.NewGuid(), customer.Id, null, "ออปแข่ง 2", null, new[] { "built-in" }, null, null, null, null, null, null, "key-opp-conc-diff", "trace-opp-diff-2");
+        const string keyHash = "opp-conc-diff-key-hash";
+        const string payloadHash1 = "opp-conc-diff-payload-hash-1";
+        const string payloadHash2 = "opp-conc-diff-payload-hash-2";
+
+        interceptor.Enabled = true;
+
+        var task1 = store1.CreateAsync(access, cmd1, keyHash, payloadHash1);
+        var task2 = store2.CreateAsync(access, cmd2, keyHash, payloadHash2);
+
+        var results = await Task.WhenAll(task1, task2);
+
+        var successes = results.Where(r => r.IsSuccess).ToList();
+        var failures = results.Where(r => r.IsFailure).ToList();
+
+        Assert.Single(successes);
+        Assert.Single(failures);
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", failures[0].Error.Code);
+
+        await using var verificationDb = new AppDbContext(options);
+        Assert.Equal(1, await verificationDb.Opportunities.CountAsync(o => o.Id == successes[0].Value!.Id));
+    }
 }

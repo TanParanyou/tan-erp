@@ -39,33 +39,10 @@ public class OpportunityStore : IOpportunityStore
             await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
 
             // 1. Check idempotency record
-            var existingRecord = await _db.IdempotencyRecords
-                .AsNoTracking()
-                .FirstOrDefaultAsync(r =>
-                    r.OrganizationId == orgId &&
-                    r.Operation == operation &&
-                    r.KeyHash == keyHash,
-                    cancellationToken);
-
-            if (existingRecord != null)
+            var existingReplay = await TryLoadReplayAsync(orgId, operation, keyHash, payloadHash, cancellationToken);
+            if (existingReplay is not null)
             {
-                if (existingRecord.PayloadHash != payloadHash)
-                {
-                    return Result<OpportunityProjection>.Failure(
-                        new Error("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload."));
-                }
-
-                if (Guid.TryParse(existingRecord.ResourceId, out var existingOppId))
-                {
-                    var existingOpp = await _db.Opportunities
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(o => o.Id == existingOppId && o.OrganizationId == orgId, cancellationToken);
-
-                    if (existingOpp != null)
-                    {
-                        return Result<OpportunityProjection>.Success(ToProjection(existingOpp));
-                    }
-                }
+                return existingReplay;
             }
 
             // 2. Validate Customer exists, belongs to org, and is Active
@@ -167,11 +144,54 @@ public class OpportunityStore : IOpportunityStore
                 auditChanges);
             _db.AddAuditEvent(auditEvent);
 
-            await _db.SaveChangesAsync(cancellationToken);
-            await tx.CommitAsync(cancellationToken);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+                var replay = await TryLoadReplayAsync(
+                    orgId, operation, keyHash, payloadHash, cancellationToken);
+                if (replay is not null) return replay;
+                throw;
+            }
 
             return Result<OpportunityProjection>.Success(ToProjection(opp));
         });
+    }
+
+    private async Task<Result<OpportunityProjection>?> TryLoadReplayAsync(
+        Guid organizationId,
+        string operation,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken)
+    {
+        var record = await _db.IdempotencyRecords
+            .AsNoTracking()
+            .SingleOrDefaultAsync(row =>
+                row.OrganizationId == organizationId &&
+                row.Operation == operation &&
+                row.KeyHash == keyHash,
+                cancellationToken);
+
+        if (record is null) return null;
+        if (record.PayloadHash != payloadHash)
+            return Result<OpportunityProjection>.Failure(new Error(
+                "IDEMPOTENCY_KEY_REUSED",
+                "The idempotency key has already been used with a different payload."));
+
+        if (!Guid.TryParse(record.ResourceId, out var opportunityId)) return null;
+        var opportunity = await _db.Opportunities.AsNoTracking().SingleOrDefaultAsync(
+            candidate => candidate.Id == opportunityId && candidate.OrganizationId == organizationId,
+            cancellationToken);
+        return opportunity is null
+            ? null
+            : Result<OpportunityProjection>.Success(ToProjection(opportunity));
     }
 
     public async Task<OpportunityPage> ListAsync(

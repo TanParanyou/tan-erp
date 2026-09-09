@@ -226,4 +226,119 @@ public class SiteStoreTests : IAsyncLifetime
         Assert.Equal(s1.Id, result[0].Id);
         Assert.Equal(s2.Id, result[1].Id);
     }
+
+    private sealed class CoordinatedSaveChangesInterceptor : Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesInterceptor
+    {
+        private readonly Barrier _barrier = new(2);
+        public bool Enabled { get; set; }
+
+        public override async ValueTask<Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int>> SavingChangesAsync(
+            Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData eventData,
+            Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (Enabled)
+            {
+                await Task.Run(() => _barrier.SignalAndWait(cancellationToken), cancellationToken);
+            }
+            return result;
+        }
+    }
+
+    [Fact]
+    public async Task Create_ConcurrentSamePayload_BothSucceedAndShareSingleResource()
+    {
+        var orgId = TestOnlyDataSeeder.TestOrgId;
+        var userId = TestOnlyDataSeeder.TestUserId;
+        var now = DateTimeOffset.UtcNow;
+
+        var customer = Customer.CreateDraft(Guid.NewGuid(), orgId, userId, "organization", "บริษัท แข่งขัน", null, "th",
+            new PrimaryContactInput("นาย แข่ง", null, "0812345678", null, "phone"), now);
+        customer.Activate(customer.RowVersion);
+        _db.Customers.Add(customer);
+        await _db.SaveChangesAsync();
+
+        var interceptor = new CoordinatedSaveChangesInterceptor();
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .AddInterceptors(interceptor)
+            .Options;
+
+        await using var db1 = new AppDbContext(options);
+        await using var db2 = new AppDbContext(options);
+        var store1 = new SiteStore(db1, new FixedClock());
+        var store2 = new SiteStore(db2, new FixedClock());
+
+        var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, null, "sites.manage", "organization");
+        var cmd = new CreateSiteCommand("uid", Guid.NewGuid(), customer.Id, "key-concurrent-1", "ไซต์แข่ง", "123", "ต", "อ", "จ", "10000", "TH", null, null, null, "trace-conc-1");
+        const string keyHash = "conc-key-hash-1";
+        const string payloadHash = "conc-payload-hash-1";
+
+        interceptor.Enabled = true;
+
+        var task1 = store1.CreateAsync(access, cmd, keyHash, payloadHash);
+        var task2 = store2.CreateAsync(access, cmd, keyHash, payloadHash);
+
+        var results = await Task.WhenAll(task1, task2);
+
+        Assert.All(results, result => Assert.True(result.IsSuccess));
+        Assert.Single(results.Select(result => result.Value!.Id).Distinct());
+
+        await using var verificationDb = new AppDbContext(options);
+        Assert.Equal(1, await verificationDb.IdempotencyRecords.CountAsync(
+            row => row.OrganizationId == orgId && row.Operation == "sites.create" && row.KeyHash == keyHash));
+        Assert.Equal(1, await verificationDb.AuditEvents.CountAsync(
+            row => row.OrganizationId == orgId && row.Action == "site.created"));
+        Assert.Equal(1, await verificationDb.Sites.CountAsync(
+            row => row.Id == results[0].Value!.Id));
+    }
+
+    [Fact]
+    public async Task Create_ConcurrentDifferentPayload_OneSucceedsOneFailsWithConflict()
+    {
+        var orgId = TestOnlyDataSeeder.TestOrgId;
+        var userId = TestOnlyDataSeeder.TestUserId;
+        var now = DateTimeOffset.UtcNow;
+
+        var customer = Customer.CreateDraft(Guid.NewGuid(), orgId, userId, "organization", "บริษัท แข่งต่างเพย์โหลด", null, "th",
+            new PrimaryContactInput("นาย แข่งสอง", null, "0812345678", null, "phone"), now);
+        customer.Activate(customer.RowVersion);
+        _db.Customers.Add(customer);
+        await _db.SaveChangesAsync();
+
+        var interceptor = new CoordinatedSaveChangesInterceptor();
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .AddInterceptors(interceptor)
+            .Options;
+
+        await using var db1 = new AppDbContext(options);
+        await using var db2 = new AppDbContext(options);
+        var store1 = new SiteStore(db1, new FixedClock());
+        var store2 = new SiteStore(db2, new FixedClock());
+
+        var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, null, "sites.manage", "organization");
+        var cmd1 = new CreateSiteCommand("uid", Guid.NewGuid(), customer.Id, "key-concurrent-diff", "ไซต์แข่ง A", "123", "ต", "อ", "จ", "10000", "TH", null, null, null, "trace-conc-diff-1");
+        var cmd2 = new CreateSiteCommand("uid", Guid.NewGuid(), customer.Id, "key-concurrent-diff", "ไซต์แข่ง B", "456", "ต", "อ", "จ", "10000", "TH", null, null, null, "trace-conc-diff-2");
+        const string keyHash = "conc-diff-key-hash";
+        const string payloadHash1 = "conc-diff-payload-hash-1";
+        const string payloadHash2 = "conc-diff-payload-hash-2";
+
+        interceptor.Enabled = true;
+
+        var task1 = store1.CreateAsync(access, cmd1, keyHash, payloadHash1);
+        var task2 = store2.CreateAsync(access, cmd2, keyHash, payloadHash2);
+
+        var results = await Task.WhenAll(task1, task2);
+
+        var successes = results.Where(r => r.IsSuccess).ToList();
+        var failures = results.Where(r => r.IsFailure).ToList();
+
+        Assert.Single(successes);
+        Assert.Single(failures);
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", failures[0].Error.Code);
+
+        await using var verificationDb = new AppDbContext(options);
+        Assert.Equal(1, await verificationDb.Sites.CountAsync(s => s.Id == successes[0].Value!.Id));
+    }
 }
