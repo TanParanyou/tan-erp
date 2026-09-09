@@ -19,6 +19,8 @@ using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
+using TanErp.IntegrationTests.Support;
+using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -64,6 +66,8 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         }
     }
 
+    private readonly InMemoryLoggerProvider _loggerProvider = new();
+
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -71,6 +75,7 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Test");
+            builder.ConfigureLogging(logging => logging.AddProvider(_loggerProvider));
             builder.ConfigureAppConfiguration((_, configuration) =>
             {
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
@@ -386,5 +391,54 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         var listData = await listRes.Content.ReadFromJsonAsync<OpportunityListResponse>();
         Assert.NotNull(listData);
         Assert.Empty(listData.Items);
+    }
+
+    [Fact]
+    public async Task CreateSite_PrivacyAuditAndLogs_DoesNotLeakAddressOrNotes()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var addressSentinel = $"SENTINEL_ADDR_{Guid.NewGuid():N}";
+        var accessNoteSentinel = $"SENTINEL_NOTE_{Guid.NewGuid():N}";
+
+        var body = new CreateSiteRequest(
+            "ไซต์ทดสอบความเป็นส่วนตัว",
+            addressSentinel,
+            "บางโฉลง",
+            "บางพลี",
+            "สมุทรปราการ",
+            "10540",
+            "TH",
+            null,
+            null,
+            accessNoteSentinel);
+
+        var msg = CreateRequest(HttpMethod.Post, $"/api/v1/customers/{customer.Id}/sites", "token-org-a", MembershipAId, $"site-key-privacy-{Guid.NewGuid():N}");
+        msg.Content = JsonContent.Create(body);
+
+        var res = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Created, res.StatusCode);
+
+        var site = await res.Content.ReadFromJsonAsync<SiteResponse>();
+        Assert.NotNull(site);
+
+        // Verify AuditEvent does not leak plain sentinel text in ChangesJson, but contains property names
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var audit = await db.AuditEvents.FirstOrDefaultAsync(a =>
+            a.OrganizationId == OrgAId &&
+            a.Action == "site.created" &&
+            a.ResourceId == site.Id.ToString());
+
+        Assert.NotNull(audit);
+        Assert.NotNull(audit.ChangesJson);
+        Assert.DoesNotContain(addressSentinel, audit.ChangesJson, StringComparison.Ordinal);
+        Assert.DoesNotContain(accessNoteSentinel, audit.ChangesJson, StringComparison.Ordinal);
+        Assert.Contains("addressLine1", audit.ChangesJson, StringComparison.Ordinal);
+        Assert.Contains("accessNote", audit.ChangesJson, StringComparison.Ordinal);
+
+        // Verify captured logs do not contain the sentinels
+        var allLogs = string.Join("\n", _loggerProvider.Messages);
+        Assert.DoesNotContain(addressSentinel, allLogs, StringComparison.Ordinal);
+        Assert.DoesNotContain(accessNoteSentinel, allLogs, StringComparison.Ordinal);
     }
 }
