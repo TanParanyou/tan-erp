@@ -476,11 +476,11 @@ git commit -m "feat(crm): persist opportunity site slice"
 **Interfaces:**
 - Produces: `CreateSiteHandler.Handle(...)` and `ListSitesHandler.Handle(...)`
 
-- [ ] **Step 1: Write RED handler tests**
+- [x] **Step 1: Write RED handler tests**
 
 Cover `sites.manage`/`sites.read`, foreign/inactive Customer, invalid fields, create success, exact replay and changed-payload conflict. Assert the store is not called after permission or validation failure.
 
-- [ ] **Step 2: Define exact contracts**
+- [x] **Step 2: Define exact contracts**
 
 ```csharp
 public sealed record CreateSiteCommand(
@@ -501,11 +501,11 @@ public interface ISiteStore
 
 Null list means Customer missing/out of scope; empty collection means valid Customer with no Site.
 
-- [ ] **Step 3: Implement handler and atomic EF store**
+- [x] **Step 3: Implement handler and atomic EF store**
 
 Create checks Active Customer in selected Organization, adds Site, idempotency record and `site.created` audit in one transaction. Canonical payload uses normalized fields/hashes but never logs or stores raw payload in idempotency/audit.
 
-- [ ] **Step 4: Run tests and commit**
+- [x] **Step 4: Run tests and commit**
 
 Run: `dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter SiteHandlerTests`
 
@@ -514,7 +514,7 @@ Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.
 Expected: all pass.
 
 ```bash
-git add backend/src/TanErp.Application/Crm/Sites backend/src/TanErp.Infrastructure/Persistence/Crm/SiteStore.cs backend/tests/TanErp.UnitTests/Crm/Sites backend/tests/TanErp.IntegrationTests/Persistence/SiteStoreTests.cs
+git add backend/src/TanErp.Application/Crm/Sites backend/src/TanErp.Infrastructure/Persistence/Crm/SiteStore.cs backend/tests/TanErp.UnitTests/Crm/Sites backend/tests/TanErp.IntegrationTests/Persistence/SiteStoreTests.cs docs/superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md
 git commit -m "feat(crm): create scoped customer sites"
 ```
 
