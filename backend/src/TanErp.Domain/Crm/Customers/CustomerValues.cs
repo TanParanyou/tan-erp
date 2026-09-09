@@ -46,6 +46,27 @@ public static class PreferredLocale
     public static bool IsValid(string value) => All.Contains(value.Trim());
 }
 
+public enum CustomerActivationOutcome
+{
+    Activated,
+    VersionConflict,
+    InvalidState
+}
+
+public static class ContactStatus
+{
+    public const string Active = "active";
+    public const string Inactive = "inactive";
+
+    public static readonly HashSet<string> All = new(StringComparer.Ordinal)
+    {
+        Active,
+        Inactive
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}
+
 public static class ContactChannel
 {
     public const string Phone = "phone";

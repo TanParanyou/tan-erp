@@ -219,4 +219,70 @@ public class CustomerTests
         Assert.True(ContactChannel.IsValid("phone"));
         Assert.True(ContactChannel.IsValid("line"));
     }
+
+    [Fact]
+    public void Activate_WhenValidDraftCustomerAndMatchingVersion_ActivatesAndChangesRowVersion()
+    {
+        var customer = Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "คุณลูกค้า ทดสอบ",
+            null,
+            PreferredLocale.Thai,
+            new PrimaryContactInput("คุณผู้ติดต่อ", null, "+66812345678", null, "phone"),
+            DateTimeOffset.UtcNow);
+
+        var originalVersion = customer.RowVersion;
+        var outcome = customer.Activate(originalVersion);
+
+        Assert.Equal(CustomerActivationOutcome.Activated, outcome);
+        Assert.Equal(CustomerStatus.Active, customer.Status);
+        Assert.NotEqual(originalVersion, customer.RowVersion);
+    }
+
+    [Fact]
+    public void Activate_WhenVersionMismatch_ReturnsVersionConflict()
+    {
+        var customer = Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "คุณลูกค้า ทดสอบ",
+            null,
+            PreferredLocale.Thai,
+            new PrimaryContactInput("คุณผู้ติดต่อ", null, "+66812345678", null, "phone"),
+            DateTimeOffset.UtcNow);
+
+        var originalVersion = customer.RowVersion;
+        var outcome = customer.Activate(Guid.NewGuid());
+
+        Assert.Equal(CustomerActivationOutcome.VersionConflict, outcome);
+        Assert.Equal(CustomerStatus.Draft, customer.Status);
+        Assert.Equal(originalVersion, customer.RowVersion);
+    }
+
+    [Fact]
+    public void Activate_WhenAlreadyActive_ReturnsInvalidState()
+    {
+        var customer = Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "คุณลูกค้า ทดสอบ",
+            null,
+            PreferredLocale.Thai,
+            new PrimaryContactInput("คุณผู้ติดต่อ", null, "+66812345678", null, "phone"),
+            DateTimeOffset.UtcNow);
+
+        var originalVersion = customer.RowVersion;
+        var firstOutcome = customer.Activate(originalVersion);
+        Assert.Equal(CustomerActivationOutcome.Activated, firstOutcome);
+
+        var secondOutcome = customer.Activate(customer.RowVersion);
+        Assert.Equal(CustomerActivationOutcome.InvalidState, secondOutcome);
+    }
 }

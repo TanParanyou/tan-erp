@@ -119,4 +119,22 @@
   <data name="CONTACT_FIELD_REQUIRED_DETAIL" xml:space="preserve">
     <value>Contact must have a name and at least a phone number or email.</value>
   </data>
+  <data name="CUSTOMER_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Customer Version Conflict</value>
+  </data>
+  <data name="CUSTOMER_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The customer data was modified in another session. Please reload before retrying.</value>
+  </data>
+  <data name="CUSTOMER_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>Invalid Customer State</value>
+  </data>
+  <data name="CUSTOMER_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>Customer must be in draft status and have an active primary contact.</value>
+  </data>
+  <data name="IF_MATCH_REQUIRED_TITLE" xml:space="preserve">
+    <value>Precondition Required</value>
+  </data>
+  <data name="IF_MATCH_REQUIRED_DETAIL" xml:space="preserve">
+    <value>The If-Match header must contain a valid quoted UUID string.</value>
+  </data>
 </root>

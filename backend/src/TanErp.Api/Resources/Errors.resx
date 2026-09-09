@@ -119,4 +119,22 @@
   <data name="CONTACT_FIELD_REQUIRED_DETAIL" xml:space="preserve">
     <value>ต้องระบุชื่อและเบอร์โทรศัพท์หรืออีเมลอย่างน้อยหนึ่งค่า</value>
   </data>
+  <data name="CUSTOMER_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลลูกค้าถูกเปลี่ยนแปลงแล้ว</value>
+  </data>
+  <data name="CUSTOMER_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ข้อมูลลูกค้ามีการแก้ไขจากเซสชันอื่น กรุณาโหลดข้อมูลใหม่ก่อนทำรายการ</value>
+  </data>
+  <data name="CUSTOMER_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>สถานะลูกค้าไม่ถูกต้อง</value>
+  </data>
+  <data name="CUSTOMER_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>ลูกค้าต้องอยู่ในสถานะฉบับร่างและมีผู้ติดต่อหลักที่เปิดใช้งานอยู่</value>
+  </data>
+  <data name="IF_MATCH_REQUIRED_TITLE" xml:space="preserve">
+    <value>จำเป็นต้องระบุเงื่อนไขเวอร์ชัน</value>
+  </data>
+  <data name="IF_MATCH_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ต้องระบุส่วนหัว If-Match ที่เป็น UUID ในเครื่องหมายคำพูดคู่</value>
+  </data>
 </root>

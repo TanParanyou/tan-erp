@@ -18,15 +18,18 @@ public class CustomersController : ControllerBase
     private readonly CreateCustomerHandler _createHandler;
     private readonly ListCustomersHandler _listHandler;
     private readonly GetCustomerHandler _getHandler;
+    private readonly TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerHandler _activateHandler;
 
     public CustomersController(
         CreateCustomerHandler createHandler,
         ListCustomersHandler listHandler,
-        GetCustomerHandler getHandler)
+        GetCustomerHandler getHandler,
+        TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerHandler activateHandler)
     {
         _createHandler = createHandler;
         _listHandler = listHandler;
         _getHandler = getHandler;
+        _activateHandler = activateHandler;
     }
 
     [HttpPost]
@@ -162,6 +165,48 @@ public class CustomersController : ControllerBase
         }
 
         var customer = result.Value!.Customer;
+        var response = MapCustomerResponse(customer, null);
+
+        Response.Headers.ETag = $"\"{customer.RowVersion}\"";
+        return Ok(response);
+    }
+
+    [HttpPost("{id:guid}/activate")]
+    [ProducesResponseType<CustomerResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> Activate(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var command = new TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerCommand(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            auth.IfMatchRowVersion,
+            auth.IdempotencyKey,
+            traceId);
+
+        var result = await _activateHandler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var customer = result.Value!;
         var response = MapCustomerResponse(customer, null);
 
         Response.Headers.ETag = $"\"{customer.RowVersion}\"";

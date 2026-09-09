@@ -280,7 +280,7 @@ git commit -m "docs(crm): approve opportunity site slice contract"
 - Consumes: `customers.activate`, customer ID, Membership context, Idempotency-Key and quoted UUID If-Match
 - Produces: `ActivateCustomerHandler.Handle(ActivateCustomerCommand, CancellationToken)` → `Result<CustomerProjection>`
 
-- [ ] **Step 1: Write RED domain tests**
+- [x] **Step 1: Write RED domain tests**
 
 ```csharp
 var originalVersion = customer.RowVersion;
@@ -293,13 +293,13 @@ Assert.Equal(CustomerActivationOutcome.VersionConflict, customer.Activate(origin
 
 Also assert a second activation with the current version returns `InvalidState`.
 
-- [ ] **Step 2: Run domain tests and confirm RED**
+- [x] **Step 2: Run domain tests and confirm RED**
 
 Run: `dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter "CustomerTests"`
 
 Expected: FAIL because `Activate` and `CustomerActivationOutcome` do not exist.
 
-- [ ] **Step 3: Add the domain transition**
+- [x] **Step 3: Add the domain transition**
 
 ```csharp
 public enum CustomerActivationOutcome { Activated, VersionConflict, InvalidState }
@@ -318,11 +318,11 @@ public CustomerActivationOutcome Activate(Guid expectedRowVersion)
 
 Add `ContactStatus` to `CustomerValues.cs` with canonical `active|inactive`, then replace the literal `"active"` defaults and assignments in `CustomerContact` with `ContactStatus.Active` before adding the activation method.
 
-- [ ] **Step 4: Write RED handler/store/API tests**
+- [x] **Step 4: Write RED handler/store/API tests**
 
 Cover permission denied without write, missing/invalid If-Match → `428 IF_MATCH_REQUIRED`, stale version → `409 CUSTOMER_VERSION_CONFLICT`, inactive/foreign customer → `404`, success → `200` + new ETag + audit, replay → same resource/version, reused key different version → `409`.
 
-- [ ] **Step 5: Implement the lifecycle port and handler**
+- [x] **Step 5: Implement the lifecycle port and handler**
 
 ```csharp
 public sealed record ActivateCustomerCommand(
@@ -340,11 +340,11 @@ public interface ICustomerLifecycleStore
 
 Handler resolves `customers.activate`, hashes key and canonical payload `customerId|expectedRowVersion|activate`, then calls the store once.
 
-- [ ] **Step 6: Implement atomic store and thin endpoint**
+- [x] **Step 6: Implement atomic store and thin endpoint**
 
 Store checks idempotency inside EF transaction before version/state checks, loads Customer by `(organizationId,id)`, invokes `Activate`, adds `customer.activated` audit with `{"changedFields":["status"]}`, commits and catches `DbUpdateConcurrencyException` as `CUSTOMER_VERSION_CONFLICT`. Controller returns mapped Problem Details or Customer response with new ETag.
 
-- [ ] **Step 7: Run tests and commit**
+- [x] **Step 7: Run tests and commit**
 
 Run: `dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter "CustomerTests|ActivateCustomerHandlerTests"`
 

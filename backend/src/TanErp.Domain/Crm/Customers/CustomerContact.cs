@@ -15,7 +15,7 @@ public class CustomerContact : Entity
     public string? LineId { get; private set; }
     public string PreferredChannel { get; private set; } = ContactChannel.Phone;
     public bool IsPrimary { get; private set; }
-    public string Status { get; private set; } = "active";
+    public string Status { get; private set; } = ContactStatus.Active;
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid CreatedByUserId { get; private set; }
 
@@ -71,7 +71,7 @@ public class CustomerContact : Entity
         LineId = string.IsNullOrWhiteSpace(lineId) ? null : lineId.Trim();
         PreferredChannel = preferredChannel.Trim();
         IsPrimary = isPrimary;
-        Status = "active";
+        Status = ContactStatus.Active;
         CreatedByUserId = createdByUserId;
         CreatedAtUtc = createdAtUtc;
     }

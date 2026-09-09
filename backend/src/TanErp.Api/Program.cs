@@ -95,6 +95,8 @@ builder.Services.AddScoped<TanErp.Application.Crm.Customers.CreateCustomer.Creat
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerReadStore, TanErp.Infrastructure.Persistence.Crm.CustomerReadStore>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ListCustomers.ListCustomersHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.GetCustomer.GetCustomerHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerLifecycleStore, TanErp.Infrastructure.Persistence.Crm.CustomerLifecycleStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerHandler>();
 
 // Authentication & Authorization
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)

@@ -5,6 +5,7 @@ namespace TanErp.Api.RequestContext;
 
 public sealed record AuthenticatedRequest(string FirebaseUid, Guid MembershipId);
 public sealed record IdempotentRequest(string FirebaseUid, Guid MembershipId, string IdempotencyKey);
+public sealed record ConditionalIdempotentRequest(string FirebaseUid, Guid MembershipId, string IdempotencyKey, Guid IfMatchRowVersion);
 
 public static class RequestContextReader
 {
@@ -50,6 +51,38 @@ public static class RequestContextReader
         }
 
         return Result<IdempotentRequest>.Success(new IdempotentRequest(authResult.Value!.FirebaseUid, authResult.Value.MembershipId, key));
+    }
+
+    public static Result<ConditionalIdempotentRequest> ReadConditionalIdempotentRequest(HttpContext httpContext)
+    {
+        var idempotentResult = ReadIdempotentRequest(httpContext);
+        if (idempotentResult.IsFailure)
+        {
+            return Result<ConditionalIdempotentRequest>.Failure(idempotentResult.Error);
+        }
+
+        if (!httpContext.Request.Headers.TryGetValue("If-Match", out var ifMatchHeader) || ifMatchHeader.Count != 1)
+        {
+            return Result<ConditionalIdempotentRequest>.Failure(new Error("IF_MATCH_REQUIRED", "Header If-Match is required."));
+        }
+
+        var raw = ifMatchHeader.ToString().Trim();
+        if (!raw.StartsWith("\"") || !raw.EndsWith("\"") || raw.Length < 3)
+        {
+            return Result<ConditionalIdempotentRequest>.Failure(new Error("IF_MATCH_REQUIRED", "Header If-Match must be a quoted UUID string."));
+        }
+
+        var unquoted = raw[1..^1].Trim();
+        if (!Guid.TryParse(unquoted, out var rowVersion) || rowVersion == Guid.Empty)
+        {
+            return Result<ConditionalIdempotentRequest>.Failure(new Error("IF_MATCH_REQUIRED", "Header If-Match must contain a valid non-empty UUID."));
+        }
+
+        return Result<ConditionalIdempotentRequest>.Success(new ConditionalIdempotentRequest(
+            idempotentResult.Value!.FirebaseUid,
+            idempotentResult.Value.MembershipId,
+            idempotentResult.Value.IdempotencyKey,
+            rowVersion));
     }
 
     private static string? GetFirebaseUid(ClaimsPrincipal user)

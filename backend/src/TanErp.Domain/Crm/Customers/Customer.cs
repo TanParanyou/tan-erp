@@ -119,5 +119,16 @@ public class Customer : Entity
         return $"CUS-{hex}";
     }
 
+    public CustomerActivationOutcome Activate(Guid expectedRowVersion)
+    {
+        if (RowVersion != expectedRowVersion) return CustomerActivationOutcome.VersionConflict;
+        if (Status != CustomerStatus.Draft) return CustomerActivationOutcome.InvalidState;
+        if (_contacts.Count(c => c.IsPrimary && c.Status == ContactStatus.Active) != 1)
+            return CustomerActivationOutcome.InvalidState;
+        Status = CustomerStatus.Active;
+        RowVersion = Guid.NewGuid();
+        return CustomerActivationOutcome.Activated;
+    }
+
     public override string ToString() => $"Customer [Id={Id}, Code={Code}, Status={Status}]";
 }

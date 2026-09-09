@@ -564,4 +564,169 @@ public class CustomerEndpointsTests : IAsyncLifetime
         Assert.Equal("ab****de", CustomerCreationStore.MaskLineId("abcde"));
         Assert.Equal("li****99", CustomerCreationStore.MaskLineId("line_lead_99"));
     }
+
+    [Fact]
+    public async Task ActivateCustomer_WhenMissingIfMatch_Returns428PreconditionRequired()
+    {
+        var createResponse = await CreateCustomerHelper("บริษัท ก่อนแอกทิเวต 1 TEST_ONLY");
+        var created = await createResponse.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(created);
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/customers/{created.Id}/activate");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-act-missing-ifmatch-1234");
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal((HttpStatusCode)428, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("IF_MATCH_REQUIRED", problem.Code);
+    }
+
+    [Fact]
+    public async Task ActivateCustomer_WhenInvalidIfMatchFormat_Returns428PreconditionRequired()
+    {
+        var createResponse = await CreateCustomerHelper("บริษัท ก่อนแอกทิเวต 2 TEST_ONLY");
+        var created = await createResponse.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(created);
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/customers/{created.Id}/activate");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-act-invalid-ifmatch-1234");
+        msg.Headers.TryAddWithoutValidation("If-Match", "\"not-a-uuid\"");
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal((HttpStatusCode)428, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("IF_MATCH_REQUIRED", problem.Code);
+    }
+
+    [Fact]
+    public async Task ActivateCustomer_WhenVersionConflict_Returns409CustomerVersionConflict()
+    {
+        var createResponse = await CreateCustomerHelper("บริษัท ก่อนแอกทิเวต 3 TEST_ONLY");
+        var created = await createResponse.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(created);
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/customers/{created.Id}/activate");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-act-conflict-12345678");
+        msg.Headers.Add("If-Match", $"\"{Guid.NewGuid()}\"");
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal("CUSTOMER_VERSION_CONFLICT", problem.Code);
+    }
+
+    [Fact]
+    public async Task ActivateCustomer_WhenUserLacksActivatePermission_Returns403Forbidden()
+    {
+        var createResponse = await CreateCustomerHelper("บริษัท ก่อนแอกทิเวต 4 TEST_ONLY");
+        var created = await createResponse.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(created);
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/customers/{created.Id}/activate");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-read-only");
+        msg.Headers.Add("X-Membership-Id", MembershipReadOnlyId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-act-no-perm-12345678");
+        msg.Headers.Add("If-Match", $"\"{created.RowVersion}\"");
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ActivateCustomer_WhenCustomerBelongsToDifferentOrg_Returns404NotFound()
+    {
+        var createResponse = await CreateCustomerHelper("บริษัท ก่อนแอกทิเวต 5 TEST_ONLY");
+        var created = await createResponse.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(created);
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/customers/{created.Id}/activate");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-b");
+        msg.Headers.Add("X-Membership-Id", MembershipBId.ToString());
+        msg.Headers.Add("Idempotency-Key", "key-act-wrong-org-123456");
+        msg.Headers.Add("If-Match", $"\"{created.RowVersion}\"");
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ActivateCustomer_WhenValid_ActivatesCustomerAndReturnsNewETagAndAudit()
+    {
+        var createResponse = await CreateCustomerHelper("บริษัท ก่อนแอกทิเวต สำเร็จ TEST_ONLY");
+        var created = await createResponse.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(created);
+        Assert.Equal("draft", created.Status);
+
+        var key = "key-act-success-1234567890";
+        var msg = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/customers/{created.Id}/activate");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", key);
+        msg.Headers.Add("If-Match", $"\"{created.RowVersion}\"");
+
+        var response = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var activated = await response.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(activated);
+        Assert.Equal("active", activated.Status);
+        Assert.NotEqual(created.RowVersion, activated.RowVersion);
+
+        var etag = response.Headers.ETag?.Tag;
+        Assert.Equal($"\"{activated.RowVersion}\"", etag);
+
+        // Verify idempotency replay with same key and payload
+        var replayMsg = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/customers/{created.Id}/activate");
+        replayMsg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        replayMsg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        replayMsg.Headers.Add("Idempotency-Key", key);
+        replayMsg.Headers.Add("If-Match", $"\"{created.RowVersion}\"");
+
+        var replayResponse = await _client.SendAsync(replayMsg);
+        Assert.Equal(HttpStatusCode.OK, replayResponse.StatusCode);
+
+        var replayActivated = await replayResponse.Content.ReadFromJsonAsync<CustomerResponse>();
+        Assert.NotNull(replayActivated);
+        Assert.Equal(activated.Id, replayActivated.Id);
+        Assert.Equal(activated.RowVersion, replayActivated.RowVersion);
+
+        // Verify audit event
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var audit = await db.AuditEvents.FirstOrDefaultAsync(a =>
+            a.OrganizationId == OrgAId &&
+            a.Action == "customer.activated" &&
+            a.ResourceId == created.Id.ToString());
+        Assert.NotNull(audit);
+    }
+
+    private async Task<HttpResponseMessage> CreateCustomerHelper(string nameTh)
+    {
+        var request = new CreateCustomerRequest(
+            "organization",
+            nameTh,
+            null,
+            "th",
+            new CreatePrimaryContactRequest("คุณตัวอย่าง", "ผู้จัดการ", "+66812345678", "test@example.com", "phone"));
+
+        var msg = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customers");
+        msg.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        msg.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+        msg.Headers.Add("Idempotency-Key", $"key-helper-{Guid.NewGuid():N}");
+        msg.Content = JsonContent.Create(request);
+
+        return await _client.SendAsync(msg);
+    }
 }
