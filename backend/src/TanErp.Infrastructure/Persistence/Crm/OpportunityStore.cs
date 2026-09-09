@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Crm.Opportunities;
@@ -14,10 +15,12 @@ namespace TanErp.Infrastructure.Persistence.Crm;
 public class OpportunityStore : IOpportunityStore
 {
     private readonly AppDbContext _db;
+    private readonly IClock _clock;
 
-    public OpportunityStore(AppDbContext db)
+    public OpportunityStore(AppDbContext db, IClock clock)
     {
         _db = db;
+        _clock = clock;
     }
 
     public async Task<Result<OpportunityProjection>> CreateAsync(
@@ -115,7 +118,7 @@ public class OpportunityStore : IOpportunityStore
             }
 
             // 5. Create Opportunity aggregate
-            var now = DateTimeOffset.UtcNow;
+            var now = _clock.UtcNow;
             var oppId = Guid.NewGuid();
 
             var opp = Opportunity.CreateDraft(

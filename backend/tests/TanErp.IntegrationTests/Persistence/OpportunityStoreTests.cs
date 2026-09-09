@@ -22,6 +22,12 @@ public class OpportunityStoreTests : IAsyncLifetime
 
     private AppDbContext _db = null!;
     private OpportunityStore _store = null!;
+    private static readonly DateTimeOffset FixedTime = DateTimeOffset.Parse("2026-09-09T04:30:00Z");
+
+    private sealed class FixedClock : TanErp.Application.Common.Abstractions.IClock
+    {
+        public DateTimeOffset UtcNow { get; } = FixedTime;
+    }
 
     public async Task InitializeAsync()
     {
@@ -35,7 +41,7 @@ public class OpportunityStoreTests : IAsyncLifetime
         await _db.Database.MigrateAsync();
         await TestOnlyDataSeeder.SeedAsync(_db, "Test", true);
 
-        _store = new OpportunityStore(_db);
+        _store = new OpportunityStore(_db, new FixedClock());
     }
 
     public async Task DisposeAsync()
@@ -137,17 +143,20 @@ public class OpportunityStoreTests : IAsyncLifetime
         var dbOpp = await _db.Opportunities.FirstOrDefaultAsync(o => o.Id == opp.Id);
         Assert.NotNull(dbOpp);
         Assert.Equal(opp.Code, dbOpp.Code);
+        Assert.Equal(FixedTime, dbOpp.CreatedAtUtc);
 
         // Verify idempotency record
         var idemp = await _db.IdempotencyRecords.FirstOrDefaultAsync(r => r.KeyHash == "key-h-3" && r.OrganizationId == orgId);
         Assert.NotNull(idemp);
         Assert.Equal(opp.Id.ToString(), idemp.ResourceId);
+        Assert.Equal(FixedTime, idemp.CreatedAtUtc);
 
         // Verify audit event
         var audit = await _db.AuditEvents.FirstOrDefaultAsync(a => a.ResourceId == opp.Id.ToString() && a.Action == "opportunity.created");
         Assert.NotNull(audit);
         Assert.Equal("Opportunity", audit.ResourceType);
         Assert.Equal("trace-3", audit.TraceId);
+        Assert.Equal(FixedTime, audit.OccurredAtUtc);
     }
 
     [Fact]

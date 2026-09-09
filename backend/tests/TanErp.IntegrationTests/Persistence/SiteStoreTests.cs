@@ -20,6 +20,12 @@ public class SiteStoreTests : IAsyncLifetime
 
     private AppDbContext _db = null!;
     private SiteStore _store = null!;
+    private static readonly DateTimeOffset FixedTime = DateTimeOffset.Parse("2026-09-09T04:30:00Z");
+
+    private sealed class FixedClock : TanErp.Application.Common.Abstractions.IClock
+    {
+        public DateTimeOffset UtcNow { get; } = FixedTime;
+    }
 
     public async Task InitializeAsync()
     {
@@ -33,7 +39,7 @@ public class SiteStoreTests : IAsyncLifetime
         await _db.Database.MigrateAsync();
         await TestOnlyDataSeeder.SeedAsync(_db, "Test", true);
 
-        _store = new SiteStore(_db);
+        _store = new SiteStore(_db, new FixedClock());
     }
 
     public async Task DisposeAsync()
@@ -118,17 +124,20 @@ public class SiteStoreTests : IAsyncLifetime
         var persistedSite = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteProj.Id);
         Assert.NotNull(persistedSite);
         Assert.Equal(siteProj.Code, persistedSite.Code);
+        Assert.Equal(FixedTime, persistedSite.CreatedAtUtc);
 
         // Verify Idempotency record persisted
         var idemp = await _db.IdempotencyRecords.FirstOrDefaultAsync(r => r.KeyHash == "key-hash-3" && r.OrganizationId == orgId);
         Assert.NotNull(idemp);
         Assert.Equal(siteProj.Id.ToString(), idemp.ResourceId);
+        Assert.Equal(FixedTime, idemp.CreatedAtUtc);
 
         // Verify Audit record persisted
         var audit = await _db.AuditEvents.FirstOrDefaultAsync(a => a.ResourceId == siteProj.Id.ToString() && a.Action == "site.created");
         Assert.NotNull(audit);
         Assert.Equal("Site", audit.ResourceType);
         Assert.Equal("trace-3", audit.TraceId);
+        Assert.Equal(FixedTime, audit.OccurredAtUtc);
     }
 
     [Fact]

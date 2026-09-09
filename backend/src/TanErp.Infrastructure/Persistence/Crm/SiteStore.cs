@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Crm.Sites;
@@ -12,10 +13,12 @@ namespace TanErp.Infrastructure.Persistence.Crm;
 public class SiteStore : ISiteStore
 {
     private readonly AppDbContext _db;
+    private readonly IClock _clock;
 
-    public SiteStore(AppDbContext db)
+    public SiteStore(AppDbContext db, IClock clock)
     {
         _db = db;
+        _clock = clock;
     }
 
     public async Task<Result<SiteProjection>> CreateAsync(
@@ -81,7 +84,7 @@ public class SiteStore : ISiteStore
             }
 
             // 3. Create Site aggregate
-            var now = DateTimeOffset.UtcNow;
+            var now = _clock.UtcNow;
             var siteId = Guid.NewGuid();
             var address = new SiteAddressInput(
                 command.AddressLine1,

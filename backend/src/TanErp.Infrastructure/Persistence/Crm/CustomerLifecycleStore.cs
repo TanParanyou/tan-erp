@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Crm.Customers;
@@ -12,10 +13,12 @@ public class CustomerLifecycleStore : ICustomerLifecycleStore
 {
     private const string ActivateOperation = "crm.customer.activate";
     private readonly AppDbContext _db;
+    private readonly IClock _clock;
 
-    public CustomerLifecycleStore(AppDbContext db)
+    public CustomerLifecycleStore(AppDbContext db, IClock clock)
     {
         _db = db;
+        _clock = clock;
     }
 
     public async Task<Result<CustomerProjection>> ActivateAsync(
@@ -92,7 +95,7 @@ public class CustomerLifecycleStore : ICustomerLifecycleStore
             }
 
             // 4. Record idempotency record
-            var now = DateTimeOffset.UtcNow;
+            var now = _clock.UtcNow;
             var idempotencyRecord = new IdempotencyRecord(
                 Guid.NewGuid(),
                 orgId,

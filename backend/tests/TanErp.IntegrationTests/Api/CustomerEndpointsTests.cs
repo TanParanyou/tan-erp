@@ -16,6 +16,8 @@ using TanErp.Infrastructure.Persistence;
 using TanErp.Infrastructure.Persistence.Crm;
 using Testcontainers.PostgreSql;
 using Xunit;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using TanErp.Application.Common.Abstractions;
 
 namespace TanErp.IntegrationTests.Api;
 
@@ -26,6 +28,13 @@ public class CustomerEndpointsTests : IAsyncLifetime
 
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
+
+    private static readonly DateTimeOffset FixedTime = DateTimeOffset.Parse("2026-09-09T04:30:00Z");
+
+    private sealed class FixedClock : IClock
+    {
+        public DateTimeOffset UtcNow { get; } = FixedTime;
+    }
 
     private static readonly Guid OrgAId = TestOnlyDataSeeder.TestOrgId;
     private static readonly Guid MembershipAId = TestOnlyDataSeeder.TestMembershipId;
@@ -84,6 +93,9 @@ public class CustomerEndpointsTests : IAsyncLifetime
                 var authDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IFirebaseTokenVerifier));
                 if (authDescriptor != null) services.Remove(authDescriptor);
                 services.AddSingleton<IFirebaseTokenVerifier, TestFirebaseTokenVerifier>();
+
+                services.RemoveAll<IClock>();
+                services.AddSingleton<IClock>(new FixedClock());
             });
         });
 
@@ -710,6 +722,14 @@ public class CustomerEndpointsTests : IAsyncLifetime
             a.Action == "customer.activated" &&
             a.ResourceId == created.Id.ToString());
         Assert.NotNull(audit);
+        Assert.Equal(FixedTime, audit.OccurredAtUtc);
+
+        var idemp = await db.IdempotencyRecords.FirstOrDefaultAsync(r =>
+            r.OrganizationId == OrgAId &&
+            r.Operation == "crm.customer.activate" &&
+            r.ResourceId == created.Id.ToString());
+        Assert.NotNull(idemp);
+        Assert.Equal(FixedTime, idemp.CreatedAtUtc);
     }
 
     private async Task<HttpResponseMessage> CreateCustomerHelper(string nameTh)
