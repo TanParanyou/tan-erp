@@ -10,6 +10,16 @@ import { Button } from "@/components/ui/Button";
 import { IconChevronLeft, IconAlertCircle, IconFileText } from "@/components/common/Icons";
 import { getContactChannelLabelKey, getCustomerLeadSourceLabelKey, getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
 
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { SiteList } from "@/features/sites/components/site-list";
+import { can } from "@/lib/permissions/can";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { apiClient } from "@/lib/api/api-client";
+import { getAuthToken } from "@/lib/auth/auth-session";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/useToast";
+import { ApiError } from "@/lib/api/api-error";
+
 interface CustomerDetailProps {
   customerId: string;
 }
@@ -18,6 +28,12 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const t = useTranslations("customers");
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const queryClient = useQueryClient();
+  const { selectedMembership } = useSelectedMembership();
+  const { toast } = useToast();
+
+  const [isActivating, setIsActivating] = React.useState(false);
+  const [showActivateModal, setShowActivateModal] = React.useState(false);
 
   const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
     const key = getCustomerTypeLabelKey(value);
@@ -40,6 +56,49 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   };
 
   const { data: customer, isLoading, isError, error, refetch } = useCustomerDetail(customerId);
+
+  const handleActivate = async () => {
+    if (!customer) return;
+
+    const token = await getAuthToken();
+    if (!token) {
+      toast.error(t("errors.authenticationRequired"));
+      return;
+    }
+
+    if (!customer?.id) {
+      return;
+    }
+
+    const membershipId = selectedMembership?.id;
+    if (!membershipId) {
+      toast.error(t("errors.membershipRequired"));
+      return;
+    }
+
+    setIsActivating(true);
+    try {
+      await apiClient.activateCustomer(customer.id, {
+        token,
+        membershipId,
+        locale: locale === "en" ? "en" : "th",
+        ifMatch: customer.rowVersion ?? "",
+      });
+
+      toast.success(t("activateSuccess"));
+      setShowActivateModal(false);
+      await queryClient.invalidateQueries({ queryKey: ["business"] });
+      refetch();
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 412) {
+        toast.error(t("errors.activateConflict"));
+      } else {
+        toast.error(err instanceof Error ? err.message : t("errors.saveUnexpected"));
+      }
+    } finally {
+      setIsActivating(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -80,6 +139,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
       : customer.displayNameTh || customer.displayNameEn || "-";
 
   const contact = customer.primaryContact;
+  const canActivate = customer.status === "draft" && can(selectedMembership, "customers.activate");
 
   return (
     <div className="flex flex-col gap-6 max-w-[800px]">
@@ -111,8 +171,31 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
               {customer.code}
             </span>
           </div>
+
+          {canActivate && (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => setShowActivateModal(true)}
+              className="min-h-[44px]"
+            >
+              {t("activateAction")}
+            </Button>
+          )}
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showActivateModal}
+        onClose={() => setShowActivateModal(false)}
+        onConfirm={handleActivate}
+        title={t("activateModalTitle")}
+        message={t("activateModalDesc")}
+        confirmText={tCommon("actions.confirm")}
+        cancelText={tCommon("actions.cancel")}
+        variant="info"
+        isLoading={isActivating}
+      />
 
       {/* Duplicate Candidates reuse shared card; masked values only */}
       {customer.duplicateCandidates && customer.duplicateCandidates.length > 0 && (
@@ -200,6 +283,12 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           </p>
         )}
       </div>
+
+      {/* Sites Section */}
+      <SiteList
+        customerId={customerId}
+        isCustomerActive={customer.status === "active"}
+      />
     </div>
   );
 }
