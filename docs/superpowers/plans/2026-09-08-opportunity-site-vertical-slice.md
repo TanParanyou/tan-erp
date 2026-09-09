@@ -370,21 +370,21 @@ git commit -m "feat(crm): activate customer with concurrency guard"
 **Interfaces:**
 - Produces: `Site.CreateActive(...)`, `Opportunity.CreateDraft(...)`, canonical value sets and generated codes
 
-- [ ] **Step 1: Write RED Site tests**
+- [x] **Step 1: Write RED Site tests**
 
 Assert label/address/country normalization, paired latitude/longitude requirement, ranges `-90..90`/`-180..180`, active status, generated code and row version. Assert blank required address and one-sided coordinate throw `ArgumentException`.
 
-- [ ] **Step 2: Write RED Opportunity tests**
+- [x] **Step 2: Write RED Opportunity tests**
 
 Assert Draft stage, unique work types, allowed work types `built-in|interior|curtain|wallpaper|exterior|other`, positive expected budget with three-letter currency, generated code and row version. Assert blank title, invalid work type and non-positive budget throw.
 
-- [ ] **Step 3: Run and confirm RED**
+- [x] **Step 3: Run and confirm RED**
 
 Run: `dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter "SiteTests|OpportunityTests"`
 
 Expected: FAIL because the new domain types do not exist.
 
-- [ ] **Step 4: Implement exact factories**
+- [x] **Step 4: Implement exact factories**
 
 ```csharp
 public static Site CreateActive(
@@ -403,7 +403,7 @@ public static Opportunity CreateDraft(
 
 Use value constants in Domain; do not depend on EF, ASP.NET or Application types.
 
-- [ ] **Step 5: Run and commit**
+- [x] **Step 5: Run and commit**
 
 Run the same filtered tests; expected PASS.
 
