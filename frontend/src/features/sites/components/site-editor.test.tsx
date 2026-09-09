@@ -8,6 +8,7 @@ import { SiteEditor } from "./site-editor";
 import { apiClient } from "@/lib/api/api-client";
 import { ToastProvider } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ui/Toast";
+import type { SiteResponse } from "@/lib/api/api-client";
 
 const mockPush = vi.fn();
 
@@ -137,10 +138,10 @@ describe("SiteEditor", () => {
   });
 
   it("locks submit button while request is in progress to prevent double submit", async () => {
-    let resolvePromise: (val: any) => void;
+    let resolvePromise: ((value: SiteResponse) => void) | undefined;
     mockedCreateSite.mockImplementation(
       () =>
-        new Promise((resolve) => {
+        new Promise<SiteResponse>((resolve) => {
           resolvePromise = resolve;
         })
     );

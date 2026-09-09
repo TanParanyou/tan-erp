@@ -5,8 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import thMessages from "@/messages/th.json";
 import { SiteList } from "./site-list";
+import type { MembershipDto } from "@/lib/permissions/can";
+import type { useCustomerSiteList } from "../api/site-queries";
 
-let mockMembership: any = {
+let mockMembership: MembershipDto | null = {
   id: "membership-a",
   permissions: [
     { key: "sites.read", scope: "organization" },
@@ -20,7 +22,7 @@ vi.mock("@/lib/membership/selected-membership-context", () => ({
   }),
 }));
 
-let mockQueryResult: any = {
+let mockQueryResult: ReturnType<typeof useCustomerSiteList> = {
   data: {
     items: [
       {
@@ -48,7 +50,7 @@ let mockQueryResult: any = {
   isError: false,
   error: null,
   refetch: vi.fn(),
-};
+} as unknown as ReturnType<typeof useCustomerSiteList>;
 
 vi.mock("../api/site-queries", () => ({
   useCustomerSiteList: () => mockQueryResult,
@@ -105,7 +107,7 @@ describe("SiteList component", () => {
       isError: false,
       error: null,
       refetch: vi.fn(),
-    };
+    } as unknown as ReturnType<typeof useCustomerSiteList>;
   });
 
   it("does not render when user lacks sites.read permission", () => {
@@ -149,7 +151,7 @@ describe("SiteList component", () => {
       isError: false,
       error: null,
       refetch: vi.fn(),
-    };
+    } as unknown as ReturnType<typeof useCustomerSiteList>;
 
     renderSiteList(client, true);
     expect(screen.getByText("ยังไม่มีสถานที่ตั้ง")).toBeInTheDocument();
@@ -157,12 +159,12 @@ describe("SiteList component", () => {
 
   it("renders minimal mono loading spinner when isLoading is true", () => {
     mockQueryResult = {
-      data: null,
+      data: undefined,
       isLoading: true,
       isError: false,
       error: null,
       refetch: vi.fn(),
-    };
+    } as unknown as ReturnType<typeof useCustomerSiteList>;
 
     renderSiteList(client, true);
     expect(screen.getByText("กำลังโหลดข้อมูล...")).toBeInTheDocument();

@@ -19,7 +19,13 @@ vi.mock("@/lib/auth/auth-session", () => ({
   getAuthToken: vi.fn(async () => "test-token"),
 }));
 
-import type { CurrentUserResponse } from "@/lib/api/api-client";
+import type {
+  CurrentUserResponse,
+  CustomerListResponse,
+  SiteListResponse,
+  OpportunityResponse,
+} from "@/lib/api/api-client";
+import type { MembershipDto } from "@/lib/permissions/can";
 
 const mockMembershipWithBranch = {
   id: "membership-1",
@@ -31,7 +37,7 @@ const mockMembershipWithBranch = {
 const mockMembershipWithoutBranch = {
   id: "membership-no-branch",
   organization: { id: "org-1", name: "Org 1" },
-  branch: null,
+  branch: undefined,
   permissions: [{ key: "opportunities.create", scope: "organization" }],
 };
 
@@ -44,7 +50,7 @@ const currentUser = {
   memberships: [mockMembershipWithBranch],
 } satisfies CurrentUserResponse;
 
-let currentMembership: any = mockMembershipWithBranch;
+let currentMembership: MembershipDto | null = mockMembershipWithBranch;
 
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({
@@ -115,11 +121,11 @@ describe("OpportunityEditor", () => {
     mockedListCustomers.mockResolvedValue({
       items: [activeCustomerA, activeCustomerB],
       nextCursor: null,
-    } as any);
+    } satisfies CustomerListResponse);
 
     mockedListCustomerSites.mockResolvedValue({
       items: [customerASite1],
-    } as any);
+    } satisfies SiteListResponse);
 
     let count = 0;
     vi.spyOn(crypto, "randomUUID").mockImplementation(() => {
@@ -156,7 +162,7 @@ describe("OpportunityEditor", () => {
       ownerUserId: "user-1",
       workTypes: ["built-in"],
       createdAtUtc: "2026-09-08T00:00:00Z",
-    } as any);
+    } satisfies OpportunityResponse);
 
     renderEditor(client);
 

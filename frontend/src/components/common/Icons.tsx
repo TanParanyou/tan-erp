@@ -448,5 +448,3 @@ export function IconBriefcase({ size = 18, strokeWidth = 2, ...props }: IconProp
     </svg>
   );
 }
-
-

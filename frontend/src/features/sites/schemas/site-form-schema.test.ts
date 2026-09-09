@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { createSiteFormSchema } from "./site-form-schema";
 
-const mockT = (key: string) => `trans_${key}`;
+const mockT: Parameters<typeof createSiteFormSchema>[0] = (key) => `trans_${key}`;
 
 describe("createSiteFormSchema", () => {
-  const schema = createSiteFormSchema(mockT as any);
+  const schema = createSiteFormSchema(mockT);
 
   it("validates minimal valid site input", () => {
     const valid = {

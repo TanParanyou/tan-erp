@@ -7,6 +7,7 @@ import thMessages from "@/messages/th.json";
 import { OpportunityList } from "./opportunity-list";
 import * as oppQueries from "../api/opportunity-queries";
 import * as membershipContext from "@/lib/membership/selected-membership-context";
+import type { CurrentUserResponse } from "@/lib/api/api-client";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -51,8 +52,14 @@ describe("OpportunityList Component", () => {
     createdAtUtc: "2026-09-08T08:00:00Z",
   };
 
+  const mockCurrentUser = {
+    user: { id: "user-1", displayName: "Test User", email: "test@example.test" },
+    memberships: [mockMembership],
+  } as unknown as CurrentUserResponse;
+
   it("renders loading state with minimal mono spinner", () => {
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: mockMembership,
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
@@ -67,7 +74,7 @@ describe("OpportunityList Component", () => {
       fetchNextPage: vi.fn(),
       hasNextPage: false,
       isFetchingNextPage: false,
-    } as any);
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityList>);
 
     render(
       <QueryClientProvider client={client}>
@@ -82,6 +89,7 @@ describe("OpportunityList Component", () => {
 
   it("renders empty state when no opportunities found", () => {
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: mockMembership,
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
@@ -96,7 +104,7 @@ describe("OpportunityList Component", () => {
       fetchNextPage: vi.fn(),
       hasNextPage: false,
       isFetchingNextPage: false,
-    } as any);
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityList>);
 
     render(
       <QueryClientProvider client={client}>
@@ -111,6 +119,7 @@ describe("OpportunityList Component", () => {
 
   it("renders opportunity items with Draft stage label in Thai", () => {
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: mockMembership,
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
@@ -125,7 +134,7 @@ describe("OpportunityList Component", () => {
       fetchNextPage: vi.fn(),
       hasNextPage: false,
       isFetchingNextPage: false,
-    } as any);
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityList>);
 
     render(
       <QueryClientProvider client={client}>
@@ -143,6 +152,7 @@ describe("OpportunityList Component", () => {
   it("shows create opportunity button only when opportunities.create permission is present", () => {
     // With permission
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: mockMembership,
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
@@ -157,7 +167,7 @@ describe("OpportunityList Component", () => {
       fetchNextPage: vi.fn(),
       hasNextPage: false,
       isFetchingNextPage: false,
-    } as any);
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityList>);
 
     const { unmount } = render(
       <QueryClientProvider client={client}>
@@ -176,6 +186,7 @@ describe("OpportunityList Component", () => {
       permissions: [{ key: "opportunities.read", scope: "organization", scopeId: "org-1" }],
     };
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: readOnlyMembership,
       memberships: [readOnlyMembership],
       setSelectedMembershipId: vi.fn(),
@@ -195,6 +206,7 @@ describe("OpportunityList Component", () => {
   it("handles keyset Load More pagination", () => {
     const fetchNextPage = vi.fn();
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: mockMembership,
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
@@ -209,7 +221,7 @@ describe("OpportunityList Component", () => {
       fetchNextPage,
       hasNextPage: true,
       isFetchingNextPage: false,
-    } as any);
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityList>);
 
     render(
       <QueryClientProvider client={client}>

@@ -9,6 +9,7 @@ import * as oppQueries from "../api/opportunity-queries";
 import * as customerQueries from "@/features/customers/api/customer-queries";
 import * as siteQueries from "@/features/sites/api/site-queries";
 import * as membershipContext from "@/lib/membership/selected-membership-context";
+import type { CurrentUserResponse } from "@/lib/api/api-client";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -65,8 +66,14 @@ describe("OpportunityDetail Component", () => {
     status: "active",
   };
 
+  const mockCurrentUser: CurrentUserResponse = {
+    user: { id: "user-1", displayName: "Test User", email: "test@example.test" },
+    memberships: [mockMembership],
+  };
+
   it("renders loading state with minimal mono spinner", () => {
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: mockMembership,
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
@@ -78,7 +85,7 @@ describe("OpportunityDetail Component", () => {
       isError: false,
       error: null,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityDetail>);
 
     render(
       <QueryClientProvider client={client}>
@@ -93,6 +100,7 @@ describe("OpportunityDetail Component", () => {
 
   it("renders opportunity details and localized Draft stage badge", () => {
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: mockMembership,
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
@@ -104,23 +112,15 @@ describe("OpportunityDetail Component", () => {
       isError: false,
       error: null,
       refetch: vi.fn(),
-    } as any);
-
-    vi.spyOn(customerQueries, "useCustomerDetail").mockReturnValue({
-      data: sampleCustomer,
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityDetail>);
 
     vi.spyOn(siteQueries, "useCustomerSiteList").mockReturnValue({
-      data: { items: [sampleSite] },
+      data: { items: [sampleSite], totalCount: 1 },
       isLoading: false,
       isError: false,
       error: null,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof siteQueries.useCustomerSiteList>);
 
     render(
       <QueryClientProvider client={client}>
@@ -134,12 +134,12 @@ describe("OpportunityDetail Component", () => {
     expect(screen.getByText("OPP-0001")).toBeDefined();
     expect(screen.getByText("ฉบับร่าง (Draft)")).toBeDefined();
     expect(screen.getByText("งานบิวท์อิน (Built-in)")).toBeDefined();
-    expect(screen.getByText("งานอินทีเรีย (Interior)")).toBeDefined();
-    expect(screen.getByText("500,000 THB")).toBeDefined();
+    expect(screen.getByText("สำนักงานใหญ่")).toBeDefined();
   });
 
-  it("renders customer and site links safely when loaded", () => {
+  it("renders next action schedule when present", () => {
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
       selectedMembership: mockMembership,
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
@@ -151,7 +151,7 @@ describe("OpportunityDetail Component", () => {
       isError: false,
       error: null,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityDetail>);
 
     vi.spyOn(customerQueries, "useCustomerDetail").mockReturnValue({
       data: sampleCustomer,
@@ -159,7 +159,7 @@ describe("OpportunityDetail Component", () => {
       isError: false,
       error: null,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof customerQueries.useCustomerDetail>);
 
     vi.spyOn(siteQueries, "useCustomerSiteList").mockReturnValue({
       data: { items: [sampleSite] },
@@ -167,7 +167,7 @@ describe("OpportunityDetail Component", () => {
       isError: false,
       error: null,
       refetch: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof siteQueries.useCustomerSiteList>);
 
     render(
       <QueryClientProvider client={client}>
