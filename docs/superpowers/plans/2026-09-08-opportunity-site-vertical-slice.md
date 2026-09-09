@@ -427,21 +427,21 @@ git commit -m "feat(crm): add site and opportunity aggregates"
 - Consumes: Domain `Site` and `Opportunity`
 - Produces: `crm.sites`, `crm.opportunities` with composite isolation constraints
 
-- [ ] **Step 1: Write RED migration tests**
+- [x] **Step 1: Write RED migration tests**
 
 Verify clean apply, rollback/reapply, exact snake_case columns, unique `(organization_id,code)`, Site FK `(customer_id,organization_id)`, Opportunity FKs for customer/branch and primary Site `(primary_site_id,customer_id,organization_id)`, concurrency tokens and indexes.
 
-- [ ] **Step 2: Run and confirm RED**
+- [x] **Step 2: Run and confirm RED**
 
 Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter OpportunitySiteMigrationTests`
 
 Expected: FAIL because tables/configurations are absent.
 
-- [ ] **Step 3: Add DbSets and configurations**
+- [x] **Step 3: Add DbSets and configurations**
 
 Add `DbSet<Site> Sites` and `DbSet<Opportunity> Opportunities`. Configure max lengths from Field Catalog, `numeric(12,2)` budget, `numeric(9,6)` latitude, `numeric(10,6)` longitude, `date` target date, PostgreSQL `text[]` work types, check constraints for status/stage/coordinates/budget and `DeleteBehavior.Restrict`.
 
-- [ ] **Step 4: Generate migration**
+- [x] **Step 4: Generate migration**
 
 Run:
 
@@ -451,12 +451,12 @@ dotnet ef migrations add OpportunitySiteSlice --project backend/src/TanErp.Infra
 
 Inspect generated migration; do not edit older migrations.
 
-- [ ] **Step 5: Run migration tests and commit**
+- [x] **Step 5: Run migration tests and commit**
 
 Run the filtered tests; expected PASS including cross-organization constraint rejection.
 
 ```bash
-git add backend/src/TanErp.Infrastructure/Persistence backend/tests/TanErp.IntegrationTests/Persistence/OpportunitySiteMigrationTests.cs
+git add backend/src/TanErp.Infrastructure/Persistence backend/tests/TanErp.IntegrationTests/Persistence/OpportunitySiteMigrationTests.cs docs/superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md
 git commit -m "feat(crm): persist opportunity site slice"
 ```
 
