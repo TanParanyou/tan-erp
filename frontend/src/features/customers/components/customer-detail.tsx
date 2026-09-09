@@ -20,6 +20,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 
+interface ActivationIntent {
+  signature: string;
+  key: string;
+}
+
 interface CustomerDetailProps {
   customerId: string;
 }
@@ -34,6 +39,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
   const [isActivating, setIsActivating] = React.useState(false);
   const [showActivateModal, setShowActivateModal] = React.useState(false);
+  const activationIntentRef = React.useRef<ActivationIntent | null>(null);
 
   const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
     const key = getCustomerTypeLabelKey(value);
@@ -78,7 +84,12 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
     setIsActivating(true);
     try {
-      const idempotencyKey = `activate-${customer.id}-${Date.now()}`;
+      const signature = `${customer.id}|${customer.rowVersion ?? ""}|activate`;
+      if (activationIntentRef.current?.signature !== signature) {
+        activationIntentRef.current = { signature, key: crypto.randomUUID() };
+      }
+      const idempotencyKey = activationIntentRef.current.key;
+
       await apiClient.activateCustomer(customer.id, {
         token,
         membershipId,
@@ -87,12 +98,17 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         ifMatch: customer.rowVersion ?? "",
       });
 
+      activationIntentRef.current = null;
       toast.success(t("activateSuccess"));
       setShowActivateModal(false);
       await queryClient.invalidateQueries({ queryKey: ["business"] });
       refetch();
     } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 412) {
+      if (
+        err instanceof ApiError &&
+        err.status === 409 &&
+        err.code === "CUSTOMER_VERSION_CONFLICT"
+      ) {
         toast.error(t("errors.activateConflict"));
       } else {
         toast.error(err instanceof Error ? err.message : t("errors.saveUnexpected"));

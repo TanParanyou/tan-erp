@@ -6,6 +6,9 @@ import { NextIntlClientProvider } from "next-intl";
 import thMessages from "@/messages/th.json";
 import { CustomerDetail } from "./customer-detail";
 
+import type { CustomerResponse } from "@/lib/api/api-client";
+import type { MembershipDto } from "@/lib/permissions/can";
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
@@ -31,14 +34,14 @@ const organizationDraftCustomer = {
   duplicateCandidates: null,
   rowVersion: "019a3cf8-96f0-7c9f-b207-93aa818f4a20",
   createdAtUtc: "2026-09-07T12:00:00Z",
-};
+} satisfies CustomerResponse;
 
 const mockMembership = {
   id: "membership-a",
   permissions: [{ key: "customers.activate", scope: "organization" }],
-};
+} satisfies MembershipDto;
 
-let currentMembership: any = mockMembership;
+let currentMembership: MembershipDto | null = mockMembership;
 
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({
@@ -63,7 +66,7 @@ vi.mock("@/lib/api/api-client", async (importOriginal) => {
   };
 });
 
-let currentCustomerData: any = organizationDraftCustomer;
+let currentCustomerData: CustomerResponse = organizationDraftCustomer;
 const mockRefetch = vi.fn();
 
 vi.mock("../api/customer-queries", () => ({
@@ -167,13 +170,91 @@ describe("CustomerDetail canonical labels", () => {
     );
   });
 
-  it("shows localized conflict message when stale ETag returns 412", async () => {
+  it("reuses idempotency key on retry with same rowVersion, but generates new key when rowVersion changes", async () => {
+    let uuidCallCount = 0;
+    vi.spyOn(crypto, "randomUUID").mockImplementation(() => {
+      uuidCallCount += 1;
+      return `activation-key-${uuidCallCount}`;
+    });
+
+    // First attempt fails with network error
+    mockActivateCustomer.mockRejectedValueOnce(new Error("Network Error"));
+
+    const { rerender } = renderCustomerDetail(client, "customer-1");
+
+    // First attempt
+    fireEvent.click(screen.getByRole("button", { name: "เปิดใช้งานลูกค้า" }));
+    fireEvent.click(screen.getByRole("button", { name: "ยืนยัน" }));
+
+    await waitFor(() => {
+      expect(mockActivateCustomer).toHaveBeenCalledTimes(1);
+    });
+    expect(mockActivateCustomer).toHaveBeenLastCalledWith(
+      "customer-1",
+      expect.objectContaining({
+        idempotencyKey: "activation-key-1",
+      })
+    );
+
+    // Retry with unchanged rowVersion (second attempt)
+    mockActivateCustomer.mockResolvedValueOnce({
+      ...organizationDraftCustomer,
+      status: "active",
+      rowVersion: "019a3cf8-96f0-7c9f-b207-93aa818f9999",
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "เปิดใช้งานลูกค้า" }));
+    fireEvent.click(screen.getByRole("button", { name: "ยืนยัน" }));
+
+    await waitFor(() => {
+      expect(mockActivateCustomer).toHaveBeenCalledTimes(2);
+    });
+    // Should reuse the same idempotency key
+    expect(mockActivateCustomer).toHaveBeenLastCalledWith(
+      "customer-1",
+      expect.objectContaining({
+        idempotencyKey: "activation-key-1",
+      })
+    );
+
+    // Now update rowVersion
+    currentCustomerData = {
+      ...organizationDraftCustomer,
+      rowVersion: "019a3cf8-96f0-7c9f-b207-93aa818f-newversion",
+    };
+    rerender(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <ToastProvider>
+            <CustomerDetail customerId="customer-1" />
+            <ToastContainer />
+          </ToastProvider>
+        </NextIntlClientProvider>
+      </QueryClientProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "เปิดใช้งานลูกค้า" }));
+    fireEvent.click(screen.getByRole("button", { name: "ยืนยัน" }));
+
+    await waitFor(() => {
+      expect(mockActivateCustomer).toHaveBeenCalledTimes(3);
+    });
+    // Should have generated a new key
+    expect(mockActivateCustomer).toHaveBeenLastCalledWith(
+      "customer-1",
+      expect.objectContaining({
+        idempotencyKey: "activation-key-2",
+      })
+    );
+  });
+
+  it("shows localized conflict message when stale ETag returns 409 CUSTOMER_VERSION_CONFLICT", async () => {
     const { ApiError } = await import("@/lib/api/api-error");
     mockActivateCustomer.mockRejectedValueOnce(
       new ApiError({
-        status: 412,
-        code: "IF_MATCH_FAILED",
-        message: "Precondition Failed",
+        status: 409,
+        code: "CUSTOMER_VERSION_CONFLICT",
+        message: "Customer row version conflict.",
       })
     );
 
