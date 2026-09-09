@@ -1,22 +1,84 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useCustomerList } from "../api/customer-queries";
-import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { IconSearch, IconPlus, IconAlertCircle, IconFileText } from "@/components/common/Icons";
+import { Select } from "@/components/ui/Select";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { BulkActionToolbar, BulkActionButton } from "@/components/ui/BulkActionToolbar";
+import { ListToolbar } from "@/components/ui/ListToolbar";
+import { ActiveFilterChips, type ActiveFilterChipItem } from "@/components/ui/ActiveFilterChips";
+import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
+import { ListFilterSelect } from "@/components/ui/ListFilterSelect";
+import { TableEntityCell } from "@/components/ui/TableEntityCell";
+import { ListSearchInput } from "@/components/ui/ListSearchInput";
+import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
+import { CustomerQuickViewDrawer } from "./customer-quick-view-drawer";
+import {
+  IconSearch,
+  IconPlus,
+  IconAlertCircle,
+  IconEye,
+  IconEdit,
+  IconDownload,
+  IconClose,
+} from "@/components/common/Icons";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
+import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
+import { useRowSelection } from "@/hooks/useRowSelection";
+import { useCsvExport } from "@/hooks/useCsvExport";
+import type { CsvColumn } from "@/lib/export/export-csv";
+import { apiClient, type CustomerListItemResponse } from "@/lib/api/api-client";
+import { getAuthToken } from "@/lib/auth/auth-session";
+
+interface CustomerFilters extends ListFilterRecord {
+  status?: string;
+  type?: string;
+}
 
 export function CustomerList() {
   const t = useTranslations("customers");
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const router = useRouter();
   const { selectedMembership } = useSelectedMembership();
+
+  // Full URL-synced List State Hook
+  const listState = useListState<CustomerFilters>({
+    schema: {
+      defaultSort: "code",
+      defaultOrder: "desc",
+      single: ["status", "type"],
+      allowedSorts: ["code", "displayNameTh", "customerType", "status"],
+    },
+    debounceMs: 350,
+  });
+
+  // Quick View Drawer State
+  const [quickViewCustomer, setQuickViewCustomer] = useState<CustomerListItemResponse | null>(null);
+
+  // Row Selection Hook
+  const {
+    selectedIds,
+    selectedCount,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+  } = useRowSelection<string | number>();
+
+  const canCreate =
+    can(selectedMembership, "customers.create") &&
+    can(selectedMembership, "customer-contacts.manage");
 
   const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
     const key = getCustomerTypeLabelKey(value);
@@ -27,13 +89,6 @@ export function CustomerList() {
     const key = getCustomerStatusLabelKey(value);
     return key ? tCommon(`status.${key}`) : "-";
   };
-
-  const [searchInput, setSearchInput] = useState("");
-  const [activeSearch, setActiveSearch] = useState("");
-
-  const canCreate =
-    can(selectedMembership, "customers.create") &&
-    can(selectedMembership, "customer-contacts.manage");
 
   const resolveListErrorMessage = (error: Error | null): string => {
     if (error?.message === "No authentication token available") {
@@ -51,220 +106,389 @@ export function CustomerList() {
     isError,
     error,
     refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
   } = useCustomerList({
-    search: activeSearch || undefined,
+    search: listState.params.search || undefined,
+    status: listState.params.filters.status || undefined,
+    customerType: listState.params.filters.type || undefined,
+    sortBy: listState.params.sort || undefined,
+    sortOrder: listState.params.order || undefined,
+    page: listState.params.page,
+    limit: listState.params.limit,
   });
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setActiveSearch(searchInput.trim());
+  // Direct server-side data & pagination values
+  const customers = data?.items ?? [];
+  const totalItems = data?.totalCount ?? 0;
+  const totalPages = data?.totalPages ?? (Math.ceil(totalItems / listState.params.limit) || 1);
+
+  // Active Filter Chips
+  const activeChips = useMemo<ActiveFilterChipItem[]>(() => {
+    const chips: ActiveFilterChipItem[] = [];
+    if (listState.params.filters.status) {
+      chips.push({
+        key: "status",
+        value: listState.params.filters.status,
+        label: `${t("statusFilterLabel")}: ${resolveCustomerStatusLabel(listState.params.filters.status)}`,
+      });
+    }
+    if (listState.params.filters.type) {
+      chips.push({
+        key: "type",
+        value: listState.params.filters.type,
+        label: `${t("typeFilterLabel")}: ${resolveCustomerTypeLabel(listState.params.filters.type)}`,
+      });
+    }
+    return chips;
+  }, [listState.params.filters.status, listState.params.filters.type]);
+
+  const handleRemoveChip = (key: string, value: string) => {
+    listState.actions.removeFilterValue(key as "status" | "type", value);
   };
 
-  const allCustomers = data?.pages.flatMap((page) => page.items || []) || [];
+  const handleClearAllFilters = () => {
+    listState.actions.clearFilters();
+  };
+
+  // Reusable CSV Export Hook
+  const csvColumns = useMemo<CsvColumn<CustomerListItemResponse>[]>(
+    () => [
+      { header: t("code"), accessor: (c) => c.code ?? "" },
+      {
+        header: tCommon("fields.name"),
+        accessor: (c) => (locale === "en" ? c.displayNameEn || c.displayNameTh : c.displayNameTh || c.displayNameEn) ?? "",
+      },
+      { header: t("customerType"), accessor: (c) => resolveCustomerTypeLabel(c.customerType) },
+      { header: t("primaryContact"), accessor: (c) => c.primaryContact?.name ?? "" },
+      { header: t("phone"), accessor: (c) => c.primaryContact?.phone ?? "" },
+      { header: t("email"), accessor: (c) => c.primaryContact?.email ?? "" },
+      { header: t("status"), accessor: (c) => resolveCustomerStatusLabel(c.status) },
+    ],
+    [locale, t, tCommon]
+  );
+
+  const { exportAll, exportSelected, isExporting } = useCsvExport<CustomerListItemResponse>({
+    filename: "customers",
+    columns: csvColumns,
+    data: customers,
+    selectedIds,
+    getId: (c) => c.id,
+    fetchAll: async () => {
+      const token = await getAuthToken();
+      if (!token || !selectedMembership?.id) return customers;
+      const res = await apiClient.listCustomers(
+        {
+          token,
+          membershipId: selectedMembership.id,
+          locale: locale === "en" ? "en" : "th",
+        },
+        {
+          search: listState.params.search || undefined,
+          status: listState.params.filters.status || undefined,
+          customerType: listState.params.filters.type || undefined,
+          sortBy: listState.params.sort || undefined,
+          sortOrder: listState.params.order || undefined,
+          page: 1,
+          limit: 1000,
+        }
+      );
+      return res.items ?? [];
+    },
+  });
+
+  // Table Columns Definition with Sticky Right Action Column
+  const columns = useMemo<Column<CustomerListItemResponse>[]>(
+    () => [
+      {
+        id: "avatar",
+        header: "",
+        className: "w-[52px]",
+        cell: (_value: unknown, customer: CustomerListItemResponse) => {
+          const isOrg = customer.customerType === "organization";
+          return (
+            <Avatar
+              initial={customer.displayNameTh || customer.displayNameEn || undefined}
+              variant={isOrg ? "navy" : "muted"}
+              size="md"
+              title={resolveCustomerTypeLabel(customer.customerType)}
+            />
+          );
+        },
+      },
+      {
+        id: "customerDetails",
+        header: `${tCommon("fields.name")} / ${t("code")}`,
+        className: "min-w-[240px]",
+        sortable: true,
+        accessorKey: "displayNameTh",
+        cell: (_value: unknown, customer: CustomerListItemResponse) => {
+          const customerName =
+            locale === "en" && customer.displayNameEn
+              ? customer.displayNameEn
+              : customer.displayNameTh || customer.displayNameEn || "-";
+          const secondaryName =
+            customer.displayNameEn && customer.displayNameTh
+              ? locale === "en"
+                ? customer.displayNameTh
+                : customer.displayNameEn
+              : null;
+
+          return (
+            <TableEntityCell
+              title={customerName}
+              code={customer.code}
+              subtitle={secondaryName}
+              href={`/${locale}/customers/${customer.id}`}
+            />
+          );
+        },
+      },
+      {
+        id: "customerType",
+        header: t("customerType"),
+        className: "min-w-[130px]",
+        sortable: true,
+        accessorKey: "customerType",
+        cell: (_value: unknown, customer: CustomerListItemResponse) => (
+          <Badge variant="neutral" size="sm">
+            {resolveCustomerTypeLabel(customer.customerType)}
+          </Badge>
+        ),
+      },
+      {
+        id: "primaryContact",
+        header: t("primaryContact"),
+        className: "min-w-[220px]",
+        cell: (_value: unknown, customer: CustomerListItemResponse) => {
+          const contact = customer.primaryContact;
+          if (!contact?.name && !contact?.phone && !contact?.email) {
+            return <span className="text-erp-text-muted">-</span>;
+          }
+          return (
+            <div className="flex flex-col gap-0.5">
+              <span className="font-semibold text-erp-text-main text-xs">{contact.name || "-"}</span>
+              <span className="font-mono text-[11px] text-erp-text-muted">
+                {[contact.phone, contact.email].filter(Boolean).join(" • ") || "-"}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        id: "status",
+        header: t("status"),
+        className: "min-w-[120px]",
+        sortable: true,
+        accessorKey: "status",
+        cell: (_value: unknown, customer: CustomerListItemResponse) => {
+          const statusKey = getCustomerStatusLabelKey(customer.status);
+          const label = statusKey ? tCommon(`status.${statusKey}`) : "-";
+          return (
+            <StatusBadge
+              label={label}
+              variant={customer.status === "active" ? "success" : "warning"}
+            />
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: tCommon("fields.actions"),
+        className: "w-[100px]",
+        sticky: "right",
+        isAction: true,
+        cell: (_value: unknown, customer: CustomerListItemResponse) => (
+          <TableActionGroup>
+            <TableAction
+              icon={<IconEye size={15} />}
+              label={t("quickView")}
+              onClick={() => setQuickViewCustomer(customer)}
+            />
+            <TableAction
+              icon={<IconEdit size={15} />}
+              label={tCommon("actions.edit")}
+              href={`/${locale}/customers/${customer.id}`}
+            />
+          </TableActionGroup>
+        ),
+      },
+    ],
+    [locale, t, tCommon]
+  );
+
+  const isZeroCustomers =
+    !isLoading &&
+    !isError &&
+    totalItems === 0 &&
+    !listState.params.search &&
+    !listState.params.filters.status &&
+    !listState.params.filters.type;
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Top Header & Actions */}
-      <div className="flex justify-between items-start flex-wrap gap-4 border-b border-erp-border pb-5">
-        <div>
-          <h1 className="text-2xl font-bold text-erp-navy mb-1 tracking-tight">
-            {t("title")}
-          </h1>
-          <p className="text-sm text-erp-text-muted m-0">
-            {t("subtitle")}
-          </p>
+    <div className="flex flex-col gap-5">
+      {/* 2-Tier Architectural Page Header */}
+      <PageHeader
+        title={t("title")}
+        subtitle={t("subtitle")}
+        actions={
+          canCreate ? (
+            <Button
+              href={`/${locale}/customers/create`}
+              variant="primary"
+              size="md"
+              icon={<IconPlus size={16} />}
+              className="min-h-[40px] font-semibold"
+            >
+              {t("createCustomer")}
+            </Button>
+          ) : undefined
+        }
+      />
+
+      {/* Advanced List Toolbar */}
+      <ListToolbar
+        activeFilters={
+          <ActiveFilterChips
+            filters={activeChips}
+            onRemove={handleRemoveChip}
+            onClear={handleClearAllFilters}
+          />
+        }
+      >
+        {/* Search & Filters Group */}
+        <div className="flex flex-wrap items-end gap-3">
+          {/* Search Input with Reusable ListSearchInput */}
+          <ListSearchInput
+            id="customer-search-input"
+            label={t("searchLabel")}
+            value={listState.draftSearch}
+            isDebouncing={listState.isDebouncing}
+            placeholder={t("searchPlaceholder")}
+            onChange={(val) => listState.actions.setSearch(val)}
+            onClear={() => listState.actions.setSearch("", true)}
+            onSubmit={(val) => listState.actions.setSearch(val, true)}
+            widthClassName="w-full sm:w-72"
+          />
+
+          {/* Status Filter */}
+          <ListFilterSelect
+            id="filter-status-select"
+            label={t("statusFilterLabel")}
+            value={listState.params.filters.status || ""}
+            onChange={(val) => listState.actions.setFilter("status", val || undefined)}
+            options={[
+              { value: "active", label: tCommon("status.active") },
+              { value: "draft", label: tCommon("status.draft") },
+            ]}
+            widthClassName="w-full sm:w-40"
+          />
+
+          {/* Customer Type Filter */}
+          <ListFilterSelect
+            id="filter-type-select"
+            label={t("typeFilterLabel")}
+            value={listState.params.filters.type || ""}
+            onChange={(val) => listState.actions.setFilter("type", val || undefined)}
+            options={[
+              { value: "organization", label: t("organization") },
+              { value: "person", label: t("person") },
+            ]}
+            widthClassName="w-full sm:w-44"
+          />
         </div>
 
-        {canCreate && (
+        {/* Export CSV Button (Aligned to bottom edge of inputs) */}
+        <div className="flex items-end self-end">
           <Button
-            href={`/${locale}/customers/create`}
-            variant="primary"
-            size="md"
-            icon={<IconPlus size={16} />}
-            className="min-h-[44px]"
-          >
-            {t("createCustomer")}
-          </Button>
-        )}
-      </div>
-
-      {/* Filter / Search Toolbar */}
-      <div className="erp-card p-4 bg-erp-surface flex items-center gap-4">
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex gap-2 flex-1 items-center"
-        >
-          <div className="flex-1">
-            <Input
-              id="customer-search-input"
-              type="search"
-              placeholder={t("searchPlaceholder")}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              leftIcon={<IconSearch size={16} />}
-              aria-label={t("searchPlaceholder")}
-            />
-          </div>
-          <Button
-            type="submit"
+            type="button"
             variant="outline"
-            size="md"
-            className="min-h-[44px]"
+            size="sm"
+            onClick={exportAll}
+            isLoading={isExporting}
+            disabled={totalItems === 0}
+            icon={<IconDownload size={15} />}
+            className="h-10 text-xs font-medium min-h-[40px]"
           >
-            {tCommon("actions.search")}
+            {t("exportCsv")}
           </Button>
-        </form>
-      </div>
+        </div>
+      </ListToolbar>
 
       {/* Main Content Area */}
-      {isLoading ? (
-        <div className="flex items-center justify-center min-h-[300px] bg-erp-surface border border-erp-border">
-          <MonoSpinner size="lg" label={tCommon("states.loading")} aria-busy="true" />
-        </div>
-      ) : isError ? (
+      {isError ? (
         <div
           role="alert"
           aria-live="polite"
           className="erp-card p-8 border-erp-danger-border bg-erp-danger-bg text-center flex flex-col items-center gap-4"
         >
           <IconAlertCircle size={32} className="text-erp-danger" />
-          <div>
-            <h2 className="text-lg font-bold text-erp-danger mb-2">
-              {resolveListErrorMessage(error)}
-            </h2>
-          </div>
+          <h2 className="text-base font-bold text-erp-danger">
+            {resolveListErrorMessage(error)}
+          </h2>
           <Button
             variant="outline"
             size="md"
             onClick={() => refetch()}
-            className="min-h-[44px]"
+            className="min-h-[40px]"
           >
             {tCommon("actions.retry")}
           </Button>
         </div>
-      ) : allCustomers.length === 0 ? (
-        <div className="erp-card py-12 px-6 text-center flex flex-col items-center gap-4">
-          <div className="w-12 h-12 flex items-center justify-center bg-erp-surface-muted border border-erp-border text-erp-text-muted">
-            <IconFileText size={24} />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-erp-navy mb-1">
-              {t("emptyTitle")}
-            </h3>
-            <p className="text-sm text-erp-text-muted m-0">
-              {t("emptyDetail")}
-            </p>
-          </div>
-          {canCreate && (
-            <Button
-              href={`/${locale}/customers/create`}
-              variant="primary"
-              size="md"
-              icon={<IconPlus size={16} />}
-              className="min-h-[44px] mt-2"
-            >
-              {t("createCustomer")}
-            </Button>
-          )}
-        </div>
+      ) : isZeroCustomers ? (
+        <EmptyState
+          icon="empty"
+          title={t("emptyTitle")}
+          description={t("emptyDetail")}
+          actionLabel={canCreate ? t("createCustomer") : undefined}
+          onAction={canCreate ? () => router.push(`/${locale}/customers/create`) : undefined}
+        />
       ) : (
         <div className="flex flex-col gap-4">
-          {/* Dense Architectural Table */}
-          <div
-            tabIndex={0}
-            aria-label={t("customerList")}
-            className="overflow-x-auto border border-erp-border bg-erp-surface"
-          >
-            <table className="erp-table w-full border-collapse text-sm text-left">
-              <thead>
-                <tr className="bg-erp-surface-muted border-b border-erp-border text-erp-navy font-bold">
-                  <th className="px-4 py-3 min-w-[120px]">{t("code")}</th>
-                  <th className="px-4 py-3 min-w-[200px]">{tCommon("fields.name")}</th>
-                  <th className="px-4 py-3 min-w-[140px]">{t("customerType")}</th>
-                  <th className="px-4 py-3 min-w-[220px]">{t("primaryContact")}</th>
-                  <th className="px-4 py-3 min-w-[100px]">{t("status")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allCustomers.map((customer) => {
-                  const customerName =
-                    locale === "en" && customer.displayNameEn
-                      ? customer.displayNameEn
-                      : customer.displayNameTh || customer.displayNameEn || "-";
+          {/* Dense Architectural DataTable with Lock-Scroll Action Column & Full Pagination Footer */}
+          <DataTable<CustomerListItemResponse>
+            columns={columns}
+            data={customers}
+            isLoading={isLoading}
+            selectable={true}
+            selectedIds={selectedIds}
+            onSelect={(id) => toggleSelection(id)}
+            onSelectAll={(ids) => selectAll(ids)}
+            sorting={{
+              key: listState.params.sort || null,
+              order: listState.params.order,
+            }}
+            onSort={(key) => listState.actions.setSort(key)}
+            pagination={{
+              page: listState.params.page,
+              limit: listState.params.limit,
+              totalPages,
+              totalItems,
+            }}
+            onPageChange={(p) => listState.actions.setPage(p)}
+            onLimitChange={(lim) => listState.actions.setLimit(lim as ListPageSize)}
+            stickyActionColumn={true}
+            className="shadow-sm rounded-none border border-erp-border bg-erp-surface"
+          />
 
-                  const contact = customer.primaryContact;
-                  const contactDetails = [
-                    contact?.name,
-                    contact?.phone ? `${t("telLabel")}: ${contact.phone}` : null,
-                    contact?.email ? `${t("emailLabel")}: ${contact.email}` : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" • ");
-
-                  return (
-                    <tr
-                      key={customer.id}
-                      className="erp-table-row border-b border-erp-border-subtle cursor-pointer"
-                    >
-                      <td className="px-4 py-3 font-mono font-semibold">
-                        <Link
-                          href={`/${locale}/customers/${customer.id}`}
-                          className="text-erp-navy no-underline block hover:underline"
-                        >
-                          {customer.code || "-"}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 font-semibold">
-                        <Link
-                          href={`/${locale}/customers/${customer.id}`}
-                          className="text-erp-text-main no-underline block hover:underline"
-                        >
-                          {customerName}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="erp-badge erp-badge-neutral">
-                          {resolveCustomerTypeLabel(customer.customerType)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-erp-text-muted text-[0.8125rem]">
-                        {contactDetails || "-"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`erp-badge ${
-                            customer.status === "active" ? "erp-badge-success" : "erp-badge-neutral"
-                          }`}
-                        >
-                          {resolveCustomerStatusLabel(customer.status)}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Keyset Cursor Pagination Button */}
-          {hasNextPage && (
-            <div className="flex justify-center mt-2">
-              <Button
-                variant="outline"
-                size="md"
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="min-h-[44px] min-w-[160px]"
-              >
-                {isFetchingNextPage ? t("loadingMore") : t("loadMore")}
-              </Button>
-            </div>
-          )}
+          {/* Floating Bulk Action Toolbar */}
+          <BulkActionToolbar selectedCount={selectedCount} onClear={clearSelection}>
+            <BulkActionButton
+              icon={<IconDownload size={15} />}
+              label={t("exportSelected", { count: selectedCount })}
+              onClick={exportSelected}
+              showLabel={true}
+              variant="default"
+            />
+          </BulkActionToolbar>
         </div>
       )}
+
+      {/* Quick View Drawer */}
+      <CustomerQuickViewDrawer
+        customer={quickViewCustomer}
+        isOpen={Boolean(quickViewCustomer)}
+        onClose={() => setQuickViewCustomer(null)}
+      />
     </div>
   );
 }
+

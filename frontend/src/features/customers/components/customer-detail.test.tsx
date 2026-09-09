@@ -108,8 +108,8 @@ describe("CustomerDetail canonical labels", () => {
   it("renders organization draft with Thai labels", () => {
     renderCustomerDetail(client, "customer-1");
 
-    expect(screen.getByText("นิติบุคคล")).toBeDefined();
-    expect(screen.getByText("ฉบับร่าง")).toBeDefined();
+    expect(screen.getAllByText("นิติบุคคล").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("ฉบับร่าง").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("โทรศัพท์ (Phone)")).toBeDefined();
     expect(screen.getByText("การแนะนำต่อ (Referral)")).toBeDefined();
     expect(screen.getByText("line_mock_id")).toBeDefined();

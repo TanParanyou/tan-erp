@@ -60,7 +60,7 @@ export function OpportunityEditor() {
     status: "active",
     limit: 100,
   });
-  const customerList = customerData?.pages.flatMap((p) => p.items ?? []) ?? [];
+  const customerList = customerData?.items ?? [];
 
   // Load Customer Sites for the selected customer
   const { data: siteData } = useCustomerSiteList(selectedCustomerId || undefined);

@@ -7,7 +7,9 @@ import thMessages from "@/messages/th.json";
 import { CustomerList } from "./customer-list";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/th/customers",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/lib/membership/selected-membership-context", () => ({
@@ -59,16 +61,17 @@ const personActiveCustomer = {
 vi.mock("../api/customer-queries", () => ({
   useCustomerList: () => ({
     data: {
-      pages: [{ items: [organizationDraftCustomer, personActiveCustomer], nextCursor: null }],
-      pageParams: [undefined],
+      items: [organizationDraftCustomer, personActiveCustomer],
+      totalCount: 2,
+      page: 1,
+      pageSize: 25,
+      totalPages: 1,
+      nextCursor: null,
     },
     isLoading: false,
     isError: false,
     error: null,
     refetch: vi.fn(),
-    fetchNextPage: vi.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
   }),
 }));
 
@@ -88,8 +91,8 @@ describe("CustomerList canonical labels", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText("นิติบุคคล")).toBeDefined();
-    expect(screen.getByText("ฉบับร่าง")).toBeDefined();
+    expect(screen.getAllByText("นิติบุคคล").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("ฉบับร่าง").length).toBeGreaterThan(0);
   });
 
   it("renders person active distinctly from organization draft", () => {
@@ -101,7 +104,7 @@ describe("CustomerList canonical labels", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText("บุคคลธรรมดา")).toBeDefined();
-    expect(screen.getByText("ใช้งานอยู่")).toBeDefined();
+    expect(screen.getAllByText("บุคคลธรรมดา").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("ใช้งานอยู่").length).toBeGreaterThan(0);
   });
 });

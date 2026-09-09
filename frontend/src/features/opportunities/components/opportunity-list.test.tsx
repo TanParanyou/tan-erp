@@ -10,7 +10,9 @@ import * as membershipContext from "@/lib/membership/selected-membership-context
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/th/opportunities",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 describe("OpportunityList Component", () => {

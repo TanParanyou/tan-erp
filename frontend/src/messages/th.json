@@ -153,9 +153,13 @@
       "selectAll": "เลือกทั้งหมดในหน้านี้",
       "selectRow": "เลือกรายการแถวที่",
       "emptyTable": "ไม่มีรายการข้อมูลแสดงในตาราง",
+      "noData": "ไม่พบข้อมูล",
       "to": "ถึง",
       "entries": "รายการ",
-      "noEntries": "ไม่มีรายการ"
+      "noEntries": "ไม่มีรายการ",
+      "sortAscending": "เรียงจากน้อยไปมาก (คลิกเพื่อสลับ)",
+      "sortDescending": "เรียงจากมากไปน้อย (คลิกเพื่อสลับ)",
+      "sortNone": "คลิกเพื่อจัดเรียงข้อมูล"
     },
     "fields": {
       "code": "รหัส",
@@ -171,6 +175,12 @@
       "attachment": "เอกสารแนบ",
       "date": "วันที่"
     },
+    "filters": {
+      "activeFiltersLabel": "ตัวกรองที่เลือก",
+      "clearAll": "ล้างตัวกรองทั้งหมด",
+      "removeFilter": "ลบตัวกรอง",
+      "all": "ทั้งหมด"
+    },
     "states": {
       "loading": "กำลังโหลดข้อมูล...",
       "processing": "กำลังประมวลผล...",
@@ -184,6 +194,10 @@
       "autoLogoutIn": "จะออกจากระบบโดยอัตโนมัติในอีก {seconds} วินาที",
       "logoutNow": "ออกจากระบบทันที",
       "stayLoggedIn": "ใช้งานต่อ"
+    },
+    "errors": {
+      "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
+      "accessDeniedDetail": "คุณไม่มีสิทธิ์เข้าถึงข้อมูลหรือดำเนินการในส่วนนี้สำหรับองค์กรที่เลือก"
     }
   },
   "customers": {
@@ -262,7 +276,16 @@
     "roleTitlePlaceholder": "เช่น ผู้จัดการฝ่ายจัดซื้อ",
     "phonePlaceholder": "เช่น 081-234-5678",
     "emailPlaceholder": "เช่น contact@example.com",
-    "lineIdPlaceholder": "เช่น @company หรือ somchai"
+    "lineIdPlaceholder": "เช่น @company หรือ somchai",
+    "searchLabel": "ค้นหาลูกค้า",
+    "statusFilterLabel": "สถานะลูกค้า",
+    "typeFilterLabel": "ประเภทลูกค้า",
+    "quickView": "ดูตัวอย่างข้อมูล",
+    "quickViewTitle": "ข้อมูลสรุปของลูกค้า",
+    "viewFullDetail": "ดูรายละเอียดแบบเต็ม",
+    "generalInfo": "ข้อมูลทั่วไป",
+    "exportCsv": "ส่งออก CSV",
+    "exportSelected": "ส่งออกที่เลือก ({count})"
   },
   "sites": {
     "title": "สถานที่ตั้ง (Sites)",
@@ -354,6 +377,7 @@
     "saveSuccess": "บันทึกโอกาสทางการขายเรียบร้อยแล้ว",
     "createdAt": "วันที่สร้าง",
     "code": "รหัสโอกาสทางการขาย",
+    "exportCsv": "ส่งออก CSV",
     "loadMore": "โหลดเพิ่มเติม",
     "loadingMore": "กำลังโหลดเพิ่มเติม...",
     "errors": {

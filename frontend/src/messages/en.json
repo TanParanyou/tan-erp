@@ -153,9 +153,13 @@
       "selectAll": "Select all on this page",
       "selectRow": "Select row",
       "emptyTable": "No records to display",
+      "noData": "No data found",
       "to": "to",
       "entries": "entries",
-      "noEntries": "No entries"
+      "noEntries": "No entries",
+      "sortAscending": "Sorted ascending (click to toggle)",
+      "sortDescending": "Sorted descending (click to toggle)",
+      "sortNone": "Click to sort"
     },
     "fields": {
       "code": "Code",
@@ -171,6 +175,12 @@
       "attachment": "Attachment",
       "date": "Date"
     },
+    "filters": {
+      "activeFiltersLabel": "Active Filters",
+      "clearAll": "Clear All",
+      "removeFilter": "Remove filter",
+      "all": "All"
+    },
     "states": {
       "loading": "Loading data...",
       "processing": "Processing...",
@@ -184,6 +194,10 @@
       "autoLogoutIn": "Automatic logout in {seconds} seconds",
       "logoutNow": "Log Out Now",
       "stayLoggedIn": "Stay Logged In"
+    },
+    "errors": {
+      "accessDeniedTitle": "Access Denied",
+      "accessDeniedDetail": "You do not have permission to access this resource or perform this action in this organization."
     }
   },
   "customers": {
@@ -262,7 +276,16 @@
     "roleTitlePlaceholder": "e.g., Procurement Manager",
     "phonePlaceholder": "e.g., 081-234-5678",
     "emailPlaceholder": "e.g., contact@example.com",
-    "lineIdPlaceholder": "e.g., @company or somchai"
+    "lineIdPlaceholder": "e.g., @company or somchai",
+    "searchLabel": "Search Customers",
+    "statusFilterLabel": "Customer Status",
+    "typeFilterLabel": "Customer Type",
+    "quickView": "Quick View",
+    "quickViewTitle": "Customer Summary",
+    "viewFullDetail": "View Full Details",
+    "generalInfo": "General Information",
+    "exportCsv": "Export CSV",
+    "exportSelected": "Export Selected ({count})"
   },
   "sites": {
     "title": "Sites",
@@ -354,6 +377,7 @@
     "saveSuccess": "Opportunity saved successfully",
     "createdAt": "Created Date",
     "code": "Opportunity Code",
+    "exportCsv": "Export CSV",
     "loadMore": "Load More",
     "loadingMore": "Loading more...",
     "errors": {

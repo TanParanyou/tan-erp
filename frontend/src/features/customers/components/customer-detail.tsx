@@ -12,6 +12,9 @@ import { getContactChannelLabelKey, getCustomerLeadSourceLabelKey, getCustomerSt
 
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { SiteList } from "@/features/sites/components/site-list";
+import { EntityDetailHeader } from "@/components/ui/EntityDetailHeader";
+import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { apiClient } from "@/lib/api/api-client";
@@ -160,48 +163,67 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   const canActivate = customer.status === "draft" && can(selectedMembership, "customers.activate");
 
   return (
-    <div className="flex flex-col gap-6 max-w-[800px]">
-      {/* Top Header & Back link */}
-      <div className="flex flex-col gap-3 border-b border-erp-border pb-5">
-        <Link
-          href={`/${locale}/customers`}
-          className="inline-flex items-center gap-1 text-erp-navy no-underline text-sm font-semibold hover:underline"
-        >
-          <IconChevronLeft size={16} />
-          <span>{t("backToList")}</span>
-        </Link>
-
-        <div className="flex justify-between items-center flex-wrap gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-erp-navy m-0">
-                {displayName}
-              </h1>
-              <span
-                className={`erp-badge ${
-                  customer.status === "active" ? "erp-badge-success" : "erp-badge-neutral"
-                }`}
-              >
-                {resolveCustomerStatusLabel(customer.status)}
-              </span>
-            </div>
-            <span className="font-mono text-erp-text-muted text-sm">
-              {customer.code}
-            </span>
-          </div>
-
-          {canActivate && (
+    <div className="w-full flex flex-col gap-6">
+      {/* Entity Detail Hero Header */}
+      <EntityDetailHeader
+        backLabel={t("backToList")}
+        backHref={`/${locale}/customers`}
+        code={customer.code}
+        title={displayName}
+        subtitle={
+          customer.displayNameEn && customer.displayNameTh && locale === "th"
+            ? customer.displayNameEn
+            : undefined
+        }
+        avatar={
+          <Avatar
+            initial={customer.displayNameTh || customer.displayNameEn || undefined}
+            variant={customer.customerType === "organization" ? "navy" : "muted"}
+            size="lg"
+            title={resolveCustomerTypeLabel(customer.customerType)}
+          />
+        }
+        statusBadge={
+          <Badge
+            variant={customer.status === "active" ? "success" : "neutral"}
+            size="md"
+          >
+            {resolveCustomerStatusLabel(customer.status)}
+          </Badge>
+        }
+        badges={[
+          <Badge key="type" variant="outline" size="sm">
+            {resolveCustomerTypeLabel(customer.customerType)}
+          </Badge>,
+        ]}
+        metrics={[
+          {
+            label: t("primaryContact"),
+            value: contact?.name || "-",
+          },
+          {
+            label: t("phone"),
+            value: contact?.phone || "-",
+            isMono: true,
+          },
+          {
+            label: t("email"),
+            value: contact?.email || "-",
+          },
+        ]}
+        actions={
+          canActivate ? (
             <Button
               variant="primary"
               size="md"
               onClick={() => setShowActivateModal(true)}
-              className="min-h-[44px]"
+              className="min-h-[40px] font-semibold"
             >
               {t("activateAction")}
             </Button>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
 
       <ConfirmationModal
         isOpen={showActivateModal}

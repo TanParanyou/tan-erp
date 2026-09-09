@@ -27,7 +27,9 @@ import { CustomerList } from "./customer-list";
 import { CustomerDetail } from "./customer-detail";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/th/customers",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/lib/membership/selected-membership-context", () => ({

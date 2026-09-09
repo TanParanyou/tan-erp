@@ -1,27 +1,58 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useOpportunityList } from "../api/opportunity-queries";
-import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
-import { IconSearch, IconPlus, IconAlertCircle, IconBriefcase } from "@/components/common/Icons";
+import { ListToolbar } from "@/components/ui/ListToolbar";
+import { ListSearchInput } from "@/components/ui/ListSearchInput";
+import { ListFilterSelect } from "@/components/ui/ListFilterSelect";
+import { TableEntityCell } from "@/components/ui/TableEntityCell";
+import { Badge } from "@/components/ui/Badge";
+import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
+import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import {
+  IconSearch,
+  IconPlus,
+  IconAlertCircle,
+  IconBriefcase,
+  IconEye,
+  IconDownload,
+} from "@/components/common/Icons";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { getOpportunityStageLabelKey, CANONICAL_OPPORTUNITY_STAGES } from "../opportunity-labels";
+import { useListState, type ListFilterRecord } from "@/hooks/useListState";
+import { useCsvExport } from "@/hooks/useCsvExport";
+import type { CsvColumn } from "@/lib/export/export-csv";
+import { apiClient, type OpportunityResponse } from "@/lib/api/api-client";
+import { getAuthToken } from "@/lib/auth/auth-session";
+
+interface OpportunityFilters extends ListFilterRecord {
+  stage?: string;
+}
 
 export function OpportunityList() {
   const t = useTranslations("opportunities");
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const router = useRouter();
   const { selectedMembership } = useSelectedMembership();
 
-  const [searchInput, setSearchInput] = useState("");
-  const [activeSearch, setActiveSearch] = useState("");
-  const [stageFilter, setStageFilter] = useState<string>("");
+  const listState = useListState<OpportunityFilters>({
+    schema: {
+      defaultSort: "code",
+      defaultOrder: "desc",
+      single: ["stage"],
+      allowedSorts: ["code", "title", "expectedBudget", "stage"],
+    },
+    debounceMs: 350,
+  });
 
   const canCreate = can(selectedMembership, "opportunities.create");
 
@@ -46,6 +77,25 @@ export function OpportunityList() {
     }
   };
 
+  const resolveStageVariant = (stage: string | null | undefined): "neutral" | "primary" | "success" | "warning" | "danger" | "info" => {
+    const key = getOpportunityStageLabelKey(stage);
+    switch (key) {
+      case "draft":
+        return "neutral";
+      case "qualified":
+        return "info";
+      case "estimation":
+      case "proposal":
+        return "warning";
+      case "won":
+        return "success";
+      case "lost":
+        return "danger";
+      default:
+        return "neutral";
+    }
+  };
+
   const resolveListErrorMessage = (error: Error | null): string => {
     if (error?.message === "No authentication token available") {
       return tCommon("feedback.operationFailed");
@@ -66,146 +116,207 @@ export function OpportunityList() {
     hasNextPage,
     isFetchingNextPage,
   } = useOpportunityList({
-    search: activeSearch || undefined,
-    stage: stageFilter || undefined,
+    search: listState.params.search || undefined,
+    stage: listState.params.filters.stage || undefined,
   });
 
-  const handleSearchSubmit = (e: React.FormEvent): void => {
-    e.preventDefault();
-    setActiveSearch(searchInput.trim());
-  };
+  const allItems = useMemo(
+    () => data?.pages.flatMap((page) => page.items ?? []) ?? [],
+    [data]
+  );
 
-  const handleClearSearch = (): void => {
-    setSearchInput("");
-    setActiveSearch("");
-  };
+  const csvColumns = useMemo<CsvColumn<OpportunityResponse>[]>(
+    () => [
+      { header: t("code"), accessor: (o) => o.code ?? o.id },
+      { header: t("titleField"), accessor: (o) => o.title || "" },
+      { header: t("stage"), accessor: (o) => resolveStageLabel(o.stage) },
+      { header: t("expectedBudget"), accessor: (o) => o.expectedBudget ?? "" },
+      { header: t("currencyCode"), accessor: (o) => o.currencyCode ?? "THB" },
+      { header: t("targetDecisionDate"), accessor: (o) => o.targetDecisionDate ?? "" },
+      { header: t("scopeSummary"), accessor: (o) => o.scopeSummary ?? "" },
+    ],
+    [t]
+  );
 
-  const allItems = data?.pages.flatMap((page) => page.items ?? []) ?? [];
+  const { exportAll, isExporting } = useCsvExport<OpportunityResponse>({
+    filename: "opportunities",
+    columns: csvColumns,
+    data: allItems,
+    fetchAll: async () => {
+      const token = await getAuthToken();
+      if (!token || !selectedMembership?.id) return allItems;
+      const res = await apiClient.listOpportunities(
+        {
+          token,
+          membershipId: selectedMembership.id,
+          locale: locale === "en" ? "en" : "th",
+        },
+        {
+          search: listState.params.search || undefined,
+          stage: listState.params.filters.stage || undefined,
+          limit: 1000,
+        }
+      );
+      return res.items ?? [];
+    },
+  });
+
+  const columns = useMemo<Column<OpportunityResponse>[]>(
+    () => [
+      {
+        id: "code",
+        header: `${t("titleField")} / ${t("code")}`,
+        sortable: true,
+        accessorKey: "code",
+        cell: (_value, opp) => (
+          <TableEntityCell
+            title={opp.title || "-"}
+            code={opp.code ?? opp.id}
+            subtitle={opp.scopeSummary}
+            href={`/${locale}/opportunities/${opp.id}`}
+          />
+        ),
+      },
+      {
+        id: "stage",
+        header: t("stage"),
+        sortable: true,
+        accessorKey: "stage",
+        cell: (_value, opp) => (
+          <Badge variant={resolveStageVariant(opp.stage)}>
+            {resolveStageLabel(opp.stage)}
+          </Badge>
+        ),
+      },
+      {
+        id: "expectedBudget",
+        header: t("expectedBudget"),
+        align: "right",
+        sortable: true,
+        accessorKey: "expectedBudget",
+        cell: (_value, opp) => (
+          <span className="font-mono text-xs text-erp-text font-medium">
+            {opp.expectedBudget !== null && opp.expectedBudget !== undefined
+              ? `${opp.expectedBudget.toLocaleString()} ${opp.currencyCode ?? "THB"}`
+              : "-"}
+          </span>
+        ),
+      },
+      {
+        id: "nextActionAt",
+        header: t("nextActionAt"),
+        cell: (_value, opp) => (
+          <div className="flex flex-col text-xs">
+            {opp.nextActionAtUtc ? (
+              <>
+                <span className="text-erp-text">
+                  {new Date(opp.nextActionAtUtc).toLocaleDateString(locale === "th" ? "th-TH" : "en-US")}
+                </span>
+                {opp.nextActionNote && (
+                  <span className="text-[11px] text-erp-text-muted mt-0.5">{opp.nextActionNote}</span>
+                )}
+              </>
+            ) : (
+              <span className="text-erp-text-muted">-</span>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: tCommon("actions.view"),
+        align: "right",
+        cell: (_value, opp) => (
+          <TableActionGroup>
+            <TableAction
+              label={tCommon("actions.view")}
+              href={`/${locale}/opportunities/${opp.id}`}
+              icon={<IconEye size={15} strokeWidth={2} />}
+            />
+          </TableActionGroup>
+        ),
+      },
+    ],
+    [locale, t, tCommon]
+  );
+
+  const isZeroOpportunities =
+    !isLoading &&
+    !isError &&
+    allItems.length === 0 &&
+    !listState.params.search &&
+    !listState.params.filters.stage;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Header bar */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-          gap: "1rem",
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 700,
-              color: "var(--erp-navy)",
-              margin: "0 0 0.25rem 0",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {t("title")}
-          </h1>
-          <p style={{ color: "var(--erp-text-muted)", margin: 0, fontSize: "0.875rem" }}>
-            {t("subtitle")}
-          </p>
-        </div>
-
-        {canCreate && (
-          <Link
-            href={`/${locale}/opportunities/create`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              backgroundColor: "var(--erp-navy)",
-              color: "#FFFFFF",
-              padding: "0.5rem 1rem",
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              textDecoration: "none",
-              border: "1px solid var(--erp-navy)",
-              minHeight: "44px",
-            }}
-          >
-            <IconPlus size={18} />
-            <span>{t("createOpportunity")}</span>
-          </Link>
-        )}
-      </div>
-
-      {/* Filter and search bar */}
-      <div
-        className="erp-card"
-        style={{
-          padding: "1rem",
-          display: "flex",
-          gap: "1rem",
-          flexWrap: "wrap",
-          alignItems: "flex-end",
-        }}
-      >
-        <form
-          onSubmit={handleSearchSubmit}
-          style={{ display: "flex", gap: "0.5rem", flex: "1 1 300px", alignItems: "flex-end" }}
-        >
-          <div style={{ flex: 1 }}>
-            <Input
-              name="search"
-              label={tCommon("actions.search")}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={t("searchPlaceholder")}
-            />
-          </div>
-          <Button
-            type="submit"
-            variant="primary"
-            style={{ minHeight: "44px", padding: "0 1rem" }}
-            aria-label={tCommon("actions.search")}
-          >
-            <IconSearch size={18} />
-          </Button>
-          {activeSearch && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClearSearch}
-              style={{ minHeight: "44px" }}
+    <div className="flex flex-col gap-5">
+      {/* 2-Tier Architectural Page Header */}
+      <PageHeader
+        title={t("title")}
+        subtitle={t("subtitle")}
+        actions={
+          canCreate ? (
+            <Link
+              href={`/${locale}/opportunities/create`}
+              className="inline-flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-erp-navy hover:bg-erp-navy-hover transition-colors rounded-none focus:outline-none focus:ring-2 focus:ring-erp-navy focus:ring-offset-1"
             >
-              {tCommon("actions.clear")}
-            </Button>
-          )}
-        </form>
+              <IconPlus size={16} strokeWidth={2.5} />
+              <span>{t("createOpportunity")}</span>
+            </Link>
+          ) : undefined
+        }
+      />
 
-        <div style={{ flex: "0 1 200px" }}>
-          <Select
-            name="stageFilter"
+      {/* List Toolbar with Search and Stage Filter */}
+      <ListToolbar>
+        <ListSearchInput
+          id="opportunity-search-input"
+          value={listState.draftSearch}
+          onChange={(val) => listState.actions.setSearch(val)}
+          onClear={() => listState.actions.setSearch("", true)}
+          onSubmit={(val) => listState.actions.setSearch(val, true)}
+          placeholder={t("searchPlaceholder")}
+          isDebouncing={listState.isDebouncing}
+          label={tCommon("actions.search")}
+          widthClassName="w-full md:w-72"
+        />
+
+        <div className="flex flex-wrap items-end gap-3 flex-1">
+          <ListFilterSelect
+            id="filter-stage-select"
             label={t("stage")}
-            value={stageFilter}
-            onChange={(e) => setStageFilter(e.target.value)}
-            options={[
-              { value: "", label: t("stageAll") },
-              ...CANONICAL_OPPORTUNITY_STAGES.map((s) => ({
-                value: s,
-                label: resolveStageLabel(s),
-              })),
-            ]}
+            value={listState.params.filters.stage || ""}
+            onChange={(val) => listState.actions.setFilter("stage", val || undefined)}
+            options={CANONICAL_OPPORTUNITY_STAGES.map((s) => ({
+              value: s,
+              label: resolveStageLabel(s),
+            }))}
+            widthClassName="w-48"
           />
         </div>
-      </div>
+
+        {/* Export CSV Button (Aligned to bottom edge of inputs) */}
+        <div className="flex items-end self-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={exportAll}
+            isLoading={isExporting}
+            disabled={allItems.length === 0}
+            icon={<IconDownload size={15} />}
+            className="h-10 text-xs font-medium min-h-[40px]"
+          >
+            {t("exportCsv")}
+          </Button>
+        </div>
+      </ListToolbar>
 
       {/* Loading state: Minimal mono spinner */}
       {isLoading && (
         <div
           role="status"
           aria-live="polite"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "4rem 0",
-          }}
+          className="flex justify-center items-center py-16"
         >
           <MonoSpinner size="lg" />
         </div>
@@ -216,19 +327,10 @@ export function OpportunityList() {
         <div
           role="alert"
           aria-live="polite"
-          className="erp-card"
-          style={{
-            padding: "1.5rem",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "0.75rem",
-            borderColor: "var(--erp-border-danger)",
-            backgroundColor: "var(--erp-bg-danger-light)",
-          }}
+          className="erp-card p-6 flex flex-col items-center gap-3 border-erp-border-danger bg-erp-bg-danger-light"
         >
           <IconAlertCircle size={32} />
-          <p style={{ color: "var(--erp-danger)", fontWeight: 600, margin: 0, textAlign: "center" }}>
+          <p className="text-erp-danger font-semibold text-center m-0">
             {resolveListErrorMessage(error)}
           </p>
           <Button type="button" variant="outline" onClick={() => refetch()} style={{ minHeight: "44px" }}>
@@ -237,175 +339,66 @@ export function OpportunityList() {
         </div>
       )}
 
-      {/* Empty state */}
-      {!isLoading && !isError && allItems.length === 0 && (
-        <div
-          className="erp-card"
-          style={{
-            padding: "3rem 1.5rem",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "0.75rem",
-            textAlign: "center",
-          }}
-        >
-          <IconBriefcase size={40} />
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, margin: 0, color: "var(--erp-navy)" }}>
-            {t("emptyTitle")}
-          </h2>
-          <p style={{ color: "var(--erp-text-muted)", margin: 0, fontSize: "0.875rem", maxWidth: "360px" }}>
-            {t("emptyDetail")}
-          </p>
-          {canCreate && (
-            <Link
-              href={`/${locale}/opportunities/create`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                backgroundColor: "var(--erp-navy)",
-                color: "#FFFFFF",
-                padding: "0.5rem 1rem",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                textDecoration: "none",
-                marginTop: "0.5rem",
-                minHeight: "44px",
-              }}
-            >
-              <IconPlus size={18} />
-              <span>{t("createFirstCta")}</span>
-            </Link>
-          )}
+      {/* Zero opportunities: Empty State */}
+      {isZeroOpportunities && (
+        <EmptyState
+          icon="empty"
+          title={t("emptyTitle")}
+          description={t("emptyDetail")}
+          actionLabel={canCreate ? t("createOpportunity") : undefined}
+          onAction={canCreate ? () => router.push(`/${locale}/opportunities/create`) : undefined}
+        />
+      )}
+
+      {/* Filtered empty state (Search/Filter produced no records) */}
+      {!isLoading && !isError && allItems.length === 0 && !isZeroOpportunities && (
+        <div className="erp-card p-12 flex flex-col items-center justify-center text-center gap-3">
+          <div className="w-10 h-10 flex items-center justify-center bg-erp-surface-secondary text-erp-text-muted rounded-none border border-erp-border">
+            <IconSearch size={20} strokeWidth={1.5} />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-erp-text">{tCommon("table.noData")}</h3>
+            <p className="text-xs text-erp-text-muted">{t("searchPlaceholder")}</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              listState.actions.setSearch("", true);
+              listState.actions.clearFilters();
+            }}
+            className="mt-2 text-xs"
+          >
+            {tCommon("actions.clear")}
+          </Button>
         </div>
       )}
 
-      {/* Opportunity Data Table / List */}
+      {/* Opportunity Data Table with Sticky Actions */}
       {!isLoading && !isError && allItems.length > 0 && (
-        <div className="erp-card" style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
-            <table
-              className="erp-table"
-              style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}
-            >
-              <thead>
-                <tr style={{ backgroundColor: "var(--erp-table-header-bg)", borderBottom: "1px solid var(--erp-border)" }}>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontWeight: 700, color: "var(--erp-navy)" }}>
-                    {t("code")}
-                  </th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontWeight: 700, color: "var(--erp-navy)" }}>
-                    {t("titleField")}
-                  </th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontWeight: 700, color: "var(--erp-navy)" }}>
-                    {t("stage")}
-                  </th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: 700, color: "var(--erp-navy)" }}>
-                    {t("expectedBudget")}
-                  </th>
-                  <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontWeight: 700, color: "var(--erp-navy)" }}>
-                    {t("nextActionAt")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {allItems.map((opp) => (
-                  <tr
-                    key={opp.id}
-                    style={{ borderBottom: "1px solid var(--erp-border-subtle)" }}
-                  >
-                    <td style={{ padding: "0.75rem 1rem", whiteSpace: "nowrap" }}>
-                      <Link
-                        href={`/${locale}/opportunities/${opp.id}`}
-                        style={{
-                          fontWeight: 600,
-                          color: "var(--erp-navy)",
-                          textDecoration: "none",
-                          display: "inline-block",
-                          minHeight: "44px",
-                          lineHeight: "44px",
-                        }}
-                      >
-                        {opp.code ?? opp.id}
-                      </Link>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem" }}>
-                      <Link
-                        href={`/${locale}/opportunities/${opp.id}`}
-                        style={{
-                          fontWeight: 600,
-                          color: "var(--erp-navy)",
-                          textDecoration: "none",
-                        }}
-                      >
-                        {opp.title}
-                      </Link>
-                      {opp.scopeSummary && (
-                        <div style={{ color: "var(--erp-text-muted)", fontSize: "0.75rem", marginTop: "0.125rem" }}>
-                          {opp.scopeSummary}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", whiteSpace: "nowrap" }}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "0.25rem 0.5rem",
-                          fontSize: "0.75rem",
-                          fontWeight: 700,
-                          border: "1px solid var(--erp-border)",
-                          backgroundColor: "var(--erp-surface)",
-                          color: "var(--erp-navy)",
-                        }}
-                      >
-                        {resolveStageLabel(opp.stage)}
-                      </span>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "right", whiteSpace: "nowrap" }}>
-                      {opp.expectedBudget !== null && opp.expectedBudget !== undefined ? (
-                        <span>
-                          {opp.expectedBudget.toLocaleString()} {opp.currencyCode ?? "THB"}
-                        </span>
-                      ) : (
-                        <span style={{ color: "var(--erp-text-muted)" }}>-</span>
-                      )}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", whiteSpace: "nowrap" }}>
-                      {opp.nextActionAtUtc ? (
-                        <div>
-                          <div>{new Date(opp.nextActionAtUtc).toLocaleDateString(locale === "th" ? "th-TH" : "en-US")}</div>
-                          {opp.nextActionNote && (
-                            <div style={{ color: "var(--erp-text-muted)", fontSize: "0.75rem" }}>
-                              {opp.nextActionNote}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span style={{ color: "var(--erp-text-muted)" }}>-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-4">
+          <DataTable<OpportunityResponse>
+            data={allItems}
+            columns={columns}
+            sorting={{
+              key: listState.params.sort || null,
+              order: listState.params.order,
+            }}
+            onSort={(key) => listState.actions.setSort(key)}
+            stickyActionColumn={true}
+          />
 
-          {/* Load more keyset pagination button */}
+          {/* Keyset Load More */}
           {hasNextPage && (
-            <div
-              style={{
-                padding: "1rem",
-                display: "flex",
-                justifyContent: "center",
-                borderTop: "1px solid var(--erp-border)",
-              }}
-            >
+            <div className="flex justify-center pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
-                style={{ minHeight: "44px", minWidth: "160px" }}
+                style={{ minHeight: "40px", minWidth: "160px" }}
+                className="text-xs font-semibold"
               >
                 {isFetchingNextPage ? <MonoSpinner size="sm" /> : t("loadMore")}
               </Button>

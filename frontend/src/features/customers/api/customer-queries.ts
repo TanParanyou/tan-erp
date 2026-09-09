@@ -8,7 +8,20 @@ export function customerListQueryKey(
   membershipId: string | null | undefined,
   locale: "th" | "en",
   params?: ListCustomersParams,
-): readonly ["business", string | null | undefined, "th" | "en", "customers", "list", string | null, string | null, number] {
+): readonly [
+  "business",
+  string | null | undefined,
+  "th" | "en",
+  "customers",
+  "list",
+  string | null,
+  string | null,
+  string | null,
+  string | null,
+  string | null,
+  number,
+  number,
+] {
   return [
     "business",
     membershipId,
@@ -17,6 +30,10 @@ export function customerListQueryKey(
     "list",
     params?.search ?? null,
     params?.status ?? null,
+    params?.customerType ?? null,
+    params?.sortBy ?? null,
+    params?.sortOrder ?? null,
+    params?.page ?? 1,
     params?.limit ?? 25,
   ] as const;
 }
@@ -31,16 +48,15 @@ export function customerDetailQueryKey(
 
 export function useCustomerList(
   params?: ListCustomersParams
-): UseInfiniteQueryResult<{ pages: CustomerListResponse[]; pageParams: (string | undefined)[] }, Error> {
+): UseQueryResult<CustomerListResponse, Error> {
   const locale = useSafeLocale();
   const normalizedLocale = locale === "en" ? "en" : "th";
   const { selectedMembership } = useSelectedMembership();
   const membershipId = selectedMembership?.id;
 
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: customerListQueryKey(membershipId, normalizedLocale, params),
-    initialPageParam: undefined as string | undefined,
-    queryFn: async ({ pageParam, signal }) => {
+    queryFn: async ({ signal }) => {
       const token = await getAuthToken();
       if (!token) {
         throw new Error("No authentication token available");
@@ -56,13 +72,9 @@ export function useCustomerList(
           locale: normalizedLocale,
           signal,
         },
-        {
-          ...params,
-          cursor: pageParam,
-        }
+        params
       );
     },
-    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
     enabled: Boolean(membershipId),
   });
 }

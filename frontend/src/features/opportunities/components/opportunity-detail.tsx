@@ -9,6 +9,9 @@ import { useCustomerSiteList } from "@/features/sites/api/site-queries";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
 import { IconChevronLeft, IconAlertCircle, IconBriefcase } from "@/components/common/Icons";
+import { EntityDetailHeader } from "@/components/ui/EntityDetailHeader";
+import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
 import { getOpportunityStageLabelKey, getWorkTypeLabelKey } from "../opportunity-labels";
 
 interface OpportunityDetailProps {
@@ -54,6 +57,27 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         return t("stageLost");
       default:
         return t("unknownStage");
+    }
+  };
+
+  const resolveStageVariant = (
+    stage: string | null | undefined
+  ): "neutral" | "primary" | "success" | "warning" | "danger" | "info" => {
+    const key = getOpportunityStageLabelKey(stage);
+    switch (key) {
+      case "draft":
+        return "neutral";
+      case "qualified":
+        return "info";
+      case "estimation":
+      case "proposal":
+        return "warning";
+      case "won":
+        return "success";
+      case "lost":
+        return "danger";
+      default:
+        return "neutral";
     }
   };
 
@@ -125,51 +149,70 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: "800px" }}>
-      {/* Header and Back Link */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", borderBottom: "1px solid var(--erp-border)", paddingBottom: "1.25rem" }}>
-        <Link
-          href={`/${locale}/opportunities`}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.25rem",
-            color: "var(--erp-navy)",
-            textDecoration: "none",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-          }}
-        >
-          <IconChevronLeft size={16} />
-          <span>{t("backToList")}</span>
-        </Link>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0 }}>
-                {opportunity.title}
-              </h1>
-              <span
-                style={{
-                  display: "inline-block",
-                  padding: "0.25rem 0.5rem",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  border: "1px solid var(--erp-border)",
-                  backgroundColor: "var(--erp-surface)",
-                  color: "var(--erp-navy)",
-                }}
-              >
-                {resolveStageLabel(opportunity.stage)}
-              </span>
-            </div>
-            <span style={{ fontFamily: "monospace", color: "var(--erp-text-muted)", fontSize: "0.875rem" }}>
-              {opportunity.code}
-            </span>
-          </div>
-        </div>
-      </div>
+    <div className="w-full flex flex-col gap-6">
+      {/* Entity Detail Hero Header */}
+      <EntityDetailHeader
+        backLabel={t("backToList")}
+        backHref={`/${locale}/opportunities`}
+        code={opportunity.code ?? opportunity.id}
+        title={opportunity.title || "-"}
+        subtitle={opportunity.scopeSummary}
+        avatar={
+          <Avatar
+            icon={<IconBriefcase size={20} />}
+            variant="navy"
+            size="lg"
+            title={opportunity.title || undefined}
+          />
+        }
+        statusBadge={
+          <Badge
+            variant={resolveStageVariant(opportunity.stage)}
+            size="md"
+          >
+            {resolveStageLabel(opportunity.stage)}
+          </Badge>
+        }
+        badges={
+          opportunity.sourceCode
+            ? [
+                <Badge key="source" variant="outline" size="sm">
+                  {opportunity.sourceCode}
+                </Badge>,
+              ]
+            : undefined
+        }
+        metrics={[
+          {
+            label: t("expectedBudget"),
+            value:
+              opportunity.expectedBudget !== null &&
+              opportunity.expectedBudget !== undefined
+                ? `${opportunity.expectedBudget.toLocaleString()} ${opportunity.currencyCode ?? "THB"}`
+                : "-",
+            isFinancial: true,
+          },
+          {
+            label: t("customer"),
+            value: customer
+              ? customer.displayNameTh || customer.displayNameEn || customer.code || "-"
+              : opportunity.customerId || "-",
+          },
+          {
+            label: t("targetDecisionDate"),
+            value: opportunity.targetDecisionDate || "-",
+            isMono: true,
+          },
+          {
+            label: t("nextActionAt"),
+            value: opportunity.nextActionAtUtc
+              ? new Date(opportunity.nextActionAtUtc).toLocaleDateString(
+                  locale === "th" ? "th-TH" : "en-US"
+                )
+              : "-",
+          },
+        ]}
+      />
 
       {/* Scope and Customer Information */}
       <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
