@@ -709,33 +709,33 @@ git commit -m "feat(frontend): add opportunity site data layer"
 - Consumes: Customer ETag/status, activation mutation, Site methods, `customers.activate`, `sites.read`, `sites.manage`
 - Produces: activation confirmation and `/customers/{customerId}/sites/create` flow
 
-- [ ] **Step 1: Write RED modal and activation tests**
+- [x] **Step 1: Write RED modal and activation tests**
 
 Assert focus enters modal and returns to trigger, Escape closes only when idle, confirm is disabled/loading during request, Customer Draft shows action only with permission, stale ETag shows localized conflict and success refreshes Customer ETag/status.
 
-- [ ] **Step 2: Implement shared ConfirmationModal**
+- [x] **Step 2: Implement shared ConfirmationModal**
 
 Use semantic dialog, labelled title/description, focus trap, `aria-modal="true"`, 44px controls and no external package. Activation copy must explain that Active Customer can start Site/Opportunity work.
 
-- [ ] **Step 3: Write RED Site schema/editor tests**
+- [x] **Step 3: Write RED Site schema/editor tests**
 
 Assert all structured fields, postal code, uppercase two-letter country, paired coordinates/ranges, submit locking, idempotency retry behavior, generic localized errors and navigation to Customer detail after success.
 
-- [ ] **Step 4: Implement Site page**
+- [x] **Step 4: Implement Site page**
 
 Use Single Dynamic Route `[id]`; accept only `id=create` in this slice and call `notFound()` for arbitrary IDs until Site detail/edit is authorized. Use `FormProvider` + `Controller`; disable all inputs during valid submit; no file upload.
 
-- [ ] **Step 5: Add Site list to Customer detail**
+- [x] **Step 5: Add Site list to Customer detail**
 
 Show Minimal Mono loading, empty/error/data states, address only with `sites.read`, and create CTA only when Customer is Active plus `sites.manage`. Do not nest button inside link.
 
-- [ ] **Step 6: Add th/en keys and run tests**
+- [x] **Step 6: Add th/en keys and run tests**
 
 Run: `npm --prefix frontend run test -- --run src/components/ui/ConfirmationModal.test.tsx src/features/customers/components/customer-detail.test.tsx src/features/sites`
 
 Expected: tests pass and message key parity remains exact.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/components/ui frontend/src/features/customers frontend/src/features/sites 'frontend/src/app/[locale]/(erp)/customers/[customerId]/sites/[id]/page.tsx' frontend/src/messages
@@ -766,27 +766,27 @@ git commit -m "feat(crm): activate customers and create sites"
 - Consumes: Opportunity query/mutation hooks, Active Customer list, Customer Sites, selected Membership Branch and current User
 - Produces: permission-aware navigation and `/opportunities`, `/opportunities/create`, `/opportunities/{id}`
 
-- [ ] **Step 1: Write RED schema tests**
+- [x] **Step 1: Write RED schema tests**
 
 Assert title required/max 250, canonical work types, positive budget + required THB when budget exists, target date format, next action date/note pairing and optional primary Site belonging to selected Customer.
 
-- [ ] **Step 2: Write RED component tests**
+- [x] **Step 2: Write RED component tests**
 
 Cover loading/empty/error/data, localized draft label, create CTA permissions, no-Branch block, customer selection restricted to Active, site options refresh when Customer changes, double submit, retry key reuse/rotation and detail rendering.
 
-- [ ] **Step 3: Implement list and dynamic route**
+- [x] **Step 3: Implement list and dynamic route**
 
 `[id]` handles `create|add` and UUID detail. List supports search/stage filter and keyset Load More. Detail displays Customer/Site IDs as navigation links only after their scoped resources are loaded; unknown enum uses localized operation failure.
 
-- [ ] **Step 4: Implement form**
+- [x] **Step 4: Implement form**
 
 Use `FormProvider`, `Controller`, generated request type, current selected Membership Branch label and current User label as read-only context. Payload includes only fields from the exact contract. When Customer changes, clear `primarySiteId` synchronously in the change handler and load that Customer's Sites via TanStack Query; do not use `useEffect` for derived state.
 
-- [ ] **Step 5: Add shell navigation and translations**
+- [x] **Step 5: Add shell navigation and translations**
 
 Show Opportunity navigation only with `opportunities.read`; close mobile drawer and preserve focus behavior. Add a pure SVG stroke icon and complete th/en message parity.
 
-- [ ] **Step 6: Run and commit**
+- [x] **Step 6: Run and commit**
 
 Run: `npm --prefix frontend run test -- --run src/features/opportunities src/components/layout/erp-shell.test.tsx`
 
@@ -808,15 +808,15 @@ git commit -m "feat(crm): add opportunity workspace"
 - Consumes: completed Slice 2 application and test stack
 - Produces: executable gate evidence and explicit next boundary
 
-- [ ] **Step 1: Add Playwright acceptance journey**
+- [x] **Step 1: Add Playwright acceptance journey**
 
 Test login → Draft Customer → activate → Site create → Opportunity create → detail → list/search. Assert request headers, status/ETag, server-derived Branch/Owner, Draft stage, Thai labels, one POST on double click and retry behavior.
 
-- [ ] **Step 2: Add negative/security journeys**
+- [x] **Step 2: Add negative/security journeys**
 
 Assert inactive Customer rejected, Org B cannot use Org A Customer/Site, selected Membership without Branch is blocked before POST and Backend still rejects direct API, stale Customer ETag conflicts, address/access note absent from error/audit/log fixtures, keyboard flow and 320px/200% zoom.
 
-- [ ] **Step 3: Run Backend gates**
+- [x] **Step 3: Run Backend gates**
 
 Run: `dotnet build backend/TanErp.slnx`
 
@@ -824,7 +824,7 @@ Run: `dotnet test backend/TanErp.slnx`
 
 Expected: exit `0`, zero failed tests.
 
-- [ ] **Step 4: Run Frontend and fixtures gates**
+- [x] **Step 4: Run Frontend and fixtures gates**
 
 Run: `npm --prefix frontend run verify`
 
@@ -832,7 +832,7 @@ Run: `npm run test:fixtures`
 
 Expected: API drift, lint, typecheck, Vitest, production build and fixture tests pass.
 
-- [ ] **Step 5: Run real E2E**
+- [x] **Step 5: Run real E2E**
 
 With PostgreSQL 17, Firebase emulator, Backend `:5005` and Frontend `:3005` running:
 
@@ -840,7 +840,7 @@ Run: `PLAYWRIGHT_TEST_BASE_URL=http://localhost:3005 npm --prefix frontend run t
 
 Expected: auth, Customer and Opportunity/Site journeys all pass; test discovery alone is not sufficient.
 
-- [ ] **Step 6: Run policy scans**
+- [x] **Step 6: Run policy scans**
 
 Run: `git diff --check`
 
@@ -848,11 +848,11 @@ Run: `rg -n "\bany\b|as any|@ts-ignore|BEGIN PRIVATE KEY|firebase-admin" fronten
 
 Review matches manually; expected no forbidden TypeScript or committed secret.
 
-- [ ] **Step 7: Write verification record**
+- [x] **Step 7: Write verification record**
 
 Record runtime versions, migration name, exact commands/counts/exit codes, UAT IDs, tenant/isolation evidence, responsive/accessibility checks and known deferred scope. Set status Passed only when Steps 3–6 have real evidence.
 
-- [ ] **Step 8: Commit evidence**
+- [x] **Step 8: Commit evidence**
 
 ```bash
 git add frontend/e2e/opportunity-site.spec.ts docs/05-engineering/opportunity-site-verification.md docs/README.md
