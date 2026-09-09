@@ -101,7 +101,114 @@ Detail และ Create response ส่งคืน Customer object พร้อ
 เมื่อผู้ใช้มี `customer-contacts.manage` ให้ `primaryContact.isMasked = false` และคืนค่าเบอร์โทรศัพท์และอีเมลเต็ม; เมื่อมีเฉพาะ `customers.read` จะคืนเฉพาะค่าที่ Mask แล้ว (`isMasked = true`)
 
 
-## Opportunity Example
+## Customer Activation + Opportunity + Site Slice 2 Specification
+
+### 1. Activate Customer
+```http
+POST /api/v1/customers/{customerId}/activate
+X-Membership-Id: <membership UUID>
+Idempotency-Key: <opaque 16-128 characters>
+If-Match: "<customer rowVersion UUID>"
+```
+Request ไม่มี body. Response `200` ใช้ `CustomerResponse` เดิมและส่ง ETag ใหม่
+
+### 2. Create and List Site
+```http
+POST /api/v1/customers/{customerId}/sites
+X-Membership-Id: <membership UUID>
+Idempotency-Key: <opaque 16-128 characters>
+Content-Type: application/json
+
+{
+  "label": "คอนโดสุขุมวิท TEST_ONLY",
+  "addressLine1": "99/9 ถนนสุขุมวิท TEST_ONLY",
+  "subdistrict": "คลองตันเหนือ",
+  "district": "วัฒนา",
+  "province": "กรุงเทพมหานคร",
+  "postalCode": "10110",
+  "countryCode": "TH",
+  "latitude": null,
+  "longitude": null,
+  "accessNote": "ติดต่อเจ้าหน้าที่ก่อนขึ้นอาคาร TEST_ONLY"
+}
+```
+Response `201`:
+```json
+{
+  "id": "019a3cf8-96f0-7c9f-b207-93aa818f4c10",
+  "customerId": "019a3cf8-96f0-7c9f-b207-93aa818f4b10",
+  "code": "SITE-019A3CF896F0",
+  "label": "คอนโดสุขุมวิท TEST_ONLY",
+  "addressLine1": "99/9 ถนนสุขุมวิท TEST_ONLY",
+  "subdistrict": "คลองตันเหนือ",
+  "district": "วัฒนา",
+  "province": "กรุงเทพมหานคร",
+  "postalCode": "10110",
+  "countryCode": "TH",
+  "latitude": null,
+  "longitude": null,
+  "accessNote": "ติดต่อเจ้าหน้าที่ก่อนขึ้นอาคาร TEST_ONLY",
+  "status": "active",
+  "rowVersion": "019a3cf8-96f0-7c9f-b207-93aa818f4c11",
+  "createdAtUtc": "2026-09-08T12:00:00Z"
+}
+```
+`GET /api/v1/customers/{customerId}/sites` คืน `{ "items": SiteResponse[] }` เรียง `normalizedLabel ASC, id ASC`; ไม่มี pagination ใน slice นี้
+
+### 3. Create, List and Read Opportunity
+```http
+POST /api/v1/opportunities
+X-Membership-Id: <membership UUID>
+Idempotency-Key: <opaque 16-128 characters>
+Content-Type: application/json
+
+{
+  "customerId": "019a3cf8-96f0-7c9f-b207-93aa818f4b10",
+  "primarySiteId": "019a3cf8-96f0-7c9f-b207-93aa818f4c10",
+  "title": "Built-in ห้องนอนใหญ่ TEST_ONLY",
+  "scopeSummary": "สำรวจและประเมินตู้เสื้อผ้า TEST_ONLY",
+  "workTypes": ["built-in"],
+  "sourceCode": null,
+  "expectedBudget": 250000.00,
+  "currencyCode": "THB",
+  "targetDecisionDate": "2026-10-15",
+  "nextActionAtUtc": "2026-09-10T03:00:00Z",
+  "nextActionNote": "นัดยืนยันเวลา TEST_ONLY"
+}
+```
+Request ห้ามมี `organizationId`, `branchId`, `ownerUserId`, `code`, `stage`, `rowVersion` หรือ actor ID
+- ใน Slice 2 นี้ `branchId` ถูก Derive จาก Active Branch ของ selected Membership
+- `ownerUserId` ถูก Derive จาก authenticated User
+(แม้ baseline example ด้านล่างจะแสดง branchId/ownerUserId ใน payload สำหรับ slice ถัดไป แต่ใน Slice 2 ฝั่ง Client ห้ามส่งมาเด็ดขาด)
+
+Response `201`:
+```json
+{
+  "id": "019a3cf8-96f0-7c9f-b207-93aa818f4d10",
+  "code": "OPP-019A3CF896F0",
+  "customerId": "019a3cf8-96f0-7c9f-b207-93aa818f4b10",
+  "primarySiteId": "019a3cf8-96f0-7c9f-b207-93aa818f4c10",
+  "branchId": "019a3cf8-96f0-7c9f-b207-93aa818f4a13",
+  "ownerUserId": "019a3cf8-96f0-7c9f-b207-93aa818f4a10",
+  "title": "Built-in ห้องนอนใหญ่ TEST_ONLY",
+  "scopeSummary": "สำรวจและประเมินตู้เสื้อผ้า TEST_ONLY",
+  "workTypes": ["built-in"],
+  "sourceCode": null,
+  "expectedBudget": 250000.00,
+  "currencyCode": "THB",
+  "targetDecisionDate": "2026-10-15",
+  "nextActionAtUtc": "2026-09-10T03:00:00Z",
+  "nextActionNote": "นัดยืนยันเวลา TEST_ONLY",
+  "stage": "draft",
+  "rowVersion": "019a3cf8-96f0-7c9f-b207-93aa818f4d11",
+  "createdAtUtc": "2026-09-08T12:00:00Z"
+}
+```
+`GET /api/v1/opportunities/{id}` คืน shape เดียวกันพร้อม ETag
+`GET /api/v1/opportunities?search=&customerId=&stage=draft&limit=25&cursor=` คืน `{ items, nextCursor }`; allowed limit `1..100`, stable sort `nextActionAtUtc ASC NULLS LAST, id ASC`
+
+
+## Baseline Examples (Broader / Future Slices)
 
 ```json
 {

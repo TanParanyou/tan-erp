@@ -168,6 +168,7 @@ Request ห้ามมี `organizationId`, `branchId`, `ownerUserId`, `code`, 
 
 ### Documentation
 
+- Modify `AGENTS.md` — authorize the approved Customer Activation + Opportunity + Site implementation boundary
 - Modify `docs/03-contracts/crm-site-survey-api-contract.md` — exact Slice 2 HTTP shapes, derived context and deferred boundary
 - Modify `docs/03-contracts/error-contract.md` — `IF_MATCH_REQUIRED`, `ACTIVE_BRANCH_REQUIRED`, `SITE_FIELD_REQUIRED`
 - Modify `docs/05-engineering/crm-site-survey-uat-scenarios.md` — executable Slice 2 subset
@@ -209,6 +210,7 @@ Request ห้ามมี `organizationId`, `branchId`, `ownerUserId`, `code`, 
 ### Task 1: Lock Slice 2 Contract and Gate
 
 **Files:**
+- Modify: `AGENTS.md`
 - Modify: `docs/03-contracts/crm-site-survey-api-contract.md`
 - Modify: `docs/03-contracts/error-contract.md`
 - Modify: `docs/05-engineering/crm-site-survey-uat-scenarios.md`
@@ -219,15 +221,19 @@ Request ห้ามมี `organizationId`, `branchId`, `ownerUserId`, `code`, 
 - Consumes: Accepted CRM Flow, Field Catalog, Governance, Data Contract and Customer verification evidence
 - Produces: exact Slice 2 contract shown in this plan and executable exit criteria
 
-- [ ] **Step 1: Record the completed Customer E2E evidence**
+- [x] **Step 1: Record the completed Customer E2E evidence**
 
 Add the exact command, tested commit SHA, Playwright count, pass/fail count and exit code supplied by Antigravity to `customer-contact-verification.md`. If any value is unavailable, stop before Task 2 and request the missing evidence.
 
-- [ ] **Step 2: Add the exact activate/site/opportunity contract**
+- [x] **Step 2: Authorize the approved implementation boundary**
+
+Update `AGENTS.md` Current phase so the authorized implementation boundary points to this approved plan. Preserve the existing product boundaries and state explicitly that lifecycle transitions beyond Customer activation remain deferred.
+
+- [x] **Step 3: Add the exact activate/site/opportunity contract**
 
 Copy the request/response shapes and derived-field rules from `Exact Slice Contract` into the authoritative API contract. State that Opportunity `branchId` and `ownerUserId` are server-derived in Slice 2 even though the broader baseline example allows assignment in a later slice.
 
-- [ ] **Step 3: Add stable errors**
+- [x] **Step 4: Add stable errors**
 
 ```text
 IF_MATCH_REQUIRED       428  If-Match missing or not a quoted UUID
@@ -237,11 +243,11 @@ SITE_FIELD_REQUIRED     422  Site field/address/coordinate pair invalid
 
 Retain `CUSTOMER_INVALID_STATE`, `CUSTOMER_VERSION_CONFLICT`, `OPPORTUNITY_FIELD_REQUIRED`, `RESOURCE_NOT_FOUND` and `IDEMPOTENCY_KEY_REUSED`.
 
-- [ ] **Step 4: Add Slice 2 UAT subset**
+- [x] **Step 5: Add Slice 2 UAT subset**
 
 Require `UAT-CRM-001` activation remainder, `UAT-CRM-004` create-Draft subset only, Site creation portion of `UAT-SRV-001`, `UAT-SEC-001`, `UAT-SEC-002`, `UAT-UX-001`, `UAT-I18N-001`, idempotency retry and stale ETag cases. Explicitly defer Qualify/Stage History and Survey Appointment.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 6: Verify and commit**
 
 Run: `rg -n "Customer Activation|ACTIVE_BRANCH_REQUIRED|IF_MATCH_REQUIRED|Opportunity \+ Site Slice 2" docs`
 
@@ -250,7 +256,7 @@ Run: `git diff --check -- docs`
 Expected: all exact rules are discoverable and diff check exits `0`.
 
 ```bash
-git add docs/03-contracts/crm-site-survey-api-contract.md docs/03-contracts/error-contract.md docs/05-engineering/crm-site-survey-uat-scenarios.md docs/05-engineering/customer-contact-verification.md docs/README.md
+git add AGENTS.md docs/03-contracts/crm-site-survey-api-contract.md docs/03-contracts/error-contract.md docs/05-engineering/crm-site-survey-uat-scenarios.md docs/05-engineering/customer-contact-verification.md docs/README.md
 git commit -m "docs(crm): approve opportunity site slice contract"
 ```
 
@@ -259,6 +265,7 @@ git commit -m "docs(crm): approve opportunity site slice contract"
 **Files:**
 - Modify: `backend/src/TanErp.Domain/Crm/Customers/Customer.cs`
 - Modify: `backend/src/TanErp.Domain/Crm/Customers/CustomerValues.cs`
+- Modify: `backend/src/TanErp.Domain/Crm/Customers/CustomerContact.cs`
 - Create: `backend/src/TanErp.Application/Crm/Customers/ICustomerLifecycleStore.cs`
 - Create: `backend/src/TanErp.Application/Crm/Customers/ActivateCustomer/ActivateCustomerCommand.cs`
 - Create: `backend/src/TanErp.Application/Crm/Customers/ActivateCustomer/ActivateCustomerHandler.cs`
@@ -309,7 +316,7 @@ public CustomerActivationOutcome Activate(Guid expectedRowVersion)
 }
 ```
 
-If `ContactStatus` is not yet centralized, add it to `CustomerValues.cs` with canonical `active|inactive` and update `CustomerContact` to use it before adding the method.
+Add `ContactStatus` to `CustomerValues.cs` with canonical `active|inactive`, then replace the literal `"active"` defaults and assignments in `CustomerContact` with `ContactStatus.Active` before adding the activation method.
 
 - [ ] **Step 4: Write RED handler/store/API tests**
 

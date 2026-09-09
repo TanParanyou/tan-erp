@@ -48,6 +48,7 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `MEMBERSHIP_CONTEXT_REQUIRED` | 400 | Missing X-Membership-Id header or invalid UUID format / ไม่มี X-Membership-Id หรือรูปแบบไม่ใช่ UUID |
 | `USER_ACCESS_DISABLED` | 403 | Internal User is disabled / บัญชีผู้ใช้ภายในระบบถูกระงับการใช้งาน |
 | `ACTIVE_MEMBERSHIP_REQUIRED` | 403 | Identity is valid but no active Membership is available / ยืนยันตัวตนสำเร็จแต่ไม่มีสมาชิกภาพที่ Active ในองค์กรใด |
+| `ACTIVE_BRANCH_REQUIRED` | 422 | Selected Membership has no Active Branch / สมาชิกภาพที่เลือกไม่มีสาขาที่เปิดใช้งานอยู่สำหรับสร้าง Opportunity |
 | `PERMISSION_DENIED` | 403 | Active Membership exists but the requested permission is absent / มีสมาชิกภาพในองค์กรแต่ไม่มีสิทธิ์สำหรับปฏิบัติการนี้ |
 | `RESOURCE_NOT_FOUND` | 404 | Requested resource not found or belongs to another organization scope / ไม่พบ Resource หรืออยู่นอก Organization scope |
 
@@ -103,6 +104,7 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | --- | ---: | --- |
 | `MAKER_CHECKER_VIOLATION` | 403 | ผู้จัดทำหรือผู้แก้ล่าสุดพยายามอนุมัติรายการที่ต้องแยกผู้ตรวจ |
 | `IDEMPOTENCY_KEY_REUSED` | 409 | ใช้ Idempotency Key เดิมกับ Payload ต่างจากคำขอแรก; ต้องสร้าง Key ใหม่เมื่อเป็นเจตนาใหม่ |
+| `IF_MATCH_REQUIRED` | 428 | Request บังคับใช้ Precondition แต่ไม่มี If-Match header หรือ format ไม่ใช่ quoted UUID string |
 
 ## Item Master Error Codes
 
@@ -136,6 +138,7 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `OPPORTUNITY_FIELD_REQUIRED` | 422 | Field ของ Stage เป้าหมายยังไม่ครบ |
 | `OPPORTUNITY_INVALID_TRANSITION` | 409 | Stage Transition ไม่อยู่ใน Allowlist |
 | `SITE_VERSION_CONFLICT` | 409 | Site ETag เก่า |
+| `SITE_FIELD_REQUIRED` | 422 | ข้อมูลบังคับของ Site (label หรือ structured address) ไม่ครบถ้วน หรือพิกัดละติจูด/ลองจิจูดไม่เป็นคู่สมบูรณ์ |
 | `SURVEY_VERSION_CONFLICT` | 409 | Draft Revision ETag เก่า |
 | `SURVEY_NOT_READY` | 422 | Measurement/Checklist/Evidence/Required Field ยังไม่ผ่าน Gate |
 | `SURVEY_INVALID_STATE` | 409 | Action ไม่รองรับสถานะ เช่น Patch Ready Revision |

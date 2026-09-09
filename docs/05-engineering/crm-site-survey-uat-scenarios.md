@@ -49,4 +49,17 @@
 6. **`UAT-I18N-001`:** ระบบแปลภาษาครบถ้วนทั้ง `th` และ `en` เมื่อเกิดข้อผิดพลาดคืน Error Code เดิมพร้อมคำอธิบายตามภาษา
 7. **Idempotency Verification:** การส่ง Request ซ้ำด้วย `Idempotency-Key` เดิมและ Payload เดิม ต้องไม่สร้างข้อมูลซ้ำและคืน Response เดิม; หาก Payload ต่างกันต้องคืน `409 IDEMPOTENCY_KEY_REUSED`
 
+## Customer Activation + Opportunity + Site Slice 2 Exit Criteria
+
+สำหรับ Slice 2 (Customer Activation + Opportunity + Site Vertical Slice) จะถือว่าผ่านเกณฑ์เมื่อ:
+1. **`UAT-CRM-001` (Activation Remainder):** ผู้ใช้ที่มีสิทธิ์ `customers.activate` สามารถ Activate Customer Draft ให้เป็น Active ได้สำเร็จโดยส่ง `If-Match` ตรงกับ ETag ปัจจุบันและ `Idempotency-Key`; เมื่อ ETag เก่าคืน `409 CUSTOMER_VERSION_CONFLICT`; เมื่อขาด If-Match คืน `428 IF_MATCH_REQUIRED`
+2. **`UAT-SRV-001` (Site Creation Portion):** สามารถสร้าง Active Site ภายใต้ Customer ที่ Active พร้อมที่อยู่แบบมีโครงสร้างครบถ้วน; ห้ามสร้าง Site ภายใต้ Customer ที่ไม่ใช่ Active หรืออยู่นอก Organization Scope
+3. **`UAT-CRM-004` (Create-Draft Subset Only):** สามารถสร้าง Opportunity Draft จาก Active Customer โดย Backend Derive Branch และ Owner จาก Active Membership และ Primary Site ต้องเป็นของ Customer เดียวกัน; ไม่รวม Stage Transition/Qualify หรือ Stage History ซึ่งเลื่อนไป Slice ถัดไป
+4. **`UAT-SEC-001`:** ผู้ใช้องค์กรอื่นไม่สามารถอ่านหรือใช้ Customer, Site, Opportunity ขององค์กรอื่นได้ (`404 RESOURCE_NOT_FOUND`)
+5. **`UAT-SEC-002`:** ที่อยู่ Site, พิกัด และ Access Note ไม่รั่วไหลใน Log, Audit Trail หรือ Problem Details (เก็บเฉพาะ Changed Field Names/IDs)
+6. **`UAT-UX-001`:** หน้าจอสร้าง Site, รายการ Opportunity, สร้าง Opportunity และดูรายละเอียด รองรับ Responsive 320px, Zoom 200%, Touch targets ≥ 44px, Keyboard navigation, Atelier Architectural Navy Sharp (0px radius) และ Minimal Mono Loading
+7. **`UAT-I18N-001`:** รองรับทั้งภาษาไทยและภาษาอังกฤษสมบูรณ์พร้อม Key parity บน UI messages และ Backend localized Problem Details
+8. **Idempotency & Concurrency:** Retry ด้วย Idempotency Key เดิมและ Payload เดิมต้องคืน Resource เดิมเสมอ; Key เดิมกับ Payload เปลี่ยนคืน `409 IDEMPOTENCY_KEY_REUSED`
+9. **Explicitly Deferred:** Opportunity Qualify/Stage Transition, Stage History, Owner Reassignment, Survey Appointment, Survey Identity/Revision และ File Upload เลื่อนไป Slice ถัดไป
+
 อ้างอิง [Flow](../01-business/crm-site-survey-flow.md), [API Contract](../03-contracts/crm-site-survey-api-contract.md) และ [Data Contract](../04-data/crm-site-survey-data-contract.md)

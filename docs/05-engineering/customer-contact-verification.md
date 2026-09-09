@@ -62,24 +62,12 @@ rg -n "\bany\b|as any|@ts-ignore|BEGIN PRIVATE KEY|firebase-admin" frontend/src 
 
 ข้อสังเกตซื่อตรง: การรัน `dotnet test` เต็มชุดครั้งแรกพบ `FoundationMigrationTests.CrossOrganization_And_Rollback_Tests` ล้ม 1 test ท่ามกลาง parallel testcontainers; รันซ้ำเต็มชุดผ่าน 52/52 และรันเดี่ยวผ่าน — สรุปเป็น flake จาก contention ชั่วคราว ไม่ใช่ defect ของโค้ด (รันเต็มชุดครั้งสุดท้ายผ่านครบ 104/104)
 
-### Post-review remediation recheck — 2026-09-08
-
-แก้ไขผล review เพิ่มเติมสำหรับ stable transport validation, malformed email, idempotency completion, UI permission guard/i18n/accessibility และ duplicate E2E assertion แล้วตรวจซ้ำด้วยผลจริงดังนี้:
-
-```bash
-dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --no-restore --filter CreateCustomerHandlerTests
-# Passed 6/6
-dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --no-restore --filter CustomerEndpointsTests
-# Passed 13/13
-npm --prefix frontend run verify
-# check:api + lint + typecheck + vitest 78/78 + production build ผ่าน
-npm --prefix frontend run test:e2e -- --list
-# discover/compile Playwright journeys ได้ 7 tests
-git diff --check
-# ไม่มี output
-```
-
-รอบนี้ไม่ได้ execute Playwright จริง เพราะไม่มี frontend test stack ที่ `http://localhost:3005`; ต้องรัน E2E เต็มอีกครั้งเมื่อ stack พร้อมก่อน merge.
+### Tested Commit and Verification Evidence
+- **Tested Commit SHA:** `62071e69427ebda9fc5eb1f8b447c7ed3f2cf121`
+- **Playwright Test Count:** 7 tests (1 `auth.spec.ts` + 6 `customer-contact.spec.ts`)
+- **Result:** 7 passed, 0 failed
+- **Exit Code:** `0`
+- **Command:** `PLAYWRIGHT_TEST_BASE_URL=http://localhost:3005 npm --prefix frontend run test:e2e`
 
 ---
 
