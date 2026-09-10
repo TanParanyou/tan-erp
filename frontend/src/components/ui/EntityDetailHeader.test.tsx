@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { EntityDetailHeader } from "./EntityDetailHeader";
 
@@ -46,5 +46,46 @@ describe("EntityDetailHeader component", () => {
     );
 
     expect(screen.getByRole("button", { name: "Activate" })).toBeInTheDocument();
+  });
+
+  it("renders copy button next to code and handles copying", async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    render(
+      <EntityDetailHeader
+        title="Project X"
+        code="CUS-2026-001"
+        copyCodeLabel="Copy code"
+        copiedLabel="Copied"
+      />
+    );
+
+    const copyBtn = screen.getByRole("button", { name: "Copy code" });
+    expect(copyBtn).toBeInTheDocument();
+
+    const { fireEvent, act } = await import("@testing-library/react");
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    expect(writeTextMock).toHaveBeenCalledWith("CUS-2026-001");
+  });
+
+  it("does not render copy button when enableCopyCode is false", () => {
+    render(
+      <EntityDetailHeader
+        title="Project X"
+        code="CUS-2026-001"
+        enableCopyCode={false}
+        copyCodeLabel="Copy code"
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "Copy code" })).not.toBeInTheDocument();
   });
 });

@@ -169,6 +169,8 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         backLabel={t("backToList")}
         backHref={`/${locale}/customers`}
         code={customer.code}
+        copyCodeLabel={tCommon("actions.copyCode")}
+        copiedLabel={tCommon("actions.copied")}
         title={displayName}
         subtitle={
           customer.displayNameEn && customer.displayNameTh && locale === "th"

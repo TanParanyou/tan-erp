@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { IconChevronLeft } from "@/components/common/Icons";
+import { CopyButton } from "@/components/common/CopyButton";
 import { cn } from "@/lib/utils/cn";
 import { Badge } from "./Badge";
 
@@ -20,6 +21,12 @@ export interface EntityDetailHeaderProps {
   backHref?: string;
   /** Primary identifier code, rendered in prominent mono font, e.g. "CUS-2026-0001" */
   code?: string | null;
+  /** Whether to show a copy button next to the code badge. Defaults to true if code is provided. */
+  enableCopyCode?: boolean;
+  /** Accessible label / tooltip for copy action. Defaults to "Copy" */
+  copyCodeLabel?: string;
+  /** Feedback label when copied. Defaults to "Copied" */
+  copiedLabel?: string;
   /** Primary entity title */
   title?: string | null;
   /** Secondary subtitle or English name */
@@ -41,6 +48,9 @@ export function EntityDetailHeader({
   backLabel,
   backHref,
   code,
+  enableCopyCode = true,
+  copyCodeLabel = "Copy",
+  copiedLabel = "Copied",
   title,
   subtitle,
   avatar,
@@ -80,13 +90,25 @@ export function EntityDetailHeader({
             {/* Code and Badges Line */}
             <div className="flex items-center flex-wrap gap-2">
               {code && (
-                <Badge
-                  variant="neutral"
-                  size="md"
-                  className="font-mono font-bold tracking-wider select-all bg-erp-surface-subtle text-erp-navy border-erp-border"
-                >
-                  {code}
-                </Badge>
+                <div className="inline-flex items-stretch border border-erp-border bg-erp-surface-subtle">
+                  <Badge
+                    variant="neutral"
+                    size="md"
+                    className="font-mono font-bold tracking-wider select-all border-0 bg-transparent text-erp-navy"
+                  >
+                    {code}
+                  </Badge>
+                  {enableCopyCode && (
+                    <CopyButton
+                      text={code}
+                      label={copyCodeLabel}
+                      copiedLabel={copiedLabel}
+                      variant="icon"
+                      size="sm"
+                      className="border-0 border-l border-erp-border bg-transparent hover:bg-erp-surface-muted h-auto px-2 py-1"
+                    />
+                  )}
+                </div>
               )}
               {statusBadge}
               {badges?.map((badge, idx) => (

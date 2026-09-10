@@ -155,6 +155,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         backLabel={t("backToList")}
         backHref={`/${locale}/opportunities`}
         code={opportunity.code ?? opportunity.id}
+        copyCodeLabel={tCommon("actions.copyCode")}
+        copiedLabel={tCommon("actions.copied")}
         title={opportunity.title || "-"}
         subtitle={opportunity.scopeSummary}
         avatar={

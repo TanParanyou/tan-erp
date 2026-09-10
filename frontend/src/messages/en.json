@@ -73,6 +73,8 @@
       "download": "Download",
       "view": "View",
       "copy": "Copy",
+      "copied": "Copied",
+      "copyCode": "Copy code",
       "retry": "Retry",
       "submit": "Submit",
       "approve": "Approve",
