@@ -17,9 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import {
-  IconSearch,
   IconPlus,
-  IconAlertCircle,
   IconBriefcase,
   IconEye,
   IconDownload,
@@ -311,36 +309,8 @@ export function OpportunityList() {
         </div>
       </ListToolbar>
 
-      {/* Loading state: Minimal mono spinner */}
-      {isLoading && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="flex justify-center items-center py-16"
-        >
-          <MonoSpinner size="lg" />
-        </div>
-      )}
-
-      {/* Error state */}
-      {isError && !isLoading && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="erp-card p-6 flex flex-col items-center gap-3 border-erp-border-danger bg-erp-bg-danger-light"
-        >
-          <IconAlertCircle size={32} />
-          <p className="text-erp-danger font-semibold text-center m-0">
-            {resolveListErrorMessage(error)}
-          </p>
-          <Button type="button" variant="outline" onClick={() => refetch()} style={{ minHeight: "44px" }}>
-            {tCommon("actions.refresh")}
-          </Button>
-        </div>
-      )}
-
       {/* Zero opportunities: Empty State */}
-      {isZeroOpportunities && (
+      {isZeroOpportunities ? (
         <EmptyState
           icon="empty"
           title={t("emptyTitle")}
@@ -348,39 +318,17 @@ export function OpportunityList() {
           actionLabel={canCreate ? t("createOpportunity") : undefined}
           onAction={canCreate ? () => router.push(`/${locale}/opportunities/create`) : undefined}
         />
-      )}
-
-      {/* Filtered empty state (Search/Filter produced no records) */}
-      {!isLoading && !isError && allItems.length === 0 && !isZeroOpportunities && (
-        <div className="erp-card p-12 flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center bg-erp-surface-secondary text-erp-text-muted rounded-none border border-erp-border">
-            <IconSearch size={20} strokeWidth={1.5} />
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-erp-text">{tCommon("table.noData")}</h3>
-            <p className="text-xs text-erp-text-muted">{t("searchPlaceholder")}</p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              listState.actions.setSearch("", true);
-              listState.actions.clearFilters();
-            }}
-            className="mt-2 text-xs"
-          >
-            {tCommon("actions.clear")}
-          </Button>
-        </div>
-      )}
-
-      {/* Opportunity Data Table with Sticky Actions */}
-      {!isLoading && !isError && allItems.length > 0 && (
+      ) : (
         <div className="space-y-4">
           <DataTable<OpportunityResponse>
             data={allItems}
             columns={columns}
+            isLoading={isLoading}
+            isError={isError}
+            error={isError ? resolveListErrorMessage(error) : null}
+            onRetry={() => refetch()}
+            emptyTitle={tCommon("table.noData")}
+            emptyDescription={t("searchPlaceholder")}
             sorting={{
               key: listState.params.sort || null,
               order: listState.params.order,

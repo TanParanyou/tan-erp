@@ -413,27 +413,8 @@ export function CustomerList() {
         </div>
       </ListToolbar>
 
-      {/* Main Content Area */}
-      {isError ? (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="erp-card p-8 border-erp-danger-border bg-erp-danger-bg text-center flex flex-col items-center gap-4"
-        >
-          <IconAlertCircle size={32} className="text-erp-danger" />
-          <h2 className="text-base font-bold text-erp-danger">
-            {resolveListErrorMessage(error)}
-          </h2>
-          <Button
-            variant="outline"
-            size="md"
-            onClick={() => refetch()}
-            className="min-h-[40px]"
-          >
-            {tCommon("actions.retry")}
-          </Button>
-        </div>
-      ) : isZeroCustomers ? (
+      {/* Main Content Area: Table-Preserved Architecture */}
+      {isZeroCustomers ? (
         <EmptyState
           icon="empty"
           title={t("emptyTitle")}
@@ -448,6 +429,11 @@ export function CustomerList() {
             columns={columns}
             data={customers}
             isLoading={isLoading}
+            isError={isError}
+            error={isError ? resolveListErrorMessage(error) : null}
+            onRetry={() => refetch()}
+            emptyTitle={tCommon("table.noData")}
+            emptyDescription={t("searchPlaceholder")}
             selectable={true}
             selectedIds={selectedIds}
             onSelect={(id) => toggleSelection(id)}
