@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { IconChevronLeft } from "@/components/common/Icons";
 import { cn } from "@/lib/utils/cn";
+import { Badge } from "./Badge";
 
 export interface EntityDetailMetric {
   label: string;
@@ -79,9 +80,13 @@ export function EntityDetailHeader({
             {/* Code and Badges Line */}
             <div className="flex items-center flex-wrap gap-2">
               {code && (
-                <span className="font-mono text-xs font-bold px-2 py-0.5 bg-erp-surface-subtle text-erp-navy border border-erp-border tracking-wider select-all">
+                <Badge
+                  variant="neutral"
+                  size="md"
+                  className="font-mono font-bold tracking-wider select-all bg-erp-surface-subtle text-erp-navy border-erp-border"
+                >
                   {code}
-                </span>
+                </Badge>
               )}
               {statusBadge}
               {badges?.map((badge, idx) => (

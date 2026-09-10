@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations, useLocale } from "next-intl";
 import { createCustomerFormSchema, type CustomerFormValues } from "../schemas/customer-form-schema";
@@ -15,11 +15,18 @@ import { Select } from "@/components/ui/Select";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { FormContainer } from "@/components/forms/FormContainer";
 import { FormActionBar } from "@/components/forms/FormActionBar";
+import { PhoneInput } from "@/components/forms/PhoneInput";
+import { SelectWithOther } from "@/components/forms/SelectWithOther";
 import { PageHeader } from "@/components/layout/PageHeader";
+
 import { useToast } from "@/hooks/useToast";
+import { useDebounce } from "@/hooks/useDebounce";
 import { IconAlertCircle } from "@/components/common/Icons";
 import { ApiError } from "@/lib/api/api-error";
 import { DuplicateCandidateCard } from "./duplicate-candidate-card";
+import { DuplicateConfirmationModal } from "./duplicate-confirmation-modal";
+import { CustomerQuickViewDrawer } from "./customer-quick-view-drawer";
+import { useCustomerDuplicateCheck } from "../api/customer-queries";
 import type { CustomerResponse } from "@/lib/api/api-client";
 
 export function CustomerEditor() {
@@ -38,13 +45,19 @@ export function CustomerEditor() {
   const [createdCustomerId, setCreatedCustomerId] = useState<string | null>(null);
   const [isCreateComplete, setIsCreateComplete] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showDuplicateConfirmModal, setShowDuplicateConfirmModal] = useState(false);
+  const [pendingValues, setPendingValues] = useState<CustomerFormValues | null>(null);
+  const [drawerCustomerId, setDrawerCustomerId] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // One idempotency key per create intent: reuse for retries of the same payload,
   // rotate only after a failed submission followed by a field change.
   const idempotencyKeyRef = useRef<string | null>(null);
   const failedSubmissionRef = useRef(false);
+  const hasConfirmedDuplicatesRef = useRef(false);
 
   const handleFormChange = (): void => {
+    hasConfirmedDuplicatesRef.current = false;
     if (failedSubmissionRef.current) {
       idempotencyKeyRef.current = null;
       failedSubmissionRef.current = false;
@@ -54,7 +67,15 @@ export function CustomerEditor() {
   const customerFormSchema = useMemo(
     () =>
       createCustomerFormSchema((key) =>
-        tValidation(key as "required" | "invalidEmail" | "phoneOrEmailRequired" | "invalidFormat"),
+        tValidation(
+          key as
+            | "required"
+            | "invalidEmail"
+            | "phoneOrEmailRequired"
+            | "invalidFormat"
+            | "invalidPhone"
+            | "leadSourceNoteRequired"
+        ),
       ),
     [tValidation],
   );
@@ -71,6 +92,7 @@ export function CustomerEditor() {
       displayNameEn: "",
       preferredLocale: locale === "en" ? "en" : "th",
       leadSource: "",
+      leadSourceNote: "",
       primaryContact: {
         name: "",
         roleTitle: "",
@@ -82,11 +104,39 @@ export function CustomerEditor() {
     },
   });
 
-  const onSubmit = async (values: CustomerFormValues) => {
-    if (isCreateComplete) {
-      return;
-    }
+  // Watched fields for live duplicate detection
+  const watchedDisplayNameTh = useWatch({ control, name: "displayNameTh" });
+  const watchedPhone = useWatch({ control, name: "primaryContact.phone" });
+  const watchedEmail = useWatch({ control, name: "primaryContact.email" });
 
+  const debouncedName = useDebounce(watchedDisplayNameTh || "", 400);
+  const debouncedPhone = useDebounce(watchedPhone || "", 400);
+  const debouncedEmail = useDebounce(watchedEmail || "", 400);
+
+  const duplicateCheckParams = useMemo(
+    () => ({
+      name: debouncedName,
+      phone: debouncedPhone,
+      email: debouncedEmail,
+    }),
+    [debouncedName, debouncedPhone, debouncedEmail],
+  );
+
+  const { data: liveDuplicates = [] } = useCustomerDuplicateCheck(
+    duplicateCheckParams,
+    !isCreateComplete,
+  );
+
+  const handleViewCandidate = (candidateId: string) => {
+    setDrawerCustomerId(candidateId);
+    setIsDrawerOpen(true);
+  };
+
+  const handleSelectExisting = (candidateId: string) => {
+    router.push(`/${locale}/customers/${candidateId}`);
+  };
+
+  const executeCreate = async (values: CustomerFormValues) => {
     setSubmitError(null);
     setDuplicateCandidates(null);
     setCreatedCustomerId(null);
@@ -116,6 +166,7 @@ export function CustomerEditor() {
           displayNameEn: values.displayNameEn || undefined,
           preferredLocale: values.preferredLocale,
           leadSource: values.leadSource || undefined,
+          leadSourceNote: values.leadSource === "other" ? values.leadSourceNote || undefined : undefined,
           primaryContact: {
             name: values.primaryContact.name,
             roleTitle: values.primaryContact.roleTitle || undefined,
@@ -137,7 +188,8 @@ export function CustomerEditor() {
       await queryClient.invalidateQueries({ queryKey: ["business"] });
       failedSubmissionRef.current = false;
 
-      if (created.duplicateCandidates?.length) {
+      // If backend returned duplicate candidates (and user hadn't confirmed yet or fallback)
+      if (created.duplicateCandidates?.length && !hasConfirmedDuplicatesRef.current) {
         setDuplicateCandidates(created.duplicateCandidates);
         setCreatedCustomerId(created.id ?? null);
         setIsCreateComplete(true);
@@ -152,6 +204,29 @@ export function CustomerEditor() {
       const message = err instanceof ApiError ? err.message : t("errors.saveUnexpected");
       setSubmitError(message);
       toast.error(message);
+    }
+  };
+
+  const onSubmit = async (values: CustomerFormValues) => {
+    if (isCreateComplete) {
+      return;
+    }
+
+    // Approach B: If there are live detected duplicates and user hasn't explicitly confirmed yet
+    if (liveDuplicates.length > 0 && !hasConfirmedDuplicatesRef.current) {
+      setPendingValues(values);
+      setShowDuplicateConfirmModal(true);
+      return;
+    }
+
+    await executeCreate(values);
+  };
+
+  const handleConfirmDuplicateCreate = async () => {
+    hasConfirmedDuplicatesRef.current = true;
+    setShowDuplicateConfirmModal(false);
+    if (pendingValues) {
+      await executeCreate(pendingValues);
     }
   };
 
@@ -198,6 +273,15 @@ export function CustomerEditor() {
           <DuplicateCandidateCard
             candidates={duplicateCandidates}
             createdCustomerHref={createdCustomerId ? `/${locale}/customers/${createdCustomerId}` : undefined}
+            onViewCandidate={handleViewCandidate}
+            onSelectExisting={handleSelectExisting}
+          />
+        ) : liveDuplicates.length > 0 ? (
+          <DuplicateCandidateCard
+            candidates={liveDuplicates}
+            isLiveAlert
+            onViewCandidate={handleViewCandidate}
+            onSelectExisting={handleSelectExisting}
           />
         ) : null
       }
@@ -212,13 +296,12 @@ export function CustomerEditor() {
         />
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Customer Information */}
-        <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-6">
-          <div className="erp-card p-6 flex flex-col gap-5">
-            <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
-              {t("title")}
-            </h2>
+      <div className="flex flex-col gap-6 w-full">
+        {/* Card 1: Customer Information */}
+        <div className="erp-card p-6 flex flex-col gap-5">
+          <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
+            {t("title")}
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Customer Type */}
@@ -260,67 +343,85 @@ export function CustomerEditor() {
             />
           </div>
 
-          {/* Name TH */}
-          <Controller
-            name="displayNameTh"
-            control={control}
-            render={({ field }) => (
-              <Input
-                id="displayNameTh"
-                label={t("displayNameTh")}
-                placeholder={t("displayNameThPlaceholder")}
-                required
-                disabled={isSubmitting || isCreateComplete}
-                error={errors.displayNameTh?.message}
-                {...field}
-              />
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Name TH */}
+            <Controller
+              name="displayNameTh"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="displayNameTh"
+                  label={t("displayNameTh")}
+                  placeholder={t("displayNameThPlaceholder")}
+                  required
+                  disabled={isSubmitting || isCreateComplete}
+                  error={errors.displayNameTh?.message}
+                  {...field}
+                />
+              )}
+            />
 
-          {/* Name EN */}
-          <Controller
-            name="displayNameEn"
-            control={control}
-            render={({ field }) => (
-              <Input
-                id="displayNameEn"
-                label={t("displayNameEn")}
-                placeholder={t("displayNameEnPlaceholder")}
-                disabled={isSubmitting || isCreateComplete}
-                error={errors.displayNameEn?.message}
-                {...field}
-              />
-            )}
-          />
+            {/* Name EN */}
+            <Controller
+              name="displayNameEn"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="displayNameEn"
+                  label={t("displayNameEn")}
+                  placeholder={t("displayNameEnPlaceholder")}
+                  disabled={isSubmitting || isCreateComplete}
+                  error={errors.displayNameEn?.message}
+                  {...field}
+                />
+              )}
+            />
+          </div>
 
           {/* Lead Source */}
           <Controller
             name="leadSource"
             control={control}
-            render={({ field }) => (
-              <Select
-                id="leadSource"
-                label={t("leadSource")}
-                placeholder={t("leadSourceSelect")}
-                error={errors.leadSource?.message}
-                disabled={isSubmitting || isCreateComplete}
-                options={[
-                  { value: "walk_in", label: t("leadSourceWalkIn") },
-                  { value: "facebook_ads", label: t("leadSourceFacebookAds") },
-                  { value: "referral", label: t("leadSourceReferral") },
-                  { value: "project_developer", label: t("leadSourceProjectDeveloper") },
-                  { value: "website", label: t("leadSourceWebsite") },
-                  { value: "other", label: t("leadSourceOther") },
-                ]}
-                {...field}
+            render={({ field: leadSourceField }) => (
+              <Controller
+                name="leadSourceNote"
+                control={control}
+                render={({ field: leadSourceNoteField }) => (
+                  <SelectWithOther
+                    triggerValue="other"
+                    selectProps={{
+                      id: "leadSource",
+                      label: t("leadSource"),
+                      placeholder: t("leadSourceSelect"),
+                      error: errors.leadSource?.message,
+                      disabled: isSubmitting || isCreateComplete,
+                      options: [
+                        { value: "walk_in", label: t("leadSourceWalkIn") },
+                        { value: "facebook_ads", label: t("leadSourceFacebookAds") },
+                        { value: "referral", label: t("leadSourceReferral") },
+                        { value: "project_developer", label: t("leadSourceProjectDeveloper") },
+                        { value: "website", label: t("leadSourceWebsite") },
+                        { value: "other", label: t("leadSourceOther") },
+                      ],
+                      ...leadSourceField,
+                    }}
+                    otherProps={{
+                      id: "leadSourceNote",
+                      label: t("leadSourceNote"),
+                      placeholder: t("leadSourceNotePlaceholder"),
+                      error: errors.leadSourceNote?.message,
+                      disabled: isSubmitting || isCreateComplete,
+                      maxLength: 200,
+                      ...leadSourceNoteField,
+                    }}
+                  />
+                )}
               />
             )}
           />
         </div>
-      </div>
 
-      {/* Right Column: Primary Contact Section */}
-      <div className="lg:col-span-5 xl:col-span-5 flex flex-col gap-6">
+        {/* Card 2: Primary Contact Section */}
         <div className="erp-card p-6 flex flex-col gap-5">
           <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
             {t("primaryContact")}
@@ -367,7 +468,7 @@ export function CustomerEditor() {
               name="primaryContact.phone"
               control={control}
               render={({ field }) => (
-                <Input
+                <PhoneInput
                   id="primaryContactPhone"
                   label={t("phone")}
                   placeholder={t("phonePlaceholder")}
@@ -435,7 +536,6 @@ export function CustomerEditor() {
           </div>
         </div>
       </div>
-    </div>
 
       {/* Safety Confirmation Modal for Cancel when isDirty */}
       <ConfirmationModal
@@ -450,6 +550,28 @@ export function CustomerEditor() {
         confirmText={tCommon("actions.confirm")}
         cancelText={tCommon("actions.cancel")}
         variant="warning"
+      />
+
+      {/* Pre-submit Duplicate Confirmation Modal */}
+      <DuplicateConfirmationModal
+        isOpen={showDuplicateConfirmModal}
+        onClose={() => setShowDuplicateConfirmModal(false)}
+        onConfirm={handleConfirmDuplicateCreate}
+        onViewCandidate={handleViewCandidate}
+        onSelectExisting={handleSelectExisting}
+        candidates={liveDuplicates}
+        isLoading={isSubmitting}
+      />
+
+      {/* Customer Quick View Drawer */}
+      <CustomerQuickViewDrawer
+        customerId={drawerCustomerId}
+        isOpen={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setDrawerCustomerId(null);
+        }}
+        onSelectExisting={handleSelectExisting}
       />
     </FormContainer>
   );

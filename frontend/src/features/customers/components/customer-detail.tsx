@@ -242,6 +242,26 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         <DuplicateCandidateCard candidates={customer.duplicateCandidates} />
       )}
 
+      <CustomerDetailContent customer={customer} />
+    </div>
+  );
+}
+
+export interface CustomerDetailContentProps {
+  customer: import("@/lib/api/api-client").CustomerResponse;
+}
+
+export function CustomerDetailContent({ customer }: CustomerDetailContentProps) {
+  const t = useTranslations("customers");
+  const contact = customer.primaryContact;
+
+  const resolveCustomerTypeLabel = (value: string | null | undefined): string => {
+    const key = getCustomerTypeLabelKey(value);
+    return key ? t(key) : "-";
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
       {/* Detail Content */}
       <div className="erp-card p-6 flex flex-col gap-5">
         <h2 className="text-lg font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3">
@@ -281,6 +301,13 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
               "-"
             )}
           </dd>
+
+          {customer.leadSourceNote && (
+            <>
+              <dt>{t("leadSourceNote")}:</dt>
+              <dd>{customer.leadSourceNote}</dd>
+            </>
+          )}
         </dl>
       </div>
 
@@ -325,10 +352,12 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
       </div>
 
       {/* Sites Section */}
-      <SiteList
-        customerId={customerId}
-        isCustomerActive={customer.status === "active"}
-      />
+      {customer.id && (
+        <SiteList
+          customerId={customer.id}
+          isCustomerActive={customer.status === "active"}
+        />
+      )}
     </div>
   );
 }

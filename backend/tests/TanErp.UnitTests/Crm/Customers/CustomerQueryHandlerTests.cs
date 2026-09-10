@@ -2,6 +2,7 @@ using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Crm.Customers;
+using TanErp.Application.Crm.Customers.CheckDuplicates;
 using TanErp.Application.Crm.Customers.GetCustomer;
 using TanErp.Application.Crm.Customers.ListCustomers;
 using Xunit;
@@ -59,6 +60,26 @@ public class CustomerQueryHandlerTests
         {
             LastIncludePii = includeContactPii;
             return Task.FromResult(SingleResult);
+        }
+
+        public IReadOnlyList<DuplicateCustomerProjection> DuplicateResults { get; set; } = Array.Empty<DuplicateCustomerProjection>();
+        public string? LastNormalizedName { get; private set; }
+        public string? LastNormalizedPhone { get; private set; }
+        public string? LastNormalizedEmail { get; private set; }
+
+        public Task<IReadOnlyList<DuplicateCustomerProjection>> FindDuplicatesAsync(
+            Guid organizationId,
+            string? normalizedName,
+            string? normalizedPhone,
+            string? normalizedEmail,
+            bool includeContactPii,
+            CancellationToken cancellationToken = default)
+        {
+            LastNormalizedName = normalizedName;
+            LastNormalizedPhone = normalizedPhone;
+            LastNormalizedEmail = normalizedEmail;
+            LastIncludePii = includeContactPii;
+            return Task.FromResult(DuplicateResults);
         }
     }
 
@@ -220,4 +241,74 @@ public class CustomerQueryHandlerTests
         Assert.Equal(customerId, result.Value.Customer.Id);
         Assert.True(store.LastIncludePii);
     }
+
+    [Fact]
+    public async Task CheckDuplicates_WhenMissingPermission_ReturnsPermissionDenied()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        var store = new FakeCustomerReadStore();
+        var handler = new CheckCustomerDuplicatesHandler(resolver, store);
+
+        var query = new CheckCustomerDuplicatesQuery("uid-1", Guid.NewGuid(), "บริษัท ทดสอบ", "0812345678", null);
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PERMISSION_DENIED", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task CheckDuplicates_WhenAllEmpty_ReturnsEmptyWithoutStoreCall()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.create");
+        var store = new FakeCustomerReadStore();
+        var handler = new CheckCustomerDuplicatesHandler(resolver, store);
+
+        var query = new CheckCustomerDuplicatesQuery("uid-1", Guid.NewGuid(), "", null, "   ");
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Empty(result.Value.Candidates);
+        Assert.Null(store.LastNormalizedName);
+    }
+
+    [Fact]
+    public async Task CheckDuplicates_WhenPhoneHasThaiCountryCode_NormalizesToDomesticZero()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.create");
+        var store = new FakeCustomerReadStore();
+        var handler = new CheckCustomerDuplicatesHandler(resolver, store);
+
+        var query = new CheckCustomerDuplicatesQuery("uid-1", Guid.NewGuid(), null, "+66 81 234 5678", null);
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("0812345678", store.LastNormalizedPhone);
+    }
+
+    [Fact]
+    public async Task CheckDuplicates_WhenFound_ReturnsCandidates()
+    {
+        var resolver = new FakeRequestAccessResolver();
+        resolver.GrantedPermissions.Add("customers.create");
+        resolver.GrantedPermissions.Add("customer-contacts.manage");
+        var store = new FakeCustomerReadStore();
+        var dupId = Guid.NewGuid();
+        store.DuplicateResults = new List<DuplicateCustomerProjection>
+        {
+            new(dupId, "CUS-0001", "บริษัท ซ้ำ จำกัด", "0812345678", "dup@test.com")
+        };
+
+        var handler = new CheckCustomerDuplicatesHandler(resolver, store);
+        var query = new CheckCustomerDuplicatesQuery("uid-1", Guid.NewGuid(), "บริษัท ซ้ำ", "0812345678", null);
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value!.Candidates);
+        Assert.Equal("CUS-0001", result.Value.Candidates[0].Code);
+        Assert.True(store.LastIncludePii);
+    }
 }
+

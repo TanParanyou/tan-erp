@@ -28,4 +28,6 @@ public sealed record CustomerResponse(
     IReadOnlyList<DuplicateCustomerResponse>? DuplicateCandidates,
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
-    string? LeadSource = null);
+    string? LeadSource = null,
+    string? LeadSourceNote = null);
+

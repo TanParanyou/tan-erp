@@ -13,6 +13,7 @@ public class Customer : Entity
     public string Status { get; private set; } = CustomerStatus.Draft;
     public string PreferredLocale { get; private set; } = TanErp.Domain.Crm.Customers.PreferredLocale.Thai;
     public string? LeadSource { get; private set; }
+    public string? LeadSourceNote { get; private set; }
     public Guid RowVersion { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid CreatedByUserId { get; private set; }
@@ -31,6 +32,7 @@ public class Customer : Entity
         string? displayNameEn,
         string preferredLocale,
         string? leadSource,
+        string? leadSourceNote,
         DateTimeOffset createdAtUtc) : base(id)
     {
         if (string.IsNullOrWhiteSpace(displayNameTh))
@@ -53,6 +55,11 @@ public class Customer : Entity
             throw new ArgumentException($"Invalid lead source: '{leadSource}'.", nameof(leadSource));
         }
 
+        if (leadSourceNote?.Trim().Length > 200)
+        {
+            throw new ArgumentException("Lead source note cannot exceed 200 characters.", nameof(leadSourceNote));
+        }
+
         OrganizationId = organizationId;
         CreatedByUserId = createdByUserId;
         CustomerType = customerType.Trim();
@@ -63,6 +70,7 @@ public class Customer : Entity
         Status = CustomerStatus.Draft;
         PreferredLocale = preferredLocale.Trim();
         LeadSource = string.IsNullOrWhiteSpace(leadSource) ? null : leadSource.Trim();
+        LeadSourceNote = string.IsNullOrWhiteSpace(leadSourceNote) ? null : leadSourceNote.Trim();
         RowVersion = Guid.NewGuid();
         CreatedAtUtc = createdAtUtc;
     }
@@ -77,7 +85,8 @@ public class Customer : Entity
         string preferredLocale,
         PrimaryContactInput primaryContact,
         DateTimeOffset now,
-        string? leadSource = null)
+        string? leadSource = null,
+        string? leadSourceNote = null)
     {
         if (primaryContact == null)
         {
@@ -93,7 +102,9 @@ public class Customer : Entity
             displayNameEn,
             preferredLocale,
             leadSource,
+            leadSourceNote,
             now);
+
 
         var contact = new CustomerContact(
             Guid.NewGuid(),

@@ -6,6 +6,7 @@ export type CurrentUserResponse = components["schemas"]["CurrentUserResponse"];
 export type CustomerListResponse = components["schemas"]["CustomerListResponse"];
 export type CustomerListItemResponse = components["schemas"]["CustomerListItemResponse"];
 export type CustomerResponse = components["schemas"]["CustomerResponse"];
+export type DuplicateCustomerResponse = components["schemas"]["DuplicateCustomerResponse"];
 export type CreateCustomerRequest = components["schemas"]["CreateCustomerRequest"];
 
 export type SiteResponse = components["schemas"]["SiteResponse"];
@@ -161,6 +162,20 @@ export class ApiClient {
     options: RequestOptions
   ): Promise<CustomerResponse> {
     return this.request<CustomerResponse>("/api/v1/customers", "POST", options, payload);
+  }
+
+  async checkCustomerDuplicates(
+    params: { name?: string | null; phone?: string | null; email?: string | null },
+    options: RequestOptions
+  ): Promise<DuplicateCustomerResponse[]> {
+    const query = new URLSearchParams();
+    if (params.name) query.set("name", params.name);
+    if (params.phone) query.set("phone", params.phone);
+    if (params.email) query.set("email", params.email);
+
+    const queryString = query.toString();
+    const endpoint = `/api/v1/customers/check-duplicates${queryString ? `?${queryString}` : ""}`;
+    return this.request<DuplicateCustomerResponse[]>(endpoint, "GET", options);
   }
 
   async activateCustomer(

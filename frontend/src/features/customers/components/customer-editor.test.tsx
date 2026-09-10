@@ -20,7 +20,15 @@ vi.mock("@/lib/auth/auth-session", () => ({
 
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({
-    selectedMembership: { id: "membership-a" },
+    selectedMembership: {
+      id: "membership-a",
+      permissions: [
+        { key: "customers.read", scope: "organization" },
+        { key: "customers.manage", scope: "organization" },
+        { key: "sites.read", scope: "organization" },
+        { key: "sites.manage", scope: "organization" },
+      ],
+    },
   }),
 }));
 
@@ -31,11 +39,17 @@ vi.mock("@/lib/api/api-client", async (importOriginal) => {
     apiClient: {
       ...actual.apiClient,
       createCustomer: vi.fn(),
+      checkCustomerDuplicates: vi.fn(),
+      getCustomer: vi.fn(),
+      listCustomerSites: vi.fn(),
     },
   };
 });
 
 const mockedCreate = vi.mocked(apiClient.createCustomer);
+const mockedCheckDuplicates = vi.mocked(apiClient.checkCustomerDuplicates);
+const mockedGetCustomer = vi.mocked(apiClient.getCustomer);
+const mockedListCustomerSites = vi.mocked(apiClient.listCustomerSites);
 
 import { ToastProvider } from "@/hooks/useToast";
 
@@ -279,4 +293,166 @@ describe("CustomerEditor create intent", () => {
 
     expect(mockPush).toHaveBeenCalledWith("/th/customers");
   });
+
+  it("displays live duplicate warning banner when duplicates are detected", async () => {
+    mockedCheckDuplicates.mockResolvedValue([
+      {
+        id: "cust-dup-live",
+        code: "CUS-0088",
+        displayNameTh: "บริษัท ตัวอย่าง จำกัด",
+        maskedPhone: "081-***-5678",
+        maskedEmail: null,
+      },
+    ]);
+
+    renderEditor(client);
+    const nameInput = document.body.querySelector("#displayNameTh") as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: "บริษัท ตัวอย่าง จำกัด" } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/ระบบตรวจพบรายชื่อลูกค้าที่อาจซ้ำซ้อนในระบบ/)).toBeDefined();
+      expect(screen.getByText("CUS-0088 — บริษัท ตัวอย่าง จำกัด")).toBeDefined();
+    });
+  });
+
+  it("intercepts submission with DuplicateConfirmationModal when duplicates exist, allows confirm create", async () => {
+    mockedCheckDuplicates.mockResolvedValue([
+      {
+        id: "cust-dup-live",
+        code: "CUS-0088",
+        displayNameTh: "บริษัท ตัวอย่าง จำกัด",
+        maskedPhone: "081-***-5678",
+        maskedEmail: null,
+      },
+    ]);
+
+    mockedCreate.mockResolvedValue({
+      id: "cust-created-new",
+      code: "CUS-0105",
+      customerType: "organization",
+      displayNameTh: "บริษัท ตัวอย่าง จำกัด",
+      status: "draft",
+      duplicateCandidates: null,
+    });
+
+    renderEditor(client);
+    fillValidForm(document.body as unknown as HTMLElement);
+
+    // Wait for live duplicates to resolve
+    await waitFor(() => {
+      expect(screen.getByText(/ระบบตรวจพบรายชื่อลูกค้าที่อาจซ้ำซ้อนในระบบ/)).toBeDefined();
+    });
+
+    // Click Save
+    const saveButton = screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" });
+    fireEvent.click(saveButton);
+
+    // Modal should appear without calling createCustomer yet
+    await waitFor(() => {
+      expect(screen.getByText(thMessages.customers.duplicateConfirmTitle)).toBeDefined();
+    });
+    expect(mockedCreate).not.toHaveBeenCalled();
+
+    // In modal, click "ยืนยันสร้างลูกค้ารายใหม่"
+    const confirmNewCustomerBtn = screen.getByRole("button", {
+      name: thMessages.customers.confirmCreateNewCustomer,
+    });
+    fireEvent.click(confirmNewCustomerBtn);
+
+    // Now createCustomer should be called and then navigate to new customer
+    await waitFor(() => {
+      expect(mockedCreate).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("cust-created-new"));
+    });
+  });
+
+  it("opens CustomerQuickViewDrawer which calls getCustomer and listCustomerSites API and displays complete details", async () => {
+    mockedCheckDuplicates.mockResolvedValue([
+      {
+        id: "cust-dup-live-1",
+        code: "CUS-0088",
+        displayNameTh: "บริษัท ตัวอย่าง จำกัด",
+        maskedPhone: "081-***-5678",
+        maskedEmail: null,
+      },
+    ]);
+
+    mockedGetCustomer.mockResolvedValue({
+      id: "cust-dup-live-1",
+      code: "CUS-0088",
+      customerType: "organization",
+      displayNameTh: "บริษัท ตัวอย่าง จำกัด",
+      displayNameEn: "Sample Company Ltd.",
+      preferredLocale: "th",
+      status: "active",
+      leadSource: "referral",
+      leadSourceNote: "จากงานสัมมนา",
+      primaryContact: {
+        name: "สมศรี มีสุข",
+        roleTitle: "ผู้จัดการฝ่ายจัดซื้อ",
+        phone: "081-234-5678",
+        email: "somsri@example.com",
+        lineId: "@somsri_line",
+        preferredChannel: "phone",
+        isMasked: false,
+      },
+      duplicateCandidates: null,
+      rowVersion: "row-v-1",
+      createdAtUtc: "2026-09-01T08:00:00Z",
+    });
+
+    mockedListCustomerSites.mockResolvedValue({
+      items: [
+        {
+          id: "site-1",
+          customerId: "cust-dup-live-1",
+          code: "SITE-001",
+          label: "สำนักงานใหญ่ อโศก",
+          addressLine1: "123 ถนนสุขุมวิท 21",
+          subdistrict: "คลองเตยเหนือ",
+          district: "วัฒนา",
+          province: "กรุงเทพมหานคร",
+          postalCode: "10110",
+          countryCode: "TH",
+          status: "active",
+        },
+      ],
+    });
+
+    renderEditor(client);
+    const nameInput = document.body.querySelector("#displayNameTh") as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: "บริษัท ตัวอย่าง จำกัด" } });
+
+    // Wait for live duplicate alert
+    await waitFor(() => {
+      expect(screen.getByText(/ระบบตรวจพบรายชื่อลูกค้าที่อาจซ้ำซ้อนในระบบ/)).toBeDefined();
+    });
+
+    // Click "ดูข้อมูล (Drawer)"
+    const viewDrawerBtn = screen.getByRole("button", { name: thMessages.customers.viewInDrawer });
+    fireEvent.click(viewDrawerBtn);
+
+    // Verify Drawer opens and calls getCustomer & listCustomerSites API
+    await waitFor(() => {
+      expect(mockedGetCustomer).toHaveBeenCalledWith("cust-dup-live-1", expect.anything());
+      expect(mockedListCustomerSites).toHaveBeenCalledWith("cust-dup-live-1", expect.anything());
+    });
+
+    // Verify detailed content is displayed inside Drawer
+    await waitFor(() => {
+      expect(screen.getByText(thMessages.customers.quickViewTitle)).toBeDefined();
+      expect(screen.getByText("Sample Company Ltd.")).toBeDefined();
+      expect(screen.getByText("สมศรี มีสุข")).toBeDefined();
+      expect(screen.getByText("ผู้จัดการฝ่ายจัดซื้อ")).toBeDefined();
+      expect(screen.getByText("081-234-5678")).toBeDefined();
+      expect(screen.getByText("somsri@example.com")).toBeDefined();
+      expect(screen.getByText("@somsri_line")).toBeDefined();
+      expect(screen.getByText("จากงานสัมมนา")).toBeDefined();
+      expect(screen.getByText("สำนักงานใหญ่ อโศก")).toBeDefined();
+      expect(screen.getByText("123 ถนนสุขุมวิท 21")).toBeDefined();
+      expect(screen.getByText("กรุงเทพมหานคร")).toBeDefined();
+      expect(screen.getByText("10110")).toBeDefined();
+    });
+  });
 });
+

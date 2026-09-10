@@ -187,7 +187,9 @@ public class CustomerCreationStore : ICustomerCreationStore
             contactProjection,
             customer.RowVersion,
             customer.CreatedAtUtc,
-            customer.LeadSource);
+            customer.LeadSource,
+            customer.LeadSourceNote);
+
     }
 
     public static string? MaskPhone(string? phone)

@@ -4,6 +4,7 @@ using TanErp.Api.Contracts.Crm.Customers;
 using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Crm.Customers;
+using TanErp.Application.Crm.Customers.CheckDuplicates;
 using TanErp.Application.Crm.Customers.CreateCustomer;
 using TanErp.Application.Crm.Customers.GetCustomer;
 using TanErp.Application.Crm.Customers.ListCustomers;
@@ -18,17 +19,20 @@ public class CustomersController : ControllerBase
     private readonly CreateCustomerHandler _createHandler;
     private readonly ListCustomersHandler _listHandler;
     private readonly GetCustomerHandler _getHandler;
+    private readonly CheckCustomerDuplicatesHandler _checkDuplicatesHandler;
     private readonly TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerHandler _activateHandler;
 
     public CustomersController(
         CreateCustomerHandler createHandler,
         ListCustomersHandler listHandler,
         GetCustomerHandler getHandler,
+        CheckCustomerDuplicatesHandler checkDuplicatesHandler,
         TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerHandler activateHandler)
     {
         _createHandler = createHandler;
         _listHandler = listHandler;
         _getHandler = getHandler;
+        _checkDuplicatesHandler = checkDuplicatesHandler;
         _activateHandler = activateHandler;
     }
 
@@ -68,7 +72,9 @@ public class CustomersController : ControllerBase
                 request.PrimaryContact.PreferredChannel,
                 request.PrimaryContact.LineId),
             traceId,
-            request.LeadSource);
+            request.LeadSource,
+            request.LeadSourceNote);
+
 
         var result = await _createHandler.Handle(command, cancellationToken);
         if (result.IsFailure)
@@ -151,6 +157,42 @@ public class CustomersController : ControllerBase
             currentPage,
             pageSize,
             totalPages);
+        return Ok(response);
+    }
+
+    [HttpGet("check-duplicates")]
+    [ProducesResponseType<IReadOnlyList<DuplicateCustomerResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> CheckDuplicates(
+        [FromQuery] string? name,
+        [FromQuery] string? phone,
+        [FromQuery] string? email,
+        CancellationToken cancellationToken = default)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var query = new CheckCustomerDuplicatesQuery(auth.FirebaseUid, auth.MembershipId, name, phone, email);
+
+        var result = await _checkDuplicatesHandler.Handle(query, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var response = result.Value!.Candidates.Select(c => new DuplicateCustomerResponse(
+            c.Id,
+            c.Code,
+            c.DisplayNameTh,
+            c.MaskedPhone,
+            c.MaskedEmail)).ToList();
+
         return Ok(response);
     }
 
@@ -251,6 +293,8 @@ public class CustomersController : ControllerBase
             duplicates,
             customer.RowVersion,
             customer.CreatedAtUtc,
-            customer.LeadSource);
+            customer.LeadSource,
+            customer.LeadSourceNote);
     }
 }
+

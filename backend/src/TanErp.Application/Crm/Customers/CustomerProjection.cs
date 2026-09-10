@@ -20,7 +20,9 @@ public sealed record CustomerProjection(
     CustomerContactProjection PrimaryContact,
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
-    string? LeadSource = null);
+    string? LeadSource = null,
+    string? LeadSourceNote = null);
+
 
 public sealed record DuplicateCustomerProjection(
     Guid Id,

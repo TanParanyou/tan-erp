@@ -30,4 +30,12 @@ public interface ICustomerReadStore
         Guid customerId,
         bool includeContactPii,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<DuplicateCustomerProjection>> FindDuplicatesAsync(
+        Guid organizationId,
+        string? normalizedName,
+        string? normalizedPhone,
+        string? normalizedEmail,
+        bool includeContactPii,
+        CancellationToken cancellationToken = default);
 }

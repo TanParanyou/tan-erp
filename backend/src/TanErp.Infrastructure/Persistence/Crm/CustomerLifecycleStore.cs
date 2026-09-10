@@ -196,6 +196,8 @@ public class CustomerLifecycleStore : ICustomerLifecycleStore
             contactProjection,
             customer.RowVersion,
             customer.CreatedAtUtc,
-            customer.LeadSource);
+            customer.LeadSource,
+            customer.LeadSourceNote);
+
     }
 }

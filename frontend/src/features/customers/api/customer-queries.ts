@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery, type UseQueryResult, type UseInfiniteQueryResult } from "@tanstack/react-query";
-import { apiClient, type CustomerListResponse, type CustomerResponse, type ListCustomersParams } from "@/lib/api/api-client";
+import { apiClient, type CustomerListResponse, type CustomerResponse, type DuplicateCustomerResponse, type ListCustomersParams } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
@@ -112,3 +112,77 @@ export function useCustomerDetail(
     enabled: Boolean(membershipId && customerId && customerId !== "create" && customerId !== "add"),
   });
 }
+
+export interface CheckDuplicatesParams {
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+}
+
+export function customerDuplicateCheckQueryKey(
+  membershipId: string | null | undefined,
+  params: CheckDuplicatesParams,
+): readonly [
+  "business",
+  string | null | undefined,
+  "customers",
+  "check-duplicates",
+  string | null,
+  string | null,
+  string | null,
+] {
+  return [
+    "business",
+    membershipId,
+    "customers",
+    "check-duplicates",
+    params.name?.trim() || null,
+    params.phone?.trim() || null,
+    params.email?.trim() || null,
+  ] as const;
+}
+
+export function useCustomerDuplicateCheck(
+  params: CheckDuplicatesParams,
+  enabled = true,
+): UseQueryResult<DuplicateCustomerResponse[], Error> {
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+
+  const trimmedName = params.name?.trim() || "";
+  const trimmedPhone = params.phone?.trim() || "";
+  const trimmedEmail = params.email?.trim() || "";
+  const hasInput = trimmedName.length >= 2 || trimmedPhone.length >= 3 || trimmedEmail.length >= 3;
+
+  return useQuery({
+    queryKey: customerDuplicateCheckQueryKey(membershipId, params),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new AuthenticationRequiredError();
+      }
+      if (!membershipId) {
+        throw new MembershipRequiredError();
+      }
+
+      return apiClient.checkCustomerDuplicates(
+        {
+          name: trimmedName || null,
+          phone: trimmedPhone || null,
+          email: trimmedEmail || null,
+        },
+        {
+          token,
+          membershipId,
+          locale: normalizedLocale,
+          signal,
+        },
+      );
+    },
+    enabled: Boolean(enabled && membershipId && hasInput),
+    staleTime: 10_000,
+  });
+}
+

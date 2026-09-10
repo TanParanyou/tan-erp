@@ -18,4 +18,6 @@ public sealed record CreateCustomerCommand(
     string PreferredLocale,
     CreatePrimaryContact PrimaryContact,
     string TraceId,
-    string? LeadSource = null);
+    string? LeadSource = null,
+    string? LeadSourceNote = null);
+

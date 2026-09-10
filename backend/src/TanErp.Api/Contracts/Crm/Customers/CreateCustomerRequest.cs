@@ -16,4 +16,6 @@ public sealed record CreateCustomerRequest(
     string? DisplayNameEn,
     [Required] string PreferredLocale,
     [Required] CreatePrimaryContactRequest PrimaryContact,
-    [MaxLength(50)] string? LeadSource = null);
+    [MaxLength(50)] string? LeadSource = null,
+    [MaxLength(200)] string? LeadSourceNote = null);
+

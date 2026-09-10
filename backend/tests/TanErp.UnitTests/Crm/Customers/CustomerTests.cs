@@ -47,8 +47,9 @@ public class CustomerTests
         Assert.Equal("active", primaryContact.Status);
         Assert.Equal("คุณตัวอย่าง TEST_ONLY", primaryContact.Name);
         Assert.Equal("+66 81 234 5678", primaryContact.Phone);
-        Assert.Equal("66812345678", primaryContact.NormalizedPhone);
+        Assert.Equal("0812345678", primaryContact.NormalizedPhone);
         Assert.Equal("test@example.com", primaryContact.Email);
+
         Assert.Equal("test@example.com", primaryContact.NormalizedEmail);
         Assert.Equal("phone", primaryContact.PreferredChannel);
     }
@@ -285,4 +286,67 @@ public class CustomerTests
         var secondOutcome = customer.Activate(customer.RowVersion);
         Assert.Equal(CustomerActivationOutcome.InvalidState, secondOutcome);
     }
+
+    [Fact]
+    public void CreateDraft_WhenInternationalPhone_PreservesPlusPrefixInNormalizedPhone()
+    {
+        var contactInput = new PrimaryContactInput("John Doe", "Director", "+1 (202) 555-0125", "john@example.com", "phone");
+
+        var customer = Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "จอห์น โด",
+            "John Doe",
+            PreferredLocale.English,
+            contactInput,
+            DateTimeOffset.UtcNow);
+
+        var primaryContact = customer.Contacts.First();
+        Assert.Equal("+12025550125", primaryContact.NormalizedPhone);
+    }
+
+    [Fact]
+    public void CreateDraft_WithLeadSourceOtherAndNote_PersistsBoth()
+    {
+        var contactInput = new PrimaryContactInput("คุณสมศักดิ์", null, "0812345678", null, "phone");
+
+        var customer = Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "สมศักดิ์ มั่งคั่ง",
+            null,
+            PreferredLocale.Thai,
+            contactInput,
+            DateTimeOffset.UtcNow,
+            leadSource: CustomerLeadSource.Other,
+            leadSourceNote: "Exhibition 2026");
+
+        Assert.Equal("other", customer.LeadSource);
+        Assert.Equal("Exhibition 2026", customer.LeadSourceNote);
+    }
+
+    [Fact]
+    public void CreateDraft_WhenLeadSourceNoteExceeds200Chars_ThrowsArgumentException()
+    {
+        var contactInput = new PrimaryContactInput("คุณสมศักดิ์", null, "0812345678", null, "phone");
+        var longNote = new string('A', 201);
+
+        Assert.Throws<ArgumentException>(() => Customer.CreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            CustomerType.Person,
+            "สมศักดิ์ มั่งคั่ง",
+            null,
+            PreferredLocale.Thai,
+            contactInput,
+            DateTimeOffset.UtcNow,
+            leadSource: CustomerLeadSource.Other,
+            leadSourceNote: longNote));
+    }
 }
+

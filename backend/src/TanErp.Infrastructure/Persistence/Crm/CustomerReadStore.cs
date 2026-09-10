@@ -144,6 +144,49 @@ public class CustomerReadStore : ICustomerReadStore
             contactProjection,
             customer.RowVersion,
             customer.CreatedAtUtc,
-            customer.LeadSource);
+            customer.LeadSource,
+            customer.LeadSourceNote);
+
+    }
+
+    public async Task<IReadOnlyList<DuplicateCustomerProjection>> FindDuplicatesAsync(
+        Guid organizationId,
+        string? normalizedName,
+        string? normalizedPhone,
+        string? normalizedEmail,
+        bool includeContactPii,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedName) &&
+            string.IsNullOrWhiteSpace(normalizedPhone) &&
+            string.IsNullOrWhiteSpace(normalizedEmail))
+        {
+            return Array.Empty<DuplicateCustomerProjection>();
+        }
+
+        var query = _db.Customers
+            .AsNoTracking()
+            .Include(c => c.Contacts)
+            .Where(c => c.OrganizationId == organizationId);
+
+        var duplicateList = await query
+            .Where(c =>
+                (!string.IsNullOrWhiteSpace(normalizedName) && c.NormalizedDisplayName == normalizedName) ||
+                (!string.IsNullOrWhiteSpace(normalizedPhone) && c.Contacts.Any(ct => ct.NormalizedPhone == normalizedPhone)) ||
+                (!string.IsNullOrWhiteSpace(normalizedEmail) && c.Contacts.Any(ct => ct.NormalizedEmail == normalizedEmail)))
+            .Take(5)
+            .ToListAsync(cancellationToken);
+
+        return duplicateList.Select(d =>
+        {
+            var dContact = d.Contacts.FirstOrDefault(ct => ct.IsPrimary) ?? d.Contacts.FirstOrDefault();
+            return new DuplicateCustomerProjection(
+                d.Id,
+                d.Code,
+                d.DisplayNameTh,
+                includeContactPii ? dContact?.Phone : CustomerCreationStore.MaskPhone(dContact?.Phone),
+                includeContactPii ? dContact?.Email : CustomerCreationStore.MaskEmail(dContact?.Email));
+        }).ToList();
     }
 }
+

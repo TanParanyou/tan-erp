@@ -162,9 +162,27 @@ public static class CustomerNormalizer
     public static string? NormalizePhone(string? phone)
     {
         if (string.IsNullOrWhiteSpace(phone)) return null;
-        var digits = DigitsOnlyRegex.Replace(phone, "");
-        return string.IsNullOrWhiteSpace(digits) ? null : digits;
+
+        var trimmed = phone.Trim();
+        var isPlus = trimmed.StartsWith('+');
+        var digits = DigitsOnlyRegex.Replace(trimmed, "");
+        if (string.IsNullOrWhiteSpace(digits)) return null;
+
+        // Thai international number: +66 or 66 followed by 8-9 digits (e.g. +66812345678 -> 0812345678)
+        if (digits.StartsWith("66") && digits.Length >= 10 && digits.Length <= 11)
+        {
+            return "0" + digits[2..];
+        }
+
+        // Other international number: preserve '+' prefix
+        if (isPlus)
+        {
+            return "+" + digits;
+        }
+
+        return digits;
     }
+
 
     public static string? NormalizeEmail(string? email)
     {

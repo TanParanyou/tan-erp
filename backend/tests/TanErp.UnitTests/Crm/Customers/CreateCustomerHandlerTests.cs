@@ -198,7 +198,8 @@ public class CreateCustomerHandlerTests
         Assert.Equal("Customer", customerAudit.ResourceType);
         Assert.Equal(store.LastRequest.Customer.Id.ToString(), customerAudit.ResourceId);
         Assert.Equal("trace-1", customerAudit.TraceId);
-        Assert.Equal("{\"changedFields\":[\"customerType\",\"displayNameTh\",\"displayNameEn\",\"preferredLocale\",\"leadSource\",\"primaryContact\"]}", customerAudit.ChangesJson);
+        Assert.Equal("{\"changedFields\":[\"customerType\",\"displayNameTh\",\"displayNameEn\",\"preferredLocale\",\"leadSource\",\"leadSourceNote\",\"primaryContact\"]}", customerAudit.ChangesJson);
+
 
         var contactAudit = auditEvents.First(a => a.Action == "contact.created");
         Assert.Equal("CustomerContact", contactAudit.ResourceType);

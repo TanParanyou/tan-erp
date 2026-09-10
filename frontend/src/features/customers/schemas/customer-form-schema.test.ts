@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import { createCustomerFormSchema } from "./customer-form-schema";
 
 const t = (
-  key: "required" | "invalidEmail" | "phoneOrEmailRequired" | "invalidFormat",
+  key:
+    | "required"
+    | "invalidEmail"
+    | "phoneOrEmailRequired"
+    | "invalidFormat"
+    | "invalidPhone"
+    | "leadSourceNoteRequired",
 ): string => `validation.${key}`;
 
 const schema = createCustomerFormSchema(t);
@@ -50,8 +56,52 @@ const contactWithoutPhoneAndEmail = {
 };
 
 describe("createCustomerFormSchema", () => {
-  it("accepts organization with phone", () => {
+  it("accepts organization with domestic phone", () => {
     expect(schema.safeParse(validOrganizationWithPhone).success).toBe(true);
+  });
+
+  it("accepts international phone numbers (+66, +1, +65)", () => {
+    expect(
+      schema.safeParse({
+        ...validOrganizationWithPhone,
+        primaryContact: {
+          ...validOrganizationWithPhone.primaryContact,
+          phone: "+66 81 234 5678",
+        },
+      }).success,
+    ).toBe(true);
+
+    expect(
+      schema.safeParse({
+        ...validOrganizationWithPhone,
+        primaryContact: {
+          ...validOrganizationWithPhone.primaryContact,
+          phone: "+1 202 555 0125",
+        },
+      }).success,
+    ).toBe(true);
+
+    expect(
+      schema.safeParse({
+        ...validOrganizationWithPhone,
+        primaryContact: {
+          ...validOrganizationWithPhone.primaryContact,
+          phone: "+65 9123 4567",
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects invalid phone numbers with invalidPhone message", () => {
+    const result = schema.safeParse({
+      ...validOrganizationWithPhone,
+      primaryContact: {
+        ...validOrganizationWithPhone.primaryContact,
+        phone: "12345",
+      },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("validation.invalidPhone");
   });
 
   it("accepts person with email only", () => {
@@ -102,6 +152,23 @@ describe("createCustomerFormSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("requires leadSourceNote when leadSource is other", () => {
+    const resultWithoutNote = schema.safeParse({
+      ...validOrganizationWithPhone,
+      leadSource: "other",
+      leadSourceNote: "",
+    });
+    expect(resultWithoutNote.success).toBe(false);
+    expect(resultWithoutNote.error?.issues[0].message).toBe("validation.leadSourceNoteRequired");
+
+    const resultWithNote = schema.safeParse({
+      ...validOrganizationWithPhone,
+      leadSource: "other",
+      leadSourceNote: "Exhibition Expo 2026",
+    });
+    expect(resultWithNote.success).toBe(true);
+  });
+
   it("rejects lineId exceeding 100 characters with localized invalidFormat", () => {
     const result = schema.safeParse({
       ...validOrganizationWithPhone,
@@ -114,3 +181,4 @@ describe("createCustomerFormSchema", () => {
     expect(result.error?.issues[0].message).toBe("validation.invalidFormat");
   });
 });
+

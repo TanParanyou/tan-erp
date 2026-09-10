@@ -224,6 +224,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customers/check-duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    name?: string;
+                    phone?: string;
+                    email?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DuplicateCustomerResponse"][];
+                        "application/json": components["schemas"]["DuplicateCustomerResponse"][];
+                        "text/json": components["schemas"]["DuplicateCustomerResponse"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customers/{id}": {
         parameters: {
             query?: never;
@@ -873,6 +947,7 @@ export interface components {
             preferredLocale?: string | null;
             primaryContact?: components["schemas"]["CreatePrimaryContactRequest"];
             leadSource?: string | null;
+            leadSourceNote?: string | null;
         };
         CreateOpportunityRequest: {
             /** Format: uuid */
@@ -942,9 +1017,13 @@ export interface components {
         CustomerListResponse: {
             items?: components["schemas"]["CustomerListItemResponse"][] | null;
             nextCursor?: string | null;
+            /** Format: int32 */
             totalCount?: number;
+            /** Format: int32 */
             page?: number;
+            /** Format: int32 */
             pageSize?: number;
+            /** Format: int32 */
             totalPages?: number;
         };
         CustomerResponse: {
@@ -963,6 +1042,7 @@ export interface components {
             /** Format: date-time */
             createdAtUtc?: string;
             leadSource?: string | null;
+            leadSourceNote?: string | null;
         };
         DuplicateCustomerResponse: {
             /** Format: uuid */
