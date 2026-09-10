@@ -96,4 +96,46 @@ describe("DataTable component", () => {
     fireEvent.click(checkboxes[2]);
     expect(onSelect).toHaveBeenCalledWith(2);
   });
+
+  it("renders error state within table frame and triggers onRetry", () => {
+    const onRetry = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={[]}
+        isError={true}
+        error="Network timeout occurred"
+        onRetry={onRetry}
+      />
+    );
+
+    // Headers are still preserved
+    expect(screen.getByText("Code")).toBeInTheDocument();
+    expect(screen.getByText("Name")).toBeInTheDocument();
+
+    // Error message and retry button are shown
+    expect(screen.getByText("Network timeout occurred")).toBeInTheDocument();
+    const retryBtn = screen.getByRole("button", { name: /ลองใหม่อีกครั้ง|retry/i });
+    expect(retryBtn).toBeInTheDocument();
+    fireEvent.click(retryBtn);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders custom emptyTitle and emptyDescription within table frame", () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={[]}
+        emptyTitle="No records found for filter"
+        emptyDescription="Try broadening your search criteria"
+      />
+    );
+
+    // Headers are still preserved
+    expect(screen.getByText("Code")).toBeInTheDocument();
+    expect(screen.getByText("Name")).toBeInTheDocument();
+
+    expect(screen.getByText("No records found for filter")).toBeInTheDocument();
+    expect(screen.getByText("Try broadening your search criteria")).toBeInTheDocument();
+  });
 });

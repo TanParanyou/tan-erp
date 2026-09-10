@@ -9,9 +9,11 @@ import {
   IconArrowUp,
   IconArrowDown,
   IconArrowUpDown,
+  IconAlertCircle,
 } from "@/components/common/Icons";
 import { Checkbox } from "./Checkbox";
 import { MonoSpinner } from "./MonoSpinner";
+import { Button } from "./Button";
 import { cn } from "@/lib/utils/cn";
 import type { SortState } from "@/hooks/useDataTable";
 import { useTranslations } from "next-intl";
@@ -48,6 +50,13 @@ export interface DataTableProps<T> {
   hidePagination?: boolean;
   stickyActionColumn?: boolean;
 
+  // Error & empty states
+  isError?: boolean;
+  error?: Error | string | null;
+  onRetry?: () => void;
+  emptyTitle?: string;
+  emptyDescription?: string;
+
   // Row selection
   selectable?: boolean;
   selectedIds?: Set<string | number>;
@@ -61,6 +70,11 @@ export function DataTable<T>({
   pagination,
   sorting,
   isLoading = false,
+  isError = false,
+  error = null,
+  onRetry,
+  emptyTitle,
+  emptyDescription,
   onPageChange,
   onLimitChange,
   onSort,
@@ -74,6 +88,8 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const t = useTranslations("common.table");
   const tStates = useTranslations("common.states");
+  const tCommon = useTranslations("common");
+  const errorMessage = typeof error === "string" ? error : error?.message;
   const safeData = data || [];
   const page = pagination?.page || 1;
   const totalPages = pagination?.totalPages ?? 0;
@@ -286,6 +302,35 @@ export function DataTable<T>({
                   <MonoSpinner size="md" label={tStates("loading")} />
                 </td>
               </tr>
+            ) : isError ? (
+              <tr>
+                <td
+                  colSpan={columns.length + (selectable ? 1 : 0)}
+                  className="h-44 text-center p-6 bg-erp-danger-bg/10"
+                >
+                  <div
+                    role="alert"
+                    aria-live="polite"
+                    className="flex flex-col items-center justify-center gap-2.5"
+                  >
+                    <IconAlertCircle size={28} className="text-erp-danger shrink-0" />
+                    <p className="text-sm font-semibold text-erp-danger m-0 max-w-md">
+                      {errorMessage || tCommon("feedback.operationFailed")}
+                    </p>
+                    {onRetry && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={onRetry}
+                        className="mt-1 text-xs font-semibold min-h-[36px]"
+                      >
+                        {tCommon("actions.retry")}
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
             ) : safeData.length > 0 ? (
               safeData.map((row, rowIdx) => {
                 const rowObj = row as Record<string, unknown>;
@@ -355,9 +400,16 @@ export function DataTable<T>({
               <tr>
                 <td
                   colSpan={columns.length + (selectable ? 1 : 0)}
-                  className="h-32 text-center text-erp-text-muted"
+                  className="h-40 text-center text-erp-text-muted p-8"
                 >
-                  {t("emptyTable")}
+                  <div className="flex flex-col items-center justify-center gap-1.5">
+                    <span className="text-sm font-semibold text-erp-text-main">
+                      {emptyTitle || t("noData")}
+                    </span>
+                    <span className="text-xs text-erp-text-muted">
+                      {emptyDescription || t("emptyTable")}
+                    </span>
+                  </div>
                 </td>
               </tr>
             )}
