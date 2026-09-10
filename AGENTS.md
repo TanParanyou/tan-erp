@@ -78,7 +78,7 @@ This repository is in **Application Implementation**. The authorized implementat
 
 ## 6. ERP Form & UX Standards (Atelier Architectural Navy Sharp)
 
-> ศึกษาคู่มือละเอียดเพิ่มเติมได้ที่ `.agents/skills/building-erp-forms/SKILL.md` และข้อกำหนดด้านการออกแบบที่ `design.md`
+> ศึกษาคู่มือละเอียดเพิ่มเติมได้ที่ `.agents/skills/building-erp-forms/SKILL.md` (ฟอร์มบันทึกข้อมูล), `.agents/skills/building-erp-lists/SKILL.md` (ตารางรายการข้อมูลและ Table-Preserved Architecture) และข้อกำหนดด้านการออกแบบที่ `design.md`
 
 - **Visual Theme:** ยึดมั่นตาม **Atelier Architectural Navy Sharp**
   - `border-radius: 0px !important` (คม เหลี่ยม ปราศจากความโค้งมน)
