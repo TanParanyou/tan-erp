@@ -94,7 +94,8 @@ This repository is in **Application Implementation**. The authorized implementat
 
 ## 7. Application & Clean Architecture Guardrails
 
-> อ่านเอกสารเหล่านี้เมื่อได้รับอนุญาตให้ทำงานในส่วน Application:
+> อ่านเอกสารและคู่มือมาตรฐาน API เหล่านี้เมื่อได้รับอนุญาตให้ทำงานในส่วน Application:
+> - มาตรฐานการทำ API: `.agents/skills/building-erp-apis/SKILL.md` (ครอบคลุมทั้ง Backend, Error Codes, Search/Pagination, OpenAPI และ Frontend Integration)
 > - Backend: `docs/02-architecture/backend-architecture.md`
 > - Frontend: `docs/02-architecture/frontend-architecture.md`
 > - API and errors: `docs/03-contracts/`
