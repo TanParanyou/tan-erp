@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useCustomerList } from "../api/customer-queries";
+import { isAuthenticationRequiredError, isMembershipRequiredError } from "@/lib/api/api-error";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -91,10 +92,10 @@ export function CustomerList() {
   };
 
   const resolveListErrorMessage = (error: Error | null): string => {
-    if (error?.message === "No authentication token available") {
+    if (isAuthenticationRequiredError(error)) {
       return t("errors.authenticationRequired");
     }
-    if (error?.message === "No active membership selected") {
+    if (isMembershipRequiredError(error)) {
       return t("errors.membershipRequired");
     }
     return t("errors.loadList");

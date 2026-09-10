@@ -90,3 +90,16 @@ Query key ของข้อมูลธุรกิจต้องรวมบ�
 หน้า Login และการเรียก Business API ที่ใช้ Firebase client ทำงานผ่าน Client boundary; การเพิ่ม Server-side fetching ที่ใช้ตัวตนผู้ใช้ต้องออกแบบการส่งต่อ Session ให้ชัดก่อน ห้ามส่ง Token หรือข้อมูลลับผ่าน Props ไปยัง UI ที่ไม่จำเป็นต้องใช้
 
 หน้าเข้าระบบต้องมีสถานะกำลังโหลด, Session หมดอายุ, ไม่มี Membership, ไม่มีสิทธิ์ และเชื่อมต่อ BE ไม่ได้ โดยข้อความที่ผู้ใช้เห็นและการตีความ HTTP error ยึด [Error Contract](../03-contracts/error-contract.md)
+
+## มาตรฐานการจัดการข้อผิดพลาด (Error Handling Standard)
+
+- **ห้ามตรวจสอบข้อผิดพลาดด้วย String Matching ดิบ และห้ามทำ Loose Fallback มั่วเด็ดขาด:**
+  - ห้ามเขียน Logic ดักจับหรือเปรียบเทียบข้อความ Error จากสตริง เช่น `error?.message === "..."` โดยเด็ดขาด ทั้งใน UI components, hooks, functions หรือ utility guards
+  - **ห้ามทำ Arbitrary/Loose Fallback ใน Functions ทุกประเภท:** ไม่ว่าจะเป็น Guard functions, Resolvers, Transformers, หรือ Mappers ห้ามดักจับข้อความแบบคลุมเครือ ห้ามเดาสุ่ม (No Guesses) และห้าม fallback มั่วโดยไม่มี Type หรือ Contract รองรับอย่างชัดเจน
+  - ห้ามแอบใส่ Fallback ดัก `error.message` ซ่อนไว้ใน Guard Functions (เช่น `if (error.message === "...") return true;`) เพื่อหวังแค่ให้เทสต์หรือโค้ดเก่าผ่าน เพราะทำให้เกิดความเปราะบาง (Brittle), ซุกซ่อนปัญหาเชิงโครงสร้าง (Anti-pattern) และขัดต่อมาตรฐาน Production-Grade
+- **ใช้ Typed Error และ Machine-Readable Error Codes เท่านั้น (Strict Code Contract):** 
+  - การโยน Error ในส่วน Client Preflight (เช่น ก่อนยิง Query หรือ Mutation เมื่อขาด Token หรือ Membership) ให้ใช้ Typed Subclasses ของ `ApiError` เสมอ เช่น `AuthenticationRequiredError` (code: `AUTHENTICATION_REQUIRED`) และ `MembershipRequiredError` (code: `MEMBERSHIP_CONTEXT_REQUIRED`)
+  - Error ที่ตอบกลับจาก Backend จะเป็น RFC 7807/9457 Problem Details ซึ่ง `ApiClient` จะแปลงเป็น `ApiError` พร้อม HTTP status code และ machine-readable `code`
+- **ใช้ Type Guard Functions และ Instance/Code-driven Narrowing เท่านั้น:**
+  - ให้ใช้ Helper Guards กลางจาก `@/lib/api/api-error` เสมอ เช่น `isAuthenticationRequiredError(error)` และ `isMembershipRequiredError(error)`
+  - ภายใน Guard Function ต้องตรวจสอบเฉพาะ `instanceof <ErrorClass>` หรือ `error.code === "<STABLE_CODE>"` เท่านั้น ห้ามแตะต้อง `error.message` เด็ดขาด

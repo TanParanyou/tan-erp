@@ -1,5 +1,6 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { apiClient, type SiteListResponse } from "@/lib/api/api-client";
+import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -25,10 +26,10 @@ export function useCustomerSiteList(
     queryFn: async ({ signal }) => {
       const token = await getAuthToken();
       if (!token) {
-        throw new Error("No authentication token available");
+        throw new AuthenticationRequiredError();
       }
       if (!membershipId) {
-        throw new Error("No active membership selected");
+        throw new MembershipRequiredError();
       }
       if (!customerId) {
         throw new Error("No customer ID provided");

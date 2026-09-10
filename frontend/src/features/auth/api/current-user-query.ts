@@ -1,5 +1,6 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { apiClient, type CurrentUserResponse } from "@/lib/api/api-client";
+import { AuthenticationRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import type { SupportedLocale } from "@/lib/i18n/locales";
@@ -20,7 +21,7 @@ export function useCurrentUser(
     queryFn: async ({ signal }) => {
       const token = await getAuthToken();
       if (!token) {
-        throw new Error("No authentication token available");
+        throw new AuthenticationRequiredError();
       }
       return apiClient.getCurrentUser(token, effectiveLocale, signal);
     },

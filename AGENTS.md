@@ -110,6 +110,7 @@ This repository is in **Application Implementation**. The authorized implementat
 
 ### Frontend (Next.js App Router + TypeScript)
 - **Strict TypeScript:** ห้ามใช้ type `any`, `as any` หรือ `@ts-ignore` เด็ดขาด กำหนด DTO / Interface ให้ครบถ้วน หรือใช้ `unknown` แล้ว narrow
+- **Strict Error Handling & No Arbitrary Fallback:** ห้ามดักจับหรือเปรียบเทียบ Error ด้วย String message ดิบ (เช่น `error.message === "..."`) และห้ามทำ loose/arbitrary fallback ในฟังก์ชันทุกประเภท (ไม่ว่าจะเป็น guard functions, resolvers หรือ mappers) ห้ามเดาสุ่มเพื่อเอาใจเทสต์ ต้องใช้ `ApiError` subclasses, machine-readable `code` หรือ type guards ตรวจสอบด้วย `instanceof` เท่านั้น
 - จัดโครงสร้างตาม Business Feature (`src/features/<feature>/`)
 - TanStack Query เป็นเจ้าของ Server State; ห้าม fetch API ใน `useEffect` โดยตรง
 - ห้ามเรียก Database ตรงจาก Frontend Code; ทุกอย่างต้องผ่าน API Client

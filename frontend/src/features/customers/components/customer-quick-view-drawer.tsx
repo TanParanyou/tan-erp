@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { IconAlertCircle } from "@/components/common/Icons";
 import { useCustomerDetail } from "../api/customer-queries";
+import { isAuthenticationRequiredError, isMembershipRequiredError } from "@/lib/api/api-error";
 import { getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
 
 export interface CustomerQuickViewDrawerProps {
@@ -35,10 +36,10 @@ export function CustomerQuickViewDrawer({
   } = useCustomerDetail(customerId);
 
   const resolveDetailErrorMessage = (err: Error | null): string => {
-    if (err?.message === "No authentication token available") {
+    if (isAuthenticationRequiredError(err)) {
       return t("errors.authenticationRequired");
     }
-    if (err?.message === "No active membership selected") {
+    if (isMembershipRequiredError(err)) {
       return t("errors.membershipRequired");
     }
     return t("errors.loadDetail");

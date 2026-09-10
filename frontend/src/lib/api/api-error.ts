@@ -53,3 +53,44 @@ export class ApiError extends Error {
     });
   }
 }
+
+export class AuthenticationRequiredError extends ApiError {
+  constructor(message = "No authentication token available") {
+    super({
+      status: 401,
+      code: "AUTHENTICATION_REQUIRED",
+      message,
+    });
+    this.name = "AuthenticationRequiredError";
+  }
+}
+
+export class MembershipRequiredError extends ApiError {
+  constructor(message = "No active membership selected") {
+    super({
+      status: 400,
+      code: "MEMBERSHIP_CONTEXT_REQUIRED",
+      message,
+    });
+    this.name = "MembershipRequiredError";
+  }
+}
+
+export function isAuthenticationRequiredError(error: unknown): boolean {
+  if (!error) return false;
+  if (error instanceof AuthenticationRequiredError) return true;
+  if (error instanceof ApiError && error.code === "AUTHENTICATION_REQUIRED") return true;
+  return false;
+}
+
+export function isMembershipRequiredError(error: unknown): boolean {
+  if (!error) return false;
+  if (error instanceof MembershipRequiredError) return true;
+  if (
+    error instanceof ApiError &&
+    (error.code === "MEMBERSHIP_CONTEXT_REQUIRED" || error.code === "ACTIVE_MEMBERSHIP_REQUIRED")
+  ) {
+    return true;
+  }
+  return false;
+}

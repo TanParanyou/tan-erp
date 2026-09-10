@@ -21,7 +21,7 @@ import { apiClient } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/useToast";
-import { ApiError } from "@/lib/api/api-error";
+import { ApiError, isAuthenticationRequiredError, isMembershipRequiredError } from "@/lib/api/api-error";
 
 interface ActivationIntent {
   signature: string;
@@ -55,10 +55,10 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
   };
 
   const resolveDetailErrorMessage = (error: Error | null): string => {
-    if (error?.message === "No authentication token available") {
+    if (isAuthenticationRequiredError(error)) {
       return t("errors.authenticationRequired");
     }
-    if (error?.message === "No active membership selected") {
+    if (isMembershipRequiredError(error)) {
       return t("errors.membershipRequired");
     }
     return t("errors.loadDetail");

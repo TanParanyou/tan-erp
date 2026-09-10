@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useOpportunityList } from "../api/opportunity-queries";
+import { isAuthenticationRequiredError, isMembershipRequiredError } from "@/lib/api/api-error";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -95,10 +96,10 @@ export function OpportunityList() {
   };
 
   const resolveListErrorMessage = (error: Error | null): string => {
-    if (error?.message === "No authentication token available") {
+    if (isAuthenticationRequiredError(error)) {
       return tCommon("feedback.operationFailed");
     }
-    if (error?.message === "No active membership selected") {
+    if (isMembershipRequiredError(error)) {
       return t("errors.branchRequiredDetail");
     }
     return t("errors.loadList");

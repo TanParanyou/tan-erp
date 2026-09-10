@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider, createTranslator } from "next-intl";
+import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import thMessages from "@/messages/th.json";
 import enMessages from "@/messages/en.json";
 
@@ -100,25 +101,26 @@ describe("customer localization", () => {
     detailState = { isError: false, error: null };
   });
 
-  it("translates list auth error in th and en", () => {
-    listState = { isError: true, error: new Error("No authentication token available") };
+  it("translates typed AuthenticationRequiredError in th and en", () => {
+    listState = { isError: true, error: new AuthenticationRequiredError() };
     renderList("th");
     expect(screen.getByText("กรุณาเข้าสู่ระบบก่อนใช้งาน")).toBeDefined();
     expect(screen.queryByText("No authentication token available")).toBeNull();
     expect(screen.queryByText("Failed to load customers")).toBeNull();
-  });
 
-  it("translates list auth error in en", () => {
     testLocale = "en";
-    listState = { isError: true, error: new Error("No authentication token available") };
     renderList("en");
     expect(screen.getByText("Please sign in to continue")).toBeDefined();
   });
 
-  it("translates list membership error in th and en", () => {
-    listState = { isError: true, error: new Error("No active membership selected") };
+  it("translates typed MembershipRequiredError in th and en", () => {
+    listState = { isError: true, error: new MembershipRequiredError() };
     renderList("th");
     expect(screen.getByText("กรุณาเลือกสมาชิกภาพที่ใช้งานอยู่")).toBeDefined();
+
+    testLocale = "en";
+    renderList("en");
+    expect(screen.getByText("Please select an active membership")).toBeDefined();
   });
 
   it("translates detail load error in th and en", () => {
