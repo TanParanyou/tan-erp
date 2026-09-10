@@ -6,17 +6,19 @@ import { useTranslations, useLocale } from "next-intl";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { IconAlertCircle } from "@/components/common/Icons";
+import { useCustomerDetail } from "../api/customer-queries";
 import { getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
-import type { CustomerListItemResponse } from "@/lib/api/api-client";
 
 export interface CustomerQuickViewDrawerProps {
-  customer: CustomerListItemResponse | null;
+  customerId: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function CustomerQuickViewDrawer({
-  customer,
+  customerId,
   isOpen,
   onClose,
 }: CustomerQuickViewDrawerProps) {
@@ -24,19 +26,36 @@ export function CustomerQuickViewDrawer({
   const tCommon = useTranslations("common");
   const locale = useLocale();
 
-  if (!customer) return null;
+  const {
+    data: customer,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useCustomerDetail(customerId);
 
-  const displayName =
-    locale === "en" && customer.displayNameEn
+  const resolveDetailErrorMessage = (err: Error | null): string => {
+    if (err?.message === "No authentication token available") {
+      return t("errors.authenticationRequired");
+    }
+    if (err?.message === "No active membership selected") {
+      return t("errors.membershipRequired");
+    }
+    return t("errors.loadDetail");
+  };
+
+  const displayName = customer
+    ? locale === "en" && customer.displayNameEn
       ? customer.displayNameEn
-      : customer.displayNameTh || customer.displayNameEn || "-";
+      : customer.displayNameTh || customer.displayNameEn || "-"
+    : "-";
 
-  const statusKey = getCustomerStatusLabelKey(customer.status);
+  const statusKey = customer ? getCustomerStatusLabelKey(customer.status) : null;
   const statusLabel = statusKey ? tCommon(`status.${statusKey}`) : "-";
-  const typeKey = getCustomerTypeLabelKey(customer.customerType);
+  const typeKey = customer ? getCustomerTypeLabelKey(customer.customerType) : null;
   const typeLabel = typeKey ? t(typeKey) : "-";
 
-  const contact = customer.primaryContact;
+  const contact = customer?.primaryContact;
 
   return (
     <Drawer
@@ -49,17 +68,43 @@ export function CustomerQuickViewDrawer({
           <Button variant="outline" size="sm" onClick={onClose} className="min-h-[40px]">
             {tCommon("actions.close")}
           </Button>
-          <Button
-            href={`/${locale}/customers/${customer.id}`}
-            variant="primary"
-            size="sm"
-            className="min-h-[40px]"
-          >
-            {t("viewFullDetail")}
-          </Button>
+          {customer && (
+            <Button
+              href={`/${locale}/customers/${customer.id}`}
+              variant="primary"
+              size="sm"
+              className="min-h-[40px]"
+            >
+              {t("viewFullDetail")}
+            </Button>
+          )}
         </div>
       }
     >
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[250px]">
+          <MonoSpinner size="md" label={tCommon("states.loading")} aria-busy="true" />
+        </div>
+      ) : isError || !customer ? (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="erp-card p-6 border-erp-danger-border bg-erp-danger-bg text-center flex flex-col items-center gap-3"
+        >
+          <IconAlertCircle size={28} className="text-erp-danger" />
+          <p className="text-sm font-bold text-erp-danger">
+            {resolveDetailErrorMessage(error)}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="min-h-[36px]"
+          >
+            {tCommon("actions.retry")}
+          </Button>
+        </div>
+      ) : (
       <div className="space-y-6">
         {/* Customer Header Info */}
         <div className="p-4 bg-erp-surface-muted border border-erp-border">
@@ -152,6 +197,7 @@ export function CustomerQuickViewDrawer({
           )}
         </div>
       </div>
+      )}
     </Drawer>
   );
 }

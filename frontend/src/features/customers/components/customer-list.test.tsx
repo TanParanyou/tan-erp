@@ -73,6 +73,13 @@ vi.mock("../api/customer-queries", () => ({
     error: null,
     refetch: vi.fn(),
   }),
+  useCustomerDetail: () => ({
+    data: null,
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
 }));
 
 describe("CustomerList canonical labels", () => {

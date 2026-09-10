@@ -65,7 +65,7 @@ export function CustomerList() {
   });
 
   // Quick View Drawer State
-  const [quickViewCustomer, setQuickViewCustomer] = useState<CustomerListItemResponse | null>(null);
+  const [quickViewCustomerId, setQuickViewCustomerId] = useState<string | null>(null);
 
   // Row Selection Hook
   const {
@@ -301,7 +301,7 @@ export function CustomerList() {
             <TableAction
               icon={<IconEye size={15} />}
               label={t("quickView")}
-              onClick={() => setQuickViewCustomer(customer)}
+              onClick={() => setQuickViewCustomerId(customer.id ?? null)}
             />
             <TableAction
               icon={<IconEdit size={15} />}
@@ -470,9 +470,9 @@ export function CustomerList() {
 
       {/* Quick View Drawer */}
       <CustomerQuickViewDrawer
-        customer={quickViewCustomer}
-        isOpen={Boolean(quickViewCustomer)}
-        onClose={() => setQuickViewCustomer(null)}
+        customerId={quickViewCustomerId}
+        isOpen={Boolean(quickViewCustomerId)}
+        onClose={() => setQuickViewCustomerId(null)}
       />
     </div>
   );
