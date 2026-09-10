@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 export type TableActionVariant = "default" | "danger" | "primary" | "success";
 
@@ -40,46 +41,36 @@ export function TableAction({
   className,
 }: TableActionProps) {
   const baseClasses = cn(
-    "relative group/action inline-flex h-8 w-8 items-center justify-center rounded-none border transition-colors",
+    "relative inline-flex h-8 w-8 items-center justify-center rounded-none border transition-colors",
     "focus-visible:outline-2 focus-visible:outline-erp-navy",
     "disabled:pointer-events-none disabled:opacity-40 disabled:hover:bg-transparent",
     variantStyles[variant],
     className
   );
 
-  const content = (
-    <>
-      {isLoading ? <MonoSpinner size="sm" /> : icon}
-      <span
-        role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/action:flex flex-col items-center z-[60]"
-      >
-        <span className="whitespace-nowrap rounded-none bg-erp-navy text-white px-2 py-0.5 text-[11px] font-medium shadow-md">
-          {label}
-        </span>
-      </span>
-    </>
-  );
+  const iconContent = isLoading ? <MonoSpinner size="sm" /> : icon;
 
-  if (href && !disabled && !isLoading) {
-    return (
-      <Link href={href} className={baseClasses} aria-label={label} title={label}>
-        {content}
+  const actionElement =
+    href && !disabled && !isLoading ? (
+      <Link href={href} className={baseClasses} aria-label={label}>
+        {iconContent}
       </Link>
+    ) : (
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled || isLoading}
+        className={baseClasses}
+        aria-label={label}
+      >
+        {iconContent}
+      </button>
     );
-  }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled || isLoading}
-      className={baseClasses}
-      aria-label={label}
-      title={label}
-    >
-      {content}
-    </button>
+    <Tooltip content={label} position="top" disabled={disabled || isLoading}>
+      {actionElement}
+    </Tooltip>
   );
 }
 
