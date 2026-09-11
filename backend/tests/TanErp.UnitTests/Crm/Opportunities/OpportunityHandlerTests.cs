@@ -19,6 +19,7 @@ public class OpportunityHandlerTests
         public Guid UserId { get; set; } = Guid.NewGuid();
         public Guid OrgId { get; set; } = Guid.NewGuid();
         public Guid? BranchId { get; set; } = Guid.NewGuid();
+        public string? LastPermissionKey { get; private set; }
 
         public Task<Result<RequestAccessContext>> ResolveAsync(
             string firebaseUid,
@@ -26,6 +27,7 @@ public class OpportunityHandlerTests
             string permissionKey,
             CancellationToken cancellationToken = default)
         {
+            LastPermissionKey = permissionKey;
             if (GrantedPermissions.Contains(permissionKey))
             {
                 return Task.FromResult(Result<RequestAccessContext>.Success(
@@ -107,6 +109,7 @@ public class OpportunityHandlerTests
     private CreateOpportunityHandler CreateHandler() => new(_accessResolver, _store);
     private ListOpportunitiesHandler ListHandler() => new(_accessResolver, _store);
     private GetOpportunityHandler GetHandler() => new(_accessResolver, _store);
+    private QualifyOpportunityHandler QualifyHandler() => new(_accessResolver, _store);
 
     [Fact]
     public async Task Create_PermissionDenied_ReturnsFailureAndDoesNotCallStore()
@@ -326,5 +329,36 @@ public class OpportunityHandlerTests
         Assert.True(result.IsSuccess);
         Assert.Equal(proj, result.Value);
         Assert.Equal(1, _store.GetCallCount);
+    }
+
+    [Fact]
+    public async Task Qualify_ValidCommand_UsesTransitionPermissionAndCallsStoreOnce()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.transition");
+        _accessResolver.BranchId = Guid.NewGuid();
+
+        var oppId = Guid.NewGuid();
+        var version = Guid.NewGuid();
+        var proj = new OpportunityProjection(
+            oppId, "OPP-01", Guid.NewGuid(), null, Guid.NewGuid(), Guid.NewGuid(),
+            "Title", "Scope", new[] { "built-in" }, null, null, null, null, null, null,
+            OpportunityStage.Qualified, Guid.NewGuid(), DateTimeOffset.UtcNow);
+        _store.QualifyResult = Result<OpportunityProjection>.Success(proj);
+
+        var cmd = new QualifyOpportunityCommand(
+            "test-uid", Guid.NewGuid(), oppId, "QUALIFIED", version, "key-qualify-123456", "trace-q");
+
+        var handler = QualifyHandler();
+        var result = await handler.Handle(cmd);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _store.QualifyCallCount);
+        Assert.Equal("opportunities.transition", _accessResolver.LastPermissionKey);
+        Assert.NotNull(_store.LastQualifyCommand);
+        Assert.Equal("qualified", _store.LastQualifyCommand!.TargetStage);
+        Assert.Equal(oppId, _store.LastQualifyCommand.OpportunityId);
+        Assert.Equal(version, _store.LastQualifyCommand.ExpectedVersion);
+        Assert.False(string.IsNullOrWhiteSpace(_store.LastKeyHash));
+        Assert.False(string.IsNullOrWhiteSpace(_store.LastPayloadHash));
     }
 }
