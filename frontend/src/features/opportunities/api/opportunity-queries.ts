@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery, type UseQueryResult, type UseInfiniteQueryResult } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient, type UseQueryResult, type UseInfiniteQueryResult, type UseMutationResult } from "@tanstack/react-query";
 import { apiClient, type OpportunityListResponse, type OpportunityResponse, type ListOpportunitiesParams } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -99,5 +99,68 @@ export function useOpportunityDetail(
       });
     },
     enabled: Boolean(membershipId && opportunityId && opportunityId !== "create" && opportunityId !== "add"),
+  });
+}
+
+export interface QualifyOpportunityVariables {
+  opportunityId: string;
+  expectedVersion: string;
+  idempotencyKey?: string;
+}
+
+export function useQualifyOpportunity(): UseMutationResult<
+  OpportunityResponse,
+  Error,
+  QualifyOpportunityVariables
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ opportunityId, expectedVersion, idempotencyKey }: QualifyOpportunityVariables) => {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new AuthenticationRequiredError();
+      }
+      if (!membershipId) {
+        throw new MembershipRequiredError();
+      }
+
+      return apiClient.transitionOpportunityStage(
+        opportunityId,
+        {
+          targetStage: "qualified",
+          expectedVersion,
+        },
+        {
+          token,
+          membershipId,
+          locale: normalizedLocale,
+          idempotencyKey,
+        }
+      );
+    },
+    onSuccess: (updatedOpportunity, variables) => {
+      queryClient.setQueryData(
+        opportunityDetailQueryKey(membershipId, normalizedLocale, variables.opportunityId),
+        updatedOpportunity
+      );
+
+      void queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return (
+            Array.isArray(key) &&
+            key[0] === "business" &&
+            key[1] === membershipId &&
+            key[3] === "opportunities" &&
+            key[4] === "list"
+          );
+        },
+      });
+    },
   });
 }

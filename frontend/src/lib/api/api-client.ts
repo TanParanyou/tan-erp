@@ -16,6 +16,7 @@ export type CreateSiteRequest = components["schemas"]["CreateSiteRequest"];
 export type OpportunityResponse = components["schemas"]["OpportunityResponse"];
 export type OpportunityListResponse = components["schemas"]["OpportunityListResponse"];
 export type CreateOpportunityRequest = components["schemas"]["CreateOpportunityRequest"];
+export type TransitionOpportunityStageRequest = components["schemas"]["TransitionOpportunityStageRequest"];
 
 export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
 export type AddressSearchResultItem = components["schemas"]["AddressSearchResultItem"];
@@ -231,6 +232,19 @@ export class ApiClient {
     options: RequestOptions
   ): Promise<OpportunityResponse> {
     return this.request<OpportunityResponse>("/api/v1/opportunities", "POST", options, payload);
+  }
+
+  async transitionOpportunityStage(
+    id: string,
+    payload: TransitionOpportunityStageRequest,
+    options: RequestOptions
+  ): Promise<OpportunityResponse> {
+    return this.request<OpportunityResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(id)}/stage-transitions`,
+      "POST",
+      options,
+      payload
+    );
   }
 
   async searchAddresses(

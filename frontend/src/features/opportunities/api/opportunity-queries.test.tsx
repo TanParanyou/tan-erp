@@ -1,5 +1,15 @@
-import { describe, expect, it } from "vitest";
-import { opportunityListQueryKey, opportunityDetailQueryKey } from "./opportunity-queries";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
+import {
+  opportunityListQueryKey,
+  opportunityDetailQueryKey,
+  useQualifyOpportunity,
+} from "./opportunity-queries";
+import { apiClient, type OpportunityResponse } from "@/lib/api/api-client";
+import * as authSession from "@/lib/auth/auth-session";
+import * as membershipContext from "@/lib/membership/selected-membership-context";
 
 describe("opportunity business query keys", () => {
   it("distinguishes filters", () => {
@@ -34,3 +44,89 @@ describe("opportunity business query keys", () => {
     expect(key).toContain("opportunities");
   });
 });
+
+describe("useQualifyOpportunity mutation", () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("useQualifyOpportunity_Success_PostsContractAndRefreshesCaches", async () => {
+    const mockToken = "sample-token";
+    const mockMembership = {
+      id: "membership-123",
+      organization: { id: "org-1", name: "Org 1" },
+      branch: { id: "branch-1", name: "Branch 1" },
+      permissions: [{ key: "opportunities.transition", scope: "organization", scopeId: "org-1" }],
+    };
+
+    vi.spyOn(authSession, "getAuthToken").mockResolvedValue(mockToken);
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      selectedMembership: mockMembership,
+      currentUser: null,
+      memberships: [mockMembership],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    const mockResponse: OpportunityResponse = {
+      id: "opp-123",
+      code: "OPP-001",
+      customerId: "cust-1",
+      branchId: "branch-1",
+      ownerUserId: "user-1",
+      title: "โครงการปรับปรุง",
+      workTypes: ["built-in"],
+      stage: "qualified",
+      rowVersion: "00000000-0000-0000-0000-000000000002",
+      createdAtUtc: "2026-09-10T10:00:00Z",
+    };
+
+    const transitionSpy = vi.spyOn(apiClient, "transitionOpportunityStage").mockResolvedValue(mockResponse);
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useQualifyOpportunity(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        opportunityId: "opp-123",
+        expectedVersion: "00000000-0000-0000-0000-000000000001",
+        idempotencyKey: "idemp-key-1",
+      });
+    });
+
+    expect(transitionSpy).toHaveBeenCalledTimes(1);
+    expect(transitionSpy).toHaveBeenCalledWith(
+      "opp-123",
+      {
+        targetStage: "qualified",
+        expectedVersion: "00000000-0000-0000-0000-000000000001",
+      },
+      {
+        token: mockToken,
+        membershipId: "membership-123",
+        locale: "th",
+        idempotencyKey: "idemp-key-1",
+      }
+    );
+
+    // Verify detail cache was populated with returned resource
+    const detailKey = opportunityDetailQueryKey("membership-123", "th", "opp-123");
+    const cachedDetail = queryClient.getQueryData(detailKey);
+    expect(cachedDetail).toEqual(mockResponse);
+
+    // Verify list queries were invalidated
+    expect(invalidateSpy).toHaveBeenCalled();
+  });
+});
+
