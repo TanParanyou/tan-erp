@@ -14,7 +14,7 @@
 
 ## Current phase
 
-This repository is in **Application Implementation**. The authorized implementation boundary is the **Customer Activation + Opportunity + Site vertical slice** documented in `docs/superpowers/plans/2026-09-08-opportunity-site-vertical-slice.md`. This slice covers Customer activation (Draft → Active), Site creation and listing, and Opportunity draft creation, listing, and detail reading. Customer lifecycle transitions beyond activation, Site edit/deactivation, Opportunity qualify/stage transitions, Survey, Estimation, Item, Commercial, Project, Procurement, Inventory, Production, and MRP behavior remain deferred without a separately approved implementation task.
+This repository is in **Application Implementation**. The authorized implementation boundary is the **Opportunity Qualification vertical slice** documented in `docs/superpowers/plans/2026-09-10-opportunity-qualification-vertical-slice.md`. This slice covers Opportunity qualification (Draft → Qualified), append-only stage history, and privacy-safe stage change audit. Customer lifecycle transitions beyond activation, Site edit/deactivation, Opportunity transitions beyond qualify (surveying, estimating, proposed, won, lost, cancelled), Survey, Estimation, Item, Commercial, Project, Procurement, Inventory, Production, and MRP behavior remain deferred without a separately approved implementation task.
 
 ## Product boundaries
 

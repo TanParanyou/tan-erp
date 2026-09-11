@@ -207,6 +207,79 @@ Response `201`:
 `GET /api/v1/opportunities/{id}` คืน shape เดียวกันพร้อม ETag
 `GET /api/v1/opportunities?search=&customerId=&stage=draft&limit=25&cursor=` คืน `{ items, nextCursor }`; allowed limit `1..100`, stable sort `nextActionAtUtc ASC NULLS LAST, id ASC`
 
+## Opportunity Qualification Slice 3 Specification
+
+### Request
+
+```http
+POST /api/v1/opportunities/{opportunityId}/stage-transitions
+Authorization: Bearer <Firebase ID token>
+X-Membership-Id: <membership UUID>
+Idempotency-Key: <opaque 16-128 characters>
+Accept-Language: th | en
+Content-Type: application/json
+```
+
+```json
+{
+  "targetStage": "qualified",
+  "expectedVersion": "019a3cf8-96f0-7c9f-b207-93aa818f4d11"
+}
+```
+
+- Slice 3 รับ `targetStage` เพียง `qualified`; ไม่รับ `organizationId`, `branchId`, `ownerUserId`, `fromStage`, actor, `reasonCode` หรือ free-text `note`
+- `expectedVersion` คือ UUID จาก `OpportunityResponse.rowVersion`; UUID ว่างคืน `422 OPPORTUNITY_FIELD_REQUIRED`
+- Missing/invalid JSON หรือ header context คืน `400 REQUEST_VALIDATION_FAILED`, `400 MEMBERSHIP_CONTEXT_REQUIRED`, `400 IDEMPOTENCY_KEY_REQUIRED` หรือ `400 IDEMPOTENCY_KEY_INVALID` ตาม baseline
+
+### Success
+
+```http
+HTTP/1.1 200 OK
+ETag: "019a3cf8-96f0-7c9f-b207-93aa818f4d12"
+Content-Type: application/json
+```
+
+Response ใช้ `OpportunityResponse` เดิมทุก field โดยเปลี่ยนเฉพาะ:
+
+```json
+{
+  "stage": "qualified",
+  "rowVersion": "019a3cf8-96f0-7c9f-b207-93aa818f4d12"
+}
+```
+
+ค่าฟิลด์อื่นต้องเท่ากับ resource ก่อน transition. Retry key/payload เดิมคืน `200`, body และ ETag เดียวกับ transition แรก และไม่เพิ่ม history/audit.
+
+### Error Matrix
+
+| HTTP | Stable code | Condition |
+| ---: | --- | --- |
+| 400 | `REQUEST_VALIDATION_FAILED` | malformed body/route binding |
+| 400 | `MEMBERSHIP_CONTEXT_REQUIRED` | ไม่มี/ผิดรูปแบบ `X-Membership-Id` |
+| 400 | `IDEMPOTENCY_KEY_REQUIRED` / `IDEMPOTENCY_KEY_INVALID` | ไม่มี key หรือความยาวนอก 16–128 |
+| 401 | `AUTHENTICATION_REQUIRED` / `AUTHENTICATION_INVALID` | ไม่มี/ใช้ token ไม่ได้ |
+| 403 | `ACTIVE_MEMBERSHIP_REQUIRED` / `PERMISSION_DENIED` | membership หมดอายุ/ไม่มี `opportunities.transition` |
+| 404 | `RESOURCE_NOT_FOUND` | Opportunity, Customer, Branch หรือ Owner Membership ไม่อยู่ Organization/scope ที่อนุญาต |
+| 409 | `IDEMPOTENCY_KEY_REUSED` | key เดิมแต่ canonical payload ต่าง |
+| 409 | `OPPORTUNITY_VERSION_CONFLICT` | `expectedVersion` ไม่ตรง current row version |
+| 409 | `OPPORTUNITY_INVALID_TRANSITION` | current stage ไม่ใช่ `draft` หรือ target ไม่ใช่ `qualified` |
+| 409 | `CUSTOMER_INVALID_STATE` | Customer ปัจจุบันไม่ Active |
+| 422 | `OPPORTUNITY_FIELD_REQUIRED` | Q gate ขาด `scopeSummary`, work type, `nextActionAtUtc` หรือ `nextActionNote` |
+| 422 | `ACTIVE_BRANCH_REQUIRED` | selected membership ไม่มี Active Branch |
+
+Precedence หลัง authentication/context/permission: idempotency replay/conflict → resource scope → expected version → current state/target → Q gate.
+
+### Canonical Stage Vocabulary
+
+Stage ทั้งหมดในระบบ: `draft`, `qualified`, `surveying`, `estimating`, `proposed`, `won`, `lost`, `cancelled`.
+
+### Persistence Contract
+
+ตาราง `crm.opportunity_stage_history`:
+- Columns: `id` (uuid, PK), `organization_id` (uuid, FK), `opportunity_id` (uuid, composite FK `(id, organization_id)`), `from_stage` / `to_stage` (varchar 32), `reason_code` / `note` (nullable text), `actor_user_id` (uuid), `occurred_at_utc` (timestamptz), `policy_version` (varchar 64), `trace_id` (varchar 128).
+- Composite Index: `(organization_id, opportunity_id, occurred_at_utc, id)`
+- Delete behavior: `Restrict`
+- Audit Event: `opportunity.stage-changed` payload `{"changedFields":["stage"],"fromStage":"draft","toStage":"qualified"}` (ไม่มี PII/business text)
 
 ## Baseline Examples (Broader / Future Slices)
 

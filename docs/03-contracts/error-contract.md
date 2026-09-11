@@ -134,9 +134,9 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `CUSTOMER_INVALID_STATE` | 409 | Customer Status ไม่รองรับ Action หรือใช้สร้างงานใหม่ไม่ได้ |
 | `CUSTOMER_FIELD_REQUIRED` | 422 | ข้อมูลบังคับของ Customer (เช่น customerType/displayNameTh/preferredLocale) ไม่ผ่านกฎ |
 | `CONTACT_FIELD_REQUIRED` | 422 | Contact ไม่มีช่องทางติดต่อขั้นต่ำ (ต้องมี phone หรือ email อย่างน้อยหนึ่งค่า) หรือ Field บังคับ |
-| `OPPORTUNITY_VERSION_CONFLICT` | 409 | Opportunity ETag เก่า |
-| `OPPORTUNITY_FIELD_REQUIRED` | 422 | Field ของ Stage เป้าหมายยังไม่ครบ |
-| `OPPORTUNITY_INVALID_TRANSITION` | 409 | Stage Transition ไม่อยู่ใน Allowlist |
+| `OPPORTUNITY_VERSION_CONFLICT` | 409 | Opportunity expectedVersion หรือ ETag เก่ากว่าข้อมูลปัจจุบัน; ให้ Reload/Compare |
+| `OPPORTUNITY_FIELD_REQUIRED` | 422 | Field ของ Stage เป้าหมายยังไม่ครบตาม Qualification gate (เช่น ขาด scopeSummary, workTypes หรือ nextAction) |
+| `OPPORTUNITY_INVALID_TRANSITION` | 409 | Stage Transition ไม่อยู่ใน Allowlist หรือสถานะปัจจุบันไม่รองรับ เช่น ไม่ใช่ draft -> qualified |
 | `SITE_VERSION_CONFLICT` | 409 | Site ETag เก่า |
 | `SITE_FIELD_REQUIRED` | 422 | ข้อมูลบังคับของ Site (label หรือ structured address) ไม่ครบถ้วน หรือพิกัดละติจูด/ลองจิจูดไม่เป็นคู่สมบูรณ์ |
 | `SURVEY_VERSION_CONFLICT` | 409 | Draft Revision ETag เก่า |

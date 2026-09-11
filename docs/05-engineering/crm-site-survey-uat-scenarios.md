@@ -60,6 +60,15 @@
 6. **`UAT-UX-001`:** หน้าจอสร้าง Site, รายการ Opportunity, สร้าง Opportunity และดูรายละเอียด รองรับ Responsive 320px, Zoom 200%, Touch targets ≥ 44px, Keyboard navigation, Atelier Architectural Navy Sharp (0px radius) และ Minimal Mono Loading
 7. **`UAT-I18N-001`:** รองรับทั้งภาษาไทยและภาษาอังกฤษสมบูรณ์พร้อม Key parity บน UI messages และ Backend localized Problem Details
 8. **Idempotency & Concurrency:** Retry ด้วย Idempotency Key เดิมและ Payload เดิมต้องคืน Resource เดิมเสมอ; Key เดิมกับ Payload เปลี่ยนคืน `409 IDEMPOTENCY_KEY_REUSED`
-9. **Explicitly Deferred:** Opportunity Qualify/Stage Transition, Stage History, Owner Reassignment, Survey Appointment, Survey Identity/Revision และ File Upload เลื่อนไป Slice ถัดไป
+## Opportunity Qualification Slice 3 Exit Criteria
+
+สำหรับ Slice 3 (Opportunity Qualification Vertical Slice) จะถือว่าผ่านเกณฑ์ Pilot เมื่อ:
+1. **`UAT-CRM-004` (Qualification Portion):** ผู้ใช้ที่มีสิทธิ์ `opportunities.transition` ใน Active Membership สามารถ Qualify Opportunity Draft ที่ข้อมูลผ่าน Q gate (Active Customer, Active Branch, Active Owner Membership ใน Branch เดียวกัน, `scopeSummary` ไม่ว่าง, มี valid `workTypes` อย่างน้อย 1 รายการ, มีทั้ง `nextActionAtUtc` และ `nextActionNote`) ได้สำเร็จ
+2. **Atomic Transition & Persistence:** เมื่อ Qualify สำเร็จ Backend ต้อง rotate `rowVersion` (ส่ง ETag ใหม่), เปลี่ยนสถานะเป็น `qualified`, และบันทึก `crm.opportunity_stage_history` (append-only) พร้อม audit event `opportunity.stage-changed` (เก็บเฉพาะ metadata และ changes โดยปราศจาก PII/business text) และ Idempotency Record ใน transaction เดียว
+3. **`UAT-UX-001`:** หน้าจอ Opportunity Detail แสดงปุ่ม Qualify และ Confirmation Modal, มี Double Submit Protection ล็อกปุ่มขณะส่งคำขอ, จัดการ Retry Intent ด้วย Idempotency Key เดิมเมื่อคำขอล้มเหลวแต่เวอร์ชันไม่เปลี่ยน, และอัปเดต Badge เป็น Qualified ใน Detail และ List Cache ทันทีโดยไม่ต้อง Reload หน้าจอ, รองรับ Responsive 320px, Zoom 200%, Touch targets ≥ 44px, Keyboard Accessible และ Atelier Architectural Navy Sharp (0px radius)
+4. **`UAT-I18N-001`:** รองรับ Key Parity ใน `messages/th.json` และ `messages/en.json` ครบทั้ง 8 Canonical Stages (`draft`, `qualified`, `surveying`, `estimating`, `proposed`, `won`, `lost`, `cancelled`) และ Backend Problem Details คืนข้อความภาษาไทย/อังกฤษครบถ้วน
+5. **Idempotency & Replay:** Retry ด้วย Idempotency Key เดิมและ Payload เดิมต้องคืนผลลัพธ์เดิม (`200 OK`) โดยไม่สร้าง History หรือ Audit ซ้ำ; Key เดิมกับ Payload ต่างกันคืน `409 IDEMPOTENCY_KEY_REUSED`
+6. **Mandatory Hardening Gate Before Production:** ใน Pilot นี้พิสูจน์เฉพาะ Positive Path และผลทดสอบ 7 จุดใหม่ ส่วน Negative-path tests (Permission Denial, Cross-Org Isolation, Missing Gate, Illegal Transition, Stale Version, Idempotency Conflict, Concurrent Winner) เป็นข้อบังคับที่ต้องผ่านใน Hardening Phase ก่อนถือว่าเสร็จสิ้นสมบูรณ์สำหรับ Production
+7. **Explicitly Deferred:** Stage Transition อื่น (`surveying`, `estimating`, `proposed`, `won`, `lost`, `cancelled`), Opportunity Edit/Patch, Owner Reassignment, Survey Appointment, Survey Identity/Revision และ Estimate Integration ยังคง Deferred
 
 อ้างอิง [Flow](../01-business/crm-site-survey-flow.md), [API Contract](../03-contracts/crm-site-survey-api-contract.md) และ [Data Contract](../04-data/crm-site-survey-data-contract.md)
