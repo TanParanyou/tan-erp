@@ -441,4 +441,72 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         Assert.DoesNotContain(addressSentinel, allLogs, StringComparison.Ordinal);
         Assert.DoesNotContain(accessNoteSentinel, allLogs, StringComparison.Ordinal);
     }
+
+    private async Task<Opportunity> SeedDraftOpportunityAsync(Guid orgId, Guid branchId, Guid customerId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var opp = Opportunity.CreateDraft(
+            Guid.NewGuid(),
+            orgId,
+            branchId,
+            customerId,
+            null,
+            TestOnlyDataSeeder.TestUserId,
+            TestOnlyDataSeeder.TestUserId,
+            "งานระบบบิวต์อิน TEST_ONLY",
+            "รายละเอียดงาน",
+            new[] { "built-in" },
+            null,
+            250000m,
+            "THB",
+            new DateOnly(2026, 12, 1),
+            now.AddDays(1),
+            "โทรติดตามผล",
+            now);
+        db.Opportunities.Add(opp);
+        await db.SaveChangesAsync();
+        return opp;
+    }
+
+    [Fact]
+    public async Task QualifyOpportunity_ValidRequest_ReturnsQualifiedWithNewETagAndPersistsHistory()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var request = new TransitionOpportunityStageRequest("qualified", opp.RowVersion);
+        var msg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            $"idem-qualify-{Guid.NewGuid():N}");
+        msg.Content = JsonContent.Create(request);
+
+        var res = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var qualified = await res.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(qualified);
+        Assert.Equal("qualified", qualified.Stage);
+        Assert.NotEqual(opp.RowVersion, qualified.RowVersion);
+        Assert.Equal($"\"{qualified.RowVersion}\"", res.Headers.ETag?.Tag);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var history = await db.OpportunityStageHistories
+            .Where(h => h.OpportunityId == opp.Id)
+            .ToListAsync();
+        Assert.Single(history);
+        Assert.Equal("draft", history[0].FromStage);
+        Assert.Equal("qualified", history[0].ToStage);
+
+        var audit = await db.AuditEvents
+            .Where(a => a.ResourceId == opp.Id.ToString() && a.Action == "opportunity.stage-changed")
+            .ToListAsync();
+        Assert.Single(audit);
+    }
 }

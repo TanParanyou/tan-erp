@@ -161,4 +161,16 @@
   <data name="INVALID_CURSOR_DETAIL" xml:space="preserve">
     <value>เคอร์เซอร์สำหรับการแบ่งหน้าไม่ถูกต้องหรือไม่สามารถถอดรหัสได้</value>
   </data>
+  <data name="OPPORTUNITY_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลงานขายถูกแก้ไขโดยผู้อื่น</value>
+  </data>
+  <data name="OPPORTUNITY_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>เวอร์ชันของข้อมูลงานขายไม่ตรงกับข้อมูลล่าสุดในระบบ กรุณาโหลดข้อมูลใหม่</value>
+  </data>
+  <data name="OPPORTUNITY_INVALID_TRANSITION_TITLE" xml:space="preserve">
+    <value>ไม่สามารถเปลี่ยนสถานะงานขายได้</value>
+  </data>
+  <data name="OPPORTUNITY_INVALID_TRANSITION_DETAIL" xml:space="preserve">
+    <value>การเปลี่ยนสถานะที่ระบุไม่ได้รับอนุญาตสำหรับสถานะปัจจุบันของงานขาย</value>
+  </data>
 </root>

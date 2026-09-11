@@ -107,6 +107,10 @@ public class OpenApiContractTests : IAsyncLifetime
         var getOpportunityPath = paths["/api/v1/opportunities/{id}"]?["get"]?.AsObject();
         Assert.NotNull(getOpportunityPath);
 
+        Assert.True(paths.ContainsKey("/api/v1/opportunities/{id}/stage-transitions"), "OpenAPI must contain path /api/v1/opportunities/{id}/stage-transitions");
+        var transitionPath = paths["/api/v1/opportunities/{id}/stage-transitions"]?["post"]?.AsObject();
+        Assert.NotNull(transitionPath);
+
         // 2. Assert operation responses 200, 401, 403
         var responses = mePath["responses"]?.AsObject();
         Assert.NotNull(responses);
@@ -134,6 +138,7 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("OpportunityResponse"), "Must define OpportunityResponse schema");
         Assert.True(schemas.ContainsKey("OpportunityListResponse"), "Must define OpportunityListResponse schema");
         Assert.True(schemas.ContainsKey("CreateOpportunityRequest"), "Must define CreateOpportunityRequest schema");
+        Assert.True(schemas.ContainsKey("TransitionOpportunityStageRequest"), "Must define TransitionOpportunityStageRequest schema");
         Assert.True(schemas.ContainsKey("AddressSearchResponse"), "Must define AddressSearchResponse schema");
         Assert.True(schemas.ContainsKey("AddressSearchResultItem"), "Must define AddressSearchResultItem schema");
         Assert.True(schemas.ContainsKey("ApiProblemDetails"), "Must define ApiProblemDetails schema");

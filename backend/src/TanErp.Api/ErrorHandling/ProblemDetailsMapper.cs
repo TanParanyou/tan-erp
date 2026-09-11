@@ -25,6 +25,8 @@ public static class ProblemDetailsMapper
         "IDEMPOTENCY_KEY_REUSED" => StatusCodes.Status409Conflict,
         "CUSTOMER_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
         "CUSTOMER_INVALID_STATE" => StatusCodes.Status409Conflict,
+        "OPPORTUNITY_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+        "OPPORTUNITY_INVALID_TRANSITION" => StatusCodes.Status409Conflict,
         "ACTIVE_BRANCH_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "CUSTOMER_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "CONTACT_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,

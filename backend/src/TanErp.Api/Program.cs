@@ -105,6 +105,7 @@ builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.IOpportunityStor
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.CreateOpportunity.CreateOpportunityHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.ListOpportunities.ListOpportunitiesHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.GetOpportunity.GetOpportunityHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.QualifyOpportunity.QualifyOpportunityHandler>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.IAddressLookupCache, TanErp.Infrastructure.MasterData.AddressLookupCache>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();
 

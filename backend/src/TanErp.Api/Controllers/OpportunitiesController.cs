@@ -7,6 +7,7 @@ using TanErp.Application.Crm.Opportunities;
 using TanErp.Application.Crm.Opportunities.CreateOpportunity;
 using TanErp.Application.Crm.Opportunities.GetOpportunity;
 using TanErp.Application.Crm.Opportunities.ListOpportunities;
+using TanErp.Application.Crm.Opportunities.QualifyOpportunity;
 
 namespace TanErp.Api.Controllers;
 
@@ -18,15 +19,18 @@ public class OpportunitiesController : ControllerBase
     private readonly CreateOpportunityHandler _createHandler;
     private readonly ListOpportunitiesHandler _listHandler;
     private readonly GetOpportunityHandler _getHandler;
+    private readonly QualifyOpportunityHandler _qualifyHandler;
 
     public OpportunitiesController(
         CreateOpportunityHandler createHandler,
         ListOpportunitiesHandler listHandler,
-        GetOpportunityHandler getHandler)
+        GetOpportunityHandler getHandler,
+        QualifyOpportunityHandler qualifyHandler)
     {
         _createHandler = createHandler;
         _listHandler = listHandler;
         _getHandler = getHandler;
+        _qualifyHandler = qualifyHandler;
     }
 
     [HttpPost]
@@ -151,6 +155,49 @@ public class OpportunitiesController : ControllerBase
             traceId);
 
         var result = await _getHandler.Handle(query, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var opp = result.Value!;
+        Response.Headers.ETag = $"\"{opp.RowVersion}\"";
+
+        return Ok(ToResponse(opp));
+    }
+
+    [HttpPost("{id:guid}/stage-transitions")]
+    [ProducesResponseType<OpportunityResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> TransitionStage(
+        [FromRoute] Guid id,
+        [FromBody] TransitionOpportunityStageRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var command = new QualifyOpportunityCommand(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            request.TargetStage,
+            request.ExpectedVersion,
+            auth.IdempotencyKey,
+            traceId);
+
+        var result = await _qualifyHandler.Handle(command, cancellationToken);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);

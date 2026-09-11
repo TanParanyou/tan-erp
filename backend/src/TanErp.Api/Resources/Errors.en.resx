@@ -161,4 +161,16 @@
   <data name="INVALID_CURSOR_DETAIL" xml:space="preserve">
     <value>The pagination cursor is invalid or could not be decoded.</value>
   </data>
+  <data name="OPPORTUNITY_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Opportunity Version Conflict</value>
+  </data>
+  <data name="OPPORTUNITY_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The opportunity version does not match the current state. Please reload and try again.</value>
+  </data>
+  <data name="OPPORTUNITY_INVALID_TRANSITION_TITLE" xml:space="preserve">
+    <value>Invalid Opportunity Transition</value>
+  </data>
+  <data name="OPPORTUNITY_INVALID_TRANSITION_DETAIL" xml:space="preserve">
+    <value>The requested stage transition is not allowed for the current opportunity stage.</value>
+  </data>
 </root>
