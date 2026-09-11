@@ -119,6 +119,19 @@ public class Opportunity : Entity
             targetDecisionDate, nextActionAtUtc, nextActionNote, now);
     }
 
+    public void Qualify(Guid expectedVersion)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage != OpportunityStage.Draft) throw new OpportunityTransitionException(Stage, OpportunityStage.Qualified);
+        if (string.IsNullOrWhiteSpace(ScopeSummary)) throw new OpportunityQualificationException(nameof(ScopeSummary));
+        if (WorkTypes.Count == 0 || WorkTypes.Any(workType => !OpportunityWorkType.IsValid(workType)))
+            throw new OpportunityQualificationException(nameof(WorkTypes));
+        if (!NextActionAtUtc.HasValue) throw new OpportunityQualificationException(nameof(NextActionAtUtc));
+        if (string.IsNullOrWhiteSpace(NextActionNote)) throw new OpportunityQualificationException(nameof(NextActionNote));
+        Stage = OpportunityStage.Qualified;
+        RowVersion = Guid.NewGuid();
+    }
+
     public static string GenerateOpportunityCode(Guid id)
     {
         var hex = id.ToString("N")[..12].ToUpperInvariant();

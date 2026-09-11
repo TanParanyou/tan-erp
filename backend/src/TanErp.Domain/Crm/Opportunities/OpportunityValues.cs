@@ -6,22 +6,31 @@ public static class OpportunityStage
 {
     public const string Draft = "draft";
     public const string Qualified = "qualified";
-    public const string Estimation = "estimation";
-    public const string Proposal = "proposal";
+    public const string Surveying = "surveying";
+    public const string Estimating = "estimating";
+    public const string Proposed = "proposed";
     public const string Won = "won";
     public const string Lost = "lost";
+    public const string Cancelled = "cancelled";
 
     public static readonly HashSet<string> All = new(StringComparer.Ordinal)
     {
         Draft,
         Qualified,
-        Estimation,
-        Proposal,
+        Surveying,
+        Estimating,
+        Proposed,
         Won,
-        Lost
+        Lost,
+        Cancelled
     };
 
     public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}
+
+public static class OpportunityStagePolicy
+{
+    public const string Version = "opportunity-stage-v1";
 }
 
 public static class OpportunityWorkType

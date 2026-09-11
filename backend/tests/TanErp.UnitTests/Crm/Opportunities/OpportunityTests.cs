@@ -88,4 +88,38 @@ public class OpportunityTests
             null, Guid.NewGuid(), Guid.NewGuid(),
             "งานบิวต์อิน", null, new[] { "built-in" }, null, budget, "THB", null, null, null, DateTimeOffset.UtcNow));
     }
+
+    [Fact]
+    public void Qualify_FromDraftWithCompleteGate_SetsQualifiedAndRotatesVersion()
+    {
+        var id = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4d10");
+        var now = DateTimeOffset.UtcNow;
+        var opp = Opportunity.CreateDraft(
+            id, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            Guid.NewGuid(), Guid.NewGuid(),
+            "งานห้องนอน TEST_ONLY",
+            "ออกแบบตกแต่งภายใน",
+            new[] { "built-in" },
+            null, 150000m, "THB",
+            new DateOnly(2026, 12, 1),
+            now.AddDays(1),
+            "ติดตามสรุปแบบ",
+            now);
+
+        var initialVersion = opp.RowVersion;
+
+        opp.Qualify(initialVersion);
+
+        Assert.Equal(OpportunityStage.Qualified, opp.Stage);
+        Assert.NotEqual(initialVersion, opp.RowVersion);
+        Assert.Equal("งานห้องนอน TEST_ONLY", opp.Title);
+        Assert.Equal("ออกแบบตกแต่งภายใน", opp.ScopeSummary);
+        Assert.Equal("ติดตามสรุปแบบ", opp.NextActionNote);
+
+        var expectedCanonicalStages = new[]
+        {
+            "draft", "qualified", "surveying", "estimating", "proposed", "won", "lost", "cancelled"
+        };
+        Assert.Equal(expectedCanonicalStages.OrderBy(s => s), OpportunityStage.All.OrderBy(s => s));
+    }
 }
