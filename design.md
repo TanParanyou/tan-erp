@@ -158,6 +158,23 @@
 - **ระยะห่างสม่ำเสมอ (Harmonized Padding & Margin):** คอนเทนเนอร์หลัก (`.erp-main-content`) กำหนด padding สม่ำเสมอรอบด้าน (`p-4 sm:p-6`: 16px บนมือถือ, 24px บนจอใหญ่)
 - **แถบ Action Bar ติดหนึบล่างจอ (Flush Sticky Action Bar):** ใช้ `sticky bottom-0 z-40` พร้อม negative margin `-mx-4 -mb-4 mt-8 sm:-mx-6 sm:-mb-6` เพื่อหักล้าง padding ของคอนเทนเนอร์หลักอย่างพอดีเป๊ะ และมี padding ด้านใน `px-4 py-3 sm:px-6 sm:py-4` ทำให้ปุ่มและสถานะตรงแนวกับเนื้อหาฟอร์มด้านบนอย่างนิ่งสนิท ไม่เด้งไปเด้งมา
 
+### 4.4 มาตรฐานขนาดและบทบาทของปุ่ม (Button Scale & Usage Rules)
+
+เพื่อป้องกันปัญหาปุ่มสูงต่ำไม่เท่ากันหรือไม่สอดคล้องกันข้ามหน้าจอ ระบบกำหนดขนาดปุ่มกลางของ Atelier Architectural Navy Sharp ไว้อย่างเคร่งครัด:
+
+| ขนาด (Size) | ความสูง (Min-Height) | Padding แนวนอน/ตั้ง | ขนาดตัวอักษร | วัตถุประสงค์และบทบาทการใช้งาน (Usage Role) |
+| :--- | :--- | :--- | :--- | :--- |
+| **`sm`** (Compact / Toolbar) | **$36\text{px}$** (`.erp-btn-sm`) | `py-1 px-3` (`0.25rem 0.75rem`) | $12\text{px} - 13\text{px}$ (`text-xs`) | ใช้ในพื้นที่จำกัด: ListToolbar Actions (เช่น Export CSV), Quick-view drawer footer, Inline card actions |
+| **`md`** (Standard / Default) | **$44\text{px}$** (`.erp-btn-md`) | `py-2 px-4` (`0.5rem 1rem`) | $14\text{px}$ (`text-sm`) | **มาตรฐานหลักของระบบ**: PageHeader Primary Action (ปุ่ม Create), Form Action Bar (ปุ่ม Save/Cancel), Confirmation Modal buttons, Error Retry buttons |
+| **`lg`** (Hero / Prominent) | **$48\text{px}$** (`.erp-btn-lg`) | `py-3 px-6` (`0.75rem 1.5rem`) | $16\text{px}$ (`text-base`) | จังหวะ Call-to-action ใหญ่, Landing page หรือหน้า Portal ที่ต้องการความโดดเด่นสูงสุด |
+| **`icon`** (Square Target) | **$44\text{px} \times 44\text{px}$** | `p-2` (`0.5rem`) | - | ปุ่มไอคอนเดี่ยวตามเกณฑ์ Touch Accessibility Floor ($44\text{px}$) |
+
+#### กฎเหล็กในการใช้งานปุ่ม (Strict Guardrails):
+1. **Reuse Central Component:** ทุกปุ่มการทำงานต้องเรียกผ่านคอมโพเนนต์กลาง `<Button />` เสมอ (ซึ่งรองรับ prop `href` เมื่อเป็น Navigation Link) ห้ามใช้แท็ก `<button>` หรือ `<Link>` แต่งสไตล์ปุ่มเองโดยเด็ดขาด
+2. **No Arbitrary Height Overrides:** ห้าม override ด้วย `min-h-[40px]`, `min-h-[44px]`, `h-10` หรือ inline style ทับความสูงของปุ่ม ให้ใช้ขนาด `size="sm" | "md" | "lg"` จาก Design System เท่านั้น
+3. **PageHeader Actions = `size="md"` ($44\text{px}$):** ทุกหน้าจอ (Customer, Opportunity, Site) ปุ่ม Action หลักบนส่วนหัวต้องมีขนาดเท่ากันคือ $44\text{px}$
+4. **Form Actions & Modals = `size="md"` ($44\text{px}$):** ปุ่มใน FormActionBar และ ConfirmationModal ต้องมีความสูงมาตรฐานเท่ากันที่ $44\text{px}$
+
 ---
 
 ## 5. มาตรฐาน Responsive ทุกขนาดหน้าจอ (Responsive System for All Devices)

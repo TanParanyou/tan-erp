@@ -35,3 +35,22 @@ Status: Active
 Cost Example: แยกเป็น Cost Record `1,250 THB/sheet`, Supplier Quote, Effective `2026-09-01`, Branch/Organization Scope และสถานะ Published
 
 ข้อมูลและตัวเลขนี้เป็น `TEST_ONLY` ไม่ใช่ราคาจริงสำหรับใช้งาน Logical Schema อยู่ที่ [Item Master Data Contract](item-master-data-contract.md)
+
+---
+
+## Geographic Master Data (ข้อมูลภูมิศาสตร์และที่อยู่ประเทศไทย)
+
+**Schema:** `master_data` (แยกจาก Domain Transactions และ Business Entities)
+
+ฐานข้อมูลมาตรฐานสำหรับระบบค้นหาที่อยู่ด่วน (Address Autocomplete), การจับคู่รหัสไปรษณีย์, และการกำหนดพิกัดภูมิศาสตร์ (Latitude / Longitude) สำหรับหน้างานและสถานที่ตั้ง:
+
+### 1. ตารางข้อมูลหลัก
+- **`master_data.provinces`:** 77 จังหวัด (`code` PK เช่น `"10"`, `name_th`, `name_en`)
+- **`master_data.districts`:** 929 อำเภอ/เขต (`code` PK เช่น `"1039"`, `province_code` FK, `name_th`, `name_en`)
+- **`master_data.subdistricts`:** 7,451 ตำบล/แขวง (`code` PK เช่น `"103901"`, `district_code` FK, `name_th`, `name_en`, `postal_code`, `latitude`, `longitude`)
+
+### 2. Performance & In-Memory Lookup Cache
+- **Data Seeding:** ข้อมูลชุดมาตรฐานจากกรมการปกครอง (DOPA) บรรจุในรูปแบบบีบอัด `thailand_addresses.json.gz` และถูก Seeding อัตโนมัติเมื่อเริ่มระบบ (Idempotent Migration)
+- **In-Memory Cache:** มี `AddressLookupCache` (Singleton Service) โหลดโครงสร้างที่อยู่ทั้งหมดขึ้นหน่วยความจำตอนเริ่มต้นระบบ รองรับการสืบค้น < 1ms ด้วยระบบคำนวณคะแนนความเกี่ยวข้อง (Postal code exact match > Prefix > Substring)
+- **API Contract:** ให้บริการผ่าน `GET /api/v1/master-data/addresses/search?q={query}&limit={limit}` (ตาม RFC 9457 และ OpenAPI Specification)
+- **Immutability Principle:** ข้อมูลภูมิศาสตร์นี้ทำหน้าที่เป็น Lookup Source; เมื่อนำไปบันทึกในเอกสารธุรกรรม (เช่น `crm.sites`, ที่อยู่จัดส่ง) ข้อมูลทั้งหมดจะถูกคัดลอกเป็น Snapshot แบบ Denormalized Strings เพื่อป้องกันผลกระทบย้อนหลังต่อข้อมูลทางกฎหมายและประวัติการตรวจสอบ (Audit Immutability)

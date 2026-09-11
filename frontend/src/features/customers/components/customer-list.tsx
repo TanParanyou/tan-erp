@@ -337,7 +337,7 @@ export function CustomerList() {
               variant="primary"
               size="md"
               icon={<IconPlus size={16} />}
-              className="min-h-[40px] font-semibold"
+              className="font-semibold"
             >
               {t("createCustomer")}
             </Button>
@@ -407,7 +407,6 @@ export function CustomerList() {
             isLoading={isExporting}
             disabled={totalItems === 0}
             icon={<IconDownload size={15} />}
-            className="h-10 text-xs font-medium min-h-[40px]"
           >
             {t("exportCsv")}
           </Button>

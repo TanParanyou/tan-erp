@@ -254,13 +254,14 @@ export function OpportunityList() {
         subtitle={t("subtitle")}
         actions={
           canCreate ? (
-            <Link
+            <Button
               href={`/${locale}/opportunities/create`}
-              className="inline-flex items-center gap-2 h-9 px-4 text-xs font-semibold text-white bg-erp-navy hover:bg-erp-navy-hover transition-colors rounded-none focus:outline-none focus:ring-2 focus:ring-erp-navy focus:ring-offset-1"
+              variant="primary"
+              size="md"
+              icon={<IconPlus size={16} strokeWidth={2} />}
             >
-              <IconPlus size={16} strokeWidth={2.5} />
-              <span>{t("createOpportunity")}</span>
-            </Link>
+              {t("createOpportunity")}
+            </Button>
           ) : undefined
         }
       />
@@ -344,10 +345,10 @@ export function OpportunityList() {
               <Button
                 type="button"
                 variant="outline"
+                size="md"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
-                style={{ minHeight: "40px", minWidth: "160px" }}
-                className="text-xs font-semibold"
+                className="min-w-[160px] text-xs font-semibold"
               >
                 {isFetchingNextPage ? <MonoSpinner size="sm" /> : t("loadMore")}
               </Button>

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 type ValidationTranslator = (
-  key: "required" | "invalidFormat" | "invalidNumber"
+  key: "required" | "invalidFormat" | "invalidNumber" | "coordinatePairRequired"
 ) => string;
 
 export const createSiteFormSchema = (t: ValidationTranslator) =>
@@ -35,7 +35,7 @@ export const createSiteFormSchema = (t: ValidationTranslator) =>
         return (hasLat && hasLng) || (!hasLat && !hasLng);
       },
       {
-        message: t("invalidFormat"),
+        message: t("coordinatePairRequired"),
         path: ["latitude"],
       }
     );

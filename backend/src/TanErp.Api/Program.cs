@@ -105,6 +105,8 @@ builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.IOpportunityStor
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.CreateOpportunity.CreateOpportunityHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.ListOpportunities.ListOpportunitiesHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.GetOpportunity.GetOpportunityHandler>();
+builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.IAddressLookupCache, TanErp.Infrastructure.MasterData.AddressLookupCache>();
+builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();
 
 // Authentication & Authorization
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
@@ -155,6 +157,7 @@ if (app.Environment.IsEnvironment("Test") && app.Configuration.GetValue<bool>("S
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await TestOnlyDataSeeder.SeedAsync(db, app.Environment.EnvironmentName, true);
+    await TanErp.Infrastructure.MasterData.Seed.AddressMasterDataSeeder.SeedAsync(db);
 }
 
 app.Run();

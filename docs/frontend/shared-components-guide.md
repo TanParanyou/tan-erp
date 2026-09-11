@@ -48,6 +48,8 @@
 | **`EmptyState`** | หน้าจอว่างเปล่าแบบระเบียบวินัยช่าง พร้อมไอคอน Pure SVG และปุ่มกระตุ้น Action |
 | **`BulkActionToolbar`** | แถบเครื่องมือลอยตัวสำหรับจัดการแถวข้อมูลที่ถูกเลือกพร้อมกันในตาราง |
 | **`DataTable`** | ตารางข้อมูล ERP ความหนาแน่นสูง รองรับ Pagination, Sorting, Row Selection (Checkbox), และ Sticky Column |
+| **`MapPreview`** | กล่องแสดงตัวอย่างพิกัดแผนที่ (ละติจูด, ลองจิจูด) พร้อมลิงก์เปิดแผนที่ภายนอก (Google Maps / Apple Maps) |
+| **`Alert`** | แถบแจ้งเตือนสถานะ/ข้อผิดพลาดระดับอินไลน์หรือ Banner ขอบมุมฉาก 0px รองรับ variant (`danger`, `warning`, `success`, `info`), Pure SVG icon, และปุ่ม Dismiss (`onClose`) |
 | **`PageLoading` / `MonoSpinner`** | Minimal Mono Loading แสดงสถานะกำลังโหลดแบบเรียบง่าย ไม่ใช้ Skeleton หลอกตา |
 | **`Toast` / `ToastContainer`** | กล่องแจ้งเตือนมุมฉาก 0px พร้อมแถบสีสถานะหนา 5px ที่ขอบซ้าย |
 
@@ -78,6 +80,26 @@
 - รองรับการทำงานแบบ Native Form (`asForm={true}` หรือส่ง `onSubmit`, `onChange`) ทำให้ปุ่มบันทึกใน `FormActionBar` ทำงานสอดคล้องกับ Form Validation และการ Submit ได้ทันที
 - ใช้ `min-h-[calc(100vh-7rem)] flex flex-col justify-between` และ `flex-1 mb-8 pb-24` ป้องกันไม่ให้ Fixed Action Bar บังฟิลด์อินพุตแถวล่างสุดตอนเลื่อนจอ
 - กำหนดความกว้างมาตรฐานด้วย `maxWidth` (`full`: w-full [ค่าเริ่มต้น เพื่อความ Fluid สอดคล้องกับหน้า List/Detail ไม่เกิด Layout Shift], `sm`: max-w-xl, `md`: max-w-3xl, `lg`: max-w-5xl, `xl`: max-w-7xl)
+
+### 3.5 `AddressAreaField` & `AddressAutocomplete` (Centralized Geographic Area Selector)
+คอมโพเนนต์เลือกพื้นที่และที่อยู่สำหรับฟอร์ม ERP ทั้งหมด (เช่น สถานที่ตั้งหน้างาน, ที่อยู่ลูกค้า, สาขา):
+- **Seamless Dual Mode:**
+  - **ขณะยังไม่เลือกพื้นที่:** แสดงช่องค้นหา `AddressAutocomplete` สไตล์ WAI-ARIA Combobox ดึงข้อมูลจากฐานข้อมูลภูมิศาสตร์ไทย (77 จังหวัด, 929 อำเภอ, 7,451 ตำบล) ผ่าน In-memory Cache ค้นหาได้ทั้งรหัสไปรษณีย์ 5 หลัก และชื่อตำบล/อำเภอ
+  - **เมื่อเลือกพื้นที่แล้ว:** แปลงสภาพเป็น **Selected Location Summary Card** คม เหลี่ยม ไร้ขอบมน ความสูงมาตรฐาน 44px (`min-h-[44px]`) แสดง `ตำบล » อำเภอ » จังหวัด รหัสไปรษณีย์` พร้อมปุ่ม "เปลี่ยนที่อยู่" เพื่อเคลียร์และค้นหาใหม่
+- **Zero Redundant Inputs:** ยกเลิกการให้ผู้ใช้กรอกข้อความแยก ตำบล อำเภอ จังหวัด รหัสไปรษณีย์ แบบ Free-text ซึ่งเสี่ยงต่อการสะกดผิดและทำให้เกิดช่องอินพุตมากเกินความจำเป็น ผู้ใช้กรอกเพียงเลขที่/ซอย/ถนน และเลือกตำบลเพียงครั้งเดียว ระบบจะเติมข้อมูลทั้งหมดให้สมบูรณ์
+
+### 3.6 `QuickNoteChips` (Rapid Template Injection)
+ชิปสำหรับเลือกข้อความเทมเพลตที่ใช้บ่อย เพื่อนำข้อความไปต่อท้ายใน `Textarea` หรือช่องบันทึกโดยอัตโนมัติ:
+- สไตล์ขอบคม 0px ทึบและชัดเจน พร้อมไอคอน `+`
+- ป้องกันข้อความซ้ำซ้อน (ฉลาดพอที่จะไม่เติมข้อความซ้ำหากมีอยู่ในช่องแล้ว)
+- รองรับคีย์เทมเพลตมาตรฐาน เช่น เงื่อนไขการเข้าหน้างาน (`siteAccess` — แลกบัตร, ประตูปิด 18:00, ติดต่อ รปภ.)
+
+### 3.7 `FormSection` (Unified Architectural Form Card)
+การ์ดแบ่งส่วนฟอร์มมาตรฐานของระบบ ERP:
+- โครงสร้าง `.erp-card` ขอบคมฉาก 0px (`border-radius: 0px`)
+- ส่วนหัวสไตล์ Architectural Solid Navy (`text-erp-navy`) ตัวพิมพ์ใหญ่ tracking-wide uppercase พร้อมเส้นขอบแบ่งหมวดหมู่บาง
+- รองรับ `title`, `description` (คำอธิบายย่อยใต้หัวข้อ), และ `headerAction` (สำหรับใส่ Badge หรือปุ่มคำสั่งขนาดกะทัดรัดประจำการ์ด)
+- ยุติปัญหาการเขียน custom card markup ซ้ำซ้อนข้าม Feature Form ต่างๆ
 
 ---
 
@@ -110,6 +132,7 @@
 | **`useLocalStorage`** | Type-safe LocalStorage Hook สำหรับบันทึกความชอบของผู้ใช้ (เช่น Page size ของตาราง) |
 | **`useMediaQuery`** | ตรวจสอบ Responsive Breakpoints (`isMobile`, `isTablet`, `isDesktop`) |
 | **`useOnlineStatus`** | ตรวจสอบสถานะการเชื่อมต่ออินเทอร์เน็ตของผู้ใช้ |
+| **`useCurrentLocation`** | ดึงพิกัดภูมิศาสตร์ (GPS ละติจูด, ลองจิจูด) จาก Browser Geolocation API พร้อมการตรวจจับข้อผิดพลาดตาม W3C (Permission Denied, Position Unavailable, Timeout) และแจ้งเตือนผ่าน Toast |
 | **`useImagePreview`** | จัดการสร้างและคืนหน่วยความจำ Object URL สำหรับภาพพรีวิว |
 
 ---

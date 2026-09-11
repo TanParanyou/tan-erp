@@ -38,4 +38,20 @@ describe("Button component", () => {
     expect(button.hasAttribute("disabled")).toBe(true);
     expect(button.getAttribute("aria-busy")).toBe("true");
   });
+
+  it("applies default size md and supports sm, lg, icon sizes", () => {
+    const { rerender } = render(<Button>บันทึก</Button>);
+    const button = screen.getByRole("button", { name: "บันทึก" });
+    expect(button.className).toContain("erp-btn-md");
+
+    rerender(<Button size="sm">บันทึก</Button>);
+    expect(button.className).toContain("erp-btn-sm");
+
+    rerender(<Button size="lg">บันทึก</Button>);
+    expect(button.className).toContain("erp-btn-lg");
+
+    rerender(<Button size="icon" aria-label="ค้นหา" />);
+    const iconBtn = screen.getByRole("button", { name: "ค้นหา" });
+    expect(iconBtn.className).toContain("erp-btn-icon");
+  });
 });

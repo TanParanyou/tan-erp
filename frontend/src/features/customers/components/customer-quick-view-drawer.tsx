@@ -70,7 +70,7 @@ export function CustomerQuickViewDrawer({
       size="lg"
       footer={
         <div className="flex flex-col-reverse sm:flex-row justify-between items-center w-full gap-3">
-          <Button variant="outline" size="sm" onClick={onClose} className="w-full sm:w-auto min-h-[40px]">
+          <Button variant="outline" size="sm" onClick={onClose} className="w-full sm:w-auto">
             {tCommon("actions.close")}
           </Button>
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -85,7 +85,7 @@ export function CustomerQuickViewDrawer({
                   onClose();
                   onSelectExisting(targetId);
                 }}
-                className="w-full sm:w-auto min-h-[40px]"
+                className="w-full sm:w-auto"
               >
                 {t("useExistingCustomer")}
               </Button>
@@ -95,7 +95,7 @@ export function CustomerQuickViewDrawer({
                 href={`/${locale}/customers/${customer.id}`}
                 variant="primary"
                 size="sm"
-                className="w-full sm:w-auto min-h-[40px] font-semibold"
+                className="w-full sm:w-auto font-semibold"
               >
                 {t("viewFullDetail")}
               </Button>
@@ -122,7 +122,6 @@ export function CustomerQuickViewDrawer({
             variant="outline"
             size="sm"
             onClick={() => refetchCustomer()}
-            className="min-h-[36px]"
           >
             {tCommon("actions.retry")}
           </Button>

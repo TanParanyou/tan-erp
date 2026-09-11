@@ -5,3 +5,6 @@ export * from "./FormContainer";
 export * from "./PhoneInput";
 export * from "./SelectWithOther";
 export * from "./phone-country-codes";
+export * from "./AddressAutocomplete";
+export * from "./QuickNoteChips";
+export * from "./FormSection";

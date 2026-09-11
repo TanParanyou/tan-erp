@@ -17,6 +17,9 @@ export type OpportunityResponse = components["schemas"]["OpportunityResponse"];
 export type OpportunityListResponse = components["schemas"]["OpportunityListResponse"];
 export type CreateOpportunityRequest = components["schemas"]["CreateOpportunityRequest"];
 
+export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
+export type AddressSearchResultItem = components["schemas"]["AddressSearchResultItem"];
+
 export interface RequestOptions {
   token: string;
   membershipId?: string;
@@ -228,6 +231,19 @@ export class ApiClient {
     options: RequestOptions
   ): Promise<OpportunityResponse> {
     return this.request<OpportunityResponse>("/api/v1/opportunities", "POST", options, payload);
+  }
+
+  async searchAddresses(
+    query: string,
+    options: RequestOptions,
+    limit: number = 20
+  ): Promise<AddressSearchResponse> {
+    const encoded = encodeURIComponent(query);
+    return this.request<AddressSearchResponse>(
+      `/api/v1/master-data/addresses/search?q=${encoded}&limit=${limit}`,
+      "GET",
+      options
+    );
   }
 }
 

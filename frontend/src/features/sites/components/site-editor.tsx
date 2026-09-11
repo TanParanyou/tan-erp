@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller, FormProvider } from "react-hook-form";
+import { useForm, Controller, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations, useLocale } from "next-intl";
 import { createSiteFormSchema, type SiteFormValues } from "../schemas/site-form-schema";
@@ -12,12 +12,20 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
+import { Button } from "@/components/ui/Button";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { MapPreview } from "@/components/ui/MapPreview";
+import { Alert } from "@/components/ui/Alert";
 import { FormContainer } from "@/components/forms/FormContainer";
 import { FormActionBar } from "@/components/forms/FormActionBar";
+import { FormSection } from "@/components/forms/FormSection";
+import { type SelectedAddress } from "@/components/forms/AddressAutocomplete";
+import { AddressAreaField } from "@/components/forms/AddressAreaField";
+import { QuickNoteChips } from "@/components/forms/QuickNoteChips";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/hooks/useToast";
-import { IconAlertCircle } from "@/components/common/Icons";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { IconAlertCircle, IconMapPin } from "@/components/common/Icons";
 import { ApiError } from "@/lib/api/api-error";
 
 interface SiteEditorProps {
@@ -52,7 +60,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
   const siteFormSchema = useMemo(
     () =>
       createSiteFormSchema((key) =>
-        tValidation(key as "required" | "invalidFormat" | "invalidNumber")
+        tValidation(key as "required" | "invalidFormat" | "invalidNumber" | "coordinatePairRequired")
       ),
     [tValidation]
   );
@@ -76,8 +84,77 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
   const {
     control,
     handleSubmit,
+    setValue,
+    getValues,
+    trigger,
     formState: { errors, isSubmitting, isDirty },
   } = methods;
+
+  const [subdistrict, district, province, postalCode, countryCode, latitude, longitude] = useWatch({
+    control,
+    name: ["subdistrict", "district", "province", "postalCode", "countryCode", "latitude", "longitude"],
+  });
+
+  const { getCurrentLocation, isLoading: isLocating } = useCurrentLocation({
+    onSuccess: (coords) => {
+      setValue("latitude", coords.latitude, { shouldValidate: true, shouldDirty: true });
+      setValue("longitude", coords.longitude, { shouldValidate: true, shouldDirty: true });
+      void trigger(["latitude", "longitude"]);
+    },
+  });
+
+  const handleAppendAccessNote = React.useCallback(
+    (text: string) => {
+      const current = getValues("accessNote") || "";
+      const separator = current.trim().length > 0 ? ", " : "";
+      const updated = `${current.trim()}${separator}${text}`;
+      setValue("accessNote", updated, { shouldValidate: true, shouldDirty: true });
+    },
+    [getValues, setValue]
+  );
+
+  const siteAccessTemplates = useMemo(
+    () => [
+      { id: "badge", label: tCommon("quickTemplates.siteAccess.badgeRequired") },
+      { id: "gate", label: tCommon("quickTemplates.siteAccess.gateCloses1800") },
+      { id: "guard", label: tCommon("quickTemplates.siteAccess.contactGuard") },
+      { id: "truck", label: tCommon("quickTemplates.siteAccess.truckAccessHours") },
+    ],
+    [tCommon]
+  );
+
+  const handleClearAddress = React.useCallback(() => {
+    setValue("subdistrict", "", { shouldValidate: true, shouldDirty: true });
+    setValue("district", "", { shouldValidate: true, shouldDirty: true });
+    setValue("province", "", { shouldValidate: true, shouldDirty: true });
+    setValue("postalCode", "", { shouldValidate: true, shouldDirty: true });
+  }, [setValue]);
+
+
+
+  const handleAddressSelect = React.useCallback(
+    (address: SelectedAddress) => {
+      setValue("subdistrict", address.subdistrict, { shouldValidate: true, shouldDirty: true });
+      setValue("district", address.district, { shouldValidate: true, shouldDirty: true });
+      setValue("province", address.province, { shouldValidate: true, shouldDirty: true });
+      setValue("postalCode", address.postalCode, { shouldValidate: true, shouldDirty: true });
+      setValue("countryCode", address.countryCode, { shouldValidate: true, shouldDirty: true });
+
+      const currentLat = getValues("latitude");
+      const currentLng = getValues("longitude");
+      if (
+        (currentLat === null || currentLat === undefined) &&
+        (currentLng === null || currentLng === undefined) &&
+        address.latitude != null &&
+        address.longitude != null
+      ) {
+        setValue("latitude", Number(address.latitude), { shouldValidate: true, shouldDirty: true });
+        setValue("longitude", Number(address.longitude), { shouldValidate: true, shouldDirty: true });
+        void trigger(["latitude", "longitude"]);
+      }
+    },
+    [setValue, getValues, trigger]
+  );
 
   const onSubmit = async (values: SiteFormValues) => {
     setSubmitError(null);
@@ -163,16 +240,9 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
         }
         errorBanner={
           submitError ? (
-            <div
-              role="alert"
-              aria-live="polite"
-              className="erp-card p-4 md:px-5 border-erp-danger-border bg-erp-danger-bg flex items-center gap-3"
-            >
-              <IconAlertCircle size={20} className="text-erp-danger shrink-0" />
-              <span className="text-erp-danger text-sm font-medium">
-                {submitError}
-              </span>
-            </div>
+            <Alert variant="danger">
+              {submitError}
+            </Alert>
           ) : null
         }
         actionBar={
@@ -188,11 +258,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Main Column: Site Information & Address */}
           <div className="lg:col-span-8 flex flex-col gap-6">
-            <div className="erp-card p-6 flex flex-col gap-5">
-              <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
-                {t("title")}
-              </h2>
-
+            <FormSection title={t("title")}>
               <div className="flex flex-col gap-4">
                 <Controller
                   name="label"
@@ -210,6 +276,25 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                   )}
                 />
 
+                <AddressAreaField
+                  id="smart-address-search"
+                  label={t("areaSelection")}
+                  hint={t("smartSearchHint")}
+                  required
+                  disabled={isSubmitting}
+                  error={
+                    errors.subdistrict?.message ||
+                    errors.district?.message ||
+                    errors.province?.message ||
+                    errors.postalCode?.message
+                      ? t("areaRequired")
+                      : undefined
+                  }
+                  value={{ subdistrict, district, province, postalCode, countryCode }}
+                  onSelect={handleAddressSelect}
+                  onClear={handleClearAddress}
+                />
+
                 <Controller
                   name="addressLine1"
                   control={control}
@@ -225,94 +310,11 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                     />
                   )}
                 />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Controller
-                    name="subdistrict"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        id="subdistrict"
-                        label={t("subdistrict")}
-                        required
-                        error={errors.subdistrict?.message}
-                        disabled={isSubmitting}
-                        {...field}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    name="district"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        id="district"
-                        label={t("district")}
-                        required
-                        error={errors.district?.message}
-                        disabled={isSubmitting}
-                        {...field}
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Controller
-                    name="province"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        id="province"
-                        label={t("province")}
-                        required
-                        error={errors.province?.message}
-                        disabled={isSubmitting}
-                        {...field}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    name="postalCode"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        id="postalCode"
-                        label={t("postalCode")}
-                        required
-                        error={errors.postalCode?.message}
-                        disabled={isSubmitting}
-                        {...field}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    name="countryCode"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        id="countryCode"
-                        label={t("countryCode")}
-                        required
-                        error={errors.countryCode?.message}
-                        disabled={isSubmitting}
-                        {...field}
-                      />
-                    )}
-                  />
-                </div>
               </div>
-            </div>
+            </FormSection>
 
             {/* Access Note Card */}
-            <div className="erp-card p-6 flex flex-col gap-5">
-              <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
-                {t("accessNote")}
-              </h2>
-
+            <FormSection title={t("accessNote")}>
               <Controller
                 name="accessNote"
                 control={control}
@@ -328,17 +330,33 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                   />
                 )}
               />
-            </div>
+
+              <QuickNoteChips
+                label={tCommon("quickTemplates.label")}
+                templates={siteAccessTemplates}
+                onSelect={handleAppendAccessNote}
+                disabled={isSubmitting}
+              />
+            </FormSection>
           </div>
 
           {/* Right Column: GPS Coordinates */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="erp-card p-6 flex flex-col gap-5">
-              <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
-                {t("coordinates")}
-              </h2>
-
+            <FormSection title={t("coordinates")}>
               <div className="flex flex-col gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  isLoading={isLocating}
+                  disabled={isSubmitting || isLocating}
+                  onClick={() => getCurrentLocation()}
+                  icon={<IconMapPin size={16} className="text-erp-navy" />}
+                  className="w-full justify-center"
+                >
+                  {isLocating ? tCommon("geolocation.gettingLocation") : tCommon("geolocation.getCurrentLocation")}
+                </Button>
+
                 <Controller
                   name="latitude"
                   control={control}
@@ -355,6 +373,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                       onChange={(e) => {
                         const val = e.target.value === "" ? null : parseFloat(e.target.value);
                         field.onChange(val);
+                        void trigger(["latitude", "longitude"]);
                       }}
                     />
                   )}
@@ -376,12 +395,20 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                       onChange={(e) => {
                         const val = e.target.value === "" ? null : parseFloat(e.target.value);
                         field.onChange(val);
+                        void trigger(["latitude", "longitude"]);
                       }}
                     />
                   )}
                 />
+
+                <MapPreview
+                  latitude={latitude}
+                  longitude={longitude}
+                  showExternalLink={true}
+                  className="mt-1"
+                />
               </div>
-            </div>
+            </FormSection>
           </div>
         </div>
 

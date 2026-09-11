@@ -89,11 +89,14 @@ describe("createSiteFormSchema", () => {
       province: "Prov",
       postalCode: "12345",
       countryCode: "TH",
-      latitude: 13.7563,
+      latitude: 13.8064145,
       longitude: null,
     });
 
     expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe("trans_coordinatePairRequired");
+    }
   });
 
   it("fails if only longitude is provided without latitude", () => {
@@ -110,6 +113,9 @@ describe("createSiteFormSchema", () => {
     });
 
     expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe("trans_coordinatePairRequired");
+    }
   });
 
   it("fails if coordinates are out of valid range (-90..90 and -180..180)", () => {

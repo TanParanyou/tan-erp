@@ -75,6 +75,10 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(paths.ContainsKey("/api/v1/customers/{customerId}/sites"), "OpenAPI must contain path /api/v1/customers/{customerId}/sites");
         Assert.True(paths.ContainsKey("/api/v1/opportunities"), "OpenAPI must contain path /api/v1/opportunities");
         Assert.True(paths.ContainsKey("/api/v1/opportunities/{id}"), "OpenAPI must contain path /api/v1/opportunities/{id}");
+        Assert.True(paths.ContainsKey("/api/v1/master-data/addresses/search"), "OpenAPI must contain path /api/v1/master-data/addresses/search");
+
+        var searchAddressPath = paths["/api/v1/master-data/addresses/search"]?["get"]?.AsObject();
+        Assert.NotNull(searchAddressPath);
 
         var mePath = paths["/api/v1/me"]?["get"]?.AsObject();
         Assert.NotNull(mePath);
@@ -130,6 +134,8 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("OpportunityResponse"), "Must define OpportunityResponse schema");
         Assert.True(schemas.ContainsKey("OpportunityListResponse"), "Must define OpportunityListResponse schema");
         Assert.True(schemas.ContainsKey("CreateOpportunityRequest"), "Must define CreateOpportunityRequest schema");
+        Assert.True(schemas.ContainsKey("AddressSearchResponse"), "Must define AddressSearchResponse schema");
+        Assert.True(schemas.ContainsKey("AddressSearchResultItem"), "Must define AddressSearchResultItem schema");
         Assert.True(schemas.ContainsKey("ApiProblemDetails"), "Must define ApiProblemDetails schema");
 
         // 5. Ensure contracts/openapi/tan-erp.v1.json exists and matches

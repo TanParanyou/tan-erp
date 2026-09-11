@@ -13,8 +13,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { Alert } from "@/components/ui/Alert";
 import { FormContainer } from "@/components/forms/FormContainer";
 import { FormActionBar } from "@/components/forms/FormActionBar";
+import { FormSection } from "@/components/forms/FormSection";
 import { PhoneInput } from "@/components/forms/PhoneInput";
 import { SelectWithOther } from "@/components/forms/SelectWithOther";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -256,16 +258,9 @@ export function CustomerEditor() {
       }
       errorBanner={
         submitError ? (
-          <div
-            role="alert"
-            aria-live="polite"
-            className="erp-card p-4 md:px-5 border-erp-danger-border bg-erp-danger-bg flex items-center gap-3"
-          >
-            <IconAlertCircle size={20} className="text-erp-danger shrink-0" />
-            <span className="text-erp-danger text-sm font-medium">
-              {submitError}
-            </span>
-          </div>
+          <Alert variant="danger">
+            {submitError}
+          </Alert>
         ) : null
       }
       topAlert={
@@ -298,11 +293,7 @@ export function CustomerEditor() {
     >
       <div className="flex flex-col gap-6 w-full">
         {/* Card 1: Customer Information */}
-        <div className="erp-card p-6 flex flex-col gap-5">
-          <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
-            {t("title")}
-          </h2>
-
+        <FormSection title={t("title")}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Customer Type */}
             <Controller
@@ -419,14 +410,10 @@ export function CustomerEditor() {
               />
             )}
           />
-        </div>
+        </FormSection>
 
         {/* Card 2: Primary Contact Section */}
-        <div className="erp-card p-6 flex flex-col gap-5">
-          <h2 className="text-base font-bold text-erp-navy m-0 border-b border-erp-border-subtle pb-3 tracking-wide uppercase">
-            {t("primaryContact")}
-          </h2>
-
+        <FormSection title={t("primaryContact")}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Contact Name */}
             <Controller
@@ -534,7 +521,7 @@ export function CustomerEditor() {
               )}
             />
           </div>
-        </div>
+        </FormSection>
       </div>
 
       {/* Safety Confirmation Modal for Cancel when isDirty */}

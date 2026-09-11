@@ -141,7 +141,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         <p style={{ color: "var(--erp-text-muted)", margin: "0 0 1rem 0", fontSize: "0.875rem" }}>
           {error?.message || t("errors.loadDetail")}
         </p>
-        <Button type="button" variant="outline" onClick={() => refetch()} style={{ minHeight: "44px" }}>
+        <Button type="button" variant="outline" size="md" onClick={() => refetch()}>
           {tCommon("actions.refresh")}
         </Button>
       </div>

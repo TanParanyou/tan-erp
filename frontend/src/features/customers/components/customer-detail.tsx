@@ -143,10 +143,10 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
           </h2>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" size="md" onClick={() => refetch()} className="min-h-[44px]">
+          <Button variant="outline" size="md" onClick={() => refetch()}>
             {tCommon("actions.retry")}
           </Button>
-          <Button href={`/${locale}/customers`} variant="primary" size="md" className="min-h-[44px]">
+          <Button href={`/${locale}/customers`} variant="primary" size="md">
             {t("backToList")}
           </Button>
         </div>
@@ -219,7 +219,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
               variant="primary"
               size="md"
               onClick={() => setShowActivateModal(true)}
-              className="min-h-[40px] font-semibold"
+              className="font-semibold"
             >
               {t("activateAction")}
             </Button>

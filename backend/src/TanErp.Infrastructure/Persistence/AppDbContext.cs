@@ -26,6 +26,9 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Crm.Sites.Site> Sites => Set<TanErp.Domain.Crm.Sites.Site>();
     public DbSet<TanErp.Domain.Crm.Opportunities.Opportunity> Opportunities => Set<TanErp.Domain.Crm.Opportunities.Opportunity>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
+    public DbSet<TanErp.Domain.MasterData.Geography.Province> Provinces => Set<TanErp.Domain.MasterData.Geography.Province>();
+    public DbSet<TanErp.Domain.MasterData.Geography.District> Districts => Set<TanErp.Domain.MasterData.Geography.District>();
+    public DbSet<TanErp.Domain.MasterData.Geography.Subdistrict> Subdistricts => Set<TanErp.Domain.MasterData.Geography.Subdistrict>();
 
     public void AddAuditEvent(AuditEvent auditEvent)
     {

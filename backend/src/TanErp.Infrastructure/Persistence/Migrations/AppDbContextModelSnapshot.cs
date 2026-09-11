@@ -757,6 +757,139 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.ToTable("users", "identity_access");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.MasterData.Geography.District", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameTh")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_th");
+
+                    b.Property<Guid>("ProvinceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("province_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("NameTh");
+
+                    b.HasIndex("ProvinceId", "Code");
+
+                    b.ToTable("districts", "master_data");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.MasterData.Geography.Province", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameTh")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_th");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("NameTh");
+
+                    b.ToTable("provinces", "master_data");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.MasterData.Geography.Subdistrict", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("code");
+
+                    b.Property<decimal?>("DefaultLatitude")
+                        .HasColumnType("numeric(9,6)")
+                        .HasColumnName("default_latitude");
+
+                    b.Property<decimal?>("DefaultLongitude")
+                        .HasColumnType("numeric(10,6)")
+                        .HasColumnName("default_longitude");
+
+                    b.Property<Guid>("DistrictId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("district_id");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameTh")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_th");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("postal_code");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("NameTh");
+
+                    b.HasIndex("PostalCode");
+
+                    b.HasIndex("DistrictId", "Code");
+
+                    b.ToTable("subdistricts", "master_data");
+                });
+
             modelBuilder.Entity("TanErp.Domain.Organization.Branch", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1000,6 +1133,24 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.MasterData.Geography.District", b =>
+                {
+                    b.HasOne("TanErp.Domain.MasterData.Geography.Province", null)
+                        .WithMany()
+                        .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.MasterData.Geography.Subdistrict", b =>
+                {
+                    b.HasOne("TanErp.Domain.MasterData.Geography.District", null)
+                        .WithMany()
+                        .HasForeignKey("DistrictId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TanErp.Domain.Organization.Branch", b =>

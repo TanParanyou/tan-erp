@@ -441,7 +441,7 @@ describe("CustomerEditor create intent", () => {
     // Verify detailed content is displayed inside Drawer
     await waitFor(() => {
       expect(screen.getByText(thMessages.customers.quickViewTitle)).toBeDefined();
-      expect(screen.getByText("Sample Company Ltd.")).toBeDefined();
+      expect(screen.getAllByText("Sample Company Ltd.").length).toBeGreaterThan(0);
       expect(screen.getByText("สมศรี มีสุข")).toBeDefined();
       expect(screen.getByText("ผู้จัดการฝ่ายจัดซื้อ")).toBeDefined();
       expect(screen.getByText("081-234-5678")).toBeDefined();
@@ -450,8 +450,8 @@ describe("CustomerEditor create intent", () => {
       expect(screen.getByText("จากงานสัมมนา")).toBeDefined();
       expect(screen.getByText("สำนักงานใหญ่ อโศก")).toBeDefined();
       expect(screen.getByText("123 ถนนสุขุมวิท 21")).toBeDefined();
-      expect(screen.getByText("กรุงเทพมหานคร")).toBeDefined();
-      expect(screen.getByText("10110")).toBeDefined();
+      expect(screen.getAllByText("กรุงเทพมหานคร").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("10110").length).toBeGreaterThan(0);
     });
   });
 });

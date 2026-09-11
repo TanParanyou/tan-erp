@@ -52,7 +52,6 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
             variant="primary"
             size="sm"
             icon={<IconPlus size={16} />}
-            className="min-h-[44px]"
           >
             {t("createSite")}
           </Button>
@@ -73,7 +72,7 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
           <p className="text-sm text-erp-danger font-medium m-0">
             {error?.message || t("errors.loadList")}
           </p>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="min-h-[44px]">
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
             {tCommon("actions.retry")}
           </Button>
         </div>

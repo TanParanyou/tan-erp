@@ -134,6 +134,16 @@
       "unspecified": "-- Not specified --",
       "imagePreview": "Image Preview"
     },
+    "addressAutocomplete": {
+      "label": "Quick Address Search",
+      "placeholder": "Type 5-digit postal code or subdistrict name (e.g. 10110)",
+      "noResults": "No matching addresses found",
+      "loading": "Searching address data...",
+      "clear": "Clear search",
+      "areaSelection": "Subdistrict / District / Province / Postal Code",
+      "changeArea": "Change",
+      "areaRequired": "Please search and select a subdistrict, district, province, and postal code"
+    },
     "phone": {
       "countryLabel": "Country code",
       "thailand": "Thailand",
@@ -166,8 +176,8 @@
       "phoneOrEmailRequired": "Provide at least a phone number or an email address",
       "invalidPhone": "Invalid phone number format (supports domestic 0x or international +country code)",
       "leadSourceNoteRequired": "Please specify details for other lead source",
-      "actionDateNotePairRequired": "Next action note is required when next action date is set (and vice versa)"
-
+      "actionDateNotePairRequired": "Next action note is required when next action date is set (and vice versa)",
+      "coordinatePairRequired": "Both latitude and longitude must be provided together"
     },
     "table": {
       "rowsPerPage": "Rows per page",
@@ -229,6 +239,27 @@
     "errors": {
       "accessDeniedTitle": "Access Denied",
       "accessDeniedDetail": "You do not have permission to access this resource or perform this action in this organization."
+    },
+    "quickTemplates": {
+      "label": "Quick Templates:",
+      "siteAccess": {
+        "badgeRequired": "Visitor badge required",
+        "gateCloses1800": "Gate closes at 18:00",
+        "contactGuard": "Contact guard at Gate 1",
+        "truckAccessHours": "Truck access allowed only 09:00 - 15:00"
+      }
+    },
+    "geolocation": {
+      "getCurrentLocation": "Get Current Location (GPS)",
+      "gettingLocation": "Detecting location...",
+      "openInMaps": "Open in Google Maps",
+      "locationSuccess": "Current coordinates retrieved successfully",
+      "notSupported": "Geolocation is not supported by your browser",
+      "permissionDenied": "Geolocation access was denied. Please allow location access in your browser settings.",
+      "unavailable": "Location information is currently unavailable",
+      "timeout": "The request to get user location timed out",
+      "coordinatePairRequired": "Both latitude and longitude must be provided together",
+      "previewTitle": "Coordinate Map Preview"
     }
   },
   "customers": {
@@ -342,6 +373,11 @@
     "backToCustomer": "Back to Customer Details",
     "emptyTitle": "No sites found",
     "emptyDetail": "No site records have been added for this customer.",
+    "smartSearchLabel": "Quick Address Search (Postal code / Subdistrict / District / Province)",
+    "smartSearchHint": "Type 5-digit postal code or subdistrict to auto-populate address and coordinates",
+    "areaSelection": "Subdistrict / District / Province / Postal Code",
+    "areaRequired": "Please search and select a subdistrict, district, province, and postal code",
+    "changeArea": "Change",
     "label": "Site Label",
     "labelPlaceholder": "e.g., Headquarters or Warehouse 1",
     "addressLine1": "Address Line 1",

@@ -13,4 +13,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="FirebaseAdmin" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MasterData\Seed\thailand_addresses.json.gz" />
+  </ItemGroup>
 </Project>
