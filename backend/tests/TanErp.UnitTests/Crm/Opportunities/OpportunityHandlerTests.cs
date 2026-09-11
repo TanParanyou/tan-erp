@@ -5,6 +5,7 @@ using TanErp.Application.Crm.Opportunities;
 using TanErp.Application.Crm.Opportunities.CreateOpportunity;
 using TanErp.Application.Crm.Opportunities.GetOpportunity;
 using TanErp.Application.Crm.Opportunities.ListOpportunities;
+using TanErp.Application.Crm.Opportunities.QualifyOpportunity;
 using TanErp.Domain.Crm.Opportunities;
 using Xunit;
 
@@ -79,6 +80,24 @@ public class OpportunityHandlerTests
         {
             GetCallCount++;
             return Task.FromResult(GetResult);
+        }
+
+        public QualifyOpportunityCommand? LastQualifyCommand { get; private set; }
+        public int QualifyCallCount { get; private set; }
+        public Result<OpportunityProjection> QualifyResult { get; set; } = Result<OpportunityProjection>.Failure(new Error("UNSET", "Unset"));
+
+        public Task<Result<OpportunityProjection>> QualifyAsync(
+            RequestAccessContext access,
+            QualifyOpportunityCommand command,
+            string keyHash,
+            string payloadHash,
+            CancellationToken cancellationToken = default)
+        {
+            QualifyCallCount++;
+            LastQualifyCommand = command;
+            LastKeyHash = keyHash;
+            LastPayloadHash = payloadHash;
+            return Task.FromResult(QualifyResult);
         }
     }
 
