@@ -1,14 +1,21 @@
 import "./../globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getMessages, getTranslations } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import { routing } from "@/i18n/routing";
 import { AppProviders } from "@/providers/app-providers";
+import { siteConfig } from "@/config/site";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+export const viewport: Viewport = {
+  themeColor: siteConfig.themeColor,
+  width: "device-width",
+  initialScale: 1,
+};
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -25,9 +32,44 @@ export async function generateMetadata({
   }
 
   const t = await getTranslations({ locale, namespace: "app" });
+  const title = t("title");
+  const description = t("description");
+
   return {
-    title: t("title"),
-    description: t("subtitle"),
+    metadataBase: new URL(siteConfig.url),
+    title: {
+      default: title,
+      template: t("titleTemplate"),
+    },
+    description,
+    keywords: t("keywords"),
+    applicationName: siteConfig.name,
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: siteConfig.name,
+    },
+    icons: siteConfig.icons,
+    alternates: {
+      canonical: `/${locale}`,
+      languages: {
+        th: "/th",
+        en: "/en",
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `/${locale}`,
+      siteName: siteConfig.name,
+      locale: locale === "th" ? "th_TH" : "en_US",
+      type: "website",
+    },
+    robots: {
+      index: false,
+      follow: false,
+    },
   };
 }
 

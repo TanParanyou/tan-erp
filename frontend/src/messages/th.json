@@ -1,7 +1,10 @@
 {
   "app": {
-    "title": "Project ERP",
-    "subtitle": "ระบบบริหารจัดการโครงการและงานผลิต"
+    "title": "Tan ERP",
+    "titleTemplate": "%s | Tan ERP",
+    "subtitle": "ระบบบริหารจัดการโครงการและงานผลิต",
+    "description": "ระบบ ERP บริหารจัดการโครงการ งานผลิต และความสัมพันธ์ลูกค้า",
+    "keywords": "ERP, Tan ERP, บริหารโครงการ, โรงงานผลิต, งานช่าง"
   },
   "auth": {
     "loginTitle": "เข้าสู่ระบบ Project ERP",

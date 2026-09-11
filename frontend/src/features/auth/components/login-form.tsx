@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Logo } from "@/components/common/Logo";
 import { useRouter } from "next/navigation";
 import { FirebaseError } from "firebase/app";
 import { signInWithEmail } from "@/lib/auth/auth-session";
@@ -76,30 +77,8 @@ export function LoginForm({ onSuccess }: LoginFormProps = {}) {
   return (
     <div className="login-card">
       <header style={{ marginBottom: "1.5rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#0B3056"
-            strokeWidth="2"
-            strokeLinecap="square"
-            strokeLinejoin="miter"
-            aria-hidden="true"
-          >
-            <rect x="3" y="3" width="18" height="18" />
-            <line x1="3" y1="9" x2="21" y2="9" />
-            <line x1="9" y1="21" x2="9" y2="9" />
-          </svg>
-          <div>
-            <div style={{ fontSize: "0.6875rem", fontWeight: 700, color: "var(--erp-text-muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              ATELIER ARCHITECTURAL NAVY
-            </div>
-            <div style={{ fontSize: "1rem", fontWeight: 800, color: "var(--erp-navy)" }}>
-              TAN-ERP
-            </div>
-          </div>
+        <div style={{ marginBottom: "1.25rem" }}>
+          <Logo iconSize={32} />
         </div>
 
         <h1 style={{ fontSize: "1.375rem", color: "var(--erp-navy)", margin: "0 0 0.5rem 0", fontWeight: 700 }}>

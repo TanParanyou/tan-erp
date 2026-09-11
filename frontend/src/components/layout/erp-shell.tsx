@@ -18,6 +18,7 @@ import {
   IconGlobe,
   IconBriefcase,
 } from "@/components/common/Icons";
+import { LogoIcon } from "@/components/common/Logo";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { can } from "@/lib/permissions/can";
@@ -86,23 +87,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            {/* Local SVG logo icon */}
-            <svg
-              width="26"
-              height="26"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#FFFFFF"
-              strokeWidth="2"
-              strokeLinecap="square"
-              strokeLinejoin="miter"
-              aria-hidden="true"
-              style={{ flexShrink: 0 }}
-            >
-              <rect x="3" y="3" width="18" height="18" />
-              <line x1="3" y1="9" x2="21" y2="9" />
-              <line x1="9" y1="21" x2="9" y2="9" />
-            </svg>
+            <LogoIcon size={26} color="#FFFFFF" strokeWidth={2} style={{ flexShrink: 0 }} />
             <span className="erp-header-title">
               {tApp("title")}
             </span>

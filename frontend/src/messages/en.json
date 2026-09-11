@@ -1,7 +1,10 @@
 {
   "app": {
-    "title": "Project ERP",
-    "subtitle": "Project & Manufacturing ERP"
+    "title": "Tan ERP",
+    "titleTemplate": "%s | Tan ERP",
+    "subtitle": "Project & Manufacturing ERP",
+    "description": "Enterprise Resource Planning for Project & Manufacturing Management",
+    "keywords": "ERP, Tan ERP, Project Management, Manufacturing, Engineering"
   },
   "auth": {
     "loginTitle": "Sign in to Project ERP",
