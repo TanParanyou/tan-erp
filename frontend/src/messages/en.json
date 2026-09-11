@@ -450,11 +450,22 @@
     "stage": "Stage / Status",
     "stageDraft": "Draft",
     "stageQualified": "Qualified",
-    "stageEstimation": "Estimation",
-    "stageProposal": "Proposal",
+    "stageSurveying": "Surveying",
+    "stageEstimating": "Estimating",
+    "stageProposed": "Proposed",
     "stageWon": "Won",
     "stageLost": "Lost",
+    "stageCancelled": "Cancelled",
     "unknownStage": "Unknown Stage",
+    "qualifyAction": "Qualify",
+    "qualifyModalTitle": "Confirm Stage Transition to 'Qualified'",
+    "qualifyModalDesc": "Are you sure you want to transition this opportunity to 'Qualified'? This stage transition cannot be reversed back to Draft.",
+    "qualifySuccess": "Stage transitioned to Qualified successfully",
+    "qGateChecklistTitle": "Qualification Readiness Checklist (Q-Gate)",
+    "qGateScopeRequired": "Scope Summary is required",
+    "qGateWorkTypesRequired": "At least one Work Type must be selected",
+    "qGateNextActionRequired": "Next Action Date and Note must both be provided",
+    "qGateNotice": "Notice: If qualification requirements are not met, the system will reject the transition. Editing existing Drafts is currently deferred.",
     "saveOpportunity": "Save Opportunity",
     "saveSuccess": "Opportunity saved successfully",
     "createdAt": "Created Date",
@@ -472,7 +483,9 @@
       "readAccessDeniedDetail": "You do not have permission to view this opportunity list.",
       "branchRequiredTitle": "Cannot Create Opportunity",
       "branchRequiredDetail": "You must have a membership affiliated with an active branch to create an opportunity.",
-      "activeCustomerRequired": "Opportunities can only be created for customers in Active status."
+      "activeCustomerRequired": "Opportunities can only be created for customers in Active status.",
+      "qualifyConflict": "The opportunity was modified by another user. Please refresh and try again.",
+      "qualifyInvalidTransition": "Cannot transition stage because current status is invalid or criteria are not met."
     }
   }
 }

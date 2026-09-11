@@ -10,6 +10,7 @@ import * as customerQueries from "@/features/customers/api/customer-queries";
 import * as siteQueries from "@/features/sites/api/site-queries";
 import * as membershipContext from "@/lib/membership/selected-membership-context";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
+import { ToastProvider } from "@/hooks/useToast";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -90,7 +91,9 @@ describe("OpportunityDetail Component", () => {
     render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="th" messages={thMessages}>
-          <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          <ToastProvider>
+            <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          </ToastProvider>
         </NextIntlClientProvider>
       </QueryClientProvider>
     );
@@ -125,7 +128,9 @@ describe("OpportunityDetail Component", () => {
     render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="th" messages={thMessages}>
-          <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          <ToastProvider>
+            <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          </ToastProvider>
         </NextIntlClientProvider>
       </QueryClientProvider>
     );
@@ -172,7 +177,9 @@ describe("OpportunityDetail Component", () => {
     render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="th" messages={thMessages}>
-          <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          <ToastProvider>
+            <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          </ToastProvider>
         </NextIntlClientProvider>
       </QueryClientProvider>
     );
@@ -180,5 +187,90 @@ describe("OpportunityDetail Component", () => {
     const customerLink = screen.getByRole("link", { name: /บริษัท ลูกค้าเอ จำกัด/i });
     expect(customerLink).toBeDefined();
     expect(customerLink.getAttribute("href")).toContain(`/customers/${sampleCustomer.id}`);
+  });
+
+  it("qualifies a draft opportunity from the confirmation modal", async () => {
+    const membershipWithTransition = {
+      ...mockMembership,
+      permissions: [
+        { key: "opportunities.read", scope: "organization", scopeId: "org-1" },
+        { key: "opportunities.transition", scope: "organization", scopeId: "org-1" },
+      ],
+    };
+
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
+      selectedMembership: membershipWithTransition,
+      memberships: [membershipWithTransition],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    const mutateAsyncMock = vi.fn().mockImplementation(async () => {
+      // simulate success
+      return {
+        ...sampleOpportunity,
+        stage: "qualified",
+      };
+    });
+
+    vi.spyOn(oppQueries, "useQualifyOpportunity").mockReturnValue({
+      mutateAsync: mutateAsyncMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof oppQueries.useQualifyOpportunity>);
+
+    vi.spyOn(oppQueries, "useOpportunityDetail").mockReturnValue({
+      data: sampleOpportunity,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityDetail>);
+
+    vi.spyOn(siteQueries, "useCustomerSiteList").mockReturnValue({
+      data: { items: [sampleSite] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof siteQueries.useCustomerSiteList>);
+
+    render(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <ToastProvider>
+            <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          </ToastProvider>
+        </NextIntlClientProvider>
+      </QueryClientProvider>
+    );
+
+    // Verify Qualify button exists for draft with permission
+    const qualifyBtn = screen.getByRole("button", { name: /ผ่านเกณฑ์ \(Qualify\)/i });
+    expect(qualifyBtn).toBeDefined();
+
+    // Click Qualify button to open confirmation modal
+    const { fireEvent, act } = await import("@testing-library/react");
+    await act(async () => {
+      fireEvent.click(qualifyBtn);
+    });
+
+    // Modal title should be visible
+    expect(screen.getByText(/ยืนยันการเปลี่ยนขั้นตอนเป็น 'ผ่านเกณฑ์'/i)).toBeDefined();
+
+    // Confirm button inside modal
+    const confirmBtn = screen.getByRole("button", { name: /ยืนยัน/i });
+    expect(confirmBtn).toBeDefined();
+
+    await act(async () => {
+      fireEvent.click(confirmBtn);
+    });
+
+    expect(mutateAsyncMock).toHaveBeenCalledTimes(1);
+    expect(mutateAsyncMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        opportunityId: sampleOpportunity.id,
+        expectedVersion: sampleOpportunity.rowVersion,
+      })
+    );
   });
 });

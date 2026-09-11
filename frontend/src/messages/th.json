@@ -450,11 +450,22 @@
     "stage": "ขั้นตอน / สถานะ",
     "stageDraft": "ฉบับร่าง (Draft)",
     "stageQualified": "ผ่านเกณฑ์ (Qualified)",
-    "stageEstimation": "ประเมินราคา (Estimation)",
-    "stageProposal": "เสนอราคา (Proposal)",
+    "stageSurveying": "สำรวจหน้างาน (Surveying)",
+    "stageEstimating": "ถอดแบบ/ประเมินราคา (Estimating)",
+    "stageProposed": "เสนอราคาแล้ว (Proposed)",
     "stageWon": "ปิดการขายสำเร็จ (Won)",
     "stageLost": "ไม่ผ่าน / ปิดการขายไม่สำเร็จ (Lost)",
+    "stageCancelled": "ยกเลิก (Cancelled)",
     "unknownStage": "ขั้นตอนที่ไม่รู้จัก",
+    "qualifyAction": "ผ่านเกณฑ์ (Qualify)",
+    "qualifyModalTitle": "ยืนยันการเปลี่ยนขั้นตอนเป็น 'ผ่านเกณฑ์' (Qualify)",
+    "qualifyModalDesc": "คุณต้องการเปลี่ยนขั้นตอนโอกาสทางการขายนี้เป็น 'ผ่านเกณฑ์' ใช่หรือไม่? การเปลี่ยนขั้นตอนนี้จะไม่สามารถย้อนกลับเป็นฉบับร่างได้",
+    "qualifySuccess": "เปลี่ยนขั้นตอนเป็นผ่านเกณฑ์เรียบร้อยแล้ว",
+    "qGateChecklistTitle": "รายการตรวจสอบความพร้อมตามเกณฑ์ (Q-Gate)",
+    "qGateScopeRequired": "ต้องมีสรุปขอบเขตงาน (Scope Summary)",
+    "qGateWorkTypesRequired": "ต้องระบุประเภทงานอย่างน้อย 1 รายการ",
+    "qGateNextActionRequired": "ต้องระบุวันและบันทึกการดำเนินการถัดไปให้ครบถ้วน",
+    "qGateNotice": "หมายเหตุ: หากข้อมูลไม่ครบถ้วน ระบบจะไม่อนุญาตให้เปลี่ยนขั้นตอน การแก้ไขข้อมูลฉบับร่างยังอยู่ระหว่างการพัฒนา",
     "saveOpportunity": "บันทึกโอกาสทางการขาย",
     "saveSuccess": "บันทึกโอกาสทางการขายเรียบร้อยแล้ว",
     "createdAt": "วันที่สร้าง",
@@ -472,7 +483,9 @@
       "readAccessDeniedDetail": "คุณไม่มีสิทธิ์ดูรายการโอกาสทางการขายนี้",
       "branchRequiredTitle": "ไม่สามารถสร้างโอกาสทางการขายได้",
       "branchRequiredDetail": "คุณต้องมีสมาชิกภาพที่สังกัดสาขาที่ใช้งานได้เพื่อสร้างโอกาสทางการขาย",
-      "activeCustomerRequired": "โอกาสทางการขายต้องสร้างให้ลูกค้าที่มีสถานะเปิดใช้งานแล้วเท่านั้น"
+      "activeCustomerRequired": "โอกาสทางการขายต้องสร้างให้ลูกค้าที่มีสถานะเปิดใช้งานแล้วเท่านั้น",
+      "qualifyConflict": "ข้อมูลโอกาสทางการขายถูกแก้ไขโดยผู้อื่นแล้ว กรุณารีเฟรชและทำรายการใหม่",
+      "qualifyInvalidTransition": "ไม่สามารถเปลี่ยนขั้นตอนได้เนื่องจากสถานะปัจจุบันไม่ถูกต้องหรือยังไม่ผ่านเกณฑ์"
     }
   }
 }

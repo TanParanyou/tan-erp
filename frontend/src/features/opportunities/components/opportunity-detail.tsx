@@ -1,18 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
-import { useOpportunityDetail } from "../api/opportunity-queries";
+import { useOpportunityDetail, useQualifyOpportunity } from "../api/opportunity-queries";
 import { useCustomerDetail } from "@/features/customers/api/customer-queries";
 import { useCustomerSiteList } from "@/features/sites/api/site-queries";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { can, PERMISSIONS } from "@/lib/permissions/can";
+import { ApiError } from "@/lib/api/api-error";
+import { useToast } from "@/hooks/useToast";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
-import { IconChevronLeft, IconAlertCircle, IconBriefcase } from "@/components/common/Icons";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { IconChevronLeft, IconAlertCircle, IconBriefcase, IconCheckCircle } from "@/components/common/Icons";
 import { EntityDetailHeader } from "@/components/ui/EntityDetailHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { getOpportunityStageLabelKey, getWorkTypeLabelKey } from "../opportunity-labels";
+
+interface QualificationIntent {
+  idempotencyKey: string;
+  opportunityId: string;
+  expectedVersion: string;
+}
 
 interface OpportunityDetailProps {
   opportunityId: string;
@@ -22,6 +33,13 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const t = useTranslations("opportunities");
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const { toast } = useToast();
+  const { selectedMembership } = useSelectedMembership();
+
+  const [showQualifyModal, setShowQualifyModal] = useState(false);
+  const [qualifyModalError, setQualifyModalError] = useState<string | null>(null);
+
+  const qualificationIntentRef = useRef<QualificationIntent | null>(null);
 
   const {
     data: opportunity,
@@ -30,6 +48,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
     error,
     refetch,
   } = useOpportunityDetail(opportunityId);
+
+  const qualifyMutation = useQualifyOpportunity();
 
   // Load scoped Customer info
   const customerId = opportunity?.customerId;
@@ -47,14 +67,18 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         return t("stageDraft");
       case "qualified":
         return t("stageQualified");
-      case "estimation":
-        return t("stageEstimation");
-      case "proposal":
-        return t("stageProposal");
+      case "surveying":
+        return t("stageSurveying");
+      case "estimating":
+        return t("stageEstimating");
+      case "proposed":
+        return t("stageProposed");
       case "won":
         return t("stageWon");
       case "lost":
         return t("stageLost");
+      case "cancelled":
+        return t("stageCancelled");
       default:
         return t("unknownStage");
     }
@@ -69,12 +93,14 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         return "neutral";
       case "qualified":
         return "info";
-      case "estimation":
-      case "proposal":
+      case "surveying":
+      case "estimating":
+      case "proposed":
         return "warning";
       case "won":
         return "success";
       case "lost":
+      case "cancelled":
         return "danger";
       default:
         return "neutral";
@@ -99,6 +125,84 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         return t("workTypeOther");
       default:
         return wt;
+    }
+  };
+
+  const isDraft = opportunity?.stage === "draft";
+  const canTransition = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_TRANSITION);
+  const canQualify = isDraft && canTransition;
+
+  // Q-gate verification checklist
+  const hasScopeSummary = Boolean(opportunity?.scopeSummary && opportunity.scopeSummary.trim().length > 0);
+  const hasWorkTypes = Boolean(opportunity?.workTypes && opportunity.workTypes.length > 0);
+  const hasNextActionPair = Boolean(
+    opportunity?.nextActionAtUtc &&
+    opportunity?.nextActionNote &&
+    opportunity.nextActionNote.trim().length > 0
+  );
+  const isQGateEligible = hasScopeSummary && hasWorkTypes && hasNextActionPair;
+
+  const handleOpenQualifyModal = () => {
+    setQualifyModalError(null);
+    setShowQualifyModal(true);
+  };
+
+  const handleCloseQualifyModal = () => {
+    if (qualifyMutation.isPending) return;
+    setShowQualifyModal(false);
+    setQualifyModalError(null);
+    qualificationIntentRef.current = null;
+  };
+
+  const handleConfirmQualify = async () => {
+    if (!opportunity || !opportunity.id || !opportunity.rowVersion) return;
+    setQualifyModalError(null);
+
+    const oppId = opportunity.id;
+    const version = opportunity.rowVersion;
+
+    if (
+      !qualificationIntentRef.current ||
+      qualificationIntentRef.current.opportunityId !== oppId ||
+      qualificationIntentRef.current.expectedVersion !== version
+    ) {
+      qualificationIntentRef.current = {
+        opportunityId: oppId,
+        expectedVersion: version,
+        idempotencyKey: crypto.randomUUID(),
+      };
+    }
+
+    const intent = qualificationIntentRef.current;
+    if (!intent) return;
+
+    try {
+      await qualifyMutation.mutateAsync({
+        opportunityId: intent.opportunityId,
+        expectedVersion: intent.expectedVersion,
+        idempotencyKey: intent.idempotencyKey,
+      });
+
+      qualificationIntentRef.current = null;
+      setShowQualifyModal(false);
+      toast.success(t("qualifySuccess"));
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        if (err.status === 409 && err.code === "OPPORTUNITY_VERSION_CONFLICT") {
+          qualificationIntentRef.current = null;
+          setQualifyModalError(t("errors.qualifyConflict"));
+          toast.error(t("errors.qualifyConflict"));
+          return;
+        }
+        if (err.status === 409 && err.code === "OPPORTUNITY_INVALID_TRANSITION") {
+          setQualifyModalError(t("errors.qualifyInvalidTransition"));
+          toast.error(t("errors.qualifyInvalidTransition"));
+          return;
+        }
+      }
+      const message = err instanceof Error ? err.message : t("errors.saveUnexpected");
+      setQualifyModalError(message);
+      toast.error(message);
     }
   };
 
@@ -214,7 +318,63 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
               : "-",
           },
         ]}
+        actions={
+          canQualify ? (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleOpenQualifyModal}
+              className="font-semibold"
+            >
+              {t("qualifyAction")}
+            </Button>
+          ) : undefined
+        }
       />
+
+      <ConfirmationModal
+        isOpen={showQualifyModal}
+        onClose={handleCloseQualifyModal}
+        onConfirm={handleConfirmQualify}
+        title={t("qualifyModalTitle")}
+        message={
+          qualifyModalError
+            ? `${t("qualifyModalDesc")}\n\n[ข้อผิดพลาด: ${qualifyModalError}]`
+            : t("qualifyModalDesc")
+        }
+        confirmText={tCommon("actions.confirm")}
+        cancelText={tCommon("actions.cancel")}
+        variant="info"
+        isLoading={qualifyMutation.isPending}
+      />
+
+      {/* Q-Gate Guidance for Draft Opportunities */}
+      {isDraft && !isQGateEligible && (
+        <div
+          role="region"
+          aria-label={t("qGateChecklistTitle")}
+          className="erp-card p-4 border-erp-warning-border bg-erp-warning-bg flex flex-col gap-2"
+        >
+          <div className="flex items-center gap-2 font-semibold text-erp-warning">
+            <IconAlertCircle size={18} />
+            <span>{t("qGateChecklistTitle")}</span>
+          </div>
+          <ul className="list-disc list-inside text-xs text-erp-text-muted flex flex-col gap-1">
+            <li className={hasScopeSummary ? "line-through text-erp-text-muted" : "text-erp-danger font-medium"}>
+              {t("qGateScopeRequired")}
+            </li>
+            <li className={hasWorkTypes ? "line-through text-erp-text-muted" : "text-erp-danger font-medium"}>
+              {t("qGateWorkTypesRequired")}
+            </li>
+            <li className={hasNextActionPair ? "line-through text-erp-text-muted" : "text-erp-danger font-medium"}>
+              {t("qGateNextActionRequired")}
+            </li>
+          </ul>
+          <p className="text-[11px] text-erp-text-muted italic mt-1">
+            {t("qGateNotice")}
+          </p>
+        </div>
+      )}
 
       {/* Scope and Customer Information */}
       <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>

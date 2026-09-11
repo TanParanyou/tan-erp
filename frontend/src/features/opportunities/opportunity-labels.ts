@@ -1,10 +1,12 @@
 export const CANONICAL_OPPORTUNITY_STAGES = [
   "draft",
   "qualified",
-  "estimation",
-  "proposal",
+  "surveying",
+  "estimating",
+  "proposed",
   "won",
   "lost",
+  "cancelled",
 ] as const;
 
 export type OpportunityStageKey = (typeof CANONICAL_OPPORTUNITY_STAGES)[number];

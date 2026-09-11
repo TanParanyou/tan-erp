@@ -63,14 +63,18 @@ export function OpportunityList() {
         return t("stageDraft");
       case "qualified":
         return t("stageQualified");
-      case "estimation":
-        return t("stageEstimation");
-      case "proposal":
-        return t("stageProposal");
+      case "surveying":
+        return t("stageSurveying");
+      case "estimating":
+        return t("stageEstimating");
+      case "proposed":
+        return t("stageProposed");
       case "won":
         return t("stageWon");
       case "lost":
         return t("stageLost");
+      case "cancelled":
+        return t("stageCancelled");
       default:
         return t("unknownStage");
     }
@@ -83,12 +87,14 @@ export function OpportunityList() {
         return "neutral";
       case "qualified":
         return "info";
-      case "estimation":
-      case "proposal":
+      case "surveying":
+      case "estimating":
+      case "proposed":
         return "warning";
       case "won":
         return "success";
       case "lost":
+      case "cancelled":
         return "danger";
       default:
         return "neutral";

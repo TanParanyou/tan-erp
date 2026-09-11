@@ -70,7 +70,10 @@ describe("useQualifyOpportunity mutation", () => {
     vi.spyOn(authSession, "getAuthToken").mockResolvedValue(mockToken);
     vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
       selectedMembership: mockMembership,
-      currentUser: null,
+      currentUser: {
+        user: { id: "user-1", displayName: "User", email: "user@example.test" },
+        memberships: [mockMembership],
+      },
       memberships: [mockMembership],
       setSelectedMembershipId: vi.fn(),
     });
