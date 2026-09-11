@@ -86,6 +86,7 @@
 | แผนแก้ไข Opportunity + Site จาก Code Review | [Opportunity + Site Remediation Plan](superpowers/plans/2026-09-09-opportunity-site-remediation.md) |
 | บันทึกผลการตรวจสอบ Opportunity + Site Slice | [Opportunity + Site Verification](05-engineering/opportunity-site-verification.md) |
 | แผนพัฒนา Opportunity Qualification Vertical Slice | [Opportunity Qualification Vertical Slice Plan](superpowers/plans/2026-09-10-opportunity-qualification-vertical-slice.md) |
+| บันทึกผลการตรวจสอบ Opportunity Qualification Slice | [Opportunity Qualification Verification](05-engineering/opportunity-qualification-verification.md) |
 | คำสั่งและ Workflow การพัฒนา (Makefile) | [Quickstart with Make](../README.md#การเริ่มต้นระบบอย่างรวดเร็วด้วย-make-quickstart-with-make) |
 
 ## สถานะเอกสาร
