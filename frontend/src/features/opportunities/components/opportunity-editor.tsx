@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,19 +13,27 @@ import {
 import { apiClient } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
-import { useCustomerList } from "@/features/customers/api/customer-queries";
 import { useCustomerSiteList } from "@/features/sites/api/site-queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Alert } from "@/components/ui/Alert";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { DateTimePicker } from "@/components/ui/DateTimePicker";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { FormContainer } from "@/components/forms/FormContainer";
+import { FormSection } from "@/components/forms/FormSection";
 import { FormActionBar } from "@/components/forms/FormActionBar";
+import { CustomerAutocomplete } from "@/components/forms/CustomerAutocomplete";
+import { CurrencySelect } from "@/components/forms/CurrencySelect";
+import { SelectWithOther } from "@/components/forms/SelectWithOther";
+import { QuickNoteChips, type QuickTemplateItem } from "@/components/forms/QuickNoteChips";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/hooks/useToast";
-import { IconAlertCircle } from "@/components/common/Icons";
 import { ApiError } from "@/lib/api/api-error";
+import { cn } from "@/lib/utils/cn";
 
 export function OpportunityEditor() {
   const t = useTranslations("opportunities");
@@ -43,6 +51,10 @@ export function OpportunityEditor() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
 
+  // Lead source master data states
+  const [selectedSourceOption, setSelectedSourceOption] = useState<string>("");
+  const [otherSourceDetail, setOtherSourceDetail] = useState<string>("");
+
   const idempotencyKeyRef = useRef<string | null>(null);
   const failedSubmissionRef = useRef(false);
 
@@ -54,13 +66,6 @@ export function OpportunityEditor() {
   };
 
   const activeBranch = selectedMembership?.branch;
-
-  // Load Active Customers list
-  const { data: customerData } = useCustomerList({
-    status: "active",
-    limit: 100,
-  });
-  const customerList = customerData?.items ?? [];
 
   // Load Customer Sites for the selected customer
   const { data: siteData } = useCustomerSiteList(selectedCustomerId || undefined);
@@ -99,55 +104,99 @@ export function OpportunityEditor() {
     handleSubmit,
     setValue,
     watch,
-    formState: { isSubmitting, isValid, isDirty },
+    formState: { isSubmitting, isDirty },
   } = methods;
 
-  const currentWorkTypes = watch("workTypes") ?? [];
+  const leadSourceOptions = useMemo(
+    () => [
+      { value: "customer_referral", label: t("leadSourceReferral") },
+      { value: "architect_partner", label: t("leadSourcePartner") },
+      { value: "website_social", label: t("leadSourceWebsiteSocial") },
+      { value: "expo_event", label: t("leadSourceExpo") },
+      { value: "direct_sales", label: t("leadSourceDirect") },
+      { value: "other", label: t("leadSourceOther") },
+    ],
+    [t]
+  );
+
+  const handleSourceSelect = useCallback(
+    (val: string) => {
+      setSelectedSourceOption(val);
+      if (val === "other") {
+        setValue("sourceCode", otherSourceDetail ? `other:${otherSourceDetail}` : "other", {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      } else {
+        setValue("sourceCode", val, { shouldValidate: true, shouldDirty: true });
+      }
+    },
+    [otherSourceDetail, setValue]
+  );
+
+  const handleOtherSourceChange = useCallback(
+    (text: string) => {
+      setOtherSourceDetail(text);
+      setValue("sourceCode", text ? `other:${text}` : "other", {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    },
+    [setValue]
+  );
+
+  const quickNoteTemplates: QuickTemplateItem[] = useMemo(
+    () => [
+      { id: "followup", label: t("quickNoteFollowUp") },
+      { id: "survey", label: t("quickNoteSurvey") },
+      { id: "quotation", label: t("quickNoteQuotation") },
+      { id: "board", label: t("quickNoteBoardMeeting") },
+      { id: "budget", label: t("quickNoteBudgetWait") },
+    ],
+    [t]
+  );
+
+  const resolveWorkTypeLabel = useCallback(
+    (wt: string): string => {
+      switch (wt) {
+        case "built-in":
+          return t("workTypeBuiltIn");
+        case "interior":
+          return t("workTypeInterior");
+        case "curtain":
+          return t("workTypeCurtain");
+        case "wallpaper":
+          return t("workTypeWallpaper");
+        case "exterior":
+          return t("workTypeExterior");
+        case "other":
+          return t("workTypeOther");
+        default:
+          return wt;
+      }
+    },
+    [t]
+  );
+
+  const handleQuickNoteSelect = useCallback(
+    (noteText: string) => {
+      const currentNote = watch("nextActionNote") || "";
+      const updatedNote = currentNote ? `${currentNote} • ${noteText}` : noteText;
+      setValue("nextActionNote", updatedNote, { shouldValidate: true, shouldDirty: true });
+    },
+    [setValue, watch]
+  );
 
   // If selected membership lacks active branch, block editing
   if (!activeBranch?.id) {
     return (
-      <div
-        role="alert"
-        aria-live="polite"
-        className="erp-card"
-        style={{
-          padding: "2rem",
-          maxWidth: "520px",
-          margin: "2rem auto",
-          textAlign: "center",
-          borderColor: "var(--erp-border-danger)",
-          backgroundColor: "var(--erp-bg-danger-light)",
-        }}
-      >
-        <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-danger)", margin: "0 0 0.5rem 0" }}>
-          {t("errors.branchRequiredTitle")}
-        </h2>
-        <p style={{ color: "var(--erp-text-main)", margin: 0, fontSize: "0.875rem" }}>
+      <div className="max-w-lg mx-auto my-8">
+        <Alert variant="danger" title={t("errors.branchRequiredTitle")}>
           {t("errors.branchRequiredDetail")}
-        </p>
+        </Alert>
       </div>
     );
   }
-
-  const resolveWorkTypeLabel = (wt: string): string => {
-    switch (wt) {
-      case "built-in":
-        return t("workTypeBuiltIn");
-      case "interior":
-        return t("workTypeInterior");
-      case "curtain":
-        return t("workTypeCurtain");
-      case "wallpaper":
-        return t("workTypeWallpaper");
-      case "exterior":
-        return t("workTypeExterior");
-      case "other":
-        return t("workTypeOther");
-      default:
-        return wt;
-    }
-  };
 
   const onSubmit = async (values: OpportunityFormValues): Promise<void> => {
     setSubmitError(null);
@@ -209,11 +258,10 @@ export function OpportunityEditor() {
 
   return (
     <FormProvider {...methods}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        <PageHeader
-          title={t("createOpportunity")}
-        />
+      <div className="flex flex-col gap-6">
+        <PageHeader title={t("createOpportunity")} />
 
+        {/* Read-only Identity Context */}
         <div className="erp-card p-4 bg-erp-surface-subtle border border-erp-border">
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm m-0">
             <div>
@@ -228,68 +276,30 @@ export function OpportunityEditor() {
         </div>
 
         {submitError && (
-          <div
-            role="alert"
-            aria-live="polite"
-            className="erp-card"
-            style={{
-              padding: "1rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              borderColor: "var(--erp-border-danger)",
-              backgroundColor: "var(--erp-bg-danger-light)",
-              color: "var(--erp-danger)",
-              fontSize: "0.875rem",
-            }}
-          >
-            <IconAlertCircle size={20} />
-            <span>{submitError}</span>
-          </div>
+          <Alert variant="danger" onClose={() => setSubmitError(null)}>
+            {submitError}
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} onChange={handleFormChange} noValidate>
           <FormContainer>
             {/* Section 1: Customer and Primary Site */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <h2
-                style={{
-                  fontSize: "1rem",
-                  fontWeight: 700,
-                  color: "var(--erp-navy)",
-                  margin: 0,
-                  paddingBottom: "0.5rem",
-                  borderBottom: "1px solid var(--erp-border)",
-                }}
-              >
-                1. {t("customer")} &amp; {t("primarySite")}
-              </h2>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
+            <FormSection title={t("sectionCustomerAndSite")}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Controller
                   name="customerId"
                   control={control}
                   render={({ field, fieldState: { error } }) => (
-                    <Select
-                      {...field}
-                      label={t("customer")}
-                      required
-                      error={error?.message}
-                      disabled={isSubmitting}
-                      options={[
-                        { value: "", label: t("customerPlaceholder") },
-                        ...customerList.map((c) => ({
-                          value: c.id ?? "",
-                          label: `${c.code ? `[${c.code}] ` : ""}${c.displayNameTh || c.displayNameEn || "-"}`,
-                        })),
-                      ]}
-                      onChange={(e) => {
-                        const newCustomerId = e.target.value;
+                    <CustomerAutocomplete
+                      value={field.value}
+                      onChange={(newCustomerId) => {
                         field.onChange(newCustomerId);
                         setSelectedCustomerId(newCustomerId);
-                        // Clear primarySiteId synchronously
                         setValue("primarySiteId", "", { shouldValidate: true, shouldDirty: true });
                       }}
+                      error={error?.message}
+                      required
+                      disabled={isSubmitting}
                     />
                   )}
                 />
@@ -307,9 +317,10 @@ export function OpportunityEditor() {
                       options={[
                         {
                           value: "",
-                          label: selectedCustomerId && siteList.length === 0
-                            ? t("noSitesForCustomer")
-                            : t("primarySitePlaceholder"),
+                          label:
+                            selectedCustomerId && siteList.length === 0
+                              ? t("noSitesForCustomer")
+                              : t("primarySitePlaceholder"),
                         },
                         ...siteList.map((s) => ({
                           value: s.id ?? "",
@@ -320,23 +331,10 @@ export function OpportunityEditor() {
                   )}
                 />
               </div>
-            </div>
+            </FormSection>
 
             {/* Section 2: Opportunity Details */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <h2
-                style={{
-                  fontSize: "1rem",
-                  fontWeight: 700,
-                  color: "var(--erp-navy)",
-                  margin: 0,
-                  paddingBottom: "0.5rem",
-                  borderBottom: "1px solid var(--erp-border)",
-                }}
-              >
-                2. {t("opportunityDetail")}
-              </h2>
-
+            <FormSection title={t("sectionOpportunityDetail")}>
               <Controller
                 name="title"
                 control={control}
@@ -368,82 +366,78 @@ export function OpportunityEditor() {
                 )}
               />
 
-              {/* Work Types Multi-select Checkboxes */}
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                    color: "var(--erp-text-main)",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  {t("workTypes")} <span style={{ color: "var(--erp-danger)" }}>*</span>
-                </label>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-                    gap: "0.5rem",
-                    backgroundColor: "var(--erp-surface)",
-                    padding: "0.75rem",
-                    border: "1px solid var(--erp-border)",
-                  }}
-                >
-                  {CANONICAL_WORK_TYPES.map((wt) => {
-                    const isChecked = currentWorkTypes.includes(wt);
-                    return (
-                      <label
-                        key={wt}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          fontSize: "0.875rem",
-                          cursor: isSubmitting ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          value={wt}
-                          checked={isChecked}
-                          disabled={isSubmitting}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setValue("workTypes", [...currentWorkTypes, wt], {
-                                shouldValidate: true,
-                                shouldDirty: true,
-                              });
-                            } else {
-                              setValue(
-                                "workTypes",
-                                currentWorkTypes.filter((x) => x !== wt),
-                                { shouldValidate: true, shouldDirty: true }
-                              );
-                            }
-                          }}
-                          style={{ width: "18px", height: "18px" }}
-                        />
-                        <span>{resolveWorkTypeLabel(wt)}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* Work Types Multi-select Checkboxes with Controller & Error */}
+              <Controller
+                name="workTypes"
+                control={control}
+                render={({ field, fieldState: { error } }) => {
+                  const currentValues = field.value ?? [];
+                  return (
+                    <div className="flex flex-col gap-2">
+                      <span className="erp-label">
+                        {t("workTypes")} <span className="erp-label-required">*</span>
+                      </span>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
+                      <div
+                        className={cn(
+                          "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-erp-surface p-3 border",
+                          error ? "border-red-600" : "border-erp-border"
+                        )}
+                      >
+                        {CANONICAL_WORK_TYPES.map((wt) => {
+                          const isChecked = currentValues.includes(wt);
+                          return (
+                            <Checkbox
+                              key={wt}
+                              id={`work-type-${wt}`}
+                              label={resolveWorkTypeLabel(wt)}
+                              checked={isChecked}
+                              disabled={isSubmitting}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  field.onChange([...currentValues, wt]);
+                                } else {
+                                  field.onChange(currentValues.filter((x) => x !== wt));
+                                }
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {error && (
+                        <p className="erp-error-text" role="alert">
+                          {error.message || t("workTypesRequiredError")}
+                        </p>
+                      )}
+                    </div>
+                  );
+                }}
+              />
+
+              {/* Source, Budget, Currency, Target Decision Date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-start">
                 <Controller
                   name="sourceCode"
                   control={control}
-                  render={({ field, fieldState: { error } }) => (
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      label={t("sourceCode")}
-                      error={error?.message}
-                      disabled={isSubmitting}
-                      placeholder={t("sourceCodePlaceholder")}
+                  render={({ fieldState: { error } }) => (
+                    <SelectWithOther
+                      selectProps={{
+                        label: t("sourceCode"),
+                        value: selectedSourceOption,
+                        placeholder: t("sourceSelectPlaceholder"),
+                        options: leadSourceOptions,
+                        error: error?.message,
+                        disabled: isSubmitting,
+                        onChange: (e) => handleSourceSelect(e.target.value),
+                      }}
+                      otherProps={{
+                        placeholder: t("sourceOtherDetailPlaceholder"),
+                        value: otherSourceDetail,
+                        disabled: isSubmitting,
+                        onChange: (e) => handleOtherSourceChange(e.target.value),
+                      }}
+                      triggerValue="other"
                     />
                   )}
                 />
@@ -455,8 +449,15 @@ export function OpportunityEditor() {
                     <Input
                       {...field}
                       type="number"
+                      min="0"
                       step="any"
                       value={field.value === undefined || field.value === null ? "" : field.value}
+                      onKeyDown={(e) => {
+                        // Prevent typing negative sign or scientific notation
+                        if (e.key === "-" || e.key === "e" || e.key === "E") {
+                          e.preventDefault();
+                        }
+                      }}
                       onChange={(e) => {
                         const val = e.target.value === "" ? undefined : Number(e.target.value);
                         field.onChange(val);
@@ -473,13 +474,12 @@ export function OpportunityEditor() {
                   name="currencyCode"
                   control={control}
                   render={({ field, fieldState: { error } }) => (
-                    <Input
+                    <CurrencySelect
                       {...field}
                       value={field.value ?? "THB"}
                       label={t("currencyCode")}
                       error={error?.message}
                       disabled={isSubmitting}
-                      placeholder="THB"
                     />
                   )}
                 />
@@ -488,10 +488,9 @@ export function OpportunityEditor() {
                   name="targetDecisionDate"
                   control={control}
                   render={({ field, fieldState: { error } }) => (
-                    <Input
-                      {...field}
-                      type="date"
+                    <DatePicker
                       value={field.value ?? ""}
+                      onChange={field.onChange}
                       label={t("targetDecisionDate")}
                       error={error?.message}
                       disabled={isSubmitting}
@@ -500,15 +499,15 @@ export function OpportunityEditor() {
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
+              {/* Next Action Datetime & Note */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <Controller
                   name="nextActionAtUtc"
                   control={control}
                   render={({ field, fieldState: { error } }) => (
-                    <Input
-                      {...field}
-                      type="datetime-local"
+                    <DateTimePicker
                       value={field.value ?? ""}
+                      onChange={field.onChange}
                       label={t("nextActionAt")}
                       error={error?.message}
                       disabled={isSubmitting}
@@ -516,24 +515,35 @@ export function OpportunityEditor() {
                   )}
                 />
 
-                <Controller
-                  name="nextActionNote"
-                  control={control}
-                  render={({ field, fieldState: { error } }) => (
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      label={t("nextActionNote")}
-                      error={error?.message}
-                      disabled={isSubmitting}
-                      placeholder={t("nextActionNotePlaceholder")}
-                    />
-                  )}
-                />
+                <div className="flex flex-col gap-2">
+                  <Controller
+                    name="nextActionNote"
+                    control={control}
+                    render={({ field, fieldState: { error } }) => (
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        label={t("nextActionNote")}
+                        error={error?.message}
+                        disabled={isSubmitting}
+                        placeholder={t("nextActionNotePlaceholder")}
+                      />
+                    )}
+                  />
+
+                  {/* Quick Note Chips */}
+                  <QuickNoteChips
+                    label={t("quickNotesLabel")}
+                    templates={quickNoteTemplates}
+                    onSelect={handleQuickNoteSelect}
+                    disabled={isSubmitting}
+                  />
+                </div>
               </div>
-            </div>
+            </FormSection>
 
             <FormActionBar
+              isDirty={isDirty}
               isLoading={isSubmitting}
               saveText={t("saveOpportunity")}
               onCancel={() => {
@@ -564,3 +574,5 @@ export function OpportunityEditor() {
     </FormProvider>
   );
 }
+
+export default OpportunityEditor;

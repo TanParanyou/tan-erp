@@ -166,15 +166,18 @@ describe("OpportunityEditor", () => {
 
     renderEditor(client);
 
-    // Wait for customer options to load
+    // Search and select customer via Autocomplete placeholder
+    const customerInput = screen.getByPlaceholderText(/พิมพ์เพื่อค้นหาชื่อหรือรหัสลูกค้า/);
+    fireEvent.focus(customerInput);
+
     await waitFor(() => {
-      expect(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/)).toBeDefined();
+      expect(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/)).toBeInTheDocument();
     });
 
-    // Select customer
-    fireEvent.change(screen.getByLabelText(/ลูกค้า/), {
-      target: { value: activeCustomerA.id },
-    });
+    fireEvent.click(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/));
+
+    // Verify selected card shows customer
+    expect(screen.getByText(/\[CUS-0001\] บริษัท ลูกค้าเอ จำกัด/)).toBeInTheDocument();
 
     // Enter title
     fireEvent.change(screen.getByLabelText(/ชื่อโอกาสทางการขาย/), {
@@ -216,15 +219,15 @@ describe("OpportunityEditor", () => {
   it("clears primarySiteId synchronously when customer selection changes", async () => {
     renderEditor(client);
 
+    // Search and select customer A
+    const customerInput = screen.getByPlaceholderText(/พิมพ์เพื่อค้นหาชื่อหรือรหัสลูกค้า/);
+    fireEvent.focus(customerInput);
+
     await waitFor(() => {
-      expect(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/)).toBeDefined();
+      expect(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/)).toBeInTheDocument();
     });
 
-    // Select customer A
-    const customerSelect = screen.getByLabelText(/ลูกค้า/);
-    fireEvent.change(customerSelect, {
-      target: { value: activeCustomerA.id },
-    });
+    fireEvent.click(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/));
 
     // Wait for Site to load
     await waitFor(() => {
@@ -238,12 +241,40 @@ describe("OpportunityEditor", () => {
     });
     expect((siteSelect as HTMLSelectElement).value).toBe(customerASite1.id);
 
-    // Change customer to B
-    fireEvent.change(customerSelect, {
-      target: { value: activeCustomerB.id },
-    });
+    // Click 'Change Customer' button
+    const changeBtn = screen.getByRole("button", { name: "เปลี่ยนลูกค้า" });
+    fireEvent.click(changeBtn);
 
     // primarySiteId must be cleared immediately
     expect((siteSelect as HTMLSelectElement).value).toBe("");
+
+    // Select Customer B
+    const reInput = screen.getByPlaceholderText(/พิมพ์เพื่อค้นหาชื่อหรือรหัสลูกค้า/);
+    fireEvent.focus(reInput);
+
+    await waitFor(() => {
+      expect(screen.getByText(/บริษัท ลูกค้าบี จำกัด/)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText(/บริษัท ลูกค้าบี จำกัด/));
+    expect(screen.getByText(/\[CUS-0002\] บริษัท ลูกค้าบี จำกัด/)).toBeInTheDocument();
+  });
+
+  it("displays validation error when workTypes is not selected on submit", async () => {
+    renderEditor(client);
+
+    // Fill title but do NOT select work type or customer
+    fireEvent.change(screen.getByLabelText(/ชื่อโอกาสทางการขาย/), {
+      target: { value: "โครงการทดสอบ" },
+    });
+
+    const submitBtn = screen.getByRole("button", { name: "บันทึกโอกาสทางการขาย" });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      const alerts = screen.getAllByRole("alert");
+      expect(alerts.length).toBeGreaterThanOrEqual(1);
+    });
+    expect(mockedCreateOpportunity).not.toHaveBeenCalled();
   });
 });
