@@ -16,10 +16,16 @@ export type CreateSiteRequest = components["schemas"]["CreateSiteRequest"];
 export type OpportunityResponse = components["schemas"]["OpportunityResponse"];
 export type OpportunityListResponse = components["schemas"]["OpportunityListResponse"];
 export type CreateOpportunityRequest = components["schemas"]["CreateOpportunityRequest"];
+export type UpdateDraftQGateRequest = components["schemas"]["UpdateDraftQGateRequest"];
+export type UpdateOpenOpportunityRequest = components["schemas"]["UpdateOpenOpportunityRequest"];
+export type ReassignOpportunityOwnerRequest = components["schemas"]["ReassignOpportunityOwnerRequest"];
 export type TransitionOpportunityStageRequest = components["schemas"]["TransitionOpportunityStageRequest"];
 
 export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
 export type AddressSearchResultItem = components["schemas"]["AddressSearchResultItem"];
+
+export type UserListItemResponse = components["schemas"]["UserListItemResponse"];
+export type UserListResponse = components["schemas"]["UserListResponse"];
 
 export interface RequestOptions {
   token: string;
@@ -36,6 +42,10 @@ export type ListCustomersParams = NonNullable<
 
 export type ListOpportunitiesParams = NonNullable<
   paths["/api/v1/opportunities"]["get"]["parameters"]["query"]
+>;
+
+export type ListUsersParams = NonNullable<
+  paths["/api/v1/users"]["get"]["parameters"]["query"]
 >;
 
 export class ApiClient {
@@ -234,6 +244,45 @@ export class ApiClient {
     return this.request<OpportunityResponse>("/api/v1/opportunities", "POST", options, payload);
   }
 
+  async updateDraftQGate(
+    id: string,
+    payload: UpdateDraftQGateRequest,
+    options: RequestOptions
+  ): Promise<OpportunityResponse> {
+    return this.request<OpportunityResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(id)}`,
+      "PATCH",
+      options,
+      payload
+    );
+  }
+
+  async updateOpenOpportunity(
+    id: string,
+    payload: UpdateOpenOpportunityRequest,
+    options: RequestOptions
+  ): Promise<OpportunityResponse> {
+    return this.request<OpportunityResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(id)}`,
+      "PUT",
+      options,
+      payload
+    );
+  }
+
+  async reassignOpportunityOwner(
+    id: string,
+    payload: ReassignOpportunityOwnerRequest,
+    options: RequestOptions
+  ): Promise<OpportunityResponse> {
+    return this.request<OpportunityResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(id)}/owner-changes`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
   async transitionOpportunityStage(
     id: string,
     payload: TransitionOpportunityStageRequest,
@@ -258,6 +307,21 @@ export class ApiClient {
       "GET",
       options
     );
+  }
+
+  async listUsers(
+    options: RequestOptions,
+    params?: ListUsersParams
+  ): Promise<UserListResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.branchId) searchParams.set("branchId", params.branchId);
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.limit) searchParams.set("limit", params.limit.toString());
+
+    const qs = searchParams.toString();
+    const endpoint = `/api/v1/users${qs ? `?${qs}` : ""}`;
+
+    return this.request<UserListResponse>(endpoint, "GET", options);
   }
 }
 

@@ -8,7 +8,13 @@ export function formatDate(
   locale: string = "th"
 ): string {
   if (!dateStr) return "-";
-  const date = new Date(dateStr);
+  let date: Date;
+  if (typeof dateStr === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) {
+    const [year, month, day] = dateStr.trim().split("-").map(Number);
+    date = new Date(year, month - 1, day);
+  } else {
+    date = new Date(dateStr);
+  }
   if (isNaN(date.getTime())) return "-";
 
   return date.toLocaleDateString(locale === "th" ? "th-TH" : "en-US", {

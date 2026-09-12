@@ -87,7 +87,7 @@ public class Opportunity : Entity
         ExpectedBudget = expectedBudget;
         CurrencyCode = string.IsNullOrWhiteSpace(currencyCode) ? null : currencyCode.Trim().ToUpperInvariant();
         TargetDecisionDate = targetDecisionDate;
-        NextActionAtUtc = nextActionAtUtc;
+        NextActionAtUtc = nextActionAtUtc?.ToUniversalTime();
         NextActionNote = string.IsNullOrWhiteSpace(nextActionNote) ? null : OpportunityNormalizer.CollapseWhitespace(nextActionNote);
         Stage = OpportunityStage.Draft;
         RowVersion = Guid.NewGuid();
@@ -129,6 +129,135 @@ public class Opportunity : Entity
         if (!NextActionAtUtc.HasValue) throw new OpportunityQualificationException(nameof(NextActionAtUtc));
         if (string.IsNullOrWhiteSpace(NextActionNote)) throw new OpportunityQualificationException(nameof(NextActionNote));
         Stage = OpportunityStage.Qualified;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void EditDraftQGate(
+        Guid expectedVersion,
+        string? scopeSummary,
+        IReadOnlyCollection<string> workTypes,
+        DateTimeOffset? nextActionAtUtc,
+        string? nextActionNote)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage != OpportunityStage.Draft) throw new OpportunityTransitionException(Stage, OpportunityStage.Draft);
+
+        if (workTypes == null || workTypes.Count == 0)
+            throw new ArgumentException("At least one work type is required.", nameof(workTypes));
+
+        var distinctWorkTypes = new List<string>();
+        foreach (var wt in workTypes)
+        {
+            if (!OpportunityWorkType.IsValid(wt))
+                throw new ArgumentException($"Invalid work type: '{wt}'.", nameof(workTypes));
+            var trimmed = wt.Trim();
+            if (!distinctWorkTypes.Contains(trimmed, StringComparer.Ordinal))
+            {
+                distinctWorkTypes.Add(trimmed);
+            }
+        }
+
+        var normalizedScope = string.IsNullOrWhiteSpace(scopeSummary) ? null : OpportunityNormalizer.CollapseWhitespace(scopeSummary);
+        if (normalizedScope != null && normalizedScope.Length > 2000)
+            throw new ArgumentException("Scope summary cannot exceed 2000 characters.", nameof(scopeSummary));
+
+        var normalizedNote = string.IsNullOrWhiteSpace(nextActionNote) ? null : OpportunityNormalizer.CollapseWhitespace(nextActionNote);
+        if (normalizedNote != null && normalizedNote.Length > 500)
+            throw new ArgumentException("Next action note cannot exceed 500 characters.", nameof(nextActionNote));
+
+        if ((nextActionAtUtc.HasValue && normalizedNote == null) || (!nextActionAtUtc.HasValue && normalizedNote != null))
+            throw new ArgumentException("Next action date and note must be provided together or both omitted.");
+
+        ScopeSummary = normalizedScope;
+        WorkTypes = distinctWorkTypes.AsReadOnly();
+        NextActionAtUtc = nextActionAtUtc?.ToUniversalTime();
+        NextActionNote = normalizedNote;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void EditOpen(
+        Guid expectedVersion,
+        string title,
+        Guid? primarySiteId,
+        string? scopeSummary,
+        IReadOnlyCollection<string> workTypes,
+        string? sourceCode,
+        decimal? expectedBudget,
+        string? currencyCode,
+        DateOnly? targetDecisionDate,
+        DateTimeOffset? nextActionAtUtc,
+        string? nextActionNote)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage == OpportunityStage.Won || Stage == OpportunityStage.Lost || Stage == OpportunityStage.Cancelled)
+            throw new OpportunityTransitionException(Stage, Stage);
+
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Opportunity title cannot be blank.", nameof(title));
+
+        if (workTypes == null || workTypes.Count == 0)
+            throw new ArgumentException("At least one work type is required.", nameof(workTypes));
+
+        var distinctWorkTypes = new List<string>();
+        foreach (var wt in workTypes)
+        {
+            if (!OpportunityWorkType.IsValid(wt))
+                throw new ArgumentException($"Invalid work type: '{wt}'.", nameof(workTypes));
+            var trimmed = wt.Trim();
+            if (!distinctWorkTypes.Contains(trimmed, StringComparer.Ordinal))
+            {
+                distinctWorkTypes.Add(trimmed);
+            }
+        }
+
+        var normalizedTitle = OpportunityNormalizer.CollapseWhitespace(title);
+        if (normalizedTitle.Length > 200)
+            throw new ArgumentException("Opportunity title cannot exceed 200 characters.", nameof(title));
+
+        var normalizedScope = string.IsNullOrWhiteSpace(scopeSummary) ? null : OpportunityNormalizer.CollapseWhitespace(scopeSummary);
+        if (normalizedScope != null && normalizedScope.Length > 2000)
+            throw new ArgumentException("Scope summary cannot exceed 2000 characters.", nameof(scopeSummary));
+
+        var normalizedSource = string.IsNullOrWhiteSpace(sourceCode) ? null : sourceCode.Trim();
+        if (normalizedSource != null && normalizedSource.Length > 50)
+            throw new ArgumentException("Source code cannot exceed 50 characters.", nameof(sourceCode));
+
+        if (expectedBudget.HasValue && expectedBudget.Value < 0)
+            throw new ArgumentException("Expected budget cannot be negative.", nameof(expectedBudget));
+
+        var normalizedCurrency = expectedBudget.HasValue ? (string.IsNullOrWhiteSpace(currencyCode) ? "THB" : currencyCode.Trim().ToUpperInvariant()) : null;
+
+        var normalizedNote = string.IsNullOrWhiteSpace(nextActionNote) ? null : OpportunityNormalizer.CollapseWhitespace(nextActionNote);
+        if (normalizedNote != null && normalizedNote.Length > 500)
+            throw new ArgumentException("Next action note cannot exceed 500 characters.", nameof(nextActionNote));
+
+        if ((nextActionAtUtc.HasValue && normalizedNote == null) || (!nextActionAtUtc.HasValue && normalizedNote != null))
+            throw new ArgumentException("Next action date and note must be provided together or both omitted.");
+
+        Title = normalizedTitle;
+        NormalizedTitle = OpportunityNormalizer.NormalizeTitle(normalizedTitle);
+        PrimarySiteId = primarySiteId;
+        ScopeSummary = normalizedScope;
+        WorkTypes = distinctWorkTypes.AsReadOnly();
+        SourceCode = normalizedSource;
+        ExpectedBudget = expectedBudget;
+        CurrencyCode = normalizedCurrency;
+        TargetDecisionDate = targetDecisionDate;
+        NextActionAtUtc = nextActionAtUtc?.ToUniversalTime();
+        NextActionNote = normalizedNote;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void ReassignOwner(Guid expectedVersion, Guid newOwnerUserId)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage == OpportunityStage.Won || Stage == OpportunityStage.Lost || Stage == OpportunityStage.Cancelled)
+            throw new OpportunityTransitionException(Stage, Stage);
+
+        if (newOwnerUserId == Guid.Empty)
+            throw new ArgumentException("Target owner user ID cannot be empty.", nameof(newOwnerUserId));
+
+        OwnerUserId = newOwnerUserId;
         RowVersion = Guid.NewGuid();
     }
 

@@ -78,6 +78,7 @@ public static class TestOnlyDataSeeder
             ("sites.manage", "Manage Sites"),
             ("opportunities.read", "Read Opportunities"),
             ("opportunities.create", "Create Opportunities"),
+            ("opportunities.update", "Update Opportunities"),
             ("opportunities.transition", "Transition Opportunities")
         };
 

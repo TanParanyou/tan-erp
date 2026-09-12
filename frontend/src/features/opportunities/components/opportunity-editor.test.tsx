@@ -68,6 +68,7 @@ vi.mock("@/lib/api/api-client", async (importOriginal) => {
       createOpportunity: vi.fn(),
       listCustomers: vi.fn(),
       listCustomerSites: vi.fn(),
+      getCustomer: vi.fn(),
     },
   };
 });
@@ -75,6 +76,7 @@ vi.mock("@/lib/api/api-client", async (importOriginal) => {
 const mockedCreateOpportunity = vi.mocked(apiClient.createOpportunity);
 const mockedListCustomers = vi.mocked(apiClient.listCustomers);
 const mockedListCustomerSites = vi.mocked(apiClient.listCustomerSites);
+const mockedGetCustomer = vi.mocked(apiClient.getCustomer);
 
 const activeCustomerA = {
   id: "10000000-0000-0000-0000-000000000001",
@@ -127,6 +129,14 @@ describe("OpportunityEditor", () => {
       items: [customerASite1],
     } satisfies SiteListResponse);
 
+    mockedGetCustomer.mockResolvedValue({
+      id: activeCustomerA.id,
+      code: activeCustomerA.code,
+      displayNameTh: activeCustomerA.displayNameTh,
+      status: "active",
+      customerType: "organization",
+    });
+
     let count = 0;
     vi.spyOn(crypto, "randomUUID").mockImplementation(() => {
       count += 1;
@@ -177,7 +187,8 @@ describe("OpportunityEditor", () => {
     fireEvent.click(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/));
 
     // Verify selected card shows customer
-    expect(screen.getByText(/\[CUS-0001\] บริษัท ลูกค้าเอ จำกัด/)).toBeInTheDocument();
+    expect(screen.getByText("บริษัท ลูกค้าเอ จำกัด")).toBeInTheDocument();
+    expect(screen.getByText("[CUS-0001]")).toBeInTheDocument();
 
     // Enter title
     fireEvent.change(screen.getByLabelText(/ชื่อโอกาสทางการขาย/), {
@@ -216,7 +227,7 @@ describe("OpportunityEditor", () => {
     });
   });
 
-  it("clears primarySiteId synchronously when customer selection changes", async () => {
+  it("clears primarySiteId synchronously when customer selection changes and renders site details card", async () => {
     renderEditor(client);
 
     // Search and select customer A
@@ -241,6 +252,9 @@ describe("OpportunityEditor", () => {
     });
     expect((siteSelect as HTMLSelectElement).value).toBe(customerASite1.id);
 
+    // Verify full site snapshot card is visible
+    expect(screen.getAllByText("สำนักงานใหญ่ ลูกค้าเอ").length).toBeGreaterThan(1);
+
     // Click 'Change Customer' button
     const changeBtn = screen.getByRole("button", { name: "เปลี่ยนลูกค้า" });
     fireEvent.click(changeBtn);
@@ -257,7 +271,32 @@ describe("OpportunityEditor", () => {
     });
 
     fireEvent.click(screen.getByText(/บริษัท ลูกค้าบี จำกัด/));
-    expect(screen.getByText(/\[CUS-0002\] บริษัท ลูกค้าบี จำกัด/)).toBeInTheDocument();
+    expect(screen.getByText("บริษัท ลูกค้าบี จำกัด")).toBeInTheDocument();
+    expect(screen.getByText("[CUS-0002]")).toBeInTheDocument();
+  });
+
+  it("opens CustomerQuickViewDrawer when clicking on the customer card", async () => {
+    renderEditor(client);
+
+    // Search and select customer A
+    const customerInput = screen.getByPlaceholderText(/พิมพ์เพื่อค้นหาชื่อหรือรหัสลูกค้า/);
+    fireEvent.focus(customerInput);
+
+    await waitFor(() => {
+      expect(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText(/บริษัท ลูกค้าเอ จำกัด/));
+
+    // Click customer card to open drawer
+    const customerCardButton = screen.getByRole("button", { name: /ดูข้อมูลลูกค้า \(Drawer\)/ });
+    expect(customerCardButton).toBeInTheDocument();
+    fireEvent.click(customerCardButton);
+
+    // Drawer should open and call getCustomer
+    await waitFor(() => {
+      expect(mockedGetCustomer).toHaveBeenCalledWith(activeCustomerA.id, expect.anything());
+    });
   });
 
   it("displays validation error when workTypes is not selected on submit", async () => {

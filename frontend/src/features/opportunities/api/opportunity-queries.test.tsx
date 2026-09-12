@@ -6,6 +6,7 @@ import {
   opportunityListQueryKey,
   opportunityDetailQueryKey,
   useQualifyOpportunity,
+  useUpdateDraftQGate,
 } from "./opportunity-queries";
 import { apiClient, type OpportunityResponse } from "@/lib/api/api-client";
 import * as authSession from "@/lib/auth/auth-session";
@@ -131,5 +132,89 @@ describe("useQualifyOpportunity mutation", () => {
     // Verify list queries were invalidated
     expect(invalidateSpy).toHaveBeenCalled();
   });
+
+  it("useUpdateDraftQGate_Success_SendsIfMatchAndRefreshesCaches", async () => {
+    const mockToken = "sample-token";
+    const mockMembership = {
+      id: "membership-123",
+      organization: { id: "org-1", name: "Org 1" },
+      branch: { id: "branch-1", name: "Branch 1" },
+      permissions: [{ key: "opportunities.update", scope: "organization", scopeId: "org-1" }],
+    };
+
+    vi.spyOn(authSession, "getAuthToken").mockResolvedValue(mockToken);
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      selectedMembership: mockMembership,
+      currentUser: {
+        user: { id: "user-1", displayName: "User", email: "user@example.test" },
+        memberships: [mockMembership],
+      },
+      memberships: [mockMembership],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    const mockResponse: OpportunityResponse = {
+      id: "opp-123",
+      code: "OPP-001",
+      customerId: "cust-1",
+      branchId: "branch-1",
+      ownerUserId: "user-1",
+      title: "โครงการปรับปรุง",
+      scopeSummary: "ขอบเขตใหม่",
+      workTypes: ["built-in"],
+      nextActionAtUtc: "2026-09-15T10:00:00Z",
+      nextActionNote: "โทรติดต่อ",
+      stage: "draft",
+      rowVersion: "00000000-0000-0000-0000-000000000003",
+      createdAtUtc: "2026-09-10T10:00:00Z",
+    };
+
+    const updateSpy = vi.spyOn(apiClient, "updateDraftQGate").mockResolvedValue(mockResponse);
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useUpdateDraftQGate(), { wrapper });
+
+    const patchPayload = {
+      scopeSummary: "ขอบเขตใหม่",
+      workTypes: ["built-in"],
+      nextActionAtUtc: "2026-09-15T10:00:00Z",
+      nextActionNote: "โทรติดต่อ",
+    };
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        opportunityId: "opp-123",
+        expectedVersion: "00000000-0000-0000-0000-000000000001",
+        payload: patchPayload,
+        idempotencyKey: "idemp-patch-1",
+      });
+    });
+
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+    expect(updateSpy).toHaveBeenCalledWith(
+      "opp-123",
+      patchPayload,
+      {
+        token: mockToken,
+        membershipId: "membership-123",
+        locale: "th",
+        idempotencyKey: "idemp-patch-1",
+        ifMatch: '"00000000-0000-0000-0000-000000000001"',
+      }
+    );
+
+    // Verify detail cache was populated with returned resource
+    const detailKey = opportunityDetailQueryKey("membership-123", "th", "opp-123");
+    const cachedDetail = queryClient.getQueryData(detailKey);
+    expect(cachedDetail).toEqual(mockResponse);
+
+    // Verify list queries were invalidated
+    expect(invalidateSpy).toHaveBeenCalled();
+  });
 });
+
 

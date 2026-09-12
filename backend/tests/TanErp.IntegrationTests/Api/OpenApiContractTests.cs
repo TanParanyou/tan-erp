@@ -107,9 +107,23 @@ public class OpenApiContractTests : IAsyncLifetime
         var getOpportunityPath = paths["/api/v1/opportunities/{id}"]?["get"]?.AsObject();
         Assert.NotNull(getOpportunityPath);
 
+        var patchOpportunityPath = paths["/api/v1/opportunities/{id}"]?["patch"]?.AsObject();
+        Assert.NotNull(patchOpportunityPath);
+
+        var putOpportunityPath = paths["/api/v1/opportunities/{id}"]?["put"]?.AsObject();
+        Assert.NotNull(putOpportunityPath);
+
         Assert.True(paths.ContainsKey("/api/v1/opportunities/{id}/stage-transitions"), "OpenAPI must contain path /api/v1/opportunities/{id}/stage-transitions");
         var transitionPath = paths["/api/v1/opportunities/{id}/stage-transitions"]?["post"]?.AsObject();
         Assert.NotNull(transitionPath);
+
+        Assert.True(paths.ContainsKey("/api/v1/opportunities/{id}/owner-changes"), "OpenAPI must contain path /api/v1/opportunities/{id}/owner-changes");
+        var ownerChangesPath = paths["/api/v1/opportunities/{id}/owner-changes"]?["post"]?.AsObject();
+        Assert.NotNull(ownerChangesPath);
+
+        Assert.True(paths.ContainsKey("/api/v1/users"), "OpenAPI must contain path /api/v1/users");
+        var listUsersPath = paths["/api/v1/users"]?["get"]?.AsObject();
+        Assert.NotNull(listUsersPath);
 
         // 2. Assert operation responses 200, 401, 403
         var responses = mePath["responses"]?.AsObject();
@@ -138,9 +152,14 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("OpportunityResponse"), "Must define OpportunityResponse schema");
         Assert.True(schemas.ContainsKey("OpportunityListResponse"), "Must define OpportunityListResponse schema");
         Assert.True(schemas.ContainsKey("CreateOpportunityRequest"), "Must define CreateOpportunityRequest schema");
+        Assert.True(schemas.ContainsKey("UpdateDraftQGateRequest"), "Must define UpdateDraftQGateRequest schema");
+        Assert.True(schemas.ContainsKey("UpdateOpenOpportunityRequest"), "Must define UpdateOpenOpportunityRequest schema");
+        Assert.True(schemas.ContainsKey("ReassignOpportunityOwnerRequest"), "Must define ReassignOpportunityOwnerRequest schema");
         Assert.True(schemas.ContainsKey("TransitionOpportunityStageRequest"), "Must define TransitionOpportunityStageRequest schema");
         Assert.True(schemas.ContainsKey("AddressSearchResponse"), "Must define AddressSearchResponse schema");
         Assert.True(schemas.ContainsKey("AddressSearchResultItem"), "Must define AddressSearchResultItem schema");
+        Assert.True(schemas.ContainsKey("UserListResponse"), "Must define UserListResponse schema");
+        Assert.True(schemas.ContainsKey("UserListItemResponse"), "Must define UserListItemResponse schema");
         Assert.True(schemas.ContainsKey("ApiProblemDetails"), "Must define ApiProblemDetails schema");
 
         // 5. Ensure contracts/openapi/tan-erp.v1.json exists and matches

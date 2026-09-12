@@ -109,7 +109,8 @@ describe("CustomerAutocomplete", () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByText(/\[CUS-001\] บริษัท ทดสอบ 1 จำกัด/)).toBeInTheDocument();
+    expect(screen.getByText("บริษัท ทดสอบ 1 จำกัด")).toBeInTheDocument();
+    expect(screen.getByText("[CUS-001]")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "เปลี่ยนลูกค้า" })).toBeInTheDocument();
   });
 

@@ -78,6 +78,13 @@ Customer Address เป็นข้อมูลติดต่อ/ออกเ�
 | `outcomeReasonCode`, `outcomeNote` | String/null | Conditional | บังคับ Lost/Cancelled/Reopen | Internal |
 | `rowVersion` | Token | System | ทุก Mutation | Internal |
 
+### แผนการพัฒนา Master Data สู่ Database Table ในอนาคต (Future Master Data Table Roadmap)
+
+ใน Phase ปัจจุบัน (Vertical Slice) ข้อมูลตัวเลือกเชิงจำแนกประเภทถูกควบคุมผ่าน **Canonical Enums และ Controlled Value Objects** เพื่อรักษา Minimal Blast Radius:
+1. **Work Types (`workTypes`):** ปัจจุบันเป็น Canonical Enum Set (`built-in`, `interior`, `curtain`, `wallpaper`, `exterior`, `other`) บันทึกแบบ PostgreSQL Array `text[]` เพื่อเป็นรากฐานให้กับโมดูล Estimation/BOM และ MRP ในอนาคต เมื่อระบบขยายตัวเต็มรูปแบบ จะสามารถยกระดับเป็นตาราง `work_type_masters` เพื่อให้แต่ละองค์กรสามารถปรับแต่งรายการประเภทงานและผูก Template งานสำรวจได้
+2. **Lead Source (`sourceCode`):** ปัจจุบันเป็น Controlled Code ที่รองรับ Custom Note ผ่านรูปแบบ `other:{detail}` เพื่อความยืดหยุ่น ในอนาคตจะขยายเป็นตาราง `lead_source_masters` เพื่อรองรับการตั้งค่าแคมเปญการตลาดและการวัด Conversion Rate แยกตามสาขา
+3. **Currency (`currencyCode`):** ปัจจุบันใช้มาตรฐาน ISO 4217 (THB default, USD, EUR, JPY, SGD, CNY) ในอนาคตเมื่อรองรับ Multi-currency เต็มรูปแบบ จะพัฒนาเป็นตาราง `currency_masters` และ `exchange_rate_histories` เพื่อการแปลงอัตราแลกเปลี่ยนตามช่วงเวลาจริง
+
 ## Site Survey Identity and Revision
 
 | Field | Type | Gate | Rule | Class |

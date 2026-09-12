@@ -8,6 +8,7 @@ using TanErp.Application.Crm.Opportunities.CreateOpportunity;
 using TanErp.Application.Crm.Opportunities.GetOpportunity;
 using TanErp.Application.Crm.Opportunities.ListOpportunities;
 using TanErp.Application.Crm.Opportunities.QualifyOpportunity;
+using TanErp.Application.Crm.Opportunities.UpdateDraftQGate;
 
 namespace TanErp.Api.Controllers;
 
@@ -20,17 +21,26 @@ public class OpportunitiesController : ControllerBase
     private readonly ListOpportunitiesHandler _listHandler;
     private readonly GetOpportunityHandler _getHandler;
     private readonly QualifyOpportunityHandler _qualifyHandler;
+    private readonly UpdateDraftQGateHandler _updateDraftQGateHandler;
+    private readonly TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityHandler _updateOpenHandler;
+    private readonly TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler _reassignOwnerHandler;
 
     public OpportunitiesController(
         CreateOpportunityHandler createHandler,
         ListOpportunitiesHandler listHandler,
         GetOpportunityHandler getHandler,
-        QualifyOpportunityHandler qualifyHandler)
+        QualifyOpportunityHandler qualifyHandler,
+        UpdateDraftQGateHandler updateDraftQGateHandler,
+        TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityHandler updateOpenHandler,
+        TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler reassignOwnerHandler)
     {
         _createHandler = createHandler;
         _listHandler = listHandler;
         _getHandler = getHandler;
         _qualifyHandler = qualifyHandler;
+        _updateDraftQGateHandler = updateDraftQGateHandler;
+        _updateOpenHandler = updateOpenHandler;
+        _reassignOwnerHandler = reassignOwnerHandler;
     }
 
     [HttpPost]
@@ -198,6 +208,149 @@ public class OpportunitiesController : ControllerBase
             traceId);
 
         var result = await _qualifyHandler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var opp = result.Value!;
+        Response.Headers.ETag = $"\"{opp.RowVersion}\"";
+
+        return Ok(ToResponse(opp));
+    }
+
+    [HttpPatch("{id:guid}")]
+    [ProducesResponseType<OpportunityResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> Patch(
+        [FromRoute] Guid id,
+        [FromBody] UpdateDraftQGateRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var command = new UpdateDraftQGateCommand(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            auth.IfMatchRowVersion,
+            request.ScopeSummary,
+            request.WorkTypes,
+            request.NextActionAtUtc,
+            request.NextActionNote,
+            auth.IdempotencyKey,
+            traceId);
+
+        var result = await _updateDraftQGateHandler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var opp = result.Value!;
+        Response.Headers.ETag = $"\"{opp.RowVersion}\"";
+
+        return Ok(ToResponse(opp));
+    }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType<OpportunityResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> UpdateOpen(
+        [FromRoute] Guid id,
+        [FromBody] UpdateOpenOpportunityRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var command = new TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityCommand(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            auth.IfMatchRowVersion,
+            request.Title,
+            request.PrimarySiteId,
+            request.ScopeSummary,
+            request.WorkTypes,
+            request.SourceCode,
+            request.ExpectedBudget,
+            request.CurrencyCode,
+            request.TargetDecisionDate,
+            request.NextActionAtUtc,
+            request.NextActionNote,
+            auth.IdempotencyKey,
+            traceId);
+
+        var result = await _updateOpenHandler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var opp = result.Value!;
+        Response.Headers.ETag = $"\"{opp.RowVersion}\"";
+
+        return Ok(ToResponse(opp));
+    }
+
+    [HttpPost("{id:guid}/owner-changes")]
+    [ProducesResponseType<OpportunityResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ReassignOwner(
+        [FromRoute] Guid id,
+        [FromBody] ReassignOpportunityOwnerRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var command = new TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerCommand(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            request.ExpectedVersion,
+            request.TargetOwnerUserId,
+            auth.IdempotencyKey,
+            traceId);
+
+        var result = await _reassignOwnerHandler.Handle(command, cancellationToken);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);

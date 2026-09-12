@@ -5,6 +5,9 @@ using TanErp.Application.Common.Results;
 using TanErp.Application.Crm.Opportunities;
 using TanErp.Application.Crm.Opportunities.CreateOpportunity;
 using TanErp.Application.Crm.Opportunities.QualifyOpportunity;
+using TanErp.Application.Crm.Opportunities.UpdateDraftQGate;
+using TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity;
+using TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner;
 using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
@@ -313,6 +316,438 @@ public class OpportunityStore : IOpportunityStore
             _db.IdempotencyRecords.Add(idempotencyRecord);
 
             // 9. Save and commit
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+                var replay = await TryLoadReplayAsync(
+                    orgId, operation, keyHash, payloadHash, cancellationToken);
+                if (replay is not null) return replay;
+                throw;
+            }
+
+            return Result<OpportunityProjection>.Success(ToProjection(opp));
+        });
+    }
+
+    public async Task<Result<OpportunityProjection>> UpdateDraftQGateAsync(
+        RequestAccessContext access,
+        UpdateDraftQGateCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        const string operation = "opportunities.update-draft-q-gate";
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            // 1. Check idempotency replay
+            var existingReplay = await TryLoadReplayAsync(orgId, operation, keyHash, payloadHash, cancellationToken);
+            if (existingReplay is not null)
+            {
+                return existingReplay;
+            }
+
+            // 2. Resource scope: load Opportunity constrained by organization_id
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.Id == command.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+
+            if (opp == null)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Opportunity not found."));
+            }
+
+            // 3. Expected version
+            if (opp.RowVersion != command.ExpectedVersion)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+
+            // 4. Current state
+            if (opp.Stage != OpportunityStage.Draft)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Only draft opportunities can be updated."));
+            }
+
+            // 5. Track changed fields for privacy-safe audit
+            var changedFields = new List<string>();
+            if (opp.ScopeSummary != command.ScopeSummary) changedFields.Add("scopeSummary");
+            if (!opp.WorkTypes.SequenceEqual(command.WorkTypes)) changedFields.Add("workTypes");
+            if (opp.NextActionAtUtc != command.NextActionAtUtc) changedFields.Add("nextActionAtUtc");
+            if (opp.NextActionNote != command.NextActionNote) changedFields.Add("nextActionNote");
+
+            // 6. Aggregate mutation
+            try
+            {
+                opp.EditDraftQGate(
+                    command.ExpectedVersion,
+                    command.ScopeSummary,
+                    command.WorkTypes,
+                    command.NextActionAtUtc,
+                    command.NextActionNote);
+            }
+            catch (OpportunityVersionException)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+            catch (OpportunityTransitionException)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Only draft opportunities can be updated."));
+            }
+            catch (ArgumentException ex)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_FIELD_REQUIRED", ex.Message));
+            }
+
+            var now = _clock.UtcNow;
+
+            // 7. Audit event (changed field names only, no values/PII)
+            var changedFieldsJson = "{\"changedFields\":[" + string.Join(",", changedFields.Select(f => $"\"{f}\"")) + "]}";
+            var auditEvent = new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "opportunity.updated",
+                "Opportunity",
+                opp.Id.ToString(),
+                now,
+                command.TraceId,
+                changedFieldsJson);
+            _db.AuditEvents.Add(auditEvent);
+
+            // 8. Idempotency record
+            var idempotencyRecord = new IdempotencyRecord(
+                Guid.NewGuid(),
+                orgId,
+                operation,
+                keyHash,
+                payloadHash,
+                opp.Id.ToString(),
+                now);
+            _db.IdempotencyRecords.Add(idempotencyRecord);
+
+            // 9. Commit transaction with optimistic concurrency
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+                var replay = await TryLoadReplayAsync(
+                    orgId, operation, keyHash, payloadHash, cancellationToken);
+                if (replay is not null) return replay;
+                throw;
+            }
+
+            return Result<OpportunityProjection>.Success(ToProjection(opp));
+        });
+    }
+
+    public async Task<Result<OpportunityProjection>> UpdateOpenAsync(
+        RequestAccessContext access,
+        UpdateOpenOpportunityCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        const string operation = "opportunities.update-open";
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            // 1. Check idempotency replay
+            var existingReplay = await TryLoadReplayAsync(orgId, operation, keyHash, payloadHash, cancellationToken);
+            if (existingReplay is not null)
+            {
+                return existingReplay;
+            }
+
+            // 2. Resource scope: load Opportunity constrained by organization_id
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.Id == command.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+
+            if (opp == null)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Opportunity not found."));
+            }
+
+            // 3. Expected version
+            if (opp.RowVersion != command.ExpectedVersion)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+
+            // 4. Current state must be open
+            if (opp.Stage == OpportunityStage.Won || opp.Stage == OpportunityStage.Lost || opp.Stage == OpportunityStage.Cancelled)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Closed opportunities cannot be updated."));
+            }
+
+            // 5. If primarySiteId provided, validate it belongs to same customer and org and is Active
+            if (command.PrimarySiteId.HasValue)
+            {
+                var site = await _db.Sites
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.Id == command.PrimarySiteId.Value && s.CustomerId == opp.CustomerId && s.OrganizationId == orgId, cancellationToken);
+
+                if (site == null)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("RESOURCE_NOT_FOUND", "Primary site not found for this customer."));
+                }
+
+                if (site.Status != SiteStatus.Active)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("RESOURCE_NOT_FOUND", "Primary site is not active."));
+                }
+            }
+
+            // 6. Track changed fields for privacy-safe audit
+            var changedFields = new List<string>();
+            if (opp.Title != command.Title) changedFields.Add("title");
+            if (opp.PrimarySiteId != command.PrimarySiteId) changedFields.Add("primarySiteId");
+            if (opp.ScopeSummary != command.ScopeSummary) changedFields.Add("scopeSummary");
+            if (!opp.WorkTypes.SequenceEqual(command.WorkTypes)) changedFields.Add("workTypes");
+            if (opp.SourceCode != command.SourceCode) changedFields.Add("sourceCode");
+            if (opp.ExpectedBudget != command.ExpectedBudget) changedFields.Add("expectedBudget");
+            if (opp.CurrencyCode != command.CurrencyCode) changedFields.Add("currencyCode");
+            if (opp.TargetDecisionDate != command.TargetDecisionDate) changedFields.Add("targetDecisionDate");
+            if (opp.NextActionAtUtc != command.NextActionAtUtc) changedFields.Add("nextActionAtUtc");
+            if (opp.NextActionNote != command.NextActionNote) changedFields.Add("nextActionNote");
+
+            // 7. Aggregate mutation
+            try
+            {
+                opp.EditOpen(
+                    command.ExpectedVersion,
+                    command.Title,
+                    command.PrimarySiteId,
+                    command.ScopeSummary,
+                    command.WorkTypes,
+                    command.SourceCode,
+                    command.ExpectedBudget,
+                    command.CurrencyCode,
+                    command.TargetDecisionDate,
+                    command.NextActionAtUtc,
+                    command.NextActionNote);
+            }
+            catch (OpportunityVersionException)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+            catch (OpportunityTransitionException)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Closed opportunities cannot be updated."));
+            }
+            catch (ArgumentException ex)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_FIELD_REQUIRED", ex.Message));
+            }
+
+            var now = _clock.UtcNow;
+
+            // 8. Audit event (changed field names only, no values/PII)
+            var changedFieldsJson = "{\"changedFields\":[" + string.Join(",", changedFields.Select(f => $"\"{f}\"")) + "]}";
+            var auditEvent = new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "opportunity.updated",
+                "Opportunity",
+                opp.Id.ToString(),
+                now,
+                command.TraceId,
+                changedFieldsJson);
+            _db.AuditEvents.Add(auditEvent);
+
+            // 9. Idempotency record
+            var idempotencyRecord = new IdempotencyRecord(
+                Guid.NewGuid(),
+                orgId,
+                operation,
+                keyHash,
+                payloadHash,
+                opp.Id.ToString(),
+                now);
+            _db.IdempotencyRecords.Add(idempotencyRecord);
+
+            // 10. Commit transaction with optimistic concurrency
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+                var replay = await TryLoadReplayAsync(
+                    orgId, operation, keyHash, payloadHash, cancellationToken);
+                if (replay is not null) return replay;
+                throw;
+            }
+
+            return Result<OpportunityProjection>.Success(ToProjection(opp));
+        });
+    }
+
+    public async Task<Result<OpportunityProjection>> ReassignOwnerAsync(
+        RequestAccessContext access,
+        ReassignOpportunityOwnerCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        const string operation = "opportunities.reassign-owner";
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            // 1. Check idempotency replay
+            var existingReplay = await TryLoadReplayAsync(orgId, operation, keyHash, payloadHash, cancellationToken);
+            if (existingReplay is not null)
+            {
+                return existingReplay;
+            }
+
+            // 2. Resource scope: load Opportunity constrained by organization_id
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.Id == command.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+
+            if (opp == null)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Opportunity not found."));
+            }
+
+            // 3. Expected version
+            if (opp.RowVersion != command.ExpectedVersion)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+
+            // 4. Current state must be open
+            if (opp.Stage == OpportunityStage.Won || opp.Stage == OpportunityStage.Lost || opp.Stage == OpportunityStage.Cancelled)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Closed opportunities cannot be reassigned."));
+            }
+
+            // 5. Target owner must have active membership in the same branch
+            var now = _clock.UtcNow;
+            var targetMembership = await _db.Memberships
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.UserId == command.TargetOwnerUserId && m.BranchId == opp.BranchId && m.OrganizationId == orgId, cancellationToken);
+
+            if (targetMembership == null || !targetMembership.IsActiveAt(now))
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Active target owner membership not found in this branch."));
+            }
+
+            var previousOwnerUserId = opp.OwnerUserId;
+
+            // 6. Aggregate mutation
+            try
+            {
+                opp.ReassignOwner(command.ExpectedVersion, command.TargetOwnerUserId);
+            }
+            catch (OpportunityVersionException)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+            catch (OpportunityTransitionException)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Closed opportunities cannot be reassigned."));
+            }
+            catch (ArgumentException ex)
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_FIELD_REQUIRED", ex.Message));
+            }
+
+            // 7. Audit event: opportunity.owner-changed with IDs only (no PII)
+            var auditPayload = FormattableString.Invariant(
+                $"{{\"previousOwnerUserId\":\"{previousOwnerUserId:D}\",\"newOwnerUserId\":\"{command.TargetOwnerUserId:D}\"}}");
+            var auditEvent = new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "opportunity.owner-changed",
+                "Opportunity",
+                opp.Id.ToString(),
+                now,
+                command.TraceId,
+                auditPayload);
+            _db.AuditEvents.Add(auditEvent);
+
+            // 8. Idempotency record
+            var idempotencyRecord = new IdempotencyRecord(
+                Guid.NewGuid(),
+                orgId,
+                operation,
+                keyHash,
+                payloadHash,
+                opp.Id.ToString(),
+                now);
+            _db.IdempotencyRecords.Add(idempotencyRecord);
+
+            // 9. Commit transaction with optimistic concurrency
             try
             {
                 await _db.SaveChangesAsync(cancellationToken);

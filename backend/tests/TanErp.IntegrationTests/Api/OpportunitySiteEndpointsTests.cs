@@ -509,4 +509,154 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
             .ToListAsync();
         Assert.Single(audit);
     }
+
+    [Fact]
+    public async Task PatchOpportunity_ValidDraft_ReturnsUpdatedResponseAndETag()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var nextActionTime = DateTimeOffset.UtcNow.AddDays(5);
+        var patchBody = new UpdateDraftQGateRequest(
+            "ปรับปรุงขอบเขตงาน Walk-in Closet",
+            new[] { "built-in", "interior" },
+            nextActionTime,
+            "ส่งรายละเอียดแบบเบื้องต้นให้ลูกค้า");
+
+        var msg = CreateRequest(
+            HttpMethod.Patch,
+            $"/api/v1/opportunities/{opp.Id}",
+            "token-org-a",
+            MembershipAId,
+            $"idem-patch-{Guid.NewGuid():N}");
+        msg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        msg.Content = JsonContent.Create(patchBody);
+
+        var res = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var updated = await res.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("draft", updated.Stage);
+        Assert.NotEqual(opp.RowVersion, updated.RowVersion);
+        Assert.Equal($"\"{updated.RowVersion}\"", res.Headers.ETag?.Tag);
+        Assert.Equal("ปรับปรุงขอบเขตงาน Walk-in Closet", updated.ScopeSummary);
+        Assert.Equal(new[] { "built-in", "interior" }, updated.WorkTypes);
+        Assert.Equal("ส่งรายละเอียดแบบเบื้องต้นให้ลูกค้า", updated.NextActionNote);
+
+        // Verify GET confirms persistence
+        var getMsg = CreateRequest(
+            HttpMethod.Get,
+            $"/api/v1/opportunities/{opp.Id}",
+            "token-org-a",
+            MembershipAId);
+        var getRes = await _client.SendAsync(getMsg);
+        Assert.Equal(HttpStatusCode.OK, getRes.StatusCode);
+        var reloaded = await getRes.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(reloaded);
+        Assert.Equal(updated.RowVersion, reloaded.RowVersion);
+        Assert.Equal("ปรับปรุงขอบเขตงาน Walk-in Closet", reloaded.ScopeSummary);
+    }
+
+    [Fact]
+    public async Task PutOpenOpportunity_ValidRequest_ReturnsETag()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var updateReq = new UpdateOpenOpportunityRequest(
+            "Kitchen Renovation Open Update",
+            null,
+            "Renovate pantry and kitchen island",
+            new[] { "built-in", "interior" },
+            "referral",
+            550000m,
+            "THB",
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+            DateTimeOffset.UtcNow.AddDays(7),
+            "Call client for design confirmation");
+
+        var msg = CreateRequest(
+            HttpMethod.Put,
+            $"/api/v1/opportunities/{opp.Id}",
+            "token-org-a",
+            MembershipAId,
+            $"idem-put-{Guid.NewGuid():N}");
+        msg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        msg.Content = JsonContent.Create(updateReq);
+
+        var res = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var updated = await res.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(updated);
+        Assert.NotEqual(opp.RowVersion, updated.RowVersion);
+        Assert.Equal($"\"{updated.RowVersion}\"", res.Headers.ETag?.Tag);
+        Assert.Equal("Kitchen Renovation Open Update", updated.Title);
+        Assert.Equal(550000m, updated.ExpectedBudget);
+        Assert.Equal("Renovate pantry and kitchen island", updated.ScopeSummary);
+    }
+
+    [Fact]
+    public async Task PutOpenOpportunity_WithLocalOffsetNextActionAtUtc_Succeeds()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var json = """{"title":"ำกไำกไำ","primarySiteId":null,"scopeSummary":"ก","workTypes":["interior","other"],"sourceCode":"architect_partner","expectedBudget":500,"currencyCode":"THB","targetDecisionDate":"2026-09-12","nextActionAtUtc":"2026-09-30T09:00","nextActionNote":"dw - นัดพบบอร์ดบริหาร/ผู้มีอำนาจตัดสินใจ - นัดพบบอร์ดบริหาร/ผู้มีอำนาจตัดสินใจ - นัดพบบอร์ดบริหาร/ผู้มีอำนาจตัดสินใจ"}""";
+
+        var msg = CreateRequest(
+            HttpMethod.Put,
+            $"/api/v1/opportunities/{opp.Id}",
+            "token-org-a",
+            MembershipAId,
+            $"idem-put-{Guid.NewGuid():N}");
+        msg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        msg.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var res = await _client.SendAsync(msg);
+        var body = await res.Content.ReadAsStringAsync();
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostReassignOwner_ValidRequest_ReturnsETag()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        // Seed a target owner user and membership in same branch
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var newOwnerUser = new User(Guid.NewGuid(), "target-owner-uid", "พนักงานขาย สอง", "targetowner@example.test", isActive: true);
+            var newOwnerMembership = new Membership(Guid.NewGuid(), OrgAId, BranchAId, newOwnerUser.Id, isActive: true);
+            db.Users.Add(newOwnerUser);
+            db.Memberships.Add(newOwnerMembership);
+            await db.SaveChangesAsync();
+
+            var reassignReq = new ReassignOpportunityOwnerRequest(
+                newOwnerUser.Id,
+                opp.RowVersion);
+
+            var msg = CreateRequest(
+                HttpMethod.Post,
+                $"/api/v1/opportunities/{opp.Id}/owner-changes",
+                "token-org-a",
+                MembershipAId,
+                $"idem-reassign-{Guid.NewGuid():N}");
+            msg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+            msg.Content = JsonContent.Create(reassignReq);
+
+            var res = await _client.SendAsync(msg);
+            Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+            var updated = await res.Content.ReadFromJsonAsync<OpportunityResponse>();
+            Assert.NotNull(updated);
+            Assert.NotEqual(opp.RowVersion, updated.RowVersion);
+            Assert.Equal($"\"{updated.RowVersion}\"", res.Headers.ETag?.Tag);
+            Assert.Equal(newOwnerUser.Id, updated.OwnerUserId);
+        }
+    }
 }
+

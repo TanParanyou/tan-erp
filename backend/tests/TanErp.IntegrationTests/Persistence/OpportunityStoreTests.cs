@@ -3,10 +3,14 @@ using TanErp.Application.Common.Models;
 using TanErp.Application.Crm.Customers;
 using TanErp.Application.Crm.Opportunities;
 using TanErp.Application.Crm.Opportunities.CreateOpportunity;
+using TanErp.Application.Crm.Opportunities.UpdateDraftQGate;
+using TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity;
+using TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner;
 using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
+using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Persistence;
 using TanErp.Infrastructure.Persistence.Crm;
@@ -392,4 +396,210 @@ public class OpportunityStoreTests : IAsyncLifetime
         await using var verificationDb = new AppDbContext(options);
         Assert.Equal(1, await verificationDb.Opportunities.CountAsync(o => o.Id == successes[0].Value!.Id));
     }
+
+    [Fact]
+    public async Task UpdateDraftQGate_ValidDraft_PersistsFieldsVersionAuditAndReplay()
+    {
+        var orgId = TestOnlyDataSeeder.TestOrgId;
+        var branchId = TestOnlyDataSeeder.TestBranchId;
+        var userId = TestOnlyDataSeeder.TestUserId;
+        var now = DateTimeOffset.UtcNow;
+
+        // 1. Create active customer and draft opportunity
+        var customer = Customer.CreateDraft(Guid.NewGuid(), orgId, userId, "organization", "บริษัท ลูกค้าทดสอบแก้ไขดราฟต์", null, "th",
+            new PrimaryContactInput("คุณ สมชาย ทดสอบ", null, "0819998877", null, "phone"), now);
+        customer.Activate(customer.RowVersion);
+        _db.Customers.Add(customer);
+
+        var opp = Opportunity.CreateDraft(
+            Guid.NewGuid(), orgId, branchId, customer.Id, null, userId, userId,
+            "โครงการ ปรับปรุงห้องนอน TEST_ONLY", null, new[] { "built-in" },
+            null, null, null, null, null, null, now);
+        _db.Opportunities.Add(opp);
+        await _db.SaveChangesAsync();
+
+        var initialVersion = opp.RowVersion;
+        var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, branchId, "opportunities.update", "organization");
+        var nextActionTime = DateTimeOffset.UtcNow.AddDays(3);
+        var cmd = new UpdateDraftQGateCommand(
+            "uid-update",
+            access.MembershipId,
+            opp.Id,
+            initialVersion,
+            "สรุปขอบเขตงานตู้เสื้อผ้าและเตียงนอนบิวต์อิน",
+            new[] { "built-in", "interior" },
+            nextActionTime,
+            "นัดหมายเข้าไปวัดขนาดพื้นที่จริง",
+            "key-update-draft-q-gate-001",
+            "trace-update-draft-001");
+
+        const string keyHash = "key-hash-update-draft-001";
+        const string payloadHash = "payload-hash-update-draft-001";
+
+        // 2. Execute update
+        var result = await _store.UpdateDraftQGateAsync(access, cmd, keyHash, payloadHash);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(initialVersion, result.Value!.RowVersion);
+        Assert.Equal("draft", result.Value.Stage);
+        Assert.Equal("สรุปขอบเขตงานตู้เสื้อผ้าและเตียงนอนบิวต์อิน", result.Value.ScopeSummary);
+        Assert.Equal(new[] { "built-in", "interior" }, result.Value.WorkTypes);
+        Assert.Equal(nextActionTime, result.Value.NextActionAtUtc);
+        Assert.Equal("นัดหมายเข้าไปวัดขนาดพื้นที่จริง", result.Value.NextActionNote);
+
+        // 3. Verify database state
+        _db.ChangeTracker.Clear();
+        var reloadedOpp = await _db.Opportunities.FindAsync(opp.Id);
+        Assert.NotNull(reloadedOpp);
+        Assert.Equal("draft", reloadedOpp.Stage);
+        Assert.Equal(result.Value.RowVersion, reloadedOpp.RowVersion);
+        Assert.Equal("สรุปขอบเขตงานตู้เสื้อผ้าและเตียงนอนบิวต์อิน", reloadedOpp.ScopeSummary);
+
+        // 4. Verify no stage history created
+        var historyCount = await _db.OpportunityStageHistories
+            .CountAsync(h => h.OpportunityId == opp.Id);
+        Assert.Equal(0, historyCount);
+
+        // 5. Verify privacy-safe audit event
+        var audit = await _db.AuditEvents
+            .Where(a => a.ResourceId == opp.Id.ToString() && a.Action == "opportunity.updated")
+            .ToListAsync();
+        Assert.Single(audit);
+        Assert.DoesNotContain("ตู้เสื้อผ้าและเตียงนอน", audit[0].ChangesJson);
+        Assert.DoesNotContain("วัดขนาดพื้นที่จริง", audit[0].ChangesJson);
+        using (var doc = System.Text.Json.JsonDocument.Parse(audit[0].ChangesJson))
+        {
+            var changedFields = doc.RootElement.GetProperty("changedFields");
+            Assert.True(changedFields.GetArrayLength() > 0);
+        }
+
+        // 6. Verify replay returns same projection and no additional audit
+        var replay = await _store.UpdateDraftQGateAsync(access, cmd, keyHash, payloadHash);
+        Assert.True(replay.IsSuccess);
+        Assert.Equal(result.Value.RowVersion, replay.Value!.RowVersion);
+
+        var auditCountAfterReplay = await _db.AuditEvents
+            .CountAsync(a => a.ResourceId == opp.Id.ToString() && a.Action == "opportunity.updated");
+        Assert.Equal(1, auditCountAfterReplay);
+    }
+
+    [Fact]
+    public async Task UpdateOpenOpportunity_ValidRequest_PersistsAudit()
+    {
+        var orgId = TestOnlyDataSeeder.TestOrgId;
+        var branchId = TestOnlyDataSeeder.TestBranchId;
+        var userId = TestOnlyDataSeeder.TestUserId;
+        var now = DateTimeOffset.UtcNow;
+
+        var c = Customer.CreateDraft(Guid.NewGuid(), orgId, userId, "organization", "บริษัท ทดสอบ Open", null, "th",
+            new PrimaryContactInput("นาย โอเพ่น", null, "0812345678", null, "phone"), now);
+        c.Activate(c.RowVersion);
+        _db.Customers.Add(c);
+
+        var opp = Opportunity.CreateDraft(
+            Guid.NewGuid(), orgId, branchId, c.Id, null, userId, userId,
+            "งานเดิม", "สรุปขอบเขตเริ่มต้น", new[] { "built-in" }, null, null, null, null, now, "นัดหมายเริ่มต้น", now);
+        opp.Qualify(opp.RowVersion);
+        _db.Opportunities.Add(opp);
+        await _db.SaveChangesAsync();
+
+        var initialVersion = opp.RowVersion;
+        var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, branchId, "opportunities.update", "organization");
+        var nextActionTime = now.AddDays(7);
+
+        var cmd = new UpdateOpenOpportunityCommand(
+            "test-uid",
+            Guid.NewGuid(),
+            opp.Id,
+            initialVersion,
+            "งานปรับปรุงห้องรับรองแขก VIP",
+            null,
+            "สรุปงานออกแบบตกแต่งครบวงจร",
+            new[] { "built-in", "interior" },
+            "referral",
+            500000m,
+            "THB",
+            new DateOnly(2026, 11, 20),
+            nextActionTime,
+            "นัดส่งแบบร่างรอบแรก",
+            "key-open-001",
+            "trace-open-001");
+
+        const string keyHash = "key-hash-open-001";
+        const string payloadHash = "payload-hash-open-001";
+
+        var result = await _store.UpdateOpenAsync(access, cmd, keyHash, payloadHash);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(initialVersion, result.Value!.RowVersion);
+        Assert.Equal("qualified", result.Value.Stage);
+        Assert.Equal("งานปรับปรุงห้องรับรองแขก VIP", result.Value.Title);
+        Assert.Equal(500000m, result.Value.ExpectedBudget);
+
+        // Verify privacy-safe audit event
+        var audit = await _db.AuditEvents
+            .Where(a => a.ResourceId == opp.Id.ToString() && a.Action == "opportunity.updated")
+            .OrderByDescending(a => a.OccurredAtUtc)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(audit);
+        Assert.DoesNotContain("VIP", audit.ChangesJson);
+        Assert.DoesNotContain("500000", audit.ChangesJson);
+    }
+
+    [Fact]
+    public async Task ReassignOwner_ActiveSameBranch_ChangesOwner()
+    {
+        var orgId = TestOnlyDataSeeder.TestOrgId;
+        var branchId = TestOnlyDataSeeder.TestBranchId;
+        var userId = TestOnlyDataSeeder.TestUserId;
+        var now = DateTimeOffset.UtcNow;
+
+        var c = Customer.CreateDraft(Guid.NewGuid(), orgId, userId, "organization", "บริษัท ทดสอบ Reassign", null, "th",
+            new PrimaryContactInput("นาย รีแอสไซน์", null, "0812345678", null, "phone"), now);
+        c.Activate(c.RowVersion);
+        _db.Customers.Add(c);
+
+        // Create new user & membership in same branch
+        var newOwnerUser = new User(Guid.NewGuid(), "new-owner-uid", "พนักงานขาย สอง", "owner2@example.test", isActive: true);
+        var newOwnerMembership = new Membership(Guid.NewGuid(), orgId, branchId, newOwnerUser.Id, isActive: true);
+        _db.Users.Add(newOwnerUser);
+        _db.Memberships.Add(newOwnerMembership);
+
+        var opp = Opportunity.CreateDraft(
+            Guid.NewGuid(), orgId, branchId, c.Id, null, userId, userId,
+            "งานขายที่จะเปลี่ยนเจ้าของ", null, new[] { "built-in" }, null, null, null, null, null, null, now);
+        _db.Opportunities.Add(opp);
+        await _db.SaveChangesAsync();
+
+        var initialVersion = opp.RowVersion;
+        var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, branchId, "opportunities.update", "organization");
+
+        var cmd = new ReassignOpportunityOwnerCommand(
+            "test-uid",
+            Guid.NewGuid(),
+            opp.Id,
+            initialVersion,
+            newOwnerUser.Id,
+            "key-reassign-001",
+            "trace-reassign-001");
+
+        const string keyHash = "key-hash-reassign-001";
+        const string payloadHash = "payload-hash-reassign-001";
+
+        var result = await _store.ReassignOwnerAsync(access, cmd, keyHash, payloadHash);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotEqual(initialVersion, result.Value!.RowVersion);
+        Assert.Equal(newOwnerUser.Id, result.Value.OwnerUserId);
+
+        // Verify audit log has IDs only and no PII
+        var audit = await _db.AuditEvents
+            .Where(a => a.ResourceId == opp.Id.ToString() && a.Action == "opportunity.owner-changed")
+            .FirstOrDefaultAsync();
+        Assert.NotNull(audit);
+        Assert.Contains(newOwnerUser.Id.ToString("D"), audit.ChangesJson);
+        Assert.Contains(userId.ToString("D"), audit.ChangesJson);
+        Assert.DoesNotContain("พนักงานขาย สอง", audit.ChangesJson);
+    }
 }
+

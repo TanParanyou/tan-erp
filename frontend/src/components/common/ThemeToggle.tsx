@@ -11,10 +11,15 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ className, style }: ThemeToggleProps) {
+  const [mounted, setMounted] = React.useState(false);
   const { resolvedTheme, toggleTheme } = useTheme();
   const t = useTranslations("shell");
 
-  const isDark = resolvedTheme === "dark";
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? resolvedTheme === "dark" : false;
   const label = isDark ? t("lightMode") : t("darkMode");
 
   return (

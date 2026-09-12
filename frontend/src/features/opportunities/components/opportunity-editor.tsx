@@ -10,6 +10,11 @@ import {
   CANONICAL_WORK_TYPES,
   type OpportunityFormValues,
 } from "../schemas/opportunity-form-schema";
+import {
+  CANONICAL_OPPORTUNITY_LEAD_SOURCES,
+  getOpportunityLeadSourceOptions,
+  resolveWorkTypeLabel as sharedResolveWorkTypeLabel,
+} from "../opportunity-labels";
 import { apiClient } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -27,10 +32,12 @@ import { FormContainer } from "@/components/forms/FormContainer";
 import { FormSection } from "@/components/forms/FormSection";
 import { FormActionBar } from "@/components/forms/FormActionBar";
 import { CustomerAutocomplete } from "@/components/forms/CustomerAutocomplete";
-import { CurrencySelect } from "@/components/forms/CurrencySelect";
+import { CurrencyAmountInput } from "@/components/forms/CurrencyAmountInput";
 import { SelectWithOther } from "@/components/forms/SelectWithOther";
 import { QuickNoteChips, type QuickTemplateItem } from "@/components/forms/QuickNoteChips";
+import { CustomerQuickViewDrawer } from "@/features/customers/components/customer-quick-view-drawer";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { cn } from "@/lib/utils/cn";
@@ -48,8 +55,11 @@ export function OpportunityEditor() {
   const ownerLabel = currentUser?.user?.displayName || currentUser?.user?.email || "-";
 
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const cancelConfirm = useDisclosure();
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+
+  // Customer Quick View Drawer state
+  const customerDrawer = useDisclosure<string>();
 
   // Lead source master data states
   const [selectedSourceOption, setSelectedSourceOption] = useState<string>("");
@@ -107,15 +117,27 @@ export function OpportunityEditor() {
     formState: { isSubmitting, isDirty },
   } = methods;
 
+  const watchedPrimarySiteId = watch("primarySiteId");
+
+  const selectedSite = useMemo(() => {
+    if (!watchedPrimarySiteId) return null;
+    return siteList.find((s) => s.id === watchedPrimarySiteId) ?? null;
+  }, [watchedPrimarySiteId, siteList]);
+
+  const formattedSiteAddress = useMemo(() => {
+    if (!selectedSite) return "";
+    const parts = [
+      selectedSite.addressLine1,
+      selectedSite.subdistrict,
+      selectedSite.district,
+      selectedSite.province,
+      selectedSite.postalCode,
+    ].filter(Boolean);
+    return parts.join(" ");
+  }, [selectedSite]);
+
   const leadSourceOptions = useMemo(
-    () => [
-      { value: "customer_referral", label: t("leadSourceReferral") },
-      { value: "architect_partner", label: t("leadSourcePartner") },
-      { value: "website_social", label: t("leadSourceWebsiteSocial") },
-      { value: "expo_event", label: t("leadSourceExpo") },
-      { value: "direct_sales", label: t("leadSourceDirect") },
-      { value: "other", label: t("leadSourceOther") },
-    ],
+    () => getOpportunityLeadSourceOptions(t),
     [t]
   );
 
@@ -157,24 +179,7 @@ export function OpportunityEditor() {
   );
 
   const resolveWorkTypeLabel = useCallback(
-    (wt: string): string => {
-      switch (wt) {
-        case "built-in":
-          return t("workTypeBuiltIn");
-        case "interior":
-          return t("workTypeInterior");
-        case "curtain":
-          return t("workTypeCurtain");
-        case "wallpaper":
-          return t("workTypeWallpaper");
-        case "exterior":
-          return t("workTypeExterior");
-        case "other":
-          return t("workTypeOther");
-        default:
-          return wt;
-      }
-    },
+    (wt: string): string => sharedResolveWorkTypeLabel(wt, t),
     [t]
   );
 
@@ -285,7 +290,7 @@ export function OpportunityEditor() {
           <FormContainer>
             {/* Section 1: Customer and Primary Site */}
             <FormSection title={t("sectionCustomerAndSite")}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <Controller
                   name="customerId"
                   control={control}
@@ -297,6 +302,9 @@ export function OpportunityEditor() {
                         setSelectedCustomerId(newCustomerId);
                         setValue("primarySiteId", "", { shouldValidate: true, shouldDirty: true });
                       }}
+                      onViewDrawer={(targetCustomerId) => {
+                        customerDrawer.open(targetCustomerId);
+                      }}
                       error={error?.message}
                       required
                       disabled={isSubmitting}
@@ -304,67 +312,111 @@ export function OpportunityEditor() {
                   )}
                 />
 
-                <Controller
-                  name="primarySiteId"
-                  control={control}
-                  render={({ field, fieldState: { error } }) => (
-                    <Select
-                      {...field}
-                      value={field.value ?? ""}
-                      label={t("primarySite")}
-                      error={error?.message}
-                      disabled={isSubmitting || !selectedCustomerId}
-                      options={[
-                        {
-                          value: "",
-                          label:
-                            selectedCustomerId && siteList.length === 0
-                              ? t("noSitesForCustomer")
-                              : t("primarySitePlaceholder"),
-                        },
-                        ...siteList.map((s) => ({
-                          value: s.id ?? "",
-                          label: s.label || s.addressLine1 || "-",
-                        })),
-                      ]}
-                    />
+                <div className="flex flex-col gap-2">
+                  <Controller
+                    name="primarySiteId"
+                    control={control}
+                    render={({ field, fieldState: { error } }) => (
+                      <Select
+                        {...field}
+                        value={field.value ?? ""}
+                        label={t("primarySite")}
+                        error={error?.message}
+                        disabled={isSubmitting || !selectedCustomerId}
+                        options={[
+                          {
+                            value: "",
+                            label:
+                              selectedCustomerId && siteList.length === 0
+                                ? t("noSitesForCustomer")
+                                : t("primarySitePlaceholder"),
+                          },
+                          ...siteList.map((s) => ({
+                            value: s.id ?? "",
+                            label: s.label || s.addressLine1 || "-",
+                          })),
+                        ]}
+                      />
+                    )}
+                  />
+
+                  {/* Primary Site Full Detail Snapshot Card */}
+                  {selectedSite && (
+                    <div
+                      role="region"
+                      aria-label={t("primarySite")}
+                      className="border border-erp-border bg-erp-surface-subtle p-3 text-xs flex flex-col gap-1.5 shadow-sm"
+                    >
+                      <div className="font-bold text-erp-navy flex items-center gap-1.5">
+                        <span className="font-semibold text-erp-text-main">{selectedSite.label || "-"}</span>
+                      </div>
+
+                      {formattedSiteAddress && (
+                        <div className="text-erp-text-muted leading-relaxed">
+                          <strong className="text-erp-text-main font-medium">{t("siteAddress")}</strong>{" "}
+                          <span>{formattedSiteAddress}</span>
+                        </div>
+                      )}
+
+                      {selectedSite.accessNote && (
+                        <div className="text-erp-text-muted mt-0.5 pt-1 border-t border-erp-border-subtle">
+                          <strong className="text-erp-text-main font-medium">{t("siteAccessNote")}</strong>{" "}
+                          <span>{selectedSite.accessNote}</span>
+                        </div>
+                      )}
+                    </div>
                   )}
-                />
+                </div>
               </div>
             </FormSection>
 
-            {/* Section 2: Opportunity Details */}
-            <FormSection title={t("sectionOpportunityDetail")}>
-              <Controller
-                name="title"
-                control={control}
-                render={({ field, fieldState: { error } }) => (
-                  <Input
-                    {...field}
-                    label={t("titleField")}
-                    required
-                    error={error?.message}
-                    disabled={isSubmitting}
-                    placeholder={t("titlePlaceholder")}
+            {/* Section 2: Project & Scope Details */}
+            <FormSection title={t("sectionProjectAndScope")}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                <div className="md:col-span-2">
+                  <Controller
+                    name="title"
+                    control={control}
+                    render={({ field, fieldState: { error } }) => (
+                      <Input
+                        {...field}
+                        label={t("titleField")}
+                        required
+                        error={error?.message}
+                        disabled={isSubmitting}
+                        placeholder={t("titlePlaceholder")}
+                      />
+                    )}
                   />
-                )}
-              />
+                </div>
 
-              <Controller
-                name="scopeSummary"
-                control={control}
-                render={({ field, fieldState: { error } }) => (
-                  <Textarea
-                    {...field}
-                    value={field.value ?? ""}
-                    label={t("scopeSummary")}
-                    error={error?.message}
-                    disabled={isSubmitting}
-                    rows={3}
-                    placeholder={t("scopeSummaryPlaceholder")}
+                <div className="md:col-span-1">
+                  <Controller
+                    name="sourceCode"
+                    control={control}
+                    render={({ fieldState: { error } }) => (
+                      <SelectWithOther
+                        selectProps={{
+                          label: t("sourceCode"),
+                          value: selectedSourceOption,
+                          placeholder: t("sourceSelectPlaceholder"),
+                          options: leadSourceOptions,
+                          error: error?.message,
+                          disabled: isSubmitting,
+                          onChange: (e) => handleSourceSelect(e.target.value),
+                        }}
+                        otherProps={{
+                          placeholder: t("sourceOtherDetailPlaceholder"),
+                          value: otherSourceDetail,
+                          disabled: isSubmitting,
+                          onChange: (e) => handleOtherSourceChange(e.target.value),
+                        }}
+                        triggerValue="other"
+                      />
+                    )}
                   />
-                )}
-              />
+                </div>
+              </div>
 
               {/* Work Types Multi-select Checkboxes with Controller & Error */}
               <Controller
@@ -415,91 +467,70 @@ export function OpportunityEditor() {
                 }}
               />
 
-              {/* Source, Budget, Currency, Target Decision Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-start">
-                <Controller
-                  name="sourceCode"
-                  control={control}
-                  render={({ fieldState: { error } }) => (
-                    <SelectWithOther
-                      selectProps={{
-                        label: t("sourceCode"),
-                        value: selectedSourceOption,
-                        placeholder: t("sourceSelectPlaceholder"),
-                        options: leadSourceOptions,
-                        error: error?.message,
-                        disabled: isSubmitting,
-                        onChange: (e) => handleSourceSelect(e.target.value),
-                      }}
-                      otherProps={{
-                        placeholder: t("sourceOtherDetailPlaceholder"),
-                        value: otherSourceDetail,
-                        disabled: isSubmitting,
-                        onChange: (e) => handleOtherSourceChange(e.target.value),
-                      }}
-                      triggerValue="other"
-                    />
-                  )}
-                />
+              <Controller
+                name="scopeSummary"
+                control={control}
+                render={({ field, fieldState: { error } }) => (
+                  <Textarea
+                    {...field}
+                    value={field.value ?? ""}
+                    label={t("scopeSummary")}
+                    error={error?.message}
+                    disabled={isSubmitting}
+                    rows={3}
+                    placeholder={t("scopeSummaryPlaceholder")}
+                  />
+                )}
+              />
+            </FormSection>
 
+            {/* Section 3: Budget & Decision Timeline */}
+            <FormSection title={t("sectionCommercialAndTimeline")}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <Controller
                   name="expectedBudget"
                   control={control}
-                  render={({ field, fieldState: { error } }) => (
-                    <Input
-                      {...field}
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={field.value === undefined || field.value === null ? "" : field.value}
-                      onKeyDown={(e) => {
-                        // Prevent typing negative sign or scientific notation
-                        if (e.key === "-" || e.key === "e" || e.key === "E") {
-                          e.preventDefault();
-                        }
-                      }}
-                      onChange={(e) => {
-                        const val = e.target.value === "" ? undefined : Number(e.target.value);
-                        field.onChange(val);
-                      }}
-                      label={t("expectedBudget")}
-                      error={error?.message}
-                      disabled={isSubmitting}
-                      placeholder="0.00"
+                  render={({ field: budgetField, fieldState: { error: budgetError } }) => (
+                    <Controller
+                      name="currencyCode"
+                      control={control}
+                      render={({ field: currencyField, fieldState: { error: currencyError } }) => (
+                        <CurrencyAmountInput
+                          label={t("expectedBudget")}
+                          amountValue={budgetField.value}
+                          onAmountChange={budgetField.onChange}
+                          currencyValue={currencyField.value ?? "THB"}
+                          onCurrencyChange={currencyField.onChange}
+                          amountError={budgetError?.message}
+                          currencyError={currencyError?.message}
+                          disabled={isSubmitting}
+                          placeholder="0.00"
+                        />
+                      )}
                     />
                   )}
                 />
 
-                <Controller
-                  name="currencyCode"
-                  control={control}
-                  render={({ field, fieldState: { error } }) => (
-                    <CurrencySelect
-                      {...field}
-                      value={field.value ?? "THB"}
-                      label={t("currencyCode")}
-                      error={error?.message}
-                      disabled={isSubmitting}
-                    />
-                  )}
-                />
-
-                <Controller
-                  name="targetDecisionDate"
-                  control={control}
-                  render={({ field, fieldState: { error } }) => (
-                    <DatePicker
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      label={t("targetDecisionDate")}
-                      error={error?.message}
-                      disabled={isSubmitting}
-                    />
-                  )}
-                />
+                <div>
+                  <Controller
+                    name="targetDecisionDate"
+                    control={control}
+                    render={({ field, fieldState: { error } }) => (
+                      <DatePicker
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        label={t("targetDecisionDate")}
+                        error={error?.message}
+                        disabled={isSubmitting}
+                      />
+                    )}
+                  />
+                </div>
               </div>
+            </FormSection>
 
-              {/* Next Action Datetime & Note */}
+            {/* Section 4: Follow-up & Next Action */}
+            <FormSection title={t("sectionFollowUpAndNextAction")}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <Controller
                   name="nextActionAtUtc"
@@ -548,7 +579,7 @@ export function OpportunityEditor() {
               saveText={t("saveOpportunity")}
               onCancel={() => {
                 if (isDirty) {
-                  setShowCancelConfirm(true);
+                  cancelConfirm.open();
                 } else {
                   router.push(`/${locale}/opportunities`);
                 }
@@ -558,17 +589,24 @@ export function OpportunityEditor() {
         </form>
 
         <ConfirmationModal
-          isOpen={showCancelConfirm}
+          isOpen={cancelConfirm.isOpen}
           title={tCommon("dialog.confirmCancelTitle")}
           message={tCommon("dialog.confirmCancelDesc")}
           confirmText={tCommon("actions.confirm")}
           cancelText={tCommon("actions.cancel")}
           variant="warning"
           onConfirm={() => {
-            setShowCancelConfirm(false);
+            cancelConfirm.close();
             router.push(`/${locale}/opportunities`);
           }}
-          onClose={() => setShowCancelConfirm(false)}
+          onClose={cancelConfirm.close}
+        />
+
+        {/* Customer Quick View Drawer */}
+        <CustomerQuickViewDrawer
+          customerId={customerDrawer.data}
+          isOpen={customerDrawer.isOpen}
+          onClose={customerDrawer.close}
         />
       </div>
     </FormProvider>

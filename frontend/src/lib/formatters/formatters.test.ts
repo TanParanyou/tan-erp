@@ -24,6 +24,8 @@ describe("formatters utils", () => {
       const d = "2026-09-08T00:00:00Z";
       expect(formatDate(d, "th")).toContain("2569");
       expect(formatDate(d, "en")).toContain("2026");
+      expect(formatDate("2026-10-15", "th")).toContain("2569");
+      expect(formatDate("2026-10-15", "en")).toContain("2026");
     });
 
     it("formats date ranges", () => {

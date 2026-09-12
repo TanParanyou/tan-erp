@@ -6,6 +6,9 @@ using TanErp.Application.Crm.Opportunities.CreateOpportunity;
 using TanErp.Application.Crm.Opportunities.GetOpportunity;
 using TanErp.Application.Crm.Opportunities.ListOpportunities;
 using TanErp.Application.Crm.Opportunities.QualifyOpportunity;
+using TanErp.Application.Crm.Opportunities.UpdateDraftQGate;
+using TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity;
+using TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner;
 using TanErp.Domain.Crm.Opportunities;
 using Xunit;
 
@@ -101,6 +104,60 @@ public class OpportunityHandlerTests
             LastPayloadHash = payloadHash;
             return Task.FromResult(QualifyResult);
         }
+
+        public UpdateDraftQGateCommand? LastUpdateDraftQGateCommand { get; private set; }
+        public int UpdateDraftQGateCallCount { get; private set; }
+        public Result<OpportunityProjection> UpdateDraftQGateResult { get; set; } = Result<OpportunityProjection>.Failure(new Error("UNSET", "Unset"));
+
+        public Task<Result<OpportunityProjection>> UpdateDraftQGateAsync(
+            RequestAccessContext access,
+            UpdateDraftQGateCommand command,
+            string keyHash,
+            string payloadHash,
+            CancellationToken cancellationToken = default)
+        {
+            UpdateDraftQGateCallCount++;
+            LastUpdateDraftQGateCommand = command;
+            LastKeyHash = keyHash;
+            LastPayloadHash = payloadHash;
+            return Task.FromResult(UpdateDraftQGateResult);
+        }
+
+        public UpdateOpenOpportunityCommand? LastUpdateOpenCommand { get; private set; }
+        public int UpdateOpenCallCount { get; private set; }
+        public Result<OpportunityProjection> UpdateOpenResult { get; set; } = Result<OpportunityProjection>.Failure(new Error("UNSET", "Unset"));
+
+        public Task<Result<OpportunityProjection>> UpdateOpenAsync(
+            RequestAccessContext access,
+            UpdateOpenOpportunityCommand command,
+            string keyHash,
+            string payloadHash,
+            CancellationToken cancellationToken = default)
+        {
+            UpdateOpenCallCount++;
+            LastUpdateOpenCommand = command;
+            LastKeyHash = keyHash;
+            LastPayloadHash = payloadHash;
+            return Task.FromResult(UpdateOpenResult);
+        }
+
+        public ReassignOpportunityOwnerCommand? LastReassignOwnerCommand { get; private set; }
+        public int ReassignOwnerCallCount { get; private set; }
+        public Result<OpportunityProjection> ReassignOwnerResult { get; set; } = Result<OpportunityProjection>.Failure(new Error("UNSET", "Unset"));
+
+        public Task<Result<OpportunityProjection>> ReassignOwnerAsync(
+            RequestAccessContext access,
+            ReassignOpportunityOwnerCommand command,
+            string keyHash,
+            string payloadHash,
+            CancellationToken cancellationToken = default)
+        {
+            ReassignOwnerCallCount++;
+            LastReassignOwnerCommand = command;
+            LastKeyHash = keyHash;
+            LastPayloadHash = payloadHash;
+            return Task.FromResult(ReassignOwnerResult);
+        }
     }
 
     private readonly FakeRequestAccessResolver _accessResolver = new();
@@ -110,6 +167,9 @@ public class OpportunityHandlerTests
     private ListOpportunitiesHandler ListHandler() => new(_accessResolver, _store);
     private GetOpportunityHandler GetHandler() => new(_accessResolver, _store);
     private QualifyOpportunityHandler QualifyHandler() => new(_accessResolver, _store);
+    private UpdateDraftQGateHandler UpdateDraftQGateHandler() => new(_accessResolver, _store);
+    private UpdateOpenOpportunityHandler UpdateOpenHandler() => new(_accessResolver, _store);
+    private ReassignOpportunityOwnerHandler ReassignOwnerHandler() => new(_accessResolver, _store);
 
     [Fact]
     public async Task Create_PermissionDenied_ReturnsFailureAndDoesNotCallStore()
@@ -361,4 +421,132 @@ public class OpportunityHandlerTests
         Assert.False(string.IsNullOrWhiteSpace(_store.LastKeyHash));
         Assert.False(string.IsNullOrWhiteSpace(_store.LastPayloadHash));
     }
+
+    [Fact]
+    public async Task UpdateDraftQGateHandler_ValidRequest_ResolvesUpdatePermissionAndPersists()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.update");
+        _accessResolver.BranchId = Guid.NewGuid();
+
+        var oppId = Guid.NewGuid();
+        var version = Guid.NewGuid();
+        var proj = new OpportunityProjection(
+            oppId, "OPP-02", Guid.NewGuid(), null, Guid.NewGuid(), Guid.NewGuid(),
+            "Title", "Scope Summary", new[] { "built-in" }, null, null, null, null,
+            DateTimeOffset.UtcNow.AddDays(1), "Call client",
+            OpportunityStage.Draft, Guid.NewGuid(), DateTimeOffset.UtcNow);
+        _store.UpdateDraftQGateResult = Result<OpportunityProjection>.Success(proj);
+
+        var actionDate = DateTimeOffset.UtcNow.AddDays(1);
+        var cmd = new UpdateDraftQGateCommand(
+            "test-uid",
+            Guid.NewGuid(),
+            oppId,
+            version,
+            "  Scope Summary  ",
+            new[] { "built-in" },
+            actionDate,
+            "  Call client  ",
+            "key-update-12345678",
+            "trace-u");
+
+        var handler = UpdateDraftQGateHandler();
+        var result = await handler.Handle(cmd);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _store.UpdateDraftQGateCallCount);
+        Assert.Equal("opportunities.update", _accessResolver.LastPermissionKey);
+        Assert.NotNull(_store.LastUpdateDraftQGateCommand);
+        Assert.Equal("Scope Summary", _store.LastUpdateDraftQGateCommand!.ScopeSummary);
+        Assert.Equal("Call client", _store.LastUpdateDraftQGateCommand.NextActionNote);
+        Assert.Equal(actionDate, _store.LastUpdateDraftQGateCommand.NextActionAtUtc);
+        Assert.Equal(new[] { "built-in" }, _store.LastUpdateDraftQGateCommand.WorkTypes);
+        Assert.False(string.IsNullOrWhiteSpace(_store.LastKeyHash));
+        Assert.False(string.IsNullOrWhiteSpace(_store.LastPayloadHash));
+    }
+
+    [Fact]
+    public async Task UpdateOpenOpportunity_ValidRequest_PersistsAudit()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.update");
+        _accessResolver.BranchId = Guid.NewGuid();
+
+        var oppId = Guid.NewGuid();
+        var version = Guid.NewGuid();
+        var proj = new OpportunityProjection(
+            oppId, "OPP-03", Guid.NewGuid(), null, Guid.NewGuid(), Guid.NewGuid(),
+            "Title Open", "Scope Open", new[] { "built-in" }, "referral", 250000m, "THB",
+            new DateOnly(2026, 12, 1), DateTimeOffset.UtcNow.AddDays(3), "Followup",
+            OpportunityStage.Qualified, Guid.NewGuid(), DateTimeOffset.UtcNow);
+        _store.UpdateOpenResult = Result<OpportunityProjection>.Success(proj);
+
+        var actionDate = DateTimeOffset.UtcNow.AddDays(3);
+        var cmd = new UpdateOpenOpportunityCommand(
+            "test-uid",
+            Guid.NewGuid(),
+            oppId,
+            version,
+            "  Title Open  ",
+            null,
+            "  Scope Open  ",
+            new[] { "built-in" },
+            "referral",
+            250000m,
+            "THB",
+            new DateOnly(2026, 12, 1),
+            actionDate,
+            "  Followup  ",
+            "key-open-12345678",
+            "trace-o");
+
+        var handler = UpdateOpenHandler();
+        var result = await handler.Handle(cmd);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _store.UpdateOpenCallCount);
+        Assert.Equal("opportunities.update", _accessResolver.LastPermissionKey);
+        Assert.NotNull(_store.LastUpdateOpenCommand);
+        Assert.Equal("Title Open", _store.LastUpdateOpenCommand!.Title);
+        Assert.Equal("Scope Open", _store.LastUpdateOpenCommand.ScopeSummary);
+        Assert.Equal(250000m, _store.LastUpdateOpenCommand.ExpectedBudget);
+        Assert.False(string.IsNullOrWhiteSpace(_store.LastKeyHash));
+        Assert.False(string.IsNullOrWhiteSpace(_store.LastPayloadHash));
+    }
+
+    [Fact]
+    public async Task ReassignOpportunityOwnerHandler_ValidRequest_ResolvesUpdatePermissionAndPersists()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.update");
+        _accessResolver.BranchId = Guid.NewGuid();
+
+        var oppId = Guid.NewGuid();
+        var version = Guid.NewGuid();
+        var targetOwnerId = Guid.NewGuid();
+        var proj = new OpportunityProjection(
+            oppId, "OPP-04", Guid.NewGuid(), null, Guid.NewGuid(), targetOwnerId,
+            "Title", null, new[] { "built-in" }, null, null, null, null, null, null,
+            OpportunityStage.Draft, Guid.NewGuid(), DateTimeOffset.UtcNow);
+        _store.ReassignOwnerResult = Result<OpportunityProjection>.Success(proj);
+
+        var cmd = new ReassignOpportunityOwnerCommand(
+            "test-uid",
+            Guid.NewGuid(),
+            oppId,
+            version,
+            targetOwnerId,
+            "key-reassign-12345678",
+            "trace-r");
+
+        var handler = ReassignOwnerHandler();
+        var result = await handler.Handle(cmd);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _store.ReassignOwnerCallCount);
+        Assert.Equal("opportunities.update", _accessResolver.LastPermissionKey);
+        Assert.NotNull(_store.LastReassignOwnerCommand);
+        Assert.Equal(targetOwnerId, _store.LastReassignOwnerCommand!.TargetOwnerUserId);
+        Assert.False(string.IsNullOrWhiteSpace(_store.LastKeyHash));
+        Assert.False(string.IsNullOrWhiteSpace(_store.LastPayloadHash));
+    }
 }
+

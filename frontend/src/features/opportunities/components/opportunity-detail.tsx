@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useOpportunityDetail, useQualifyOpportunity } from "../api/opportunity-queries";
 import { useCustomerDetail } from "@/features/customers/api/customer-queries";
+import { CustomerQuickViewDrawer } from "@/features/customers/components/customer-quick-view-drawer";
 import { useCustomerSiteList } from "@/features/sites/api/site-queries";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can, PERMISSIONS } from "@/lib/permissions/can";
 import { ApiError } from "@/lib/api/api-error";
 import { useToast } from "@/hooks/useToast";
+import { useDisclosure } from "@/hooks/useDisclosure";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
@@ -17,7 +18,11 @@ import { IconChevronLeft, IconAlertCircle, IconBriefcase, IconCheckCircle } from
 import { EntityDetailHeader } from "@/components/ui/EntityDetailHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
-import { getOpportunityStageLabelKey, getWorkTypeLabelKey } from "../opportunity-labels";
+import { formatDate, formatDateTime } from "@/lib/formatters/formatters";
+import { getOpportunityStageLabelKey, resolveWorkTypeLabel } from "../opportunity-labels";
+import { OpportunityQGateEditor } from "./opportunity-q-gate-editor";
+import { OpportunityOwnerReassignModal } from "./opportunity-owner-reassign-modal";
+import { OpportunityOpenEditorDrawer } from "./opportunity-open-editor-drawer";
 
 interface QualificationIntent {
   idempotencyKey: string;
@@ -36,8 +41,16 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const { toast } = useToast();
   const { selectedMembership } = useSelectedMembership();
 
-  const [showQualifyModal, setShowQualifyModal] = useState(false);
+  const qualifyModal = useDisclosure({
+    onClose: () => {
+      setQualifyModalError(null);
+      qualificationIntentRef.current = null;
+    },
+  });
+  const reassignModal = useDisclosure();
+  const editDrawer = useDisclosure();
   const [qualifyModalError, setQualifyModalError] = useState<string | null>(null);
+  const customerDrawer = useDisclosure();
 
   const qualificationIntentRef = useRef<QualificationIntent | null>(null);
 
@@ -107,30 +120,17 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
     }
   };
 
-  const resolveWorkTypeLabel = (wt: string): string => {
-    const key = getWorkTypeLabelKey(wt);
-    if (!key) return wt;
-    switch (key) {
-      case "built-in":
-        return t("workTypeBuiltIn");
-      case "interior":
-        return t("workTypeInterior");
-      case "curtain":
-        return t("workTypeCurtain");
-      case "wallpaper":
-        return t("workTypeWallpaper");
-      case "exterior":
-        return t("workTypeExterior");
-      case "other":
-        return t("workTypeOther");
-      default:
-        return wt;
-    }
-  };
-
   const isDraft = opportunity?.stage === "draft";
+  const isOpen =
+    opportunity?.stage === "draft" ||
+    opportunity?.stage === "qualified" ||
+    opportunity?.stage === "surveying" ||
+    opportunity?.stage === "estimating" ||
+    opportunity?.stage === "proposed";
   const canTransition = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_TRANSITION);
+  const canUpdate = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_UPDATE);
   const canQualify = isDraft && canTransition;
+  const canReassign = isOpen && canUpdate;
 
   // Q-gate verification checklist
   const hasScopeSummary = Boolean(opportunity?.scopeSummary && opportunity.scopeSummary.trim().length > 0);
@@ -144,14 +144,12 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
   const handleOpenQualifyModal = () => {
     setQualifyModalError(null);
-    setShowQualifyModal(true);
+    qualifyModal.open();
   };
 
   const handleCloseQualifyModal = () => {
     if (qualifyMutation.isPending) return;
-    setShowQualifyModal(false);
-    setQualifyModalError(null);
-    qualificationIntentRef.current = null;
+    qualifyModal.close();
   };
 
   const handleConfirmQualify = async () => {
@@ -184,7 +182,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
       });
 
       qualificationIntentRef.current = null;
-      setShowQualifyModal(false);
+      qualifyModal.close();
       toast.success(t("qualifySuccess"));
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -300,40 +298,90 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
           },
           {
             label: t("customer"),
-            value: customer
-              ? customer.displayNameTh || customer.displayNameEn || customer.code || "-"
-              : opportunity.customerId || "-",
+            value: opportunity.customerId ? (
+              <button
+                type="button"
+                onClick={() => customerDrawer.open()}
+                className="font-semibold text-erp-navy hover:underline text-left cursor-pointer truncate max-w-full inline-block focus-visible:outline-2 focus-visible:outline-erp-navy bg-transparent border-0 p-0 text-sm"
+                title={
+                  customer
+                    ? customer.displayNameTh || customer.displayNameEn || customer.code || ""
+                    : opportunity.customerId
+                }
+              >
+                {customer
+                  ? customer.displayNameTh || customer.displayNameEn || customer.code || "-"
+                  : opportunity.customerId}
+              </button>
+            ) : (
+              "-"
+            ),
           },
           {
             label: t("targetDecisionDate"),
-            value: opportunity.targetDecisionDate || "-",
+            value: formatDate(opportunity.targetDecisionDate, locale),
             isMono: true,
           },
           {
             label: t("nextActionAt"),
-            value: opportunity.nextActionAtUtc
-              ? new Date(opportunity.nextActionAtUtc).toLocaleDateString(
-                  locale === "th" ? "th-TH" : "en-US"
-                )
-              : "-",
+            value: formatDateTime(opportunity.nextActionAtUtc, locale),
+            isMono: true,
           },
         ]}
         actions={
-          canQualify ? (
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleOpenQualifyModal}
-              className="font-semibold"
-            >
-              {t("qualifyAction")}
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            {canReassign && (
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => editDrawer.open()}
+                className="font-semibold"
+              >
+                {t("editOpportunityAction")}
+              </Button>
+            )}
+            {canReassign && (
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => reassignModal.open()}
+                className="font-semibold"
+              >
+                {t("reassignOwnerAction")}
+              </Button>
+            )}
+            {canQualify && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleOpenQualifyModal}
+                className="font-semibold"
+              >
+                {t("qualifyAction")}
+              </Button>
+            )}
+          </div>
         }
       />
 
+      {canReassign && (
+        <OpportunityOpenEditorDrawer
+          isOpen={editDrawer.isOpen}
+          onClose={editDrawer.close}
+          opportunity={opportunity}
+        />
+      )}
+
+      {canReassign && (
+        <OpportunityOwnerReassignModal
+          isOpen={reassignModal.isOpen}
+          onClose={reassignModal.close}
+          opportunity={opportunity}
+        />
+      )}
+
       <ConfirmationModal
-        isOpen={showQualifyModal}
+        isOpen={qualifyModal.isOpen}
         onClose={handleCloseQualifyModal}
         onConfirm={handleConfirmQualify}
         title={t("qualifyModalTitle")}
@@ -376,6 +424,13 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         </div>
       )}
 
+      {/* Inline Q-Gate Editor for Draft Opportunities */}
+      {isDraft && canUpdate && (
+        <OpportunityQGateEditor
+          opportunity={opportunity}
+        />
+      )}
+
       {/* Scope and Customer Information */}
       <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0, borderBottom: "1px solid var(--erp-border-subtle)", paddingBottom: "0.75rem" }}>
@@ -385,16 +440,23 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         <dl className="erp-dl">
           <dt>{t("customer")}:</dt>
           <dd>
-            {customer ? (
-              <Link
-                href={`/${locale}/customers/${customer.id}`}
-                style={{ fontWeight: 600, color: "var(--erp-navy)", textDecoration: "none" }}
+            {opportunity.customerId ? (
+              <button
+                type="button"
+                onClick={() => customerDrawer.open()}
+                className="font-semibold text-erp-navy hover:underline text-left cursor-pointer inline-flex items-center gap-1 focus-visible:outline-2 focus-visible:outline-erp-navy bg-transparent border-0 p-0 text-sm"
               >
-                {customer.code ? `[${customer.code}] ` : ""}
-                {customer.displayNameTh || customer.displayNameEn || "-"}
-              </Link>
+                {customer ? (
+                  <>
+                    {customer.code ? `[${customer.code}] ` : ""}
+                    {customer.displayNameTh || customer.displayNameEn || "-"}
+                  </>
+                ) : (
+                  <span className="font-mono">{opportunity.customerId}</span>
+                )}
+              </button>
             ) : (
-              <span style={{ fontFamily: "monospace" }}>{opportunity.customerId}</span>
+              <span className="text-erp-text-muted">-</span>
             )}
           </dd>
 
@@ -429,7 +491,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                       backgroundColor: "var(--erp-surface)",
                     }}
                   >
-                    {resolveWorkTypeLabel(wt)}
+                    {resolveWorkTypeLabel(wt, t)}
                   </span>
                 ))
               ) : (
@@ -456,13 +518,13 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
           <dd>{opportunity.sourceCode || "-"}</dd>
 
           <dt>{t("targetDecisionDate")}:</dt>
-          <dd>{opportunity.targetDecisionDate || "-"}</dd>
+          <dd className="font-mono">{formatDate(opportunity.targetDecisionDate, locale)}</dd>
 
           <dt>{t("nextActionAt")}:</dt>
           <dd>
             {opportunity.nextActionAtUtc ? (
               <div>
-                <div>{new Date(opportunity.nextActionAtUtc).toLocaleString(locale === "th" ? "th-TH" : "en-US")}</div>
+                <div className="font-mono">{formatDateTime(opportunity.nextActionAtUtc, locale)}</div>
                 {opportunity.nextActionNote && (
                   <div style={{ color: "var(--erp-text-muted)", fontSize: "0.8125rem", marginTop: "0.25rem" }}>
                     {opportunity.nextActionNote}
@@ -475,13 +537,17 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
           </dd>
 
           <dt>{t("createdAt")}:</dt>
-          <dd>
-            {opportunity.createdAtUtc
-              ? new Date(opportunity.createdAtUtc).toLocaleString(locale === "th" ? "th-TH" : "en-US")
-              : "-"}
+          <dd className="font-mono">
+            {formatDateTime(opportunity.createdAtUtc, locale)}
           </dd>
         </dl>
       </div>
+
+      <CustomerQuickViewDrawer
+        customerId={opportunity.customerId ?? null}
+        isOpen={customerDrawer.isOpen}
+        onClose={customerDrawer.close}
+      />
     </div>
   );
 }

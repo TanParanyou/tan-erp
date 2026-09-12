@@ -3,6 +3,8 @@ using TanErp.Application.Common.Results;
 using TanErp.Application.Crm.Opportunities.CreateOpportunity;
 using TanErp.Application.Crm.Opportunities.QualifyOpportunity;
 
+using TanErp.Application.Crm.Opportunities.UpdateDraftQGate;
+
 namespace TanErp.Application.Crm.Opportunities;
 
 public sealed record OpportunityListFilter(
@@ -28,6 +30,27 @@ public interface IOpportunityStore
     Task<Result<OpportunityProjection>> QualifyAsync(
         RequestAccessContext access,
         QualifyOpportunityCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OpportunityProjection>> UpdateDraftQGateAsync(
+        RequestAccessContext access,
+        UpdateDraftQGateCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OpportunityProjection>> UpdateOpenAsync(
+        RequestAccessContext access,
+        UpdateOpenOpportunity.UpdateOpenOpportunityCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<OpportunityProjection>> ReassignOwnerAsync(
+        RequestAccessContext access,
+        ReassignOpportunityOwner.ReassignOpportunityOwnerCommand command,
         string keyHash,
         string payloadHash,
         CancellationToken cancellationToken = default);
