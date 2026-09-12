@@ -28,7 +28,7 @@ export function PageHeader({
   const t = useTranslations("shell");
 
   return (
-    <div className={`mb-6 ${className}`}>
+    <div className={`${className}`}>
       {/* 2-Tier Architecture: Breadcrumbs (Tier 1) */}
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav

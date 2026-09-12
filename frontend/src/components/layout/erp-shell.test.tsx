@@ -139,6 +139,7 @@ describe("ErpShell Component", () => {
   });
 
   it("toggles mobile navigation menu when hamburger button is clicked", () => {
+    Object.defineProperty(window, "innerWidth", { writable: true, configurable: true, value: 375 });
     renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
 
     const menuButton = screen.getByRole("button", { name: "เปิด/ปิดเมนู" });

@@ -17,6 +17,9 @@ import {
   IconLogOut,
   IconGlobe,
   IconBriefcase,
+  IconUser,
+  IconBuilding,
+  IconGitBranch,
 } from "@/components/common/Icons";
 import { LogoIcon } from "@/components/common/Logo";
 import { Button } from "@/components/ui/Button";
@@ -75,8 +78,11 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
             type="button"
             className="erp-header-toggle-btn"
             onClick={() => {
-              setIsMobileMenuOpen((prev) => !prev);
-              setIsSidebarCollapsed((prev) => !prev);
+              if (typeof window !== "undefined" && window.innerWidth <= 768) {
+                setIsMobileMenuOpen((prev) => !prev);
+              } else {
+                setIsSidebarCollapsed((prev) => !prev);
+              }
             }}
             aria-label={tShell("toggleMenu")}
             aria-expanded={isMobileMenuOpen}
@@ -206,28 +212,100 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
 
           {/* Mobile-only Context & User Info */}
           <div className="erp-drawer-context">
-            <div>
-              <span style={{ color: "var(--erp-text-muted)", fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 700 }}>
-                {tShell("user")}
-              </span>
-              <div style={{ fontWeight: 600, color: "var(--erp-text-main)", marginTop: "0.125rem" }}>
-                {user?.displayName || user?.email || "-"}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  backgroundColor: "var(--erp-surface)",
+                  border: "1px solid var(--erp-border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--erp-navy)",
+                  flexShrink: 0,
+                }}
+                aria-label={tShell("user")}
+                title={tShell("user")}
+              >
+                <IconUser size={20} />
               </div>
-              {user?.email && user?.displayName && (
-                <div style={{ color: "var(--erp-text-muted)", fontSize: "0.75rem" }}>
-                  {user.email}
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontWeight: 600, color: "var(--erp-text-main)", fontSize: "0.875rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user?.displayName || user?.email || "-"}
                 </div>
-              )}
+                {user?.email && user?.displayName && (
+                  <div style={{ color: "var(--erp-text-muted)", fontSize: "0.75rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {user.email}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div style={{ borderTop: "1px dashed var(--erp-border)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
-              <div>
-                <strong style={{ color: "var(--erp-text-muted)" }}>{tShell("organization")}:</strong>{" "}
-                <span style={{ color: "var(--erp-text-main)", fontWeight: 600 }}>{orgName}</span>
+            <div
+              style={{
+                borderTop: "1px solid var(--erp-border-subtle)",
+                paddingTop: "0.625rem",
+                marginTop: "0.125rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.625rem", fontSize: "0.8125rem" }}
+                title={`${tShell("organization")}: ${orgName}`}
+              >
+                <span
+                  style={{
+                    color: "var(--erp-text-muted)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    flexShrink: 0,
+                  }}
+                  aria-label={tShell("organization")}
+                >
+                  <IconBuilding size={16} />
+                </span>
+                <span
+                  style={{
+                    color: "var(--erp-text-main)",
+                    fontWeight: 500,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {orgName}
+                </span>
               </div>
-              <div>
-                <strong style={{ color: "var(--erp-text-muted)" }}>{tShell("branch")}:</strong>{" "}
-                <span style={{ color: "var(--erp-text-main)", fontWeight: 600 }}>{branchName}</span>
+
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.625rem", fontSize: "0.8125rem" }}
+                title={`${tShell("branch")}: ${branchName}`}
+              >
+                <span
+                  style={{
+                    color: "var(--erp-text-muted)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    flexShrink: 0,
+                  }}
+                  aria-label={tShell("branch")}
+                >
+                  <IconGitBranch size={16} />
+                </span>
+                <span
+                  style={{
+                    color: "var(--erp-text-muted)",
+                    fontSize: "0.8125rem",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {branchName}
+                </span>
               </div>
             </div>
           </div>
