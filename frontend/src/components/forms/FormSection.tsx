@@ -38,19 +38,19 @@ export function FormSection({
 
   return (
     <div
-      className={cn("erp-card p-6 flex flex-col gap-5", className)}
+      className={cn("erp-card p-4 sm:p-6 flex flex-col gap-4 sm:gap-5", className)}
       {...props}
     >
       {hasHeader && (
         <div
           className={cn(
-            "flex items-center justify-between border-b border-erp-border-subtle pb-3 gap-3",
+            "flex flex-col sm:flex-row sm:items-center justify-between border-b border-erp-border-subtle pb-3 gap-2.5 sm:gap-3",
             headerClassName
           )}
         >
           <div className="flex flex-col gap-1 min-w-0">
             {title && (
-              <h2 className="text-base font-bold text-erp-navy m-0 tracking-wide uppercase truncate">
+              <h2 className="text-sm sm:text-base font-bold text-erp-navy m-0 tracking-wide uppercase truncate">
                 {title}
               </h2>
             )}
@@ -62,14 +62,14 @@ export function FormSection({
           </div>
 
           {headerAction && (
-            <div className="shrink-0 flex items-center gap-2">
+            <div className="shrink-0 flex items-center gap-2 self-start sm:self-auto">
               {headerAction}
             </div>
           )}
         </div>
       )}
 
-      <div className={cn("flex flex-col gap-5", contentClassName)}>
+      <div className={cn("flex flex-col gap-4 sm:gap-5", contentClassName)}>
         {children}
       </div>
     </div>
