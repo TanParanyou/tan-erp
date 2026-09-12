@@ -457,3 +457,74 @@ export function IconPhone({ size = 18, strokeWidth = 2, ...props }: IconProps) {
   );
 }
 
+export function IconChevronDown({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+export function IconGrid({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
+  );
+}
+
+export function IconList({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <line x1="8" y1="6" x2="21" y2="6" />
+      <line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" />
+      <line x1="3" y1="12" x2="3.01" y2="12" />
+      <line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  );
+}
+
+export function IconUser({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+export function IconBuilding({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <rect x="4" y="2" width="16" height="20" />
+      <line x1="9" y1="22" x2="9" y2="18" />
+      <line x1="15" y1="22" x2="15" y2="18" />
+      <line x1="9" y1="18" x2="15" y2="18" />
+      <line x1="8" y1="6" x2="10" y2="6" />
+      <line x1="14" y1="6" x2="16" y2="6" />
+      <line x1="8" y1="10" x2="10" y2="10" />
+      <line x1="14" y1="10" x2="16" y2="10" />
+      <line x1="8" y1="14" x2="10" y2="14" />
+      <line x1="14" y1="14" x2="16" y2="14" />
+    </svg>
+  );
+}
+
+export function IconGitBranch({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <line x1="6" y1="3" x2="6" y2="15" />
+      <circle cx="18" cy="6" r="3" />
+      <circle cx="6" cy="18" r="3" />
+      <path d="M18 9a9 9 0 0 1-9 9" />
+    </svg>
+  );
+}
+
+
+
