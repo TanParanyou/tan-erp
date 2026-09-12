@@ -19,3 +19,19 @@ export function getMessages(locale: SupportedLocale): typeof thMessages {
 }
 
 export type Messages = typeof thMessages;
+
+export type LocalizedText = {
+  th?: string;
+  en?: string;
+  [key: string]: string | undefined;
+};
+
+export function getLocalizedText(
+  obj: LocalizedText | string | null | undefined,
+  locale: string = defaultLocale
+): string {
+  if (!obj) return "";
+  if (typeof obj === "string") return obj;
+  return obj[locale] || obj[defaultLocale] || obj.en || Object.values(obj)[0] || "";
+}
+

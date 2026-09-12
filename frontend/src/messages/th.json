@@ -486,6 +486,29 @@
       "activeCustomerRequired": "โอกาสทางการขายต้องสร้างให้ลูกค้าที่มีสถานะเปิดใช้งานแล้วเท่านั้น",
       "qualifyConflict": "ข้อมูลโอกาสทางการขายถูกแก้ไขโดยผู้อื่นแล้ว กรุณารีเฟรชและทำรายการใหม่",
       "qualifyInvalidTransition": "ไม่สามารถเปลี่ยนขั้นตอนได้เนื่องจากสถานะปัจจุบันไม่ถูกต้องหรือยังไม่ผ่านเกณฑ์"
-    }
+    },
+    "sectionCustomerAndSite": "1. ข้อมูลลูกค้าและสถานที่ตั้งหลัก",
+    "sectionOpportunityDetail": "2. รายละเอียดโอกาสทางการขาย",
+    "customerSearchPlaceholder": "พิมพ์เพื่อค้นหาชื่อหรือรหัสลูกค้า...",
+    "changeCustomer": "เปลี่ยนลูกค้า",
+    "noCustomerFound": "ไม่พบข้อมูลลูกค้า",
+    "quickNotesLabel": "ข้อความด่วน:",
+    "quickNoteFollowUp": "โทรติดตามผล",
+    "quickNoteSurvey": "นัดสำรวจหน้างาน",
+    "quickNoteQuotation": "ส่งใบเสนอราคาฉบับแก้ไข",
+    "quickNoteBoardMeeting": "นัดพบบอร์ดบริหาร/ผู้มีอำนาจตัดสินใจ",
+    "quickNoteBudgetWait": "รอผลการอนุมัติงบประมาณ",
+    "workTypesRequiredError": "กรุณาเลือกประเภทงานอย่างน้อย 1 รายการ",
+    "nonNegativeBudget": "งบประมาณต้องมากกว่า 0 และไม่สามารถติดลบได้",
+    "sourceSelectPlaceholder": "-- เลือกแหล่งที่มา --",
+    "sourceOtherDetailPlaceholder": "ระบุรายละเอียดแหล่งที่มาเพิ่มเติม...",
+    "leadSourceReferral": "ลูกค้าเดิม / แนะนำต่อ",
+    "leadSourcePartner": "สถาปนิก / ผู้รับเหมาพันธมิตร",
+    "leadSourceWebsiteSocial": "เว็บไซต์ / โซเชียลมีเดีย",
+    "leadSourceExpo": "งานแสดงสินค้า / อีเวนต์",
+    "leadSourceDirect": "ติดต่อเข้ามาโดยตรง / Walk-in",
+    "leadSourceOther": "อื่นๆ (โปรดระบุ)",
+    "chooseDate": "เลือกวันที่ (วว/ดด/ปปปป)",
+    "chooseTime": "เลือกเวลา (ชม.:นาที)"
   }
 }

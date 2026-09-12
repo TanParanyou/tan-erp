@@ -486,6 +486,29 @@
       "activeCustomerRequired": "Opportunities can only be created for customers in Active status.",
       "qualifyConflict": "The opportunity was modified by another user. Please refresh and try again.",
       "qualifyInvalidTransition": "Cannot transition stage because current status is invalid or criteria are not met."
-    }
+    },
+    "sectionCustomerAndSite": "1. Customer & Primary Site",
+    "sectionOpportunityDetail": "2. Opportunity Details",
+    "customerSearchPlaceholder": "Type to search customer name or code...",
+    "changeCustomer": "Change Customer",
+    "noCustomerFound": "No customers found",
+    "quickNotesLabel": "Quick notes:",
+    "quickNoteFollowUp": "Follow-up call",
+    "quickNoteSurvey": "Site survey appointment",
+    "quickNoteQuotation": "Send revised quotation",
+    "quickNoteBoardMeeting": "Meet with executives/decision makers",
+    "quickNoteBudgetWait": "Awaiting budget approval",
+    "workTypesRequiredError": "Please select at least one work type",
+    "nonNegativeBudget": "Budget must be greater than 0 and cannot be negative",
+    "sourceSelectPlaceholder": "-- Select lead source --",
+    "sourceOtherDetailPlaceholder": "Specify lead source details...",
+    "leadSourceReferral": "Existing Customer / Referral",
+    "leadSourcePartner": "Architect / Contractor Partner",
+    "leadSourceWebsiteSocial": "Website / Social Media",
+    "leadSourceExpo": "Exhibition / Event",
+    "leadSourceDirect": "Direct Contact / Walk-in",
+    "leadSourceOther": "Other (Please specify)",
+    "chooseDate": "Choose date (DD/MM/YYYY)",
+    "chooseTime": "Choose time (HH:mm)"
   }
 }
