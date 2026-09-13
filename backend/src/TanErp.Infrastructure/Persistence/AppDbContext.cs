@@ -30,6 +30,11 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Surveys.SiteSurveyRevision> SiteSurveyRevisions => Set<TanErp.Domain.Surveys.SiteSurveyRevision>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyArea> SiteSurveyAreas => Set<TanErp.Domain.Surveys.SiteSurveyArea>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyMeasurement> SiteSurveyMeasurements => Set<TanErp.Domain.Surveys.SiteSurveyMeasurement>();
+    public DbSet<TanErp.Domain.Estimates.Estimate> Estimates => Set<TanErp.Domain.Estimates.Estimate>();
+    public DbSet<TanErp.Domain.Estimates.EstimateRevision> EstimateRevisions => Set<TanErp.Domain.Estimates.EstimateRevision>();
+    public DbSet<TanErp.Domain.Estimates.EstimateSection> EstimateSections => Set<TanErp.Domain.Estimates.EstimateSection>();
+    public DbSet<TanErp.Domain.Estimates.EstimateWorkItem> EstimateWorkItems => Set<TanErp.Domain.Estimates.EstimateWorkItem>();
+    public DbSet<TanErp.Domain.Estimates.EstimateCostComponent> EstimateCostComponents => Set<TanErp.Domain.Estimates.EstimateCostComponent>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
     public DbSet<TanErp.Domain.MasterData.Geography.Province> Provinces => Set<TanErp.Domain.MasterData.Geography.Province>();
     public DbSet<TanErp.Domain.MasterData.Geography.District> Districts => Set<TanErp.Domain.MasterData.Geography.District>();
