@@ -64,7 +64,13 @@ describe("CustomerAutocomplete", () => {
     client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     mockedListCustomers.mockResolvedValue({
       items: mockCustomers,
-      nextCursor: null,
+      pagination: {
+        page: 1,
+        pageSize: 25,
+        totalCount: mockCustomers.length,
+        totalPages: 1,
+        nextCursor: null,
+      },
     });
   });
 

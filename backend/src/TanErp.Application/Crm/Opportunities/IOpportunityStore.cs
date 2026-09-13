@@ -11,12 +11,18 @@ public sealed record OpportunityListFilter(
     string? Search,
     Guid? CustomerId,
     string? Stage,
+    string? SortBy = null,
+    string? SortOrder = null,
+    int? Page = null,
     int Limit = 25,
     string? Cursor = null);
 
 public sealed record OpportunityPage(
     IReadOnlyList<OpportunityProjection> Items,
-    string? NextCursor);
+    string? NextCursor,
+    int TotalCount = 0,
+    int Page = 1,
+    int PageSize = 25);
 
 public interface IOpportunityStore
 {

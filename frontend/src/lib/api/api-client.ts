@@ -224,6 +224,9 @@ export class ApiClient {
     if (params?.search) query.set("search", params.search);
     if (params?.customerId) query.set("customerId", params.customerId);
     if (params?.stage) query.set("stage", params.stage);
+    if (params?.sortBy) query.set("sortBy", params.sortBy);
+    if (params?.sortOrder) query.set("sortOrder", params.sortOrder);
+    if (params?.page !== undefined && params?.page !== null) query.set("page", params.page.toString());
     if (params?.limit) query.set("limit", params.limit.toString());
     if (params?.cursor) query.set("cursor", params.cursor);
 

@@ -239,14 +239,14 @@ public class OpportunityStoreTests : IAsyncLifetime
         await _db.SaveChangesAsync();
 
         // Page 1 with Limit 2: should return opp2 (today), opp1 (tomorrow) and a nextCursor
-        var page1 = await _store.ListAsync(orgId, new OpportunityListFilter(null, c.Id, null, 2, null));
+        var page1 = await _store.ListAsync(orgId, new OpportunityListFilter(null, c.Id, null, Limit: 2));
         Assert.Equal(2, page1.Items.Count);
         Assert.Equal(opp2.Id, page1.Items[0].Id);
         Assert.Equal(opp1.Id, page1.Items[1].Id);
         Assert.NotNull(page1.NextCursor);
 
         // Page 2 using cursor: should return opp3 (null next action) and no nextCursor
-        var page2 = await _store.ListAsync(orgId, new OpportunityListFilter(null, c.Id, null, 2, page1.NextCursor));
+        var page2 = await _store.ListAsync(orgId, new OpportunityListFilter(null, c.Id, null, Limit: 2, Cursor: page1.NextCursor));
         Assert.Single(page2.Items);
         Assert.Equal(opp3.Id, page2.Items[0].Id);
         Assert.Null(page2.NextCursor);

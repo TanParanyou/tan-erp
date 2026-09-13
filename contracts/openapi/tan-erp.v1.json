@@ -1054,6 +1054,28 @@
             }
           },
           {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "schema": {
@@ -2945,25 +2967,8 @@
             },
             "nullable": true
           },
-          "nextCursor": {
-            "type": "string",
-            "nullable": true
-          },
-          "totalCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMetadataResponse"
           }
         },
         "additionalProperties": false
@@ -3087,9 +3092,8 @@
             },
             "nullable": true
           },
-          "nextCursor": {
-            "type": "string",
-            "nullable": true
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMetadataResponse"
           }
         },
         "additionalProperties": false
@@ -3242,6 +3246,32 @@
             "format": "uuid"
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaginationMetadataResponse": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nextCursor": {
             "type": "string",
             "nullable": true
           }

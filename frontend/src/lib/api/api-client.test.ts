@@ -313,7 +313,13 @@ describe("ApiClient", () => {
   it("sends GET /api/v1/opportunities with encoded query parameters", async () => {
     const mockOppList = {
       items: [],
-      nextCursor: null,
+      pagination: {
+        page: 1,
+        pageSize: 10,
+        totalCount: 0,
+        totalPages: 1,
+        nextCursor: null,
+      },
     };
 
     const fetchMock = vi.fn().mockResolvedValue({

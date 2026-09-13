@@ -131,3 +131,37 @@ public static class OpportunityNormalizer
         return CollapseWhitespace(value).ToLowerInvariant();
     }
 }
+
+public static class OpportunitySortKey
+{
+    public const string Code = "code";
+    public const string Title = "title";
+    public const string Stage = "stage";
+    public const string ExpectedBudget = "expectedBudget";
+    public const string CreatedAt = "createdAt";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Code,
+        Title,
+        Stage,
+        ExpectedBudget,
+        CreatedAt
+    };
+
+    public static bool IsValid(string value) => All.Contains(value.Trim());
+}
+
+public static class OpportunitySortOrder
+{
+    public const string Asc = "asc";
+    public const string Desc = "desc";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Asc,
+        Desc
+    };
+
+    public static bool IsValid(string value) => All.Contains(value.Trim());
+}

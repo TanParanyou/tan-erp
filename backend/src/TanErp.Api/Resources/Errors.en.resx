@@ -173,4 +173,16 @@
   <data name="OPPORTUNITY_INVALID_TRANSITION_DETAIL" xml:space="preserve">
     <value>The requested stage transition is not allowed for the current opportunity stage.</value>
   </data>
+  <data name="OPPORTUNITY_SORT_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Sort Key</value>
+  </data>
+  <data name="OPPORTUNITY_SORT_INVALID_DETAIL" xml:space="preserve">
+    <value>The provided opportunity sort key is not supported.</value>
+  </data>
+  <data name="OPPORTUNITY_SORT_ORDER_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Sort Order</value>
+  </data>
+  <data name="OPPORTUNITY_SORT_ORDER_INVALID_DETAIL" xml:space="preserve">
+    <value>The sort order must be either asc or desc.</value>
+  </data>
 </root>

@@ -123,6 +123,8 @@ export function OpportunityList() {
   } = useOpportunityList({
     search: listState.params.search || undefined,
     stage: listState.params.filters.stage || undefined,
+    sortBy: listState.params.sort || undefined,
+    sortOrder: listState.params.order || undefined,
   });
 
   const allItems = useMemo(

@@ -109,6 +109,9 @@ public class OpportunitiesController : ControllerBase
         [FromQuery] string? search,
         [FromQuery] Guid? customerId,
         [FromQuery] string? stage,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = null,
+        [FromQuery] int? page = null,
         [FromQuery] int limit = 25,
         [FromQuery] string? cursor = null,
         CancellationToken cancellationToken = default)
@@ -128,6 +131,9 @@ public class OpportunitiesController : ControllerBase
             search,
             customerId,
             stage,
+            sortBy,
+            sortOrder,
+            page,
             limit,
             cursor,
             traceId);
@@ -139,7 +145,19 @@ public class OpportunitiesController : ControllerBase
         }
 
         var items = result.Value!.Items.Select(ToResponse).ToList();
-        return Ok(new OpportunityListResponse(items, result.Value.NextCursor));
+        var totalCount = result.Value.TotalCount;
+        var pageSize = result.Value.PageSize;
+        var currentPage = result.Value.Page;
+        var totalPages = pageSize > 0 ? (int)Math.Ceiling((double)totalCount / pageSize) : 1;
+
+        var pagination = new TanErp.Api.Contracts.Common.PaginationMetadataResponse(
+            currentPage,
+            pageSize,
+            totalCount,
+            totalPages,
+            result.Value.NextCursor);
+
+        return Ok(new OpportunityListResponse(items, pagination));
     }
 
     [HttpGet("{id:guid}")]

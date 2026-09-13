@@ -98,7 +98,21 @@ describe("OpportunityList Component", () => {
     });
 
     vi.spyOn(oppQueries, "useOpportunityList").mockReturnValue({
-      data: { pages: [{ items: [], nextCursor: null }], pageParams: [undefined] },
+      data: {
+        pages: [
+          {
+            items: [],
+            pagination: {
+              page: 1,
+              pageSize: 25,
+              totalCount: 0,
+              totalPages: 1,
+              nextCursor: null,
+            },
+          },
+        ],
+        pageParams: [undefined],
+      },
       isLoading: false,
       isError: false,
       error: null,
@@ -128,7 +142,21 @@ describe("OpportunityList Component", () => {
     });
 
     vi.spyOn(oppQueries, "useOpportunityList").mockReturnValue({
-      data: { pages: [{ items: [sampleOpportunity], nextCursor: null }], pageParams: [undefined] },
+      data: {
+        pages: [
+          {
+            items: [sampleOpportunity],
+            pagination: {
+              page: 1,
+              pageSize: 25,
+              totalCount: 1,
+              totalPages: 1,
+              nextCursor: null,
+            },
+          },
+        ],
+        pageParams: [undefined],
+      },
       isLoading: false,
       isError: false,
       error: null,
@@ -161,7 +189,21 @@ describe("OpportunityList Component", () => {
     });
 
     vi.spyOn(oppQueries, "useOpportunityList").mockReturnValue({
-      data: { pages: [{ items: [sampleOpportunity], nextCursor: null }], pageParams: [undefined] },
+      data: {
+        pages: [
+          {
+            items: [sampleOpportunity],
+            pagination: {
+              page: 1,
+              pageSize: 25,
+              totalCount: 1,
+              totalPages: 1,
+              nextCursor: null,
+            },
+          },
+        ],
+        pageParams: [undefined],
+      },
       isLoading: false,
       isError: false,
       error: null,
@@ -215,7 +257,21 @@ describe("OpportunityList Component", () => {
     });
 
     vi.spyOn(oppQueries, "useOpportunityList").mockReturnValue({
-      data: { pages: [{ items: [sampleOpportunity], nextCursor: "cursor-123" }], pageParams: [undefined] },
+      data: {
+        pages: [
+          {
+            items: [sampleOpportunity],
+            pagination: {
+              page: 1,
+              pageSize: 25,
+              totalCount: 2,
+              totalPages: 2,
+              nextCursor: "cursor-123",
+            },
+          },
+        ],
+        pageParams: [undefined],
+      },
       isLoading: false,
       isError: false,
       error: null,

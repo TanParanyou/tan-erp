@@ -150,13 +150,14 @@ public class CustomersController : ControllerBase
         var currentPage = result.Value.Page;
         var totalPages = pageSize > 0 ? (int)Math.Ceiling((double)totalCount / pageSize) : 1;
 
-        var response = new CustomerListResponse(
-            items,
-            result.Value.NextCursor,
-            totalCount,
+        var pagination = new TanErp.Api.Contracts.Common.PaginationMetadataResponse(
             currentPage,
             pageSize,
-            totalPages);
+            totalCount,
+            totalPages,
+            result.Value.NextCursor);
+
+        var response = new CustomerListResponse(items, pagination);
         return Ok(response);
     }
 

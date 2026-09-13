@@ -173,4 +173,16 @@
   <data name="OPPORTUNITY_INVALID_TRANSITION_DETAIL" xml:space="preserve">
     <value>การเปลี่ยนสถานะที่ระบุไม่ได้รับอนุญาตสำหรับสถานะปัจจุบันของงานขาย</value>
   </data>
+  <data name="OPPORTUNITY_SORT_INVALID_TITLE" xml:space="preserve">
+    <value>คีย์สำหรับจัดเรียงข้อมูลไม่ถูกต้อง</value>
+  </data>
+  <data name="OPPORTUNITY_SORT_INVALID_DETAIL" xml:space="preserve">
+    <value>คีย์สำหรับจัดเรียงรายการโอกาสทางการขายไม่ถูกต้อง</value>
+  </data>
+  <data name="OPPORTUNITY_SORT_ORDER_INVALID_TITLE" xml:space="preserve">
+    <value>ลำดับการจัดเรียงไม่ถูกต้อง</value>
+  </data>
+  <data name="OPPORTUNITY_SORT_ORDER_INVALID_DETAIL" xml:space="preserve">
+    <value>ลำดับการจัดเรียงรายการโอกาสทางการขายต้องเป็น asc หรือ desc</value>
+  </data>
 </root>

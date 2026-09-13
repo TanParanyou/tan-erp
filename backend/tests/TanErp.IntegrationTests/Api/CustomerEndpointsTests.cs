@@ -808,6 +808,9 @@ public class CustomerEndpointsTests : IAsyncLifetime
 
         var list = await resp.Content.ReadFromJsonAsync<CustomerListResponse>();
         Assert.NotNull(list);
+        Assert.NotNull(list.Pagination);
+        Assert.Equal(1, list.Pagination.Page);
+        Assert.Equal(10, list.Pagination.PageSize);
         if (list.Items.Count >= 2)
         {
             for (int i = 0; i < list.Items.Count - 1; i++)

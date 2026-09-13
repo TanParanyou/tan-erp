@@ -122,7 +122,13 @@ describe("OpportunityEditor", () => {
 
     mockedListCustomers.mockResolvedValue({
       items: [activeCustomerA, activeCustomerB],
-      nextCursor: null,
+      pagination: {
+        page: 1,
+        pageSize: 25,
+        totalCount: 2,
+        totalPages: 1,
+        nextCursor: null,
+      },
     } satisfies CustomerListResponse);
 
     mockedListCustomerSites.mockResolvedValue({

@@ -1,3 +1,5 @@
+using TanErp.Api.Contracts.Common;
+
 namespace TanErp.Api.Contracts.Crm.Customers;
 
 public sealed record CustomerListItemResponse(
@@ -13,8 +15,4 @@ public sealed record CustomerListItemResponse(
 
 public sealed record CustomerListResponse(
     IReadOnlyList<CustomerListItemResponse> Items,
-    string? NextCursor,
-    int TotalCount = 0,
-    int Page = 1,
-    int PageSize = 25,
-    int TotalPages = 1);
+    PaginationMetadataResponse Pagination);

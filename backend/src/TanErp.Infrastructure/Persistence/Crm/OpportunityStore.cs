@@ -893,48 +893,91 @@ public class OpportunityStore : IOpportunityStore
             query = query.Where(o => o.NormalizedTitle.Contains(normSearch) || o.Code.Contains(normSearch));
         }
 
-        // Keyset Pagination cursor: NextActionAtUtc ASC NULLS LAST, Id ASC
-        if (!string.IsNullOrWhiteSpace(filter.Cursor))
+        // Total count before cursor/page slice
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Dynamic Sorting
+        var isDesc = string.Equals(filter.SortOrder, OpportunitySortOrder.Desc, StringComparison.OrdinalIgnoreCase);
+        query = filter.SortBy?.ToLowerInvariant() switch
         {
-            var decoded = OpportunityCursor.TryDecode(filter.Cursor);
-            if (decoded != null)
+            OpportunitySortKey.Code => isDesc
+                ? query.OrderByDescending(o => o.Code).ThenBy(o => o.Id)
+                : query.OrderBy(o => o.Code).ThenBy(o => o.Id),
+            OpportunitySortKey.Title => isDesc
+                ? query.OrderByDescending(o => o.NormalizedTitle).ThenBy(o => o.Id)
+                : query.OrderBy(o => o.NormalizedTitle).ThenBy(o => o.Id),
+            OpportunitySortKey.Stage => isDesc
+                ? query.OrderByDescending(o => o.Stage).ThenBy(o => o.Id)
+                : query.OrderBy(o => o.Stage).ThenBy(o => o.Id),
+            OpportunitySortKey.ExpectedBudget => isDesc
+                ? query.OrderByDescending(o => o.ExpectedBudget).ThenBy(o => o.Id)
+                : query.OrderBy(o => o.ExpectedBudget).ThenBy(o => o.Id),
+            OpportunitySortKey.CreatedAt => isDesc
+                ? query.OrderByDescending(o => o.CreatedAtUtc).ThenBy(o => o.Id)
+                : query.OrderBy(o => o.CreatedAtUtc).ThenBy(o => o.Id),
+            _ => isDesc
+                ? query.OrderByDescending(o => o.NextActionAtUtc.HasValue ? 1 : 0)
+                    .ThenByDescending(o => o.NextActionAtUtc)
+                    .ThenBy(o => o.Id)
+                : query.OrderBy(o => o.NextActionAtUtc.HasValue ? 0 : 1)
+                    .ThenBy(o => o.NextActionAtUtc)
+                    .ThenBy(o => o.Id)
+        };
+
+        var limit = filter.Limit;
+        List<Opportunity> items;
+        string? nextCursor = null;
+        int currentPage = filter.Page ?? 1;
+
+        if (filter.Page.HasValue)
+        {
+            var skip = (currentPage - 1) * limit;
+            items = await query
+                .Skip(skip)
+                .Take(limit)
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            // Keyset Pagination cursor: NextActionAtUtc ASC NULLS LAST, Id ASC
+            if (!string.IsNullOrWhiteSpace(filter.Cursor))
             {
-                if (decoded.NextActionAtUtc.HasValue)
+                var decoded = OpportunityCursor.TryDecode(filter.Cursor);
+                if (decoded != null)
                 {
-                    var cursorTime = decoded.NextActionAtUtc.Value;
-                    var cursorId = decoded.Id;
-                    query = query.Where(o =>
-                        o.NextActionAtUtc == null ||
-                        o.NextActionAtUtc > cursorTime ||
-                        (o.NextActionAtUtc == cursorTime && o.Id > cursorId));
+                    if (decoded.NextActionAtUtc.HasValue)
+                    {
+                        var cursorTime = decoded.NextActionAtUtc.Value;
+                        var cursorId = decoded.Id;
+                        query = query.Where(o =>
+                            o.NextActionAtUtc == null ||
+                            o.NextActionAtUtc > cursorTime ||
+                            (o.NextActionAtUtc == cursorTime && o.Id > cursorId));
+                    }
+                    else
+                    {
+                        // cursor was on a null next_action_at_utc row: all previous rows with non-null were before it
+                        var cursorId = decoded.Id;
+                        query = query.Where(o => o.NextActionAtUtc == null && o.Id > cursorId);
+                    }
                 }
-                else
-                {
-                    // cursor was on a null next_action_at_utc row: all previous rows with non-null were before it
-                    var cursorId = decoded.Id;
-                    query = query.Where(o => o.NextActionAtUtc == null && o.Id > cursorId);
-                }
+            }
+
+            // Query limit + 1 items to determine if there's a next page
+            items = await query
+                .Take(limit + 1)
+                .ToListAsync(cancellationToken);
+
+            if (items.Count > limit)
+            {
+                var lastItem = items[limit - 1];
+                nextCursor = OpportunityCursor.Encode(lastItem.NextActionAtUtc, lastItem.Id);
+                items.RemoveAt(limit);
             }
         }
 
-        // Query limit + 1 items to determine if there's a next page
-        var items = await query
-            .OrderBy(o => o.NextActionAtUtc.HasValue ? 0 : 1)
-            .ThenBy(o => o.NextActionAtUtc)
-            .ThenBy(o => o.Id)
-            .Take(filter.Limit + 1)
-            .ToListAsync(cancellationToken);
-
-        string? nextCursor = null;
-        if (items.Count > filter.Limit)
-        {
-            var lastItem = items[filter.Limit - 1];
-            nextCursor = OpportunityCursor.Encode(lastItem.NextActionAtUtc, lastItem.Id);
-            items.RemoveAt(filter.Limit);
-        }
-
         var projections = items.Select(ToProjection).ToList();
-        return new OpportunityPage(projections, nextCursor);
+        return new OpportunityPage(projections, nextCursor, totalCount, currentPage, limit);
     }
 
     public async Task<OpportunityProjection?> GetAsync(

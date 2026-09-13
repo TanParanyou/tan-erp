@@ -62,11 +62,13 @@ vi.mock("../api/customer-queries", () => ({
   useCustomerList: () => ({
     data: {
       items: [organizationDraftCustomer, personActiveCustomer],
-      totalCount: 2,
-      page: 1,
-      pageSize: 25,
-      totalPages: 1,
-      nextCursor: null,
+      pagination: {
+        totalCount: 2,
+        page: 1,
+        pageSize: 25,
+        totalPages: 1,
+        nextCursor: null,
+      },
     },
     isLoading: false,
     isError: false,

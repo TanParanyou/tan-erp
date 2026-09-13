@@ -315,7 +315,7 @@ public class OpportunityHandlerTests
     [Fact]
     public async Task List_PermissionDenied_ReturnsFailureAndDoesNotCallStore()
     {
-        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), null, null, null, 25, null, "trace");
+        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), Limit: 25, TraceId: "trace");
         var handler = ListHandler();
 
         var result = await handler.Handle(query);
@@ -329,7 +329,7 @@ public class OpportunityHandlerTests
     public async Task List_InvalidCursor_ReturnsValidationError()
     {
         _accessResolver.GrantedPermissions.Add("opportunities.read");
-        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), null, null, null, 25, "not-valid-base64-json", "trace");
+        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), Limit: 25, Cursor: "not-valid-base64-json", TraceId: "trace");
         var handler = ListHandler();
 
         var result = await handler.Handle(query);
@@ -343,7 +343,48 @@ public class OpportunityHandlerTests
     public async Task List_ClampsLimitBetween1And100()
     {
         _accessResolver.GrantedPermissions.Add("opportunities.read");
-        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), null, null, null, 500, null, "trace");
+        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), null, null, null, null, null, null, 500, null, "trace");
+        var handler = ListHandler();
+
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _store.ListCallCount);
+    }
+
+    [Fact]
+    public async Task List_InvalidSortBy_ReturnsOpportunitySortInvalid()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.read");
+        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), SortBy: "dangerous_sql_injection");
+        var handler = ListHandler();
+
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("OPPORTUNITY_SORT_INVALID", result.Error.Code);
+        Assert.Equal(0, _store.ListCallCount);
+    }
+
+    [Fact]
+    public async Task List_InvalidSortOrder_ReturnsOpportunitySortOrderInvalid()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.read");
+        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), SortOrder: "unknown_direction");
+        var handler = ListHandler();
+
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("OPPORTUNITY_SORT_ORDER_INVALID", result.Error.Code);
+        Assert.Equal(0, _store.ListCallCount);
+    }
+
+    [Fact]
+    public async Task List_NegativePage_ClampsToOne()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.read");
+        var query = new ListOpportunitiesQuery("uid", Guid.NewGuid(), Page: -5);
         var handler = ListHandler();
 
         var result = await handler.Handle(query);

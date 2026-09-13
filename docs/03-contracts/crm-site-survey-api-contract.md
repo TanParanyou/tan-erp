@@ -62,7 +62,8 @@ Response 201 คืน Customer Draft, generated code และ ETag พร้�
 Required business header: X-Membership-Id: <membership UUID>
 Required create header: Idempotency-Key: <opaque 16-128 characters>
 Supported permission scope in Slice 1: organization only
-List sort: normalizedDisplayName ASC, id ASC
+List query params: search, status, customerType, sortBy, sortOrder, page, limit, cursor
+List sort default: normalizedDisplayName ASC, id ASC; allowed sorts: code, displayNameTh, status, customerType, createdAt
 List defaults: limit=25; allowed range 1..100
 Create result: Customer status=draft, one active primaryContact, ETag="<rowVersion>"
 Duplicate signal: exact normalized name/phone/email inside the selected Organization only
@@ -91,7 +92,13 @@ Request body มีเฉพาะ `customerType`, `displayNameTh`, `displayName
       }
     }
   ],
-  "nextCursor": null
+  "pagination": {
+    "page": 1,
+    "pageSize": 25,
+    "totalCount": 1,
+    "totalPages": 1,
+    "nextCursor": null
+  }
 }
 ```
 
@@ -205,7 +212,7 @@ Response `201`:
 }
 ```
 `GET /api/v1/opportunities/{id}` คืน shape เดียวกันพร้อม ETag
-`GET /api/v1/opportunities?search=&customerId=&stage=draft&limit=25&cursor=` คืน `{ items, nextCursor }`; allowed limit `1..100`, stable sort `nextActionAtUtc ASC NULLS LAST, id ASC`
+`GET /api/v1/opportunities?search=&customerId=&stage=draft&sortBy=code&sortOrder=desc&page=1&limit=25&cursor=` คืน `{ items, pagination: { page, pageSize, totalCount, totalPages, nextCursor } }`; allowed limit `1..100`, default sort `nextActionAtUtc ASC NULLS LAST, id ASC`; allowed sorts: `code`, `title`, `stage`, `expectedBudget`, `createdAt`
 
 ## Opportunity Qualification Slice 3 Specification
 

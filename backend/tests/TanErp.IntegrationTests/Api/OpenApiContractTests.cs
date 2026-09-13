@@ -149,6 +149,7 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("CurrentUserResponse"), "Must define CurrentUserResponse schema");
         Assert.True(schemas.ContainsKey("CustomerResponse"), "Must define CustomerResponse schema");
         Assert.True(schemas.ContainsKey("CustomerListResponse"), "Must define CustomerListResponse schema");
+        Assert.True(schemas.ContainsKey("PaginationMetadataResponse"), "Must define PaginationMetadataResponse schema");
         Assert.True(schemas.ContainsKey("CreateCustomerRequest"), "Must define CreateCustomerRequest schema");
         Assert.True(schemas.ContainsKey("SiteResponse"), "Must define SiteResponse schema");
         Assert.True(schemas.ContainsKey("SiteListResponse"), "Must define SiteListResponse schema");

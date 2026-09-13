@@ -561,6 +561,9 @@ export interface paths {
                     search?: string;
                     customerId?: string;
                     stage?: string;
+                    sortBy?: string;
+                    sortOrder?: string;
+                    page?: number;
                     limit?: number;
                     cursor?: string;
                 };
@@ -1685,15 +1688,7 @@ export interface components {
         };
         CustomerListResponse: {
             items?: components["schemas"]["CustomerListItemResponse"][] | null;
-            nextCursor?: string | null;
-            /** Format: int32 */
-            totalCount?: number;
-            /** Format: int32 */
-            page?: number;
-            /** Format: int32 */
-            pageSize?: number;
-            /** Format: int32 */
-            totalPages?: number;
+            pagination?: components["schemas"]["PaginationMetadataResponse"];
         };
         CustomerResponse: {
             /** Format: uuid */
@@ -1730,7 +1725,7 @@ export interface components {
         };
         OpportunityListResponse: {
             items?: components["schemas"]["OpportunityResponse"][] | null;
-            nextCursor?: string | null;
+            pagination?: components["schemas"]["PaginationMetadataResponse"];
         };
         OpportunityResponse: {
             /** Format: uuid */
@@ -1784,6 +1779,17 @@ export interface components {
             /** Format: uuid */
             id?: string;
             name?: string | null;
+        };
+        PaginationMetadataResponse: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            nextCursor?: string | null;
         };
         PermissionDto: {
             key?: string | null;

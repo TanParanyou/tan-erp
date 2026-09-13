@@ -391,6 +391,8 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         var listData = await listRes.Content.ReadFromJsonAsync<OpportunityListResponse>();
         Assert.NotNull(listData);
         Assert.Empty(listData.Items);
+        Assert.NotNull(listData.Pagination);
+        Assert.Equal(0, listData.Pagination.TotalCount);
     }
 
     [Fact]

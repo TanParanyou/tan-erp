@@ -119,8 +119,8 @@ export function CustomerList() {
 
   // Direct server-side data & pagination values
   const customers = data?.items ?? [];
-  const totalItems = data?.totalCount ?? 0;
-  const totalPages = data?.totalPages ?? (Math.ceil(totalItems / listState.params.limit) || 1);
+  const totalItems = data?.pagination?.totalCount ?? 0;
+  const totalPages = data?.pagination?.totalPages ?? (Math.ceil(totalItems / listState.params.limit) || 1);
 
   // Active Filter Chips
   const activeChips = useMemo<ActiveFilterChipItem[]>(() => {

@@ -17,7 +17,19 @@ export function opportunityListQueryKey(
   membershipId: string | null | undefined,
   locale: "th" | "en",
   params?: ListOpportunitiesParams
-): readonly ["business", string | null | undefined, "th" | "en", "opportunities", "list", string | null, string | null, string | null, number] {
+): readonly [
+  "business",
+  string | null | undefined,
+  "th" | "en",
+  "opportunities",
+  "list",
+  string | null,
+  string | null,
+  string | null,
+  string | null,
+  string | null,
+  number
+] {
   return [
     "business",
     membershipId,
@@ -27,6 +39,8 @@ export function opportunityListQueryKey(
     params?.search ?? null,
     params?.customerId ?? null,
     params?.stage ?? null,
+    params?.sortBy ?? null,
+    params?.sortOrder ?? null,
     params?.limit ?? 25,
   ] as const;
 }
@@ -72,7 +86,7 @@ export function useOpportunityList(
         }
       );
     },
-    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination?.nextCursor || undefined,
     enabled: Boolean(membershipId),
   });
 }

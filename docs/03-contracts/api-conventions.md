@@ -9,7 +9,7 @@
 - JSON field ใช้ `camelCase`; Identifier ใช้ UUID
 - Timestamp ใช้ ISO 8601 UTC เช่น `2026-09-05T08:30:00Z`
 - Money ส่ง `amount` และ `currency`; ห้ามใช้ Floating Point
-- List endpoint รองรับ deterministic pagination และ explicit sorting
+- List endpoint รองรับ deterministic pagination และ explicit sorting โดยจัดกลุ่ม Metadata ไว้ใน nested object `pagination: { page, pageSize, totalCount, totalPages, nextCursor }`
 - Mutating request สำคัญรองรับ Idempotency Key ตาม Contract
 
 ## ตัวอย่าง Resource
