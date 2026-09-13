@@ -88,6 +88,7 @@
 | แผนพัฒนา Opportunity Qualification Vertical Slice | [Opportunity Qualification Vertical Slice Plan](superpowers/plans/2026-09-10-opportunity-qualification-vertical-slice.md) |
 | บันทึกผลการตรวจสอบ Opportunity Qualification Slice | [Opportunity Qualification Verification](05-engineering/opportunity-qualification-verification.md) |
 | แผนรวมการพัฒนา Opportunity Module | [Opportunity Module Completion Master Plan](superpowers/plans/2026-09-12-opportunity-module-completion-master-plan.md) |
+| แผนแนบภาพงานจริงใน Opportunity ตาม Stage | [Opportunity Work Images Vertical Slice Plan](superpowers/plans/2026-09-13-opportunity-work-images-vertical-slice.md) |
 | บันทึกผลการตรวจสอบ Opportunity Draft Q-Gate Slice | [Opportunity Draft Q-Gate Verification](05-engineering/opportunity-draft-q-gate-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Outcome Slice | [Opportunity Outcome Verification](05-engineering/opportunity-outcome-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Hardening & Readiness | [Opportunity Hardening Verification](05-engineering/opportunity-hardening-verification.md) |

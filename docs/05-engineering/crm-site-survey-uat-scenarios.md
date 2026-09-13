@@ -14,6 +14,7 @@
 | `UAT-CRM-004` | Sales | สร้าง Opportunity จาก Active Customer แล้ว Qualify | Branch/Owner/Scope/Next Action ครบ; มี Stage History |
 | `UAT-CRM-005` | Sales | ข้าม Stage หรือ Close โดยไม่มี Reason | Stable Error; State ไม่เปลี่ยน |
 | `UAT-CRM-006` | Sales Manager | Reopen Lost Opportunity พร้อมสิทธิ์/Reason | Open Stage + Append-only History/Audit |
+| `UAT-CRM-007` | Sales | เลือกและบันทึกภาพงานหลายภาพใน Opportunity Open stage | Preview/caption แยกรูป; upload หลัง Save; ผูกทั้งชุดหรือไม่ผูกเลย; refresh แล้วยังเห็นทุกภาพตาม stage |
 | `UAT-SRV-001` | Coordinator | สร้าง Site + Survey Appointment | Survey + Draft Revision 1 แบบ Atomic |
 | `UAT-SRV-002` | Surveyor | บันทึกหลาย Area/Measurement/Checklist/Evidence | Draft/ETag/Upload State ถูกต้อง |
 | `UAT-SRV-003` | Surveyor | Measurement ผิด Unit, ≤0 หรือ Derived Cycle | Field/Area Error; ไม่บันทึกค่าผิด |

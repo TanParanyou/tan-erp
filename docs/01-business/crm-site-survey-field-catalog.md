@@ -78,6 +78,20 @@ Customer Address เป็นข้อมูลติดต่อ/ออกเ�
 | `outcomeReasonCode`, `outcomeNote` | String/null | Conditional | บังคับ Lost/Cancelled/Reopen | Internal |
 | `rowVersion` | Token | System | ทุก Mutation | Internal |
 
+### Opportunity Work Images (planned; not yet implemented)
+
+Opportunity หนึ่งรายการแนบภาพงานได้หลายภาพในแต่ละ Open stage (`draft`, `qualified`, `surveying`, `estimating`, `proposed`) และเลือกหลายภาพในครั้งเดียวได้; เพิ่มชุดภาพภายหลังได้. การมีภาพยังเป็น Optional ไม่ใช่ Q gate หรือ stage gate จน Sales Owner ยืนยันเกณฑ์ขั้นต่ำ. Closed stage อ่านย้อนหลังอย่างเดียว. ภาพ Survey/Estimate/Quotation ยังคงเป็นหลักฐานของโมดูลต้นทาง ไม่คัดลอก binary มา CRM.
+
+| Field | Type | Gate | Rule | Class |
+| --- | --- | --- | --- | --- |
+| `opportunityId`, `fileId` | UUID | On attach | แต่ละภาพอ้าง Opportunity/verified File ใน Organization เดียวกัน | Internal |
+| `stageAtAttach` | Enum | System | เก็บ stage ณ เวลาผูกภาพ; ไม่เปลี่ยนย้อนหลัง | Internal |
+| `caption` | String/null | Optional | คำอธิบายแยกต่อภาพ; ความยาวรอยืนยัน | Personal/Internal |
+| `displayOrder` | Integer | System | รักษาลำดับภาพในชุดที่บันทึก | Internal |
+| `createdByUserId`, `createdAtUtc` | UUID/UTC | System | ผู้แนบและเวลาผูกภาพ | Internal |
+
+Binary อยู่ File Service; CRM เก็บเฉพาะ references/metadata และบันทึกทั้งชุดแบบ atomic หลังทุกภาพผ่าน upload/verify. รายละเอียด contract และ verification อยู่ที่ [Opportunity Work Images Plan](../superpowers/plans/2026-09-13-opportunity-work-images-vertical-slice.md).
+
 ### แผนการพัฒนา Master Data สู่ Database Table ในอนาคต (Future Master Data Table Roadmap)
 
 ใน Phase ปัจจุบัน (Vertical Slice) ข้อมูลตัวเลือกเชิงจำแนกประเภทถูกควบคุมผ่าน **Canonical Enums และ Controlled Value Objects** เพื่อรักษา Minimal Blast Radius:
