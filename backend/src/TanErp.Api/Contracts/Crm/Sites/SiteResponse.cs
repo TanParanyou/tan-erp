@@ -1,5 +1,14 @@
 namespace TanErp.Api.Contracts.Crm.Sites;
 
+public sealed record SiteSummaryResponse(
+    Guid Id,
+    string Label,
+    string AddressLine1,
+    string? Subdistrict = null,
+    string? District = null,
+    string? Province = null,
+    string? PostalCode = null);
+
 public sealed record SiteResponse(
     Guid Id,
     Guid CustomerId,

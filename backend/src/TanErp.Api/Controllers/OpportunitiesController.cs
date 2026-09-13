@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TanErp.Api.Contracts.Crm.Opportunities;
+using TanErp.Api.Contracts.Crm.Sites;
 using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Crm.Opportunities;
@@ -282,7 +283,8 @@ public class OpportunitiesController : ControllerBase
             h.Note,
             h.ActorUserId,
             h.OccurredAtUtc,
-            h.PolicyVersion)).ToList();
+            h.PolicyVersion,
+            h.Actor != null ? new ActorSummaryResponse(h.Actor.Id, h.Actor.DisplayName) : null)).ToList();
 
         return Ok(new OpportunityStageHistoryListResponse(items));
     }
@@ -433,10 +435,6 @@ public class OpportunitiesController : ControllerBase
     private static OpportunityResponse ToResponse(OpportunityProjection o) => new(
         o.Id,
         o.Code,
-        o.CustomerId,
-        o.PrimarySiteId,
-        o.BranchId,
-        o.OwnerUserId,
         o.Title,
         o.ScopeSummary,
         o.WorkTypes,
@@ -449,5 +447,8 @@ public class OpportunitiesController : ControllerBase
         o.Stage,
         o.RowVersion,
         o.CreatedAtUtc,
+        o.Customer != null ? new CustomerSummaryResponse(o.Customer.Id, o.Customer.Code, o.Customer.DisplayNameTh, o.Customer.DisplayNameEn, o.Customer.Status) : null,
+        o.PrimarySite != null ? new SiteSummaryResponse(o.PrimarySite.Id, o.PrimarySite.Label, o.PrimarySite.AddressLine1, o.PrimarySite.Subdistrict, o.PrimarySite.District, o.PrimarySite.Province, o.PrimarySite.PostalCode) : null,
+        o.Branch != null ? new BranchSummaryResponse(o.Branch.Id, o.Branch.Name) : null,
         o.Owner != null ? new OwnerSummaryResponse(o.Owner.Id, o.Owner.DisplayName, o.Owner.Email) : null);
 }

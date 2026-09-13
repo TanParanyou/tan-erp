@@ -15,6 +15,9 @@ export type CreateSiteRequest = components["schemas"]["CreateSiteRequest"];
 
 export type OpportunityResponse = components["schemas"]["OpportunityResponse"];
 export type OpportunityListResponse = components["schemas"]["OpportunityListResponse"];
+export type CustomerSummaryResponse = components["schemas"]["CustomerSummaryResponse"];
+export type SiteSummaryResponse = components["schemas"]["SiteSummaryResponse"];
+export type ActorSummaryResponse = components["schemas"]["ActorSummaryResponse"];
 export type CreateOpportunityRequest = components["schemas"]["CreateOpportunityRequest"];
 export type UpdateDraftQGateRequest = components["schemas"]["UpdateDraftQGateRequest"];
 export type UpdateOpenOpportunityRequest = components["schemas"]["UpdateOpenOpportunityRequest"];
@@ -32,6 +35,12 @@ export type UpdateSurveyDraftRequest = components["schemas"]["UpdateSurveyDraftR
 export type UpdateSurveyAreaRequest = components["schemas"]["UpdateSurveyAreaRequest"];
 export type UpdateSurveyMeasurementRequest = components["schemas"]["UpdateSurveyMeasurementRequest"];
 export type MarkSurveyReadyRequest = components["schemas"]["MarkSurveyReadyRequest"];
+
+export type EstimateDetailResponse = components["schemas"]["EstimateDetailResponse"];
+export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionResponse"];
+export type CreateEstimateDraftRequest = components["schemas"]["CreateEstimateDraftRequest"];
+export type UpdateEstimateDraftRequest = components["schemas"]["UpdateEstimateDraftRequest"];
+export type CalculateEstimateRequest = components["schemas"]["CalculateEstimateRequest"];
 
 
 export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
@@ -399,6 +408,75 @@ export class ApiClient {
   ): Promise<SiteSurveyRevisionResponse> {
     return this.request<SiteSurveyRevisionResponse>(
       `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys/${encodeURIComponent(surveyId)}/revisions/${encodeURIComponent(revisionId)}/mark-ready`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async getEstimate(
+    id: string,
+    options: RequestOptions
+  ): Promise<EstimateDetailResponse> {
+    return this.request<EstimateDetailResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}`,
+      "GET",
+      options
+    );
+  }
+
+  async getOpportunityEstimate(
+    opportunityId: string,
+    options: RequestOptions
+  ): Promise<EstimateDetailResponse | null> {
+    try {
+      return await this.request<EstimateDetailResponse>(
+        `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/estimates`,
+        "GET",
+        options
+      );
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 204) {
+        return null;
+      }
+      throw err;
+    }
+  }
+
+  async createEstimate(
+    payload: CreateEstimateDraftRequest,
+    options: RequestOptions
+  ): Promise<EstimateDetailResponse> {
+    return this.request<EstimateDetailResponse>(
+      "/api/v1/estimates",
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async updateEstimateDraft(
+    id: string,
+    revisionId: string,
+    payload: UpdateEstimateDraftRequest,
+    options: RequestOptions
+  ): Promise<EstimateRevisionResponse> {
+    return this.request<EstimateRevisionResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/revisions/${encodeURIComponent(revisionId)}/draft`,
+      "PUT",
+      options,
+      payload
+    );
+  }
+
+  async calculateEstimate(
+    id: string,
+    revisionId: string,
+    payload: CalculateEstimateRequest,
+    options: RequestOptions
+  ): Promise<EstimateRevisionResponse> {
+    return this.request<EstimateRevisionResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/revisions/${encodeURIComponent(revisionId)}/calculate`,
       "POST",
       options,
       payload

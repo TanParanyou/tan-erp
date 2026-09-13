@@ -1,3 +1,5 @@
+using TanErp.Api.Contracts.Crm.Sites;
+
 namespace TanErp.Api.Contracts.Crm.Opportunities;
 
 public sealed record OwnerSummaryResponse(
@@ -5,13 +7,20 @@ public sealed record OwnerSummaryResponse(
     string DisplayName,
     string? Email);
 
+public sealed record BranchSummaryResponse(
+    Guid Id,
+    string Name);
+
+public sealed record CustomerSummaryResponse(
+    Guid Id,
+    string Code,
+    string DisplayNameTh,
+    string? DisplayNameEn,
+    string Status);
+
 public sealed record OpportunityResponse(
     Guid Id,
     string Code,
-    Guid CustomerId,
-    Guid? PrimarySiteId,
-    Guid BranchId,
-    Guid OwnerUserId,
     string Title,
     string? ScopeSummary,
     IReadOnlyList<string> WorkTypes,
@@ -24,4 +33,7 @@ public sealed record OpportunityResponse(
     string Stage,
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
+    CustomerSummaryResponse? Customer = null,
+    SiteSummaryResponse? PrimarySite = null,
+    BranchSummaryResponse? Branch = null,
     OwnerSummaryResponse? Owner = null);

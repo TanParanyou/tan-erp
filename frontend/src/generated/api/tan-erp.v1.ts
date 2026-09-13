@@ -548,6 +548,457 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/estimates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateEstimateDraftRequest"];
+                    "text/json": components["schemas"]["CreateEstimateDraftRequest"];
+                    "application/*+json": components["schemas"]["CreateEstimateDraftRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EstimateDetailResponse"];
+                        "application/json": components["schemas"]["EstimateDetailResponse"];
+                        "text/json": components["schemas"]["EstimateDetailResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/estimates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EstimateDetailResponse"];
+                        "application/json": components["schemas"]["EstimateDetailResponse"];
+                        "text/json": components["schemas"]["EstimateDetailResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/opportunities/{opportunityId}/estimates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    opportunityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EstimateDetailResponse"];
+                        "application/json": components["schemas"]["EstimateDetailResponse"];
+                        "text/json": components["schemas"]["EstimateDetailResponse"];
+                    };
+                };
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/estimates/{id}/revisions/{revisionId}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    revisionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateEstimateDraftRequest"];
+                    "text/json": components["schemas"]["UpdateEstimateDraftRequest"];
+                    "application/*+json": components["schemas"]["UpdateEstimateDraftRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EstimateRevisionResponse"];
+                        "application/json": components["schemas"]["EstimateRevisionResponse"];
+                        "text/json": components["schemas"]["EstimateRevisionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Precondition Required */
+                428: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/estimates/{id}/revisions/{revisionId}/calculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    revisionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CalculateEstimateRequest"];
+                    "text/json": components["schemas"]["CalculateEstimateRequest"];
+                    "application/*+json": components["schemas"]["CalculateEstimateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EstimateRevisionResponse"];
+                        "application/json": components["schemas"]["EstimateRevisionResponse"];
+                        "text/json": components["schemas"]["EstimateRevisionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/opportunities": {
         parameters: {
             query?: never;
@@ -1991,6 +2442,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ActorSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+        };
         AddressSearchResponse: {
             items?: components["schemas"]["AddressSearchResultItem"][] | null;
         };
@@ -2027,6 +2483,17 @@ export interface components {
             id?: string;
             name?: string | null;
         };
+        BranchSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+        };
+        CalculateEstimateRequest: {
+            /** Format: uuid */
+            expectedRevisionVersion?: string;
+            /** Format: double */
+            discountAmount?: number;
+        };
         CreateCustomerRequest: {
             customerType?: string | null;
             displayNameTh?: string | null;
@@ -2035,6 +2502,18 @@ export interface components {
             primaryContact?: components["schemas"]["CreatePrimaryContactRequest"];
             leadSource?: string | null;
             leadSourceNote?: string | null;
+        };
+        CreateEstimateDraftRequest: {
+            /** Format: uuid */
+            customerId?: string;
+            /** Format: uuid */
+            opportunityId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            /** Format: uuid */
+            siteSurveyRevisionId?: string | null;
+            siteSurveySnapshotHash?: string | null;
+            currency?: string | null;
         };
         CreateOpportunityRequest: {
             /** Format: uuid */
@@ -2135,6 +2614,14 @@ export interface components {
             leadSource?: string | null;
             leadSourceNote?: string | null;
         };
+        CustomerSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            displayNameTh?: string | null;
+            displayNameEn?: string | null;
+            status?: string | null;
+        };
         DuplicateCustomerResponse: {
             /** Format: uuid */
             id?: string;
@@ -2142,6 +2629,132 @@ export interface components {
             displayNameTh?: string | null;
             maskedPhone?: string | null;
             maskedEmail?: string | null;
+        };
+        EstimateCostComponentResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            estimateWorkItemId?: string;
+            type?: string | null;
+            description?: string | null;
+            /** Format: double */
+            quantity?: number;
+            unitCode?: string | null;
+            /** Format: double */
+            unitCost?: number;
+            currency?: string | null;
+            /** Format: double */
+            totalCost?: number;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        EstimateDetailResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            /** Format: uuid */
+            customerId?: string;
+            /** Format: uuid */
+            opportunityId?: string;
+            /** Format: uuid */
+            siteSurveyRevisionId?: string | null;
+            siteSurveySnapshotHash?: string | null;
+            number?: string | null;
+            status?: string | null;
+            /** Format: int32 */
+            currentRevisionNo?: number;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+            currentRevision?: components["schemas"]["EstimateRevisionResponse"];
+        };
+        EstimateRevisionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            estimateId?: string;
+            /** Format: int32 */
+            revisionNo?: number;
+            status?: string | null;
+            currency?: string | null;
+            /** Format: int32 */
+            calculationVersion?: number;
+            calculationPolicyVersion?: string | null;
+            taxPolicyVersion?: string | null;
+            /** Format: double */
+            netCost?: number;
+            /** Format: double */
+            sellingBeforeDiscount?: number;
+            /** Format: double */
+            discountAmount?: number;
+            /** Format: double */
+            netBeforeTax?: number;
+            /** Format: double */
+            taxAmount?: number;
+            /** Format: double */
+            grandTotal?: number;
+            /** Format: double */
+            marginAmount?: number;
+            /** Format: double */
+            marginRate?: number;
+            /** Format: double */
+            markupRate?: number;
+            calculationSnapshotJson?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+            sections?: components["schemas"]["EstimateSectionResponse"][] | null;
+        };
+        EstimateSectionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            estimateRevisionId?: string;
+            code?: string | null;
+            nameTh?: string | null;
+            nameEn?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+            /** Format: double */
+            subtotalCost?: number;
+            /** Format: double */
+            subtotalSellingPrice?: number;
+            workItems?: components["schemas"]["EstimateWorkItemResponse"][] | null;
+        };
+        EstimateWorkItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            estimateSectionId?: string;
+            code?: string | null;
+            descriptionTh?: string | null;
+            descriptionEn?: string | null;
+            /** Format: double */
+            quantity?: number;
+            unitCode?: string | null;
+            sellingRuleType?: string | null;
+            /** Format: double */
+            sellingRuleValue?: number;
+            /** Format: double */
+            unitCost?: number;
+            /** Format: double */
+            totalCost?: number;
+            /** Format: double */
+            unitSellingPrice?: number;
+            /** Format: double */
+            totalSellingPrice?: number;
+            /** Format: int32 */
+            sortOrder?: number;
+            costComponents?: components["schemas"]["EstimateCostComponentResponse"][] | null;
         };
         MarkSurveyReadyRequest: {
             /** Format: uuid */
@@ -2164,14 +2777,6 @@ export interface components {
             /** Format: uuid */
             id?: string;
             code?: string | null;
-            /** Format: uuid */
-            customerId?: string;
-            /** Format: uuid */
-            primarySiteId?: string | null;
-            /** Format: uuid */
-            branchId?: string;
-            /** Format: uuid */
-            ownerUserId?: string;
             title?: string | null;
             scopeSummary?: string | null;
             workTypes?: string[] | null;
@@ -2189,6 +2794,9 @@ export interface components {
             rowVersion?: string;
             /** Format: date-time */
             createdAtUtc?: string;
+            customer?: components["schemas"]["CustomerSummaryResponse"];
+            primarySite?: components["schemas"]["SiteSummaryResponse"];
+            branch?: components["schemas"]["BranchSummaryResponse"];
             owner?: components["schemas"]["OwnerSummaryResponse"];
         };
         OpportunityStageHistoryItemResponse: {
@@ -2205,6 +2813,7 @@ export interface components {
             /** Format: date-time */
             occurredAtUtc?: string;
             policyVersion?: string | null;
+            actor?: components["schemas"]["ActorSummaryResponse"];
         };
         OpportunityStageHistoryListResponse: {
             items?: components["schemas"]["OpportunityStageHistoryItemResponse"][] | null;
@@ -2275,6 +2884,10 @@ export interface components {
             id?: string;
             label?: string | null;
             addressLine1?: string | null;
+            subdistrict?: string | null;
+            district?: string | null;
+            province?: string | null;
+            postalCode?: string | null;
         };
         SiteSurveyAreaResponse: {
             /** Format: uuid */
@@ -2379,6 +2992,51 @@ export interface components {
             /** Format: date-time */
             nextActionAtUtc?: string | null;
             nextActionNote?: string | null;
+        };
+        UpdateEstimateCostComponentDto: {
+            /** Format: uuid */
+            id?: string | null;
+            type?: string | null;
+            description?: string | null;
+            /** Format: double */
+            quantity?: number;
+            unitCode?: string | null;
+            /** Format: double */
+            unitCost?: number;
+            currency?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        UpdateEstimateDraftRequest: {
+            /** Format: uuid */
+            expectedRevisionVersion?: string;
+            sections?: components["schemas"]["UpdateEstimateSectionDto"][] | null;
+        };
+        UpdateEstimateSectionDto: {
+            /** Format: uuid */
+            id?: string | null;
+            code?: string | null;
+            nameTh?: string | null;
+            nameEn?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+            workItems?: components["schemas"]["UpdateEstimateWorkItemDto"][] | null;
+        };
+        UpdateEstimateWorkItemDto: {
+            /** Format: uuid */
+            id?: string | null;
+            code?: string | null;
+            descriptionTh?: string | null;
+            descriptionEn?: string | null;
+            /** Format: double */
+            quantity?: number;
+            unitCode?: string | null;
+            sellingRuleType?: string | null;
+            /** Format: double */
+            sellingRuleValue?: number;
+            /** Format: int32 */
+            sortOrder?: number;
+            costComponents?: components["schemas"]["UpdateEstimateCostComponentDto"][] | null;
         };
         UpdateOpenOpportunityRequest: {
             title?: string | null;

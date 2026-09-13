@@ -1,5 +1,9 @@
 namespace TanErp.Api.Contracts.Crm.Opportunities;
 
+public sealed record ActorSummaryResponse(
+    Guid Id,
+    string DisplayName);
+
 public sealed record OpportunityStageHistoryItemResponse(
     Guid Id,
     Guid OpportunityId,
@@ -9,7 +13,8 @@ public sealed record OpportunityStageHistoryItemResponse(
     string? Note,
     Guid ActorUserId,
     DateTimeOffset OccurredAtUtc,
-    string PolicyVersion);
+    string PolicyVersion,
+    ActorSummaryResponse? Actor = null);
 
 public sealed record OpportunityStageHistoryListResponse(
     IReadOnlyList<OpportunityStageHistoryItemResponse> Items);

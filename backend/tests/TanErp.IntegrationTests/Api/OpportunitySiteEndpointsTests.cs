@@ -363,8 +363,8 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         Assert.NotNull(opp);
         Assert.Equal("Built-in ห้องนอนใหญ่", opp.Title);
         Assert.Equal(OpportunityStage.Draft, opp.Stage);
-        Assert.Equal(BranchAId, opp.BranchId);
-        Assert.Equal(TestOnlyDataSeeder.TestUserId, opp.OwnerUserId);
+        Assert.Equal(BranchAId, opp.Branch?.Id);
+        Assert.Equal(TestOnlyDataSeeder.TestUserId, opp.Owner?.Id);
     }
 
     [Fact]
@@ -657,7 +657,7 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
             Assert.NotNull(updated);
             Assert.NotEqual(opp.RowVersion, updated.RowVersion);
             Assert.Equal($"\"{updated.RowVersion}\"", res.Headers.ETag?.Tag);
-            Assert.Equal(newOwnerUser.Id, updated.OwnerUserId);
+            Assert.Equal(newOwnerUser.Id, updated.Owner?.Id);
         }
     }
 

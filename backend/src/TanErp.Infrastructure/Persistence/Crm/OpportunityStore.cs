@@ -164,7 +164,7 @@ public class OpportunityStore : IOpportunityStore
                 throw;
             }
 
-            return Result<OpportunityProjection>.Success(ToProjection(opp));
+            return Result<OpportunityProjection>.Success(await LoadFullProjectionAsync(opp, orgId, cancellationToken));
         });
     }
 
@@ -401,7 +401,7 @@ public class OpportunityStore : IOpportunityStore
                 throw;
             }
 
-            return Result<OpportunityProjection>.Success(ToProjection(opp));
+            return Result<OpportunityProjection>.Success(await LoadFullProjectionAsync(opp, orgId, cancellationToken));
         });
     }
 
@@ -534,7 +534,7 @@ public class OpportunityStore : IOpportunityStore
                 throw;
             }
 
-            return Result<OpportunityProjection>.Success(ToProjection(opp));
+            return Result<OpportunityProjection>.Success(await LoadFullProjectionAsync(opp, orgId, cancellationToken));
         });
     }
 
@@ -699,7 +699,7 @@ public class OpportunityStore : IOpportunityStore
                 throw;
             }
 
-            return Result<OpportunityProjection>.Success(ToProjection(opp));
+            return Result<OpportunityProjection>.Success(await LoadFullProjectionAsync(opp, orgId, cancellationToken));
         });
     }
 
@@ -833,7 +833,7 @@ public class OpportunityStore : IOpportunityStore
                 throw;
             }
 
-            return Result<OpportunityProjection>.Success(ToProjection(opp));
+            return Result<OpportunityProjection>.Success(await LoadFullProjectionAsync(opp, orgId, cancellationToken));
         });
     }
 
@@ -864,7 +864,7 @@ public class OpportunityStore : IOpportunityStore
             cancellationToken);
         return opportunity is null
             ? null
-            : Result<OpportunityProjection>.Success(ToProjection(opportunity));
+            : Result<OpportunityProjection>.Success(await LoadFullProjectionAsync(opportunity, organizationId, cancellationToken));
     }
 
     public async Task<OpportunityPage> ListAsync(
@@ -976,7 +976,28 @@ public class OpportunityStore : IOpportunityStore
             }
         }
 
-        var projections = items.Select(o => ToProjection(o)).ToList();
+        var customerIds = items.Select(i => i.CustomerId).Distinct().ToList();
+        var ownerIds = items.Select(i => i.OwnerUserId).Distinct().ToList();
+
+        var customerMap = await _db.Customers
+            .AsNoTracking()
+            .Where(c => customerIds.Contains(c.Id) && c.OrganizationId == organizationId)
+            .Select(c => new CustomerSummaryProjection(c.Id, c.Code, c.DisplayNameTh, c.DisplayNameEn, c.Status))
+            .ToDictionaryAsync(c => c.Id, cancellationToken);
+
+        var ownerMap = await _db.Users
+            .AsNoTracking()
+            .Where(u => ownerIds.Contains(u.Id))
+            .Select(u => new OwnerSummaryProjection(u.Id, u.DisplayName, u.Email))
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var projections = items.Select(o => ToProjection(
+            o,
+            ownerMap.GetValueOrDefault(o.OwnerUserId),
+            null,
+            customerMap.GetValueOrDefault(o.CustomerId),
+            null)).ToList();
+
         return new OpportunityPage(projections, nextCursor, totalCount, currentPage, limit);
     }
 
@@ -990,14 +1011,43 @@ public class OpportunityStore : IOpportunityStore
             .FirstOrDefaultAsync(o => o.Id == opportunityId && o.OrganizationId == organizationId, cancellationToken);
 
         if (opp == null) return null;
+        return await LoadFullProjectionAsync(opp, organizationId, cancellationToken);
+    }
 
+    private async Task<OpportunityProjection> LoadFullProjectionAsync(
+        Opportunity opp,
+        Guid organizationId,
+        CancellationToken cancellationToken)
+    {
         var owner = await _db.Users
             .AsNoTracking()
             .Where(u => u.Id == opp.OwnerUserId)
             .Select(u => new OwnerSummaryProjection(u.Id, u.DisplayName, u.Email))
             .FirstOrDefaultAsync(cancellationToken);
 
-        return ToProjection(opp, owner);
+        var branch = await _db.Branches
+            .AsNoTracking()
+            .Where(b => b.Id == opp.BranchId && b.OrganizationId == organizationId)
+            .Select(b => new BranchSummaryProjection(b.Id, b.Name))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var customer = await _db.Customers
+            .AsNoTracking()
+            .Where(c => c.Id == opp.CustomerId && c.OrganizationId == organizationId)
+            .Select(c => new CustomerSummaryProjection(c.Id, c.Code, c.DisplayNameTh, c.DisplayNameEn, c.Status))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        SiteSummaryProjection? primarySite = null;
+        if (opp.PrimarySiteId.HasValue)
+        {
+            primarySite = await _db.Sites
+                .AsNoTracking()
+                .Where(s => s.Id == opp.PrimarySiteId.Value && s.OrganizationId == organizationId)
+                .Select(s => new SiteSummaryProjection(s.Id, s.Label, s.AddressLine1, s.Subdistrict, s.District, s.Province, s.PostalCode))
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        return ToProjection(opp, owner, branch, customer, primarySite);
     }
 
     public async Task<IReadOnlyList<OpportunityStageHistoryProjection>> GetStageHistoryAsync(
@@ -1005,28 +1055,42 @@ public class OpportunityStore : IOpportunityStore
         Guid opportunityId,
         CancellationToken cancellationToken = default)
     {
-        var histories = await _db.OpportunityStageHistories
+        var rawHistories = await _db.OpportunityStageHistories
             .AsNoTracking()
             .Where(h => h.OpportunityId == opportunityId && h.OrganizationId == organizationId)
             .OrderByDescending(h => h.OccurredAtUtc)
             .ThenByDescending(h => h.Id)
-            .Select(h => new OpportunityStageHistoryProjection(
-                h.Id,
-                h.OpportunityId,
-                h.FromStage,
-                h.ToStage,
-                h.ReasonCode,
-                h.Note,
-                h.ActorUserId,
-                h.OccurredAtUtc,
-                h.PolicyVersion,
-                h.TraceId))
             .ToListAsync(cancellationToken);
+
+        var actorIds = rawHistories.Select(h => h.ActorUserId).Distinct().ToList();
+        var actorMap = await _db.Users
+            .AsNoTracking()
+            .Where(u => actorIds.Contains(u.Id))
+            .Select(u => new ActorSummaryProjection(u.Id, u.DisplayName))
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var histories = rawHistories.Select(h => new OpportunityStageHistoryProjection(
+            h.Id,
+            h.OpportunityId,
+            h.FromStage,
+            h.ToStage,
+            h.ReasonCode,
+            h.Note,
+            h.ActorUserId,
+            h.OccurredAtUtc,
+            h.PolicyVersion,
+            h.TraceId,
+            actorMap.GetValueOrDefault(h.ActorUserId))).ToList();
 
         return histories;
     }
 
-    private static OpportunityProjection ToProjection(Opportunity o, OwnerSummaryProjection? owner = null) => new(
+    private static OpportunityProjection ToProjection(
+        Opportunity o,
+        OwnerSummaryProjection? owner = null,
+        BranchSummaryProjection? branch = null,
+        CustomerSummaryProjection? customer = null,
+        SiteSummaryProjection? primarySite = null) => new(
         o.Id,
         o.Code,
         o.CustomerId,
@@ -1045,5 +1109,8 @@ public class OpportunityStore : IOpportunityStore
         o.Stage,
         o.RowVersion,
         o.CreatedAtUtc,
-        owner);
+        owner,
+        branch,
+        customer,
+        primarySite);
 }

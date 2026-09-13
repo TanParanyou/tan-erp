@@ -5,6 +5,26 @@ public sealed record OwnerSummaryProjection(
     string DisplayName,
     string? Email);
 
+public sealed record BranchSummaryProjection(
+    Guid Id,
+    string Name);
+
+public sealed record CustomerSummaryProjection(
+    Guid Id,
+    string Code,
+    string DisplayNameTh,
+    string? DisplayNameEn,
+    string Status);
+
+public sealed record SiteSummaryProjection(
+    Guid Id,
+    string Label,
+    string AddressLine1,
+    string Subdistrict,
+    string District,
+    string Province,
+    string PostalCode);
+
 public sealed record OpportunityProjection(
     Guid Id,
     string Code,
@@ -24,4 +44,7 @@ public sealed record OpportunityProjection(
     string Stage,
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
-    OwnerSummaryProjection? Owner = null);
+    OwnerSummaryProjection? Owner = null,
+    BranchSummaryProjection? Branch = null,
+    CustomerSummaryProjection? Customer = null,
+    SiteSummaryProjection? PrimarySite = null);

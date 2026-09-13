@@ -84,7 +84,10 @@ public static class TestOnlyDataSeeder
             ("surveys.read", "Read Site Surveys"),
             ("surveys.create", "Create Site Surveys"),
             ("surveys.update", "Update Site Surveys"),
-            ("surveys.mark-ready", "Mark Site Surveys Ready")
+            ("surveys.mark-ready", "Mark Site Surveys Ready"),
+            ("estimates.read", "Read Estimates"),
+            ("estimates.create", "Create Estimates"),
+            ("estimates.update", "Update Estimates")
         };
 
 
