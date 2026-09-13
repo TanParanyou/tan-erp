@@ -35,19 +35,31 @@ describe("Survey Components", () => {
   const sampleOpportunity: OpportunityResponse = {
     id: "30000000-0000-0000-0000-000000000001",
     code: "OPP-0001",
-    customerId: "10000000-0000-0000-0000-000000000001",
-    primarySiteId: "20000000-0000-0000-0000-000000000001",
-    branchId: "branch-1",
     title: "โครงการปรับปรุงอาคาร",
     stage: "qualified",
     rowVersion: "00000000-0000-0000-0000-000000000001",
+    customer: {
+      id: "10000000-0000-0000-0000-000000000001",
+      code: "CUS-0001",
+      displayNameTh: "ลูกค้า",
+    },
+    primarySite: {
+      id: "20000000-0000-0000-0000-000000000001",
+      label: "สำนักงานใหญ่",
+      addressLine1: "123 สุขุมวิท",
+      subdistrict: "คลองเตย",
+      district: "คลองเตย",
+      province: "กรุงเทพมหานคร",
+      postalCode: "10110",
+    },
+    branch: { id: "branch-1", name: "สาขา 1" },
   };
 
   const sampleSurvey: SiteSurveyResponse = {
     id: "40000000-0000-0000-0000-000000000001",
     surveyNumber: "SRV-2026-0001",
     opportunityId: sampleOpportunity.id,
-    siteId: sampleOpportunity.primarySiteId ?? undefined,
+    siteId: sampleOpportunity.primarySite?.id ?? undefined,
     assignedSurveyorId: "user-1",
     status: "scheduled",
     scheduledStartUtc: "2026-09-20T09:00:00Z",
@@ -123,7 +135,7 @@ describe("Survey Components", () => {
             {
               id: "20000000-0000-0000-0000-000000000001",
               label: "สำนักงานใหญ่ สุขุมวิท",
-              customerId: sampleOpportunity.customerId ?? undefined,
+              customerId: sampleOpportunity.customer?.id ?? undefined,
             },
           ],
           totalCount: 1,
@@ -195,7 +207,7 @@ describe("Survey Components", () => {
         expect(mutateAsyncMock).toHaveBeenCalledWith(
           expect.objectContaining({
             payload: expect.objectContaining({
-              siteId: sampleOpportunity.primarySiteId,
+              siteId: sampleOpportunity.primarySite?.id,
               assignedSurveyorId: "user-1",
               expectedOpportunityVersion: sampleOpportunity.rowVersion,
             }),
@@ -213,7 +225,7 @@ describe("Survey Components", () => {
             {
               id: "20000000-0000-0000-0000-000000000001",
               label: "สำนักงานใหญ่ สุขุมวิท",
-              customerId: sampleOpportunity.customerId ?? undefined,
+              customerId: sampleOpportunity.customer?.id ?? undefined,
             },
           ],
           totalCount: 1,
@@ -324,7 +336,7 @@ describe("Survey Components", () => {
       fireEvent.change(scopeTextarea, { target: { value: "สำรวจพื้นที่สำหรับงาน built-in ตู้เสื้อผ้า" } });
 
       // Click add area
-      const addAreaBtn = screen.getByRole("button", { name: "+ เพิ่มพื้นที่สำรวจ" });
+      const addAreaBtn = screen.getByRole("button", { name: /เพิ่มพื้นที่สำรวจ/ });
       fireEvent.click(addAreaBtn);
 
       // Area inputs should appear
@@ -332,7 +344,7 @@ describe("Survey Components", () => {
       fireEvent.change(areaNameInput, { target: { value: "ห้องนอนใหญ่" } });
 
       // Click add measurement
-      const addMeasureBtn = screen.getByRole("button", { name: "+ เพิ่มระยะวัด" });
+      const addMeasureBtn = screen.getByRole("button", { name: /เพิ่มระยะวัด/ });
       fireEvent.click(addMeasureBtn);
 
       // Measurement value input
@@ -392,7 +404,11 @@ describe("Survey Components", () => {
         </QueryClientProvider>
       );
 
-      // Attempt mark ready without filling required data
+      // Clear visitedAt to test missing visit validation
+      const visitedInput = screen.getByLabelText("วันที่และเวลาเข้าพบจริง");
+      fireEvent.change(visitedInput, { target: { value: "" } });
+
+      // Attempt mark ready without visit date
       const markReadyBtn = screen.getByRole("button", { name: "ยืนยันความพร้อม (Mark Ready)" });
       fireEvent.click(markReadyBtn);
 
@@ -400,6 +416,66 @@ describe("Survey Components", () => {
       await waitFor(() => {
         expect(screen.getByText("กรุณาระบุวันและเวลาที่เข้าพบจริง")).toBeDefined();
       });
+
+      // Now fill visit date but leave scope summary empty
+      fireEvent.change(visitedInput, { target: { value: "2026-09-20T10:00" } });
+      fireEvent.click(markReadyBtn);
+
+      await waitFor(() => {
+        expect(screen.getByText("กรุณากรอกสรุปขอบเขตงานสำรวจ")).toBeDefined();
+      });
+    });
+
+    it("converts length measurements to millimeters in real-time and guards unsaved changes", async () => {
+      const onClose = vi.fn();
+
+      render(
+        <QueryClientProvider client={client}>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <ToastProvider>
+              <SurveyWorkspaceDrawer
+                isOpen={true}
+                onClose={onClose}
+                opportunityId={sampleOpportunity.id ?? ""}
+                survey={sampleSurvey}
+                currentOpportunityVersion={sampleOpportunity.rowVersion ?? ""}
+              />
+            </ToastProvider>
+          </NextIntlClientProvider>
+        </QueryClientProvider>
+      );
+
+      // Add area
+      const addAreaBtn = screen.getByRole("button", { name: /เพิ่มพื้นที่สำรวจ/ });
+      fireEvent.click(addAreaBtn);
+
+      // Add measurement value: 2.5 (meter is default)
+      const valueInput = screen.getAllByPlaceholderText("ค่าที่วัดได้")[0];
+      fireEvent.change(valueInput, { target: { value: "2.5" } });
+
+      // Expect real-time conversion badge to show "= 2,500 mm"
+      await waitFor(() => {
+        expect(screen.getAllByText(/= 2,500 mm/).length).toBeGreaterThanOrEqual(1);
+      });
+
+      // Attempt to close drawer with unsaved changes
+      const cancelBtn = screen.getByRole("button", { name: "ยกเลิก" });
+      fireEvent.click(cancelBtn);
+
+      // Unsaved changes confirmation modal should appear
+      expect(await screen.findByText("ละทิ้งการเปลี่ยนแปลงหรือไม่?")).toBeDefined();
+      expect(onClose).not.toHaveBeenCalled();
+
+      // Click continue editing
+      const continueBtn = screen.getByRole("button", { name: "แก้ไขต่อ" });
+      fireEvent.click(continueBtn);
+      expect(onClose).not.toHaveBeenCalled();
+
+      // Click cancel again and confirm discard
+      fireEvent.click(cancelBtn);
+      const discardBtn = await screen.findByRole("button", { name: "ละทิ้งข้อมูล" });
+      fireEvent.click(discardBtn);
+      expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it("opens confirmation modal and executes mark ready mutation when valid", async () => {
@@ -449,7 +525,7 @@ describe("Survey Components", () => {
       fireEvent.change(scopeTextarea, { target: { value: "สำรวจพื้นที่เสร็จสมบูรณ์" } });
 
       // Add area
-      const addAreaBtn = screen.getByRole("button", { name: "+ เพิ่มพื้นที่สำรวจ" });
+      const addAreaBtn = screen.getByRole("button", { name: /เพิ่มพื้นที่สำรวจ/ });
       fireEvent.click(addAreaBtn);
 
       const areaNameInput = screen.getByPlaceholderText("ชื่อพื้นที่");
@@ -482,6 +558,121 @@ describe("Survey Components", () => {
           })
         );
         expect(onClose).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it("auto-fills area name when standard room preset is selected", async () => {
+      render(
+        <QueryClientProvider client={client}>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <ToastProvider>
+              <SurveyWorkspaceDrawer
+                isOpen={true}
+                onClose={vi.fn()}
+                opportunityId={sampleOpportunity.id ?? ""}
+                survey={sampleSurvey}
+                currentOpportunityVersion={sampleOpportunity.rowVersion ?? ""}
+              />
+            </ToastProvider>
+          </NextIntlClientProvider>
+        </QueryClientProvider>
+      );
+
+      // Add new area
+      const addAreaBtn = screen.getByRole("button", { name: /เพิ่มพื้นที่สำรวจ/ });
+      fireEvent.click(addAreaBtn);
+
+      // Select preset from dropdown
+      const presetSelect = screen.getByLabelText("เลือกห้อง/พื้นที่มาตรฐาน");
+      fireEvent.change(presetSelect, { target: { value: "master_bedroom" } });
+
+      // Check that the area name input is auto-filled
+      const areaNameInput = screen.getByPlaceholderText("ชื่อพื้นที่") as HTMLInputElement;
+      expect(areaNameInput.value).toBe("ห้องนอนใหญ่ (Master Bedroom)");
+    });
+
+    it("adds multiple areas at once via batch template modal", async () => {
+      render(
+        <QueryClientProvider client={client}>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <ToastProvider>
+              <SurveyWorkspaceDrawer
+                isOpen={true}
+                onClose={vi.fn()}
+                opportunityId={sampleOpportunity.id ?? ""}
+                survey={sampleSurvey}
+                currentOpportunityVersion={sampleOpportunity.rowVersion ?? ""}
+              />
+            </ToastProvider>
+          </NextIntlClientProvider>
+        </QueryClientProvider>
+      );
+
+      // Open batch template modal
+      const batchBtn = screen.getByRole("button", { name: "สร้างจากชุดเทมเพลต" });
+      fireEvent.click(batchBtn);
+
+      // Verify modal is open
+      expect(await screen.findByRole("heading", { name: /สร้างชุดพื้นที่สำรวจมาตรฐาน/ })).toBeDefined();
+
+      // Click condo studio package (3 rooms: living_room, master_bedroom, kitchen)
+      const condoBtn = screen.getByText(/คอนโด Studio/);
+      fireEvent.click(condoBtn);
+
+      // Confirm add
+      const confirmBtn = screen.getByRole("button", { name: /สร้างพื้นที่ที่เลือก \(3 ห้อง\)/ });
+      fireEvent.click(confirmBtn);
+
+      // Check that 3 areas were appended
+      await waitFor(() => {
+        expect(screen.getByDisplayValue("AREA-01")).toBeDefined();
+        expect(screen.getByDisplayValue("AREA-02")).toBeDefined();
+        expect(screen.getByDisplayValue("AREA-03")).toBeDefined();
+        expect(screen.getByDisplayValue("ห้องนั่งเล่น (Living Room)")).toBeDefined();
+        expect(screen.getByDisplayValue("ห้องนอนใหญ่ (Master Bedroom)")).toBeDefined();
+        expect(screen.getByDisplayValue("ห้องครัว (Kitchen)")).toBeDefined();
+      });
+    });
+
+    it("toggles 3D preview visualizer panel on button click", async () => {
+      render(
+        <QueryClientProvider client={client}>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <ToastProvider>
+              <SurveyWorkspaceDrawer
+                isOpen={true}
+                onClose={vi.fn()}
+                opportunityId={sampleOpportunity.id ?? ""}
+                survey={sampleSurvey}
+                currentOpportunityVersion={sampleOpportunity.rowVersion ?? ""}
+              />
+            </ToastProvider>
+          </NextIntlClientProvider>
+        </QueryClientProvider>
+      );
+
+      // Add new area
+      const addAreaBtn = screen.getByRole("button", { name: /เพิ่มพื้นที่สำรวจ/ });
+      fireEvent.click(addAreaBtn);
+
+      // 3D toggle button should be present
+      const toggle3DBtn = screen.getByRole("button", { name: /จำลองแบบ 3D/ });
+      expect(toggle3DBtn).toBeDefined();
+
+      // Click to open 3D preview
+      fireEvent.click(toggle3DBtn);
+
+      // Visualizer panel should show reset button, zoom slider, and hint
+      expect(await screen.findByRole("button", { name: "รีเซ็ตมุมมอง" })).toBeDefined();
+      expect(screen.getByLabelText("ซูม (Zoom):")).toBeDefined();
+      expect(screen.getByText(/หมุน: ลากนิ้ว\/เมาส์บนภาพ/)).toBeDefined();
+
+      // Click to close 3D preview (toggle button or visualizer close button)
+      const closeButtons = screen.getAllByRole("button", { name: /ซ่อน 3D/ });
+      fireEvent.click(closeButtons[0]);
+
+      await waitFor(() => {
+        expect(screen.queryByRole("button", { name: "รีเซ็ตมุมมอง" })).toBeNull();
       });
     });
   });

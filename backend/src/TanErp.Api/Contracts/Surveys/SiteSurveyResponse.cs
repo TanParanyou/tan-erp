@@ -1,3 +1,5 @@
+using TanErp.Api.Contracts.Crm.Sites;
+
 namespace TanErp.Api.Contracts.Surveys;
 
 public sealed record SiteSurveyMeasurementResponse(
@@ -44,11 +46,6 @@ public sealed record SurveyorSummaryResponse(
     Guid Id,
     string DisplayName,
     string? Email);
-
-public sealed record SiteSummaryResponse(
-    Guid Id,
-    string Label,
-    string AddressLine1);
 
 public sealed record SiteSurveyResponse(
     Guid Id,

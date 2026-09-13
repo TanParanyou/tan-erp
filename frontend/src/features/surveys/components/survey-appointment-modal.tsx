@@ -33,7 +33,7 @@ export function SurveyAppointmentModal({
   const { toast } = useToast();
   const createMutation = useCreateSiteSurvey(opportunity.id || "");
 
-  const [siteId, setSiteId] = useState<string>(opportunity.primarySiteId || "");
+  const [siteId, setSiteId] = useState<string>(opportunity.primarySite?.id || "");
   const [assignedSurveyorId, setAssignedSurveyorId] = useState<string>("");
   const [scheduledStart, setScheduledStart] = useState<string>("");
   const [scheduledEnd, setScheduledEnd] = useState<string>("");
@@ -42,7 +42,7 @@ export function SurveyAppointmentModal({
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
 
   // Load Customer Sites
-  const { data: siteData } = useCustomerSiteList(opportunity.customerId || undefined);
+  const { data: siteData } = useCustomerSiteList(opportunity.customer?.id || undefined);
   const siteList = siteData?.items ?? [];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,7 +157,7 @@ export function SurveyAppointmentModal({
               setAssignedSurveyorId(userId);
               setErrorMsg(null);
             }}
-            branchId={opportunity.branchId || undefined}
+            branchId={opportunity.branch?.id || undefined}
             required
             disabled={createMutation.isPending}
             label={t("surveyorLabel")}
