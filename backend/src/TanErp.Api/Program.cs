@@ -111,6 +111,7 @@ builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.QualifyOpportuni
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.UpdateDraftQGate.UpdateDraftQGateHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryHandler>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.IAddressLookupCache, TanErp.Infrastructure.MasterData.AddressLookupCache>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();
 

@@ -52,18 +52,44 @@ public class QualifyOpportunityHandler
 
         // 4. Normalize target and validate
         var normalizedTarget = command.TargetStage?.Trim().ToLowerInvariant();
-        if (normalizedTarget != OpportunityStage.Qualified)
+        if (normalizedTarget != OpportunityStage.Qualified &&
+            normalizedTarget != OpportunityStage.Lost &&
+            normalizedTarget != OpportunityStage.Cancelled &&
+            normalizedTarget != OpportunityStage.Draft)
         {
             return Result<OpportunityProjection>.Failure(
                 new Error("OPPORTUNITY_INVALID_TRANSITION", $"Cannot transition opportunity to target stage '{command.TargetStage}'."));
         }
 
+        if (normalizedTarget == OpportunityStage.Lost)
+        {
+            if (string.IsNullOrWhiteSpace(command.ReasonCode) || !OpportunityReasonCodes.IsValidLostReason(command.ReasonCode))
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_FIELD_REQUIRED", "A valid reason code is required to mark an opportunity as lost."));
+            }
+        }
+        else if (normalizedTarget == OpportunityStage.Cancelled)
+        {
+            if (string.IsNullOrWhiteSpace(command.ReasonCode) || !OpportunityReasonCodes.IsValidCancelledReason(command.ReasonCode))
+            {
+                return Result<OpportunityProjection>.Failure(
+                    new Error("OPPORTUNITY_FIELD_REQUIRED", "A valid reason code is required to cancel an opportunity."));
+            }
+        }
+
         // 5. Compute deterministic hashes
         var keyHash = Sha256Hex.Compute(command.IdempotencyKey);
-        var canonicalPayload = FormattableString.Invariant($"{command.OpportunityId:D}|qualified|{command.ExpectedVersion:D}");
+        var canonicalPayload = FormattableString.Invariant(
+            $"{command.OpportunityId:D}|{normalizedTarget}|{command.ExpectedVersion:D}|{command.ReasonCode ?? string.Empty}|{command.Note ?? string.Empty}");
         var payloadHash = Sha256Hex.Compute(canonicalPayload);
 
-        var normalizedCommand = command with { TargetStage = normalizedTarget };
+        var normalizedCommand = command with
+        {
+            TargetStage = normalizedTarget,
+            ReasonCode = string.IsNullOrWhiteSpace(command.ReasonCode) ? null : command.ReasonCode.Trim(),
+            Note = string.IsNullOrWhiteSpace(command.Note) ? null : command.Note.Trim()
+        };
 
         // 6. Delegate to store
         return await _store.QualifyAsync(access, normalizedCommand, keyHash, payloadHash, cancellationToken);

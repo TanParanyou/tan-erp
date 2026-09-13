@@ -24,6 +24,7 @@ public class OpportunitiesController : ControllerBase
     private readonly UpdateDraftQGateHandler _updateDraftQGateHandler;
     private readonly TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityHandler _updateOpenHandler;
     private readonly TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler _reassignOwnerHandler;
+    private readonly TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryHandler _getStageHistoryHandler;
 
     public OpportunitiesController(
         CreateOpportunityHandler createHandler,
@@ -32,7 +33,8 @@ public class OpportunitiesController : ControllerBase
         QualifyOpportunityHandler qualifyHandler,
         UpdateDraftQGateHandler updateDraftQGateHandler,
         TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityHandler updateOpenHandler,
-        TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler reassignOwnerHandler)
+        TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler reassignOwnerHandler,
+        TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryHandler getStageHistoryHandler)
     {
         _createHandler = createHandler;
         _listHandler = listHandler;
@@ -41,6 +43,7 @@ public class OpportunitiesController : ControllerBase
         _updateDraftQGateHandler = updateDraftQGateHandler;
         _updateOpenHandler = updateOpenHandler;
         _reassignOwnerHandler = reassignOwnerHandler;
+        _getStageHistoryHandler = getStageHistoryHandler;
     }
 
     [HttpPost]
@@ -205,7 +208,9 @@ public class OpportunitiesController : ControllerBase
             request.TargetStage,
             request.ExpectedVersion,
             auth.IdempotencyKey,
-            traceId);
+            traceId,
+            request.ReasonCode,
+            request.Note);
 
         var result = await _qualifyHandler.Handle(command, cancellationToken);
         if (result.IsFailure)
@@ -217,6 +222,51 @@ public class OpportunitiesController : ControllerBase
         Response.Headers.ETag = $"\"{opp.RowVersion}\"";
 
         return Ok(ToResponse(opp));
+    }
+
+    [HttpGet("{id:guid}/stage-history")]
+    [ProducesResponseType<OpportunityStageHistoryListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetStageHistory(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var query = new TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryQuery(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            traceId);
+
+        var result = await _getStageHistoryHandler.Handle(query, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var items = result.Value!.Select(h => new OpportunityStageHistoryItemResponse(
+            h.Id,
+            h.OpportunityId,
+            h.FromStage,
+            h.ToStage,
+            h.ReasonCode,
+            h.Note,
+            h.ActorUserId,
+            h.OccurredAtUtc,
+            h.PolicyVersion)).ToList();
+
+        return Ok(new OpportunityStageHistoryListResponse(items));
     }
 
     [HttpPatch("{id:guid}")]

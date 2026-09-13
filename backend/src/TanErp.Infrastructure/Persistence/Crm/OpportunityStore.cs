@@ -241,38 +241,99 @@ public class OpportunityStore : IOpportunityStore
                     new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
             }
 
-            // 4. Current state / target
-            if (opp.Stage != OpportunityStage.Draft || command.TargetStage != OpportunityStage.Qualified)
+            // 4. Current state / target check & domain execution
+            var previousStage = opp.Stage;
+            var targetStage = command.TargetStage;
+
+            if (targetStage == OpportunityStage.Qualified && previousStage == OpportunityStage.Draft)
+            {
+                if (customer.Status != CustomerStatus.Active)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("CUSTOMER_INVALID_STATE", "Customer is not active."));
+                }
+
+                try
+                {
+                    opp.Qualify(command.ExpectedVersion);
+                }
+                catch (OpportunityVersionException)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+                }
+                catch (OpportunityTransitionException)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_INVALID_TRANSITION", "Cannot transition opportunity to the requested stage."));
+                }
+                catch (OpportunityQualificationException ex)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_FIELD_REQUIRED", $"Qualification gate failed for field '{ex.MissingField}'."));
+                }
+            }
+            else if (targetStage == OpportunityStage.Lost || targetStage == OpportunityStage.Cancelled)
+            {
+                if (string.IsNullOrWhiteSpace(command.ReasonCode))
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_FIELD_REQUIRED", "Reason code is required to close an opportunity."));
+                }
+
+                try
+                {
+                    opp.Close(command.ExpectedVersion, targetStage, command.ReasonCode, command.Note);
+                }
+                catch (OpportunityVersionException)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+                }
+                catch (OpportunityTransitionException)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_INVALID_TRANSITION", "Cannot transition opportunity to the requested stage."));
+                }
+                catch (ArgumentException ex)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_FIELD_REQUIRED", ex.Message));
+                }
+            }
+            else if ((previousStage == OpportunityStage.Lost || previousStage == OpportunityStage.Cancelled) &&
+                     (targetStage == OpportunityStage.Draft || targetStage == OpportunityStage.Qualified))
+            {
+                if (string.IsNullOrWhiteSpace(command.ReasonCode))
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_FIELD_REQUIRED", "Reason code is required to reopen an opportunity."));
+                }
+
+                try
+                {
+                    opp.Reopen(command.ExpectedVersion, targetStage, command.ReasonCode, command.Note);
+                }
+                catch (OpportunityVersionException)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+                }
+                catch (OpportunityTransitionException)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_INVALID_TRANSITION", "Cannot transition opportunity to the requested stage."));
+                }
+                catch (ArgumentException ex)
+                {
+                    return Result<OpportunityProjection>.Failure(
+                        new Error("OPPORTUNITY_FIELD_REQUIRED", ex.Message));
+                }
+            }
+            else
             {
                 return Result<OpportunityProjection>.Failure(
                     new Error("OPPORTUNITY_INVALID_TRANSITION", "Cannot transition opportunity to the requested stage."));
-            }
-
-            if (customer.Status != CustomerStatus.Active)
-            {
-                return Result<OpportunityProjection>.Failure(
-                    new Error("CUSTOMER_INVALID_STATE", "Customer is not active."));
-            }
-
-            // 5. Q gate: aggregate Qualify
-            try
-            {
-                opp.Qualify(command.ExpectedVersion);
-            }
-            catch (OpportunityVersionException)
-            {
-                return Result<OpportunityProjection>.Failure(
-                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
-            }
-            catch (OpportunityTransitionException)
-            {
-                return Result<OpportunityProjection>.Failure(
-                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Cannot transition opportunity to the requested stage."));
-            }
-            catch (OpportunityQualificationException ex)
-            {
-                return Result<OpportunityProjection>.Failure(
-                    new Error("OPPORTUNITY_FIELD_REQUIRED", $"Qualification gate failed for field '{ex.MissingField}'."));
             }
 
             // 6. Add OpportunityStageHistory
@@ -280,18 +341,20 @@ public class OpportunityStore : IOpportunityStore
                 Guid.NewGuid(),
                 orgId,
                 opp.Id,
-                OpportunityStage.Draft,
-                OpportunityStage.Qualified,
-                null,
-                null,
+                previousStage,
+                targetStage,
+                command.ReasonCode,
+                command.Note,
                 access.ActorUserId,
                 now,
                 OpportunityStagePolicy.Version,
                 command.TraceId);
             _db.OpportunityStageHistories.Add(history);
 
-            // 7. Add AuditEvent (stage change only, no PII)
-            const string auditChanges = "{\"changedFields\":[\"stage\"],\"fromStage\":\"draft\",\"toStage\":\"qualified\"}";
+            // 7. Add AuditEvent (stage change only, no PII, metadata only)
+            var reasonCodeJson = string.IsNullOrWhiteSpace(command.ReasonCode) ? "null" : $"\"{command.ReasonCode}\"";
+            var auditChanges = FormattableString.Invariant(
+                $"{{\"changedFields\":[\"stage\"],\"fromStage\":\"{previousStage}\",\"toStage\":\"{targetStage}\",\"reasonCode\":{reasonCodeJson}}}");
             var auditEvent = new AuditEvent(
                 Guid.NewGuid(),
                 orgId,
@@ -884,6 +947,32 @@ public class OpportunityStore : IOpportunityStore
             .FirstOrDefaultAsync(o => o.Id == opportunityId && o.OrganizationId == organizationId, cancellationToken);
 
         return opp != null ? ToProjection(opp) : null;
+    }
+
+    public async Task<IReadOnlyList<OpportunityStageHistoryProjection>> GetStageHistoryAsync(
+        Guid organizationId,
+        Guid opportunityId,
+        CancellationToken cancellationToken = default)
+    {
+        var histories = await _db.OpportunityStageHistories
+            .AsNoTracking()
+            .Where(h => h.OpportunityId == opportunityId && h.OrganizationId == organizationId)
+            .OrderByDescending(h => h.OccurredAtUtc)
+            .ThenByDescending(h => h.Id)
+            .Select(h => new OpportunityStageHistoryProjection(
+                h.Id,
+                h.OpportunityId,
+                h.FromStage,
+                h.ToStage,
+                h.ReasonCode,
+                h.Note,
+                h.ActorUserId,
+                h.OccurredAtUtc,
+                h.PolicyVersion,
+                h.TraceId))
+            .ToListAsync(cancellationToken);
+
+        return histories;
     }
 
     private static OpportunityProjection ToProjection(Opportunity o) => new(

@@ -658,5 +658,141 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
             Assert.Equal(newOwnerUser.Id, updated.OwnerUserId);
         }
     }
+
+    [Fact]
+    public async Task PostStageTransitions_CloseLost_ValidReason_AppendsHistory()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var req = new TransitionOpportunityStageRequest(
+            "lost",
+            opp.RowVersion,
+            OpportunityReasonCodes.LostPriceTooHigh,
+            "ลูกค้างบประมาณไม่พอ");
+
+        var msg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            $"idem-lost-{Guid.NewGuid():N}");
+        msg.Content = JsonContent.Create(req);
+
+        var res = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var updated = await res.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("lost", updated.Stage);
+        Assert.NotEqual(opp.RowVersion, updated.RowVersion);
+
+        // Verify stage history
+        var histMsg = CreateRequest(
+            HttpMethod.Get,
+            $"/api/v1/opportunities/{opp.Id}/stage-history",
+            "token-org-a",
+            MembershipAId);
+        var histRes = await _client.SendAsync(histMsg);
+        Assert.Equal(HttpStatusCode.OK, histRes.StatusCode);
+
+        var historyList = await histRes.Content.ReadFromJsonAsync<OpportunityStageHistoryListResponse>();
+        Assert.NotNull(historyList);
+        Assert.NotEmpty(historyList.Items);
+        var latest = historyList.Items.First();
+        Assert.Equal("draft", latest.FromStage);
+        Assert.Equal("lost", latest.ToStage);
+        Assert.Equal(OpportunityReasonCodes.LostPriceTooHigh, latest.ReasonCode);
+    }
+
+    [Fact]
+    public async Task PostStageTransitions_CloseCancelled_ValidReason_AppendsHistory()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var req = new TransitionOpportunityStageRequest(
+            "cancelled",
+            opp.RowVersion,
+            OpportunityReasonCodes.CancelledCustomerAbandoned);
+
+        var msg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            $"idem-cancel-{Guid.NewGuid():N}");
+        msg.Content = JsonContent.Create(req);
+
+        var res = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var updated = await res.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("cancelled", updated.Stage);
+        Assert.NotEqual(opp.RowVersion, updated.RowVersion);
+    }
+
+    [Fact]
+    public async Task PostStageTransitions_Reopen_ApprovedTarget_AppendsHistory()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        // First close as lost
+        var closeReq = new TransitionOpportunityStageRequest(
+            "lost",
+            opp.RowVersion,
+            OpportunityReasonCodes.LostPriceTooHigh);
+
+        var closeMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            $"idem-close-{Guid.NewGuid():N}");
+        closeMsg.Content = JsonContent.Create(closeReq);
+
+        var closeRes = await _client.SendAsync(closeMsg);
+        Assert.Equal(HttpStatusCode.OK, closeRes.StatusCode);
+        var closedOpp = await closeRes.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(closedOpp);
+
+        // Now reopen to draft
+        var reopenReq = new TransitionOpportunityStageRequest(
+            "draft",
+            closedOpp.RowVersion,
+            OpportunityReasonCodes.ReopenBudgetAdjusted,
+            "ลูกค้าได้รับงบเพิ่ม");
+
+        var reopenMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            $"idem-reopen-{Guid.NewGuid():N}");
+        reopenMsg.Content = JsonContent.Create(reopenReq);
+
+        var reopenRes = await _client.SendAsync(reopenMsg);
+        Assert.Equal(HttpStatusCode.OK, reopenRes.StatusCode);
+        var reopenedOpp = await reopenRes.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(reopenedOpp);
+        Assert.Equal("draft", reopenedOpp.Stage);
+        Assert.NotEqual(closedOpp.RowVersion, reopenedOpp.RowVersion);
+
+        // Verify history has 2 entries (lost, then draft)
+        var histMsg = CreateRequest(
+            HttpMethod.Get,
+            $"/api/v1/opportunities/{opp.Id}/stage-history",
+            "token-org-a",
+            MembershipAId);
+        var histRes = await _client.SendAsync(histMsg);
+        var historyList = await histRes.Content.ReadFromJsonAsync<OpportunityStageHistoryListResponse>();
+        Assert.NotNull(historyList);
+        Assert.Equal(2, historyList.Items.Count);
+        Assert.Equal("draft", historyList.Items[0].ToStage);
+        Assert.Equal(OpportunityReasonCodes.ReopenBudgetAdjusted, historyList.Items[0].ReasonCode);
+        Assert.Equal("lost", historyList.Items[1].ToStage);
+    }
 }
 

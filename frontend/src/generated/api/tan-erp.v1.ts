@@ -1123,6 +1123,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/opportunities/{id}/stage-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OpportunityStageHistoryListResponse"];
+                        "application/json": components["schemas"]["OpportunityStageHistoryListResponse"];
+                        "text/json": components["schemas"]["OpportunityStageHistoryListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/opportunities/{id}/owner-changes": {
         parameters: {
             query?: never;
@@ -1679,6 +1762,24 @@ export interface components {
             /** Format: date-time */
             createdAtUtc?: string;
         };
+        OpportunityStageHistoryItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            opportunityId?: string;
+            fromStage?: string | null;
+            toStage?: string | null;
+            reasonCode?: string | null;
+            note?: string | null;
+            /** Format: uuid */
+            actorUserId?: string;
+            /** Format: date-time */
+            occurredAtUtc?: string;
+            policyVersion?: string | null;
+        };
+        OpportunityStageHistoryListResponse: {
+            items?: components["schemas"]["OpportunityStageHistoryItemResponse"][] | null;
+        };
         OrganizationDto: {
             /** Format: uuid */
             id?: string;
@@ -1727,6 +1828,8 @@ export interface components {
             targetStage?: string | null;
             /** Format: uuid */
             expectedVersion?: string;
+            reasonCode?: string | null;
+            note?: string | null;
         };
         UpdateDraftQGateRequest: {
             scopeSummary?: string | null;

@@ -132,6 +132,60 @@ public class Opportunity : Entity
         RowVersion = Guid.NewGuid();
     }
 
+    public void Close(Guid expectedVersion, string targetStage, string reasonCode, string? note = null)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+
+        var normalizedTarget = targetStage?.Trim().ToLowerInvariant();
+        if (normalizedTarget != OpportunityStage.Lost && normalizedTarget != OpportunityStage.Cancelled)
+        {
+            throw new OpportunityTransitionException(Stage, targetStage ?? string.Empty);
+        }
+
+        if (Stage == OpportunityStage.Won || Stage == OpportunityStage.Lost || Stage == OpportunityStage.Cancelled)
+        {
+            throw new OpportunityTransitionException(Stage, normalizedTarget);
+        }
+
+        if (normalizedTarget == OpportunityStage.Lost)
+        {
+            if (!OpportunityReasonCodes.IsValidLostReason(reasonCode))
+                throw new ArgumentException($"Invalid lost reason code: '{reasonCode}'.", nameof(reasonCode));
+        }
+        else if (normalizedTarget == OpportunityStage.Cancelled)
+        {
+            if (!OpportunityReasonCodes.IsValidCancelledReason(reasonCode))
+                throw new ArgumentException($"Invalid cancelled reason code: '{reasonCode}'.", nameof(reasonCode));
+        }
+
+        Stage = normalizedTarget;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void Reopen(Guid expectedVersion, string targetStage, string reasonCode, string? note = null)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+
+        if (Stage != OpportunityStage.Lost && Stage != OpportunityStage.Cancelled)
+        {
+            throw new OpportunityTransitionException(Stage, targetStage ?? string.Empty);
+        }
+
+        var normalizedTarget = targetStage?.Trim().ToLowerInvariant();
+        if (normalizedTarget != OpportunityStage.Draft && normalizedTarget != OpportunityStage.Qualified)
+        {
+            throw new OpportunityTransitionException(Stage, targetStage ?? string.Empty);
+        }
+
+        if (!OpportunityReasonCodes.IsValidReopenReason(reasonCode))
+        {
+            throw new ArgumentException($"Invalid reopen reason code: '{reasonCode}'.", nameof(reasonCode));
+        }
+
+        Stage = normalizedTarget;
+        RowVersion = Guid.NewGuid();
+    }
+
     public void EditDraftQGate(
         Guid expectedVersion,
         string? scopeSummary,

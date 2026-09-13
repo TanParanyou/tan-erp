@@ -23,6 +23,9 @@ import { getOpportunityStageLabelKey, resolveWorkTypeLabel } from "../opportunit
 import { OpportunityQGateEditor } from "./opportunity-q-gate-editor";
 import { OpportunityOwnerReassignModal } from "./opportunity-owner-reassign-modal";
 import { OpportunityOpenEditorDrawer } from "./opportunity-open-editor-drawer";
+import { OpportunityCloseModal } from "./opportunity-close-modal";
+import { OpportunityReopenModal } from "./opportunity-reopen-modal";
+import { OpportunityStageTimeline } from "./opportunity-stage-timeline";
 
 interface QualificationIntent {
   idempotencyKey: string;
@@ -49,6 +52,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   });
   const reassignModal = useDisclosure();
   const editDrawer = useDisclosure();
+  const closeOutcomeModal = useDisclosure();
+  const reopenModal = useDisclosure();
   const [qualifyModalError, setQualifyModalError] = useState<string | null>(null);
   const customerDrawer = useDisclosure();
 
@@ -127,10 +132,13 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
     opportunity?.stage === "surveying" ||
     opportunity?.stage === "estimating" ||
     opportunity?.stage === "proposed";
+  const isClosed = opportunity?.stage === "lost" || opportunity?.stage === "cancelled";
   const canTransition = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_TRANSITION);
   const canUpdate = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_UPDATE);
   const canQualify = isDraft && canTransition;
   const canReassign = isOpen && canUpdate;
+  const canClose = isOpen && canTransition;
+  const canReopen = isClosed && canTransition;
 
   // Q-gate verification checklist
   const hasScopeSummary = Boolean(opportunity?.scopeSummary && opportunity.scopeSummary.trim().length > 0);
@@ -330,6 +338,26 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         ]}
         actions={
           <div className="flex items-center gap-2">
+            {canReopen && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => reopenModal.open()}
+                className="font-semibold"
+              >
+                {t("reopenAction")}
+              </Button>
+            )}
+            {canClose && (
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => closeOutcomeModal.open()}
+                className="font-semibold text-erp-danger border-erp-danger/40 hover:bg-erp-danger/10"
+              >
+                {t("closeAction")}
+              </Button>
+            )}
             {canReassign && (
               <Button
                 variant="outline"
@@ -376,6 +404,22 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         <OpportunityOwnerReassignModal
           isOpen={reassignModal.isOpen}
           onClose={reassignModal.close}
+          opportunity={opportunity}
+        />
+      )}
+
+      {canClose && (
+        <OpportunityCloseModal
+          isOpen={closeOutcomeModal.isOpen}
+          onClose={closeOutcomeModal.close}
+          opportunity={opportunity}
+        />
+      )}
+
+      {canReopen && (
+        <OpportunityReopenModal
+          isOpen={reopenModal.isOpen}
+          onClose={reopenModal.close}
           opportunity={opportunity}
         />
       )}
@@ -542,6 +586,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
           </dd>
         </dl>
       </div>
+
+      {opportunity?.id && <OpportunityStageTimeline opportunityId={opportunity.id} />}
 
       <CustomerQuickViewDrawer
         customerId={opportunity.customerId ?? null}

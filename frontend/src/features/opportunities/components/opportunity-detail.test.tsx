@@ -35,6 +35,14 @@ describe("OpportunityDetail Component", () => {
       error: null,
       refetch: vi.fn(),
     } as unknown as ReturnType<typeof userQueries.useUserList>);
+
+    vi.spyOn(oppQueries, "useOpportunityStageHistory").mockReturnValue({
+      data: { items: [] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityStageHistory>);
   });
 
   const mockMembership = {
@@ -604,6 +612,174 @@ describe("OpportunityDetail Component", () => {
         payload: expect.objectContaining({
           title: "โครงการปรับปรุงอาคารสำนักงาน (แก้ไขใหม่)",
         }),
+      })
+    );
+  });
+
+  it("OpportunityDetail_CloseLost_OpensModalAndSubmits", async () => {
+    const memberWithTransition = {
+      ...mockMembership,
+      permissions: [
+        { key: "opportunities.read", scope: "organization", scopeId: "org-1" },
+        { key: "opportunities.transition", scope: "organization", scopeId: "org-1" },
+      ],
+    };
+
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
+      selectedMembership: memberWithTransition,
+      memberships: [memberWithTransition],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    vi.spyOn(oppQueries, "useOpportunityDetail").mockReturnValue({
+      data: sampleOpportunity,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityDetail>);
+
+    const mutateTransitionMock = vi.fn().mockResolvedValue({
+      ...sampleOpportunity,
+      stage: "lost",
+      rowVersion: "00000000-0000-0000-0000-000000000004",
+    });
+
+    vi.spyOn(oppQueries, "useTransitionOpportunityStage").mockReturnValue({
+      mutateAsync: mutateTransitionMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof oppQueries.useTransitionOpportunityStage>);
+
+    render(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <ToastProvider>
+            <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          </ToastProvider>
+        </NextIntlClientProvider>
+      </QueryClientProvider>
+    );
+
+    // Click Close button
+    const closeBtn = screen.getByRole("button", { name: /ปิดงาน \/ ยกเลิก\.\.\./i });
+    expect(closeBtn).toBeDefined();
+
+    const { fireEvent, act } = await import("@testing-library/react");
+    await act(async () => {
+      fireEvent.click(closeBtn);
+    });
+
+    // Modal dialog should be open
+    const modalDialog = screen.getByRole("dialog");
+    expect(modalDialog).toBeDefined();
+
+    // Select reason (first combobox is stage which defaults to 'lost', second is reasonCode)
+    const comboboxes = screen.getAllByRole("combobox");
+    const reasonSelect = comboboxes.length > 1 ? comboboxes[1] : comboboxes[0];
+    await act(async () => {
+      fireEvent.change(reasonSelect, { target: { value: "lost_price_too_high" } });
+    });
+
+    // Confirm
+    const confirmBtn = screen.getByRole("button", { name: /ยืนยัน/i });
+    await act(async () => {
+      fireEvent.click(confirmBtn);
+    });
+
+    expect(mutateTransitionMock).toHaveBeenCalledTimes(1);
+    expect(mutateTransitionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        opportunityId: sampleOpportunity.id,
+        targetStage: "lost",
+        expectedVersion: sampleOpportunity.rowVersion,
+        reasonCode: "lost_price_too_high",
+      })
+    );
+  });
+
+  it("OpportunityDetail_Reopen_OpensModalAndSubmits", async () => {
+    const closedOpportunity = {
+      ...sampleOpportunity,
+      stage: "lost",
+    };
+
+    const memberWithTransition = {
+      ...mockMembership,
+      permissions: [
+        { key: "opportunities.read", scope: "organization", scopeId: "org-1" },
+        { key: "opportunities.transition", scope: "organization", scopeId: "org-1" },
+      ],
+    };
+
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
+      selectedMembership: memberWithTransition,
+      memberships: [memberWithTransition],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    vi.spyOn(oppQueries, "useOpportunityDetail").mockReturnValue({
+      data: closedOpportunity,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityDetail>);
+
+    const mutateTransitionMock = vi.fn().mockResolvedValue({
+      ...closedOpportunity,
+      stage: "qualified",
+      rowVersion: "00000000-0000-0000-0000-000000000005",
+    });
+
+    vi.spyOn(oppQueries, "useTransitionOpportunityStage").mockReturnValue({
+      mutateAsync: mutateTransitionMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof oppQueries.useTransitionOpportunityStage>);
+
+    render(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <ToastProvider>
+            <OpportunityDetail opportunityId={closedOpportunity.id} />
+          </ToastProvider>
+        </NextIntlClientProvider>
+      </QueryClientProvider>
+    );
+
+    // Click Reopen button
+    const reopenBtn = screen.getByRole("button", { name: /เปิดงานใหม่ \(Reopen\)/i });
+    expect(reopenBtn).toBeDefined();
+
+    const { fireEvent, act } = await import("@testing-library/react");
+    await act(async () => {
+      fireEvent.click(reopenBtn);
+    });
+
+    // Modal dialog should be open
+    const modalDialog = screen.getByRole("dialog");
+    expect(modalDialog).toBeDefined();
+
+    // Select reason
+    const select = screen.getByRole("combobox");
+    await act(async () => {
+      fireEvent.change(select, { target: { value: "reopen_budget_adjusted" } });
+    });
+
+    // Confirm
+    const confirmBtn = screen.getByRole("button", { name: /ยืนยัน/i });
+    await act(async () => {
+      fireEvent.click(confirmBtn);
+    });
+
+    expect(mutateTransitionMock).toHaveBeenCalledTimes(1);
+    expect(mutateTransitionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        opportunityId: closedOpportunity.id,
+        targetStage: "qualified",
+        expectedVersion: closedOpportunity.rowVersion,
+        reasonCode: "reopen_budget_adjusted",
       })
     );
   });

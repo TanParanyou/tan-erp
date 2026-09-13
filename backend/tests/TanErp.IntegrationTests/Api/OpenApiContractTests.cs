@@ -121,6 +121,10 @@ public class OpenApiContractTests : IAsyncLifetime
         var ownerChangesPath = paths["/api/v1/opportunities/{id}/owner-changes"]?["post"]?.AsObject();
         Assert.NotNull(ownerChangesPath);
 
+        Assert.True(paths.ContainsKey("/api/v1/opportunities/{id}/stage-history"), "OpenAPI must contain path /api/v1/opportunities/{id}/stage-history");
+        var stageHistoryPath = paths["/api/v1/opportunities/{id}/stage-history"]?["get"]?.AsObject();
+        Assert.NotNull(stageHistoryPath);
+
         Assert.True(paths.ContainsKey("/api/v1/users"), "OpenAPI must contain path /api/v1/users");
         var listUsersPath = paths["/api/v1/users"]?["get"]?.AsObject();
         Assert.NotNull(listUsersPath);
@@ -156,6 +160,8 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("UpdateOpenOpportunityRequest"), "Must define UpdateOpenOpportunityRequest schema");
         Assert.True(schemas.ContainsKey("ReassignOpportunityOwnerRequest"), "Must define ReassignOpportunityOwnerRequest schema");
         Assert.True(schemas.ContainsKey("TransitionOpportunityStageRequest"), "Must define TransitionOpportunityStageRequest schema");
+        Assert.True(schemas.ContainsKey("OpportunityStageHistoryListResponse"), "Must define OpportunityStageHistoryListResponse schema");
+        Assert.True(schemas.ContainsKey("OpportunityStageHistoryItemResponse"), "Must define OpportunityStageHistoryItemResponse schema");
         Assert.True(schemas.ContainsKey("AddressSearchResponse"), "Must define AddressSearchResponse schema");
         Assert.True(schemas.ContainsKey("AddressSearchResultItem"), "Must define AddressSearchResultItem schema");
         Assert.True(schemas.ContainsKey("UserListResponse"), "Must define UserListResponse schema");

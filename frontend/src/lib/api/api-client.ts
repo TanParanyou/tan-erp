@@ -20,6 +20,8 @@ export type UpdateDraftQGateRequest = components["schemas"]["UpdateDraftQGateReq
 export type UpdateOpenOpportunityRequest = components["schemas"]["UpdateOpenOpportunityRequest"];
 export type ReassignOpportunityOwnerRequest = components["schemas"]["ReassignOpportunityOwnerRequest"];
 export type TransitionOpportunityStageRequest = components["schemas"]["TransitionOpportunityStageRequest"];
+export type OpportunityStageHistoryListResponse = components["schemas"]["OpportunityStageHistoryListResponse"];
+export type OpportunityStageHistoryItemResponse = components["schemas"]["OpportunityStageHistoryItemResponse"];
 
 export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
 export type AddressSearchResultItem = components["schemas"]["AddressSearchResultItem"];
@@ -293,6 +295,17 @@ export class ApiClient {
       "POST",
       options,
       payload
+    );
+  }
+
+  async getOpportunityStageHistory(
+    id: string,
+    options: RequestOptions
+  ): Promise<OpportunityStageHistoryListResponse> {
+    return this.request<OpportunityStageHistoryListResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(id)}/stage-history`,
+      "GET",
+      options
     );
   }
 

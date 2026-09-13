@@ -64,4 +64,9 @@ public interface IOpportunityStore
         Guid organizationId,
         Guid opportunityId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<OpportunityStageHistoryProjection>> GetStageHistoryAsync(
+        Guid organizationId,
+        Guid opportunityId,
+        CancellationToken cancellationToken = default);
 }

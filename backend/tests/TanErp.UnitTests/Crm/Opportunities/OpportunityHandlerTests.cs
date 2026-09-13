@@ -87,6 +87,16 @@ public class OpportunityHandlerTests
             return Task.FromResult(GetResult);
         }
 
+        public IReadOnlyList<OpportunityStageHistoryProjection> StageHistoryResult { get; set; } = Array.Empty<OpportunityStageHistoryProjection>();
+
+        public Task<IReadOnlyList<OpportunityStageHistoryProjection>> GetStageHistoryAsync(
+            Guid organizationId,
+            Guid opportunityId,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(StageHistoryResult);
+        }
+
         public QualifyOpportunityCommand? LastQualifyCommand { get; private set; }
         public int QualifyCallCount { get; private set; }
         public Result<OpportunityProjection> QualifyResult { get; set; } = Result<OpportunityProjection>.Failure(new Error("UNSET", "Unset"));

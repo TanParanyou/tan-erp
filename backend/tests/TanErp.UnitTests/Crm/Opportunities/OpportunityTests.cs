@@ -122,4 +122,57 @@ public class OpportunityTests
         };
         Assert.Equal(expectedCanonicalStages.OrderBy(s => s), OpportunityStage.All.OrderBy(s => s));
     }
+
+    private static Opportunity CreateValidDraft()
+    {
+        var now = DateTimeOffset.UtcNow;
+        return Opportunity.CreateDraft(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            Guid.NewGuid(), Guid.NewGuid(),
+            "งานห้องนอน TEST_ONLY",
+            "ออกแบบตกแต่งภายใน",
+            new[] { "built-in" },
+            null, 150000m, "THB",
+            new DateOnly(2026, 12, 1),
+            now.AddDays(1),
+            "ติดตามสรุปแบบ",
+            now);
+    }
+
+    [Fact]
+    public void CloseLost_ValidReason_ChangesStageAndRotatesVersion()
+    {
+        var opp = CreateValidDraft();
+        var initialVersion = opp.RowVersion;
+
+        opp.Close(initialVersion, OpportunityStage.Lost, OpportunityReasonCodes.LostPriceTooHigh, "ราคาสูงเกินงบ");
+
+        Assert.Equal(OpportunityStage.Lost, opp.Stage);
+        Assert.NotEqual(initialVersion, opp.RowVersion);
+    }
+
+    [Fact]
+    public void CloseCancelled_ValidReason_ChangesStageAndRotatesVersion()
+    {
+        var opp = CreateValidDraft();
+        var initialVersion = opp.RowVersion;
+
+        opp.Close(initialVersion, OpportunityStage.Cancelled, OpportunityReasonCodes.CancelledCustomerAbandoned);
+
+        Assert.Equal(OpportunityStage.Cancelled, opp.Stage);
+        Assert.NotEqual(initialVersion, opp.RowVersion);
+    }
+
+    [Fact]
+    public void Reopen_ApprovedTarget_ChangesStageAndRotatesVersion()
+    {
+        var opp = CreateValidDraft();
+        opp.Close(opp.RowVersion, OpportunityStage.Lost, OpportunityReasonCodes.LostPriceTooHigh);
+
+        var closedVersion = opp.RowVersion;
+        opp.Reopen(closedVersion, OpportunityStage.Draft, OpportunityReasonCodes.ReopenBudgetAdjusted);
+
+        Assert.Equal(OpportunityStage.Draft, opp.Stage);
+        Assert.NotEqual(closedVersion, opp.RowVersion);
+    }
 }

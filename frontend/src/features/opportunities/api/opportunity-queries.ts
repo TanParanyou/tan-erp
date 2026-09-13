@@ -110,16 +110,21 @@ export function useOpportunityDetail(
   });
 }
 
-export interface QualifyOpportunityVariables {
+export interface TransitionOpportunityStageVariables {
   opportunityId: string;
+  targetStage?: string;
   expectedVersion: string;
+  reasonCode?: string;
+  note?: string;
   idempotencyKey?: string;
 }
 
-export function useQualifyOpportunity(): UseMutationResult<
+export type QualifyOpportunityVariables = TransitionOpportunityStageVariables;
+
+export function useTransitionOpportunityStage(): UseMutationResult<
   OpportunityResponse,
   Error,
-  QualifyOpportunityVariables
+  TransitionOpportunityStageVariables
 > {
   const locale = useSafeLocale();
   const normalizedLocale = locale === "en" ? "en" : "th";
@@ -128,7 +133,14 @@ export function useQualifyOpportunity(): UseMutationResult<
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ opportunityId, expectedVersion, idempotencyKey }: QualifyOpportunityVariables) => {
+    mutationFn: async ({
+      opportunityId,
+      targetStage = "qualified",
+      expectedVersion,
+      reasonCode,
+      note,
+      idempotencyKey,
+    }: TransitionOpportunityStageVariables) => {
       const token = await getAuthToken();
       if (!token) {
         throw new AuthenticationRequiredError();
@@ -140,8 +152,10 @@ export function useQualifyOpportunity(): UseMutationResult<
       return apiClient.transitionOpportunityStage(
         opportunityId,
         {
-          targetStage: "qualified",
+          targetStage,
           expectedVersion,
+          reasonCode,
+          note,
         },
         {
           token,
@@ -157,6 +171,11 @@ export function useQualifyOpportunity(): UseMutationResult<
         updatedOpportunity
       );
 
+      // Invalidate stage history
+      void queryClient.invalidateQueries({
+        queryKey: opportunityStageHistoryQueryKey(membershipId, variables.opportunityId),
+      });
+
       void queryClient.invalidateQueries({
         predicate: (query) => {
           const key = query.queryKey;
@@ -170,6 +189,51 @@ export function useQualifyOpportunity(): UseMutationResult<
         },
       });
     },
+  });
+}
+
+export function useQualifyOpportunity(): UseMutationResult<
+  OpportunityResponse,
+  Error,
+  QualifyOpportunityVariables
+> {
+  return useTransitionOpportunityStage();
+}
+
+export function opportunityStageHistoryQueryKey(
+  membershipId: string | null | undefined,
+  opportunityId: string | null | undefined
+): readonly ["business", string | null | undefined, "opportunities", "stage-history", string | null | undefined] {
+  return ["business", membershipId, "opportunities", "stage-history", opportunityId] as const;
+}
+
+export function useOpportunityStageHistory(
+  opportunityId: string | null | undefined
+): UseQueryResult<import("@/lib/api/api-client").OpportunityStageHistoryListResponse, Error> {
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery({
+    queryKey: opportunityStageHistoryQueryKey(membershipId, opportunityId),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new AuthenticationRequiredError();
+      }
+      if (!membershipId) {
+        throw new MembershipRequiredError();
+      }
+      if (!opportunityId) {
+        throw new Error("No opportunity ID provided");
+      }
+
+      return apiClient.getOpportunityStageHistory(opportunityId, {
+        token,
+        membershipId,
+        signal,
+      });
+    },
+    enabled: Boolean(membershipId && opportunityId && opportunityId !== "create" && opportunityId !== "add"),
   });
 }
 

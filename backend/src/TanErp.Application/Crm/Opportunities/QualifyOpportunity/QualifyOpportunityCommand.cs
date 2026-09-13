@@ -7,4 +7,6 @@ public sealed record QualifyOpportunityCommand(
     string TargetStage,
     Guid ExpectedVersion,
     string IdempotencyKey,
-    string TraceId);
+    string TraceId,
+    string? ReasonCode = null,
+    string? Note = null);
