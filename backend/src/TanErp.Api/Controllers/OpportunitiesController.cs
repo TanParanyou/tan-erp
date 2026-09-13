@@ -448,5 +448,6 @@ public class OpportunitiesController : ControllerBase
         o.NextActionNote,
         o.Stage,
         o.RowVersion,
-        o.CreatedAtUtc);
+        o.CreatedAtUtc,
+        o.Owner != null ? new OwnerSummaryResponse(o.Owner.Id, o.Owner.DisplayName, o.Owner.Email) : null);
 }

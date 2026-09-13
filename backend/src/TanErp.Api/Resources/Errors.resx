@@ -185,4 +185,22 @@
   <data name="OPPORTUNITY_SORT_ORDER_INVALID_DETAIL" xml:space="preserve">
     <value>ลำดับการจัดเรียงรายการโอกาสทางการขายต้องเป็น asc หรือ desc</value>
   </data>
+  <data name="SURVEY_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>ข้อมูลการสำรวจไม่ครบถ้วน</value>
+  </data>
+  <data name="SURVEY_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ข้อมูลจำเป็นสำหรับการนัดหมายสำรวจหน้างานไม่ครบถ้วน</value>
+  </data>
+  <data name="SURVEY_SCHEDULE_INVALID_TITLE" xml:space="preserve">
+    <value>ช่วงเวลานัดหมายไม่ถูกต้อง</value>
+  </data>
+  <data name="SURVEY_SCHEDULE_INVALID_DETAIL" xml:space="preserve">
+    <value>เวลาสิ้นสุดการนัดหมายต้องอยู่หลังเวลาเริ่มต้นการนัดหมาย</value>
+  </data>
+  <data name="SURVEY_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลการสำรวจถูกแก้ไขโดยผู้อื่น</value>
+  </data>
+  <data name="SURVEY_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>เวอร์ชันของข้อมูลการสำรวจไม่ตรงกับข้อมูลล่าสุดในระบบ กรุณาโหลดข้อมูลใหม่</value>
+  </data>
 </root>

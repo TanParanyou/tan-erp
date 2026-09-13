@@ -23,6 +23,10 @@ export type TransitionOpportunityStageRequest = components["schemas"]["Transitio
 export type OpportunityStageHistoryListResponse = components["schemas"]["OpportunityStageHistoryListResponse"];
 export type OpportunityStageHistoryItemResponse = components["schemas"]["OpportunityStageHistoryItemResponse"];
 
+export type SiteSurveyResponse = components["schemas"]["SiteSurveyResponse"];
+export type SiteSurveyRevisionResponse = components["schemas"]["SiteSurveyRevisionResponse"];
+export type CreateSiteSurveyRequest = components["schemas"]["CreateSiteSurveyRequest"];
+
 export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
 export type AddressSearchResultItem = components["schemas"]["AddressSearchResultItem"];
 
@@ -338,6 +342,30 @@ export class ApiClient {
     const endpoint = `/api/v1/users${qs ? `?${qs}` : ""}`;
 
     return this.request<UserListResponse>(endpoint, "GET", options);
+  }
+
+  async createSiteSurvey(
+    opportunityId: string,
+    payload: CreateSiteSurveyRequest,
+    options: RequestOptions
+  ): Promise<SiteSurveyResponse> {
+    return this.request<SiteSurveyResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async getOpportunitySurvey(
+    opportunityId: string,
+    options: RequestOptions
+  ): Promise<SiteSurveyResponse> {
+    return this.request<SiteSurveyResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys`,
+      "GET",
+      options
+    );
   }
 }
 

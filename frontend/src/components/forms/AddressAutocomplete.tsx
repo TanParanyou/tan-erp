@@ -21,6 +21,7 @@ export interface AddressAutocompleteProps {
   label?: string;
   hint?: string;
   placeholder?: string;
+  required?: boolean;
   disabled?: boolean;
   onSelect: (address: SelectedAddress) => void;
   className?: string;
@@ -31,6 +32,7 @@ export function AddressAutocomplete({
   label,
   hint,
   placeholder,
+  required = false,
   disabled = false,
   onSelect,
   className = "",
@@ -186,6 +188,7 @@ export function AddressAutocomplete({
       {label && (
         <label htmlFor={inputId} className="erp-label">
           {label}
+          {required && <span className="erp-label-required">*</span>}
         </label>
       )}
 

@@ -11,6 +11,8 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Alert } from "@/components/ui/Alert";
 import { IconAlertCircle } from "@/components/common/Icons";
+import { Modal } from "@/components/ui/Modal";
+import { getLostReasonOptions, getCancelledReasonOptions } from "../opportunity-labels";
 
 interface OpportunityCloseModalProps {
   isOpen: boolean;
@@ -39,28 +41,12 @@ export function OpportunityCloseModal({
 
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
 
-  if (!isOpen) return null;
-
   const isLost = selectedStage === "lost";
   const title = t("closeOutcomeModalTitle");
   const desc = t("closeOutcomeModalDesc");
 
-  const lostOptions = [
-    { value: "lost_price_too_high", label: t("reasons.lost_price_too_high") },
-    { value: "lost_competitor_selected", label: t("reasons.lost_competitor_selected") },
-    { value: "lost_scope_mismatch", label: t("reasons.lost_scope_mismatch") },
-    { value: "lost_timeline_unfeasible", label: t("reasons.lost_timeline_unfeasible") },
-    { value: "lost_no_response", label: t("reasons.lost_no_response") },
-    { value: "lost_other", label: t("reasons.lost_other") },
-  ];
-
-  const cancelledOptions = [
-    { value: "cancelled_customer_abandoned", label: t("reasons.cancelled_customer_abandoned") },
-    { value: "cancelled_duplicate", label: t("reasons.cancelled_duplicate") },
-    { value: "cancelled_invalid_lead", label: t("reasons.cancelled_invalid_lead") },
-    { value: "cancelled_other", label: t("reasons.cancelled_other") },
-  ];
-
+  const lostOptions = getLostReasonOptions(t);
+  const cancelledOptions = getCancelledReasonOptions(t);
   const reasonOptions = isLost ? lostOptions : cancelledOptions;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,25 +90,14 @@ export function OpportunityCloseModal({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="close-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      description={desc}
+      size="lg"
     >
-      <div
-        className="w-full max-w-lg bg-erp-surface border border-erp-border p-6 flex flex-col gap-4 shadow-xl"
-        style={{ borderRadius: "0px" }}
-      >
-        <div className="flex flex-col gap-1">
-          <h2 id="close-modal-title" className="text-lg font-bold text-erp-danger">
-            {title}
-          </h2>
-          <p className="text-sm text-erp-text-muted">
-            {desc}
-          </p>
-        </div>
-
+      <div className="flex flex-col gap-4">
         {errorMsg && (
           <Alert variant="danger" title={tCommon("feedback.operationFailed")}>
             <div className="flex items-center gap-2">
@@ -195,6 +170,6 @@ export function OpportunityCloseModal({
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

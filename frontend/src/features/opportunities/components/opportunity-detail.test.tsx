@@ -9,6 +9,7 @@ import * as oppQueries from "../api/opportunity-queries";
 import * as customerQueries from "@/features/customers/api/customer-queries";
 import * as siteQueries from "@/features/sites/api/site-queries";
 import * as userQueries from "@/features/users/api/user-queries";
+import * as surveyQueries from "@/features/surveys/api/survey-queries";
 import * as membershipContext from "@/lib/membership/selected-membership-context";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
 import { ToastProvider } from "@/hooks/useToast";
@@ -475,15 +476,23 @@ describe("OpportunityDetail Component", () => {
       </QueryClientProvider>
     );
 
-    // Reassign Owner button should be visible
-    const reassignBtn = screen.getByRole("button", { name: /โอนย้ายผู้รับผิดชอบ/i });
-    expect(reassignBtn).toBeDefined();
+    // Open manage actions dropdown
+    const manageBtn = screen.getByRole("button", { name: /จัดการ/i });
+    expect(manageBtn).toBeDefined();
 
     const { fireEvent, act } = await import("@testing-library/react");
 
-    // Click button to open modal
     await act(async () => {
-      fireEvent.click(reassignBtn);
+      fireEvent.click(manageBtn);
+    });
+
+    // Reassign Owner menuitem should be visible
+    const reassignItem = screen.getByRole("menuitem", { name: /โอนย้ายผู้รับผิดชอบ/i });
+    expect(reassignItem).toBeDefined();
+
+    // Click item to open modal
+    await act(async () => {
+      fireEvent.click(reassignItem);
     });
 
     // Modal dialog should be rendered
@@ -576,15 +585,23 @@ describe("OpportunityDetail Component", () => {
       </QueryClientProvider>
     );
 
-    // Edit button should be visible
-    const editBtn = screen.getByRole("button", { name: /แก้ไขข้อมูล/i });
-    expect(editBtn).toBeDefined();
+    // Open manage actions dropdown
+    const manageBtn = screen.getByRole("button", { name: /จัดการ/i });
+    expect(manageBtn).toBeDefined();
 
     const { fireEvent, act } = await import("@testing-library/react");
 
-    // Click edit button to open drawer
     await act(async () => {
-      fireEvent.click(editBtn);
+      fireEvent.click(manageBtn);
+    });
+
+    // Edit menuitem should be visible
+    const editItem = screen.getByRole("menuitem", { name: /แก้ไขข้อมูล/i });
+    expect(editItem).toBeDefined();
+
+    // Click edit item to open drawer
+    await act(async () => {
+      fireEvent.click(editItem);
     });
 
     // Drawer dialog should be open
@@ -661,13 +678,22 @@ describe("OpportunityDetail Component", () => {
       </QueryClientProvider>
     );
 
-    // Click Close button
-    const closeBtn = screen.getByRole("button", { name: /ปิดงาน \/ ยกเลิก\.\.\./i });
-    expect(closeBtn).toBeDefined();
+    // Open manage actions dropdown
+    const manageBtn = screen.getByRole("button", { name: /จัดการ/i });
+    expect(manageBtn).toBeDefined();
 
     const { fireEvent, act } = await import("@testing-library/react");
+
     await act(async () => {
-      fireEvent.click(closeBtn);
+      fireEvent.click(manageBtn);
+    });
+
+    // Close menuitem should be visible
+    const closeItem = screen.getByRole("menuitem", { name: /ปิดงาน \/ ยกเลิก\.\.\./i });
+    expect(closeItem).toBeDefined();
+
+    await act(async () => {
+      fireEvent.click(closeItem);
     });
 
     // Modal dialog should be open
@@ -783,5 +809,73 @@ describe("OpportunityDetail Component", () => {
       })
     );
   });
-});
 
+  it("renders SurveyCard with surveyor display name projected from backend", () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
+      selectedMembership: mockMembership,
+      memberships: [mockMembership],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    vi.spyOn(oppQueries, "useOpportunityDetail").mockReturnValue({
+      data: {
+        ...sampleOpportunity,
+        stage: "surveying",
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityDetail>);
+
+    vi.spyOn(surveyQueries, "useOpportunitySurvey").mockReturnValue({
+      data: {
+        id: "40000000-0000-0000-0000-000000000001",
+        surveyNumber: "SRV-2026-0001",
+        opportunityId: sampleOpportunity.id,
+        siteId: sampleOpportunity.primarySiteId,
+        assignedSurveyorId: "user-2",
+        assignedSurveyor: {
+          id: "user-2",
+          displayName: "นายสำรวจ พร้อมลุย",
+          email: "surveyor@example.com",
+        },
+        status: "scheduled",
+        scheduledStartUtc: "2026-09-20T09:00:00Z",
+        currentRevision: {
+          id: "50000000-0000-0000-0000-000000000001",
+          siteSurveyId: "40000000-0000-0000-0000-000000000001",
+          revisionNumber: 1,
+          status: "draft",
+          readiness: "draft",
+          rowVersion: "00000000-0000-0000-0000-000000000001",
+          createdAtUtc: "2026-09-13T04:00:00Z",
+        },
+        rowVersion: "00000000-0000-0000-0000-000000000001",
+        createdAtUtc: "2026-09-13T04:00:00Z",
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as ReturnType<typeof surveyQueries.useOpportunitySurvey>);
+
+    render(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <ToastProvider>
+            <OpportunityDetail opportunityId={sampleOpportunity.id} />
+          </ToastProvider>
+        </NextIntlClientProvider>
+      </QueryClientProvider>
+    );
+
+    // SurveyCard should show surveyor's displayName from assignedSurveyor projection
+    expect(screen.getByText("SRV-2026-0001")).toBeDefined();
+    expect(screen.getByText("นายสำรวจ พร้อมลุย")).toBeDefined();
+  });
+});

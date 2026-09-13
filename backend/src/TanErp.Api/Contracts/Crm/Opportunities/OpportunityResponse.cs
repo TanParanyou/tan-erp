@@ -1,5 +1,10 @@
 namespace TanErp.Api.Contracts.Crm.Opportunities;
 
+public sealed record OwnerSummaryResponse(
+    Guid Id,
+    string DisplayName,
+    string? Email);
+
 public sealed record OpportunityResponse(
     Guid Id,
     string Code,
@@ -18,4 +23,5 @@ public sealed record OpportunityResponse(
     string? NextActionNote,
     string Stage,
     Guid RowVersion,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    OwnerSummaryResponse? Owner = null);

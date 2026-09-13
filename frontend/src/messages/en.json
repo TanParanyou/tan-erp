@@ -86,7 +86,8 @@
       "saveChanges": "Save Changes",
       "clearSelection": "Clear selection",
       "loadMore": "Load More",
-      "clear": "Clear"
+      "clear": "Clear",
+      "manage": "Actions"
     },
     "status": {
       "active": "Active",
@@ -537,6 +538,7 @@
     "userSelectionRequired": "Please select a responsible employee",
     "reassignSuccess": "Opportunity owner reassigned successfully",
     "saving": "Saving...",
+    "scheduleSurveyAction": "Schedule Survey",
     "closeAction": "Close / Cancel...",
     "closeLostAction": "Mark as Lost",
     "closeCancelledAction": "Cancel Opportunity",
@@ -577,12 +579,46 @@
       "cancelled_customer_abandoned": "Customer abandoned project",
       "cancelled_duplicate": "Duplicate opportunity",
       "cancelled_invalid_lead": "Invalid lead/wrong target",
+      "cancelled_force_majeure": "Force majeure / Uncontrollable external factor",
+      "cancelled_internal_decision": "Internal cancellation decision",
       "cancelled_other": "Other reason",
       "reopen_customer_reengaged": "Customer re-engaged",
       "reopen_budget_adjusted": "Budget adjusted",
       "reopen_scope_redefined": "Scope redefined",
       "reopen_erroneous_closure": "Erroneous closure",
       "reopen_other": "Other reason"
+    }
+  },
+  "surveys": {
+    "surveyCardTitle": "Site Survey Appointment Details",
+    "surveyNumberLabel": "Survey Number",
+    "siteLabel": "Survey Site",
+    "siteSelectPlaceholder": "-- Select Survey Site --",
+    "siteRequired": "Please select a survey site",
+    "surveyorLabel": "Assigned Surveyor",
+    "surveyorPlaceholder": "Select surveyor employee...",
+    "surveyorRequired": "Please select an assigned surveyor",
+    "scheduledTimeLabel": "Schedule Date & Time",
+    "scheduledStartLabel": "Scheduled Start",
+    "scheduledEndLabel": "Scheduled End",
+    "endBeforeStartError": "Scheduled end time must be after scheduled start time",
+    "scheduleModalTitle": "Schedule Site Survey",
+    "scheduleModalDesc": "Create survey appointment with initial Baseline Revision 1. Upon saving, opportunity stage will automatically transition to 'Surveying'.",
+    "confirmScheduleAction": "Confirm Schedule",
+    "scheduleSuccess": "Site survey scheduled successfully",
+    "versionConflict": "Opportunity has been modified by another user. Please reload.",
+    "revisionBadge": "Rev {number}",
+    "statuses": {
+      "scheduled": "Scheduled",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "revisionStatuses": {
+      "draft": "Draft",
+      "ready": "Ready",
+      "superseded": "Superseded",
+      "void": "Void"
     }
   }
 }

@@ -26,6 +26,10 @@ export const PERMISSIONS = {
   OPPORTUNITIES_CREATE: "opportunities.create",
   OPPORTUNITIES_UPDATE: "opportunities.update",
   OPPORTUNITIES_TRANSITION: "opportunities.transition",
+
+  // Surveys
+  SURVEYS_READ: "surveys.read",
+  SURVEYS_CREATE: "surveys.create",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

@@ -11,6 +11,8 @@ import { UserAutocomplete } from "@/components/forms/UserAutocomplete";
 import { Alert } from "@/components/ui/Alert";
 import { IconAlertCircle } from "@/components/common/Icons";
 
+import { Modal } from "@/components/ui/Modal";
+
 interface OpportunityOwnerReassignModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -33,8 +35,6 @@ export function OpportunityOwnerReassignModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,25 +75,14 @@ export function OpportunityOwnerReassignModal({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="reassign-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t("reassignOwnerModalTitle")}
+      description={t("reassignOwnerModalDesc")}
+      size="lg"
     >
-      <div
-        className="w-full max-w-lg bg-erp-surface border border-erp-border p-6 flex flex-col gap-4 shadow-xl"
-        style={{ borderRadius: "0px" }}
-      >
-        <div className="flex flex-col gap-1">
-          <h2 id="reassign-modal-title" className="text-lg font-bold text-erp-navy">
-            {t("reassignOwnerModalTitle")}
-          </h2>
-          <p className="text-sm text-erp-text-muted">
-            {t("reassignOwnerModalDesc")}
-          </p>
-        </div>
-
+      <div className="flex flex-col gap-4">
         {errorMsg && (
           <Alert variant="danger" title={tCommon("feedback.operationFailed")}>
             <div className="flex items-center gap-2">
@@ -139,6 +128,6 @@ export function OpportunityOwnerReassignModal({
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

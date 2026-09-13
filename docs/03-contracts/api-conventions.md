@@ -11,6 +11,9 @@
 - Money ส่ง `amount` และ `currency`; ห้ามใช้ Floating Point
 - List endpoint รองรับ deterministic pagination และ explicit sorting โดยจัดกลุ่ม Metadata ไว้ใน nested object `pagination: { page, pageSize, totalCount, totalPages, nextCursor }`
 - Mutating request สำคัญรองรับ Idempotency Key ตาม Contract
+- **Structured Projections & Nested Objects (JsonDocument Pattern):**
+  - ใน Response ของ Resource หลัก (เช่น Opportunity, SiteSurvey, Estimate) ข้อมูล Entity ที่มีความสัมพันธ์เกี่ยวข้องกัน (เช่น Owner, Customer, Primary Site, Assigned Surveyor) ต้องถูกส่งคืนมาเป็น Nested JSON Object / JsonDocument ที่มี Label/DisplayName พร้อมใช้งาน (เช่น `owner: { id, displayName, email }`, `primarySite: { id, label }`)
+  - **ห้ามส่งคืนเฉพาะ Foreign Key ID แบนๆ** เพื่อผลักภาระให้ Frontend ต้องไปยิง query หลายรอบและเขียน logic `find()` ประกอบร่างข้อมูลเองเด็ดขาด Backend มีหน้าที่รับผิดชอบทำ Join/Projection ให้สมบูรณ์จากฐานข้อมูลโดยตรง
 
 ## ตัวอย่าง Resource
 
@@ -85,3 +88,5 @@ Endpoint, Stage และ Ready Survey Revision ของ Customer/Opportunity/S
 - ทุก Request ส่ง `Accept-Language: th` หรือ `en`
 - ทุก Response มี Correlation/Trace ID ที่ค้นในระบบติดตามได้
 - List ต้องกำหนด Max Page Size และ Stable Tie-breaker เช่น `id`
+- **Structured Projections & JsonDocument Pattern:** ข้อมูล Entity ที่ต้องนำไปแสดงผลคู่กัน (เช่น Owner, Surveyor, Customer, Site) Backend ต้องทำ Projection เป็น Nested Object จากฐานข้อมูลโดยตรง (เช่น `owner: { id, displayName, email }`, `assignedSurveyor: { id, displayName }`) ห้ามส่งเฉพาะ UUID ดิบเพื่อบังคับให้ Frontend ไปเรียก API ดึงรายการทั้งหมดมาค้นหา (`find`) เอง
+- **No Loose / Arbitrary Fallback Chains:** ห้ามทำ Fallback ลูกโซ่แบบเดาสุ่มที่ Frontend (เช่น `valA || valB || valC` หรือหยิบ field อื่นมาประดิษฐ์ string แสดงผลแทน) ข้อมูลที่แสดงต้องมาจาก Contract และ Single Source of Truth ที่ชัดเจน หากไม่มีข้อมูลให้แสดงสถานะว่างตามมาตรฐาน (`-`) ห้ามเดาข้อมูลขึ้นมาเองเพื่อเอาใจเทสต์หรือหลบข้อผิดพลาด

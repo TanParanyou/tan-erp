@@ -88,6 +88,7 @@ export function AddressAreaField({
         id={id}
         label={displayLabel}
         hint={hint}
+        required={required}
         disabled={disabled}
         onSelect={onSelect}
       />

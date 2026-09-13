@@ -1498,6 +1498,184 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/opportunities/{opportunityId}/surveys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    opportunityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SiteSurveyResponse"];
+                        "application/json": components["schemas"]["SiteSurveyResponse"];
+                        "text/json": components["schemas"]["SiteSurveyResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    opportunityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSiteSurveyRequest"];
+                    "text/json": components["schemas"]["CreateSiteSurveyRequest"];
+                    "application/*+json": components["schemas"]["CreateSiteSurveyRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SiteSurveyResponse"];
+                        "application/json": components["schemas"]["SiteSurveyResponse"];
+                        "text/json": components["schemas"]["SiteSurveyResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -1661,6 +1839,18 @@ export interface components {
             longitude?: number | null;
             accessNote?: string | null;
         };
+        CreateSiteSurveyRequest: {
+            /** Format: uuid */
+            siteId?: string;
+            /** Format: uuid */
+            assignedSurveyorId?: string;
+            /** Format: date-time */
+            scheduledStartUtc?: string | null;
+            /** Format: date-time */
+            scheduledEndUtc?: string | null;
+            /** Format: uuid */
+            expectedOpportunityVersion?: string;
+        };
         CurrentUserResponse: {
             user?: components["schemas"]["UserDto"];
             memberships?: components["schemas"]["MembershipDto"][] | null;
@@ -1756,6 +1946,7 @@ export interface components {
             rowVersion?: string;
             /** Format: date-time */
             createdAtUtc?: string;
+            owner?: components["schemas"]["OwnerSummaryResponse"];
         };
         OpportunityStageHistoryItemResponse: {
             /** Format: uuid */
@@ -1779,6 +1970,12 @@ export interface components {
             /** Format: uuid */
             id?: string;
             name?: string | null;
+        };
+        OwnerSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+            email?: string | null;
         };
         PaginationMetadataResponse: {
             /** Format: int32 */
@@ -1829,6 +2026,75 @@ export interface components {
             rowVersion?: string;
             /** Format: date-time */
             createdAtUtc?: string;
+        };
+        SiteSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            label?: string | null;
+            addressLine1?: string | null;
+        };
+        SiteSurveyResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            /** Format: uuid */
+            opportunityId?: string;
+            /** Format: uuid */
+            siteId?: string;
+            surveyNumber?: string | null;
+            /** Format: uuid */
+            assignedSurveyorId?: string;
+            /** Format: date-time */
+            scheduledStartUtc?: string | null;
+            /** Format: date-time */
+            scheduledEndUtc?: string | null;
+            status?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: uuid */
+            createdByUserId?: string;
+            currentRevision?: components["schemas"]["SiteSurveyRevisionResponse"];
+            assignedSurveyor?: components["schemas"]["SurveyorSummaryResponse"];
+            site?: components["schemas"]["SiteSummaryResponse"];
+        };
+        SiteSurveyRevisionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            siteSurveyId?: string;
+            /** Format: int32 */
+            revisionNumber?: number;
+            surveyTemplateVersion?: string | null;
+            /** Format: date-time */
+            visitedAtUtc?: string | null;
+            scopeSummary?: string | null;
+            assumptions?: string[] | null;
+            constraints?: string[] | null;
+            missingDetails?: string[] | null;
+            readiness?: string | null;
+            status?: string | null;
+            /** Format: date-time */
+            readyAtUtc?: string | null;
+            /** Format: uuid */
+            readyByUserId?: string | null;
+            snapshotHash?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: uuid */
+            createdByUserId?: string;
+        };
+        SurveyorSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+            email?: string | null;
         };
         TransitionOpportunityStageRequest: {
             targetStage?: string | null;

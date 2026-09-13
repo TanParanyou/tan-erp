@@ -132,6 +132,21 @@ public class Opportunity : Entity
         RowVersion = Guid.NewGuid();
     }
 
+    public void EnterSurveying(Guid expectedVersion, Guid siteId)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage != OpportunityStage.Qualified) throw new OpportunityTransitionException(Stage, OpportunityStage.Surveying);
+        if (siteId == Guid.Empty) throw new ArgumentException("Site ID cannot be empty.", nameof(siteId));
+
+        if (!PrimarySiteId.HasValue)
+        {
+            PrimarySiteId = siteId;
+        }
+
+        Stage = OpportunityStage.Surveying;
+        RowVersion = Guid.NewGuid();
+    }
+
     public void Close(Guid expectedVersion, string targetStage, string reasonCode, string? note = null)
     {
         if (RowVersion != expectedVersion) throw new OpportunityVersionException();

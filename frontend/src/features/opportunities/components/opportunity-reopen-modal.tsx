@@ -11,6 +11,8 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Alert } from "@/components/ui/Alert";
 import { IconAlertCircle } from "@/components/common/Icons";
+import { Modal } from "@/components/ui/Modal";
+import { getReopenReasonOptions } from "../opportunity-labels";
 
 interface OpportunityReopenModalProps {
   isOpen: boolean;
@@ -36,15 +38,7 @@ export function OpportunityReopenModal({
 
   const idempotencyKeyRef = useRef<string>(crypto.randomUUID());
 
-  if (!isOpen) return null;
-
-  const reopenOptions = [
-    { value: "reopen_customer_reengaged", label: t("reasons.reopen_customer_reengaged") },
-    { value: "reopen_budget_adjusted", label: t("reasons.reopen_budget_adjusted") },
-    { value: "reopen_scope_redefined", label: t("reasons.reopen_scope_redefined") },
-    { value: "reopen_erroneous_closure", label: t("reasons.reopen_erroneous_closure") },
-    { value: "reopen_other", label: t("reasons.reopen_other") },
-  ];
+  const reopenOptions = getReopenReasonOptions(t);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,25 +84,14 @@ export function OpportunityReopenModal({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="reopen-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t("reopenModalTitle")}
+      description={t("reopenModalDesc")}
+      size="lg"
     >
-      <div
-        className="w-full max-w-lg bg-erp-surface border border-erp-border p-6 flex flex-col gap-4 shadow-xl"
-        style={{ borderRadius: "0px" }}
-      >
-        <div className="flex flex-col gap-1">
-          <h2 id="reopen-modal-title" className="text-lg font-bold text-erp-navy">
-            {t("reopenModalTitle")}
-          </h2>
-          <p className="text-sm text-erp-text-muted">
-            {t("reopenModalDesc")}
-          </p>
-        </div>
-
+      <div className="flex flex-col gap-4">
         {errorMsg && (
           <Alert variant="danger" title={tCommon("feedback.operationFailed")}>
             <div className="flex items-center gap-2">
@@ -165,6 +148,6 @@ export function OpportunityReopenModal({
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

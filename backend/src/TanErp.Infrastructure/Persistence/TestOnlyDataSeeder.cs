@@ -80,7 +80,9 @@ public static class TestOnlyDataSeeder
             ("opportunities.read", "Read Opportunities"),
             ("opportunities.create", "Create Opportunities"),
             ("opportunities.update", "Update Opportunities"),
-            ("opportunities.transition", "Transition Opportunities")
+            ("opportunities.transition", "Transition Opportunities"),
+            ("surveys.read", "Read Site Surveys"),
+            ("surveys.create", "Create Site Surveys")
         };
 
         var seededPerms = new List<Permission>();

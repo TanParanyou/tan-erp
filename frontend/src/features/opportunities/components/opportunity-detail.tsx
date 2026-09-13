@@ -14,7 +14,8 @@ import { useDisclosure } from "@/hooks/useDisclosure";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { IconChevronLeft, IconAlertCircle, IconBriefcase, IconCheckCircle } from "@/components/common/Icons";
+import { DropdownMenu, type DropdownMenuItem } from "@/components/ui/DropdownMenu";
+import { IconChevronLeft, IconAlertCircle, IconBriefcase, IconCheckCircle, IconEdit, IconUser, IconClose } from "@/components/common/Icons";
 import { EntityDetailHeader } from "@/components/ui/EntityDetailHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -26,6 +27,9 @@ import { OpportunityOpenEditorDrawer } from "./opportunity-open-editor-drawer";
 import { OpportunityCloseModal } from "./opportunity-close-modal";
 import { OpportunityReopenModal } from "./opportunity-reopen-modal";
 import { OpportunityStageTimeline } from "./opportunity-stage-timeline";
+import { useOpportunitySurvey } from "@/features/surveys/api/survey-queries";
+import { SurveyAppointmentModal } from "@/features/surveys/components/survey-appointment-modal";
+import { SurveyCard } from "@/features/surveys/components/survey-card";
 
 interface QualificationIntent {
   idempotencyKey: string;
@@ -54,6 +58,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const editDrawer = useDisclosure();
   const closeOutcomeModal = useDisclosure();
   const reopenModal = useDisclosure();
+  const surveyModal = useDisclosure();
   const [qualifyModalError, setQualifyModalError] = useState<string | null>(null);
   const customerDrawer = useDisclosure();
 
@@ -69,12 +74,15 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
   const qualifyMutation = useQualifyOpportunity();
 
+  // Load scoped Survey info if exists
+  const { data: survey } = useOpportunitySurvey(opportunityId);
+
   // Load scoped Customer info
   const customerId = opportunity?.customerId;
   const { data: customer } = useCustomerDetail(customerId);
 
   // Load scoped Customer Sites
-  const { data: siteData } = useCustomerSiteList(customerId);
+  const siteData = useCustomerSiteList(customerId).data;
   const primarySite = siteData?.items?.find((s) => s.id === opportunity?.primarySiteId);
 
   const resolveStageLabel = (stage: string | null | undefined): string => {
@@ -126,6 +134,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   };
 
   const isDraft = opportunity?.stage === "draft";
+  const isQualified = opportunity?.stage === "qualified";
   const isOpen =
     opportunity?.stage === "draft" ||
     opportunity?.stage === "qualified" ||
@@ -135,7 +144,9 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const isClosed = opportunity?.stage === "lost" || opportunity?.stage === "cancelled";
   const canTransition = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_TRANSITION);
   const canUpdate = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_UPDATE);
+  const canCreateSurvey = can(selectedMembership, PERMISSIONS.SURVEYS_CREATE);
   const canQualify = isDraft && canTransition;
+  const canScheduleSurvey = isQualified && canCreateSurvey;
   const canReassign = isOpen && canUpdate;
   const canClose = isOpen && canTransition;
   const canReopen = isClosed && canTransition;
@@ -338,46 +349,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         ]}
         actions={
           <div className="flex items-center gap-2">
-            {canReopen && (
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => reopenModal.open()}
-                className="font-semibold"
-              >
-                {t("reopenAction")}
-              </Button>
-            )}
-            {canClose && (
-              <Button
-                variant="outline"
-                size="md"
-                onClick={() => closeOutcomeModal.open()}
-                className="font-semibold text-erp-danger border-erp-danger/40 hover:bg-erp-danger/10"
-              >
-                {t("closeAction")}
-              </Button>
-            )}
-            {canReassign && (
-              <Button
-                variant="outline"
-                size="md"
-                onClick={() => editDrawer.open()}
-                className="font-semibold"
-              >
-                {t("editOpportunityAction")}
-              </Button>
-            )}
-            {canReassign && (
-              <Button
-                variant="outline"
-                size="md"
-                onClick={() => reassignModal.open()}
-                className="font-semibold"
-              >
-                {t("reassignOwnerAction")}
-              </Button>
-            )}
+            {/* Primary Action Button based on Opportunity Stage */}
             {canQualify && (
               <Button
                 variant="primary"
@@ -388,9 +360,74 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                 {t("qualifyAction")}
               </Button>
             )}
+            {canScheduleSurvey && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => surveyModal.open()}
+                className="font-semibold"
+              >
+                {t("scheduleSurveyAction")}
+              </Button>
+            )}
+            {canReopen && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => reopenModal.open()}
+                className="font-semibold"
+              >
+                {t("reopenAction")}
+              </Button>
+            )}
+
+            {/* Management Actions Dropdown Menu */}
+            {(canReassign || canClose) && (
+              <DropdownMenu
+                triggerLabel={tCommon("actions.manage")}
+                items={[
+                  ...(canReassign
+                    ? [
+                        {
+                          key: "edit-opportunity",
+                          label: t("editOpportunityAction"),
+                          icon: <IconEdit size={16} />,
+                          onClick: () => editDrawer.open(),
+                        },
+                        {
+                          key: "reassign-owner",
+                          label: t("reassignOwnerAction"),
+                          icon: <IconUser size={16} />,
+                          onClick: () => reassignModal.open(),
+                        },
+                      ]
+                    : []),
+                  ...(canClose
+                    ? [
+                        {
+                          key: "close-opportunity",
+                          label: t("closeAction"),
+                          icon: <IconClose size={16} />,
+                          onClick: () => closeOutcomeModal.open(),
+                          variant: "danger" as const,
+                          dividerAbove: canReassign,
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            )}
           </div>
         }
       />
+
+      {canScheduleSurvey && (
+        <SurveyAppointmentModal
+          isOpen={surveyModal.isOpen}
+          onClose={surveyModal.close}
+          opportunity={opportunity}
+        />
+      )}
 
       {canReassign && (
         <OpportunityOpenEditorDrawer
@@ -472,6 +509,14 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
       {isDraft && canUpdate && (
         <OpportunityQGateEditor
           opportunity={opportunity}
+        />
+      )}
+
+      {/* Survey Information Card */}
+      {survey && (
+        <SurveyCard
+          survey={survey}
+          siteLabel={primarySite?.label || primarySite?.addressLine1 || undefined}
         />
       )}
 
@@ -578,6 +623,24 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
             ) : (
               "-"
             )}
+          </dd>
+
+          <dt>{t("ownerLabel")}:</dt>
+          <dd>
+            {opportunity.owner ? (
+              <span className="font-medium text-erp-text-main">
+                {opportunity.owner.displayName} {opportunity.owner.email ? `(${opportunity.owner.email})` : ""}
+              </span>
+            ) : opportunity.ownerUserId ? (
+              <span className="font-mono text-erp-text-muted">{opportunity.ownerUserId}</span>
+            ) : (
+              "-"
+            )}
+          </dd>
+
+          <dt>{t("branchLabel")}:</dt>
+          <dd className="font-medium text-erp-text-main">
+            {opportunity.branchId || "-"}
           </dd>
 
           <dt>{t("createdAt")}:</dt>

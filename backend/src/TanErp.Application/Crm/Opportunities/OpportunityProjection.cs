@@ -1,5 +1,10 @@
 namespace TanErp.Application.Crm.Opportunities;
 
+public sealed record OwnerSummaryProjection(
+    Guid Id,
+    string DisplayName,
+    string? Email);
+
 public sealed record OpportunityProjection(
     Guid Id,
     string Code,
@@ -18,4 +23,5 @@ public sealed record OpportunityProjection(
     string? NextActionNote,
     string Stage,
     Guid RowVersion,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    OwnerSummaryProjection? Owner = null);

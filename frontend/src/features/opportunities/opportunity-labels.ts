@@ -91,3 +91,71 @@ export function getOpportunityLeadSourceOptions(t: (key: string) => string): { v
     { value: "other", label: t("leadSourceOther") },
   ];
 }
+
+export const CANONICAL_LOST_REASONS = [
+  "lost_price_too_high",
+  "lost_competitor_selected",
+  "lost_scope_mismatch",
+  "lost_timeline_unfeasible",
+  "lost_no_response",
+  "lost_other",
+] as const;
+
+export type LostReasonKey = (typeof CANONICAL_LOST_REASONS)[number];
+
+export const CANONICAL_CANCELLED_REASONS = [
+  "cancelled_customer_abandoned",
+  "cancelled_duplicate",
+  "cancelled_invalid_lead",
+  "cancelled_force_majeure",
+  "cancelled_internal_decision",
+  "cancelled_other",
+] as const;
+
+export type CancelledReasonKey = (typeof CANONICAL_CANCELLED_REASONS)[number];
+
+export const CANONICAL_REOPEN_REASONS = [
+  "reopen_customer_reengaged",
+  "reopen_budget_adjusted",
+  "reopen_scope_redefined",
+  "reopen_erroneous_closure",
+  "reopen_other",
+] as const;
+
+export type ReopenReasonKey = (typeof CANONICAL_REOPEN_REASONS)[number];
+
+export function getLostReasonOptions(t: (key: string) => string): { value: string; label: string }[] {
+  return CANONICAL_LOST_REASONS.map((code) => ({
+    value: code,
+    label: t(`reasons.${code}`),
+  }));
+}
+
+export function getCancelledReasonOptions(t: (key: string) => string): { value: string; label: string }[] {
+  return CANONICAL_CANCELLED_REASONS.map((code) => ({
+    value: code,
+    label: t(`reasons.${code}`),
+  }));
+}
+
+export function getReopenReasonOptions(t: (key: string) => string): { value: string; label: string }[] {
+  return CANONICAL_REOPEN_REASONS.map((code) => ({
+    value: code,
+    label: t(`reasons.${code}`),
+  }));
+}
+
+export function resolveReasonLabel(reasonCode: string | null | undefined, t: (key: string) => string): string | null {
+  if (!reasonCode) return null;
+  const isKnown =
+    (CANONICAL_LOST_REASONS as readonly string[]).includes(reasonCode) ||
+    (CANONICAL_CANCELLED_REASONS as readonly string[]).includes(reasonCode) ||
+    (CANONICAL_REOPEN_REASONS as readonly string[]).includes(reasonCode);
+
+  if (isKnown) {
+    return t(`reasons.${reasonCode}`);
+  }
+  return reasonCode;
+}
+
+

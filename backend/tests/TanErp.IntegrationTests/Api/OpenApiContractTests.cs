@@ -125,6 +125,12 @@ public class OpenApiContractTests : IAsyncLifetime
         var stageHistoryPath = paths["/api/v1/opportunities/{id}/stage-history"]?["get"]?.AsObject();
         Assert.NotNull(stageHistoryPath);
 
+        Assert.True(paths.ContainsKey("/api/v1/opportunities/{opportunityId}/surveys"), "OpenAPI must contain path /api/v1/opportunities/{opportunityId}/surveys");
+        var surveyPath = paths["/api/v1/opportunities/{opportunityId}/surveys"]?.AsObject();
+        Assert.NotNull(surveyPath);
+        Assert.NotNull(surveyPath["post"]?.AsObject());
+        Assert.NotNull(surveyPath["get"]?.AsObject());
+
         Assert.True(paths.ContainsKey("/api/v1/users"), "OpenAPI must contain path /api/v1/users");
         var listUsersPath = paths["/api/v1/users"]?["get"]?.AsObject();
         Assert.NotNull(listUsersPath);
@@ -165,6 +171,9 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("OpportunityStageHistoryItemResponse"), "Must define OpportunityStageHistoryItemResponse schema");
         Assert.True(schemas.ContainsKey("AddressSearchResponse"), "Must define AddressSearchResponse schema");
         Assert.True(schemas.ContainsKey("AddressSearchResultItem"), "Must define AddressSearchResultItem schema");
+        Assert.True(schemas.ContainsKey("CreateSiteSurveyRequest"), "Must define CreateSiteSurveyRequest schema");
+        Assert.True(schemas.ContainsKey("SiteSurveyResponse"), "Must define SiteSurveyResponse schema");
+        Assert.True(schemas.ContainsKey("SiteSurveyRevisionResponse"), "Must define SiteSurveyRevisionResponse schema");
         Assert.True(schemas.ContainsKey("UserListResponse"), "Must define UserListResponse schema");
         Assert.True(schemas.ContainsKey("UserListItemResponse"), "Must define UserListItemResponse schema");
         Assert.True(schemas.ContainsKey("ApiProblemDetails"), "Must define ApiProblemDetails schema");

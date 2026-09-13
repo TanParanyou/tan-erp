@@ -111,7 +111,8 @@ This repository is in **Application Implementation**. The authorized implementat
 
 ### Frontend (Next.js App Router + TypeScript)
 - **Strict TypeScript:** ห้ามใช้ type `any`, `as any` หรือ `@ts-ignore` เด็ดขาด กำหนด DTO / Interface ให้ครบถ้วน หรือใช้ `unknown` แล้ว narrow
-- **Strict Error Handling & No Arbitrary Fallback:** ห้ามดักจับหรือเปรียบเทียบ Error ด้วย String message ดิบ (เช่น `error.message === "..."`) และห้ามทำ loose/arbitrary fallback ในฟังก์ชันทุกประเภท (ไม่ว่าจะเป็น guard functions, resolvers หรือ mappers) ห้ามเดาสุ่มเพื่อเอาใจเทสต์ ต้องใช้ `ApiError` subclasses, machine-readable `code` หรือ type guards ตรวจสอบด้วย `instanceof` เท่านั้น
+- **Strict Error Handling & No Arbitrary Fallback:** ห้ามดักจับหรือเปรียบเทียบ Error ด้วย String message ดิบ (เช่น `error.message === "..."`) และ**ห้ามทำ Loose / Arbitrary Fallback ต่อกันเป็นลูกโซ่เด็ดขาด** (เช่น `valA || valB || valC` หรือเดา field อื่นมาแสดงแทนเมื่อไม่มีข้อมูล) ไม่ว่าจะเป็น guard functions, UI components, resolvers หรือ data mappers ต้องยึดถือ Single Source of Truth และ Structured Contract ที่แน่นอน หากไม่มีข้อมูลให้แสดงสถานะว่าง/ไม่มีข้อมูลตามมาตรฐาน (`-`) ห้ามเดาสุ่มหรือประดิษฐ์ข้อมูลขึ้นมาเองเพื่อเอาใจเทสต์
+- **No FE Find Logic & Backend Structured Projection (JsonDocument):** ข้อมูลความสัมพันธ์ที่ต้องใช้แสดงผลบนหน้าจอ (เช่น ผู้รับผิดชอบ, สถานที่, ลูกค้า) ต้องถูกโปรเจกต์เป็น Structured JSON Object / JsonDocument จาก Backend มาใน Response โดยตรง (เช่น `owner: { id, displayName, email }`, `assignedSurveyor: { id, displayName }`) **ห้ามส่งคืนเฉพาะ Foreign Key UUID ดิบ แล้วเขียน logic `array.find(...)` จับคู่ข้อมูลเองที่ Frontend เด็ดขาด**
 - จัดโครงสร้างตาม Business Feature (`src/features/<feature>/`)
 - TanStack Query เป็นเจ้าของ Server State; ห้าม fetch API ใน `useEffect` โดยตรง
 - ห้ามเรียก Database ตรงจาก Frontend Code; ทุกอย่างต้องผ่าน API Client

@@ -976,7 +976,7 @@ public class OpportunityStore : IOpportunityStore
             }
         }
 
-        var projections = items.Select(ToProjection).ToList();
+        var projections = items.Select(o => ToProjection(o)).ToList();
         return new OpportunityPage(projections, nextCursor, totalCount, currentPage, limit);
     }
 
@@ -989,7 +989,15 @@ public class OpportunityStore : IOpportunityStore
             .AsNoTracking()
             .FirstOrDefaultAsync(o => o.Id == opportunityId && o.OrganizationId == organizationId, cancellationToken);
 
-        return opp != null ? ToProjection(opp) : null;
+        if (opp == null) return null;
+
+        var owner = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Id == opp.OwnerUserId)
+            .Select(u => new OwnerSummaryProjection(u.Id, u.DisplayName, u.Email))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return ToProjection(opp, owner);
     }
 
     public async Task<IReadOnlyList<OpportunityStageHistoryProjection>> GetStageHistoryAsync(
@@ -1018,7 +1026,7 @@ public class OpportunityStore : IOpportunityStore
         return histories;
     }
 
-    private static OpportunityProjection ToProjection(Opportunity o) => new(
+    private static OpportunityProjection ToProjection(Opportunity o, OwnerSummaryProjection? owner = null) => new(
         o.Id,
         o.Code,
         o.CustomerId,
@@ -1036,5 +1044,6 @@ public class OpportunityStore : IOpportunityStore
         o.NextActionNote,
         o.Stage,
         o.RowVersion,
-        o.CreatedAtUtc);
+        o.CreatedAtUtc,
+        owner);
 }

@@ -596,8 +596,6 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Id", "OrganizationId");
-
                     b.HasIndex("CustomerId", "OrganizationId");
 
                     b.HasIndex("OrganizationId", "Code")
@@ -1066,6 +1064,203 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.ToTable("organizations", "organization");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurvey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AssignedSurveyorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_surveyor_id");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<Guid>("OpportunityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("opportunity_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<DateTimeOffset?>("ScheduledEndUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("scheduled_end_utc");
+
+                    b.Property<DateTimeOffset?>("ScheduledStartUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("scheduled_start_utc");
+
+                    b.Property<Guid>("SiteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SurveyNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("survey_number");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedSurveyorId");
+
+                    b.HasIndex("BranchId", "OrganizationId");
+
+                    b.HasIndex("OpportunityId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "SurveyNumber")
+                        .IsUnique();
+
+                    b.HasIndex("SiteId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "OpportunityId", "Id");
+
+                    b.HasIndex("OrganizationId", "BranchId", "Status", "ScheduledStartUtc");
+
+                    b.ToTable("site_surveys", "crm", t =>
+                        {
+                            t.HasCheckConstraint("CK_site_surveys_schedule_range", "scheduled_start_utc IS NULL OR scheduled_end_utc IS NULL OR scheduled_end_utc > scheduled_start_utc");
+
+                            t.HasCheckConstraint("CK_site_surveys_status", "status IN ('scheduled', 'in_progress', 'completed', 'cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyRevision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.PrimitiveCollection<string[]>("Assumptions")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("assumptions");
+
+                    b.PrimitiveCollection<string[]>("Constraints")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("constraints");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.PrimitiveCollection<string[]>("MissingDetails")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("missing_details");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Readiness")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("readiness");
+
+                    b.Property<DateTimeOffset?>("ReadyAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("ready_at_utc");
+
+                    b.Property<Guid?>("ReadyByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ready_by_user_id");
+
+                    b.Property<int>("RevisionNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("revision_number");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("ScopeSummary")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("scope_summary");
+
+                    b.Property<Guid>("SiteSurveyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("site_survey_id");
+
+                    b.Property<string>("SnapshotHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("snapshot_hash");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SurveyTemplateVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("survey_template_version");
+
+                    b.Property<DateTimeOffset?>("VisitedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("visited_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ReadyByUserId");
+
+                    b.HasIndex("SiteSurveyId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "SiteSurveyId", "RevisionNumber")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "SiteSurveyId", "Status");
+
+                    b.ToTable("site_survey_revisions", "crm", t =>
+                        {
+                            t.HasCheckConstraint("CK_site_survey_revisions_readiness", "readiness IN ('incomplete', 'requiresAttention', 'ready')");
+
+                            t.HasCheckConstraint("CK_site_survey_revisions_revision_number", "revision_number > 0");
+
+                            t.HasCheckConstraint("CK_site_survey_revisions_status", "status IN ('draft', 'ready', 'superseded', 'void')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Common.IdempotencyRecord", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Organization", null)
@@ -1277,6 +1472,69 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurvey", b =>
+                {
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedSurveyorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Crm.Opportunities.Opportunity", null)
+                        .WithMany()
+                        .HasForeignKey("OpportunityId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Crm.Sites.Site", null)
+                        .WithMany()
+                        .HasForeignKey("SiteId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyRevision", b =>
+                {
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("ReadyByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Surveys.SiteSurvey", null)
+                        .WithMany("Revisions")
+                        .HasForeignKey("SiteSurveyId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Crm.Customers.Customer", b =>
                 {
                     b.Navigation("Contacts");
@@ -1316,6 +1574,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Navigation("Memberships");
 
                     b.Navigation("Roles");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurvey", b =>
+                {
+                    b.Navigation("Revisions");
                 });
 #pragma warning restore 612, 618
         }

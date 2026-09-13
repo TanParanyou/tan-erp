@@ -284,9 +284,9 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                   disabled={isSubmitting}
                   error={
                     errors.subdistrict?.message ||
-                    errors.district?.message ||
-                    errors.province?.message ||
-                    errors.postalCode?.message
+                      errors.district?.message ||
+                      errors.province?.message ||
+                      errors.postalCode?.message
                       ? t("areaRequired")
                       : undefined
                   }

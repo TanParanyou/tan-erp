@@ -86,7 +86,8 @@
       "saveChanges": "บันทึกการเปลี่ยนแปลง",
       "clearSelection": "ล้างค่าที่เลือก",
       "loadMore": "โหลดเพิ่มเติม",
-      "clear": "ล้างค่า"
+      "clear": "ล้างค่า",
+      "manage": "จัดการ"
     },
     "status": {
       "active": "ใช้งานอยู่",
@@ -537,6 +538,7 @@
     "userSelectionRequired": "กรุณาเลือกพนักงานผู้รับผิดชอบ",
     "reassignSuccess": "โอนย้ายผู้รับผิดชอบเรียบร้อยแล้ว",
     "saving": "กำลังบันทึก...",
+    "scheduleSurveyAction": "นัดหมายสำรวจหน้างาน",
     "closeAction": "ปิดงาน / ยกเลิก...",
     "closeLostAction": "ปิดการขายไม่สำเร็จ (Lost)",
     "closeCancelledAction": "ยกเลิกโอกาสทางการขาย (Cancel)",
@@ -577,12 +579,46 @@
       "cancelled_customer_abandoned": "ลูกค้ายกเลิกโครงการ / ชะลอการลงทุน",
       "cancelled_duplicate": "รายการซ้ำซ้อน",
       "cancelled_invalid_lead": "ข้อมูลเบื้องต้นไม่ถูกต้อง / ไม่ใช่กลุ่มเป้าหมาย",
+      "cancelled_force_majeure": "เหตุสุดวิสัย / ปัจจัยภายนอกที่ไม่สามารถควบคุมได้",
+      "cancelled_internal_decision": "การตัดสินใจยกเลิกภายในองค์กร",
       "cancelled_other": "เหตุผลอื่น",
       "reopen_customer_reengaged": "ลูกค้ากลับมาติดต่อใหม่ / ฟื้นโครงการ",
       "reopen_budget_adjusted": "ลูกค้าปรับงบประมาณใหม่",
       "reopen_scope_redefined": "มีการปรับลดหรือเปลี่ยนขอบเขตงานใหม่",
       "reopen_erroneous_closure": "ปิดงานผิดพลาด",
       "reopen_other": "เหตุผลอื่น"
+    }
+  },
+  "surveys": {
+    "surveyCardTitle": "ข้อมูลการนัดหมายสำรวจหน้างาน (Site Survey Appointment)",
+    "surveyNumberLabel": "เลขที่ใบนัดสำรวจ",
+    "siteLabel": "สถานที่สำรวจ",
+    "siteSelectPlaceholder": "-- เลือกสถานที่สำรวจ --",
+    "siteRequired": "กรุณาเลือกสถานที่สำรวจ",
+    "surveyorLabel": "ผู้รับผิดชอบการสำรวจ",
+    "surveyorPlaceholder": "เลือกพนักงานผู้ทำการสำรวจ...",
+    "surveyorRequired": "กรุณาเลือกผู้ทำการสำรวจ",
+    "scheduledTimeLabel": "วันและเวลานัดหมาย",
+    "scheduledStartLabel": "เวลานัดหมายเริ่มต้น",
+    "scheduledEndLabel": "เวลานัดหมายสิ้นสุด",
+    "endBeforeStartError": "เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น",
+    "scheduleModalTitle": "นัดหมายสำรวจหน้างาน (Schedule Site Survey)",
+    "scheduleModalDesc": "สร้างใบนัดหมายสำรวจหน้างานพร้อมร่างเอกสารสำรวจ (Revision 1) เมื่อบันทึกสำเร็จ สถานะของโอกาสทางการขายจะเปลี่ยนเป็น 'สำรวจหน้างาน' (Surveying) โดยอัตโนมัติ",
+    "confirmScheduleAction": "ยืนยันนัดหมาย",
+    "scheduleSuccess": "บันทึกการนัดหมายสำรวจหน้างานเรียบร้อยแล้ว",
+    "versionConflict": "ข้อมูลโอกาสทางการขายถูกแก้ไขโดยผู้อื่น กรุณาโหลดข้อมูลใหม่",
+    "revisionBadge": "รุ่นที่ {number}",
+    "statuses": {
+      "scheduled": "นัดหมายแล้ว",
+      "in_progress": "กำลังสำรวจ",
+      "completed": "สำรวจเสร็จสิ้น",
+      "cancelled": "ยกเลิกแล้ว"
+    },
+    "revisionStatuses": {
+      "draft": "ฉบับร่าง",
+      "ready": "พร้อมใช้งาน",
+      "superseded": "ถูกแทนที่",
+      "void": "ยกเลิก"
     }
   }
 }

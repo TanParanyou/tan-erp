@@ -185,4 +185,22 @@
   <data name="OPPORTUNITY_SORT_ORDER_INVALID_DETAIL" xml:space="preserve">
     <value>The sort order must be either asc or desc.</value>
   </data>
+  <data name="SURVEY_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>Survey Field Required</value>
+  </data>
+  <data name="SURVEY_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Required survey appointment fields are missing.</value>
+  </data>
+  <data name="SURVEY_SCHEDULE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Survey Schedule</value>
+  </data>
+  <data name="SURVEY_SCHEDULE_INVALID_DETAIL" xml:space="preserve">
+    <value>Scheduled end time must be strictly after scheduled start time.</value>
+  </data>
+  <data name="SURVEY_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Survey Version Conflict</value>
+  </data>
+  <data name="SURVEY_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The survey version does not match the current state. Please reload and try again.</value>
+  </data>
 </root>

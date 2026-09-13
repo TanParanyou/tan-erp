@@ -7,7 +7,7 @@ import { formatDateTime } from "@/lib/formatters/formatters";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { Badge } from "@/components/ui/Badge";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
-import { getOpportunityStageLabelKey } from "../opportunity-labels";
+import { getOpportunityStageLabelKey, resolveReasonLabel } from "../opportunity-labels";
 
 interface OpportunityStageTimelineProps {
   opportunityId: string;
@@ -67,15 +67,6 @@ export function OpportunityStageTimeline({ opportunityId }: OpportunityStageTime
     }
   };
 
-  const resolveReasonLabel = (reasonCode: string | null | undefined): string | null => {
-    if (!reasonCode) return null;
-    try {
-      return t(`reasons.${reasonCode}` as Parameters<typeof t>[0]);
-    } catch {
-      return reasonCode;
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="erp-card p-6 flex justify-center items-center">
@@ -108,7 +99,7 @@ export function OpportunityStageTimeline({ opportunityId }: OpportunityStageTime
       ) : (
         <div className="relative pl-6 border-l-2 border-erp-border space-y-6">
           {items.map((item) => {
-            const reasonLabel = resolveReasonLabel(item.reasonCode);
+            const reasonLabel = resolveReasonLabel(item.reasonCode, t);
             return (
               <div key={item.id} className="relative group">
                 {/* Dot marker */}

@@ -1,0 +1,20 @@
+using TanErp.Application.Common.Models;
+using TanErp.Application.Common.Results;
+using TanErp.Application.Surveys.CreateSiteSurvey;
+
+namespace TanErp.Application.Surveys;
+
+public interface ISiteSurveyStore
+{
+    Task<Result<SiteSurveyProjection>> CreateAsync(
+        RequestAccessContext access,
+        CreateSiteSurveyCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
+
+    Task<SiteSurveyProjection?> GetByOpportunityIdAsync(
+        Guid organizationId,
+        Guid opportunityId,
+        CancellationToken cancellationToken = default);
+}
