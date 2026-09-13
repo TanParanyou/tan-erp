@@ -18,6 +18,11 @@ export interface DrawerProps {
   size?: DrawerSize;
   closeOnOverlayClick?: boolean;
   closeLabel?: string;
+  contentClassName?: string;
+  overlayClassName?: string;
+  headerActions?: React.ReactNode;
+  noPadding?: boolean;
+  showHeader?: boolean;
 }
 
 const sizeClasses: Record<DrawerSize, string> = {
@@ -38,6 +43,11 @@ export function Drawer({
   size = "md",
   closeOnOverlayClick = true,
   closeLabel = "Close drawer",
+  contentClassName,
+  overlayClassName,
+  headerActions,
+  noPadding = false,
+  showHeader = true,
 }: DrawerProps) {
   const titleId = useId();
   const descriptionId = useId();
@@ -62,7 +72,10 @@ export function Drawer({
   if (!isOpen || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="erp-drawer-overlay" onClick={closeOnOverlayClick ? onClose : undefined}>
+    <div
+      className={cn("erp-drawer-overlay", overlayClassName)}
+      onClick={closeOnOverlayClick ? onClose : undefined}
+    >
       <div
         role="dialog"
         aria-modal="true"
@@ -75,31 +88,42 @@ export function Drawer({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-erp-border bg-erp-surface px-5 py-4">
-          <div className="min-w-0">
-            {title && (
-              <h2 id={titleId} className="text-base font-semibold text-erp-text-main">
-                {title}
-              </h2>
-            )}
-            {description && (
-              <p id={descriptionId} className="mt-1 break-words text-xs sm:text-sm text-erp-text-muted">
-                {description}
-              </p>
-            )}
+        {showHeader && (
+          <div className="shrink-0 flex items-start justify-between gap-4 border-b border-erp-border bg-erp-surface px-5 py-3.5">
+            <div className="min-w-0 flex-1">
+              {title && (
+                <h2 id={titleId} className="text-base font-semibold text-erp-text-main leading-snug break-words">
+                  {title}
+                </h2>
+              )}
+              {description && (
+                <p id={descriptionId} className="mt-0.5 break-words text-xs text-erp-text-muted leading-relaxed">
+                  {description}
+                </p>
+              )}
+            </div>
+            <div className="shrink-0 flex items-center gap-1.5">
+              {headerActions}
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 text-erp-text-muted hover:text-erp-text-main hover:bg-erp-surface-muted rounded-none transition-colors focus-visible:outline-2 focus-visible:outline-erp-navy"
+                aria-label={closeLabel}
+              >
+                <IconClose size={20} />
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-erp-text-muted hover:text-erp-text-main hover:bg-erp-surface-muted rounded-none transition-colors focus-visible:outline-2 focus-visible:outline-erp-navy"
-            aria-label={closeLabel}
-          >
-            <IconClose size={20} />
-          </button>
-        </div>
+        )}
 
         {/* Content */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-erp-text-body">
+        <div
+          className={cn(
+            "min-h-0 flex-1 text-erp-text-body",
+            noPadding ? "overflow-hidden flex flex-col" : "overflow-y-auto px-5 py-4",
+            contentClassName
+          )}
+        >
           {children}
         </div>
 

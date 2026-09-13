@@ -9,6 +9,7 @@ export interface CheckboxProps
   error?: string;
   description?: string;
   labelClassName?: string;
+  wrapperClassName?: string;
 }
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
@@ -20,6 +21,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       description,
       disabled,
       labelClassName,
+      wrapperClassName,
       id,
       ...props
     },
@@ -30,7 +32,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     const errorId = generatedId ? `${generatedId}-error` : undefined;
 
     return (
-      <div className="erp-form-group mb-2">
+      <div className={cn("erp-form-group mb-2", wrapperClassName)}>
         <label
           htmlFor={generatedId}
           className={cn(

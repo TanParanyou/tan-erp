@@ -520,13 +520,38 @@
 /* ==========================================================================
    Overlays (Modals & Drawers)
    ========================================================================== */
-.erp-modal-overlay,
 .erp-drawer-overlay {
   position: fixed;
   inset: 0;
   background-color: rgba(11, 48, 86, 0.45);
   backdrop-filter: blur(1px);
-  z-index: 999;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.erp-drawer-window {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--erp-surface);
+  border-left: 1px solid var(--erp-border);
+  border-radius: 0 !important;
+  box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1110;
+}
+
+.erp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(11, 48, 86, 0.45);
+  backdrop-filter: blur(1px);
+  z-index: 1200;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -542,22 +567,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 1000;
-}
-
-.erp-drawer-window {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--erp-surface);
-  border-left: 1px solid var(--erp-border);
-  border-radius: 0 !important;
-  box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 1000;
+  z-index: 1210;
 }
 
 /* ==========================================================================
@@ -1072,9 +1082,17 @@
     flex: 1;
   }
 
-  .erp-modal-window {
+  .erp-modal-window:not([class*="w-full"]) {
     width: 95vw !important;
     margin: 0.5rem;
+  }
+
+  .erp-modal-window[class*="w-full"] {
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border: none !important;
   }
 
   .erp-drawer-window {

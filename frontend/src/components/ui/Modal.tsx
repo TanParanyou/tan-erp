@@ -6,7 +6,7 @@ import { IconClose } from "@/components/common/Icons";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { cn } from "@/lib/utils/cn";
 
-export type ModalSize = "sm" | "md" | "lg" | "xl";
+export type ModalSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -19,6 +19,8 @@ export interface ModalProps {
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
   footer?: React.ReactNode;
+  className?: string;
+  contentClassName?: string;
 }
 
 const sizeClasses: Record<ModalSize, string> = {
@@ -26,6 +28,9 @@ const sizeClasses: Record<ModalSize, string> = {
   md: "max-w-md",
   lg: "max-w-lg",
   xl: "max-w-2xl",
+  "2xl": "max-w-5xl",
+  "3xl": "max-w-6xl w-[95vw]",
+  full: "w-full max-w-none h-full max-h-none sm:w-[98vw] sm:max-w-[98vw] sm:h-[95vh] sm:max-h-[95vh]",
 };
 
 export function Modal({
@@ -39,6 +44,8 @@ export function Modal({
   closeOnOverlayClick = true,
   closeOnEscape = true,
   footer,
+  className,
+  contentClassName,
 }: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
@@ -126,7 +133,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={description ? descriptionId : undefined}
-        className={cn("erp-modal-window", sizeClasses[size])}
+        className={cn("erp-modal-window", sizeClasses[size], className)}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -165,7 +172,7 @@ export function Modal({
 
         {/* Body */}
         {children && (
-          <div className="flex-1 overflow-y-auto px-5 py-4 text-erp-text-body">
+          <div className={cn("flex-1 overflow-y-auto px-5 py-4 text-erp-text-body", contentClassName)}>
             {children}
           </div>
         )}

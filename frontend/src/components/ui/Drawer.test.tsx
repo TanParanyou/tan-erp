@@ -27,4 +27,30 @@ describe("Drawer component", () => {
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("applies noPadding layout correctly without px-5 py-4", () => {
+    render(
+      <Drawer isOpen={true} onClose={vi.fn()} noPadding={true} contentClassName="custom-content">
+        <p>Full Bleed Content</p>
+      </Drawer>
+    );
+
+    const contentElement = screen.getByText("Full Bleed Content").parentElement;
+    expect(contentElement).toHaveClass("custom-content");
+    expect(contentElement).toHaveClass("overflow-hidden");
+    expect(contentElement).not.toHaveClass("px-5");
+    expect(contentElement).not.toHaveClass("py-4");
+  });
+
+  it("hides header when showHeader is false", () => {
+    render(
+      <Drawer isOpen={true} onClose={vi.fn()} title="Hidden Title" showHeader={false}>
+        <p>No Header Content</p>
+      </Drawer>
+    );
+
+    expect(screen.queryByText("Hidden Title")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Close drawer")).not.toBeInTheDocument();
+    expect(screen.getByText("No Header Content")).toBeInTheDocument();
+  });
 });

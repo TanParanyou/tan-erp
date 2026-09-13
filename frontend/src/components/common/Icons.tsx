@@ -526,5 +526,81 @@ export function IconGitBranch({ size = 18, strokeWidth = 2, ...props }: IconProp
   );
 }
 
+export function IconBox3D({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+export function IconZoomIn({ size = 16, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <line x1="11" y1="8" x2="11" y2="14" />
+      <line x1="8" y1="11" x2="14" y2="11" />
+    </svg>
+  );
+}
+
+export function IconZoomOut({ size = 16, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <line x1="8" y1="11" x2="14" y2="11" />
+    </svg>
+  );
+}
+
+export function IconMaximize({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+    </svg>
+  );
+}
+
+export function IconMinimize({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <path d="M4 14h6m0 0v6m0-6L3 21m17-7h-6m0 0v6m0-6l7 7M4 10h6m0 0V4m0 6L3 3m17 7h-6m0 0V4m0 6l7-7" />
+    </svg>
+  );
+}
+
+export function IconRotateCw({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.6L21 8" />
+      <polyline points="21 3 21 8 16 8" />
+    </svg>
+  );
+}
+
+export function IconRotateCcw({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <path d="M3 12a9 9 0 1 0 9-9 8.95 8.95 0 0 0-6.57 2.6L3 8" />
+      <polyline points="3 3 3 8 8 8" />
+    </svg>
+  );
+}
+
+export function IconExternalLink({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  );
+}
+
+
 
 

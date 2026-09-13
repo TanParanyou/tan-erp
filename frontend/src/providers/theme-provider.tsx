@@ -61,6 +61,11 @@ export function ThemeProvider({
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute("data-theme", resolvedTheme);
+    if (resolvedTheme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
   }, [resolvedTheme]);
 
   const setTheme = (newTheme: ThemeMode) => {
