@@ -171,11 +171,11 @@ describe("OpportunityEditor", () => {
     mockedCreateOpportunity.mockResolvedValueOnce({
       id: "30000000-0000-0000-0000-000000000001",
       code: "OPP-0001",
-      customerId: activeCustomerA.id,
+      customer: { id: activeCustomerA.id, code: activeCustomerA.code, displayNameTh: activeCustomerA.displayNameTh },
       title: "โครงการปรับปรุงอาคารสำนักงาน",
       stage: "draft",
-      branchId: "branch-1",
-      ownerUserId: "user-1",
+      branch: { id: "branch-1", name: "สาขา 1" },
+      owner: { id: "user-1", displayName: "ผู้ใช้ 1" },
       workTypes: ["built-in"],
       createdAtUtc: "2026-09-08T00:00:00Z",
     } satisfies OpportunityResponse);

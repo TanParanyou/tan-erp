@@ -99,7 +99,7 @@ export function OpportunityOwnerReassignModal({
               setTargetOwnerUserId(userId);
               setErrorMsg(null);
             }}
-            branchId={opportunity.branchId || undefined}
+            branchId={opportunity.branch?.id || undefined}
             required
             disabled={reassignMutation.isPending}
             label={t("newOwnerLabel")}

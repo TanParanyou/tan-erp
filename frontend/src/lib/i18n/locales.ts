@@ -20,11 +20,16 @@ export function getMessages(locale: SupportedLocale): typeof thMessages {
 
 export type Messages = typeof thMessages;
 
-export type LocalizedText = {
-  th?: string;
-  en?: string;
-  [key: string]: string | undefined;
-};
+export type LocalizedText =
+  | {
+      th?: string;
+      en?: string;
+      [key: string]: string | undefined;
+    }
+  | {
+      th: string;
+      en: string;
+    };
 
 export function getLocalizedText(
   obj: LocalizedText | string | null | undefined,
@@ -32,6 +37,7 @@ export function getLocalizedText(
 ): string {
   if (!obj) return "";
   if (typeof obj === "string") return obj;
-  return obj[locale] || obj[defaultLocale] || obj.en || Object.values(obj)[0] || "";
+  const record = obj as Record<string, string | undefined>;
+  return record[locale] || record[defaultLocale] || record.en || Object.values(record)[0] || "";
 }
 

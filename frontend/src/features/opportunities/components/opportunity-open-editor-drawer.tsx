@@ -57,7 +57,7 @@ export function OpportunityOpenEditorDrawer({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Load customer sites
-  const { data: siteData } = useCustomerSiteList(opportunity.customerId);
+  const { data: siteData } = useCustomerSiteList(opportunity.customer?.id);
   const siteList = siteData?.items ?? [];
 
   // Parse initial sourceCode
@@ -96,7 +96,7 @@ export function OpportunityOpenEditorDrawer({
   } = useForm<UpdateOpenOpportunityFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      primarySiteId: opportunity.primarySiteId || "",
+      primarySiteId: opportunity.primarySite?.id || "",
       title: opportunity.title || "",
       scopeSummary: opportunity.scopeSummary || "",
       workTypes: defaultWorkTypes,

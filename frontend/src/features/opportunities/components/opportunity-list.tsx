@@ -136,6 +136,7 @@ export function OpportunityList() {
     () => [
       { header: t("code"), accessor: (o) => o.code ?? o.id },
       { header: t("titleField"), accessor: (o) => o.title || "" },
+      { header: t("customer"), accessor: (o) => o.customer?.displayNameTh || o.customer?.displayNameEn || o.customer?.code || "" },
       { header: t("stage"), accessor: (o) => resolveStageLabel(o.stage) },
       { header: t("expectedBudget"), accessor: (o) => o.expectedBudget ?? "" },
       { header: t("currencyCode"), accessor: (o) => o.currencyCode ?? "THB" },
@@ -182,6 +183,19 @@ export function OpportunityList() {
             subtitle={opp.scopeSummary}
             href={`/${locale}/opportunities/${opp.id}`}
           />
+        ),
+      },
+      {
+        id: "customer",
+        header: t("customer"),
+        cell: (_value, opp) => (
+          <span className="text-xs text-erp-text font-medium">
+            {opp.customer ? (
+              opp.customer.displayNameTh || opp.customer.displayNameEn || opp.customer.code || "-"
+            ) : (
+              "-"
+            )}
+          </span>
         ),
       },
       {

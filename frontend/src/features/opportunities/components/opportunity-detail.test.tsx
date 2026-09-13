@@ -53,27 +53,6 @@ describe("OpportunityDetail Component", () => {
     permissions: [{ key: "opportunities.read", scope: "organization", scopeId: "org-1" }],
   };
 
-  const sampleOpportunity = {
-    id: "30000000-0000-0000-0000-000000000001",
-    code: "OPP-0001",
-    customerId: "10000000-0000-0000-0000-000000000001",
-    primarySiteId: "20000000-0000-0000-0000-000000000001",
-    branchId: "branch-1",
-    ownerUserId: "user-1",
-    title: "โครงการปรับปรุงอาคารสำนักงาน",
-    scopeSummary: "ปรับปรุงห้องประชุมและพื้นที่ส่วนกลาง",
-    workTypes: ["built-in", "interior"],
-    sourceCode: "referral",
-    expectedBudget: 500000,
-    currencyCode: "THB",
-    targetDecisionDate: "2026-10-15",
-    nextActionAtUtc: "2026-09-20T10:00:00Z",
-    nextActionNote: "นัดประชุมนำเสนอแบบร่าง",
-    stage: "draft",
-    rowVersion: "00000000-0000-0000-0000-000000000001",
-    createdAtUtc: "2026-09-08T08:00:00Z",
-  };
-
   const sampleCustomer = {
     id: "10000000-0000-0000-0000-000000000001",
     code: "CUS-0001",
@@ -87,6 +66,27 @@ describe("OpportunityDetail Component", () => {
     label: "สำนักงานใหญ่",
     addressLine1: "123 สุขุมวิท",
     status: "active",
+  };
+
+  const sampleOpportunity = {
+    id: "30000000-0000-0000-0000-000000000001",
+    code: "OPP-0001",
+    title: "โครงการปรับปรุงอาคารสำนักงาน",
+    scopeSummary: "ปรับปรุงห้องประชุมและพื้นที่ส่วนกลาง",
+    workTypes: ["built-in", "interior"],
+    sourceCode: "referral",
+    expectedBudget: 500000,
+    currencyCode: "THB",
+    targetDecisionDate: "2026-10-15",
+    nextActionAtUtc: "2026-09-20T10:00:00Z",
+    nextActionNote: "นัดประชุมนำเสนอแบบร่าง",
+    stage: "draft",
+    rowVersion: "00000000-0000-0000-0000-000000000001",
+    createdAtUtc: "2026-09-08T08:00:00Z",
+    customer: sampleCustomer,
+    primarySite: sampleSite,
+    branch: { id: "branch-1", name: "สาขาใหญ่ (กรุงเทพ)" },
+    owner: { id: "user-1", displayName: "พนักงาน ทดสอบ", email: "user1@example.com" },
   };
 
   const mockCurrentUser: CurrentUserResponse = {
@@ -214,7 +214,8 @@ describe("OpportunityDetail Component", () => {
       fireEvent.click(customerButtons[0]);
     });
 
-    expect(screen.getByText("ข้อมูลสรุปของลูกค้า")).toBeDefined();
+    expect(screen.getByText("สาขาใหญ่ (กรุงเทพ)")).toBeDefined();
+    expect(screen.queryByText("branch-1")).toBeNull();
   });
 
   it("qualifies a draft opportunity from the confirmation modal", async () => {
@@ -838,7 +839,7 @@ describe("OpportunityDetail Component", () => {
         id: "40000000-0000-0000-0000-000000000001",
         surveyNumber: "SRV-2026-0001",
         opportunityId: sampleOpportunity.id,
-        siteId: sampleOpportunity.primarySiteId,
+        siteId: sampleOpportunity.primarySite?.id,
         assignedSurveyorId: "user-2",
         assignedSurveyor: {
           id: "user-2",

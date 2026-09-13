@@ -3,9 +3,7 @@
 import React, { useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useOpportunityDetail, useQualifyOpportunity } from "../api/opportunity-queries";
-import { useCustomerDetail } from "@/features/customers/api/customer-queries";
 import { CustomerQuickViewDrawer } from "@/features/customers/components/customer-quick-view-drawer";
-import { useCustomerSiteList } from "@/features/sites/api/site-queries";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can, PERMISSIONS } from "@/lib/permissions/can";
 import { ApiError } from "@/lib/api/api-error";
@@ -30,6 +28,8 @@ import { OpportunityStageTimeline } from "./opportunity-stage-timeline";
 import { useOpportunitySurvey } from "@/features/surveys/api/survey-queries";
 import { SurveyAppointmentModal } from "@/features/surveys/components/survey-appointment-modal";
 import { SurveyCard } from "@/features/surveys/components/survey-card";
+import { useOpportunityEstimate, useCreateEstimate } from "@/features/estimates/api/estimate-queries";
+import { EstimateCard } from "@/features/estimates/components/estimate-card";
 
 interface QualificationIntent {
   idempotencyKey: string;
@@ -77,13 +77,13 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   // Load scoped Survey info if exists
   const { data: survey } = useOpportunitySurvey(opportunityId);
 
-  // Load scoped Customer info
-  const customerId = opportunity?.customerId;
-  const { data: customer } = useCustomerDetail(customerId);
+  // Load scoped Estimate info
+  const { data: estimate } = useOpportunityEstimate(opportunityId);
+  const createEstimateMutation = useCreateEstimate(opportunityId);
 
-  // Load scoped Customer Sites
-  const siteData = useCustomerSiteList(customerId).data;
-  const primarySite = siteData?.items?.find((s) => s.id === opportunity?.primarySiteId);
+  // Structured Customer & Primary Site from backend projection
+  const customer = opportunity?.customer;
+  const primarySite = opportunity?.primarySite;
 
   const resolveStageLabel = (stage: string | null | undefined): string => {
     const key = getOpportunityStageLabelKey(stage);
@@ -317,20 +317,14 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
           },
           {
             label: t("customer"),
-            value: opportunity.customerId ? (
+            value: customer ? (
               <button
                 type="button"
                 onClick={() => customerDrawer.open()}
                 className="font-semibold text-erp-navy hover:underline text-left cursor-pointer truncate max-w-full inline-block focus-visible:outline-2 focus-visible:outline-erp-navy bg-transparent border-0 p-0 text-sm"
-                title={
-                  customer
-                    ? customer.displayNameTh || customer.displayNameEn || customer.code || ""
-                    : opportunity.customerId
-                }
+                title={customer.displayNameTh || customer.displayNameEn || customer.code || ""}
               >
-                {customer
-                  ? customer.displayNameTh || customer.displayNameEn || customer.code || "-"
-                  : opportunity.customerId}
+                {customer.displayNameTh || customer.displayNameEn || customer.code || "-"}
               </button>
             ) : (
               "-"
@@ -523,6 +517,36 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         />
       )}
 
+      {/* Official Estimate Card */}
+      {(opportunity.stage === "estimating" || estimate) && (
+        <EstimateCard
+          estimate={estimate ?? null}
+          opportunityId={opportunity.id}
+          customerId={opportunity.customer?.id}
+          branchId={opportunity.branch?.id}
+          siteSurveyRevisionId={survey?.currentRevision?.id}
+          siteSurveySnapshotHash={survey?.currentRevision?.snapshotHash}
+          canEdit={canUpdate}
+          isCreating={createEstimateMutation.isPending}
+          onCreateEstimate={async () => {
+            if (!opportunity.branch?.id || !opportunity.customer?.id) return;
+            try {
+              await createEstimateMutation.mutateAsync({
+                customerId: opportunity.customer.id,
+                opportunityId: opportunity.id,
+                branchId: opportunity.branch.id,
+                siteSurveyRevisionId: survey?.currentRevision?.id,
+                siteSurveySnapshotHash: survey?.currentRevision?.snapshotHash,
+                currency: "THB",
+              });
+              toast.success("สร้างใบประเมินราคาเรียบร้อยแล้ว");
+            } catch {
+              toast.error(tCommon("error"));
+            }
+          }}
+        />
+      )}
+
       {/* Scope and Customer Information */}
       <div className="erp-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--erp-navy)", margin: 0, borderBottom: "1px solid var(--erp-border-subtle)", paddingBottom: "0.75rem" }}>
@@ -532,20 +556,14 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         <dl className="erp-dl">
           <dt>{t("customer")}:</dt>
           <dd>
-            {opportunity.customerId ? (
+            {customer ? (
               <button
                 type="button"
                 onClick={() => customerDrawer.open()}
                 className="font-semibold text-erp-navy hover:underline text-left cursor-pointer inline-flex items-center gap-1 focus-visible:outline-2 focus-visible:outline-erp-navy bg-transparent border-0 p-0 text-sm"
               >
-                {customer ? (
-                  <>
-                    {customer.code ? `[${customer.code}] ` : ""}
-                    {customer.displayNameTh || customer.displayNameEn || "-"}
-                  </>
-                ) : (
-                  <span className="font-mono">{opportunity.customerId}</span>
-                )}
+                {customer.code ? `[${customer.code}] ` : ""}
+                {customer.displayNameTh || customer.displayNameEn || "-"}
               </button>
             ) : (
               <span className="text-erp-text-muted">-</span>
@@ -554,14 +572,10 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
           <dt>{t("primarySite")}:</dt>
           <dd>
-            {opportunity.primarySiteId ? (
-              primarySite ? (
-                <span>
-                  {primarySite.label || primarySite.addressLine1}
-                </span>
-              ) : (
-                <span style={{ fontFamily: "monospace" }}>{opportunity.primarySiteId}</span>
-              )
+            {primarySite ? (
+              <span>
+                {primarySite.label || primarySite.addressLine1}
+              </span>
             ) : (
               <span style={{ color: "var(--erp-text-muted)" }}>-</span>
             )}
@@ -634,8 +648,6 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
               <span className="font-medium text-erp-text-main">
                 {opportunity.owner.displayName} {opportunity.owner.email ? `(${opportunity.owner.email})` : ""}
               </span>
-            ) : opportunity.ownerUserId ? (
-              <span className="font-mono text-erp-text-muted">{opportunity.ownerUserId}</span>
             ) : (
               "-"
             )}
@@ -643,7 +655,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
           <dt>{t("branchLabel")}:</dt>
           <dd className="font-medium text-erp-text-main">
-            {opportunity.branchId || "-"}
+            {opportunity.branch?.name || "-"}
           </dd>
 
           <dt>{t("createdAt")}:</dt>
@@ -656,7 +668,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
       {opportunity?.id && <OpportunityStageTimeline opportunityId={opportunity.id} />}
 
       <CustomerQuickViewDrawer
-        customerId={opportunity.customerId ?? null}
+        customerId={opportunity.customer?.id ?? null}
         isOpen={customerDrawer.isOpen}
         onClose={customerDrawer.close}
       />

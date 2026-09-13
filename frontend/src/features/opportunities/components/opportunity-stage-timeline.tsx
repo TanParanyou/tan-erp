@@ -119,9 +119,16 @@ export function OpportunityStageTimeline({ opportunityId }: OpportunityStageTime
                         {resolveStageLabel(item.toStage)}
                       </Badge>
                     </div>
-                    <time className="text-xs font-mono text-erp-text-muted">
-                      {formatDateTime(item.occurredAtUtc, locale)}
-                    </time>
+                    <div className="flex items-center gap-2">
+                      <time className="text-xs font-mono text-erp-text-muted">
+                        {formatDateTime(item.occurredAtUtc, locale)}
+                      </time>
+                      {item.actor?.displayName && (
+                        <span className="text-xs font-medium text-erp-text-main">
+                          • {item.actor.displayName}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {reasonLabel && (
