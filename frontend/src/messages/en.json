@@ -619,6 +619,61 @@
       "ready": "Ready",
       "superseded": "Superseded",
       "void": "Void"
+    },
+    "openWorkspace": "Open Workspace",
+    "workspaceTitle": "Site Survey Workspace",
+    "workspaceDesc": "Record survey areas, measurements, constraints and verify readiness to hand off for estimation.",
+    "visitedAtLabel": "Actual Visit Date & Time",
+    "scopeSummaryLabel": "Scope Summary",
+    "scopeSummaryPlaceholder": "Summary of on-site survey scope, e.g. master bedroom built-in wardrobe...",
+    "areasTitle": "Areas & Measurements",
+    "addAreaAction": "+ Add Survey Area",
+    "areaCodeLabel": "Area Code",
+    "areaNameLabel": "Area Name",
+    "areaDescLabel": "Description",
+    "removeAreaAction": "Delete Area",
+    "measurementsTitle": "Measurements",
+    "addMeasurementAction": "+ Add Measurement",
+    "measurementTypeLabel": "Measurement Type",
+    "measurementValueLabel": "Value",
+    "measurementUnitLabel": "Unit",
+    "measurementNotesLabel": "Notes",
+    "removeMeasurementAction": "Delete",
+    "assumptionsTitle": "Assumptions",
+    "constraintsTitle": "Constraints",
+    "missingDetailsTitle": "Missing Details",
+    "addNotePlaceholder": "Type and press Enter...",
+    "saveDraftAction": "Save Draft",
+    "markReadyAction": "Mark Ready",
+    "markReadyConfirmTitle": "Mark Survey Revision Ready",
+    "markReadyConfirmDesc": "Once marked ready, this survey revision will be locked as immutable and cannot be changed. The opportunity will automatically transition to 'Estimating'.",
+    "saveDraftSuccess": "Draft revision saved successfully",
+    "markReadySuccess": "Survey marked ready. Opportunity transitioned to Estimating.",
+    "readyBadge": "Ready for Estimating",
+    "hashLabel": "Snapshot Hash",
+    "readinessErrors": {
+      "missingVisit": "Visit date and time is required",
+      "missingScope": "Scope summary is required",
+      "missingArea": "At least one survey area is required",
+      "missingMeasurement": "Each area must have at least one measurement with a positive value"
+    },
+    "types": {
+      "width": "Width",
+      "height": "Height",
+      "depth": "Depth",
+      "length": "Length",
+      "area": "Area",
+      "opening": "Opening",
+      "count": "Count",
+      "custom": "Custom"
+    },
+    "units": {
+      "mm": "Millimeter (mm)",
+      "cm": "Centimeter (cm)",
+      "m": "Meter (m)",
+      "sqm": "Square Meter (sqm)",
+      "unit": "Unit"
     }
   }
 }
+

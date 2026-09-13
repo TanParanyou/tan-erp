@@ -115,7 +115,10 @@ builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.GetOpportunitySt
 builder.Services.AddScoped<TanErp.Application.Surveys.ISiteSurveyStore, TanErp.Infrastructure.Persistence.Surveys.SiteSurveyStore>();
 builder.Services.AddScoped<TanErp.Application.Surveys.CreateSiteSurvey.CreateSiteSurveyHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.GetSiteSurvey.GetSiteSurveyHandler>();
+builder.Services.AddScoped<TanErp.Application.Surveys.UpdateSurveyDraft.UpdateSurveyDraftHandler>();
+builder.Services.AddScoped<TanErp.Application.Surveys.MarkSurveyReady.MarkSurveyReadyHandler>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.IAddressLookupCache, TanErp.Infrastructure.MasterData.AddressLookupCache>();
+
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();
 
 // Authentication & Authorization

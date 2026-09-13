@@ -203,4 +203,23 @@
   <data name="SURVEY_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>เวอร์ชันของข้อมูลการสำรวจไม่ตรงกับข้อมูลล่าสุดในระบบ กรุณาโหลดข้อมูลใหม่</value>
   </data>
+  <data name="SURVEY_NOT_READY_TITLE" xml:space="preserve">
+    <value>ข้อมูลการสำรวจยังไม่พร้อมส่งต่อ</value>
+  </data>
+  <data name="SURVEY_NOT_READY_DETAIL" xml:space="preserve">
+    <value>ข้อมูลการสำรวจยังไม่ผ่านเกณฑ์ความพร้อม กรุณากรอกรายละเอียดพื้นที่และระยะที่วัดได้ให้ครบถ้วน</value>
+  </data>
+  <data name="SURVEY_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>สถานะการสำรวจไม่ถูกต้อง</value>
+  </data>
+  <data name="SURVEY_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถแก้ไขหรือดำเนินการในสถานะปัจจุบันของฉบับสำรวจได้</value>
+  </data>
+  <data name="SURVEY_MEASUREMENT_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลระยะวัดไม่ถูกต้อง</value>
+  </data>
+  <data name="SURVEY_MEASUREMENT_INVALID_DETAIL" xml:space="preserve">
+    <value>ค่าระยะวัดต้องมากกว่าศูนย์ และระบุประเภทและหน่วยวัดให้ถูกต้อง</value>
+  </data>
 </root>
+

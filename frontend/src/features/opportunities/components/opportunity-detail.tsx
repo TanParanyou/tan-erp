@@ -517,6 +517,9 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         <SurveyCard
           survey={survey}
           siteLabel={primarySite?.label || primarySite?.addressLine1 || undefined}
+          opportunityId={opportunity.id}
+          opportunityRowVersion={opportunity.rowVersion}
+          canEdit={canUpdate}
         />
       )}
 

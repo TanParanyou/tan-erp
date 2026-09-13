@@ -25,7 +25,14 @@ export type OpportunityStageHistoryItemResponse = components["schemas"]["Opportu
 
 export type SiteSurveyResponse = components["schemas"]["SiteSurveyResponse"];
 export type SiteSurveyRevisionResponse = components["schemas"]["SiteSurveyRevisionResponse"];
+export type SiteSurveyAreaResponse = components["schemas"]["SiteSurveyAreaResponse"];
+export type SiteSurveyMeasurementResponse = components["schemas"]["SiteSurveyMeasurementResponse"];
 export type CreateSiteSurveyRequest = components["schemas"]["CreateSiteSurveyRequest"];
+export type UpdateSurveyDraftRequest = components["schemas"]["UpdateSurveyDraftRequest"];
+export type UpdateSurveyAreaRequest = components["schemas"]["UpdateSurveyAreaRequest"];
+export type UpdateSurveyMeasurementRequest = components["schemas"]["UpdateSurveyMeasurementRequest"];
+export type MarkSurveyReadyRequest = components["schemas"]["MarkSurveyReadyRequest"];
+
 
 export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
 export type AddressSearchResultItem = components["schemas"]["AddressSearchResultItem"];
@@ -367,6 +374,37 @@ export class ApiClient {
       options
     );
   }
+
+  async updateSurveyDraft(
+    opportunityId: string,
+    surveyId: string,
+    revisionId: string,
+    payload: UpdateSurveyDraftRequest,
+    options: RequestOptions
+  ): Promise<SiteSurveyRevisionResponse> {
+    return this.request<SiteSurveyRevisionResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys/${encodeURIComponent(surveyId)}/revisions/${encodeURIComponent(revisionId)}/draft`,
+      "PUT",
+      options,
+      payload
+    );
+  }
+
+  async markSurveyReady(
+    opportunityId: string,
+    surveyId: string,
+    revisionId: string,
+    payload: MarkSurveyReadyRequest,
+    options: RequestOptions
+  ): Promise<SiteSurveyRevisionResponse> {
+    return this.request<SiteSurveyRevisionResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys/${encodeURIComponent(surveyId)}/revisions/${encodeURIComponent(revisionId)}/mark-ready`,
+      "POST",
+      options,
+      payload
+    );
+  }
 }
 
 export const apiClient = new ApiClient();
+

@@ -22,6 +22,9 @@ public class SiteSurveyRevision : Entity
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid CreatedByUserId { get; private set; }
 
+    private readonly List<SiteSurveyArea> _areas = new();
+    public IReadOnlyCollection<SiteSurveyArea> Areas => _areas.AsReadOnly();
+
     protected SiteSurveyRevision() { }
 
     private SiteSurveyRevision(
@@ -50,6 +53,78 @@ public class SiteSurveyRevision : Entity
         CreatedByUserId = createdByUserId;
     }
 
+    public void AddArea(SiteSurveyArea area)
+    {
+        ArgumentNullException.ThrowIfNull(area);
+        _areas.Add(area);
+    }
+
+    public void UpdateDraft(
+        DateTimeOffset? visitedAtUtc,
+        string? scopeSummary,
+        IEnumerable<string>? assumptions,
+        IEnumerable<string>? constraints,
+        IEnumerable<string>? missingDetails)
+    {
+        if (Status != SurveyRevisionStatus.Draft)
+        {
+            throw new SurveyInvalidStateException(Status, $"Cannot edit survey revision in status '{Status}'. Only draft revisions can be edited.");
+        }
+
+        VisitedAtUtc = visitedAtUtc?.ToUniversalTime();
+        ScopeSummary = string.IsNullOrWhiteSpace(scopeSummary) ? null : scopeSummary.Trim();
+        Assumptions = assumptions?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).Distinct(StringComparer.Ordinal).ToArray() ?? Array.Empty<string>();
+        Constraints = constraints?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).Distinct(StringComparer.Ordinal).ToArray() ?? Array.Empty<string>();
+        MissingDetails = missingDetails?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).Distinct(StringComparer.Ordinal).ToArray() ?? Array.Empty<string>();
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void MarkReady(Guid actorUserId, DateTimeOffset now, string snapshotHash)
+    {
+        if (Status != SurveyRevisionStatus.Draft)
+        {
+            throw new SurveyInvalidStateException(Status, $"Cannot mark survey revision ready when in status '{Status}'.");
+        }
+
+        if (!VisitedAtUtc.HasValue)
+        {
+            throw new SurveyReadinessException(nameof(VisitedAtUtc), "Visit date/time is required to mark revision ready.");
+        }
+
+        if (string.IsNullOrWhiteSpace(ScopeSummary))
+        {
+            throw new SurveyReadinessException(nameof(ScopeSummary), "Scope summary is required to mark revision ready.");
+        }
+
+        if (_areas.Count == 0)
+        {
+            throw new SurveyReadinessException(nameof(Areas), "At least one survey area is required to mark revision ready.");
+        }
+
+        foreach (var area in _areas)
+        {
+            if (area.Measurements.Count == 0)
+            {
+                throw new SurveyReadinessException(nameof(SiteSurveyMeasurement), $"Area '{area.Name}' must have at least one measurement.");
+            }
+
+            foreach (var m in area.Measurements)
+            {
+                if (m.Value <= 0)
+                {
+                    throw new SurveyReadinessException(nameof(m.Value), $"Measurement '{m.MeasurementType}' in area '{area.Name}' must be strictly positive.");
+                }
+            }
+        }
+
+        Readiness = SurveyReadiness.Ready;
+        Status = SurveyRevisionStatus.Ready;
+        ReadyAtUtc = now.ToUniversalTime();
+        ReadyByUserId = actorUserId;
+        SnapshotHash = snapshotHash;
+        RowVersion = Guid.NewGuid();
+    }
+
     public static SiteSurveyRevision CreateBaseline(
         Guid organizationId,
         Guid siteSurveyId,
@@ -67,3 +142,4 @@ public class SiteSurveyRevision : Entity
             now: now);
     }
 }
+

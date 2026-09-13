@@ -1,5 +1,24 @@
 namespace TanErp.Api.Contracts.Surveys;
 
+public sealed record SiteSurveyMeasurementResponse(
+    Guid Id,
+    Guid SiteSurveyAreaId,
+    string MeasurementType,
+    decimal Value,
+    string UnitCode,
+    string CaptureMethod,
+    string? Notes,
+    int SortOrder);
+
+public sealed record SiteSurveyAreaResponse(
+    Guid Id,
+    Guid SiteSurveyRevisionId,
+    string Code,
+    string Name,
+    string? Description,
+    int SortOrder,
+    IReadOnlyList<SiteSurveyMeasurementResponse> Measurements);
+
 public sealed record SiteSurveyRevisionResponse(
     Guid Id,
     Guid SiteSurveyId,
@@ -17,7 +36,9 @@ public sealed record SiteSurveyRevisionResponse(
     string? SnapshotHash,
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
-    Guid CreatedByUserId);
+    Guid CreatedByUserId,
+    IReadOnlyList<SiteSurveyAreaResponse>? Areas = null);
+
 
 public sealed record SurveyorSummaryResponse(
     Guid Id,

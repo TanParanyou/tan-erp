@@ -619,6 +619,61 @@
       "ready": "พร้อมใช้งาน",
       "superseded": "ถูกแทนที่",
       "void": "ยกเลิก"
+    },
+    "openWorkspace": "เปิดหน้าต่างสำรวจ (Workspace)",
+    "workspaceTitle": "บันทึกผลการสำรวจหน้างาน (Site Survey Workspace)",
+    "workspaceDesc": "บันทึกข้อมูลพื้นที่ ขนาดที่วัดได้ ข้อจำกัด และตรวจรับความพร้อมเพื่อส่งต่อการประเมินราคา",
+    "visitedAtLabel": "วันที่และเวลาเข้าพบจริง",
+    "scopeSummaryLabel": "สรุปขอบเขตงานสำรวจ",
+    "scopeSummaryPlaceholder": "ระบุภาพรวมของงานสำรวจ เช่น สำรวจพื้นที่ทำตู้เสื้อผ้า built-in...",
+    "areasTitle": "พื้นที่และระยะที่วัดได้ (Areas & Measurements)",
+    "addAreaAction": "+ เพิ่มพื้นที่สำรวจ",
+    "areaCodeLabel": "รหัสพื้นที่",
+    "areaNameLabel": "ชื่อพื้นที่",
+    "areaDescLabel": "คำอธิบาย",
+    "removeAreaAction": "ลบพื้นที่",
+    "measurementsTitle": "ระยะที่วัดได้ (Measurements)",
+    "addMeasurementAction": "+ เพิ่มระยะวัด",
+    "measurementTypeLabel": "ประเภทการวัด",
+    "measurementValueLabel": "ค่าที่วัดได้",
+    "measurementUnitLabel": "หน่วยวัด",
+    "measurementNotesLabel": "บันทึกเพิ่มเติม",
+    "removeMeasurementAction": "ลบ",
+    "assumptionsTitle": "สมมติฐานหน้างาน (Assumptions)",
+    "constraintsTitle": "ข้อจำกัดหน้างาน (Constraints)",
+    "missingDetailsTitle": "ข้อมูลที่ยังขาด (Missing Details)",
+    "addNotePlaceholder": "พิมพ์ข้อความแล้วกด Enter...",
+    "saveDraftAction": "บันทึกฉบับร่าง",
+    "markReadyAction": "ยืนยันความพร้อม (Mark Ready)",
+    "markReadyConfirmTitle": "ยืนยันความพร้อมเพื่อส่งต่อประเมินราคา (Mark Ready)",
+    "markReadyConfirmDesc": "เมื่อยืนยันแล้ว ข้อมูลฉบับสำรวจนี้จะถูกล็อกเป็นข้อมูลถาวร (Immutable) ไม่สามารถแก้ไขได้อีก และสถานะโครงการจะเปลี่ยนเป็น 'พร้อมประเมินราคา' (Estimating) ทันที",
+    "saveDraftSuccess": "บันทึกข้อมูลฉบับร่างเรียบร้อยแล้ว",
+    "markReadySuccess": "ยืนยันความพร้อมฉบับสำรวจสำเร็จ สถานะโครงการเปลี่ยนเป็นพร้อมประเมินราคาแล้ว",
+    "readyBadge": "พร้อมประเมินราคา (Ready)",
+    "hashLabel": "Snapshot Hash",
+    "readinessErrors": {
+      "missingVisit": "กรุณาระบุวันและเวลาที่เข้าพบจริง",
+      "missingScope": "กรุณากรอกสรุปขอบเขตงานสำรวจ",
+      "missingArea": "ต้องมีพื้นที่สำรวจอย่างน้อย 1 พื้นที่",
+      "missingMeasurement": "แต่ละพื้นที่ต้องมีรายการระยะวัดอย่างน้อย 1 รายการและค่าต้องมากกว่า 0"
+    },
+    "types": {
+      "width": "ความกว้าง (Width)",
+      "height": "ความสูง (Height)",
+      "depth": "ความลึก (Depth)",
+      "length": "ความยาว (Length)",
+      "area": "พื้นที่ (Area)",
+      "opening": "ช่องเปิด (Opening)",
+      "count": "จำนวน (Count)",
+      "custom": "กำหนดเอง (Custom)"
+    },
+    "units": {
+      "mm": "มิลลิเมตร (mm)",
+      "cm": "เซนติเมตร (cm)",
+      "m": "เมตร (m)",
+      "sqm": "ตารางเมตร (sqm)",
+      "unit": "หน่วย (unit)"
     }
   }
 }
+

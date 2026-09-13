@@ -17,4 +17,17 @@ public interface ISiteSurveyStore
         Guid organizationId,
         Guid opportunityId,
         CancellationToken cancellationToken = default);
+
+    Task<Result<SiteSurveyRevisionProjection>> UpdateDraftAsync(
+        RequestAccessContext access,
+        UpdateSurveyDraft.UpdateSurveyDraftCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<SiteSurveyRevisionProjection>> MarkReadyAsync(
+        RequestAccessContext access,
+        MarkSurveyReady.MarkSurveyReadyCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
 }
+

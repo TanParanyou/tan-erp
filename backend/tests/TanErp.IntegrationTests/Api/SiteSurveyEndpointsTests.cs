@@ -209,4 +209,119 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
         var response = await _client.SendAsync(requestMsg);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task UpdateDraftAndMarkReady_CompleteFlow_TransitionsOpportunityToEstimating()
+    {
+        var (_, siteId, oppId, oppVersion) = await SetupQualifiedOpportunityAsync();
+        var now = DateTimeOffset.UtcNow;
+        var start = now.AddDays(1);
+        var end = start.AddHours(2);
+
+        // 1. Create survey
+        var createReq = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{oppId}/surveys",
+            "token-org-a",
+            MembershipAId);
+        createReq.Headers.Add("Idempotency-Key", "idemp-survey-flow-0001");
+        createReq.Content = JsonContent.Create(new CreateSiteSurveyRequest(
+            siteId,
+            UserAId,
+            start,
+            end,
+            oppVersion));
+
+        var createResp = await _client.SendAsync(createReq);
+        Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
+        var survey = await createResp.Content.ReadFromJsonAsync<SiteSurveyResponse>();
+        Assert.NotNull(survey);
+        Assert.NotNull(survey.CurrentRevision);
+        var revisionId = survey.CurrentRevision.Id;
+        var revVersion = survey.CurrentRevision.RowVersion;
+
+        // 2. Update Draft with Areas & Measurements
+        var updateReq = CreateAuthenticatedRequest(
+            HttpMethod.Put,
+            $"/api/v1/opportunities/{oppId}/surveys/{survey.Id}/revisions/{revisionId}/draft",
+            "token-org-a",
+            MembershipAId);
+        updateReq.Headers.Add("If-Match", $"\"{revVersion}\"");
+
+        var areas = new List<UpdateSurveyAreaRequest>
+        {
+            new(
+                null,
+                "AREA-01",
+                "ห้องนอนใหญ่",
+                "ตู้เสื้อผ้า built-in",
+                1,
+                new List<UpdateSurveyMeasurementRequest>
+                {
+                    new(null, "width", 3.2m, "m", "measured", "ความกว้างผนัง", 1),
+                    new(null, "height", 2.6m, "m", "measured", "ความสูงฝ้า", 2),
+                    new(null, "depth", 0.6m, "m", "measured", "ความลึกตู้", 3)
+                })
+        };
+
+        updateReq.Content = JsonContent.Create(new UpdateSurveyDraftRequest(
+            revVersion,
+            now,
+            "สำรวจและวัดระยะห้องนอนใหญ่",
+            new List<string> { "ผนังปูนฉาบเรียบ" },
+            new List<string> { "มีเบรกเกอร์แอร์ที่ผนังด้านขวา" },
+            new List<string>(),
+            areas));
+
+        var updateResp = await _client.SendAsync(updateReq);
+        Assert.Equal(HttpStatusCode.OK, updateResp.StatusCode);
+
+        var updatedRev = await updateResp.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>();
+        Assert.NotNull(updatedRev);
+        Assert.Equal("สำรวจและวัดระยะห้องนอนใหญ่", updatedRev.ScopeSummary);
+        Assert.NotNull(updatedRev.Areas);
+        Assert.Single(updatedRev.Areas);
+        Assert.Equal("ห้องนอนใหญ่", updatedRev.Areas[0].Name);
+        Assert.Equal(3, updatedRev.Areas[0].Measurements.Count);
+        var newRevVersion = updatedRev.RowVersion;
+
+        // 3. Mark Ready
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var oppInDb = await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId);
+            var currentOppVersion = oppInDb.RowVersion;
+
+            var markReadyReq = CreateAuthenticatedRequest(
+                HttpMethod.Post,
+                $"/api/v1/opportunities/{oppId}/surveys/{survey.Id}/revisions/{revisionId}/mark-ready",
+                "token-org-a",
+                MembershipAId);
+            markReadyReq.Headers.Add("Idempotency-Key", "idemp-survey-mark-ready-0001");
+            markReadyReq.Content = JsonContent.Create(new MarkSurveyReadyRequest(
+                newRevVersion,
+                currentOppVersion));
+
+            var markReadyResp = await _client.SendAsync(markReadyReq);
+            Assert.Equal(HttpStatusCode.OK, markReadyResp.StatusCode);
+
+            var readyRev = await markReadyResp.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>();
+            Assert.NotNull(readyRev);
+            Assert.Equal(SurveyRevisionStatus.Ready, readyRev.Status);
+            Assert.Equal(SurveyReadiness.Ready, readyRev.Readiness);
+            Assert.NotNull(readyRev.SnapshotHash);
+
+            // Verify Opportunity transitioned to Estimating
+            var finalOpp = await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId);
+            Assert.Equal(OpportunityStage.Estimating, finalOpp.Stage);
+
+
+            var estimatingHistory = await db.OpportunityStageHistories
+                .Where(h => h.OpportunityId == oppId && h.ToStage == OpportunityStage.Estimating)
+                .SingleOrDefaultAsync();
+            Assert.NotNull(estimatingHistory);
+            Assert.Equal(OpportunityStage.Surveying, estimatingHistory.FromStage);
+        }
+    }
 }
+

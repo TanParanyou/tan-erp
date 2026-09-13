@@ -2,8 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Common.Security;
 using TanErp.Application.Surveys;
 using TanErp.Application.Surveys.CreateSiteSurvey;
+using TanErp.Application.Surveys.MarkSurveyReady;
+using TanErp.Application.Surveys.UpdateSurveyDraft;
 using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
@@ -11,6 +14,7 @@ using TanErp.Domain.Crm.Sites;
 using TanErp.Domain.Surveys;
 
 namespace TanErp.Infrastructure.Persistence.Surveys;
+
 
 public class SiteSurveyStore : ISiteSurveyStore
 {
@@ -258,6 +262,8 @@ public class SiteSurveyStore : ISiteSurveyStore
         var survey = await _db.SiteSurveys
             .AsNoTracking()
             .Include(s => s.Revisions)
+                .ThenInclude(r => r.Areas)
+                    .ThenInclude(a => a.Measurements)
             .FirstOrDefaultAsync(s => s.OpportunityId == opportunityId && s.OrganizationId == organizationId, cancellationToken);
 
         if (survey == null) return null;
@@ -277,6 +283,341 @@ public class SiteSurveyStore : ISiteSurveyStore
             .FirstOrDefaultAsync(cancellationToken);
 
         return ToProjection(survey, currentRevision, surveyor, site);
+    }
+
+    public async Task<Result<SiteSurveyRevisionProjection>> UpdateDraftAsync(
+        RequestAccessContext access,
+        UpdateSurveyDraftCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            var survey = await _db.SiteSurveys
+                .FirstOrDefaultAsync(s => s.Id == command.SiteSurveyId && s.OrganizationId == orgId, cancellationToken);
+
+            if (survey == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey not found."));
+            }
+
+            var revision = await _db.SiteSurveyRevisions
+                .Include(r => r.Areas)
+                    .ThenInclude(a => a.Measurements)
+                .FirstOrDefaultAsync(r => r.Id == command.RevisionId && r.SiteSurveyId == survey.Id && r.OrganizationId == orgId, cancellationToken);
+
+            if (revision == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey revision not found."));
+            }
+
+            if (revision.RowVersion != command.ExpectedRevisionVersion)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_VERSION_CONFLICT", "Survey revision version conflict."));
+            }
+
+            if (revision.Status != SurveyRevisionStatus.Draft)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_INVALID_STATE", $"Cannot edit revision in status '{revision.Status}'."));
+            }
+
+            revision.UpdateDraft(
+                command.VisitedAtUtc,
+                command.ScopeSummary,
+                command.Assumptions,
+                command.Constraints,
+                command.MissingDetails);
+
+            // Update Areas & Measurements
+            var existingAreas = revision.Areas.ToList();
+            var commandAreaIds = command.Areas.Where(a => a.Id.HasValue).Select(a => a.Id!.Value).ToHashSet();
+
+            foreach (var ea in existingAreas.Where(a => !commandAreaIds.Contains(a.Id)))
+            {
+                _db.SiteSurveyAreas.Remove(ea);
+            }
+
+            foreach (var aInput in command.Areas)
+            {
+                SiteSurveyArea area;
+                if (aInput.Id.HasValue && existingAreas.FirstOrDefault(a => a.Id == aInput.Id.Value) is { } existingArea)
+                {
+                    area = existingArea;
+                    _db.Entry(area).Property(p => p.Code).CurrentValue = aInput.Code.Trim().ToUpperInvariant();
+                    _db.Entry(area).Property(p => p.Name).CurrentValue = aInput.Name.Trim();
+                    _db.Entry(area).Property(p => p.Description).CurrentValue = string.IsNullOrWhiteSpace(aInput.Description) ? null : aInput.Description.Trim();
+                    _db.Entry(area).Property(p => p.SortOrder).CurrentValue = aInput.SortOrder;
+                }
+                else
+                {
+                    area = new SiteSurveyArea(
+                        aInput.Id ?? Guid.NewGuid(),
+                        orgId,
+                        revision.Id,
+                        aInput.Code,
+                        aInput.Name,
+                        aInput.Description,
+                        aInput.SortOrder);
+                    _db.SiteSurveyAreas.Add(area);
+                }
+
+                var existingMeasurements = area.Measurements.ToList();
+                var commandMeasurementIds = aInput.Measurements.Where(m => m.Id.HasValue).Select(m => m.Id!.Value).ToHashSet();
+
+                foreach (var em in existingMeasurements.Where(m => !commandMeasurementIds.Contains(m.Id)))
+                {
+                    _db.SiteSurveyMeasurements.Remove(em);
+                }
+
+                foreach (var mInput in aInput.Measurements)
+                {
+                    if (mInput.Value <= 0)
+                    {
+                        return Result<SiteSurveyRevisionProjection>.Failure(
+                            new Error("SURVEY_MEASUREMENT_INVALID", $"Measurement value for '{mInput.MeasurementType}' must be positive."));
+                    }
+
+                    if (!MeasurementType.IsValid(mInput.MeasurementType))
+                    {
+                        return Result<SiteSurveyRevisionProjection>.Failure(
+                            new Error("SURVEY_MEASUREMENT_INVALID", $"Invalid measurement type: '{mInput.MeasurementType}'."));
+                    }
+
+                    if (!MeasurementUnit.IsValid(mInput.UnitCode))
+                    {
+                        return Result<SiteSurveyRevisionProjection>.Failure(
+                            new Error("SURVEY_MEASUREMENT_INVALID", $"Invalid measurement unit: '{mInput.UnitCode}'."));
+                    }
+
+                    if (mInput.Id.HasValue && existingMeasurements.FirstOrDefault(m => m.Id == mInput.Id.Value) is { } existingMeasurement)
+                    {
+                        _db.Entry(existingMeasurement).Property(p => p.MeasurementType).CurrentValue = mInput.MeasurementType.Trim().ToLowerInvariant();
+                        _db.Entry(existingMeasurement).Property(p => p.Value).CurrentValue = mInput.Value;
+                        _db.Entry(existingMeasurement).Property(p => p.UnitCode).CurrentValue = mInput.UnitCode.Trim().ToLowerInvariant();
+                        _db.Entry(existingMeasurement).Property(p => p.CaptureMethod).CurrentValue = mInput.CaptureMethod.Trim().ToLowerInvariant();
+                        _db.Entry(existingMeasurement).Property(p => p.Notes).CurrentValue = string.IsNullOrWhiteSpace(mInput.Notes) ? null : mInput.Notes.Trim();
+                        _db.Entry(existingMeasurement).Property(p => p.SortOrder).CurrentValue = mInput.SortOrder;
+                    }
+                    else
+                    {
+                        var newM = new SiteSurveyMeasurement(
+                            mInput.Id ?? Guid.NewGuid(),
+                            orgId,
+                            area.Id,
+                            mInput.MeasurementType,
+                            mInput.Value,
+                            mInput.UnitCode,
+                            mInput.CaptureMethod,
+                            mInput.Notes,
+                            mInput.SortOrder);
+                        _db.SiteSurveyMeasurements.Add(newM);
+                    }
+                }
+            }
+
+            var now = _clock.UtcNow;
+            var auditChanges = FormattableString.Invariant(
+                $"{{\"changedFields\":[\"visitedAtUtc\",\"scopeSummary\",\"areas\"],\"revisionNumber\":{revision.RevisionNumber}}}");
+            var auditEvent = new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "survey.revision-updated",
+                "SiteSurveyRevision",
+                revision.Id.ToString(),
+                now,
+                command.TraceId,
+                auditChanges);
+            _db.AddAuditEvent(auditEvent);
+
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+
+            var refreshedRevision = await _db.SiteSurveyRevisions
+                .AsNoTracking()
+                .Include(r => r.Areas)
+                    .ThenInclude(a => a.Measurements)
+                .SingleAsync(r => r.Id == revision.Id, cancellationToken);
+
+            return Result<SiteSurveyRevisionProjection>.Success(ToRevisionProjection(refreshedRevision, refreshedRevision.Areas.ToList()));
+        });
+    }
+
+    public async Task<Result<SiteSurveyRevisionProjection>> MarkReadyAsync(
+        RequestAccessContext access,
+        MarkSurveyReadyCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            // Replay check
+            var existingRecord = await _db.IdempotencyRecords
+                .SingleOrDefaultAsync(r => r.OrganizationId == orgId && r.Operation == "site_survey_revision.mark_ready" && r.KeyHash == keyHash, cancellationToken);
+
+            if (existingRecord != null)
+            {
+                if (existingRecord.PayloadHash != payloadHash)
+                {
+                    return Result<SiteSurveyRevisionProjection>.Failure(
+                        new Error("IDEMPOTENCY_KEY_REUSED", "Idempotency key has already been used with different payload."));
+                }
+
+                var cachedRevision = await _db.SiteSurveyRevisions
+                    .AsNoTracking()
+                    .Include(r => r.Areas)
+                        .ThenInclude(a => a.Measurements)
+                    .SingleOrDefaultAsync(r => r.Id == command.RevisionId && r.OrganizationId == orgId, cancellationToken);
+
+                if (cachedRevision != null)
+                {
+                    return Result<SiteSurveyRevisionProjection>.Success(ToRevisionProjection(cachedRevision, cachedRevision.Areas.ToList()));
+                }
+            }
+
+            var survey = await _db.SiteSurveys
+                .FirstOrDefaultAsync(s => s.Id == command.SiteSurveyId && s.OrganizationId == orgId, cancellationToken);
+
+            if (survey == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey not found."));
+            }
+
+            var revision = await _db.SiteSurveyRevisions
+                .Include(r => r.Areas)
+                    .ThenInclude(a => a.Measurements)
+                .FirstOrDefaultAsync(r => r.Id == command.RevisionId && r.SiteSurveyId == survey.Id && r.OrganizationId == orgId, cancellationToken);
+
+            if (revision == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey revision not found."));
+            }
+
+            if (revision.RowVersion != command.ExpectedRevisionVersion)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_VERSION_CONFLICT", "Survey revision version conflict."));
+            }
+
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.Id == survey.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+
+            if (opp == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Associated opportunity not found."));
+            }
+
+            if (opp.RowVersion != command.ExpectedOpportunityVersion)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+
+            if (opp.Stage != OpportunityStage.Surveying)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", $"Opportunity must be in 'surveying' stage to enter estimating. Current stage: '{opp.Stage}'."));
+            }
+
+            var now = _clock.UtcNow;
+            var canonicalHashPayload = $"{survey.SurveyNumber}|{revision.RevisionNumber}|{revision.VisitedAtUtc:O}|{revision.ScopeSummary}|{revision.Areas.Count}|{revision.Areas.Sum(a => a.Measurements.Count)}";
+            var snapshotHash = Sha256Hex.Compute(canonicalHashPayload);
+
+            try
+            {
+                revision.MarkReady(access.ActorUserId, now, snapshotHash);
+            }
+            catch (SurveyReadinessException ex)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_NOT_READY", ex.Message));
+            }
+            catch (SurveyInvalidStateException ex)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_INVALID_STATE", ex.Message));
+            }
+
+            // Milestone: Advance Opportunity to estimating
+            var previousOppStage = opp.Stage;
+            opp.EnterEstimating(command.ExpectedOpportunityVersion);
+
+            var history = new OpportunityStageHistory(
+                Guid.NewGuid(),
+                orgId,
+                opp.Id,
+                previousOppStage,
+                OpportunityStage.Estimating,
+                reasonCode: null,
+                note: $"Survey {survey.SurveyNumber} revision {revision.RevisionNumber} marked ready.",
+                access.ActorUserId,
+                now,
+                OpportunityStagePolicy.Version,
+                command.TraceId);
+            _db.OpportunityStageHistories.Add(history);
+
+            // Audit
+            var oppAuditChanges = FormattableString.Invariant(
+                $"{{\"changedFields\":[\"stage\"],\"fromStage\":\"{previousOppStage}\",\"toStage\":\"{OpportunityStage.Estimating}\",\"surveyNumber\":\"{survey.SurveyNumber}\",\"revisionNumber\":{revision.RevisionNumber}}}");
+            var oppAuditEvent = new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "opportunity.stage-changed",
+                "Opportunity",
+                opp.Id.ToString(),
+                now,
+                command.TraceId,
+                oppAuditChanges);
+            _db.AddAuditEvent(oppAuditEvent);
+
+            var surveyAuditChanges = FormattableString.Invariant(
+                $"{{\"changedFields\":[\"status\",\"readiness\",\"snapshotHash\"],\"revisionNumber\":{revision.RevisionNumber},\"snapshotHash\":\"{snapshotHash}\"}}");
+            var surveyAuditEvent = new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "survey.marked-ready",
+                "SiteSurveyRevision",
+                revision.Id.ToString(),
+                now,
+                command.TraceId,
+                surveyAuditChanges);
+            _db.AddAuditEvent(surveyAuditEvent);
+
+            var idempotencyRecord = new IdempotencyRecord(
+                Guid.NewGuid(),
+                orgId,
+                "site_survey_revision.mark_ready",
+                keyHash,
+                payloadHash,
+                revision.Id.ToString(),
+                now);
+            _db.IdempotencyRecords.Add(idempotencyRecord);
+
+
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+
+            return Result<SiteSurveyRevisionProjection>.Success(ToRevisionProjection(revision, revision.Areas.ToList()));
+        });
     }
 
     private async Task<Result<SiteSurveyProjection>?> TryLoadReplayAsync(
@@ -304,6 +645,8 @@ public class SiteSurveyStore : ISiteSurveyStore
         var survey = await _db.SiteSurveys
             .AsNoTracking()
             .Include(s => s.Revisions)
+                .ThenInclude(r => r.Areas)
+                    .ThenInclude(a => a.Measurements)
             .SingleOrDefaultAsync(
                 candidate => candidate.Id == surveyId && candidate.OrganizationId == organizationId,
                 cancellationToken);
@@ -311,6 +654,48 @@ public class SiteSurveyStore : ISiteSurveyStore
         if (survey is null) return null;
         var currentRevision = survey.Revisions.OrderByDescending(r => r.RevisionNumber).FirstOrDefault();
         return Result<SiteSurveyProjection>.Success(ToProjection(survey, currentRevision));
+    }
+
+    private static SiteSurveyRevisionProjection ToRevisionProjection(
+        SiteSurveyRevision r,
+        IReadOnlyList<SiteSurveyArea>? areas = null)
+    {
+        var areaList = areas?.OrderBy(a => a.SortOrder).Select(a => new SiteSurveyAreaProjection(
+            a.Id,
+            a.SiteSurveyRevisionId,
+            a.Code,
+            a.Name,
+            a.Description,
+            a.SortOrder,
+            a.Measurements.OrderBy(m => m.SortOrder).Select(m => new SiteSurveyMeasurementProjection(
+                m.Id,
+                m.SiteSurveyAreaId,
+                m.MeasurementType,
+                m.Value,
+                m.UnitCode,
+                m.CaptureMethod,
+                m.Notes,
+                m.SortOrder)).ToList())).ToList();
+
+        return new SiteSurveyRevisionProjection(
+            r.Id,
+            r.SiteSurveyId,
+            r.RevisionNumber,
+            r.SurveyTemplateVersion,
+            r.VisitedAtUtc,
+            r.ScopeSummary,
+            r.Assumptions.ToList(),
+            r.Constraints.ToList(),
+            r.MissingDetails.ToList(),
+            r.Readiness,
+            r.Status,
+            r.ReadyAtUtc,
+            r.ReadyByUserId,
+            r.SnapshotHash,
+            r.RowVersion,
+            r.CreatedAtUtc,
+            r.CreatedByUserId,
+            areaList);
     }
 
     private static SiteSurveyProjection ToProjection(
@@ -322,24 +707,7 @@ public class SiteSurveyStore : ISiteSurveyStore
         SiteSurveyRevisionProjection? revProj = null;
         if (r != null)
         {
-            revProj = new SiteSurveyRevisionProjection(
-                r.Id,
-                r.SiteSurveyId,
-                r.RevisionNumber,
-                r.SurveyTemplateVersion,
-                r.VisitedAtUtc,
-                r.ScopeSummary,
-                r.Assumptions.ToList(),
-                r.Constraints.ToList(),
-                r.MissingDetails.ToList(),
-                r.Readiness,
-                r.Status,
-                r.ReadyAtUtc,
-                r.ReadyByUserId,
-                r.SnapshotHash,
-                r.RowVersion,
-                r.CreatedAtUtc,
-                r.CreatedByUserId);
+            revProj = ToRevisionProjection(r, r.Areas.ToList());
         }
 
         return new SiteSurveyProjection(
@@ -361,3 +729,4 @@ public class SiteSurveyStore : ISiteSurveyStore
             site);
     }
 }
+

@@ -28,6 +28,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Crm.Opportunities.OpportunityStageHistory> OpportunityStageHistories => Set<TanErp.Domain.Crm.Opportunities.OpportunityStageHistory>();
     public DbSet<TanErp.Domain.Surveys.SiteSurvey> SiteSurveys => Set<TanErp.Domain.Surveys.SiteSurvey>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyRevision> SiteSurveyRevisions => Set<TanErp.Domain.Surveys.SiteSurveyRevision>();
+    public DbSet<TanErp.Domain.Surveys.SiteSurveyArea> SiteSurveyAreas => Set<TanErp.Domain.Surveys.SiteSurveyArea>();
+    public DbSet<TanErp.Domain.Surveys.SiteSurveyMeasurement> SiteSurveyMeasurements => Set<TanErp.Domain.Surveys.SiteSurveyMeasurement>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
     public DbSet<TanErp.Domain.MasterData.Geography.Province> Provinces => Set<TanErp.Domain.MasterData.Geography.Province>();
     public DbSet<TanErp.Domain.MasterData.Geography.District> Districts => Set<TanErp.Domain.MasterData.Geography.District>();

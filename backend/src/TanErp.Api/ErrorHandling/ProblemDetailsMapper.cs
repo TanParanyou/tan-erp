@@ -32,6 +32,7 @@ public static class ProblemDetailsMapper
         "OPPORTUNITY_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
         "OPPORTUNITY_INVALID_TRANSITION" => StatusCodes.Status409Conflict,
         "SURVEY_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+        "SURVEY_INVALID_STATE" => StatusCodes.Status409Conflict,
         "ACTIVE_BRANCH_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "CUSTOMER_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "CONTACT_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
@@ -39,7 +40,10 @@ public static class ProblemDetailsMapper
         "OPPORTUNITY_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "SURVEY_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "SURVEY_SCHEDULE_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "SURVEY_NOT_READY" => StatusCodes.Status422UnprocessableEntity,
+        "SURVEY_MEASUREMENT_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "IF_MATCH_REQUIRED" => StatusCodes.Status428PreconditionRequired,
+
         "INTERNAL_SERVER_ERROR" => StatusCodes.Status500InternalServerError,
         _ => StatusCodes.Status500InternalServerError
     };

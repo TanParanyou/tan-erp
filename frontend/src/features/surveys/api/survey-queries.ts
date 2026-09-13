@@ -2,7 +2,10 @@ import { useQuery, useMutation, useQueryClient, type UseQueryResult, type UseMut
 import {
   apiClient,
   type SiteSurveyResponse,
+  type SiteSurveyRevisionResponse,
   type CreateSiteSurveyRequest,
+  type UpdateSurveyDraftRequest,
+  type MarkSurveyReadyRequest,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -95,3 +98,85 @@ export function useCreateSiteSurvey(
     },
   });
 }
+
+export function useUpdateSurveyDraft(
+  opportunityId: string,
+  surveyId: string,
+  revisionId: string
+): UseMutationResult<
+  SiteSurveyRevisionResponse,
+  Error,
+  {
+    payload: UpdateSurveyDraftRequest;
+    ifMatch: string;
+  }
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ payload, ifMatch }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.updateSurveyDraft(opportunityId, surveyId, revisionId, payload, {
+        token,
+        membershipId,
+        ifMatch,
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: opportunitySurveyQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+    },
+  });
+}
+
+export function useMarkSurveyReady(
+  opportunityId: string,
+  surveyId: string,
+  revisionId: string
+): UseMutationResult<
+  SiteSurveyRevisionResponse,
+  Error,
+  {
+    payload: MarkSurveyReadyRequest;
+    idempotencyKey: string;
+  }
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ payload, idempotencyKey }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.markSurveyReady(opportunityId, surveyId, revisionId, payload, {
+        token,
+        membershipId,
+        idempotencyKey,
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: opportunityDetailQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: opportunitySurveyQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+    },
+  });
+}
+

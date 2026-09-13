@@ -147,6 +147,16 @@ public class Opportunity : Entity
         RowVersion = Guid.NewGuid();
     }
 
+    public void EnterEstimating(Guid expectedVersion)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage != OpportunityStage.Surveying) throw new OpportunityTransitionException(Stage, OpportunityStage.Estimating);
+
+        Stage = OpportunityStage.Estimating;
+        RowVersion = Guid.NewGuid();
+    }
+
+
     public void Close(Guid expectedVersion, string targetStage, string reasonCode, string? note = null)
     {
         if (RowVersion != expectedVersion) throw new OpportunityVersionException();

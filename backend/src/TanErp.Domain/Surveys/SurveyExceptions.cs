@@ -23,3 +23,26 @@ public sealed class SurveyTransitionException : SurveyDomainException
         TargetStatus = targetStatus;
     }
 }
+
+public sealed class SurveyInvalidStateException : SurveyDomainException
+{
+    public string CurrentStatus { get; }
+
+    public SurveyInvalidStateException(string currentStatus, string message)
+        : base(message)
+    {
+        CurrentStatus = currentStatus;
+    }
+}
+
+public sealed class SurveyReadinessException : SurveyDomainException
+{
+    public string MissingRequirement { get; }
+
+    public SurveyReadinessException(string missingRequirement, string message)
+        : base(message)
+    {
+        MissingRequirement = missingRequirement;
+    }
+}
+

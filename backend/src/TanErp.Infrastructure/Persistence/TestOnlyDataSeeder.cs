@@ -82,8 +82,11 @@ public static class TestOnlyDataSeeder
             ("opportunities.update", "Update Opportunities"),
             ("opportunities.transition", "Transition Opportunities"),
             ("surveys.read", "Read Site Surveys"),
-            ("surveys.create", "Create Site Surveys")
+            ("surveys.create", "Create Site Surveys"),
+            ("surveys.update", "Update Site Surveys"),
+            ("surveys.mark-ready", "Mark Site Surveys Ready")
         };
+
 
         var seededPerms = new List<Permission>();
         foreach (var (key, desc) in permKeys)

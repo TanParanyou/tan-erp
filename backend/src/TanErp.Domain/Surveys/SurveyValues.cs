@@ -56,3 +56,52 @@ public static class SurveyDefaults
 {
     public const string BaselineTemplateVersion = "SURVEY-BASELINE-v1";
 }
+
+public static class MeasurementType
+{
+    public const string Width = "width";
+    public const string Depth = "depth";
+    public const string Height = "height";
+    public const string Length = "length";
+    public const string Area = "area";
+    public const string Opening = "opening";
+    public const string Count = "count";
+    public const string Custom = "custom";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Width, Depth, Height, Length, Area, Opening, Count, Custom
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}
+
+public static class MeasurementUnit
+{
+    public const string Millimeter = "mm";
+    public const string Centimeter = "cm";
+    public const string Meter = "m";
+    public const string SquareMeter = "sqm";
+    public const string Unit = "unit";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Millimeter, Centimeter, Meter, SquareMeter, Unit
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}
+
+public static class CaptureMethod
+{
+    public const string Measured = "measured";
+    public const string CustomerProvided = "customer_provided";
+    public const string Derived = "derived";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Measured, CustomerProvided, Derived
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}

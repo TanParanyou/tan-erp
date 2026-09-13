@@ -123,4 +123,93 @@ public class SiteSurveyTests
 
         Assert.Throws<OpportunityVersionException>(() => opp.EnterSurveying(Guid.NewGuid(), _siteId));
     }
+
+    [Fact]
+    public void UpdateDraft_ValidFields_UpdatesFieldsAndRotatesVersion()
+    {
+        var revision = SiteSurveyRevision.CreateBaseline(_orgId, Guid.NewGuid(), _userId, _now);
+        var initialVersion = revision.RowVersion;
+
+        var visited = _now.AddDays(2);
+        revision.UpdateDraft(
+            visited,
+            "Scope summary for built-in",
+            new[] { "Assumption 1" },
+            new[] { "Constraint 1" },
+            new[] { "Detail 1" });
+
+        Assert.Equal(visited.ToUniversalTime(), revision.VisitedAtUtc);
+        Assert.Equal("Scope summary for built-in", revision.ScopeSummary);
+        Assert.Single(revision.Assumptions);
+        Assert.Single(revision.Constraints);
+        Assert.Single(revision.MissingDetails);
+        Assert.NotEqual(initialVersion, revision.RowVersion);
+    }
+
+    [Fact]
+    public void MarkReady_MissingRequirements_ThrowsSurveyReadinessException()
+    {
+        var revision = SiteSurveyRevision.CreateBaseline(_orgId, Guid.NewGuid(), _userId, _now);
+
+        // Missing visit date and scope summary
+        Assert.Throws<SurveyReadinessException>(() =>
+            revision.MarkReady(_userId, _now, "test-hash"));
+
+        // Add visit date but missing scope summary
+        revision.UpdateDraft(_now, null, null, null, null);
+        Assert.Throws<SurveyReadinessException>(() =>
+            revision.MarkReady(_userId, _now, "test-hash"));
+
+        // Add scope summary but no area
+        revision.UpdateDraft(_now, "Valid Scope", null, null, null);
+        Assert.Throws<SurveyReadinessException>(() =>
+            revision.MarkReady(_userId, _now, "test-hash"));
+    }
+
+    [Fact]
+    public void MarkReady_ValidAreasAndMeasurements_LocksReadyAndComputesHash()
+    {
+        var revision = SiteSurveyRevision.CreateBaseline(_orgId, Guid.NewGuid(), _userId, _now);
+        revision.UpdateDraft(_now, "Complete scope", null, null, null);
+
+        var area = new SiteSurveyArea(Guid.NewGuid(), _orgId, revision.Id, "AREA-01", "Master Bedroom", "Main room", 1);
+        var measurement = new SiteSurveyMeasurement(
+            Guid.NewGuid(), _orgId, area.Id, MeasurementType.Width, 3.5m, MeasurementUnit.Meter, CaptureMethod.Measured, "Laser measure", 1);
+        area.AddMeasurement(measurement);
+        revision.AddArea(area);
+
+        var initialVersion = revision.RowVersion;
+        revision.MarkReady(_userId, _now, "hash-12345");
+
+        Assert.Equal(SurveyRevisionStatus.Ready, revision.Status);
+        Assert.Equal(SurveyReadiness.Ready, revision.Readiness);
+        Assert.Equal("hash-12345", revision.SnapshotHash);
+        Assert.Equal(_userId, revision.ReadyByUserId);
+        Assert.Equal(_now.ToUniversalTime(), revision.ReadyAtUtc);
+        Assert.NotEqual(initialVersion, revision.RowVersion);
+
+        // Cannot update anymore once ready
+        Assert.Throws<SurveyInvalidStateException>(() =>
+            revision.UpdateDraft(_now, "New scope", null, null, null));
+    }
+
+    [Fact]
+    public void EnterEstimating_OpportunityInSurveying_TransitionsToEstimating()
+    {
+        var opp = Opportunity.CreateDraft(
+            Guid.NewGuid(), _orgId, _branchId, Guid.NewGuid(), null, _userId, _userId,
+            "Built-in Closet", "Full bedroom closet", new[] { "built-in" }, null, null, null, null,
+            _now.AddDays(1), "Follow up", _now);
+
+        opp.Qualify(opp.RowVersion);
+        opp.EnterSurveying(opp.RowVersion, _siteId);
+        Assert.Equal(OpportunityStage.Surveying, opp.Stage);
+
+        var previousVersion = opp.RowVersion;
+        opp.EnterEstimating(previousVersion);
+
+        Assert.Equal(OpportunityStage.Estimating, opp.Stage);
+        Assert.NotEqual(previousVersion, opp.RowVersion);
+    }
 }
+

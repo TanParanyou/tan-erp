@@ -1,20 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { formatDateTime } from "@/lib/formatters/formatters";
 import type { SiteSurveyResponse } from "@/lib/api/api-client";
 import { Badge } from "@/components/ui/Badge";
-import { IconCheckCircle, IconClock, IconUser, IconMapPin } from "@/components/common/Icons";
+import { Button } from "@/components/ui/Button";
+import { IconCheckCircle, IconClock, IconUser, IconMapPin, IconEdit, IconEye } from "@/components/common/Icons";
+import { SurveyWorkspaceDrawer } from "./survey-workspace-drawer";
 
 interface SurveyCardProps {
   survey: SiteSurveyResponse;
   siteLabel?: string;
   surveyorName?: string;
+  opportunityId?: string;
+  opportunityRowVersion?: string;
+  canEdit?: boolean;
 }
 
-export function SurveyCard({ survey, siteLabel, surveyorName }: SurveyCardProps) {
+export function SurveyCard({
+  survey,
+  siteLabel,
+  surveyorName,
+  opportunityId,
+  opportunityRowVersion,
+  canEdit = true,
+}: SurveyCardProps) {
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const t = useTranslations("surveys");
   const locale = useSafeLocale();
 
@@ -109,6 +122,58 @@ export function SurveyCard({ survey, siteLabel, surveyorName }: SurveyCardProps)
           </div>
         </div>
       </div>
+
+      {/* Revision summary & Workspace actions */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-erp-border-subtle text-xs">
+        <div className="flex items-center gap-3">
+          {survey.currentRevision?.status === "ready" ? (
+            <div className="flex items-center gap-1.5 text-emerald-700 font-medium">
+              <IconCheckCircle size={15} />
+              <span>{t("readyBadge")}</span>
+              {survey.currentRevision.snapshotHash && (
+                <span className="font-mono text-[11px] text-erp-text-muted ml-1 bg-erp-border-subtle px-1.5 py-0.5">
+                  #{survey.currentRevision.snapshotHash.slice(0, 8)}
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="text-erp-text-muted">
+              {t("revisionStatuses.draft")} • {survey.currentRevision?.areas?.length ?? 0} {t("areasTitle")}
+            </span>
+          )}
+        </div>
+
+        {opportunityId && opportunityRowVersion && (
+          <Button
+            variant={survey.currentRevision?.status === "ready" ? "secondary" : "primary"}
+            size="sm"
+            onClick={() => setIsWorkspaceOpen(true)}
+            className="flex items-center gap-1.5 font-semibold"
+          >
+            {survey.currentRevision?.status === "ready" || !canEdit ? (
+              <>
+                <IconEye size={15} />
+                <span>{t("openWorkspace")}</span>
+              </>
+            ) : (
+              <>
+                <IconEdit size={15} />
+                <span>{t("openWorkspace")}</span>
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+
+      {opportunityId && opportunityRowVersion && (
+        <SurveyWorkspaceDrawer
+          isOpen={isWorkspaceOpen}
+          onClose={() => setIsWorkspaceOpen(false)}
+          opportunityId={opportunityId}
+          survey={survey}
+          currentOpportunityVersion={opportunityRowVersion}
+        />
+      )}
     </div>
   );
 }

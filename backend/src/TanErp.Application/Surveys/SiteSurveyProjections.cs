@@ -1,5 +1,24 @@
 namespace TanErp.Application.Surveys;
 
+public sealed record SiteSurveyMeasurementProjection(
+    Guid Id,
+    Guid SiteSurveyAreaId,
+    string MeasurementType,
+    decimal Value,
+    string UnitCode,
+    string CaptureMethod,
+    string? Notes,
+    int SortOrder);
+
+public sealed record SiteSurveyAreaProjection(
+    Guid Id,
+    Guid SiteSurveyRevisionId,
+    string Code,
+    string Name,
+    string? Description,
+    int SortOrder,
+    IReadOnlyList<SiteSurveyMeasurementProjection> Measurements);
+
 public sealed record SiteSurveyRevisionProjection(
     Guid Id,
     Guid SiteSurveyId,
@@ -17,7 +36,9 @@ public sealed record SiteSurveyRevisionProjection(
     string? SnapshotHash,
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
-    Guid CreatedByUserId);
+    Guid CreatedByUserId,
+    IReadOnlyList<SiteSurveyAreaProjection>? Areas = null);
+
 
 public sealed record SurveyorSummaryProjection(
     Guid Id,
