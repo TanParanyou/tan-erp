@@ -221,5 +221,17 @@
   <data name="SURVEY_MEASUREMENT_INVALID_DETAIL" xml:space="preserve">
     <value>ค่าระยะวัดต้องมากกว่าศูนย์ และระบุประเภทและหน่วยวัดให้ถูกต้อง</value>
   </data>
+  <data name="ESTIMATE_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลใบประมาณการถูกแก้ไขโดยผู้อื่น</value>
+  </data>
+  <data name="ESTIMATE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>เวอร์ชันของข้อมูลใบประมาณการไม่ตรงกับข้อมูลล่าสุดในระบบ กรุณาโหลดข้อมูลใหม่</value>
+  </data>
+  <data name="ESTIMATE_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>สถานะใบประมาณการไม่ถูกต้อง</value>
+  </data>
+  <data name="ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถแก้ไขหรือดำเนินการในสถานะปัจจุบันของใบประมาณการได้</value>
+  </data>
 </root>
 

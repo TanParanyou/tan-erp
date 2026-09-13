@@ -30,7 +30,9 @@ export function DropdownMenu({
   className,
 }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [computedAlign, setComputedAlign] = useState<"left" | "right">(align);
   const containerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const toggle = useCallback(() => {
     setIsOpen((prev) => !prev);
@@ -39,6 +41,46 @@ export function DropdownMenu({
   const close = useCallback(() => {
     setIsOpen(false);
   }, []);
+
+  // Adjust alignment dynamically when menu opens to avoid overflowing viewport
+  useEffect(() => {
+    if (!isOpen) {
+      setComputedAlign(align);
+      return;
+    }
+
+    const updateAlignment = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const estimatedMenuWidth = menuRef.current?.offsetWidth || 220;
+
+      // If align is right: menu extends to the left from container's right edge
+      // container.right - estimatedMenuWidth < 0 -> overflows left edge!
+      // If align is left: menu extends to the right from container's left edge
+      // container.left + estimatedMenuWidth > viewportWidth -> overflows right edge!
+      if (align === "left") {
+        if (rect.left + estimatedMenuWidth > viewportWidth - 16 && rect.right - estimatedMenuWidth >= 16) {
+          setComputedAlign("right");
+        } else {
+          setComputedAlign("left");
+        }
+      } else {
+        // default right align
+        if (rect.right + (estimatedMenuWidth - rect.width) > viewportWidth - 16 && rect.right > viewportWidth - 16) {
+          setComputedAlign("right");
+        } else if (rect.right - estimatedMenuWidth < 16 && rect.left + estimatedMenuWidth <= viewportWidth - 16) {
+          setComputedAlign("left");
+        } else {
+          setComputedAlign("right");
+        }
+      }
+    };
+
+    updateAlignment();
+    window.addEventListener("resize", updateAlignment);
+    return () => window.removeEventListener("resize", updateAlignment);
+  }, [isOpen, align]);
 
   // Click outside to dismiss
   useEffect(() => {
@@ -94,11 +136,12 @@ export function DropdownMenu({
 
       {isOpen && (
         <div
+          ref={menuRef}
           role="menu"
           aria-orientation="vertical"
           className={cn(
-            "absolute z-50 mt-1 min-w-[200px] border border-erp-border bg-erp-surface py-1 shadow-lg focus:outline-none",
-            align === "right" ? "right-0" : "left-0"
+            "absolute z-50 mt-1 min-w-[200px] max-w-[calc(100vw-2rem)] whitespace-nowrap border border-erp-border bg-erp-surface py-1 shadow-lg focus:outline-none",
+            computedAlign === "right" ? "right-0" : "left-0"
           )}
           style={{ borderRadius: "0px" }}
         >

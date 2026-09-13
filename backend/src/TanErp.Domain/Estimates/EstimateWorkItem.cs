@@ -119,9 +119,13 @@ public class EstimateWorkItem
             ? decimal.Round(TotalCost / Quantity, 4, MidpointRounding.AwayFromZero)
             : 0;
 
+        decimal effectiveRuleValue = (SellingRuleType == Estimates.SellingRuleType.Margin || SellingRuleType == Estimates.SellingRuleType.Markup) && SellingRuleValue > 1m
+            ? SellingRuleValue / 100m
+            : SellingRuleValue;
+
         if (SellingRuleType == Estimates.SellingRuleType.Margin)
         {
-            decimal divisor = 1m - SellingRuleValue;
+            decimal divisor = 1m - effectiveRuleValue;
             if (divisor <= 0)
             {
                 TotalSellingPrice = TotalCost;
@@ -133,7 +137,7 @@ public class EstimateWorkItem
         }
         else if (SellingRuleType == Estimates.SellingRuleType.Markup)
         {
-            TotalSellingPrice = decimal.Round(TotalCost * (1m + SellingRuleValue), 2, MidpointRounding.AwayFromZero);
+            TotalSellingPrice = decimal.Round(TotalCost * (1m + effectiveRuleValue), 2, MidpointRounding.AwayFromZero);
         }
         else
         {

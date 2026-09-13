@@ -149,8 +149,12 @@ public class EstimateStore : IEstimateStore
                 throw new EstimateInvalidStateException($"Cannot update estimate in status '{revision.Status}'.");
 
             // Remove existing relational structure
-            _db.EstimateSections.RemoveRange(revision.Sections);
-            revision.ClearSections();
+            if (revision.Sections.Count > 0)
+            {
+                _db.EstimateSections.RemoveRange(revision.Sections);
+                await _db.SaveChangesAsync(cancellationToken);
+                revision.ClearSections();
+            }
 
             // Recreate sections, work items, and cost components
             foreach (var sDto in sectionsDto.OrderBy(s => s.SortOrder))
@@ -194,12 +198,15 @@ public class EstimateStore : IEstimateStore
                             cDto.SortOrder);
 
                         workItem.AddCostComponent(comp);
+                        _db.EstimateCostComponents.Add(comp);
                     }
 
                     section.AddWorkItem(workItem);
+                    _db.EstimateWorkItems.Add(workItem);
                 }
 
                 revision.AddSection(section);
+                _db.EstimateSections.Add(section);
             }
 
             // Recalculate financial summary

@@ -25,10 +25,12 @@ public sealed class ApiExceptionHandler : IExceptionHandler
         var problem = ProblemDetailsMapper.CreateProblem(
             "INTERNAL_SERVER_ERROR", httpContext);
         _logger.LogError(
-            "Unhandled request. ErrorCode: {ErrorCode}; TraceId: {TraceId}; ExceptionType: {ExceptionType}",
+            exception,
+            "Unhandled request. ErrorCode: {ErrorCode}; TraceId: {TraceId}; ExceptionType: {ExceptionType}; Message: {Message}",
             problem.Code,
             problem.TraceId,
-            exception.GetType().Name);
+            exception.GetType().Name,
+            exception.Message);
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
         await httpContext.Response.WriteAsJsonAsync(
             problem,

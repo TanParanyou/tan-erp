@@ -33,6 +33,8 @@ public static class ProblemDetailsMapper
         "OPPORTUNITY_INVALID_TRANSITION" => StatusCodes.Status409Conflict,
         "SURVEY_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
         "SURVEY_INVALID_STATE" => StatusCodes.Status409Conflict,
+        "ESTIMATE_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+        "ESTIMATE_INVALID_STATE" => StatusCodes.Status409Conflict,
         "ACTIVE_BRANCH_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "CUSTOMER_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "CONTACT_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,

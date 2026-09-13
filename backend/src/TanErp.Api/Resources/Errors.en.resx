@@ -221,5 +221,17 @@
   <data name="SURVEY_MEASUREMENT_INVALID_DETAIL" xml:space="preserve">
     <value>Measurement value must be strictly positive with valid measurement type and unit code.</value>
   </data>
+  <data name="ESTIMATE_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Estimate Version Conflict</value>
+  </data>
+  <data name="ESTIMATE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The estimate version does not match the current state. Please reload and try again.</value>
+  </data>
+  <data name="ESTIMATE_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>Invalid Estimate Status</value>
+  </data>
+  <data name="ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>The operation cannot be performed on the estimate in its current status.</value>
+  </data>
 </root>
 

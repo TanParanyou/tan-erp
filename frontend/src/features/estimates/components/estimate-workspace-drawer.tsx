@@ -74,6 +74,17 @@ export function EstimateWorkspaceDrawer({
   const revisionId = currentRevision?.id ?? "";
   const currency = currentRevision?.currency ?? "THB";
 
+  const [activeRowVersion, setActiveRowVersion] = useState<string | null>(null);
+
+  // Keep activeRowVersion in sync when currentRevision changes from query updates
+  useEffect(() => {
+    if (currentRevision?.rowVersion) {
+      setActiveRowVersion(currentRevision.rowVersion);
+    }
+  }, [currentRevision?.rowVersion]);
+
+  const effectiveRowVersion = activeRowVersion || currentRevision?.rowVersion;
+
   const methods = useForm<EstimateWorkspaceFormData>({
     resolver: zodResolver(estimateWorkspaceSchema),
     defaultValues: {
@@ -98,7 +109,7 @@ export function EstimateWorkspaceDrawer({
 
   // Populate form from currentRevision
   useEffect(() => {
-    if (currentRevision) {
+    if (currentRevision && !isDirty) {
       const initialSections = (currentRevision.sections || []).map((s, sIdx) => ({
         id: s.id,
         code: s.code || `SEC-${sIdx + 1}`,
@@ -133,7 +144,7 @@ export function EstimateWorkspaceDrawer({
         sections: initialSections,
       });
     }
-  }, [currentRevision, reset, currency]);
+  }, [currentRevision, reset, currency, isDirty]);
 
   const updateDraftMutation = useUpdateEstimateDraft(opportunityId ?? "", estimate.id ?? "", revisionId);
   const calculateMutation = useCalculateEstimate(opportunityId ?? "", estimate.id ?? "", revisionId);
@@ -291,9 +302,9 @@ export function EstimateWorkspaceDrawer({
     remove(sectionIndex);
   };
 
-  const buildUpdatePayload = (data: EstimateWorkspaceFormData): UpdateEstimateDraftRequest => {
+  const buildUpdatePayload = (data: EstimateWorkspaceFormData, targetVersion?: string): UpdateEstimateDraftRequest => {
     return {
-      expectedRevisionVersion: currentRevision?.rowVersion ?? "",
+      expectedRevisionVersion: targetVersion || effectiveRowVersion || "",
       sections: (data.sections || []).map((s, sIdx) => ({
         id: s.id || null,
         code: s.code,
@@ -326,14 +337,17 @@ export function EstimateWorkspaceDrawer({
   };
 
   const handleSaveDraft = async () => {
-    if (!currentRevision?.rowVersion) return;
+    if (!effectiveRowVersion) return;
     try {
       const formData = getValues();
-      const payload = buildUpdatePayload(formData);
-      await updateDraftMutation.mutateAsync({
+      const payload = buildUpdatePayload(formData, effectiveRowVersion);
+      const updatedRev = await updateDraftMutation.mutateAsync({
         payload,
-        ifMatch: `"${currentRevision.rowVersion}"`,
+        ifMatch: `"${effectiveRowVersion}"`,
       });
+      if (updatedRev?.rowVersion) {
+        setActiveRowVersion(updatedRev.rowVersion);
+      }
       toast.success(t("saveDraftSuccess"));
       reset(formData);
     } catch (err: unknown) {
@@ -343,20 +357,34 @@ export function EstimateWorkspaceDrawer({
   };
 
   const handleRecalculate = async () => {
-    if (!currentRevision?.rowVersion) return;
+    if (!effectiveRowVersion) return;
     try {
       const formData = getValues();
-      const savePayload = buildUpdatePayload(formData);
-      await updateDraftMutation.mutateAsync({
-        payload: savePayload,
-        ifMatch: `"${currentRevision.rowVersion}"`,
-      });
+      let latestVersion = effectiveRowVersion;
 
+      // 1. If form has changes or was dirty, save draft first and obtain the latest rowVersion
+      if (isDirty) {
+        const savePayload = buildUpdatePayload(formData, latestVersion);
+        const updatedRev = await updateDraftMutation.mutateAsync({
+          payload: savePayload,
+          ifMatch: `"${latestVersion}"`,
+        });
+        if (updatedRev?.rowVersion) {
+          latestVersion = updatedRev.rowVersion;
+          setActiveRowVersion(latestVersion);
+        }
+      }
+
+      // 2. Call calculate with the exact latest version
       const calcPayload: CalculateEstimateRequest = {
-        expectedRevisionVersion: currentRevision.rowVersion,
+        expectedRevisionVersion: latestVersion,
         discountAmount: Number(formData.discountAmount) || 0,
       };
-      await calculateMutation.mutateAsync(calcPayload);
+      const calculatedRev = await calculateMutation.mutateAsync(calcPayload);
+      if (calculatedRev?.rowVersion) {
+        setActiveRowVersion(calculatedRev.rowVersion);
+      }
+
       toast.success(t("calculateSuccess"));
       reset(formData);
     } catch (err: unknown) {
