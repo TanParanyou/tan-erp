@@ -17,6 +17,7 @@ public static class TestOnlyDataSeeder
     public static readonly Guid TestUserIdB = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b20");
     public static readonly Guid TestMembershipBId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b21");
     public static readonly Guid TestOrgBId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b22");
+    public static readonly Guid TestBranchBId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b23");
     public const string TestFirebaseUidB = "foundation-user-b-test-only";
     public const string TestUserEmailB = "foundation-user-b@example.test";
 
@@ -124,6 +125,14 @@ public static class TestOnlyDataSeeder
             db.Organizations.Add(orgB);
         }
 
+        // Seed Branch B
+        var branchB = await db.Branches.FindAsync(TestBranchBId);
+        if (branchB == null)
+        {
+            branchB = new Branch(TestBranchBId, TestOrgBId, "B01-B", "สาขาทดสอบ B");
+            db.Branches.Add(branchB);
+        }
+
         var userB = await db.Users.FirstOrDefaultAsync(u => u.FirebaseUid == TestFirebaseUidB);
         if (userB == null)
         {
@@ -134,7 +143,7 @@ public static class TestOnlyDataSeeder
         var membershipB = await db.Memberships.FindAsync(TestMembershipBId);
         if (membershipB == null)
         {
-            membershipB = new Membership(TestMembershipBId, TestOrgBId, null, userB.Id, isActive: true);
+            membershipB = new Membership(TestMembershipBId, TestOrgBId, TestBranchBId, userB.Id, isActive: true);
             db.Memberships.Add(membershipB);
         }
 

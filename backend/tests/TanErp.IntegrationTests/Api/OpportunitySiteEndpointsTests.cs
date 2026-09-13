@@ -794,5 +794,200 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         Assert.Equal(OpportunityReasonCodes.ReopenBudgetAdjusted, historyList.Items[0].ReasonCode);
         Assert.Equal("lost", historyList.Items[1].ToStage);
     }
+
+    [Fact]
+    public async Task Hardening_CrossOrgIsolation_AllMutationsAndQueriesReturn404()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        // Org B attempts to transition stage of Org A -> 404
+        var transReq = new TransitionOpportunityStageRequest("qualified", opp.RowVersion);
+        var transMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-b",
+            MembershipBId,
+            $"idem-cross-trans-{Guid.NewGuid():N}");
+        transMsg.Content = JsonContent.Create(transReq);
+        var transRes = await _client.SendAsync(transMsg);
+        Assert.Equal(HttpStatusCode.NotFound, transRes.StatusCode);
+
+        // Org B attempts to read stage history of Org A -> 404
+        var histMsg = CreateRequest(
+            HttpMethod.Get,
+            $"/api/v1/opportunities/{opp.Id}/stage-history",
+            "token-org-b",
+            MembershipBId);
+        var histRes = await _client.SendAsync(histMsg);
+        Assert.Equal(HttpStatusCode.NotFound, histRes.StatusCode);
+
+        // Org B attempts to PATCH draft of Org A -> 404
+        var patchReq = new UpdateDraftQGateRequest("Cross Org Scope", new[] { "built-in" }, null, null);
+        var patchMsg = CreateRequest(
+            HttpMethod.Patch,
+            $"/api/v1/opportunities/{opp.Id}",
+            "token-org-b",
+            MembershipBId,
+            $"idem-cross-patch-{Guid.NewGuid():N}");
+        patchMsg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        patchMsg.Content = JsonContent.Create(patchReq);
+        var patchRes = await _client.SendAsync(patchMsg);
+        Assert.Equal(HttpStatusCode.NotFound, patchRes.StatusCode);
+
+        // Org B attempts to reassign owner of Org A -> 404
+        var reassignReq = new ReassignOpportunityOwnerRequest(opp.RowVersion, Guid.NewGuid());
+        var reassignMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/owner-changes",
+            "token-org-b",
+            MembershipBId,
+            $"idem-cross-owner-{Guid.NewGuid():N}");
+        reassignMsg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        reassignMsg.Content = JsonContent.Create(reassignReq);
+        var reassignRes = await _client.SendAsync(reassignMsg);
+        Assert.Equal(HttpStatusCode.NotFound, reassignRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task Hardening_PermissionDenial_NoPermUserGets403()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        // User without opportunities.transition attempts qualify -> 403
+        var transReq = new TransitionOpportunityStageRequest("qualified", opp.RowVersion);
+        var transMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-no-perm",
+            MembershipNoPermId,
+            $"idem-noperm-trans-{Guid.NewGuid():N}");
+        transMsg.Content = JsonContent.Create(transReq);
+        var transRes = await _client.SendAsync(transMsg);
+        Assert.Equal(HttpStatusCode.Forbidden, transRes.StatusCode);
+
+        // User without opportunities.update attempts PATCH draft -> 403
+        var patchReq = new UpdateDraftQGateRequest("No Perm Scope", new[] { "built-in" }, null, null);
+        var patchMsg = CreateRequest(
+            HttpMethod.Patch,
+            $"/api/v1/opportunities/{opp.Id}",
+            "token-no-perm",
+            MembershipNoPermId,
+            $"idem-noperm-patch-{Guid.NewGuid():N}");
+        patchMsg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        patchMsg.Content = JsonContent.Create(patchReq);
+        var patchRes = await _client.SendAsync(patchMsg);
+        Assert.Equal(HttpStatusCode.Forbidden, patchRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task Hardening_StaleVersion_Returns409Conflict()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var staleVersion = Guid.NewGuid();
+
+        // Stale expectedVersion in stage transition -> 409
+        var transReq = new TransitionOpportunityStageRequest("qualified", staleVersion);
+        var transMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            $"idem-stale-trans-{Guid.NewGuid():N}");
+        transMsg.Content = JsonContent.Create(transReq);
+        var transRes = await _client.SendAsync(transMsg);
+        Assert.Equal(HttpStatusCode.Conflict, transRes.StatusCode);
+
+        // Stale If-Match in PATCH draft -> 409
+        var patchReq = new UpdateDraftQGateRequest("Stale Version Update", new[] { "built-in" }, null, null);
+        var patchMsg = CreateRequest(
+            HttpMethod.Patch,
+            $"/api/v1/opportunities/{opp.Id}",
+            "token-org-a",
+            MembershipAId,
+            $"idem-stale-patch-{Guid.NewGuid():N}");
+        patchMsg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{staleVersion}\""));
+        patchMsg.Content = JsonContent.Create(patchReq);
+        var patchRes = await _client.SendAsync(patchMsg);
+        Assert.Equal(HttpStatusCode.Conflict, patchRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task Hardening_MissingIfMatch_PatchReturns428PreconditionRequired()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var patchReq = new UpdateDraftQGateRequest("Missing IfMatch", new[] { "built-in" }, null, null);
+        var patchMsg = CreateRequest(
+            HttpMethod.Patch,
+            $"/api/v1/opportunities/{opp.Id}",
+            "token-org-a",
+            MembershipAId,
+            $"idem-noifmatch-{Guid.NewGuid():N}");
+        // Do NOT add If-Match header
+        patchMsg.Content = JsonContent.Create(patchReq);
+        var patchRes = await _client.SendAsync(patchMsg);
+        Assert.Equal((HttpStatusCode)428, patchRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task Hardening_IdempotencyReplayAndConflict_BehavesDeterministically()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+
+        var idempotencyKey = $"idem-test-replay-{Guid.NewGuid():N}";
+        var req = new TransitionOpportunityStageRequest("cancelled", opp.RowVersion, OpportunityReasonCodes.CancelledDuplicate);
+
+        // First call -> 200 OK
+        var firstMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            idempotencyKey);
+        firstMsg.Content = JsonContent.Create(req);
+        var firstRes = await _client.SendAsync(firstMsg);
+        Assert.Equal(HttpStatusCode.OK, firstRes.StatusCode);
+        var firstBody = await firstRes.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(firstBody);
+
+        // Second call with same idempotency key and identical payload -> 200 OK replay
+        var replayMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            idempotencyKey);
+        replayMsg.Content = JsonContent.Create(req);
+        var replayRes = await _client.SendAsync(replayMsg);
+        Assert.Equal(HttpStatusCode.OK, replayRes.StatusCode);
+        var replayBody = await replayRes.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(replayBody);
+        Assert.Equal(firstBody.RowVersion, replayBody.RowVersion);
+
+        // Verify history has only 1 entry (not duplicated)
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var historyCount = await db.OpportunityStageHistories
+            .CountAsync(h => h.OpportunityId == opp.Id);
+        Assert.Equal(1, historyCount);
+
+        // Third call with same idempotency key but different payload -> 409 IDEMPOTENCY_KEY_REUSED
+        var conflictReq = new TransitionOpportunityStageRequest("lost", opp.RowVersion, OpportunityReasonCodes.LostOther);
+        var conflictMsg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/stage-transitions",
+            "token-org-a",
+            MembershipAId,
+            idempotencyKey);
+        conflictMsg.Content = JsonContent.Create(conflictReq);
+        var conflictRes = await _client.SendAsync(conflictMsg);
+        Assert.Equal(HttpStatusCode.Conflict, conflictRes.StatusCode);
+    }
 }
 
