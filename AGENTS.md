@@ -14,7 +14,7 @@
 
 ## Current phase
 
-This repository is in **Application Implementation**. The authorized implementation boundary is the **Opportunity Qualification vertical slice** documented in `docs/superpowers/plans/2026-09-10-opportunity-qualification-vertical-slice.md`. This slice covers Opportunity qualification (Draft → Qualified), append-only stage history, and privacy-safe stage change audit. Customer lifecycle transitions beyond activation, Site edit/deactivation, Opportunity transitions beyond qualify (surveying, estimating, proposed, won, lost, cancelled), Survey, Estimation, Item, Commercial, Project, Procurement, Inventory, Production, and MRP behavior remain deferred without a separately approved implementation task.
+This repository is in **Application Implementation**. The authorized implementation boundary is the **Opportunity Work Images vertical slice (Slice 1A)** documented in `docs/superpowers/plans/2026-09-13-opportunity-work-images-vertical-slice.md`. This slice covers multi-image work photo attachment for Open Opportunities (`draft`, `qualified`, `surveying`, `estimating`, `proposed`), thumbnail/lightbox gallery, per-image captions, and backend file verification/storage integration. Customer lifecycle transitions beyond activation, Site edit/deactivation, Survey revision readiness, Estimation calculation, Item, Commercial, Project, Procurement, Inventory, Production, and MRP behavior remain deferred without a separately approved implementation task.
 
 ## Product boundaries
 

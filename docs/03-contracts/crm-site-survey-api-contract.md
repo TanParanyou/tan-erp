@@ -26,6 +26,12 @@ Backend Resolve Membership/Scope จาก PostgreSQL ทุก Request, Error �
 | ค้นหา/อ่าน Opportunity | `GET /api/v1/opportunities`, `GET /api/v1/opportunities/{id}` | `opportunities.read` | 200 |
 | สร้าง/แก้ Opportunity | `POST /api/v1/opportunities`, `PATCH /api/v1/opportunities/{id}` | `opportunities.create`, `opportunities.update` | 201/200 |
 | เปลี่ยน Stage | `POST /api/v1/opportunities/{id}/stage-transitions` | `opportunities.transition` | 200 |
+| เริ่ม Upload Session | `POST /api/v1/files/upload-sessions` | ตาม Parent Resource (`opportunities.update`, etc.) | 201 |
+| Complete Upload Session | `POST /api/v1/files/upload-sessions/{id}/complete` | ตาม Parent Resource | 200 |
+| Preview ไฟล์ | `GET /api/v1/files/{id}/preview` | ตาม Parent Resource (`opportunities.read`, etc.) | 200/302 |
+| แนบภาพงาน (Batch) | `POST /api/v1/opportunities/{id}/work-images` | `opportunities.update` | 201 |
+| อ่านภาพงาน | `GET /api/v1/opportunities/{id}/work-images` | `opportunities.read` | 200 |
+| ถอดภาพงาน (Soft Detach) | `DELETE /api/v1/opportunities/{id}/work-images/{imageId}` | `opportunities.update` | 204 |
 | สร้าง/อ่าน Survey | `POST /api/v1/site-surveys`, `GET /api/v1/site-surveys/{id}` | `surveys.create`, `surveys.read` | 201/200 |
 | Save Draft Revision | `PATCH /api/v1/site-survey-revisions/{id}` | `surveys.update` | 200 |
 | Mark Ready | `POST /api/v1/site-survey-revisions/{id}/mark-ready` | `surveys.mark-ready` | 200 |
@@ -287,6 +293,93 @@ Stage ทั้งหมดในระบบ: `draft`, `qualified`, `surveying`
 - Composite Index: `(organization_id, opportunity_id, occurred_at_utc, id)`
 - Delete behavior: `Restrict`
 - Audit Event: `opportunity.stage-changed` payload `{"changedFields":["stage"],"fromStage":"draft","toStage":"qualified"}` (ไม่มี PII/business text)
+
+## Opportunity Work Images Slice 1A Specification
+
+### 1. File Service Upload Session Contract
+
+```http
+POST /api/v1/files/upload-sessions
+Authorization: Bearer <Firebase ID token>
+X-Membership-Id: <membership UUID>
+Content-Type: application/json
+```
+
+```json
+{
+  "parentType": "opportunity",
+  "parentId": "019a3cf8-96f0-7c9f-b207-93aa818f4d11",
+  "mimeType": "image/webp",
+  "sizeBytes": 123456
+}
+```
+
+Response `201 Created`:
+```json
+{
+  "sessionId": "019a3cf8-96f0-7c9f-b207-93aa818f4e01",
+  "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e02",
+  "uploadUrl": "/api/v1/files/upload-sessions/019a3cf8-96f0-7c9f-b207-93aa818f4e01/content",
+  "expiresAtUtc": "2026-09-15T23:45:00Z"
+}
+```
+
+- อัปโหลดเนื้อหาไฟล์ไบนารี: `PUT /api/v1/files/upload-sessions/{sessionId}/content` พร้อม Header `Content-Type: image/webp`
+- ยืนยันความสมบูรณ์: `POST /api/v1/files/upload-sessions/{sessionId}/complete` คืน `200 OK` `{ "fileId": "...", "status": "verified" }`
+
+### 2. Opportunity Work Images Attach Contract (Batch)
+
+```http
+POST /api/v1/opportunities/{id}/work-images
+Authorization: Bearer <Firebase ID token>
+X-Membership-Id: <membership UUID>
+Idempotency-Key: <opaque 16-128 characters>
+If-Match: "<current Opportunity rowVersion UUID>"
+Content-Type: application/json
+```
+
+```json
+{
+  "images": [
+    { "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e02", "caption": "มุมหน้าตู้ TEST_ONLY" },
+    { "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e03", "caption": "มุมภายในตู้ TEST_ONLY" }
+  ]
+}
+```
+
+- บันทึก atomic ทั้งหมด หรือไม่มีเลย (All-or-nothing) ในหนึ่ง Transaction พร้อม rotate `rowVersion`
+- ตรวจสอบว่า Opportunity อยู่ใน Open stages (`draft`, `qualified`, `surveying`, `estimating`, `proposed`)
+- คืน `201 Created` พร้อม Header `ETag: "<new Opportunity rowVersion>"` และ Body:
+```json
+{
+  "items": [
+    {
+      "id": "019a3cf8-96f0-7c9f-b207-93aa818f4f01",
+      "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e02",
+      "stageAtAttach": "draft",
+      "caption": "มุมหน้าตู้ TEST_ONLY",
+      "displayOrder": 1,
+      "createdAtUtc": "2026-09-15T23:30:00Z",
+      "createdBy": {
+        "id": "019a3cf8-96f0-7c9f-b207-93aa818f4a01",
+        "displayName": "คุณทดสอบ การขาย"
+      }
+    }
+  ],
+  "opportunityRowVersion": "019a3cf8-96f0-7c9f-b207-93aa818f4d12"
+}
+```
+
+### 3. List Work Images
+
+`GET /api/v1/opportunities/{id}/work-images?stage=&limit=25&cursor=`
+คืนรายการภาพงานเรียงลำดับ `(createdAtUtc DESC, displayOrder ASC, id ASC)` รองรับ cursor pagination
+
+### 4. Soft Detach Work Image
+
+`DELETE /api/v1/opportunities/{id}/work-images/{imageId}`
+Header `If-Match: "<rowVersion>"`, `Idempotency-Key: <key>`
+คืน `204 No Content` พร้อม `ETag` ใหม่ โดยไม่ลบไฟล์ binary จาก File Service
 
 ## Baseline Examples (Broader / Future Slices)
 

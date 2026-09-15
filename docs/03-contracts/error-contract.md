@@ -137,6 +137,8 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `OPPORTUNITY_VERSION_CONFLICT` | 409 | Opportunity expectedVersion หรือ ETag เก่ากว่าข้อมูลปัจจุบัน; ให้ Reload/Compare |
 | `OPPORTUNITY_FIELD_REQUIRED` | 422 | Field ของ Stage เป้าหมายยังไม่ครบตาม Qualification gate (เช่น ขาด scopeSummary, workTypes หรือ nextAction) |
 | `OPPORTUNITY_INVALID_TRANSITION` | 409 | Stage Transition ไม่อยู่ใน Allowlist หรือสถานะปัจจุบันไม่รองรับ เช่น ไม่ใช่ draft -> qualified |
+| `OPPORTUNITY_IMAGE_NOT_READY` | 409 | ไฟล์ภาพยังไม่ได้ยืนยัน (Not Verified) หรือไม่ได้อยู่ในสถานะที่พร้อมผูกกับ Opportunity |
+| `FILE_UPLOAD_SESSION_INVALID` | 400 | Session การอัปโหลดไม่ถูกต้อง หมดอายุ หรือไฟล์ไม่ตรงตามเงื่อนไข (ขนาดเกินหรือ MIME ไม่ถูกต้อง) |
 | `SITE_VERSION_CONFLICT` | 409 | Site ETag เก่า |
 | `SITE_FIELD_REQUIRED` | 422 | ข้อมูลบังคับของ Site (label หรือ structured address) ไม่ครบถ้วน หรือพิกัดละติจูด/ลองจิจูดไม่เป็นคู่สมบูรณ์ |
 | `SURVEY_VERSION_CONFLICT` | 409 | Draft Revision ETag เก่า |
