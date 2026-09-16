@@ -201,10 +201,10 @@ export function MultiImagePicker({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed p-6 text-center cursor-pointer transition-colors bg-card ${
+          className={`border-2 border-dashed p-6 text-center cursor-pointer transition-colors ${
             isDragging
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-primary hover:bg-muted/30"
+              ? "border-erp-navy bg-erp-navy/5"
+              : "border-erp-slate-300 dark:border-erp-slate-700 bg-erp-slate-50/60 dark:bg-erp-slate-900/30 hover:border-erp-navy hover:bg-erp-slate-100/50"
           }`}
           style={{ borderRadius: "0px" }}
         >
@@ -217,11 +217,11 @@ export function MultiImagePicker({
             onChange={handleInputChange}
           />
           <div className="flex flex-col items-center justify-center space-y-2">
-            <div className="p-3 bg-muted rounded-none border border-border text-foreground">
+            <div className="p-3 bg-white dark:bg-erp-slate-800 rounded-none border border-erp-border text-erp-navy dark:text-erp-slate-300">
               <IconUpload className="w-5 h-5" />
             </div>
-            <p className="text-sm font-medium text-foreground">{t("dropImagesHere")}</p>
-            <p className="text-xs font-mono text-muted-foreground">{t("maxImagesLimit")}</p>
+            <p className="text-sm font-semibold text-erp-text-main">{t("dropImagesHere")}</p>
+            <p className="text-xs font-mono text-erp-text-muted">{t("maxImagesLimit")}</p>
           </div>
         </div>
       )}
@@ -232,11 +232,11 @@ export function MultiImagePicker({
           {items.map((item, index) => (
             <div
               key={item.id}
-              className="border border-border bg-card p-3 space-y-2 relative"
+              className="border border-erp-border bg-white dark:bg-erp-slate-900 p-3 space-y-2 relative shadow-none"
               style={{ borderRadius: "0px" }}
             >
               {/* Thumbnail with overlay status */}
-              <div className="relative aspect-video w-full bg-muted overflow-hidden border border-border">
+              <div className="relative aspect-video w-full bg-erp-slate-100 dark:bg-erp-slate-800 overflow-hidden border border-erp-border">
                 <Image
                   src={item.previewUrl}
                   alt={item.caption || `Image ${index + 1}`}
@@ -250,7 +250,7 @@ export function MultiImagePicker({
                   <button
                     type="button"
                     onClick={() => removeItem(item.id)}
-                    className="absolute top-1 right-1 p-1 bg-black/70 hover:bg-destructive text-white transition-colors"
+                    className="absolute top-1 right-1 p-1 bg-erp-navy/80 hover:bg-destructive text-white transition-colors"
                     style={{ borderRadius: "0px" }}
                     title={tCommon("cancel")}
                   >
@@ -259,7 +259,7 @@ export function MultiImagePicker({
                 )}
 
                 {/* Compression Status Badge */}
-                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/80 text-[10px] font-mono text-white">
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-erp-navy/90 text-[10px] font-mono text-white">
                   {item.isOptimizing ? (
                     <span className="text-amber-300">Optimizing...</span>
                   ) : (
@@ -276,7 +276,7 @@ export function MultiImagePicker({
                 placeholder={t("imageCaptionPlaceholder")}
                 disabled={disabled}
                 maxLength={500}
-                className="w-full px-2 py-1.5 text-xs bg-background border border-border text-foreground focus:outline-none focus:border-primary"
+                className="w-full px-2 py-1.5 text-xs bg-white dark:bg-erp-slate-950 border border-erp-border text-erp-text-main focus:outline-none focus:border-erp-navy"
                 style={{ borderRadius: "0px" }}
               />
             </div>

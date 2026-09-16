@@ -2,8 +2,11 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { IconUpload, IconClose, IconEye, IconAlertCircle } from "@/components/common/Icons";
+import { IconUpload, IconEye, IconAlertCircle, IconCamera } from "@/components/common/Icons";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { cn } from "@/lib/utils/cn";
 import {
   useOpportunityWorkImages,
   useDetachWorkImage,
@@ -26,6 +29,7 @@ export interface OpportunityWorkImagesSectionProps {
  * - Filter by stage
  * - Soft-detach with confirmation modal (ETag protected)
  * - Attach button opening deferred upload modal
+ * - Atelier Architectural Navy Sharp design compliant
  */
 export function OpportunityWorkImagesSection({
   opportunityId,
@@ -71,47 +75,48 @@ export function OpportunityWorkImagesSection({
   const images = data?.items ?? [];
 
   return (
-    <div className="border border-border bg-card p-6 space-y-6" style={{ borderRadius: "0px" }}>
+    <div className="erp-card p-6 flex flex-col gap-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <h2 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-erp-border pb-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-base font-bold text-erp-navy">
             {t("workImagesTitle")}
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          </h3>
+          <p className="text-xs text-erp-text-muted">
             {t("workImagesSubtitle")}
           </p>
         </div>
 
         {/* Action: Attach Work Images */}
         {canManage && !isClosed && (
-          <button
+          <Button
             type="button"
+            variant="primary"
+            size="sm"
             onClick={() => setIsAttachModalOpen(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider bg-primary hover:bg-primary/90 text-primary-foreground transition-colors self-start sm:self-auto"
-            style={{ borderRadius: "0px" }}
+            icon={<IconUpload size={16} />}
+            className="self-start sm:self-auto"
           >
-            <IconUpload className="w-3.5 h-3.5" />
-            <span>{t("attachImagesAction")}</span>
-          </button>
+            {t("attachImagesAction")}
+          </Button>
         )}
       </div>
 
       {/* Filter Tabs / Stage Filter */}
       {images.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <span className="text-xs font-mono text-muted-foreground mr-1">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <span className="font-mono text-erp-text-muted mr-1 uppercase">
             {t("filterByStage")}:
           </span>
           <button
             type="button"
             onClick={() => setSelectedStageFilter(null)}
-            className={`px-2.5 py-1 text-xs font-mono uppercase tracking-wider transition-colors border ${
+            className={cn(
+              "px-2.5 py-1 text-xs font-mono uppercase tracking-wider transition-colors border rounded-none",
               selectedStageFilter === null
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-muted text-muted-foreground border-border hover:text-foreground"
-            }`}
-            style={{ borderRadius: "0px" }}
+                ? "bg-erp-navy text-white border-erp-navy"
+                : "bg-white dark:bg-erp-slate-900 text-erp-text-muted border-erp-border hover:text-erp-text-main"
+            )}
           >
             {t("allStages")}
           </button>
@@ -120,12 +125,12 @@ export function OpportunityWorkImagesSection({
               key={stage}
               type="button"
               onClick={() => setSelectedStageFilter(stage)}
-              className={`px-2.5 py-1 text-xs font-mono uppercase tracking-wider transition-colors border ${
+              className={cn(
+                "px-2.5 py-1 text-xs font-mono uppercase tracking-wider transition-colors border rounded-none",
                 selectedStageFilter === stage
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted text-muted-foreground border-border hover:text-foreground"
-              }`}
-              style={{ borderRadius: "0px" }}
+                  ? "bg-erp-navy text-white border-erp-navy"
+                  : "bg-white dark:bg-erp-slate-900 text-erp-text-muted border-erp-border hover:text-erp-text-main"
+              )}
             >
               {stage}
             </button>
@@ -135,28 +140,49 @@ export function OpportunityWorkImagesSection({
 
       {/* Gallery Grid */}
       {isLoading ? (
-        <div className="py-12 text-center text-xs font-mono text-muted-foreground">
-          Loading work images...
+        <div className="py-12 flex flex-col items-center justify-center gap-2 text-xs font-mono text-erp-text-muted">
+          <MonoSpinner size="md" />
+          <span>{t("loadingWorkImages")}</span>
         </div>
       ) : isError ? (
-        <div className="py-8 text-center text-xs font-mono text-destructive">
-          Failed to load work images.
+        <div className="py-8 flex flex-col items-center justify-center gap-2 text-xs font-mono text-destructive">
+          <IconAlertCircle size={20} />
+          <span>{t("loadWorkImagesError")}</span>
         </div>
       ) : images.length === 0 ? (
-        <div className="py-12 border border-dashed border-border text-center space-y-2">
-          <p className="text-xs text-muted-foreground">{t("workImagesEmpty")}</p>
+        <div className="py-12 px-6 border border-dashed border-erp-slate-300 dark:border-erp-slate-700 bg-erp-slate-50/60 dark:bg-erp-slate-900/30 text-center flex flex-col items-center justify-center gap-3">
+          <div className="w-12 h-12 flex items-center justify-center bg-white dark:bg-erp-slate-800 border border-erp-border text-erp-navy dark:text-erp-slate-300">
+            <IconCamera size={24} strokeWidth={1.6} />
+          </div>
+          <div className="space-y-1 max-w-md">
+            <p className="text-sm font-semibold text-erp-text-main">{t("workImagesEmpty")}</p>
+            <p className="text-xs text-erp-text-muted leading-relaxed">
+              {t("workImagesEmptyHint")}
+            </p>
+          </div>
+          {canManage && !isClosed && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsAttachModalOpen(true)}
+              icon={<IconUpload size={14} />}
+              className="mt-1"
+            >
+              {t("attachImagesAction")}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {images.map((image) => (
             <div
               key={image.id}
-              className="border border-border bg-card group relative flex flex-col justify-between overflow-hidden"
-              style={{ borderRadius: "0px" }}
+              className="border border-erp-border bg-white dark:bg-erp-slate-900 group relative flex flex-col justify-between overflow-hidden shadow-none rounded-none hover:border-erp-navy transition-colors"
             >
               {/* Thumbnail Container */}
               <div
-                className="relative aspect-video w-full bg-muted cursor-pointer overflow-hidden"
+                className="relative aspect-video w-full bg-erp-slate-100 dark:bg-erp-slate-800 cursor-pointer overflow-hidden"
                 onClick={() => setPreviewImage(image)}
               >
                 <Image
@@ -168,24 +194,24 @@ export function OpportunityWorkImagesSection({
                 />
 
                 {/* Stage Badge */}
-                <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/75 text-[10px] font-mono text-white uppercase">
+                <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-erp-navy/90 text-[10px] font-mono text-white uppercase rounded-none">
                   {image.stageAtAttach}
                 </div>
 
                 {/* Hover overlay with Eye icon */}
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="p-1.5 bg-black/70 text-white rounded-none">
-                    <IconEye className="w-4 h-4" />
+                <div className="absolute inset-0 bg-erp-navy/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="p-1.5 bg-white text-erp-navy rounded-none shadow-sm">
+                    <IconEye size={16} />
                   </span>
                 </div>
               </div>
 
               {/* Caption & Metadata Footer */}
-              <div className="p-2.5 space-y-1.5 text-xs bg-background/50 border-t border-border flex-1 flex flex-col justify-between">
-                <p className="text-foreground line-clamp-2 text-xs font-medium">
-                  {image.caption || <span className="text-muted-foreground italic">-</span>}
+              <div className="p-3 space-y-2 text-xs bg-erp-slate-50/70 dark:bg-erp-slate-950/40 border-t border-erp-border flex-1 flex flex-col justify-between">
+                <p className="text-erp-text-main line-clamp-2 text-xs font-medium" title={image.caption ?? undefined}>
+                  {image.caption || <span className="text-erp-text-muted italic">-</span>}
                 </p>
-                <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-1 border-t border-border/50">
+                <div className="flex items-center justify-between text-[10px] font-mono text-erp-text-muted pt-1.5 border-t border-erp-border/60">
                   <span className="truncate">{image.createdBy?.displayName ?? "-"}</span>
                   {canManage && !isClosed && (
                     <button
@@ -194,10 +220,10 @@ export function OpportunityWorkImagesSection({
                         e.stopPropagation();
                         setImageToDetach(image);
                       }}
-                      className="text-destructive hover:underline ml-2 uppercase"
-                      title="Detach"
+                      className="text-destructive hover:underline ml-2 uppercase font-semibold"
+                      title={tCommon("delete")}
                     >
-                      Detach
+                      {tCommon("delete")}
                     </button>
                   )}
                 </div>
@@ -216,7 +242,7 @@ export function OpportunityWorkImagesSection({
           size="xl"
         >
           <div className="space-y-4">
-            <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden border border-border">
+            <div className="relative aspect-video w-full bg-erp-navy/95 flex items-center justify-center overflow-hidden border border-erp-border">
               <Image
                 src={`/api/v1/files/${previewImage.fileId}`}
                 alt={previewImage.caption || "Full preview"}
@@ -225,14 +251,14 @@ export function OpportunityWorkImagesSection({
                 className="object-contain"
               />
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-mono text-muted-foreground gap-2 pt-2 border-t border-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs font-mono text-erp-text-muted gap-2 pt-2 border-t border-erp-border">
               <div>
                 <span>{t("stageBadge")}: </span>
-                <span className="font-bold text-foreground uppercase">{previewImage.stageAtAttach}</span>
+                <span className="font-bold text-erp-text-main uppercase">{previewImage.stageAtAttach}</span>
               </div>
               <div>
                 <span>{t("uploadedBy")}: </span>
-                <span className="text-foreground">{previewImage.createdBy?.displayName ?? "-"}</span>
+                <span className="text-erp-text-main">{previewImage.createdBy?.displayName ?? "-"}</span>
                 <span className="mx-2">•</span>
                 <span>{previewImage.createdAtUtc ? new Date(previewImage.createdAtUtc).toLocaleString() : "-"}</span>
               </div>
@@ -249,7 +275,7 @@ export function OpportunityWorkImagesSection({
           title={t("detachImageConfirmTitle")}
         >
           <div className="space-y-4">
-            <p className="text-xs text-foreground">
+            <p className="text-xs text-erp-text-main">
               {t("detachImageConfirmMessage")}
             </p>
             {detachMutation.isError && (
@@ -257,25 +283,25 @@ export function OpportunityWorkImagesSection({
                 {detachMutation.error.message}
               </div>
             )}
-            <div className="flex justify-end gap-3 pt-4 border-t border-border">
-              <button
+            <div className="flex justify-end gap-3 pt-4 border-t border-erp-border">
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setImageToDetach(null)}
                 disabled={detachMutation.isPending}
-                className="px-4 py-2 text-xs font-mono uppercase tracking-wider bg-muted text-foreground border border-border"
-                style={{ borderRadius: "0px" }}
               >
                 {tCommon("cancel")}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 onClick={handleDetach}
-                disabled={detachMutation.isPending}
-                className="px-5 py-2 text-xs font-mono uppercase tracking-wider bg-destructive text-destructive-foreground disabled:opacity-50"
-                style={{ borderRadius: "0px" }}
+                isLoading={detachMutation.isPending}
               >
-                {detachMutation.isPending ? t("detachingImage") : tCommon("save")}
-              </button>
+                {detachMutation.isPending ? t("detachingImage") : tCommon("delete")}
+              </Button>
             </div>
           </div>
         </Modal>

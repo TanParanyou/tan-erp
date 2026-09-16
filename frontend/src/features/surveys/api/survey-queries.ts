@@ -7,7 +7,7 @@ import {
   type UpdateSurveyDraftRequest,
   type MarkSurveyReadyRequest,
 } from "@/lib/api/api-client";
-import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
+import { AuthenticationRequiredError, MembershipRequiredError, ApiError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -38,15 +38,18 @@ export function useOpportunitySurvey(
       if (!membershipId) throw new MembershipRequiredError();
 
       try {
-        return await apiClient.getOpportunitySurvey(opportunityId, {
+        const res = await apiClient.getOpportunitySurvey(opportunityId, {
           token,
           membershipId,
           locale: normalizedLocale,
           signal,
         });
+        return res ?? null;
       } catch (err: unknown) {
-        // If 404, return null (no survey yet scheduled)
-        if (err && typeof err === "object" && "status" in err && (err as { status: number }).status === 404) {
+        if (err instanceof ApiError && (err.status === 404 || err.status === 204)) {
+          return null;
+        }
+        if (err && typeof err === "object" && "status" in err && ((err as { status: number }).status === 404 || (err as { status: number }).status === 204)) {
           return null;
         }
         throw err;

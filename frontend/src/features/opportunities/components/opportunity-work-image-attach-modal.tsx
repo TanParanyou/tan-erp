@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { IconUpload } from "@/components/common/Icons";
 import { MultiImagePicker, type PendingImageItem } from "@/components/forms/MultiImagePicker";
 import { fileClient } from "@/lib/api/file-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -163,33 +165,26 @@ export function OpportunityWorkImageAttachModal({
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
-          <button
+        <div className="flex justify-end gap-3 pt-4 border-t border-erp-border">
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-xs font-mono uppercase tracking-wider bg-muted hover:bg-muted/80 text-foreground border border-border"
-            style={{ borderRadius: "0px" }}
           >
             {tCommon("cancel")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
+            variant="primary"
+            size="sm"
             disabled={pendingItems.length === 0 || isSubmitting}
-            className="px-5 py-2 text-xs font-mono uppercase tracking-wider bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ borderRadius: "0px" }}
+            isLoading={isSubmitting}
+            icon={<IconUpload size={16} />}
           >
-            {isSubmitting ? (
-              <>
-                <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                <span>{t("attachingImages")}</span>
-              </>
-            ) : (
-              <span>
-                {t("attachImagesAction")} ({pendingItems.length})
-              </span>
-            )}
-          </button>
+            {isSubmitting ? t("attachingImages") : `${t("attachImagesAction")} (${pendingItems.length})`}
+          </Button>
         </div>
       </form>
     </Modal>

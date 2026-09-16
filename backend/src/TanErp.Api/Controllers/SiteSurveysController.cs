@@ -82,6 +82,7 @@ public class SiteSurveysController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType<SiteSurveyResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
@@ -110,7 +111,7 @@ public class SiteSurveysController : ControllerBase
 
         if (result.Value == null)
         {
-            return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
+            return NoContent();
         }
 
         var survey = result.Value;

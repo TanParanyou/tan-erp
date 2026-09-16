@@ -424,12 +424,20 @@ export class ApiClient {
   async getOpportunitySurvey(
     opportunityId: string,
     options: RequestOptions
-  ): Promise<SiteSurveyResponse> {
-    return this.request<SiteSurveyResponse>(
-      `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys`,
-      "GET",
-      options
-    );
+  ): Promise<SiteSurveyResponse | null> {
+    try {
+      const res = await this.request<SiteSurveyResponse | undefined>(
+        `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys`,
+        "GET",
+        options
+      );
+      return res ?? null;
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 204 || err.status === 404)) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   async updateSurveyDraft(
@@ -478,13 +486,14 @@ export class ApiClient {
     options: RequestOptions
   ): Promise<EstimateDetailResponse | null> {
     try {
-      return await this.request<EstimateDetailResponse>(
+      const res = await this.request<EstimateDetailResponse | undefined>(
         `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/estimates`,
         "GET",
         options
       );
+      return res ?? null;
     } catch (err) {
-      if (err instanceof ApiError && err.status === 204) {
+      if (err instanceof ApiError && (err.status === 204 || err.status === 404)) {
         return null;
       }
       throw err;
