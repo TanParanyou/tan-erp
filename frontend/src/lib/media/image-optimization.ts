@@ -140,3 +140,15 @@ export async function optimizeImageToWebP(
     img.src = objectUrl;
   });
 }
+
+/**
+ * Optimizes multiple image files concurrently in the user's browser.
+ * Naturally strips EXIF metadata through HTML5 Canvas rendering.
+ */
+export async function optimizeMultipleImagesToWebP(
+  files: File[],
+  options: OptimizeImageOptions = {}
+): Promise<OptimizationResult[]> {
+  return Promise.all(files.map((file) => optimizeImageToWebP(file, options)));
+}
+

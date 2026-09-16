@@ -25,6 +25,10 @@ export type ReassignOpportunityOwnerRequest = components["schemas"]["ReassignOpp
 export type TransitionOpportunityStageRequest = components["schemas"]["TransitionOpportunityStageRequest"];
 export type OpportunityStageHistoryListResponse = components["schemas"]["OpportunityStageHistoryListResponse"];
 export type OpportunityStageHistoryItemResponse = components["schemas"]["OpportunityStageHistoryItemResponse"];
+export type AttachWorkImagesRequest = components["schemas"]["AttachWorkImagesRequest"];
+export type AttachWorkImagesResponse = components["schemas"]["AttachWorkImagesResponse"];
+export type OpportunityWorkImageListResponse = components["schemas"]["OpportunityWorkImageListResponse"];
+export type OpportunityWorkImageResponse = components["schemas"]["OpportunityWorkImageResponse"];
 
 export type SiteSurveyResponse = components["schemas"]["SiteSurveyResponse"];
 export type SiteSurveyRevisionResponse = components["schemas"]["SiteSurveyRevisionResponse"];
@@ -138,6 +142,10 @@ export class ApiClient {
         }
 
         throw ApiError.fromUnknown(response.status);
+      }
+
+      if (response.status === 204) {
+        return undefined as T;
       }
 
       const data: T = await response.json();
@@ -328,6 +336,46 @@ export class ApiClient {
     return this.request<OpportunityStageHistoryListResponse>(
       `/api/v1/opportunities/${encodeURIComponent(id)}/stage-history`,
       "GET",
+      options
+    );
+  }
+
+  async attachWorkImages(
+    id: string,
+    payload: AttachWorkImagesRequest,
+    options: RequestOptions
+  ): Promise<AttachWorkImagesResponse> {
+    return this.request<AttachWorkImagesResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(id)}/work-images`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async listWorkImages(
+    id: string,
+    options: RequestOptions,
+    params?: { stage?: string; limit?: number; cursor?: string }
+  ): Promise<OpportunityWorkImageListResponse> {
+    const query = new URLSearchParams();
+    if (params?.stage) query.set("stage", params.stage);
+    if (params?.limit) query.set("limit", params.limit.toString());
+    if (params?.cursor) query.set("cursor", params.cursor);
+
+    const queryString = query.toString();
+    const endpoint = `/api/v1/opportunities/${encodeURIComponent(id)}/work-images${queryString ? `?${queryString}` : ""}`;
+    return this.request<OpportunityWorkImageListResponse>(endpoint, "GET", options);
+  }
+
+  async detachWorkImage(
+    opportunityId: string,
+    imageId: string,
+    options: RequestOptions
+  ): Promise<void> {
+    return this.request<void>(
+      `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/work-images/${encodeURIComponent(imageId)}`,
+      "DELETE",
       options
     );
   }

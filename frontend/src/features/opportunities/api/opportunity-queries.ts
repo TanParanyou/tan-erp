@@ -7,6 +7,8 @@ import {
   type UpdateDraftQGateRequest,
   type UpdateOpenOpportunityRequest,
   type ReassignOpportunityOwnerRequest,
+  type OpportunityWorkImageListResponse,
+  type AttachWorkImagesResponse,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -51,6 +53,31 @@ export function opportunityDetailQueryKey(
   opportunityId: string | null | undefined
 ): readonly ["business", string | null | undefined, "th" | "en", "opportunities", "detail", string | null | undefined] {
   return ["business", membershipId, locale, "opportunities", "detail", opportunityId] as const;
+}
+
+export function opportunityWorkImagesQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  opportunityId: string | null | undefined,
+  stage?: string | null
+): readonly [
+  "business",
+  string | null | undefined,
+  "th" | "en",
+  "opportunities",
+  "work-images",
+  string | null | undefined,
+  string | null
+] {
+  return [
+    "business",
+    membershipId,
+    locale,
+    "opportunities",
+    "work-images",
+    opportunityId,
+    stage ?? null,
+  ] as const;
 }
 
 export function useOpportunityList(
@@ -445,6 +472,182 @@ export function useReassignOpportunityOwner(): UseMutationResult<
             key[4] === "list"
           );
         },
+      });
+    },
+  });
+}
+
+export function useOpportunityWorkImages(
+  opportunityId: string | null | undefined,
+  stage?: string | null
+): UseQueryResult<OpportunityWorkImageListResponse, Error> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery({
+    queryKey: opportunityWorkImagesQueryKey(membershipId, normalizedLocale, opportunityId, stage),
+    queryFn: async () => {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new AuthenticationRequiredError();
+      }
+      if (!membershipId) {
+        throw new MembershipRequiredError();
+      }
+
+      return apiClient.listWorkImages(
+        opportunityId!,
+        {
+          token,
+          membershipId,
+          locale: normalizedLocale,
+        },
+        stage ? { stage } : undefined
+      );
+    },
+    enabled: Boolean(membershipId && opportunityId),
+    staleTime: 30_000,
+  });
+}
+
+export interface AttachWorkImagesVariables {
+  opportunityId: string;
+  expectedVersion: string;
+  images: { fileId: string; caption?: string }[];
+  idempotencyKey?: string;
+}
+
+export function useAttachWorkImages(): UseMutationResult<
+  AttachWorkImagesResponse,
+  Error,
+  AttachWorkImagesVariables
+> {
+  const queryClient = useQueryClient();
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async ({
+      opportunityId,
+      expectedVersion,
+      images,
+      idempotencyKey,
+    }: AttachWorkImagesVariables) => {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new AuthenticationRequiredError();
+      }
+      if (!membershipId) {
+        throw new MembershipRequiredError();
+      }
+
+      return apiClient.attachWorkImages(
+        opportunityId,
+        { images },
+        {
+          token,
+          membershipId,
+          locale: normalizedLocale,
+          idempotencyKey,
+          ifMatch: `"${expectedVersion}"`,
+        }
+      );
+    },
+    onSuccess: (response, variables) => {
+      // Invalidate work images queries for this opportunity
+      void queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return (
+            Array.isArray(key) &&
+            key[0] === "business" &&
+            key[1] === membershipId &&
+            key[3] === "opportunities" &&
+            key[4] === "work-images" &&
+            key[5] === variables.opportunityId
+          );
+        },
+      });
+
+      // Update detail query cache with rotated rowVersion
+      queryClient.setQueryData(
+        opportunityDetailQueryKey(membershipId, normalizedLocale, variables.opportunityId),
+        (prev: OpportunityResponse | undefined) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            rowVersion: response.opportunityRowVersion,
+          };
+        }
+      );
+    },
+  });
+}
+
+export interface DetachWorkImageVariables {
+  opportunityId: string;
+  imageId: string;
+  expectedVersion: string;
+  idempotencyKey?: string;
+}
+
+export function useDetachWorkImage(): UseMutationResult<
+  void,
+  Error,
+  DetachWorkImageVariables
+> {
+  const queryClient = useQueryClient();
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async ({
+      opportunityId,
+      imageId,
+      expectedVersion,
+      idempotencyKey,
+    }: DetachWorkImageVariables) => {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new AuthenticationRequiredError();
+      }
+      if (!membershipId) {
+        throw new MembershipRequiredError();
+      }
+
+      return apiClient.detachWorkImage(opportunityId, imageId, {
+        token,
+        membershipId,
+        locale: normalizedLocale,
+        idempotencyKey,
+        ifMatch: `"${expectedVersion}"`,
+      });
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate work images queries for this opportunity
+      void queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return (
+            Array.isArray(key) &&
+            key[0] === "business" &&
+            key[1] === membershipId &&
+            key[3] === "opportunities" &&
+            key[4] === "work-images" &&
+            key[5] === variables.opportunityId
+          );
+        },
+      });
+
+      // Refetch detail query to get updated rowVersion
+      void queryClient.invalidateQueries({
+        queryKey: opportunityDetailQueryKey(membershipId, normalizedLocale, variables.opportunityId),
       });
     },
   });

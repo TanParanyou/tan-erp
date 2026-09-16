@@ -25,6 +25,7 @@ import { OpportunityOpenEditorDrawer } from "./opportunity-open-editor-drawer";
 import { OpportunityCloseModal } from "./opportunity-close-modal";
 import { OpportunityReopenModal } from "./opportunity-reopen-modal";
 import { OpportunityStageTimeline } from "./opportunity-stage-timeline";
+import { OpportunityWorkImagesSection } from "./opportunity-work-images-section";
 import { useOpportunitySurvey } from "@/features/surveys/api/survey-queries";
 import { SurveyAppointmentModal } from "@/features/surveys/components/survey-appointment-modal";
 import { SurveyCard } from "@/features/surveys/components/survey-card";
@@ -664,6 +665,15 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
           </dd>
         </dl>
       </div>
+
+      {opportunity?.id && opportunity.stage && opportunity.rowVersion && (
+        <OpportunityWorkImagesSection
+          opportunityId={opportunity.id}
+          currentStage={opportunity.stage}
+          rowVersion={opportunity.rowVersion}
+          canManage={canUpdate}
+        />
+      )}
 
       {opportunity?.id && <OpportunityStageTimeline opportunityId={opportunity.id} />}
 

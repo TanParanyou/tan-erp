@@ -614,7 +614,27 @@
       "reopen_scope_redefined": "มีการปรับลดหรือเปลี่ยนขอบเขตงานใหม่",
       "reopen_erroneous_closure": "ปิดงานผิดพลาด",
       "reopen_other": "เหตุผลอื่น"
-    }
+    },
+    "workImagesTitle": "ภาพถ่ายหน้างาน (Work Images)",
+    "workImagesSubtitle": "ภาพถ่ายสถานที่ หน้างาน และรายละเอียดชิ้นงานที่แนบในแต่ละขั้นตอนของโอกาสทางการขาย",
+    "attachImagesAction": "แนบภาพถ่ายหน้างาน",
+    "attachImagesModalTitle": "แนบภาพถ่ายหน้างาน (Attach Work Images)",
+    "attachImagesModalDesc": "เลือกภาพถ่ายหน้างานที่ต้องการแนบ (สูงสุด 20 ภาพต่อครั้ง) ระบบจะแปลงและบีบอัดเป็น WebP เพื่อความรวดเร็วและประหยัดพื้นที่",
+    "workImagesEmpty": "ยังไม่มีภาพถ่ายหน้างานแนบในโอกาสทางการขายนี้",
+    "dropImagesHere": "ลากรูปภาพมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์",
+    "maxImagesLimit": "แนบได้สูงสุด 20 ภาพต่อครั้ง",
+    "imageCaptionPlaceholder": "ระบุคำอธิบายภาพ (ไม่บังคับ)...",
+    "attachingImages": "กำลังอัปโหลดและประมวลผลรูปภาพ...",
+    "attachImagesSuccess": "แนบภาพถ่ายหน้างานเรียบร้อยแล้ว",
+    "detachImageConfirmTitle": "ยืนยันการถอดภาพถ่าย",
+    "detachImageConfirmMessage": "คุณแน่ใจหรือไม่ว่าต้องการถอดภาพถ่ายนี้ออกจากโอกาสทางการขาย?",
+    "detachingImage": "กำลังถอดภาพถ่าย...",
+    "detachImageSuccess": "ถอดภาพถ่ายเรียบร้อยแล้ว",
+    "viewOriginalImage": "ดูภาพขนาดเต็ม",
+    "stageBadge": "ขั้นตอนที่แนบ",
+    "uploadedBy": "อัปโหลดโดย",
+    "filterByStage": "กรองตามขั้นตอน",
+    "allStages": "ทุกขั้นตอน"
   },
   "surveys": {
     "surveyCardTitle": "ข้อมูลการนัดหมายสำรวจหน้างาน (Site Survey Appointment)",

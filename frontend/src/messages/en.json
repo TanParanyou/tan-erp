@@ -614,7 +614,27 @@
       "reopen_scope_redefined": "Scope redefined",
       "reopen_erroneous_closure": "Erroneous closure",
       "reopen_other": "Other reason"
-    }
+    },
+    "workImagesTitle": "Work Images",
+    "workImagesSubtitle": "Site photos and work details captured across opportunity stages",
+    "attachImagesAction": "Attach Work Images",
+    "attachImagesModalTitle": "Attach Work Images",
+    "attachImagesModalDesc": "Select site photos to attach (up to 20 images per batch). Images are converted and compressed to WebP locally for fast and efficient upload.",
+    "workImagesEmpty": "No work images attached to this opportunity yet.",
+    "dropImagesHere": "Drag and drop images here, or click to browse",
+    "maxImagesLimit": "Maximum 20 images per batch",
+    "imageCaptionPlaceholder": "Add a caption (optional)...",
+    "attachingImages": "Uploading and processing images...",
+    "attachImagesSuccess": "Work images attached successfully",
+    "detachImageConfirmTitle": "Confirm Detach Image",
+    "detachImageConfirmMessage": "Are you sure you want to detach this work image from the opportunity?",
+    "detachingImage": "Detaching image...",
+    "detachImageSuccess": "Work image detached successfully",
+    "viewOriginalImage": "View full image",
+    "stageBadge": "Stage at attach",
+    "uploadedBy": "Uploaded by",
+    "filterByStage": "Filter by stage",
+    "allStages": "All stages"
   },
   "surveys": {
     "surveyCardTitle": "Site Survey Appointment Details",
