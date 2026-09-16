@@ -991,5 +991,158 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         var conflictRes = await _client.SendAsync(conflictMsg);
         Assert.Equal(HttpStatusCode.Conflict, conflictRes.StatusCode);
     }
+
+    // ==========================================
+    // OPPORTUNITY WORK IMAGES TESTS
+    // ==========================================
+
+    private async Task<TanErp.Domain.Files.UploadedFile> SeedVerifiedFileAsync(Guid orgId, string filename = "test.webp")
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var file = new TanErp.Domain.Files.UploadedFile(
+            Guid.NewGuid(),
+            orgId,
+            $"{orgId}/session-seed/{filename}",
+            filename,
+            "image/webp",
+            512 * 1024,
+            $"session-seed-{Guid.NewGuid():N}",
+            TestOnlyDataSeeder.TestUserId,
+            DateTimeOffset.UtcNow);
+
+        db.UploadedFiles.Add(file);
+        await db.SaveChangesAsync();
+        return file;
+    }
+
+    [Fact]
+    public async Task AttachWorkImages_ValidRequest_Returns201WithETagAndPersistsItems()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+        var file1 = await SeedVerifiedFileAsync(OrgAId, "front.webp");
+        var file2 = await SeedVerifiedFileAsync(OrgAId, "side.webp");
+
+        var request = new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImagesRequest(
+        [
+            new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImageItemRequest(file1.Id, "ภาพด้านหน้า TEST_ONLY"),
+            new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImageItemRequest(file2.Id, "ภาพด้านข้าง TEST_ONLY")
+        ]);
+
+        var msg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/work-images",
+            "token-org-a",
+            MembershipAId,
+            $"idem-attach-{Guid.NewGuid():N}");
+        msg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        msg.Content = JsonContent.Create(request);
+
+        var res = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Created, res.StatusCode);
+
+        var result = await res.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImagesResponse>();
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Items.Count);
+        Assert.NotEqual(opp.RowVersion, result.OpportunityRowVersion);
+        Assert.Equal($"\"{result.OpportunityRowVersion}\"", res.Headers.ETag?.Tag);
+        Assert.Equal("draft", result.Items[0].StageAtAttach);
+        Assert.Equal("ภาพด้านหน้า TEST_ONLY", result.Items[0].Caption);
+        Assert.Equal("ภาพด้านข้าง TEST_ONLY", result.Items[1].Caption);
+
+        // Verify GET /work-images
+        var listMsg = CreateRequest(HttpMethod.Get, $"/api/v1/opportunities/{opp.Id}/work-images", "token-org-a", MembershipAId);
+        var listRes = await _client.SendAsync(listMsg);
+        Assert.Equal(HttpStatusCode.OK, listRes.StatusCode);
+
+        var listBody = await listRes.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Crm.Opportunities.OpportunityWorkImageListResponse>();
+        Assert.NotNull(listBody);
+        Assert.Equal(2, listBody.Items.Count);
+
+        // Verify AuditEvent
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var audit = await db.AuditEvents.FirstOrDefaultAsync(a => a.OrganizationId == OrgAId && a.Action == "opportunity.work-images-added" && a.ResourceId == opp.Id.ToString());
+        Assert.NotNull(audit);
+        Assert.Contains(file1.Id.ToString("D"), audit.ChangesJson, StringComparison.Ordinal);
+        Assert.DoesNotContain("ภาพด้านหน้า", audit.ChangesJson, StringComparison.Ordinal); // No caption in audit
+    }
+
+    [Fact]
+    public async Task AttachWorkImages_UnverifiedOrForeignFile_Returns409ImageNotReady()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+        var nonExistentFileId = Guid.NewGuid();
+
+        var request = new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImagesRequest(
+        [
+            new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImageItemRequest(nonExistentFileId, "ภาพทดสอบ")
+        ]);
+
+        var msg = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/opportunities/{opp.Id}/work-images",
+            "token-org-a",
+            MembershipAId,
+            $"idem-attach-unready-{Guid.NewGuid():N}");
+        msg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        msg.Content = JsonContent.Create(request);
+
+        var res = await _client.SendAsync(msg);
+        Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
+        var problem = await res.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.Equal("OPPORTUNITY_IMAGE_NOT_READY", problem?.Code);
+    }
+
+    [Fact]
+    public async Task DetachWorkImage_ValidRequest_Returns204WithNewETagAndSoftDeletes()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
+        var file = await SeedVerifiedFileAsync(OrgAId, "to-delete.webp");
+
+        var attachReq = new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImagesRequest(
+        [
+            new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImageItemRequest(file.Id, "จะถูกลบ")
+        ]);
+
+        var attachMsg = CreateRequest(HttpMethod.Post, $"/api/v1/opportunities/{opp.Id}/work-images", "token-org-a", MembershipAId, $"idem-attach-del-{Guid.NewGuid():N}");
+        attachMsg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{opp.RowVersion}\""));
+        attachMsg.Content = JsonContent.Create(attachReq);
+        var attachRes = await _client.SendAsync(attachMsg);
+        var attachBody = await attachRes.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImagesResponse>();
+        Assert.NotNull(attachBody);
+
+        var workImageId = attachBody.Items[0].Id;
+        var newVersion = attachBody.OpportunityRowVersion;
+
+        // Detach
+        var detachMsg = CreateRequest(
+            HttpMethod.Delete,
+            $"/api/v1/opportunities/{opp.Id}/work-images/{workImageId}",
+            "token-org-a",
+            MembershipAId,
+            $"idem-detach-{Guid.NewGuid():N}");
+        detachMsg.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{newVersion}\""));
+
+        var detachRes = await _client.SendAsync(detachMsg);
+        Assert.Equal(HttpStatusCode.NoContent, detachRes.StatusCode);
+        Assert.NotNull(detachRes.Headers.ETag);
+
+        // List should now be empty
+        var listMsg = CreateRequest(HttpMethod.Get, $"/api/v1/opportunities/{opp.Id}/work-images", "token-org-a", MembershipAId);
+        var listRes = await _client.SendAsync(listMsg);
+        var listBody = await listRes.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Crm.Opportunities.OpportunityWorkImageListResponse>();
+        Assert.NotNull(listBody);
+        Assert.Empty(listBody.Items);
+
+        // Physical file in UploadedFiles must still exist!
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var dbFile = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == file.Id);
+        Assert.NotNull(dbFile);
+    }
 }
 

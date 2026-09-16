@@ -168,6 +168,39 @@ public class OpportunityHandlerTests
             LastPayloadHash = payloadHash;
             return Task.FromResult(ReassignOwnerResult);
         }
+
+        public Task<Result<TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImagesResultProjection>> AttachWorkImagesAsync(
+            RequestAccessContext access,
+            TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.AttachWorkImagesCommand command,
+            string keyHash,
+            string payloadHash,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Result<TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImagesResultProjection>.Success(
+                new TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImagesResultProjection(Array.Empty<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>(), Guid.NewGuid())));
+        }
+
+        public Task<IReadOnlyList<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>> ListWorkImagesAsync(
+            Guid organizationId,
+            Guid opportunityId,
+            string? stage,
+            int limit,
+            string? cursor,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>>(
+                Array.Empty<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>());
+        }
+
+        public Task<Result<Guid>> DetachWorkImageAsync(
+            RequestAccessContext access,
+            TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageCommand command,
+            string keyHash,
+            string payloadHash,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Result<Guid>.Success(Guid.NewGuid()));
+        }
     }
 
     private readonly FakeRequestAccessResolver _accessResolver = new();

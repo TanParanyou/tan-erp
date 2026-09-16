@@ -340,6 +340,19 @@ public class Opportunity : Entity
         RowVersion = Guid.NewGuid();
     }
 
+    public void AssertCanAttachWorkImages(Guid expectedVersion)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage == OpportunityStage.Won || Stage == OpportunityStage.Lost || Stage == OpportunityStage.Cancelled)
+            throw new OpportunityTransitionException(Stage, Stage);
+    }
+
+    public void RotateRowVersion(Guid expectedVersion)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        RowVersion = Guid.NewGuid();
+    }
+
     public static string GenerateOpportunityCode(Guid id)
     {
         var hex = id.ToString("N")[..12].ToUpperInvariant();

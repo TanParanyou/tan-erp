@@ -13,6 +13,9 @@ using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
 using TanErp.Domain.Organization;
+using TanErp.Application.Crm.Opportunities.WorkImages;
+using TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages;
+using TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage;
 
 namespace TanErp.Infrastructure.Persistence.Crm;
 
@@ -1083,6 +1086,328 @@ public class OpportunityStore : IOpportunityStore
             actorMap.GetValueOrDefault(h.ActorUserId))).ToList();
 
         return histories;
+    }
+
+    public async Task<Result<AttachWorkImagesResultProjection>> AttachWorkImagesAsync(
+        RequestAccessContext access,
+        AttachWorkImagesCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        const string operation = "opportunities.work-images.attach";
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            // 1. Idempotency replay check
+            var existingRecord = await _db.IdempotencyRecords
+                .FirstOrDefaultAsync(
+                    r => r.OrganizationId == orgId && r.Operation == operation && r.KeyHash == keyHash,
+                    cancellationToken);
+
+            if (existingRecord != null)
+            {
+                if (existingRecord.PayloadHash != payloadHash)
+                {
+                    return Result<AttachWorkImagesResultProjection>.Failure(
+                        new Error("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different request payload."));
+                }
+
+                // Return existing attached items
+                var reloadedOpp = await _db.Opportunities.AsNoTracking().FirstOrDefaultAsync(o => o.Id == command.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+                var existingItems = await ListWorkImagesAsync(orgId, command.OpportunityId, null, 100, null, cancellationToken);
+                return Result<AttachWorkImagesResultProjection>.Success(new AttachWorkImagesResultProjection(existingItems, reloadedOpp?.RowVersion ?? command.ExpectedVersion));
+            }
+
+            // 2. Load Opportunity
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.Id == command.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+
+            if (opp == null)
+            {
+                return Result<AttachWorkImagesResultProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Opportunity not found."));
+            }
+
+            // 3. Concurrency check & Open stage assertion
+            try
+            {
+                opp.AssertCanAttachWorkImages(command.ExpectedVersion);
+            }
+            catch (OpportunityVersionException)
+            {
+                return Result<AttachWorkImagesResultProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+            catch (OpportunityTransitionException)
+            {
+                return Result<AttachWorkImagesResultProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_STATE", "Work images cannot be attached to a closed opportunity."));
+            }
+
+            // 4. Verify all files exist in files schema, belong to same org, and have verified status
+            var fileIds = command.Images.Select(i => i.FileId).Distinct().ToList();
+            var verifiedFiles = await _db.UploadedFiles
+                .AsNoTracking()
+                .Where(f => fileIds.Contains(f.Id) && f.OrganizationId == orgId && f.Status == "verified")
+                .Select(f => f.Id)
+                .ToListAsync(cancellationToken);
+
+            if (verifiedFiles.Count != fileIds.Count)
+            {
+                return Result<AttachWorkImagesResultProjection>.Failure(
+                    new Error("OPPORTUNITY_IMAGE_NOT_READY", "One or more images are not verified or ready to be attached."));
+            }
+
+            // 5. Determine display order baseline
+            var currentMaxOrder = await _db.OpportunityWorkImages
+                .Where(w => w.OrganizationId == orgId && w.OpportunityId == opp.Id && !w.IsDeleted)
+                .Select(w => (int?)w.DisplayOrder)
+                .MaxAsync(cancellationToken) ?? 0;
+
+            var now = _clock.UtcNow;
+            var createdItems = new List<OpportunityWorkImage>();
+            for (var i = 0; i < command.Images.Count; i++)
+            {
+                var img = command.Images[i];
+                var entity = new OpportunityWorkImage(
+                    Guid.NewGuid(),
+                    orgId,
+                    opp.Id,
+                    img.FileId,
+                    opp.Stage,
+                    img.Caption,
+                    currentMaxOrder + i + 1,
+                    now,
+                    access.ActorUserId);
+
+                _db.OpportunityWorkImages.Add(entity);
+                createdItems.Add(entity);
+            }
+
+            // 6. Rotate Opportunity rowVersion
+            opp.RotateRowVersion(command.ExpectedVersion);
+
+            // 7. Add AuditEvent (IDs and stage only, no caption or URL)
+            var attachedFileIdsJson = string.Join(",", createdItems.Select(c => $"\"{c.FileId:D}\""));
+            var auditChanges = FormattableString.Invariant(
+                $"{{\"stage\":\"{opp.Stage}\",\"attachedCount\":{createdItems.Count},\"fileIds\":[{attachedFileIdsJson}]}}");
+
+            var auditEvent = new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "opportunity.work-images-added",
+                "Opportunity",
+                opp.Id.ToString(),
+                now,
+                command.TraceId,
+                auditChanges);
+            _db.AddAuditEvent(auditEvent);
+
+            // 8. Add IdempotencyRecord
+            var idempotencyRecord = new IdempotencyRecord(
+                Guid.NewGuid(),
+                orgId,
+                operation,
+                keyHash,
+                payloadHash,
+                opp.Id.ToString(),
+                now);
+            _db.IdempotencyRecords.Add(idempotencyRecord);
+
+            // 9. Save and commit
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return Result<AttachWorkImagesResultProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+
+            // 10. Query actor display name for structured projection
+            var actorUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == access.ActorUserId, cancellationToken);
+            var actorSummary = new WorkImageUserSummaryProjection(access.ActorUserId, actorUser?.DisplayName ?? "System User");
+
+            var projections = createdItems.Select(c => new OpportunityWorkImageProjection(
+                c.Id,
+                c.FileId,
+                c.StageAtAttach,
+                c.Caption,
+                c.DisplayOrder,
+                c.CreatedAtUtc,
+                actorSummary)).ToList();
+
+            return Result<AttachWorkImagesResultProjection>.Success(
+                new AttachWorkImagesResultProjection(projections, opp.RowVersion));
+        });
+    }
+
+    public async Task<IReadOnlyList<OpportunityWorkImageProjection>> ListWorkImagesAsync(
+        Guid organizationId,
+        Guid opportunityId,
+        string? stage,
+        int limit,
+        string? cursor,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _db.OpportunityWorkImages
+            .AsNoTracking()
+            .Where(w => w.OrganizationId == organizationId && w.OpportunityId == opportunityId && !w.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(stage))
+        {
+            var normalizedStage = stage.Trim().ToLowerInvariant();
+            query = query.Where(w => w.StageAtAttach == normalizedStage);
+        }
+
+        var images = await query
+            .OrderByDescending(w => w.CreatedAtUtc)
+            .ThenBy(w => w.DisplayOrder)
+            .ThenBy(w => w.Id)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+
+        var userIds = images.Select(w => w.CreatedByUserId).Distinct().ToList();
+        var userMap = await _db.Users
+            .AsNoTracking()
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.DisplayName, cancellationToken);
+
+        return images.Select(w => new OpportunityWorkImageProjection(
+            w.Id,
+            w.FileId,
+            w.StageAtAttach,
+            w.Caption,
+            w.DisplayOrder,
+            w.CreatedAtUtc,
+            new WorkImageUserSummaryProjection(w.CreatedByUserId, userMap.GetValueOrDefault(w.CreatedByUserId) ?? "Unknown User"))).ToList();
+    }
+
+    public async Task<Result<Guid>> DetachWorkImageAsync(
+        RequestAccessContext access,
+        DetachWorkImageCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        const string operation = "opportunities.work-images.detach";
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            // 1. Check idempotency
+            var existingRecord = await _db.IdempotencyRecords
+                .FirstOrDefaultAsync(
+                    r => r.OrganizationId == orgId && r.Operation == operation && r.KeyHash == keyHash,
+                    cancellationToken);
+
+            if (existingRecord != null)
+            {
+                if (existingRecord.PayloadHash != payloadHash)
+                {
+                    return Result<Guid>.Failure(
+                        new Error("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different request payload."));
+                }
+                var reloadedOpp = await _db.Opportunities.AsNoTracking().FirstOrDefaultAsync(o => o.Id == command.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+                return Result<Guid>.Success(reloadedOpp?.RowVersion ?? command.ExpectedVersion);
+            }
+
+            // 2. Load Opportunity
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.Id == command.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+
+            if (opp == null)
+            {
+                return Result<Guid>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Opportunity not found."));
+            }
+
+            // 3. Concurrency check
+            try
+            {
+                opp.AssertCanAttachWorkImages(command.ExpectedVersion);
+            }
+            catch (OpportunityVersionException)
+            {
+                return Result<Guid>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+            catch (OpportunityTransitionException)
+            {
+                return Result<Guid>.Failure(
+                    new Error("OPPORTUNITY_INVALID_STATE", "Work images cannot be detached from a closed opportunity."));
+            }
+
+            // 4. Load WorkImage
+            var workImage = await _db.OpportunityWorkImages
+                .FirstOrDefaultAsync(
+                    w => w.Id == command.WorkImageId && w.OpportunityId == opp.Id && w.OrganizationId == orgId && !w.IsDeleted,
+                    cancellationToken);
+
+            if (workImage == null)
+            {
+                return Result<Guid>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Work image not found."));
+            }
+
+            // 5. Soft delete (do not delete physical file)
+            workImage.SoftDelete();
+
+            // 6. Rotate Opportunity rowVersion
+            opp.RotateRowVersion(command.ExpectedVersion);
+
+            // 7. Add AuditEvent
+            var now = _clock.UtcNow;
+            var auditEvent = new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "opportunity.work-image-detached",
+                "Opportunity",
+                opp.Id.ToString(),
+                now,
+                command.TraceId,
+                $"{{\"workImageId\":\"{workImage.Id:D}\",\"fileId\":\"{workImage.FileId:D}\"}}");
+            _db.AddAuditEvent(auditEvent);
+
+            // 8. Add IdempotencyRecord
+            var idempotencyRecord = new IdempotencyRecord(
+                Guid.NewGuid(),
+                orgId,
+                operation,
+                keyHash,
+                payloadHash,
+                opp.Id.ToString(),
+                now);
+            _db.IdempotencyRecords.Add(idempotencyRecord);
+
+            // 9. Save and commit
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return Result<Guid>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+
+            return Result<Guid>.Success(opp.RowVersion);
+        });
     }
 
     private static OpportunityProjection ToProjection(

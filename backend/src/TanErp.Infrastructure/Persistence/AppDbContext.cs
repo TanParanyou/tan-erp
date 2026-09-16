@@ -27,6 +27,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Crm.Sites.Site> Sites => Set<TanErp.Domain.Crm.Sites.Site>();
     public DbSet<TanErp.Domain.Crm.Opportunities.Opportunity> Opportunities => Set<TanErp.Domain.Crm.Opportunities.Opportunity>();
     public DbSet<TanErp.Domain.Crm.Opportunities.OpportunityStageHistory> OpportunityStageHistories => Set<TanErp.Domain.Crm.Opportunities.OpportunityStageHistory>();
+    public DbSet<TanErp.Domain.Crm.Opportunities.OpportunityWorkImage> OpportunityWorkImages => Set<TanErp.Domain.Crm.Opportunities.OpportunityWorkImage>();
     public DbSet<TanErp.Domain.Surveys.SiteSurvey> SiteSurveys => Set<TanErp.Domain.Surveys.SiteSurvey>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyRevision> SiteSurveyRevisions => Set<TanErp.Domain.Surveys.SiteSurveyRevision>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyArea> SiteSurveyAreas => Set<TanErp.Domain.Surveys.SiteSurveyArea>();

@@ -75,4 +75,26 @@ public interface IOpportunityStore
         Guid organizationId,
         Guid opportunityId,
         CancellationToken cancellationToken = default);
+
+    Task<Result<WorkImages.AttachWorkImagesResultProjection>> AttachWorkImagesAsync(
+        RequestAccessContext access,
+        WorkImages.AttachWorkImages.AttachWorkImagesCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<WorkImages.OpportunityWorkImageProjection>> ListWorkImagesAsync(
+        Guid organizationId,
+        Guid opportunityId,
+        string? stage,
+        int limit,
+        string? cursor,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<Guid>> DetachWorkImageAsync(
+        RequestAccessContext access,
+        WorkImages.DetachWorkImage.DetachWorkImageCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
 }

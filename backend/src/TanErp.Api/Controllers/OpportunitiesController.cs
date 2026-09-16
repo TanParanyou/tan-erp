@@ -26,6 +26,9 @@ public class OpportunitiesController : ControllerBase
     private readonly TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityHandler _updateOpenHandler;
     private readonly TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler _reassignOwnerHandler;
     private readonly TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryHandler _getStageHistoryHandler;
+    private readonly TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.AttachWorkImagesHandler _attachWorkImagesHandler;
+    private readonly TanErp.Application.Crm.Opportunities.WorkImages.ListWorkImages.ListWorkImagesHandler _listWorkImagesHandler;
+    private readonly TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageHandler _detachWorkImageHandler;
 
     public OpportunitiesController(
         CreateOpportunityHandler createHandler,
@@ -35,7 +38,10 @@ public class OpportunitiesController : ControllerBase
         UpdateDraftQGateHandler updateDraftQGateHandler,
         TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityHandler updateOpenHandler,
         TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler reassignOwnerHandler,
-        TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryHandler getStageHistoryHandler)
+        TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryHandler getStageHistoryHandler,
+        TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.AttachWorkImagesHandler attachWorkImagesHandler,
+        TanErp.Application.Crm.Opportunities.WorkImages.ListWorkImages.ListWorkImagesHandler listWorkImagesHandler,
+        TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageHandler detachWorkImageHandler)
     {
         _createHandler = createHandler;
         _listHandler = listHandler;
@@ -45,6 +51,9 @@ public class OpportunitiesController : ControllerBase
         _updateOpenHandler = updateOpenHandler;
         _reassignOwnerHandler = reassignOwnerHandler;
         _getStageHistoryHandler = getStageHistoryHandler;
+        _attachWorkImagesHandler = attachWorkImagesHandler;
+        _listWorkImagesHandler = listWorkImagesHandler;
+        _detachWorkImageHandler = detachWorkImageHandler;
     }
 
     [HttpPost]
@@ -430,6 +439,153 @@ public class OpportunitiesController : ControllerBase
         Response.Headers.ETag = $"\"{opp.RowVersion}\"";
 
         return Ok(ToResponse(opp));
+    }
+
+    [HttpPost("{id:guid}/work-images")]
+    [ProducesResponseType<AttachWorkImagesResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> AttachWorkImages(
+        [FromRoute] Guid id,
+        [FromBody] AttachWorkImagesRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var items = request.Images
+            .Select(i => new TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.WorkImageItemInput(i.FileId, i.Caption))
+            .ToList();
+
+        var command = new TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.AttachWorkImagesCommand(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            auth.IfMatchRowVersion,
+            items,
+            auth.IdempotencyKey,
+            traceId);
+
+        var result = await _attachWorkImagesHandler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var res = result.Value!;
+        Response.Headers.ETag = $"\"{res.OpportunityRowVersion}\"";
+
+        var responseItems = res.Items.Select(i => new OpportunityWorkImageResponse(
+            i.Id,
+            i.FileId,
+            i.StageAtAttach,
+            i.Caption,
+            i.DisplayOrder,
+            i.CreatedAtUtc,
+            new WorkImageUserSummaryResponse(i.CreatedBy.Id, i.CreatedBy.DisplayName))).ToList();
+
+        return StatusCode(StatusCodes.Status201Created, new AttachWorkImagesResponse(responseItems, res.OpportunityRowVersion));
+    }
+
+    [HttpGet("{id:guid}/work-images")]
+    [ProducesResponseType<OpportunityWorkImageListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ListWorkImages(
+        [FromRoute] Guid id,
+        [FromQuery] string? stage,
+        [FromQuery] int limit = 25,
+        [FromQuery] string? cursor = null,
+        CancellationToken cancellationToken = default)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var query = new TanErp.Application.Crm.Opportunities.WorkImages.ListWorkImages.ListWorkImagesQuery(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            stage,
+            limit,
+            cursor,
+            traceId);
+
+        var result = await _listWorkImagesHandler.Handle(query, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var items = result.Value!.Select(i => new OpportunityWorkImageResponse(
+            i.Id,
+            i.FileId,
+            i.StageAtAttach,
+            i.Caption,
+            i.DisplayOrder,
+            i.CreatedAtUtc,
+            new WorkImageUserSummaryResponse(i.CreatedBy.Id, i.CreatedBy.DisplayName))).ToList();
+
+        return Ok(new OpportunityWorkImageListResponse(items));
+    }
+
+    [HttpDelete("{id:guid}/work-images/{imageId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> DetachWorkImage(
+        [FromRoute] Guid id,
+        [FromRoute] Guid imageId,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var command = new TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageCommand(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            id,
+            imageId,
+            auth.IfMatchRowVersion,
+            auth.IdempotencyKey,
+            traceId);
+
+        var result = await _detachWorkImageHandler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        Response.Headers.ETag = $"\"{result.Value}\"";
+        return NoContent();
     }
 
     private static OpportunityResponse ToResponse(OpportunityProjection o) => new(

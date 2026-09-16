@@ -112,6 +112,9 @@ builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.UpdateDraftQGate
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.UpdateOpenOpportunity.UpdateOpenOpportunityHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.ReassignOpportunityOwner.ReassignOpportunityOwnerHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.AttachWorkImagesHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.WorkImages.ListWorkImages.ListWorkImagesHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.ISiteSurveyStore, TanErp.Infrastructure.Persistence.Surveys.SiteSurveyStore>();
 builder.Services.AddScoped<TanErp.Application.Surveys.CreateSiteSurvey.CreateSiteSurveyHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.GetSiteSurvey.GetSiteSurveyHandler>();
