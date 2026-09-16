@@ -233,5 +233,17 @@
   <data name="ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>The operation cannot be performed on the estimate in its current status.</value>
   </data>
+  <data name="FILE_UPLOAD_SESSION_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid File Upload</value>
+  </data>
+  <data name="FILE_UPLOAD_SESSION_INVALID_DETAIL" xml:space="preserve">
+    <value>The uploaded file did not pass validation. Please check the file type, size, and quantity limit.</value>
+  </data>
+  <data name="FILE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>File Not Found</value>
+  </data>
+  <data name="FILE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>The specified file was not found in the system.</value>
+  </data>
 </root>
 

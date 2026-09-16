@@ -126,6 +126,12 @@ builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddress
 
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();
 
+// File Service (reusable across modules)
+builder.Services.AddSingleton<TanErp.Application.Files.IFileStorageProvider, TanErp.Infrastructure.Files.LocalFileStorageProvider>();
+builder.Services.AddScoped<TanErp.Application.Files.IFileStore, TanErp.Infrastructure.Files.FileStore>();
+builder.Services.AddScoped<TanErp.Application.Files.CreateUploadSession.CreateUploadSessionHandler>();
+builder.Services.AddScoped<TanErp.Application.Files.CompleteUploadSession.CompleteUploadSessionHandler>();
+
 // Authentication & Authorization
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
     .AddScheme<AuthenticationSchemeOptions, FirebaseAuthenticationHandler>(

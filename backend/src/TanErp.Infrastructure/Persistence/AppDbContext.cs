@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Domain.Common;
+using TanErp.Domain.Files;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 
@@ -39,6 +40,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.MasterData.Geography.Province> Provinces => Set<TanErp.Domain.MasterData.Geography.Province>();
     public DbSet<TanErp.Domain.MasterData.Geography.District> Districts => Set<TanErp.Domain.MasterData.Geography.District>();
     public DbSet<TanErp.Domain.MasterData.Geography.Subdistrict> Subdistricts => Set<TanErp.Domain.MasterData.Geography.Subdistrict>();
+    public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
 
     public void AddAuditEvent(AuditEvent auditEvent)
     {

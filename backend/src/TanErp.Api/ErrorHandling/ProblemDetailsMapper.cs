@@ -44,6 +44,9 @@ public static class ProblemDetailsMapper
         "SURVEY_SCHEDULE_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "SURVEY_NOT_READY" => StatusCodes.Status422UnprocessableEntity,
         "SURVEY_MEASUREMENT_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "FILE_UPLOAD_SESSION_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "OPPORTUNITY_IMAGE_NOT_READY" => StatusCodes.Status409Conflict,
+        "FILE_NOT_FOUND" => StatusCodes.Status404NotFound,
         "IF_MATCH_REQUIRED" => StatusCodes.Status428PreconditionRequired,
 
         "INTERNAL_SERVER_ERROR" => StatusCodes.Status500InternalServerError,

@@ -233,5 +233,17 @@
   <data name="ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>ไม่สามารถแก้ไขหรือดำเนินการในสถานะปัจจุบันของใบประมาณการได้</value>
   </data>
+  <data name="FILE_UPLOAD_SESSION_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลไฟล์ไม่ถูกต้อง</value>
+  </data>
+  <data name="FILE_UPLOAD_SESSION_INVALID_DETAIL" xml:space="preserve">
+    <value>ไฟล์ที่อัปโหลดไม่ผ่านการตรวจสอบ กรุณาตรวจสอบประเภทไฟล์ ขนาดไฟล์ และจำนวนไฟล์ที่อนุญาต</value>
+  </data>
+  <data name="FILE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบไฟล์</value>
+  </data>
+  <data name="FILE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบไฟล์ที่ระบุในระบบ</value>
+  </data>
 </root>
 
