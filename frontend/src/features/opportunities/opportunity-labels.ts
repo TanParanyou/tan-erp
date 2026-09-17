@@ -20,6 +20,34 @@ export function getOpportunityStageLabelKey(value: string | null | undefined): O
   return null;
 }
 
+export function resolveOpportunityStageLabel(
+  stage: string | null | undefined,
+  t: (key: string) => string
+): string {
+  const key = getOpportunityStageLabelKey(stage);
+  if (!key) return t("unknownStage");
+  switch (key) {
+    case "draft":
+      return t("stageDraft");
+    case "qualified":
+      return t("stageQualified");
+    case "surveying":
+      return t("stageSurveying");
+    case "estimating":
+      return t("stageEstimating");
+    case "proposed":
+      return t("stageProposed");
+    case "won":
+      return t("stageWon");
+    case "lost":
+      return t("stageLost");
+    case "cancelled":
+      return t("stageCancelled");
+    default:
+      return t("unknownStage");
+  }
+}
+
 export const CANONICAL_WORK_TYPES = [
   "built-in",
   "interior",

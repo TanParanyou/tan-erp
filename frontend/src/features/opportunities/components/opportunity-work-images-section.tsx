@@ -12,6 +12,7 @@ import {
   useDetachWorkImage,
 } from "../api/opportunity-queries";
 import { OpportunityWorkImageAttachModal } from "./opportunity-work-image-attach-modal";
+import { resolveOpportunityStageLabel } from "../opportunity-labels";
 import { useTranslations } from "next-intl";
 import { fileClient } from "@/lib/api/file-client";
 import type { OpportunityWorkImageResponse } from "@/lib/api/api-client";
@@ -46,10 +47,8 @@ export function OpportunityWorkImagesSection({
   const [previewImage, setPreviewImage] = useState<OpportunityWorkImageResponse | null>(null);
   const [imageToDetach, setImageToDetach] = useState<OpportunityWorkImageResponse | null>(null);
 
-  const { data, isLoading, isError } = useOpportunityWorkImages(
-    opportunityId,
-    selectedStageFilter
-  );
+  // Fetch all images for this opportunity (unfiltered by stage to keep tabs and counts stable)
+  const { data, isLoading, isError } = useOpportunityWorkImages(opportunityId);
 
   const detachMutation = useDetachWorkImage();
 
@@ -73,7 +72,19 @@ export function OpportunityWorkImagesSection({
     }
   };
 
-  const images = data?.items ?? [];
+  const allImages = data?.items ?? [];
+  const filteredImages = selectedStageFilter
+    ? allImages.filter((img) => img.stageAtAttach === selectedStageFilter)
+    : allImages;
+
+  const stageCounts: Record<string, number> = {};
+  for (const img of allImages) {
+    if (img.stageAtAttach) {
+      stageCounts[img.stageAtAttach] = (stageCounts[img.stageAtAttach] ?? 0) + 1;
+    }
+  }
+
+  const STAGES = ["draft", "qualified", "surveying", "estimating", "proposed"] as const;
 
   return (
     <div className="erp-card p-6 flex flex-col gap-5">
@@ -103,8 +114,8 @@ export function OpportunityWorkImagesSection({
         )}
       </div>
 
-      {/* Filter Tabs / Stage Filter */}
-      {images.length > 0 && (
+      {/* Filter Tabs / Stage Filter - Always visible if there are any images in the opportunity */}
+      {allImages.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
           <span className="font-mono text-erp-text-muted mr-1 uppercase">
             {t("filterByStage")}:
@@ -113,29 +124,32 @@ export function OpportunityWorkImagesSection({
             type="button"
             onClick={() => setSelectedStageFilter(null)}
             className={cn(
-              "px-2.5 py-1 text-xs font-mono uppercase tracking-wider transition-colors border rounded-none",
+              "px-2.5 py-1 text-xs font-mono tracking-wider transition-colors border rounded-none whitespace-nowrap",
               selectedStageFilter === null
                 ? "bg-erp-navy text-white border-erp-navy"
                 : "bg-white dark:bg-erp-slate-900 text-erp-text-muted border-erp-border hover:text-erp-text-main"
             )}
           >
-            {t("allStages")}
+            {t("allStages")} ({allImages.length})
           </button>
-          {["draft", "qualified", "surveying", "estimating", "proposed"].map((stage) => (
-            <button
-              key={stage}
-              type="button"
-              onClick={() => setSelectedStageFilter(stage)}
-              className={cn(
-                "px-2.5 py-1 text-xs font-mono uppercase tracking-wider transition-colors border rounded-none",
-                selectedStageFilter === stage
-                  ? "bg-erp-navy text-white border-erp-navy"
-                  : "bg-white dark:bg-erp-slate-900 text-erp-text-muted border-erp-border hover:text-erp-text-main"
-              )}
-            >
-              {stage}
-            </button>
-          ))}
+          {STAGES.map((stage) => {
+            const count = stageCounts[stage] ?? 0;
+            return (
+              <button
+                key={stage}
+                type="button"
+                onClick={() => setSelectedStageFilter(stage)}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-mono tracking-wider transition-colors border rounded-none whitespace-nowrap",
+                  selectedStageFilter === stage
+                    ? "bg-erp-navy text-white border-erp-navy"
+                    : "bg-white dark:bg-erp-slate-900 text-erp-text-muted border-erp-border hover:text-erp-text-main"
+                )}
+              >
+                {resolveOpportunityStageLabel(stage, t)} ({count})
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -150,7 +164,7 @@ export function OpportunityWorkImagesSection({
           <IconAlertCircle size={20} />
           <span>{t("loadWorkImagesError")}</span>
         </div>
-      ) : images.length === 0 ? (
+      ) : allImages.length === 0 ? (
         <div className="py-12 px-6 border border-dashed border-erp-slate-300 dark:border-erp-slate-700 bg-erp-slate-50/60 dark:bg-erp-slate-900/30 text-center flex flex-col items-center justify-center gap-3">
           <div className="w-12 h-12 flex items-center justify-center bg-white dark:bg-erp-slate-800 border border-erp-border text-erp-navy dark:text-erp-slate-300">
             <IconCamera size={24} strokeWidth={1.6} />
@@ -174,9 +188,36 @@ export function OpportunityWorkImagesSection({
             </Button>
           )}
         </div>
+      ) : filteredImages.length === 0 ? (
+        <div className="py-10 px-6 border border-dashed border-erp-slate-300 dark:border-erp-slate-700 bg-erp-slate-50/40 dark:bg-erp-slate-900/20 text-center flex flex-col items-center justify-center gap-3">
+          <p className="text-xs font-mono text-erp-text-muted">
+            {t("workImagesEmptyInStage")}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setSelectedStageFilter(null)}
+            >
+              {t("viewAllStagesAction")} ({allImages.length})
+            </Button>
+            {canManage && !isClosed && (
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => setIsAttachModalOpen(true)}
+                icon={<IconUpload size={14} />}
+              >
+                {t("attachImagesAction")}
+              </Button>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {images.map((image) => (
+          {filteredImages.map((image) => (
             <div
               key={image.id}
               className="border border-erp-border bg-white dark:bg-erp-slate-900 group relative flex flex-col justify-between overflow-hidden shadow-none rounded-none hover:border-erp-navy transition-colors"

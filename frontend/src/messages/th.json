@@ -637,7 +637,9 @@
     "stageBadge": "ขั้นตอนที่แนบ",
     "uploadedBy": "อัปโหลดโดย",
     "filterByStage": "กรองตามขั้นตอน",
-    "allStages": "ทุกขั้นตอน"
+    "allStages": "ทุกขั้นตอน",
+    "workImagesEmptyInStage": "ไม่มีภาพถ่ายหน้างานในขั้นตอนนี้",
+    "viewAllStagesAction": "ดูภาพทุกขั้นตอน"
   },
   "surveys": {
     "surveyCardTitle": "ข้อมูลการนัดหมายสำรวจหน้างาน (Site Survey Appointment)",

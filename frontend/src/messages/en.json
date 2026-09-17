@@ -637,7 +637,9 @@
     "stageBadge": "Stage at attach",
     "uploadedBy": "Uploaded by",
     "filterByStage": "Filter by stage",
-    "allStages": "All stages"
+    "allStages": "All stages",
+    "workImagesEmptyInStage": "No work images in this stage.",
+    "viewAllStagesAction": "View all stages"
   },
   "surveys": {
     "surveyCardTitle": "Site Survey Appointment Details",
