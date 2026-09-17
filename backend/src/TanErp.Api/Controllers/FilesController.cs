@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using TanErp.Api.Contracts.Files;
 using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Files;
 using TanErp.Application.Files.CompleteUploadSession;
 using TanErp.Application.Files.CreateUploadSession;
+using TanErp.Infrastructure.Persistence;
 
 namespace TanErp.Api.Controllers;
 
@@ -17,15 +20,27 @@ public class FilesController : ControllerBase
     private readonly CreateUploadSessionHandler _createSessionHandler;
     private readonly CompleteUploadSessionHandler _completeSessionHandler;
     private readonly IFileStorageProvider _storageProvider;
+    private readonly AppDbContext _dbContext;
+    private readonly string _storageBasePath;
 
     public FilesController(
         CreateUploadSessionHandler createSessionHandler,
         CompleteUploadSessionHandler completeSessionHandler,
-        IFileStorageProvider storageProvider)
+        IFileStorageProvider storageProvider,
+        AppDbContext dbContext,
+        IConfiguration configuration)
     {
         _createSessionHandler = createSessionHandler;
         _completeSessionHandler = completeSessionHandler;
         _storageProvider = storageProvider;
+        _dbContext = dbContext;
+
+        var basePath = configuration["Storage:BasePath"];
+        if (string.IsNullOrWhiteSpace(basePath))
+        {
+            basePath = Path.Combine(AppContext.BaseDirectory, "local-storage");
+        }
+        _storageBasePath = basePath;
     }
 
     /// <summary>
@@ -202,21 +217,52 @@ public class FilesController : ControllerBase
     }
 
     /// <summary>
-    /// Serves a stored file by its storage path segments.
+    /// Serves a stored file by its file ID (GUID) or storage path segments.
     /// </summary>
     [HttpGet("{**storagePath}")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
-    public IActionResult ServeFile([FromRoute] string storagePath)
+    public async Task<IActionResult> ServeFile(
+        [FromRoute] string storagePath,
+        CancellationToken cancellationToken)
     {
-        // Security: only serve files under the configured base path.
-        // The LocalFileStorageProvider constructs paths with org/session/file structure.
-        // No directory traversal possible as storagePath is routed strictly.
-        var servingUrl = _storageProvider.GetServingUrl(storagePath);
+        string? relativePath = null;
+        string mediaType = "application/octet-stream";
 
-        // For local storage, redirect to the actual file or stream it.
-        // This endpoint is a placeholder — production deployments replace with CDN redirect.
-        return NotFound();
+        if (Guid.TryParse(storagePath, out var fileId))
+        {
+            var file = await _dbContext.UploadedFiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.Id == fileId, cancellationToken);
+
+            if (file is null)
+            {
+                return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
+            }
+
+            relativePath = file.StoragePath;
+            mediaType = string.IsNullOrWhiteSpace(file.MediaType) ? "image/webp" : file.MediaType;
+        }
+        else
+        {
+            relativePath = storagePath;
+        }
+
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
+        }
+
+        var fullPath = Path.GetFullPath(Path.Combine(_storageBasePath, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+        var baseFullPath = Path.GetFullPath(_storageBasePath);
+
+        // Security: directory traversal guard
+        if (!fullPath.StartsWith(baseFullPath, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
+        {
+            return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
+        }
+
+        return PhysicalFile(fullPath, mediaType, enableRangeProcessing: true);
     }
 }

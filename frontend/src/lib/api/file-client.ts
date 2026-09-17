@@ -17,8 +17,13 @@ export type CompletedFileResponse = components["schemas"]["CompletedFileResponse
 export class FileClient {
   private readonly baseUrl: string;
 
-  constructor(baseUrl: string = "") {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    this.baseUrl = (baseUrl || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  }
+
+  getFileUrl(fileId?: string | null): string {
+    if (!fileId) return "";
+    return `${this.baseUrl}/api/v1/files/${encodeURIComponent(fileId)}`;
   }
 
   async createSession(
@@ -110,6 +115,4 @@ export class FileClient {
   }
 }
 
-export const fileClient = new FileClient(
-  process.env.NEXT_PUBLIC_API_URL || ""
-);
+export const fileClient = new FileClient();

@@ -13,6 +13,7 @@ import {
 } from "../api/opportunity-queries";
 import { OpportunityWorkImageAttachModal } from "./opportunity-work-image-attach-modal";
 import { useTranslations } from "next-intl";
+import { fileClient } from "@/lib/api/file-client";
 import type { OpportunityWorkImageResponse } from "@/lib/api/api-client";
 
 export interface OpportunityWorkImagesSectionProps {
@@ -186,7 +187,7 @@ export function OpportunityWorkImagesSection({
                 onClick={() => setPreviewImage(image)}
               >
                 <Image
-                  src={`/api/v1/files/${image.fileId}`}
+                  src={fileClient.getFileUrl(image.fileId)}
                   alt={image.caption || "Work photo"}
                   fill
                   unoptimized
@@ -244,7 +245,7 @@ export function OpportunityWorkImagesSection({
           <div className="space-y-4">
             <div className="relative aspect-video w-full bg-erp-navy/95 flex items-center justify-center overflow-hidden border border-erp-border">
               <Image
-                src={`/api/v1/files/${previewImage.fileId}`}
+                src={fileClient.getFileUrl(previewImage.fileId)}
                 alt={previewImage.caption || "Full preview"}
                 fill
                 unoptimized
