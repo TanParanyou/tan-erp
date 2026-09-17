@@ -34,6 +34,90 @@ export interface MultiImagePickerProps {
  * - Per-image caption input
  * - Native drag-and-drop support
  */
+interface ImagePickerItemProps {
+  item: PendingImageItem;
+  index: number;
+  disabled?: boolean;
+  onRemove: (id: string) => void;
+  onCaptionChange: (id: string, caption: string) => void;
+  placeholderText: string;
+  removeTitleText: string;
+}
+
+function ImagePickerItem({
+  item,
+  index,
+  disabled,
+  onRemove,
+  onCaptionChange,
+  placeholderText,
+  removeTitleText,
+}: ImagePickerItemProps) {
+  const [localCaption, setLocalCaption] = useState(item.caption);
+
+  useEffect(() => {
+    setLocalCaption(item.caption);
+  }, [item.caption]);
+
+  const handleCaptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalCaption(val);
+    onCaptionChange(item.id, val);
+  };
+
+  return (
+    <div
+      className="border border-erp-border bg-white dark:bg-erp-slate-900 p-3 space-y-2 relative shadow-none"
+      style={{ borderRadius: "0px" }}
+    >
+      {/* Thumbnail with overlay status */}
+      <div className="relative aspect-video w-full bg-erp-slate-100 dark:bg-erp-slate-800 overflow-hidden border border-erp-border">
+        <Image
+          src={item.previewUrl}
+          alt={item.caption || `Image ${index + 1}`}
+          fill
+          unoptimized
+          className="object-cover"
+        />
+
+        {/* Remove button */}
+        {!disabled && (
+          <button
+            type="button"
+            onClick={() => onRemove(item.id)}
+            className="absolute top-1 right-1 p-1 bg-erp-navy/90 hover:bg-destructive text-white transition-colors z-10"
+            style={{ borderRadius: "0px" }}
+            title={removeTitleText}
+          >
+            <IconClose className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Compression Status Badge - High contrast readable background */}
+        <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 bg-slate-900/90 dark:bg-black/90 backdrop-blur-sm border border-white/20 text-[10px] font-mono font-medium text-white shadow-sm z-10">
+          {item.isOptimizing ? (
+            <span className="text-amber-300">Optimizing...</span>
+          ) : (
+            <span className="text-emerald-300">{item.savingsSummary}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Caption Input */}
+      <input
+        type="text"
+        value={localCaption}
+        onChange={handleCaptionChange}
+        placeholder={placeholderText}
+        disabled={disabled}
+        maxLength={500}
+        className="w-full px-2 py-1.5 text-xs bg-white dark:bg-erp-slate-950 border border-erp-border text-erp-text-main focus:outline-none focus:border-erp-navy"
+        style={{ borderRadius: "0px" }}
+      />
+    </div>
+  );
+}
+
 export function MultiImagePicker({
   label,
   maxFiles = 20,
@@ -230,56 +314,16 @@ export function MultiImagePicker({
       {items.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {items.map((item, index) => (
-            <div
+            <ImagePickerItem
               key={item.id}
-              className="border border-erp-border bg-white dark:bg-erp-slate-900 p-3 space-y-2 relative shadow-none"
-              style={{ borderRadius: "0px" }}
-            >
-              {/* Thumbnail with overlay status */}
-              <div className="relative aspect-video w-full bg-erp-slate-100 dark:bg-erp-slate-800 overflow-hidden border border-erp-border">
-                <Image
-                  src={item.previewUrl}
-                  alt={item.caption || `Image ${index + 1}`}
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-
-                {/* Remove button */}
-                {!disabled && (
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.id)}
-                    className="absolute top-1 right-1 p-1 bg-erp-navy/80 hover:bg-destructive text-white transition-colors"
-                    style={{ borderRadius: "0px" }}
-                    title={tCommon("cancel")}
-                  >
-                    <IconClose className="w-4 h-4" />
-                  </button>
-                )}
-
-                {/* Compression Status Badge */}
-                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-erp-navy/90 text-[10px] font-mono text-white">
-                  {item.isOptimizing ? (
-                    <span className="text-amber-300">Optimizing...</span>
-                  ) : (
-                    <span>{item.savingsSummary}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Caption Input */}
-              <input
-                type="text"
-                value={item.caption}
-                onChange={(e) => updateCaption(item.id, e.target.value)}
-                placeholder={t("imageCaptionPlaceholder")}
-                disabled={disabled}
-                maxLength={500}
-                className="w-full px-2 py-1.5 text-xs bg-white dark:bg-erp-slate-950 border border-erp-border text-erp-text-main focus:outline-none focus:border-erp-navy"
-                style={{ borderRadius: "0px" }}
-              />
-            </div>
+              item={item}
+              index={index}
+              disabled={disabled}
+              onRemove={removeItem}
+              onCaptionChange={updateCaption}
+              placeholderText={t("imageCaptionPlaceholder")}
+              removeTitleText={tCommon("cancel")}
+            />
           ))}
         </div>
       )}

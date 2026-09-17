@@ -8,4 +8,5 @@ export * from "./InactivityTimeoutDialog";
 export * from "./ExpandableText";
 export * from "./QRCodePass";
 export * from "./ShareButton";
+export * from "./GalleryLightboxModal";
 
