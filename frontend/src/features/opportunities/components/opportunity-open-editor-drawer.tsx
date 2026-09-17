@@ -209,6 +209,29 @@ export function OpportunityOpenEditorDrawer({
       title={t("editOpportunityTitle")}
       description={opportunity.code ?? undefined}
       size="xl"
+      footer={
+        <div className="flex justify-end gap-3 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            onClick={onClose}
+            disabled={isSubmitting || updateMutation.isPending}
+          >
+            {tCommon("actions.cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="opportunity-open-edit-form"
+            variant="primary"
+            size="md"
+            isLoading={isSubmitting || updateMutation.isPending}
+            disabled={isSubmitting || updateMutation.isPending}
+          >
+            {tCommon("actions.save")}
+          </Button>
+        </div>
+      }
     >
       {submitError && (
         <Alert variant="danger" title={tCommon("feedback.operationFailed")} className="mb-4">
@@ -406,27 +429,6 @@ export function OpportunityOpenEditorDrawer({
             />
           </div>
         </FormSection>
-
-        <div className="flex justify-end gap-3 pt-4 border-t border-erp-border">
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
-            onClick={onClose}
-            disabled={isSubmitting || updateMutation.isPending}
-          >
-            {tCommon("actions.cancel")}
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            isLoading={isSubmitting || updateMutation.isPending}
-            disabled={isSubmitting || updateMutation.isPending}
-          >
-            {tCommon("actions.save")}
-          </Button>
-        </div>
       </form>
     </Drawer>
   );

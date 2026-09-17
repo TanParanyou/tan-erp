@@ -74,7 +74,7 @@ test.describe("Opportunity Draft Q-Gate Completion Journey", () => {
     );
     await modalConfirmBtn.click();
     await activateResponsePromise;
-    await expect(page.getByText("ใช้งาน")).toBeVisible();
+    await expect(page.getByText("ใช้งานอยู่")).toBeVisible();
 
     // 2. Create Incomplete Draft Opportunity (only customer, title, workTypes - omitting scopeSummary and nextAction)
     await page.getByRole("link", { name: "โอกาสทางการขาย" }).click();
@@ -82,7 +82,8 @@ test.describe("Opportunity Draft Q-Gate Completion Journey", () => {
     await page.getByRole("link", { name: /สร้างโอกาสทางการขาย/ }).click();
     await page.waitForURL("**/th/opportunities/create");
 
-    await page.getByLabel(/ลูกค้า/).selectOption(customerId);
+    await page.getByLabel(/ลูกค้า/).fill(customerNameTh);
+    await page.getByRole("option", { name: new RegExp(customerNameTh) }).click();
     const oppTitle = `โครงการทดสอบ Q-Gate Inline ${suffix}`;
     await page.getByLabel(/ชื่อโอกาสทางการขาย/).fill(oppTitle);
     await page.getByLabel(/งานบิวท์อิน/).check();
@@ -151,6 +152,6 @@ test.describe("Opportunity Draft Q-Gate Completion Journey", () => {
     await transitionPromise;
 
     // 7. Verify UI updates to Qualified stage
-    await expect(page.getByText("ผ่านเกณฑ์ (Qualified)")).toBeVisible();
+    await expect(page.getByText("ผ่านเกณฑ์ (Qualified)").first()).toBeVisible();
   });
 });

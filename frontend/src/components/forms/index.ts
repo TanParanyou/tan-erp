@@ -20,3 +20,5 @@ export * from "./CurrencyAmountInput";
 export * from "./CustomerAutocomplete";
 export * from "./UserAutocomplete";
 export * from "./EntityAutocomplete";
+export * from "./MultiImagePicker";
+export * from "./CameraCaptureModal";

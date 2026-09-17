@@ -28,19 +28,24 @@ import { Alert } from "@/components/ui/Alert";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { Button } from "@/components/ui/Button";
 import { FormContainer } from "@/components/forms/FormContainer";
 import { FormSection } from "@/components/forms/FormSection";
 import { FormActionBar } from "@/components/forms/FormActionBar";
+import { FormTabs, useFormTabErrors } from "@/components/forms/FormTabs";
 import { CustomerAutocomplete } from "@/components/forms/CustomerAutocomplete";
 import { CurrencyAmountInput } from "@/components/forms/CurrencyAmountInput";
 import { SelectWithOther } from "@/components/forms/SelectWithOther";
 import { QuickNoteChips, type QuickTemplateItem } from "@/components/forms/QuickNoteChips";
 import { CustomerQuickViewDrawer } from "@/features/customers/components/customer-quick-view-drawer";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { IconChevronRight, IconChevronLeft } from "@/components/common/Icons";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { cn } from "@/lib/utils/cn";
+
+export type OpportunityEditorTab = "project" | "plan";
 
 export function OpportunityEditor() {
   const t = useTranslations("opportunities");
@@ -109,13 +114,31 @@ export function OpportunityEditor() {
     mode: "onBlur",
   });
 
+  const [activeTab, setActiveTab] = useState<OpportunityEditorTab>("project");
+
   const {
     control,
     handleSubmit,
     setValue,
     watch,
-    formState: { isSubmitting, isDirty },
+    formState: { isSubmitting, isDirty, errors },
   } = methods;
+
+  const { tabErrorMap, handleFormError } = useFormTabErrors<OpportunityEditorTab, OpportunityFormValues>({
+    tabFieldsMap: {
+      project: ["customerId", "primarySiteId", "title", "workTypes", "scopeSummary"],
+      plan: [
+        "expectedBudget",
+        "currencyCode",
+        "targetDecisionDate",
+        "sourceCode",
+        "nextActionAtUtc",
+        "nextActionNote",
+      ],
+    },
+    errors,
+    setActiveTab,
+  });
 
   const watchedPrimarySiteId = watch("primarySiteId");
 
@@ -263,22 +286,27 @@ export function OpportunityEditor() {
 
   return (
     <FormProvider {...methods}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-5">
         <PageHeader title={t("createOpportunity")} />
 
-        {/* Read-only Identity Context */}
-        <div className="erp-card p-4 bg-erp-surface-subtle border border-erp-border">
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm m-0">
-            <div>
-              <dt className="text-erp-text-muted font-medium">{t("branchLabel")}:</dt>
-              <dd className="text-erp-text-main font-semibold mt-0.5 m-0">{activeBranch.name ?? "-"}</dd>
-            </div>
-            <div>
-              <dt className="text-erp-text-muted font-medium">{t("ownerLabel")}:</dt>
-              <dd className="text-erp-text-main font-semibold mt-0.5 m-0">{ownerLabel}</dd>
-            </div>
-          </dl>
-        </div>
+        {/* Global FormTabs with Error Indicator and Unrestricted Switching */}
+        <FormTabs<OpportunityEditorTab>
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          ariaLabel={t("opportunityFormTabs")}
+          tabs={[
+            {
+              id: "project",
+              label: t("tabProjectAndCustomer"),
+              hasError: tabErrorMap.project,
+            },
+            {
+              id: "plan",
+              label: t("tabPlanAndExecution"),
+              hasError: tabErrorMap.plan,
+            },
+          ]}
+        />
 
         {submitError && (
           <Alert variant="danger" onClose={() => setSubmitError(null)}>
@@ -286,305 +314,364 @@ export function OpportunityEditor() {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} onChange={handleFormChange} noValidate>
-          <FormContainer>
-            {/* Section 1: Customer and Primary Site */}
-            <FormSection title={t("sectionCustomerAndSite")}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                <Controller
-                  name="customerId"
-                  control={control}
-                  render={({ field, fieldState: { error } }) => (
-                    <CustomerAutocomplete
-                      value={field.value}
-                      onChange={(newCustomerId) => {
-                        field.onChange(newCustomerId);
-                        setSelectedCustomerId(newCustomerId);
-                        setValue("primarySiteId", "", { shouldValidate: true, shouldDirty: true });
-                      }}
-                      onViewDrawer={(targetCustomerId) => {
-                        customerDrawer.open(targetCustomerId);
-                      }}
-                      error={error?.message}
-                      required
-                      disabled={isSubmitting}
-                    />
-                  )}
-                />
-
-                <div className="flex flex-col gap-2">
-                  <Controller
-                    name="primarySiteId"
-                    control={control}
-                    render={({ field, fieldState: { error } }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? ""}
-                        label={t("primarySite")}
-                        error={error?.message}
-                        disabled={isSubmitting || !selectedCustomerId}
-                        options={[
-                          {
-                            value: "",
-                            label:
-                              selectedCustomerId && siteList.length === 0
-                                ? t("noSitesForCustomer")
-                                : t("primarySitePlaceholder"),
-                          },
-                          ...siteList.map((s) => ({
-                            value: s.id ?? "",
-                            label: s.label || s.addressLine1 || "-",
-                          })),
-                        ]}
-                      />
-                    )}
-                  />
-
-                  {/* Primary Site Full Detail Snapshot Card */}
-                  {selectedSite && (
-                    <div
-                      role="region"
-                      aria-label={t("primarySite")}
-                      className="border border-erp-border bg-erp-surface-subtle p-3 text-xs flex flex-col gap-1.5 shadow-sm"
-                    >
-                      <div className="font-bold text-erp-navy flex items-center gap-1.5">
-                        <span className="font-semibold text-erp-text-main">{selectedSite.label || "-"}</span>
-                      </div>
-
-                      {formattedSiteAddress && (
-                        <div className="text-erp-text-muted leading-relaxed">
-                          <strong className="text-erp-text-main font-medium">{t("siteAddress")}</strong>{" "}
-                          <span>{formattedSiteAddress}</span>
-                        </div>
-                      )}
-
-                      {selectedSite.accessNote && (
-                        <div className="text-erp-text-muted mt-0.5 pt-1 border-t border-erp-border-subtle">
-                          <strong className="text-erp-text-main font-medium">{t("siteAccessNote")}</strong>{" "}
-                          <span>{selectedSite.accessNote}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </FormSection>
-
-            {/* Section 2: Project & Scope Details */}
-            <FormSection title={t("sectionProjectAndScope")}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                <div className="md:col-span-2">
-                  <Controller
-                    name="title"
-                    control={control}
-                    render={({ field, fieldState: { error } }) => (
-                      <Input
-                        {...field}
-                        label={t("titleField")}
-                        required
-                        error={error?.message}
-                        disabled={isSubmitting}
-                        placeholder={t("titlePlaceholder")}
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="md:col-span-1">
-                  <Controller
-                    name="sourceCode"
-                    control={control}
-                    render={({ fieldState: { error } }) => (
-                      <SelectWithOther
-                        selectProps={{
-                          label: t("sourceCode"),
-                          value: selectedSourceOption,
-                          placeholder: t("sourceSelectPlaceholder"),
-                          options: leadSourceOptions,
-                          error: error?.message,
-                          disabled: isSubmitting,
-                          onChange: (e) => handleSourceSelect(e.target.value),
-                        }}
-                        otherProps={{
-                          placeholder: t("sourceOtherDetailPlaceholder"),
-                          value: otherSourceDetail,
-                          disabled: isSubmitting,
-                          onChange: (e) => handleOtherSourceChange(e.target.value),
-                        }}
-                        triggerValue="other"
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Work Types Multi-select Checkboxes with Controller & Error */}
-              <Controller
-                name="workTypes"
-                control={control}
-                render={({ field, fieldState: { error } }) => {
-                  const currentValues = field.value ?? [];
-                  return (
-                    <div className="flex flex-col gap-2">
-                      <span className="erp-label">
-                        {t("workTypes")} <span className="erp-label-required">*</span>
-                      </span>
-
-                      <div
-                        className={cn(
-                          "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-erp-surface p-3 border",
-                          error ? "border-red-600" : "border-erp-border"
-                        )}
-                      >
-                        {CANONICAL_WORK_TYPES.map((wt) => {
-                          const isChecked = currentValues.includes(wt);
-                          return (
-                            <Checkbox
-                              key={wt}
-                              id={`work-type-${wt}`}
-                              label={resolveWorkTypeLabel(wt)}
-                              checked={isChecked}
-                              disabled={isSubmitting}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  field.onChange([...currentValues, wt]);
-                                } else {
-                                  field.onChange(currentValues.filter((x) => x !== wt));
-                                }
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-
-                      {error && (
-                        <p className="erp-error-text" role="alert">
-                          {error.message || t("workTypesRequiredError")}
-                        </p>
-                      )}
-                    </div>
-                  );
+        <form onSubmit={handleSubmit(onSubmit, handleFormError)} onChange={handleFormChange} noValidate>
+          <FormContainer
+            maxWidth="full"
+            actionBar={
+              <FormActionBar
+                isDirty={isDirty}
+                isLoading={isSubmitting}
+                saveText={t("saveOpportunity")}
+                onCancel={() => {
+                  if (isDirty) {
+                    cancelConfirm.open();
+                  } else {
+                    router.push(`/${locale}/opportunities`);
+                  }
                 }}
               />
-
-              <Controller
-                name="scopeSummary"
-                control={control}
-                render={({ field, fieldState: { error } }) => (
-                  <Textarea
-                    {...field}
-                    value={field.value ?? ""}
-                    label={t("scopeSummary")}
-                    error={error?.message}
-                    disabled={isSubmitting}
-                    rows={3}
-                    placeholder={t("scopeSummaryPlaceholder")}
+            }
+          >
+            {/* Tab 1: Project & Customer (Preserved in DOM via CSS hidden to prevent form unregistration) */}
+            <div
+              role="tabpanel"
+              id="tabpanel-project"
+              aria-labelledby="tab-project"
+              className={cn("flex flex-col gap-6", activeTab !== "project" && "hidden")}
+            >
+              {/* Section 1: Customer and Primary Site */}
+              <FormSection title={t("sectionCustomerAndSite")}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  <Controller
+                    name="customerId"
+                    control={control}
+                    render={({ field, fieldState: { error } }) => (
+                      <CustomerAutocomplete
+                        value={field.value}
+                        onChange={(newCustomerId) => {
+                          field.onChange(newCustomerId);
+                          setSelectedCustomerId(newCustomerId);
+                          setValue("primarySiteId", "", { shouldValidate: true, shouldDirty: true });
+                        }}
+                        onViewDrawer={(targetCustomerId) => {
+                          customerDrawer.open(targetCustomerId);
+                        }}
+                        error={error?.message}
+                        required
+                        disabled={isSubmitting}
+                      />
+                    )}
                   />
-                )}
-              />
-            </FormSection>
 
-            {/* Section 3: Budget & Decision Timeline */}
-            <FormSection title={t("sectionCommercialAndTimeline")}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                <Controller
-                  name="expectedBudget"
-                  control={control}
-                  render={({ field: budgetField, fieldState: { error: budgetError } }) => (
+                  <div className="flex flex-col gap-2">
                     <Controller
-                      name="currencyCode"
+                      name="primarySiteId"
                       control={control}
-                      render={({ field: currencyField, fieldState: { error: currencyError } }) => (
-                        <CurrencyAmountInput
-                          label={t("expectedBudget")}
-                          amountValue={budgetField.value}
-                          onAmountChange={budgetField.onChange}
-                          currencyValue={currencyField.value ?? "THB"}
-                          onCurrencyChange={currencyField.onChange}
-                          amountError={budgetError?.message}
-                          currencyError={currencyError?.message}
-                          disabled={isSubmitting}
-                          placeholder="0.00"
+                      render={({ field, fieldState: { error } }) => (
+                        <Select
+                          {...field}
+                          value={field.value ?? ""}
+                          label={t("primarySite")}
+                          error={error?.message}
+                          disabled={isSubmitting || !selectedCustomerId}
+                          options={[
+                            {
+                              value: "",
+                              label:
+                                selectedCustomerId && siteList.length === 0
+                                  ? t("noSitesForCustomer")
+                                  : t("primarySitePlaceholder"),
+                            },
+                            ...siteList.map((s) => ({
+                              value: s.id ?? "",
+                              label: s.label || s.addressLine1 || "-",
+                            })),
+                          ]}
                         />
                       )}
                     />
-                  )}
-                />
 
-                <div>
-                  <Controller
-                    name="targetDecisionDate"
-                    control={control}
-                    render={({ field, fieldState: { error } }) => (
-                      <DatePicker
-                        value={field.value ?? ""}
-                        onChange={field.onChange}
-                        label={t("targetDecisionDate")}
-                        error={error?.message}
-                        disabled={isSubmitting}
-                      />
+                    {/* Primary Site Full Detail Snapshot Card */}
+                    {selectedSite && (
+                      <div
+                        role="region"
+                        aria-label={t("primarySite")}
+                        className="border border-erp-border bg-erp-surface-subtle p-3 text-xs flex flex-col gap-1.5 shadow-xs"
+                      >
+                        <div className="font-bold text-erp-navy flex items-center gap-1.5">
+                          <span className="font-semibold text-erp-text-main">{selectedSite.label || "-"}</span>
+                        </div>
+
+                        {formattedSiteAddress && (
+                          <div className="text-erp-text-muted leading-relaxed">
+                            <strong className="text-erp-text-main font-medium">{t("siteAddress")}</strong>{" "}
+                            <span>{formattedSiteAddress}</span>
+                          </div>
+                        )}
+
+                        {selectedSite.accessNote && (
+                          <div className="text-erp-text-muted mt-0.5 pt-1 border-t border-erp-border-subtle">
+                            <strong className="text-erp-text-main font-medium">{t("siteAccessNote")}</strong>{" "}
+                            <span>{selectedSite.accessNote}</span>
+                          </div>
+                        )}
+                      </div>
                     )}
-                  />
+                  </div>
                 </div>
-              </div>
-            </FormSection>
+              </FormSection>
 
-            {/* Section 4: Follow-up & Next Action */}
-            <FormSection title={t("sectionFollowUpAndNextAction")}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              {/* Section 2: Project & Scope Details */}
+              <FormSection title={t("sectionProjectAndScope")}>
                 <Controller
-                  name="nextActionAtUtc"
+                  name="title"
                   control={control}
                   render={({ field, fieldState: { error } }) => (
-                    <DateTimePicker
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      label={t("nextActionAt")}
+                    <Input
+                      {...field}
+                      label={t("titleField")}
+                      required
                       error={error?.message}
                       disabled={isSubmitting}
+                      placeholder={t("titlePlaceholder")}
                     />
                   )}
                 />
 
-                <div className="flex flex-col gap-2">
+                {/* Work Types Multi-select Checkboxes with Controller & Error */}
+                <Controller
+                  name="workTypes"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => {
+                    const currentValues = field.value ?? [];
+                    return (
+                      <div className="flex flex-col gap-2">
+                        <span className="erp-label">
+                          {t("workTypes")} <span className="erp-label-required">*</span>
+                        </span>
+
+                        <div
+                          className={cn(
+                            "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-erp-surface p-3 border",
+                            error ? "border-red-600" : "border-erp-border"
+                          )}
+                        >
+                          {CANONICAL_WORK_TYPES.map((wt) => {
+                            const isChecked = currentValues.includes(wt);
+                            return (
+                              <Checkbox
+                                key={wt}
+                                id={`work-type-${wt}`}
+                                label={resolveWorkTypeLabel(wt)}
+                                checked={isChecked}
+                                disabled={isSubmitting}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    field.onChange([...currentValues, wt]);
+                                  } else {
+                                    field.onChange(currentValues.filter((x) => x !== wt));
+                                  }
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+
+                        {error && (
+                          <p className="erp-error-text" role="alert">
+                            {error.message || t("workTypesRequiredError")}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }}
+                />
+
+                <Controller
+                  name="scopeSummary"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <Textarea
+                      {...field}
+                      value={field.value ?? ""}
+                      label={t("scopeSummary")}
+                      error={error?.message}
+                      disabled={isSubmitting}
+                      rows={3}
+                      placeholder={t("scopeSummaryPlaceholder")}
+                    />
+                  )}
+                />
+              </FormSection>
+
+              {/* Bottom Step Forward Button */}
+              <div className="flex justify-end pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={() => setActiveTab("plan")}
+                  className="flex items-center gap-1.5 font-bold text-erp-navy hover:bg-erp-surface-subtle"
+                >
+                  <span>{t("nextTabAction")}</span>
+                  <IconChevronRight size={16} />
+                </Button>
+              </div>
+            </div>
+
+            {/* Tab 2: Commercial & Follow-up Execution */}
+            <div
+              role="tabpanel"
+              id="tabpanel-plan"
+              aria-labelledby="tab-plan"
+              className={cn("flex flex-col gap-6", activeTab !== "plan" && "hidden")}
+            >
+              {/* Compact Read-only Identity Context */}
+              <div className="erp-card p-3.5 bg-erp-surface-subtle border border-erp-border shadow-xs">
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs m-0">
+                  <div>
+                    <dt className="text-erp-text-muted font-medium">{t("branchLabel")}:</dt>
+                    <dd className="text-erp-text-main font-semibold mt-0.5 m-0">{activeBranch.name ?? "-"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-erp-text-muted font-medium">{t("ownerLabel")}:</dt>
+                    <dd className="text-erp-text-main font-semibold mt-0.5 m-0">{ownerLabel}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              {/* Section 3: Budget, Timeline & Lead Source */}
+              <FormSection title={t("sectionCommercialAndTimeline")}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                  <div className="md:col-span-1">
+                    <Controller
+                      name="sourceCode"
+                      control={control}
+                      render={({ fieldState: { error } }) => (
+                        <SelectWithOther
+                          selectProps={{
+                            label: t("sourceCode"),
+                            value: selectedSourceOption,
+                            placeholder: t("sourceSelectPlaceholder"),
+                            options: leadSourceOptions,
+                            error: error?.message,
+                            disabled: isSubmitting,
+                            onChange: (e) => handleSourceSelect(e.target.value),
+                          }}
+                          otherProps={{
+                            placeholder: t("sourceOtherDetailPlaceholder"),
+                            value: otherSourceDetail,
+                            disabled: isSubmitting,
+                            onChange: (e) => handleOtherSourceChange(e.target.value),
+                          }}
+                          triggerValue="other"
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <div className="md:col-span-1">
+                    <Controller
+                      name="expectedBudget"
+                      control={control}
+                      render={({ field: budgetField, fieldState: { error: budgetError } }) => (
+                        <Controller
+                          name="currencyCode"
+                          control={control}
+                          render={({ field: currencyField, fieldState: { error: currencyError } }) => (
+                            <CurrencyAmountInput
+                              label={t("expectedBudget")}
+                              amountValue={budgetField.value}
+                              onAmountChange={budgetField.onChange}
+                              currencyValue={currencyField.value ?? "THB"}
+                              onCurrencyChange={currencyField.onChange}
+                              amountError={budgetError?.message}
+                              currencyError={currencyError?.message}
+                              disabled={isSubmitting}
+                              placeholder="0.00"
+                            />
+                          )}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <div className="md:col-span-1">
+                    <Controller
+                      name="targetDecisionDate"
+                      control={control}
+                      render={({ field, fieldState: { error } }) => (
+                        <DatePicker
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          label={t("targetDecisionDate")}
+                          error={error?.message}
+                          disabled={isSubmitting}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+              </FormSection>
+
+              {/* Section 4: Follow-up & Next Action */}
+              <FormSection title={t("sectionFollowUpAndNextAction")}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                   <Controller
-                    name="nextActionNote"
+                    name="nextActionAtUtc"
                     control={control}
                     render={({ field, fieldState: { error } }) => (
-                      <Input
-                        {...field}
+                      <DateTimePicker
                         value={field.value ?? ""}
-                        label={t("nextActionNote")}
+                        onChange={field.onChange}
+                        label={t("nextActionAt")}
                         error={error?.message}
                         disabled={isSubmitting}
-                        placeholder={t("nextActionNotePlaceholder")}
                       />
                     )}
                   />
 
-                  {/* Quick Note Chips */}
-                  <QuickNoteChips
-                    label={t("quickNotesLabel")}
-                    templates={quickNoteTemplates}
-                    onSelect={handleQuickNoteSelect}
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
-            </FormSection>
+                  <div className="flex flex-col gap-2">
+                    <Controller
+                      name="nextActionNote"
+                      control={control}
+                      render={({ field, fieldState: { error } }) => (
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          label={t("nextActionNote")}
+                          error={error?.message}
+                          disabled={isSubmitting}
+                          placeholder={t("nextActionNotePlaceholder")}
+                        />
+                      )}
+                    />
 
-            <FormActionBar
-              isDirty={isDirty}
-              isLoading={isSubmitting}
-              saveText={t("saveOpportunity")}
-              onCancel={() => {
-                if (isDirty) {
-                  cancelConfirm.open();
-                } else {
-                  router.push(`/${locale}/opportunities`);
-                }
-              }}
-            />
+                    {/* Quick Note Chips */}
+                    <QuickNoteChips
+                      label={t("quickNotesLabel")}
+                      templates={quickNoteTemplates}
+                      onSelect={handleQuickNoteSelect}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+              </FormSection>
+
+              {/* Bottom Step Back Button */}
+              <div className="flex justify-start pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={() => setActiveTab("project")}
+                  className="flex items-center gap-1.5 font-bold text-erp-navy hover:bg-erp-surface-subtle"
+                >
+                  <IconChevronLeft size={16} />
+                  <span>{t("prevTabAction")}</span>
+                </Button>
+              </div>
+            </div>
           </FormContainer>
         </form>
 

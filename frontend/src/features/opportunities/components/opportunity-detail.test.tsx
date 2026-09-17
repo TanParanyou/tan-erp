@@ -159,7 +159,7 @@ describe("OpportunityDetail Component", () => {
 
     expect(screen.getByText("โครงการปรับปรุงอาคารสำนักงาน")).toBeDefined();
     expect(screen.getByText("OPP-0001")).toBeDefined();
-    expect(screen.getByText("ฉบับร่าง (Draft)")).toBeDefined();
+    expect(screen.getAllByText("ฉบับร่าง (Draft)").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("งานบิวท์อิน (Built-in)")).toBeDefined();
     expect(screen.getByText("สำนักงานใหญ่")).toBeDefined();
   });

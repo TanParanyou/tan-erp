@@ -322,4 +322,33 @@ describe("OpportunityEditor", () => {
     });
     expect(mockedCreateOpportunity).not.toHaveBeenCalled();
   });
+
+  it("allows switching tabs freely and switches back to tab with errors on invalid submit", async () => {
+    renderEditor(client);
+
+    // 1. Initial tab is project & customer
+    const projectTab = screen.getByRole("tab", { name: /ข้อมูลโครงการ/ });
+    const planTab = screen.getByRole("tab", { name: /แผนการค้า/ });
+
+    expect(projectTab).toHaveAttribute("aria-selected", "true");
+    expect(planTab).toHaveAttribute("aria-selected", "false");
+
+    // 2. Click to switch to plan tab freely
+    fireEvent.click(planTab);
+    expect(planTab).toHaveAttribute("aria-selected", "true");
+    expect(projectTab).toHaveAttribute("aria-selected", "false");
+
+    // 3. Try to submit while on plan tab with required fields in project tab missing
+    const submitBtn = screen.getByRole("button", { name: /บันทึกโอกาสทางการขาย/ });
+    fireEvent.click(submitBtn);
+
+    // 4. Form should auto-switch back to project tab because customerId and title are missing
+    await waitFor(() => {
+      expect(projectTab).toHaveAttribute("aria-selected", "true");
+      // Tab error indicator should be active
+      const errorIndicator = screen.getAllByRole("status");
+      expect(errorIndicator.length).toBeGreaterThanOrEqual(1);
+    });
+    expect(mockedCreateOpportunity).not.toHaveBeenCalled();
+  });
 });

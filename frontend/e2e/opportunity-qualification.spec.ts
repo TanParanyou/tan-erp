@@ -76,7 +76,7 @@ test.describe("Opportunity Qualification Journey", () => {
     );
     await modalConfirmBtn.click();
     await activateResponsePromise;
-    await expect(page.getByText("ใช้งาน")).toBeVisible();
+    await expect(page.getByText("ใช้งานอยู่")).toBeVisible();
 
     // 2. Create Opportunity that meets all Q-gate invariants
     await page.getByRole("link", { name: "โอกาสทางการขาย" }).click();
@@ -84,15 +84,17 @@ test.describe("Opportunity Qualification Journey", () => {
     await page.getByRole("link", { name: /สร้างโอกาสทางการขาย/ }).click();
     await page.waitForURL("**/th/opportunities/create");
 
-    await page.getByLabel(/ลูกค้า/).selectOption(customerId);
+    await page.getByLabel(/ลูกค้า/).fill(customerNameTh);
+    await page.getByRole("option", { name: new RegExp(customerNameTh) }).click();
     const oppTitle = `โครงการประเมินคุณสมบัติ ${suffix}`;
     await page.getByLabel(/ชื่อโอกาสทางการขาย/).fill(oppTitle);
     await page.getByLabel(/สรุปขอบเขตงาน/).fill("ตกแต่งภายในสำนักงานชั้น 5 และติดตั้งเฟอร์นิเจอร์บิวท์อิน");
     await page.getByLabel(/งานบิวท์อิน/).check();
     await page.getByLabel(/งานอินทีเรีย/).check();
-    await page.getByLabel(/งบประมาณที่คาดหวัง/).fill("850000");
-    await page.getByLabel(/สกุลเงิน/).fill("THB");
-    await page.getByLabel(/วัน-เวลาที่ต้องดำเนินการถัดไป/).fill("2026-10-15T10:00");
+    await page.getByRole("spinbutton", { name: /งบประมาณที่คาดหวัง/ }).fill("850000");
+    const datePickerInput = page.getByPlaceholder("เลือกวันที่ (วว/ดด/ปปปป)").last();
+    await datePickerInput.fill("15/10/2026");
+    await datePickerInput.press("Enter");
     await page.getByLabel(/บันทึกการดำเนินการถัดไป/).fill("นัดหมายสำรวจหน้างานจริง");
 
     const createOppResponsePromise = page.waitForResponse(
@@ -162,12 +164,12 @@ test.describe("Opportunity Qualification Journey", () => {
     expect(qualifiedData.rowVersion).not.toBe(oppData.rowVersion);
 
     // 5. Verify UI Detail updates to Qualified badge without page reload
-    await expect(page.getByText("ผ่านเกณฑ์ (Qualified)")).toBeVisible();
+    await expect(page.getByText("ผ่านเกณฑ์ (Qualified)").first()).toBeVisible();
 
     // 6. Verify Opportunity List displays Qualified
     await page.getByRole("link", { name: "กลับหน้ารายการโอกาสทางการขาย" }).click();
     await page.waitForURL("**/th/opportunities");
     await expect(page.getByText(oppTitle)).toBeVisible();
-    await expect(page.getByText("ผ่านเกณฑ์ (Qualified)")).toBeVisible();
+    await expect(page.locator("table").getByText("ผ่านเกณฑ์ (Qualified)").first()).toBeVisible();
   });
 });

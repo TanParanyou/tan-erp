@@ -47,10 +47,10 @@ export function OpportunityWorkImageStageFilter({
       role="toolbar"
       aria-label={t("filterByStage")}
     >
-      <div className="flex items-center gap-1 text-erp-text-muted mr-1 shrink-0 font-mono text-[11px] uppercase">
+      {/* <div className="flex items-center gap-1 text-erp-text-muted mr-1 shrink-0 font-mono text-[11px] uppercase">
         <IconFilter size={13} className="text-erp-text-muted" />
         <span>{t("filterByStage")}:</span>
-      </div>
+      </div> */}
 
       <div className="inline-flex border border-erp-border bg-erp-surface p-0.5 rounded-none shrink-0">
         {/* All Stages Button */}
@@ -83,8 +83,8 @@ export function OpportunityWorkImageStageFilter({
                 isSelected
                   ? "bg-erp-navy text-white font-semibold shadow-sm"
                   : count > 0
-                  ? "text-erp-text-main hover:bg-erp-surface-muted"
-                  : "text-erp-text-muted/60 hover:text-erp-text-muted hover:bg-erp-surface-muted"
+                    ? "text-erp-text-main hover:bg-erp-surface-muted"
+                    : "text-erp-text-muted/60 hover:text-erp-text-muted hover:bg-erp-surface-muted"
               )}
               aria-pressed={isSelected}
             >

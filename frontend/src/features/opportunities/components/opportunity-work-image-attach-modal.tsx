@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { IconUpload } from "@/components/common/Icons";
@@ -23,7 +22,7 @@ export interface OpportunityWorkImageAttachModalProps {
 /**
  * Modal for attaching work images to an Opportunity.
  * Follows the 3-step deferred upload protocol:
- * 1. User picks/compresses images (MultiImagePicker - local only)
+ * 1. User picks/captures/compresses images (MultiImagePicker - local only)
  * 2. On submit: Create file session -> Complete upload session -> Attach work images to Opportunity (all-or-nothing)
  * 3. Rotates opportunity rowVersion and invalidates queries
  */
@@ -156,6 +155,7 @@ export function OpportunityWorkImageAttachModal({
           onChange={setPendingItems}
           disabled={isSubmitting}
           maxFiles={20}
+          enableCamera={true}
         />
 
         {errorMessage && (
@@ -164,12 +164,12 @@ export function OpportunityWorkImageAttachModal({
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons (Atelier 44px md buttons) */}
         <div className="flex justify-end gap-3 pt-4 border-t border-erp-border">
           <Button
             type="button"
             variant="secondary"
-            size="sm"
+            size="md"
             onClick={handleClose}
             disabled={isSubmitting}
           >
@@ -178,7 +178,7 @@ export function OpportunityWorkImageAttachModal({
           <Button
             type="submit"
             variant="primary"
-            size="sm"
+            size="md"
             disabled={pendingItems.length === 0 || isSubmitting}
             isLoading={isSubmitting}
             icon={<IconUpload size={16} />}

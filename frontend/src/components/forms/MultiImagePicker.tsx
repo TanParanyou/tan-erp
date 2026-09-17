@@ -2,8 +2,9 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
-import { IconUpload, IconClose, IconAlertCircle } from "@/components/common/Icons";
+import { IconUpload, IconClose, IconAlertCircle, IconCamera } from "@/components/common/Icons";
 import { optimizeImageToWebP, type OptimizationResult } from "@/lib/media/image-optimization";
+import { CameraCaptureModal } from "./CameraCaptureModal";
 import { useTranslations } from "next-intl";
 
 export interface PendingImageItem {
@@ -24,6 +25,7 @@ export interface MultiImagePickerProps {
   className?: string;
   error?: string;
   disabled?: boolean;
+  enableCamera?: boolean;
 }
 
 /**
@@ -33,6 +35,8 @@ export interface MultiImagePickerProps {
  * - Deferred upload (returns local File objects, does not upload immediately)
  * - Per-image caption input
  * - Native drag-and-drop support
+ * - In-app WebRTC camera viewfinder with live preview, shutter snapshot review & retake
+ * - Device native camera capture fallback
  */
 interface ImagePickerItemProps {
   item: PendingImageItem;
@@ -126,14 +130,19 @@ export function MultiImagePicker({
   className = "",
   error,
   disabled = false,
+  enableCamera = true,
 }: MultiImagePickerProps) {
   const t = useTranslations("opportunities");
   const tCommon = useTranslations("common.actions");
   const tFeedback = useTranslations("common.feedback");
+  const tCamera = useTranslations("common.camera");
 
   const [isDragging, setIsDragging] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const nativeCameraInputRef = useRef<HTMLInputElement>(null);
 
   // Clean up object URLs on unmount
   const itemsRef = useRef(items);
@@ -229,6 +238,7 @@ export function MultiImagePicker({
     }
     processFiles(fileList);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (nativeCameraInputRef.current) nativeCameraInputRef.current.value = "";
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -256,6 +266,10 @@ export function MultiImagePicker({
     processFiles(fileList);
   };
 
+  const handleCameraCapture = (file: File) => {
+    processFiles([file]);
+  };
+
   const removeItem = (id: string) => {
     const itemToRemove = items.find((i) => i.id === id);
     if (itemToRemove?.previewUrl) {
@@ -278,7 +292,25 @@ export function MultiImagePicker({
         </label>
       )}
 
-      {/* Drop Zone */}
+      {/* Hidden File Inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        className="hidden"
+        onChange={handleInputChange}
+      />
+      <input
+        ref={nativeCameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleInputChange}
+      />
+
+      {/* Drop Zone & Capture Controls */}
       {items.length < maxFiles && !disabled && (
         <div
           onDragOver={handleDragOver}
@@ -292,20 +324,45 @@ export function MultiImagePicker({
           }`}
           style={{ borderRadius: "0px" }}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            className="hidden"
-            onChange={handleInputChange}
-          />
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <div className="p-3 bg-white dark:bg-erp-slate-800 rounded-none border border-erp-border text-erp-navy dark:text-erp-slate-300">
-              <IconUpload className="w-5 h-5" />
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-erp-text-main">{t("dropImagesHere")}</p>
+              <p className="text-xs font-mono text-erp-text-muted mt-0.5">{t("maxImagesLimit")}</p>
             </div>
-            <p className="text-sm font-semibold text-erp-text-main">{t("dropImagesHere")}</p>
-            <p className="text-xs font-mono text-erp-text-muted">{t("maxImagesLimit")}</p>
+
+            {/* Square Action Buttons: Choose File (Left) & Open Camera (Right) */}
+            <div
+              className="flex items-center justify-center gap-4 pt-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-28 h-28 aspect-square flex flex-col items-center justify-center gap-2 p-3 bg-white dark:bg-erp-slate-800 border-2 border-erp-border hover:border-erp-navy hover:bg-erp-surface-subtle text-erp-navy dark:text-erp-slate-200 transition-all select-none focus:outline-none focus:border-erp-navy active:translate-y-0.5"
+                style={{ borderRadius: "0px" }}
+                title={t("browseFiles")}
+              >
+                <IconUpload size={28} className="text-erp-navy dark:text-erp-slate-200 shrink-0" />
+                <span className="text-xs font-semibold text-erp-text-main text-center leading-tight">
+                  {t("browseFiles")}
+                </span>
+              </button>
+
+              {enableCamera && (
+                <button
+                  type="button"
+                  onClick={() => setIsCameraModalOpen(true)}
+                  className="w-28 h-28 aspect-square flex flex-col items-center justify-center gap-2 p-3 bg-erp-navy hover:bg-erp-navy-950 border-2 border-erp-navy text-white transition-all select-none focus:outline-none active:translate-y-0.5"
+                  style={{ borderRadius: "0px" }}
+                  title={t("takePhotoAction")}
+                >
+                  <IconCamera size={28} className="text-white shrink-0" />
+                  <span className="text-xs font-semibold text-white text-center leading-tight">
+                    {t("takePhotoAction")}
+                  </span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -334,6 +391,18 @@ export function MultiImagePicker({
           <IconAlertCircle className="w-4 h-4 shrink-0" />
           <span>{error || localError}</span>
         </div>
+      )}
+
+      {/* Camera Capture Modal (In-App Viewfinder) */}
+      {enableCamera && (
+        <CameraCaptureModal
+          isOpen={isCameraModalOpen}
+          onClose={() => setIsCameraModalOpen(false)}
+          onCapture={handleCameraCapture}
+          title={tCamera("modalTitle")}
+          preferredFacingMode="environment"
+          onTriggerNativeCamera={() => nativeCameraInputRef.current?.click()}
+        />
       )}
     </div>
   );
