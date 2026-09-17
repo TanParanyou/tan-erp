@@ -28,7 +28,7 @@ frontend/src/
 
 ## มาตรฐาน UI/UX และหน้าจอต้นแบบ
 - มาตรฐานการออกแบบและระบบโทเค็นสี/ขนาดตัวอักษร: [Design System (Atelier Architectural Navy Sharp)](../../design.md)
-- มาตรฐานหน้าฟอร์ม ERP (Single Route [id], Deferred Upload, Double Submit Lock): [Building ERP Forms](../../.agents/skills/building-erp-forms/SKILL.md)
+- มาตรฐานหน้าฟอร์ม ERP (Single Route [id], Deferred Upload, Double Submit Lock, Tabbed Forms & Error Auto-Switch): [Building ERP Forms](../../.agents/skills/building-erp-forms/SKILL.md)
 - หน้าจอต้นแบบระบบ ERP เสมือนจริง (Interactive Master-Detail Prototype): [preview.html](../../preview.html)
 - เอกสารสถาปัตยกรรมละเอียดเดิม: [Frontend Architecture Design](../superpowers/specs/2026-09-05-tan-erp-frontend-architecture-design.md)
 

@@ -158,6 +158,15 @@
 - **ระยะห่างสม่ำเสมอ (Harmonized Padding & Margin):** คอนเทนเนอร์หลัก (`.erp-main-content`) กำหนด padding สม่ำเสมอรอบด้าน (`p-4 sm:p-6`: 16px บนมือถือ, 24px บนจอใหญ่)
 - **แถบ Action Bar ติดหนึบล่างจอ (Flush Sticky Action Bar):** ใช้ `sticky bottom-0 z-40` พร้อม negative margin `-mx-4 -mb-4 mt-8 sm:-mx-6 sm:-mb-6` เพื่อหักล้าง padding ของคอนเทนเนอร์หลักอย่างพอดีเป๊ะ และมี padding ด้านใน `px-4 py-3 sm:px-6 sm:py-4` ทำให้ปุ่มและสถานะตรงแนวกับเนื้อหาฟอร์มด้านบนอย่างนิ่งสนิท ไม่เด้งไปเด้งมา
 
+### 4.3.1 มาตรฐานสถาปัตยกรรมแท็บฟอร์ม (Form Tabs & Zero-Scroll Standards)
+
+สำหรับฟอร์มที่มีข้อมูลหลากหลายหมวดหมู่ เพื่อลดการเลื่อนหน้าจอ (Zero-Scroll Form) ให้ใช้คอมโพเนนต์กลาง `<FormTabs />` และ Hook `useFormTabErrors` จาก `@/components/forms`:
+- **สไตล์ Atelier Architectural Navy Sharp:** คม เหลี่ยม ปราศจากความโค้งมน (`border-radius: 0px !important`) แท็บที่แอกทีฟเป็น Solid Navy `#0B3056` ตัวหนังสือขาว และแท็บทั่วไปเป็นพื้นผิว Surface พร้อม Hover Subtle
+- **Error Indicator บนหัวแท็บ (Red Dot Badge):** เมื่อมีฟิลด์ในแท็บใดไม่ผ่านการตรวจสอบ (Validation Failure) ให้แสดงจุดเตือนสีแดง (`bg-erp-danger animate-pulse`) บนปุ่มหัวแท็บนั้นทันที
+- **Auto-Switch ไปแท็บที่มี Error:** เมื่อผู้ใช้กดปุ่ม Submit จากแท็บอื่น ระบบจะสลับแท็บกลับไปยังแท็บแรกที่มี Error ทันทีโดยอัตโนมัติ พร้อมโฟกัสช่องที่พบปัญหา
+- **อิสระในการคลิกสลับแท็บ (Unrestricted Navigation):** ผู้ใช้สามารถคลิกสลับแท็บไปมาเพื่อกรอกข้อมูลส่วนใดก่อนก็ได้ ไม่มีการบล็อกลำดับขั้นตอน
+- **การรักษา DOM ของฟอร์ม (CSS `hidden` vs Unmount):** สลับแท็บด้วย Class `hidden` เสมอ ห้ามใช้การ Unmount เพื่อป้องกัน React Hook Form สูญเสียการลงทะเบียนของช่องอินพุต
+
 ### 4.4 มาตรฐานขนาดและบทบาทของปุ่ม (Button Scale & Usage Rules)
 
 เพื่อป้องกันปัญหาปุ่มสูงต่ำไม่เท่ากันหรือไม่สอดคล้องกันข้ามหน้าจอ ระบบกำหนดขนาดปุ่มกลางของ Atelier Architectural Navy Sharp ไว้อย่างเคร่งครัด:

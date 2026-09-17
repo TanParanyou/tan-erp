@@ -89,6 +89,7 @@ This repository is in **Application Implementation**. The authorized implementat
 - **Double Submit Protection:** ปุ่มบันทึก/ส่งข้อมูลต้องมีสถานะ `isLoading` และถูก Disable ทันทีขณะยิง Request
 - **Safety Confirmation Modal:** การลบ (Delete), การยกเลิก (Void/Cancel) หรือการกระทำที่มีความเสี่ยงสูง ต้องมี Confirmation Modal ยืนยันเสมอ พร้อมทั้งปุ่มยืนยันใน Modal ต้องมี `isLoading` ล็อกปุ่มไว้ขณะยิง API
 - **Minimal Mono Loading:** ขณะดึงข้อมูล Edit ให้ใช้ Minimal Loading Component ในคอนเทนเนอร์ (ห้ามใช้ Skeleton Loader)
+- **Tabbed Form Architecture (`FormTabs` & `useFormTabErrors`):** สำหรับฟอร์มที่มีข้อมูลหลายกลุ่มเพื่อลดการ scroll ให้ใช้ `<FormTabs />` กลาง พร้อม Red Dot Error Indicator บนหัวแท็บ, Auto-Switch ไปแท็บแรกที่มี Error เมื่อ submit ไม่ผ่าน, อิสระในการคลิกสลับแท็บ (Unrestricted) และซ่อนด้วย CSS `hidden` เพื่อรักษา DOM input registration
 
 ---
 
