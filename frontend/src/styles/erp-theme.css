@@ -1138,6 +1138,13 @@
   .login-card {
     padding: 1.5rem 1.125rem;
   }
+
+  /* Mobile button typography (text-xs on mobile devices) */
+  .erp-btn,
+  .erp-btn-sm,
+  .erp-btn-md {
+    font-size: 0.75rem;
+  }
 }
 
 @media (max-width: 420px) {

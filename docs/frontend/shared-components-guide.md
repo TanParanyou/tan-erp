@@ -101,6 +101,24 @@
 - รองรับ `title`, `description` (คำอธิบายย่อยใต้หัวข้อ), และ `headerAction` (สำหรับใส่ Badge หรือปุ่มคำสั่งขนาดกะทัดรัดประจำการ์ด)
 - ยุติปัญหาการเขียน custom card markup ซ้ำซ้อนข้าม Feature Form ต่างๆ
 
+### 3.8 `MultiImagePicker` (Deferred Multi-Image Attach & In-App Camera)
+คอมโพเนนต์เลือกและแนบภาพถ่ายหลายรูปในครั้งเดียว (Multi-Image Attachment) สำหรับฟอร์ม ERP และหน้างาน:
+- **Dual Square Action Buttons:** ปุ่ม Action ทรงสี่เหลี่ยมจัตุรัสคู่สมมาตรขนาดเท่ากัน ซ้าย-ขวา (`w-28 h-28 aspect-square`) ขอบคม 0px สไตล์ Atelier ชัดเจน เข้าใจง่าย:
+  - ฝั่งซ้าย: ปุ่มเลือกไฟล์ภาพจากเครื่อง (`IconUpload`)
+  - ฝั่งขวา: ปุ่มเปิดกล้องถ่ายภาพหน้างาน (`IconCamera`) สีกรมท่าเข้ม
+- **Client-Side Optimization (WebP):** บีบอัดภาพและแปลงเป็น WebP บนเครื่องของผู้ใช้ทันทีแบบ Concurrency พร้อมถอดข้อมูล EXIF/GPS อัตโนมัติ แสดงเปอร์เซ็นต์พื้นที่ที่ประหยัดได้
+- **Deferred Upload Flow:** รูปที่เลือก/ถ่ายจะถูกเก็บเป็น Local `File` objects และอัปโหลดจริงในฟังก์ชัน `onSubmit` เท่านั้น ไม่มีการยิงไฟล์ขยะค้างใน Storage
+- **Per-Image Captions:** มีช่องกรอกคำอธิบายภาพรายรูป (ความยาวสูงสุด 500 ตัวอักษร) พร้อมปุ่มลบรูปภาพมุมฉาก
+- **Native Device Camera Fallback:** รองรับ `<input type="file" accept="image/*" capture="environment">` สำหรับอุปกรณ์ที่ไม่รองรับ WebRTC หรือเมื่อผู้ใช้ปฏิเสธ Permission
+
+### 3.9 `CameraCaptureModal` (Full-Screen Architectural Camera Viewfinder)
+หน้าต่างเปิดกล้องถ่ายภาพเต็มจอ (Full Screen Modal `size="full"`) ระดับมืออาชีพ:
+- **Full-Screen Viewfinder:** ขยายเต็มจอ $100\%$ ให้ช่างและผู้ประเมินราคาเล็งจัดองค์ประกอบหน้างานได้ชัดเจนเต็มตา
+- **Architectural Surveyor Crosshair:** กรอบเล็งระดับสายตา กากบาทตรงกลาง และมาร์กเกอร์ 4 มุม สไตล์กล้องวัดระดับช่างสถาปัตย์
+- **Single Switch Button (Front/Back):** ปุ่มสลับกล้องเพียงปุ่มเดียวที่ระบุเป้าหมายชัดเจน (สลับกล้องหน้า $\leftrightarrow$ กล้องหลัง) ควบคู่กับ Blueprint Badge บอกสถานะกล้องปัจจุบัน
+- **Freeze & Review Flow:** กดปุ่มชัตเตอร์แล้วแสดงภาพถ่ายทันที พร้อมปุ่ม "ถ่ายใหม่ (Retake)" และ "ใช้ภาพนี้ (Use Photo)"
+- **Strict Error Handling:** แสดงข้อผิดพลาดตาม W3C DOMException อย่างถูกต้อง พร้อมปุ่มสลับไปใช้ Native Camera ของระบบปฏิบัติการทันที
+
 ---
 
 ## 🌐 4. Shared Utilities & Global Widgets (`@/components/common` & `@/components/layout`)
@@ -134,6 +152,7 @@
 | **`useOnlineStatus`** | ตรวจสอบสถานะการเชื่อมต่ออินเทอร์เน็ตของผู้ใช้ |
 | **`useCurrentLocation`** | ดึงพิกัดภูมิศาสตร์ (GPS ละติจูด, ลองจิจูด) จาก Browser Geolocation API พร้อมการตรวจจับข้อผิดพลาดตาม W3C (Permission Denied, Position Unavailable, Timeout) และแจ้งเตือนผ่าน Toast |
 | **`useImagePreview`** | จัดการสร้างและคืนหน่วยความจำ Object URL สำหรับภาพพรีวิว |
+| **`useCamera`** | ควบคุมกล้องผ่าน WebRTC MediaStream, สำรวจอุปกรณ์กล้อง (`enumerateDevices`), สลับกล้องหน้า (`user`) / กล้องหลัง (`environment`), Snapshot เฟรมภาพเป็น `File` (WebP/JPEG), หยุด Track อัตโนมัติเมื่อ Unmount เพื่อป้องกันไฟกล้องค้าง และจัดการ Error Code อย่างรัดกุม |
 
 ---
 
