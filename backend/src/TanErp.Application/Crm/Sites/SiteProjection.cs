@@ -1,5 +1,12 @@
 namespace TanErp.Application.Crm.Sites;
 
+public sealed record SiteImageProjection(
+    Guid Id,
+    Guid FileId,
+    string? Caption,
+    int DisplayOrder,
+    DateTimeOffset CreatedAtUtc);
+
 public sealed record SiteProjection(
     Guid Id,
     string Code,
@@ -16,4 +23,5 @@ public sealed record SiteProjection(
     string? AccessNote,
     string Status,
     Guid RowVersion,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    IReadOnlyList<SiteImageProjection>? Images = null);

@@ -2558,6 +2558,13 @@ export interface paths {
                         "text/json": components["schemas"]["SiteSurveyResponse"];
                     };
                 };
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Bad Request */
                 400: {
                     headers: {
@@ -3108,6 +3115,8 @@ export interface components {
             primaryContact?: components["schemas"]["CreatePrimaryContactRequest"];
             leadSource?: string | null;
             leadSourceNote?: string | null;
+            /** Format: uuid */
+            imageFileId?: string | null;
         };
         CreateEstimateDraftRequest: {
             /** Format: uuid */
@@ -3147,6 +3156,11 @@ export interface components {
             preferredChannel?: string | null;
             lineId?: string | null;
         };
+        CreateSiteImageRequest: {
+            /** Format: uuid */
+            fileId?: string;
+            caption?: string | null;
+        };
         CreateSiteRequest: {
             label?: string | null;
             addressLine1?: string | null;
@@ -3160,6 +3174,7 @@ export interface components {
             /** Format: double */
             longitude?: number | null;
             accessNote?: string | null;
+            images?: components["schemas"]["CreateSiteImageRequest"][] | null;
         };
         CreateSiteSurveyRequest: {
             /** Format: uuid */
@@ -3226,6 +3241,8 @@ export interface components {
             createdAtUtc?: string;
             leadSource?: string | null;
             leadSourceNote?: string | null;
+            /** Format: uuid */
+            imageFileId?: string | null;
         };
         CustomerSummaryResponse: {
             /** Format: uuid */
@@ -3487,6 +3504,17 @@ export interface components {
             /** Format: uuid */
             expectedVersion?: string;
         };
+        SiteImageResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            fileId?: string;
+            caption?: string | null;
+            /** Format: int32 */
+            displayOrder?: number;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
         SiteListResponse: {
             items?: components["schemas"]["SiteResponse"][] | null;
         };
@@ -3513,6 +3541,7 @@ export interface components {
             rowVersion?: string;
             /** Format: date-time */
             createdAtUtc?: string;
+            images?: components["schemas"]["SiteImageResponse"][] | null;
         };
         SiteSummaryResponse: {
             /** Format: uuid */

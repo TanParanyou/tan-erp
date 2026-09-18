@@ -14,6 +14,7 @@ public class Customer : Entity
     public string PreferredLocale { get; private set; } = TanErp.Domain.Crm.Customers.PreferredLocale.Thai;
     public string? LeadSource { get; private set; }
     public string? LeadSourceNote { get; private set; }
+    public Guid? ImageFileId { get; private set; }
     public Guid RowVersion { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid CreatedByUserId { get; private set; }
@@ -33,6 +34,7 @@ public class Customer : Entity
         string preferredLocale,
         string? leadSource,
         string? leadSourceNote,
+        Guid? imageFileId,
         DateTimeOffset createdAtUtc) : base(id)
     {
         if (string.IsNullOrWhiteSpace(displayNameTh))
@@ -71,6 +73,7 @@ public class Customer : Entity
         PreferredLocale = preferredLocale.Trim();
         LeadSource = string.IsNullOrWhiteSpace(leadSource) ? null : leadSource.Trim();
         LeadSourceNote = string.IsNullOrWhiteSpace(leadSourceNote) ? null : leadSourceNote.Trim();
+        ImageFileId = imageFileId;
         RowVersion = Guid.NewGuid();
         CreatedAtUtc = createdAtUtc;
     }
@@ -86,7 +89,8 @@ public class Customer : Entity
         PrimaryContactInput primaryContact,
         DateTimeOffset now,
         string? leadSource = null,
-        string? leadSourceNote = null)
+        string? leadSourceNote = null,
+        Guid? imageFileId = null)
     {
         if (primaryContact == null)
         {
@@ -103,6 +107,7 @@ public class Customer : Entity
             preferredLocale,
             leadSource,
             leadSourceNote,
+            imageFileId,
             now);
 
 

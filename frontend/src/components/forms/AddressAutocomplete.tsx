@@ -23,6 +23,7 @@ export interface AddressAutocompleteProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
+  error?: string;
   onSelect: (address: SelectedAddress) => void;
   className?: string;
 }
@@ -34,6 +35,7 @@ export function AddressAutocomplete({
   placeholder,
   required = false,
   disabled = false,
+  error,
   onSelect,
   className = "",
 }: AddressAutocompleteProps) {
@@ -222,6 +224,7 @@ export function AddressAutocomplete({
           aria-controls={listboxId}
           aria-activedescendant={activeIndex >= 0 ? `${inputId}-option-${activeIndex}` : undefined}
           disabled={disabled}
+          aria-invalid={Boolean(error)}
           value={query}
           placeholder={placeholder || t("placeholder")}
           onChange={(e) => setQuery(e.target.value)}
@@ -230,7 +233,7 @@ export function AddressAutocomplete({
           }}
           onKeyDown={handleKeyDown}
           autoComplete="off"
-          className="erp-input pl-9 pr-16"
+          className={`erp-input pl-9 pr-16 ${error ? "erp-input-error" : ""}`}
         />
 
         {/* Right action indicators: Spinner or Clear */}

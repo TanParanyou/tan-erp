@@ -90,11 +90,13 @@ export function AddressAreaField({
         hint={hint}
         required={required}
         disabled={disabled}
+        error={error}
         onSelect={onSelect}
       />
       {error && (
-        <span className="text-xs text-erp-error font-medium mt-1 block" role="alert">
-          {error}
+        <span className="text-xs text-erp-danger font-medium mt-1 flex items-center gap-1" role="alert">
+          <IconMapPin size={12} className="text-erp-danger shrink-0" />
+          <span>{error}</span>
         </span>
       )}
     </div>

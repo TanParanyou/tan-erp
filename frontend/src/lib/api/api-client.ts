@@ -12,6 +12,8 @@ export type CreateCustomerRequest = components["schemas"]["CreateCustomerRequest
 export type SiteResponse = components["schemas"]["SiteResponse"];
 export type SiteListResponse = components["schemas"]["SiteListResponse"];
 export type CreateSiteRequest = components["schemas"]["CreateSiteRequest"];
+export type SiteImageResponse = components["schemas"]["SiteImageResponse"];
+export type CreateSiteImageRequest = components["schemas"]["CreateSiteImageRequest"];
 
 export type OpportunityResponse = components["schemas"]["OpportunityResponse"];
 export type OpportunityListResponse = components["schemas"]["OpportunityListResponse"];

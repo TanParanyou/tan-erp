@@ -85,7 +85,28 @@ public class SiteStore : ISiteStore
 
             _db.Sites.Add(site);
 
-            // 4. Record idempotency
+            // 4. Create Site Images if any
+            var siteImages = new List<SiteImage>();
+            if (command.Images != null && command.Images.Count > 0)
+            {
+                for (int i = 0; i < command.Images.Count; i++)
+                {
+                    var imgInput = command.Images[i];
+                    var siteImage = new SiteImage(
+                        Guid.NewGuid(),
+                        orgId,
+                        siteId,
+                        imgInput.FileId,
+                        imgInput.Caption,
+                        displayOrder: i,
+                        createdAtUtc: now,
+                        createdByUserId: access.ActorUserId);
+                    _db.SiteImages.Add(siteImage);
+                    siteImages.Add(siteImage);
+                }
+            }
+
+            // 5. Record idempotency
             var idempotencyRecord = new IdempotencyRecord(
                 Guid.NewGuid(),
                 orgId,
@@ -96,8 +117,8 @@ public class SiteStore : ISiteStore
                 now);
             _db.IdempotencyRecords.Add(idempotencyRecord);
 
-            // 5. Record audit event (no raw PII)
-            const string auditChanges = "{\"changedFields\":[\"customerId\",\"label\",\"addressLine1\",\"subdistrict\",\"district\",\"province\",\"postalCode\",\"countryCode\",\"latitude\",\"longitude\",\"accessNote\",\"status\"]}";
+            // 6. Record audit event (no raw PII)
+            const string auditChanges = "{\"changedFields\":[\"customerId\",\"label\",\"addressLine1\",\"subdistrict\",\"district\",\"province\",\"postalCode\",\"countryCode\",\"latitude\",\"longitude\",\"accessNote\",\"status\",\"images\"]}";
             var auditEvent = new AuditEvent(
                 Guid.NewGuid(),
                 orgId,
@@ -126,7 +147,7 @@ public class SiteStore : ISiteStore
                 throw;
             }
 
-            return Result<SiteProjection>.Success(ToProjection(site));
+            return Result<SiteProjection>.Success(ToProjection(site, siteImages));
         });
     }
 
@@ -155,7 +176,15 @@ public class SiteStore : ISiteStore
         var site = await _db.Sites.AsNoTracking().SingleOrDefaultAsync(
             candidate => candidate.Id == siteId && candidate.OrganizationId == organizationId,
             cancellationToken);
-        return site is null ? null : Result<SiteProjection>.Success(ToProjection(site));
+        if (site is null) return null;
+
+        var siteImages = await _db.SiteImages.AsNoTracking()
+            .Where(img => img.OrganizationId == organizationId && img.SiteId == siteId && !img.IsDeleted)
+            .OrderBy(img => img.DisplayOrder)
+            .ThenBy(img => img.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
+        return Result<SiteProjection>.Success(ToProjection(site, siteImages));
     }
 
     public async Task<IReadOnlyList<SiteProjection>?> ListByCustomerAsync(
@@ -174,18 +203,27 @@ public class SiteStore : ISiteStore
         }
 
         // 2. Fetch sites ordered by normalized_label ASC, id ASC
-        var sites = await _db.Sites
+        var siteList = await _db.Sites
             .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId && s.CustomerId == customerId)
             .OrderBy(s => s.NormalizedLabel)
             .ThenBy(s => s.Id)
-            .Select(s => ToProjection(s))
             .ToListAsync(cancellationToken);
 
-        return sites;
+        var siteIds = siteList.Select(s => s.Id).ToList();
+        var images = await _db.SiteImages
+            .AsNoTracking()
+            .Where(img => img.OrganizationId == organizationId && siteIds.Contains(img.SiteId) && !img.IsDeleted)
+            .OrderBy(img => img.DisplayOrder)
+            .ThenBy(img => img.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
+        var imagesBySiteId = images.GroupBy(img => img.SiteId).ToDictionary(g => g.Key, g => (IReadOnlyList<SiteImage>)g.ToList());
+
+        return siteList.Select(s => ToProjection(s, imagesBySiteId.GetValueOrDefault(s.Id))).ToList();
     }
 
-    private static SiteProjection ToProjection(Site s) => new(
+    private static SiteProjection ToProjection(Site s, IReadOnlyList<SiteImage>? images = null) => new(
         s.Id,
         s.Code,
         s.CustomerId,
@@ -201,5 +239,11 @@ public class SiteStore : ISiteStore
         s.AccessNote,
         s.Status,
         s.RowVersion,
-        s.CreatedAtUtc);
+        s.CreatedAtUtc,
+        images?.Select(img => new SiteImageProjection(
+            img.Id,
+            img.FileId,
+            img.Caption,
+            img.DisplayOrder,
+            img.CreatedAtUtc)).ToList());
 }

@@ -29,5 +29,6 @@ public sealed record CustomerResponse(
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
     string? LeadSource = null,
-    string? LeadSourceNote = null);
+    string? LeadSourceNote = null,
+    Guid? ImageFileId = null);
 

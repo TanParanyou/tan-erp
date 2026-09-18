@@ -66,6 +66,17 @@ public class CreateSiteHandler
                 return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "Longitude must be between -180 and 180."));
         }
 
+        if (command.Images != null)
+        {
+            foreach (var img in command.Images)
+            {
+                if (img.FileId == Guid.Empty)
+                    return Result<SiteProjection>.Failure(new Error("SITE_IMAGE_INVALID", "Image File ID cannot be empty."));
+                if (img.Caption != null && img.Caption.Length > 500)
+                    return Result<SiteProjection>.Failure(new Error("SITE_IMAGE_INVALID", "Image caption cannot exceed 500 characters."));
+            }
+        }
+
         // 3. Compute key hash and canonical payload hash
         var keyHash = Sha256Hex.Compute(command.IdempotencyKey);
         var normLabel = SiteNormalizer.CollapseWhitespace(command.Label);
@@ -78,8 +89,11 @@ public class CreateSiteHandler
         var latStr = command.Latitude?.ToString("F6", System.Globalization.CultureInfo.InvariantCulture) ?? "";
         var lngStr = command.Longitude?.ToString("F6", System.Globalization.CultureInfo.InvariantCulture) ?? "";
         var normNote = command.AccessNote != null ? SiteNormalizer.CollapseWhitespace(command.AccessNote) : "";
+        var imagesStr = command.Images != null && command.Images.Count > 0
+            ? string.Join(";", command.Images.Select(i => $"{i.FileId}:{i.Caption?.Trim() ?? ""}"))
+            : "";
 
-        var canonicalPayload = $"{command.CustomerId}|{normLabel}|{normAddr}|{normSub}|{normDist}|{normProv}|{normPost}|{normCountry}|{latStr}|{lngStr}|{normNote}";
+        var canonicalPayload = $"{command.CustomerId}|{normLabel}|{normAddr}|{normSub}|{normDist}|{normProv}|{normPost}|{normCountry}|{latStr}|{lngStr}|{normNote}|{imagesStr}";
         var payloadHash = Sha256Hex.Compute(canonicalPayload);
 
         // 4. Delegate to atomic store

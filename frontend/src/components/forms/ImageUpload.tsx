@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { IconUpload, IconClose, IconEye, IconAlertCircle } from "@/components/common/Icons";
 import { optimizeImageToWebP } from "@/lib/media/image-optimization";
-import { Modal } from "@/components/ui/Modal";
+import { GalleryLightboxModal, type GalleryItemMetadata } from "@/components/common/GalleryLightboxModal";
 import { useTranslations } from "next-intl";
 
 export interface ImageUploadProps {
@@ -144,29 +144,33 @@ export function ImageUpload({
       {label && <label className="erp-label">{label}</label>}
 
       {previewSrc ? (
-        <div className="relative inline-block group/preview">
-          <div className="relative h-36 w-36 overflow-hidden border border-erp-border bg-erp-surface-muted rounded-none">
+        <div className="relative inline-flex items-center justify-start group/preview">
+          <div className="relative h-32 w-32 shrink-0 overflow-hidden border border-erp-border bg-erp-surface-muted rounded-none">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewSrc}
               alt="Preview"
               className="h-full w-full object-cover rounded-none"
             />
+
+            {/* Hover overlay with Eye action */}
+            <button
+              type="button"
+              onClick={() => setIsLightboxOpen(true)}
+              className="absolute inset-0 bg-erp-navy/40 text-white rounded-none flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity focus-visible:outline-2 focus-visible:outline-white cursor-pointer"
+              title={t("view")}
+              aria-label={t("view")}
+            >
+              <span className="p-2 bg-erp-surface text-erp-navy rounded-none shadow-md">
+                <IconEye size={18} strokeWidth={2} />
+              </span>
+            </button>
           </div>
 
           <button
             type="button"
-            onClick={() => setIsLightboxOpen(true)}
-            className="absolute inset-0 bg-black/40 text-white rounded-none flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity focus-visible:outline-2 focus-visible:outline-white"
-            title={t("view")}
-            aria-label={t("view")}
-          >
-            <IconEye size={20} />
-          </button>
-          <button
-            type="button"
             onClick={handleRemove}
-            className="absolute -top-2 -right-2 h-6 w-6 bg-erp-danger text-white rounded-none flex items-center justify-center shadow-md transition-colors z-10 focus-visible:outline-2 focus-visible:outline-white"
+            className="absolute -top-2 -right-2 h-6 w-6 bg-erp-danger text-white rounded-none flex items-center justify-center shadow-md transition-colors z-10 focus-visible:outline-2 focus-visible:outline-white cursor-pointer hover:bg-red-700"
             title={t("delete")}
             aria-label={t("delete")}
           >
@@ -187,7 +191,7 @@ export function ImageUpload({
               fileInputRef.current?.click();
             }
           }}
-          className={`flex flex-col items-center justify-center w-36 h-36 border-2 border-dashed ${
+          className={`flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed ${
             isDragging
               ? "border-erp-navy bg-erp-navy-light"
               : "border-erp-border bg-erp-surface hover:border-erp-navy hover:bg-erp-surface-muted"
@@ -204,29 +208,28 @@ export function ImageUpload({
       )}
 
       {activeError && (
-        <p className="erp-error-text flex items-center gap-1" role="alert">
+        <p className="erp-error-text flex items-center gap-1 mt-1" role="alert">
           <IconAlertCircle size={12} />
           <span>{activeError}</span>
         </p>
       )}
 
-      {/* Lightweight Sharp Modal Lightbox */}
+      {/* Full Architectural Lightbox via GalleryLightboxModal */}
       {previewSrc && (
-        <Modal
+        <GalleryLightboxModal
           isOpen={isLightboxOpen}
           onClose={() => setIsLightboxOpen(false)}
-          size="lg"
+          items={[
+            {
+              id: "single-preview",
+              imageUrl: previewSrc,
+              caption: label || tForm("imagePreview"),
+            } as GalleryItemMetadata,
+          ]}
+          currentIndex={0}
+          onIndexChange={() => {}}
           title={label || tForm("imagePreview")}
-        >
-          <div className="flex items-center justify-center p-2 bg-erp-surface">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewSrc}
-              alt="Expanded Preview"
-              className="max-h-[70vh] max-w-full object-contain rounded-none border border-erp-border"
-            />
-          </div>
-        </Modal>
+        />
       )}
     </div>
   );

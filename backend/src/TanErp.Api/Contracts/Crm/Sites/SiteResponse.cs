@@ -1,5 +1,12 @@
 namespace TanErp.Api.Contracts.Crm.Sites;
 
+public sealed record SiteImageResponse(
+    Guid Id,
+    Guid FileId,
+    string? Caption,
+    int DisplayOrder,
+    DateTimeOffset CreatedAtUtc);
+
 public sealed record SiteSummaryResponse(
     Guid Id,
     string Label,
@@ -25,7 +32,8 @@ public sealed record SiteResponse(
     string? AccessNote,
     string Status,
     Guid RowVersion,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    IReadOnlyList<SiteImageResponse>? Images = null);
 
 public sealed record SiteListResponse(
     IReadOnlyList<SiteResponse> Items);

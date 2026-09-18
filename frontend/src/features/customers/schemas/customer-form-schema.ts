@@ -44,6 +44,8 @@ export const createCustomerFormSchema = (t: ValidationTranslator) =>
         lineId: z.string().trim().max(100, t("invalidFormat")).optional().or(z.literal("")),
         preferredChannel: z.enum(["phone", "email", "line", "other"]),
       }),
+      imageFile: z.custom<File | null>((val) => val === null || val === undefined || typeof File !== "undefined" && val instanceof File).optional(),
+      imageFileId: z.string().optional().nullable().or(z.literal("")),
     })
     .superRefine((data, ctx) => {
       // 1. Either phone or email must be present

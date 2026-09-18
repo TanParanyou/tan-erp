@@ -12,3 +12,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0008 — Typed Items และ Versioned Cost Records](0008-typed-items-versioned-cost-records.md)
 - [0009 — Immutable Ready Site Survey Revisions](0009-versioned-site-survey-revisions.md)
 - [0010 — Foundation Application Runtime](0010-foundation-application-runtime.md)
+- [0011 — Production-Grade Document Numbering Engine](0011-production-document-numbering-engine.md)

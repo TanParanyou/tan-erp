@@ -1,5 +1,9 @@
 namespace TanErp.Application.Crm.Sites.CreateSite;
 
+public sealed record CreateSiteImageInput(
+    Guid FileId,
+    string? Caption = null);
+
 public sealed record CreateSiteCommand(
     string FirebaseUid,
     Guid MembershipId,
@@ -15,4 +19,5 @@ public sealed record CreateSiteCommand(
     decimal? Latitude,
     decimal? Longitude,
     string? AccessNote,
-    string TraceId);
+    string TraceId,
+    IReadOnlyList<CreateSiteImageInput>? Images = null);

@@ -73,7 +73,8 @@ public class CustomersController : ControllerBase
                 request.PrimaryContact.LineId),
             traceId,
             request.LeadSource,
-            request.LeadSourceNote);
+            request.LeadSourceNote,
+            request.ImageFileId);
 
 
         var result = await _createHandler.Handle(command, cancellationToken);
@@ -295,7 +296,8 @@ public class CustomersController : ControllerBase
             customer.RowVersion,
             customer.CreatedAtUtc,
             customer.LeadSource,
-            customer.LeadSourceNote);
+            customer.LeadSourceNote,
+            customer.ImageFileId);
     }
 }
 

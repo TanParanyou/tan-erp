@@ -19,5 +19,6 @@ public sealed record CreateCustomerCommand(
     CreatePrimaryContact PrimaryContact,
     string TraceId,
     string? LeadSource = null,
-    string? LeadSourceNote = null);
+    string? LeadSourceNote = null,
+    Guid? ImageFileId = null);
 

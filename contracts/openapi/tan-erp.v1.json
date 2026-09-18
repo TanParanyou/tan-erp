@@ -179,7 +179,7 @@
                 "$ref": "#/components/schemas/CreateCustomerRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateCustomerRequest"
               }
@@ -876,7 +876,7 @@
                 "$ref": "#/components/schemas/CreateEstimateDraftRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateEstimateDraftRequest"
               }
@@ -1227,7 +1227,7 @@
                 "$ref": "#/components/schemas/UpdateEstimateDraftRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateEstimateDraftRequest"
               }
@@ -1415,7 +1415,7 @@
                 "$ref": "#/components/schemas/CalculateEstimateRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/CalculateEstimateRequest"
               }
@@ -1563,7 +1563,7 @@
                 "$ref": "#/components/schemas/CreateUploadSessionRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateUploadSessionRequest"
               }
@@ -1943,7 +1943,7 @@
                 "$ref": "#/components/schemas/CreateOpportunityRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateOpportunityRequest"
               }
@@ -2389,7 +2389,7 @@
                 "$ref": "#/components/schemas/UpdateDraftQGateRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateDraftQGateRequest"
               }
@@ -2586,7 +2586,7 @@
                 "$ref": "#/components/schemas/UpdateOpenOpportunityRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateOpenOpportunityRequest"
               }
@@ -2785,7 +2785,7 @@
                 "$ref": "#/components/schemas/TransitionOpportunityStageRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/TransitionOpportunityStageRequest"
               }
@@ -3084,7 +3084,7 @@
                 "$ref": "#/components/schemas/ReassignOpportunityOwnerRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/ReassignOpportunityOwnerRequest"
               }
@@ -3263,7 +3263,7 @@
                 "$ref": "#/components/schemas/AttachWorkImagesRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/AttachWorkImagesRequest"
               }
@@ -3755,7 +3755,7 @@
                 "$ref": "#/components/schemas/CreateSiteRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateSiteRequest"
               }
@@ -4052,7 +4052,7 @@
                 "$ref": "#/components/schemas/CreateSiteSurveyRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateSiteSurveyRequest"
               }
@@ -4370,7 +4370,7 @@
                 "$ref": "#/components/schemas/UpdateSurveyDraftRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateSurveyDraftRequest"
               }
@@ -4587,7 +4587,7 @@
                 "$ref": "#/components/schemas/MarkSurveyReadyRequest"
               }
             },
-            "application/*\u002Bjson": {
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/MarkSurveyReadyRequest"
               }
@@ -4970,7 +4970,7 @@
             "nullable": true
           }
         },
-        "additionalProperties": {}
+        "additionalProperties": { }
       },
       "AttachWorkImageItemRequest": {
         "type": "object",
@@ -5130,6 +5130,11 @@
           "leadSourceNote": {
             "type": "string",
             "nullable": true
+          },
+          "imageFileId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -5252,6 +5257,20 @@
         },
         "additionalProperties": false
       },
+      "CreateSiteImageRequest": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateSiteRequest": {
         "type": "object",
         "properties": {
@@ -5295,6 +5314,13 @@
           },
           "accessNote": {
             "type": "string",
+            "nullable": true
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateSiteImageRequest"
+            },
             "nullable": true
           }
         },
@@ -5519,6 +5545,11 @@
           },
           "leadSourceNote": {
             "type": "string",
+            "nullable": true
+          },
+          "imageFileId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         },
@@ -6241,6 +6272,32 @@
         },
         "additionalProperties": false
       },
+      "SiteImageResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "SiteListResponse": {
         "type": "object",
         "properties": {
@@ -6322,6 +6379,13 @@
           "createdAtUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SiteImageResponse"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -7062,7 +7126,7 @@
     "securitySchemes": {
       "Bearer": {
         "type": "http",
-        "description": "JWT Authorization header using the Bearer scheme. Example: \u0022Authorization: Bearer {token}\u0022",
+        "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
         "scheme": "Bearer",
         "bearerFormat": "JWT"
       }
@@ -7070,7 +7134,7 @@
   },
   "security": [
     {
-      "Bearer": []
+      "Bearer": [ ]
     }
   ],
   "tags": [

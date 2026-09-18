@@ -1,5 +1,9 @@
 namespace TanErp.Api.Contracts.Crm.Sites;
 
+public sealed record CreateSiteImageRequest(
+    Guid FileId,
+    string? Caption = null);
+
 public sealed record CreateSiteRequest(
     string Label,
     string AddressLine1,
@@ -10,4 +14,5 @@ public sealed record CreateSiteRequest(
     string CountryCode,
     decimal? Latitude = null,
     decimal? Longitude = null,
-    string? AccessNote = null);
+    string? AccessNote = null,
+    IReadOnlyList<CreateSiteImageRequest>? Images = null);

@@ -123,13 +123,14 @@ public class CreateCustomerHandler
                 command.PrimaryContact.LineId),
             now,
             command.LeadSource,
-            command.LeadSourceNote);
+            command.LeadSourceNote,
+            command.ImageFileId);
 
         var primaryContactEntity = customer.Contacts.First();
 
         // 5. Create deterministic hashes
         var keyHash = ComputeSha256Hex(command.IdempotencyKey);
-        var canonicalPayload = $"{command.CustomerType}|{CustomerNormalizer.CollapseWhitespace(command.DisplayNameTh)}|{CustomerNormalizer.CollapseWhitespace(command.DisplayNameEn ?? "")}|{command.PreferredLocale}|{command.LeadSource?.Trim() ?? ""}|{command.LeadSourceNote?.Trim() ?? ""}|{CustomerNormalizer.CollapseWhitespace(command.PrimaryContact.Name)}|{CustomerNormalizer.CollapseWhitespace(command.PrimaryContact.RoleTitle ?? "")}|{normalizedPhone ?? ""}|{normalizedEmail ?? ""}|{command.PrimaryContact.LineId?.Trim() ?? ""}|{command.PrimaryContact.PreferredChannel}";
+        var canonicalPayload = $"{command.CustomerType}|{CustomerNormalizer.CollapseWhitespace(command.DisplayNameTh)}|{CustomerNormalizer.CollapseWhitespace(command.DisplayNameEn ?? "")}|{command.PreferredLocale}|{command.LeadSource?.Trim() ?? ""}|{command.LeadSourceNote?.Trim() ?? ""}|{command.ImageFileId?.ToString() ?? ""}|{CustomerNormalizer.CollapseWhitespace(command.PrimaryContact.Name)}|{CustomerNormalizer.CollapseWhitespace(command.PrimaryContact.RoleTitle ?? "")}|{normalizedPhone ?? ""}|{normalizedEmail ?? ""}|{command.PrimaryContact.LineId?.Trim() ?? ""}|{command.PrimaryContact.PreferredChannel}";
         var payloadHash = ComputeSha256Hex(canonicalPayload);
 
         // 6. Audit Events (Changed fields only, never raw PII)

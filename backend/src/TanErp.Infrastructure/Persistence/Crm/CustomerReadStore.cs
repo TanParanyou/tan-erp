@@ -145,7 +145,8 @@ public class CustomerReadStore : ICustomerReadStore
             customer.RowVersion,
             customer.CreatedAtUtc,
             customer.LeadSource,
-            customer.LeadSourceNote);
+            customer.LeadSourceNote,
+            customer.ImageFileId);
 
     }
 

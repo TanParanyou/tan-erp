@@ -27,14 +27,22 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(x => x.PreferredLocale).HasColumnName("preferred_locale").HasMaxLength(10).IsRequired();
         builder.Property(x => x.LeadSource).HasColumnName("lead_source").HasMaxLength(50);
         builder.Property(x => x.LeadSourceNote).HasColumnName("lead_source_note").HasMaxLength(200);
+        builder.Property(x => x.ImageFileId).HasColumnName("image_file_id");
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
+
+        builder.HasIndex(x => x.ImageFileId);
 
         builder.HasOne<Organization>()
             .WithMany()
             .HasForeignKey(x => x.OrganizationId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<TanErp.Domain.Files.UploadedFile>()
+            .WithMany()
+            .HasForeignKey(x => x.ImageFileId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasMany(x => x.Contacts)
             .WithOne(x => x.Customer)

@@ -25,6 +25,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Crm.Customers.Customer> Customers => Set<TanErp.Domain.Crm.Customers.Customer>();
     public DbSet<TanErp.Domain.Crm.Customers.CustomerContact> CustomerContacts => Set<TanErp.Domain.Crm.Customers.CustomerContact>();
     public DbSet<TanErp.Domain.Crm.Sites.Site> Sites => Set<TanErp.Domain.Crm.Sites.Site>();
+    public DbSet<TanErp.Domain.Crm.Sites.SiteImage> SiteImages => Set<TanErp.Domain.Crm.Sites.SiteImage>();
     public DbSet<TanErp.Domain.Crm.Opportunities.Opportunity> Opportunities => Set<TanErp.Domain.Crm.Opportunities.Opportunity>();
     public DbSet<TanErp.Domain.Crm.Opportunities.OpportunityStageHistory> OpportunityStageHistories => Set<TanErp.Domain.Crm.Opportunities.OpportunityStageHistory>();
     public DbSet<TanErp.Domain.Crm.Opportunities.OpportunityWorkImage> OpportunityWorkImages => Set<TanErp.Domain.Crm.Opportunities.OpportunityWorkImage>();

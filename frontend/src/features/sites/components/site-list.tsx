@@ -9,6 +9,8 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
 import { IconPlus, IconAlertCircle, IconMapPin } from "@/components/common/Icons";
+import { SiteDetailDrawer } from "./site-detail-drawer";
+import type { SiteResponse } from "@/lib/api/api-client";
 
 interface SiteListProps {
   customerId: string;
@@ -20,6 +22,14 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
+
+  const [selectedSite, setSelectedSite] = React.useState<SiteResponse | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+
+  const handleOpenSiteDrawer = (site: SiteResponse) => {
+    setSelectedSite(site);
+    setIsDrawerOpen(true);
+  };
 
   const hasReadPermission = can(selectedMembership, "sites.read");
   const hasManagePermission = can(selectedMembership, "sites.manage");
@@ -95,20 +105,45 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
                 <th className="erp-th text-left">{t("addressLine1")}</th>
                 <th className="erp-th text-left">{t("province")}</th>
                 <th className="erp-th text-left">{t("postalCode")}</th>
+                <th className="erp-th text-center">{t("sitePhotos")}</th>
                 <th className="erp-th text-center">{t("status")}</th>
               </tr>
             </thead>
             <tbody>
               {data.items.map((site) => (
-                <tr key={site.id} className="erp-tr">
+                <tr
+                  key={site.id}
+                  className="erp-tr hover:bg-erp-surface-subtle cursor-pointer transition-colors"
+                  onClick={() => handleOpenSiteDrawer(site)}
+                >
                   <td className="erp-td font-semibold text-erp-navy">
-                    {site.label}
+                    <button
+                      type="button"
+                      className="text-left font-semibold text-erp-navy hover:underline focus:outline-none"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenSiteDrawer(site);
+                      }}
+                    >
+                      {site.label}
+                    </button>
                   </td>
                   <td className="erp-td">
                     <div>{site.addressLine1}</div>
                   </td>
                   <td className="erp-td">{site.province}</td>
                   <td className="erp-td font-mono">{site.postalCode}</td>
+                  <td className="erp-td text-center">
+                    {site.images && site.images.length > 0 ? (
+                      <span className="erp-badge erp-badge-navy font-mono text-xs">
+                        {t("photoCount", { count: site.images.length })}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-neutral-400">
+                        {t("noPhotos")}
+                      </span>
+                    )}
+                  </td>
                   <td className="erp-td text-center">
                     <span
                       className={`erp-badge ${
@@ -124,6 +159,16 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
           </table>
         </div>
       )}
+
+      {/* Site Detail Drawer */}
+      <SiteDetailDrawer
+        site={selectedSite}
+        isOpen={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setSelectedSite(null);
+        }}
+      />
     </div>
   );
 }

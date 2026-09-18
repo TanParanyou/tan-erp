@@ -62,7 +62,8 @@ public class SitesController : ControllerBase
             request.Latitude,
             request.Longitude,
             request.AccessNote,
-            traceId);
+            traceId,
+            request.Images?.Select(i => new CreateSiteImageInput(i.FileId, i.Caption)).ToList());
 
         var result = await _createHandler.Handle(command, cancellationToken);
         if (result.IsFailure)
@@ -131,5 +132,11 @@ public class SitesController : ControllerBase
         s.AccessNote,
         s.Status,
         s.RowVersion,
-        s.CreatedAtUtc);
+        s.CreatedAtUtc,
+        s.Images?.Select(img => new SiteImageResponse(
+            img.Id,
+            img.FileId,
+            img.Caption,
+            img.DisplayOrder,
+            img.CreatedAtUtc)).ToList());
 }

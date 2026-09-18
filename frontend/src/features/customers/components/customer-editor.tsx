@@ -19,6 +19,8 @@ import { FormActionBar } from "@/components/forms/FormActionBar";
 import { FormSection } from "@/components/forms/FormSection";
 import { PhoneInput } from "@/components/forms/PhoneInput";
 import { SelectWithOther } from "@/components/forms/SelectWithOther";
+import { ImageUpload } from "@/components/forms/ImageUpload";
+import { fileClient } from "@/lib/api/file-client";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 import { useToast } from "@/hooks/useToast";
@@ -95,6 +97,8 @@ export function CustomerEditor() {
       preferredLocale: locale === "en" ? "en" : "th",
       leadSource: "",
       leadSourceNote: "",
+      imageFile: null,
+      imageFileId: "",
       primaryContact: {
         name: "",
         roleTitle: "",
@@ -161,6 +165,46 @@ export function CustomerEditor() {
 
     try {
       idempotencyKeyRef.current ??= crypto.randomUUID();
+
+      let uploadedImageFileId: string | undefined = values.imageFileId || undefined;
+      if (values.imageFile && values.imageFile instanceof File) {
+        const sessionRes = await fileClient.createSession(
+          {
+            files: [
+              {
+                filename: values.imageFile.name,
+                mediaType: values.imageFile.type || "image/webp",
+                fileSizeBytes: values.imageFile.size,
+              },
+            ],
+          },
+          {
+            token,
+            membershipId,
+            idempotencyKey: `file-sess-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+            locale: locale === "en" ? "en" : "th",
+          }
+        );
+
+        if (!sessionRes.sessionId) {
+          throw new Error("Failed to create file upload session.");
+        }
+
+        const completeRes = await fileClient.completeSession(
+          sessionRes.sessionId,
+          [values.imageFile],
+          {
+            token,
+            membershipId,
+            locale: locale === "en" ? "en" : "th",
+          }
+        );
+
+        if (completeRes.files && completeRes.files.length > 0 && completeRes.files[0].fileId) {
+          uploadedImageFileId = completeRes.files[0].fileId;
+        }
+      }
+
       const created = await apiClient.createCustomer(
         {
           customerType: values.customerType,
@@ -169,6 +213,7 @@ export function CustomerEditor() {
           preferredLocale: values.preferredLocale,
           leadSource: values.leadSource || undefined,
           leadSourceNote: values.leadSource === "other" ? values.leadSourceNote || undefined : undefined,
+          imageFileId: uploadedImageFileId,
           primaryContact: {
             name: values.primaryContact.name,
             roleTitle: values.primaryContact.roleTitle || undefined,
@@ -410,6 +455,30 @@ export function CustomerEditor() {
               />
             )}
           />
+
+          {/* Customer Image / Profile Photo */}
+          <div className="mt-2">
+            <Controller
+              name="imageFile"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <ImageUpload
+                    label={t("imageUploadLabel")}
+                    value={field.value ?? undefined}
+                    onChange={(file) => {
+                      field.onChange(file);
+                      handleFormChange();
+                    }}
+                    error={errors.imageFile?.message}
+                  />
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {t("imageUploadHint")}
+                  </p>
+                </div>
+              )}
+            />
+          </div>
         </FormSection>
 
         {/* Card 2: Primary Contact Section */}

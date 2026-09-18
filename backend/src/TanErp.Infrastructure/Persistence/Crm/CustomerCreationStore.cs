@@ -188,7 +188,8 @@ public class CustomerCreationStore : ICustomerCreationStore
             customer.RowVersion,
             customer.CreatedAtUtc,
             customer.LeadSource,
-            customer.LeadSourceNote);
+            customer.LeadSourceNote,
+            customer.ImageFileId);
 
     }
 

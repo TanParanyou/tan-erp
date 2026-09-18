@@ -18,6 +18,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { apiClient } from "@/lib/api/api-client";
+import { fileClient } from "@/lib/api/file-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/useToast";
@@ -179,6 +180,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         }
         avatar={
           <Avatar
+            src={customer.imageFileId ? fileClient.getFileUrl(customer.imageFileId) : null}
             initial={customer.displayNameTh || customer.displayNameEn || undefined}
             variant={customer.customerType === "organization" ? "navy" : "muted"}
             size="lg"

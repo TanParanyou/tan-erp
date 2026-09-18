@@ -23,6 +23,8 @@ import { type SelectedAddress } from "@/components/forms/AddressAutocomplete";
 import { AddressAreaField } from "@/components/forms/AddressAreaField";
 import { QuickNoteChips } from "@/components/forms/QuickNoteChips";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { MultiImagePicker, type PendingImageItem } from "@/components/forms/MultiImagePicker";
+import { fileClient } from "@/lib/api/file-client";
 import { useToast } from "@/hooks/useToast";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { IconAlertCircle, IconMapPin } from "@/components/common/Icons";
@@ -46,6 +48,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [pendingImages, setPendingImages] = useState<PendingImageItem[]>([]);
 
   const idempotencyKeyRef = useRef<string | null>(null);
   const failedSubmissionRef = useRef(false);
@@ -176,6 +179,54 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
     }
 
     try {
+      const stillOptimizing = pendingImages.some((i) => i.isOptimizing);
+      if (stillOptimizing) {
+        toast.warning(tCommon("states.loading"));
+        return;
+      }
+
+      let uploadedImages: { fileId: string; caption?: string }[] | undefined = undefined;
+
+      if (pendingImages.length > 0) {
+        const filesToUpload = pendingImages.map((i) => i.optimizedFile ?? i.originalFile);
+        const sessionRes = await fileClient.createSession(
+          {
+            files: filesToUpload.map((f) => ({
+              filename: f.name,
+              mediaType: f.type || "image/webp",
+              fileSizeBytes: f.size,
+            })),
+          },
+          {
+            token,
+            membershipId,
+            idempotencyKey: crypto.randomUUID(),
+            locale: locale === "en" ? "en" : "th",
+          }
+        );
+
+        if (!sessionRes.sessionId) {
+          throw new Error("Failed to create file upload session.");
+        }
+
+        const completeRes = await fileClient.completeSession(
+          sessionRes.sessionId,
+          filesToUpload,
+          {
+            token,
+            membershipId,
+            locale: locale === "en" ? "en" : "th",
+          }
+        );
+
+        if (completeRes.files && completeRes.files.length > 0) {
+          uploadedImages = completeRes.files.map((cf, idx) => ({
+            fileId: cf.fileId ?? "",
+            caption: pendingImages[idx]?.caption?.trim() || undefined,
+          })).filter((item) => Boolean(item.fileId));
+        }
+      }
+
       idempotencyKeyRef.current ??= crypto.randomUUID();
       await apiClient.createSite(
         customerId,
@@ -190,6 +241,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
           latitude: values.latitude !== null && values.latitude !== undefined ? Number(values.latitude) : undefined,
           longitude: values.longitude !== null && values.longitude !== undefined ? Number(values.longitude) : undefined,
           accessNote: values.accessNote || undefined,
+          images: uploadedImages,
         },
         {
           token,
@@ -336,6 +388,23 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                 templates={siteAccessTemplates}
                 onSelect={handleAppendAccessNote}
                 disabled={isSubmitting}
+              />
+            </FormSection>
+
+            {/* Site Photos Section */}
+            <FormSection title={t("sitePhotos")}>
+              <p className="text-xs text-neutral-500 -mt-2 mb-3">
+                {t("sitePhotosSubtitle")}
+              </p>
+              <MultiImagePicker
+                items={pendingImages}
+                onChange={(items) => {
+                  setPendingImages(items);
+                  handleFormChange();
+                }}
+                disabled={isSubmitting}
+                maxFiles={20}
+                enableCamera={true}
               />
             </FormSection>
           </div>
