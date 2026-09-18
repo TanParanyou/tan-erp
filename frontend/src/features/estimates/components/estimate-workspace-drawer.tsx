@@ -22,6 +22,7 @@ import {
   useUpdateEstimateDraft,
   useCalculateEstimate,
 } from "@/features/estimates/api/estimate-queries";
+import { ApiError } from "@/lib/api/api-error";
 import {
   estimateWorkspaceSchema,
   type EstimateWorkspaceFormData,
@@ -351,8 +352,17 @@ export function EstimateWorkspaceDrawer({
       toast.success(t("saveDraftSuccess"));
       reset(formData);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : tc("alerts.errorTitle");
-      toast.error(msg);
+      if (err instanceof ApiError) {
+        if (err.code === "ESTIMATE_VERSION_CONFLICT") {
+          toast.error(t("versionConflict"));
+        } else if (err.code === "ESTIMATE_INVALID_STATE") {
+          toast.error(t("invalidState"));
+        } else {
+          toast.error(t("saveDraftFailed"));
+        }
+      } else {
+        toast.error(tc("alerts.errorTitle"));
+      }
     }
   };
 
@@ -388,8 +398,17 @@ export function EstimateWorkspaceDrawer({
       toast.success(t("calculateSuccess"));
       reset(formData);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : tc("alerts.errorTitle");
-      toast.error(msg);
+      if (err instanceof ApiError) {
+        if (err.code === "ESTIMATE_VERSION_CONFLICT") {
+          toast.error(t("versionConflict"));
+        } else if (err.code === "ESTIMATE_INVALID_STATE") {
+          toast.error(t("invalidState"));
+        } else {
+          toast.error(t("calculateFailed"));
+        }
+      } else {
+        toast.error(tc("alerts.errorTitle"));
+      }
     }
   };
 
@@ -557,6 +576,7 @@ export function EstimateWorkspaceDrawer({
                 name="discountAmount"
                 render={({ field }) => (
                   <Input
+                    id="estimate-discount-input"
                     type="number"
                     step="100"
                     min="0"

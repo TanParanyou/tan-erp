@@ -568,9 +568,12 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                         siteSurveySnapshotHash: survey?.currentRevision?.snapshotHash,
                         currency: "THB",
                       });
-                      toast.success(tEstimates("createSuccess"));
-                    } catch {
-                      toast.error(tCommon("error"));
+                    } catch (err: unknown) {
+                      if (err instanceof ApiError && err.code === "ESTIMATE_VERSION_CONFLICT") {
+                        toast.error(tEstimates("versionConflict"));
+                      } else {
+                        toast.error(tEstimates("createFailed"));
+                      }
                     }
                   }}
                 />

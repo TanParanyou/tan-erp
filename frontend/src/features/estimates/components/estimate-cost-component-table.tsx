@@ -44,7 +44,7 @@ export function EstimateCostComponentTable({
   const handleAddCost = () => {
     append({
       type: "material",
-      description: "",
+      description: t("defaultMaterial"),
       quantity: 1,
       unitCode: "lot",
       unitCost: 0,
@@ -216,6 +216,7 @@ export function EstimateCostComponentTable({
                       name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.description`}
                       render={({ field: inputField }) => (
                         <Input
+                          id={`cost-component-desc-${sectionIndex}-${itemIndex}-${cIdx}`}
                           value={inputField.value ?? ""}
                           placeholder={t("costDescPlaceholder")}
                           onChange={inputField.onChange}
@@ -253,6 +254,7 @@ export function EstimateCostComponentTable({
                       name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.unitCost`}
                       render={({ field: costField }) => (
                         <Input
+                          id={`cost-component-unit-cost-${sectionIndex}-${itemIndex}-${cIdx}`}
                           type="number"
                           step="any"
                           min="0"
