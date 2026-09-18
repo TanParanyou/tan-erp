@@ -93,6 +93,7 @@
 | บันทึกผลการตรวจสอบ Opportunity Draft Q-Gate Slice | [Opportunity Draft Q-Gate Verification](05-engineering/opportunity-draft-q-gate-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Outcome Slice | [Opportunity Outcome Verification](05-engineering/opportunity-outcome-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Hardening & Readiness | [Opportunity Hardening Verification](05-engineering/opportunity-hardening-verification.md) |
+| บันทึกผลการตรวจสอบ Site Survey Slice | [Site Survey Verification](05-engineering/site-survey-verification.md) |
 | คำสั่งและ Workflow การพัฒนา (Makefile) | [Quickstart with Make](../README.md#การเริ่มต้นระบบอย่างรวดเร็วด้วย-make-quickstart-with-make) |
 
 ## สถานะเอกสาร

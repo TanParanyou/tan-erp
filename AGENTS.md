@@ -14,7 +14,7 @@
 
 ## Current phase
 
-This repository is in **Application Implementation**. The authorized implementation boundary is the **Opportunity Work Images vertical slice (Slice 1A)** documented in `docs/superpowers/plans/2026-09-13-opportunity-work-images-vertical-slice.md`. This slice covers multi-image work photo attachment for Open Opportunities (`draft`, `qualified`, `surveying`, `estimating`, `proposed`), thumbnail/lightbox gallery, per-image captions, and backend file verification/storage integration. Customer lifecycle transitions beyond activation, Site edit/deactivation, Survey revision readiness, Estimation calculation, Item, Commercial, Project, Procurement, Inventory, Production, and MRP behavior remain deferred without a separately approved implementation task.
+This repository is in **Application Implementation**. The authorized implementation boundary covers the **Opportunity Work Images vertical slice (Slice 1A)** and the **Site Survey Vertical Slice (Slice 4)** documented in `docs/superpowers/plans/2026-09-13-opportunity-work-images-vertical-slice.md` and `docs/05-engineering/site-survey-verification.md`. This slice covers multi-image work photo attachment for Open Opportunities, site survey appointment scheduling, surveying stage transitions, survey workspace with areas/measurements/notes, survey revision readiness gates (Mark Ready) with snapshot hashing, and automatic progression to the estimating stage. Customer lifecycle transitions beyond activation, Site edit/deactivation, Estimation calculation, Item, Commercial, Project, Procurement, Inventory, Production, and MRP behavior remain deferred without a separately approved implementation task.
 
 ## Product boundaries
 

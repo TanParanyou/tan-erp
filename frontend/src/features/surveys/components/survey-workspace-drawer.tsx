@@ -197,7 +197,9 @@ export function SurveyWorkspaceDrawer({
     const result = validateSurveyReadiness(formData);
 
     if (!result.isValid && result.errorKey) {
-      const translatedMsg = t(result.errorKey as Parameters<typeof t>[0], result.errorParams as any);
+      const translatedMsg = result.errorParams
+        ? t(result.errorKey as Parameters<typeof t>[0], result.errorParams)
+        : t(result.errorKey as Parameters<typeof t>[0]);
       setValidationError(translatedMsg);
       return;
     }
