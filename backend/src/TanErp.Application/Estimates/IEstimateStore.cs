@@ -54,13 +54,14 @@ public interface IEstimateStore
         string traceId,
         CancellationToken cancellationToken);
 
-    Task<AcceptQuotationProjection> AcceptQuotationAsync(
+    Task<Result<AcceptQuotationProjection>> AcceptQuotationAsync(
         Guid organizationId,
         Guid estimateId,
         Guid expectedOpportunityVersion,
         string? decisionNote,
         Guid actorUserId,
-        string idempotencyKey,
+        string keyHash,
+        string payloadHash,
         string traceId,
         CancellationToken cancellationToken);
 }

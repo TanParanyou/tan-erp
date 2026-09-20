@@ -37,39 +37,19 @@ public class AcceptQuotationHandler
         }
 
         var access = accessResult.Value!;
-        try
-        {
-            var result = await _store.AcceptQuotationAsync(
-                access.OrganizationId,
-                command.EstimateId,
-                command.ExpectedOpportunityVersion,
-                command.DecisionNote,
-                access.ActorUserId,
-                idempotencyKey,
-                command.TraceId,
-                cancellationToken);
+        var keyHash = Sha256Hex.Compute(idempotencyKey);
+        var canonicalPayload = $"{command.EstimateId}|{command.ExpectedOpportunityVersion}";
+        var payloadHash = Sha256Hex.Compute(canonicalPayload);
 
-            return Result<AcceptQuotationProjection>.Success(result);
-        }
-        catch (EstimateNotFoundException)
-        {
-            return Result<AcceptQuotationProjection>.Failure(
-                new Error("RESOURCE_NOT_FOUND", $"Estimate '{command.EstimateId}' was not found."));
-        }
-        catch (OpportunityVersionException)
-        {
-            return Result<AcceptQuotationProjection>.Failure(
-                new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
-        }
-        catch (OpportunityTransitionException ex)
-        {
-            return Result<AcceptQuotationProjection>.Failure(
-                new Error("OPPORTUNITY_INVALID_TRANSITION", ex.Message));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result<AcceptQuotationProjection>.Failure(
-                new Error("INVALID_STATE", ex.Message));
-        }
+        return await _store.AcceptQuotationAsync(
+            access.OrganizationId,
+            command.EstimateId,
+            command.ExpectedOpportunityVersion,
+            command.DecisionNote,
+            access.ActorUserId,
+            keyHash,
+            payloadHash,
+            command.TraceId,
+            cancellationToken);
     }
 }

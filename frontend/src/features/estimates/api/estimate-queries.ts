@@ -173,7 +173,7 @@ export function useCalculateEstimate(
 export function useIssueQuotation(
   opportunityId: string,
   estimateId: string
-): UseMutationResult<QuotationResponse, Error, IssueQuotationRequest> {
+): UseMutationResult<QuotationResponse, Error, { payload: IssueQuotationRequest; idempotencyKey?: string }> {
   const queryClient = useQueryClient();
   const locale = useSafeLocale();
   const normalizedLocale = locale === "en" ? "en" : "th";
@@ -181,7 +181,7 @@ export function useIssueQuotation(
   const membershipId = selectedMembership?.id;
 
   return useMutation({
-    mutationFn: async (payload: IssueQuotationRequest) => {
+    mutationFn: async ({ payload, idempotencyKey }) => {
       const token = await getAuthToken();
       if (!token) throw new AuthenticationRequiredError();
       if (!membershipId) throw new MembershipRequiredError();
@@ -189,7 +189,7 @@ export function useIssueQuotation(
       return apiClient.issueQuotation(estimateId, payload, {
         token,
         membershipId,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
         locale: normalizedLocale,
       });
     },
@@ -207,7 +207,7 @@ export function useIssueQuotation(
 export function useAcceptQuotation(
   opportunityId: string,
   estimateId: string
-): UseMutationResult<AcceptQuotationResponse, Error, AcceptQuotationRequest> {
+): UseMutationResult<AcceptQuotationResponse, Error, { payload: AcceptQuotationRequest; idempotencyKey?: string }> {
   const queryClient = useQueryClient();
   const locale = useSafeLocale();
   const normalizedLocale = locale === "en" ? "en" : "th";
@@ -215,7 +215,7 @@ export function useAcceptQuotation(
   const membershipId = selectedMembership?.id;
 
   return useMutation({
-    mutationFn: async (payload: AcceptQuotationRequest) => {
+    mutationFn: async ({ payload, idempotencyKey }) => {
       const token = await getAuthToken();
       if (!token) throw new AuthenticationRequiredError();
       if (!membershipId) throw new MembershipRequiredError();
@@ -223,7 +223,7 @@ export function useAcceptQuotation(
       return apiClient.acceptQuotation(estimateId, payload, {
         token,
         membershipId,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
         locale: normalizedLocale,
       });
     },

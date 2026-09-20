@@ -86,6 +86,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const customerDrawer = useDisclosure();
 
   const qualificationIntentRef = useRef<QualificationIntent | null>(null);
+  const acceptIntentKeyRef = useRef<{ versionKey: string; idempotencyKey: string } | null>(null);
 
   const {
     data: opportunity,
@@ -174,6 +175,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const isDraft = opportunity?.stage === "draft";
   const isQualified = opportunity?.stage === "qualified";
   const isProposed = opportunity?.stage === "proposed";
+  const isWon = opportunity?.stage === "won";
   const isOpen =
     opportunity?.stage === "draft" ||
     opportunity?.stage === "qualified" ||
@@ -184,7 +186,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const canTransition = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_TRANSITION);
   const canUpdate = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_UPDATE);
   const canCreateSurvey = can(selectedMembership, PERMISSIONS.SURVEYS_CREATE);
-  const canAccept = can(selectedMembership, PERMISSIONS.QUOTATIONS_ACCEPT) || canTransition;
+  const canAccept = can(selectedMembership, PERMISSIONS.QUOTATIONS_ACCEPT);
   const canQualify = isDraft && canTransition && isQGateEligible;
   const canScheduleSurvey = isQualified && canCreateSurvey;
   const canAcceptQuotation = isProposed && Boolean(estimate) && canAccept;
@@ -192,12 +194,31 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const canClose = isOpen && canTransition;
   const canReopen = isClosed && canTransition;
 
+  const handleCancelAcceptQuotation = () => {
+    acceptIntentKeyRef.current = null;
+    acceptQuotationModal.close();
+  };
+
   const handleConfirmAcceptQuotation = async () => {
     if (!opportunity || !opportunity.id || !opportunity.rowVersion || !estimate || !estimate.id) return;
+
+    const currentVersionKey = `${opportunity.rowVersion}`;
+    let idempKey: string;
+    if (acceptIntentKeyRef.current && acceptIntentKeyRef.current.versionKey === currentVersionKey) {
+      idempKey = acceptIntentKeyRef.current.idempotencyKey;
+    } else {
+      idempKey = crypto.randomUUID();
+      acceptIntentKeyRef.current = { versionKey: currentVersionKey, idempotencyKey: idempKey };
+    }
+
     try {
       await acceptQuotationMutation.mutateAsync({
-        expectedOpportunityVersion: opportunity.rowVersion,
+        payload: {
+          expectedOpportunityVersion: opportunity.rowVersion,
+        },
+        idempotencyKey: idempKey,
       });
+      acceptIntentKeyRef.current = null;
       acceptQuotationModal.close();
       toast.success(t("quotationAcceptedSuccess"));
     } catch (err: unknown) {
@@ -582,6 +603,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                 <EstimateCard
                   estimate={estimate ?? null}
                   opportunityId={opportunity.id}
+                  opportunityRowVersion={opportunity.rowVersion}
                   customerId={opportunity.customer?.id}
                   branchId={opportunity.branch?.id}
                   siteSurveyRevisionId={survey?.currentRevision?.id}
@@ -892,7 +914,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
       <ConfirmationModal
         isOpen={acceptQuotationModal.isOpen}
-        onClose={acceptQuotationModal.close}
+        onClose={handleCancelAcceptQuotation}
         onConfirm={handleConfirmAcceptQuotation}
         title={t("acceptQuotationModalTitle")}
         message={t("acceptQuotationModalDesc")}

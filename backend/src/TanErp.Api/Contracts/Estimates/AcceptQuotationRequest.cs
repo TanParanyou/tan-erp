@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TanErp.Api.Contracts.Estimates;
 
 public sealed record AcceptQuotationRequest(
-    Guid ExpectedOpportunityVersion,
+    [Required] Guid ExpectedOpportunityVersion,
     string? DecisionNote);
 
 public sealed record AcceptQuotationResponse(

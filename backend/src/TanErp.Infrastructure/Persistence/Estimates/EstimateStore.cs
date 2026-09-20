@@ -712,49 +712,115 @@ public class EstimateStore : IEstimateStore
         });
     }
 
-    public async Task<AcceptQuotationProjection> AcceptQuotationAsync(
+    public async Task<Result<AcceptQuotationProjection>> AcceptQuotationAsync(
         Guid organizationId,
         Guid estimateId,
         Guid expectedOpportunityVersion,
         string? decisionNote,
         Guid actorUserId,
-        string idempotencyKey,
+        string keyHash,
+        string payloadHash,
         string traceId,
         CancellationToken cancellationToken)
     {
         var strategy = _db.Database.CreateExecutionStrategy();
+        const string operation = "quotations.accept";
         return await strategy.ExecuteAsync(async () =>
         {
             await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
 
+            // 1. Replay check precedes Won/state/version checks
+            var existingRecord = await _db.IdempotencyRecords
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    row => row.OrganizationId == organizationId &&
+                           row.Operation == operation &&
+                           row.KeyHash == keyHash,
+                    cancellationToken);
+
+            if (existingRecord is not null)
+            {
+                if (existingRecord.PayloadHash != payloadHash)
+                {
+                    return Result<AcceptQuotationProjection>.Failure(new Error(
+                        "IDEMPOTENCY_KEY_REUSED",
+                        "The idempotency key has already been used with a different payload."));
+                }
+
+                if (Guid.TryParse(existingRecord.ResourceId, out var replayQuotationId))
+                {
+                    var replayQuotation = await _db.Quotations
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(q => q.Id == replayQuotationId && q.OrganizationId == organizationId, cancellationToken);
+
+                    if (replayQuotation is not null)
+                    {
+                        var replayOpp = await _db.Opportunities
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(o => o.Id == replayQuotation.OpportunityId && o.OrganizationId == organizationId, cancellationToken);
+
+                        if (replayOpp is not null)
+                        {
+                            return Result<AcceptQuotationProjection>.Success(new AcceptQuotationProjection(
+                                replayQuotation.Id,
+                                replayOpp.Id,
+                                replayOpp.Stage,
+                                replayOpp.RowVersion,
+                                replayQuotation.AcceptedAtUtc ?? replayQuotation.UpdatedAtUtc));
+                        }
+                    }
+                }
+            }
+
+            // 2. Load scoped entities
             var estimate = await _db.Estimates
                 .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.Id == estimateId, cancellationToken);
 
             if (estimate is null)
-                throw new EstimateNotFoundException(estimateId);
+            {
+                return Result<AcceptQuotationProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", $"Estimate '{estimateId}' was not found."));
+            }
 
             var opp = await _db.Opportunities
                 .FirstOrDefaultAsync(o => o.OrganizationId == organizationId && o.Id == estimate.OpportunityId, cancellationToken);
 
             if (opp is null)
-                throw new InvalidOperationException($"Opportunity '{estimate.OpportunityId}' not found.");
+            {
+                return Result<AcceptQuotationProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", $"Opportunity '{estimate.OpportunityId}' was not found."));
+            }
 
             var quotation = await _db.Quotations
                 .FirstOrDefaultAsync(q => q.OrganizationId == organizationId && q.EstimateId == estimateId, cancellationToken);
 
             if (quotation is null)
-                throw new InvalidOperationException($"No quotation found for estimate '{estimateId}'.");
-
-            if (opp.Stage == OpportunityStage.Won)
             {
-                return new AcceptQuotationProjection(
-                    quotation.Id,
-                    opp.Id,
-                    opp.Stage,
-                    opp.RowVersion,
-                    quotation.AcceptedAtUtc ?? quotation.UpdatedAtUtc);
+                return Result<AcceptQuotationProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", $"No quotation found for estimate '{estimateId}'."));
             }
 
+            // 3. Stage and Concurrency validation
+            // If already Won and not a replay of the original winning idempotency key: reject!
+            if (opp.Stage == OpportunityStage.Won)
+            {
+                return Result<AcceptQuotationProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Opportunity is already in 'won' stage."));
+            }
+
+            if (opp.RowVersion != expectedOpportunityVersion)
+            {
+                return Result<AcceptQuotationProjection>.Failure(
+                    new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
+            }
+
+            if (opp.Stage != OpportunityStage.Proposed)
+            {
+                return Result<AcceptQuotationProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", $"Opportunity must be in 'proposed' stage to accept quotation. Current stage is '{opp.Stage}'."));
+            }
+
+            // 4. Perform Transition and Accept
             var prevOppStage = opp.Stage;
             opp.MarkWon(expectedOpportunityVersion);
             quotation.Accept(_clock.UtcNow);
@@ -774,6 +840,7 @@ public class EstimateStore : IEstimateStore
 
             _db.OpportunityStageHistories.Add(history);
 
+            // Audits omit decision note
             var oppAudit = new AuditEvent(
                 Guid.NewGuid(),
                 organizationId,
@@ -808,15 +875,76 @@ public class EstimateStore : IEstimateStore
             _db.AddAuditEvent(oppAudit);
             _db.AddAuditEvent(quoteAudit);
 
-            await _db.SaveChangesAsync(cancellationToken);
-            await tx.CommitAsync(cancellationToken);
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(
+                Guid.NewGuid(),
+                organizationId,
+                operation,
+                keyHash,
+                payloadHash,
+                quotation.Id.ToString(),
+                _clock.UtcNow));
 
-            return new AcceptQuotationProjection(
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException pg && pg.SqlState == "23505")
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+
+                var winnerRecord = await _db.IdempotencyRecords
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        row => row.OrganizationId == organizationId &&
+                               row.Operation == operation &&
+                               row.KeyHash == keyHash,
+                        cancellationToken);
+
+                if (winnerRecord is not null)
+                {
+                    if (winnerRecord.PayloadHash != payloadHash)
+                    {
+                        return Result<AcceptQuotationProjection>.Failure(new Error(
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "The idempotency key has already been used with a different payload."));
+                    }
+
+                    if (Guid.TryParse(winnerRecord.ResourceId, out var winnerQuotationId))
+                    {
+                        var winnerQuotation = await _db.Quotations
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(q => q.Id == winnerQuotationId && q.OrganizationId == organizationId, cancellationToken);
+
+                        if (winnerQuotation is not null)
+                        {
+                            var winnerOpp = await _db.Opportunities
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(o => o.Id == winnerQuotation.OpportunityId && o.OrganizationId == organizationId, cancellationToken);
+
+                            if (winnerOpp is not null)
+                            {
+                                return Result<AcceptQuotationProjection>.Success(new AcceptQuotationProjection(
+                                    winnerQuotation.Id,
+                                    winnerOpp.Id,
+                                    winnerOpp.Stage,
+                                    winnerOpp.RowVersion,
+                                    winnerQuotation.AcceptedAtUtc ?? winnerQuotation.UpdatedAtUtc));
+                            }
+                        }
+                    }
+                }
+
+                throw;
+            }
+
+            return Result<AcceptQuotationProjection>.Success(new AcceptQuotationProjection(
                 quotation.Id,
                 opp.Id,
                 opp.Stage,
                 opp.RowVersion,
-                quotation.AcceptedAtUtc!.Value);
+                quotation.AcceptedAtUtc!.Value));
         });
     }
 

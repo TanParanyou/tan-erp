@@ -885,4 +885,105 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.NotEqual(q1.Number, q2.Number);
         Assert.NotEqual(q1.QuotationId, q2.QuotationId);
     }
+
+    [Fact]
+    public async Task AcceptQuotation_ReplaySameIntent_ReturnsSameWonResultWithoutDuplicateEffects()
+    {
+        var (estimate, opp, _) = await SetupCalculatedEstimateAsync($"accept-{Guid.NewGuid():N}");
+
+        // 1. Issue quotation to get into Proposed stage
+        var issueMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation",
+            "token-org-a",
+            MembershipAId);
+        issueMsg.Headers.Add("Idempotency-Key", $"idemp-quote-pre-accept-{Guid.NewGuid():N}");
+        issueMsg.Content = JsonContent.Create(new IssueQuotationRequest(
+            estimate.RowVersion,
+            opp.RowVersion));
+
+        var issueRes = await _client.SendAsync(issueMsg);
+        Assert.Equal(HttpStatusCode.Created, issueRes.StatusCode);
+        var quotation = (await issueRes.Content.ReadFromJsonAsync<QuotationResponse>())!;
+
+        var idempotencyKey = $"idemp-accept-replay-{Guid.NewGuid():N}";
+
+        // 2. Initial Acceptance
+        var acceptMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation/accept",
+            "token-org-a",
+            MembershipAId);
+        acceptMsg.Headers.Add("Idempotency-Key", idempotencyKey);
+        acceptMsg.Content = JsonContent.Create(new AcceptQuotationRequest(
+            quotation.OpportunityRowVersion,
+            "ลูกค้ายืนยันตกลงสั่งซื้อตามใบเสนอราคา"));
+
+        var acceptRes = await _client.SendAsync(acceptMsg);
+        Assert.Equal(HttpStatusCode.OK, acceptRes.StatusCode);
+        var accepted = (await acceptRes.Content.ReadFromJsonAsync<AcceptQuotationResponse>())!;
+        Assert.Equal(OpportunityStage.Won, accepted.OpportunityStage);
+        Assert.Equal(quotation.QuotationId, accepted.QuotationId);
+
+        // 3. Replay with SAME idempotency key and same payload
+        var replayMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation/accept",
+            "token-org-a",
+            MembershipAId);
+        replayMsg.Headers.Add("Idempotency-Key", idempotencyKey);
+        replayMsg.Content = JsonContent.Create(new AcceptQuotationRequest(
+            quotation.OpportunityRowVersion,
+            "ลูกค้ายืนยันตกลงสั่งซื้อตามใบเสนอราคา"));
+
+        var replayRes = await _client.SendAsync(replayMsg);
+        Assert.Equal(HttpStatusCode.OK, replayRes.StatusCode);
+        var replayed = (await replayRes.Content.ReadFromJsonAsync<AcceptQuotationResponse>())!;
+        Assert.Equal(accepted.QuotationId, replayed.QuotationId);
+        Assert.Equal(OpportunityStage.Won, replayed.OpportunityStage);
+
+        // Verify database: Exactly 1 Won history, 1 quotations.accepted audit, 1 idempotency record
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var wonHistoryCount = await db.OpportunityStageHistories
+            .CountAsync(h => h.OpportunityId == opp.Id && h.ToStage == OpportunityStage.Won);
+        Assert.Equal(1, wonHistoryCount);
+
+        var quoteAuditCount = await db.AuditEvents
+            .CountAsync(a => a.Action == "quotations.accepted" && a.ResourceId == quotation.QuotationId.ToString());
+        Assert.Equal(1, quoteAuditCount);
+
+        var idempRecordCount = await db.IdempotencyRecords
+            .CountAsync(r => r.ResourceId == quotation.QuotationId.ToString() && r.Operation == "quotations.accept");
+        Assert.Equal(1, idempRecordCount);
+
+        // 4. Replay with DIFFERENT payload under same key must be rejected (409 Conflict)
+        var diffPayloadMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation/accept",
+            "token-org-a",
+            MembershipAId);
+        diffPayloadMsg.Headers.Add("Idempotency-Key", idempotencyKey);
+        diffPayloadMsg.Content = JsonContent.Create(new AcceptQuotationRequest(
+            Guid.NewGuid(), // different version
+            "หมายเหตุอื่น"));
+
+        var diffPayloadRes = await _client.SendAsync(diffPayloadMsg);
+        Assert.Equal(HttpStatusCode.Conflict, diffPayloadRes.StatusCode);
+
+        // 5. Different key after Won must NOT masquerade as replay (must be rejected with 409 Conflict)
+        var diffKeyMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation/accept",
+            "token-org-a",
+            MembershipAId);
+        diffKeyMsg.Headers.Add("Idempotency-Key", $"idemp-different-key-{Guid.NewGuid():N}");
+        diffKeyMsg.Content = JsonContent.Create(new AcceptQuotationRequest(
+            quotation.OpportunityRowVersion,
+            "สั่งซื้อใหม่อีกรอบ"));
+
+        var diffKeyRes = await _client.SendAsync(diffKeyMsg);
+        Assert.Equal(HttpStatusCode.Conflict, diffKeyRes.StatusCode);
+    }
 }

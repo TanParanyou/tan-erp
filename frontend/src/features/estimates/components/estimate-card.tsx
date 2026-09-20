@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { EstimateDetailResponse } from "@/lib/api/api-client";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +23,7 @@ import {
 interface EstimateCardProps {
   estimate: EstimateDetailResponse | null;
   opportunityId?: string;
+  opportunityRowVersion?: string;
   customerId?: string;
   branchId?: string;
   siteSurveyRevisionId?: string | null;
@@ -35,6 +36,7 @@ interface EstimateCardProps {
 export function EstimateCard({
   estimate,
   opportunityId,
+  opportunityRowVersion,
   canEdit = true,
   onCreateEstimate,
   isCreating = false,
@@ -45,30 +47,51 @@ export function EstimateCard({
   const { selectedMembership } = useSelectedMembership();
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const issueQuotationModal = useDisclosure();
+  const intentKeyRef = useRef<{ versionKey: string; idempotencyKey: string } | null>(null);
 
   const issueQuotationMutation = useIssueQuotation(
     opportunityId ?? "",
     estimate?.id ?? ""
   );
 
-  const canIssue = can(selectedMembership, PERMISSIONS.QUOTATIONS_ISSUE) || canEdit;
+  const canIssue = can(selectedMembership, PERMISSIONS.QUOTATIONS_ISSUE);
   const isDraft = estimate?.currentRevision?.status === "draft";
   const grandTotal = estimate?.currentRevision?.grandTotal ?? 0;
   const canIssueQuotation = Boolean(
     opportunityId &&
+    opportunityRowVersion &&
     estimate &&
     isDraft &&
     canIssue &&
     grandTotal > 0
   );
 
+  const handleCancelIssueQuotation = () => {
+    intentKeyRef.current = null;
+    issueQuotationModal.close();
+  };
+
   const handleConfirmIssueQuotation = async () => {
-    if (!estimate || !opportunityId) return;
+    if (!estimate || !opportunityId || !opportunityRowVersion) return;
+
+    const currentVersionKey = `${estimate.rowVersion}|${opportunityRowVersion}`;
+    let idempKey: string;
+    if (intentKeyRef.current && intentKeyRef.current.versionKey === currentVersionKey) {
+      idempKey = intentKeyRef.current.idempotencyKey;
+    } else {
+      idempKey = crypto.randomUUID();
+      intentKeyRef.current = { versionKey: currentVersionKey, idempotencyKey: idempKey };
+    }
 
     try {
       await issueQuotationMutation.mutateAsync({
-        expectedEstimateVersion: estimate.rowVersion,
+        payload: {
+          expectedEstimateVersion: estimate.rowVersion,
+          expectedOpportunityVersion: opportunityRowVersion,
+        },
+        idempotencyKey: idempKey,
       });
+      intentKeyRef.current = null;
       issueQuotationModal.close();
       toast.success(t("quotationIssuedSuccess"));
     } catch (err: unknown) {
@@ -203,7 +226,7 @@ export function EstimateCard({
 
       <ConfirmationModal
         isOpen={issueQuotationModal.isOpen}
-        onClose={issueQuotationModal.close}
+        onClose={handleCancelIssueQuotation}
         onConfirm={handleConfirmIssueQuotation}
         title={t("issueQuotationModalTitle")}
         message={t("issueQuotationModalDesc")}
