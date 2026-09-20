@@ -15,7 +15,12 @@ vi.mock("@/hooks/useToast", () => ({
 // Mock useSelectedMembership
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({
-    selectedMembership: { id: "mem-1", role: "admin", organizationId: "org-1" },
+    selectedMembership: {
+      id: "mem-1",
+      role: "admin",
+      organizationId: "org-1",
+      permissions: [{ key: "quotations.issue", scope: "organization" }],
+    },
   }),
 }));
 
@@ -43,6 +48,17 @@ vi.mock("next-intl", () => ({
         discount: "ส่วนลด",
         grandTotal: "ยอดรวมสุทธิทั้งสิ้น",
         marginRate: "อัตรากำไร (Margin)",
+        issueQuotation: "ออกใบเสนอราคา",
+        issueQuotationModalTitle: "ยืนยันการออกใบเสนอราคา",
+        "statuses.quoted": "ออกใบเสนอราคาแล้ว (Quoted)",
+        "statuses.draft": "ฉบับร่าง (Draft)",
+      };
+      return translations[key] ?? key;
+    }
+    if (namespace === "common") {
+      const translations: Record<string, string> = {
+        "actions.cancel": "ยกเลิก",
+        "actions.confirm": "ยืนยัน",
       };
       return translations[key] ?? key;
     }
@@ -135,5 +151,114 @@ describe("EstimateCard", () => {
     expect(screen.getByText(/5,000\.00/)).toBeInTheDocument();
     expect(screen.getByText(/69,550\.00/)).toBeInTheDocument();
     expect(screen.getByText(/0\.23%/)).toBeInTheDocument();
+  });
+
+  it("renders issue quotation button and opens confirmation modal when draft has positive total", () => {
+    const mockEstimate: EstimateDetailResponse = {
+      id: "est-1234",
+      organizationId: "org-1",
+      branchId: "branch-1",
+      customerId: "cust-1",
+      opportunityId: "opp-1",
+      siteSurveyRevisionId: null,
+      siteSurveySnapshotHash: null,
+      number: "EST-2026-0099",
+      status: "draft",
+      currentRevisionNo: 1,
+      rowVersion: "version-1",
+      createdAtUtc: "2026-09-18T00:00:00Z",
+      updatedAtUtc: "2026-09-18T00:00:00Z",
+      currentRevision: {
+        id: "rev-1",
+        estimateId: "est-1234",
+        revisionNo: 1,
+        status: "draft",
+        currency: "THB",
+        calculationVersion: 1,
+        calculationPolicyVersion: "v1",
+        taxPolicyVersion: "v1",
+        netCost: 50000,
+        sellingBeforeDiscount: 70000,
+        discountAmount: 0,
+        netBeforeTax: 70000,
+        taxAmount: 4900,
+        grandTotal: 74900,
+        marginAmount: 20000,
+        marginRate: 0.2857,
+        markupRate: 0.40,
+        calculationSnapshotJson: null,
+        rowVersion: "rev-version-1",
+        createdAtUtc: "2026-09-18T00:00:00Z",
+        updatedAtUtc: "2026-09-18T00:00:00Z",
+        sections: [],
+      },
+    };
+
+    renderWithClient(
+      <EstimateCard
+        estimate={mockEstimate}
+        opportunityId="opp-1"
+        canEdit={true}
+      />
+    );
+
+    const issueBtn = screen.getByRole("button", { name: "ออกใบเสนอราคา" });
+    expect(issueBtn).toBeInTheDocument();
+
+    fireEvent.click(issueBtn);
+    expect(screen.getByText("ยืนยันการออกใบเสนอราคา")).toBeInTheDocument();
+  });
+
+  it("renders quoted badge and does not display issue button when already quoted", () => {
+    const mockEstimate: EstimateDetailResponse = {
+      id: "est-1234",
+      organizationId: "org-1",
+      branchId: "branch-1",
+      customerId: "cust-1",
+      opportunityId: "opp-1",
+      siteSurveyRevisionId: null,
+      siteSurveySnapshotHash: null,
+      number: "EST-2026-0099",
+      status: "quoted",
+      currentRevisionNo: 1,
+      rowVersion: "version-2",
+      createdAtUtc: "2026-09-18T00:00:00Z",
+      updatedAtUtc: "2026-09-18T00:00:00Z",
+      currentRevision: {
+        id: "rev-1",
+        estimateId: "est-1234",
+        revisionNo: 1,
+        status: "quoted",
+        currency: "THB",
+        calculationVersion: 1,
+        calculationPolicyVersion: "v1",
+        taxPolicyVersion: "v1",
+        netCost: 50000,
+        sellingBeforeDiscount: 70000,
+        discountAmount: 0,
+        netBeforeTax: 70000,
+        taxAmount: 4900,
+        grandTotal: 74900,
+        marginAmount: 20000,
+        marginRate: 0.2857,
+        markupRate: 0.40,
+        calculationSnapshotJson: null,
+        rowVersion: "rev-version-1",
+        createdAtUtc: "2026-09-18T00:00:00Z",
+        updatedAtUtc: "2026-09-18T00:00:00Z",
+        sections: [],
+      },
+    };
+
+    renderWithClient(
+      <EstimateCard
+        estimate={mockEstimate}
+        opportunityId="opp-1"
+        canEdit={true}
+      />
+    );
+
+    expect(screen.getByText("ออกใบเสนอราคาแล้ว (Quoted)")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "ออกใบเสนอราคา" })).not.toBeInTheDocument();
   });
 });

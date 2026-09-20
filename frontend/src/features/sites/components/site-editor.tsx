@@ -283,6 +283,8 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
           <PageHeader
             title={t("createSite")}
             subtitle={t("subtitle")}
+            onBack={handleCancel}
+            backLabel={t("backToCustomer")}
             breadcrumbs={[
               { label: tShell("customers"), href: `/${locale}/customers` },
               { label: tCustomers("customerDetail"), href: `/${locale}/customers/${customerId}` },

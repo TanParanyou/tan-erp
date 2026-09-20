@@ -245,5 +245,23 @@
   <data name="FILE_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>ไม่พบไฟล์ที่ระบุในระบบ</value>
   </data>
+  <data name="INVALID_DOCUMENT_TYPE_TITLE" xml:space="preserve">
+    <value>ประเภทเอกสารไม่ถูกต้อง</value>
+  </data>
+  <data name="INVALID_DOCUMENT_TYPE_DETAIL" xml:space="preserve">
+    <value>ประเภทเอกสารที่ระบุไม่ได้รับการสนับสนุนในระบบ</value>
+  </data>
+  <data name="INVALID_FORMAT_PATTERN_TITLE" xml:space="preserve">
+    <value>รูปแบบการกำหนดเลขไม่ถูกต้อง</value>
+  </data>
+  <data name="INVALID_FORMAT_PATTERN_DETAIL" xml:space="preserve">
+    <value>รูปแบบเลขเอกสารต้องไม่ว่างเปล่าและต้องมีรูปแบบที่ถูกต้อง</value>
+  </data>
+  <data name="INVALID_PADDING_TITLE" xml:space="preserve">
+    <value>จำนวนหลักตัวเลขไม่ถูกต้อง</value>
+  </data>
+  <data name="INVALID_PADDING_DETAIL" xml:space="preserve">
+    <value>จำนวนหลักของตัวเลขรันลำดับต้องอยู่ระหว่าง 1 ถึง 10 หลัก</value>
+  </data>
 </root>
 

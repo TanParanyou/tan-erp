@@ -52,7 +52,8 @@
     "darkMode": "Dark mode",
     "systemMode": "System mode",
     "customers": "Customers",
-    "opportunities": "Opportunities"
+    "opportunities": "Opportunities",
+    "documentNumbering": "Document Numbering"
   },
   "common": {
     "actions": {
@@ -456,6 +457,16 @@
     "saveSuccess": "Site saved successfully",
     "siteDetail": "Site Details",
     "viewDetails": "View Details",
+    "searchLabel": "Search Sites",
+    "searchPlaceholder": "Search by site name or address...",
+    "statusFilter": "Status",
+    "hasPhotosFilter": "Photos",
+    "allPhotos": "All",
+    "withPhotos": "Has photos",
+    "withoutPhotos": "No photos",
+    "filteredEmptyTitle": "No sites match the criteria",
+    "filteredEmptyDetail": "Try adjusting your search query or filters",
+    "resetFilters": "Reset Filters",
     "address": "Address",
     "coordinatesTitle": "Map Coordinates",
     "noCoordinates": "No coordinates specified",
@@ -524,6 +535,12 @@
     "qualifyModalTitle": "Confirm Stage Transition to 'Qualified'",
     "qualifyModalDesc": "Are you sure you want to transition this opportunity to 'Qualified'? This stage transition cannot be reversed back to Draft.",
     "qualifySuccess": "Stage transitioned to Qualified successfully",
+    "acceptQuotationAction": "Accept Quotation",
+    "acceptingQuotation": "Accepting...",
+    "acceptQuotationModalTitle": "Confirm Quotation Acceptance",
+    "acceptQuotationModalDesc": "Are you sure you want to confirm customer acceptance for this official quotation? Once confirmed, the opportunity stage will advance to 'Won'.",
+    "quotationAcceptedSuccess": "Quotation accepted and opportunity marked as Won successfully.",
+    "acceptQuotationFailed": "Failed to accept quotation. Please try again.",
     "qGateChecklistTitle": "Qualification Readiness Checklist (Q-Gate)",
     "qGateScopeRequired": "Scope Summary is required",
     "qGateWorkTypesRequired": "At least one Work Type must be selected",
@@ -914,10 +931,18 @@
     "invalidState": "The current revision status does not permit this modification.",
     "statuses": {
       "draft": "Draft",
+      "quoted": "Quoted",
       "approved": "Approved",
       "superseded": "Superseded",
       "rejected": "Rejected"
     },
+    "issueQuotation": "Issue Quotation",
+    "issuingQuotation": "Issuing Quotation...",
+    "issueQuotationModalTitle": "Confirm Quotation Issuance",
+    "issueQuotationModalDesc": "Are you sure you want to issue an official quotation for this estimate? Once issued, the opportunity stage will advance to 'Proposed' automatically.",
+    "quotationIssuedSuccess": "Official quotation issued successfully.",
+    "quotationIssuedFailed": "Failed to issue quotation. Please try again.",
+    "quotationNumber": "Quotation Number",
     "confirmDeleteSection": "Are you sure you want to delete this section and all its work items?",
     "confirmDeleteWorkItem": "Are you sure you want to delete this work item and all its cost components?",
     "confirmDeleteCostComponent": "Are you sure you want to delete this cost component?",
@@ -1072,6 +1097,44 @@
       "expand": "Maximize drawer",
       "collapse": "Restore size"
     }
+  },
+  "documentNumbering": {
+    "title": "Document Numbering Settings",
+    "description": "Configure document format patterns, prefixes, and reset cycles for enterprise accounting compliance",
+    "loadError": "Failed to load document numbering rules. Please try again.",
+    "editTitle": "Edit Document Sequence",
+    "editDescription": "Configure prefix, token format patterns, and reset cycle",
+    "patternRequired": "Format pattern is required",
+    "updateFailed": "Failed to save settings. Please try again.",
+    "livePreview": "Live Sample Preview",
+    "previewBadge": "Sample sequence #1",
+    "prefix": "Prefix",
+    "formatPattern": "Format Pattern",
+    "clickToInsertToken": "Click to insert variable",
+    "resetPeriod": "Reset Cycle",
+    "padding": "Sequence Padding",
+    "isBranchSpecific": "Branch-Specific Sequence (separate counter per branch)",
+    "badgeBranchSpecific": "Per Branch",
+    "types": {
+      "estimates": "Official Estimate",
+      "surveys": "Site Survey",
+      "opportunities": "Opportunity",
+      "quotations": "Commercial Quotation"
+    },
+    "resetOptions": {
+      "never": "Continuous (Never Reset)",
+      "yearly": "Yearly",
+      "monthly": "Monthly",
+      "daily": "Daily"
+    },
+    "table": {
+      "documentType": "Document Type",
+      "prefix": "Prefix",
+      "pattern": "Format Pattern",
+      "resetPeriod": "Reset Cycle",
+      "preview": "Sample Code"
+    }
   }
 }
+
 

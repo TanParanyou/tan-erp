@@ -87,7 +87,12 @@ public static class TestOnlyDataSeeder
             ("surveys.mark-ready", "Mark Site Surveys Ready"),
             ("estimates.read", "Read Estimates"),
             ("estimates.create", "Create Estimates"),
-            ("estimates.update", "Update Estimates")
+            ("estimates.update", "Update Estimates"),
+            ("quotations.issue", "Issue Quotations"),
+            ("quotations.accept", "Accept Quotations"),
+            ("document-sequences.read", "Read Document Sequences"),
+            ("document-sequences.manage", "Manage Document Sequences"),
+            ("document-sequences.manual-override", "Manual Override Document Numbers")
         };
 
 

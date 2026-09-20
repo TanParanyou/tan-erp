@@ -30,6 +30,10 @@ export const PERMISSIONS = {
   // Surveys
   SURVEYS_READ: "surveys.read",
   SURVEYS_CREATE: "surveys.create",
+
+  // Commercial - Quotations
+  QUOTATIONS_ISSUE: "quotations.issue",
+  QUOTATIONS_ACCEPT: "quotations.accept",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

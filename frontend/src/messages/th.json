@@ -52,7 +52,8 @@
     "darkMode": "โหมดมืด",
     "systemMode": "ตามระบบ",
     "customers": "ข้อมูลลูกค้า",
-    "opportunities": "โอกาสทางการขาย"
+    "opportunities": "โอกาสทางการขาย",
+    "documentNumbering": "รูปแบบเลขที่เอกสาร"
   },
   "common": {
     "actions": {
@@ -456,6 +457,16 @@
     "saveSuccess": "บันทึกสถานที่ตั้งเรียบร้อยแล้ว",
     "siteDetail": "รายละเอียดสถานที่ตั้ง",
     "viewDetails": "ดูรายละเอียด",
+    "searchLabel": "ค้นหาสถานที่ตั้ง",
+    "searchPlaceholder": "พิมพ์ชื่อสถานที่ หรือที่อยู่...",
+    "statusFilter": "สถานะ",
+    "hasPhotosFilter": "รูปถ่าย",
+    "allPhotos": "ทั้งหมด",
+    "withPhotos": "มีรูปถ่าย",
+    "withoutPhotos": "ไม่มีรูปถ่าย",
+    "filteredEmptyTitle": "ไม่พบสถานที่ตั้งที่ตรงกับเงื่อนไข",
+    "filteredEmptyDetail": "ลองปรับคำค้นหาหรือตัวกรองใหม่อีกครั้ง",
+    "resetFilters": "ล้างตัวกรอง",
     "address": "ที่อยู่",
     "coordinatesTitle": "พิกัดแผนที่",
     "noCoordinates": "ไม่ได้ระบุพิกัด",
@@ -524,6 +535,12 @@
     "qualifyModalTitle": "ยืนยันการเปลี่ยนขั้นตอนเป็น 'ผ่านเกณฑ์' (Qualify)",
     "qualifyModalDesc": "คุณต้องการเปลี่ยนขั้นตอนโอกาสทางการขายนี้เป็น 'ผ่านเกณฑ์' ใช่หรือไม่? การเปลี่ยนขั้นตอนนี้จะไม่สามารถย้อนกลับเป็นฉบับร่างได้",
     "qualifySuccess": "เปลี่ยนขั้นตอนเป็นผ่านเกณฑ์เรียบร้อยแล้ว",
+    "acceptQuotationAction": "ลูกค้ายอมรับใบเสนอราคา (Accept Quotation)",
+    "acceptingQuotation": "กำลังบันทึก...",
+    "acceptQuotationModalTitle": "ยืนยันการยอมรับใบเสนอราคา (Accept Quotation)",
+    "acceptQuotationModalDesc": "คุณต้องการบันทึกว่าลูกค้ายอมรับใบเสนอราคาทางการนี้ใช่หรือไม่? เมื่อยืนยันแล้ว ขั้นตอนโอกาสทางการขายจะเปลี่ยนเป็น 'ปิดการขายสำเร็จ (Won)'",
+    "quotationAcceptedSuccess": "บันทึกการยอมรับใบเสนอราคาและปิดการขายสำเร็จแล้ว",
+    "acceptQuotationFailed": "ไม่สามารถบันทึกการยอมรับใบเสนอราคาได้ กรุณาลองใหม่อีกครั้ง",
     "qGateChecklistTitle": "รายการตรวจสอบความพร้อมตามเกณฑ์ (Q-Gate)",
     "qGateScopeRequired": "ต้องมีสรุปขอบเขตงาน (Scope Summary)",
     "qGateWorkTypesRequired": "ต้องระบุประเภทงานอย่างน้อย 1 รายการ",
@@ -914,10 +931,18 @@
     "invalidState": "สถานะปัจจุบันของใบประเมินราคาไม่อนุญาตให้แก้ไข",
     "statuses": {
       "draft": "ฉบับร่าง (Draft)",
+      "quoted": "ออกใบเสนอราคาแล้ว (Quoted)",
       "approved": "อนุมัติแล้ว (Approved)",
       "superseded": "ถูกแทนที่ (Superseded)",
       "rejected": "ไม่อนุมัติ (Rejected)"
     },
+    "issueQuotation": "ออกใบเสนอราคา (Issue Quotation)",
+    "issuingQuotation": "กำลังออกใบเสนอราคา...",
+    "issueQuotationModalTitle": "ยืนยันการออกใบเสนอราคา (Issue Quotation)",
+    "issueQuotationModalDesc": "คุณต้องการออกใบเสนอราคาทางการสำหรับการประเมินราคานี้ใช่หรือไม่? เมื่อออกใบเสนอราคาแล้ว ขั้นตอนโอกาสทางการขายจะเลื่อนไปเป็น 'เสนอราคาแล้ว (Proposed)' โดยอัตโนมัติ",
+    "quotationIssuedSuccess": "ออกใบเสนอราคาเรียบร้อยแล้ว",
+    "quotationIssuedFailed": "ไม่สามารถออกใบเสนอราคาได้ กรุณาลองใหม่อีกครั้ง",
+    "quotationNumber": "เลขที่ใบเสนอราคา",
     "confirmDeleteSection": "คุณต้องการลบหมวดหมู่งานนี้และรายการงานทั้งหมดหรือไม่?",
     "confirmDeleteWorkItem": "คุณต้องการลบรายการงานนี้และต้นทุนทั้งหมดหรือไม่?",
     "confirmDeleteCostComponent": "คุณต้องการลบรายการต้นทุนนี้หรือไม่?",
@@ -1072,6 +1097,44 @@
       "expand": "ดูแบบเต็มจอ",
       "collapse": "ย่อหน้าต่าง"
     }
+  },
+  "documentNumbering": {
+    "title": "ตั้งค่ารูปแบบเลขที่เอกสาร (Document Numbering)",
+    "description": "กำหนดโครงสร้างและรอบการเริ่มนับเลขใหม่ของเอกสารแต่ละประเภทในระบบเพื่อความเป็นระเบียบและถูกต้องตามมาตรฐานบัญชี",
+    "loadError": "ไม่สามารถโหลดข้อมูลรูปแบบเลขที่เอกสารได้ กรุณาลองใหม่อีกครั้ง",
+    "editTitle": "แก้ไขรูปแบบเลขที่เอกสาร",
+    "editDescription": "กำหนดคำนำหน้า รูปแบบโทเคน และรอบการเริ่มนับใหม่",
+    "patternRequired": "กรุณาระบุ Format Pattern",
+    "updateFailed": "บันทึกการตั้งค่าไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "livePreview": "ตัวอย่างเลขที่เอกสารจริง (Live Preview)",
+    "previewBadge": "ตัวอย่างลำดับที่ 1",
+    "prefix": "คำนำหน้า (Prefix)",
+    "formatPattern": "รูปแบบโครงสร้าง (Format Pattern)",
+    "clickToInsertToken": "คลิกเพื่อแทรกตัวแปร",
+    "resetPeriod": "รอบการเริ่มนับ 1 ใหม่ (Reset Cycle)",
+    "padding": "จำนวนหลักตัวเลข (Padding)",
+    "isBranchSpecific": "แยกชุดตัวนับอิสระตามสาขา (Branch-Specific Sequence)",
+    "badgeBranchSpecific": "แยกตามสาขา",
+    "types": {
+      "estimates": "ใบประเมินราคา (Estimate)",
+      "surveys": "บันทึกสำรวจหน้างาน (Site Survey)",
+      "opportunities": "โอกาสทางการขาย (Opportunity)",
+      "quotations": "ใบเสนอราคา (Quotation)"
+    },
+    "resetOptions": {
+      "never": "ไม่เริ่มนับใหม่ (รันต่อเนื่อง)",
+      "yearly": "เริ่มนับใหม่ทุกปี (Yearly)",
+      "monthly": "เริ่มนับใหม่ทุกเดือน (Monthly)",
+      "daily": "เริ่มนับใหม่ทุกวัน (Daily)"
+    },
+    "table": {
+      "documentType": "ประเภทเอกสาร",
+      "prefix": "Prefix",
+      "pattern": "แม่แบบ (Pattern)",
+      "resetPeriod": "รอบการรีเซ็ต",
+      "preview": "ตัวอย่างรหัส"
+    }
   }
 }
+
 

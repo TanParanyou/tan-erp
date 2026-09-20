@@ -2,7 +2,10 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Estimates;
+using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
+using TanErp.Domain.Crm.Opportunities;
+using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Estimates;
 
 namespace TanErp.Infrastructure.Persistence.Estimates;
@@ -11,11 +14,13 @@ public class EstimateStore : IEstimateStore
 {
     private readonly AppDbContext _db;
     private readonly IClock _clock;
+    private readonly IDocumentNumberGenerator _documentNumberGenerator;
 
-    public EstimateStore(AppDbContext db, IClock clock)
+    public EstimateStore(AppDbContext db, IClock clock, IDocumentNumberGenerator documentNumberGenerator)
     {
         _db = db;
         _clock = clock;
+        _documentNumberGenerator = documentNumberGenerator;
     }
 
     public async Task<EstimateDetailProjection> CreateDraftAsync(
@@ -48,11 +53,12 @@ public class EstimateStore : IEstimateStore
                 return MapToDetailProjection(existing);
             }
 
-            var year = _clock.UtcNow.Year;
-            var prefix = $"EST-{year}-";
-            var count = await _db.Estimates
-                .CountAsync(e => e.OrganizationId == organizationId && e.Number.StartsWith(prefix), cancellationToken);
-            var number = $"{prefix}{(count + 1):D4}";
+            var number = await _documentNumberGenerator.GenerateAsync(
+                organizationId,
+                TanErp.Domain.DocumentNumbering.DocumentTypes.Estimates,
+                branchId,
+                _clock.UtcNow,
+                cancellationToken);
 
             var estimate = Estimate.CreateDraft(
                 Guid.NewGuid(),
@@ -278,6 +284,285 @@ public class EstimateStore : IEstimateStore
             await tx.CommitAsync(cancellationToken);
 
             return MapToRevisionProjection(revision);
+        });
+    }
+
+    public async Task<QuotationDetailProjection> IssueQuotationAsync(
+        Guid organizationId,
+        Guid estimateId,
+        Guid expectedEstimateVersion,
+        Guid expectedOpportunityVersion,
+        Guid actorUserId,
+        string idempotencyKey,
+        string traceId,
+        CancellationToken cancellationToken)
+    {
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            var existingQuotation = await _db.Quotations
+                .FirstOrDefaultAsync(q => q.OrganizationId == organizationId && q.EstimateId == estimateId, cancellationToken);
+
+            var estimate = await _db.Estimates
+                .Include(e => e.Revisions)
+                .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.Id == estimateId, cancellationToken);
+
+            if (estimate is null)
+                throw new EstimateNotFoundException(estimateId);
+
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.OrganizationId == organizationId && o.Id == estimate.OpportunityId, cancellationToken);
+
+            if (opp is null)
+                throw new InvalidOperationException($"Opportunity '{estimate.OpportunityId}' not found.");
+
+            if (existingQuotation is not null)
+            {
+                return new QuotationDetailProjection(
+                    existingQuotation.Id,
+                    estimate.Id,
+                    opp.Id,
+                    existingQuotation.Number,
+                    existingQuotation.Status,
+                    existingQuotation.TotalAmount,
+                    existingQuotation.IssuedAtUtc,
+                    existingQuotation.EstimateRevisionId,
+                    estimate.CurrentRevisionNo,
+                    opp.Stage,
+                    opp.RowVersion,
+                    estimate.RowVersion);
+            }
+
+            if (estimate.RowVersion != expectedEstimateVersion)
+                throw new DbUpdateConcurrencyException("Estimate version conflict.");
+
+            var currentRev = estimate.CurrentRevision;
+            if (currentRev is null)
+                throw new EstimateInvalidStateException("Estimate has no revisions.");
+
+            if (currentRev.GrandTotal <= 0)
+                throw new EstimateInvalidStateException("Cannot issue quotation for an estimate without calculated amount.");
+
+            var prevOppStage = opp.Stage;
+            opp.EnterProposed(expectedOpportunityVersion);
+
+            estimate.MarkQuoted();
+
+            string quotationNumber;
+            try
+            {
+                quotationNumber = await _documentNumberGenerator.GenerateAsync(
+                    organizationId,
+                    DocumentTypes.Quotations,
+                    estimate.BranchId,
+                    _clock.UtcNow,
+                    cancellationToken);
+            }
+            catch
+            {
+                var year = _clock.UtcNow.Year;
+                var prefix = $"QT-{year}-";
+                var count = await _db.Quotations
+                    .CountAsync(q => q.OrganizationId == organizationId && q.Number.StartsWith(prefix), cancellationToken);
+                quotationNumber = $"{prefix}{(count + 1):D4}";
+            }
+
+            var snapshotHash = !string.IsNullOrWhiteSpace(currentRev.CalculationSnapshotJson)
+                ? Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(currentRev.CalculationSnapshotJson))).ToLowerInvariant()
+                : null;
+
+            var quotation = new Quotation(
+                Guid.NewGuid(),
+                organizationId,
+                estimate.BranchId,
+                estimate.CustomerId,
+                opp.Id,
+                estimate.Id,
+                currentRev.Id,
+                quotationNumber,
+                currentRev.GrandTotal,
+                snapshotHash,
+                _clock.UtcNow);
+
+            _db.Quotations.Add(quotation);
+
+            var history = new OpportunityStageHistory(
+                Guid.NewGuid(),
+                organizationId,
+                opp.Id,
+                prevOppStage,
+                OpportunityStage.Proposed,
+                reasonCode: null,
+                note: $"Quotation {quotation.Number} issued for Estimate {estimate.Number}.",
+                actorUserId,
+                _clock.UtcNow,
+                OpportunityStagePolicy.Version,
+                traceId);
+
+            _db.OpportunityStageHistories.Add(history);
+
+            var oppAudit = new AuditEvent(
+                Guid.NewGuid(),
+                organizationId,
+                actorUserId,
+                "opportunity.stage-changed",
+                "Opportunity",
+                opp.Id.ToString(),
+                _clock.UtcNow,
+                string.Empty,
+                JsonSerializer.Serialize(new
+                {
+                    fromStage = prevOppStage,
+                    toStage = OpportunityStage.Proposed,
+                    quotationNumber = quotation.Number,
+                    estimateNumber = estimate.Number
+                }));
+
+            var quoteAudit = new AuditEvent(
+                Guid.NewGuid(),
+                organizationId,
+                actorUserId,
+                "quotations.issued",
+                "Quotation",
+                quotation.Id.ToString(),
+                _clock.UtcNow,
+                string.Empty,
+                JsonSerializer.Serialize(new
+                {
+                    quotationNumber = quotation.Number,
+                    quotation.TotalAmount,
+                    estimateNumber = estimate.Number
+                }));
+
+            _db.AddAuditEvent(oppAudit);
+            _db.AddAuditEvent(quoteAudit);
+
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+
+            return new QuotationDetailProjection(
+                quotation.Id,
+                estimate.Id,
+                opp.Id,
+                quotation.Number,
+                quotation.Status,
+                quotation.TotalAmount,
+                quotation.IssuedAtUtc,
+                quotation.EstimateRevisionId,
+                estimate.CurrentRevisionNo,
+                opp.Stage,
+                opp.RowVersion,
+                estimate.RowVersion);
+        });
+    }
+
+    public async Task<AcceptQuotationProjection> AcceptQuotationAsync(
+        Guid organizationId,
+        Guid estimateId,
+        Guid expectedOpportunityVersion,
+        string? decisionNote,
+        Guid actorUserId,
+        string idempotencyKey,
+        string traceId,
+        CancellationToken cancellationToken)
+    {
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            var estimate = await _db.Estimates
+                .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.Id == estimateId, cancellationToken);
+
+            if (estimate is null)
+                throw new EstimateNotFoundException(estimateId);
+
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.OrganizationId == organizationId && o.Id == estimate.OpportunityId, cancellationToken);
+
+            if (opp is null)
+                throw new InvalidOperationException($"Opportunity '{estimate.OpportunityId}' not found.");
+
+            var quotation = await _db.Quotations
+                .FirstOrDefaultAsync(q => q.OrganizationId == organizationId && q.EstimateId == estimateId, cancellationToken);
+
+            if (quotation is null)
+                throw new InvalidOperationException($"No quotation found for estimate '{estimateId}'.");
+
+            if (opp.Stage == OpportunityStage.Won)
+            {
+                return new AcceptQuotationProjection(
+                    quotation.Id,
+                    opp.Id,
+                    opp.Stage,
+                    opp.RowVersion,
+                    quotation.AcceptedAtUtc ?? quotation.UpdatedAtUtc);
+            }
+
+            var prevOppStage = opp.Stage;
+            opp.MarkWon(expectedOpportunityVersion);
+            quotation.Accept(_clock.UtcNow);
+
+            var history = new OpportunityStageHistory(
+                Guid.NewGuid(),
+                organizationId,
+                opp.Id,
+                prevOppStage,
+                OpportunityStage.Won,
+                reasonCode: null,
+                note: string.IsNullOrWhiteSpace(decisionNote) ? $"Quotation {quotation.Number} accepted by customer." : decisionNote.Trim(),
+                actorUserId,
+                _clock.UtcNow,
+                OpportunityStagePolicy.Version,
+                traceId);
+
+            _db.OpportunityStageHistories.Add(history);
+
+            var oppAudit = new AuditEvent(
+                Guid.NewGuid(),
+                organizationId,
+                actorUserId,
+                "opportunity.stage-changed",
+                "Opportunity",
+                opp.Id.ToString(),
+                _clock.UtcNow,
+                string.Empty,
+                JsonSerializer.Serialize(new
+                {
+                    fromStage = prevOppStage,
+                    toStage = OpportunityStage.Won,
+                    quotationNumber = quotation.Number
+                }));
+
+            var quoteAudit = new AuditEvent(
+                Guid.NewGuid(),
+                organizationId,
+                actorUserId,
+                "quotations.accepted",
+                "Quotation",
+                quotation.Id.ToString(),
+                _clock.UtcNow,
+                string.Empty,
+                JsonSerializer.Serialize(new
+                {
+                    quotation.Number,
+                    acceptedAtUtc = quotation.AcceptedAtUtc
+                }));
+
+            _db.AddAuditEvent(oppAudit);
+            _db.AddAuditEvent(quoteAudit);
+
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+
+            return new AcceptQuotationProjection(
+                quotation.Id,
+                opp.Id,
+                opp.Stage,
+                opp.RowVersion,
+                quotation.AcceptedAtUtc!.Value);
         });
     }
 

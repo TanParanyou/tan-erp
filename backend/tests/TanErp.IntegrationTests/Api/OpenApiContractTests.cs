@@ -151,6 +151,14 @@ public class OpenApiContractTests : IAsyncLifetime
         var calculateEstimatePath = paths["/api/v1/estimates/{id}/revisions/{revisionId}/calculate"]?["post"]?.AsObject();
         Assert.NotNull(calculateEstimatePath);
 
+        Assert.True(paths.ContainsKey("/api/v1/estimates/{id}/quotation"), "OpenAPI must contain path /api/v1/estimates/{id}/quotation");
+        var issueQuotationPath = paths["/api/v1/estimates/{id}/quotation"]?["post"]?.AsObject();
+        Assert.NotNull(issueQuotationPath);
+
+        Assert.True(paths.ContainsKey("/api/v1/estimates/{id}/quotation/accept"), "OpenAPI must contain path /api/v1/estimates/{id}/quotation/accept");
+        var acceptQuotationPath = paths["/api/v1/estimates/{id}/quotation/accept"]?["post"]?.AsObject();
+        Assert.NotNull(acceptQuotationPath);
+
         Assert.True(paths.ContainsKey("/api/v1/users"), "OpenAPI must contain path /api/v1/users");
         var listUsersPath = paths["/api/v1/users"]?["get"]?.AsObject();
         Assert.NotNull(listUsersPath);
@@ -199,6 +207,10 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("EstimateRevisionResponse"), "Must define EstimateRevisionResponse schema");
         Assert.True(schemas.ContainsKey("UpdateEstimateDraftRequest"), "Must define UpdateEstimateDraftRequest schema");
         Assert.True(schemas.ContainsKey("CalculateEstimateRequest"), "Must define CalculateEstimateRequest schema");
+        Assert.True(schemas.ContainsKey("IssueQuotationRequest"), "Must define IssueQuotationRequest schema");
+        Assert.True(schemas.ContainsKey("QuotationResponse"), "Must define QuotationResponse schema");
+        Assert.True(schemas.ContainsKey("AcceptQuotationRequest"), "Must define AcceptQuotationRequest schema");
+        Assert.True(schemas.ContainsKey("AcceptQuotationResponse"), "Must define AcceptQuotationResponse schema");
         Assert.True(schemas.ContainsKey("UserListResponse"), "Must define UserListResponse schema");
         Assert.True(schemas.ContainsKey("UserListItemResponse"), "Must define UserListItemResponse schema");
         Assert.True(schemas.ContainsKey("BranchSummaryResponse"), "Must define BranchSummaryResponse schema");

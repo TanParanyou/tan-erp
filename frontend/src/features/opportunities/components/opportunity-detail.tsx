@@ -43,7 +43,7 @@ import { OpportunityWorkImagesSection } from "./opportunity-work-images-section"
 import { useOpportunitySurvey } from "@/features/surveys/api/survey-queries";
 import { SurveyAppointmentModal } from "@/features/surveys/components/survey-appointment-modal";
 import { SurveyCard } from "@/features/surveys/components/survey-card";
-import { useOpportunityEstimate, useCreateEstimate } from "@/features/estimates/api/estimate-queries";
+import { useOpportunityEstimate, useCreateEstimate, useAcceptQuotation } from "@/features/estimates/api/estimate-queries";
 import { EstimateCard } from "@/features/estimates/components/estimate-card";
 import { cn } from "@/lib/utils/cn";
 
@@ -81,6 +81,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const closeOutcomeModal = useDisclosure();
   const reopenModal = useDisclosure();
   const surveyModal = useDisclosure();
+  const acceptQuotationModal = useDisclosure();
   const [qualifyModalError, setQualifyModalError] = useState<string | null>(null);
   const customerDrawer = useDisclosure();
 
@@ -106,6 +107,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   // Load scoped Estimate info
   const { data: estimate } = useOpportunityEstimate(opportunityId);
   const createEstimateMutation = useCreateEstimate(opportunityId);
+  const acceptQuotationMutation = useAcceptQuotation(opportunityId, estimate?.id ?? "");
 
   // Structured Customer & Primary Site from backend projection
   const customer = opportunity?.customer;
@@ -171,6 +173,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
   const isDraft = opportunity?.stage === "draft";
   const isQualified = opportunity?.stage === "qualified";
+  const isProposed = opportunity?.stage === "proposed";
   const isOpen =
     opportunity?.stage === "draft" ||
     opportunity?.stage === "qualified" ||
@@ -181,11 +184,27 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const canTransition = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_TRANSITION);
   const canUpdate = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_UPDATE);
   const canCreateSurvey = can(selectedMembership, PERMISSIONS.SURVEYS_CREATE);
+  const canAccept = can(selectedMembership, PERMISSIONS.QUOTATIONS_ACCEPT) || canTransition;
   const canQualify = isDraft && canTransition && isQGateEligible;
   const canScheduleSurvey = isQualified && canCreateSurvey;
+  const canAcceptQuotation = isProposed && Boolean(estimate) && canAccept;
   const canReassign = isOpen && canUpdate;
   const canClose = isOpen && canTransition;
   const canReopen = isClosed && canTransition;
+
+  const handleConfirmAcceptQuotation = async () => {
+    if (!opportunity || !opportunity.id || !opportunity.rowVersion || !estimate || !estimate.id) return;
+    try {
+      await acceptQuotationMutation.mutateAsync({
+        expectedOpportunityVersion: opportunity.rowVersion,
+      });
+      acceptQuotationModal.close();
+      toast.success(t("quotationAcceptedSuccess"));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : t("acceptQuotationFailed");
+      toast.error(message);
+    }
+  };
 
   const handleOpenQualifyModal = () => {
     setQualifyModalError(null);
@@ -375,6 +394,18 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                 className="font-semibold"
               >
                 {t("scheduleSurveyAction")}
+              </Button>
+            )}
+            {canAcceptQuotation && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => acceptQuotationModal.open()}
+                disabled={acceptQuotationMutation.isPending}
+                isLoading={acceptQuotationMutation.isPending}
+                className="font-semibold"
+              >
+                {t("acceptQuotationAction")}
               </Button>
             )}
             {canReopen && (
@@ -857,6 +888,18 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         cancelText={tCommon("actions.cancel")}
         variant="info"
         isLoading={qualifyMutation.isPending}
+      />
+
+      <ConfirmationModal
+        isOpen={acceptQuotationModal.isOpen}
+        onClose={acceptQuotationModal.close}
+        onConfirm={handleConfirmAcceptQuotation}
+        title={t("acceptQuotationModalTitle")}
+        message={t("acceptQuotationModalDesc")}
+        confirmText={t("acceptQuotationAction")}
+        cancelText={tCommon("actions.cancel")}
+        variant="info"
+        isLoading={acceptQuotationMutation.isPending}
       />
 
       <CustomerQuickViewDrawer

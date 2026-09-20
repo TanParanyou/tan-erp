@@ -22,6 +22,107 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("TanErp.Domain.Commercial.Quotation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AcceptedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at_utc");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<Guid>("EstimateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_id");
+
+                    b.Property<Guid>("EstimateRevisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_revision_id");
+
+                    b.Property<DateTimeOffset>("IssuedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("issued_at_utc");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("number");
+
+                    b.Property<Guid>("OpportunityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("opportunity_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("SnapshotHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("snapshot_hash");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_amount");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("EstimateId");
+
+                    b.HasIndex("EstimateRevisionId");
+
+                    b.HasIndex("OpportunityId");
+
+                    b.HasIndex("OrganizationId", "EstimateId");
+
+                    b.HasIndex("OrganizationId", "Number")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "OpportunityId");
+
+                    b.ToTable("quotations", "commercial", t =>
+                        {
+                            t.HasCheckConstraint("ck_quotations_status", "status IN ('draft', 'issued', 'accepted', 'rejected', 'expired')");
+
+                            t.HasCheckConstraint("ck_quotations_total_amount", "total_amount >= 0");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Common.AuditEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -742,6 +843,100 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_site_images_display_order", "display_order >= 0");
                         });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.DocumentNumbering.DocumentSequenceCounter", b =>
+                {
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("DocumentType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("document_type");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("PeriodKey")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("period_key");
+
+                    b.Property<long>("CurrentValue")
+                        .HasColumnType("bigint")
+                        .HasColumnName("current_val");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("OrganizationId", "DocumentType", "BranchId", "PeriodKey");
+
+                    b.ToTable("sequence_counters", "common");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("document_type");
+
+                    b.Property<string>("FormatPattern")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("format_pattern");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsBranchSpecific")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_branch_specific");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<int>("Padding")
+                        .HasColumnType("integer")
+                        .HasColumnName("padding");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("prefix");
+
+                    b.Property<int>("ResetPeriod")
+                        .HasColumnType("integer")
+                        .HasColumnName("reset_period");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "DocumentType")
+                        .IsUnique();
+
+                    b.ToTable("document_sequence_definitions", "common");
                 });
 
             modelBuilder.Entity("TanErp.Domain.Estimates.Estimate", b =>
@@ -2005,6 +2200,45 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Commercial.Quotation", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Crm.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Estimates.Estimate", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Estimates.EstimateRevision", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateRevisionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Crm.Opportunities.Opportunity", null)
+                        .WithMany()
+                        .HasForeignKey("OpportunityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Common.IdempotencyRecord", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Organization", null)
@@ -2159,6 +2393,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("SiteId", "OrganizationId")
                         .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

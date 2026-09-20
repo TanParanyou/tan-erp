@@ -50,6 +50,7 @@ export type OpportunityEditorTab = "project" | "plan";
 export function OpportunityEditor() {
   const t = useTranslations("opportunities");
   const tCommon = useTranslations("common");
+  const tShell = useTranslations("shell");
   const tValidation = useTranslations("common.validation");
   const locale = useLocale();
   const router = useRouter();
@@ -284,10 +285,27 @@ export function OpportunityEditor() {
     }
   };
 
+  const handleCancel = () => {
+    if (isDirty) {
+      cancelConfirm.open();
+    } else {
+      router.push(`/${locale}/opportunities`);
+    }
+  };
+
   return (
     <FormProvider {...methods}>
       <div className="flex flex-col gap-5">
-        <PageHeader title={t("createOpportunity")} />
+        <PageHeader
+          title={t("createOpportunity")}
+          subtitle={t("subtitle")}
+          onBack={handleCancel}
+          backLabel={t("backToList")}
+          breadcrumbs={[
+            { label: tShell("opportunities"), href: `/${locale}/opportunities` },
+            { label: t("createOpportunity") },
+          ]}
+        />
 
         {/* Global FormTabs with Error Indicator and Unrestricted Switching */}
         <FormTabs<OpportunityEditorTab>
@@ -322,13 +340,7 @@ export function OpportunityEditor() {
                 isDirty={isDirty}
                 isLoading={isSubmitting}
                 saveText={t("saveOpportunity")}
-                onCancel={() => {
-                  if (isDirty) {
-                    cancelConfirm.open();
-                  } else {
-                    router.push(`/${locale}/opportunities`);
-                  }
-                }}
+                onCancel={handleCancel}
               />
             }
           >

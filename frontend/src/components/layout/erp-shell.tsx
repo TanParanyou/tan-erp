@@ -20,6 +20,7 @@ import {
   IconUser,
   IconBuilding,
   IconGitBranch,
+  IconFileText,
 } from "@/components/common/Icons";
 import { LogoIcon } from "@/components/common/Logo";
 import { Button } from "@/components/ui/Button";
@@ -53,6 +54,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
 
   const hasCustomersRead = can(activeMembership, "customers.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
+  const hasSettingsRead = can(activeMembership, "document-sequences.read") || can(activeMembership, "organizations.read");
 
   const targetLocale = locale === "th" ? "en" : "th";
 
@@ -64,6 +66,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
   const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/`;
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
+  const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "var(--erp-canvas)" }}>
@@ -345,6 +348,19 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
                 >
                   <IconBriefcase size={20} />
                   <span className="erp-nav-text">{tShell("opportunities")}</span>
+                </Link>
+              </li>
+            )}
+            {hasSettingsRead && (
+              <li>
+                <Link
+                  href={`/${locale}/settings/document-numbering`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`erp-nav-link ${isDocumentNumberingActive ? "erp-nav-link-active" : ""}`}
+                  title={tShell("documentNumbering")}
+                >
+                  <IconFileText size={20} />
+                  <span className="erp-nav-text">{tShell("documentNumbering")}</span>
                 </Link>
               </li>
             )}

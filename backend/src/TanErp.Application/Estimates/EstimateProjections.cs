@@ -79,3 +79,24 @@ public sealed record EstimateDetailProjection(
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset UpdatedAtUtc,
     EstimateRevisionProjection? CurrentRevision);
+
+public sealed record QuotationDetailProjection(
+    Guid QuotationId,
+    Guid EstimateId,
+    Guid OpportunityId,
+    string Number,
+    string Status,
+    decimal GrandTotal,
+    DateTimeOffset IssuedAtUtc,
+    Guid EstimateRevisionId,
+    int RevisionNo,
+    string OpportunityStage,
+    Guid OpportunityRowVersion,
+    Guid EstimateRowVersion);
+
+public sealed record AcceptQuotationProjection(
+    Guid QuotationId,
+    Guid OpportunityId,
+    string OpportunityStage,
+    Guid OpportunityRowVersion,
+    DateTimeOffset AcceptedAtUtc);

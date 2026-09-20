@@ -125,4 +125,14 @@ public class EstimateRevision
 
         CalculationSnapshotJson = JsonSerializer.Serialize(snapshotObj);
     }
+
+    public void MarkQuoted()
+    {
+        if (Status != EstimateRevisionStatus.Draft && Status != EstimateRevisionStatus.Approved)
+            throw new EstimateInvalidStateException($"Cannot quote estimate revision in status '{Status}'.");
+
+        Status = EstimateRevisionStatus.Quoted;
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = DateTimeOffset.UtcNow;
+    }
 }

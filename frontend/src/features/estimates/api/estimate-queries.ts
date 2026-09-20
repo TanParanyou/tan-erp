@@ -6,6 +6,10 @@ import {
   type CreateEstimateDraftRequest,
   type UpdateEstimateDraftRequest,
   type CalculateEstimateRequest,
+  type IssueQuotationRequest,
+  type QuotationResponse,
+  type AcceptQuotationRequest,
+  type AcceptQuotationResponse,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError, ApiError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -161,6 +165,74 @@ export function useCalculateEstimate(
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: opportunityEstimateQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+    },
+  });
+}
+
+export function useIssueQuotation(
+  opportunityId: string,
+  estimateId: string
+): UseMutationResult<QuotationResponse, Error, IssueQuotationRequest> {
+  const queryClient = useQueryClient();
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async (payload: IssueQuotationRequest) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.issueQuotation(estimateId, payload, {
+        token,
+        membershipId,
+        idempotencyKey: crypto.randomUUID(),
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: opportunityEstimateQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: opportunityDetailQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+    },
+  });
+}
+
+export function useAcceptQuotation(
+  opportunityId: string,
+  estimateId: string
+): UseMutationResult<AcceptQuotationResponse, Error, AcceptQuotationRequest> {
+  const queryClient = useQueryClient();
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async (payload: AcceptQuotationRequest) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.acceptQuotation(estimateId, payload, {
+        token,
+        membershipId,
+        idempotencyKey: crypto.randomUUID(),
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: opportunityEstimateQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: opportunityDetailQueryKey(membershipId, normalizedLocale, opportunityId),
       });
     },
   });

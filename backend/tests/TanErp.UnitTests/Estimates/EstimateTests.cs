@@ -154,4 +154,21 @@ public class EstimateTests
         Assert.Equal(9630m, revision.GrandTotal);
         Assert.Equal(4000m, revision.MarginAmount);
     }
+
+    [Fact]
+    public void MarkQuoted_TransitionsEstimateAndRevisionToQuoted()
+    {
+        var estimate = Estimate.CreateDraft(
+            Guid.NewGuid(), _orgId, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "EST-2026-0002");
+
+        var oldEstimateVersion = estimate.RowVersion;
+        var oldRevVersion = estimate.CurrentRevision!.RowVersion;
+
+        estimate.MarkQuoted();
+
+        Assert.Equal(EstimateStatus.Quoted, estimate.Status);
+        Assert.Equal(EstimateRevisionStatus.Quoted, estimate.CurrentRevision.Status);
+        Assert.NotEqual(oldEstimateVersion, estimate.RowVersion);
+        Assert.NotEqual(oldRevVersion, estimate.CurrentRevision.RowVersion);
+    }
 }

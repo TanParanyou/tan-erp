@@ -38,11 +38,14 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Estimates.EstimateSection> EstimateSections => Set<TanErp.Domain.Estimates.EstimateSection>();
     public DbSet<TanErp.Domain.Estimates.EstimateWorkItem> EstimateWorkItems => Set<TanErp.Domain.Estimates.EstimateWorkItem>();
     public DbSet<TanErp.Domain.Estimates.EstimateCostComponent> EstimateCostComponents => Set<TanErp.Domain.Estimates.EstimateCostComponent>();
+    public DbSet<TanErp.Domain.Commercial.Quotation> Quotations => Set<TanErp.Domain.Commercial.Quotation>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
     public DbSet<TanErp.Domain.MasterData.Geography.Province> Provinces => Set<TanErp.Domain.MasterData.Geography.Province>();
     public DbSet<TanErp.Domain.MasterData.Geography.District> Districts => Set<TanErp.Domain.MasterData.Geography.District>();
     public DbSet<TanErp.Domain.MasterData.Geography.Subdistrict> Subdistricts => Set<TanErp.Domain.MasterData.Geography.Subdistrict>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
+    public DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition> DocumentSequenceDefinitions => Set<TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition>();
+    public DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceCounter> DocumentSequenceCounters => Set<TanErp.Domain.DocumentNumbering.DocumentSequenceCounter>();
 
     public void AddAuditEvent(AuditEvent auditEvent)
     {

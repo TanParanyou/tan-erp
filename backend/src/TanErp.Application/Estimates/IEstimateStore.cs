@@ -42,6 +42,26 @@ public interface IEstimateStore
         Guid actorUserId,
         string idempotencyKey,
         CancellationToken cancellationToken);
+
+    Task<QuotationDetailProjection> IssueQuotationAsync(
+        Guid organizationId,
+        Guid estimateId,
+        Guid expectedEstimateVersion,
+        Guid expectedOpportunityVersion,
+        Guid actorUserId,
+        string idempotencyKey,
+        string traceId,
+        CancellationToken cancellationToken);
+
+    Task<AcceptQuotationProjection> AcceptQuotationAsync(
+        Guid organizationId,
+        Guid estimateId,
+        Guid expectedOpportunityVersion,
+        string? decisionNote,
+        Guid actorUserId,
+        string idempotencyKey,
+        string traceId,
+        CancellationToken cancellationToken);
 }
 
 public sealed record EstimateCostComponentDraftDto(

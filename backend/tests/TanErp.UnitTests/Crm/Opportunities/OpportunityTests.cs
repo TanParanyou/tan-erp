@@ -175,4 +175,35 @@ public class OpportunityTests
         Assert.Equal(OpportunityStage.Draft, opp.Stage);
         Assert.NotEqual(closedVersion, opp.RowVersion);
     }
+
+    [Fact]
+    public void EnterProposed_FromEstimating_SetsProposedAndRotatesVersion()
+    {
+        var opp = CreateValidDraft();
+        opp.Qualify(opp.RowVersion);
+        opp.EnterSurveying(opp.RowVersion, Guid.NewGuid());
+        opp.EnterEstimating(opp.RowVersion);
+
+        var estimatingVersion = opp.RowVersion;
+        opp.EnterProposed(estimatingVersion);
+
+        Assert.Equal(OpportunityStage.Proposed, opp.Stage);
+        Assert.NotEqual(estimatingVersion, opp.RowVersion);
+    }
+
+    [Fact]
+    public void MarkWon_FromProposed_SetsWonAndRotatesVersion()
+    {
+        var opp = CreateValidDraft();
+        opp.Qualify(opp.RowVersion);
+        opp.EnterSurveying(opp.RowVersion, Guid.NewGuid());
+        opp.EnterEstimating(opp.RowVersion);
+        opp.EnterProposed(opp.RowVersion);
+
+        var proposedVersion = opp.RowVersion;
+        opp.MarkWon(proposedVersion);
+
+        Assert.Equal(OpportunityStage.Won, opp.Stage);
+        Assert.NotEqual(proposedVersion, opp.RowVersion);
+    }
 }

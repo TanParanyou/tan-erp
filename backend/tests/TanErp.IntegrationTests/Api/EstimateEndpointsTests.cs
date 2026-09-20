@@ -385,4 +385,175 @@ public class EstimateEndpointsTests : IAsyncLifetime
         var updateRes = await _client.SendAsync(updateMsg);
         Assert.Equal(HttpStatusCode.Conflict, updateRes.StatusCode);
     }
+
+    [Fact]
+    public async Task IssueQuotation_And_AcceptQuotation_FullCommercialCycle_AdvancesOpportunityToProposedThenWon()
+    {
+        var (customerId, _, oppId, _) = await SetupEstimatingOpportunityAsync();
+
+        // 1. Create estimate
+        var createMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            "/api/v1/estimates",
+            "token-org-a",
+            MembershipAId);
+        createMsg.Headers.Add("Idempotency-Key", "idemp-commercial-0001");
+        createMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
+            customerId,
+            oppId,
+            BranchAId,
+            null,
+            null,
+            "THB"));
+
+        var createRes = await _client.SendAsync(createMsg);
+        Assert.Equal(HttpStatusCode.Created, createRes.StatusCode);
+        var estimate = (await createRes.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+        var revision = estimate.CurrentRevision!;
+
+        // 2. Update draft with sections, items, and cost components
+        var updateMsg = CreateAuthenticatedRequest(
+            HttpMethod.Put,
+            $"/api/v1/estimates/{estimate.Id}/revisions/{revision.Id}/draft",
+            "token-org-a",
+            MembershipAId);
+        updateMsg.Headers.Add("If-Match", $"\"{revision.RowVersion}\"");
+        updateMsg.Content = JsonContent.Create(new UpdateEstimateDraftRequest(
+            revision.RowVersion,
+            new List<UpdateEstimateSectionDto>
+            {
+                new(
+                    null,
+                    "SEC-01",
+                    "งาน Built-in ตู้",
+                    "Built-in Section",
+                    1,
+                    new List<UpdateEstimateWorkItemDto>
+                    {
+                        new(
+                            null,
+                            "WI-01",
+                            "ตู้เสื้อผ้า",
+                            "Wardrobe",
+                            1,
+                            "ชุด",
+                            SellingRuleType.Margin,
+                            0.20m,
+                            1,
+                            new List<UpdateEstimateCostComponentDto>
+                            {
+                                new(null, CostComponentType.Material, "ไม้", 10, "แผ่น", 1000m, "THB", 1)
+                            })
+                    })
+            }));
+
+        var updateRes = await _client.SendAsync(updateMsg);
+        Assert.Equal(HttpStatusCode.OK, updateRes.StatusCode);
+        var updatedRevision = (await updateRes.Content.ReadFromJsonAsync<EstimateRevisionResponse>())!;
+
+        // 3. Calculate with discount
+        var calcMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/revisions/{revision.Id}/calculate",
+            "token-org-a",
+            MembershipAId);
+        calcMsg.Headers.Add("Idempotency-Key", "idemp-commercial-calc-0001");
+        calcMsg.Content = JsonContent.Create(new CalculateEstimateRequest(updatedRevision.RowVersion, 500m));
+
+        var calcRes = await _client.SendAsync(calcMsg);
+        Assert.Equal(HttpStatusCode.OK, calcRes.StatusCode);
+        var calculatedRev = (await calcRes.Content.ReadFromJsonAsync<EstimateRevisionResponse>())!;
+        Assert.True(calculatedRev.GrandTotal > 0);
+
+        // Fetch latest estimate rowVersion
+        var getEstimateMsg = CreateAuthenticatedRequest(
+            HttpMethod.Get,
+            $"/api/v1/estimates/{estimate.Id}",
+            "token-org-a",
+            MembershipAId);
+        var getEstimateRes = await _client.SendAsync(getEstimateMsg);
+        var latestEstimate = (await getEstimateRes.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+
+        // Fetch latest opportunity rowVersion
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var oppInDb = await db.Opportunities.FirstAsync(o => o.Id == oppId);
+        Assert.Equal(OpportunityStage.Estimating, oppInDb.Stage);
+
+        // 4. Issue Quotation
+        var issueQuoteMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation",
+            "token-org-a",
+            MembershipAId);
+        issueQuoteMsg.Headers.Add("Idempotency-Key", "idemp-commercial-quote-0001");
+        issueQuoteMsg.Content = JsonContent.Create(new IssueQuotationRequest(
+            latestEstimate.RowVersion,
+            oppInDb.RowVersion));
+
+        var issueQuoteRes = await _client.SendAsync(issueQuoteMsg);
+        var errContent = await issueQuoteRes.Content.ReadAsStringAsync();
+        Assert.True(issueQuoteRes.StatusCode == HttpStatusCode.Created, $"Failed with: {issueQuoteRes.StatusCode} - {errContent}");
+        var quotation = (await issueQuoteRes.Content.ReadFromJsonAsync<QuotationResponse>())!;
+
+        Assert.StartsWith("QT-", quotation.Number);
+        Assert.Equal("issued", quotation.Status);
+        Assert.Equal(OpportunityStage.Proposed, quotation.OpportunityStage);
+        Assert.Equal(calculatedRev.GrandTotal, quotation.GrandTotal);
+
+        // Verify DB stage and history
+        await db.Entry(oppInDb).ReloadAsync();
+        Assert.Equal(OpportunityStage.Proposed, oppInDb.Stage);
+
+        var historyList = await db.OpportunityStageHistories
+            .Where(h => h.OpportunityId == oppId)
+            .OrderBy(h => h.OccurredAtUtc)
+            .ToListAsync();
+        Assert.Contains(historyList, h => h.FromStage == OpportunityStage.Estimating && h.ToStage == OpportunityStage.Proposed);
+
+        // Verify Idempotency replay returns same quotation
+        var replayMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation",
+            "token-org-a",
+            MembershipAId);
+        replayMsg.Headers.Add("Idempotency-Key", "idemp-commercial-quote-0001");
+        replayMsg.Content = JsonContent.Create(new IssueQuotationRequest(
+            latestEstimate.RowVersion,
+            oppInDb.RowVersion));
+
+        var replayRes = await _client.SendAsync(replayMsg);
+        Assert.Equal(HttpStatusCode.Created, replayRes.StatusCode);
+        var replayQuotation = (await replayRes.Content.ReadFromJsonAsync<QuotationResponse>())!;
+        Assert.Equal(quotation.QuotationId, replayQuotation.QuotationId);
+        Assert.Equal(quotation.Number, replayQuotation.Number);
+
+        // 5. Accept Quotation (Customer Acceptance) -> Won
+        var acceptMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation/accept",
+            "token-org-a",
+            MembershipAId);
+        acceptMsg.Headers.Add("Idempotency-Key", "idemp-commercial-accept-0001");
+        acceptMsg.Content = JsonContent.Create(new AcceptQuotationRequest(
+            quotation.OpportunityRowVersion,
+            "ลูกค้ายืนยันตกลงสั่งซื้อตามใบเสนอราคา"));
+
+        var acceptRes = await _client.SendAsync(acceptMsg);
+        Assert.Equal(HttpStatusCode.OK, acceptRes.StatusCode);
+        var acceptResponse = (await acceptRes.Content.ReadFromJsonAsync<AcceptQuotationResponse>())!;
+
+        Assert.Equal(quotation.QuotationId, acceptResponse.QuotationId);
+        Assert.Equal(OpportunityStage.Won, acceptResponse.OpportunityStage);
+
+        // Verify DB stage and history
+        await db.Entry(oppInDb).ReloadAsync();
+        Assert.Equal(OpportunityStage.Won, oppInDb.Stage);
+
+        var updatedHistories = await db.OpportunityStageHistories
+            .Where(h => h.OpportunityId == oppId)
+            .OrderBy(h => h.OccurredAtUtc)
+            .ToListAsync();
+        Assert.Contains(updatedHistories, h => h.FromStage == OpportunityStage.Proposed && h.ToStage == OpportunityStage.Won);
+    }
 }

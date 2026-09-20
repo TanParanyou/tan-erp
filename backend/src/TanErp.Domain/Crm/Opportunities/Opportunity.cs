@@ -156,6 +156,24 @@ public class Opportunity : Entity
         RowVersion = Guid.NewGuid();
     }
 
+    public void EnterProposed(Guid expectedVersion)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage != OpportunityStage.Estimating) throw new OpportunityTransitionException(Stage, OpportunityStage.Proposed);
+
+        Stage = OpportunityStage.Proposed;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void MarkWon(Guid expectedVersion)
+    {
+        if (RowVersion != expectedVersion) throw new OpportunityVersionException();
+        if (Stage != OpportunityStage.Proposed) throw new OpportunityTransitionException(Stage, OpportunityStage.Won);
+
+        Stage = OpportunityStage.Won;
+        RowVersion = Guid.NewGuid();
+    }
+
 
     public void Close(Guid expectedVersion, string targetStage, string reasonCode, string? note = null)
     {

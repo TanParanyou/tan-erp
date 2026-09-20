@@ -47,6 +47,10 @@ export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionRe
 export type CreateEstimateDraftRequest = components["schemas"]["CreateEstimateDraftRequest"];
 export type UpdateEstimateDraftRequest = components["schemas"]["UpdateEstimateDraftRequest"];
 export type CalculateEstimateRequest = components["schemas"]["CalculateEstimateRequest"];
+export type IssueQuotationRequest = components["schemas"]["IssueQuotationRequest"];
+export type QuotationResponse = components["schemas"]["QuotationResponse"];
+export type AcceptQuotationRequest = components["schemas"]["AcceptQuotationRequest"];
+export type AcceptQuotationResponse = components["schemas"]["AcceptQuotationResponse"];
 
 
 export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
@@ -536,6 +540,67 @@ export class ApiClient {
   ): Promise<EstimateRevisionResponse> {
     return this.request<EstimateRevisionResponse>(
       `/api/v1/estimates/${encodeURIComponent(id)}/revisions/${encodeURIComponent(revisionId)}/calculate`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async issueQuotation(
+    id: string,
+    payload: IssueQuotationRequest,
+    options: RequestOptions
+  ): Promise<QuotationResponse> {
+    return this.request<QuotationResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/quotation`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async acceptQuotation(
+    id: string,
+    payload: AcceptQuotationRequest,
+    options: RequestOptions
+  ): Promise<AcceptQuotationResponse> {
+    return this.request<AcceptQuotationResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/quotation/accept`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async listDocumentSequences(
+    options: RequestOptions
+  ): Promise<import("@/features/settings/document-numbering/types").DocumentSequenceItem[]> {
+    return this.request<import("@/features/settings/document-numbering/types").DocumentSequenceItem[]>(
+      "/api/v1/settings/document-sequences",
+      "GET",
+      options
+    );
+  }
+
+  async updateDocumentSequence(
+    documentType: string,
+    payload: import("@/features/settings/document-numbering/types").UpdateDocumentSequencePayload,
+    options: RequestOptions
+  ): Promise<import("@/features/settings/document-numbering/types").DocumentSequenceItem> {
+    return this.request<import("@/features/settings/document-numbering/types").DocumentSequenceItem>(
+      `/api/v1/settings/document-sequences/${encodeURIComponent(documentType)}`,
+      "PUT",
+      options,
+      payload
+    );
+  }
+
+  async previewDocumentSequence(
+    payload: import("@/features/settings/document-numbering/types").PreviewDocumentSequencePayload,
+    options: RequestOptions
+  ): Promise<{ preview: string }> {
+    return this.request<{ preview: string }>(
+      "/api/v1/settings/document-sequences/preview",
       "POST",
       options,
       payload

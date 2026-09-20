@@ -35,11 +35,11 @@ async function signIn(page: Page, email = "foundation-user@example.test"): Promi
   };
 }
 
-test.describe("Official Estimate BOQ & Calculation Journey (Slice 5A)", () => {
-  test("creates estimate draft, configures BOQ sections and items, recalculates with discount, and verifies financial summary", async ({
+test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
+  test("creates estimate draft, calculates BOQ, issues quotation, and advances opportunity to proposed then won upon customer acceptance", async ({
     page,
   }) => {
-    test.setTimeout(60000);
+    test.setTimeout(120000);
     await signIn(page);
 
     // 1. Create a customer with a primary site and activate
@@ -265,5 +265,40 @@ test.describe("Official Estimate BOQ & Calculation Journey (Slice 5A)", () => {
 
     await expect(page.getByText(estimateData.number)).toBeVisible();
     await expect(page.getByText(/ยอดรวมสุทธิทั้งสิ้น/)).toBeVisible();
+
+    // 10. Issue Quotation (Slice 5B: Advances Opportunity to 'proposed')
+    const issueQuotationBtn = page.getByRole("button", { name: /ออกใบเสนอราคา/i });
+    await expect(issueQuotationBtn).toBeVisible();
+    await issueQuotationBtn.click();
+
+    const issueConfirmModal = page.getByRole("dialog");
+    await expect(issueConfirmModal).toBeVisible();
+    const issueConfirmBtn = issueConfirmModal.getByRole("button", { name: /ออกใบเสนอราคา/i });
+    const issueQuotationPromise = page.waitForResponse(
+      (res) => res.url().includes("/quotation") && res.request().method() === "POST" && res.status() === 201
+    );
+    await issueConfirmBtn.click();
+    await issueQuotationPromise;
+
+    // Verify Estimate is now quoted and Opportunity stage is proposed
+    await expect(page.getByText(/ออกใบเสนอราคาแล้ว/i)).toBeVisible();
+    await expect(page.getByText(/เสนอราคาแล้ว \(Proposed\)/i).first()).toBeVisible();
+
+    // 11. Customer Acceptance (Slice 5B: Advances Opportunity to 'won')
+    const acceptQuotationBtn = page.getByRole("button", { name: /ลูกค้ายอมรับใบเสนอราคา/i });
+    await expect(acceptQuotationBtn).toBeVisible();
+    await acceptQuotationBtn.click();
+
+    const acceptConfirmModal = page.getByRole("dialog");
+    await expect(acceptConfirmModal).toBeVisible();
+    const acceptConfirmBtn = acceptConfirmModal.getByRole("button", { name: /ลูกค้ายอมรับใบเสนอราคา/i });
+    const acceptQuotationPromise = page.waitForResponse(
+      (res) => res.url().includes("/quotation/accept") && res.request().method() === "POST" && res.status() === 200
+    );
+    await acceptConfirmBtn.click();
+    await acceptQuotationPromise;
+
+    // Verify Opportunity stage is now won!
+    await expect(page.getByText(/ปิดการขายสำเร็จ \(Won\)/i).first()).toBeVisible();
   });
 });

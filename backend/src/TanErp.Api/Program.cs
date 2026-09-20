@@ -125,6 +125,8 @@ builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateDraft.Crea
 builder.Services.AddScoped<TanErp.Application.Estimates.GetEstimate.GetEstimateHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.UpdateEstimateDraft.UpdateEstimateDraftHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.CalculateEstimate.CalculateEstimateHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.IssueQuotation.IssueQuotationHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.AcceptQuotation.AcceptQuotationHandler>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.IAddressLookupCache, TanErp.Infrastructure.MasterData.AddressLookupCache>();
 
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();
@@ -134,6 +136,13 @@ builder.Services.AddSingleton<TanErp.Application.Files.IFileStorageProvider, Tan
 builder.Services.AddScoped<TanErp.Application.Files.IFileStore, TanErp.Infrastructure.Files.FileStore>();
 builder.Services.AddScoped<TanErp.Application.Files.CreateUploadSession.CreateUploadSessionHandler>();
 builder.Services.AddScoped<TanErp.Application.Files.CompleteUploadSession.CompleteUploadSessionHandler>();
+
+// Document Numbering Platform Service
+builder.Services.AddScoped<TanErp.Application.Common.Abstractions.ISequenceCounter, TanErp.Infrastructure.Persistence.DocumentNumbering.SequenceCounter>();
+builder.Services.AddScoped<TanErp.Application.Common.Abstractions.IDocumentNumberGenerator, TanErp.Infrastructure.Persistence.DocumentNumbering.DocumentNumberGenerator>();
+builder.Services.AddScoped<TanErp.Application.DocumentNumbering.ListDocumentSequences.ListDocumentSequencesHandler>();
+builder.Services.AddScoped<TanErp.Application.DocumentNumbering.UpdateDocumentSequence.UpdateDocumentSequenceHandler>();
+builder.Services.AddScoped<TanErp.Application.DocumentNumbering.PreviewDocumentSequence.PreviewDocumentSequenceHandler>();
 
 // Authentication & Authorization
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)

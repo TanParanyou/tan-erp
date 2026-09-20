@@ -245,5 +245,23 @@
   <data name="FILE_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>The specified file was not found in the system.</value>
   </data>
+  <data name="INVALID_DOCUMENT_TYPE_TITLE" xml:space="preserve">
+    <value>Invalid Document Type</value>
+  </data>
+  <data name="INVALID_DOCUMENT_TYPE_DETAIL" xml:space="preserve">
+    <value>The specified document type is not supported.</value>
+  </data>
+  <data name="INVALID_FORMAT_PATTERN_TITLE" xml:space="preserve">
+    <value>Invalid Format Pattern</value>
+  </data>
+  <data name="INVALID_FORMAT_PATTERN_DETAIL" xml:space="preserve">
+    <value>The format pattern cannot be blank and must have a valid structure.</value>
+  </data>
+  <data name="INVALID_PADDING_TITLE" xml:space="preserve">
+    <value>Invalid Sequence Padding</value>
+  </data>
+  <data name="INVALID_PADDING_DETAIL" xml:space="preserve">
+    <value>Sequence padding must be between 1 and 10 digits.</value>
+  </data>
 </root>
 

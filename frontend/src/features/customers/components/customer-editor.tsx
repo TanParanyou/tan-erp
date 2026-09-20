@@ -295,6 +295,8 @@ export function CustomerEditor() {
         <PageHeader
           title={t("createCustomer")}
           subtitle={t("subtitle")}
+          onBack={handleCancel}
+          backLabel={t("backToList")}
           breadcrumbs={[
             { label: tShell("customers"), href: `/${locale}/customers` },
             { label: t("createCustomer") },

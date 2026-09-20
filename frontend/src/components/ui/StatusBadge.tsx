@@ -25,6 +25,7 @@ const statusVariantMap: Record<string, BadgeVariant> = {
   confirmed: "success",
   approved: "success",
   completed: "success",
+  quoted: "info",
   pending: "warning",
   draft: "warning",
   review: "warning",

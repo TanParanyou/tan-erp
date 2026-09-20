@@ -85,4 +85,12 @@ public class Estimate
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = DateTimeOffset.UtcNow;
     }
+
+    public void MarkQuoted()
+    {
+        CurrentRevision?.MarkQuoted();
+        Status = EstimateStatus.Quoted;
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = DateTimeOffset.UtcNow;
+    }
 }
