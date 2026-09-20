@@ -60,7 +60,8 @@ public class ListDocumentSequencesHandler
                     def.Padding,
                     def.IsBranchSpecific,
                     def.IsActive,
-                    preview));
+                    preview,
+                    def.RowVersion));
             }
             else
             {
@@ -74,6 +75,7 @@ public class ListDocumentSequencesHandler
                 };
                 var defaultPattern = "{PREFIX}-{YYYY}-{SEQ:4}";
                 var preview = _generator.Preview(defaultPattern, defaultPrefix, "HQ", sampleSequence: 1, defaultPadding: 4);
+                var defaultRowVersion = DocumentSequenceDefinition.ComputeDefaultRowVersion(orgId, docType);
 
                 results.Add(new DocumentSequenceProjection(
                     null,
@@ -84,7 +86,8 @@ public class ListDocumentSequencesHandler
                     4,
                     false,
                     true,
-                    preview));
+                    preview,
+                    defaultRowVersion));
             }
         }
 

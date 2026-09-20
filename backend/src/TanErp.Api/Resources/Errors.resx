@@ -269,5 +269,17 @@
   <data name="DOCUMENT_NUMBER_ALLOCATION_FAILED_DETAIL" xml:space="preserve">
     <value>ไม่สามารถจัดสรรเลขที่เอกสารได้เนื่องจากการตั้งค่าลำดับเอกสารไม่ถูกต้องหรือไม่สามารถรันลำดับได้</value>
   </data>
+  <data name="INVALID_RESET_PERIOD_TITLE" xml:space="preserve">
+    <value>รอบการเริ่มนับใหม่ไม่ถูกต้อง</value>
+  </data>
+  <data name="INVALID_RESET_PERIOD_DETAIL" xml:space="preserve">
+    <value>รอบการเริ่มนับเลขใหม่ต้องเป็น Never, Yearly, Monthly หรือ Daily</value>
+  </data>
+  <data name="DOCUMENT_SEQUENCE_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>รูปแบบเลขที่เอกสารถูกแก้ไขโดยผู้อื่น</value>
+  </data>
+  <data name="DOCUMENT_SEQUENCE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>เวอร์ชันของรูปแบบเลขที่เอกสารไม่ตรงกับข้อมูลล่าสุดในระบบ กรุณาโหลดข้อมูลใหม่</value>
+  </data>
 </root>
 

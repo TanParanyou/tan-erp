@@ -6,6 +6,7 @@ import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useUpdateDocumentSequence } from "../api/document-sequence-queries";
+import { ApiError } from "@/lib/api/api-error";
 import type { DocumentSequenceItem, ResetPeriod } from "../types";
 
 export interface DocumentSequenceDrawerProps {
@@ -98,6 +99,7 @@ export function DocumentSequenceDrawer({
     try {
       await updateMutation.mutateAsync({
         documentType: item.documentType,
+        ifMatch: item.rowVersion,
         payload: {
           prefix: prefix.trim(),
           formatPattern: formatPattern.trim(),
@@ -108,6 +110,24 @@ export function DocumentSequenceDrawer({
       });
       onClose();
     } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        if (err.code === "DOCUMENT_SEQUENCE_VERSION_CONFLICT") {
+          setError(t("versionConflict"));
+          return;
+        }
+        if (err.code === "INVALID_FORMAT_PATTERN") {
+          setError(t("invalidPattern"));
+          return;
+        }
+        if (err.code === "INVALID_RESET_PERIOD") {
+          setError(t("invalidResetPeriod"));
+          return;
+        }
+        if (err.code === "PERMISSION_DENIED") {
+          setError(t("permissionDenied"));
+          return;
+        }
+      }
       setError(err instanceof Error ? err.message : t("updateFailed"));
     }
   };

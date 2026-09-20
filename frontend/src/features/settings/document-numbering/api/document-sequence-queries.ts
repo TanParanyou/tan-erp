@@ -40,7 +40,7 @@ export function useDocumentSequences(): UseQueryResult<DocumentSequenceItem[], E
 export function useUpdateDocumentSequence(): UseMutationResult<
   DocumentSequenceItem,
   Error,
-  { documentType: string; payload: UpdateDocumentSequencePayload }
+  { documentType: string; payload: UpdateDocumentSequencePayload; ifMatch: string }
 > {
   const queryClient = useQueryClient();
   const locale = useSafeLocale();
@@ -49,7 +49,7 @@ export function useUpdateDocumentSequence(): UseMutationResult<
   const membershipId = selectedMembership?.id;
 
   return useMutation({
-    mutationFn: async ({ documentType, payload }) => {
+    mutationFn: async ({ documentType, payload, ifMatch }) => {
       const token = await getAuthToken();
       if (!token) throw new AuthenticationRequiredError();
       if (!membershipId) throw new MembershipRequiredError();
@@ -58,6 +58,7 @@ export function useUpdateDocumentSequence(): UseMutationResult<
         token,
         membershipId,
         locale: normalizedLocale,
+        ifMatch,
       });
     },
     onSuccess: () => {

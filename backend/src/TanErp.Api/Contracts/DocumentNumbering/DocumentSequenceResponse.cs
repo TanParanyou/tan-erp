@@ -11,4 +11,5 @@ public class DocumentSequenceResponse
     public bool IsBranchSpecific { get; set; }
     public bool IsActive { get; set; }
     public string SamplePreview { get; set; } = string.Empty;
+    public Guid RowVersion { get; set; }
 }

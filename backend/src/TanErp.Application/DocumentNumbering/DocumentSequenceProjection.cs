@@ -9,4 +9,5 @@ public record DocumentSequenceProjection(
     int Padding,
     bool IsBranchSpecific,
     bool IsActive,
-    string SamplePreview);
+    string SamplePreview,
+    Guid RowVersion);

@@ -10,6 +10,7 @@ export interface DocumentSequenceItem {
   isBranchSpecific: boolean;
   isActive: boolean;
   samplePreview: string;
+  rowVersion: string;
 }
 
 export interface UpdateDocumentSequencePayload {

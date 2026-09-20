@@ -15,6 +15,26 @@ public class DocumentSequenceDefinition : Entity
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset UpdatedAtUtc { get; private set; }
 
+    public Guid RowVersion => ComputeRowVersion(OrganizationId, DocumentType, UpdatedAtUtc);
+
+    public static Guid ComputeRowVersion(Guid orgId, string docType, DateTimeOffset updatedAtUtc)
+    {
+        var key = $"docseq:{orgId}:{docType.Trim().ToLowerInvariant()}:{updatedAtUtc.ToUnixTimeMilliseconds()}";
+        var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(key));
+        Span<byte> guidBytes = stackalloc byte[16];
+        hash.AsSpan(0, 16).CopyTo(guidBytes);
+        return new Guid(guidBytes);
+    }
+
+    public static Guid ComputeDefaultRowVersion(Guid orgId, string docType)
+    {
+        var key = $"docseq:{orgId}:{docType.Trim().ToLowerInvariant()}:default";
+        var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(key));
+        Span<byte> guidBytes = stackalloc byte[16];
+        hash.AsSpan(0, 16).CopyTo(guidBytes);
+        return new Guid(guidBytes);
+    }
+
     private DocumentSequenceDefinition() { }
 
     public DocumentSequenceDefinition(

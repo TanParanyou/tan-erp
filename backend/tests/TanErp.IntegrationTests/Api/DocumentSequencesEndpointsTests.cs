@@ -141,7 +141,14 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
     [Fact]
     public async Task UpdateDocumentSequence_UpdatesAndReturnsConfiguredSequence()
     {
+        var getInitialReq = CreateAuthenticatedRequest(HttpMethod.Get, "/api/v1/settings/document-sequences");
+        var getInitialRes = await _client.SendAsync(getInitialReq);
+        Assert.Equal(HttpStatusCode.OK, getInitialRes.StatusCode);
+        var initialList = await getInitialRes.Content.ReadFromJsonAsync<List<DocumentSequenceResponse>>();
+        var initialEst = initialList!.First(s => s.DocumentType == "estimates");
+
         var updateRequest = CreateAuthenticatedRequest(HttpMethod.Put, "/api/v1/settings/document-sequences/estimates");
+        updateRequest.Headers.Add("If-Match", $"\"{initialEst.RowVersion}\"");
         updateRequest.Content = JsonContent.Create(new UpdateDocumentSequenceRequest
         {
             Prefix = "EST-NEW-",
@@ -162,6 +169,7 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
         Assert.Equal("Yearly", updated.ResetPeriod);
         Assert.Equal(5, updated.Padding);
         Assert.False(updated.IsBranchSpecific);
+        Assert.NotEqual(Guid.Empty, updated.RowVersion);
 
         // Verify that GET also reflects the updated sequence
         var getRequest = CreateAuthenticatedRequest(HttpMethod.Get, "/api/v1/settings/document-sequences");
@@ -174,12 +182,19 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
         Assert.Equal("EST-NEW-", estimateSeq.Prefix);
         Assert.Equal("{PREFIX}{YYYY}-{SEQ:5}", estimateSeq.FormatPattern);
         Assert.StartsWith("EST-NEW-", estimateSeq.SamplePreview);
+        Assert.Equal(updated.RowVersion, estimateSeq.RowVersion);
     }
 
     [Fact]
     public async Task UpdateDocumentSequence_WithInvalidPadding_Returns400BadRequest()
     {
+        var getInitialReq = CreateAuthenticatedRequest(HttpMethod.Get, "/api/v1/settings/document-sequences");
+        var getInitialRes = await _client.SendAsync(getInitialReq);
+        var initialList = await getInitialRes.Content.ReadFromJsonAsync<List<DocumentSequenceResponse>>();
+        var initialEst = initialList!.First(s => s.DocumentType == "estimates");
+
         var request = CreateAuthenticatedRequest(HttpMethod.Put, "/api/v1/settings/document-sequences/estimates");
+        request.Headers.Add("If-Match", $"\"{initialEst.RowVersion}\"");
         request.Content = JsonContent.Create(new UpdateDocumentSequenceRequest
         {
             Prefix = "EST-",
@@ -196,6 +211,7 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
     public async Task UpdateDocumentSequence_WithInvalidDocType_Returns400BadRequest()
     {
         var request = CreateAuthenticatedRequest(HttpMethod.Put, "/api/v1/settings/document-sequences/unsupported-type");
+        request.Headers.Add("If-Match", $"\"{Guid.NewGuid()}\"");
         request.Content = JsonContent.Create(new UpdateDocumentSequenceRequest
         {
             Prefix = "UNKNOWN-",
@@ -211,8 +227,15 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
     [Fact]
     public async Task MultiTenant_UpdatingOrgASequence_DoesNotLeakToOrgB()
     {
-        // 1. Org A updates its estimate sequence
+        // 1. Get Org A initial version
+        var orgAGetReq = CreateAuthenticatedRequest(HttpMethod.Get, "/api/v1/settings/document-sequences");
+        var orgAGetRes = await _client.SendAsync(orgAGetReq);
+        var orgAList = await orgAGetRes.Content.ReadFromJsonAsync<List<DocumentSequenceResponse>>();
+        var orgAInitial = orgAList!.First(s => s.DocumentType == "estimates");
+
+        // 2. Org A updates its estimate sequence
         var updateRequest = CreateAuthenticatedRequest(HttpMethod.Put, "/api/v1/settings/document-sequences/estimates");
+        updateRequest.Headers.Add("If-Match", $"\"{orgAInitial.RowVersion}\"");
         updateRequest.Content = JsonContent.Create(new UpdateDocumentSequenceRequest
         {
             Prefix = "TENANT-A-",
@@ -223,7 +246,7 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
         var updateResponse = await _client.SendAsync(updateRequest);
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-        // 2. Org B reads its estimate sequence
+        // 3. Org B reads its estimate sequence
         var orgBRequest = CreateAuthenticatedRequest(
             HttpMethod.Get,
             "/api/v1/settings/document-sequences",
@@ -240,6 +263,130 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
         // Org B must still have the default prefix "EST", NOT "TENANT-A-"
         Assert.Equal("EST", orgBEstimate.Prefix);
         Assert.StartsWith("EST-", orgBEstimate.SamplePreview);
+    }
+
+    [Theory]
+    [InlineData("Success", HttpStatusCode.OK)]
+    [InlineData("MissingPermission", HttpStatusCode.Forbidden)]
+    [InlineData("StaleVersion", HttpStatusCode.Conflict)]
+    [InlineData("InvalidReset", HttpStatusCode.BadRequest)]
+    [InlineData("InvalidToken", HttpStatusCode.BadRequest)]
+    [InlineData("MissingSequenceToken", HttpStatusCode.BadRequest)]
+    [InlineData("DuplicateSequenceToken", HttpStatusCode.BadRequest)]
+    public async Task DocumentSequence_UpdateRequiresPermissionVersionAndValidPattern(string scenario, HttpStatusCode expectedStatus)
+    {
+        // 1. Read baseline state
+        var getReq = CreateAuthenticatedRequest(HttpMethod.Get, "/api/v1/settings/document-sequences");
+        var getRes = await _client.SendAsync(getReq);
+        Assert.Equal(HttpStatusCode.OK, getRes.StatusCode);
+        var list = await getRes.Content.ReadFromJsonAsync<List<DocumentSequenceResponse>>();
+        var baseline = list!.First(s => s.DocumentType == "quotations");
+        var initialVersion = baseline.RowVersion;
+
+        string ifMatchHeader = $"\"{initialVersion}\"";
+        string prefix = baseline.Prefix;
+        string pattern = "{PREFIX}-{YYYY}-{SEQ:4}";
+        string reset = "Yearly";
+        bool deactivatePermission = false;
+
+        switch (scenario)
+        {
+            case "Success":
+                prefix = "QT-SUCC-";
+                pattern = "{PREFIX}-{YYYY}-{MM}-{SEQ:5}";
+                reset = "Monthly";
+                break;
+            case "MissingPermission":
+                deactivatePermission = true;
+                prefix = "QT-NOPERM-";
+                break;
+            case "StaleVersion":
+                ifMatchHeader = $"\"{Guid.NewGuid()}\"";
+                prefix = "QT-STALE-";
+                break;
+            case "InvalidReset":
+                reset = "Weekly";
+                prefix = "QT-BADRESET-";
+                break;
+            case "InvalidToken":
+                pattern = "{PREFIX}-{UNKNOWN_TOKEN}-{SEQ:4}";
+                prefix = "QT-BADTOKEN-";
+                break;
+            case "MissingSequenceToken":
+                pattern = "{PREFIX}-{YYYY}-{MM}";
+                prefix = "QT-NOSEQ-";
+                break;
+            case "DuplicateSequenceToken":
+                pattern = "{PREFIX}-{SEQ:4}-{SEQ:4}";
+                prefix = "QT-DUPSEQ-";
+                break;
+        }
+
+        if (deactivatePermission)
+        {
+            using var scope = _factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var perm = await db.Permissions.FirstAsync(p => p.Key == "document-sequences.manage");
+            perm.Deactivate();
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            var updateReq = CreateAuthenticatedRequest(HttpMethod.Put, "/api/v1/settings/document-sequences/quotations");
+            updateReq.Headers.Add("If-Match", ifMatchHeader);
+            updateReq.Content = JsonContent.Create(new UpdateDocumentSequenceRequest
+            {
+                Prefix = prefix,
+                FormatPattern = pattern,
+                ResetPeriod = reset,
+                Padding = 4,
+                IsBranchSpecific = false
+            });
+
+            var updateRes = await _client.SendAsync(updateReq);
+            Assert.Equal(expectedStatus, updateRes.StatusCode);
+
+            if (scenario == "Success")
+            {
+                Assert.NotNull(updateRes.Headers.ETag);
+                var body = await updateRes.Content.ReadFromJsonAsync<DocumentSequenceResponse>();
+                Assert.NotNull(body);
+                Assert.NotEqual(initialVersion, body.RowVersion);
+                Assert.Equal($"\"{body.RowVersion}\"", updateRes.Headers.ETag.Tag);
+
+                // Verify updated definition
+                var verifyReq = CreateAuthenticatedRequest(HttpMethod.Get, "/api/v1/settings/document-sequences");
+                var verifyRes = await _client.SendAsync(verifyReq);
+                var verifyList = await verifyRes.Content.ReadFromJsonAsync<List<DocumentSequenceResponse>>();
+                var current = verifyList!.First(s => s.DocumentType == "quotations");
+                Assert.Equal("QT-SUCC-", current.Prefix);
+                Assert.Equal(pattern, current.FormatPattern);
+                Assert.Equal(body.RowVersion, current.RowVersion);
+            }
+            else
+            {
+                // Definition must remain unchanged
+                var verifyReq = CreateAuthenticatedRequest(HttpMethod.Get, "/api/v1/settings/document-sequences");
+                var verifyRes = await _client.SendAsync(verifyReq);
+                var verifyList = await verifyRes.Content.ReadFromJsonAsync<List<DocumentSequenceResponse>>();
+                var current = verifyList!.First(s => s.DocumentType == "quotations");
+                Assert.Equal(baseline.Prefix, current.Prefix);
+                Assert.Equal(baseline.FormatPattern, current.FormatPattern);
+                Assert.Equal(initialVersion, current.RowVersion);
+            }
+        }
+        finally
+        {
+            if (deactivatePermission)
+            {
+                using var scope = _factory.Services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var perm = await db.Permissions.FirstAsync(p => p.Key == "document-sequences.manage");
+                perm.Activate();
+                await db.SaveChangesAsync();
+            }
+        }
     }
 }
 

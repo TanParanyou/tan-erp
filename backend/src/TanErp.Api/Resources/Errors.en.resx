@@ -269,5 +269,17 @@
   <data name="DOCUMENT_NUMBER_ALLOCATION_FAILED_DETAIL" xml:space="preserve">
     <value>Failed to allocate document number due to sequence configuration or generation error.</value>
   </data>
+  <data name="INVALID_RESET_PERIOD_TITLE" xml:space="preserve">
+    <value>Invalid Reset Period</value>
+  </data>
+  <data name="INVALID_RESET_PERIOD_DETAIL" xml:space="preserve">
+    <value>The reset period must be Never, Yearly, Monthly, or Daily.</value>
+  </data>
+  <data name="DOCUMENT_SEQUENCE_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Document Sequence Concurrency Conflict</value>
+  </data>
+  <data name="DOCUMENT_SEQUENCE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The document sequence configuration was modified by another user. Please refresh and try again.</value>
+  </data>
 </root>
 

@@ -58,7 +58,8 @@ public class DocumentSequencesController : ControllerBase
             Padding = p.Padding,
             IsBranchSpecific = p.IsBranchSpecific,
             IsActive = p.IsActive,
-            SamplePreview = p.SamplePreview
+            SamplePreview = p.SamplePreview,
+            RowVersion = p.RowVersion
         }).ToList();
 
         return Ok(response);
@@ -69,12 +70,14 @@ public class DocumentSequencesController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
     public async Task<IActionResult> Update(
         [FromRoute] string documentType,
         [FromBody] UpdateDocumentSequenceRequest request,
         CancellationToken cancellationToken)
     {
-        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        var authResult = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
         if (authResult.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
@@ -84,6 +87,7 @@ public class DocumentSequencesController : ControllerBase
         var command = new UpdateDocumentSequenceCommand(
             auth.FirebaseUid,
             auth.MembershipId,
+            auth.IfMatchRowVersion,
             documentType,
             request.Prefix,
             request.FormatPattern,
@@ -98,6 +102,7 @@ public class DocumentSequencesController : ControllerBase
         }
 
         var p = result.Value!;
+        Response.Headers.ETag = $"\"{p.RowVersion}\"";
         return Ok(new DocumentSequenceResponse
         {
             Id = p.Id,
@@ -108,7 +113,8 @@ public class DocumentSequencesController : ControllerBase
             Padding = p.Padding,
             IsBranchSpecific = p.IsBranchSpecific,
             IsActive = p.IsActive,
-            SamplePreview = p.SamplePreview
+            SamplePreview = p.SamplePreview,
+            RowVersion = p.RowVersion
         });
     }
 
