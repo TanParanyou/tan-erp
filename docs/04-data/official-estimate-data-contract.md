@@ -92,8 +92,9 @@ Policy Configuration ใช้ Typed Header/Scope/Status/Effective Period แล
 | `estimate_approval_steps` | request, sequence, permission/scope, thresholdSnapshot, status | ลำดับคงที่หลัง Submit |
 | `estimate_approval_decisions` | step, reviewer, approved/returned, reason, note, decidedAt | Append-only; Maker–Checker |
 | `estimate_approval_snapshots` | revision, calculation hash, policy version, JSONB | Freeze ตอน Approved |
-| `estimate_quotation_links` | revision, quotation ID, issuedAt, snapshot hash | Quotation อ้าง Approved Revision |
-| `customer_acceptances` | quotation, decision, channel, occurredAt, evidenceFileId | Append-only ตาม Retention Policy |
+| `commercial.quotations` | id, organization_id, branch_id, customer_id, opportunity_id, estimate_id, estimate_revision_id, number, status, total_amount, snapshot_hash, issued_at_utc, accepted_at_utc, row_version | Commercial Quotation ออกจาก Estimate Revision ที่คำนวณแล้ว |
+| `common.document_sequence_definitions` | id, organization_id, document_type, prefix, format_pattern, reset_period, padding, is_branch_specific, is_active | กำหนดรูปแบบเลขที่เอกสาร |
+| `common.document_sequence_counters` | id, organization_id, document_type, period_key, current_value | ตัวนับเลขที่เอกสารระดับ atomic sequence |
 
 `estimate_approval_requests` ต้องอ้าง `approval_policy_version_id`, Calculation Snapshot Hash และ Frozen Route Hash ส่วน `In Review` derive จาก Open Request/Active Step ไม่เก็บเป็น Revision Status
 

@@ -202,6 +202,45 @@ Test Data ต้องอยู่ Organization/Branch สำหรับ UAT �
 
 **Expected:** Draft Cancel สำเร็จและแก้ต่อไม่ได้; ขั้น 2 ถูกปฏิเสธ; ขั้น 3 Cancel Route/Open Step อย่าง Atomic และเก็บ Reason/Audit
 
+## UAT-EST-017 — Trusted Create Estimate Draft
+
+**Role:** Estimator
+
+1. สร้าง Estimate Draft จาก Opportunity ที่อยู่ใน stage `estimating` และ Site Survey Revision ที่ Ready
+2. Server derive `customerId`, `branchId` และ `siteSurveySnapshotHash` โดยตรงจากฐานข้อมูล
+3. ส่ง Request โดยไม่ส่ง fields ที่ derive เหล่านั้น
+
+**Expected:** ได้ Estimate Draft ที่ผูกกับ Customer, Branch, และ Survey Snapshot อย่างถูกต้อง หาก Opportunity ไม่อยู่ใน `estimating` หรือ Survey Revision ยังไม่ Ready หรืออยู่นอก Scope จะถูกปฏิเสธ (404/422/409)
+
+## UAT-EST-018 — Idempotent Quotation Issuance
+
+**Role:** Sales / Commercial
+
+1. ออก Quotation จาก Estimate ที่คำนวณแล้ว
+2. ส่ง Idempotency Key และ row versions
+3. ส่ง Request เดิมซ้ำ (Replay)
+
+**Expected:** ได้รับเลขที่ Quotation จาก Atomic Sequence Generator; Estimate/Revision กลายเป็น `quoted`; Opportunity เปลี่ยนเป็น `proposed`; มี Stage History 1 รายการ และ Audit 2 รายการ; Replay คืนผลเดิมโดยไม่สร้างเลขที่เอกสารหรือ Audit ซ้ำ
+
+## UAT-EST-019 — Quotation Acceptance and Progression to Won
+
+**Role:** Sales Manager
+
+1. รับการตอบรับ Quotation ที่มีสถานะ `issued`
+2. ส่ง expected Opportunity row version
+3. ส่ง Request ซ้ำ
+
+**Expected:** Quotation เปลี่ยนสถานะเป็น `accepted`; Opportunity เปลี่ยนเป็น `won`; บันทึก Stage History 1 รายการ และ Audit 2 รายการ (ไม่บันทึก decisionNote); Replay ซ้ำคืนผลเดิม
+
+## UAT-EST-020 — Document Sequence Format and Concurrency
+
+**Role:** System Admin
+
+1. เข้าหน้า Document Numbering Settings และแก้ไข Format Pattern ด้วย If-Match header
+2. ทดสอบ Pattern ที่ไม่มี `{SEQ}` หรือ Reset Period ไม่ถูกต้อง
+
+**Expected:** Pattern ที่ไม่ถูกต้องถูกปฏิเสธพร้อม Problem Details ที่มี error code ชัดเจน; การอัปเดตที่ส่ง If-Match ถูกต้องจะหมุน ETag/rowVersion ใหม่
+
 ## Exit Criteria
 
 - Scenario Critical `001–014` ผ่านหรือมี Business Decision ที่อนุมัติการเปลี่ยน

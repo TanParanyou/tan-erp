@@ -90,6 +90,13 @@
 | แผนรวมการพัฒนา Opportunity Module | [Opportunity Module Completion Master Plan](superpowers/plans/2026-09-12-opportunity-module-completion-master-plan.md) |
 | แผนแนบภาพงานจริงใน Opportunity ตาม Stage | [Opportunity Work Images Vertical Slice Plan](superpowers/plans/2026-09-13-opportunity-work-images-vertical-slice.md) |
 | บันทึกผลการตรวจสอบ Opportunity Work Images Slice | [Opportunity Work Images Verification](05-engineering/opportunity-work-images-verification.md) |
+| แผนรวมแก้ไข branch Opportunity จาก Code Review | [Opportunity Branch Remediation Master Plan](superpowers/plans/2026-09-20-opportunity-branch-remediation-master-plan.md) |
+| แผนแก้ไข File Security และ Work Images | [File Security and Work Images Remediation Plan](superpowers/plans/2026-09-20-file-security-work-images-remediation.md) |
+| แผนปรับปรุง Official Estimate, Commercial และ Document Numbering | [Official Estimate and Commercial Hardening Plan](superpowers/plans/2026-09-20-official-estimate-commercial-hardening.md) |
+| แผนพัฒนา Official Estimate BOQ & Calculation Slice (5A) | [Official Estimate BOQ & Calculation Vertical Slice Plan](superpowers/plans/2026-09-18-official-estimate-boq-calculation-vertical-slice.md) |
+| แผนพัฒนา Commercial Quotation Slice (5B) | [Commercial Quotation Vertical Slice Plan](superpowers/plans/2026-09-20-commercial-quotation-vertical-slice.md) |
+| บันทึกผลการตรวจสอบ Official Estimate BOQ & Calculation Slice | [Official Estimate Verification](05-engineering/official-estimate-verification.md) |
+| บันทึกผลการตรวจสอบ Commercial Quotation Slice | [Commercial Quotation Verification](05-engineering/commercial-quotation-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Draft Q-Gate Slice | [Opportunity Draft Q-Gate Verification](05-engineering/opportunity-draft-q-gate-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Outcome Slice | [Opportunity Outcome Verification](05-engineering/opportunity-outcome-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Hardening & Readiness | [Opportunity Hardening Verification](05-engineering/opportunity-hardening-verification.md) |

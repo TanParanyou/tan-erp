@@ -19,26 +19,33 @@ Backend สร้าง Organization/Branch Scope จาก PostgreSQL Membershi
 | --- | --- | --- | --- |
 | สร้าง Draft | `POST /api/v1/estimates` | `estimates.create` | 201 |
 | อ่าน Workspace | `GET /api/v1/estimates/{id}` | `estimates.read` | 200 |
-| Autosave Draft | `PATCH /api/v1/estimates/{id}/draft` | `estimates.update` | 200 |
-| คำนวณ | `POST /api/v1/estimates/{id}/calculate` | `estimates.update` | 200 |
+| Autosave Draft | `PUT /api/v1/estimates/{id}/revisions/{revisionId}/draft` | `estimates.update` | 200 |
+| คำนวณ | `POST /api/v1/estimates/{id}/revisions/{revisionId}/calculate` | `estimates.update` | 200 |
 | ส่งตรวจ | `POST /api/v1/estimates/{id}/submit` | `estimates.submit` | 202 |
 | Approve/Return | `POST /api/v1/estimates/{id}/review-decisions` | `estimates.approve` | 201 |
 | ยกเลิก | `POST /api/v1/estimates/{id}/cancel` | `estimates.cancel` | 200 |
 | สร้าง Revision | `POST /api/v1/estimates/{id}/revisions` | `estimates.update` | 201 |
 | ออก Quotation | `POST /api/v1/estimates/{id}/quotation` | `quotations.issue` | 201 |
+| ตอบรับ Quotation | `POST /api/v1/estimates/{id}/quotation/accept` | `quotations.accept` | 200 |
+| อ่านเลขที่เอกสาร | `GET /api/v1/settings/document-sequences` | `document-sequences.read` | 200 |
+| ทดสอบเลขที่เอกสาร | `POST /api/v1/settings/document-sequences/preview` | `document-sequences.manage` | 200 |
+| ตั้งค่าเลขที่เอกสาร | `PUT /api/v1/settings/document-sequences/{documentType}` | `document-sequences.manage` | 200 |
 
 ทุก Path ตรวจ Resource Scope; Resource นอก Scope คืน 404
 
 ## Create Draft
 
+```http
+POST /api/v1/estimates
+Idempotency-Key: <16-128 chars>
+Content-Type: application/json
+```
+
 ```json
 {
-  "customerId": "5d70e0d5-f894-4da7-a591-90c81419855a",
   "opportunityId": "9c5ae5f9-f02d-40ef-bd62-678a4631cd10",
   "siteSurveyRevisionId": "e4a8d0bd-c464-44c4-b0fa-eac3de2869b1",
-  "branchId": "6493ddaf-284b-4a98-b1c2-f715fe5c971a",
-  "currency": "THB",
-  "sourceQuickEstimateVersionId": null
+  "currency": "THB"
 }
 ```
 
@@ -52,7 +59,7 @@ Backend สร้าง Organization/Branch Scope จาก PostgreSQL Membershi
 }
 ```
 
-`sourceQuickEstimateVersionId` เป็น Optional Official Estimate เริ่มจาก Customer/Opportunity/Ready Site Survey Revision โดยตรงได้
+Backend derives `customerId`, `branchId`, และ `siteSurveySnapshotHash` จาก Opportunity ที่อยู่ใน stage `estimating` และ Ready/Superseded Site Survey Revision ที่อยู่ใน Opportunity และ Organization เดียวกันโดยตรง Request ห้ามส่งค่าเหล่านี้มาเองเพื่อป้องกันการปลอมแปลง
 
 ## Autosave Draft
 
@@ -179,20 +186,67 @@ Response 201 คืน Draft Revision ใหม่ที่ Clone Business Snaps
 
 ## Issue Quotation
 
-```json
-POST /api/v1/estimates/{id}/quotation
-{ "approvedRevision": 2, "locale": "th", "validityDays": 15 }
+```http
+POST /api/v1/estimates/{estimateId}/quotation
+Authorization: Bearer <firebase-id-token>
+Idempotency-Key: <16-128 chars>
+Content-Type: application/json
 ```
 
-ใช้ได้เฉพาะ Approved Revision และ `quotations.issue` Response คืน `quotationId`, `number`, `estimateRevision`, `status=draft` และ Customer Snapshot Hash ห้ามออกซ้ำเมื่อ Retry ด้วย Idempotency Key เดิม
+```json
+{
+  "expectedEstimateVersion": "8b584988-cb94-4363-8a3a-2325c8ceb7e6",
+  "expectedOpportunityVersion": "7efd2427-4632-4467-85ef-96860bf53a48"
+}
+```
+
+- Permission: `quotations.issue`
+- Preconditions: Estimate อยู่ในสถานะคำนวณแล้ว, Opportunity อยู่ใน stage `estimating`, replay check มาก่อน version check
+- Atomic Effects: ออกเลขที่เอกสารด้วย Atomic Sequence Engine, บันทึก Snapshot, ปรับ Estimate/Revision เป็น `quoted`, ปรับ Opportunity เป็น `proposed`, บันทึก 1 Stage History, 2 Audits, 1 Idempotency Record
+
+## Accept Quotation
+
+```http
+POST /api/v1/estimates/{estimateId}/quotation/accept
+Authorization: Bearer <firebase-id-token>
+Idempotency-Key: <16-128 chars>
+Content-Type: application/json
+```
+
+```json
+{
+  "expectedOpportunityVersion": "7efd2427-4632-4467-85ef-96860bf53a48",
+  "decisionNote": null
+}
+```
+
+- Permission: `quotations.accept`
+- Preconditions: Quotation อยู่ในสถานะ `issued`, Opportunity อยู่ใน stage `proposed`, replay check มาก่อน version check
+- Atomic Effects: ปรับ Quotation เป็น `accepted`, ปรับ Opportunity เป็น `won`, บันทึก 1 Stage History, 2 Audits (ละเว้น `decisionNote`), 1 Idempotency Record
+
+## Document Sequence Settings
+
+```http
+GET /api/v1/settings/document-sequences
+Permission: document-sequences.read
+
+POST /api/v1/settings/document-sequences/preview
+Permission: document-sequences.manage
+{ "documentType": "Quotation", "pattern": "QT-{YYYY}-{SEQ:4}", "resetPeriod": "Yearly" }
+
+PUT /api/v1/settings/document-sequences/{documentType}
+Permission: document-sequences.manage
+If-Match: "<rowVersion>"
+{ "pattern": "QT-{YYYY}-{SEQ:4}", "resetPeriod": "Yearly" }
+```
 
 ## State/Retry Rules
 
 - Draft/Returned แก้ได้; Submitted อ่านอย่างเดียวสำหรับ Maker; Approved/Quoted/Cancelled immutable
-- Calculate/Submit/Cancel/Revision/Quotation ใช้ Idempotency Key
+- Calculate/Submit/Cancel/Revision/Quotation/Accept ใช้ Idempotency Key
 - Key เดิม + Payload เดิมคืนผลเดิม; Payload ต่างคืน `IDEMPOTENCY_KEY_REUSED`
 - Draft เปลี่ยนหลัง Calculate ทำผลเป็น Outdated และ Submit ไม่ได้จนคำนวณใหม่
-- Timeout Retry ใช้ Key/ETag เดิม ห้ามสร้าง Revision/Quotation ซ้ำ
+- Timeout Retry ใช้ Key เดิม ห้ามสร้าง Revision/Quotation/Audit ซ้ำ
 
 ## Contract Test Cases
 
