@@ -1,17 +1,17 @@
+using TanErp.Application.Common.Results;
+
 namespace TanErp.Application.Estimates;
 
 public interface IEstimateStore
 {
-    Task<EstimateDetailProjection> CreateDraftAsync(
+    Task<Result<EstimateDetailProjection>> CreateDraftAsync(
         Guid organizationId,
-        Guid branchId,
-        Guid customerId,
         Guid opportunityId,
-        Guid? siteSurveyRevisionId,
-        string? siteSurveySnapshotHash,
+        Guid siteSurveyRevisionId,
         string currency,
         Guid actorUserId,
-        string idempotencyKey,
+        string keyHash,
+        string payloadHash,
         CancellationToken cancellationToken);
 
     Task<EstimateDetailProjection?> GetByIdAsync(

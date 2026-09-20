@@ -39,7 +39,13 @@ public class EstimateEndpointsTests : IAsyncLifetime
     {
         public Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<string?>(idToken == "token-org-a" ? UidA : null);
+            var uid = idToken switch
+            {
+                "token-org-a" => UidA,
+                "token-org-b" => TestOnlyDataSeeder.TestFirebaseUidB,
+                _ => null
+            };
+            return Task.FromResult(uid);
         }
     }
 
@@ -94,53 +100,85 @@ public class EstimateEndpointsTests : IAsyncLifetime
         return request;
     }
 
-    private async Task<(Guid customerId, Guid siteId, Guid opportunityId, Guid oppVersion)> SetupEstimatingOpportunityAsync()
+    private async Task<(Guid customerId, Guid siteId, Guid opportunityId, Guid oppVersion, Guid surveyRevisionId, string snapshotHash)> SetupEstimatingOpportunityAsync(
+        string revisionStatus = SurveyRevisionStatus.Ready,
+        string stage = OpportunityStage.Estimating,
+        Guid? overrideOrgId = null,
+        Guid? overrideBranchId = null,
+        Guid? overrideUserId = null)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var now = DateTimeOffset.UtcNow;
+        var orgId = overrideOrgId ?? OrgAId;
+        var branchId = overrideBranchId ?? (overrideOrgId == TestOnlyDataSeeder.TestOrgBId ? TestOnlyDataSeeder.TestBranchBId : BranchAId);
+        var userId = overrideUserId ?? (overrideOrgId == TestOnlyDataSeeder.TestOrgBId ? TestOnlyDataSeeder.TestUserIdB : UserAId);
 
         var customer = Customer.CreateDraft(
-            Guid.NewGuid(), OrgAId, UserAId, CustomerType.Person, "คุณลูกค้า สำหรับ Estimate", null, "th",
+            Guid.NewGuid(), orgId, userId, CustomerType.Person, "คุณลูกค้า สำหรับ Estimate", null, "th",
             new PrimaryContactInput("คุณสมชาย", null, "0812345678", null, "phone"), now);
         customer.Activate(customer.RowVersion);
         db.Customers.Add(customer);
 
         var address = new SiteAddressInput("123 ถนนสุขุมวิท", "คลองเตย", "คลองเตย", "กรุงเทพมหานคร", "10110", "TH");
-        var site = Site.CreateActive(Guid.NewGuid(), OrgAId, customer.Id, UserAId, "บ้านพักอาศัย", address, 13.7m, 100.5m, null, now);
+        var site = Site.CreateActive(Guid.NewGuid(), orgId, customer.Id, userId, "บ้านพักอาศัย", address, 13.7m, 100.5m, null, now);
         db.Sites.Add(site);
 
         var opp = Opportunity.CreateDraft(
-            Guid.NewGuid(), OrgAId, BranchAId, customer.Id, site.Id, UserAId, UserAId,
+            Guid.NewGuid(), orgId, branchId, customer.Id, site.Id, userId, userId,
             "งานประเมินราคาบิลท์อิน", "ขอบเขตงานตู้เสื้อผ้า", new[] { "built-in" }, null, 500000m, "THB",
             new DateOnly(2026, 12, 31), now.AddDays(2), "เตรียมประเมินราคา", now);
-        opp.Qualify(opp.RowVersion);
-        opp.EnterSurveying(opp.RowVersion, site.Id);
-        opp.EnterEstimating(opp.RowVersion);
+
+        if (stage == OpportunityStage.Qualified || stage == OpportunityStage.Surveying || stage == OpportunityStage.Estimating)
+        {
+            opp.Qualify(opp.RowVersion);
+        }
+        if (stage == OpportunityStage.Surveying || stage == OpportunityStage.Estimating)
+        {
+            opp.EnterSurveying(opp.RowVersion, site.Id);
+        }
+        if (stage == OpportunityStage.Estimating)
+        {
+            opp.EnterEstimating(opp.RowVersion);
+        }
         db.Opportunities.Add(opp);
+
+        var survey = SiteSurvey.CreateAppointment(
+            orgId, branchId, opp.Id, site.Id, userId, userId, now, now.AddHours(2), now);
+        var revision = SiteSurveyRevision.CreateBaseline(orgId, survey.Id, userId, now);
+        var area = new SiteSurveyArea(Guid.NewGuid(), orgId, revision.Id, "AREA-01", "ห้องนอน", null, 1);
+        area.AddMeasurement(new SiteSurveyMeasurement(Guid.NewGuid(), orgId, area.Id, "width", 3.0m, "m", "measured", null, 1));
+        revision.AddArea(area);
+        revision.UpdateDraft(now, "สำรวจห้องนอน", null, null, null);
+
+        var snapshotHash = "hash-ready-survey-rev-001";
+        if (revisionStatus == SurveyRevisionStatus.Ready)
+        {
+            revision.MarkReady(userId, now, snapshotHash);
+        }
+
+        db.SiteSurveys.Add(survey);
+        db.SiteSurveyRevisions.Add(revision);
 
         await db.SaveChangesAsync();
 
-        return (customer.Id, site.Id, opp.Id, opp.RowVersion);
+        return (customer.Id, site.Id, opp.Id, opp.RowVersion, revision.Id, snapshotHash);
     }
 
     [Fact]
-    public async Task CreateEstimateDraft_ValidScope_ReturnsCreated()
+    public async Task CreateEstimate_ReadySurvey_DerivesCustomerBranchAndSnapshot()
     {
-        var (customerId, _, oppId, _) = await SetupEstimatingOpportunityAsync();
+        var (customerId, _, oppId, _, surveyRevId, snapshotHash) = await SetupEstimatingOpportunityAsync();
 
         var requestMsg = CreateAuthenticatedRequest(
             HttpMethod.Post,
             "/api/v1/estimates",
             "token-org-a",
             MembershipAId);
-        requestMsg.Headers.Add("Idempotency-Key", "idemp-estimate-create-0001");
+        requestMsg.Headers.Add("Idempotency-Key", "idemp-estimate-derive-0001");
         requestMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
-            customerId,
             oppId,
-            BranchAId,
-            SiteSurveyRevisionId: null,
-            SiteSurveySnapshotHash: null,
+            surveyRevId,
             Currency: "THB"));
 
         var response = await _client.SendAsync(requestMsg);
@@ -151,6 +189,8 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal(oppId, estimate.OpportunityId);
         Assert.Equal(customerId, estimate.CustomerId);
         Assert.Equal(BranchAId, estimate.BranchId);
+        Assert.Equal(surveyRevId, estimate.SiteSurveyRevisionId);
+        Assert.Equal(snapshotHash, estimate.SiteSurveySnapshotHash);
         Assert.Equal(EstimateStatus.Draft, estimate.Status);
         Assert.StartsWith("EST-", estimate.Number);
         Assert.Equal(1, estimate.CurrentRevisionNo);
@@ -159,10 +199,100 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal(EstimateRevisionStatus.Draft, estimate.CurrentRevision.Status);
     }
 
+    [Theory]
+    [InlineData("cross-org")]
+    [InlineData("wrong-opp")]
+    [InlineData("draft-revision")]
+    [InlineData("non-estimating-stage")]
+    public async Task CreateEstimate_ForgedOrUnreadyRelationship_IsRejected(string scenario)
+    {
+        Guid oppId;
+        Guid surveyRevId;
+        HttpStatusCode expectedStatus;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var initialCounter = (await db.DocumentSequenceCounters.AsNoTracking().FirstOrDefaultAsync(c => c.OrganizationId == OrgAId && c.DocumentType == "estimates"))?.CurrentValue ?? 0;
+            var initialAuditCount = await db.AuditEvents.CountAsync(a => a.OrganizationId == OrgAId && a.Action == "estimates.created");
+            var initialEstimateCount = await db.Estimates.CountAsync(e => e.OrganizationId == OrgAId);
+
+            switch (scenario)
+            {
+                case "cross-org":
+                {
+                    // Survey revision belongs to OrgB
+                    var (_, _, _, _, otherRevId, _) = await SetupEstimatingOpportunityAsync(overrideOrgId: TestOnlyDataSeeder.TestOrgBId);
+                    var (_, _, currentOppId, _, _, _) = await SetupEstimatingOpportunityAsync();
+                    oppId = currentOppId;
+                    surveyRevId = otherRevId;
+                    expectedStatus = HttpStatusCode.NotFound;
+                    break;
+                }
+                case "wrong-opp":
+                {
+                    // Survey revision belongs to oppB, requested with oppA
+                    var (_, _, oppA, _, _, _) = await SetupEstimatingOpportunityAsync();
+                    var (_, _, _, _, revB, _) = await SetupEstimatingOpportunityAsync();
+                    oppId = oppA;
+                    surveyRevId = revB;
+                    expectedStatus = HttpStatusCode.NotFound;
+                    break;
+                }
+                case "draft-revision":
+                {
+                    // Survey revision is Draft, not Ready
+                    var (_, _, opp, _, draftRev, _) = await SetupEstimatingOpportunityAsync(revisionStatus: SurveyRevisionStatus.Draft);
+                    oppId = opp;
+                    surveyRevId = draftRev;
+                    expectedStatus = HttpStatusCode.UnprocessableEntity;
+                    break;
+                }
+                case "non-estimating-stage":
+                {
+                    // Opportunity is in Qualified stage, not Estimating
+                    var (_, _, opp, _, rev, _) = await SetupEstimatingOpportunityAsync(stage: OpportunityStage.Qualified);
+                    oppId = opp;
+                    surveyRevId = rev;
+                    expectedStatus = HttpStatusCode.Conflict;
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(scenario));
+            }
+
+            var requestMsg = CreateAuthenticatedRequest(
+                HttpMethod.Post,
+                "/api/v1/estimates",
+                "token-org-a",
+                MembershipAId);
+            requestMsg.Headers.Add("Idempotency-Key", $"idemp-forged-{scenario}");
+            requestMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
+                oppId,
+                surveyRevId,
+                Currency: "THB"));
+
+            var response = await _client.SendAsync(requestMsg);
+            Assert.Equal(expectedStatus, response.StatusCode);
+
+            // Assert no number / Estimate / audit consumed
+            using var verifyScope = _factory.Services.CreateScope();
+            var verifyDb = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var finalCounter = (await verifyDb.DocumentSequenceCounters.AsNoTracking().FirstOrDefaultAsync(c => c.OrganizationId == OrgAId && c.DocumentType == "estimates"))?.CurrentValue ?? 0;
+            var finalAuditCount = await verifyDb.AuditEvents.CountAsync(a => a.OrganizationId == OrgAId && a.Action == "estimates.created");
+            var finalEstimateCount = await verifyDb.Estimates.CountAsync(e => e.OrganizationId == OrgAId);
+
+            Assert.Equal(initialCounter, finalCounter);
+            Assert.Equal(initialAuditCount, finalAuditCount);
+            Assert.Equal(initialEstimateCount, finalEstimateCount);
+        }
+    }
+
     [Fact]
     public async Task UpdateEstimateDraft_ValidSections_UpdatesAndRotatesRowVersion()
     {
-        var (customerId, _, oppId, _) = await SetupEstimatingOpportunityAsync();
+        var (_, _, oppId, _, surveyRevId, _) = await SetupEstimatingOpportunityAsync();
 
         // 1. Create estimate
         var createMsg = CreateAuthenticatedRequest(
@@ -172,11 +302,8 @@ public class EstimateEndpointsTests : IAsyncLifetime
             MembershipAId);
         createMsg.Headers.Add("Idempotency-Key", "idemp-estimate-create-0002");
         createMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
-            customerId,
             oppId,
-            BranchAId,
-            null,
-            null,
+            surveyRevId,
             "THB"));
 
         var createRes = await _client.SendAsync(createMsg);
@@ -242,7 +369,7 @@ public class EstimateEndpointsTests : IAsyncLifetime
     [Fact]
     public async Task CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot()
     {
-        var (customerId, _, oppId, _) = await SetupEstimatingOpportunityAsync();
+        var (_, _, oppId, _, surveyRevId, _) = await SetupEstimatingOpportunityAsync();
 
         // 1. Create estimate
         var createMsg = CreateAuthenticatedRequest(
@@ -252,11 +379,8 @@ public class EstimateEndpointsTests : IAsyncLifetime
             MembershipAId);
         createMsg.Headers.Add("Idempotency-Key", "idemp-estimate-create-0003");
         createMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
-            customerId,
             oppId,
-            BranchAId,
-            null,
-            null,
+            surveyRevId,
             "THB"));
 
         var createRes = await _client.SendAsync(createMsg);
@@ -349,7 +473,7 @@ public class EstimateEndpointsTests : IAsyncLifetime
     [Fact]
     public async Task UpdateDraft_OutdatedVersion_Returns409Conflict()
     {
-        var (customerId, _, oppId, _) = await SetupEstimatingOpportunityAsync();
+        var (_, _, oppId, _, surveyRevId, _) = await SetupEstimatingOpportunityAsync();
 
         // 1. Create estimate
         var createMsg = CreateAuthenticatedRequest(
@@ -359,11 +483,8 @@ public class EstimateEndpointsTests : IAsyncLifetime
             MembershipAId);
         createMsg.Headers.Add("Idempotency-Key", "idemp-estimate-create-0004");
         createMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
-            customerId,
             oppId,
-            BranchAId,
-            null,
-            null,
+            surveyRevId,
             "THB"));
 
         var createRes = await _client.SendAsync(createMsg);
@@ -389,7 +510,7 @@ public class EstimateEndpointsTests : IAsyncLifetime
     [Fact]
     public async Task IssueQuotation_And_AcceptQuotation_FullCommercialCycle_AdvancesOpportunityToProposedThenWon()
     {
-        var (customerId, _, oppId, _) = await SetupEstimatingOpportunityAsync();
+        var (_, _, oppId, _, surveyRevId, _) = await SetupEstimatingOpportunityAsync();
 
         // 1. Create estimate
         var createMsg = CreateAuthenticatedRequest(
@@ -399,11 +520,8 @@ public class EstimateEndpointsTests : IAsyncLifetime
             MembershipAId);
         createMsg.Headers.Add("Idempotency-Key", "idemp-commercial-0001");
         createMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
-            customerId,
             oppId,
-            BranchAId,
-            null,
-            null,
+            surveyRevId,
             "THB"));
 
         var createRes = await _client.SendAsync(createMsg);

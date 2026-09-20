@@ -40,18 +40,18 @@ public class CreateEstimateDraftHandler
             ? EstimateDefaults.DefaultCurrency
             : command.Currency.Trim();
 
-        var result = await _store.CreateDraftAsync(
+        var keyHash = Sha256Hex.Compute(idempotencyKey);
+        var canonicalPayload = $"{command.OpportunityId}|{command.SiteSurveyRevisionId}|{currency}";
+        var payloadHash = Sha256Hex.Compute(canonicalPayload);
+
+        return await _store.CreateDraftAsync(
             orgId,
-            command.BranchId,
-            command.CustomerId,
             command.OpportunityId,
             command.SiteSurveyRevisionId,
-            command.SiteSurveySnapshotHash,
             currency,
             access.ActorUserId,
-            idempotencyKey,
+            keyHash,
+            payloadHash,
             cancellationToken);
-
-        return Result<EstimateDetailProjection>.Success(result);
     }
 }

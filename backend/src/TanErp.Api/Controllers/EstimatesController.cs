@@ -63,11 +63,8 @@ public class EstimatesController : ControllerBase
         var command = new CreateEstimateDraftCommand(
             auth.FirebaseUid,
             auth.MembershipId,
-            request.CustomerId,
             request.OpportunityId,
-            request.BranchId,
             request.SiteSurveyRevisionId,
-            request.SiteSurveySnapshotHash,
             request.Currency);
 
         var result = await _createHandler.HandleAsync(command, auth.IdempotencyKey, cancellationToken);

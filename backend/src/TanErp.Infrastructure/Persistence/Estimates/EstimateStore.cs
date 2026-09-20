@@ -1,12 +1,14 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Results;
 using TanErp.Application.Estimates;
 using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Estimates;
+using TanErp.Domain.Surveys;
 
 namespace TanErp.Infrastructure.Persistence.Estimates;
 
@@ -23,22 +25,96 @@ public class EstimateStore : IEstimateStore
         _documentNumberGenerator = documentNumberGenerator;
     }
 
-    public async Task<EstimateDetailProjection> CreateDraftAsync(
+    public async Task<Result<EstimateDetailProjection>> CreateDraftAsync(
         Guid organizationId,
-        Guid branchId,
-        Guid customerId,
         Guid opportunityId,
-        Guid? siteSurveyRevisionId,
-        string? siteSurveySnapshotHash,
+        Guid siteSurveyRevisionId,
         string currency,
         Guid actorUserId,
-        string idempotencyKey,
+        string keyHash,
+        string payloadHash,
         CancellationToken cancellationToken)
     {
+        const string operation = "estimates.create";
         var strategy = _db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
             await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            // 1. Replay check first
+            var existingRecord = await _db.IdempotencyRecords
+                .AsNoTracking()
+                .SingleOrDefaultAsync(row =>
+                    row.OrganizationId == organizationId &&
+                    row.Operation == operation &&
+                    row.KeyHash == keyHash,
+                    cancellationToken);
+
+            if (existingRecord is not null)
+            {
+                if (existingRecord.PayloadHash != payloadHash)
+                {
+                    return Result<EstimateDetailProjection>.Failure(new Error(
+                        "IDEMPOTENCY_KEY_REUSED",
+                        "The idempotency key has already been used with a different payload."));
+                }
+
+                if (Guid.TryParse(existingRecord.ResourceId, out var replayEstimateId))
+                {
+                    var replayEstimate = await _db.Estimates
+                        .Include(e => e.Revisions)
+                            .ThenInclude(r => r.Sections)
+                                .ThenInclude(s => s.WorkItems)
+                                    .ThenInclude(w => w.CostComponents)
+                        .FirstOrDefaultAsync(e => e.Id == replayEstimateId && e.OrganizationId == organizationId, cancellationToken);
+
+                    if (replayEstimate is not null)
+                    {
+                        return Result<EstimateDetailProjection>.Success(MapToDetailProjection(replayEstimate));
+                    }
+                }
+            }
+
+            // 2. Load scoped Opportunity
+            var opp = await _db.Opportunities
+                .FirstOrDefaultAsync(o => o.Id == opportunityId && o.OrganizationId == organizationId, cancellationToken);
+
+            if (opp is null)
+            {
+                return Result<EstimateDetailProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Opportunity not found."));
+            }
+
+            if (opp.Stage != OpportunityStage.Estimating)
+            {
+                return Result<EstimateDetailProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", "Opportunity must be in 'estimating' stage to create an estimate draft."));
+            }
+
+            // 3. Load matching Ready/Superseded revision belonging to same Opportunity and organization
+            var revision = await _db.SiteSurveyRevisions
+                .FirstOrDefaultAsync(r => r.Id == siteSurveyRevisionId && r.OrganizationId == organizationId, cancellationToken);
+
+            if (revision is null)
+            {
+                return Result<EstimateDetailProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey revision not found."));
+            }
+
+            var survey = await _db.SiteSurveys
+                .FirstOrDefaultAsync(s => s.Id == revision.SiteSurveyId && s.OpportunityId == opp.Id && s.OrganizationId == organizationId, cancellationToken);
+
+            if (survey is null)
+            {
+                return Result<EstimateDetailProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey revision does not belong to this opportunity."));
+            }
+
+            if (revision.Status != SurveyRevisionStatus.Ready && revision.Status != SurveyRevisionStatus.Superseded)
+            {
+                return Result<EstimateDetailProjection>.Failure(
+                    new Error("SURVEY_NOT_READY", "Site survey revision must be ready or superseded."));
+            }
 
             // Check if estimate already exists for this opportunity
             var existing = await _db.Estimates
@@ -50,8 +126,13 @@ public class EstimateStore : IEstimateStore
 
             if (existing is not null)
             {
-                return MapToDetailProjection(existing);
+                return Result<EstimateDetailProjection>.Success(MapToDetailProjection(existing));
             }
+
+            // 4. Derive customerId, branchId, and snapshotHash from server state
+            var customerId = opp.CustomerId;
+            var branchId = opp.BranchId;
+            var snapshotHash = revision.SnapshotHash;
 
             var number = await _documentNumberGenerator.GenerateAsync(
                 organizationId,
@@ -68,7 +149,7 @@ public class EstimateStore : IEstimateStore
                 opportunityId,
                 number,
                 siteSurveyRevisionId,
-                siteSurveySnapshotHash,
+                snapshotHash,
                 currency);
 
             _db.Estimates.Add(estimate);
@@ -86,10 +167,51 @@ public class EstimateStore : IEstimateStore
 
             _db.AddAuditEvent(auditEvent);
 
-            await _db.SaveChangesAsync(cancellationToken);
-            await tx.CommitAsync(cancellationToken);
+            var idempotencyRecord = new IdempotencyRecord(
+                Guid.NewGuid(),
+                organizationId,
+                operation,
+                keyHash,
+                payloadHash,
+                estimate.Id.ToString(),
+                _clock.UtcNow);
 
-            return MapToDetailProjection(estimate);
+            _db.IdempotencyRecords.Add(idempotencyRecord);
+
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+                var replay = await _db.IdempotencyRecords
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(row =>
+                        row.OrganizationId == organizationId &&
+                        row.Operation == operation &&
+                        row.KeyHash == keyHash,
+                        cancellationToken);
+
+                if (replay is not null && replay.PayloadHash == payloadHash && Guid.TryParse(replay.ResourceId, out var reloadedId))
+                {
+                    var loaded = await _db.Estimates
+                        .Include(e => e.Revisions)
+                            .ThenInclude(r => r.Sections)
+                                .ThenInclude(s => s.WorkItems)
+                                    .ThenInclude(w => w.CostComponents)
+                        .FirstOrDefaultAsync(e => e.Id == reloadedId && e.OrganizationId == organizationId, cancellationToken);
+                    if (loaded is not null)
+                    {
+                        return Result<EstimateDetailProjection>.Success(MapToDetailProjection(loaded));
+                    }
+                }
+                throw;
+            }
+
+            return Result<EstimateDetailProjection>.Success(MapToDetailProjection(estimate));
         });
     }
 
