@@ -263,5 +263,11 @@
   <data name="INVALID_PADDING_DETAIL" xml:space="preserve">
     <value>Sequence padding must be between 1 and 10 digits.</value>
   </data>
+  <data name="DOCUMENT_NUMBER_ALLOCATION_FAILED_TITLE" xml:space="preserve">
+    <value>Document Number Allocation Failed</value>
+  </data>
+  <data name="DOCUMENT_NUMBER_ALLOCATION_FAILED_DETAIL" xml:space="preserve">
+    <value>Failed to allocate document number due to sequence configuration or generation error.</value>
+  </data>
 </root>
 

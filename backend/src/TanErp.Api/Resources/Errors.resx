@@ -263,5 +263,11 @@
   <data name="INVALID_PADDING_DETAIL" xml:space="preserve">
     <value>จำนวนหลักของตัวเลขรันลำดับต้องอยู่ระหว่าง 1 ถึง 10 หลัก</value>
   </data>
+  <data name="DOCUMENT_NUMBER_ALLOCATION_FAILED_TITLE" xml:space="preserve">
+    <value>การจัดสรรเลขที่เอกสารล้มเหลว</value>
+  </data>
+  <data name="DOCUMENT_NUMBER_ALLOCATION_FAILED_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถจัดสรรเลขที่เอกสารได้เนื่องจากการตั้งค่าลำดับเอกสารไม่ถูกต้องหรือไม่สามารถรันลำดับได้</value>
+  </data>
 </root>
 

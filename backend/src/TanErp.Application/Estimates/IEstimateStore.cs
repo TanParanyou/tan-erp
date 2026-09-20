@@ -43,13 +43,14 @@ public interface IEstimateStore
         string idempotencyKey,
         CancellationToken cancellationToken);
 
-    Task<QuotationDetailProjection> IssueQuotationAsync(
+    Task<Result<QuotationDetailProjection>> IssueQuotationAsync(
         Guid organizationId,
         Guid estimateId,
         Guid expectedEstimateVersion,
         Guid expectedOpportunityVersion,
         Guid actorUserId,
-        string idempotencyKey,
+        string keyHash,
+        string payloadHash,
         string traceId,
         CancellationToken cancellationToken);
 

@@ -37,49 +37,19 @@ public class IssueQuotationHandler
         }
 
         var access = accessResult.Value!;
-        try
-        {
-            var result = await _store.IssueQuotationAsync(
-                access.OrganizationId,
-                command.EstimateId,
-                command.ExpectedEstimateVersion,
-                command.ExpectedOpportunityVersion,
-                access.ActorUserId,
-                idempotencyKey,
-                command.TraceId,
-                cancellationToken);
+        var keyHash = Sha256Hex.Compute(idempotencyKey);
+        var canonicalPayload = $"{command.EstimateId}|{command.ExpectedEstimateVersion}|{command.ExpectedOpportunityVersion}";
+        var payloadHash = Sha256Hex.Compute(canonicalPayload);
 
-            return Result<QuotationDetailProjection>.Success(result);
-        }
-        catch (EstimateNotFoundException)
-        {
-            return Result<QuotationDetailProjection>.Failure(
-                new Error("RESOURCE_NOT_FOUND", $"Estimate '{command.EstimateId}' was not found."));
-        }
-        catch (OpportunityVersionException)
-        {
-            return Result<QuotationDetailProjection>.Failure(
-                new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
-        }
-        catch (OpportunityTransitionException ex)
-        {
-            return Result<QuotationDetailProjection>.Failure(
-                new Error("OPPORTUNITY_INVALID_TRANSITION", ex.Message));
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Result<QuotationDetailProjection>.Failure(
-                new Error("ESTIMATE_VERSION_CONFLICT", "The estimate has been modified by another user."));
-        }
-        catch (EstimateInvalidStateException ex)
-        {
-            return Result<QuotationDetailProjection>.Failure(
-                new Error("ESTIMATE_INVALID_STATE", ex.Message));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result<QuotationDetailProjection>.Failure(
-                new Error("INVALID_STATE", ex.Message));
-        }
+        return await _store.IssueQuotationAsync(
+            access.OrganizationId,
+            command.EstimateId,
+            command.ExpectedEstimateVersion,
+            command.ExpectedOpportunityVersion,
+            access.ActorUserId,
+            keyHash,
+            payloadHash,
+            command.TraceId,
+            cancellationToken);
     }
 }

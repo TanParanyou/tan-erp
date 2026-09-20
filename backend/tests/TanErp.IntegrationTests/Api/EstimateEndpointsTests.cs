@@ -598,6 +598,8 @@ public class EstimateEndpointsTests : IAsyncLifetime
         var oppInDb = await db.Opportunities.FirstAsync(o => o.Id == oppId);
         Assert.Equal(OpportunityStage.Estimating, oppInDb.Stage);
 
+        var expectedOppRowVersion = oppInDb.RowVersion;
+
         // 4. Issue Quotation
         var issueQuoteMsg = CreateAuthenticatedRequest(
             HttpMethod.Post,
@@ -607,7 +609,7 @@ public class EstimateEndpointsTests : IAsyncLifetime
         issueQuoteMsg.Headers.Add("Idempotency-Key", "idemp-commercial-quote-0001");
         issueQuoteMsg.Content = JsonContent.Create(new IssueQuotationRequest(
             latestEstimate.RowVersion,
-            oppInDb.RowVersion));
+            expectedOppRowVersion));
 
         var issueQuoteRes = await _client.SendAsync(issueQuoteMsg);
         var errContent = await issueQuoteRes.Content.ReadAsStringAsync();
@@ -638,7 +640,7 @@ public class EstimateEndpointsTests : IAsyncLifetime
         replayMsg.Headers.Add("Idempotency-Key", "idemp-commercial-quote-0001");
         replayMsg.Content = JsonContent.Create(new IssueQuotationRequest(
             latestEstimate.RowVersion,
-            oppInDb.RowVersion));
+            expectedOppRowVersion));
 
         var replayRes = await _client.SendAsync(replayMsg);
         Assert.Equal(HttpStatusCode.Created, replayRes.StatusCode);
@@ -673,5 +675,214 @@ public class EstimateEndpointsTests : IAsyncLifetime
             .OrderBy(h => h.OccurredAtUtc)
             .ToListAsync();
         Assert.Contains(updatedHistories, h => h.FromStage == OpportunityStage.Proposed && h.ToStage == OpportunityStage.Won);
+    }
+
+    private async Task<(EstimateDetailResponse estimate, Opportunity opp, EstimateRevisionResponse calculatedRev)> SetupCalculatedEstimateAsync(
+        string keyPrefix = "calc-est")
+    {
+        var (_, _, oppId, _, surveyRevId, _) = await SetupEstimatingOpportunityAsync();
+
+        var createMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            "/api/v1/estimates",
+            "token-org-a",
+            MembershipAId);
+        createMsg.Headers.Add("Idempotency-Key", $"{keyPrefix}-create");
+        createMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
+            oppId,
+            surveyRevId,
+            "THB"));
+
+        var createRes = await _client.SendAsync(createMsg);
+        Assert.Equal(HttpStatusCode.Created, createRes.StatusCode);
+        var estimate = (await createRes.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+        var revision = estimate.CurrentRevision!;
+
+        var updateMsg = CreateAuthenticatedRequest(
+            HttpMethod.Put,
+            $"/api/v1/estimates/{estimate.Id}/revisions/{revision.Id}/draft",
+            "token-org-a",
+            MembershipAId);
+        updateMsg.Headers.Add("If-Match", $"\"{revision.RowVersion}\"");
+        updateMsg.Content = JsonContent.Create(new UpdateEstimateDraftRequest(
+            revision.RowVersion,
+            new List<UpdateEstimateSectionDto>
+            {
+                new(
+                    null,
+                    "SEC-01",
+                    "งาน Built-in ตู้",
+                    "Built-in Section",
+                    1,
+                    new List<UpdateEstimateWorkItemDto>
+                    {
+                        new(
+                            null,
+                            "WI-01",
+                            "ตู้เสื้อผ้า",
+                            "Wardrobe",
+                            1,
+                            "ชุด",
+                            SellingRuleType.Margin,
+                            0.20m,
+                            1,
+                            new List<UpdateEstimateCostComponentDto>
+                            {
+                                new(null, CostComponentType.Material, "ไม้", 10, "แผ่น", 1000m, "THB", 1)
+                            })
+                    })
+            }));
+
+        var updateRes = await _client.SendAsync(updateMsg);
+        Assert.Equal(HttpStatusCode.OK, updateRes.StatusCode);
+        var updatedRevision = (await updateRes.Content.ReadFromJsonAsync<EstimateRevisionResponse>())!;
+
+        var calcMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/revisions/{revision.Id}/calculate",
+            "token-org-a",
+            MembershipAId);
+        calcMsg.Headers.Add("Idempotency-Key", $"{keyPrefix}-calc");
+        calcMsg.Content = JsonContent.Create(new CalculateEstimateRequest(updatedRevision.RowVersion, 500m));
+
+        var calcRes = await _client.SendAsync(calcMsg);
+        Assert.Equal(HttpStatusCode.OK, calcRes.StatusCode);
+        var calculatedRev = (await calcRes.Content.ReadFromJsonAsync<EstimateRevisionResponse>())!;
+
+        var getEstimateMsg = CreateAuthenticatedRequest(
+            HttpMethod.Get,
+            $"/api/v1/estimates/{estimate.Id}",
+            "token-org-a",
+            MembershipAId);
+        var getEstimateRes = await _client.SendAsync(getEstimateMsg);
+        var latestEstimate = (await getEstimateRes.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var oppInDb = await db.Opportunities.FirstAsync(o => o.Id == oppId);
+
+        return (latestEstimate, oppInDb, calculatedRev);
+    }
+
+    [Fact]
+    public async Task IssueQuotation_ReplaySameIntent_ReturnsSameQuotationWithoutDuplicateEffects()
+    {
+        var (estimate, opp, _) = await SetupCalculatedEstimateAsync($"replay-{Guid.NewGuid():N}");
+
+        var idempotencyKey = $"idemp-quote-replay-{Guid.NewGuid():N}";
+
+        // Initial Issue
+        var issueMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation",
+            "token-org-a",
+            MembershipAId);
+        issueMsg.Headers.Add("Idempotency-Key", idempotencyKey);
+        issueMsg.Content = JsonContent.Create(new IssueQuotationRequest(
+            estimate.RowVersion,
+            opp.RowVersion));
+
+        var issueRes = await _client.SendAsync(issueMsg);
+        Assert.Equal(HttpStatusCode.Created, issueRes.StatusCode);
+        var quotation = (await issueRes.Content.ReadFromJsonAsync<QuotationResponse>())!;
+
+        // Replay same intent (same key, same payload)
+        var replayMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation",
+            "token-org-a",
+            MembershipAId);
+        replayMsg.Headers.Add("Idempotency-Key", idempotencyKey);
+        replayMsg.Content = JsonContent.Create(new IssueQuotationRequest(
+            estimate.RowVersion,
+            opp.RowVersion));
+
+        var replayRes = await _client.SendAsync(replayMsg);
+        Assert.Equal(HttpStatusCode.Created, replayRes.StatusCode);
+        var replayQuotation = (await replayRes.Content.ReadFromJsonAsync<QuotationResponse>())!;
+
+        Assert.Equal(quotation.QuotationId, replayQuotation.QuotationId);
+        Assert.Equal(quotation.Number, replayQuotation.Number);
+
+        // Assert exactly one Quotation in DB for this estimate
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var quotationsCount = await db.Quotations.CountAsync(q => q.EstimateId == estimate.Id);
+        Assert.Equal(1, quotationsCount);
+
+        var stageHistoryCount = await db.OpportunityStageHistories
+            .CountAsync(h => h.OpportunityId == opp.Id && h.ToStage == OpportunityStage.Proposed);
+        Assert.Equal(1, stageHistoryCount);
+
+        var auditCount = await db.AuditEvents
+            .CountAsync(a => a.Action == "quotations.issued" && a.ResourceId == quotation.QuotationId.ToString());
+        Assert.Equal(1, auditCount);
+
+        var idempRecordCount = await db.IdempotencyRecords
+            .CountAsync(r => r.ResourceId == quotation.QuotationId.ToString() && r.Operation == "quotations.issue");
+        Assert.Equal(1, idempRecordCount);
+
+        // Replay with DIFFERENT payload must be rejected with IDEMPOTENCY_KEY_REUSED (409)
+        var conflictMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/quotation",
+            "token-org-a",
+            MembershipAId);
+        conflictMsg.Headers.Add("Idempotency-Key", idempotencyKey);
+        conflictMsg.Content = JsonContent.Create(new IssueQuotationRequest(
+            Guid.NewGuid(), // different version
+            opp.RowVersion));
+
+        var conflictRes = await _client.SendAsync(conflictMsg);
+        Assert.Equal(HttpStatusCode.Conflict, conflictRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task IssueQuotation_TwoEstimates_AllocatesDistinctAtomicNumbers()
+    {
+        var (estimate1, opp1, _) = await SetupCalculatedEstimateAsync($"atomic1-{Guid.NewGuid():N}");
+        var (estimate2, opp2, _) = await SetupCalculatedEstimateAsync($"atomic2-{Guid.NewGuid():N}");
+
+        var issueTask1 = Task.Run(async () =>
+        {
+            var msg = CreateAuthenticatedRequest(
+                HttpMethod.Post,
+                $"/api/v1/estimates/{estimate1.Id}/quotation",
+                "token-org-a",
+                MembershipAId);
+            msg.Headers.Add("Idempotency-Key", $"idemp-quote-atomic-1-{Guid.NewGuid():N}");
+            msg.Content = JsonContent.Create(new IssueQuotationRequest(
+                estimate1.RowVersion,
+                opp1.RowVersion));
+            return await _client.SendAsync(msg);
+        });
+
+        var issueTask2 = Task.Run(async () =>
+        {
+            var msg = CreateAuthenticatedRequest(
+                HttpMethod.Post,
+                $"/api/v1/estimates/{estimate2.Id}/quotation",
+                "token-org-a",
+                MembershipAId);
+            msg.Headers.Add("Idempotency-Key", $"idemp-quote-atomic-2-{Guid.NewGuid():N}");
+            msg.Content = JsonContent.Create(new IssueQuotationRequest(
+                estimate2.RowVersion,
+                opp2.RowVersion));
+            return await _client.SendAsync(msg);
+        });
+
+        var responses = await Task.WhenAll(issueTask1, issueTask2);
+
+        Assert.Equal(HttpStatusCode.Created, responses[0].StatusCode);
+        Assert.Equal(HttpStatusCode.Created, responses[1].StatusCode);
+
+        var q1 = (await responses[0].Content.ReadFromJsonAsync<QuotationResponse>())!;
+        var q2 = (await responses[1].Content.ReadFromJsonAsync<QuotationResponse>())!;
+
+        Assert.NotEmpty(q1.Number);
+        Assert.NotEmpty(q2.Number);
+        Assert.NotEqual(q1.Number, q2.Number);
+        Assert.NotEqual(q1.QuotationId, q2.QuotationId);
     }
 }
