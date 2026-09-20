@@ -982,6 +982,7 @@
     "insertTemplate": "Insert Templates",
     "exportCsv": "Export CSV",
     "exporting": "Exporting...",
+    "exportSnapshotRequired": "A verified calculation snapshot is required before exporting CSV",
     "moveUp": "Move Up",
     "moveDown": "Move Down",
     "sectionSubtotal": "Section Total",

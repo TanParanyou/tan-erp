@@ -982,6 +982,7 @@
     "insertTemplate": "แทรกแม่แบบ",
     "exportCsv": "ส่งออก CSV",
     "exporting": "กำลังส่งออก...",
+    "exportSnapshotRequired": "ต้องคำนวณราคาและมี Snapshot ที่ยืนยันแล้วก่อนส่งออก CSV",
     "moveUp": "เลื่อนขึ้น",
     "moveDown": "เลื่อนลง",
     "sectionSubtotal": "รวมหมวด",

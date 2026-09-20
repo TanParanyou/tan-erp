@@ -11,8 +11,6 @@ import { IconSave, IconCheck, IconPlus } from "@/components/common/Icons";
 import { useToast } from "@/hooks/useToast";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
-import { useCsvExport } from "@/hooks/useCsvExport";
-import type { CsvColumn } from "@/lib/export/export-csv";
 import type {
   EstimateDetailResponse,
   UpdateEstimateDraftRequest,
@@ -31,6 +29,11 @@ import {
   calculateLiveWorkspaceHud,
   calculateWorkItemSummary,
 } from "../utils/estimate-calculations";
+import {
+  isEstimateCalculationSnapshot,
+  exportEstimateSnapshotCsv,
+  type EstimateCalculationSnapshot,
+} from "../utils/estimate-export";
 import { EstimateWorkspaceHud } from "./estimate-workspace-hud";
 import { EstimateSectionCard } from "./estimate-section-card";
 
@@ -39,22 +42,6 @@ interface EstimateWorkspaceDrawerProps {
   onClose: () => void;
   opportunityId?: string;
   estimate: EstimateDetailResponse;
-}
-
-interface BoqExportRow {
-  sectionCode: string;
-  sectionName: string;
-  itemCode: string;
-  itemDescTh: string;
-  itemDescEn: string;
-  quantity: number;
-  unit: string;
-  unitCost: number;
-  totalCost: number;
-  unitSellingPrice: number;
-  totalSellingPrice: number;
-  grossProfit: number;
-  marginRate: number;
 }
 
 export function EstimateWorkspaceDrawer({
@@ -169,58 +156,31 @@ export function EstimateWorkspaceDrawer({
     }
   );
 
-  // BOQ CSV Export Preparation
-  const boqExportData = useMemo<readonly BoqExportRow[]>(() => {
-    const rows: BoqExportRow[] = [];
-    (watchedSections || []).forEach((s) => {
-      const secCode = s?.code || "";
-      const secName = s?.nameTh || "";
-      (s?.workItems || []).forEach((w) => {
-        const summary = calculateWorkItemSummary(w || {});
-        rows.push({
-          sectionCode: secCode,
-          sectionName: secName,
-          itemCode: w?.code || "",
-          itemDescTh: w?.descriptionTh || "",
-          itemDescEn: w?.descriptionEn || "",
-          quantity: Number(w?.quantity) || 1,
-          unit: w?.unitCode || "lot",
-          unitCost: summary.unitCostSum,
-          totalCost: summary.totalCost,
-          unitSellingPrice: summary.unitSellingPrice,
-          totalSellingPrice: summary.totalSellingPrice,
-          grossProfit: summary.grossProfit,
-          marginRate: summary.marginRate,
-        });
-      });
-    });
-    return rows;
-  }, [watchedSections]);
+  // Verified Server Calculation Snapshot for CSV Export
+  const parsedSnapshot = useMemo<EstimateCalculationSnapshot | null>(() => {
+    if (!currentRevision?.calculationSnapshotJson) {
+      return null;
+    }
+    try {
+      const raw: unknown = JSON.parse(currentRevision.calculationSnapshotJson);
+      return isEstimateCalculationSnapshot(raw) ? raw : null;
+    } catch {
+      return null;
+    }
+  }, [currentRevision?.calculationSnapshotJson]);
 
-  const boqCsvColumns = useMemo<readonly CsvColumn<BoqExportRow>[]>(
-    () => [
-      { header: "Section Code", accessor: (row: BoqExportRow) => row.sectionCode },
-      { header: "Section Name", accessor: (row: BoqExportRow) => row.sectionName },
-      { header: "Item Code", accessor: (row: BoqExportRow) => row.itemCode },
-      { header: "Description (TH)", accessor: (row: BoqExportRow) => row.itemDescTh },
-      { header: "Description (EN)", accessor: (row: BoqExportRow) => row.itemDescEn },
-      { header: "Quantity", accessor: (row: BoqExportRow) => row.quantity },
-      { header: "Unit", accessor: (row: BoqExportRow) => row.unit },
-      { header: "Unit Cost", accessor: (row: BoqExportRow) => row.unitCost },
-      { header: "Total Cost", accessor: (row: BoqExportRow) => row.totalCost },
-      { header: "Unit Selling Price", accessor: (row: BoqExportRow) => row.unitSellingPrice },
-      { header: "Total Selling Price", accessor: (row: BoqExportRow) => row.totalSellingPrice },
-      { header: "Gross Profit", accessor: (row: BoqExportRow) => row.grossProfit },
-      { header: "Margin %", accessor: (row: BoqExportRow) => row.marginRate },
-    ],
-    []
-  );
+  const [isExporting, setIsExporting] = useState(false);
 
-  const { isExporting, exportAll: exportBoqCsv } = useCsvExport<BoqExportRow>({
-    filename: `BOQ_${estimate.number || "Estimate"}_R${currentRevision?.revisionNo ?? 1}`,
-    columns: boqCsvColumns,
-    data: boqExportData,
-  });
+  const handleExportSnapshot = React.useCallback(() => {
+    if (!parsedSnapshot) return;
+    setIsExporting(true);
+    try {
+      const filename = `BOQ_${estimate.number || "Estimate"}_R${currentRevision?.revisionNo ?? 1}_snapshot`;
+      exportEstimateSnapshotCsv(filename, parsedSnapshot);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [estimate.number, currentRevision?.revisionNo, parsedSnapshot]);
 
   // Filtered Section Indices for Live Search & Low Margin Filter
   const visibleSectionIndices = useMemo(() => {
@@ -497,10 +457,11 @@ export function EstimateWorkspaceDrawer({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={exportBoqCsv}
-                  disabled={isExporting || boqExportData.length === 0}
+                  onClick={handleExportSnapshot}
+                  disabled={isExporting || !parsedSnapshot}
                   isLoading={isExporting}
-                  className="!rounded-none h-9 text-xs border-erp-border text-erp-text-secondary hover:bg-erp-surface-subtle"
+                  title={!parsedSnapshot ? t("exportSnapshotRequired") : undefined}
+                  className="!rounded-none h-9 text-xs border-erp-border text-erp-text-secondary hover:bg-erp-surface-subtle disabled:opacity-50"
                 >
                   <svg
                     className="w-3.5 h-3.5 mr-1.5 text-erp-navy"
