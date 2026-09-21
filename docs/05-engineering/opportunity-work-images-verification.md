@@ -43,3 +43,40 @@
 
 4. **i18n Parity**:
    - Complete translations in both `th.json` and `en.json` (0 hardcoded strings)
+
+## 5. Security & Multi-Image Remediation Verification (September 2026)
+
+ตามแผนแก้ไขเร่งด่วนใน `docs/superpowers/plans/2026-09-20-file-security-work-images-remediation.md`:
+
+### 5.1 Exact Commit SHAs
+- `bf2b7bf`: `fix(files): enforce verified parent ownership on bind`
+- `bc3fe3a`: `fix(opportunities): make work image retry and paging deterministic`
+- `fd01d69`: `test(files): verify secure multi-image journey and sync openapi contract`
+
+### 5.2 Targeted Security & Functional Tests (`FileUploadSessionTests.cs`)
+1. **ปิด Anonymous Access & Direct Path Traversal:**
+   - `ClosePublicFiles_AnonymousRequest_ReturnsUnauthorized`: ไม่ส่ง Token เข้า `GET /api/v1/files/{fileId}/content` ได้รับ `401 Unauthorized`
+   - `ClosePublicFiles_AuthenticatedNonMember_ReturnsForbidden`: ส่ง Token ที่ไม่ได้เป็น Member ของ Tenant ได้รับ `403 Forbidden`
+   - มี Header `Cache-Control: private, no-store` กำกับเสมอ
+2. **ผูก Upload Session กับ Parent Entity (Zero Cross-Parent Reuse):**
+   - `UploadSession_BindToDifferentParent_ReturnsConflict`: นำ `fileId` จาก Session ที่ระบุ Opportunity หนึ่งไปแนบให้อีก Opportunity หรือ Customer อื่น ได้รับ `409 Conflict` (`OPPORTUNITY_IMAGE_NOT_READY` / Invariant Violation)
+   - `UploadSession_CrossTenantReplay_ReturnsNotFoundOrConflict`: นำ Session ของ Tenant อื่นมาเรียกหรือแนบ ได้รับ `404 Not Found` หรือ `409 Conflict`
+3. **Retry-Safe Client Upload & Deterministic Keyset Cursor Pagination:**
+   - `AttachWorkImages_RetryFailedBatch_ReusesVerifiedFilesWithoutReupload`: เมื่อการแนบในรอบแรกล้มเหลว ฝั่ง Client สามารถ Retry โดยส่งเฉพาะ `fileId` ที่ Verified แล้วซ้ำได้โดยไม่เกิด Conflict และไม่ต้องอัปโหลดไบนารีซ้ำ
+   - `ListWorkImages_MoreThanLimit_ReturnsStableNextPage`: เมื่อมีรูปภาพมากกว่า `limit` Backend คืนรายการเรียงลำดับเสถียรตาม `(CreatedAtUtc DESC, Id DESC)` พร้อมส่งมอบ Base64Url JSON `nextCursor` ที่ถูกต้อง
+
+### 5.3 Complete Verification Gates Results
+- **Backend (.NET 10 / C# Clean Architecture)**:
+  - `TanErp.UnitTests`: 167/167 passed (100%)
+  - `TanErp.ArchitectureTests`: 3/3 passed (100%)
+  - `TanErp.IntegrationTests`: 171/171 passed (100% รวม 6 targeted tests)
+  - **รวม Backend Tests:** 341 tests ผ่านทั้งหมด 100%
+- **Frontend (Next.js 16 + React 19 + TypeScript)**:
+  - `Vitest`: 496/496 passed (112 test files)
+  - `tsc --noEmit` (typecheck): ผ่าน 0 errors
+  - `eslint .` (lint): ผ่าน 0 errors
+  - `next build`: ผ่าน 100% (Compiled successfully, static & dynamic routes valid)
+- **Working Tree Cleanliness**:
+  - `frontend/next-env.d.ts` สะอาด
+  - ไม่มี Unstaged artifacts ของระบบทดสอบหลุดค้าง
+

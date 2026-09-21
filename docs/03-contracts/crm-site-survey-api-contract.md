@@ -28,9 +28,9 @@ Backend Resolve Membership/Scope จาก PostgreSQL ทุก Request, Error �
 | เปลี่ยน Stage | `POST /api/v1/opportunities/{id}/stage-transitions` | `opportunities.transition` | 200 |
 | เริ่ม Upload Session | `POST /api/v1/files/upload-sessions` | ตาม Parent Resource (`opportunities.update`, etc.) | 201 |
 | Complete Upload Session | `POST /api/v1/files/upload-sessions/{id}/complete` | ตาม Parent Resource | 200 |
-| Preview ไฟล์ | `GET /api/v1/files/{id}/preview` | ตาม Parent Resource (`opportunities.read`, etc.) | 200/302 |
+| ดึงเนื้อหาไฟล์ (Secure Stream) | `GET /api/v1/files/{fileId}/content` | ตาม Parent Resource (Tenant + Parent Auth, Cache-Control: private, no-store) | 200 |
 | แนบภาพงาน (Batch) | `POST /api/v1/opportunities/{id}/work-images` | `opportunities.update` | 201 |
-| อ่านภาพงาน | `GET /api/v1/opportunities/{id}/work-images` | `opportunities.read` | 200 |
+| อ่านภาพงาน (Keyset Cursor) | `GET /api/v1/opportunities/{id}/work-images` | `opportunities.read` | 200 |
 | ถอดภาพงาน (Soft Detach) | `DELETE /api/v1/opportunities/{id}/work-images/{imageId}` | `opportunities.update` | 204 |
 | สร้าง/อ่าน Survey | `POST /api/v1/site-surveys`, `GET /api/v1/site-surveys/{id}` | `surveys.create`, `surveys.read` | 201/200 |
 | Save Draft Revision | `PATCH /api/v1/site-survey-revisions/{id}` | `surveys.update` | 200 |
@@ -309,8 +309,14 @@ Content-Type: application/json
 {
   "parentType": "opportunity",
   "parentId": "019a3cf8-96f0-7c9f-b207-93aa818f4d11",
-  "mimeType": "image/webp",
-  "sizeBytes": 123456
+  "creationIntentId": null,
+  "files": [
+    {
+      "filename": "site-front.webp",
+      "mediaType": "image/webp",
+      "fileSizeBytes": 245760
+    }
+  ]
 }
 ```
 
@@ -318,14 +324,49 @@ Response `201 Created`:
 ```json
 {
   "sessionId": "019a3cf8-96f0-7c9f-b207-93aa818f4e01",
-  "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e02",
-  "uploadUrl": "/api/v1/files/upload-sessions/019a3cf8-96f0-7c9f-b207-93aa818f4e01/content",
-  "expiresAtUtc": "2026-09-15T23:45:00Z"
+  "expiresAtUtc": "2026-09-15T23:45:00Z",
+  "slots": [
+    {
+      "slotId": "019a3cf8-96f0-7c9f-b207-93aa818f4e02",
+      "filename": "site-front.webp",
+      "mediaType": "image/webp",
+      "fileSizeBytes": 245760
+    }
+  ]
 }
 ```
 
-- อัปโหลดเนื้อหาไฟล์ไบนารี: `PUT /api/v1/files/upload-sessions/{sessionId}/content` พร้อม Header `Content-Type: image/webp`
-- ยืนยันความสมบูรณ์: `POST /api/v1/files/upload-sessions/{sessionId}/complete` คืน `200 OK` `{ "fileId": "...", "status": "verified" }`
+- อัปโหลดเนื้อหาไฟล์และ Complete Session:
+  ```http
+  POST /api/v1/files/upload-sessions/{sessionId}/complete
+  Authorization: Bearer <Firebase ID token>
+  X-Membership-Id: <membership UUID>
+  Content-Type: multipart/form-data
+  ```
+  แนบ Form file พร้อม Slot mapping ใน Request โดย Server ตรวจสอบ Magic Numbers, MIME Type, ขนาดไฟล์ และสิทธิ์ Session คืน `200 OK`:
+  ```json
+  {
+    "sessionId": "019a3cf8-96f0-7c9f-b207-93aa818f4e01",
+    "files": [
+      {
+        "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e03",
+        "slotId": "019a3cf8-96f0-7c9f-b207-93aa818f4e02",
+        "filename": "site-front.webp",
+        "storagePath": "org-uuid/session-uuid/site-front.webp",
+        "mediaType": "image/webp",
+        "fileSizeBytes": 245760
+      }
+    ]
+  }
+  ```
+
+- ดึงเนื้อหาไฟล์ (Secure Stream):
+  ```http
+  GET /api/v1/files/{fileId}/content
+  Authorization: Bearer <Firebase ID token>
+  X-Membership-Id: <membership UUID>
+  ```
+  Server ตรวจสอบ Tenant Boundary, Membership สิทธิ์ และสิทธิ์การเข้าถึง Parent Resource (เช่น ตรวจสอบ `opportunities.read` เมื่อไฟล์ผูกกับ Opportunity) และส่งคืน Stream Binary พร้อม Header `Cache-Control: private, no-store` (ยกเลิก Anonymous และ Direct Path Traversal โดยเด็ดขาด)
 
 ### 2. Opportunity Work Images Attach Contract (Batch)
 
@@ -341,12 +382,13 @@ Content-Type: application/json
 ```json
 {
   "images": [
-    { "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e02", "caption": "มุมหน้าตู้ TEST_ONLY" },
-    { "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e03", "caption": "มุมภายในตู้ TEST_ONLY" }
+    { "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e03", "caption": "มุมหน้าตู้ TEST_ONLY" },
+    { "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e04", "caption": "มุมภายในตู้ TEST_ONLY" }
   ]
 }
 ```
 
+- ตรวจสอบ Parent Invariant: `fileId` ต้องมาจาก Upload Session ที่ระบุ `parentType = "opportunity"` และ `parentId = {opportunityId}` ของ Organization เดียวกันเท่านั้น
 - บันทึก atomic ทั้งหมด หรือไม่มีเลย (All-or-nothing) ในหนึ่ง Transaction พร้อม rotate `rowVersion`
 - ตรวจสอบว่า Opportunity อยู่ใน Open stages (`draft`, `qualified`, `surveying`, `estimating`, `proposed`)
 - คืน `201 Created` พร้อม Header `ETag: "<new Opportunity rowVersion>"` และ Body:
@@ -355,7 +397,7 @@ Content-Type: application/json
   "items": [
     {
       "id": "019a3cf8-96f0-7c9f-b207-93aa818f4f01",
-      "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e02",
+      "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e03",
       "stageAtAttach": "draft",
       "caption": "มุมหน้าตู้ TEST_ONLY",
       "displayOrder": 1,
@@ -370,10 +412,30 @@ Content-Type: application/json
 }
 ```
 
-### 3. List Work Images
+### 3. List Work Images (Deterministic Keyset Cursor Pagination)
 
-`GET /api/v1/opportunities/{id}/work-images?stage=&limit=25&cursor=`
-คืนรายการภาพงานเรียงลำดับ `(createdAtUtc DESC, displayOrder ASC, id ASC)` รองรับ cursor pagination
+`GET /api/v1/opportunities/{id}/work-images?limit=25&cursor=<base64url>`
+
+คืนรายการภาพงานเรียงลำดับเสถียร `(CreatedAtUtc DESC, Id DESC)` โดย `nextCursor` เป็น Base64Url JSON `{ "c": "timestamp", "id": "uuid" }`:
+```json
+{
+  "items": [
+    {
+      "id": "019a3cf8-96f0-7c9f-b207-93aa818f4f01",
+      "fileId": "019a3cf8-96f0-7c9f-b207-93aa818f4e03",
+      "stageAtAttach": "draft",
+      "caption": "มุมหน้าตู้ TEST_ONLY",
+      "displayOrder": 1,
+      "createdAtUtc": "2026-09-15T23:30:00Z",
+      "createdBy": {
+        "id": "019a3cf8-96f0-7c9f-b207-93aa818f4a01",
+        "displayName": "คุณทดสอบ การขาย"
+      }
+    }
+  ],
+  "nextCursor": "eyJjIjoiMjAyNi0wOS0xNVQyMzozMDowMFoiLCJpZCI6IjAxOWEzY2Y4LTk2ZjAtN2M5Zi1iMjA3LTkzYWE4MThmNGYwMSJ9"
+}
+```
 
 ### 4. Soft Detach Work Image
 

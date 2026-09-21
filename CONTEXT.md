@@ -176,3 +176,25 @@ _Avoid_: Date String, Timestamp
 นโยบายแยกเลขเอกสารระหว่างฉบับร่าง (Draft) กับฉบับทางการ (Official) เพื่อรับประกันความต่อเนื่องของเลขทางการ (Gapless)
 _Avoid_: Single Running Number
 
+## การจัดการไฟล์และภาพถ่าย (Files & Media Assets)
+
+**File Upload Session (รอบการอัปโหลดไฟล์)**:
+วงจรเตรียมอัปโหลดไฟล์ที่มีอายุจำกัด ผูกติดกับ Parent Entity (เช่น Opportunity, Customer, Site) เพื่อยืนยันขอบเขตสิทธิ์ ป้องกันการอัปโหลดไฟล์ลอย และป้องกันการนำไฟล์ไปใช้ข้ามเอกสารหรือข้ามองค์กร
+_Avoid_: Direct Upload, Free Upload, Temp Upload
+
+**File Upload Slot (ช่องรับไฟล์)**:
+ข้อกำหนดช่องรับไฟล์แต่ละรายการภายใน Upload Session ซึ่งระบุชื่อไฟล์ ขนาดไฟล์ และ MIME Type ที่ผ่านการตรวจสอบความถูกต้องก่อนรับข้อมูล
+_Avoid_: Form Field, Multi-part Param
+
+**Verified File (ไฟล์ที่ผ่านการตรวจสอบแล้ว)**:
+ไฟล์ที่ถูกอัปโหลด ตรวจสอบความถูกต้องของ Magic Numbers และ Header แล้ว บันทึกในระบบจัดเก็บไฟล์พร้อมระบุเจ้าขององค์กร และพร้อมสำหรับนำไปผูกติดกับ Parent Entity
+_Avoid_: Unchecked File, Raw File
+
+**File Parent Invariant (เงื่อนไขความสัมพันธ์ไฟล์กับข้อมูลหลัก)**:
+ข้อกำหนดความปลอดภัยระดับสถาปัตยกรรมที่รับประกันว่าไฟล์ที่อัปโหลดต้องถูกผูกและใช้งานได้เฉพาะกับ Parent Entity (และ Parent Type) ที่ประกาศไว้ใน Upload Session เท่านั้น ห้ามนำ `fileId` ข้าม Tenant หรือข้าม Parent มาผูกเด็ดขาด
+_Avoid_: Loose File Reference, Global File Pool
+
+**Work Images (ภาพถ่ายหน้างานตามขั้นตอน)**:
+ภาพถ่ายจริงที่แนบไว้กับ Opportunity เพื่อบันทึกสภาพหน้างานหรือหลักฐานประกอบในแต่ละขั้นตอนการขาย (Stage) โดยอ้างอิงไฟล์ที่ Verified แล้ว และรองรับการดึงข้อมูลแบบ Keyset Cursor Pagination
+_Avoid_: Site Survey Image เมื่อหมายถึงภาพประกอบ Opportunity ทั่วไป
+
