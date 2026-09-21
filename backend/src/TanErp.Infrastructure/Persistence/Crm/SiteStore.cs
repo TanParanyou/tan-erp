@@ -14,11 +14,16 @@ public class SiteStore : ISiteStore
 {
     private readonly AppDbContext _db;
     private readonly IClock _clock;
+    private readonly TanErp.Application.Files.IFileStore _fileStore;
 
-    public SiteStore(AppDbContext db, IClock clock)
+    public SiteStore(
+        AppDbContext db,
+        IClock clock,
+        TanErp.Application.Files.IFileStore fileStore)
     {
         _db = db;
         _clock = clock;
+        _fileStore = fileStore;
     }
 
     public async Task<Result<SiteProjection>> CreateAsync(
@@ -89,6 +94,27 @@ public class SiteStore : ISiteStore
             var siteImages = new List<SiteImage>();
             if (command.Images != null && command.Images.Count > 0)
             {
+                if (!command.FileUploadIntentId.HasValue)
+                {
+                    return Result<SiteProjection>.Failure(
+                        new Error("FILE_UPLOAD_SESSION_INVALID", "FileUploadIntentId is required when Images are provided."));
+                }
+
+                var fileIds = command.Images.Select(i => i.FileId).Distinct().ToList();
+                var fileValidation = await _fileStore.ValidateVerifiedFilesForParentAsync(
+                    orgId,
+                    access.ActorUserId,
+                    TanErp.Domain.Files.FileParentTypes.Site,
+                    null,
+                    command.FileUploadIntentId.Value,
+                    fileIds,
+                    cancellationToken);
+
+                if (fileValidation.IsFailure)
+                {
+                    return Result<SiteProjection>.Failure(fileValidation.Error);
+                }
+
                 for (int i = 0; i < command.Images.Count; i++)
                 {
                     var imgInput = command.Images[i];
@@ -130,6 +156,11 @@ public class SiteStore : ISiteStore
                 command.TraceId,
                 auditChanges);
             _db.AddAuditEvent(auditEvent);
+
+            if (command.Images != null && command.Images.Count > 0 && command.FileUploadIntentId.HasValue)
+            {
+                await _fileStore.BindFilesToParentAsync(orgId, command.FileUploadIntentId.Value, siteId, cancellationToken);
+            }
 
             try
             {

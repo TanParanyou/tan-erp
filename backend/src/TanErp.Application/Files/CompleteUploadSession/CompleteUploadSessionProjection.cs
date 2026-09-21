@@ -8,5 +8,5 @@ public sealed record CompletedFileProjection(
     string ServingUrl);
 
 public sealed record CompleteUploadSessionProjection(
-    string SessionId,
+    Guid SessionId,
     IReadOnlyList<CompletedFileProjection> Files);

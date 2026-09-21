@@ -59,6 +59,29 @@ public class LocalFileStorageProvider : IFileStorageProvider
     public string GetServingUrl(string storagePath) =>
         $"/api/v1/files/{storagePath}";
 
+    public string GetServingUrl(Guid fileId) =>
+        $"/api/v1/files/{fileId}/content";
+
+    public Task<Stream?> OpenReadStreamAsync(string storagePath, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(storagePath))
+        {
+            return Task.FromResult<Stream?>(null);
+        }
+
+        var fullPath = Path.GetFullPath(Path.Combine(_basePath, storagePath.Replace('/', Path.DirectorySeparatorChar)));
+        var baseFullPath = Path.GetFullPath(_basePath);
+
+        // Directory traversal security guard
+        if (!fullPath.StartsWith(baseFullPath, StringComparison.OrdinalIgnoreCase) || !File.Exists(fullPath))
+        {
+            return Task.FromResult<Stream?>(null);
+        }
+
+        Stream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
+        return Task.FromResult<Stream?>(fileStream);
+    }
+
     public Task DeleteAsync(string storagePath, CancellationToken cancellationToken = default)
     {
         var fullPath = Path.Combine(_basePath, storagePath.Replace('/', Path.DirectorySeparatorChar));

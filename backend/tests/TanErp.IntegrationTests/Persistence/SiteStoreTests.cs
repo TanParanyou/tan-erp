@@ -27,6 +27,14 @@ public class SiteStoreTests : IAsyncLifetime
         public DateTimeOffset UtcNow { get; } = FixedTime;
     }
 
+    private static TanErp.Application.Files.IFileStore CreateFileStore(AppDbContext db, TanErp.Application.Common.Abstractions.IClock clock)
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+        var storage = new TanErp.Infrastructure.Files.LocalFileStorageProvider(config);
+        var resolver = new TanErp.Infrastructure.Files.FileParentAccessResolver(db, clock);
+        return new TanErp.Infrastructure.Files.FileStore(db, storage, resolver);
+    }
+
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -39,7 +47,8 @@ public class SiteStoreTests : IAsyncLifetime
         await _db.Database.MigrateAsync();
         await TestOnlyDataSeeder.SeedAsync(_db, "Test", true);
 
-        _store = new SiteStore(_db, new FixedClock());
+        var clock = new FixedClock();
+        _store = new SiteStore(_db, clock, CreateFileStore(_db, clock));
     }
 
     public async Task DisposeAsync()
@@ -266,8 +275,9 @@ public class SiteStoreTests : IAsyncLifetime
 
         await using var db1 = new AppDbContext(options);
         await using var db2 = new AppDbContext(options);
-        var store1 = new SiteStore(db1, new FixedClock());
-        var store2 = new SiteStore(db2, new FixedClock());
+        var clock1 = new FixedClock();
+        var store1 = new SiteStore(db1, clock1, CreateFileStore(db1, clock1));
+        var store2 = new SiteStore(db2, clock1, CreateFileStore(db2, clock1));
 
         var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, null, "sites.manage", "organization");
         var cmd = new CreateSiteCommand("uid", Guid.NewGuid(), customer.Id, "key-concurrent-1", "ไซต์แข่ง", "123", "ต", "อ", "จ", "10000", "TH", null, null, null, "trace-conc-1");
@@ -314,8 +324,9 @@ public class SiteStoreTests : IAsyncLifetime
 
         await using var db1 = new AppDbContext(options);
         await using var db2 = new AppDbContext(options);
-        var store1 = new SiteStore(db1, new FixedClock());
-        var store2 = new SiteStore(db2, new FixedClock());
+        var clock2 = new FixedClock();
+        var store1 = new SiteStore(db1, clock2, CreateFileStore(db1, clock2));
+        var store2 = new SiteStore(db2, clock2, CreateFileStore(db2, clock2));
 
         var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, null, "sites.manage", "organization");
         var cmd1 = new CreateSiteCommand("uid", Guid.NewGuid(), customer.Id, "key-concurrent-diff", "ไซต์แข่ง A", "123", "ต", "อ", "จ", "10000", "TH", null, null, null, "trace-conc-diff-1");

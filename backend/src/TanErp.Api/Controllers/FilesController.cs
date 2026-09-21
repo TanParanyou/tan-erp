@@ -1,14 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using TanErp.Api.Contracts.Files;
 using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
-using TanErp.Application.Files;
 using TanErp.Application.Files.CompleteUploadSession;
 using TanErp.Application.Files.CreateUploadSession;
-using TanErp.Infrastructure.Persistence;
+using TanErp.Application.Files.GetFileContent;
 
 namespace TanErp.Api.Controllers;
 
@@ -19,39 +16,29 @@ public class FilesController : ControllerBase
 {
     private readonly CreateUploadSessionHandler _createSessionHandler;
     private readonly CompleteUploadSessionHandler _completeSessionHandler;
-    private readonly IFileStorageProvider _storageProvider;
-    private readonly AppDbContext _dbContext;
-    private readonly string _storageBasePath;
+    private readonly GetFileContentHandler _getFileContentHandler;
 
     public FilesController(
         CreateUploadSessionHandler createSessionHandler,
         CompleteUploadSessionHandler completeSessionHandler,
-        IFileStorageProvider storageProvider,
-        AppDbContext dbContext,
-        IConfiguration configuration)
+        GetFileContentHandler getFileContentHandler)
     {
         _createSessionHandler = createSessionHandler;
         _completeSessionHandler = completeSessionHandler;
-        _storageProvider = storageProvider;
-        _dbContext = dbContext;
-
-        var basePath = configuration["Storage:BasePath"];
-        if (string.IsNullOrWhiteSpace(basePath))
-        {
-            basePath = Path.Combine(AppContext.BaseDirectory, "local-storage");
-        }
-        _storageBasePath = basePath;
+        _getFileContentHandler = getFileContentHandler;
     }
 
     /// <summary>
-    /// Creates a new upload session and returns pre-authorized slot URLs for each file.
-    /// The client uploads each file to its slot URL, then calls complete-session.
+    /// Creates a parent-bound upload session and returns declared slots.
     /// </summary>
+    [HttpPost("upload-sessions")]
     [HttpPost("sessions")]
     [ProducesResponseType<CreateUploadSessionResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> CreateSession(
         [FromBody] CreateUploadSessionRequest request,
@@ -73,6 +60,9 @@ public class FilesController : ControllerBase
         var command = new CreateUploadSessionCommand(
             auth.FirebaseUid,
             auth.MembershipId,
+            request.ParentType,
+            request.ParentId,
+            request.CreationIntentId,
             slots,
             auth.IdempotencyKey,
             traceId);
@@ -86,86 +76,28 @@ public class FilesController : ControllerBase
         var session = result.Value!;
         var response = new CreateUploadSessionResponse(
             session.SessionId,
-            session.Slots.Select(s => new UploadSlotResponse(s.SlotId, s.UploadUrl)).ToList());
+            session.ExpiresAtUtc,
+            session.Slots.Select(s => new UploadSlotResponse(s.SlotId, s.Filename, s.MediaType, s.FileSizeBytes)).ToList());
 
         return CreatedAtAction(null, response);
     }
 
     /// <summary>
-    /// Uploads a single file to a specific slot in a session.
-    /// Accepts multipart/form-data with a single "file" field.
+    /// Completes an upload session by verifying and streaming multipart file binaries.
     /// </summary>
-    [HttpPost("sessions/{sessionId}/slots/{slotIndex:int}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
-    [RequestFormLimits(MultipartBodyLengthLimit = 15 * 1024 * 1024)] // 15 MB raw limit
-    [RequestSizeLimit(15 * 1024 * 1024)]
-    public async Task<IActionResult> UploadSlot(
-        [FromRoute] string sessionId,
-        [FromRoute] int slotIndex,
-        CancellationToken cancellationToken)
-    {
-        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
-        if (contextResult.IsFailure)
-        {
-            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
-        }
-
-        if (!Request.HasFormContentType || Request.Form.Files.Count == 0)
-        {
-            return ProblemDetailsMapper.CreateProblemResult("FILE_UPLOAD_SESSION_INVALID", HttpContext);
-        }
-
-        var formFile = Request.Form.Files.GetFile("file");
-        if (formFile is null)
-        {
-            return ProblemDetailsMapper.CreateProblemResult("FILE_UPLOAD_SESSION_INVALID", HttpContext);
-        }
-
-        // Temporarily persist to session slot storage path; CompleteSession will read it back
-        var auth = contextResult.Value!;
-
-        // We use CompleteUploadSessionHandler directly for single-file sessions in this slot
-        var fileInput = new FileCompletionInput(
-            $"{sessionId}_{slotIndex}",
-            formFile.FileName,
-            formFile.ContentType,
-            formFile.Length,
-            formFile.OpenReadStream());
-
-        var command = new CompleteUploadSessionCommand(
-            auth.FirebaseUid,
-            auth.MembershipId,
-            sessionId,
-            [fileInput],
-            HttpContext.TraceIdentifier);
-
-        var result = await _completeSessionHandler.Handle(command, cancellationToken);
-        if (result.IsFailure)
-        {
-            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
-        }
-
-        return NoContent();
-    }
-
-    /// <summary>
-    /// Completes an upload session after all slot files have been uploaded.
-    /// Verifies magic numbers, persists metadata, and returns fileIds.
-    /// The client submits file references; actual binaries come from slot uploads.
-    /// </summary>
-    [HttpPost("sessions/{sessionId}/complete")]
+    [HttpPost("upload-sessions/{sessionId:guid}/complete")]
+    [HttpPost("sessions/{sessionId:guid}/complete")]
     [ProducesResponseType<CompleteUploadSessionResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     [RequestFormLimits(MultipartBodyLengthLimit = 200 * 1024 * 1024)] // 200 MB aggregate
     [RequestSizeLimit(200 * 1024 * 1024)]
     public async Task<IActionResult> CompleteSession(
-        [FromRoute] string sessionId,
+        [FromRoute] Guid sessionId,
         CancellationToken cancellationToken)
     {
         var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
@@ -181,14 +113,38 @@ public class FilesController : ControllerBase
             return ProblemDetailsMapper.CreateProblemResult("FILE_UPLOAD_SESSION_INVALID", HttpContext);
         }
 
-        var fileInputs = Request.Form.Files
-            .Select((f, i) => new FileCompletionInput(
-                SlotId: $"{sessionId}_{i}",
-                OriginalFilename: f.FileName,
-                MediaType: f.ContentType,
-                FileSizeBytes: f.Length,
-                Content: f.OpenReadStream()))
-            .ToList();
+        var fileInputs = new List<FileCompletionInput>();
+
+        for (var i = 0; i < Request.Form.Files.Count; i++)
+        {
+            var formFile = Request.Form.Files[i];
+
+            // Resolve Slot ID: from form field slotId, part name, or header
+            Guid slotId = Guid.Empty;
+            if (Guid.TryParse(formFile.Name, out var nameGuid))
+            {
+                slotId = nameGuid;
+            }
+            else if (Request.Form.TryGetValue($"slotId_{i}", out var slotIdVal) && Guid.TryParse(slotIdVal, out var parsedVal))
+            {
+                slotId = parsedVal;
+            }
+            else if (Request.Form.TryGetValue("slotId", out var singleSlotId) && Guid.TryParse(singleSlotId, out var parsedSingle))
+            {
+                slotId = parsedSingle;
+            }
+            else if (Request.Headers.TryGetValue("X-Slot-Id", out var headerVal) && Guid.TryParse(headerVal, out var parsedHeader))
+            {
+                slotId = parsedHeader;
+            }
+
+            fileInputs.Add(new FileCompletionInput(
+                SlotId: slotId,
+                OriginalFilename: formFile.FileName,
+                MediaType: formFile.ContentType,
+                FileSizeBytes: formFile.Length,
+                Content: formFile.OpenReadStream()));
+        }
 
         var command = new CompleteUploadSessionCommand(
             auth.FirebaseUid,
@@ -217,52 +173,39 @@ public class FilesController : ControllerBase
     }
 
     /// <summary>
-    /// Serves a stored file by its file ID (GUID) or storage path segments.
+    /// Streams protected file content to authorized users. Anonymous or unauthenticated access is strictly forbidden.
     /// </summary>
-    [HttpGet("{**storagePath}")]
-    [AllowAnonymous]
+    [HttpGet("{fileId:guid}/content")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ServeFile(
-        [FromRoute] string storagePath,
+    public async Task<IActionResult> GetFileContent(
+        [FromRoute] Guid fileId,
         CancellationToken cancellationToken)
     {
-        string? relativePath = null;
-        string mediaType = "application/octet-stream";
-
-        if (Guid.TryParse(storagePath, out var fileId))
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
         {
-            var file = await _dbContext.UploadedFiles
-                .AsNoTracking()
-                .FirstOrDefaultAsync(f => f.Id == fileId, cancellationToken);
-
-            if (file is null)
-            {
-                return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
-            }
-
-            relativePath = file.StoragePath;
-            mediaType = string.IsNullOrWhiteSpace(file.MediaType) ? "image/webp" : file.MediaType;
-        }
-        else
-        {
-            relativePath = storagePath;
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
         }
 
-        if (string.IsNullOrWhiteSpace(relativePath))
+        var auth = contextResult.Value!;
+
+        var query = new GetFileContentQuery(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            fileId);
+
+        var result = await _getFileContentHandler.Handle(query, cancellationToken);
+        if (result.IsFailure)
         {
-            return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         }
 
-        var fullPath = Path.GetFullPath(Path.Combine(_storageBasePath, relativePath.Replace('/', Path.DirectorySeparatorChar)));
-        var baseFullPath = Path.GetFullPath(_storageBasePath);
+        Response.Headers["Cache-Control"] = "private, no-store";
 
-        // Security: directory traversal guard
-        if (!fullPath.StartsWith(baseFullPath, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
-        {
-            return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
-        }
-
-        return PhysicalFile(fullPath, mediaType, enableRangeProcessing: true);
+        var content = result.Value!;
+        return File(content.ContentStream, content.MediaType, content.Filename, enableRangeProcessing: true);
     }
 }

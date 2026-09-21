@@ -22,6 +22,11 @@ public interface IFileStorageProvider
     string GetServingUrl(string storagePath);
 
     /// <summary>
+    /// Opens a read stream for the specified storage path, or returns null if not found.
+    /// </summary>
+    Task<Stream?> OpenReadStreamAsync(string storagePath, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Deletes the file binary. Idempotent — does not throw if not found.
     /// </summary>
     Task DeleteAsync(string storagePath, CancellationToken cancellationToken = default);

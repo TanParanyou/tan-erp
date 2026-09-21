@@ -18,5 +18,6 @@ public sealed record CreateCustomerRequest(
     [Required] CreatePrimaryContactRequest PrimaryContact,
     [MaxLength(50)] string? LeadSource = null,
     [MaxLength(200)] string? LeadSourceNote = null,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    Guid? FileUploadIntentId = null);
 

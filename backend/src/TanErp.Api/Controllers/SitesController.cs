@@ -63,7 +63,8 @@ public class SitesController : ControllerBase
             request.Longitude,
             request.AccessNote,
             traceId,
-            request.Images?.Select(i => new CreateSiteImageInput(i.FileId, i.Caption)).ToList());
+            request.Images?.Select(i => new CreateSiteImageInput(i.FileId, i.Caption)).ToList(),
+            request.FileUploadIntentId);
 
         var result = await _createHandler.Handle(command, cancellationToken);
         if (result.IsFailure)

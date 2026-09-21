@@ -74,7 +74,8 @@ public class CustomersController : ControllerBase
             traceId,
             request.LeadSource,
             request.LeadSourceNote,
-            request.ImageFileId);
+            request.ImageFileId,
+            request.FileUploadIntentId);
 
 
         var result = await _createHandler.Handle(command, cancellationToken);

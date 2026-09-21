@@ -1,13 +1,12 @@
 namespace TanErp.Application.Files.CreateUploadSession;
 
-/// <summary>
-/// Represents a single upload slot returned to the client.
-/// The client uploads one file per slot using the provided upload URL.
-/// </summary>
 public sealed record UploadSlotProjection(
-    string SlotId,
-    string UploadUrl);
+    Guid SlotId,
+    string Filename,
+    string MediaType,
+    long FileSizeBytes);
 
 public sealed record UploadSessionProjection(
-    string SessionId,
+    Guid SessionId,
+    DateTimeOffset ExpiresAtUtc,
     IReadOnlyList<UploadSlotProjection> Slots);

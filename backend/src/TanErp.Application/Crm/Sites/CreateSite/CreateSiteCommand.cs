@@ -20,4 +20,5 @@ public sealed record CreateSiteCommand(
     decimal? Longitude,
     string? AccessNote,
     string TraceId,
-    IReadOnlyList<CreateSiteImageInput>? Images = null);
+    IReadOnlyList<CreateSiteImageInput>? Images = null,
+    Guid? FileUploadIntentId = null);

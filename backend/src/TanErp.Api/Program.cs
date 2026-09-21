@@ -134,8 +134,10 @@ builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddress
 // File Service (reusable across modules)
 builder.Services.AddSingleton<TanErp.Application.Files.IFileStorageProvider, TanErp.Infrastructure.Files.LocalFileStorageProvider>();
 builder.Services.AddScoped<TanErp.Application.Files.IFileStore, TanErp.Infrastructure.Files.FileStore>();
+builder.Services.AddScoped<TanErp.Application.Files.IFileParentAccessResolver, TanErp.Infrastructure.Files.FileParentAccessResolver>();
 builder.Services.AddScoped<TanErp.Application.Files.CreateUploadSession.CreateUploadSessionHandler>();
 builder.Services.AddScoped<TanErp.Application.Files.CompleteUploadSession.CompleteUploadSessionHandler>();
+builder.Services.AddScoped<TanErp.Application.Files.GetFileContent.GetFileContentHandler>();
 
 // Document Numbering Platform Service
 builder.Services.AddScoped<TanErp.Application.Common.Abstractions.ISequenceCounter, TanErp.Infrastructure.Persistence.DocumentNumbering.SequenceCounter>();

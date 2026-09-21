@@ -11,6 +11,9 @@ public sealed record FileSlotInput(
 public sealed record CreateUploadSessionCommand(
     string FirebaseUid,
     Guid MembershipId,
+    string ParentType,
+    Guid? ParentId,
+    Guid? CreationIntentId,
     IReadOnlyList<FileSlotInput> Files,
     string IdempotencyKey,
     string TraceId);

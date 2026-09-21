@@ -27,6 +27,14 @@ public class OpportunityQualificationTests : IAsyncLifetime
         public DateTimeOffset UtcNow { get; } = FixedTime;
     }
 
+    private static TanErp.Application.Files.IFileStore CreateFileStore(AppDbContext db, TanErp.Application.Common.Abstractions.IClock clock)
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+        var storage = new TanErp.Infrastructure.Files.LocalFileStorageProvider(config);
+        var resolver = new TanErp.Infrastructure.Files.FileParentAccessResolver(db, clock);
+        return new TanErp.Infrastructure.Files.FileStore(db, storage, resolver);
+    }
+
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -39,7 +47,8 @@ public class OpportunityQualificationTests : IAsyncLifetime
         await _db.Database.MigrateAsync();
         await TestOnlyDataSeeder.SeedAsync(_db, "Test", true);
 
-        _store = new OpportunityStore(_db, new FixedClock());
+        var clock = new FixedClock();
+        _store = new OpportunityStore(_db, clock, CreateFileStore(_db, clock));
     }
 
     public async Task DisposeAsync()

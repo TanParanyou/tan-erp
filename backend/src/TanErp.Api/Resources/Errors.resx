@@ -233,11 +233,23 @@
   <data name="ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>ไม่สามารถแก้ไขหรือดำเนินการในสถานะปัจจุบันของใบประมาณการได้</value>
   </data>
+  <data name="FILE_PARENT_TYPE_INVALID_TITLE" xml:space="preserve">
+    <value>ประเภทข้อมูลหลักของไฟล์ไม่ถูกต้อง</value>
+  </data>
+  <data name="FILE_PARENT_TYPE_INVALID_DETAIL" xml:space="preserve">
+    <value>ประเภทข้อมูลหลักของไฟล์ต้องเป็น opportunity, customer หรือ site และต้องระบุรหัสอ้างอิงให้ถูกต้อง</value>
+  </data>
   <data name="FILE_UPLOAD_SESSION_INVALID_TITLE" xml:space="preserve">
     <value>ข้อมูลไฟล์ไม่ถูกต้อง</value>
   </data>
   <data name="FILE_UPLOAD_SESSION_INVALID_DETAIL" xml:space="preserve">
     <value>ไฟล์ที่อัปโหลดไม่ผ่านการตรวจสอบ กรุณาตรวจสอบประเภทไฟล์ ขนาดไฟล์ และจำนวนไฟล์ที่อนุญาต</value>
+  </data>
+  <data name="OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID_TITLE" xml:space="preserve">
+    <value>ตัวชี้ตำแหน่งหน้าไม่ถูกต้อง</value>
+  </data>
+  <data name="OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID_DETAIL" xml:space="preserve">
+    <value>พารามิเตอร์ cursor สำหรับการแบ่งหน้ารูปภาพไม่ถูกต้อง</value>
   </data>
   <data name="FILE_NOT_FOUND_TITLE" xml:space="preserve">
     <value>ไม่พบไฟล์</value>

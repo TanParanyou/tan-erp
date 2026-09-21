@@ -23,11 +23,16 @@ public class OpportunityStore : IOpportunityStore
 {
     private readonly AppDbContext _db;
     private readonly IClock _clock;
+    private readonly TanErp.Application.Files.IFileStore _fileStore;
 
-    public OpportunityStore(AppDbContext db, IClock clock)
+    public OpportunityStore(
+        AppDbContext db,
+        IClock clock,
+        TanErp.Application.Files.IFileStore fileStore)
     {
         _db = db;
         _clock = clock;
+        _fileStore = fileStore;
     }
 
     public async Task<Result<OpportunityProjection>> CreateAsync(
@@ -1149,18 +1154,21 @@ public class OpportunityStore : IOpportunityStore
                     new Error("OPPORTUNITY_INVALID_STATE", "Work images cannot be attached to a closed opportunity."));
             }
 
-            // 4. Verify all files exist in files schema, belong to same org, and have verified status
+            // 4. Verify all files exist in files schema, belong to same org, match parent intent, and have verified status
             var fileIds = command.Images.Select(i => i.FileId).Distinct().ToList();
-            var verifiedFiles = await _db.UploadedFiles
-                .AsNoTracking()
-                .Where(f => fileIds.Contains(f.Id) && f.OrganizationId == orgId && f.Status == "verified")
-                .Select(f => f.Id)
-                .ToListAsync(cancellationToken);
+            var validationResult = await _fileStore.ValidateVerifiedFilesForParentAsync(
+                orgId,
+                access.ActorUserId,
+                TanErp.Domain.Files.FileParentTypes.Opportunity,
+                opp.Id,
+                null,
+                fileIds,
+                cancellationToken);
 
-            if (verifiedFiles.Count != fileIds.Count)
+            if (validationResult.IsFailure)
             {
                 return Result<AttachWorkImagesResultProjection>.Failure(
-                    new Error("OPPORTUNITY_IMAGE_NOT_READY", "One or more images are not verified or ready to be attached."));
+                    new Error("OPPORTUNITY_IMAGE_NOT_READY", validationResult.Error.Message ?? "One or more images are not verified or ready to be attached."));
             }
 
             // 5. Determine display order baseline

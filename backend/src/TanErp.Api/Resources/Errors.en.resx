@@ -233,11 +233,23 @@
   <data name="ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>The operation cannot be performed on the estimate in its current status.</value>
   </data>
+  <data name="FILE_PARENT_TYPE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid File Parent Type</value>
+  </data>
+  <data name="FILE_PARENT_TYPE_INVALID_DETAIL" xml:space="preserve">
+    <value>The file parent type must be opportunity, customer, or site, and must reference a valid parent.</value>
+  </data>
   <data name="FILE_UPLOAD_SESSION_INVALID_TITLE" xml:space="preserve">
-    <value>Invalid File Upload</value>
+    <value>Invalid File Upload Session</value>
   </data>
   <data name="FILE_UPLOAD_SESSION_INVALID_DETAIL" xml:space="preserve">
-    <value>The uploaded file did not pass validation. Please check the file type, size, and quantity limit.</value>
+    <value>The upload session is invalid, expired, already consumed, or contains mismatched slots.</value>
+  </data>
+  <data name="OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Pagination Cursor</value>
+  </data>
+  <data name="OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID_DETAIL" xml:space="preserve">
+    <value>The provided pagination cursor is malformed or invalid.</value>
   </data>
   <data name="FILE_NOT_FOUND_TITLE" xml:space="preserve">
     <value>File Not Found</value>

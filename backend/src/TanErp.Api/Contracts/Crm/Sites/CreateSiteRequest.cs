@@ -15,4 +15,5 @@ public sealed record CreateSiteRequest(
     decimal? Latitude = null,
     decimal? Longitude = null,
     string? AccessNote = null,
-    IReadOnlyList<CreateSiteImageRequest>? Images = null);
+    IReadOnlyList<CreateSiteImageRequest>? Images = null,
+    Guid? FileUploadIntentId = null);

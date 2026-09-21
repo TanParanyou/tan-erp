@@ -44,6 +44,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.MasterData.Geography.District> Districts => Set<TanErp.Domain.MasterData.Geography.District>();
     public DbSet<TanErp.Domain.MasterData.Geography.Subdistrict> Subdistricts => Set<TanErp.Domain.MasterData.Geography.Subdistrict>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
+    public DbSet<TanErp.Domain.Files.FileUploadSession> FileUploadSessions => Set<TanErp.Domain.Files.FileUploadSession>();
+    public DbSet<TanErp.Domain.Files.FileUploadSlot> FileUploadSlots => Set<TanErp.Domain.Files.FileUploadSlot>();
     public DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition> DocumentSequenceDefinitions => Set<TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition>();
     public DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceCounter> DocumentSequenceCounters => Set<TanErp.Domain.DocumentNumbering.DocumentSequenceCounter>();
 

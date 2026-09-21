@@ -3,6 +3,7 @@ using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Crm.Customers;
 using TanErp.Application.Crm.Customers.CreateCustomer;
+using TanErp.Application.Files;
 using TanErp.Domain.Crm.Customers;
 using Xunit;
 
@@ -10,6 +11,32 @@ namespace TanErp.UnitTests.Crm.Customers;
 
 public class CreateCustomerHandlerTests
 {
+    private class FakeFileStore : IFileStore
+    {
+        public Task<Result<TanErp.Domain.Files.UploadedFile>> GetByIdAsync(Guid fileId, Guid organizationId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Result<TanErp.Domain.Files.UploadedFile>.Failure(new Error("NOT_FOUND", "Not found")));
+
+        public Task SaveAsync(TanErp.Domain.Files.UploadedFile file, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<Result<TanErp.Domain.Files.FileUploadSession>> CreateSessionAsync(RequestAccessContext access, string parentType, Guid? parentId, Guid? creationIntentId, IReadOnlyList<TanErp.Application.Files.CreateUploadSession.FileSlotInput> files, string keyHash, string payloadHash, CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task<Result<TanErp.Domain.Files.FileUploadSession>> GetCompletableSessionAsync(Guid organizationId, Guid actorUserId, Guid sessionId, CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task<Result<IReadOnlyList<TanErp.Domain.Files.UploadedFile>>> CompleteSessionAsync(Guid organizationId, Guid actorUserId, Guid sessionId, IReadOnlyList<TanErp.Domain.Files.UploadedFile> files, CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task<Result<TanErp.Application.Files.GetFileContent.FileContentResult>> GetAuthorizedFileContentAsync(RequestAccessContext access, Guid fileId, CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public Task<Result<bool>> ValidateVerifiedFilesForParentAsync(Guid organizationId, Guid actorUserId, string parentType, Guid? parentId, Guid? creationIntentId, IReadOnlyCollection<Guid> fileIds, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Result<bool>.Success(true));
+
+        public Task BindFilesToParentAsync(Guid organizationId, Guid? creationIntentId, Guid actualParentId, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+    }
+
     private class FakeRequestAccessResolver : IRequestAccessResolver
     {
         public HashSet<string> GrantedPermissions { get; } = new(StringComparer.Ordinal);
@@ -71,7 +98,7 @@ public class CreateCustomerHandlerTests
     {
         var accessResolver = new FakeRequestAccessResolver();
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -91,7 +118,7 @@ public class CreateCustomerHandlerTests
         var resolver = new FakeRequestAccessResolver();
         resolver.GrantedPermissions.Add("customers.create");
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(resolver, store, new FakeClock());
+        var handler = new CreateCustomerHandler(resolver, store, new FakeClock(), new FakeFileStore());
 
         var result = await handler.Handle(new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -112,7 +139,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
 
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -134,7 +161,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
 
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -155,7 +182,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customers.create");
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
 
         var result = await handler.Handle(new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -176,7 +203,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
 
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -219,7 +246,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customers.create");
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -241,7 +268,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customers.create");
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",

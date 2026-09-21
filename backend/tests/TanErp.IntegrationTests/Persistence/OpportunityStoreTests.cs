@@ -33,6 +33,14 @@ public class OpportunityStoreTests : IAsyncLifetime
         public DateTimeOffset UtcNow { get; } = FixedTime;
     }
 
+    private static TanErp.Application.Files.IFileStore CreateFileStore(AppDbContext db, TanErp.Application.Common.Abstractions.IClock clock)
+    {
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+        var storage = new TanErp.Infrastructure.Files.LocalFileStorageProvider(config);
+        var resolver = new TanErp.Infrastructure.Files.FileParentAccessResolver(db, clock);
+        return new TanErp.Infrastructure.Files.FileStore(db, storage, resolver);
+    }
+
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -45,7 +53,8 @@ public class OpportunityStoreTests : IAsyncLifetime
         await _db.Database.MigrateAsync();
         await TestOnlyDataSeeder.SeedAsync(_db, "Test", true);
 
-        _store = new OpportunityStore(_db, new FixedClock());
+        var clock = new FixedClock();
+        _store = new OpportunityStore(_db, clock, CreateFileStore(_db, clock));
     }
 
     public async Task DisposeAsync()
@@ -320,8 +329,9 @@ public class OpportunityStoreTests : IAsyncLifetime
 
         await using var db1 = new AppDbContext(options);
         await using var db2 = new AppDbContext(options);
-        var store1 = new OpportunityStore(db1, new FixedClock());
-        var store2 = new OpportunityStore(db2, new FixedClock());
+        var clock1 = new FixedClock();
+        var store1 = new OpportunityStore(db1, clock1, CreateFileStore(db1, clock1));
+        var store2 = new OpportunityStore(db2, clock1, CreateFileStore(db2, clock1));
 
         var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, branchId, "opportunities.create", "branch");
         var cmd = new CreateOpportunityCommand("uid", Guid.NewGuid(), customer.Id, null, "ออปแข่ง", null, new[] { "built-in" }, null, null, null, null, null, null, "key-opp-conc-1", "trace-opp-conc-1");
@@ -369,8 +379,9 @@ public class OpportunityStoreTests : IAsyncLifetime
 
         await using var db1 = new AppDbContext(options);
         await using var db2 = new AppDbContext(options);
-        var store1 = new OpportunityStore(db1, new FixedClock());
-        var store2 = new OpportunityStore(db2, new FixedClock());
+        var clock2 = new FixedClock();
+        var store1 = new OpportunityStore(db1, clock2, CreateFileStore(db1, clock2));
+        var store2 = new OpportunityStore(db2, clock2, CreateFileStore(db2, clock2));
 
         var access = new RequestAccessContext(userId, Guid.NewGuid(), orgId, branchId, "opportunities.create", "branch");
         var cmd1 = new CreateOpportunityCommand("uid", Guid.NewGuid(), customer.Id, null, "ออปแข่ง 1", null, new[] { "built-in" }, null, null, null, null, null, null, "key-opp-conc-diff", "trace-opp-diff-1");

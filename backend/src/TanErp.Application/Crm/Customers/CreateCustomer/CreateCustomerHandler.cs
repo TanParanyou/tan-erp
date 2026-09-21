@@ -12,15 +12,18 @@ public class CreateCustomerHandler
     private readonly IRequestAccessResolver _accessResolver;
     private readonly ICustomerCreationStore _store;
     private readonly IClock _clock;
+    private readonly TanErp.Application.Files.IFileStore _fileStore;
 
     public CreateCustomerHandler(
         IRequestAccessResolver accessResolver,
         ICustomerCreationStore store,
-        IClock clock)
+        IClock clock,
+        TanErp.Application.Files.IFileStore fileStore)
     {
         _accessResolver = accessResolver;
         _store = store;
         _clock = clock;
+        _fileStore = fileStore;
     }
 
     public async Task<Result<CreateCustomerResult>> Handle(
@@ -102,6 +105,29 @@ public class CreateCustomerHandler
             return Result<CreateCustomerResult>.Failure(new Error("CONTACT_FIELD_REQUIRED", "Line ID cannot exceed 100 characters."));
         }
 
+        if (command.ImageFileId.HasValue)
+        {
+            if (!command.FileUploadIntentId.HasValue)
+            {
+                return Result<CreateCustomerResult>.Failure(
+                    new Error("FILE_UPLOAD_SESSION_INVALID", "FileUploadIntentId is required when ImageFileId is provided."));
+            }
+
+            var fileValidation = await _fileStore.ValidateVerifiedFilesForParentAsync(
+                access.OrganizationId,
+                access.ActorUserId,
+                TanErp.Domain.Files.FileParentTypes.Customer,
+                null,
+                command.FileUploadIntentId.Value,
+                [command.ImageFileId.Value],
+                cancellationToken);
+
+            if (fileValidation.IsFailure)
+            {
+                return Result<CreateCustomerResult>.Failure(fileValidation.Error);
+            }
+        }
+
         var now = _clock.UtcNow;
         var customerId = Guid.NewGuid();
 
@@ -175,6 +201,15 @@ public class CreateCustomerHandler
         if (persistResult.IsFailure)
         {
             return Result<CreateCustomerResult>.Failure(persistResult.Error);
+        }
+
+        if (command.ImageFileId.HasValue && command.FileUploadIntentId.HasValue)
+        {
+            await _fileStore.BindFilesToParentAsync(
+                access.OrganizationId,
+                command.FileUploadIntentId.Value,
+                persistResult.Value!.Customer.Id,
+                cancellationToken);
         }
 
         return Result<CreateCustomerResult>.Success(new CreateCustomerResult(

@@ -20,5 +20,6 @@ public sealed record CreateCustomerCommand(
     string TraceId,
     string? LeadSource = null,
     string? LeadSourceNote = null,
-    Guid? ImageFileId = null);
+    Guid? ImageFileId = null,
+    Guid? FileUploadIntentId = null);
 
