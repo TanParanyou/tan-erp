@@ -110,7 +110,7 @@ export function OpportunityWorkImageAttachModal({
 
         // 2. Complete session with actual binaries and slot mapping
         const filesWithSlots = sessionRes.slots.map((slot, idx) => ({
-          slotId: slot.slotId,
+          slotId: slot.slotId ?? "",
           file: filesToUpload[idx],
         }));
 

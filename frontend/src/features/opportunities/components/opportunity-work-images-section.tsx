@@ -68,7 +68,9 @@ export function OpportunityWorkImagesSection({
   const isClosed =
     currentStage === "won" || currentStage === "lost" || currentStage === "cancelled";
 
-  const allImages = data?.pages.flatMap((page) => page.items) ?? [];
+  const allImages: OpportunityWorkImageResponse[] = (
+    data?.pages.flatMap((page) => page.items ?? []) ?? []
+  ).filter((img): img is OpportunityWorkImageResponse => Boolean(img));
   const filteredImages = selectedStageFilter
     ? allImages.filter((img) => img.stageAtAttach === selectedStageFilter)
     : allImages;

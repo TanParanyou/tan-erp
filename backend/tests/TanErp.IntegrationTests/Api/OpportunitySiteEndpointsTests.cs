@@ -996,20 +996,45 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
     // OPPORTUNITY WORK IMAGES TESTS
     // ==========================================
 
-    private async Task<TanErp.Domain.Files.UploadedFile> SeedVerifiedFileAsync(Guid orgId, string filename = "test.webp")
+    private async Task<TanErp.Domain.Files.UploadedFile> SeedVerifiedFileAsync(Guid orgId, Guid? parentId = null, string filename = "test.webp")
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var now = DateTimeOffset.UtcNow;
+        var sessionId = Guid.NewGuid();
+        var session = new TanErp.Domain.Files.FileUploadSession(
+            sessionId,
+            orgId,
+            TanErp.Domain.Files.FileParentTypes.Opportunity,
+            parentId,
+            null,
+            TestOnlyDataSeeder.TestUserId,
+            now,
+            now.AddHours(2),
+            $"idem-key-seed-{Guid.NewGuid():N}",
+            "payload-hash-seed");
+
+        var slot = new TanErp.Domain.Files.FileUploadSlot(
+            Guid.NewGuid(),
+            sessionId,
+            0,
+            filename,
+            "image/webp",
+            512 * 1024);
+        session.AddSlot(slot);
+        db.FileUploadSessions.Add(session);
+
         var file = new TanErp.Domain.Files.UploadedFile(
             Guid.NewGuid(),
             orgId,
-            $"{orgId}/session-seed/{filename}",
+            $"{orgId}/{sessionId}/{filename}",
             filename,
             "image/webp",
             512 * 1024,
-            $"session-seed-{Guid.NewGuid():N}",
+            sessionId.ToString("D"),
             TestOnlyDataSeeder.TestUserId,
-            DateTimeOffset.UtcNow);
+            now);
 
         db.UploadedFiles.Add(file);
         await db.SaveChangesAsync();
@@ -1021,8 +1046,8 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
     {
         var customer = await SeedActiveCustomerAsync(OrgAId);
         var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
-        var file1 = await SeedVerifiedFileAsync(OrgAId, "front.webp");
-        var file2 = await SeedVerifiedFileAsync(OrgAId, "side.webp");
+        var file1 = await SeedVerifiedFileAsync(OrgAId, opp.Id, "front.webp");
+        var file2 = await SeedVerifiedFileAsync(OrgAId, opp.Id, "side.webp");
 
         var request = new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImagesRequest(
         [
@@ -1101,7 +1126,7 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
     {
         var customer = await SeedActiveCustomerAsync(OrgAId);
         var opp = await SeedDraftOpportunityAsync(OrgAId, BranchAId, customer.Id);
-        var file = await SeedVerifiedFileAsync(OrgAId, "to-delete.webp");
+        var file = await SeedVerifiedFileAsync(OrgAId, opp.Id, "to-delete.webp");
 
         var attachReq = new TanErp.Api.Contracts.Crm.Opportunities.AttachWorkImagesRequest(
         [

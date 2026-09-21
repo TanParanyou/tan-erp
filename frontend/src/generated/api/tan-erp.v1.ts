@@ -1423,6 +1423,115 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/files/upload-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateUploadSessionRequest"];
+                    "text/json": components["schemas"]["CreateUploadSessionRequest"];
+                    "application/*+json": components["schemas"]["CreateUploadSessionRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreateUploadSessionResponse"];
+                        "application/json": components["schemas"]["CreateUploadSessionResponse"];
+                        "text/json": components["schemas"]["CreateUploadSessionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/files/sessions": {
         parameters: {
             query?: never;
@@ -1491,6 +1600,28 @@ export interface paths {
                         "text/json": components["schemas"]["ApiProblemDetails"];
                     };
                 };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
                 /** @description Unprocessable Content */
                 422: {
                     headers: {
@@ -1510,7 +1641,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/files/sessions/{sessionId}/slots/{slotIndex}": {
+    "/api/v1/files/upload-sessions/{sessionId}/complete": {
         parameters: {
             query?: never;
             header?: never;
@@ -1525,18 +1656,21 @@ export interface paths {
                 header?: never;
                 path: {
                     sessionId: string;
-                    slotIndex: number;
                 };
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description No Content */
-                204: {
+                /** @description OK */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["CompleteUploadSessionResponse"];
+                        "application/json": components["schemas"]["CompleteUploadSessionResponse"];
+                        "text/json": components["schemas"]["CompleteUploadSessionResponse"];
+                    };
                 };
                 /** @description Bad Request */
                 400: {
@@ -1562,6 +1696,39 @@ export interface paths {
                 };
                 /** @description Forbidden */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1643,6 +1810,28 @@ export interface paths {
                         "text/json": components["schemas"]["ApiProblemDetails"];
                     };
                 };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
                 /** @description Unprocessable Content */
                 422: {
                     headers: {
@@ -1662,7 +1851,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/files/{storagePath}": {
+    "/api/v1/files/{fileId}/content": {
         parameters: {
             query?: never;
             header?: never;
@@ -1674,7 +1863,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    storagePath: string;
+                    fileId: string;
                 };
                 cookie?: never;
             };
@@ -1686,6 +1875,28 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
                 };
                 /** @description Not Found */
                 404: {
@@ -3535,7 +3746,8 @@ export interface components {
             discountAmount?: number;
         };
         CompleteUploadSessionResponse: {
-            sessionId?: string | null;
+            /** Format: uuid */
+            sessionId?: string;
             files?: components["schemas"]["CompletedFileResponse"][] | null;
         };
         CompletedFileResponse: {
@@ -3557,6 +3769,8 @@ export interface components {
             leadSourceNote?: string | null;
             /** Format: uuid */
             imageFileId?: string | null;
+            /** Format: uuid */
+            fileUploadIntentId?: string | null;
         };
         CreateEstimateDraftRequest: {
             /** Format: uuid */
@@ -3610,6 +3824,8 @@ export interface components {
             longitude?: number | null;
             accessNote?: string | null;
             images?: components["schemas"]["CreateSiteImageRequest"][] | null;
+            /** Format: uuid */
+            fileUploadIntentId?: string | null;
         };
         CreateSiteSurveyRequest: {
             /** Format: uuid */
@@ -3624,10 +3840,18 @@ export interface components {
             expectedOpportunityVersion?: string;
         };
         CreateUploadSessionRequest: {
+            parentType?: string | null;
+            /** Format: uuid */
+            parentId?: string | null;
+            /** Format: uuid */
+            creationIntentId?: string | null;
             files?: components["schemas"]["FileSlotRequest"][] | null;
         };
         CreateUploadSessionResponse: {
-            sessionId?: string | null;
+            /** Format: uuid */
+            sessionId?: string;
+            /** Format: date-time */
+            expiresAtUtc?: string;
             slots?: components["schemas"]["UploadSlotResponse"][] | null;
         };
         CurrentUserResponse: {
@@ -3912,6 +4136,7 @@ export interface components {
         };
         OpportunityWorkImageListResponse: {
             items?: components["schemas"]["OpportunityWorkImageResponse"][] | null;
+            nextCursor?: string | null;
         };
         OpportunityWorkImageResponse: {
             /** Format: uuid */
@@ -4251,8 +4476,12 @@ export interface components {
             sortOrder?: number;
         };
         UploadSlotResponse: {
-            slotId?: string | null;
-            uploadUrl?: string | null;
+            /** Format: uuid */
+            slotId?: string;
+            filename?: string | null;
+            mediaType?: string | null;
+            /** Format: int64 */
+            fileSizeBytes?: number;
         };
         UserDto: {
             /** Format: uuid */
