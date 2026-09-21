@@ -520,6 +520,81 @@ public class FileUploadSessionTests : IAsyncLifetime
     }
 
     // ==========================================
+    // Task 4: Test 6
+    // ==========================================
+
+    [Fact]
+    public async Task ListWorkImages_MoreThanLimit_ReturnsStableNextPage()
+    {
+        var (oppId, oppVersion) = await SetupOpportunityDetailedAsync();
+        var webpBytes = CreateMinimalWebP();
+
+        // 1. Upload & attach 5 images with incremental timestamps / orders
+        var attachedIds = new List<Guid>();
+        for (var i = 0; i < 5; i++)
+        {
+            var fileId = await UploadFileForOpportunityAsync(oppId, "token-org-a", MembershipAId, $"photo-{i}.webp", webpBytes);
+            var attachMsg = CreateRequest(
+                HttpMethod.Post,
+                $"/api/v1/opportunities/{oppId}/work-images",
+                "token-org-a",
+                MembershipAId,
+                $"attach-seq-{i}-{Guid.NewGuid():N}",
+                oppVersion);
+            attachMsg.Content = JsonContent.Create(new AttachWorkImagesRequest([new AttachWorkImageItemRequest(fileId, $"Photo #{i}")]));
+            var attachRes = await _client.SendAsync(attachMsg);
+            Assert.Equal(HttpStatusCode.Created, attachRes.StatusCode);
+            var attached = await attachRes.Content.ReadFromJsonAsync<AttachWorkImagesResponse>();
+            Assert.NotNull(attached);
+            oppVersion = attached.OpportunityRowVersion;
+            attachedIds.Add(attached.Items[0].Id);
+        }
+
+        // 2. Query Page 1 with limit = 2
+        var page1Msg = CreateRequest(HttpMethod.Get, $"/api/v1/opportunities/{oppId}/work-images?limit=2", "token-org-a", MembershipAId);
+        var page1Res = await _client.SendAsync(page1Msg);
+        Assert.Equal(HttpStatusCode.OK, page1Res.StatusCode);
+        var page1 = await page1Res.Content.ReadFromJsonAsync<OpportunityWorkImageListResponse>();
+        Assert.NotNull(page1);
+        Assert.Equal(2, page1.Items.Count);
+        Assert.NotNull(page1.NextCursor);
+        Assert.NotEmpty(page1.NextCursor);
+
+        // 3. Query Page 2 with limit = 2 and cursor from Page 1
+        var page2Msg = CreateRequest(HttpMethod.Get, $"/api/v1/opportunities/{oppId}/work-images?limit=2&cursor={page1.NextCursor}", "token-org-a", MembershipAId);
+        var page2Res = await _client.SendAsync(page2Msg);
+        Assert.Equal(HttpStatusCode.OK, page2Res.StatusCode);
+        var page2 = await page2Res.Content.ReadFromJsonAsync<OpportunityWorkImageListResponse>();
+        Assert.NotNull(page2);
+        Assert.Equal(2, page2.Items.Count);
+        Assert.NotNull(page2.NextCursor);
+
+        // 4. Query Page 3 with limit = 2 and cursor from Page 2 (last remaining item)
+        var page3Msg = CreateRequest(HttpMethod.Get, $"/api/v1/opportunities/{oppId}/work-images?limit=2&cursor={page2.NextCursor}", "token-org-a", MembershipAId);
+        var page3Res = await _client.SendAsync(page3Msg);
+        Assert.Equal(HttpStatusCode.OK, page3Res.StatusCode);
+        var page3 = await page3Res.Content.ReadFromJsonAsync<OpportunityWorkImageListResponse>();
+        Assert.NotNull(page3);
+        Assert.Single(page3.Items);
+        Assert.Null(page3.NextCursor); // Final page must have null nextCursor
+
+        // 5. Verify no duplicate IDs across all pages
+        var allPageIds = page1.Items.Select(x => x.Id)
+            .Concat(page2.Items.Select(x => x.Id))
+            .Concat(page3.Items.Select(x => x.Id))
+            .ToList();
+        Assert.Equal(5, allPageIds.Count);
+        Assert.Equal(5, allPageIds.Distinct().Count());
+
+        // 6. Invalid cursor returns 400 BadRequest with OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID
+        var badCursorMsg = CreateRequest(HttpMethod.Get, $"/api/v1/opportunities/{oppId}/work-images?cursor=invalid-not-base64-json", "token-org-a", MembershipAId);
+        var badCursorRes = await _client.SendAsync(badCursorMsg);
+        Assert.Equal(HttpStatusCode.BadRequest, badCursorRes.StatusCode);
+        var badProblem = await badCursorRes.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.Equal("OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID", badProblem?.Code);
+    }
+
+    // ==========================================
     // Existing Permission and Validation Tests
     // ==========================================
 

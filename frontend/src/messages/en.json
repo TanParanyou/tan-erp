@@ -91,8 +91,17 @@
       "clear": "Clear",
       "manage": "Manage",
       "discard": "Discard",
-      "continueEditing": "Continue Editing"
+      "continueEditing": "Continue Editing",
+      "actions": "Actions"
     },
+    "alerts": {
+      "errorTitle": "Error",
+      "successTitle": "Success",
+      "warningTitle": "Warning",
+      "infoTitle": "Notice"
+    },
+    "error": "Error",
+    "translationFailed": "Translation failed",
     "status": {
       "active": "Active",
       "inactive": "Inactive",
@@ -290,8 +299,9 @@
       "stayLoggedIn": "Stay Logged In"
     },
     "errors": {
+      "unexpected": "An unexpected error occurred. Please try again.",
       "accessDeniedTitle": "Access Denied",
-      "accessDeniedDetail": "You do not have permission to access this resource or perform this action in this organization."
+      "accessDeniedDetail": "You do not have permission to access or perform this action for the selected organization."
     },
     "quickTemplates": {
       "label": "Quick Templates:",
@@ -445,8 +455,10 @@
     "postalCode": "Postal Code",
     "countryCode": "Country Code",
     "latitude": "Latitude",
+    "latitudePlaceholder": "e.g. 13.7563",
     "longitude": "Longitude",
-    "coordinates": "GPS Coordinates",
+    "longitudePlaceholder": "e.g. 100.5018",
+    "coordinates": "Coordinates (GPS)",
     "accessNote": "Access Note",
     "accessNotePlaceholder": "e.g., Visitor badge required, gate closes at 18:00",
     "sitePhotos": "Site Photos",
@@ -533,7 +545,8 @@
     "unknownStage": "Unknown Stage",
     "qualifyAction": "Qualify",
     "qualifyModalTitle": "Confirm Stage Transition to 'Qualified'",
-    "qualifyModalDesc": "Are you sure you want to transition this opportunity to 'Qualified'? This stage transition cannot be reversed back to Draft.",
+    "qualifyModalDesc": "Are you sure you want to advance this opportunity to 'Qualified'? This action cannot be reversed to draft.",
+    "qualifyErrorPrefix": "Error",
     "qualifySuccess": "Stage transitioned to Qualified successfully",
     "acceptQuotationAction": "Accept Quotation",
     "acceptingQuotation": "Accepting...",
@@ -716,7 +729,9 @@
     "filterByStage": "Filter by stage",
     "allStages": "All stages",
     "workImagesEmptyInStage": "No work images in this stage.",
-    "viewAllStagesAction": "View all stages"
+    "viewAllStagesAction": "View all stages",
+    "loadMoreImages": "Load More Images",
+    "loadingMoreImages": "Loading More Images..."
   },
   "surveys": {
     "surveyCardTitle": "Site Survey Appointment Details",
@@ -1103,12 +1118,13 @@
     "title": "Document Numbering Settings",
     "description": "Configure document format patterns, prefixes, and reset cycles for enterprise accounting compliance",
     "loadError": "Failed to load document numbering rules. Please try again.",
+    "loading": "Loading document sequences...",
     "editTitle": "Edit Document Sequence",
     "editDescription": "Configure prefix, token format patterns, and reset cycle",
     "patternRequired": "Format pattern is required",
     "updateFailed": "Failed to save settings. Please try again.",
     "versionConflict": "This configuration was modified by another user. Please refresh to get the latest settings.",
-    "invalidPattern": "Invalid format pattern. It must contain {SEQ} exactly once with supported tokens.",
+    "invalidPattern": "Invalid format pattern. It must contain '{SEQ}' exactly once with supported tokens.",
     "invalidResetPeriod": "Invalid reset cycle.",
     "permissionDenied": "You do not have permission to manage document sequences.",
     "livePreview": "Live Sample Preview",
@@ -1120,11 +1136,62 @@
     "padding": "Sequence Padding",
     "isBranchSpecific": "Branch-Specific Sequence (separate counter per branch)",
     "badgeBranchSpecific": "Per Branch",
+    "presetsTitle": "Popular Preset Templates",
+    "presetsSubtitle": "Select a pre-configured standard format in one click",
+    "presets": {
+      "thaiStandard": "Thai Standard (2-digit BE Year + Month)",
+      "international": "International (4-digit AD Year + Month)",
+      "branch": "Branch Specific (With Branch Code)",
+      "continuous": "Continuous (Never Reset)"
+    },
+    "builderTitle": "Segment Builder",
+    "yearFormat": "Year Format",
+    "yearOptions": {
+      "bb": "2-digit Buddhist Year (e.g. 69)",
+      "bbbb": "4-digit Buddhist Year (e.g. 2569)",
+      "yyyy": "4-digit Gregorian Year (e.g. 2026)",
+      "yy": "2-digit Gregorian Year (e.g. 26)",
+      "none": "No Year"
+    },
+    "monthFormat": "Month/Day Format",
+    "monthOptions": {
+      "mm": "2-digit Month (e.g. 09)",
+      "mmdd": "Month & Day (e.g. 0921)",
+      "none": "No Month/Day"
+    },
+    "separatorPrefix": "Separator after Prefix",
+    "separatorSeq": "Separator before Sequence",
+    "separatorOptions": {
+      "none": "None (Attached)",
+      "dash": "Dash (-)",
+      "slash": "Slash (/)"
+    },
+    "digits": "Sequence Digits",
+    "digitsOptions": {
+      "d4": "4 digits (0001)",
+      "d5": "5 digits (00001)",
+      "d6": "6 digits (000001)"
+    },
+    "advancedModeToggle": "Advanced Custom Pattern Mode",
+    "advancedModeHint": "Enable to manually enter and customize '{TOKEN}' syntax freely",
     "types": {
       "estimates": "Official Estimate",
       "surveys": "Site Survey",
       "opportunities": "Opportunity",
-      "quotations": "Commercial Quotation"
+      "quotations": "Commercial Quotation",
+      "customers": "Customer Code"
+    },
+    "tokens": {
+      "prefix": "Prefix",
+      "branch": "Branch Code",
+      "bbbb": "Buddhist Year (4 digits)",
+      "bb": "Buddhist Year (2 digits)",
+      "yyyy": "Gregorian Year (4 digits)",
+      "yy": "Gregorian Year (2 digits)",
+      "mm": "Month (01-12)",
+      "dd": "Day (01-31)",
+      "seq4": "Sequence 4 digits (0001)",
+      "seq5": "Sequence 5 digits (00001)"
     },
     "resetOptions": {
       "never": "Continuous (Never Reset)",
@@ -1139,6 +1206,10 @@
       "resetPeriod": "Reset Cycle",
       "preview": "Sample Code"
     }
+  },
+  "signatures": {
+    "saved": "Signature \"{name}\" saved to library successfully",
+    "deleted": "Signature \"{name}\" removed from library successfully"
   }
 }
 

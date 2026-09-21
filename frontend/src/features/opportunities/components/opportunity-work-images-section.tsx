@@ -11,7 +11,7 @@ import { GalleryLightboxModal } from "@/components/common/GalleryLightboxModal";
 import { useGalleryLightbox } from "@/hooks/useGalleryLightbox";
 import { useToast } from "@/hooks/useToast";
 import {
-  useOpportunityWorkImages,
+  useInfiniteOpportunityWorkImages,
   useDetachWorkImage,
 } from "../api/opportunity-queries";
 import { OpportunityWorkImageAttachModal } from "./opportunity-work-image-attach-modal";
@@ -54,14 +54,21 @@ export function OpportunityWorkImagesSection({
   const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [imageToDetach, setImageToDetach] = useState<OpportunityWorkImageResponse | null>(null);
 
-  // Fetch all images for this opportunity (unfiltered by stage to keep tabs and counts stable)
-  const { data, isLoading, isError } = useOpportunityWorkImages(opportunityId);
+  // Fetch all images for this opportunity using cursor pagination
+  const {
+    data,
+    isLoading,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteOpportunityWorkImages(opportunityId);
   const detachMutation = useDetachWorkImage();
 
   const isClosed =
     currentStage === "won" || currentStage === "lost" || currentStage === "cancelled";
 
-  const allImages = data?.items ?? [];
+  const allImages = data?.pages.flatMap((page) => page.items) ?? [];
   const filteredImages = selectedStageFilter
     ? allImages.filter((img) => img.stageAtAttach === selectedStageFilter)
     : allImages;
@@ -179,6 +186,22 @@ export function OpportunityWorkImagesSection({
               onDetach={(img) => setImageToDetach(img)}
             />
           ))}
+        </div>
+      )}
+
+      {/* Keyset Cursor Load More Button */}
+      {hasNextPage && (
+        <div className="flex justify-center pt-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            onClick={() => void fetchNextPage()}
+            disabled={isFetchingNextPage}
+            isLoading={isFetchingNextPage}
+          >
+            {isFetchingNextPage ? t("loadingMoreImages") : t("loadMoreImages")}
+          </Button>
         </div>
       )}
 

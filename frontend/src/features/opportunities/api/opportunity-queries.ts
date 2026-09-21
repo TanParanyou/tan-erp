@@ -512,6 +512,53 @@ export function useOpportunityWorkImages(
   });
 }
 
+export function useInfiniteOpportunityWorkImages(
+  opportunityId: string | null | undefined,
+  stage?: string | null,
+  limit = 25
+) {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useInfiniteQuery({
+    queryKey: [
+      ...opportunityWorkImagesQueryKey(membershipId, normalizedLocale, opportunityId, stage),
+      "infinite",
+      limit,
+    ],
+    queryFn: async ({ pageParam, signal }) => {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new AuthenticationRequiredError();
+      }
+      if (!membershipId) {
+        throw new MembershipRequiredError();
+      }
+
+      return apiClient.listWorkImages(
+        opportunityId!,
+        {
+          token,
+          membershipId,
+          locale: normalizedLocale,
+          signal,
+        },
+        {
+          stage: stage || undefined,
+          limit,
+          cursor: (pageParam as string | undefined) || undefined,
+        }
+      );
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+    enabled: Boolean(membershipId && opportunityId),
+    staleTime: 30_000,
+  });
+}
+
 export interface AttachWorkImagesVariables {
   opportunityId: string;
   expectedVersion: string;

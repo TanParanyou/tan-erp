@@ -40,6 +40,7 @@ export function OpportunityWorkImageAttachModal({
   const membershipId = selectedMembership?.id;
 
   const [pendingItems, setPendingItems] = useState<PendingImageItem[]>([]);
+  const [uploadedFileMap, setUploadedFileMap] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -48,6 +49,7 @@ export function OpportunityWorkImageAttachModal({
   const handleClose = () => {
     if (isSubmitting) return;
     setPendingItems([]);
+    setUploadedFileMap({});
     setErrorMessage(null);
     onClose();
   };
@@ -72,52 +74,80 @@ export function OpportunityWorkImageAttachModal({
         throw new Error("Authentication and active membership required.");
       }
 
-      const filesToUpload = pendingItems.map(
-        (i) => i.optimizedFile ?? i.originalFile
-      );
+      // Filter only items that haven't been uploaded and verified yet
+      const itemsToUpload = pendingItems.filter((i) => !uploadedFileMap[i.id]);
+      const currentMap = { ...uploadedFileMap };
 
-      // 1. Create upload session
-      const createSessionReq = {
-        files: filesToUpload.map((f) => ({
-          filename: f.name,
-          mediaType: f.type || "image/webp",
-          fileSizeBytes: f.size,
-        })),
-      };
+      if (itemsToUpload.length > 0) {
+        const filesToUpload = itemsToUpload.map(
+          (i) => i.optimizedFile ?? i.originalFile
+        );
 
-      const idempotencyKey = `file-sess-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+        // 1. Create upload session with parent binding
+        const createSessionReq = {
+          parentType: "opportunity",
+          parentId: opportunityId,
+          creationIntentId: null,
+          files: filesToUpload.map((f) => ({
+            filename: f.name,
+            mediaType: f.type || "image/webp",
+            fileSizeBytes: f.size,
+          })),
+        };
 
-      const sessionRes = await fileClient.createSession(createSessionReq, {
-        token,
-        membershipId,
-        idempotencyKey,
-        locale: normalizedLocale,
-      });
+        const idempotencyKey = `file-sess-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
 
-      if (!sessionRes.sessionId) {
-        throw new Error("Failed to create file upload session.");
-      }
-
-      // 2. Complete session with actual binaries
-      const completeRes = await fileClient.completeSession(
-        sessionRes.sessionId,
-        filesToUpload,
-        {
+        const sessionRes = await fileClient.createSession(createSessionReq, {
           token,
           membershipId,
+          idempotencyKey,
           locale: normalizedLocale,
-        }
-      );
+        });
 
-      if (!completeRes.files || completeRes.files.length === 0) {
-        throw new Error("File verification failed on server.");
+        if (!sessionRes.sessionId || !sessionRes.slots) {
+          throw new Error("Failed to create file upload session.");
+        }
+
+        // 2. Complete session with actual binaries and slot mapping
+        const filesWithSlots = sessionRes.slots.map((slot, idx) => ({
+          slotId: slot.slotId,
+          file: filesToUpload[idx],
+        }));
+
+        const completeRes = await fileClient.completeSession(
+          sessionRes.sessionId,
+          filesWithSlots,
+          {
+            token,
+            membershipId,
+            locale: normalizedLocale,
+          }
+        );
+
+        if (!completeRes.files || completeRes.files.length === 0) {
+          throw new Error("File verification failed on server.");
+        }
+
+        completeRes.files.forEach((cf, idx) => {
+          if (cf.fileId) {
+            currentMap[itemsToUpload[idx].id] = cf.fileId;
+          }
+        });
+
+        setUploadedFileMap(currentMap);
       }
 
       // 3. Attach verified file IDs to Opportunity
-      const attachImagesPayload = completeRes.files.map((cf, idx) => ({
-        fileId: cf.fileId ?? "",
-        caption: pendingItems[idx]?.caption?.trim() || undefined,
-      })).filter((item) => Boolean(item.fileId));
+      const attachImagesPayload = pendingItems
+        .map((item) => ({
+          fileId: currentMap[item.id] ?? "",
+          caption: item.caption?.trim() || undefined,
+        }))
+        .filter((item) => Boolean(item.fileId));
+
+      if (attachImagesPayload.length !== pendingItems.length) {
+        throw new Error("Some files could not be verified. Please retry.");
+      }
 
       const attachIdempotencyKey = `opp-img-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
 

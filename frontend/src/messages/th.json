@@ -91,8 +91,17 @@
       "clear": "ล้างค่า",
       "manage": "จัดการ",
       "discard": "ละทิ้งข้อมูล",
-      "continueEditing": "แก้ไขต่อ"
+      "continueEditing": "แก้ไขต่อ",
+      "actions": "การกระทำ"
     },
+    "alerts": {
+      "errorTitle": "เกิดข้อผิดพลาด",
+      "successTitle": "สำเร็จ",
+      "warningTitle": "คำเตือน",
+      "infoTitle": "ข้อความแจ้งเตือน"
+    },
+    "error": "ข้อผิดพลาด",
+    "translationFailed": "แปลภาษาไม่สำเร็จ",
     "status": {
       "active": "ใช้งานอยู่",
       "inactive": "ไม่ได้ใช้งาน",
@@ -290,6 +299,7 @@
       "stayLoggedIn": "ใช้งานต่อ"
     },
     "errors": {
+      "unexpected": "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง",
       "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
       "accessDeniedDetail": "คุณไม่มีสิทธิ์เข้าถึงข้อมูลหรือดำเนินการในส่วนนี้สำหรับองค์กรที่เลือก"
     },
@@ -445,7 +455,9 @@
     "postalCode": "รหัสไปรษณีย์",
     "countryCode": "รหัสประเทศ",
     "latitude": "ละติจูด",
+    "latitudePlaceholder": "เช่น 13.7563",
     "longitude": "ลองจิจูด",
+    "longitudePlaceholder": "เช่น 100.5018",
     "coordinates": "พิกัดภูมิศาสตร์ (GPS)",
     "accessNote": "หมายเหตุการเข้าพื้นที่",
     "accessNotePlaceholder": "เช่น ต้องแลกบัตรก่อนเข้า หรือ ประตูปิดหลัง 18:00",
@@ -534,6 +546,7 @@
     "qualifyAction": "ผ่านเกณฑ์ (Qualify)",
     "qualifyModalTitle": "ยืนยันการเปลี่ยนขั้นตอนเป็น 'ผ่านเกณฑ์' (Qualify)",
     "qualifyModalDesc": "คุณต้องการเปลี่ยนขั้นตอนโอกาสทางการขายนี้เป็น 'ผ่านเกณฑ์' ใช่หรือไม่? การเปลี่ยนขั้นตอนนี้จะไม่สามารถย้อนกลับเป็นฉบับร่างได้",
+    "qualifyErrorPrefix": "ข้อผิดพลาด",
     "qualifySuccess": "เปลี่ยนขั้นตอนเป็นผ่านเกณฑ์เรียบร้อยแล้ว",
     "acceptQuotationAction": "ลูกค้ายอมรับใบเสนอราคา (Accept Quotation)",
     "acceptingQuotation": "กำลังบันทึก...",
@@ -716,7 +729,9 @@
     "filterByStage": "กรองตามขั้นตอน",
     "allStages": "ทุกขั้นตอน",
     "workImagesEmptyInStage": "ไม่มีภาพถ่ายหน้างานในขั้นตอนนี้",
-    "viewAllStagesAction": "ดูภาพทุกขั้นตอน"
+    "viewAllStagesAction": "ดูภาพทุกขั้นตอน",
+    "loadMoreImages": "โหลดภาพเพิ่มเติม",
+    "loadingMoreImages": "กำลังโหลดภาพเพิ่มเติม..."
   },
   "surveys": {
     "surveyCardTitle": "ข้อมูลการนัดหมายสำรวจหน้างาน (Site Survey Appointment)",
@@ -1103,12 +1118,13 @@
     "title": "ตั้งค่ารูปแบบเลขที่เอกสาร (Document Numbering)",
     "description": "กำหนดโครงสร้างและรอบการเริ่มนับเลขใหม่ของเอกสารแต่ละประเภทในระบบเพื่อความเป็นระเบียบและถูกต้องตามมาตรฐานบัญชี",
     "loadError": "ไม่สามารถโหลดข้อมูลรูปแบบเลขที่เอกสารได้ กรุณาลองใหม่อีกครั้ง",
+    "loading": "กำลังโหลดรูปแบบเลขที่เอกสาร...",
     "editTitle": "แก้ไขรูปแบบเลขที่เอกสาร",
     "editDescription": "กำหนดคำนำหน้า รูปแบบโทเคน และรอบการเริ่มนับใหม่",
     "patternRequired": "กรุณาระบุ Format Pattern",
     "updateFailed": "บันทึกการตั้งค่าไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
     "versionConflict": "รูปแบบเลขที่เอกสารถูกแก้ไขโดยผู้ใช้อื่นแล้ว โปรดรีเฟรชหน้าจอเพื่อรับข้อมูลล่าสุด",
-    "invalidPattern": "รูปแบบไม่ถูกต้อง ต้องมีตัวแปร {SEQ} หนึ่งตัวเท่านั้น และใช้ตัวแปรที่ระบบรองรับ",
+    "invalidPattern": "รูปแบบไม่ถูกต้อง ต้องมีตัวแปร '{SEQ}' หนึ่งตัวเท่านั้น และใช้ตัวแปรที่ระบบรองรับ",
     "invalidResetPeriod": "รอบการเริ่มนับใหม่ไม่ถูกต้อง",
     "permissionDenied": "คุณไม่มีสิทธิ์ในการแก้ไขรูปแบบเลขที่เอกสาร",
     "livePreview": "ตัวอย่างเลขที่เอกสารจริง (Live Preview)",
@@ -1120,11 +1136,62 @@
     "padding": "จำนวนหลักตัวเลข (Padding)",
     "isBranchSpecific": "แยกชุดตัวนับอิสระตามสาขา (Branch-Specific Sequence)",
     "badgeBranchSpecific": "แยกตามสาขา",
+    "presetsTitle": "รูปแบบแนะนำยอดนิยม (Quick Presets)",
+    "presetsSubtitle": "เลือกโครงสร้างมาตรฐานสำเร็จรูปได้ในคลิกเดียว",
+    "presets": {
+      "thaiStandard": "แบบไทยยอดนิยม (พ.ศ. 2 หลัก + เดือน)",
+      "international": "แบบสากล (ค.ศ. 4 หลัก + เดือน)",
+      "branch": "แบบแยกตามสาขา (ระบุรหัสสาขา)",
+      "continuous": "แบบรันต่อเนื่อง (ไม่รีเซ็ต)"
+    },
+    "builderTitle": "กำหนดโครงสร้างชิ้นส่วน (Segment Builder)",
+    "yearFormat": "รูปแบบปี (Year)",
+    "yearOptions": {
+      "bb": "พ.ศ. 2 หลัก (เช่น 69)",
+      "bbbb": "พ.ศ. 4 หลัก (เช่น 2569)",
+      "yyyy": "ค.ศ. 4 หลัก (เช่น 2026)",
+      "yy": "ค.ศ. 2 หลัก (เช่น 26)",
+      "none": "ไม่ระบุปี"
+    },
+    "monthFormat": "รูปแบบเดือน/วัน (Month/Day)",
+    "monthOptions": {
+      "mm": "เดือน 2 หลัก (เช่น 09)",
+      "mmdd": "เดือนและวัน (เช่น 0921)",
+      "none": "ไม่ระบุเดือน/วัน"
+    },
+    "separatorPrefix": "ตัวคั่นหลังคำนำหน้า",
+    "separatorSeq": "ตัวคั่นก่อนเลขรันลำดับ",
+    "separatorOptions": {
+      "none": "ไม่มี (ติดกัน)",
+      "dash": "ขีดกลาง (-)",
+      "slash": "ทับ (/)"
+    },
+    "digits": "จำนวนหลักตัวเลขรันลำดับ",
+    "digitsOptions": {
+      "d4": "4 หลัก (0001)",
+      "d5": "5 หลัก (00001)",
+      "d6": "6 หลัก (000001)"
+    },
+    "advancedModeToggle": "โหมดกำหนดเองขั้นสูง (Advanced Custom Pattern)",
+    "advancedModeHint": "เปิดเพื่อพิมพ์หรือแก้ไขโครงสร้างโทเคน '{TOKEN}' อิสระด้วยตนเอง",
     "types": {
       "estimates": "ใบประเมินราคา (Estimate)",
       "surveys": "บันทึกสำรวจหน้างาน (Site Survey)",
       "opportunities": "โอกาสทางการขาย (Opportunity)",
-      "quotations": "ใบเสนอราคา (Quotation)"
+      "quotations": "ใบเสนอราคา (Quotation)",
+      "customers": "รหัสลูกค้า (Customer Code)"
+    },
+    "tokens": {
+      "prefix": "คำนำหน้า (Prefix)",
+      "branch": "รหัสสาขา (Branch)",
+      "bbbb": "ปี พ.ศ. (4 หลัก)",
+      "bb": "ปี พ.ศ. (2 หลัก)",
+      "yyyy": "ปี ค.ศ. (4 หลัก)",
+      "yy": "ปี ค.ศ. (2 หลัก)",
+      "mm": "เดือน (01-12)",
+      "dd": "วัน (01-31)",
+      "seq4": "ลำดับ 4 หลัก (0001)",
+      "seq5": "ลำดับ 5 หลัก (00001)"
     },
     "resetOptions": {
       "never": "ไม่เริ่มนับใหม่ (รันต่อเนื่อง)",
@@ -1134,11 +1201,15 @@
     },
     "table": {
       "documentType": "ประเภทเอกสาร",
-      "prefix": "Prefix",
+      "prefix": "คำนำหน้า (Prefix)",
       "pattern": "แม่แบบ (Pattern)",
       "resetPeriod": "รอบการรีเซ็ต",
       "preview": "ตัวอย่างรหัส"
     }
+  },
+  "signatures": {
+    "saved": "บันทึกลายเซ็น \"{name}\" ลงในคลังเรียบร้อยแล้ว",
+    "deleted": "ลบลายเซ็น \"{name}\" ออกจากคลังเรียบร้อยแล้ว"
   }
 }
 

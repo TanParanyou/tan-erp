@@ -535,7 +535,7 @@ public class OpportunitiesController : ControllerBase
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         }
 
-        var items = result.Value!.Select(i => new OpportunityWorkImageResponse(
+        var items = result.Value!.Items.Select(i => new OpportunityWorkImageResponse(
             i.Id,
             i.FileId,
             i.StageAtAttach,
@@ -544,7 +544,7 @@ public class OpportunitiesController : ControllerBase
             i.CreatedAtUtc,
             new WorkImageUserSummaryResponse(i.CreatedBy.Id, i.CreatedBy.DisplayName))).ToList();
 
-        return Ok(new OpportunityWorkImageListResponse(items));
+        return Ok(new OpportunityWorkImageListResponse(items, result.Value.NextCursor));
     }
 
     [HttpDelete("{id:guid}/work-images/{imageId:guid}")]

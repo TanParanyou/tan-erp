@@ -16,7 +16,7 @@ public class ListWorkImagesHandler
         _store = store;
     }
 
-    public async Task<Result<IReadOnlyList<OpportunityWorkImageProjection>>> Handle(
+    public async Task<Result<OpportunityWorkImagePageProjection>> Handle(
         ListWorkImagesQuery query,
         CancellationToken cancellationToken = default)
     {
@@ -28,20 +28,18 @@ public class ListWorkImagesHandler
 
         if (accessResult.IsFailure)
         {
-            return Result<IReadOnlyList<OpportunityWorkImageProjection>>.Failure(accessResult.Error);
+            return Result<OpportunityWorkImagePageProjection>.Failure(accessResult.Error);
         }
 
         var access = accessResult.Value!;
         var limit = query.Limit is < 1 or > 100 ? 25 : query.Limit;
 
-        var items = await _store.ListWorkImagesAsync(
+        return await _store.ListWorkImagesAsync(
             access.OrganizationId,
             query.OpportunityId,
             query.Stage,
             limit,
             query.Cursor,
             cancellationToken);
-
-        return Result<IReadOnlyList<OpportunityWorkImageProjection>>.Success(items);
     }
 }

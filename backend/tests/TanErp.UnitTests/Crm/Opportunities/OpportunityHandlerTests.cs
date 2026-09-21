@@ -180,7 +180,7 @@ public class OpportunityHandlerTests
                 new TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImagesResultProjection(Array.Empty<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>(), Guid.NewGuid())));
         }
 
-        public Task<IReadOnlyList<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>> ListWorkImagesAsync(
+        public Task<Result<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImagePageProjection>> ListWorkImagesAsync(
             Guid organizationId,
             Guid opportunityId,
             string? stage,
@@ -188,8 +188,10 @@ public class OpportunityHandlerTests
             string? cursor,
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<IReadOnlyList<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>>(
-                Array.Empty<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>());
+            return Task.FromResult(Result<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImagePageProjection>.Success(
+                new TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImagePageProjection(
+                    Array.Empty<TanErp.Application.Crm.Opportunities.WorkImages.OpportunityWorkImageProjection>(),
+                    null)));
         }
 
         public Task<Result<Guid>> DetachWorkImageAsync(

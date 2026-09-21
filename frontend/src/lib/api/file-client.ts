@@ -23,7 +23,7 @@ export class FileClient {
 
   getFileUrl(fileId?: string | null): string {
     if (!fileId) return "";
-    return `${this.baseUrl}/api/v1/files/${encodeURIComponent(fileId)}`;
+    return `${this.baseUrl}/api/v1/files/${encodeURIComponent(fileId)}/content`;
   }
 
   async createSession(
@@ -42,7 +42,7 @@ export class FileClient {
     if (membershipId) headers["X-Membership-Id"] = membershipId;
     if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
 
-    const response = await fetch(`${this.baseUrl}/api/v1/files/sessions`, {
+    const response = await fetch(`${this.baseUrl}/api/v1/files/upload-sessions`, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
@@ -70,14 +70,18 @@ export class FileClient {
    */
   async completeSession(
     sessionId: string,
-    files: File[],
+    files: (File | { slotId: string; file: File })[],
     options: RequestOptions
   ): Promise<CompleteUploadSessionResponse> {
     const { token, membershipId, locale = "th", signal } = options;
 
     const formData = new FormData();
-    for (const file of files) {
-      formData.append("files", file);
+    for (const item of files) {
+      if ("slotId" in item && "file" in item) {
+        formData.append(item.slotId, item.file, item.file.name);
+      } else {
+        formData.append(item.name, item, item.name);
+      }
     }
 
     const headers: Record<string, string> = {
@@ -89,7 +93,7 @@ export class FileClient {
     if (membershipId) headers["X-Membership-Id"] = membershipId;
 
     const response = await fetch(
-      `${this.baseUrl}/api/v1/files/sessions/${encodeURIComponent(sessionId)}/complete`,
+      `${this.baseUrl}/api/v1/files/upload-sessions/${encodeURIComponent(sessionId)}/complete`,
       {
         method: "POST",
         headers,

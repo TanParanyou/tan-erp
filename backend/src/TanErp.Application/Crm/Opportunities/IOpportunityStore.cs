@@ -83,7 +83,7 @@ public interface IOpportunityStore
         string payloadHash,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<WorkImages.OpportunityWorkImageProjection>> ListWorkImagesAsync(
+    Task<Result<WorkImages.OpportunityWorkImagePageProjection>> ListWorkImagesAsync(
         Guid organizationId,
         Guid opportunityId,
         string? stage,

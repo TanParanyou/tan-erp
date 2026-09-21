@@ -12,6 +12,7 @@ import type { OpportunityWorkImageResponse } from "@/lib/api/api-client";
 // Mock queries
 vi.mock("../api/opportunity-queries", () => ({
   useOpportunityWorkImages: vi.fn(),
+  useInfiniteOpportunityWorkImages: vi.fn(),
   useDetachWorkImage: vi.fn(),
   useAttachWorkImages: vi.fn(() => ({
     mutateAsync: vi.fn(),
@@ -74,22 +75,28 @@ describe("OpportunityWorkImagesSection Component", () => {
   });
 
   it("renders loading spinner while fetching images", () => {
-    vi.mocked(queries.useOpportunityWorkImages).mockReturnValue({
+    vi.mocked(queries.useInfiniteOpportunityWorkImages).mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
-    } as unknown as ReturnType<typeof queries.useOpportunityWorkImages>);
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof queries.useInfiniteOpportunityWorkImages>);
 
     renderComponent();
     expect(screen.getByText("กำลังโหลดภาพถ่ายหน้างาน...")).toBeInTheDocument();
   });
 
   it("renders empty state when there are no images", () => {
-    vi.mocked(queries.useOpportunityWorkImages).mockReturnValue({
-      data: { items: [], nextCursor: null },
+    vi.mocked(queries.useInfiniteOpportunityWorkImages).mockReturnValue({
+      data: { pages: [{ items: [], nextCursor: null }] },
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof queries.useOpportunityWorkImages>);
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof queries.useInfiniteOpportunityWorkImages>);
 
     renderComponent();
     expect(screen.getByText("ยังไม่มีภาพถ่ายหน้างานแนบในโอกาสทางการขายนี้")).toBeInTheDocument();
@@ -120,11 +127,14 @@ describe("OpportunityWorkImagesSection Component", () => {
       },
     ];
 
-    vi.mocked(queries.useOpportunityWorkImages).mockReturnValue({
-      data: { items: mockImages, nextCursor: null },
+    vi.mocked(queries.useInfiniteOpportunityWorkImages).mockReturnValue({
+      data: { pages: [{ items: mockImages, nextCursor: null }] },
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof queries.useOpportunityWorkImages>);
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof queries.useInfiniteOpportunityWorkImages>);
 
     renderComponent();
 
@@ -161,11 +171,14 @@ describe("OpportunityWorkImagesSection Component", () => {
       },
     ];
 
-    vi.mocked(queries.useOpportunityWorkImages).mockReturnValue({
-      data: { items: mockImages, nextCursor: null },
+    vi.mocked(queries.useInfiniteOpportunityWorkImages).mockReturnValue({
+      data: { pages: [{ items: mockImages, nextCursor: null }] },
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof queries.useOpportunityWorkImages>);
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof queries.useInfiniteOpportunityWorkImages>);
 
     renderComponent();
 
@@ -200,11 +213,14 @@ describe("OpportunityWorkImagesSection Component", () => {
       },
     ];
 
-    vi.mocked(queries.useOpportunityWorkImages).mockReturnValue({
-      data: { items: mockImages, nextCursor: null },
+    vi.mocked(queries.useInfiniteOpportunityWorkImages).mockReturnValue({
+      data: { pages: [{ items: mockImages, nextCursor: null }] },
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof queries.useOpportunityWorkImages>);
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof queries.useInfiniteOpportunityWorkImages>);
 
     renderComponent();
 
@@ -231,11 +247,14 @@ describe("OpportunityWorkImagesSection Component", () => {
       },
     ];
 
-    vi.mocked(queries.useOpportunityWorkImages).mockReturnValue({
-      data: { items: mockImages, nextCursor: null },
+    vi.mocked(queries.useInfiniteOpportunityWorkImages).mockReturnValue({
+      data: { pages: [{ items: mockImages, nextCursor: null }] },
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof queries.useOpportunityWorkImages>);
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof queries.useInfiniteOpportunityWorkImages>);
 
     renderComponent();
 
@@ -278,11 +297,14 @@ describe("OpportunityWorkImagesSection Component", () => {
       },
     ];
 
-    vi.mocked(queries.useOpportunityWorkImages).mockReturnValue({
-      data: { items: mockImages, nextCursor: null },
+    vi.mocked(queries.useInfiniteOpportunityWorkImages).mockReturnValue({
+      data: { pages: [{ items: mockImages, nextCursor: null }] },
       isLoading: false,
       isError: false,
-    } as unknown as ReturnType<typeof queries.useOpportunityWorkImages>);
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof queries.useInfiniteOpportunityWorkImages>);
 
     // Render with canManage = false
     const { rerender } = renderComponent({ canManage: false, currentStage: "surveying" });
@@ -306,5 +328,42 @@ describe("OpportunityWorkImagesSection Component", () => {
 
     expect(screen.queryByRole("button", { name: /แนบภาพถ่ายหน้างาน/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /ลบ/i })).not.toBeInTheDocument();
+  });
+
+  it("renders load more button and calls fetchNextPage when hasNextPage is true", () => {
+    const fetchNextPage = vi.fn();
+    vi.mocked(queries.useInfiniteOpportunityWorkImages).mockReturnValue({
+      data: {
+        pages: [
+          {
+            items: [
+              {
+                id: "img-1",
+                fileId: "file-1",
+                stageAtAttach: "surveying",
+                caption: "ภาพหน้า 1",
+                displayOrder: 1,
+                createdAtUtc: "2026-09-17T08:00:00Z",
+                createdBy: { id: "user-1", displayName: "นาย ก" },
+              },
+            ],
+            nextCursor: "next-cur",
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      hasNextPage: true,
+      fetchNextPage,
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof queries.useInfiniteOpportunityWorkImages>);
+
+    renderComponent();
+
+    const loadMoreBtn = screen.getByRole("button", { name: "โหลดภาพเพิ่มเติม" });
+    expect(loadMoreBtn).toBeInTheDocument();
+
+    fireEvent.click(loadMoreBtn);
+    expect(fetchNextPage).toHaveBeenCalled();
   });
 });

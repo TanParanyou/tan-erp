@@ -1124,8 +1124,8 @@ public class OpportunityStore : IOpportunityStore
 
                 // Return existing attached items
                 var reloadedOpp = await _db.Opportunities.AsNoTracking().FirstOrDefaultAsync(o => o.Id == command.OpportunityId && o.OrganizationId == orgId, cancellationToken);
-                var existingItems = await ListWorkImagesAsync(orgId, command.OpportunityId, null, 100, null, cancellationToken);
-                return Result<AttachWorkImagesResultProjection>.Success(new AttachWorkImagesResultProjection(existingItems, reloadedOpp?.RowVersion ?? command.ExpectedVersion));
+                var existingItemsResult = await ListWorkImagesAsync(orgId, command.OpportunityId, null, 100, null, cancellationToken);
+                return Result<AttachWorkImagesResultProjection>.Success(new AttachWorkImagesResultProjection(existingItemsResult.Value?.Items ?? [], reloadedOpp?.RowVersion ?? command.ExpectedVersion));
             }
 
             // 2. Load Opportunity
@@ -1259,7 +1259,7 @@ public class OpportunityStore : IOpportunityStore
         });
     }
 
-    public async Task<IReadOnlyList<OpportunityWorkImageProjection>> ListWorkImagesAsync(
+    public async Task<Result<OpportunityWorkImagePageProjection>> ListWorkImagesAsync(
         Guid organizationId,
         Guid opportunityId,
         string? stage,
@@ -1267,6 +1267,14 @@ public class OpportunityStore : IOpportunityStore
         string? cursor,
         CancellationToken cancellationToken = default)
     {
+        var decodeResult = OpportunityWorkImageCursor.TryDecode(cursor);
+        if (decodeResult.IsFailure)
+        {
+            return Result<OpportunityWorkImagePageProjection>.Failure(decodeResult.Error);
+        }
+
+        var cursorValue = decodeResult.Value;
+
         var query = _db.OpportunityWorkImages
             .AsNoTracking()
             .Where(w => w.OrganizationId == organizationId && w.OpportunityId == opportunityId && !w.IsDeleted);
@@ -1277,12 +1285,26 @@ public class OpportunityStore : IOpportunityStore
             query = query.Where(w => w.StageAtAttach == normalizedStage);
         }
 
+        if (cursorValue.HasValue)
+        {
+            var (cursorCreatedAt, cursorId) = cursorValue.Value;
+            query = query.Where(w => w.CreatedAtUtc < cursorCreatedAt || (w.CreatedAtUtc == cursorCreatedAt && w.Id < cursorId));
+        }
+
+        var fetchLimit = Math.Clamp(limit, 1, 100);
         var images = await query
             .OrderByDescending(w => w.CreatedAtUtc)
-            .ThenBy(w => w.DisplayOrder)
-            .ThenBy(w => w.Id)
-            .Take(limit)
+            .ThenByDescending(w => w.Id)
+            .Take(fetchLimit + 1)
             .ToListAsync(cancellationToken);
+
+        string? nextCursor = null;
+        if (images.Count > fetchLimit)
+        {
+            var lastItem = images[fetchLimit - 1];
+            nextCursor = OpportunityWorkImageCursor.Encode(lastItem.CreatedAtUtc, lastItem.Id);
+            images = images.Take(fetchLimit).ToList();
+        }
 
         var userIds = images.Select(w => w.CreatedByUserId).Distinct().ToList();
         var userMap = await _db.Users
@@ -1290,7 +1312,7 @@ public class OpportunityStore : IOpportunityStore
             .Where(u => userIds.Contains(u.Id))
             .ToDictionaryAsync(u => u.Id, u => u.DisplayName, cancellationToken);
 
-        return images.Select(w => new OpportunityWorkImageProjection(
+        var projections = images.Select(w => new OpportunityWorkImageProjection(
             w.Id,
             w.FileId,
             w.StageAtAttach,
@@ -1298,6 +1320,9 @@ public class OpportunityStore : IOpportunityStore
             w.DisplayOrder,
             w.CreatedAtUtc,
             new WorkImageUserSummaryProjection(w.CreatedByUserId, userMap.GetValueOrDefault(w.CreatedByUserId) ?? "Unknown User"))).ToList();
+
+        return Result<OpportunityWorkImagePageProjection>.Success(
+            new OpportunityWorkImagePageProjection(projections, nextCursor));
     }
 
     public async Task<Result<Guid>> DetachWorkImageAsync(

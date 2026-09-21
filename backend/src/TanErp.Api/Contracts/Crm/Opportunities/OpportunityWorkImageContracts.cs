@@ -25,4 +25,5 @@ public sealed record AttachWorkImagesResponse(
     Guid OpportunityRowVersion);
 
 public sealed record OpportunityWorkImageListResponse(
-    IReadOnlyList<OpportunityWorkImageResponse> Items);
+    IReadOnlyList<OpportunityWorkImageResponse> Items,
+    string? NextCursor = null);

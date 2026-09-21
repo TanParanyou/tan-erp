@@ -16,3 +16,7 @@ public sealed record OpportunityWorkImageProjection(
 public sealed record AttachWorkImagesResultProjection(
     IReadOnlyList<OpportunityWorkImageProjection> Items,
     Guid OpportunityRowVersion);
+
+public sealed record OpportunityWorkImagePageProjection(
+    IReadOnlyList<OpportunityWorkImageProjection> Items,
+    string? NextCursor);
