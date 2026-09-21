@@ -614,11 +614,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                     if (!opportunity.branch?.id || !opportunity.customer?.id) return;
                     try {
                       await createEstimateMutation.mutateAsync({
-                        customerId: opportunity.customer.id,
                         opportunityId: opportunity.id,
-                        branchId: opportunity.branch.id,
                         siteSurveyRevisionId: survey?.currentRevision?.id,
-                        siteSurveySnapshotHash: survey?.currentRevision?.snapshotHash,
                         currency: "THB",
                       });
                     } catch (err: unknown) {

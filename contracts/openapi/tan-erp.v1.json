@@ -1051,6 +1051,46 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition Required",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -5784,26 +5824,13 @@
       "CreateEstimateDraftRequest": {
         "type": "object",
         "properties": {
-          "customerId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "opportunityId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "branchId": {
             "type": "string",
             "format": "uuid"
           },
           "siteSurveyRevisionId": {
             "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "siteSurveySnapshotHash": {
-            "type": "string",
-            "nullable": true
+            "format": "uuid"
           },
           "currency": {
             "type": "string",
@@ -6260,6 +6287,10 @@
           "samplePreview": {
             "type": "string",
             "nullable": true
+          },
+          "rowVersion": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "additionalProperties": false
@@ -7489,6 +7520,10 @@
         "additionalProperties": false
       },
       "UpdateDocumentSequenceRequest": {
+        "required": [
+          "formatPattern",
+          "resetPeriod"
+        ],
         "type": "object",
         "properties": {
           "prefix": {
@@ -7496,14 +7531,16 @@
             "nullable": true
           },
           "formatPattern": {
-            "type": "string",
-            "nullable": true
+            "minLength": 1,
+            "type": "string"
           },
           "resetPeriod": {
-            "type": "string",
-            "nullable": true
+            "minLength": 1,
+            "type": "string"
           },
           "padding": {
+            "maximum": 10,
+            "minimum": 1,
             "type": "integer",
             "format": "int32"
           },

@@ -283,6 +283,8 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
     // Verify Estimate is now quoted and Opportunity stage is proposed
     await expect(page.getByText(/ออกใบเสนอราคาแล้ว/i)).toBeVisible();
     await expect(page.getByText(/เสนอราคาแล้ว \(Proposed\)/i).first()).toBeVisible();
+    const proposedTimelineBadge = page.locator("div[class*='border-l-2']").getByText(/เสนอราคาแล้ว \(Proposed\)/i);
+    await expect(proposedTimelineBadge).toBeVisible();
 
     // 11. Customer Acceptance (Slice 5B: Advances Opportunity to 'won')
     const acceptQuotationBtn = page.getByRole("button", { name: /ลูกค้ายอมรับใบเสนอราคา/i });
@@ -300,5 +302,7 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
 
     // Verify Opportunity stage is now won!
     await expect(page.getByText(/ปิดการขายสำเร็จ \(Won\)/i).first()).toBeVisible();
+    const wonTimelineBadge = page.locator("div[class*='border-l-2']").getByText(/ปิดการขายสำเร็จ \(Won\)/i);
+    await expect(wonTimelineBadge).toHaveCount(1);
   });
 });

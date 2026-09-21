@@ -15,7 +15,10 @@ import { AuthenticationRequiredError, MembershipRequiredError, ApiError } from "
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
-import { opportunityDetailQueryKey } from "@/features/opportunities/api/opportunity-queries";
+import {
+  opportunityDetailQueryKey,
+  opportunityStageHistoryQueryKey,
+} from "@/features/opportunities/api/opportunity-queries";
 
 export function opportunityEstimateQueryKey(
   membershipId: string | null | undefined,
@@ -200,6 +203,9 @@ export function useIssueQuotation(
       void queryClient.invalidateQueries({
         queryKey: opportunityDetailQueryKey(membershipId, normalizedLocale, opportunityId),
       });
+      void queryClient.invalidateQueries({
+        queryKey: opportunityStageHistoryQueryKey(membershipId, opportunityId),
+      });
     },
   });
 }
@@ -233,6 +239,9 @@ export function useAcceptQuotation(
       });
       void queryClient.invalidateQueries({
         queryKey: opportunityDetailQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: opportunityStageHistoryQueryKey(membershipId, opportunityId),
       });
     },
   });

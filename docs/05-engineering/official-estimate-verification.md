@@ -1,7 +1,7 @@
 # Official Estimate BOQ & Calculation Vertical Slice Verification (Slice 5A)
 
-**Status:** Remediation Pending (Slice 5A Baseline Verified at 28aedbf; Hardening under `docs/superpowers/plans/2026-09-20-official-estimate-commercial-hardening.md`)
-**Tested Commit/Date:** 2026-09-18 (commit `28aedbf`)
+**Status:** Verified (Hardened per `docs/superpowers/plans/2026-09-20-official-estimate-commercial-hardening.md`)
+**Tested Commit/Date:** 2026-09-21 (Hardening verified on `feat/opportunity-qualification`)
 **Environment:**
 - macOS Apple Silicon
 - PostgreSQL 17 Container (port 5432)

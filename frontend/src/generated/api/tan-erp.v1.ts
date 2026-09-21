@@ -676,6 +676,28 @@ export interface paths {
                         "text/json": components["schemas"]["ApiProblemDetails"];
                     };
                 };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Precondition Required */
+                428: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
             };
         };
         post?: never;
@@ -3538,14 +3560,9 @@ export interface components {
         };
         CreateEstimateDraftRequest: {
             /** Format: uuid */
-            customerId?: string;
-            /** Format: uuid */
             opportunityId?: string;
             /** Format: uuid */
-            branchId?: string;
-            /** Format: uuid */
-            siteSurveyRevisionId?: string | null;
-            siteSurveySnapshotHash?: string | null;
+            siteSurveyRevisionId?: string;
             currency?: string | null;
         };
         CreateOpportunityRequest: {
@@ -3682,6 +3699,8 @@ export interface components {
             isBranchSpecific?: boolean;
             isActive?: boolean;
             samplePreview?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
         };
         DuplicateCustomerResponse: {
             /** Format: uuid */
@@ -4124,8 +4143,8 @@ export interface components {
         };
         UpdateDocumentSequenceRequest: {
             prefix?: string | null;
-            formatPattern?: string | null;
-            resetPeriod?: string | null;
+            formatPattern: string;
+            resetPeriod: string;
             /** Format: int32 */
             padding?: number;
             isBranchSpecific?: boolean;

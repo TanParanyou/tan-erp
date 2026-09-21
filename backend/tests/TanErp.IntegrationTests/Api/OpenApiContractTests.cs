@@ -214,7 +214,30 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.True(schemas.ContainsKey("UserListResponse"), "Must define UserListResponse schema");
         Assert.True(schemas.ContainsKey("UserListItemResponse"), "Must define UserListItemResponse schema");
         Assert.True(schemas.ContainsKey("BranchSummaryResponse"), "Must define BranchSummaryResponse schema");
+        Assert.True(schemas.ContainsKey("DocumentSequenceResponse"), "Must define DocumentSequenceResponse schema");
+        Assert.True(schemas.ContainsKey("UpdateDocumentSequenceRequest"), "Must define UpdateDocumentSequenceRequest schema");
         Assert.True(schemas.ContainsKey("ApiProblemDetails"), "Must define ApiProblemDetails schema");
+
+        // Assert required fields on mutation requests
+        var issueSchema = schemas["IssueQuotationRequest"]?.AsObject();
+        Assert.NotNull(issueSchema);
+        var issueProperties = issueSchema["properties"]?.AsObject();
+        Assert.NotNull(issueProperties);
+        Assert.True(issueProperties.ContainsKey("expectedEstimateVersion"));
+        Assert.True(issueProperties.ContainsKey("expectedOpportunityVersion"));
+
+        var acceptSchema = schemas["AcceptQuotationRequest"]?.AsObject();
+        Assert.NotNull(acceptSchema);
+        var acceptProperties = acceptSchema["properties"]?.AsObject();
+        Assert.NotNull(acceptProperties);
+        Assert.True(acceptProperties.ContainsKey("expectedOpportunityVersion"));
+
+        var updateSeqSchema = schemas["UpdateDocumentSequenceRequest"]?.AsObject();
+        Assert.NotNull(updateSeqSchema);
+        var updateSeqRequired = updateSeqSchema["required"]?.AsArray().Select(n => n?.GetValue<string>()).ToList();
+        Assert.NotNull(updateSeqRequired);
+        Assert.Contains("formatPattern", updateSeqRequired);
+        Assert.Contains("resetPeriod", updateSeqRequired);
 
         // 5. Ensure contracts/openapi/tan-erp.v1.json exists and matches
         var contractsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../contracts/openapi"));

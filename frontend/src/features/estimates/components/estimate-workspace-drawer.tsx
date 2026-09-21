@@ -310,7 +310,40 @@ export function EstimateWorkspaceDrawer({
         setActiveRowVersion(updatedRev.rowVersion);
       }
       toast.success(t("saveDraftSuccess"));
-      reset(formData);
+
+      const updatedSections = (updatedRev.sections || []).map((s, sIdx) => ({
+        id: s.id,
+        code: s.code || `SEC-${sIdx + 1}`,
+        nameTh: s.nameTh || "",
+        nameEn: s.nameEn || "",
+        sortOrder: s.sortOrder || sIdx + 1,
+        workItems: (s.workItems || []).map((w, wIdx) => ({
+          id: w.id,
+          code: w.code || `ITM-${s.code || sIdx + 1}-${wIdx + 1}`,
+          descriptionTh: w.descriptionTh || "",
+          descriptionEn: w.descriptionEn || "",
+          quantity: w.quantity || 1,
+          unitCode: w.unitCode || "lot",
+          sellingRuleType: w.sellingRuleType || "margin",
+          sellingRuleValue: w.sellingRuleValue ?? 20,
+          sortOrder: w.sortOrder || wIdx + 1,
+          costComponents: (w.costComponents || []).map((c, cIdx) => ({
+            id: c.id,
+            type: c.type || "material",
+            description: c.description || "",
+            quantity: c.quantity || 1,
+            unitCode: c.unitCode || "lot",
+            unitCost: c.unitCost || 0,
+            currency: c.currency || currency,
+            sortOrder: c.sortOrder || cIdx + 1,
+          })),
+        })),
+      }));
+
+      reset({
+        discountAmount: Number(formData.discountAmount) || 0,
+        sections: updatedSections,
+      });
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.code === "ESTIMATE_VERSION_CONFLICT") {
@@ -330,24 +363,8 @@ export function EstimateWorkspaceDrawer({
     if (!effectiveRowVersion) return;
     try {
       const formData = getValues();
-      let latestVersion = effectiveRowVersion;
-
-      // 1. If form has changes or was dirty, save draft first and obtain the latest rowVersion
-      if (isDirty) {
-        const savePayload = buildUpdatePayload(formData, latestVersion);
-        const updatedRev = await updateDraftMutation.mutateAsync({
-          payload: savePayload,
-          ifMatch: `"${latestVersion}"`,
-        });
-        if (updatedRev?.rowVersion) {
-          latestVersion = updatedRev.rowVersion;
-          setActiveRowVersion(latestVersion);
-        }
-      }
-
-      // 2. Call calculate with the exact latest version
       const calcPayload: CalculateEstimateRequest = {
-        expectedRevisionVersion: latestVersion,
+        expectedRevisionVersion: effectiveRowVersion,
         discountAmount: Number(formData.discountAmount) || 0,
       };
       const calculatedRev = await calculateMutation.mutateAsync(calcPayload);
