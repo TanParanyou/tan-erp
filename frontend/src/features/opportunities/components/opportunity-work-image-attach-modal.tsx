@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { IconUpload } from "@/components/common/Icons";
@@ -11,6 +11,7 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { useAttachWorkImages } from "../api/opportunity-queries";
 import { useTranslations } from "next-intl";
+import { ApiError } from "@/lib/api/api-error";
 
 export interface OpportunityWorkImageAttachModalProps {
   isOpen: boolean;
@@ -43,14 +44,22 @@ export function OpportunityWorkImageAttachModal({
   const [uploadedFileMap, setUploadedFileMap] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const uploadIntentRef = useRef<{ itemKey: string; idempotencyKey: string } | null>(null);
+  const attachIntentRef = useRef<string | null>(null);
 
   const attachMutation = useAttachWorkImages();
 
-  const handleClose = () => {
-    if (isSubmitting) return;
+  const resetUploadState = () => {
     setPendingItems([]);
     setUploadedFileMap({});
     setErrorMessage(null);
+    uploadIntentRef.current = null;
+    attachIntentRef.current = null;
+  };
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    resetUploadState();
     onClose();
   };
 
@@ -61,7 +70,7 @@ export function OpportunityWorkImageAttachModal({
     // Check if any image is still being optimized
     const stillOptimizing = pendingItems.some((i) => i.isOptimizing);
     if (stillOptimizing) {
-      setErrorMessage("Please wait for all images to finish optimizing.");
+      setErrorMessage(t("waitForImageOptimization"));
       return;
     }
 
@@ -71,7 +80,8 @@ export function OpportunityWorkImageAttachModal({
     try {
       const token = await getAuthToken();
       if (!token || !membershipId) {
-        throw new Error("Authentication and active membership required.");
+        setErrorMessage(t("uploadAuthenticationRequired"));
+        return;
       }
 
       // Filter only items that haven't been uploaded and verified yet
@@ -95,7 +105,14 @@ export function OpportunityWorkImageAttachModal({
           })),
         };
 
-        const idempotencyKey = `file-sess-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+        const itemKey = itemsToUpload.map((item) => item.id).join(":");
+        if (uploadIntentRef.current?.itemKey !== itemKey) {
+          uploadIntentRef.current = {
+            itemKey,
+            idempotencyKey: `file-sess-${crypto.randomUUID()}`,
+          };
+        }
+        const idempotencyKey = uploadIntentRef.current.idempotencyKey;
 
         const sessionRes = await fileClient.createSession(createSessionReq, {
           token,
@@ -105,7 +122,8 @@ export function OpportunityWorkImageAttachModal({
         });
 
         if (!sessionRes.sessionId || !sessionRes.slots) {
-          throw new Error("Failed to create file upload session.");
+          setErrorMessage(t("uploadSessionCreateError"));
+          return;
         }
 
         // 2. Complete session with actual binaries and slot mapping
@@ -125,7 +143,8 @@ export function OpportunityWorkImageAttachModal({
         );
 
         if (!completeRes.files || completeRes.files.length === 0) {
-          throw new Error("File verification failed on server.");
+          setErrorMessage(t("uploadVerificationError"));
+          return;
         }
 
         completeRes.files.forEach((cf, idx) => {
@@ -135,6 +154,7 @@ export function OpportunityWorkImageAttachModal({
         });
 
         setUploadedFileMap(currentMap);
+        uploadIntentRef.current = null;
       }
 
       // 3. Attach verified file IDs to Opportunity
@@ -146,24 +166,26 @@ export function OpportunityWorkImageAttachModal({
         .filter((item) => Boolean(item.fileId));
 
       if (attachImagesPayload.length !== pendingItems.length) {
-        throw new Error("Some files could not be verified. Please retry.");
+        setErrorMessage(t("uploadIncompleteError"));
+        return;
       }
 
-      const attachIdempotencyKey = `opp-img-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+      attachIntentRef.current ??= `opp-img-${crypto.randomUUID()}`;
 
       await attachMutation.mutateAsync({
         opportunityId,
         expectedVersion,
         images: attachImagesPayload,
-        idempotencyKey: attachIdempotencyKey,
+        idempotencyKey: attachIntentRef.current,
       });
 
-      handleClose();
+      resetUploadState();
+      onClose();
     } catch (err: unknown) {
-      if (err instanceof Error) {
+      if (err instanceof ApiError) {
         setErrorMessage(err.message);
       } else {
-        setErrorMessage("An unexpected error occurred during upload.");
+        setErrorMessage(t("uploadUnexpectedError"));
       }
     } finally {
       setIsSubmitting(false);
@@ -189,7 +211,11 @@ export function OpportunityWorkImageAttachModal({
         />
 
         {errorMessage && (
-          <div className="p-3 bg-destructive/10 border border-destructive text-destructive text-xs font-mono">
+          <div
+            className="p-3 bg-destructive/10 border border-destructive text-destructive text-xs font-mono"
+            role="alert"
+            aria-live="polite"
+          >
             {errorMessage}
           </div>
         )}

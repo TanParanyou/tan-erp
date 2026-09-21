@@ -41,6 +41,8 @@ public class FileUploadSessionTests : IAsyncLifetime
 
     private const string UidNoPerm = "uid-no-perm-file-test";
     private static readonly Guid MembershipNoPermId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f5c01");
+    private const string UidSameOrg = "uid-same-org-file-test";
+    private static readonly Guid MembershipSameOrgId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f5c02");
 
     private static readonly Guid OrgBId = TestOnlyDataSeeder.TestOrgBId;
     private static readonly Guid BranchBId = TestOnlyDataSeeder.TestBranchBId;
@@ -57,6 +59,7 @@ public class FileUploadSessionTests : IAsyncLifetime
                 "token-org-a" => UidA,
                 "token-org-b" => UidB,
                 "token-no-perm" => UidNoPerm,
+                "token-same-org" => UidSameOrg,
                 _ => null
             };
             return Task.FromResult(uid);
@@ -106,6 +109,16 @@ public class FileUploadSessionTests : IAsyncLifetime
         var userNoPerm = new TanErp.Domain.IdentityAccess.User(Guid.NewGuid(), UidNoPerm, "No Perm", "noperm-file@example.test", true);
         db.Users.Add(userNoPerm);
         db.Memberships.Add(new TanErp.Domain.Organization.Membership(MembershipNoPermId, OrgAId, BranchAId, userNoPerm.Id, true));
+
+        var userSameOrg = new TanErp.Domain.IdentityAccess.User(Guid.NewGuid(), UidSameOrg, "Same Org", "same-org-file@example.test", true);
+        db.Users.Add(userSameOrg);
+        db.Memberships.Add(new TanErp.Domain.Organization.Membership(MembershipSameOrgId, OrgAId, BranchAId, userSameOrg.Id, true));
+        var roleIds = await db.MembershipRoles
+            .Where(mr => mr.MembershipId == MembershipAId)
+            .Select(mr => mr.RoleId)
+            .ToListAsync();
+        db.MembershipRoles.AddRange(roleIds.Select(roleId =>
+            new MembershipRole(MembershipSameOrgId, roleId, OrgAId)));
 
         await db.SaveChangesAsync();
     }
@@ -267,6 +280,19 @@ public class FileUploadSessionTests : IAsyncLifetime
             Assert.Equal(resp1.Slots[i].MediaType, resp2.Slots[i].MediaType);
             Assert.Equal(resp1.Slots[i].FileSizeBytes, resp2.Slots[i].FileSizeBytes);
         }
+
+        var otherActorMessage = CreateRequest(
+            HttpMethod.Post,
+            "/api/v1/files/upload-sessions",
+            "token-same-org",
+            MembershipSameOrgId,
+            key);
+        otherActorMessage.Content = JsonContent.Create(body);
+        var otherActorResponse = await _client.SendAsync(otherActorMessage);
+        Assert.Equal(HttpStatusCode.Created, otherActorResponse.StatusCode);
+        var otherActorSession = await otherActorResponse.Content.ReadFromJsonAsync<CreateUploadSessionResponse>();
+        Assert.NotNull(otherActorSession);
+        Assert.NotEqual(resp1.SessionId, otherActorSession.SessionId);
     }
 
     [Theory]
@@ -377,6 +403,48 @@ public class FileUploadSessionTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, orgBRes.StatusCode);
         var problem = await orgBRes.Content.ReadFromJsonAsync<ApiProblemDetails>();
         Assert.Equal("RESOURCE_NOT_FOUND", problem?.Code);
+
+        // 4. An unbound customer-creation image remains private to the actor who created the intent.
+        var creationIntentId = Guid.NewGuid();
+        var customerCreateRequest = new CreateUploadSessionRequest(
+            "customer",
+            null,
+            creationIntentId,
+            [new FileSlotRequest("private.webp", "image/webp", webpBytes.Length)]);
+        var customerCreateMessage = CreateRequest(
+            HttpMethod.Post,
+            "/api/v1/files/upload-sessions",
+            "token-org-a",
+            MembershipAId,
+            $"private-intent-{Guid.NewGuid():N}");
+        customerCreateMessage.Content = JsonContent.Create(customerCreateRequest);
+        var customerCreateResponse = await _client.SendAsync(customerCreateMessage);
+        Assert.Equal(HttpStatusCode.Created, customerCreateResponse.StatusCode);
+        var customerSession = await customerCreateResponse.Content.ReadFromJsonAsync<CreateUploadSessionResponse>();
+        Assert.NotNull(customerSession);
+
+        using var customerForm = new MultipartFormDataContent();
+        var customerFileContent = new ByteArrayContent(webpBytes);
+        customerFileContent.Headers.ContentType = new MediaTypeHeaderValue("image/webp");
+        customerForm.Add(customerFileContent, customerSession.Slots[0].SlotId.ToString(), "private.webp");
+        var customerCompleteMessage = CreateRequest(
+            HttpMethod.Post,
+            $"/api/v1/files/upload-sessions/{customerSession.SessionId}/complete",
+            "token-org-a",
+            MembershipAId);
+        customerCompleteMessage.Content = customerForm;
+        var customerCompleteResponse = await _client.SendAsync(customerCompleteMessage);
+        Assert.Equal(HttpStatusCode.OK, customerCompleteResponse.StatusCode);
+        var customerComplete = await customerCompleteResponse.Content.ReadFromJsonAsync<CompleteUploadSessionResponse>();
+        Assert.NotNull(customerComplete);
+
+        var sameOrgOtherActorMessage = CreateRequest(
+            HttpMethod.Get,
+            $"/api/v1/files/{customerComplete.Files[0].FileId}/content",
+            "token-same-org",
+            MembershipSameOrgId);
+        var sameOrgOtherActorResponse = await _client.SendAsync(sameOrgOtherActorMessage);
+        Assert.Equal(HttpStatusCode.NotFound, sameOrgOtherActorResponse.StatusCode);
     }
 
     [Fact]

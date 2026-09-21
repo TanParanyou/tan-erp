@@ -1,6 +1,15 @@
 import { ApiError } from "./api-error";
 import type { RequestOptions } from "./api-client";
+import type { ProblemDetails } from "./problem-details";
 import type { components } from "@/generated/api/tan-erp.v1";
+
+function isProblemDetails(value: unknown): value is ProblemDetails {
+  if (typeof value !== "object" || value === null) return false;
+  if ("code" in value && value.code !== null && typeof value.code !== "string") return false;
+  if ("status" in value && value.status !== null && typeof value.status !== "number") return false;
+  if ("title" in value && value.title !== null && typeof value.title !== "string") return false;
+  return "code" in value || "status" in value || "title" in value;
+}
 
 export type CreateUploadSessionRequest = components["schemas"]["CreateUploadSessionRequest"];
 export type CreateUploadSessionResponse = components["schemas"]["CreateUploadSessionResponse"];
@@ -24,6 +33,38 @@ export class FileClient {
   getFileUrl(fileId?: string | null): string {
     if (!fileId) return "";
     return `${this.baseUrl}/api/v1/files/${encodeURIComponent(fileId)}/content`;
+  }
+
+  async getFileBlob(fileId: string, options: RequestOptions): Promise<Blob> {
+    const { token, membershipId, locale = "th", signal } = options;
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token.trim()}`,
+      "Accept-Language": locale,
+      Accept: "image/webp,image/png,image/jpeg",
+    };
+
+    if (membershipId) headers["X-Membership-Id"] = membershipId;
+
+    const response = await fetch(this.getFileUrl(fileId), {
+      method: "GET",
+      headers,
+      signal,
+    });
+
+    if (!response.ok) {
+      let problem: unknown = null;
+      try {
+        problem = await response.json();
+      } catch {
+        // The response may not contain a JSON problem body.
+      }
+      if (isProblemDetails(problem)) {
+        throw ApiError.fromProblemDetails(response.status, problem);
+      }
+      throw ApiError.fromUnknown(response.status);
+    }
+
+    return response.blob();
   }
 
   async createSession(

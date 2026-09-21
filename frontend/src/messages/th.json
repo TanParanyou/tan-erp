@@ -731,7 +731,18 @@
     "workImagesEmptyInStage": "ไม่มีภาพถ่ายหน้างานในขั้นตอนนี้",
     "viewAllStagesAction": "ดูภาพทุกขั้นตอน",
     "loadMoreImages": "โหลดภาพเพิ่มเติม",
-    "loadingMoreImages": "กำลังโหลดภาพเพิ่มเติม..."
+    "loadingMoreImages": "กำลังโหลดภาพเพิ่มเติม...",
+    "waitForImageOptimization": "กรุณารอให้ระบบประมวลผลรูปภาพทั้งหมดเสร็จก่อน",
+    "uploadAuthenticationRequired": "กรุณาเข้าสู่ระบบและเลือกองค์กรที่ใช้งานก่อนอัปโหลด",
+    "uploadSessionCreateError": "ไม่สามารถเตรียมการอัปโหลดรูปภาพได้ กรุณาลองใหม่",
+    "uploadVerificationError": "เซิร์ฟเวอร์ไม่สามารถตรวจสอบรูปภาพที่อัปโหลดได้",
+    "uploadIncompleteError": "มีรูปภาพบางรายการยังไม่พร้อม กรุณาลองอัปโหลดอีกครั้ง",
+    "uploadUnexpectedError": "เกิดข้อผิดพลาดระหว่างอัปโหลดรูปภาพ",
+    "protectedImageLoading": "กำลังโหลดรูปภาพที่มีการป้องกัน",
+    "protectedImageLoadError": "ไม่สามารถโหลดรูปภาพที่มีการป้องกันได้",
+    "imageOptimizing": "กำลังประมวลผล...",
+    "imageOptimizedSummary": "WebP (ลดลง {percent}%)",
+    "imageOriginalSummary": "ไฟล์ต้นฉบับ"
   },
   "surveys": {
     "surveyCardTitle": "ข้อมูลการนัดหมายสำรวจหน้างาน (Site Survey Appointment)",
@@ -1212,5 +1223,3 @@
     "deleted": "ลบลายเซ็น \"{name}\" ออกจากคลังเรียบร้อยแล้ว"
   }
 }
-
-

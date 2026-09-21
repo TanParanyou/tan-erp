@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { MapPreview } from "@/components/ui/MapPreview";
 import { IconMapPin, IconEye } from "@/components/common/Icons";
-import { fileClient } from "@/lib/api/file-client";
+import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
 import { GalleryLightboxModal, type GalleryItemMetadata } from "@/components/common/GalleryLightboxModal";
 import type { SiteResponse } from "@/lib/api/api-client";
 
@@ -34,7 +33,7 @@ export function SiteDetailDrawer({
   const images = site.images ?? [];
   const galleryItems: GalleryItemMetadata[] = images.map((img, idx) => ({
     id: img.id || `img-${idx}`,
-    imageUrl: fileClient.getFileUrl(img.fileId),
+    fileId: img.fileId,
     caption: img.caption,
   }));
 
@@ -157,12 +156,11 @@ export function SiteDetailDrawer({
                     onClick={() => setLightboxIndex(idx)}
                   >
                     <div className="relative aspect-video w-full bg-erp-surface-muted overflow-hidden">
-                      <Image
-                        src={fileClient.getFileUrl(img.fileId)}
-                        alt={img.caption || `Site image ${idx + 1}`}
-                        fill
-                        unoptimized
-                        className="object-cover transition-transform group-hover:scale-105"
+                      <AuthenticatedFileImage
+                        fileId={img.fileId ?? ""}
+                        alt={img.caption || `${t("sitePhotos")} ${idx + 1}`}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-erp-navy/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="p-1.5 bg-erp-surface text-erp-navy rounded-none shadow-md">

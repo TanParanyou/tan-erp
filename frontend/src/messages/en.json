@@ -731,7 +731,18 @@
     "workImagesEmptyInStage": "No work images in this stage.",
     "viewAllStagesAction": "View all stages",
     "loadMoreImages": "Load More Images",
-    "loadingMoreImages": "Loading More Images..."
+    "loadingMoreImages": "Loading More Images...",
+    "waitForImageOptimization": "Please wait for every image to finish processing.",
+    "uploadAuthenticationRequired": "Sign in and select an active organization before uploading.",
+    "uploadSessionCreateError": "Unable to prepare the image upload. Please try again.",
+    "uploadVerificationError": "The server could not verify the uploaded images.",
+    "uploadIncompleteError": "Some images are not ready. Please retry the upload.",
+    "uploadUnexpectedError": "An unexpected error occurred while uploading images.",
+    "protectedImageLoading": "Loading protected image",
+    "protectedImageLoadError": "Unable to load protected image",
+    "imageOptimizing": "Processing...",
+    "imageOptimizedSummary": "WebP ({percent}% saved)",
+    "imageOriginalSummary": "Original"
   },
   "surveys": {
     "surveyCardTitle": "Site Survey Appointment Details",
@@ -1212,5 +1223,3 @@
     "deleted": "Signature \"{name}\" removed from library successfully"
   }
 }
-
-

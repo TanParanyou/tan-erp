@@ -8,6 +8,7 @@ import { OpportunityWorkImageAttachModal } from "./opportunity-work-image-attach
 
 import { fileClient } from "@/lib/api/file-client";
 import { useAttachWorkImages } from "../api/opportunity-queries";
+import { ApiError } from "@/lib/api/api-error";
 
 vi.mock("../api/opportunity-queries", () => ({
   useAttachWorkImages: vi.fn(() => ({
@@ -130,7 +131,11 @@ describe("OpportunityWorkImageAttachModal component", () => {
   it("reuses verified fileId on retry without re-uploading completed files", async () => {
     const mockMutateAsync = vi
       .fn()
-      .mockRejectedValueOnce(new Error("Version conflict on first attempt"))
+      .mockRejectedValueOnce(new ApiError({
+        status: 409,
+        code: "OPPORTUNITY_VERSION_CONFLICT",
+        message: "Version conflict on first attempt",
+      }))
       .mockResolvedValueOnce({
         items: [],
         opportunityRowVersion: "ver-2",
@@ -193,5 +198,9 @@ describe("OpportunityWorkImageAttachModal component", () => {
         ],
       })
     );
+
+    const firstAttachIntent = mockMutateAsync.mock.calls[0][0].idempotencyKey;
+    const retriedAttachIntent = mockMutateAsync.mock.calls[1][0].idempotencyKey;
+    expect(retriedAttachIntent).toBe(firstAttachIntent);
   });
 });

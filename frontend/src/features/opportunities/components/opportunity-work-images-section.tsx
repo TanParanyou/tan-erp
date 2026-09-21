@@ -19,7 +19,6 @@ import { OpportunityWorkImageCard } from "./opportunity-work-image-card";
 import { OpportunityWorkImageStageFilter } from "./opportunity-work-image-stage-filter";
 import { resolveOpportunityStageLabel } from "../opportunity-labels";
 import { useTranslations } from "next-intl";
-import { fileClient } from "@/lib/api/file-client";
 import type { OpportunityWorkImageResponse } from "@/lib/api/api-client";
 
 export interface OpportunityWorkImagesSectionProps {
@@ -215,7 +214,7 @@ export function OpportunityWorkImagesSection({
         onIndexChange={lightbox.goTo}
         items={filteredImages.map((img, idx) => ({
           id: img.id ?? img.fileId ?? `item-${idx}`,
-          imageUrl: fileClient.getFileUrl(img.fileId ?? ""),
+          fileId: img.fileId,
           caption: img.caption,
           stageBadge: (
             <Badge variant="primary" size="sm">

@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { IconEye, IconTrash } from "@/components/common/Icons";
+import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
 import { Badge } from "@/components/ui/Badge";
 import { resolveOpportunityStageLabel } from "../opportunity-labels";
-import { fileClient } from "@/lib/api/file-client";
 import { useTranslations } from "next-intl";
 import type { OpportunityWorkImageResponse } from "@/lib/api/api-client";
 
@@ -54,12 +53,11 @@ export function OpportunityWorkImageCard({
         }}
         aria-label={image.caption || stageLabel}
       >
-        <Image
-          src={fileClient.getFileUrl(image.fileId ?? "")}
+        <AuthenticatedFileImage
+          fileId={image.fileId ?? ""}
           alt={image.caption || stageLabel}
-          fill
-          unoptimized
-          className="object-cover transition-transform group-hover:scale-105"
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
         />
 
         {/* Stage Badge */}

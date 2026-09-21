@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { cn } from "@/lib/utils/cn";
+import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
 
 export type AvatarSize = "sm" | "md" | "lg";
 export type AvatarVariant = "navy" | "muted" | "outline";
@@ -10,6 +11,7 @@ export interface AvatarProps {
   initial?: string;
   icon?: React.ReactNode;
   src?: string | null;
+  fileId?: string | null;
   alt?: string;
   size?: AvatarSize;
   variant?: AvatarVariant;
@@ -33,6 +35,7 @@ export function Avatar({
   initial,
   icon,
   src,
+  fileId,
   alt = "Avatar",
   size = "md",
   variant = "muted",
@@ -56,7 +59,13 @@ export function Avatar({
       title={title ?? alt}
       aria-label={title ?? alt}
     >
-      {src && !imageError ? (
+      {fileId ? (
+        <AuthenticatedFileImage
+          fileId={fileId}
+          alt={alt}
+          className="w-full h-full object-cover rounded-none"
+        />
+      ) : src && !imageError ? (
         <img
           src={src}
           alt={alt}

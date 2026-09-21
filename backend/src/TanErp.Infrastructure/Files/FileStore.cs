@@ -67,7 +67,9 @@ public class FileStore : IFileStore
         var existing = await _db.FileUploadSessions
             .Include(s => s.Slots)
             .FirstOrDefaultAsync(
-                s => s.OrganizationId == access.OrganizationId && s.IdempotencyKeyHash == keyHash,
+                s => s.OrganizationId == access.OrganizationId
+                    && s.CreatedByUserId == access.ActorUserId
+                    && s.IdempotencyKeyHash == keyHash,
                 cancellationToken);
 
         if (existing != null)
@@ -220,6 +222,12 @@ public class FileStore : IFileStore
 
             if (session != null)
             {
+                if (!session.ParentId.HasValue && session.CreatedByUserId != access.ActorUserId)
+                {
+                    return Result<FileContentResult>.Failure(
+                        new Error("RESOURCE_NOT_FOUND", "File was not found."));
+                }
+
                 var parentAccessResult = await _parentAccessResolver.ResolveAsync(
                     access,
                     session.ParentType,

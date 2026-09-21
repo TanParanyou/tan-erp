@@ -41,6 +41,12 @@ vi.mock("@/lib/api/file-client", () => ({
   },
 }));
 
+vi.mock("@/components/common/AuthenticatedFileImage", () => ({
+  AuthenticatedFileImage: ({ fileId, alt }: { fileId: string; alt: string }) => (
+    <img src={`blob:${fileId}`} alt={alt} />
+  ),
+}));
+
 function renderComponent(props = {}) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },

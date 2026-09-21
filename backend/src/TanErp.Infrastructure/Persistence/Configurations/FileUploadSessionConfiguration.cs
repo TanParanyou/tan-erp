@@ -29,8 +29,9 @@ public class FileUploadSessionConfiguration : IEntityTypeConfiguration<FileUploa
             .HasForeignKey(slot => slot.SessionId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(s => new { s.OrganizationId, s.IdempotencyKeyHash })
-            .HasDatabaseName("ix_file_upload_sessions_org_idempotency");
+        builder.HasIndex(s => new { s.OrganizationId, s.CreatedByUserId, s.IdempotencyKeyHash })
+            .IsUnique()
+            .HasDatabaseName("ux_file_upload_sessions_org_actor_idempotency");
 
         builder.HasIndex(s => new { s.OrganizationId, s.ParentType, s.ParentId })
             .HasDatabaseName("ix_file_upload_sessions_parent");

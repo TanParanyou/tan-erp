@@ -11,11 +11,13 @@ import {
   IconTrash,
 } from "@/components/common/Icons";
 import { CopyButton } from "@/components/common/CopyButton";
+import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
 import { cn } from "@/lib/utils/cn";
 
 export interface GalleryItemMetadata {
   id: string;
-  imageUrl: string;
+  imageUrl?: string;
+  fileId?: string;
   caption?: string | null;
   stageBadge?: React.ReactNode;
   createdByName?: string | null;
@@ -157,25 +159,29 @@ export function GalleryLightboxModal({
           {/* Right: Quick Actions & Prominent Close Button */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Copy image URL */}
-            <CopyButton
-              text={currentItem.imageUrl}
-              variant="button"
-              label={tLightbox("copyUrl")}
-              copiedLabel={tLightbox("copiedUrl")}
-              className="!h-8 !text-xs !bg-erp-surface-subtle hover:!bg-erp-surface-muted text-erp-text-main border border-erp-border hidden sm:inline-flex"
-            />
+            {!currentItem.fileId && currentItem.imageUrl && (
+              <CopyButton
+                text={currentItem.imageUrl}
+                variant="button"
+                label={tLightbox("copyUrl")}
+                copiedLabel={tLightbox("copiedUrl")}
+                className="!h-8 !text-xs !bg-erp-surface-subtle hover:!bg-erp-surface-muted text-erp-text-main border border-erp-border hidden sm:inline-flex"
+              />
+            )}
 
             {/* Open Original link */}
-            <a
-              href={currentItem.imageUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-8 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-erp-text-main bg-erp-surface-subtle hover:bg-erp-surface-muted border border-erp-border transition-colors rounded-none"
-              title={tLightbox("openNewTabAction")}
-            >
-              <IconExternalLink size={14} />
-              <span className="hidden md:inline">{tLightbox("openNewTabAction")}</span>
-            </a>
+            {!currentItem.fileId && currentItem.imageUrl && (
+              <a
+                href={currentItem.imageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-8 px-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-erp-text-main bg-erp-surface-subtle hover:bg-erp-surface-muted border border-erp-border transition-colors rounded-none"
+                title={tLightbox("openNewTabAction")}
+              >
+                <IconExternalLink size={14} />
+                <span className="hidden md:inline">{tLightbox("openNewTabAction")}</span>
+              </a>
+            )}
 
             {/* Close button */}
             <button
@@ -223,12 +229,21 @@ export function GalleryLightboxModal({
 
             {/* Centered Image View */}
             <div className="flex-1 w-full flex items-center justify-center p-2 min-h-0 overflow-hidden">
-              <img
-                src={currentItem.imageUrl}
-                alt={currentItem.caption || title || tLightbox("preview")}
-                className="max-h-full max-w-full object-contain pointer-events-none select-none border border-white/10 shadow-2xl"
-                draggable={false}
-              />
+              {currentItem.fileId ? (
+                <AuthenticatedFileImage
+                  fileId={currentItem.fileId}
+                  alt={currentItem.caption || title || tLightbox("preview")}
+                  className="max-h-full max-w-full object-contain pointer-events-none select-none border border-white/10 shadow-2xl"
+                  draggable={false}
+                />
+              ) : (
+                <img
+                  src={currentItem.imageUrl}
+                  alt={currentItem.caption || title || tLightbox("preview")}
+                  className="max-h-full max-w-full object-contain pointer-events-none select-none border border-white/10 shadow-2xl"
+                  draggable={false}
+                />
+              )}
             </div>
 
             {/* Bottom Thumbnails Carousel Strip */}
@@ -250,11 +265,21 @@ export function GalleryLightboxModal({
                     )}
                     aria-label={`${tLightbox("image")} ${idx + 1}`}
                   >
-                    <img
-                      src={item.imageUrl}
-                      alt={item.caption || `Thumbnail ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                    {item.fileId ? (
+                      <AuthenticatedFileImage
+                        fileId={item.fileId}
+                        alt={item.caption || `${tLightbox("image")} ${idx + 1}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.caption || `${tLightbox("image")} ${idx + 1}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                   </button>
                 ))}
               </div>

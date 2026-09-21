@@ -46,6 +46,7 @@ interface ImagePickerItemProps {
   onCaptionChange: (id: string, caption: string) => void;
   placeholderText: string;
   removeTitleText: string;
+  optimizingText: string;
 }
 
 function ImagePickerItem({
@@ -56,6 +57,7 @@ function ImagePickerItem({
   onCaptionChange,
   placeholderText,
   removeTitleText,
+  optimizingText,
 }: ImagePickerItemProps) {
   const [localCaption, setLocalCaption] = useState(item.caption);
 
@@ -100,7 +102,7 @@ function ImagePickerItem({
         {/* Compression Status Badge - High contrast readable background */}
         <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 bg-slate-900/90 dark:bg-black/90 backdrop-blur-sm border border-white/20 text-[10px] font-mono font-medium text-white shadow-sm z-10">
           {item.isOptimizing ? (
-            <span className="text-amber-300">Optimizing...</span>
+            <span className="text-amber-300">{optimizingText}</span>
           ) : (
             <span className="text-emerald-300">{item.savingsSummary}</span>
           )}
@@ -179,7 +181,7 @@ export function MultiImagePicker({
 
       // Initial pending items with blob previews
       const newPendingItems: PendingImageItem[] = filesToProcess.map((file) => ({
-        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        id: crypto.randomUUID(),
         originalFile: file,
         previewUrl: URL.createObjectURL(file),
         caption: "",
@@ -199,11 +201,11 @@ export function MultiImagePicker({
               quality: 0.85,
             });
             const savings = res.isOptimized
-              ? `WebP (${res.savedPercent}% saved)`
-              : "Original";
+              ? t("imageOptimizedSummary", { percent: res.savedPercent })
+              : t("imageOriginalSummary");
             return { targetId, file: res.file, savings };
           } catch {
-            return { targetId, file, savings: "Original" };
+            return { targetId, file, savings: t("imageOriginalSummary") };
           }
         })
       );
@@ -380,6 +382,7 @@ export function MultiImagePicker({
               onCaptionChange={updateCaption}
               placeholderText={t("imageCaptionPlaceholder")}
               removeTitleText={tCommon("cancel")}
+              optimizingText={t("imageOptimizing")}
             />
           ))}
         </div>
