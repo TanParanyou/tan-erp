@@ -900,7 +900,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
         title={t("qualifyModalTitle")}
         message={
           qualifyModalError
-            ? `${t("qualifyModalDesc")}\n\n[ข้อผิดพลาด: ${qualifyModalError}]`
+            ? `${t("qualifyModalDesc")}\n\n[${t("qualifyErrorPrefix")}: ${qualifyModalError}]`
             : t("qualifyModalDesc")
         }
         confirmText={tCommon("actions.confirm")}

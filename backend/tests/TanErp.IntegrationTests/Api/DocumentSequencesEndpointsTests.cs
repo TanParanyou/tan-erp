@@ -110,6 +110,14 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
         Assert.Equal("EST", estimateSeq.Prefix);
         Assert.NotNull(estimateSeq.SamplePreview);
         Assert.StartsWith("EST-", estimateSeq.SamplePreview);
+
+        var customerSeq = list.FirstOrDefault(s => s.DocumentType == "customers");
+        Assert.NotNull(customerSeq);
+        Assert.Equal("CUS-", customerSeq.Prefix);
+        Assert.Equal("{PREFIX}{SEQ:5}", customerSeq.FormatPattern);
+        Assert.Equal("Never", customerSeq.ResetPeriod);
+        Assert.Equal(5, customerSeq.Padding);
+        Assert.Equal("CUS-00001", customerSeq.SamplePreview);
     }
 
     [Fact]

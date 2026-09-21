@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import type { SignaturePreset, SignatureMode } from "@/types/signatures";
 import { useToast } from "@/hooks/useToast";
 
@@ -59,6 +60,7 @@ export function useSignaturePresets(defaultWatSignatureUrl?: string) {
   });
   const [selectedPresetId, setSelectedPresetId] = useState<string>("default");
   const { toast } = useToast();
+  const t = useTranslations("signatures");
 
   const savePreset = useCallback(
     (name: string, url: string, signatoryName?: string, signatoryTitle?: string) => {
@@ -85,9 +87,9 @@ export function useSignaturePresets(defaultWatSignatureUrl?: string) {
       });
 
       setSelectedPresetId(newPreset.id);
-      toast.success(`บันทึกลายเซ็น "${trimmed}" ลงในคลังเรียบร้อยแล้ว`);
+      toast.success(t("saved", { name: trimmed }));
     },
-    [toast]
+    [toast, t]
   );
 
   const deletePreset = useCallback(
@@ -103,9 +105,9 @@ export function useSignaturePresets(defaultWatSignatureUrl?: string) {
       });
 
       setSelectedPresetId((curr) => (curr === id ? "default" : curr));
-      toast.success(`ลบลายเซ็น "${name}" ออกจากคลังเรียบร้อยแล้ว`);
+      toast.success(t("deleted", { name }));
     },
-    [toast]
+    [toast, t]
   );
 
   const resolveActiveSignature = useCallback(

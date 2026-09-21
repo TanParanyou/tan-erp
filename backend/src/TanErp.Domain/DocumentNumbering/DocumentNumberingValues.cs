@@ -14,13 +14,15 @@ public static class DocumentTypes
     public const string Surveys = "surveys";
     public const string Opportunities = "opportunities";
     public const string Quotations = "quotations";
+    public const string Customers = "customers";
 
     public static readonly IReadOnlyCollection<string> All = new[]
     {
         Estimates,
         Surveys,
         Opportunities,
-        Quotations
+        Quotations,
+        Customers
     };
 
     public static bool IsValid(string documentType) =>

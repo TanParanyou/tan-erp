@@ -144,8 +144,11 @@ export function ImageUpload({
       {label && <label className="erp-label">{label}</label>}
 
       {previewSrc ? (
-        <div className="relative inline-flex items-center justify-start group/preview">
-          <div className="relative h-32 w-32 shrink-0 overflow-hidden border border-erp-border bg-erp-surface-muted rounded-none">
+        <div
+          className="relative w-32 h-32 shrink-0 self-start group/preview"
+          style={{ width: "8rem", height: "8rem" }}
+        >
+          <div className="relative h-full w-full overflow-hidden border border-erp-border bg-erp-surface-muted rounded-none">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewSrc}

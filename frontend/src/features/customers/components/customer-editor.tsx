@@ -73,12 +73,12 @@ export function CustomerEditor() {
       createCustomerFormSchema((key) =>
         tValidation(
           key as
-            | "required"
-            | "invalidEmail"
-            | "phoneOrEmailRequired"
-            | "invalidFormat"
-            | "invalidPhone"
-            | "leadSourceNoteRequired"
+          | "required"
+          | "invalidEmail"
+          | "phoneOrEmailRequired"
+          | "invalidFormat"
+          | "invalidPhone"
+          | "leadSourceNoteRequired"
         ),
       ),
     [tValidation],
@@ -341,6 +341,30 @@ export function CustomerEditor() {
       <div className="flex flex-col gap-6 w-full">
         {/* Card 1: Customer Information */}
         <FormSection title={t("title")}>
+          {/* Customer Image / Profile Photo */}
+          <div className="">
+            <Controller
+              name="imageFile"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <ImageUpload
+                    label={t("imageUploadLabel")}
+                    value={field.value ?? undefined}
+                    onChange={(file) => {
+                      field.onChange(file);
+                      handleFormChange();
+                    }}
+                    error={errors.imageFile?.message}
+                  />
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {t("imageUploadHint")}
+                  </p>
+                </div>
+              )}
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Customer Type */}
             <Controller
@@ -457,30 +481,6 @@ export function CustomerEditor() {
               />
             )}
           />
-
-          {/* Customer Image / Profile Photo */}
-          <div className="mt-2">
-            <Controller
-              name="imageFile"
-              control={control}
-              render={({ field }) => (
-                <div>
-                  <ImageUpload
-                    label={t("imageUploadLabel")}
-                    value={field.value ?? undefined}
-                    onChange={(file) => {
-                      field.onChange(file);
-                      handleFormChange();
-                    }}
-                    error={errors.imageFile?.message}
-                  />
-                  <p className="text-xs text-neutral-500 mt-1">
-                    {t("imageUploadHint")}
-                  </p>
-                </div>
-              )}
-            />
-          </div>
         </FormSection>
 
         {/* Card 2: Primary Contact Section */}

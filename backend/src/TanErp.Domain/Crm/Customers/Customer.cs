@@ -35,7 +35,8 @@ public class Customer : Entity
         string? leadSource,
         string? leadSourceNote,
         Guid? imageFileId,
-        DateTimeOffset createdAtUtc) : base(id)
+        DateTimeOffset createdAtUtc,
+        string? customerCode = null) : base(id)
     {
         if (string.IsNullOrWhiteSpace(displayNameTh))
         {
@@ -68,7 +69,7 @@ public class Customer : Entity
         DisplayNameTh = CustomerNormalizer.CollapseWhitespace(displayNameTh);
         DisplayNameEn = string.IsNullOrWhiteSpace(displayNameEn) ? null : CustomerNormalizer.CollapseWhitespace(displayNameEn);
         NormalizedDisplayName = CustomerNormalizer.NormalizeName(displayNameTh);
-        Code = GenerateCustomerCode(id);
+        Code = !string.IsNullOrWhiteSpace(customerCode) ? customerCode.Trim() : GenerateCustomerCode(id);
         Status = CustomerStatus.Draft;
         PreferredLocale = preferredLocale.Trim();
         LeadSource = string.IsNullOrWhiteSpace(leadSource) ? null : leadSource.Trim();
@@ -90,7 +91,8 @@ public class Customer : Entity
         DateTimeOffset now,
         string? leadSource = null,
         string? leadSourceNote = null,
-        Guid? imageFileId = null)
+        Guid? imageFileId = null,
+        string? customerCode = null)
     {
         if (primaryContact == null)
         {
@@ -108,7 +110,8 @@ public class Customer : Entity
             leadSource,
             leadSourceNote,
             imageFileId,
-            now);
+            now,
+            customerCode);
 
 
         var contact = new CustomerContact(

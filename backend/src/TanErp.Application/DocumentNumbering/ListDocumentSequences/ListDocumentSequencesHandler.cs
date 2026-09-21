@@ -65,16 +65,34 @@ public class ListDocumentSequencesHandler
             }
             else
             {
-                var defaultPrefix = docType switch
+                string defaultPrefix;
+                string defaultPattern;
+                ResetPeriod defaultResetPeriod;
+                int defaultPadding;
+
+                if (docType == DocumentTypes.Customers)
                 {
-                    DocumentTypes.Estimates => "EST",
-                    DocumentTypes.Surveys => "SRV",
-                    DocumentTypes.Opportunities => "OPP",
-                    DocumentTypes.Quotations => "QT",
-                    _ => docType.ToUpperInvariant().Substring(0, Math.Min(3, docType.Length))
-                };
-                var defaultPattern = "{PREFIX}-{YYYY}-{SEQ:4}";
-                var preview = _generator.Preview(defaultPattern, defaultPrefix, "HQ", sampleSequence: 1, defaultPadding: 4);
+                    defaultPrefix = "CUS-";
+                    defaultPattern = "{PREFIX}{SEQ:5}";
+                    defaultResetPeriod = ResetPeriod.Never;
+                    defaultPadding = 5;
+                }
+                else
+                {
+                    defaultPrefix = docType switch
+                    {
+                        DocumentTypes.Estimates => "EST",
+                        DocumentTypes.Surveys => "SRV",
+                        DocumentTypes.Opportunities => "OPP",
+                        DocumentTypes.Quotations => "QT",
+                        _ => docType.ToUpperInvariant().Substring(0, Math.Min(3, docType.Length))
+                    };
+                    defaultPattern = "{PREFIX}-{YYYY}-{SEQ:4}";
+                    defaultResetPeriod = ResetPeriod.Yearly;
+                    defaultPadding = 4;
+                }
+
+                var preview = _generator.Preview(defaultPattern, defaultPrefix, "HQ", sampleSequence: 1, defaultPadding: defaultPadding);
                 var defaultRowVersion = DocumentSequenceDefinition.ComputeDefaultRowVersion(orgId, docType);
 
                 results.Add(new DocumentSequenceProjection(
@@ -82,8 +100,8 @@ public class ListDocumentSequencesHandler
                     docType,
                     defaultPrefix,
                     defaultPattern,
-                    ResetPeriod.Yearly.ToString(),
-                    4,
+                    defaultResetPeriod.ToString(),
+                    defaultPadding,
                     false,
                     true,
                     preview,

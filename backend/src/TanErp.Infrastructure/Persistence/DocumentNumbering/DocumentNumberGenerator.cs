@@ -53,18 +53,29 @@ public class DocumentNumberGenerator : IDocumentNumberGenerator
         }
         else
         {
-            prefix = normalizedDocType switch
+            if (normalizedDocType == DocumentTypes.Customers)
             {
-                DocumentTypes.Estimates => "EST",
-                DocumentTypes.Surveys => "SRV",
-                DocumentTypes.Opportunities => "OPP",
-                DocumentTypes.Quotations => "QT",
-                _ => normalizedDocType.ToUpperInvariant().Substring(0, Math.Min(3, normalizedDocType.Length))
-            };
-            formatPattern = "{PREFIX}-{YYYY}-{SEQ:4}";
-            resetPeriod = ResetPeriod.Yearly;
-            padding = 4;
-            isBranchSpecific = false;
+                prefix = "CUS-";
+                formatPattern = "{PREFIX}{SEQ:5}";
+                resetPeriod = ResetPeriod.Never;
+                padding = 5;
+                isBranchSpecific = false;
+            }
+            else
+            {
+                prefix = normalizedDocType switch
+                {
+                    DocumentTypes.Estimates => "EST",
+                    DocumentTypes.Surveys => "SRV",
+                    DocumentTypes.Opportunities => "OPP",
+                    DocumentTypes.Quotations => "QT",
+                    _ => normalizedDocType.ToUpperInvariant().Substring(0, Math.Min(3, normalizedDocType.Length))
+                };
+                formatPattern = "{PREFIX}-{YYYY}-{SEQ:4}";
+                resetPeriod = ResetPeriod.Yearly;
+                padding = 4;
+                isBranchSpecific = false;
+            }
         }
 
         string? branchCode = null;

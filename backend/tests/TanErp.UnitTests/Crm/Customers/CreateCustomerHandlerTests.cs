@@ -5,6 +5,7 @@ using TanErp.Application.Crm.Customers;
 using TanErp.Application.Crm.Customers.CreateCustomer;
 using TanErp.Application.Files;
 using TanErp.Domain.Crm.Customers;
+using TanErp.Domain.DocumentNumbering;
 using Xunit;
 
 namespace TanErp.UnitTests.Crm.Customers;
@@ -88,6 +89,32 @@ public class CreateCustomerHandlerTests
         }
     }
 
+    private class FakeDocumentNumberGenerator : IDocumentNumberGenerator
+    {
+        public string GeneratedNumber { get; set; } = "CUS-00001";
+
+        public Task<string> GenerateAsync(
+            Guid organizationId,
+            string documentType,
+            Guid? branchId = null,
+            DateTimeOffset? timestamp = null,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(GeneratedNumber);
+        }
+
+        public string Preview(
+            string formatPattern,
+            string prefix,
+            string? branchCode = null,
+            DateTimeOffset? timestamp = null,
+            long sampleSequence = 1,
+            int defaultPadding = 4) =>
+            $"{prefix}{sampleSequence.ToString().PadLeft(defaultPadding, '0')}";
+
+        public string ComputePeriodKey(ResetPeriod resetPeriod, DateTimeOffset timestamp) => "GLOBAL";
+    }
+
     private class FakeClock : IClock
     {
         public DateTimeOffset UtcNow => DateTimeOffset.Parse("2026-09-07T12:00:00Z");
@@ -98,7 +125,7 @@ public class CreateCustomerHandlerTests
     {
         var accessResolver = new FakeRequestAccessResolver();
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore(), new FakeDocumentNumberGenerator());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -118,7 +145,7 @@ public class CreateCustomerHandlerTests
         var resolver = new FakeRequestAccessResolver();
         resolver.GrantedPermissions.Add("customers.create");
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(resolver, store, new FakeClock(), new FakeFileStore());
+        var handler = new CreateCustomerHandler(resolver, store, new FakeClock(), new FakeFileStore(), new FakeDocumentNumberGenerator());
 
         var result = await handler.Handle(new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -139,7 +166,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
 
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore(), new FakeDocumentNumberGenerator());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -161,7 +188,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
 
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore(), new FakeDocumentNumberGenerator());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -182,7 +209,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customers.create");
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore(), new FakeDocumentNumberGenerator());
 
         var result = await handler.Handle(new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -203,7 +230,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
 
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore(), new FakeDocumentNumberGenerator());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -216,6 +243,7 @@ public class CreateCustomerHandlerTests
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
         Assert.NotNull(store.LastRequest);
+        Assert.Equal("CUS-00001", store.LastRequest.Customer.Code);
 
         // Verify audit events
         var auditEvents = store.LastRequest.AuditEvents;
@@ -246,7 +274,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customers.create");
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore(), new FakeDocumentNumberGenerator());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",
@@ -268,7 +296,7 @@ public class CreateCustomerHandlerTests
         accessResolver.GrantedPermissions.Add("customers.create");
         accessResolver.GrantedPermissions.Add("customer-contacts.manage");
         var store = new FakeCustomerCreationStore();
-        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore());
+        var handler = new CreateCustomerHandler(accessResolver, store, new FakeClock(), new FakeFileStore(), new FakeDocumentNumberGenerator());
 
         var command = new CreateCustomerCommand(
             "uid-1", Guid.NewGuid(), "key-1234567890123456",

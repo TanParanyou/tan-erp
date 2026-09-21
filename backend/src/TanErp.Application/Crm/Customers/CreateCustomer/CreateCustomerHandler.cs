@@ -13,17 +13,20 @@ public class CreateCustomerHandler
     private readonly ICustomerCreationStore _store;
     private readonly IClock _clock;
     private readonly TanErp.Application.Files.IFileStore _fileStore;
+    private readonly IDocumentNumberGenerator _documentNumberGenerator;
 
     public CreateCustomerHandler(
         IRequestAccessResolver accessResolver,
         ICustomerCreationStore store,
         IClock clock,
-        TanErp.Application.Files.IFileStore fileStore)
+        TanErp.Application.Files.IFileStore fileStore,
+        IDocumentNumberGenerator documentNumberGenerator)
     {
         _accessResolver = accessResolver;
         _store = store;
         _clock = clock;
         _fileStore = fileStore;
+        _documentNumberGenerator = documentNumberGenerator;
     }
 
     public async Task<Result<CreateCustomerResult>> Handle(
@@ -131,7 +134,15 @@ public class CreateCustomerHandler
         var now = _clock.UtcNow;
         var customerId = Guid.NewGuid();
 
-        // 4. Create Customer Aggregate
+        // 4. Generate Customer Code
+        var customerCode = await _documentNumberGenerator.GenerateAsync(
+            access.OrganizationId,
+            TanErp.Domain.DocumentNumbering.DocumentTypes.Customers,
+            branchId: null,
+            timestamp: now,
+            cancellationToken: cancellationToken);
+
+        // 5. Create Customer Aggregate
         var customer = Customer.CreateDraft(
             customerId,
             access.OrganizationId,
@@ -150,7 +161,8 @@ public class CreateCustomerHandler
             now,
             command.LeadSource,
             command.LeadSourceNote,
-            command.ImageFileId);
+            command.ImageFileId,
+            customerCode);
 
         var primaryContactEntity = customer.Contacts.First();
 

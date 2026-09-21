@@ -114,4 +114,28 @@ describe("PhoneInput component", () => {
 
     expect(countrySelect.value).toBe("+1");
   });
+
+  it("sets maxLength based on selected country (10 for Thailand)", () => {
+    render(<PhoneInput label="Phone" id="phone-maxlen-test" />);
+
+    const input = screen.getByRole("textbox");
+    expect(input.getAttribute("maxlength")).toBe("10");
+
+    const countrySelect = screen.getByRole("combobox") as HTMLSelectElement;
+    // Switch to Singapore (+65) which has maxInputLength = 8
+    fireEvent.change(countrySelect, { target: { value: "+65" } });
+    expect(input.getAttribute("maxlength")).toBe("8");
+  });
+
+  it("sanitizes non-numeric characters on typing", () => {
+    const handleChange = vi.fn();
+    render(<PhoneInput label="Phone" id="phone-sanitize-test" onChange={handleChange} />);
+
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "081-234-abcd-5678" } });
+
+    expect(handleChange).toHaveBeenCalledTimes(1);
+    const event = handleChange.mock.calls[0][0];
+    expect(event.target.value).toBe("081-234--5678");
+  });
 });

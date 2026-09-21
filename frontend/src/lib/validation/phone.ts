@@ -8,29 +8,43 @@ export function cleanPhoneNumber(value: string): string {
   return value.replace(/[\s\-\(\)\.]/g, "");
 }
 
+import {
+  parsePhoneValue,
+  validatePhoneForCountry,
+  findCountryByDialCode,
+} from "@/components/forms/phone-country-codes";
+
 /**
- * Validates whether a phone number matches either:
- * 1. Domestic Thai format: 9-10 digits starting with 0 (e.g. 0812345678, 021234567)
- * 2. International format: E.164 compliant (+ followed by 1-3 digit country code and 4-14 subscriber digits, total 7-15 digits)
- *    e.g. +66812345678, +12025550125, +6591234567, +819012345678
+ * Validates whether a phone number matches country-specific formats:
+ * 1. Domestic Thai format: 9 digits for landlines (02, 03x, 04x, 05x, 07x) or 10 digits for mobiles (06, 08, 09)
+ * 2. Country-specific international numbers according to selected country code (+66, +65, +1, etc.)
+ * 3. ITU-T E.164 fallback for other international dial codes (+ and 7-15 digits)
  */
 export function isValidPhoneNumber(value: string): boolean {
   if (!value) return false;
   const cleaned = cleanPhoneNumber(value);
+  if (!cleaned) return false;
 
-  // Domestic Thai format: 0 followed by 8 to 9 digits (total 9-10 digits)
-  const domesticThaiRegex = /^0[2-9]\d{7,8}$/;
-  if (domesticThaiRegex.test(cleaned)) {
-    return true;
+  // If starts with domestic 0 (assumed Thai domestic)
+  if (cleaned.startsWith("0")) {
+    return validatePhoneForCountry("+66", cleaned);
   }
 
-  // International E.164: starts with '+' followed by 7 to 15 digits
-  const internationalE164Regex = /^\+[1-9]\d{6,14}$/;
-  if (internationalE164Regex.test(cleaned)) {
-    return true;
+  // If international (+...)
+  if (cleaned.startsWith("+")) {
+    const parsed = parsePhoneValue(cleaned);
+    const country = findCountryByDialCode(parsed.dialCode);
+    if (country) {
+      return validatePhoneForCountry(parsed.dialCode, parsed.nationalNumber, {
+        isInternational: true,
+      });
+    }
+    // Fallback E.164
+    return /^\+[1-9]\d{6,14}$/.test(cleaned);
   }
 
-  return false;
+  // If un-prefixed digits (assumed Thai national number without 0)
+  return validatePhoneForCountry("+66", cleaned);
 }
 
 export interface PhoneSchemaOptions {

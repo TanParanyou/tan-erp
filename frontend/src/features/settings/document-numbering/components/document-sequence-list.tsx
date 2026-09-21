@@ -51,7 +51,7 @@ export function DocumentSequenceList() {
       {isLoading && (
         <div className="flex items-center justify-center p-12 border border-erp-border bg-slate-50 dark:bg-slate-900">
           <span className="font-mono text-xs uppercase tracking-widest text-slate-500 animate-pulse">
-            LOADING DOCUMENT SEQUENCES...
+            {t("loading")}
           </span>
         </div>
       )}
@@ -74,7 +74,7 @@ export function DocumentSequenceList() {
                 <th className="p-3">{t("table.pattern")}</th>
                 <th className="p-3">{t("table.resetPeriod")}</th>
                 <th className="p-3">{t("table.preview")}</th>
-                <th className="p-3 text-right">{tCommon("actions.actions")}</th>
+                <th className="p-3 text-right">{tCommon("actions.manage")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-erp-border">

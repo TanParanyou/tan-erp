@@ -10,17 +10,27 @@ describe("phone validation utility", () => {
   });
 
   describe("isValidPhoneNumber", () => {
-    it("accepts valid Thai domestic mobile numbers", () => {
+    it("accepts valid Thai domestic mobile numbers (10 digits)", () => {
       expect(isValidPhoneNumber("0812345678")).toBe(true);
       expect(isValidPhoneNumber("081-234-5678")).toBe(true);
       expect(isValidPhoneNumber("091 234 5678")).toBe(true);
       expect(isValidPhoneNumber("061-234-5678")).toBe(true);
     });
 
-    it("accepts valid Thai domestic landline numbers", () => {
+    it("accepts valid Thai domestic landline numbers (9 digits)", () => {
       expect(isValidPhoneNumber("021234567")).toBe(true);
       expect(isValidPhoneNumber("02-123-4567")).toBe(true);
       expect(isValidPhoneNumber("053-123-456")).toBe(true);
+    });
+
+    it("rejects incomplete or invalid length Thai phone numbers", () => {
+      expect(isValidPhoneNumber("081234")).toBe(false); // only 6 digits
+      expect(isValidPhoneNumber("08123456")).toBe(false); // 8 digits (mobile needs 10)
+      expect(isValidPhoneNumber("08123456789")).toBe(false); // 11 digits
+      expect(isValidPhoneNumber("+6681234")).toBe(false); // incomplete international Thai
+      expect(isValidPhoneNumber("+668123456")).toBe(false); // incomplete international Thai
+      expect(isValidPhoneNumber("+660812345678")).toBe(false); // invalid leading 0 after +66
+      expect(isValidPhoneNumber("81234")).toBe(false); // un-prefixed short
     });
 
     it("accepts valid international numbers (+CountryCode)", () => {
@@ -30,6 +40,11 @@ describe("phone validation utility", () => {
       expect(isValidPhoneNumber("+65 9123 4567")).toBe(true);
       expect(isValidPhoneNumber("+81 90 1234 5678")).toBe(true);
       expect(isValidPhoneNumber("+44 20 7946 0958")).toBe(true);
+    });
+
+    it("rejects invalid international phone numbers for specific countries", () => {
+      expect(isValidPhoneNumber("+651234")).toBe(false); // Singapore needs 8 digits
+      expect(isValidPhoneNumber("+120255")).toBe(false); // US needs 10 digits
     });
 
     it("rejects invalid phone numbers", () => {

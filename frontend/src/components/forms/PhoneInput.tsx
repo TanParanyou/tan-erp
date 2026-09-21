@@ -8,6 +8,7 @@ import {
   DEFAULT_COUNTRY_DIAL_CODE,
   parsePhoneValue,
   formatCombinedPhone,
+  findCountryByDialCode,
 } from "./phone-country-codes";
 
 export interface PhoneInputProps
@@ -123,6 +124,9 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
       }
     };
 
+    const countryConfig = findCountryByDialCode(selectedCountry);
+    const maxInputLength = countryConfig ? countryConfig.maxInputLength : 15;
+
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const rawInput = e.target.value;
 
@@ -138,11 +142,14 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
         return;
       }
 
+      // Restrict input to digits, spaces, and dashes for clean phone entry
+      const sanitized = rawInput.replace(/[^\d\s\-]/g, "");
+
       if (!isControlled) {
-        setUncontrolledNumber(rawInput);
+        setUncontrolledNumber(sanitized);
       }
 
-      const combined = formatCombinedPhone(selectedCountry, rawInput);
+      const combined = formatCombinedPhone(selectedCountry, sanitized);
       triggerChange(combined, e);
     };
 
@@ -214,6 +221,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
             type="tel"
             inputMode="tel"
             autoComplete="tel"
+            maxLength={maxInputLength}
             value={currentNationalNumber}
             onChange={handleNumberChange}
             onBlur={onBlur}

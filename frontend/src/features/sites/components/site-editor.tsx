@@ -437,7 +437,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                       label={t("latitude")}
                       type="number"
                       step="any"
-                      placeholder="เช่น 13.7563"
+                      placeholder={t("latitudePlaceholder")}
                       error={errors.latitude?.message}
                       disabled={isSubmitting}
                       value={field.value ?? ""}
@@ -459,7 +459,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
                       label={t("longitude")}
                       type="number"
                       step="any"
-                      placeholder="เช่น 100.5018"
+                      placeholder={t("longitudePlaceholder")}
                       error={errors.longitude?.message}
                       disabled={isSubmitting}
                       value={field.value ?? ""}

@@ -3,6 +3,7 @@ import {
   parsePhoneValue,
   formatCombinedPhone,
   findCountryByDialCode,
+  validatePhoneForCountry,
   PHONE_COUNTRIES,
   DEFAULT_COUNTRY_DIAL_CODE,
 } from "./phone-country-codes";
@@ -85,6 +86,37 @@ describe("phone-country-codes", () => {
 
     it("preserves explicit + numbers typed by user", () => {
       expect(formatCombinedPhone("+66", "+6591234567")).toBe("+6591234567");
+    });
+  });
+
+  describe("validatePhoneForCountry", () => {
+    it("validates Thailand numbers correctly", () => {
+      // 10 digits mobile
+      expect(validatePhoneForCountry("+66", "0812345678")).toBe(true);
+      expect(validatePhoneForCountry("+66", "0912345678")).toBe(true);
+      expect(validatePhoneForCountry("+66", "0612345678")).toBe(true);
+      expect(validatePhoneForCountry("+66", "812345678")).toBe(true);
+      // 9 digits landline
+      expect(validatePhoneForCountry("+66", "021234567")).toBe(true);
+      expect(validatePhoneForCountry("+66", "21234567")).toBe(true);
+      // Incomplete or invalid
+      expect(validatePhoneForCountry("+66", "081234")).toBe(false);
+      expect(validatePhoneForCountry("+66", "08123456")).toBe(false);
+      expect(validatePhoneForCountry("+66", "081234567890")).toBe(false);
+      expect(validatePhoneForCountry("+66", "0112345678")).toBe(false);
+    });
+
+    it("validates Singapore numbers correctly (8 digits)", () => {
+      expect(validatePhoneForCountry("+65", "91234567")).toBe(true);
+      expect(validatePhoneForCountry("+65", "81234567")).toBe(true);
+      expect(validatePhoneForCountry("+65", "61234567")).toBe(true);
+      expect(validatePhoneForCountry("+65", "12345")).toBe(false);
+      expect(validatePhoneForCountry("+65", "912345678")).toBe(false);
+    });
+
+    it("validates US numbers correctly (10 digits)", () => {
+      expect(validatePhoneForCountry("+1", "2025550125")).toBe(true);
+      expect(validatePhoneForCountry("+1", "20255501")).toBe(false);
     });
   });
 });

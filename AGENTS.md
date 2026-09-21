@@ -97,6 +97,7 @@ This repository is in **Application Implementation**. The authorized implementat
 
 > อ่านเอกสารและคู่มือมาตรฐาน API เหล่านี้เมื่อได้รับอนุญาตให้ทำงานในส่วน Application:
 > - มาตรฐานการทำ API: `.agents/skills/building-erp-apis/SKILL.md` (ครอบคลุมทั้ง Backend, Error Codes, Search/Pagination, OpenAPI และ Frontend Integration)
+> - มาตรฐานเลขที่เอกสารและ Master Data Codes: `.agents/skills/erp-document-numbering/SKILL.md` (ระบบรันเลขที่เอกสาร, Concurrency Lock, Token Format และการแยกรอบรีเซ็ต)
 > - Backend: `docs/02-architecture/backend-architecture.md`
 > - Frontend: `docs/02-architecture/frontend-architecture.md`
 > - API and errors: `docs/03-contracts/`
