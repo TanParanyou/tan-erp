@@ -80,3 +80,20 @@
   - `frontend/next-env.d.ts` สะอาด
   - ไม่มี Unstaged artifacts ของระบบทดสอบหลุดค้าง
 
+## 6. Protected Image Rendering and Actor Isolation Follow-up (2026-09-21)
+
+สถานะ: implementation commit `9802953`; ยังไม่ประกาศ Production-ready เพราะ production build ถูก environment block ตามรายละเอียดด้านล่าง
+
+- Protected image ของ Customer, Site และ Opportunity ใช้ authenticated fetch พร้อม `Authorization` และ `X-Membership-Id` ก่อนสร้าง Blob URL; ไม่มี `<img>` เรียก protected API โดยตรง
+- Upload/attach retry ใช้ `crypto.randomUUID()` และ reuse idempotency intent เดิม; verified file IDs ไม่ถูกอัปโหลดซ้ำ
+- Upload-session idempotency ถูก scope ด้วย `(organization_id, created_by_user_id, idempotency_key_hash)` และมี unique index
+- รูปที่ผูกกับ Customer/Site creation intent ยังไม่ bind เปิดอ่านได้เฉพาะ actor ผู้สร้าง intent แม้อยู่ tenant เดียวกัน
+- ข้อความสถานะ/ข้อผิดพลาดที่เพิ่มใหม่มีคู่ `th`/`en` และ error region ใช้ `aria-live="polite"`
+
+ผล verification ล่าสุด:
+
+- `dotnet build backend/TanErp.slnx`: ผ่าน, 0 warnings / 0 errors
+- `dotnet test backend/TanErp.slnx --no-build`: ผ่าน 341/341 (Unit 167, Architecture 3, Integration 171)
+- Frontend API parity, ESLint และ TypeScript: ผ่าน
+- Vitest รอบเต็ม: ผ่าน 497/497; targeted protected-image/retry suite ผ่าน 19/19
+- `npm run build`: ยังยืนยันไม่ได้ใน execution environment นี้ เพราะ Turbopack ต้อง bind internal port แต่ OS ตอบ `EPERM`; webpack fallback พบ pre-existing root-layout issue ที่ `src/app/page.tsx` ซึ่งอยู่นอก remediation นี้
