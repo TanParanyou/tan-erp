@@ -1,8 +1,13 @@
+using System.Text.Json.Serialization;
+
 namespace TanErp.Domain.Items;
 
 public sealed record LocalizedText
 {
+    [JsonPropertyName("th")]
     public string Thai { get; init; }
+
+    [JsonPropertyName("en")]
     public string? English { get; init; }
 
     public LocalizedText(string thai, string? english)

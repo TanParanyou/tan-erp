@@ -136,6 +136,7 @@ builder.Services.AddScoped<TanErp.Application.Items.IItemStore, TanErp.Infrastru
 builder.Services.AddScoped<TanErp.Application.Items.IItemImageStore, TanErp.Infrastructure.Persistence.Items.ItemImageStore>();
 builder.Services.AddScoped<TanErp.Application.Items.ICostRecordStore, TanErp.Infrastructure.Persistence.Items.CostRecordStore>();
 builder.Services.AddScoped<TanErp.Application.Items.ICostResolver, TanErp.Infrastructure.Persistence.Items.CostResolver>();
+builder.Services.AddScoped<TanErp.Application.Items.Catalog.IEstimateCatalogReader, TanErp.Infrastructure.Persistence.Items.EstimateCatalogReader>();
 
 // File Service (reusable across modules)
 builder.Services.AddSingleton<TanErp.Application.Files.IFileStorageProvider, TanErp.Infrastructure.Files.LocalFileStorageProvider>();

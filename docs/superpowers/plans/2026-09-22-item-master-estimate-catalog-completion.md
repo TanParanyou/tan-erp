@@ -65,11 +65,11 @@
 ## Gate C — Authoritative Estimate Flow
 
 ### Task 5: Branch-Aware Estimate Catalog Read Model API
-- [ ] Step 5.1: Write integration tests for `GET /api/v1/estimate-catalog/items`
-- [ ] Step 5.2: Implement `IEstimateCatalogReader` with server-side search, facets, cursor pagination and zero N+1 queries
-- [ ] Step 5.3: Filter for Active, `canCost=true`, branch-available items with deterministic published cost
-- [ ] Step 5.4: Validate cursor format (`ITEM_CATALOG_CURSOR_INVALID` on malformed cursor)
-- [ ] Step 5.5: Register controller endpoint, verify OpenAPI parity, and run tests
+- [x] Step 5.1: Write integration tests for `GET /api/v1/estimate-catalog/items`
+- [x] Step 5.2: Implement `IEstimateCatalogReader` with server-side search, facets, cursor pagination and zero N+1 queries
+- [x] Step 5.3: Filter for Active, `canCost=true`, branch-available items with deterministic published cost
+- [x] Step 5.4: Validate cursor format (`ITEM_CATALOG_CURSOR_INVALID` on malformed cursor)
+- [x] Step 5.5: Register controller endpoint, verify OpenAPI parity, and run tests
 
 ### Task 6: Estimate Cost Component Reference, Price Revalidation & Snapshot
 - [ ] Step 6.1: Write tests for Estimate Cost Component catalog reference and snapshot invariants

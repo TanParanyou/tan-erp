@@ -1,3 +1,4 @@
+using System.Text.Json;
 using TanErp.Application.Items;
 
 namespace TanErp.Api.Contracts.Items;
@@ -194,4 +195,57 @@ public static class ItemResponseMapper
         p.RowVersion,
         p.CreatedAtUtc,
         p.UpdatedAtUtc);
+
+    public static EstimateCatalogResponse ToResponse(TanErp.Application.Items.Catalog.EstimateCatalogResult result) => new()
+    {
+        Items = result.Items.Select(i => new EstimateCatalogItemResponse
+        {
+            Id = i.Id,
+            Code = i.Code,
+            Name = new LocalizedTextResponse { Thai = i.Name.Thai, English = i.Name.English },
+            Description = i.Description != null ? new LocalizedTextResponse { Thai = i.Description.Thai, English = i.Description.English } : null,
+            ItemType = i.ItemType,
+            Category = ToResponse(i.Category),
+            Brand = i.Brand != null ? ToResponse(i.Brand) : null,
+            BaseUnit = ToResponse(i.BaseUnit),
+            Attributes = JsonSerializer.SerializeToDocument(i.Attributes ?? new Dictionary<string, string>()),
+            PrimaryImage = i.PrimaryImage != null ? new CatalogPrimaryImageResponse
+            {
+                FileId = i.PrimaryImage.FileId,
+                AltText = new LocalizedTextResponse { Thai = i.PrimaryImage.AltText.Thai, English = i.PrimaryImage.AltText.English }
+            } : null,
+            ResolvedCost = i.ResolvedCost != null ? new CatalogResolvedCostResponse
+            {
+                CostRecordId = i.ResolvedCost.CostRecordId,
+                Version = i.ResolvedCost.Version,
+                Amount = i.ResolvedCost.Amount,
+                Currency = i.ResolvedCost.Currency,
+                UnitCode = i.ResolvedCost.UnitCode,
+                Scope = i.ResolvedCost.Scope,
+                EffectiveFromUtc = i.ResolvedCost.EffectiveFromUtc,
+                PolicyVersion = i.ResolvedCost.PolicyVersion
+            } : null
+        }).ToList(),
+        Facets = new CatalogFacetsResponse
+        {
+            ItemTypes = result.Facets.ItemTypes.Select(f => new CatalogFacetValueResponse { Value = f.Value, Count = f.Count }).ToList(),
+            Categories = result.Facets.Categories.Select(c => new CatalogCategoryFacetResponse
+            {
+                Id = c.Id,
+                Name = new LocalizedTextResponse { Thai = c.Name.Thai, English = c.Name.English },
+                Count = c.Count
+            }).ToList(),
+            Brands = result.Facets.Brands.Select(b => new CatalogBrandFacetResponse
+            {
+                Id = b.Id,
+                Name = new LocalizedTextResponse { Thai = b.Name.Thai, English = b.Name.English },
+                Count = b.Count
+            }).ToList()
+        },
+        PageInfo = new CatalogPageInfoResponse
+        {
+            NextCursor = result.NextCursor,
+            HasNextPage = result.HasNextPage
+        }
+    };
 }

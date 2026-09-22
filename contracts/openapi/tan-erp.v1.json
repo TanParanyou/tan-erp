@@ -2547,6 +2547,159 @@
         }
       }
     },
+    "/api/v1/estimate-catalog/items": {
+      "get": {
+        "tags": [
+          "EstimateCatalog"
+        ],
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "hasCost",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateCatalogResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateCatalogResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateCatalogResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/estimates": {
       "post": {
         "tags": [
@@ -11133,6 +11286,145 @@
         },
         "additionalProperties": false
       },
+      "CatalogBrandFacetResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedTextResponse"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogCategoryFacetResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedTextResponse"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogFacetValueResponse": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogFacetsResponse": {
+        "type": "object",
+        "properties": {
+          "itemTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogFacetValueResponse"
+            },
+            "nullable": true
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogCategoryFacetResponse"
+            },
+            "nullable": true
+          },
+          "brands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogBrandFacetResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogPageInfoResponse": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogPrimaryImageResponse": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "altText": {
+            "$ref": "#/components/schemas/LocalizedTextResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogResolvedCostResponse": {
+        "type": "object",
+        "properties": {
+          "costRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true
+          },
+          "effectiveFromUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "policyVersion": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CategorySummaryResponse": {
         "type": "object",
         "properties": {
@@ -12166,6 +12458,67 @@
           "maskedEmail": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EstimateCatalogItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedTextResponse"
+          },
+          "description": {
+            "$ref": "#/components/schemas/LocalizedTextResponse"
+          },
+          "itemType": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/CategorySummaryResponse"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/BrandSummaryResponse"
+          },
+          "baseUnit": {
+            "$ref": "#/components/schemas/UnitSummaryResponse"
+          },
+          "attributes": {
+            "nullable": true
+          },
+          "primaryImage": {
+            "$ref": "#/components/schemas/CatalogPrimaryImageResponse"
+          },
+          "resolvedCost": {
+            "$ref": "#/components/schemas/CatalogResolvedCostResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EstimateCatalogResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstimateCatalogItemResponse"
+            },
+            "nullable": true
+          },
+          "facets": {
+            "$ref": "#/components/schemas/CatalogFacetsResponse"
+          },
+          "pageInfo": {
+            "$ref": "#/components/schemas/CatalogPageInfoResponse"
           }
         },
         "additionalProperties": false
@@ -14727,6 +15080,9 @@
     },
     {
       "name": "DocumentSequences"
+    },
+    {
+      "name": "EstimateCatalog"
     },
     {
       "name": "Estimates"
