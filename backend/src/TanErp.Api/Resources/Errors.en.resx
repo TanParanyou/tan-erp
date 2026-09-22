@@ -353,5 +353,65 @@
   <data name="BRANCH_INACTIVE_DETAIL" xml:space="preserve">
     <value>The specified branch is deactivated and cannot be accessed.</value>
   </data>
+  <data name="ITEM_CATEGORY_CIRCULAR_DEPENDENCY_TITLE" xml:space="preserve">
+    <value>Category Circular Dependency</value>
+  </data>
+  <data name="ITEM_CATEGORY_CIRCULAR_DEPENDENCY_DETAIL" xml:space="preserve">
+    <value>Category hierarchy cannot contain circular references.</value>
+  </data>
+  <data name="ITEM_CATEGORY_CYCLE_TITLE" xml:space="preserve">
+    <value>Category Circular Dependency</value>
+  </data>
+  <data name="ITEM_CATEGORY_CYCLE_DETAIL" xml:space="preserve">
+    <value>Category hierarchy cannot contain circular references.</value>
+  </data>
+  <data name="ITEM_CODE_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>Item Code Immutable</value>
+  </data>
+  <data name="ITEM_CODE_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>Item code cannot be changed once the item has been activated.</value>
+  </data>
+  <data name="ITEM_INACTIVE_LOCKED_TITLE" xml:space="preserve">
+    <value>Item Inactive</value>
+  </data>
+  <data name="ITEM_INACTIVE_LOCKED_DETAIL" xml:space="preserve">
+    <value>Inactive item cannot be modified.</value>
+  </data>
+  <data name="ITEM_CATEGORY_INACTIVE_TITLE" xml:space="preserve">
+    <value>Category Inactive</value>
+  </data>
+  <data name="ITEM_CATEGORY_INACTIVE_DETAIL" xml:space="preserve">
+    <value>Category must be active before the item can be activated.</value>
+  </data>
+  <data name="ITEM_UNIT_INACTIVE_TITLE" xml:space="preserve">
+    <value>Unit Inactive</value>
+  </data>
+  <data name="ITEM_UNIT_INACTIVE_DETAIL" xml:space="preserve">
+    <value>Base unit must be active before the item can be activated.</value>
+  </data>
+  <data name="ITEM_BRAND_INACTIVE_TITLE" xml:space="preserve">
+    <value>Brand Inactive</value>
+  </data>
+  <data name="ITEM_BRAND_INACTIVE_DETAIL" xml:space="preserve">
+    <value>Brand must be active before the item can be activated.</value>
+  </data>
+  <data name="ITEM_ALIAS_CONFLICT_TITLE" xml:space="preserve">
+    <value>Item Alias Conflict</value>
+  </data>
+  <data name="ITEM_ALIAS_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The specified alias already exists for this item.</value>
+  </data>
+  <data name="ITEM_CAPABILITY_REQUIRED_TITLE" xml:space="preserve">
+    <value>Item Capability Required</value>
+  </data>
+  <data name="ITEM_CAPABILITY_REQUIRED_DETAIL" xml:space="preserve">
+    <value>At least one capability must be enabled for activation.</value>
+  </data>
+  <data name="ITEM_ATTRIBUTE_RESERVED_TITLE" xml:space="preserve">
+    <value>Item Attribute Reserved</value>
+  </data>
+  <data name="ITEM_ATTRIBUTE_RESERVED_DETAIL" xml:space="preserve">
+    <value>Reserved system attribute keys cannot be used.</value>
+  </data>
 </root>
 

@@ -434,4 +434,240 @@ public class ItemEndpointsTests : IAsyncLifetime
         var itemAfterDel = await delAliasRes.Content.ReadFromJsonAsync<ItemResponse>();
         Assert.Empty(itemAfterDel!.Aliases);
     }
+
+    [Fact]
+    public async Task CreateItem_DuplicateCode_Returns409Conflict()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+        var code = "DUP-" + Guid.NewGuid().ToString("N")[..6];
+
+        var req1 = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        req1.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = code,
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "สินค้า 1", English = "Item 1" }
+        });
+        var res1 = await _client.SendAsync(req1);
+        Assert.Equal(HttpStatusCode.Created, res1.StatusCode);
+
+        var req2 = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        req2.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = code.ToLowerInvariant(), // case-insensitive duplicate
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "สินค้า 2", English = "Item 2" }
+        });
+        var res2 = await _client.SendAsync(req2);
+        Assert.Equal(HttpStatusCode.Conflict, res2.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateItem_ActivatedItem_CannotChangeCode_Returns422()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+        var code = "IMMUT-" + Guid.NewGuid().ToString("N")[..6];
+
+        var createReq = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        createReq.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = code,
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "สินค้าคงรูป", English = "Immutable Item" }
+        });
+        var createRes = await _client.SendAsync(createReq);
+        var item = await createRes.Content.ReadFromJsonAsync<ItemResponse>();
+
+        // Activate item
+        var actReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item!.Id}/activate", ifMatch: item.RowVersion);
+        var actRes = await _client.SendAsync(actReq);
+        Assert.Equal(HttpStatusCode.OK, actRes.StatusCode);
+        var activated = await actRes.Content.ReadFromJsonAsync<ItemResponse>();
+
+        // Attempt to change code
+        var updateReq = CreateRequest(HttpMethod.Put, $"/api/v1/items/{item.Id}", ifMatch: activated!.RowVersion);
+        updateReq.Content = JsonContent.Create(new UpdateItemRequest
+        {
+            Code = "CHANGED-CODE",
+            ItemType = activated.ItemType,
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = activated.Name.Thai, English = activated.Name.English }
+        });
+        var updateRes = await _client.SendAsync(updateReq);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, updateRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateItem_InactiveItem_Returns422()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+
+        var createReq = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        createReq.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "INACT-" + Guid.NewGuid().ToString("N")[..6],
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "สินค้าจะถูกปิด", English = "To be inactive" }
+        });
+        var createRes = await _client.SendAsync(createReq);
+        var item = await createRes.Content.ReadFromJsonAsync<ItemResponse>();
+
+        // Activate then Deactivate
+        var actReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item!.Id}/activate", ifMatch: item.RowVersion);
+        var actRes = await _client.SendAsync(actReq);
+        var activated = await actRes.Content.ReadFromJsonAsync<ItemResponse>();
+
+        var deactReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/deactivate", ifMatch: activated!.RowVersion);
+        deactReq.Content = JsonContent.Create(new DeactivateItemRequest { ReasonCode = "OBSOLETE" });
+        var deactRes = await _client.SendAsync(deactReq);
+        var deactivated = await deactRes.Content.ReadFromJsonAsync<ItemResponse>();
+
+        // Attempt to update inactive item
+        var updateReq = CreateRequest(HttpMethod.Put, $"/api/v1/items/{item.Id}", ifMatch: deactivated!.RowVersion);
+        updateReq.Content = JsonContent.Create(new UpdateItemRequest
+        {
+            Code = item.Code,
+            ItemType = item.ItemType,
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "แก้ไขชื่อตอน inactive", English = "Edit when inactive" }
+        });
+        var updateRes = await _client.SendAsync(updateReq);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, updateRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task ActivateItem_SelectedBranchesWithoutBranches_Returns422()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+
+        var createReq = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        createReq.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "NO-BR-" + Guid.NewGuid().ToString("N")[..6],
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            AvailabilityMode = "selected_branches",
+            SelectedBranchIds = new List<Guid>(), // empty branches
+            Name = new LocalizedTextInput { Thai = "ไม่มีสาขา", English = "No branches" }
+        });
+        var createRes = await _client.SendAsync(createReq);
+        var item = await createRes.Content.ReadFromJsonAsync<ItemResponse>();
+
+        var actReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item!.Id}/activate", ifMatch: item.RowVersion);
+        var actRes = await _client.SendAsync(actReq);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, actRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateItem_CrossOrgCategory_Returns404()
+    {
+        var (_, unitId, _) = await SeedTaxonomyAsync();
+        var fakeCategoryId = Guid.NewGuid();
+
+        var req = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        req.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "CROSS-CAT-" + Guid.NewGuid().ToString("N")[..6],
+            ItemType = "material",
+            CategoryId = fakeCategoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "หมวดต่างองค์กร", English = "Cross org cat" }
+        });
+        var res = await _client.SendAsync(req);
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task Category_CycleDetection_IndirectCycle_Returns422()
+    {
+        // Create Cat A
+        var catAReq = CreateRequest(HttpMethod.Post, "/api/v1/item-categories");
+        catAReq.Content = JsonContent.Create(new CreateItemCategoryRequest
+        {
+            Code = "CYC-A-" + Guid.NewGuid().ToString("N")[..4],
+            Name = new LocalizedTextInput { Thai = "หมวด A", English = "Category A" }
+        });
+        var catARes = await _client.SendAsync(catAReq);
+        var catA = await catARes.Content.ReadFromJsonAsync<ItemCategoryDetailResponse>();
+
+        // Create Cat B with Parent = Cat A
+        var catBReq = CreateRequest(HttpMethod.Post, "/api/v1/item-categories");
+        catBReq.Content = JsonContent.Create(new CreateItemCategoryRequest
+        {
+            Code = "CYC-B-" + Guid.NewGuid().ToString("N")[..4],
+            Name = new LocalizedTextInput { Thai = "หมวด B", English = "Category B" },
+            ParentCategoryId = catA!.Id
+        });
+        var catBRes = await _client.SendAsync(catBReq);
+        var catB = await catBRes.Content.ReadFromJsonAsync<ItemCategoryDetailResponse>();
+
+        // Create Cat C with Parent = Cat B
+        var catCReq = CreateRequest(HttpMethod.Post, "/api/v1/item-categories");
+        catCReq.Content = JsonContent.Create(new CreateItemCategoryRequest
+        {
+            Code = "CYC-C-" + Guid.NewGuid().ToString("N")[..4],
+            Name = new LocalizedTextInput { Thai = "หมวด C", English = "Category C" },
+            ParentCategoryId = catB!.Id
+        });
+        var catCRes = await _client.SendAsync(catCReq);
+        var catC = await catCRes.Content.ReadFromJsonAsync<ItemCategoryDetailResponse>();
+
+        // Update Cat A to have Parent = Cat C (forming indirect cycle A -> C -> B -> A)
+        var updateCatAReq = CreateRequest(HttpMethod.Put, $"/api/v1/item-categories/{catA.Id}", ifMatch: catA.RowVersion);
+        updateCatAReq.Content = JsonContent.Create(new UpdateItemCategoryRequest
+        {
+            Code = catA.Code,
+            Name = new LocalizedTextInput { Thai = catA.Name.Thai, English = catA.Name.English },
+            ParentCategoryId = catC!.Id
+        });
+        var updateCatARes = await _client.SendAsync(updateCatAReq);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, updateCatARes.StatusCode);
+    }
+
+    [Fact]
+    public async Task ItemAlias_Duplicate_Returns409Conflict()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+
+        var createReq = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        createReq.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "ALIAS-DUP-" + Guid.NewGuid().ToString("N")[..6],
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "สินค้าซ้ำ Alias", English = "Alias dup item" }
+        });
+        var createRes = await _client.SendAsync(createReq);
+        var item = await createRes.Content.ReadFromJsonAsync<ItemResponse>();
+
+        // Add first alias
+        var add1Req = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item!.Id}/aliases");
+        add1Req.Content = JsonContent.Create(new AddAliasRequest
+        {
+            Alias = new LocalizedTextInput { Thai = "ชื่อเล่นเดียว", English = "Same Nickname" }
+        });
+        var add1Res = await _client.SendAsync(add1Req);
+        Assert.Equal(HttpStatusCode.OK, add1Res.StatusCode);
+
+        // Add same alias again
+        var add2Req = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/aliases");
+        add2Req.Content = JsonContent.Create(new AddAliasRequest
+        {
+            Alias = new LocalizedTextInput { Thai = "ชื่อเล่นเดียว", English = "Same Nickname" }
+        });
+        var add2Res = await _client.SendAsync(add2Req);
+        Assert.Equal(HttpStatusCode.Conflict, add2Res.StatusCode);
+    }
 }

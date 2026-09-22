@@ -251,6 +251,47 @@ public class ItemStore : IItemStore
             return Result<ItemDetailProjection>.Failure(new Error("ITEM_VERSION_CONFLICT", "Item has been modified by another user."));
         }
 
+        if (item.Status == ItemStatus.Inactive)
+        {
+            return Result<ItemDetailProjection>.Failure(new Error("ITEM_INACTIVE_LOCKED", "Item is inactive and cannot be modified."));
+        }
+
+        // Verify category exists in same org
+        var categoryExists = await _db.ItemCategories
+            .AnyAsync(c => c.Id == data.CategoryId && c.OrganizationId == orgId, ct);
+        if (!categoryExists)
+        {
+            return Result<ItemDetailProjection>.Failure(new Error("ITEM_CATEGORY_NOT_FOUND", "Category not found in organization."));
+        }
+
+        // Verify base unit exists in same org
+        var unitExists = await _db.Units
+            .AnyAsync(u => u.Id == data.BaseUnitId && u.OrganizationId == orgId, ct);
+        if (!unitExists)
+        {
+            return Result<ItemDetailProjection>.Failure(new Error("ITEM_UNIT_NOT_FOUND", "Base unit not found in organization."));
+        }
+
+        // Verify brand if provided exists in same org
+        if (data.BrandId.HasValue)
+        {
+            var brandExists = await _db.ItemBrands
+                .AnyAsync(b => b.Id == data.BrandId.Value && b.OrganizationId == orgId, ct);
+            if (!brandExists)
+            {
+                return Result<ItemDetailProjection>.Failure(new Error("ITEM_BRAND_NOT_FOUND", "Brand not found in organization."));
+            }
+        }
+
+        // Check duplicate code if changed
+        var normalizedCode = data.Code.Trim().ToUpperInvariant();
+        var codeConflict = await _db.Items
+            .AnyAsync(i => i.OrganizationId == orgId && i.Id != item.Id && i.NormalizedCode == normalizedCode, ct);
+        if (codeConflict)
+        {
+            return Result<ItemDetailProjection>.Failure(new Error("ITEM_CODE_CONFLICT", $"Item code '{data.Code}' already exists."));
+        }
+
         var rowVersionBefore = item.RowVersion;
         var now = DateTimeOffset.UtcNow;
         var name = LocalizedText.Create(data.Name.Thai, data.Name.English);
@@ -334,6 +375,34 @@ public class ItemStore : IItemStore
 
         var rowVersionBefore = item.RowVersion;
         var now = DateTimeOffset.UtcNow;
+
+        // Check category is active
+        var cat = await _db.ItemCategories
+            .FirstOrDefaultAsync(c => c.Id == item.CategoryId && c.OrganizationId == organizationId, ct);
+        if (cat == null || cat.Status != ItemStatus.Active)
+        {
+            return Result<ItemDetailProjection>.Failure(new Error("ITEM_CATEGORY_INACTIVE", "Category is inactive or missing."));
+        }
+
+        // Check unit is active
+        var unit = await _db.Units
+            .FirstOrDefaultAsync(u => u.Id == item.BaseUnitId && u.OrganizationId == organizationId, ct);
+        if (unit == null || unit.Status != ItemStatus.Active)
+        {
+            return Result<ItemDetailProjection>.Failure(new Error("ITEM_UNIT_INACTIVE", "Base unit is inactive or missing."));
+        }
+
+        // Check brand if present is active
+        if (item.BrandId.HasValue)
+        {
+            var brand = await _db.ItemBrands
+                .FirstOrDefaultAsync(b => b.Id == item.BrandId.Value && b.OrganizationId == organizationId, ct);
+            if (brand == null || brand.Status != ItemStatus.Active)
+            {
+                return Result<ItemDetailProjection>.Failure(new Error("ITEM_BRAND_INACTIVE", "Brand is inactive or missing."));
+            }
+        }
+
         var hasActiveBranch = item.BranchAvailabilities.Any(b => b.Status == ItemStatus.Active);
 
         try
@@ -609,6 +678,23 @@ public class ItemStore : IItemStore
             now);
 
         _db.ItemCategories.Add(category);
+
+        var audit = new AuditEvent(
+            Guid.NewGuid(),
+            orgId,
+            access.ActorUserId,
+            "item-categories.create",
+            "item-category",
+            category.Id.ToString(),
+            now,
+            string.Empty,
+            JsonSerializer.Serialize(new { code = category.Code, name = category.Name }),
+            branchId: access.BranchId,
+            actorMembershipId: access.MembershipId,
+            requestId: null,
+            rowVersionAfter: category.RowVersion);
+        _db.AuditEvents.Add(audit);
+
         await _db.SaveChangesAsync(ct);
 
         return Result<ItemCategoryDetailProjection>.Success(await GetCategoryAsync(orgId, catId, ct) ?? null!);
@@ -635,19 +721,36 @@ public class ItemStore : IItemStore
 
         if (data.ParentCategoryId.HasValue)
         {
-            if (data.ParentCategoryId.Value == data.CategoryId)
+            var currentParentId = (Guid?)data.ParentCategoryId.Value;
+            var visited = new HashSet<Guid> { data.CategoryId };
+            while (currentParentId.HasValue)
             {
-                return Result<ItemCategoryDetailProjection>.Failure(new Error("ITEM_CATEGORY_CYCLE", "Category cannot be its own parent."));
-            }
+                if (visited.Contains(currentParentId.Value))
+                {
+                    return Result<ItemCategoryDetailProjection>.Failure(new Error("ITEM_CATEGORY_CYCLE", "Category hierarchy cannot contain circular references."));
+                }
+                visited.Add(currentParentId.Value);
 
-            var parentExists = await _db.ItemCategories
-                .AnyAsync(c => c.Id == data.ParentCategoryId.Value && c.OrganizationId == orgId, ct);
-            if (!parentExists)
-            {
-                return Result<ItemCategoryDetailProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Parent category not found in organization."));
+                var parentCat = await _db.ItemCategories
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == currentParentId.Value && c.OrganizationId == orgId, ct);
+                if (parentCat == null)
+                {
+                    return Result<ItemCategoryDetailProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Parent category not found in organization."));
+                }
+                currentParentId = parentCat.ParentCategoryId;
             }
         }
 
+        var normalizedCatCode = data.Code.Trim().ToUpperInvariant();
+        var catCodeConflict = await _db.ItemCategories
+            .AnyAsync(c => c.OrganizationId == orgId && c.Id != category.Id && c.NormalizedCode == normalizedCatCode, ct);
+        if (catCodeConflict)
+        {
+            return Result<ItemCategoryDetailProjection>.Failure(new Error("ITEM_CODE_CONFLICT", $"Category code '{data.Code}' already exists."));
+        }
+
+        var rowVersionBefore = category.RowVersion;
         var now = DateTimeOffset.UtcNow;
         var name = LocalizedText.Create(data.Name.Thai, data.Name.English);
         var desc = LocalizedText.CreateOptional(data.Description?.Thai, data.Description?.English);
@@ -662,6 +765,23 @@ public class ItemStore : IItemStore
             data.SortOrder,
             access.ActorUserId,
             now);
+
+        var updateAudit = new AuditEvent(
+            Guid.NewGuid(),
+            orgId,
+            access.ActorUserId,
+            "item-categories.update",
+            "item-category",
+            category.Id.ToString(),
+            now,
+            string.Empty,
+            JsonSerializer.Serialize(new { code = category.Code, name = category.Name }),
+            branchId: access.BranchId,
+            actorMembershipId: access.MembershipId,
+            requestId: null,
+            rowVersionBefore: rowVersionBefore,
+            rowVersionAfter: category.RowVersion);
+        _db.AuditEvents.Add(updateAudit);
 
         await _db.SaveChangesAsync(ct);
         return Result<ItemCategoryDetailProjection>.Success(await GetCategoryAsync(orgId, category.Id, ct) ?? null!);
@@ -857,9 +977,12 @@ public class ItemStore : IItemStore
 
         var aliasText = LocalizedText.Create(aliasDto.Thai, aliasDto.English);
         var normTh = aliasText.Thai.Trim().ToLowerInvariant();
+        var normEn = aliasText.English?.Trim().ToLowerInvariant();
 
         var exists = await _db.ItemAliases
-            .AnyAsync(a => a.OrganizationId == organizationId && a.ItemId == itemId && a.NormalizedTh == normTh && a.Status == ItemStatus.Active, ct);
+            .AnyAsync(a => a.OrganizationId == organizationId && a.ItemId == itemId &&
+                           (a.NormalizedTh == normTh || (normEn != null && a.NormalizedEn == normEn)) &&
+                           a.Status == ItemStatus.Active, ct);
         if (exists)
         {
             return Result<ItemDetailProjection>.Failure(new Error("ITEM_ALIAS_CONFLICT", "Alias already exists for this item."));

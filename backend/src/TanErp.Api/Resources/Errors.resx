@@ -419,6 +419,60 @@
   <data name="ITEM_CATEGORY_CIRCULAR_DEPENDENCY_DETAIL" xml:space="preserve">
     <value>ไม่สามารถกำหนดหมวดหมู่หลักที่ทำให้เกิดความสัมพันธ์แบบวนซ้ำได้</value>
   </data>
+  <data name="ITEM_CATEGORY_CYCLE_TITLE" xml:space="preserve">
+    <value>โครงสร้างหมวดหมู่สินค้าวนซ้ำ</value>
+  </data>
+  <data name="ITEM_CATEGORY_CYCLE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถกำหนดหมวดหมู่หลักที่ทำให้เกิดความสัมพันธ์แบบวนซ้ำได้</value>
+  </data>
+  <data name="ITEM_CODE_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>ไม่สามารถแก้ไขรหัสสินค้าได้</value>
+  </data>
+  <data name="ITEM_CODE_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>รหัสสินค้าไม่สามารถเปลี่ยนแปลงได้หลังจากสินค้าได้รับการเปิดใช้งานแล้ว</value>
+  </data>
+  <data name="ITEM_INACTIVE_LOCKED_TITLE" xml:space="preserve">
+    <value>สินค้าถูกปิดการใช้งาน</value>
+  </data>
+  <data name="ITEM_INACTIVE_LOCKED_DETAIL" xml:space="preserve">
+    <value>สินค้าอยู่ในสถานะปิดการใช้งาน จึงไม่สามารถแก้ไขข้อมูลได้</value>
+  </data>
+  <data name="ITEM_CATEGORY_INACTIVE_TITLE" xml:space="preserve">
+    <value>หมวดหมู่สินค้าถูกปิดใช้งาน</value>
+  </data>
+  <data name="ITEM_CATEGORY_INACTIVE_DETAIL" xml:space="preserve">
+    <value>หมวดหมู่สินค้าต้องอยู่ในสถานะพร้อมใช้งานจึงจะสามารถเปิดใช้งานสินค้าได้</value>
+  </data>
+  <data name="ITEM_UNIT_INACTIVE_TITLE" xml:space="preserve">
+    <value>หน่วยนับถูกปิดใช้งาน</value>
+  </data>
+  <data name="ITEM_UNIT_INACTIVE_DETAIL" xml:space="preserve">
+    <value>หน่วยนับต้องอยู่ในสถานะพร้อมใช้งานจึงจะสามารถเปิดใช้งานสินค้าได้</value>
+  </data>
+  <data name="ITEM_BRAND_INACTIVE_TITLE" xml:space="preserve">
+    <value>แบรนด์สินค้าถูกปิดใช้งาน</value>
+  </data>
+  <data name="ITEM_BRAND_INACTIVE_DETAIL" xml:space="preserve">
+    <value>แบรนด์สินค้าต้องอยู่ในสถานะพร้อมใช้งานจึงจะสามารถเปิดใช้งานสินค้าได้</value>
+  </data>
+  <data name="ITEM_ALIAS_CONFLICT_TITLE" xml:space="preserve">
+    <value>ชื่อเรียกอื่นของสินค้าซ้ำ</value>
+  </data>
+  <data name="ITEM_ALIAS_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ชื่อเรียกอื่นนี้มีอยู่แล้วสำหรับสินค้านี้</value>
+  </data>
+  <data name="ITEM_CAPABILITY_REQUIRED_TITLE" xml:space="preserve">
+    <value>ต้องกำหนดความสามารถสินค้า</value>
+  </data>
+  <data name="ITEM_CAPABILITY_REQUIRED_DETAIL" xml:space="preserve">
+    <value>สินค้าต้องมีความสามารถอย่างน้อยหนึ่งอย่างในการเปิดใช้งาน</value>
+  </data>
+  <data name="ITEM_ATTRIBUTE_RESERVED_TITLE" xml:space="preserve">
+    <value>คีย์คุณลักษณะสงวนสิทธิ์</value>
+  </data>
+  <data name="ITEM_ATTRIBUTE_RESERVED_DETAIL" xml:space="preserve">
+    <value>ไม่อนุญาตให้ใช้ชื่อคีย์คุณลักษณะที่สงวนไว้โดยระบบ</value>
+  </data>
   <data name="ITEM_IMAGE_LIMIT_EXCEEDED_TITLE" xml:space="preserve">
     <value>จำนวนรูปภาพสินค้าเกินกำหนด</value>
   </data>

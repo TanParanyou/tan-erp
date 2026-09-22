@@ -149,6 +149,11 @@ public class Item : Entity
         Guid updatedByUserId,
         DateTimeOffset updatedAtUtc)
     {
+        if (Status == ItemStatus.Inactive)
+        {
+            throw new ItemValidationException("ITEM_INACTIVE_LOCKED", "Item is inactive and cannot be modified.");
+        }
+
         var normalizedNewCode = NormalizeCode(code);
         if (ActivatedOnce && normalizedNewCode != NormalizedCode)
         {
