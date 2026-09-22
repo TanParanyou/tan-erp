@@ -63,5 +63,10 @@ public class UpdateEstimateDraftHandler
             return Result<EstimateRevisionProjection>.Failure(
                 new Error("ESTIMATE_INVALID_STATE", ex.Message));
         }
+        catch (ItemCostConflictException ex)
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error(ex.Code, ex.Message));
+        }
     }
 }

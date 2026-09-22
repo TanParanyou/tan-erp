@@ -12565,6 +12565,59 @@
           "sortOrder": {
             "type": "integer",
             "format": "int32"
+          },
+          "itemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "costRecordId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "costRecordVersion": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "itemCodeSnapshot": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemNameSnapshot": {
+            "$ref": "#/components/schemas/LocalizedTextResponse"
+          },
+          "unitSnapshot": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitCostSnapshot": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "currencySnapshot": {
+            "type": "string",
+            "nullable": true
+          },
+          "costScopeSnapshot": {
+            "type": "string",
+            "nullable": true
+          },
+          "costEffectiveFromUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "costPolicyVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "resolvedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -14518,6 +14571,21 @@
           "sortOrder": {
             "type": "integer",
             "format": "int32"
+          },
+          "itemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "costRecordId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "costRecordVersion": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false

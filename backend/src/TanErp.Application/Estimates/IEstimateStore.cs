@@ -74,7 +74,10 @@ public sealed record EstimateCostComponentDraftDto(
     string UnitCode,
     decimal UnitCost,
     string? Currency,
-    int SortOrder);
+    int SortOrder,
+    Guid? ItemId = null,
+    Guid? CostRecordId = null,
+    int? CostRecordVersion = null);
 
 public sealed record EstimateWorkItemDraftDto(
     Guid? Id,

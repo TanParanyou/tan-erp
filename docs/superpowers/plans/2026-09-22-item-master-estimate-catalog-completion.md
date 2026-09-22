@@ -72,11 +72,11 @@
 - [x] Step 5.5: Register controller endpoint, verify OpenAPI parity, and run tests
 
 ### Task 6: Estimate Cost Component Reference, Price Revalidation & Snapshot
-- [ ] Step 6.1: Write tests for Estimate Cost Component catalog reference and snapshot invariants
-- [ ] Step 6.2: Update `EstimateCostComponent` entity and EF mapping to store immutable snapshot fields
-- [ ] Step 6.3: Update `UpdateEstimateDraftHandler` to ignore client unitCost, resolve server-side, and return `ITEM_COST_VERSION_CONFLICT` on price change
-- [ ] Step 6.4: Add migration for Estimate cost component snapshot columns
-- [ ] Step 6.5: Run regression tests for Estimate BOQ & Calculation
+- [x] Step 6.1: Write tests for Estimate Cost Component catalog reference and snapshot invariants
+- [x] Step 6.2: Update `EstimateCostComponent` entity and EF mapping to store immutable snapshot fields
+- [x] Step 6.3: Update `UpdateEstimateDraftHandler` to ignore client unitCost, resolve server-side, and return `ITEM_COST_VERSION_CONFLICT` on price change
+- [x] Step 6.4: Add migration for Estimate cost component snapshot columns
+- [x] Step 6.5: Run regression tests for Estimate BOQ & Calculation
 
 ### Task 7: Frontend Catalog Adapter, TanStack Query Hook & Modal Connection
 - [ ] Step 7.1: Regenerate TypeScript OpenAPI client (`npm run generate:api`)

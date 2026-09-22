@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Estimates;
+using TanErp.Application.Items;
 using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Estimates;
+using TanErp.Domain.Items;
 using TanErp.Domain.Surveys;
 
 namespace TanErp.Infrastructure.Persistence.Estimates;
@@ -17,12 +19,18 @@ public class EstimateStore : IEstimateStore
     private readonly AppDbContext _db;
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _documentNumberGenerator;
+    private readonly ICostResolver _costResolver;
 
-    public EstimateStore(AppDbContext db, IClock clock, IDocumentNumberGenerator documentNumberGenerator)
+    public EstimateStore(
+        AppDbContext db,
+        IClock clock,
+        IDocumentNumberGenerator documentNumberGenerator,
+        ICostResolver costResolver)
     {
         _db = db;
         _clock = clock;
         _documentNumberGenerator = documentNumberGenerator;
+        _costResolver = costResolver;
     }
 
     public async Task<Result<EstimateDetailProjection>> CreateDraftAsync(
@@ -270,6 +278,13 @@ public class EstimateStore : IEstimateStore
             if (revision is null)
                 throw new EstimateNotFoundException(estimateId);
 
+            var estimate = await _db.Estimates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.Id == estimateId, cancellationToken);
+
+            if (estimate is null)
+                throw new EstimateNotFoundException(estimateId);
+
             if (revision.RowVersion != expectedRevisionVersion)
                 throw new DbUpdateConcurrencyException("Revision version conflict.");
 
@@ -324,6 +339,82 @@ public class EstimateStore : IEstimateStore
                             cDto.UnitCost,
                             cDto.Currency ?? EstimateDefaults.DefaultCurrency,
                             cDto.SortOrder);
+
+                        if (cDto.ItemId.HasValue)
+                        {
+                            var item = await _db.Items
+                                .AsNoTracking()
+                                .Include(i => i.BaseUnit)
+                                .Include(i => i.BranchAvailabilities)
+                                .FirstOrDefaultAsync(i => i.Id == cDto.ItemId.Value && i.OrganizationId == organizationId, cancellationToken);
+
+                            if (item is null)
+                            {
+                                throw new ItemCostConflictException("ITEM_NOT_FOUND", $"Item '{cDto.ItemId.Value}' was not found.");
+                            }
+
+                            if (item.Status != ItemStatus.Active || !item.Capabilities.CanCost)
+                            {
+                                throw new ItemCostConflictException("ITEM_NOT_AVAILABLE", $"Item '{item.Code}' is not active or cannot be costed.");
+                            }
+
+                            if (item.AvailabilityMode == ItemAvailabilityMode.SelectedBranches &&
+                                !item.BranchAvailabilities.Any(ba => ba.BranchId == estimate.BranchId && ba.Status == "active"))
+                            {
+                                throw new ItemCostConflictException("ITEM_NOT_AVAILABLE", $"Item '{item.Code}' is not available in branch '{estimate.BranchId}'.");
+                            }
+
+                            var resolveResult = await _costResolver.ResolveAsync(new ResolveCostRequest(
+                                organizationId,
+                                estimate.BranchId,
+                                item.Id,
+                                item.BaseUnitId,
+                                cDto.Currency ?? EstimateDefaults.DefaultCurrency,
+                                cDto.Quantity,
+                                _clock.UtcNow), cancellationToken);
+
+                            if (resolveResult.IsFailure)
+                            {
+                                throw new ItemCostConflictException(resolveResult.Error.Code, resolveResult.Error.Message);
+                            }
+
+                            var resolved = resolveResult.Value!;
+
+                            // Revalidation: If client supplied cost record ID, version, or unit cost, it must match current resolved cost
+                            if (cDto.CostRecordId.HasValue && cDto.CostRecordId.Value != resolved.CostRecordId)
+                            {
+                                throw new ItemCostConflictException("ITEM_COST_VERSION_CONFLICT",
+                                    $"Cost record ID mismatch for item '{item.Code}'. Expected {cDto.CostRecordId.Value}, current is {resolved.CostRecordId}.");
+                            }
+
+                            if (cDto.CostRecordVersion.HasValue && cDto.CostRecordVersion.Value != resolved.Version)
+                            {
+                                throw new ItemCostConflictException("ITEM_COST_VERSION_CONFLICT",
+                                    $"Cost record version mismatch for item '{item.Code}'. Expected v{cDto.CostRecordVersion.Value}, current is v{resolved.Version}.");
+                            }
+
+                            if (cDto.UnitCost != resolved.Amount)
+                            {
+                                throw new ItemCostConflictException("ITEM_COST_VERSION_CONFLICT",
+                                    $"Unit cost mismatch for item '{item.Code}'. Expected {cDto.UnitCost}, current resolved cost is {resolved.Amount}.");
+                            }
+
+                            var unitCode = item.BaseUnit?.Code ?? cDto.UnitCode;
+
+                            comp.SetCatalogCostSnapshot(
+                                item.Id,
+                                resolved.CostRecordId,
+                                resolved.Version,
+                                item.Code,
+                                item.Name,
+                                unitCode,
+                                resolved.Amount,
+                                resolved.Currency,
+                                resolved.Scope,
+                                resolved.EffectiveFromUtc,
+                                "v1",
+                                resolved.ResolvedAtUtc);
+                        }
 
                         workItem.AddCostComponent(comp);
                         _db.EstimateCostComponents.Add(comp);
@@ -1012,7 +1103,19 @@ public class EstimateStore : IEstimateStore
                                 c.UnitCost,
                                 c.Currency,
                                 c.TotalCost,
-                                c.SortOrder))
+                                c.SortOrder,
+                                c.ItemId,
+                                c.CostRecordId,
+                                c.CostRecordVersion,
+                                c.ItemCodeSnapshot,
+                                c.ItemNameSnapshot,
+                                c.UnitSnapshot,
+                                c.UnitCostSnapshot,
+                                c.CurrencySnapshot,
+                                c.CostScopeSnapshot,
+                                c.CostEffectiveFromUtc,
+                                c.CostPolicyVersion,
+                                c.ResolvedAtUtc))
                             .ToList()))
                     .ToList()))
             .ToList();

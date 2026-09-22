@@ -1,3 +1,4 @@
+using TanErp.Api.Contracts.Items;
 using TanErp.Application.Estimates;
 
 namespace TanErp.Api.Contracts.Estimates;
@@ -12,7 +13,19 @@ public sealed record EstimateCostComponentResponse(
     decimal UnitCost,
     string Currency,
     decimal TotalCost,
-    int SortOrder);
+    int SortOrder,
+    Guid? ItemId = null,
+    Guid? CostRecordId = null,
+    int? CostRecordVersion = null,
+    string? ItemCodeSnapshot = null,
+    LocalizedTextResponse? ItemNameSnapshot = null,
+    string? UnitSnapshot = null,
+    decimal? UnitCostSnapshot = null,
+    string? CurrencySnapshot = null,
+    string? CostScopeSnapshot = null,
+    DateTimeOffset? CostEffectiveFromUtc = null,
+    string? CostPolicyVersion = null,
+    DateTimeOffset? ResolvedAtUtc = null);
 
 public sealed record EstimateWorkItemResponse(
     Guid Id,
@@ -139,7 +152,19 @@ public sealed record EstimateDetailResponse(
                     c.UnitCost,
                     c.Currency,
                     c.TotalCost,
-                    c.SortOrder)).ToList())).ToList())).ToList();
+                    c.SortOrder,
+                    c.ItemId,
+                    c.CostRecordId,
+                    c.CostRecordVersion,
+                    c.ItemCodeSnapshot,
+                    c.ItemNameSnapshot == null ? null : new LocalizedTextResponse { Thai = c.ItemNameSnapshot.Thai, English = c.ItemNameSnapshot.English },
+                    c.UnitSnapshot,
+                    c.UnitCostSnapshot,
+                    c.CurrencySnapshot,
+                    c.CostScopeSnapshot,
+                    c.CostEffectiveFromUtc,
+                    c.CostPolicyVersion,
+                    c.ResolvedAtUtc)).ToList())).ToList())).ToList();
 
         return new EstimateRevisionResponse(
             r.Id,

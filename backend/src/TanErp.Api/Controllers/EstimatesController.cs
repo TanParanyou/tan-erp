@@ -182,7 +182,10 @@ public class EstimatesController : ControllerBase
                     c.UnitCode,
                     c.UnitCost,
                     c.Currency,
-                    c.SortOrder)).ToList())).ToList())).ToList();
+                    c.SortOrder,
+                    c.ItemId,
+                    c.CostRecordId,
+                    c.CostRecordVersion)).ToList())).ToList())).ToList();
 
         var command = new UpdateEstimateDraftCommand(
             auth.FirebaseUid,

@@ -10,7 +10,10 @@ public sealed record UpdateEstimateCostComponentDto(
     [Required] string UnitCode,
     [Range(0, 999999999)] decimal UnitCost,
     string? Currency,
-    int SortOrder = 1);
+    int SortOrder = 1,
+    Guid? ItemId = null,
+    Guid? CostRecordId = null,
+    int? CostRecordVersion = null);
 
 public sealed record UpdateEstimateWorkItemDto(
     Guid? Id,

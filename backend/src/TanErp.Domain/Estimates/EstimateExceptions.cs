@@ -23,3 +23,15 @@ public class EstimateCalculationException : Exception
     {
     }
 }
+
+public class ItemCostConflictException : Exception
+{
+    public string Code { get; }
+
+    public ItemCostConflictException(string code, string message)
+        : base(message)
+    {
+        Code = code;
+    }
+}
+

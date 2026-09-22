@@ -1,3 +1,5 @@
+using TanErp.Domain.Items;
+
 namespace TanErp.Application.Estimates;
 
 public sealed record EstimateCostComponentProjection(
@@ -10,7 +12,19 @@ public sealed record EstimateCostComponentProjection(
     decimal UnitCost,
     string Currency,
     decimal TotalCost,
-    int SortOrder);
+    int SortOrder,
+    Guid? ItemId = null,
+    Guid? CostRecordId = null,
+    int? CostRecordVersion = null,
+    string? ItemCodeSnapshot = null,
+    LocalizedText? ItemNameSnapshot = null,
+    string? UnitSnapshot = null,
+    decimal? UnitCostSnapshot = null,
+    string? CurrencySnapshot = null,
+    string? CostScopeSnapshot = null,
+    DateTimeOffset? CostEffectiveFromUtc = null,
+    string? CostPolicyVersion = null,
+    DateTimeOffset? ResolvedAtUtc = null);
 
 public sealed record EstimateWorkItemProjection(
     Guid Id,

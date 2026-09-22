@@ -13,6 +13,7 @@ using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
 using TanErp.Domain.Estimates;
+using TanErp.Domain.Items;
 using TanErp.Domain.Surveys;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
@@ -502,6 +503,224 @@ public class EstimateEndpointsTests : IAsyncLifetime
         updateMsg.Content = JsonContent.Create(new UpdateEstimateDraftRequest(
             staleVersion,
             new List<UpdateEstimateSectionDto>()));
+
+        var updateRes = await _client.SendAsync(updateMsg);
+        Assert.Equal(HttpStatusCode.Conflict, updateRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateDraft_WithCatalogItem_ResolvesAndSnapshotsCostAuthoritatively()
+    {
+        var (_, _, oppId, _, surveyRevId, _) = await SetupEstimatingOpportunityAsync();
+
+        // 1. Seed active item and published cost
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var actorId = UserAId;
+
+        var cat = new ItemCategory(Guid.NewGuid(), OrgAId, "TEST-CAT", LocalizedText.Create("หมวดหมู่ทดสอบ", "Test Category"), null, null, [ItemType.Material], 1, actorId, now);
+        var unit = new UnitOfMeasure(Guid.NewGuid(), OrgAId, "PCS", LocalizedText.Create("ชิ้น", "Piece"), "pcs", "count", 0, "half_up", actorId, now);
+        db.ItemCategories.Add(cat);
+        db.Units.Add(unit);
+
+        var item = Item.CreateDraft(
+            Guid.NewGuid(), OrgAId, "CATALOG-SOLAR-01", ItemType.Material, cat.Id, null,
+            LocalizedText.Create("แผงโซลาร์เซลล์", "Solar Panel"), null, unit.Id,
+            ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false),
+            null, null, actorId, now);
+        item.Activate(actorId, now, false);
+        db.Items.Add(item);
+
+        var cost = CostRecord.CreateDraft(
+            Guid.NewGuid(), OrgAId, item.Id, CostScopeType.Organization, null, unit.Id, "THB",
+            2500m, 0m, null, now.AddDays(-1), null, 1, null, null, null, null, actorId, now);
+        var approverId = Guid.NewGuid();
+        cost.Submit(actorId, now);
+        cost.Approve(approverId, now);
+        cost.Publish(approverId, now);
+        db.CostRecords.Add(cost);
+        await db.SaveChangesAsync();
+
+        // 2. Create estimate draft
+        var createMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            "/api/v1/estimates",
+            "token-org-a",
+            MembershipAId);
+        createMsg.Headers.Add("Idempotency-Key", "idemp-estimate-catalog-0001");
+        createMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
+            oppId,
+            surveyRevId,
+            "THB"));
+
+        var createRes = await _client.SendAsync(createMsg);
+        Assert.Equal(HttpStatusCode.Created, createRes.StatusCode);
+        var estimate = (await createRes.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+        var revision = estimate.CurrentRevision!;
+
+        // 3. Update draft with catalog component matching published cost
+        var updateMsg = CreateAuthenticatedRequest(
+            HttpMethod.Put,
+            $"/api/v1/estimates/{estimate.Id}/revisions/{revision.Id}/draft",
+            "token-org-a",
+            MembershipAId);
+        updateMsg.Headers.Add("If-Match", $"\"{revision.RowVersion}\"");
+        updateMsg.Content = JsonContent.Create(new UpdateEstimateDraftRequest(
+            revision.RowVersion,
+            new List<UpdateEstimateSectionDto>
+            {
+                new(
+                    Id: null,
+                    Code: "SEC-01",
+                    NameTh: "หมวดงานโซลาร์",
+                    NameEn: "Solar Section",
+                    SortOrder: 1,
+                    WorkItems: new List<UpdateEstimateWorkItemDto>
+                    {
+                        new(
+                            Id: null,
+                            Code: "WI-01",
+                            DescriptionTh: "ติดตั้งแผงโซลาร์",
+                            DescriptionEn: "Install Solar",
+                            Quantity: 4m,
+                            UnitCode: "ชุด",
+                            SellingRuleType: SellingRuleType.Margin,
+                            SellingRuleValue: 0.20m,
+                            SortOrder: 1,
+                            CostComponents: new List<UpdateEstimateCostComponentDto>
+                            {
+                                new(
+                                    Id: null,
+                                    Type: CostComponentType.Material,
+                                    Description: "แผงโซลาร์เซลล์",
+                                    Quantity: 4m,
+                                    UnitCode: "PCS",
+                                    UnitCost: 2500m,
+                                    Currency: "THB",
+                                    SortOrder: 1,
+                                    ItemId: item.Id,
+                                    CostRecordId: cost.Id,
+                                    CostRecordVersion: 1)
+                            })
+                    })
+            }));
+
+        var updateRes = await _client.SendAsync(updateMsg);
+        Assert.Equal(HttpStatusCode.OK, updateRes.StatusCode);
+
+        var updatedRev = await updateRes.Content.ReadFromJsonAsync<EstimateRevisionResponse>();
+        Assert.NotNull(updatedRev);
+        var comp = updatedRev.Sections[0].WorkItems[0].CostComponents[0];
+        Assert.Equal(item.Id, comp.ItemId);
+        Assert.Equal(cost.Id, comp.CostRecordId);
+        Assert.Equal(1, comp.CostRecordVersion);
+        Assert.Equal("CATALOG-SOLAR-01", comp.ItemCodeSnapshot);
+        Assert.NotNull(comp.ItemNameSnapshot);
+        Assert.Equal("แผงโซลาร์เซลล์", comp.ItemNameSnapshot.Thai);
+        Assert.Equal("PCS", comp.UnitSnapshot);
+        Assert.Equal(2500m, comp.UnitCostSnapshot);
+        Assert.Equal(2500m, comp.UnitCost);
+        Assert.Equal(10000m, comp.TotalCost);
+        Assert.NotNull(comp.ResolvedAtUtc);
+    }
+
+    [Fact]
+    public async Task UpdateDraft_WithMismatchedCatalogPrice_Returns409Conflict()
+    {
+        var (_, _, oppId, _, surveyRevId, _) = await SetupEstimatingOpportunityAsync();
+
+        // 1. Seed active item and published cost
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var actorId = UserAId;
+
+        var cat = new ItemCategory(Guid.NewGuid(), OrgAId, "TEST-CAT2", LocalizedText.Create("หมวดหมู่ทดสอบ2", "Test Category 2"), null, null, [ItemType.Material], 1, actorId, now);
+        var unit = new UnitOfMeasure(Guid.NewGuid(), OrgAId, "PCS2", LocalizedText.Create("ชิ้น", "Piece"), "pcs", "count", 0, "half_up", actorId, now);
+        db.ItemCategories.Add(cat);
+        db.Units.Add(unit);
+
+        var item = Item.CreateDraft(
+            Guid.NewGuid(), OrgAId, "CATALOG-SOLAR-02", ItemType.Material, cat.Id, null,
+            LocalizedText.Create("แผงโซลาร์เซลล์ 2", "Solar Panel 2"), null, unit.Id,
+            ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false),
+            null, null, actorId, now);
+        item.Activate(actorId, now, false);
+        db.Items.Add(item);
+
+        var cost = CostRecord.CreateDraft(
+            Guid.NewGuid(), OrgAId, item.Id, CostScopeType.Organization, null, unit.Id, "THB",
+            2500m, 0m, null, now.AddDays(-1), null, 1, null, null, null, null, actorId, now);
+        var approverId2 = Guid.NewGuid();
+        cost.Submit(actorId, now);
+        cost.Approve(approverId2, now);
+        cost.Publish(approverId2, now);
+        db.CostRecords.Add(cost);
+        await db.SaveChangesAsync();
+
+        // 2. Create estimate draft
+        var createMsg = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            "/api/v1/estimates",
+            "token-org-a",
+            MembershipAId);
+        createMsg.Headers.Add("Idempotency-Key", "idemp-estimate-catalog-0002");
+        createMsg.Content = JsonContent.Create(new CreateEstimateDraftRequest(
+            oppId,
+            surveyRevId,
+            "THB"));
+
+        var createRes = await _client.SendAsync(createMsg);
+        var estimate = (await createRes.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+        var revision = estimate.CurrentRevision!;
+
+        // 3. Update draft with mismatched unitCost (e.g. 2000m instead of 2500m)
+        var updateMsg = CreateAuthenticatedRequest(
+            HttpMethod.Put,
+            $"/api/v1/estimates/{estimate.Id}/revisions/{revision.Id}/draft",
+            "token-org-a",
+            MembershipAId);
+        updateMsg.Headers.Add("If-Match", $"\"{revision.RowVersion}\"");
+        updateMsg.Content = JsonContent.Create(new UpdateEstimateDraftRequest(
+            revision.RowVersion,
+            new List<UpdateEstimateSectionDto>
+            {
+                new(
+                    Id: null,
+                    Code: "SEC-01",
+                    NameTh: "หมวดงานโซลาร์",
+                    NameEn: "Solar Section",
+                    SortOrder: 1,
+                    WorkItems: new List<UpdateEstimateWorkItemDto>
+                    {
+                        new(
+                            Id: null,
+                            Code: "WI-01",
+                            DescriptionTh: "ติดตั้งแผงโซลาร์",
+                            DescriptionEn: "Install Solar",
+                            Quantity: 1m,
+                            UnitCode: "ชุด",
+                            SellingRuleType: SellingRuleType.Margin,
+                            SellingRuleValue: 0.20m,
+                            SortOrder: 1,
+                            CostComponents: new List<UpdateEstimateCostComponentDto>
+                            {
+                                new(
+                                    Id: null,
+                                    Type: CostComponentType.Material,
+                                    Description: "แผงโซลาร์เซลล์",
+                                    Quantity: 1m,
+                                    UnitCode: "PCS2",
+                                    UnitCost: 2000m, // Mismatched price!
+                                    Currency: "THB",
+                                    SortOrder: 1,
+                                    ItemId: item.Id,
+                                    CostRecordId: cost.Id,
+                                    CostRecordVersion: 1)
+                            })
+                    })
+            }));
 
         var updateRes = await _client.SendAsync(updateMsg);
         Assert.Equal(HttpStatusCode.Conflict, updateRes.StatusCode);
