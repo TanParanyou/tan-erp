@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
 using TanErp.Api.Contracts.Items;
 using TanErp.Domain.Items;
+using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
@@ -27,7 +28,7 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
     private const string Uid = TestOnlyDataSeeder.TestFirebaseUid;
     private static readonly Guid OrgId = TestOnlyDataSeeder.TestOrgId;
     private static readonly Guid BranchAId = TestOnlyDataSeeder.TestBranchId;
-    private static readonly Guid BranchBId = TestOnlyDataSeeder.TestBranchBId;
+    private static readonly Guid BranchBId = Guid.NewGuid();
     private static readonly Guid MembershipId = TestOnlyDataSeeder.TestMembershipId;
 
     private class TestFirebaseTokenVerifier : IFirebaseTokenVerifier
@@ -93,6 +94,10 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
     {
         var now = DateTimeOffset.UtcNow;
         var actorId = Guid.NewGuid();
+
+        // 0. Branch B in Org
+        var branchB = new Branch(BranchBId, OrgId, "B02", "สาขา 2", true, now);
+        db.Branches.Add(branchB);
 
         // 1. Categories
         var catSolar = new ItemCategory(Guid.NewGuid(), OrgId, "SOLAR", LocalizedText.Create("โซลาร์เซลล์", "Solar Cell"), null, null, [ItemType.Material], 1, actorId, now);
@@ -224,5 +229,33 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
         Assert.NotNull(body);
         Assert.Single(body.Items);
         Assert.Equal("MOUNT-ROOF-01", body.Items[0].Code);
+    }
+
+    [Fact]
+    public async Task SearchCatalog_CrossOrgBranch_ReturnsNotFound()
+    {
+        var crossOrgBranchId = TestOnlyDataSeeder.TestBranchBId; // Belongs to Org B!
+        var req = CreateRequest($"/api/v1/estimate-catalog/items?branchId={crossOrgBranchId}");
+        var res = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task SearchCatalog_InactiveBranch_ReturnsUnprocessableEntity()
+    {
+        var inactiveBranchId = Guid.NewGuid();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var inactiveBranch = new Branch(inactiveBranchId, OrgId, "INACT", "Inactive Branch", false, DateTimeOffset.UtcNow);
+            db.Branches.Add(inactiveBranch);
+            await db.SaveChangesAsync();
+        }
+
+        var req = CreateRequest($"/api/v1/estimate-catalog/items?branchId={inactiveBranchId}");
+        var res = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, res.StatusCode);
     }
 }

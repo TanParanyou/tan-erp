@@ -264,4 +264,76 @@ public class CostResolverTests : IAsyncLifetime
         Assert.False(res.IsSuccess);
         Assert.Equal("ITEM_COST_NOT_FOUND", res.Error.Code);
     }
+
+    [Fact]
+    public async Task Resolve_ReturnsPolicyVersion_AndMatchesSnapshotMetadata()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var cost = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            500m, 0m, null, now.AddDays(-1), null, 1, null, null, null, null, _actorId, now);
+        cost.Submit(_actorId, now);
+        cost.Approve(Guid.NewGuid(), now);
+        cost.Publish(Guid.NewGuid(), now);
+
+        _db.CostRecords.Add(cost);
+        await _db.SaveChangesAsync();
+
+        var req = new ResolveCostRequest(_orgId, _branchA, _itemId, _unitId, "THB", 1, now, PolicyVersion: "policy-2026-v2");
+        var res = await _resolver.ResolveAsync(req, CancellationToken.None);
+
+        Assert.True(res.IsSuccess);
+        Assert.Equal("policy-2026-v2", res.Value!.PolicyVersion);
+        Assert.Equal(cost.Id, res.Value.CostRecordId);
+        Assert.Equal(1, res.Value.Version);
+        Assert.Equal(CostScopeType.Organization, res.Value.Scope);
+        Assert.Equal(cost.EffectiveFromUtc, res.Value.EffectiveFromUtc);
+    }
+
+    [Fact]
+    public async Task ResolveForCatalog_FollowsSameSourcePriorityAndBranchPrecedence()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var sourceLow = new CostSource(Guid.NewGuid(), _orgId, "SRC_L", LocalizedText.Create("L", "L"), priority: 10, isActive: true, now);
+        var sourceHigh = new CostSource(Guid.NewGuid(), _orgId, "SRC_H", LocalizedText.Create("H", "H"), priority: 99, isActive: true, now);
+        _db.CostSources.AddRange(sourceLow, sourceHigh);
+
+        var orgCostLow = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            100m, 0m, null, now.AddDays(-10), null, 1, sourceLow.Id, null, null, null, _actorId, now);
+        orgCostLow.Submit(_actorId, now);
+        orgCostLow.Approve(Guid.NewGuid(), now);
+        orgCostLow.Publish(Guid.NewGuid(), now);
+
+        var orgCostHigh = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            120m, 0m, null, now.AddDays(-10), null, 2, sourceHigh.Id, null, null, null, _actorId, now);
+        orgCostHigh.Submit(_actorId, now);
+        orgCostHigh.Approve(Guid.NewGuid(), now);
+        orgCostHigh.Publish(Guid.NewGuid(), now);
+
+        var branchCost = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Branch, _branchA, _unitId, "THB",
+            150m, 0m, null, now.AddDays(-10), null, 3, null, null, null, null, _actorId, now);
+        branchCost.Submit(_actorId, now);
+        branchCost.Approve(Guid.NewGuid(), now);
+        branchCost.Publish(Guid.NewGuid(), now);
+
+        _db.CostRecords.AddRange(orgCostLow, orgCostHigh, branchCost);
+        await _db.SaveChangesAsync();
+
+        var allRecords = await _db.CostRecords.Include(c => c.CostSource).Include(c => c.Unit).ToListAsync();
+
+        // For Branch A: Branch override wins over higher org source priority
+        var resBranchA = _resolver.ResolveForCatalog(allRecords, _branchA);
+        Assert.NotNull(resBranchA);
+        Assert.Equal(150m, resBranchA.Amount);
+        Assert.Equal(CostScopeType.Branch, resBranchA.Scope);
+
+        // For Branch B: No branch override -> High priority cost wins (120m) over low priority (100m)
+        var resBranchB = _resolver.ResolveForCatalog(allRecords, _branchB);
+        Assert.NotNull(resBranchB);
+        Assert.Equal(120m, resBranchB.Amount);
+        Assert.Equal(CostScopeType.Organization, resBranchB.Scope);
+    }
 }

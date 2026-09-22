@@ -65,4 +65,5 @@ public sealed record ResolvedCostProjection(
     Guid? CostSourceId,
     string? CostSourceCode,
     string? SourceReference,
-    DateTimeOffset ResolvedAtUtc);
+    DateTimeOffset ResolvedAtUtc,
+    string? PolicyVersion = null);

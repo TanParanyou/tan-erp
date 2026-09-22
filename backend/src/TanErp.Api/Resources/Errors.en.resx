@@ -341,5 +341,17 @@
   <data name="ITEM_COST_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>The cost record has been modified concurrently. Please refresh and try again.</value>
   </data>
+  <data name="BRANCH_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Branch Not Found</value>
+  </data>
+  <data name="BRANCH_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>The specified branch was not found in this organization.</value>
+  </data>
+  <data name="BRANCH_INACTIVE_TITLE" xml:space="preserve">
+    <value>Branch Inactive</value>
+  </data>
+  <data name="BRANCH_INACTIVE_DETAIL" xml:space="preserve">
+    <value>The specified branch is deactivated and cannot be accessed.</value>
+  </data>
 </root>
 

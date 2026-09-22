@@ -11,10 +11,12 @@ namespace TanErp.Infrastructure.Persistence.Items;
 public class EstimateCatalogReader : IEstimateCatalogReader
 {
     private readonly AppDbContext _db;
+    private readonly ICostResolver _costResolver;
 
-    public EstimateCatalogReader(AppDbContext db)
+    public EstimateCatalogReader(AppDbContext db, ICostResolver costResolver)
     {
         _db = db;
+        _costResolver = costResolver;
     }
 
     private sealed class CursorData
@@ -127,6 +129,7 @@ public class EstimateCatalogReader : IEstimateCatalogReader
         var publishedCosts = await _db.CostRecords
             .AsNoTracking()
             .Include(c => c.Unit)
+            .Include(c => c.CostSource)
             .Where(c => itemIds.Contains(c.ItemId)
                 && c.Status == CostRecordStatus.Published
                 && c.EffectiveFromUtc <= now
@@ -136,7 +139,7 @@ public class EstimateCatalogReader : IEstimateCatalogReader
 
         var costsByItem = publishedCosts
             .GroupBy(c => c.ItemId)
-            .ToDictionary(g => g.Key, g => ResolvePublishedCostForCatalog(g.ToList(), branchId));
+            .ToDictionary(g => g.Key, g => _costResolver.ResolveForCatalog(g.ToList(), branchId));
 
         // 10. Map to Projections
         var projectedItems = new List<EstimateCatalogItemProjection>();
@@ -185,32 +188,6 @@ public class EstimateCatalogReader : IEstimateCatalogReader
             facets,
             nextCursor,
             hasNextPage));
-    }
-
-    private static CatalogResolvedCostProjection? ResolvePublishedCostForCatalog(
-        List<CostRecord> records,
-        Guid branchId)
-    {
-        if (records.Count == 0) return null;
-
-        var branchRecords = records.Where(r => r.Scope == CostScopeType.Branch && r.BranchId == branchId).ToList();
-        var candidates = branchRecords.Count > 0 ? branchRecords : records;
-
-        var winner = candidates
-            .OrderByDescending(r => r.EffectiveFromUtc)
-            .ThenByDescending(r => r.Version)
-            .FirstOrDefault();
-
-        if (winner == null) return null;
-
-        return new CatalogResolvedCostProjection(
-            winner.Id,
-            winner.Version,
-            winner.Amount,
-            winner.Currency,
-            winner.Unit.Symbol,
-            winner.Scope,
-            winner.EffectiveFromUtc);
     }
 
     private async Task<EstimateCatalogFacets> CalculateFacetsAsync(IQueryable<Item> baseQuery, CancellationToken ct)

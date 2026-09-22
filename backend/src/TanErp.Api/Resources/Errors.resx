@@ -503,5 +503,17 @@
   <data name="ITEM_COST_IMMUTABLE_DETAIL" xml:space="preserve">
     <value>บันทึกต้นทุนที่เผยแพร่ ยกเลิก หรือถูกแทนที่แล้วไม่สามารถแก้ไขข้อมูลทางการเงินได้</value>
   </data>
+  <data name="BRANCH_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบสาขา</value>
+  </data>
+  <data name="BRANCH_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบสาขาที่ระบุในองค์กรนี้</value>
+  </data>
+  <data name="BRANCH_INACTIVE_TITLE" xml:space="preserve">
+    <value>สาขาถูกปิดใช้งาน</value>
+  </data>
+  <data name="BRANCH_INACTIVE_DETAIL" xml:space="preserve">
+    <value>สาขาที่ระบุถูกปิดใช้งานแล้ว ไม่สามารถดำเนินการได้</value>
+  </data>
 </root>
 

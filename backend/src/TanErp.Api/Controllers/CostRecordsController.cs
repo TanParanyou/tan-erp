@@ -5,6 +5,7 @@ using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Items;
+using TanErp.Domain.Items;
 
 namespace TanErp.Api.Controllers;
 
@@ -40,7 +41,9 @@ public class CostRecordsController : ControllerBase
         if (authResult.IsFailure) return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
 
         var auth = authResult.Value!;
-        var accessResult = await _accessResolver.ResolveAsync(auth.FirebaseUid, auth.MembershipId, "cost-records.create", ct);
+        var accessResult = string.Equals(request.Scope, CostScopeType.Branch, StringComparison.OrdinalIgnoreCase) && request.BranchId.HasValue
+            ? await _accessResolver.ResolveBranchAccessAsync(auth.FirebaseUid, auth.MembershipId, "cost-records.create", request.BranchId.Value, ct)
+            : await _accessResolver.ResolveAsync(auth.FirebaseUid, auth.MembershipId, "cost-records.create", ct);
         if (accessResult.IsFailure) return ProblemDetailsMapper.CreateProblemResult(accessResult.Error.Code, HttpContext);
 
         var access = accessResult.Value!;

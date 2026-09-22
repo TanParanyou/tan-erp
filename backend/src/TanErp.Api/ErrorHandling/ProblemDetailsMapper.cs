@@ -68,6 +68,8 @@ public static class ProblemDetailsMapper
         "ITEM_IMAGE_NOT_FOUND" => StatusCodes.Status404NotFound,
         "ITEM_COST_NOT_FOUND" => StatusCodes.Status404NotFound,
         "COST_RECORD_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "BRANCH_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "BRANCH_INACTIVE" => StatusCodes.Status422UnprocessableEntity,
 
         "ITEM_CODE_EXISTS" => StatusCodes.Status409Conflict,
         "ITEM_CODE_CONFLICT" => StatusCodes.Status409Conflict,

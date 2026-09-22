@@ -11,6 +11,13 @@ public interface IRequestAccessResolver
         string permissionKey,
         CancellationToken cancellationToken = default);
 
+    Task<Result<RequestAccessContext>> ResolveBranchAccessAsync(
+        string firebaseUid,
+        Guid membershipId,
+        string permissionKey,
+        Guid targetBranchId,
+        CancellationToken cancellationToken = default);
+
     async Task<Result<RequestAccessContext>> ResolveAnyAsync(
         string firebaseUid,
         Guid membershipId,

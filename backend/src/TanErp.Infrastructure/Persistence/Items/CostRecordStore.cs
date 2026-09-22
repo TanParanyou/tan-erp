@@ -50,12 +50,16 @@ public class CostRecordStore : ICostRecordStore
                 return Result<CostRecordDetailProjection>.Failure(new Error("COST_BRANCH_REQUIRED", "Branch ID is required for branch scoped costs."));
             }
 
-            var branchExists = await _db.Branches
+            var branch = await _db.Branches
                 .AsNoTracking()
-                .AnyAsync(b => b.Id == data.BranchId.Value && b.OrganizationId == orgId, ct);
-            if (!branchExists)
+                .FirstOrDefaultAsync(b => b.Id == data.BranchId.Value && b.OrganizationId == orgId, ct);
+            if (branch == null)
             {
                 return Result<CostRecordDetailProjection>.Failure(new Error("BRANCH_NOT_FOUND", "Branch not found."));
+            }
+            if (!branch.IsActive)
+            {
+                return Result<CostRecordDetailProjection>.Failure(new Error("BRANCH_INACTIVE", "Branch is inactive."));
             }
         }
 
