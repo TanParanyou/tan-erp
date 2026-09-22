@@ -10,6 +10,12 @@ public class AuditEvent : Entity
     public DateTimeOffset OccurredAtUtc { get; private set; }
     public string TraceId { get; private set; } = string.Empty;
     public string ChangesJson { get; private set; } = "{}";
+    public Guid? BranchId { get; private set; }
+    public Guid? ActorMembershipId { get; private set; }
+    public string? RequestId { get; private set; }
+    public Guid? RowVersionBefore { get; private set; }
+    public Guid? RowVersionAfter { get; private set; }
+    public string? Reason { get; private set; }
 
     protected AuditEvent() { }
 
@@ -22,7 +28,13 @@ public class AuditEvent : Entity
         string resourceId,
         DateTimeOffset occurredAtUtc,
         string traceId,
-        string changesJson = "{}") : base(id)
+        string changesJson = "{}",
+        Guid? branchId = null,
+        Guid? actorMembershipId = null,
+        string? requestId = null,
+        Guid? rowVersionBefore = null,
+        Guid? rowVersionAfter = null,
+        string? reason = null) : base(id)
     {
         if (string.IsNullOrWhiteSpace(action))
             throw new ArgumentException("Action cannot be blank.", nameof(action));
@@ -37,5 +49,11 @@ public class AuditEvent : Entity
         OccurredAtUtc = occurredAtUtc;
         TraceId = traceId?.Trim() ?? string.Empty;
         ChangesJson = string.IsNullOrWhiteSpace(changesJson) ? "{}" : changesJson;
+        BranchId = branchId;
+        ActorMembershipId = actorMembershipId;
+        RequestId = string.IsNullOrWhiteSpace(requestId) ? null : requestId.Trim();
+        RowVersionBefore = rowVersionBefore;
+        RowVersionAfter = rowVersionAfter;
+        Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
     }
 }

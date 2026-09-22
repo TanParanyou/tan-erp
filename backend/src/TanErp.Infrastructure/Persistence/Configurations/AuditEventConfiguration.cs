@@ -20,5 +20,14 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
         builder.Property(x => x.OccurredAtUtc).HasColumnName("occurred_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.TraceId).HasColumnName("trace_id").HasMaxLength(128).IsRequired();
         builder.Property(x => x.ChangesJson).HasColumnName("changes").HasColumnType("jsonb").IsRequired();
+        builder.Property(x => x.BranchId).HasColumnName("branch_id");
+        builder.Property(x => x.ActorMembershipId).HasColumnName("actor_membership_id");
+        builder.Property(x => x.RequestId).HasColumnName("request_id").HasMaxLength(128);
+        builder.Property(x => x.RowVersionBefore).HasColumnName("row_version_before");
+        builder.Property(x => x.RowVersionAfter).HasColumnName("row_version_after");
+        builder.Property(x => x.Reason).HasColumnName("reason").HasMaxLength(500);
+
+        builder.HasIndex(x => new { x.OrganizationId, x.ResourceType, x.ResourceId, x.OccurredAtUtc });
+        builder.HasIndex(x => new { x.OrganizationId, x.OccurredAtUtc });
     }
 }

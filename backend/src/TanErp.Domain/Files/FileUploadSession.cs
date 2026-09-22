@@ -7,9 +7,10 @@ public static class FileParentTypes
     public const string Opportunity = "opportunity";
     public const string Customer = "customer";
     public const string Site = "site";
+    public const string Item = "item";
 
     public static bool IsValid(string? parentType) =>
-        parentType is Opportunity or Customer or Site;
+        parentType is Opportunity or Customer or Site or Item;
 }
 
 public static class FileUploadSessionStatus

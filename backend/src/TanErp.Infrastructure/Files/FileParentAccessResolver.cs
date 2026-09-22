@@ -31,7 +31,7 @@ public class FileParentAccessResolver : IFileParentAccessResolver
         if (string.IsNullOrWhiteSpace(parentType) || !FileParentTypes.IsValid(parentType))
         {
             return Result<FileParentAccess>.Failure(
-                new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site."));
+                new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site, item."));
         }
 
         var normalizedParentType = parentType.Trim().ToLowerInvariant();
@@ -210,9 +210,53 @@ public class FileParentAccessResolver : IFileParentAccessResolver
                 }
             }
 
+            case FileParentTypes.Item:
+            {
+                if (!parentId.HasValue)
+                {
+                    return Result<FileParentAccess>.Failure(
+                        new Error("FILE_PARENT_TYPE_INVALID", "Item upload requires an existing parentId."));
+                }
+
+                var requiredPerm = operation switch
+                {
+                    FileAccessOperation.Read => "items.read",
+                    _ => "items.manage-images"
+                };
+
+                var hasPerm = await HasPermissionAsync(access.MembershipId, requiredPerm, cancellationToken);
+                if (!hasPerm && operation == FileAccessOperation.Read)
+                {
+                    hasPerm = await HasPermissionAsync(access.MembershipId, "items.manage-images", cancellationToken);
+                }
+                if (!hasPerm && operation != FileAccessOperation.Read)
+                {
+                    hasPerm = await HasPermissionAsync(access.MembershipId, "items.update", cancellationToken);
+                }
+
+                if (!hasPerm)
+                {
+                    return Result<FileParentAccess>.Failure(
+                        new Error("PERMISSION_DENIED", "Access is denied for the requested operation."));
+                }
+
+                var exists = await _db.Items
+                    .AsNoTracking()
+                    .AnyAsync(i => i.Id == parentId.Value && i.OrganizationId == access.OrganizationId, cancellationToken);
+
+                if (!exists)
+                {
+                    return Result<FileParentAccess>.Failure(
+                        new Error("RESOURCE_NOT_FOUND", "Item not found."));
+                }
+
+                return Result<FileParentAccess>.Success(
+                    new FileParentAccess(normalizedParentType, parentId, null, access.OrganizationId));
+            }
+
             default:
                 return Result<FileParentAccess>.Failure(
-                    new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site."));
+                    new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site, item."));
         }
     }
 

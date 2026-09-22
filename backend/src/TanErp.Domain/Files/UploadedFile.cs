@@ -18,6 +18,12 @@ public class UploadedFile : Entity
     public Guid UploadedByUserId { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
+    public string? ContentSha256 { get; private set; }
+    public string ScanStatus { get; private set; } = "content_verified";
+    public DateTimeOffset? VerifiedAtUtc { get; private set; }
+    public int? Width { get; private set; }
+    public int? Height { get; private set; }
+
     protected UploadedFile() { }
 
     public UploadedFile(
@@ -29,7 +35,12 @@ public class UploadedFile : Entity
         long fileSizeBytes,
         string uploadSessionId,
         Guid uploadedByUserId,
-        DateTimeOffset createdAtUtc) : base(id)
+        DateTimeOffset createdAtUtc,
+        string? contentSha256 = null,
+        string scanStatus = "content_verified",
+        DateTimeOffset? verifiedAtUtc = null,
+        int? width = null,
+        int? height = null) : base(id)
     {
         if (string.IsNullOrWhiteSpace(storagePath))
             throw new ArgumentException("Storage path cannot be blank.", nameof(storagePath));
@@ -55,5 +66,10 @@ public class UploadedFile : Entity
         Status = UploadedFileStatus.Verified;
         UploadedByUserId = uploadedByUserId;
         CreatedAtUtc = createdAtUtc;
+        ContentSha256 = string.IsNullOrWhiteSpace(contentSha256) ? null : contentSha256.Trim();
+        ScanStatus = string.IsNullOrWhiteSpace(scanStatus) ? "content_verified" : scanStatus.Trim();
+        VerifiedAtUtc = verifiedAtUtc ?? createdAtUtc;
+        Width = width;
+        Height = height;
     }
 }
