@@ -99,7 +99,10 @@
 | แผนพัฒนา Official Estimate BOQ & Calculation Slice (5A) | [Official Estimate BOQ & Calculation Vertical Slice Plan](superpowers/plans/2026-09-18-official-estimate-boq-calculation-vertical-slice.md) |
 | แผนพัฒนา Commercial Quotation Slice (5B) | [Commercial Quotation Vertical Slice Plan](superpowers/plans/2026-09-20-commercial-quotation-vertical-slice.md) |
 | แผนพัฒนา Item Master สำหรับ Estimate Catalog | [Item Master Estimate Catalog Foundation Plan](superpowers/plans/2026-09-21-item-master-estimate-catalog-foundation.md) |
+| แผนปิดงานค้าง Item Master Estimate Catalog | [Item Master Estimate Catalog Completion Plan](superpowers/plans/2026-09-22-item-master-estimate-catalog-completion.md) |
+| แผนแก้ไข Item Master Catalog จาก Code Review | [Item Master Catalog Code Review Remediation Plan](superpowers/plans/2026-09-22-item-master-catalog-code-review-remediation.md) |
 | Prompt สำหรับ Antigravity ทำ Item Master Estimate Catalog | [Antigravity Item Master Execution Prompt](superpowers/prompts/2026-09-21-antigravity-item-master-estimate-catalog.md) |
+| Prompt สำหรับ Antigravity ปิดงาน Item Master Estimate Catalog | [Antigravity Item Master Completion Prompt](superpowers/prompts/2026-09-22-antigravity-item-master-estimate-catalog-completion.md) |
 | บันทึกผลการตรวจสอบ Official Estimate BOQ & Calculation Slice | [Official Estimate Verification](05-engineering/official-estimate-verification.md) |
 | บันทึกผลการตรวจสอบ Commercial Quotation Slice | [Commercial Quotation Verification](05-engineering/commercial-quotation-verification.md) |
 | บันทึกผลการตรวจสอบ Item Master Estimate Catalog Slice | [Item Master Estimate Catalog Verification](05-engineering/item-master-estimate-catalog-verification.md) |
