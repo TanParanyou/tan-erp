@@ -92,7 +92,23 @@ public static class TestOnlyDataSeeder
             ("quotations.accept", "Accept Quotations"),
             ("document-sequences.read", "Read Document Sequences"),
             ("document-sequences.manage", "Manage Document Sequences"),
-            ("document-sequences.manual-override", "Manual Override Document Numbers")
+            ("document-sequences.manual-override", "Manual Override Document Numbers"),
+            ("items.read", "Read Items and Estimate Catalog"),
+            ("items.create", "Create Items"),
+            ("items.update", "Update Items"),
+            ("items.activate", "Activate Items"),
+            ("items.deactivate", "Deactivate Items"),
+            ("items.manage-taxonomy", "Manage Categories and Brands"),
+            ("items.manage-branches", "Manage Item Branch Availability"),
+            ("items.manage-images", "Manage Item Images"),
+            ("cost-records.read", "Read Cost Records"),
+            ("cost-records.create", "Create Cost Records"),
+            ("cost-records.submit", "Submit Cost Records"),
+            ("cost-records.approve", "Approve Cost Records"),
+            ("cost-records.publish", "Publish Cost Records"),
+            ("cost-records.disable", "Disable Cost Records"),
+            ("units.read", "Read Units"),
+            ("units.manage", "Manage Units")
         };
 
 

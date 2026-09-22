@@ -293,5 +293,191 @@
   <data name="DOCUMENT_SEQUENCE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>เวอร์ชันของรูปแบบเลขที่เอกสารไม่ตรงกับข้อมูลล่าสุดในระบบ กรุณาโหลดข้อมูลใหม่</value>
   </data>
+  <data name="ITEM_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบรายการสินค้า</value>
+  </data>
+  <data name="ITEM_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบรายการสินค้าที่ระบุในองค์กรนี้</value>
+  </data>
+  <data name="ITEM_CATEGORY_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบหมวดหมู่สินค้า</value>
+  </data>
+  <data name="ITEM_CATEGORY_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบหมวดหมู่สินค้าที่ระบุในองค์กรนี้</value>
+  </data>
+  <data name="ITEM_BRAND_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบแบรนด์สินค้า</value>
+  </data>
+  <data name="ITEM_BRAND_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบแบรนด์สินค้าที่ระบุในองค์กรนี้</value>
+  </data>
+  <data name="ITEM_UNIT_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบหน่วยนับ</value>
+  </data>
+  <data name="ITEM_UNIT_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบหน่วยนับที่ระบุในองค์กรนี้</value>
+  </data>
+  <data name="ITEM_ALIAS_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบชื่อเรียกอื่นของสินค้า</value>
+  </data>
+  <data name="ITEM_ALIAS_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบชื่อเรียกอื่นของรายการสินค้านี้</value>
+  </data>
+  <data name="ITEM_IMAGE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบรูปภาพสินค้า</value>
+  </data>
+  <data name="ITEM_IMAGE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบรูปภาพสินค้าที่ระบุ</value>
+  </data>
+  <data name="ITEM_CODE_EXISTS_TITLE" xml:space="preserve">
+    <value>รหัสสินค้าซ้ำ</value>
+  </data>
+  <data name="ITEM_CODE_EXISTS_DETAIL" xml:space="preserve">
+    <value>รหัสสินค้านี้ถูกใช้งานแล้วในองค์กร</value>
+  </data>
+  <data name="ITEM_CATEGORY_CODE_EXISTS_TITLE" xml:space="preserve">
+    <value>รหัสหมวดหมู่ซ้ำ</value>
+  </data>
+  <data name="ITEM_CATEGORY_CODE_EXISTS_DETAIL" xml:space="preserve">
+    <value>รหัสหมวดหมู่นี้ถูกใช้งานแล้วในองค์กร</value>
+  </data>
+  <data name="ITEM_BRAND_CODE_EXISTS_TITLE" xml:space="preserve">
+    <value>รหัสแบรนด์ซ้ำ</value>
+  </data>
+  <data name="ITEM_BRAND_CODE_EXISTS_DETAIL" xml:space="preserve">
+    <value>รหัสแบรนด์นี้ถูกใช้งานแล้วในองค์กร</value>
+  </data>
+  <data name="ITEM_UNIT_CODE_EXISTS_TITLE" xml:space="preserve">
+    <value>รหัสหน่วยนับซ้ำ</value>
+  </data>
+  <data name="ITEM_UNIT_CODE_EXISTS_DETAIL" xml:space="preserve">
+    <value>รหัสหน่วยนับนี้ถูกใช้งานแล้วในองค์กร</value>
+  </data>
+  <data name="ITEM_ALIAS_EXISTS_TITLE" xml:space="preserve">
+    <value>ชื่อเรียกอื่นของสินค้าซ้ำ</value>
+  </data>
+  <data name="ITEM_ALIAS_EXISTS_DETAIL" xml:space="preserve">
+    <value>ชื่อเรียกอื่นของสินค้านี้มีอยู่แล้วในระบบ</value>
+  </data>
+  <data name="ITEM_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลสินค้าถูกเปลี่ยนแปลงแล้ว</value>
+  </data>
+  <data name="ITEM_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ข้อมูลสินค้ามีการเปลี่ยนแปลงจากเซสชันอื่น กรุณาโหลดข้อมูลใหม่ก่อนทำรายการ</value>
+  </data>
+  <data name="ITEM_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>สถานะสินค้าไม่ถูกต้อง</value>
+  </data>
+  <data name="ITEM_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถดำเนินการกับสินค้าในสถานะปัจจุบันได้</value>
+  </data>
+  <data name="ITEM_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>ข้อมูลสินค้าไม่ครบถ้วน</value>
+  </data>
+  <data name="ITEM_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>กรุณาระบุข้อมูลที่จำเป็นของสินค้าให้ครบถ้วน</value>
+  </data>
+  <data name="ITEM_TYPE_INVALID_TITLE" xml:space="preserve">
+    <value>ประเภทสินค้าไม่ถูกต้อง</value>
+  </data>
+  <data name="ITEM_TYPE_INVALID_DETAIL" xml:space="preserve">
+    <value>ประเภทสินค้าต้องเป็น material, labor, service, subcontract หรือ other</value>
+  </data>
+  <data name="ITEM_AVAILABILITY_MODE_INVALID_TITLE" xml:space="preserve">
+    <value>โหมดความพร้อมใช้งานของสินค้าไม่ถูกต้อง</value>
+  </data>
+  <data name="ITEM_AVAILABILITY_MODE_INVALID_DETAIL" xml:space="preserve">
+    <value>โหมดความพร้อมใช้งานต้องเป็น all_branches หรือ selected_branches</value>
+  </data>
+  <data name="ITEM_DEACTIVATION_REASON_REQUIRED_TITLE" xml:space="preserve">
+    <value>จำเป็นต้องระบุเหตุผลการปิดใช้งาน</value>
+  </data>
+  <data name="ITEM_DEACTIVATION_REASON_REQUIRED_DETAIL" xml:space="preserve">
+    <value>กรุณาระบุรหัสเหตุผลในการปิดใช้งานรายการสินค้า</value>
+  </data>
+  <data name="ITEM_BRANCH_REQUIRED_TITLE" xml:space="preserve">
+    <value>จำเป็นต้องระบุสาขาที่เปิดให้ใช้งาน</value>
+  </data>
+  <data name="ITEM_BRANCH_REQUIRED_DETAIL" xml:space="preserve">
+    <value>สำหรับสินค้าที่จำกัดเฉพาะสาขา ต้องระบุสาขาที่เปิดให้ใช้งานอย่างน้อยหนึ่งสาขา</value>
+  </data>
+  <data name="ITEM_CATEGORY_CIRCULAR_DEPENDENCY_TITLE" xml:space="preserve">
+    <value>โครงสร้างหมวดหมู่สินค้าวนซ้ำ</value>
+  </data>
+  <data name="ITEM_CATEGORY_CIRCULAR_DEPENDENCY_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถกำหนดหมวดหมู่หลักที่ทำให้เกิดความสัมพันธ์แบบวนซ้ำได้</value>
+  </data>
+  <data name="ITEM_IMAGE_LIMIT_EXCEEDED_TITLE" xml:space="preserve">
+    <value>จำนวนรูปภาพสินค้าเกินกำหนด</value>
+  </data>
+  <data name="ITEM_IMAGE_LIMIT_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>สินค้าสามารถมีรูปภาพได้สูงสุด 10 รูป</value>
+  </data>
+  <data name="ITEM_IMAGE_NOT_READY_TITLE" xml:space="preserve">
+    <value>รูปภาพยังไม่พร้อมใช้งาน</value>
+  </data>
+  <data name="ITEM_IMAGE_NOT_READY_DETAIL" xml:space="preserve">
+    <value>ไฟล์รูปภาพยังไม่ได้รับการตรวจสอบความปลอดภัยหรือการอัปโหลดไม่สมบูรณ์</value>
+  </data>
+  <data name="COST_RECORD_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบบันทึกต้นทุน</value>
+  </data>
+  <data name="COST_RECORD_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบบันทึกต้นทุนที่ระบุในองค์กรนี้</value>
+  </data>
+  <data name="COST_RECORD_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>บันทึกต้นทุนถูกเปลี่ยนแปลงแล้ว</value>
+  </data>
+  <data name="COST_RECORD_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>บันทึกต้นทุนมีการแก้ไขจากเซสชันอื่น กรุณาโหลดข้อมูลใหม่</value>
+  </data>
+  <data name="COST_RECORD_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>สถานะบันทึกต้นทุนไม่ถูกต้อง</value>
+  </data>
+  <data name="COST_RECORD_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถเปลี่ยนสถานะบันทึกต้นทุนในสถานะปัจจุบันได้</value>
+  </data>
+  <data name="COST_RECORD_MAKER_CHECKER_VIOLATION_TITLE" xml:space="preserve">
+    <value>ผิดหลักการ Maker-Checker</value>
+  </data>
+  <data name="COST_RECORD_MAKER_CHECKER_VIOLATION_DETAIL" xml:space="preserve">
+    <value>ผู้สร้างหรือแก้ไขบันทึกต้นทุนไม่สามารถอนุมัติบันทึกของตนเองได้</value>
+  </data>
+  <data name="COST_RECORD_DATE_OVERLAP_TITLE" xml:space="preserve">
+    <value>ช่วงวันที่มีผลบังคับใช้ของต้นทุนซ้ำซ้อน</value>
+  </data>
+  <data name="COST_RECORD_DATE_OVERLAP_DETAIL" xml:space="preserve">
+    <value>พบต้นทุนอื่นที่มีผลบังคับใช้ทับซ้อนกับช่วงเวลาที่ระบุในระดับสาขาหรือองค์กรเดียวกัน</value>
+  </data>
+  <data name="COST_RECORD_FIELD_REQUIRED_TITLE" xml:space="preserve">
+    <value>ข้อมูลบันทึกต้นทุนไม่ครบถ้วน</value>
+  </data>
+  <data name="COST_RECORD_FIELD_REQUIRED_DETAIL" xml:space="preserve">
+    <value>กรุณาระบุข้อมูลต้นทุนให้ถูกต้องและครบถ้วน</value>
+  </data>
+  <data name="ITEM_COST_AMBIGUOUS_TITLE" xml:space="preserve">
+    <value>พบต้นทุนที่กำกวม</value>
+  </data>
+  <data name="ITEM_COST_AMBIGUOUS_DETAIL" xml:space="preserve">
+    <value>พบต้นทุนที่ใช้งานได้มากกว่าหนึ่งรายการที่มีลำดับความสำคัญเท่ากัน</value>
+  </data>
+  <data name="ITEM_COST_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบต้นทุนที่ใช้งานได้</value>
+  </data>
+  <data name="ITEM_COST_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบต้นทุนที่เผยแพร่และมีผลบังคับใช้สำหรับสินค้านี้ในสาขาหรือองค์กรที่ระบุ</value>
+  </data>
+  <data name="ITEM_COST_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>เวอร์ชันต้นทุนสินค้าเปลี่ยนแปลง</value>
+  </data>
+  <data name="ITEM_COST_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ต้นทุนของสินค้าในใบประเมินราคามีการเปลี่ยนแปลง กรุณาตรวจสอบและอัปเดตราคาใหม่</value>
+  </data>
+  <data name="ITEM_CATALOG_CURSOR_INVALID_TITLE" xml:space="preserve">
+    <value>Cursor ของแคตตาล็อกสินค้าไม่ถูกต้อง</value>
+  </data>
+  <data name="ITEM_CATALOG_CURSOR_INVALID_DETAIL" xml:space="preserve">
+    <value>ค่า Cursor สำหรับแบ่งหน้าไม่ถูกต้องหรือไม่สามารถถอดรหัสได้</value>
+  </data>
 </root>
 

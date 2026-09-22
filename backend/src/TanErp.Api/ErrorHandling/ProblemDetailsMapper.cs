@@ -57,6 +57,44 @@ public static class ProblemDetailsMapper
         "FILE_NOT_FOUND" => StatusCodes.Status404NotFound,
         "IF_MATCH_REQUIRED" => StatusCodes.Status428PreconditionRequired,
 
+        // Item Master, Catalog & Cost Records
+        "ITEM_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "ITEM_CATEGORY_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "ITEM_BRAND_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "ITEM_UNIT_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "ITEM_ALIAS_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "ITEM_IMAGE_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "ITEM_COST_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "COST_RECORD_NOT_FOUND" => StatusCodes.Status404NotFound,
+
+        "ITEM_CODE_EXISTS" => StatusCodes.Status409Conflict,
+        "ITEM_CODE_CONFLICT" => StatusCodes.Status409Conflict,
+        "ITEM_CATEGORY_CODE_EXISTS" => StatusCodes.Status409Conflict,
+        "ITEM_BRAND_CODE_EXISTS" => StatusCodes.Status409Conflict,
+        "ITEM_UNIT_CODE_EXISTS" => StatusCodes.Status409Conflict,
+        "ITEM_ALIAS_EXISTS" => StatusCodes.Status409Conflict,
+        "ITEM_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+        "ITEM_INVALID_STATE" => StatusCodes.Status409Conflict,
+        "ITEM_IMAGE_LIMIT_EXCEEDED" => StatusCodes.Status409Conflict,
+        "ITEM_IMAGE_NOT_READY" => StatusCodes.Status409Conflict,
+        "COST_RECORD_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+        "COST_RECORD_INVALID_STATE" => StatusCodes.Status409Conflict,
+        "COST_RECORD_DATE_OVERLAP" => StatusCodes.Status409Conflict,
+        "ITEM_COST_AMBIGUOUS" => StatusCodes.Status409Conflict,
+        "ITEM_COST_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+
+        "COST_RECORD_MAKER_CHECKER_VIOLATION" => StatusCodes.Status403Forbidden,
+
+        "ITEM_CATALOG_CURSOR_INVALID" => StatusCodes.Status400BadRequest,
+
+        "ITEM_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "ITEM_TYPE_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "ITEM_AVAILABILITY_MODE_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "ITEM_DEACTIVATION_REASON_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "ITEM_BRANCH_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "ITEM_CATEGORY_CIRCULAR_DEPENDENCY" => StatusCodes.Status422UnprocessableEntity,
+        "COST_RECORD_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+
         "INTERNAL_SERVER_ERROR" => StatusCodes.Status500InternalServerError,
         _ => StatusCodes.Status500InternalServerError
     };

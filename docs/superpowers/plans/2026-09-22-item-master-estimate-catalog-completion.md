@@ -40,11 +40,11 @@
 ## Gate B — Governed Master Data
 
 ### Task 2: Governed Item & Taxonomy Management API
-- [ ] Step 2.1: Write failing API tests for Item, Category, Brand, Unit, Alias, and Branch Availability
-- [ ] Step 2.2: Implement `IItemStore` and CQRS handlers (Create, Update, Activate, Deactivate, SetBranchAvailability, Manage Taxonomy)
-- [ ] Step 2.3: Implement API controllers with RFC 9457 Problem Details and ETag/If-Match concurrency
-- [ ] Step 2.4: Ensure atomic `AuditEvent` logging and scope security (cross-organization returns 404)
-- [ ] Step 2.5: Run tests and verify OpenAPI contracts
+- [x] Step 2.1: Write failing API tests for Item, Category, Brand, Unit, Alias, and Branch Availability
+- [x] Step 2.2: Implement `IItemStore` and CQRS handlers (Create, Update, Activate, Deactivate, SetBranchAvailability, Manage Taxonomy)
+- [x] Step 2.3: Implement API controllers with RFC 9457 Problem Details and ETag/If-Match concurrency
+- [x] Step 2.4: Ensure atomic `AuditEvent` logging and scope security (cross-organization returns 404)
+- [x] Step 2.5: Run tests and verify OpenAPI contracts
 
 ### Task 3: Verified Private Item Images over File Service
 - [ ] Step 3.1: Write failing unit and integration tests for Item Image invariants

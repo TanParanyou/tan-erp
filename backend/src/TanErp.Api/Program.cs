@@ -131,6 +131,9 @@ builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddress
 
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();
 
+// Item Master Catalog & Taxonomy Store
+builder.Services.AddScoped<TanErp.Application.Items.IItemStore, TanErp.Infrastructure.Persistence.Items.ItemStore>();
+
 // File Service (reusable across modules)
 builder.Services.AddSingleton<TanErp.Application.Files.IFileStorageProvider, TanErp.Infrastructure.Files.LocalFileStorageProvider>();
 builder.Services.AddScoped<TanErp.Application.Files.IFileStore, TanErp.Infrastructure.Files.FileStore>();
