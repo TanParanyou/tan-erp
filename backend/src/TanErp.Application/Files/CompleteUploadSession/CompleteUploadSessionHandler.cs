@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Domain.Files;
@@ -163,29 +164,39 @@ public class CompleteUploadSessionHandler
                         cancellationToken);
                 }
 
-                // 7. Size check
-                if (fileInput.FileSizeBytes > MaxFileSizeBytes)
+                // 7. Bound, verify and hash the actual stream before storage
+                await using var verified = new MemoryStream(capacity: checked((int)Math.Min(fileInput.FileSizeBytes, MaxFileSizeBytes)));
+                await verified.WriteAsync(headerBuffer.AsMemory(0, bytesRead), cancellationToken);
+                await CopyWithLimitAsync(fileInput.Content, verified, MaxFileSizeBytes + 1 - bytesRead, cancellationToken);
+
+                if (verified.Length > MaxFileSizeBytes)
                 {
                     return await RollbackAndFail(savedPaths,
-                        new Error("FILE_UPLOAD_SESSION_INVALID",
-                            $"File '{fileInput.OriginalFilename}' exceeds the maximum allowed size of 10 MB."),
+                        new Error("FILE_TOO_LARGE", $"File '{fileInput.OriginalFilename}' exceeds the maximum allowed size of 10 MB."),
                         cancellationToken);
                 }
 
-                // 8. Reconstruct stream
-                var fullStream = new PrependedStream(headerBuffer[..bytesRead], fileInput.Content);
+                if (verified.Length != fileInput.FileSizeBytes)
+                {
+                    return await RollbackAndFail(savedPaths,
+                        new Error("FILE_SIZE_MISMATCH", $"Uploaded byte count ({verified.Length}) does not match the declared size ({fileInput.FileSizeBytes})."),
+                        cancellationToken);
+                }
 
-                // 9. Persist binary
+                var sha256 = Convert.ToHexString(SHA256.HashData(verified.ToArray())).ToLowerInvariant();
+                verified.Position = 0;
+
+                // 8. Persist verified binary
                 var storagePath = await _storageProvider.SaveAsync(
                     access.OrganizationId,
                     command.SessionId.ToString(),
                     fileInput.OriginalFilename,
-                    fullStream,
+                    verified,
                     cancellationToken);
 
                 savedPaths.Add(storagePath);
 
-                // 10. Prepare metadata
+                // 9. Prepare metadata with SHA-256 and content_verified status
                 var fileId = Guid.NewGuid();
                 var uploadedFile = new UploadedFile(
                     fileId,
@@ -193,10 +204,13 @@ public class CompleteUploadSessionHandler
                     storagePath,
                     fileInput.OriginalFilename,
                     detectedType,
-                    fileInput.FileSizeBytes,
+                    verified.Length,
                     command.SessionId.ToString(),
                     access.ActorUserId,
-                    _clock.UtcNow);
+                    _clock.UtcNow,
+                    contentSha256: sha256,
+                    scanStatus: FileScanStatus.ContentVerified,
+                    verifiedAtUtc: _clock.UtcNow);
 
                 uploadedFiles.Add(uploadedFile);
 
@@ -204,7 +218,7 @@ public class CompleteUploadSessionHandler
                     fileId,
                     fileInput.OriginalFilename,
                     detectedType,
-                    fileInput.FileSizeBytes,
+                    verified.Length,
                     $"/api/v1/files/{fileId}/content"));
             }
 
@@ -266,54 +280,20 @@ public class CompleteUploadSessionHandler
 
         return null;
     }
-}
 
-internal sealed class PrependedStream : Stream
-{
-    private readonly byte[] _prefix;
-    private int _prefixOffset;
-    private readonly Stream _inner;
-
-    public PrependedStream(byte[] prefix, Stream inner)
+    private static async Task CopyWithLimitAsync(Stream source, Stream destination, long maxAdditionalBytes, CancellationToken cancellationToken)
     {
-        _prefix = prefix;
-        _inner = inner;
-    }
-
-    public override bool CanRead => true;
-    public override bool CanSeek => false;
-    public override bool CanWrite => false;
-    public override long Length => throw new NotSupportedException();
-    public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var prefixRemaining = _prefix.Length - _prefixOffset;
-        if (prefixRemaining > 0)
+        var buffer = new byte[81920];
+        long totalRead = 0;
+        int read;
+        while ((read = await source.ReadAsync(buffer, 0, (int)Math.Min(buffer.Length, maxAdditionalBytes - totalRead + 1), cancellationToken)) > 0)
         {
-            var prefixRead = Math.Min(prefixRemaining, count);
-            Array.Copy(_prefix, _prefixOffset, buffer, offset, prefixRead);
-            _prefixOffset += prefixRead;
-            return prefixRead;
+            await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            totalRead += read;
+            if (totalRead > maxAdditionalBytes)
+            {
+                break;
+            }
         }
-        return _inner.Read(buffer, offset, count);
     }
-
-    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-    {
-        var prefixRemaining = _prefix.Length - _prefixOffset;
-        if (prefixRemaining > 0)
-        {
-            var prefixRead = Math.Min(prefixRemaining, count);
-            Array.Copy(_prefix, _prefixOffset, buffer, offset, prefixRead);
-            _prefixOffset += prefixRead;
-            return prefixRead;
-        }
-        return await _inner.ReadAsync(buffer.AsMemory(offset, count), cancellationToken);
-    }
-
-    public override void Flush() { }
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-    public override void SetLength(long value) => throw new NotSupportedException();
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }

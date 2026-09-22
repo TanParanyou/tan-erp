@@ -240,10 +240,22 @@
     <value>The file parent type must be opportunity, customer, or site, and must reference a valid parent.</value>
   </data>
   <data name="FILE_UPLOAD_SESSION_INVALID_TITLE" xml:space="preserve">
-    <value>Invalid File Upload Session</value>
+    <value>Invalid Upload File</value>
   </data>
   <data name="FILE_UPLOAD_SESSION_INVALID_DETAIL" xml:space="preserve">
-    <value>The upload session is invalid, expired, already consumed, or contains mismatched slots.</value>
+    <value>The uploaded file failed verification. Please check file type, size, and permitted count.</value>
+  </data>
+  <data name="FILE_TOO_LARGE_TITLE" xml:space="preserve">
+    <value>File Too Large</value>
+  </data>
+  <data name="FILE_TOO_LARGE_DETAIL" xml:space="preserve">
+    <value>The uploaded file exceeds the maximum allowed size of 10 MB.</value>
+  </data>
+  <data name="FILE_SIZE_MISMATCH_TITLE" xml:space="preserve">
+    <value>File Size Mismatch</value>
+  </data>
+  <data name="FILE_SIZE_MISMATCH_DETAIL" xml:space="preserve">
+    <value>Uploaded byte count does not match declared slot size.</value>
   </data>
   <data name="OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID_TITLE" xml:space="preserve">
     <value>Invalid Pagination Cursor</value>

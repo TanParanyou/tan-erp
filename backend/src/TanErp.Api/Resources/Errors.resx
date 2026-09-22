@@ -245,6 +245,18 @@
   <data name="FILE_UPLOAD_SESSION_INVALID_DETAIL" xml:space="preserve">
     <value>ไฟล์ที่อัปโหลดไม่ผ่านการตรวจสอบ กรุณาตรวจสอบประเภทไฟล์ ขนาดไฟล์ และจำนวนไฟล์ที่อนุญาต</value>
   </data>
+  <data name="FILE_TOO_LARGE_TITLE" xml:space="preserve">
+    <value>ขนาดไฟล์เกินกำหนด</value>
+  </data>
+  <data name="FILE_TOO_LARGE_DETAIL" xml:space="preserve">
+    <value>ไฟล์ที่อัปโหลดมีขนาดเกินขีดจำกัดสูงสุด 10 MB</value>
+  </data>
+  <data name="FILE_SIZE_MISMATCH_TITLE" xml:space="preserve">
+    <value>ขนาดไฟล์ไม่ตรงกับที่ระบุ</value>
+  </data>
+  <data name="FILE_SIZE_MISMATCH_DETAIL" xml:space="preserve">
+    <value>จำนวนไบต์ที่อัปโหลดจริงไม่ตรงกับขนาดไฟล์ที่แจ้งไว้ในช่องอัปโหลด</value>
+  </data>
   <data name="OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID_TITLE" xml:space="preserve">
     <value>ตัวชี้ตำแหน่งหน้าไม่ถูกต้อง</value>
   </data>

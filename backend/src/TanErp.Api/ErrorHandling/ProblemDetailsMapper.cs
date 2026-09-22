@@ -52,6 +52,8 @@ public static class ProblemDetailsMapper
         "SURVEY_MEASUREMENT_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "FILE_PARENT_TYPE_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "FILE_UPLOAD_SESSION_INVALID" => StatusCodes.Status409Conflict,
+        "FILE_TOO_LARGE" => StatusCodes.Status422UnprocessableEntity,
+        "FILE_SIZE_MISMATCH" => StatusCodes.Status422UnprocessableEntity,
         "OPPORTUNITY_WORK_IMAGE_CURSOR_INVALID" => StatusCodes.Status400BadRequest,
         "OPPORTUNITY_IMAGE_NOT_READY" => StatusCodes.Status409Conflict,
         "FILE_NOT_FOUND" => StatusCodes.Status404NotFound,
