@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm, FormProvider, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -52,6 +53,7 @@ export function EstimateWorkspaceDrawer({
 }: EstimateWorkspaceDrawerProps) {
   const t = useTranslations("estimates");
   const tc = useTranslations("common");
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirm();
 
@@ -357,6 +359,9 @@ export function EstimateWorkspaceDrawer({
       if (err instanceof ApiError) {
         if (err.code === "ESTIMATE_VERSION_CONFLICT") {
           toast.error(t("versionConflict"));
+        } else if (err.code === "ITEM_COST_VERSION_CONFLICT") {
+          void queryClient.invalidateQueries({ queryKey: ["estimates", "catalog"] });
+          toast.error(t("costVersionConflict"));
         } else if (err.code === "ESTIMATE_INVALID_STATE") {
           toast.error(t("invalidState"));
         } else {

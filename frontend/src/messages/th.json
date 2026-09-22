@@ -1039,6 +1039,10 @@
     "catalogModalTitle": "คลังรายการสินค้าและสเปกวัสดุ (Item Catalog)",
     "catalogModalDesc": "ค้นหาและเลือกรายการวัสดุตามประเภท แบรนด์ และความหนาเพื่อนำเข้าสู่ BOQ",
     "loadingCatalog": "กำลังโหลดรายการจากคลังวัสดุ...",
+    "errorLoadingCatalog": "เกิดข้อผิดพลาดในการโหลดรายการคลังวัสดุ",
+    "retry": "ลองใหม่",
+    "costVersionConflict": "ต้นทุนของวัสดุมีการเปลี่ยนแปลง กรุณาเลือกรายการจากคลังวัสดุใหม่อีกครั้ง",
+    "noBranchSelected": "กรุณาระบุสาขาก่อนค้นหาคลังวัสดุ",
     "insertSelectedCount": "แทรก {count} รายการที่เลือก",
     "catalogFacets": {
       "scope": "บทบาท",

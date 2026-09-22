@@ -5,10 +5,9 @@ import { NextIntlClientProvider } from "next-intl";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import thMessages from "@/messages/th.json";
 import { LightboxProvider } from "@/providers/lightbox-provider";
-import { CatalogItemDetailDrawer } from "./CatalogItemDetailDrawer";
-import type { CatalogItem } from "@/features/estimates/constants/estimate-catalog-items";
+import { CatalogItemDetailDrawer, type DrawerCatalogItem } from "./CatalogItemDetailDrawer";
 
-const mockItem: CatalogItem = {
+const mockItem: DrawerCatalogItem = {
   id: "item-001",
   code: "WD-HMR-15",
   name: {
@@ -62,7 +61,7 @@ const mockItem: CatalogItem = {
 };
 
 function renderDrawer(props: {
-  item: CatalogItem | null;
+  item: DrawerCatalogItem | null;
   isOpen: boolean;
   onClose?: () => void;
 }) {

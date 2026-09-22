@@ -2,14 +2,17 @@
 
 import React, { useState } from "react";
 import { useFormContext, useFieldArray, Controller } from "react-hook-form";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { IconTrash, IconPlus } from "@/components/common/Icons";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useEstimateOptions } from "../options/estimate-options";
 import { QUICK_COST_PRESETS, type QuickCostPreset } from "../constants/estimate-templates";
-import type { CatalogItem } from "../constants/estimate-catalog-items";
+import {
+  getLocalizedText,
+  type CatalogItemModel,
+} from "../api/estimate-catalog-client";
 import type { EstimateWorkspaceFormData } from "../schemas/estimate-workspace-schema";
 import { calculateCostComponentSubtotal } from "../utils/estimate-calculations";
 import { formatFinancialNumber } from "../utils/estimate-formatters";
@@ -29,6 +32,7 @@ export function EstimateCostComponentTable({
   branchId,
 }: EstimateCostComponentTableProps) {
   const t = useTranslations("estimates");
+  const locale = useLocale();
   const { options } = useEstimateOptions();
   const { confirm, ConfirmDialog } = useConfirm();
   const { control, watch } = useFormContext<EstimateWorkspaceFormData>();
@@ -46,7 +50,7 @@ export function EstimateCostComponentTable({
   const handleAddCost = () => {
     append({
       type: "material",
-      description: t("defaultMaterial"),
+      description: "",
       quantity: 1,
       unitCode: "lot",
       unitCost: 0,
@@ -67,19 +71,25 @@ export function EstimateCostComponentTable({
     });
   };
 
-  const handleInsertFromCatalog = (selectedItems: CatalogItem[]) => {
-    selectedItems.forEach((item) => {
+  const handleInsertFromCatalog = (selectedItems: CatalogItemModel[]) => {
+    selectedItems.forEach((item, selectedIndex) => {
+      const rawType = (item.itemType || "").toLowerCase();
+      const componentType: "material" | "labor" | "subcontract" | "equipment" =
+        rawType === "labor" || rawType === "subcontract" || rawType === "equipment"
+          ? rawType
+          : "material";
+
       append({
-        type: item.itemType,
-        description: item.name.th,
+        type: componentType,
+        description: getLocalizedText(item.name, locale),
         quantity: 1,
-        unitCode: item.pricing.baseUnitCode,
-        unitCost: item.pricing.defaultUnitCost,
-        currency,
-        sortOrder: fields.length + 1,
+        unitCode: item.resolvedCost?.unitCode || item.baseUnit.code || "lot",
+        unitCost: item.resolvedCost?.amount ?? 0,
+        currency: item.resolvedCost?.currency || currency,
+        sortOrder: fields.length + selectedIndex + 1,
         itemId: item.id,
-        costRecordId: item.pricing.costRecordId || null,
-        costRecordVersion: item.pricing.costRecordVersion ?? null,
+        costRecordId: item.resolvedCost?.costRecordId || null,
+        costRecordVersion: item.resolvedCost?.version ?? null,
       });
     });
   };

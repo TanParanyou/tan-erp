@@ -1,10 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { apiClient, type EstimateCatalogResponse } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { useOptionalSelectedMembership } from "@/lib/membership/selected-membership-context";
+import {
+  fetchEstimateCatalog,
+  type CatalogModel,
+  type FetchCatalogQuery,
+} from "../api/estimate-catalog-client";
 
 export interface UseEstimateCatalogParams {
   branchId: string;
@@ -33,19 +37,30 @@ export function useEstimateCatalog({
   const membershipId = membershipContext?.selectedMembership?.id;
   const locale = useSafeLocale();
 
-  return useQuery<EstimateCatalogResponse>({
+  const query: FetchCatalogQuery = {
+    branchId,
+    search: search?.trim() || undefined,
+    itemType: itemType || undefined,
+    categoryId: categoryId || undefined,
+    brandId: brandId || undefined,
+    hasCost,
+    cursor: cursor || undefined,
+    pageSize,
+  };
+
+  return useQuery<CatalogModel>({
     queryKey: [
       "estimates",
       "catalog",
       membershipId,
       branchId,
-      search,
-      itemType,
-      categoryId,
-      brandId,
-      hasCost,
-      cursor,
-      pageSize,
+      query.search,
+      query.itemType,
+      query.categoryId,
+      query.brandId,
+      query.hasCost,
+      query.cursor,
+      query.pageSize,
     ],
     queryFn: async ({ signal }) => {
       const token = await getAuthToken();
@@ -53,24 +68,12 @@ export function useEstimateCatalog({
         throw new Error("AUTHENTICATION_REQUIRED");
       }
 
-      return apiClient.getEstimateCatalog(
-        {
-          branchId,
-          search: search?.trim() || undefined,
-          itemType: itemType || undefined,
-          categoryId: categoryId || undefined,
-          brandId: brandId || undefined,
-          hasCost,
-          cursor: cursor || undefined,
-          pageSize,
-        },
-        {
-          token,
-          membershipId,
-          locale: locale === "en" ? "en" : "th",
-          signal,
-        }
-      );
+      return fetchEstimateCatalog(query, {
+        token,
+        membershipId,
+        locale: locale === "en" ? "en" : "th",
+        signal,
+      });
     },
     enabled: Boolean(enabled && branchId && membershipId),
     staleTime: 60 * 1000,

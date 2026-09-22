@@ -10,11 +10,40 @@ import { useLocalizedText } from "@/hooks/useLocalizedText";
 import { isSupportedLocale, defaultLocale } from "@/lib/i18n/locales";
 import { IconMaximize, IconMinimize } from "@/components/common/Icons";
 import { formatFinancialNumber } from "@/features/estimates/utils/estimate-formatters";
-import type { CatalogItem } from "@/features/estimates/constants/estimate-catalog-items";
 import { useAuthenticatedFileUrl } from "@/hooks/useAuthenticatedFileUrl";
 
+export interface DrawerCatalogItem {
+  id: string;
+  code: string;
+  name: { th?: string; en?: string; thai?: string; english?: string };
+  itemType: string;
+  category: { id: string; name: { th?: string; en?: string; thai?: string; english?: string } };
+  subCategory?: { id: string; name: { th?: string; en?: string; thai?: string; english?: string } };
+  brand?: { id: string; name: { th?: string; en?: string; thai?: string; english?: string } };
+  supplier?: { id: string; code?: string; name: { th?: string; en?: string; thai?: string; english?: string } };
+  primaryImageFileId?: string;
+  imageUrl?: string;
+  images?: string[];
+  status?: string;
+  description?: { th?: string; en?: string; thai?: string; english?: string };
+  aliases?: { th?: string; en?: string; thai?: string; english?: string }[];
+  specs?: Record<string, string>;
+  attributes?: Record<string, string>;
+  capabilities?: { canCost?: boolean; canSell?: boolean };
+  pricing?: {
+    defaultUnitCost?: number;
+    currency?: string;
+    baseUnitCode?: string;
+  };
+  resolvedCost?: {
+    amount?: number;
+    currency?: string;
+    unitCode?: string;
+  };
+}
+
 export interface CatalogItemDetailDrawerProps {
-  item: CatalogItem | null;
+  item: DrawerCatalogItem | null;
   isOpen: boolean;
   onClose: () => void;
   currency?: string;
@@ -42,15 +71,21 @@ export function CatalogItemDetailDrawer({
   const itemData = useMemo(() => {
     if (!item) return null;
 
-    const itemName = getLocalized(item.name) || item.name.th;
-    const itemAltName = currentLocale === "th" ? item.name.en || "-" : item.name.th || "-";
-    const brandName = getLocalized(item.brand.name) || item.brand.name.th;
-    const categoryName = getLocalized(item.category.name) || item.category.name.th;
+    const itemName = getLocalized(item.name) || item.name.th || item.name.thai || "-";
+    const itemAltName = currentLocale === "th"
+      ? item.name.en || item.name.english || "-"
+      : item.name.th || item.name.thai || "-";
+    const brandName = item.brand
+      ? getLocalized(item.brand.name) || item.brand.name.th || item.brand.name.thai || "-"
+      : "-";
+    const categoryName = item.category
+      ? getLocalized(item.category.name) || item.category.name.th || item.category.name.thai || "-"
+      : "-";
     const subCategoryName = item.subCategory
-      ? getLocalized(item.subCategory.name) || item.subCategory.name.th
+      ? getLocalized(item.subCategory.name) || item.subCategory.name.th || item.subCategory.name.thai || "-"
       : "-";
     const supplierName = item.supplier
-      ? getLocalized(item.supplier.name) || item.supplier.name.th
+      ? getLocalized(item.supplier.name) || item.supplier.name.th || item.supplier.name.thai || "-"
       : "-";
     const itemDesc = item.description ? getLocalized(item.description) : null;
 
@@ -236,7 +271,7 @@ export function CatalogItemDetailDrawer({
                 {t("catalogDetail.unitCode")}
               </span>
               <span className="font-mono font-medium text-erp-text-main">
-                {item.pricing.baseUnitCode}
+                {item.pricing?.baseUnitCode || item.resolvedCost?.unitCode || "-"}
               </span>
             </div>
           </div>
@@ -351,15 +386,15 @@ export function CatalogItemDetailDrawer({
                   {t("catalogDetail.unitCost")}
                 </span>
                 <span className="text-xs text-erp-text-secondary font-mono">
-                  1 {item.pricing.baseUnitCode}
+                  1 {item.pricing?.baseUnitCode || item.resolvedCost?.unitCode || "-"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold text-sm text-erp-navy">
-                  {formatFinancialNumber(item.pricing.defaultUnitCost)} {currency}
+                  {formatFinancialNumber(item.pricing?.defaultUnitCost ?? item.resolvedCost?.amount ?? 0)} {currency}
                 </span>
                 <CopyButton
-                  text={`${item.pricing.defaultUnitCost}`}
+                  text={`${item.pricing?.defaultUnitCost ?? item.resolvedCost?.amount ?? 0}`}
                   variant="icon"
                   size="sm"
                   className="h-6 w-6 border-0 bg-transparent p-0 text-erp-text-muted hover:text-erp-navy"

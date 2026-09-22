@@ -1040,6 +1040,10 @@
     "catalogModalTitle": "Item & Material Catalog",
     "catalogModalDesc": "Search and select materials by category, brand, and thickness to insert into BOQ",
     "loadingCatalog": "Loading catalog items from material catalog...",
+    "errorLoadingCatalog": "Failed to load catalog items.",
+    "retry": "Retry",
+    "costVersionConflict": "Item cost version has changed. Please re-select the item from the catalog.",
+    "noBranchSelected": "Please select a branch before browsing catalog.",
     "insertSelectedCount": "Insert {count} Selected Items",
     "catalogFacets": {
       "scope": "Scope",
