@@ -282,4 +282,127 @@ public class CostRecordEndpointsTests : IAsyncLifetime
         var editPublishedRes = await _client.SendAsync(editPublishedReq);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, editPublishedRes.StatusCode);
     }
+
+    [Fact]
+    public async Task ReturnDraft_RequiresReason_CreatesReviewRecord()
+    {
+        var (itemId, unitId) = await CreateTestItemAsync();
+        var now = DateTimeOffset.UtcNow;
+
+        // Maker creates and submits
+        var createReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs", token: "token-maker", membershipId: MembershipMakerId);
+        createReq.Content = JsonContent.Create(new CreateCostRecordRequest
+        {
+            Scope = "organization",
+            UnitId = unitId,
+            Currency = "THB",
+            Amount = 300.00m,
+            EffectiveFromUtc = now
+        });
+        var createRes = await _client.SendAsync(createReq);
+        var cost = await createRes.Content.ReadFromJsonAsync<CostRecordResponse>();
+
+        var submitReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost!.Id}/submit", token: "token-maker", membershipId: MembershipMakerId);
+        await _client.SendAsync(submitReq);
+
+        // Checker returns with reason
+        var returnReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost.Id}/return", token: "token-checker", membershipId: MembershipCheckerId);
+        returnReq.Content = JsonContent.Create(new ReturnCostRecordRequest { Reason = "ต้นทุนสูงเกินไป ให้ต่อรองใหม่" });
+        var returnRes = await _client.SendAsync(returnReq);
+        Assert.Equal(HttpStatusCode.OK, returnRes.StatusCode);
+
+        var returnedCost = await returnRes.Content.ReadFromJsonAsync<CostRecordResponse>();
+        Assert.Equal("returned", returnedCost!.Status);
+
+        // Verify review entry
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var reviews = await db.CostRecordReviews.Where(r => r.CostRecordId == cost.Id).ToListAsync();
+        Assert.Contains(reviews, r => r.Decision == "returned" && r.Reason == "ต้นทุนสูงเกินไป ให้ต่อรองใหม่");
+    }
+
+    [Fact]
+    public async Task Disable_RequiresReason_CreatesReviewRecord()
+    {
+        var (itemId, unitId) = await CreateTestItemAsync();
+        var now = DateTimeOffset.UtcNow;
+
+        var createReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs", token: "token-maker", membershipId: MembershipMakerId);
+        createReq.Content = JsonContent.Create(new CreateCostRecordRequest
+        {
+            Scope = "organization",
+            UnitId = unitId,
+            Currency = "THB",
+            Amount = 400.00m,
+            EffectiveFromUtc = now
+        });
+        var createRes = await _client.SendAsync(createReq);
+        var cost = await createRes.Content.ReadFromJsonAsync<CostRecordResponse>();
+
+        // Checker disables with reason
+        var disableReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost!.Id}/disable", token: "token-checker", membershipId: MembershipCheckerId);
+        disableReq.Content = JsonContent.Create(new DisableCostRecordRequest { Reason = "ซัพพลายเออร์ยกเลิกราคานี้" });
+        var disableRes = await _client.SendAsync(disableReq);
+        Assert.Equal(HttpStatusCode.OK, disableRes.StatusCode);
+
+        var disabledCost = await disableRes.Content.ReadFromJsonAsync<CostRecordResponse>();
+        Assert.Equal("disabled", disabledCost!.Status);
+        Assert.Equal("ซัพพลายเออร์ยกเลิกราคานี้", disabledCost.Reason);
+    }
+
+    [Fact]
+    public async Task Publish_OverlappingRanges_ReturnsConflict()
+    {
+        var (itemId, unitId) = await CreateTestItemAsync();
+        var effectiveDate = new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero);
+
+        // 1. Create, submit, approve, and publish Record 1
+        var createReq1 = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs", token: "token-maker", membershipId: MembershipMakerId);
+        createReq1.Content = JsonContent.Create(new CreateCostRecordRequest
+        {
+            Scope = "organization",
+            UnitId = unitId,
+            Currency = "THB",
+            Amount = 100.00m,
+            MinimumQuantity = 10,
+            EffectiveFromUtc = effectiveDate
+        });
+        var createRes1 = await _client.SendAsync(createReq1);
+        var cost1 = await createRes1.Content.ReadFromJsonAsync<CostRecordResponse>();
+
+        var submitReq1 = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost1!.Id}/submit", token: "token-maker", membershipId: MembershipMakerId);
+        await _client.SendAsync(submitReq1);
+
+        var approveReq1 = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost1.Id}/approve", token: "token-checker", membershipId: MembershipCheckerId);
+        await _client.SendAsync(approveReq1);
+
+        var publishReq1 = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost1.Id}/publish", token: "token-checker", membershipId: MembershipCheckerId);
+        var publishRes1 = await _client.SendAsync(publishReq1);
+        Assert.Equal(HttpStatusCode.OK, publishRes1.StatusCode);
+
+        // 2. Create, submit, approve Record 2 with exact same effective date & min quantity
+        var createReq2 = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs", token: "token-maker", membershipId: MembershipMakerId);
+        createReq2.Content = JsonContent.Create(new CreateCostRecordRequest
+        {
+            Scope = "organization",
+            UnitId = unitId,
+            Currency = "THB",
+            Amount = 120.00m,
+            MinimumQuantity = 10,
+            EffectiveFromUtc = effectiveDate
+        });
+        var createRes2 = await _client.SendAsync(createReq2);
+        var cost2 = await createRes2.Content.ReadFromJsonAsync<CostRecordResponse>();
+
+        var submitReq2 = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost2!.Id}/submit", token: "token-maker", membershipId: MembershipMakerId);
+        await _client.SendAsync(submitReq2);
+
+        var approveReq2 = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost2.Id}/approve", token: "token-checker", membershipId: MembershipCheckerId);
+        await _client.SendAsync(approveReq2);
+
+        // 3. Attempt to publish Record 2 -> Conflict 409 COST_RECORD_DATE_OVERLAP
+        var publishReq2 = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost2.Id}/publish", token: "token-checker", membershipId: MembershipCheckerId);
+        var publishRes2 = await _client.SendAsync(publishReq2);
+        Assert.Equal(HttpStatusCode.Conflict, publishRes2.StatusCode);
+    }
 }

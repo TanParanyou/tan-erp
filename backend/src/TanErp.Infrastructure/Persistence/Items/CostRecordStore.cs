@@ -450,6 +450,25 @@ public class CostRecordStore : ICostRecordStore
             return Result<CostRecordDetailProjection>.Failure(new Error("ITEM_COST_VERSION_CONFLICT", "Cost record has been modified concurrently."));
         }
 
+        // Reject exact same effective date & min quantity overlap if active published exists
+        var duplicateActivePublished = await _db.CostRecords
+            .AnyAsync(c => c.OrganizationId == orgId
+                && c.ItemId == itemId
+                && c.Id != costId
+                && c.Status == CostRecordStatus.Published
+                && c.Scope == record.Scope
+                && c.BranchId == record.BranchId
+                && c.UnitId == record.UnitId
+                && c.Currency == record.Currency
+                && c.EffectiveFromUtc == record.EffectiveFromUtc
+                && c.MinimumQuantity == record.MinimumQuantity, ct);
+
+        if (duplicateActivePublished)
+        {
+            await tx.RollbackAsync(ct);
+            return Result<CostRecordDetailProjection>.Failure(new Error("COST_RECORD_DATE_OVERLAP", "A published cost record already exists with the same effective date and minimum quantity."));
+        }
+
         var now = DateTimeOffset.UtcNow;
         try
         {
@@ -471,7 +490,7 @@ public class CostRecordStore : ICostRecordStore
                 && c.BranchId == record.BranchId
                 && c.UnitId == record.UnitId
                 && c.Currency == record.Currency
-                && c.EffectiveFromUtc <= record.EffectiveFromUtc)
+                && c.EffectiveFromUtc < record.EffectiveFromUtc)
             .ToListAsync(ct);
 
         foreach (var prev in previousPublished)
