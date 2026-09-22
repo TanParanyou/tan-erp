@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import thMessages from "@/messages/th.json";
 import { LightboxProvider } from "@/providers/lightbox-provider";
 import { CatalogItemDetailDrawer } from "./CatalogItemDetailDrawer";
@@ -65,16 +66,21 @@ function renderDrawer(props: {
   isOpen: boolean;
   onClose?: () => void;
 }) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <NextIntlClientProvider locale="th" messages={thMessages}>
-      <LightboxProvider>
-        <CatalogItemDetailDrawer
-          item={props.item}
-          isOpen={props.isOpen}
-          onClose={props.onClose || vi.fn()}
-        />
-      </LightboxProvider>
-    </NextIntlClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="th" messages={thMessages}>
+        <LightboxProvider>
+          <CatalogItemDetailDrawer
+            item={props.item}
+            isOpen={props.isOpen}
+            onClose={props.onClose || vi.fn()}
+          />
+        </LightboxProvider>
+      </NextIntlClientProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -91,12 +97,17 @@ describe("CatalogItemDetailDrawer component", () => {
     const { rerender } = renderDrawer({ item: null, isOpen: true });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
     rerender(
-      <NextIntlClientProvider locale="th" messages={thMessages}>
-        <LightboxProvider>
-          <CatalogItemDetailDrawer item={mockItem} isOpen={false} onClose={vi.fn()} />
-        </LightboxProvider>
-      </NextIntlClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <LightboxProvider>
+            <CatalogItemDetailDrawer item={mockItem} isOpen={false} onClose={vi.fn()} />
+          </LightboxProvider>
+        </NextIntlClientProvider>
+      </QueryClientProvider>
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

@@ -51,6 +51,8 @@ export type IssueQuotationRequest = components["schemas"]["IssueQuotationRequest
 export type QuotationResponse = components["schemas"]["QuotationResponse"];
 export type AcceptQuotationRequest = components["schemas"]["AcceptQuotationRequest"];
 export type AcceptQuotationResponse = components["schemas"]["AcceptQuotationResponse"];
+export type EstimateCatalogResponse = components["schemas"]["EstimateCatalogResponse"];
+export type EstimateCatalogItemResponse = components["schemas"]["EstimateCatalogItemResponse"];
 
 
 export type AddressSearchResponse = components["schemas"]["AddressSearchResponse"];
@@ -604,6 +606,36 @@ export class ApiClient {
       "POST",
       options,
       payload
+    );
+  }
+
+  async getEstimateCatalog(
+    query: {
+      branchId: string;
+      search?: string;
+      itemType?: string;
+      categoryId?: string;
+      brandId?: string;
+      hasCost?: boolean;
+      cursor?: string;
+      pageSize?: number;
+    },
+    options: RequestOptions
+  ): Promise<components["schemas"]["EstimateCatalogResponse"]> {
+    const params = new URLSearchParams();
+    params.set("branchId", query.branchId);
+    if (query.search) params.set("search", query.search);
+    if (query.itemType) params.set("itemType", query.itemType);
+    if (query.categoryId) params.set("categoryId", query.categoryId);
+    if (query.brandId) params.set("brandId", query.brandId);
+    if (query.hasCost !== undefined) params.set("hasCost", String(query.hasCost));
+    if (query.cursor) params.set("cursor", query.cursor);
+    if (query.pageSize) params.set("pageSize", String(query.pageSize));
+
+    return this.request<components["schemas"]["EstimateCatalogResponse"]>(
+      `/api/v1/estimate-catalog/items?${params.toString()}`,
+      "GET",
+      options
     );
   }
 }

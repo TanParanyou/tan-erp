@@ -1039,6 +1039,7 @@
     "browseCatalog": "Browse Catalog",
     "catalogModalTitle": "Item & Material Catalog",
     "catalogModalDesc": "Search and select materials by category, brand, and thickness to insert into BOQ",
+    "loadingCatalog": "Loading catalog items from material catalog...",
     "insertSelectedCount": "Insert {count} Selected Items",
     "catalogFacets": {
       "scope": "Scope",

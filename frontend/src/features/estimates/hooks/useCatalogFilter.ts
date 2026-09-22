@@ -6,6 +6,7 @@ import {
   type CostNatureType,
   type LocalizedString,
 } from "../constants/estimate-catalog-items";
+import { useEstimateCatalog } from "./use-estimate-catalog";
 
 export type CatalogScope = "all" | "cost" | "sell";
 
@@ -32,12 +33,14 @@ export interface SubCategoryOption {
 }
 
 export interface UseCatalogFilterProps {
+  branchId?: string;
   isOpen: boolean;
   onSelectItems: (items: CatalogItem[]) => void;
   onClose: () => void;
 }
 
 export function useCatalogFilter({
+  branchId,
   isOpen,
   onSelectItems,
   onClose,
@@ -58,6 +61,77 @@ export function useCatalogFilter({
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
+  // TanStack Query to fetch authoritative catalog from backend
+  const catalogQuery = useEstimateCatalog({
+    branchId: branchId || "",
+    search,
+    enabled: Boolean(isOpen && branchId),
+  });
+
+  const catalogItems = useMemo<CatalogItem[]>(() => {
+    if (branchId && catalogQuery.data?.items) {
+      return catalogQuery.data.items.map((apiItem) => {
+        const itemThName = apiItem.name?.thai ?? "";
+        const itemEnName = apiItem.name?.english ?? itemThName;
+        const catThName = apiItem.category?.name?.thai ?? "";
+        const catEnName = apiItem.category?.name?.english ?? catThName;
+        const brandThName = apiItem.brand?.name?.thai ?? "";
+        const brandEnName = apiItem.brand?.name?.english ?? brandThName;
+        const unitCode = apiItem.resolvedCost?.unitCode ?? apiItem.baseUnit?.code ?? "lot";
+        const unitCost = apiItem.resolvedCost?.amount ?? 0;
+        const rawType = (apiItem.itemType ?? "").toLowerCase();
+        const itemNature: CostNatureType =
+          rawType === "labor"
+            ? "labor"
+            : rawType === "subcontract"
+            ? "subcontract"
+            : rawType === "equipment"
+            ? "equipment"
+            : "material";
+
+        return {
+          id: apiItem.id ?? "",
+          code: apiItem.code ?? "",
+          name: {
+            th: itemThName,
+            en: itemEnName,
+          },
+          itemType: itemNature,
+          category: {
+            id: apiItem.category?.id ?? "unknown",
+            name: {
+              th: catThName,
+              en: catEnName,
+            },
+          },
+          brand: {
+            id: apiItem.brand?.id ?? "unknown",
+            name: {
+              th: brandThName,
+              en: brandEnName,
+            },
+          },
+          status: "active" as const,
+          capabilities: {
+            canCost: true,
+            canSell: true,
+          },
+          costNature: itemNature,
+          pricing: {
+            baseUnitCode: unitCode,
+            defaultUnitCost: unitCost,
+            standardSellPrice: unitCost,
+            currency: apiItem.resolvedCost?.currency ?? "THB",
+          },
+          primaryImageFileId: apiItem.primaryImage?.fileId,
+          costRecordId: apiItem.resolvedCost?.costRecordId,
+          costRecordVersion: apiItem.resolvedCost?.version,
+        };
+      });
+    }
+    return [...ESTIMATE_CATALOG_ITEMS];
+  }, [branchId, catalogQuery.data?.items]);
+
   // Reset selection when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -76,7 +150,7 @@ export function useCatalogFilter({
   // Extract unique available categories from catalog
   const availableCategories = useMemo<CategoryOption[]>(() => {
     const catMap = new Map<string, CategoryOption>();
-    for (const item of ESTIMATE_CATALOG_ITEMS) {
+    for (const item of catalogItems) {
       if (item.category.id && !catMap.has(item.category.id)) {
         catMap.set(item.category.id, {
           id: item.category.id,
@@ -85,12 +159,12 @@ export function useCatalogFilter({
       }
     }
     return Array.from(catMap.values());
-  }, []);
+  }, [catalogItems]);
 
   // Extract unique available brands from catalog
   const availableBrands = useMemo<BrandOption[]>(() => {
     const brandMap = new Map<string, BrandOption>();
-    for (const item of ESTIMATE_CATALOG_ITEMS) {
+    for (const item of catalogItems) {
       if (item.brand.id && !brandMap.has(item.brand.id)) {
         brandMap.set(item.brand.id, {
           id: item.brand.id,
@@ -99,12 +173,12 @@ export function useCatalogFilter({
       }
     }
     return Array.from(brandMap.values());
-  }, []);
+  }, [catalogItems]);
 
   // Extract unique available suppliers from catalog
   const availableSuppliers = useMemo<SupplierOption[]>(() => {
     const supMap = new Map<string, SupplierOption>();
-    for (const item of ESTIMATE_CATALOG_ITEMS) {
+    for (const item of catalogItems) {
       if (item.supplier && !supMap.has(item.supplier.id)) {
         supMap.set(item.supplier.id, {
           id: item.supplier.id,
@@ -114,12 +188,12 @@ export function useCatalogFilter({
       }
     }
     return Array.from(supMap.values());
-  }, []);
+  }, [catalogItems]);
 
   // Extract available sub-categories for current category
   const availableSubCategories = useMemo<SubCategoryOption[]>(() => {
     const subMap = new Map<string, SubCategoryOption>();
-    for (const item of ESTIMATE_CATALOG_ITEMS) {
+    for (const item of catalogItems) {
       if (selectedCategory !== "all" && item.category.id !== selectedCategory) {
         continue;
       }
@@ -132,12 +206,12 @@ export function useCatalogFilter({
       }
     }
     return Array.from(subMap.values());
-  }, [selectedCategory]);
+  }, [selectedCategory, catalogItems]);
 
   // Extract unique available thicknesses
   const availableThicknesses = useMemo(() => {
     const thickSet = new Set<string>();
-    for (const item of ESTIMATE_CATALOG_ITEMS) {
+    for (const item of catalogItems) {
       if (selectedCategory !== "all" && item.category.id !== selectedCategory) {
         continue;
       }
@@ -150,12 +224,12 @@ export function useCatalogFilter({
       const numB = parseFloat(b) || 0;
       return numA - numB;
     });
-  }, [selectedCategory]);
+  }, [selectedCategory, catalogItems]);
 
   // Extract available dynamic attributes for selected category
   const availableAttributes = useMemo(() => {
     const attrMap: Record<string, Set<string>> = {};
-    for (const item of ESTIMATE_CATALOG_ITEMS) {
+    for (const item of catalogItems) {
       if (selectedCategory !== "all" && item.category.id !== selectedCategory) {
         continue;
       }
@@ -172,7 +246,7 @@ export function useCatalogFilter({
       result[k] = Array.from(set).sort();
     }
     return result;
-  }, [selectedCategory]);
+  }, [selectedCategory, catalogItems]);
 
   // Toggle Type filter
   const toggleType = useCallback((type: CostNatureType | string) => {
@@ -245,7 +319,7 @@ export function useCatalogFilter({
 
   // Filter items based on active criteria
   const filteredItems = useMemo(() => {
-    return filterCatalogItems(ESTIMATE_CATALOG_ITEMS, {
+    return filterCatalogItems(catalogItems, {
       search,
       scope,
       itemTypes: selectedTypes,
@@ -257,6 +331,7 @@ export function useCatalogFilter({
       attributes: selectedAttributes,
     });
   }, [
+    catalogItems,
     search,
     scope,
     selectedTypes,
@@ -285,14 +360,14 @@ export function useCatalogFilter({
 
   // Confirm insert
   const handleConfirmInsert = useCallback(() => {
-    const selected = ESTIMATE_CATALOG_ITEMS.filter((item) =>
+    const selected = catalogItems.filter((item) =>
       selectedItemIds.includes(item.id)
     );
     if (selected.length > 0) {
       onSelectItems(selected);
       onClose();
     }
-  }, [selectedItemIds, onSelectItems, onClose]);
+  }, [catalogItems, selectedItemIds, onSelectItems, onClose]);
 
   return {
     search,
@@ -327,5 +402,6 @@ export function useCatalogFilter({
     availableSubCategories,
     availableThicknesses,
     availableAttributes,
+    isCatalogLoading: catalogQuery.isLoading,
   };
 }

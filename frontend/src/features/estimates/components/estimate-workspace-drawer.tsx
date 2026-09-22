@@ -123,6 +123,9 @@ export function EstimateWorkspaceDrawer({
             unitCost: c.unitCost || 0,
             currency: c.currency || currency,
             sortOrder: c.sortOrder || cIdx + 1,
+            itemId: c.itemId || null,
+            costRecordId: c.costRecordId || null,
+            costRecordVersion: c.costRecordVersion ?? null,
           })),
         })),
       }));
@@ -291,6 +294,9 @@ export function EstimateWorkspaceDrawer({
             unitCost: Number(c.unitCost) || 0,
             currency: c.currency || currency,
             sortOrder: cIdx + 1,
+            itemId: c.itemId || null,
+            costRecordId: c.costRecordId || null,
+            costRecordVersion: c.costRecordVersion ?? null,
           })),
         })),
       })),
@@ -336,6 +342,9 @@ export function EstimateWorkspaceDrawer({
             unitCost: c.unitCost || 0,
             currency: c.currency || currency,
             sortOrder: c.sortOrder || cIdx + 1,
+            itemId: c.itemId || null,
+            costRecordId: c.costRecordId || null,
+            costRecordVersion: c.costRecordVersion ?? null,
           })),
         })),
       }));
@@ -535,6 +544,7 @@ export function EstimateWorkspaceDrawer({
                     key={fields[sIdx]?.id || sIdx}
                     sectionIndex={sIdx}
                     currency={currency}
+                    branchId={estimate.branchId}
                     onRemoveSection={handleRemoveSection}
                   />
                 ))}

@@ -19,12 +19,14 @@ interface EstimateCostComponentTableProps {
   sectionIndex: number;
   itemIndex: number;
   currency: string;
+  branchId?: string;
 }
 
 export function EstimateCostComponentTable({
   sectionIndex,
   itemIndex,
   currency,
+  branchId,
 }: EstimateCostComponentTableProps) {
   const t = useTranslations("estimates");
   const { options } = useEstimateOptions();
@@ -75,6 +77,9 @@ export function EstimateCostComponentTable({
         unitCost: item.pricing.defaultUnitCost,
         currency,
         sortOrder: fields.length + 1,
+        itemId: item.id,
+        costRecordId: item.pricing.costRecordId || null,
+        costRecordVersion: item.pricing.costRecordVersion ?? null,
       });
     });
   };
@@ -298,6 +303,7 @@ export function EstimateCostComponentTable({
         onClose={() => setIsCatalogOpen(false)}
         onSelectItems={handleInsertFromCatalog}
         currency={currency}
+        branchId={branchId}
       />
 
       <ConfirmDialog />

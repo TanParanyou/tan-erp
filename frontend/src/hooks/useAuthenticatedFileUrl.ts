@@ -5,18 +5,18 @@ import { useQuery } from "@tanstack/react-query";
 import { fileClient } from "@/lib/api/file-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
-import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { useOptionalSelectedMembership } from "@/lib/membership/selected-membership-context";
 
-export function useAuthenticatedFileUrl(fileId: string) {
-  const { selectedMembership } = useSelectedMembership();
+export function useAuthenticatedFileUrl(fileId?: string | null) {
+  const membershipContext = useOptionalSelectedMembership();
   const locale = useSafeLocale();
-  const membershipId = selectedMembership?.id;
+  const membershipId = membershipContext?.selectedMembership?.id;
 
   const query = useQuery({
     queryKey: ["business", "file-content", membershipId, fileId],
     queryFn: async () => {
       const token = await getAuthToken();
-      if (!token || !membershipId) {
+      if (!token || !membershipId || !fileId) {
         throw new Error("AUTHENTICATION_REQUIRED");
       }
       return fileClient.getFileBlob(fileId, {

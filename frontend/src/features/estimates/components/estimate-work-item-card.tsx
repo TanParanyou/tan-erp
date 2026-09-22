@@ -22,6 +22,7 @@ interface EstimateWorkItemCardProps {
   sectionIndex: number;
   itemIndex: number;
   currency: string;
+  branchId?: string;
   isFirst?: boolean;
   isLast?: boolean;
   onDuplicateItem: (itemIndex: number) => void;
@@ -34,6 +35,7 @@ export function EstimateWorkItemCard({
   sectionIndex,
   itemIndex,
   currency,
+  branchId,
   isFirst = false,
   isLast = false,
   onDuplicateItem,
@@ -281,6 +283,7 @@ export function EstimateWorkItemCard({
           sectionIndex={sectionIndex}
           itemIndex={itemIndex}
           currency={currency}
+          branchId={branchId}
         />
       </div>
 

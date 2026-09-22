@@ -28,7 +28,7 @@ export interface CatalogSubCategory {
 }
 
 export interface CatalogCategory {
-  id: ItemCategoryType;
+  id: string;
   name: LocalizedString;
   subCategories?: CatalogSubCategory[];
 }
@@ -57,6 +57,8 @@ export interface CatalogPricing {
   defaultUnitCost: number;
   currency: string;
   baseUnitCode: string;
+  costRecordId?: string;
+  costRecordVersion?: number;
 }
 
 export interface CatalogCapabilities {
@@ -79,6 +81,7 @@ export interface CatalogItem {
   supplier?: CatalogSupplier;
   imageUrl?: string;
   images?: string[];
+  primaryImageFileId?: string;
   status: "active" | "inactive" | "phase_out";
   specs?: CatalogSpecs;
   attributes?: Record<string, string>;

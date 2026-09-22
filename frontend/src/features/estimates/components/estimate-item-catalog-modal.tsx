@@ -18,6 +18,7 @@ export interface EstimateItemCatalogModalProps {
   onClose: () => void;
   onSelectItems: (items: CatalogItem[]) => void;
   currency: string;
+  branchId?: string;
 }
 
 const SCOPES: readonly { id: CatalogScope; labelKey: string }[] = [
@@ -31,6 +32,7 @@ export function EstimateItemCatalogModal({
   onClose,
   onSelectItems,
   currency,
+  branchId,
 }: EstimateItemCatalogModalProps) {
   const t = useTranslations("estimates");
   const tc = useTranslations("common");
@@ -68,7 +70,9 @@ export function EstimateItemCatalogModal({
     availableSubCategories,
     availableThicknesses,
     availableAttributes,
+    isCatalogLoading,
   } = useCatalogFilter({
+    branchId,
     isOpen,
     onSelectItems,
     onClose,
@@ -247,6 +251,7 @@ export function EstimateItemCatalogModal({
               onClearFilters={handleResetFilters}
               onToggleSelectAll={handleToggleSelectAll}
               isAllSelected={isAllVisibleSelected}
+              isCatalogLoading={isCatalogLoading}
             />
           </div>
         </div>

@@ -4,9 +4,66 @@ import React, { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { IconEye, IconChevronLeft, IconChevronRight } from "@/components/common/Icons";
+import { useAuthenticatedFileUrl } from "@/hooks/useAuthenticatedFileUrl";
 import { formatFinancialNumber } from "../../utils/estimate-formatters";
 import type { CatalogItem } from "../../constants/estimate-catalog-items";
 import type { BrandOption, SupplierOption, SubCategoryOption, CategoryOption } from "../../hooks/useCatalogFilter";
+
+interface CatalogItemThumbnailProps {
+  primaryImageFileId?: string;
+  imageUrl?: string;
+  name: string;
+  onClick?: () => void;
+  viewDetailLabel: string;
+}
+
+function CatalogItemThumbnail({
+  primaryImageFileId,
+  imageUrl,
+  name,
+  onClick,
+  viewDetailLabel,
+}: CatalogItemThumbnailProps) {
+  const { objectUrl, isLoading } = useAuthenticatedFileUrl(primaryImageFileId || "");
+  const [hasError, setHasError] = useState(false);
+
+  const displayUrl = objectUrl || imageUrl;
+
+  return (
+    <div
+      onClick={onClick}
+      className="w-9 h-9 mx-auto bg-erp-surface border border-erp-border flex items-center justify-center overflow-hidden cursor-pointer hover:border-erp-navy transition-colors group"
+      title={viewDetailLabel}
+    >
+      {isLoading ? (
+        <div className="w-full h-full bg-erp-surface-subtle animate-pulse" />
+      ) : displayUrl && !hasError ? (
+        <img
+          src={displayUrl}
+          alt={name}
+          onError={() => setHasError(true)}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+        />
+      ) : (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="square"
+          aria-hidden="true"
+          className="text-erp-text-muted/60"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="0" ry="0" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      )}
+    </div>
+  );
+}
 
 export interface CatalogItemsTableProps {
   items: CatalogItem[];
@@ -29,6 +86,7 @@ export interface CatalogItemsTableProps {
   onClearFilters: () => void;
   onToggleSelectAll?: () => void;
   isAllSelected?: boolean;
+  isCatalogLoading?: boolean;
 }
 
 export function CatalogItemsTable({
@@ -52,6 +110,7 @@ export function CatalogItemsTable({
   onClearFilters,
   onToggleSelectAll,
   isAllSelected = false,
+  isCatalogLoading = false,
 }: CatalogItemsTableProps) {
   const t = useTranslations("estimates");
   const locale = useLocale() as "th" | "en";
@@ -59,13 +118,6 @@ export function CatalogItemsTable({
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(20);
-
-  // Image error state (URL fallback tracking)
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-
-  const handleImageError = (itemId: string) => {
-    setImageErrors((prev) => ({ ...prev, [itemId]: true }));
-  };
 
   // Reset page when items or filters change
   useEffect(() => {
@@ -281,7 +333,12 @@ export function CatalogItemsTable({
 
       {/* Table Area (Zero horizontal scroll with compact intelligent column grouping) */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain">
-        {items.length === 0 ? (
+        {isCatalogLoading ? (
+          <div className="py-16 text-center text-xs text-erp-text-muted flex flex-col items-center justify-center gap-2">
+            <div className="w-5 h-5 border-2 border-erp-navy border-t-transparent animate-spin" />
+            <span>{t("loadingCatalog")}</span>
+          </div>
+        ) : items.length === 0 ? (
           <div className="py-16 text-center text-xs text-erp-text-muted">
             {t("noMatchingItems")}
           </div>
@@ -345,8 +402,6 @@ export function CatalogItemsTable({
                   ? Object.entries(item.attributes).slice(0, 3)
                   : [];
 
-                const hasImageError = Boolean(imageErrors[item.id]);
-
                 return (
                   <tr
                     key={item.id}
@@ -372,36 +427,13 @@ export function CatalogItemsTable({
 
                     {/* Col 2: Image Thumbnail with Fallback */}
                     <td className="p-1.5 text-center border-r border-erp-border/60 align-top" onClick={(e) => e.stopPropagation()}>
-                      <div
+                      <CatalogItemThumbnail
+                        primaryImageFileId={item.primaryImageFileId}
+                        imageUrl={item.imageUrl}
+                        name={item.name[locale] || item.name.th}
                         onClick={() => onOpenDetail?.(item)}
-                        className="w-9 h-9 mx-auto bg-erp-surface border border-erp-border flex items-center justify-center overflow-hidden cursor-pointer hover:border-erp-navy transition-colors group"
-                        title={t("catalogDetail.viewDetail")}
-                      >
-                        {item.imageUrl && !hasImageError ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.name[locale] || item.name.th}
-                            onError={() => handleImageError(item.id)}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="square"
-                            aria-hidden="true"
-                            className="text-erp-text-muted/60"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="0" ry="0" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <polyline points="21 15 16 10 5 21" />
-                          </svg>
-                        )}
-                      </div>
+                        viewDetailLabel={t("catalogDetail.viewDetail")}
+                      />
                     </td>
 
                     {/* Col 3: Code + Name + Badges + Subcategory/Aliases */}

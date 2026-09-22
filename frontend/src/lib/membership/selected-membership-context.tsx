@@ -63,3 +63,8 @@ export function useSelectedMembership(): SelectedMembershipContextType {
   }
   return context;
 }
+
+export function useOptionalSelectedMembership(): SelectedMembershipContextType | null {
+  const context = useContext(SelectedMembershipContext);
+  return context ?? null;
+}

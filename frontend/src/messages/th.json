@@ -353,7 +353,6 @@
     "leadSourceNote": "ระบุแหล่งที่มาเพิ่มเติม",
     "leadSourceNotePlaceholder": "เช่น งานแสดงสินค้า, คำแนะนำจากเพื่อน...",
     "status": "สถานะ",
-
     "active": "ใช้งาน",
     "inactive": "ไม่ใช้งาน",
     "primaryContact": "ผู้ติดต่อหลัก",
@@ -1039,6 +1038,7 @@
     "browseCatalog": "ค้นหาจากคลังวัสดุ",
     "catalogModalTitle": "คลังรายการสินค้าและสเปกวัสดุ (Item Catalog)",
     "catalogModalDesc": "ค้นหาและเลือกรายการวัสดุตามประเภท แบรนด์ และความหนาเพื่อนำเข้าสู่ BOQ",
+    "loadingCatalog": "กำลังโหลดรายการจากคลังวัสดุ...",
     "insertSelectedCount": "แทรก {count} รายการที่เลือก",
     "catalogFacets": {
       "scope": "บทบาท",

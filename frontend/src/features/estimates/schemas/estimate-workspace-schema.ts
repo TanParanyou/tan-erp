@@ -9,6 +9,9 @@ export const costComponentSchema = z.object({
   unitCost: z.number().min(0, "Unit cost must be greater than or equal to 0"),
   currency: z.string(),
   sortOrder: z.number(),
+  itemId: z.string().nullable().optional(),
+  costRecordId: z.string().nullable().optional(),
+  costRecordVersion: z.number().nullable().optional(),
 });
 
 export type CostComponentFormData = z.infer<typeof costComponentSchema>;

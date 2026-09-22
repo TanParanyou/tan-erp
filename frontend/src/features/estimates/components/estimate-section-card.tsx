@@ -21,6 +21,7 @@ interface EstimateSectionCardProps {
   sectionIndex: number;
   currency: string;
   isInitiallyExpanded?: boolean;
+  branchId?: string;
   onRemoveSection: (sectionIndex: number) => void;
 }
 
@@ -28,6 +29,7 @@ export function EstimateSectionCard({
   sectionIndex,
   currency,
   isInitiallyExpanded = true,
+  branchId,
   onRemoveSection,
 }: EstimateSectionCardProps) {
   const t = useTranslations("estimates");
@@ -302,6 +304,7 @@ export function EstimateSectionCard({
                 sectionIndex={sectionIndex}
                 itemIndex={wIdx}
                 currency={currency}
+                branchId={branchId}
                 isFirst={wIdx === 0}
                 isLast={wIdx === fields.length - 1}
                 onDuplicateItem={handleDuplicateItem}

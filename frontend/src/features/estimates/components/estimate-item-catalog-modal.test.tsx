@@ -1,8 +1,22 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { EstimateItemCatalogModal } from "./estimate-item-catalog-modal";
 import { ESTIMATE_CATALOG_ITEMS } from "../constants/estimate-catalog-items";
+
+function renderModal(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  );
+}
 
 // Mock next-intl
 vi.mock("next-intl", () => ({
@@ -113,13 +127,13 @@ describe("EstimateItemCatalogModal", () => {
   };
 
   it("renders modal when isOpen is true", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
     expect(screen.getByText("คลังรายการสินค้าและสเปกวัสดุ")).toBeDefined();
     expect(screen.getByPlaceholderText("ค้นหารายการงานหรือวัสดุ...")).toBeDefined();
   });
 
   it("filters items by search input", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
     const searchInput = screen.getByPlaceholderText("ค้นหารายการงานหรือวัสดุ...");
 
     // Initially shows items
@@ -133,7 +147,7 @@ describe("EstimateItemCatalogModal", () => {
   it("selects items and confirms insert", () => {
     const onSelectItems = vi.fn();
     const onClose = vi.fn();
-    render(
+    renderModal(
       <EstimateItemCatalogModal
         {...defaultProps}
         onSelectItems={onSelectItems}
@@ -156,7 +170,7 @@ describe("EstimateItemCatalogModal", () => {
   });
 
   it("toggles category and brand search inputs when search icons are clicked", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
 
     // Initially category and brand search inputs are not visible
     expect(screen.queryByPlaceholderText("ค้นหาหมวดหมู่...")).toBeNull();
@@ -174,7 +188,7 @@ describe("EstimateItemCatalogModal", () => {
   });
 
   it("supports autocomplete search for supplier", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
     const supplierInput = screen.getByPlaceholderText("ค้นหาผู้จัดจำหน่าย...");
     expect(supplierInput).toBeDefined();
 
@@ -184,7 +198,7 @@ describe("EstimateItemCatalogModal", () => {
   });
 
   it("opens item detail drawer when view detail button is clicked", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
     const firstItem = ESTIMATE_CATALOG_ITEMS[0];
 
     // Find view detail buttons
@@ -205,7 +219,7 @@ describe("EstimateItemCatalogModal", () => {
   });
 
   it("collapses and expands sidebar filter sections", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
 
     // Cost type checkboxes are initially visible
     expect(screen.getByText("ค่าวัสดุ")).toBeDefined();
@@ -225,7 +239,7 @@ describe("EstimateItemCatalogModal", () => {
   });
 
   it("selects all visible items when table header select-all checkbox is clicked", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
 
     // Find the header select all checkbox
     const selectAllCheckbox = screen.getByLabelText("เลือกทั้งหมดในหน้านี้");
@@ -251,7 +265,7 @@ describe("EstimateItemCatalogModal", () => {
   });
 
   it("renders pagination controls and displays item counts", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
 
     // Should display pagination showing count
     expect(
@@ -268,7 +282,7 @@ describe("EstimateItemCatalogModal", () => {
   });
 
   it("displays active filter count badge on collapsible section header when filters are selected", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
 
     // Initially no badge on Cost Type header
     const costTypeHeader = screen.getByRole("button", { name: /1\. ประเภทต้นทุน/ });
@@ -283,7 +297,7 @@ describe("EstimateItemCatalogModal", () => {
   });
 
   it("toggles mobile filter sidebar when mobile filter button is clicked", () => {
-    render(<EstimateItemCatalogModal {...defaultProps} />);
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
 
     // Find the mobile filter toggle button
     const mobileFilterBtn = screen.getByRole("button", { name: /แสดงตัวกรอง/ });

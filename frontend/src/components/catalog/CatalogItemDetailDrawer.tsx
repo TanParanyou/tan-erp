@@ -11,6 +11,7 @@ import { isSupportedLocale, defaultLocale } from "@/lib/i18n/locales";
 import { IconMaximize, IconMinimize } from "@/components/common/Icons";
 import { formatFinancialNumber } from "@/features/estimates/utils/estimate-formatters";
 import type { CatalogItem } from "@/features/estimates/constants/estimate-catalog-items";
+import { useAuthenticatedFileUrl } from "@/hooks/useAuthenticatedFileUrl";
 
 export interface CatalogItemDetailDrawerProps {
   item: CatalogItem | null;
@@ -31,6 +32,8 @@ export function CatalogItemDetailDrawer({
   const currentLocale = isSupportedLocale(rawLocale) ? rawLocale : defaultLocale;
   const getLocalized = useLocalizedText();
   const [isExpanded, setIsExpanded] = React.useState(false);
+
+  const { objectUrl: authImageUrl } = useAuthenticatedFileUrl(item?.primaryImageFileId || "");
 
   React.useEffect(() => {
     setIsExpanded(false);
@@ -55,6 +58,8 @@ export function CatalogItemDetailDrawer({
     const images: string[] =
       item.images && item.images.length > 0
         ? item.images
+        : authImageUrl
+        ? [authImageUrl]
         : item.imageUrl
         ? [item.imageUrl]
         : [];
@@ -88,7 +93,7 @@ export function CatalogItemDetailDrawer({
       allSpecsText,
       statusVariant,
     };
-  }, [item, currentLocale, getLocalized]);
+  }, [item, currentLocale, getLocalized, authImageUrl]);
 
   if (!item || !itemData) return null;
 
