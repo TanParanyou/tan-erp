@@ -47,18 +47,18 @@
 - [x] Step 2.5: Run tests and verify OpenAPI contracts
 
 ### Task 3: Verified Private Item Images over File Service
-- [ ] Step 3.1: Write failing unit and integration tests for Item Image invariants
-- [ ] Step 3.2: Implement `ItemImage` entity, configurations, and partial unique constraint for primary image
-- [ ] Step 3.3: Implement `IItemImageStore` and image endpoints (attach, set primary, reorder, detach)
-- [ ] Step 3.4: Integrate with `FileParentAccessResolver` for permission and authorization
-- [ ] Step 3.5: Run tests and verify image privacy (no public URLs or token leaks)
+- [x] Step 3.1: Write failing unit and integration tests for Item Image invariants
+- [x] Step 3.2: Implement `ItemImage` entity, configurations, and partial unique constraint for primary image
+- [x] Step 3.3: Implement `IItemImageStore` and image endpoints (attach, set primary, reorder, detach)
+- [x] Step 3.4: Integrate with `FileParentAccessResolver` for permission and authorization
+- [x] Step 3.5: Run tests and verify image privacy (no public URLs or token leaks)
 
 ### Task 4: Versioned Cost Workflow, Maker-Checker & Deterministic Resolver
-- [ ] Step 4.1: Write tests for Cost lifecycle (Draft → Submitted → Approved/Returned → Published/Superseded/Disabled) and maker-checker invariant
-- [ ] Step 4.2: Implement `CostRecord`, `CostRecordReview`, `CostSource` entities and persistence
-- [ ] Step 4.3: Implement `ICostResolver` with deterministic precedence (Branch > Organization, latest EffectiveFrom, ambiguity detection)
-- [ ] Step 4.4: Implement Cost endpoints with atomic audit and concurrency
-- [ ] Step 4.5: Run tests and verify cost immutability and resolver invariants
+- [x] Step 4.1: Write tests for Cost lifecycle (Draft → Submitted → Approved/Returned → Published/Superseded/Disabled) and maker-checker invariant
+- [x] Step 4.2: Implement `CostRecord`, `CostRecordReview`, `CostSource` entities and persistence
+- [x] Step 4.3: Implement `ICostResolver` with deterministic precedence (Branch > Organization, latest EffectiveFrom, ambiguity detection)
+- [x] Step 4.4: Implement Cost endpoints with atomic audit and concurrency
+- [x] Step 4.5: Run tests and verify cost immutability and resolver invariants
 
 ---
 

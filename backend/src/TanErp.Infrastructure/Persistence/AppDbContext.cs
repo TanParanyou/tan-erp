@@ -55,6 +55,9 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Items.UnitOfMeasure> Units => Set<TanErp.Domain.Items.UnitOfMeasure>();
     public DbSet<TanErp.Domain.Items.ItemBranchAvailability> ItemBranchAvailabilities => Set<TanErp.Domain.Items.ItemBranchAvailability>();
     public DbSet<TanErp.Domain.Items.ItemImage> ItemImages => Set<TanErp.Domain.Items.ItemImage>();
+    public DbSet<TanErp.Domain.Items.CostRecord> CostRecords => Set<TanErp.Domain.Items.CostRecord>();
+    public DbSet<TanErp.Domain.Items.CostRecordReview> CostRecordReviews => Set<TanErp.Domain.Items.CostRecordReview>();
+    public DbSet<TanErp.Domain.Items.CostSource> CostSources => Set<TanErp.Domain.Items.CostSource>();
 
     public void AddAuditEvent(AuditEvent auditEvent)
     {

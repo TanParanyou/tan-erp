@@ -165,4 +165,33 @@ public static class ItemResponseMapper
         Width = p.Width,
         Height = p.Height
     };
+
+    public static CostRecordResponse ToResponse(CostRecordDetailProjection p) => new(
+        p.Id,
+        p.OrganizationId,
+        p.ItemId,
+        p.Scope,
+        p.BranchId,
+        p.UnitId,
+        new LocalizedTextDto(p.UnitName.Thai, p.UnitName.English),
+        p.Currency,
+        p.Amount,
+        p.MinimumQuantity,
+        p.MaximumQuantity,
+        p.EffectiveFromUtc,
+        p.EffectiveToUtc,
+        p.Status,
+        p.Version,
+        p.CostSourceId,
+        p.CostSourceName != null ? new LocalizedTextDto(p.CostSourceName.Thai, p.CostSourceName.English) : null,
+        p.SourceReference,
+        p.Reason,
+        p.EvidenceFileId,
+        p.CreatedByUserId,
+        p.LastFinancialEditorId,
+        p.ApprovedByUserId,
+        p.PublishedByUserId,
+        p.RowVersion,
+        p.CreatedAtUtc,
+        p.UpdatedAtUtc);
 }

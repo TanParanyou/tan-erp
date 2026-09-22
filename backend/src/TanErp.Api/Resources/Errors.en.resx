@@ -293,5 +293,41 @@
   <data name="DOCUMENT_SEQUENCE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>The document sequence configuration was modified by another user. Please refresh and try again.</value>
   </data>
+  <data name="MAKER_CHECKER_VIOLATION_TITLE" xml:space="preserve">
+    <value>Maker-Checker Violation</value>
+  </data>
+  <data name="MAKER_CHECKER_VIOLATION_DETAIL" xml:space="preserve">
+    <value>The maker or last financial editor cannot approve or review their own cost record.</value>
+  </data>
+  <data name="ITEM_COST_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>Cost Record Immutable</value>
+  </data>
+  <data name="ITEM_COST_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>Published, superseded, or disabled cost records cannot be modified.</value>
+  </data>
+  <data name="ITEM_COST_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Cost Record Not Found</value>
+  </data>
+  <data name="ITEM_COST_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>No published cost record was found matching the criteria.</value>
+  </data>
+  <data name="ITEM_COST_AMBIGUOUS_TITLE" xml:space="preserve">
+    <value>Cost Record Ambiguous</value>
+  </data>
+  <data name="ITEM_COST_AMBIGUOUS_DETAIL" xml:space="preserve">
+    <value>Multiple cost records match with ambiguous precedence.</value>
+  </data>
+  <data name="COST_RECORD_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Cost Record Not Found</value>
+  </data>
+  <data name="COST_RECORD_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>The specified cost record was not found.</value>
+  </data>
+  <data name="ITEM_COST_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Cost Record Version Conflict</value>
+  </data>
+  <data name="ITEM_COST_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The cost record has been modified concurrently. Please refresh and try again.</value>
+  </data>
 </root>
 

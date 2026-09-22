@@ -84,6 +84,15 @@ public static class ProblemDetailsMapper
         "ITEM_COST_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
 
         "COST_RECORD_MAKER_CHECKER_VIOLATION" => StatusCodes.Status403Forbidden,
+        "MAKER_CHECKER_VIOLATION" => StatusCodes.Status422UnprocessableEntity,
+        "ITEM_COST_IMMUTABLE" => StatusCodes.Status422UnprocessableEntity,
+        "COST_BRANCH_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "COST_AMOUNT_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "COST_QUANTITY_RANGE_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "COST_EFFECTIVE_PERIOD_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "COST_RETURN_REASON_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "COST_DISABLE_REASON_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "COST_INVALID_STATUS_TRANSITION" => StatusCodes.Status422UnprocessableEntity,
 
         "ITEM_CATALOG_CURSOR_INVALID" => StatusCodes.Status400BadRequest,
 

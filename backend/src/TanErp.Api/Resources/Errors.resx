@@ -479,5 +479,17 @@
   <data name="ITEM_CATALOG_CURSOR_INVALID_DETAIL" xml:space="preserve">
     <value>ค่า Cursor สำหรับแบ่งหน้าไม่ถูกต้องหรือไม่สามารถถอดรหัสได้</value>
   </data>
+  <data name="MAKER_CHECKER_VIOLATION_TITLE" xml:space="preserve">
+    <value>ผิดหลักการ Maker-Checker</value>
+  </data>
+  <data name="MAKER_CHECKER_VIOLATION_DETAIL" xml:space="preserve">
+    <value>ผู้สร้างหรือแก้ไขบันทึกต้นทุนไม่สามารถอนุมัติหรือตรวจทานบันทึกของตนเองได้</value>
+  </data>
+  <data name="ITEM_COST_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>ต้นทุนไม่สามารถแก้ไขได้</value>
+  </data>
+  <data name="ITEM_COST_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>บันทึกต้นทุนที่เผยแพร่ ยกเลิก หรือถูกแทนที่แล้วไม่สามารถแก้ไขข้อมูลทางการเงินได้</value>
+  </data>
 </root>
 
