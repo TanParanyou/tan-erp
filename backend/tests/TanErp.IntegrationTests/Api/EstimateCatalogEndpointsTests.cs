@@ -258,4 +258,53 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, res.StatusCode);
     }
+
+    [Fact]
+    public async Task SearchCatalog_FilterByHasCost_PushesPredicateToDatabase_DoesNotReturnShortPage()
+    {
+        // Add 3 unpriced items with codes that sort alphabetically BEFORE and BETWEEN the priced items
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var cat = await db.ItemCategories.FirstAsync(c => c.OrganizationId == OrgId);
+            var unit = await db.Units.FirstAsync(u => u.OrganizationId == OrgId);
+            var now = DateTimeOffset.UtcNow;
+            var actorId = Guid.NewGuid();
+
+            var unpriced1 = Item.CreateDraft(Guid.NewGuid(), OrgId, "AAA-NO-COST", ItemType.Material, cat.Id, null, LocalizedText.Create("ของไม่มีราคา 1", null), null, unit.Id, ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false), null, null, actorId, now);
+            unpriced1.Activate(actorId, now, false);
+            var unpriced2 = Item.CreateDraft(Guid.NewGuid(), OrgId, "BBB-NO-COST", ItemType.Material, cat.Id, null, LocalizedText.Create("ของไม่มีราคา 2", null), null, unit.Id, ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false), null, null, actorId, now);
+            unpriced2.Activate(actorId, now, false);
+            var unpriced3 = Item.CreateDraft(Guid.NewGuid(), OrgId, "CCC-NO-COST", ItemType.Material, cat.Id, null, LocalizedText.Create("ของไม่มีราคา 3", null), null, unit.Id, ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false), null, null, actorId, now);
+            unpriced3.Activate(actorId, now, false);
+
+            db.Items.AddRange(unpriced1, unpriced2, unpriced3);
+            await db.SaveChangesAsync();
+        }
+
+        // Query with hasCost=true and pageSize=2
+        // If in-memory filter is used on pageSize+1 (3 items: AAA, BBB, CCC), they have no cost so result would be EMPTY 0 items!
+        // But with database predicate pushdown, it must return the 2 priced items ("MOUNT-ROOF-01", "SOLAR-PANEL-550W")
+        var req = CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&hasCost=true&pageSize=2");
+        var res = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var body = await res.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(body);
+        Assert.Equal(2, body.Items.Count);
+        Assert.All(body.Items, i => Assert.NotNull(i.ResolvedCost));
+    }
+
+    [Fact]
+    public async Task SearchCatalog_TamperedCursor_ReturnsBadRequestWithCatalogCursorInvalid()
+    {
+        // Tampered JSON with empty code and empty Guid
+        var tamperedJson = "{\"Code\":\"\",\"Id\":\"00000000-0000-0000-0000-000000000000\"}";
+        var tamperedCursor = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(tamperedJson));
+
+        var req = CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&cursor={tamperedCursor}");
+        var res = await _client.SendAsync(req);
+
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
 }

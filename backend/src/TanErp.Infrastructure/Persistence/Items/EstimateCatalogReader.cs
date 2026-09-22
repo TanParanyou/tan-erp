@@ -46,10 +46,51 @@ public class EstimateCatalogReader : IEstimateCatalogReader
             i.AvailabilityMode == ItemAvailabilityMode.AllBranches ||
             i.BranchAvailabilities.Any(ba => ba.BranchId == branchId && ba.Status == "active"));
 
-        // 3. Facets query base
+        var now = DateTimeOffset.UtcNow;
+
+        // 3. Database HasCost predicate
+        if (query.HasCost.HasValue)
+        {
+            if (query.HasCost.Value)
+            {
+                queryable = queryable.Where(i => _db.CostRecords.Any(c =>
+                    c.OrganizationId == orgId
+                    && c.ItemId == i.Id
+                    && c.Status == CostRecordStatus.Published
+                    && c.EffectiveFromUtc <= now
+                    && (c.EffectiveToUtc == null || c.EffectiveToUtc >= now)
+                    && (c.Scope == CostScopeType.Organization || (c.Scope == CostScopeType.Branch && c.BranchId == branchId))));
+            }
+            else
+            {
+                queryable = queryable.Where(i => !_db.CostRecords.Any(c =>
+                    c.OrganizationId == orgId
+                    && c.ItemId == i.Id
+                    && c.Status == CostRecordStatus.Published
+                    && c.EffectiveFromUtc <= now
+                    && (c.EffectiveToUtc == null || c.EffectiveToUtc >= now)
+                    && (c.Scope == CostScopeType.Organization || (c.Scope == CostScopeType.Branch && c.BranchId == branchId))));
+            }
+        }
+
+        // 4. Server-side Search
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var search = query.Search.Trim().ToLowerInvariant();
+            var searchUpper = query.Search.Trim().ToUpperInvariant();
+
+            queryable = queryable.Where(i =>
+                i.NormalizedCode.Contains(searchUpper) ||
+                i.Name.Thai.ToLower().Contains(search) ||
+                (i.Name.English != null && i.Name.English.ToLower().Contains(search)) ||
+                i.Aliases.Any(a => a.Status == "active" &&
+                    (a.NormalizedTh.Contains(search) || (a.NormalizedEn != null && a.NormalizedEn.Contains(search)))));
+        }
+
+        // 5. Facets query base (reflects branch, hasCost, and search query)
         var facetsBase = queryable;
 
-        // 4. Filters
+        // 6. Category, Brand, and ItemType Filters
         if (!string.IsNullOrWhiteSpace(query.ItemType))
         {
             var itemType = query.ItemType.Trim().ToLowerInvariant();
@@ -64,20 +105,6 @@ public class EstimateCatalogReader : IEstimateCatalogReader
         if (query.BrandId.HasValue)
         {
             queryable = queryable.Where(i => i.BrandId == query.BrandId.Value);
-        }
-
-        // 5. Server-side Search
-        if (!string.IsNullOrWhiteSpace(query.Search))
-        {
-            var search = query.Search.Trim().ToLowerInvariant();
-            var searchUpper = query.Search.Trim().ToUpperInvariant();
-
-            queryable = queryable.Where(i =>
-                i.NormalizedCode.Contains(searchUpper) ||
-                i.Name.Thai.ToLower().Contains(search) ||
-                (i.Name.English != null && i.Name.English.ToLower().Contains(search)) ||
-                i.Aliases.Any(a => a.Status == "active" &&
-                    (a.NormalizedTh.Contains(search) || (a.NormalizedEn != null && a.NormalizedEn.Contains(search)))));
         }
 
         // 6. Cursor Decoding
@@ -125,7 +152,6 @@ public class EstimateCatalogReader : IEstimateCatalogReader
             .ToDictionaryAsync(im => im.ItemId, ct);
 
         // 9. Batch Load Costs (Zero N+1)
-        var now = DateTimeOffset.UtcNow;
         var publishedCosts = await _db.CostRecords
             .AsNoTracking()
             .Include(c => c.Unit)
@@ -146,10 +172,6 @@ public class EstimateCatalogReader : IEstimateCatalogReader
         foreach (var item in pagedItems)
         {
             var resolvedCost = costsByItem.GetValueOrDefault(item.Id);
-            if (query.HasCost == true && resolvedCost == null)
-            {
-                continue;
-            }
 
             primaryImages.TryGetValue(item.Id, out var img);
             var primaryImageProj = img != null
