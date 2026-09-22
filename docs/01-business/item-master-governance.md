@@ -8,7 +8,8 @@
 
 | Concern | Owner ตัวอย่าง | Checker ตัวอย่าง |
 | --- | --- | --- |
-| Item/Category | Item Master Owner | Data Steward |
+| Item/Category/Brand/Alias/Branch Availability | Item Master Owner | Data Steward |
+| Item Image | Item Master Owner | Data Steward/Security Policy |
 | Unit/Conversion | Data Steward | Estimation/Operations Specialist |
 | Cost Source/Record | Cost Owner | Cost Approver/Finance |
 | Import Batch | Item Master Owner | ผู้มี `item-imports.commit` |
@@ -24,6 +25,32 @@
 - การถอน Capability ที่มีธุรกรรมค้างต้อง Block หรือกำหนด Effective Change ตาม Module Owner
 - Deactivate บังคับเหตุผล; Snapshot เดิมไม่เปลี่ยนและ Item กลับ Active ได้เมื่อผ่าน Validation
 - Item ที่เคยถูกอ้างห้าม Hard Delete
+
+## Localized Text Rules
+
+- `name`/`description` ใช้ JSON Object ที่อนุญาตเฉพาะ `th`, `en`; ไม่รับ Array, Scalar, HTML หรือ Key อิสระ
+- ภาษาไทยบังคับก่อน Active; ภาษาอังกฤษว่างได้และ API/UI แสดง Empty State โดยไม่เดาค่าจากภาษาอื่น
+- Search/Sort ใช้ Query และ Index ที่ประกาศไว้ ไม่โหลดทุก Item ไปกรองใน Frontend
+- Attributes JSON ใช้เฉพาะข้อมูลแสดงผล/Facet ที่ไม่ใช่ Business Authority; Field ที่กำหนดราคา Scope Permission Lifecycle หรือ Calculation ต้องเป็น Typed Contract
+- Category ใช้ Parent Relation เพื่อแทน Subcategory และห้าม Cycle; Brand เป็น Master แยก ส่วน Alias ใช้ค้นหาแต่ไม่แทน Canonical Item Name
+- Supplier เป็น Context แยกและยังไม่ถูกสร้างเป็น Item-owned Master ใน Slice นี้; Cost Source อาจเก็บ `supplier_id` ได้เมื่อ Supplier Contract พร้อม
+
+## Branch Availability Rules
+
+- Item เป็นข้อมูลระดับ Organization และห้าม Duplicate เพียงเพราะใช้หลายสาขา
+- `allBranches` ใช้ได้กับทุก Branch ปัจจุบัน/อนาคต; `selectedBranches` ใช้ได้เฉพาะ Active Relation
+- การเปิดใช้ในสาขาไม่สร้างราคา; Branch Cost Override ต้องผ่าน Cost Lifecycle แยกต่างหาก
+- Catalog ต้องรับ Branch Context และ Fail-closed เมื่อ Membership ไม่มี Branch Scope ที่ร้องขอ
+- การเปลี่ยน Availability ไม่เปลี่ยน Estimate Snapshot เดิม
+
+## Item Image Rules
+
+- Reuse File Upload Session/Verified File และบังคับ File Parent Invariant `item + itemId`
+- Item Form ใช้ Deferred Upload: เลือกไฟล์ไว้ใน Client และ Upload เมื่อ Submit เท่านั้น
+- รับเฉพาะ JPEG/PNG/WebP ภายในขนาดที่กำหนด ตรวจ Signature/MIME, Strip EXIF/GPS และ Scan ก่อน Verified
+- File/Object Storage เป็น Private; การอ่านต้องผ่าน Authorization หรือ Signed URL อายุสั้น
+- Detach Image ไม่ลบ Binary ทันที; Cleanup เฉพาะ Verified File ที่ไม่มี Reference ตาม Retention Job
+- Primary Image เปลี่ยนแบบ Atomic และ Audit; Reorder ต้องใช้ ETag เพื่อกัน Lost Update
 
 ## Cost Record Lifecycle Rules
 
@@ -109,11 +136,17 @@ Input ต้องมี Organization, Branch, Item, Unit, Currency, Quantity, E
 ## Audit Events
 
 - `item.created`, `updated`, `activated`, `deactivated`
+- `item-category.created`, `updated`, `deactivated`
+- `item-brand.created`, `updated`, `deactivated`
+- `item-alias.created`, `updated`, `deactivated`
+- `item.branch-availability.updated`
+- `item-image.attached`, `updated`, `primary-changed`, `detached`
 - `unit.created`, `updated`, `deactivated`
 - `unit-conversion.created`, `superseded`, `disabled`
 - `cost-record.created`, `submitted`, `returned`, `approved`, `published`, `superseded`, `disabled`
 - `item-import.uploaded`, `validated`, `committed`, `failed`
 - Cost Resolution ที่ใช้กับ Estimate เก็บใน Estimate Snapshot ไม่สร้าง Audit Event ต่อการ Preview ทุกครั้ง
+- Audit Event เป็น Append-only, เขียนใน Transaction เดียวกับ State Change และไม่เก็บ Binary, Access Token, Signed URL หรือ Secret
 
 ## Governance Test Cases
 
@@ -129,6 +162,9 @@ Input ต้องมี Organization, Branch, Item, Unit, Currency, Quantity, E
 | `TC-GOV-ITEM-008` | Publish Cost รุ่นใหม่ | Estimate Snapshot เดิมไม่เปลี่ยน |
 | `TC-GOV-ITEM-009` | Conversion Chain เป็น Cycle | Reject |
 | `TC-GOV-ITEM-010` | ผู้ใช้ข้าม Organization | 404 + Security Audit |
+| `TC-GOV-ITEM-011` | Item เปิดใช้หลายสาขาแต่ต้นทุนต่างกัน | Item เดียว + Availability/Cost แยกสาขา |
+| `TC-GOV-ITEM-012` | Attach File จาก Upload Session ของ Parent อื่น | Reject และไม่สร้าง Relation |
+| `TC-GOV-ITEM-013` | Catalog Item ถูกปิดในสาขาหลัง Estimate บันทึก | เลือกใหม่ไม่ได้; Snapshot เดิมอ่านได้ |
 
 ## Production Sign-off
 

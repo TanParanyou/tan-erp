@@ -1,7 +1,7 @@
 # Item Master and Cost Foundation Design
 
-**สถานะ:** Approved Design Direction  
-**ขอบเขต:** Documentation Foundation เท่านั้น
+**สถานะ:** Approved Design Direction
+**ขอบเขต:** Approved Design สำหรับ Estimate Catalog Foundation; การลงมือพัฒนาต้องอ้าง Implementation Plan ที่อนุมัติแยกต่างหาก
 
 ## เป้าหมาย
 
@@ -16,6 +16,10 @@
 - Item Master เก็บ Identity/Classification/Default Unit; ไม่เก็บ Current Cost ก้อนเดียวบน Item
 - Cost Record แยกเป็น Versioned Record ที่มี Source, Unit, Currency, Quantity Break, Branch Scope และ Effective Period
 - Estimate เก็บ Cost Snapshot ที่ใช้จริง จึงไม่เปลี่ยนตาม Master Data ภายหลัง
+- `name` และ `description` ใช้ Localized JSONB รูปทรงคงที่ `{ th, en? }`; Core Business Fields ยังคงเป็น Typed Columns
+- Item เป็นข้อมูลระดับ Organization และเปิดใช้ทุกสาขาหรือสาขาที่เลือกผ่าน Item Branch Availability
+- Item Image อ้าง Verified File ของ File Service เดิม ไม่เก็บ Binary หรือ Public URL บน Item
+- Category ใช้ Parent Category เพื่อรองรับ Subcategory โดยไม่สร้าง Entity ซ้ำ, Brand เป็น Master แยก และ Alias เป็นคำค้นของ Item
 - Phase แรกไม่สร้าง BOM, Stock Balance, Supplier Contract หรือ General-purpose Workflow Builder
 
 แนวทางนี้ยืดหยุ่นกว่าการใช้ Item Type เป็นตัวกำหนดทุกพฤติกรรม และปลอดภัยกว่าการเก็บราคาเดียวบน Item ส่วนการสร้าง Generic Product Model เต็มรูปแบบถูกเลื่อนไปจนมีข้อมูล Procurement/Inventory/Production จริง
@@ -28,6 +32,14 @@
 - Unit Conversion เป็นของ Item เมื่อการแปลงขึ้นกับขนาด/บรรจุภัณฑ์; Conversion กลางใช้เฉพาะมิติเดียวกันและ Exact เท่านั้น
 - Cost Source บอกที่มา/หลักฐาน ส่วน Cost Record บอกค่าต้นทุนที่ใช้ได้ใน Scope/ช่วงเวลา
 - Reference Rate ของ Quick Estimate ไม่ใช่ Cost Record ของ Official Estimate
+- Item Branch Availability บอกว่าเลือก Item ในสาขาได้หรือไม่; Branch-scoped Cost Record บอกต้นทุนของสาขาและไม่ใช่สิ่งเดียวกัน
+- Item Image เป็น Relation ไปยัง Verified File; File Service เป็นเจ้าของ Binary, Media Validation และสิทธิ์ดาวน์โหลด
+
+## Estimate Catalog Foundation Boundary
+
+Slice แรกที่เชื่อม `estimate-item-catalog-modal.tsx` รองรับเฉพาะ Active Item ที่ `canCost=true`, THB, Base Unit, Organization Default Cost และ Branch Override แบบ Deterministic พร้อม Primary Image และ Estimate Snapshot
+
+ภายใน Slice นี้รวม Item/Hierarchical Category/Brand/Alias/Unit CRUD ขั้นต่ำ, Activation/Deactivation, Branch Availability, Item Image Attach/Detach/Reorder, Cost Maker–Checker/Publish, Catalog Search และการเก็บ Item/Cost Snapshot ใน Estimate ส่วน Unit Conversion Chain, Quantity Break UI ขั้นสูง, Import, Supplier Integration, Inventory และ Production ยังคง Deferred แม้ Schema/Contract เดิมรองรับการต่อยอด
 
 ## Item Lifecycle
 
@@ -130,17 +142,20 @@ POST            /api/v1/item-import-batches/{id}/commit
 
 Relational Core:
 
-- items (รวม Typed Capability Columns), item_categories
+- items (รวม Localized JSONB และ Typed Capability Columns), item_categories
+- item_brands, item_aliases; Category ใช้ `parent_category_id` แทน Subcategory table
+- item_branch_availabilities, item_images ซึ่งอ้าง Verified File
 - units, unit_conversions, item_unit_conversions
 - cost_sources, cost_records, cost_record_reviews
 - item_import_batches, item_import_rows
 - audit events และ estimate cost snapshots
 
-JSONB ใช้เฉพาะ Import Raw Row/Validation Metadata และ Versioned Cost Policy Snapshot ห้ามเก็บ Item/Unit/Cost Core เป็น JSONB ก้อนเดียว
+JSONB ใช้กับ Localized Text ที่มีรูปทรงคงที่, Attributes ที่ไม่ใช่กฎธุรกิจ, Import Raw Row/Validation Metadata และ Versioned Snapshot เท่านั้น ห้ามเก็บ Item/Unit/Cost Core เป็น JSONB ก้อนเดียว
 
 ## Permission Direction
 
 - `items.read`, `items.create`, `items.update`, `items.activate`, `items.deactivate`
+- `items.manage-branches`, `items.manage-images`
 - `cost-records.read`, `cost-records.create`, `cost-records.submit`, `cost-records.approve`, `cost-records.publish`, `cost-records.disable`
 - `units.read`, `units.manage`
 - `item-imports.create`, `item-imports.commit`

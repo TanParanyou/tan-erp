@@ -108,6 +108,26 @@ _Avoid_: Estimate Line, Free-text Item
 ขอบเขตการนำ Item ไปใช้ เช่น ขาย คิดต้นทุน จัดซื้อ เก็บคลัง หรือผลิต โดยไม่เปลี่ยนความหมายของประเภท Item
 _Avoid_: Item Type, Permission
 
+**Item Category (หมวดรายการ)**:
+โครงสร้างจัดกลุ่ม Item แบบลำดับชั้น โดย Category ลูกใช้ Parent Category เดียวกันแทนการสร้างชนิด Subcategory แยก
+_Avoid_: Tag, Separate Subcategory Entity
+
+**Item Brand (ยี่ห้อรายการ)**:
+ข้อมูลหลักระดับองค์กรสำหรับระบุยี่ห้อของ Item โดย Item ที่ไม่มีแนวคิดเรื่องยี่ห้อสามารถเว้นว่างได้
+_Avoid_: Supplier, Manufacturer Contract
+
+**Item Alias (ชื่อเรียกอื่นของรายการ)**:
+คำค้นหลายภาษาที่ชี้กลับไปยัง Item เดิมโดยไม่แทน Canonical Item Name และไม่สร้าง Item ใหม่
+_Avoid_: Duplicate Item, Display Name, Item Code
+
+**Item Branch Availability (การเปิดใช้รายการในสาขา)**:
+กติกาที่ระบุว่า Item ระดับองค์กรใช้ได้ทุกสาขาหรือเฉพาะสาขาที่เลือก โดยไม่สร้าง Item ซ้ำและไม่ใช้แทนราคาประจำสาขา
+_Avoid_: Branch Item, Branch Cost, Item Copy
+
+**Item Image (ภาพประกอบรายการ)**:
+ความสัมพันธ์ระหว่าง Item กับ Verified File สำหรับภาพหลัก ภาพเพิ่มเติม หรือภาพข้อมูลทางเทคนิค โดยไฟล์ยังอยู่ภายใต้ File Service
+_Avoid_: Image URL, Embedded Image, Public File
+
 **Unit of Measure (หน่วยนับ)**:
 หน่วยมาตรฐานที่ใช้บอกปริมาณของ Item, Work Item หรือต้นทุน
 _Avoid_: Package Size, Conversion Factor
@@ -197,4 +217,3 @@ _Avoid_: Loose File Reference, Global File Pool
 **Work Images (ภาพถ่ายหน้างานตามขั้นตอน)**:
 ภาพถ่ายจริงที่แนบไว้กับ Opportunity เพื่อบันทึกสภาพหน้างานหรือหลักฐานประกอบในแต่ละขั้นตอนการขาย (Stage) โดยอ้างอิงไฟล์ที่ Verified แล้ว และรองรับการดึงข้อมูลแบบ Keyset Cursor Pagination
 _Avoid_: Site Survey Image เมื่อหมายถึงภาพประกอบ Opportunity ทั่วไป
-

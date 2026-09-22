@@ -77,6 +77,8 @@
 | เหตุผลเลือก Typed Item/Versioned Cost | [ADR 0008](adr/0008-typed-items-versioned-cost-records.md) |
 | เหตุผลเลือก Immutable Ready Survey Revision | [ADR 0009](adr/0009-versioned-site-survey-revisions.md) |
 | เหตุผลเลือก Foundation Application Runtime | [ADR 0010](adr/0010-foundation-application-runtime.md) |
+| เหตุผลใช้ Localized JSONB เฉพาะข้อความ Item | [ADR 0012](adr/0012-localized-jsonb-for-item-text.md) |
+| เหตุผลใช้ Organization Item + Branch Availability | [ADR 0013](adr/0013-organization-items-with-branch-availability.md) |
 | แผนแก้ไข Foundation Login จาก Code Review | [Foundation Login Remediation Plan](superpowers/plans/2026-09-06-foundation-login-current-user-remediation.md) |
 | คู่มือปฏิบัติการ Foundation Login | [Foundation Login Runbook](05-engineering/foundation-login-runbook.md) |
 | บันทึกผลการตรวจสอบ Foundation Login | [Foundation Login Verification](05-engineering/foundation-login-verification.md) |
@@ -96,6 +98,8 @@
 | แผนปรับปรุง Official Estimate, Commercial และ Document Numbering | [Official Estimate and Commercial Hardening Plan](superpowers/plans/2026-09-20-official-estimate-commercial-hardening.md) |
 | แผนพัฒนา Official Estimate BOQ & Calculation Slice (5A) | [Official Estimate BOQ & Calculation Vertical Slice Plan](superpowers/plans/2026-09-18-official-estimate-boq-calculation-vertical-slice.md) |
 | แผนพัฒนา Commercial Quotation Slice (5B) | [Commercial Quotation Vertical Slice Plan](superpowers/plans/2026-09-20-commercial-quotation-vertical-slice.md) |
+| แผนพัฒนา Item Master สำหรับ Estimate Catalog | [Item Master Estimate Catalog Foundation Plan](superpowers/plans/2026-09-21-item-master-estimate-catalog-foundation.md) |
+| Prompt สำหรับ Antigravity ทำ Item Master Estimate Catalog | [Antigravity Item Master Execution Prompt](superpowers/prompts/2026-09-21-antigravity-item-master-estimate-catalog.md) |
 | บันทึกผลการตรวจสอบ Official Estimate BOQ & Calculation Slice | [Official Estimate Verification](05-engineering/official-estimate-verification.md) |
 | บันทึกผลการตรวจสอบ Commercial Quotation Slice | [Commercial Quotation Verification](05-engineering/commercial-quotation-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Draft Q-Gate Slice | [Opportunity Draft Q-Gate Verification](05-engineering/opportunity-draft-q-gate-verification.md) |

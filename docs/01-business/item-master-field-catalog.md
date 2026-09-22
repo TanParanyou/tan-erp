@@ -2,7 +2,7 @@
 
 **สถานะ:** Accepted Direction — Production Baseline; ค่า Cost ทั้งหมดในตัวอย่างเป็น `TEST_ONLY`
 
-เอกสารนี้เป็นแหล่งอ้างอิงหลักของ Field, Type, Required Gate และ Visibility สำหรับ Item, Unit, Conversion, Cost Source และ Cost Record
+เอกสารนี้เป็นแหล่งอ้างอิงหลักของ Field, Type, Required Gate และ Visibility สำหรับ Item, Category, Brand, Alias, Branch Availability, Item Image, Unit, Conversion, Cost Source และ Cost Record
 
 ## Gate Legend
 
@@ -20,12 +20,14 @@
 | `code` | String ≤50 | D | Normalize Uppercase; Unique ใน Organization; immutable หลัง Active ครั้งแรก |
 | `itemType` | Enum | D | `material`, `labor`, `service`, `subcontract`, `other` |
 | `categoryId` | UUID | A | Active Category ใน Organization เดียวกัน |
-| `nameTh` | String ≤250 | A | บังคับ; Trim/Normalize |
-| `nameEn` | String ≤250/null | Optional | ใช้สำหรับเอกสาร/ค้นหาภาษาอังกฤษ |
-| `descriptionTh` | String ≤2,000/null | Optional | ไม่ส่งลูกค้าอัตโนมัติ |
-| `descriptionEn` | String ≤2,000/null | Optional | ไม่ส่งลูกค้าอัตโนมัติ |
+| `brandId` | UUID/null | Optional | Active Brand ใน Organization เดียวกัน; Material/Product ใช้ได้แต่ Labor/Service ว่างได้ |
+| `name` | Localized JSON `{th,en?}` | A | `th` บังคับ ≤250; อนุญาตเฉพาะ `th`,`en`; Trim/Normalize |
+| `description` | Localized JSON `{th?,en?}` | Optional | แต่ละภาษา ≤2,000; Plain text; ไม่ส่งลูกค้าอัตโนมัติ |
 | `baseUnitCode` | String ≤20 | A | Active Unit และเข้ากับ Item |
 | `taxCategoryCode` | String ≤30/null | Optional | เป็น Classification ไม่ใช่ Tax Rate |
+| `availabilityMode` | Enum | D | `allBranches` หรือ `selectedBranches`; ไม่อนุมานจาก Branch List |
+| `attributes` | JSON Object | Optional | String values สำหรับแสดงผล/กรอง; ห้ามควบคุมราคา สิทธิ์ Lifecycle หรือ Calculation |
+| `attributesSchemaVersion` | Integer | Conditional | บังคับเมื่อมี Attributes |
 | `status` | Enum | System | `draft`, `active`, `inactive` |
 | `rowVersion` | Token | System | เปลี่ยนทุก Write |
 
@@ -41,22 +43,73 @@
 
 Capability ไม่ให้สิทธิ์ User และไม่สร้าง Transaction ของโมดูลอนาคต
 
+## Item Branch Availability
+
+| Field | Type | Gate | Rule |
+| --- | --- | --- | --- |
+| `itemId`, `branchId` | UUID | A | Item/Branch อยู่ Organization เดียวกัน |
+| `status` | Enum | System | `active|inactive` |
+| `effectiveFromUtc`, `effectiveToUtc` | UTC/null | Optional | Exclusive End; Period ไม่กลับด้าน |
+| `inactiveReason` | String ≤500/null | Conditional | บังคับเมื่อปิด Relation |
+| `rowVersion` | Token | System | Compare-and-swap |
+
+`allBranches` ไม่ต้องมี Relation; `selectedBranches` ต้องมี Active Relation อย่างน้อยหนึ่งรายการก่อน Activate Item ราคาสาขาเก็บใน Cost Record ไม่เก็บใน Availability
+
+## Item Image
+
+| Field | Type | Gate | Rule |
+| --- | --- | --- | --- |
+| `fileId` | UUID | D | Verified JPEG/PNG/WebP จาก Upload Session ของ Item เดียวกัน |
+| `role` | Enum | D | `primary|gallery|technical` |
+| `isPrimary` | Boolean | D | Active Primary ได้หนึ่งภาพต่อ Item |
+| `displayOrder` | Integer ≥0 | D | Stable Sort ด้วย `displayOrder,id` |
+| `altText` | Localized JSON `{th,en?}` | A | `th` บังคับสำหรับภาพที่ Active; แต่ละภาษา ≤250 |
+| `caption` | Localized JSON `{th?,en?}` | Optional | แต่ละภาษา ≤500; Plain text |
+| `status` | Enum | System | `active|inactive` |
+| `rowVersion` | Token | System | Compare-and-swap |
+
+Original File จำกัด 10 MB; Backend ตรวจ MIME และ Magic Number, ลบ EXIF/GPS, Scan ก่อน Verified และสร้าง Thumbnail/Medium Variant โดยไม่เขียนทับ Original
+
 ## Category
 
 | Field | Type | Gate | Rule |
 | --- | --- | --- | --- |
 | `code` | String ≤30 | A | Unique ใน Organization |
-| `nameTh`, `nameEn` | String | A/Optional | ภาษาไทยบังคับ |
+| `name` | Localized JSON `{th,en?}` | A | ภาษาไทยบังคับ; แต่ละภาษา ≤250 |
+| `description` | Localized JSON `{th?,en?}` | Optional | แต่ละภาษา ≤1,000; Plain text |
 | `parentCategoryId` | UUID/null | Optional | ห้าม Cycle; Parent อยู่ Organization เดียวกัน |
 | `allowedItemTypes` | Enum Set | A | Item ต้องอยู่ใน Allowlist |
+| `sortOrder` | Integer ≥0 | D | Stable Sort ด้วย `sortOrder,id` |
 | `status` | Enum | System | Active/Inactive; Category ที่ถูกใช้ห้ามลบ |
+
+Category และ Subcategory ใช้ Entity เดียวกัน โดย Subcategory คือ Category ที่มี `parentCategoryId`
+
+## Brand
+
+| Field | Type | Gate | Rule |
+| --- | --- | --- | --- |
+| `code` | String ≤30 | D | Normalize Uppercase; Unique ใน Organization |
+| `name` | Localized JSON `{th,en?}` | A | ภาษาไทยบังคับ; แต่ละภาษา ≤250 |
+| `description` | Localized JSON `{th?,en?}` | Optional | แต่ละภาษา ≤1,000; Plain text |
+| `sortOrder` | Integer ≥0 | D | Stable Sort ด้วย `sortOrder,id` |
+| `status` | Enum | System | Active/Inactive; Brand ที่ถูกใช้ห้าม Hard Delete |
+
+## Item Alias
+
+| Field | Type | Gate | Rule |
+| --- | --- | --- | --- |
+| `alias` | Localized JSON `{th,en?}` | D | ต้องมีอย่างน้อยหนึ่งภาษา; แต่ละภาษา ≤250 |
+| `status` | Enum | System | Active/Inactive |
+| `rowVersion` | Token | System | Compare-and-swap |
+
+Alias ใช้ค้นหาคำเรียกอื่น เช่น “ไม้เขียว” แต่ไม่แทน Item Name และไม่ถูกส่งเป็น Estimate Description โดยอัตโนมัติ
 
 ## Unit of Measure
 
 | Field | Type | Gate | Rule |
 | --- | --- | --- | --- |
 | `code` | String ≤20 | D | Unique ใน Organization เช่น `m`, `m2`, `sheet`, `day` |
-| `nameTh`, `nameEn` | String ≤100 | A/Optional | ภาษาไทยบังคับ |
+| `name` | Localized JSON `{th,en?}` | A | ภาษาไทยบังคับ; แต่ละภาษา ≤100 |
 | `symbol` | String ≤20 | A | ใช้แสดงผล ไม่ใช้เป็น Identifier |
 | `dimension` | Enum | A | `length`, `area`, `volume`, `mass`, `time`, `count`, `custom` |
 | `decimalScale` | Integer 0–4 | A | ควบคุมการรับ/แสดง Quantity |
@@ -136,6 +189,13 @@ Natural Key สำหรับ Period Overlap คือ Organization + Item + Br
 | `TC-FIELD-ITEM-008` | Branch นอก Organization | 404 + Security Audit |
 | `TC-FIELD-ITEM-009` | Patch ด้วย ETag เก่า | `ITEM_VERSION_CONFLICT` |
 | `TC-FIELD-ITEM-010` | Inactive Item ใน Snapshot เก่า | อ่านประวัติได้แต่เลือกใหม่ไม่ได้ |
+| `TC-FIELD-ITEM-011` | Localized Name มี Key อื่นหรือ `th` ว่างตอน Activate | Reject Field Error |
+| `TC-FIELD-ITEM-012` | Selected Branches ไม่มีสาขาที่ Active | Activate ไม่ได้ |
+| `TC-FIELD-ITEM-013` | ภาพไม่มี Alt Text ไทยตอน Activate | Reject Field Error |
+| `TC-FIELD-ITEM-014` | Attributes พยายามกำหนดราคา/สถานะ | Reject ตาม Attributes Schema |
+| `TC-FIELD-ITEM-015` | Category Parent เกิด Cycle | Reject และไม่เปลี่ยนข้อมูลบางส่วน |
+| `TC-FIELD-ITEM-016` | Alias ซ้ำหลัง Normalize | Reject `ITEM_ALIAS_CONFLICT` |
+| `TC-FIELD-ITEM-017` | Item อ้าง Brand ข้าม Organization | 404 + Security Audit |
 
 ## ตัวอย่างสั้น
 

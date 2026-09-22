@@ -14,6 +14,8 @@
 Create Draft
   → classify Item Type and Category
   → assign Base Unit and Capabilities
+  → choose all branches or selected branches
+  → attach verified images (optional)
   → validate
   → Activate
   → use in Estimate/Cost Record
@@ -50,14 +52,28 @@ Published Cost Record แก้ย้อนหลังไม่ได้ Versio
 
 ## Standard Sequence
 
-1. สร้าง Category/Unit ที่จำเป็น
-2. สร้าง Item Draft พร้อม Type, Base Unit และ Capability
+1. สร้าง Category hierarchy, Brand และ Unit ที่จำเป็น
+2. สร้าง Item Draft พร้อม Type, Base Unit, Capability และ Alias ที่ช่วยค้นหา
 3. Activate Item เมื่อ Field Gate ผ่าน
-4. สร้าง Cost Source และ Cost Record ตาม Unit/Currency/Branch/Quantity Break
-5. Submit และผ่าน Maker–Checker ก่อน Publish
-6. Official Estimate ขอ Resolve Cost ด้วย Item + Branch + Unit + Currency + Quantity + Estimate Date
-7. ระบบคืน Cost Record เดียวพร้อม Version/Source หรือ Stable Error
-8. Estimate บันทึก Snapshot ที่ใช้จริง
+4. กำหนด Branch Availability โดยไม่สร้าง Item ซ้ำ และแนบ Verified Item Image ตามต้องการ
+5. สร้าง Cost Source และ Cost Record ตาม Unit/Currency/Branch/Quantity Break
+6. Submit และผ่าน Maker–Checker ก่อน Publish
+7. Estimate Catalog ค้นหา Active Item ที่เปิดใช้ใน Branch และ Resolve Cost
+8. ระบบคืน Cost Record เดียวพร้อม Version/Source/Primary Image หรือ Stable Error
+9. Estimate ส่ง Item/Cost Identity กลับ Backend ซึ่ง Validate ใหม่ก่อนบันทึก Snapshot
+
+## Estimate Catalog Flow
+
+```text
+Open Catalog with Branch Context
+  → server filters Active + canCost + Branch Availability
+  → server resolves Published Cost and Primary Verified Image
+  → user selects Item and Quantity
+  → backend revalidates Item/Cost identity
+  → Estimate stores Item + Cost + Unit + Localized Name Snapshot
+```
+
+Frontend ห้ามถือ Static Catalog เป็น Production Source และห้ามเชื่อ `unitCost` ที่ Browser ส่งกลับโดยไม่ Resolve/Validate ฝั่ง Server
 
 ## Cost Resolution Flow
 
@@ -93,9 +109,14 @@ Import ไม่รัน Macro, Formula หรือ External Link และไ
 | Action | State | Permission | Guard | Result |
 | --- | --- | --- | --- | --- |
 | Create Item | — | `items.create` | Organization Scope | Draft |
+| Manage Category/Brand | — | `items.manage-taxonomy` | Organization Scope + no category cycle | Active/Draft Master |
+| Manage Alias | Draft/Active | `items.update` | Same Item + normalized uniqueness | Search Alias ใหม่ |
 | Patch Item | Draft/Active | `items.update` | ETag; immutable Code rule | ETag ใหม่ |
 | Activate Item | Draft/Inactive | `items.activate` | Required Field/Unit/Capability | Active |
 | Deactivate Item | Active | `items.deactivate` | Reason + no destructive cascade | Inactive |
+| Update Branch Availability | Draft/Active | `items.manage-branches` | Same Organization + ETag | Mode/Relations ใหม่ |
+| Attach/Reorder/Detach Image | Draft/Active | `items.manage-images` | Verified Parent File + ETag | Image Set ใหม่ |
+| Search Estimate Catalog | Active | `items.read` + `cost-records.read` | Branch Scope + deterministic cost | Cursor Page |
 | Create Cost | Active Item | `cost-records.create` | Unit/Currency/Source/Scope | Cost Draft |
 | Submit Cost | Draft/Returned | `cost-records.submit` | Field/Period complete | Submitted |
 | Review Cost | Submitted | `cost-records.approve` | Authority + Maker–Checker | Approved/Returned |

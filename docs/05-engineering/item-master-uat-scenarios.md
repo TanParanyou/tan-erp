@@ -26,6 +26,17 @@
 | `UAT-ITEM-016` | Estimator/Auditor | Publish Cost รุ่นใหม่หลัง Estimate คำนวณแล้ว | Estimate Snapshot เดิมยัง Reproduce ได้ |
 | `UAT-ITEM-017` | Thai/English User | Trigger Validation เดียวกันสองภาษา | Code เดิม; title/detail ตามภาษา; fallback ไทย |
 | `UAT-ITEM-018` | Keyboard/Mobile User | ค้นหา เปิดรายละเอียด แก้ Item และอ่าน Cost State ที่ 320px/200% | Focus เห็น, Target ≥44px, ไม่พึ่งสี, ไม่มีข้อมูลสำคัญถูกตัด |
+| `UAT-ITEM-019` | Item Master Owner | บันทึก Name/Description สองภาษาเป็น JSONB แล้วค้นหาด้วยชื่อไทย/อังกฤษ | ได้ Item เดิม; Key/Type ที่ไม่อนุญาตถูก Reject |
+| `UAT-ITEM-020` | Branch User | เปิด Catalog ที่สาขาซึ่ง Item แบบ Selected Branches ไม่ได้เปิดใช้ | Item ไม่ปรากฏและไม่รั่วข้อมูลข้าม Scope |
+| `UAT-ITEM-021` | Estimator | เลือก Item เดียวกันในสองสาขาที่มี Cost Override ต่างกัน | Item ID เดียว; Cost Record/Snapshot ต่างตาม Branch |
+| `UAT-ITEM-022` | Item Master Owner | แนบ JPEG/PNG/WebP ที่ Verified และตั้ง Primary Image | Catalog แสดงภาพผ่าน Authorized File API และมี Audit |
+| `UAT-ITEM-023` | Malicious User | แนบไฟล์ผิด Signature, ข้าม Parent หรือข้าม Organization | Reject; ไม่มี Relation/File Disclosure |
+| `UAT-ITEM-024` | Concurrent Editors | ตั้ง Primary Image หรือแก้ Branch Availability พร้อม ETag เดิม | Request หนึ่งสำเร็จ อีก Request Conflict; ไม่เกิด Primary ซ้ำ |
+| `UAT-ITEM-025` | Estimator | เลือก Catalog Item แล้วราคา Published เปลี่ยนก่อน Save Estimate | Backend Reject Version Conflict/ให้เลือกใหม่; ไม่เชื่อราคา Client |
+| `UAT-ITEM-026` | Auditor | ตรวจ Item/Branch/Image/Cost หลังแก้หลายครั้ง | Audit ระบุ Actor, Action, Resource, Trace และ Changed Fields ครบโดยไม่มี Secret |
+| `UAT-ITEM-027` | Item Master Owner | สร้าง Category แม่/ลูกและพยายามสร้าง Cycle | โครงสร้างปกติบันทึกได้; Cycle ถูก Reject |
+| `UAT-ITEM-028` | Estimator | ค้น Item ด้วย Alias “ไม้เขียว” และกรอง Brand | ได้ Item เดิมพร้อม Canonical Name/Brand ที่ถูกต้อง |
+| `UAT-ITEM-029` | Cross-organization User | อ้าง Category หรือ Brand ของอีก Organization | 404; ไม่มีข้อมูลรั่ว; State ไม่เปลี่ยน |
 
 ## Production Sign-off
 
@@ -33,7 +44,7 @@
 - Data Steward ยืนยัน Unit, Conversion, Code normalization และ Import Template
 - Finance/Cost Owner ยืนยัน Source Priority, Effective Period, Staleness, Zero/Manual Cost และ Branch Override
 - Security Owner ยืนยัน Permission, Scope, Maker–Checker และข้อมูล Cost ที่แต่ละ Role มองเห็น
-- Scenario `001–018` ผ่าน หรือมี Business Decision/Exception ที่บันทึกและอนุมัติ
+- Scenario `001–029` ผ่าน หรือมี Business Decision/Exception ที่บันทึกและอนุมัติ
 - ค่า `TEST_ONLY` ถูกแทนด้วย Published Policy/ข้อมูลจริงก่อน Production
 
 อ้างอิง [Governance](../01-business/item-master-governance.md), [API Contract](../03-contracts/item-master-api-contract.md) และ [Data Contract](../04-data/item-master-data-contract.md)
