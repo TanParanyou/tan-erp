@@ -369,4 +369,93 @@ public class ItemImageEndpointsTests : IAsyncLifetime
         Assert.Equal(img1!.Id, list[1].Id);
         Assert.Equal(1, list[1].DisplayOrder);
     }
+
+    [Fact]
+    public async Task AttachImage_WrongOrganization_Returns404()
+    {
+        var itemId = await CreateTestItemAsync();
+        var fileId = await UploadFileForItemAsync(itemId, "cross-org.jpg");
+
+        // Request from Org B credentials to Org A's item
+        var attachReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/images", "token-org-b", TestOnlyDataSeeder.TestMembershipBId);
+        attachReq.Content = JsonContent.Create(new AttachItemImageRequest
+        {
+            FileId = fileId,
+            Role = "gallery",
+            AltText = new LocalizedTextInput { Thai = "รูปข้ามองค์กร" }
+        });
+
+        var attachRes = await _client.SendAsync(attachReq);
+        Assert.Equal(HttpStatusCode.NotFound, attachRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task AttachImage_WithoutPermission_Returns403()
+    {
+        var itemId = await CreateTestItemAsync();
+        var fileId = await UploadFileForItemAsync(itemId, "no-perm.jpg");
+
+        // Request without items.manage-images permission
+        var attachReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/images", "token-no-perm", MembershipNoPermId);
+        attachReq.Content = JsonContent.Create(new AttachItemImageRequest
+        {
+            FileId = fileId,
+            Role = "gallery",
+            AltText = new LocalizedTextInput { Thai = "ไม่มีสิทธิ์" }
+        });
+
+        var attachRes = await _client.SendAsync(attachReq);
+        Assert.Equal(HttpStatusCode.Forbidden, attachRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task AttachImage_WrongParentId_Returns409Conflict()
+    {
+        var item1Id = await CreateTestItemAsync();
+        var item2Id = await CreateTestItemAsync();
+
+        // Upload file for Item 1
+        var fileId = await UploadFileForItemAsync(item1Id, "item1-file.jpg");
+
+        // Try to attach this file to Item 2 (parent mismatch)
+        var attachReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item2Id}/images");
+        attachReq.Content = JsonContent.Create(new AttachItemImageRequest
+        {
+            FileId = fileId,
+            Role = "gallery",
+            AltText = new LocalizedTextInput { Thai = "ไฟล์ผิด item" }
+        });
+
+        var attachRes = await _client.SendAsync(attachReq);
+        Assert.Equal(HttpStatusCode.Conflict, attachRes.StatusCode);
+    }
+
+    [Fact]
+    public async Task DetachImage_PreservesUploadedFileBinaryRetention()
+    {
+        var itemId = await CreateTestItemAsync();
+        var fileId = await UploadFileForItemAsync(itemId, "retain.jpg");
+
+        var attachReq = CreateRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/images");
+        attachReq.Content = JsonContent.Create(new AttachItemImageRequest
+        {
+            FileId = fileId,
+            Role = "primary",
+            IsPrimary = true,
+            AltText = new LocalizedTextInput { Thai = "รูปเก็บไฟล์" }
+        });
+        var attachRes = await _client.SendAsync(attachReq);
+        var img = await attachRes.Content.ReadFromJsonAsync<ItemImageDetailResponse>();
+
+        // Detach image
+        var detachReq = CreateRequest(HttpMethod.Delete, $"/api/v1/items/{itemId}/images/{img!.Id}");
+        var detachRes = await _client.SendAsync(detachReq);
+        Assert.Equal(HttpStatusCode.NoContent, detachRes.StatusCode);
+
+        // Verify UploadedFile is still present in database (not deleted)
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var fileStillExists = await db.UploadedFiles.AnyAsync(f => f.Id == fileId);
+        Assert.True(fileStillExists, "UploadedFile must be retained after detaching image");
+    }
 }
