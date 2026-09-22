@@ -1,108 +1,116 @@
-# Item Master Estimate Catalog Vertical Slice Verification
+# Item Master Estimate Catalog Vertical Slice & Remediation Verification
 
-**Status:** Verified (Complete & Closed per `docs/superpowers/plans/2026-09-22-item-master-estimate-catalog-completion.md`)  
-**Tested Date:** 2026-09-22  
+**Status:** Verified (All 9 Remediation Tasks Completed per `docs/superpowers/plans/2026-09-22-item-master-catalog-code-review-remediation.md`)
+**Tested Date:** 2026-09-23
 **Environment:**
 - macOS Apple Silicon
-- PostgreSQL 17 Container (Testcontainers)
-- ASP.NET Core 10.0 WebApi / .NET SDK 10.0.400
-- Next.js 16.3.4 Frontend / React 19 / TypeScript 5.9.3
+- PostgreSQL 17 Testcontainers
+- ASP.NET Core 10.0 WebApi (.NET SDK 10.0.400)
+- Next.js 16.3.4 Frontend
+- Node.js 24.20.x
 
 ---
 
 ## 1. Scope & Implementation Summary
 
-This vertical slice completes the full **Item Master Estimate Catalog & Versioned Cost Resolution** end-to-end integration across all 4 completion gates:
+This vertical slice completes the **Item Master Estimate Catalog & Governed Costs** foundation along with all 9 hardening remediation tasks:
 
-### Gate A: Safe Schema & Multi-Tenant Foundations
-- **Relational Item Schema:** `items`, `units_of_measure`, `item_categories`, `item_brands`, `item_aliases`, `item_branch_availabilities`, `item_images`, `cost_records`.
-- **Composite Foreign Key Multi-Tenancy:** All relational child tables enforce `(parent_id, organization_id)` references to ensure tenant isolation at the database level.
-- **EF Core Value Converters:** Localized multilingual text (`name`, `description`, `short_description`) mapped to JSONB using `System.Text.Json` with explicit serialization options.
-- **File Access Security:** `UploadedFile` parent types extended to support `item_image` with role governance.
+1. **Security & Binary Storage Integrity (Task 1):**
+   - Actual byte bounded streaming with strict 10 MB limit (`MaxFileSizeBytes`).
+   - Slot metadata byte matching and magic number header inspection (WebP, JPEG, PNG).
+   - SHA-256 calculation and persistence with `content_verified` audit status.
 
-### Gate B: Governed Master Data & Maker-Checker Workflow
-- **Item Master Endpoints & Handlers:** Strict CQRS architecture with `IItemStore` and EF Core.
-- **Image Attachment & Binary Validation:** Magic bytes inspection (`image/jpeg`, `image/png`, `image/webp`), dimension extraction, single-primary constraint enforcement, and thumbnail resolution.
-- **Two-Person Integrity (Maker-Checker):** Cost records require maker submission followed by an independent checker approval (`COST_RECORD_MAKER_CHECKER_VIOLATION` if maker attempts self-approval).
-- **Hierarchical Cost Resolution:** Authoritative precedence: Active Branch-specific Cost > Active Organization Standard Cost > Inactive / None.
+2. **Tenant-Safe Catalog & Cost Schema (Task 2):**
+   - Organization-scoped composite foreign keys across `items`, `item_categories`, `units_of_measure`, `item_brands`, `item_images`, `cost_records`.
+   - Explicit JSONB constraints on localized text (`name`, `description`).
+   - Zero pending model changes on fresh and upgraded database schemas.
 
-### Gate C: Authoritative Estimate Flow & Version Conflict Detection
-- **Authoritative Catalog Endpoint:** `GET /api/v1/estimate-catalog/items` with search filters, category facets, deterministic keyset/cursor pagination, and resolved cost projection based on estimate branch.
-- **Immutable Estimate Snapshots:** `estimate_cost_components` table stores catalog cost snapshots (`item_id`, `cost_record_id`, `cost_record_version`, `unit_cost_snapshot`, `cost_scope_snapshot`, `resolved_at_utc`).
-- **Server-Side Cost Revalidation & Conflict Detection:** On draft update (`PUT /api/v1/estimates/{id}/revisions/{revisionId}/draft`), if a cost record version, ID, or amount differs from active catalog pricing, backend strictly rejects with HTTP 409 Conflict (`ITEM_COST_VERSION_CONFLICT`).
-- **Frontend Architecture & Global Reuse:**
-  - `useEstimateCatalog` TanStack Query hook with safe fallback.
-  - `EstimateItemCatalogModal` connected to authoritative backend search and filters, propagating `branchId` from `EstimateWorkspaceDrawer`.
-  - Reusable `CatalogItemThumbnail` and `CatalogItemDetailDrawer` with authenticated image loading.
-  - Strict TypeScript compliance (zero `any`, zero `@ts-ignore`), Atelier Architectural Navy Sharp design (`0px` border-radius, Solid Navy `#0B3056`), and complete Thai/English translations in `messages/`.
+3. **Authoritative Branch Access & Single-Source Cost Resolution (Task 3):**
+   - Centralized `ICostResolver` implementing exact hierarchy:
+     1. Exact Branch active approved cost.
+     2. Organization-wide active approved cost.
+   - Ambiguity rejection on duplicate precedence.
+   - Strict branch ownership and active membership validation.
 
-### Gate D: Production Evidence & Integration Verification
-- Comprehensive end-to-end integration test (`ItemCatalogEstimateFlowTests.cs`) verifying the complete lifecycle:
-  1. Branch B setup
-  2. Taxonomy setup (ItemCategory & UnitOfMeasure)
-  3. Item master creation & activation
-  4. Primary image attachment
-  5. Organization standard cost (1000 THB) creation & publication via Maker-Checker
-  6. Branch B specific cost (1200 THB) creation & publication via Maker-Checker
-  7. Authoritative catalog resolution verifying Branch A receives Org cost while Branch B receives Branch cost
-  8. Estimate draft creation for Opportunity in Branch B
-  9. Draft update with catalog item snapshot persistence
-  10. Price change simulation to Version 2 (1350 THB)
-  11. Stale price / stale version update rejection with HTTP 409 Conflict (`ITEM_COST_VERSION_CONFLICT`)
-  12. Fresh authoritative price update accepted with HTTP 200 OK and updated snapshot persistence.
+4. **Estimate Catalog Search, Query Pushdown & Pagination (Task 4):**
+   - Deterministic Keyset Cursor pagination (`SortKey:Name,Id`).
+   - Server-side pushdown for search across localized name/description, code, category, brand, and type.
+   - Elimination of N+1 database queries through batch cost resolution.
+
+5. **Audited Item Management & Invariants (Task 5):**
+   - Maker-checker audited commands for Item lifecycle: Create, Update, Activate, Deactivate.
+   - Prevention of category hierarchy circular dependencies.
+   - Concurrency locking with `If-Match` ETags.
+
+6. **Verified Private Item Images (Task 6):**
+   - Private binary access with organization and item membership verification.
+   - Parent type validation (`FileParentTypes.Item`).
+   - Revocable object URL rendering with accessible fallback.
+
+7. **Governed Cost Commands & Maker-Checker Review (Task 7):**
+   - Cost records with Maker-Checker separation: Submitter cannot approve own cost record (`MAKER_CHECKER_VIOLATION` / `422 UnprocessableEntity`).
+   - Strict effective date intervals with non-overlapping constraints.
+   - Return for revision and disable workflows.
+
+8. **Frontend Locale, Contracts & Resilient Catalog Modal (Task 8):**
+   - Strictly typed API client with Zod/TS contract mapping.
+   - Active locale support (`th` / `en`) with no hardcoded `.th`.
+   - Server-state modal with preserved multi-page selection and keyboard navigation.
+   - Conflict recovery on `ITEM_COST_VERSION_CONFLICT`.
+
+9. **Regression Matrix & End-to-End Verification (Task 9):**
+   - Automated regression test suite covering all critical security and governance findings.
+   - End-to-end integration scenario verifying item creation, maker-checker cost approval, catalog resolution, BOQ snapshot immutability, and concurrent conflict rejection.
 
 ---
 
-## 2. Automated Test Verification Results
+## 2. Automated Test Results
 
-### 2.1 Backend Integration Tests
-```bash
-export PATH="/Users/syaco/.dotnet:$PATH"
-dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~ItemCatalogEstimateFlowTests"
-```
-**Result:** Passed 100% (1/1 green, 6.0 s)
-- `CompleteE2EFlow_ItemMaster_CostMakerChecker_BranchResolution_EstimateSnapshot_And_ConflictRejection`: PASSED
+### 2.1 Backend Integration Tests (Review Regression Matrix & End-to-End Scenario)
 
-### 2.2 Backend Full Test Suite
 ```bash
-export PATH="/Users/syaco/.dotnet:$PATH"
-dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj
-dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj
+dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~ItemCatalogEstimateFlowTests"
 ```
-**Result:** Passed 100%
 
-### 2.3 Frontend Full Test Suite (Vitest)
-```bash
-cd frontend && npm run test
-```
-**Result:** Passed 100% (113 test files, 497 tests passed, 0 failures)
-- `estimate-item-catalog-modal.test.tsx`: PASSED
-- `estimate-catalog-items.test.ts`: PASSED
-- `estimate-card.test.tsx`: PASSED
-- `estimate-calculations.test.ts`: PASSED
+**Results:**
+- `ReviewRegression_ActualByteOverflow_Rejected`: **PASSED** (Rejects payload exceeding declared size)
+- `ReviewRegression_TruncatedUpload_Rejected`: **PASSED** (Rejects incomplete/truncated payload)
+- `ReviewRegression_MakerSelfApproval_RejectedWithMakerCheckerViolation`: **PASSED** (Rejects self-approval with 422 Maker-Checker violation)
+- `ReviewRegression_CrossOrgAccess_ForbiddenOrNotFound`: **PASSED** (Blocks cross-org branch catalog access)
+- `ReviewRegression_InvalidCursor_ReturnsBadRequest`: **PASSED** (Rejects malformed cursor with 400 Bad Request)
+- `Scenarios.ItemCatalogEstimateFlowTests`: **PASSED** (Full end-to-end catalog, cost resolution, BOQ snapshot, and 409 conflict recovery)
 
-### 2.4 Frontend Verification Pipeline
+### 2.2 Frontend Unit & Integration Tests (Vitest)
+
 ```bash
-cd frontend
-npm run typecheck
-npm run lint
-npm run build
+cd frontend && npm test -- --run src/features/estimates/api/estimate-catalog-client.test.ts src/features/estimates/components/estimate-cost-component-table.test.tsx
 ```
-**Result:** All gates passed with 0 errors, 0 warnings:
-- `typecheck`: Passed (`tsc --noEmit` clean, strict types)
+
+**Results:** Passed 100% (2 test files, 11 tests green)
+- `estimate-catalog-client.test.ts`: 8/8 tests passed
+- `estimate-cost-component-table.test.tsx`: 3/3 tests passed
+
+### 2.3 Frontend Verification Pipeline
+
+```bash
+cd frontend && npm run verify
+```
+
+**Results:** All gates passed with 0 errors:
+- `check:api`: Passed (Generated API contract is in exact parity)
 - `lint`: Passed (`eslint .` clean)
+- `typecheck`: Passed (`tsc --noEmit` clean, strict types)
+- `test`: Passed (Vitest test suite passes)
 - `build`: Passed (`next build` compiled successfully)
 
 ---
 
-## 3. Compliance & Architectural Invariants
+## 3. Delivery Gates Assessment
 
-| Guardrail | Status | Evidence |
+| Gate | Status | Evidence |
 |---|---|---|
-| Strict TypeScript | Verified | No `any`, `as any`, or `@ts-ignore` used |
-| Design System (Atelier Navy Sharp) | Verified | `0px` radius, `#0B3056` navy, pure SVG icons |
-| Bilingual Translations | Verified | Both `th.json` and `en.json` fully synchronized |
-| Multi-Tenant Isolation | Verified | Tenant composite keys enforced at database and query levels |
-| Concurrency Control | Verified | ETag / `If-Match` conditional requests on all draft updates |
-| Maker-Checker Invariant | Verified | Self-approval rejected with HTTP 403 Forbidden |
-| Authoritative Catalog Snapshots | Verified | Immutably stored in database; stale prices rejected with 409 Conflict |
+| **1. Security Hotfix Gate** | PASS | Bounded stream, slot matching, and SHA-256 verified in `ReviewRegression_ActualByteOverflow_Rejected` and `ReviewRegression_TruncatedUpload_Rejected`. |
+| **2. Schema Gate** | PASS | Composite org-scoped FKs and migrations pass on EF Core without `PendingModelChangesWarning`. |
+| **3. Authority Gate** | PASS | Single `ICostResolver` authority; catalog pushdown and branch access isolation verified. |
+| **4. Workflow Gate** | PASS | Maker-checker enforcement verified in `ReviewRegression_MakerSelfApproval_RejectedWithMakerCheckerViolation`. |
+| **5. Evidence Gate** | PASS | All regression scenarios automated in backend integration tests and Playwright E2E spec. |

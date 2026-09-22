@@ -16,7 +16,8 @@ public interface IRequestAccessResolver
         Guid membershipId,
         string permissionKey,
         Guid targetBranchId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+        => ResolveAsync(firebaseUid, membershipId, permissionKey, cancellationToken);
 
     async Task<Result<RequestAccessContext>> ResolveAnyAsync(
         string firebaseUid,
