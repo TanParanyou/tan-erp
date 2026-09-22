@@ -45,7 +45,9 @@ public class CompleteUploadSessionHandler
                 "customers.update",
                 "customers.create",
                 "sites.update",
-                "sites.create"
+                "sites.create",
+                "items.manage-images",
+                "items.update"
             ],
             cancellationToken);
 

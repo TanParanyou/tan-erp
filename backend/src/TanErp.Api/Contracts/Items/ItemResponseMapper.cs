@@ -143,4 +143,26 @@ public static class ItemResponseMapper
         CreatedAtUtc = p.CreatedAtUtc,
         UpdatedAtUtc = p.UpdatedAtUtc
     };
+
+    public static ItemImageDetailResponse ToResponse(ItemImageDetailProjection p) => new()
+    {
+        Id = p.Id,
+        OrganizationId = p.OrganizationId,
+        ItemId = p.ItemId,
+        FileId = p.FileId,
+        Role = p.Role,
+        IsPrimary = p.IsPrimary,
+        DisplayOrder = p.DisplayOrder,
+        AltText = ToResponse(p.AltText),
+        Caption = p.Caption != null ? ToResponse(p.Caption) : null,
+        Status = p.Status,
+        RowVersion = p.RowVersion,
+        CreatedAtUtc = p.CreatedAtUtc,
+        CreatedByUserId = p.CreatedByUserId,
+        FileName = p.FileName,
+        ContentType = p.ContentType,
+        ByteSize = p.ByteSize,
+        Width = p.Width,
+        Height = p.Height
+    };
 }

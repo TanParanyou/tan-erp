@@ -32,7 +32,10 @@ public class GetFileContentHandler
                 "customers.create",
                 "sites.read",
                 "sites.update",
-                "sites.create"
+                "sites.create",
+                "items.read",
+                "items.manage-images",
+                "items.update"
             ],
             cancellationToken);
 

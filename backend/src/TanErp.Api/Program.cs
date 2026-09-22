@@ -133,6 +133,7 @@ builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddress
 
 // Item Master Catalog & Taxonomy Store
 builder.Services.AddScoped<TanErp.Application.Items.IItemStore, TanErp.Infrastructure.Persistence.Items.ItemStore>();
+builder.Services.AddScoped<TanErp.Application.Items.IItemImageStore, TanErp.Infrastructure.Persistence.Items.ItemImageStore>();
 
 // File Service (reusable across modules)
 builder.Services.AddSingleton<TanErp.Application.Files.IFileStorageProvider, TanErp.Infrastructure.Files.LocalFileStorageProvider>();

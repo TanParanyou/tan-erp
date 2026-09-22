@@ -86,6 +86,10 @@ public class ItemImage : Entity
         {
             Role = ItemImageRole.Primary;
         }
+        else if (Role == ItemImageRole.Primary)
+        {
+            Role = ItemImageRole.Gallery;
+        }
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = updatedAtUtc;
         UpdatedByUserId = updatedByUserId;

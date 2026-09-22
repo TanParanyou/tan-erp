@@ -224,3 +224,47 @@ public sealed class PagedItemsResponse
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
 }
+
+public sealed class AttachItemImageRequest
+{
+    [Required]
+    public Guid FileId { get; set; }
+
+    [MaxLength(32)]
+    public string Role { get; set; } = "gallery";
+
+    public bool IsPrimary { get; set; } = false;
+
+    [Required]
+    public LocalizedTextInput AltText { get; set; } = new();
+
+    public LocalizedTextInput? Caption { get; set; }
+}
+
+public sealed class ReorderItemImagesRequest
+{
+    [Required]
+    public List<Guid> OrderedImageIds { get; set; } = new();
+}
+
+public sealed class ItemImageDetailResponse
+{
+    public Guid Id { get; set; }
+    public Guid OrganizationId { get; set; }
+    public Guid ItemId { get; set; }
+    public Guid FileId { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public bool IsPrimary { get; set; }
+    public int DisplayOrder { get; set; }
+    public LocalizedTextResponse AltText { get; set; } = new();
+    public LocalizedTextResponse? Caption { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public Guid RowVersion { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; set; }
+    public Guid CreatedByUserId { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+    public long ByteSize { get; set; }
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+}
