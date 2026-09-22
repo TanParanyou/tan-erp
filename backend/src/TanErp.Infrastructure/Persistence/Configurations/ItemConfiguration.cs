@@ -17,6 +17,8 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
             t.HasCheckConstraint("CK_items_status", "status IN ('draft', 'active', 'inactive')");
             t.HasCheckConstraint("CK_items_availability_mode", "availability_mode IN ('all_branches', 'selected_branches')");
             t.HasCheckConstraint("CK_items_at_least_one_capability", "can_sell OR can_cost OR can_purchase OR can_stock OR can_produce");
+            t.HasCheckConstraint("CK_items_name_shape", "jsonb_typeof(name) = 'object' AND (name - 'th' - 'en') = '{}'::jsonb");
+            t.HasCheckConstraint("CK_items_description_shape", "description IS NULL OR (jsonb_typeof(description) = 'object' AND (description - 'th' - 'en') = '{}'::jsonb)");
             t.HasCheckConstraint("CK_items_active_requires_thai_name", "status != 'active' OR (name->>'th' IS NOT NULL AND length(trim(name->>'th')) > 0)");
         });
 

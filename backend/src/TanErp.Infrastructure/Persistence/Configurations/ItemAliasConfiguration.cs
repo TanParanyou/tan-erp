@@ -14,6 +14,7 @@ public class ItemAliasConfiguration : IEntityTypeConfiguration<ItemAlias>
         builder.ToTable("item_aliases", "item_master", t =>
         {
             t.HasCheckConstraint("CK_item_aliases_status", "status IN ('active', 'inactive')");
+            t.HasCheckConstraint("CK_item_aliases_alias_shape", "jsonb_typeof(alias) = 'object' AND (alias - 'th' - 'en') = '{}'::jsonb");
         });
 
         builder.HasKey(x => x.Id);
@@ -44,6 +45,10 @@ public class ItemAliasConfiguration : IEntityTypeConfiguration<ItemAlias>
 
         // Indexes
         builder.HasIndex(x => new { x.OrganizationId, x.ItemId, x.NormalizedTh }).IsUnique();
+        builder.HasIndex(x => new { x.OrganizationId, x.ItemId, x.NormalizedEn })
+            .IsUnique()
+            .HasFilter("normalized_en IS NOT NULL")
+            .HasDatabaseName("ix_item_aliases_org_item_normalized_en");
         builder.HasIndex(x => new { x.OrganizationId, x.NormalizedTh });
         builder.HasIndex(x => new { x.OrganizationId, x.NormalizedEn });
 

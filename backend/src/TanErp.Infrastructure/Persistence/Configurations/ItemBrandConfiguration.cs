@@ -15,6 +15,8 @@ public class ItemBrandConfiguration : IEntityTypeConfiguration<ItemBrand>
         {
             t.HasCheckConstraint("CK_item_brands_status", "status IN ('active', 'inactive')");
             t.HasCheckConstraint("CK_item_brands_sort_order", "sort_order >= 0");
+            t.HasCheckConstraint("CK_item_brands_name_shape", "jsonb_typeof(name) = 'object' AND (name - 'th' - 'en') = '{}'::jsonb");
+            t.HasCheckConstraint("CK_item_brands_description_shape", "description IS NULL OR (jsonb_typeof(description) = 'object' AND (description - 'th' - 'en') = '{}'::jsonb)");
         });
 
         builder.HasKey(x => x.Id);

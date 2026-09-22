@@ -17,6 +17,8 @@ public class ItemImageConfiguration : IEntityTypeConfiguration<ItemImage>
             t.HasCheckConstraint("CK_item_images_role", "role IN ('primary', 'gallery', 'technical')");
             t.HasCheckConstraint("CK_item_images_status", "status IN ('active', 'inactive')");
             t.HasCheckConstraint("CK_item_images_display_order", "display_order >= 0");
+            t.HasCheckConstraint("CK_item_images_alt_text_shape", "jsonb_typeof(alt_text) = 'object' AND (alt_text - 'th' - 'en') = '{}'::jsonb");
+            t.HasCheckConstraint("CK_item_images_caption_shape", "caption IS NULL OR (jsonb_typeof(caption) = 'object' AND (caption - 'th' - 'en') = '{}'::jsonb)");
         });
 
         builder.HasKey(x => x.Id);

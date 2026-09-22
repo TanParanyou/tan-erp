@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TanErp.Domain.Files;
 using TanErp.Domain.Items;
 using TanErp.Domain.Organization;
 
@@ -79,6 +80,12 @@ public class CostRecordConfiguration : IEntityTypeConfiguration<CostRecord>
         builder.HasOne<Branch>()
             .WithMany()
             .HasForeignKey(x => x.BranchId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<UploadedFile>()
+            .WithMany()
+            .HasForeignKey(x => new { x.EvidenceFileId, x.OrganizationId })
+            .HasPrincipalKey(x => new { x.Id, x.OrganizationId })
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -65,12 +65,14 @@ public class EstimateCostComponentConfiguration : IEntityTypeConfiguration<Estim
 
         builder.HasOne<Item>()
             .WithMany()
-            .HasForeignKey(x => x.ItemId)
+            .HasForeignKey(x => new { x.ItemId, x.OrganizationId })
+            .HasPrincipalKey(x => new { x.Id, x.OrganizationId })
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne<CostRecord>()
             .WithMany()
-            .HasForeignKey(x => x.CostRecordId)
+            .HasForeignKey(x => new { x.CostRecordId, x.OrganizationId })
+            .HasPrincipalKey(x => new { x.Id, x.OrganizationId })
             .OnDelete(DeleteBehavior.SetNull);
     }
 }
