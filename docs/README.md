@@ -102,6 +102,7 @@
 | Prompt สำหรับ Antigravity ทำ Item Master Estimate Catalog | [Antigravity Item Master Execution Prompt](superpowers/prompts/2026-09-21-antigravity-item-master-estimate-catalog.md) |
 | บันทึกผลการตรวจสอบ Official Estimate BOQ & Calculation Slice | [Official Estimate Verification](05-engineering/official-estimate-verification.md) |
 | บันทึกผลการตรวจสอบ Commercial Quotation Slice | [Commercial Quotation Verification](05-engineering/commercial-quotation-verification.md) |
+| บันทึกผลการตรวจสอบ Item Master Estimate Catalog Slice | [Item Master Estimate Catalog Verification](05-engineering/item-master-estimate-catalog-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Draft Q-Gate Slice | [Opportunity Draft Q-Gate Verification](05-engineering/opportunity-draft-q-gate-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Outcome Slice | [Opportunity Outcome Verification](05-engineering/opportunity-outcome-verification.md) |
 | บันทึกผลการตรวจสอบ Opportunity Hardening & Readiness | [Opportunity Hardening Verification](05-engineering/opportunity-hardening-verification.md) |
