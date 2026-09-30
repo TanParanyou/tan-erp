@@ -60,4 +60,5 @@
 - `dotnet build backend/TanErp.slnx --no-restore -m:1`: ผ่าน 0 warnings/errors.
 - `dotnet test backend/TanErp.slnx --no-restore -m:1`: Architecture 3/3 และ Unit 288/288 ผ่าน; Integration 290/291 ผ่าน. รายการที่ล้มคือ `DocumentSequencesEndpointsTests.UpdateDocumentSequence_WithInvalidDocType_Returns400BadRequest` ระหว่าง PostgreSQL fixture startup ด้วย `Received unknown response H for SSLRequest`; regression test ของ Opportunity ผ่านใน full run.
 - รัน `DocumentSequencesEndpointsTests.UpdateDocumentSequence_WithInvalidDocType_Returns400BadRequest` แยกหลัง full suite ผ่าน 1/1 ใน 11 วินาที; ผลนี้ชี้ว่า failure อาจเกิดจาก fixture startup ชั่วคราว แต่ยังไม่ยืนยัน root cause และไม่ทำให้ full suite run ที่มี 1 failure กลายเป็น green gate.
-- Full suite run นี้ยังไม่เป็น green gate; ให้รันซ้ำเมื่อ PostgreSQL Testcontainers เริ่มต้นได้เสถียร.
+- Full suite retry ด้วย `dotnet test backend/TanErp.slnx --no-build --no-restore -m:1` ไม่จบหลัง 13 นาทีและถูกยกเลิกขณะ testhost ยังทำงาน; ไม่มีผลรวมให้ใช้เป็นหลักฐาน.
+- Full suite gate ยังเปิด; ให้ตรวจสาเหตุของ fixture/startup stall ก่อนรันซ้ำ.
