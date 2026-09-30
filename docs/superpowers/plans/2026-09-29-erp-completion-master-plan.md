@@ -129,6 +129,7 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 - [ ] Business/Finance ยืนยัน pilot prices, policies/authority/tax และ authorized-role UAT; Security ตรวจ scope/PII/private files และ permission revocation
 - [ ] ตรวจ tablet/200% zoom/full keyboard/screen-reader/ไทย–อังกฤษ และ output/print ที่อยู่ใน release; technical E2E ไม่แทน business UAT
 - [ ] ระบุ hosting/domain/secrets/HTTPS, health/logs/traces/alerts, rate/dependency failure, capacity และ support owner; ยืนยัน RPO/RTO ก่อนจัด Backup Schedule และทำ Restore Drill จริง
+- [x] Local database-only restore rehearsal (2026-09-30, code `d77410e`): กู้ลง PostgreSQL แยกและตรวจ schema, counts/hashes ครบ 58 ตาราง/11,084 แถว, migration history 41 รายการ และ document counters ตรงกัน; ต้นทางไม่เปลี่ยนและลบปลายทางชั่วคราวแล้ว. ดู [Backup/Restore evidence](../../06-operations/backup-and-restore.md#local-database-restore-rehearsal--2026-09-30). File bytes, identity/config/secrets, staging recovery และ Business Owner/RPO/RTO approval ยังเปิด; ไม่ถือว่าผ่าน Production restore gate.
 - [ ] ทำ staging rehearsal, immutable artifact promotion, rollback/forward-fix decision และ Go/No-go Record โดยผู้มีอำนาจ; เก็บผลและข้อจำกัดในเอกสาร verification/runbook เจ้าของเรื่อง
 
 **ผลส่งมอบ/เกณฑ์จบ:** ทุกข้อที่เกี่ยวข้องใน Release Readiness มีหลักฐานของ release เดียวกันหรือ disposition ที่อนุมัติ; full backend code gate ผ่านแล้ว แต่ migration จาก sanitized legacy data, pilot, UAT, Accessibility และ Operations/Go-No-Go ยังคงเปิด.

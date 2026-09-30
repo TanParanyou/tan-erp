@@ -56,4 +56,6 @@ CP หมายถึงรายการใน [ERP Completion Plan](../superp
 
 ใช้ [Definition of Done](../05-engineering/definition-of-done.md) สำหรับแต่ละ feature และ [Release Readiness](../06-operations/release-readiness.md) สำหรับ release. Full backend integration หลังแก้ Survey hash ผ่านแล้วตามหลักฐานด้านบน; หาก code/schema เปลี่ยนอีกต้องตรวจใหม่. หลักฐานที่ยังค้างต้องคงสถานะเปิดจนมีผลตรวจจริง ได้แก่ migration จาก sanitized legacy copy, authorized-role UAT, pilot data, Business/Finance/Security policy sign-off, accessibility และ Backup/Restore/Operations.
 
+Local database-only restore rehearsal วันที่ 2026-09-30 ผ่าน: schema และข้อมูล 58 ตาราง/11,084 แถวตรงกับต้นทางหลัง restore ลง PostgreSQL แยก. ดู [Backup/Restore](../06-operations/backup-and-restore.md#local-database-restore-rehearsal--2026-09-30). ยังต้องกู้ file bytes/identity/config/secrets และซ้อมบน staging พร้อมเจ้าของงานอนุมัติ RPO/RTO ก่อนปิด Operations gate.
+
 หากเสนอเลื่อน requirement ให้บันทึก ID, ผลกระทบ, ขอบเขต release, ผู้ตัดสินใจและหลักฐานไว้ในแผนของ slice และ Go/No-go Record. การมี fixture TEST_ONLY ไม่แทนข้อมูลหรือราคาที่ธุรกิจอนุมัติ.
