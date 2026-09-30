@@ -1080,6 +1080,32 @@ public class EstimateEndpointsTests : IAsyncLifetime
             oppVersion));
         var issueQuotationResponse = await _client.SendAsync(issueQuotationRequest);
         Assert.Equal(HttpStatusCode.Created, issueQuotationResponse.StatusCode);
+        using (var quotationJson = System.Text.Json.JsonDocument.Parse(
+                   await issueQuotationResponse.Content.ReadAsStringAsync()))
+        {
+            var responseProperties = quotationJson.RootElement.EnumerateObject()
+                .Select(property => property.Name)
+                .OrderBy(name => name, StringComparer.Ordinal)
+                .ToArray();
+            var allowedProperties = new[]
+            {
+                "estimateId",
+                "estimateRevisionId",
+                "estimateRowVersion",
+                "grandTotal",
+                "issuedAtUtc",
+                "number",
+                "opportunityId",
+                "opportunityRowVersion",
+                "opportunityStage",
+                "quotationId",
+                "revisionNo",
+                "status"
+            };
+
+            Assert.Equal(allowedProperties, responseProperties);
+        }
+
         var quotation = (await issueQuotationResponse.Content.ReadFromJsonAsync<QuotationResponse>())!;
         Assert.Equal(estimate.Id, quotation.EstimateId);
         Assert.Equal(revision.Id, quotation.EstimateRevisionId);

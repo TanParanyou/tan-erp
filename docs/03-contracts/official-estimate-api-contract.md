@@ -237,7 +237,7 @@ Content-Type: application/json
 - Permission: `quotations.issue`
 - Preconditions: Current Revision เป็น `approved` และมี Calculation Snapshot ที่ยังตรงกับ Revision, Opportunity อยู่ใน stage `estimating`, replay check มาก่อน version/state check
 - Atomic Effects: ออกเลขที่เอกสารด้วย Atomic Sequence Engine, บันทึก Snapshot, ปรับ Estimate/Revision เป็น `quoted`, ปรับ Opportunity เป็น `proposed`, บันทึก 1 Stage History, 2 Audits, 1 Idempotency Record
-- Response `201` ใช้ `QuotationResponse` และมีเฉพาะ `quotationId`, `estimateId`, `opportunityId`, `number`, `status`, `grandTotal`, `issuedAtUtc`, `estimateRevisionId`, `revisionNo`, `opportunityStage`, `opportunityRowVersion` และ `estimateRowVersion`. Response นี้เป็นผลการออก Quotation สำหรับแอปภายใน; ยังไม่มี endpoint สำหรับ customer preview/export หรือ rendered document และไม่ใช่ Customer-facing Output ตาม FR-QUO-002.
+- Response `201` ใช้ `QuotationResponse` และมีเฉพาะ `quotationId`, `estimateId`, `opportunityId`, `number`, `status`, `grandTotal`, `issuedAtUtc`, `estimateRevisionId`, `revisionNo`, `opportunityStage`, `opportunityRowVersion` และ `estimateRowVersion`. Integration test `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` ตรวจชื่อ property ทั้งชุดตรงกับ allowlist นี้. Response นี้เป็นผลการออก Quotation สำหรับแอปภายใน; ยังไม่มี endpoint สำหรับ customer preview/export หรือ rendered document และไม่ใช่ Customer-facing Output ตาม FR-QUO-002.
 
 ```json
 {
