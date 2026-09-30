@@ -34,32 +34,27 @@ dotnet ef database update --project backend/src/TanErp.Infrastructure --startup-
 ## การรันสภาพแวดล้อมจำลองภายในเครื่อง (Local Stack & Acceptance)
 
 ```bash
-# 1. สตาร์ต PostgreSQL 17 Container
-docker compose -f deploy/compose.yml up -d
+# 1. เตรียม frontend local environment และเปิด PostgreSQL + Auth Emulator
+make dev-env
+docker compose -f deploy/compose.yml up -d postgres firebase-emulator
 
-# 2. สตาร์ต Firebase Auth Emulator (พอร์ต 9099)
-npx firebase emulators:start --only auth --project tan-erp-test-only
+# 2. เตรียมบัญชี TEST_ONLY รวม independent Estimate reviewer ใน Auth Emulator
+make db-seed
 
-# 3. เตรียมข้อมูลผู้ใช้ทดสอบใน Firebase Emulator
-node scripts/seed-emulator-users.mjs
+# 3. เปิด Test API (:5005); migration และ demo seed ทำตอนเริ่ม API
+SeedDedicatedEstimateReviewer=true make dev-backend-demo
 
-# 4. ทำ Database Migration (หรือรัน 'make db-migrate')
-dotnet ef database update --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api
+# 4. เปิด terminal ใหม่: dev frontend (:3005)
+npm --prefix frontend run dev -- -p 3005
 
-# 5. สตาร์ต Backend API ด้วยโหมด Test (พอร์ต 5005 หรือรัน 'make dev-backend')
-test -n "$ConnectionStrings__Database"
-ASPNETCORE_ENVIRONMENT=Test \
-SeedTestData=true \
-FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
-Firebase__ProjectId=tan-erp-test-only \
-dotnet run --project backend/src/TanErp.Api --urls http://localhost:5005
+# 5. เปิด terminal ใหม่: ทดสอบ Estimate → Approval → Quotation → Revision
+npm --prefix frontend run test:e2e -- official-estimate.spec.ts --project=chromium
 
-# หากต้องการ Customer/Site/Survey/Estimate demo และ Item Catalog ที่มี Published TEST_ONLY costs
-make dev-backend-demo
-
-# 6. หยุดการทำงานของ Container โดยไม่ลบ Volume (หรือรัน 'make stop')
+# 6. หยุด API/frontend ด้วย Ctrl+C; หยุด containers โดยไม่ลบ Volume
 docker compose -f deploy/compose.yml stop
 ```
+
+Compose เปิด Auth Emulator อยู่แล้ว จึงไม่ต้องเปิด Firebase CLI ซ้ำที่พอร์ต 9099. Browser journey ที่ใช้ Emulator ต้องรันกับ dev frontend: `firebase-client.ts` ไม่เชื่อม Emulator ใน production build ตาม safety guard. การผ่าน production build เป็น code gate แยกจากการล็อกอินด้วยบัญชี TEST_ONLY.
 
 ## ตัวแปรสภาพแวดล้อมที่จำเป็น (Environment Variables)
 

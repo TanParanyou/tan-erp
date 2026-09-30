@@ -856,6 +856,10 @@ public class EstimateStore : IEstimateStore
             return await strategy.ExecuteAsync(async () =>
             {
                 await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+                // Read the estimate and approval route only after the preceding decision commits.
+                var reviewLockKey = $"{organizationId:N}:{operation}:{estimateId:N}";
+                await _db.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT pg_advisory_xact_lock(hashtextextended({reviewLockKey}, 0))", cancellationToken);
             var replay = await GetIdempotencyReplayAsync(organizationId, estimateId, operation, keyHash, payloadHash, cancellationToken);
             if (replay is not null)
                 return replay;

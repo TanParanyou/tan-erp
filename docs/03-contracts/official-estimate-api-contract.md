@@ -186,6 +186,8 @@ Content-Type: application/json
 
 Decision เป็น `approved` หรือ `returned`; API สำเร็จตอบ 200. Approve บันทึก Approval Snapshot และทำ Revision เป็น Immutable. Maker/Last Financial Editor ห้าม approve หรือ return. Reviewer Membership ต้องตรงกับ step ที่ assign และ permission/scope ต้องยัง active ตอนตัดสิน.
 
+Approve/Return ที่แข่งกันบน approval step เดียวกันต้องบันทึกได้เพียงหนึ่ง decision. Backend serialize การอ่านและเขียน review ของ Estimate เดียวกันภายใน transaction; เมื่อ decision ก่อนหน้าเปลี่ยน Estimate RowVersion แล้ว request ที่ถือเวอร์ชันเก่าตอบ 409 `ESTIMATE_VERSION_CONFLICT`. Same-key/same-payload replay ยังคงคืนผลสำเร็จเดิมโดยไม่เพิ่ม decision.
+
 `In Review` เป็น Derived UI State จาก Approval Request/Step; Revision ยังคง `submitted` จนได้ผล `approved` หรือ `returned`
 
 ## Cancel

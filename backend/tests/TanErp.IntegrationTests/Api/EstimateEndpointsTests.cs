@@ -1485,8 +1485,11 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal(0, await verifyDb.EstimateApprovalDecisions.CountAsync(row => row.EstimateApprovalRequestId == requestId));
     }
 
-    [Fact]
-    public async Task ReviewEstimate_ConcurrentDecisionsWithSameVersionOnlyOneSucceeds()
+    [Theory]
+    [InlineData("approved", "returned")]
+    [InlineData("returned", "approved")]
+    public async Task ReviewEstimate_ConcurrentDecisionsWithSameVersionOnlyOneSucceeds(
+        string firstDecision, string secondDecision)
     {
         var (estimate, _, _) = await SetupCalculatedEstimateAsync($"concurrent-review-{Guid.NewGuid():N}");
         var submitRequest = CreateAuthenticatedRequest(HttpMethod.Post,
@@ -1511,13 +1514,16 @@ public class EstimateEndpointsTests : IAsyncLifetime
         }
 
         var responses = await Task.WhenAll(
-            _client.SendAsync(BuildReviewRequest("approved", $"concurrent-approve-{Guid.NewGuid():N}")),
-            _client.SendAsync(BuildReviewRequest("returned", $"concurrent-return-{Guid.NewGuid():N}")));
+            _client.SendAsync(BuildReviewRequest(firstDecision, $"concurrent-first-{Guid.NewGuid():N}")),
+            _client.SendAsync(BuildReviewRequest(secondDecision, $"concurrent-second-{Guid.NewGuid():N}")));
 
         var responseDetails = await Task.WhenAll(responses.Select(async response =>
             $"{(int)response.StatusCode}: {await response.Content.ReadAsStringAsync()}"));
         Assert.True(responses.Count(response => response.StatusCode == HttpStatusCode.OK) == 1, string.Join(Environment.NewLine, responseDetails));
         Assert.True(responses.Count(response => response.StatusCode == HttpStatusCode.Conflict) == 1, string.Join(Environment.NewLine, responseDetails));
+        using var conflict = System.Text.Json.JsonDocument.Parse(
+            await responses.Single(response => response.StatusCode == HttpStatusCode.Conflict).Content.ReadAsStringAsync());
+        Assert.Equal("ESTIMATE_VERSION_CONFLICT", conflict.RootElement.GetProperty("code").GetString());
         using var verifyScope = _factory.Services.CreateScope();
         var verifyDb = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var requestId = await verifyDb.EstimateApprovalRequests
