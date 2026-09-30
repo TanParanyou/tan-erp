@@ -74,6 +74,8 @@ Relational Field ใช้กับ Identity, Scope, State, Measurement, Evidenc
 - Evidence file ID/checksum/manifest; ไม่ฝัง Binary
 - Readiness result, warnings, actor/time
 
+Baseline ที่มี implementation ณ 2026-09-30 ใช้ `v2:<sha256>` สำหรับ Survey Number, Revision/Template Version, เวลาเข้าพื้นที่, Scope Summary, Assumptions/Constraints/Missing Details, Area และ Measurement ทุกฟิลด์ที่บันทึกอยู่ รวมค่าการวัด/หน่วย/วิธีวัด/หมายเหตุ โดยเรียงลำดับข้อมูลก่อน hash และ normalize decimal/เวลาให้คงที่. Hash เดิมที่เป็น SHA-256 เปล่า 64 ตัวอักษรยังเป็นหลักฐานของ Ready Revision เดิมและห้ามคำนวณทับ. Customer-safe labels, Checklist, Evidence Manifest และ Ready actor/time ในสัญญาเต็มข้างต้นยังไม่มีข้อมูลครบใน baseline นี้; เมื่อ implement ต้องเพิ่ม hash version ใหม่พร้อม migration/compatibility decision ไม่ตีความ `v2` ว่าครอบคลุมฟิลด์ที่ยังไม่มี.
+
 Official Estimate เก็บ `site_survey_revision_id` + snapshot hash + Source Summary ที่ต้องใช้ หาก Source ถูก Void ภายหลังให้แจ้ง Risk แต่ห้ามสลับ Revision อัตโนมัติ
 
 ## Index and Constraint Baseline

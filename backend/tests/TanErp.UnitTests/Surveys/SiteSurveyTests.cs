@@ -1,3 +1,4 @@
+using TanErp.Application.Surveys;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Surveys;
 using Xunit;
@@ -13,6 +14,27 @@ public class SiteSurveyTests
     private readonly Guid _surveyorId = Guid.NewGuid();
     private readonly Guid _userId = Guid.NewGuid();
     private readonly DateTimeOffset _now = DateTimeOffset.UtcNow;
+
+    [Fact]
+    public void SnapshotHash_ChangesWhenMeasuredValueChanges()
+    {
+        SiteSurveyRevision CreateRevision(decimal value)
+        {
+            var revision = SiteSurveyRevision.CreateBaseline(_orgId, Guid.NewGuid(), _userId, _now);
+            revision.UpdateDraft(_now, "Built-in bedroom", new[] { "Existing wall" }, null, null);
+            var area = new SiteSurveyArea(Guid.NewGuid(), _orgId, revision.Id, "BEDROOM", "Bedroom", null, 1);
+            area.AddMeasurement(new SiteSurveyMeasurement(
+                Guid.NewGuid(), _orgId, area.Id, MeasurementType.Width, value,
+                MeasurementUnit.Meter, CaptureMethod.Measured, "Laser", 1));
+            revision.AddArea(area);
+            return revision;
+        }
+
+        var first = SurveySnapshotHasher.Compute("SRV-TEST-001", CreateRevision(3.2m));
+        var changed = SurveySnapshotHasher.Compute("SRV-TEST-001", CreateRevision(3.4m));
+
+        Assert.NotEqual(first, changed);
+    }
 
     [Fact]
     public void CreateAppointment_ValidInputs_InitializesScheduledStatusAndSurveyNumber()
@@ -212,4 +234,3 @@ public class SiteSurveyTests
         Assert.NotEqual(previousVersion, opp.RowVersion);
     }
 }
-

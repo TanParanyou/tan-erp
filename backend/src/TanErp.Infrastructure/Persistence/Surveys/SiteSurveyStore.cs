@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
-using TanErp.Application.Common.Security;
 using TanErp.Application.Surveys;
 using TanErp.Application.Surveys.CreateSiteSurvey;
 using TanErp.Application.Surveys.MarkSurveyReady;
@@ -537,8 +536,7 @@ public class SiteSurveyStore : ISiteSurveyStore
             }
 
             var now = _clock.UtcNow;
-            var canonicalHashPayload = $"{survey.SurveyNumber}|{revision.RevisionNumber}|{revision.VisitedAtUtc:O}|{revision.ScopeSummary}|{revision.Areas.Count}|{revision.Areas.Sum(a => a.Measurements.Count)}";
-            var snapshotHash = Sha256Hex.Compute(canonicalHashPayload);
+            var snapshotHash = SurveySnapshotHasher.Compute(survey.SurveyNumber, revision);
 
             try
             {
@@ -729,4 +727,3 @@ public class SiteSurveyStore : ISiteSurveyStore
             site);
     }
 }
-

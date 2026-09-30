@@ -86,6 +86,19 @@ CP-02/03/05 เตรียมคู่ขนานกับ CP-01 ได้ต�
 
 Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.md), [Maintenance Plan](2026-09-23-estimate-master-data-maintenance.md), [Item Governance](../../01-business/item-master-governance.md) และ [CRM/Survey Governance](../../01-business/crm-site-survey-governance.md). Customer/Site lifecycle ที่มีแล้วใช้ [Customer Verification](../../05-engineering/customer-completion-verification.md); ไม่สร้างซ้ำ.
 
+**Baseline audit 2026-09-30:** ตารางนี้อ้าง code/API ที่มีจริงและ [Survey Verification](../../05-engineering/site-survey-verification.md), [Item Verification](../../05-engineering/item-master-estimate-catalog-verification.md); `partial` ไม่ใช่ผ่าน UAT.
+
+| Requirement | สถานะ code | งานที่ยังต้องปิด |
+| --- | --- | --- |
+| FR-ITEM-001–004 | Implemented: Item lifecycle, versioned Cost/Maker–Checker และ deterministic branch-aware resolver | ตรวจ pilot data/ราคา/สิทธิ์กับผู้ใช้จริง |
+| FR-ITEM-005 | Implemented ใน Item Master: exact/item-specific conversion และ guard มิติ/วงรอบ | ถ้าจะใช้หน่วยที่แปลงใน Estimate ต้องตรึง conversion snapshot ก่อน |
+| FR-ITEM-006 | Missing: ไม่พบ Preview/Validate/Atomic Commit import API | ยืนยัน format/duplicate rule และเปิด Import slice หรือบันทึกการเลื่อนสำหรับ pilot |
+| FR-ITEM-007 | Partial: Estimate ตรึง Cost Record และ Calculation/Tax Policy | Conversion snapshot ยังไม่มี; คง base-unit gate จนกว่าจะมี snapshot |
+| FR-SRV-001 | Partial: visit/scope, Area/Measurement, Assumption/Constraint มีแล้ว | Checklist/Evidence ที่ผูกกับ Survey Revision ยังไม่มี |
+| FR-SRV-002 | Partial: Draft version check และ Ready immutability มีแล้ว | New/Void Revision ยังไม่มี endpoint/use case |
+| FR-SRV-003 | Partial: baseline template code กับ Ready gate พื้นฐานมีแล้ว | Published versioned template และ checklist/evidence fail-closed gate ยังไม่มี |
+| FR-SRV-004 | Implemented สำหรับ baseline: Estimate ตรึง Ready Revision ID/hash; hash `v2` รวมข้อมูลการวัดจริง | ขยาย hash version ใหม่เมื่อ Checklist/Evidence/labels พร้อม; UAT reference/history ยังเปิด |
+
 - [ ] เทียบ FR-ITEM-001–007 และ FR-SRV-001–004 กับ API/Data/UI/UAT; แยก implemented/partial/deferred โดยมีเส้นทางโค้ดหรือหลักฐานจริง
 - [ ] เปิด Import slice ตาม FR-ITEM-006: ยืนยัน file format/size/duplicate rule; Preview/Validate แสดง error ต่อแถว; Commit แบบ atomic/idempotent โดยไม่ auto-publish Cost; สร้าง permission/contract/migration และ test rollback ก่อนใช้จริง
 - [ ] เปิด Survey extension ตามช่องว่างที่ยืนยัน: Checklist/Evidence/Versioned Readiness Template, New/Void Revision และการเข้าถึงไฟล์; ยืนยัน business effect ต่อ Opportunity/Estimate ก่อนสร้าง routes
@@ -109,7 +122,7 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ใช้ [Release Readiness](../../06-operations/release-readiness.md) เป็น checklist หลัก. Operations ใช้ [Environments](../../06-operations/environments.md), [Deployment](../../06-operations/deployment.md), [Observability](../../06-operations/observability.md), [Backup/Restore](../../06-operations/backup-and-restore.md) และ [Incident Response](../../06-operations/incident-response.md).
 
-- [x] Full backend code gate: `dotnet build backend/TanErp.slnx --no-restore -m:1` ผ่าน 0 warnings/errors; `dotnet test backend/TanErp.slnx --no-restore -m:1` ผ่าน Integration 289/289, Unit 287/287 และ Architecture 3/3 เมื่ออนุญาต Docker Desktop socket; Integration run ใช้ 8m37s. ระบุ release scope/code/schema/artifact และ known limitations สำหรับ release จริงยังค้าง.
+- [x] Full backend code gate: หลังแก้ Survey hash `dotnet build backend/TanErp.slnx --no-restore -m:1` ผ่าน 0 warnings/errors; `dotnet test backend/TanErp.slnx --no-build --no-restore -m:1` ผ่าน Integration 289/289, Unit 288/288 และ Architecture 3/3 เมื่ออนุญาต Docker Desktop socket; ดู [Site Survey Verification](../../05-engineering/site-survey-verification.md#4-snapshot-hash-follow-up-2026-09-30). ระบุ release scope/code/schema/artifact และ known limitations สำหรับ release จริงยังค้าง.
 - [ ] ทดสอบ migration บน sanitized legacy copy และ historical quotations/files/costs; หาก release เป็นฐานใหม่ให้เจ้าของข้อมูลรับรองเงื่อนไขนั้น ห้ามถือ empty-database rehearsal แทน upgrade rehearsal
 - [ ] Business/Finance ยืนยัน pilot prices, policies/authority/tax และ authorized-role UAT; Security ตรวจ scope/PII/private files และ permission revocation
 - [ ] ตรวจ tablet/200% zoom/full keyboard/screen-reader/ไทย–อังกฤษ และ output/print ที่อยู่ใน release; technical E2E ไม่แทน business UAT
