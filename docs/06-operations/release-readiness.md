@@ -29,4 +29,14 @@
 
 ## Go/No-go Record
 
-บันทึกวันที่ Version ผู้ตัดสินใจ Evidence ที่ตรวจ Remaining Risk และเงื่อนไขหยุด/ย้อน Release ทุกครั้ง
+สร้างบันทึกหนึ่งฉบับต่อ release candidate โดยกรอกข้อมูลและลิงก์หลักฐานจริงก่อนให้ผู้มีอำนาจตัดสินใจ. ช่องที่ยังไม่มีผลให้ระบุ `ค้าง` พร้อมเจ้าของงาน; ห้ามถือว่าการมี checklist หรือผล test ของ commit อื่นเป็นหลักฐานผ่าน.
+
+| รายการ | ข้อมูลที่ต้องบันทึก |
+| --- | --- |
+| Release candidate | วันที่/เวลา, environment, scope ที่รวมและเลื่อน, version, commit SHA, schema/migration version และ immutable artifact ID |
+| Product/UAT | เคสและผลของผู้ใช้ตาม role จริง, pilot data/policy ที่อนุมัติ, ข้อจำกัดที่แจ้งผู้ใช้ และลิงก์ verification ของแต่ละ critical slice |
+| Engineering/Security | ผล build/test/security/accessibility ของ candidate เดียวกัน, RBAC/organization/file review และรายการ defect ที่ยังเปิด |
+| Data/Operations | ผล migration rehearsal บนข้อมูล legacy ที่ลบข้อมูลอ่อนไหวแล้ว หรือเหตุผลที่รับรองการเริ่มด้วยฐานใหม่; backup/restore drill, monitoring, support owner และ staging rehearsal |
+| Risk/Decision | Remaining risk/deferral พร้อมผลกระทบและผู้รับผิดชอบ, เงื่อนไขหยุด rollout, rollback/forward-fix, ผู้มีอำนาจตัดสินใจ, เวลา และผล `Go` หรือ `No-go` |
+
+หากหลักฐาน release candidate ยังไม่ครบ ให้คงผลเป็น `Pending decision` และอ้างรายการค้างใน [ERP Completion Plan](../superpowers/plans/2026-09-29-erp-completion-master-plan.md#cp-05--releaseuatoperations). การบันทึก `Go` ต้องเป็นการตัดสินใจของเจ้าของงานที่มีอำนาจ ไม่ใช่การอนุมานจากผล automated tests.

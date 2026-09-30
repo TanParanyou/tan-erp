@@ -54,6 +54,6 @@ CP หมายถึงรายการใน [ERP Completion Plan](../superp
 
 ## Gates ก่อนประกาศพร้อมใช้งาน
 
-ใช้ [Definition of Done](../05-engineering/definition-of-done.md) สำหรับแต่ละ feature และ [Release Readiness](../06-operations/release-readiness.md) สำหรับ release. หลักฐานที่ค้างต้องคงสถานะเปิดจนมีผลตรวจจริง รวมถึง full integration หลังการเปลี่ยนล่าสุด, migration จาก sanitized legacy copy, authorized-role UAT, pilot data, Business/Finance/Security policy sign-off, accessibility และ Backup/Restore/Operations.
+ใช้ [Definition of Done](../05-engineering/definition-of-done.md) สำหรับแต่ละ feature และ [Release Readiness](../06-operations/release-readiness.md) สำหรับ release. Full backend integration หลังแก้ Survey hash ผ่านแล้วตามหลักฐานด้านบน; หาก code/schema เปลี่ยนอีกต้องตรวจใหม่. หลักฐานที่ยังค้างต้องคงสถานะเปิดจนมีผลตรวจจริง ได้แก่ migration จาก sanitized legacy copy, authorized-role UAT, pilot data, Business/Finance/Security policy sign-off, accessibility และ Backup/Restore/Operations.
 
 หากเสนอเลื่อน requirement ให้บันทึก ID, ผลกระทบ, ขอบเขต release, ผู้ตัดสินใจและหลักฐานไว้ในแผนของ slice และ Go/No-go Record. การมี fixture TEST_ONLY ไม่แทนข้อมูลหรือราคาที่ธุรกิจอนุมัติ.
