@@ -31,8 +31,8 @@ export const DEFAULT_SELLING_RULE_OPTIONS: EstimateOptionItem[] = [
     defaultLabelEn: "Markup % (On Cost)",
   },
   {
-    value: "fixed",
-    labelKey: "sellingRuleTypes.fixed",
+    value: "fixed_price",
+    labelKey: "sellingRuleTypes.fixed_price",
     defaultLabelTh: "ราคาคงที่ (Fixed Amount)",
     defaultLabelEn: "Fixed Amount",
   },
@@ -56,6 +56,18 @@ export const DEFAULT_COST_TYPE_OPTIONS: EstimateOptionItem[] = [
     labelKey: "costTypes.subcontract",
     defaultLabelTh: "ค่าจ้างเหมา (Subcontract)",
     defaultLabelEn: "Subcontract",
+  },
+  {
+    value: "service",
+    labelKey: "costTypes.service",
+    defaultLabelTh: "ค่าบริการ (Service)",
+    defaultLabelEn: "Service",
+  },
+  {
+    value: "other_direct",
+    labelKey: "costTypes.otherDirect",
+    defaultLabelTh: "ต้นทุนทางตรงอื่น ๆ (Other Direct)",
+    defaultLabelEn: "Other Direct",
   },
   {
     value: "equipment",

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useFormContext, useFieldArray, Controller } from "react-hook-form";
+import { useFormContext, useFieldArray, Controller, useWatch } from "react-hook-form";
 import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -10,12 +10,14 @@ import { useConfirm } from "@/hooks/useConfirm";
 import { useEstimateOptions } from "../options/estimate-options";
 import { QUICK_COST_PRESETS, type QuickCostPreset } from "../constants/estimate-templates";
 import {
-  getLocalizedText,
   type CatalogItemModel,
 } from "../api/estimate-catalog-client";
 import type { EstimateWorkspaceFormData } from "../schemas/estimate-workspace-schema";
 import { calculateCostComponentSubtotal } from "../utils/estimate-calculations";
 import { formatFinancialNumber } from "../utils/estimate-formatters";
+import { Button } from "@/components/ui/Button";
+import { useEstimateWorkspace } from "./estimate-workspace-context";
+import { catalogCostComponents } from "../utils/estimate-workspace-mapper";
 import { EstimateItemCatalogModal } from "./estimate-item-catalog-modal";
 
 interface EstimateCostComponentTableProps {
@@ -35,7 +37,8 @@ export function EstimateCostComponentTable({
   const locale = useLocale();
   const { options } = useEstimateOptions();
   const { confirm, ConfirmDialog } = useConfirm();
-  const { control, watch } = useFormContext<EstimateWorkspaceFormData>();
+  const { control, getValues, formState: { errors } } = useFormContext<EstimateWorkspaceFormData>();
+  const workspace = useEstimateWorkspace();
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
 
   const fieldArrayName = `sections.${sectionIndex}.workItems.${itemIndex}.costComponents` as const;
@@ -45,7 +48,7 @@ export function EstimateCostComponentTable({
     name: fieldArrayName,
   });
 
-  const costComponents = watch(fieldArrayName) || [];
+  const costComponents = useWatch({ control, name: fieldArrayName }) ?? [];
 
   const handleAddCost = () => {
     append({
@@ -56,6 +59,7 @@ export function EstimateCostComponentTable({
       unitCost: 0,
       currency,
       sortOrder: fields.length + 1,
+      isProvisional: true,
     });
   };
 
@@ -68,30 +72,12 @@ export function EstimateCostComponentTable({
       unitCost: preset.defaultCost,
       currency,
       sortOrder: fields.length + 1,
+      isProvisional: true,
     });
   };
 
   const handleInsertFromCatalog = (selectedItems: CatalogItemModel[]) => {
-    selectedItems.forEach((item, selectedIndex) => {
-      const rawType = (item.itemType || "").toLowerCase();
-      const componentType: "material" | "labor" | "subcontract" | "equipment" =
-        rawType === "labor" || rawType === "subcontract" || rawType === "equipment"
-          ? rawType
-          : "material";
-
-      append({
-        type: componentType,
-        description: getLocalizedText(item.name, locale),
-        quantity: 1,
-        unitCode: item.resolvedCost?.unitCode || item.baseUnit.code || "lot",
-        unitCost: item.resolvedCost?.amount ?? 0,
-        currency: item.resolvedCost?.currency || currency,
-        sortOrder: fields.length + selectedIndex + 1,
-        itemId: item.id,
-        costRecordId: item.resolvedCost?.costRecordId || null,
-        costRecordVersion: item.resolvedCost?.version ?? null,
-      });
-    });
+    append(catalogCostComponents(selectedItems, locale, fields.length));
   };
 
   const handleRemoveCost = async (index: number) => {
@@ -116,7 +102,7 @@ export function EstimateCostComponentTable({
   };
 
   return (
-    <div className="bg-erp-surface border border-erp-border p-3.5 mt-2">
+    <div className="bg-erp-surface">
       {/* 1. Header & Add Actions */}
       <div className="flex flex-wrap justify-between items-center mb-2.5 gap-2">
         <span className="text-xs font-bold text-erp-navy flex items-center gap-1.5">
@@ -125,10 +111,15 @@ export function EstimateCostComponentTable({
 
         <div className="flex items-center gap-2">
           {/* Browse Catalog Button */}
-          <button
+          <Button size="sm" variant="outline"
             type="button"
-            onClick={() => setIsCatalogOpen(true)}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-erp-navy hover:text-white hover:bg-erp-navy py-1 px-2.5 border border-erp-navy transition-colors bg-white"
+            onClick={() => {
+              if (workspace) {
+                const section = getValues(`sections.${sectionIndex}`);
+                const work = section.workItems[itemIndex];
+                if (section.uiKey && work.uiKey) workspace.openCatalog({ sectionKey: section.uiKey, workKey: work.uiKey });
+              } else setIsCatalogOpen(true);
+            }}
             title={t("catalogModalDesc")}
           >
             <svg
@@ -143,36 +134,34 @@ export function EstimateCostComponentTable({
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
             </svg>
             {t("browseCatalog")}
-          </button>
+          </Button>
 
           {/* Add Blank Cost Button */}
-          <button
+          <Button size="sm" variant="outline"
             type="button"
             onClick={handleAddCost}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-erp-text-main hover:text-erp-navy hover:bg-erp-surface-subtle py-1 px-2.5 border border-erp-border transition-colors bg-white"
           >
             <IconPlus size={13} />
             {t("addComponent")}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* 2. Quick Cost Chips */}
       <div className="flex flex-wrap items-center gap-1.5 mb-3 pb-2.5 border-b border-border/60">
-        <span className="text-[11px] font-semibold text-erp-text-muted mr-1">
+        <span className="text-xs font-semibold text-erp-text-muted mr-1">
           {t("quickAddCostTitle")}
         </span>
         {QUICK_COST_PRESETS.map((preset) => (
-          <button
+          <Button size="sm" variant="outline"
             key={preset.id}
             type="button"
             onClick={() => handleQuickAddCost(preset)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-none border border-border bg-erp-bg-neutral hover:bg-erp-navy hover:text-white hover:border-erp-navy transition-colors text-erp-text-secondary font-mono"
             title={`${preset.defaultDesc} (@ ${preset.defaultCost} ${currency})`}
           >
             <span className="text-erp-text-muted hover:text-white">+</span>
             <span>{t(preset.labelKey)}</span>
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -183,20 +172,11 @@ export function EstimateCostComponentTable({
         </div>
       ) : (
         <div className="border border-erp-border">
-          {/* Table Head (Visible on sm screens and up) */}
-          <div className="hidden sm:grid grid-cols-12 gap-2 px-3 py-1.5 bg-erp-surface-subtle text-[11px] font-bold text-erp-text-secondary border-b border-erp-border items-center">
-            <div className="col-span-3">{t("costType")}</div>
-            <div className="col-span-4">{t("costDesc")}</div>
-            <div className="col-span-1 text-right">{t("quantity")}</div>
-            <div className="col-span-2 text-right">{t("unitCost")}</div>
-            <div className="col-span-1 text-right">{t("totalCost")}</div>
-            <div className="col-span-1 text-center"></div>
-          </div>
-
-          {/* Table Rows */}
+          {/* Component forms */}
           <div className="divide-y divide-erp-border/60">
             {fields.map((field, cIdx) => {
-              const currentItem = costComponents[cIdx] || field;
+              const currentItem = costComponents[cIdx];
+              if (!currentItem) return null;
               const subtotal = calculateCostComponentSubtotal(
                 currentItem.quantity,
                 currentItem.unitCost
@@ -205,45 +185,48 @@ export function EstimateCostComponentTable({
               return (
                 <div
                   key={field.id}
-                  className="grid grid-cols-12 gap-2 items-center px-3 py-1.5 text-xs hover:bg-erp-surface-subtle/40 transition-colors"
+                  id={currentItem.id ? `estimate-target-${currentItem.id}` : undefined}
+                  tabIndex={-1}
+                  className="grid grid-cols-2 gap-2 items-start p-2 text-xs focus-visible:outline-2 focus-visible:outline-erp-navy"
                 >
                   {/* Cost Type Select */}
-                  <div className="col-span-12 sm:col-span-3">
+                  <div className="col-span-2">
                     <Controller
                       control={control}
                       name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.type`}
                       render={({ field: selectField }) => (
                         <Select
+                          id={`cost-type-${sectionIndex}-${itemIndex}-${cIdx}`}
+                          label={t("costType")}
                           options={options.costTypes}
                           value={selectField.value}
                           onChange={selectField.onChange}
                           wrapperClassName="mb-0"
-                          className="h-8 min-h-[32px] py-0.5 text-xs"
                         />
                       )}
                     />
                   </div>
 
                   {/* Description Input */}
-                  <div className="col-span-12 sm:col-span-4">
+                  <div className="col-span-2">
                     <Controller
                       control={control}
                       name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.description`}
                       render={({ field: inputField }) => (
                         <Input
+                          label={t("costDesc")}
                           id={`cost-component-desc-${sectionIndex}-${itemIndex}-${cIdx}`}
                           value={inputField.value ?? ""}
                           placeholder={t("costDescPlaceholder")}
                           onChange={inputField.onChange}
                           wrapperClassName="mb-0"
-                          className="h-8 min-h-[32px] py-0.5 text-xs"
                         />
                       )}
                     />
                   </div>
 
                   {/* Quantity Input */}
-                  <div className="col-span-4 sm:col-span-1">
+                  <div className="col-span-1">
                     <Controller
                       control={control}
                       name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.quantity`}
@@ -252,18 +235,20 @@ export function EstimateCostComponentTable({
                           type="number"
                           step="any"
                           min="0"
-                          placeholder="1"
+                          id={`cost-quantity-${sectionIndex}-${itemIndex}-${cIdx}`}
+                          label={t("quantity")}
+                          error={errors.sections?.[sectionIndex]?.workItems?.[itemIndex]?.costComponents?.[cIdx]?.quantity ? t("workspace.costInvalid") : undefined}
                           value={qtyField.value ?? ""}
                           onChange={(e) => qtyField.onChange(Number(e.target.value))}
                           wrapperClassName="mb-0"
-                          className="h-8 min-h-[32px] py-0.5 text-right font-mono text-xs"
+                          className="text-right font-mono"
                         />
                       )}
                     />
                   </div>
 
                   {/* Unit Cost Input */}
-                  <div className="col-span-4 sm:col-span-2">
+                  <div className="col-span-1">
                     <Controller
                       control={control}
                       name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.unitCost`}
@@ -273,33 +258,72 @@ export function EstimateCostComponentTable({
                           type="number"
                           step="any"
                           min="0"
-                          placeholder="0.00"
+                          label={t("unitCost")}
+                          error={errors.sections?.[sectionIndex]?.workItems?.[itemIndex]?.costComponents?.[cIdx]?.unitCost ? t("workspace.costInvalid") : undefined}
                           value={costField.value ?? ""}
                           onChange={(e) => costField.onChange(Number(e.target.value))}
                           wrapperClassName="mb-0"
-                          className="h-8 min-h-[32px] py-0.5 text-right font-mono text-xs"
+                          className="text-right font-mono"
                         />
                       )}
                     />
                   </div>
 
                   {/* Line Subtotal */}
-                  <div className="col-span-3 sm:col-span-1 text-right font-mono text-xs font-bold text-erp-navy truncate">
+                  <div className="col-span-1 text-right font-mono text-xs font-bold text-erp-navy truncate">
                     {formatFinancialNumber(subtotal)}
                   </div>
 
                   {/* Delete Action Button */}
-                  <div className="col-span-1 sm:col-span-1 flex items-center justify-center">
-                    <button
+                  <div className="col-span-1 flex items-center justify-center">
+                    <Button size="sm" variant="outline"
                       type="button"
                       onClick={() => handleRemoveCost(cIdx)}
-                      className="w-7 h-7 text-erp-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center"
+                      className="text-erp-text-muted"
                       title={t("removeWorkItem")}
                       aria-label={t("removeWorkItem")}
                     >
                       <IconTrash size={14} />
-                    </button>
+                    </Button>
                   </div>
+                  {currentItem.isProvisional !== false && (
+                    <div className="col-span-2 grid grid-cols-1 gap-2 border-t border-erp-border/40 pt-2">
+                      <Controller
+                        control={control}
+                        name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.provisionalReasonCode`}
+                        render={({ field: reasonField }) => (
+                          <Select
+                            options={[
+                              { value: "supplier-quote-pending", label: t("provisionalReasons.supplierQuotePending") },
+                              { value: "market-benchmark", label: t("provisionalReasons.marketBenchmark") },
+                              { value: "historical-reference", label: t("provisionalReasons.historicalReference") },
+                              { value: "engineering-allowance", label: t("provisionalReasons.engineeringAllowance") },
+                              { value: "other", label: t("provisionalReasons.other") },
+                            ]}
+                            value={reasonField.value ?? ""}
+                            onChange={reasonField.onChange}
+                            placeholder={t("provisionalReasonCode")}
+                            required
+                            wrapperClassName="mb-0"
+                            aria-label={t("provisionalReasonCode")}
+                          />
+                        )}
+                      />
+                      <Controller
+                        control={control}
+                        name={`sections.${sectionIndex}.workItems.${itemIndex}.costComponents.${cIdx}.provisionalNote`}
+                        render={({ field: noteField }) => (
+                          <Input
+                            value={noteField.value ?? ""}
+                            placeholder={t("provisionalNote")}
+                            onChange={noteField.onChange}
+                            wrapperClassName="mb-0"
+                            aria-label={t("provisionalNote")}
+                          />
+                        )}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -308,13 +332,13 @@ export function EstimateCostComponentTable({
       )}
 
       {/* Multi-tier Faceted Item Catalog Modal */}
-      <EstimateItemCatalogModal
+      {!workspace && <EstimateItemCatalogModal
         isOpen={isCatalogOpen}
         onClose={() => setIsCatalogOpen(false)}
         onSelectItems={handleInsertFromCatalog}
         currency={currency}
         branchId={branchId}
-      />
+      />}
 
       <ConfirmDialog />
     </div>

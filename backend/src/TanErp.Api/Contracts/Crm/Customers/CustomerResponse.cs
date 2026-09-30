@@ -30,5 +30,14 @@ public sealed record CustomerResponse(
     DateTimeOffset CreatedAtUtc,
     string? LeadSource = null,
     string? LeadSourceNote = null,
-    Guid? ImageFileId = null);
-
+    Guid? ImageFileId = null,
+    string? LegalName = null,
+    string? TaxIdentifier = null,
+    string? BranchCode = null,
+    int? CreditTermDays = null,
+    decimal? CreditLimit = null,
+    string CurrencyCode = "THB",
+    string? BillingCycle = null,
+    int? BillingDay = null,
+    string? PaymentConditionNote = null,
+    string? InactiveReason = null);

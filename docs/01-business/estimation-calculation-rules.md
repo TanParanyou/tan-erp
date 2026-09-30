@@ -57,7 +57,9 @@ Markup Rate ต้องไม่ติดลบ เว้นแต่ Published
 
 ### Fixed Price
 
-Fixed Price ใช้ได้เฉพาะ Permission `estimates.override-price`, บังคับเหตุผล และ Trigger Approval ระบบยังต้องคำนวณ Margin/Markup จริงจาก Fixed Price เพื่อให้ผู้อนุมัติเห็นความเสี่ยง
+Fixed Price ใช้ได้เฉพาะ Permission `estimates.override-price` ในขอบเขต Organization/Branch ของ Estimate และบังคับ `sellingRuleReasonCode` (สูงสุด 64 ตัวอักษร). ไม่มีสิทธิ์ให้ปฏิเสธการบันทึกด้วย `PERMISSION_DENIED`; ไม่มีเหตุผลให้ปฏิเสธด้วย `ESTIMATE_FIXED_PRICE_REASON_REQUIRED`. ระบบเก็บเหตุผลใน BOQ, Input Hash และ Calculation Snapshot, จัด readiness เป็น `requiresAttention` และส่งราคา/เหตุผลให้ผู้ตรวจอิสระเห็นก่อนอนุมัติ. ระบบยังคำนวณ Margin/Markup จริงจาก Fixed Price เพื่อให้ผู้อนุมัติเห็นความเสี่ยง. Customer-safe Quotation ต้องไม่แสดง Reason Code หรือต้นทุนภายใน
+
+Work Item ที่ไม่มี `itemId` ถือเป็น Custom Work Item และต้องมี `overrideReasonCode` (ไม่เกิน 64 ตัวอักษร) กับ `overrideReason` (ไม่เกิน 500 ตัวอักษร) ก่อน Calculate/Submit; ข้อมูลไม่ครบทำให้ readiness เป็น `blocked`. เมื่อครบแล้ว readiness เป็น `requiresAttention` พร้อม trigger `CUSTOM_WORK_ITEM`, เพื่อให้ approval policy เลือกเส้นทางตามนโยบายที่เปิดใช้. Work Item ที่ผูก Item Master เก็บ ID และ code/name snapshot ไว้กับ Estimate Revision เพื่อให้รายการเก่ายังคงแสดงข้อมูลเดิม แม้ชื่อ master เปลี่ยนภายหลัง.
 
 ตัวอย่าง `TEST_ONLY`: ต้นทุน `100.00` และ Margin `25%` ให้ Selling Price `133.33`; Markup `25%` ให้ `125.00` คำสองคำนี้ห้ามใช้แทนกัน
 
@@ -80,7 +82,7 @@ Phase 1 ใช้ Discount ระดับ Document หลังคำนวณ 
 - `percent`: Selling Before Discount × Rate โดย Rate อยู่ระหว่าง 0–1
 - `fixed-amount`: จำนวนเงินไม่เกิน Selling Before Discount
 
-Discount >0 บังคับ Reason Code และอาจ Trigger Approval ตาม Policy Line/Section Discount เป็น Future Capability เพื่อหลีกเลี่ยงการแจกจ่ายเศษปัดซับซ้อนใน Release แรก
+Discount >0 บังคับ Reason Code ที่บันทึกใน Revision และ Calculation Snapshot และอาจ Trigger Approval ตาม Policy. Rate, Type และ Reason Code อยู่ใน Input Hash. Line/Section Discount เป็น Future Capability เพื่อหลีกเลี่ยงการแจกจ่ายเศษปัดซับซ้อนใน Release แรก.
 
 ## Tax
 

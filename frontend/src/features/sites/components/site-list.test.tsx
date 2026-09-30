@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
+import { ToastProvider } from "@/hooks/useToast";
 import thMessages from "@/messages/th.json";
 import { SiteList } from "./site-list";
 import type { MembershipDto } from "@/lib/permissions/can";
@@ -59,9 +60,11 @@ vi.mock("../api/site-queries", () => ({
 function renderSiteList(client: QueryClient, isCustomerActive: boolean) {
   return render(
     <QueryClientProvider client={client}>
-      <NextIntlClientProvider locale="th" messages={thMessages}>
-        <SiteList customerId="customer-1" isCustomerActive={isCustomerActive} />
-      </NextIntlClientProvider>
+      <ToastProvider>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <SiteList customerId="customer-1" isCustomerActive={isCustomerActive} />
+        </NextIntlClientProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }
@@ -136,12 +139,29 @@ describe("SiteList component", () => {
     // When customer is active and has sites.manage, show button
     rerender(
       <QueryClientProvider client={client}>
-        <NextIntlClientProvider locale="th" messages={thMessages}>
-          <SiteList customerId="customer-1" isCustomerActive={true} />
-        </NextIntlClientProvider>
+        <ToastProvider>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <SiteList customerId="customer-1" isCustomerActive={true} />
+          </NextIntlClientProvider>
+        </ToastProvider>
       </QueryClientProvider>
     );
     expect(screen.getByRole("link", { name: /เพิ่มสถานที่ตั้ง/ })).toBeInTheDocument();
+  });
+
+  it("hides site management controls in view mode while keeping site data visible", () => {
+    render(
+      <QueryClientProvider client={client}>
+        <ToastProvider>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <SiteList customerId="customer-1" isCustomerActive mode="view" />
+          </NextIntlClientProvider>
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("สำนักงานใหญ่")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /เพิ่มสถานที่ตั้ง/ })).not.toBeInTheDocument();
   });
 
   it("renders empty state when items array is empty", () => {

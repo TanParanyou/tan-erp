@@ -4,11 +4,16 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { EstimateItemCatalogModal } from "./estimate-item-catalog-modal";
 import { useEstimateCatalog } from "../hooks/use-estimate-catalog";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 import type { CatalogItemModel, CatalogModel } from "../api/estimate-catalog-client";
 import thMessages from "@/messages/th.json";
 
 vi.mock("../hooks/use-estimate-catalog", () => ({
   useEstimateCatalog: vi.fn(),
+}));
+
+vi.mock("@/hooks/useMediaQuery", () => ({
+  useIsMobile: vi.fn(() => false),
 }));
 
 vi.mock("../hooks/use-private-item-image", () => ({
@@ -17,6 +22,10 @@ vi.mock("../hooks/use-private-item-image", () => ({
     isLoading: false,
     isError: false,
   }),
+}));
+
+vi.mock("@/components/ui/Avatar", () => ({
+  Avatar: ({ initial, fileId }: { initial?: string; fileId?: string | null }) => <span data-testid="taxonomy-avatar" data-file-id={fileId ?? "none"}>{initial}</span>,
 }));
 
 const mockItems: CatalogItemModel[] = [
@@ -32,6 +41,7 @@ const mockItems: CatalogItemModel[] = [
       english: "Grade A for interior design",
     },
     itemType: "material",
+    costComponentType: "material",
     category: {
       id: "cat-1",
       code: "CAT-WD",
@@ -68,6 +78,7 @@ const mockItems: CatalogItemModel[] = [
       english: "Carpentry Framework Labor",
     },
     itemType: "labor",
+    costComponentType: "labor",
     category: {
       id: "cat-2",
       code: "CAT-LB",
@@ -94,6 +105,7 @@ const mockCatalogData: CatalogModel = {
       {
         id: "cat-1",
         name: { thai: "งานไม้", english: "Woodwork" },
+        imageFileId: "category-image-1",
         count: 1,
       },
       {
@@ -106,8 +118,14 @@ const mockCatalogData: CatalogModel = {
       {
         id: "brand-1",
         name: { thai: "วนชัย", english: "Vanachai" },
+        imageFileId: "brand-image-1",
         count: 1,
       },
+    ],
+    attributes: [
+      { key: "thickness_mm", value: "10", count: 2 },
+      { key: "thickness_mm", value: "18", count: 4 },
+      { key: "material", value: "MDF", count: 3 },
     ],
   },
   pageInfo: {
@@ -135,6 +153,7 @@ describe("EstimateItemCatalogModal (Server-State Driven)", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useIsMobile).mockReturnValue(false);
   });
 
   it("renders branch guard warning when branchId is missing", () => {
@@ -161,6 +180,22 @@ describe("EstimateItemCatalogModal (Server-State Driven)", () => {
     renderModal(<EstimateItemCatalogModal {...defaultProps} />);
 
     expect(screen.getByText("กำลังโหลดรายการจากคลังวัสดุ...")).toBeInTheDocument();
+  });
+
+  it("renders category and brand facet thumbnails from the API projection", () => {
+    vi.mocked(useEstimateCatalog).mockReturnValue({
+      data: mockCatalogData,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useEstimateCatalog>);
+
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
+
+    const avatars = screen.getAllByTestId("taxonomy-avatar");
+    expect(avatars[0]).toHaveAttribute("data-file-id", "category-image-1");
+    expect(avatars[0]).toHaveTextContent("งานไม้");
+    expect(avatars[2]).toHaveAttribute("data-file-id", "brand-image-1");
   });
 
   it("renders error state and handles retry button click", () => {
@@ -215,6 +250,46 @@ describe("EstimateItemCatalogModal (Server-State Driven)", () => {
 
     expect(screen.getByText("LB-001")).toBeInTheDocument();
     expect(screen.getByText("ค่าแรงติดตั้งโครงไม้")).toBeInTheDocument();
+  });
+
+  it("shows readable specification names and filters by selecting a value", async () => {
+    vi.mocked(useEstimateCatalog).mockReturnValue({
+      data: mockCatalogData,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useEstimateCatalog>);
+
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
+
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "ความหนา (มม.)" }));
+    fireEvent.click(screen.getByRole("radio", { name: /10\s*\(2\)/ }));
+
+    await waitFor(() => {
+      expect(useEstimateCatalog).toHaveBeenLastCalledWith(
+        expect.objectContaining({ attributeKey: "thickness_mm", attributeValue: "10" })
+      );
+    });
+  });
+
+  it("returns from mobile filters to the item list without clearing the chosen type", () => {
+    vi.mocked(useIsMobile).mockReturnValue(true);
+    vi.mocked(useEstimateCatalog).mockReturnValue({
+      data: mockCatalogData,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useEstimateCatalog>);
+
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
+    expect(screen.queryByRole("button", { name: "ดูรายการสินค้า" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "แสดงตัวกรอง" }));
+    fireEvent.click(screen.getByRole("button", { name: /^วัสดุ\s*1$/ }));
+    fireEvent.click(screen.getByRole("button", { name: "ดูรายการสินค้า" }));
+
+    expect(screen.getByRole("button", { name: "แสดงตัวกรอง" })).toHaveAttribute("aria-expanded", "false");
+    expect(useEstimateCatalog).toHaveBeenLastCalledWith(expect.objectContaining({ itemType: "material" }));
   });
 
   it("keeps confirm button disabled when no items are selected, enables on selection", () => {

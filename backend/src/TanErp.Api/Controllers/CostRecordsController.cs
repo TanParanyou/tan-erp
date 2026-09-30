@@ -4,6 +4,7 @@ using TanErp.Api.Contracts.Items;
 using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Results;
 using TanErp.Application.Items;
 using TanErp.Domain.Items;
 
@@ -31,13 +32,14 @@ public class CostRecordsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> CreateDraft(
         [FromRoute] Guid itemId,
         [FromBody] CreateCostRecordRequest request,
         CancellationToken ct)
     {
-        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        var authResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
         if (authResult.IsFailure) return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
 
         var auth = authResult.Value!;
@@ -63,7 +65,7 @@ public class CostRecordsController : ControllerBase
             request.Reason,
             request.EvidenceFileId);
 
-        var result = await _costStore.CreateDraftAsync(data, access, ct);
+        var result = await _costStore.CreateDraftAsync(data, access, auth.IdempotencyKey, ct);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -131,6 +133,7 @@ public class CostRecordsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> UpdateDraft(
         [FromRoute] Guid itemId,
@@ -147,6 +150,7 @@ public class CostRecordsController : ControllerBase
 
         var access = accessResult.Value!;
         var ifMatch = ParseIfMatchHeader();
+        if (ifMatch.IsFailure) return ProblemDetailsMapper.CreateProblemResult(ifMatch.Error.Code, HttpContext);
 
         var data = new UpdateCostRecordData(
             costId,
@@ -163,7 +167,7 @@ public class CostRecordsController : ControllerBase
             request.Reason,
             request.EvidenceFileId);
 
-        var result = await _costStore.UpdateDraftAsync(data, access, ifMatch, ct);
+        var result = await _costStore.UpdateDraftAsync(data, access, ifMatch.Value, ct);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -180,6 +184,7 @@ public class CostRecordsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Submit(
         [FromRoute] Guid itemId,
@@ -195,7 +200,8 @@ public class CostRecordsController : ControllerBase
 
         var access = accessResult.Value!;
         var ifMatch = ParseIfMatchHeader();
-        var result = await _costStore.SubmitAsync(access.OrganizationId, itemId, costId, access, ifMatch, ct);
+        if (ifMatch.IsFailure) return ProblemDetailsMapper.CreateProblemResult(ifMatch.Error.Code, HttpContext);
+        var result = await _costStore.SubmitAsync(access.OrganizationId, itemId, costId, access, ifMatch.Value, ct);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -212,6 +218,7 @@ public class CostRecordsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Approve(
         [FromRoute] Guid itemId,
@@ -227,7 +234,8 @@ public class CostRecordsController : ControllerBase
 
         var access = accessResult.Value!;
         var ifMatch = ParseIfMatchHeader();
-        var result = await _costStore.ApproveAsync(access.OrganizationId, itemId, costId, access, ifMatch, ct);
+        if (ifMatch.IsFailure) return ProblemDetailsMapper.CreateProblemResult(ifMatch.Error.Code, HttpContext);
+        var result = await _costStore.ApproveAsync(access.OrganizationId, itemId, costId, access, ifMatch.Value, ct);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -245,6 +253,7 @@ public class CostRecordsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Return(
         [FromRoute] Guid itemId,
@@ -261,7 +270,8 @@ public class CostRecordsController : ControllerBase
 
         var access = accessResult.Value!;
         var ifMatch = ParseIfMatchHeader();
-        var result = await _costStore.ReturnAsync(access.OrganizationId, itemId, costId, request.Reason, access, ifMatch, ct);
+        if (ifMatch.IsFailure) return ProblemDetailsMapper.CreateProblemResult(ifMatch.Error.Code, HttpContext);
+        var result = await _costStore.ReturnAsync(access.OrganizationId, itemId, costId, request.Reason, access, ifMatch.Value, ct);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -274,17 +284,20 @@ public class CostRecordsController : ControllerBase
 
     [HttpPost("{costId:guid}/publish")]
     [ProducesResponseType<CostRecordResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Publish(
         [FromRoute] Guid itemId,
         [FromRoute] Guid costId,
         CancellationToken ct)
     {
-        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        var authResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
         if (authResult.IsFailure) return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
 
         var auth = authResult.Value!;
@@ -292,8 +305,7 @@ public class CostRecordsController : ControllerBase
         if (accessResult.IsFailure) return ProblemDetailsMapper.CreateProblemResult(accessResult.Error.Code, HttpContext);
 
         var access = accessResult.Value!;
-        var ifMatch = ParseIfMatchHeader();
-        var result = await _costStore.PublishAsync(access.OrganizationId, itemId, costId, access, ifMatch, ct);
+        var result = await _costStore.PublishAsync(access.OrganizationId, itemId, costId, access, auth.IfMatchRowVersion, auth.IdempotencyKey, ct);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -311,6 +323,7 @@ public class CostRecordsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Disable(
         [FromRoute] Guid itemId,
@@ -327,7 +340,8 @@ public class CostRecordsController : ControllerBase
 
         var access = accessResult.Value!;
         var ifMatch = ParseIfMatchHeader();
-        var result = await _costStore.DisableAsync(access.OrganizationId, itemId, costId, request.Reason, access, ifMatch, ct);
+        if (ifMatch.IsFailure) return ProblemDetailsMapper.CreateProblemResult(ifMatch.Error.Code, HttpContext);
+        var result = await _costStore.DisableAsync(access.OrganizationId, itemId, costId, request.Reason, access, ifMatch.Value, ct);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -338,12 +352,11 @@ public class CostRecordsController : ControllerBase
         return Ok(response);
     }
 
-    private Guid? ParseIfMatchHeader()
+    private Result<Guid> ParseIfMatchHeader()
     {
-        var header = Request.Headers.IfMatch.ToString();
-        if (string.IsNullOrWhiteSpace(header)) return null;
-
-        var clean = header.Trim('\"', ' ', '\'');
-        return Guid.TryParse(clean, out var guid) ? guid : null;
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        return conditional.IsFailure
+            ? Result<Guid>.Failure(conditional.Error)
+            : Result<Guid>.Success(conditional.Value!.IfMatchRowVersion);
     }
 }

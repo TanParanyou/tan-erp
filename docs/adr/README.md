@@ -15,3 +15,5 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0011 — Production-Grade Document Numbering Engine](0011-production-document-numbering-engine.md)
 - [0012 — Localized JSONB สำหรับข้อความ Item](0012-localized-jsonb-for-item-text.md)
 - [0013 — Organization Item และ Branch Availability](0013-organization-items-with-branch-availability.md)
+- [0014 — Reusable Cost Source และ Cost Record Evidence](0014-reusable-cost-source-with-record-evidence.md)
+- [0015 — Item Code เป็น SKU ภายใน และ Barcode หลายค่าต่อ Item](0015-item-code-sku-and-multiple-barcodes.md)

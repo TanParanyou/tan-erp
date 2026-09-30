@@ -87,6 +87,7 @@ export function OpportunityReopenModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      closeDisabled={transitionMutation.isPending}
       title={t("reopenModalTitle")}
       description={t("reopenModalDesc")}
       size="lg"

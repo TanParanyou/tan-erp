@@ -507,6 +507,8 @@ Commit: `fix(estimates): harden item catalog frontend flow`
 
 ### Task 9: Prove the Remediation and Resume the Completion Plan
 
+> Reopened 2026-09-23 after code review: the Playwright modal smoke test now passes against an isolated database, but the priced-Item → saved BOQ browser journey and legacy-data migration rehearsal remain open. See [verification evidence](../../05-engineering/item-master-estimate-catalog-verification.md).
+
 **Files:**
 - Create: `backend/tests/TanErp.IntegrationTests/Api/ItemCatalogEstimateFlowTests.cs`
 - Create: `frontend/e2e/estimate-item-catalog.spec.ts`
@@ -519,19 +521,19 @@ Commit: `fix(estimates): harden item catalog frontend flow`
 - Consumes: Tasks 1–8
 - Produces: reproducible evidence that all review findings are closed
 
-- [x] **Step 1: Add one end-to-end backend security scenario**
+- [ ] **Step 1: Add one end-to-end backend security scenario**
 
 Create taxonomy, selected-branch Item, item-parent Verified image and organization/branch costs; publish with a distinct checker; query Catalog; tamper client unit cost; save Estimate; publish a newer cost; assert authoritative historical snapshot remains unchanged.
 
-- [x] **Step 2: Add the review regression matrix**
+- [ ] **Step 2: Add the review regression matrix**
 
 Record automated cases for actual-byte overflow, truncated upload, cross-org Branch/File/Cost IDs, wrong file parent, invalid cursor, equal-precedence cost ambiguity, quantity tier, Item type `other`, stale ETag, maker self-approval and unauthorized private content.
 
-- [x] **Step 3: Run browser coverage**
+- [ ] **Step 3: Run browser coverage**
 
 At desktop and 320px viewport test Thai/English rendering, server search/filter, private image/placeholder, multi-select ordering, save/reload, price conflict recovery, keyboard focus and 200% zoom.
 
-- [x] **Step 4: Run the full completion gates**
+- [ ] **Step 4: Run the full completion gates**
 
 ```bash
 dotnet --version
@@ -546,11 +548,11 @@ git diff --check
 
 Expected: SDK `10.0.400`, zero pending model changes and every command exits 0. Record UTC timestamp, commit SHA, test counts and exact result.
 
-- [x] **Step 5: Update plan status from evidence**
+- [ ] **Step 5: Update plan status from evidence**
 
 Mark remediation checkboxes only where evidence exists. In the Completion Plan, mark corresponding requirements complete and leave unrelated remaining tasks unchecked. Link the verification document from `docs/README.md`.
 
-- [x] **Step 6: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add backend/tests/TanErp.IntegrationTests/Api frontend/e2e docs

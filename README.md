@@ -2,7 +2,7 @@
 
 `tan-erp` คือระบบ Project ERP สำหรับธุรกิจออกแบบ ตกแต่งภายใน และผลิตงานบิวต์อิน เริ่มต้นจากงานประเมินราคา (Estimate) แล้วค่อยขยายไปสู่งานขาย โครงการ จัดซื้อ คลัง ผลิต ติดตั้ง การเงิน และบริการหลังการขาย
 
-สถานะปัจจุบันคือ **Application Implementation**: ขอบเขตที่ได้รับอนุมัติคือ Foundation Login และ Current User vertical slice ตาม [Foundation Plan](docs/superpowers/plans/2026-09-06-foundation-login-current-user.md) โดยโมดูลธุรกิจอื่นยังคงถูก Gate ไว้อย่างชัดเจน
+สถานะปัจจุบันคือ **Application Implementation**: มี implementation ของ Foundation, CRM/Customer/Site, Opportunity/Site Survey, Item Master, Official Estimate และ Commercial Quotation แล้ว โดยความพร้อมใช้งานจริงต้องตรวจแยกตามหลักฐานและข้อค้างใน [Implementation Roadmap](docs/00-overview/implementation-roadmap.md). งานปิดช่องว่างและโมดูลระยะถัดไปอยู่ใน [ERP Completion Plan](docs/superpowers/plans/2026-09-29-erp-completion-master-plan.md); งาน Draft/Future ยังต้องยืนยันขอบเขตก่อนเริ่มพัฒนา.
 
 ## ข้อกำหนดของระบบ (Prerequisites)
 

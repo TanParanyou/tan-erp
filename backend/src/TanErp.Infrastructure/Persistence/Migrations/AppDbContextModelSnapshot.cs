@@ -42,6 +42,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at_utc");
 
+                    b.Property<string>("CustomerBillingSnapshotHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("customer_billing_snapshot_hash");
+
+                    b.Property<string>("CustomerBillingSnapshotJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("customer_billing_snapshot_json");
+
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid")
                         .HasColumnName("customer_id");
@@ -264,6 +273,20 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("BillingCycle")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("billing_cycle");
+
+                    b.Property<int?>("BillingDay")
+                        .HasColumnType("integer")
+                        .HasColumnName("billing_day");
+
+                    b.Property<string>("BranchCode")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
+                        .HasColumnName("branch_code");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -277,6 +300,23 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_user_id");
+
+                    b.Property<decimal?>("CreditLimit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("credit_limit");
+
+                    b.Property<int>("CreditTermDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("credit_term_days");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasDefaultValue("THB")
+                        .HasColumnName("currency_code");
 
                     b.Property<string>("CustomerType")
                         .IsRequired()
@@ -299,6 +339,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("image_file_id");
 
+                    b.Property<string>("InactiveReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("inactive_reason");
+
                     b.Property<string>("LeadSource")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -309,15 +354,30 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("lead_source_note");
 
+                    b.Property<string>("LegalName")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("legal_name");
+
                     b.Property<string>("NormalizedDisplayName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("normalized_display_name");
 
+                    b.Property<string>("NormalizedTaxIdentifier")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
+                        .HasColumnName("normalized_tax_identifier");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
+
+                    b.Property<string>("PaymentConditionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("payment_condition_note");
 
                     b.Property<string>("PreferredLocale")
                         .IsRequired()
@@ -336,6 +396,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("status");
 
+                    b.Property<string>("TaxIdentifier")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
+                        .HasColumnName("tax_identifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ImageFileId");
@@ -343,9 +408,126 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId", "Code")
                         .IsUnique();
 
+                    b.HasIndex("OrganizationId", "NormalizedTaxIdentifier", "BranchCode");
+
                     b.HasIndex("OrganizationId", "Status", "NormalizedDisplayName", "Id");
 
-                    b.ToTable("customers", "crm");
+                    b.ToTable("customers", "crm", t =>
+                        {
+                            t.HasCheckConstraint("ck_customers_billing_day", "billing_day IS NULL OR billing_day BETWEEN 1 AND 31");
+
+                            t.HasCheckConstraint("ck_customers_credit_limit", "credit_limit IS NULL OR credit_limit >= 0");
+
+                            t.HasCheckConstraint("ck_customers_credit_term_days", "credit_term_days >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Crm.Customers.CustomerAddress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AddressLine1")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("address_line1");
+
+                    b.Property<string>("AddressType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("address_type");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("country_code");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("District")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("district");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_primary");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("label");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
+                        .HasColumnName("postal_code");
+
+                    b.Property<string>("Province")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("province");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Subdistrict")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("subdistrict");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique()
+                        .HasFilter("status = 'active' AND is_primary = true AND address_type = 'billing'");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("CustomerId", "OrganizationId");
+
+                    b.ToTable("customer_addresses", "crm", t =>
+                        {
+                            t.HasCheckConstraint("ck_customer_addresses_postal_code", "postal_code ~ '^[0-9]{5}$'");
+
+                            t.HasCheckConstraint("ck_customer_addresses_status", "status IN ('active', 'inactive')");
+
+                            t.HasCheckConstraint("ck_customer_addresses_type", "address_type IN ('billing', 'contact')");
+                        });
                 });
 
             modelBuilder.Entity("TanErp.Domain.Crm.Customers.CustomerContact", b =>
@@ -416,6 +598,13 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("role_title");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -970,6 +1159,101 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.ToTable("document_sequence_definitions", "common");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Estimates.CalculationPolicyVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("content_hash");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTimeOffset>("EffectiveFromUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_from_utc");
+
+                    b.Property<DateTimeOffset?>("EffectiveToUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_to_utc");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("OverheadMethod")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("overhead_method");
+
+                    b.Property<decimal>("OverheadValue")
+                        .HasPrecision(12, 6)
+                        .HasColumnType("numeric(12,6)")
+                        .HasColumnName("overhead_value");
+
+                    b.Property<string>("PolicyCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("policy_code");
+
+                    b.Property<DateTimeOffset?>("PublishedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at_utc");
+
+                    b.Property<Guid?>("PublishedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("published_by_user_id");
+
+                    b.Property<string>("RoundingMode")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("rounding_mode");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "PolicyCode", "Version")
+                        .IsUnique()
+                        .HasFilter("branch_id IS NULL");
+
+                    b.HasIndex("OrganizationId", "BranchId", "PolicyCode", "Version")
+                        .IsUnique()
+                        .HasFilter("branch_id IS NOT NULL");
+
+                    b.ToTable("calculation_policy_versions", "estimates", t =>
+                        {
+                            t.HasCheckConstraint("ck_estimate_calculation_policy_overhead", "overhead_value >= 0 AND (overhead_method <> 'percent-direct-cost' OR overhead_value <= 1)");
+
+                            t.HasCheckConstraint("ck_estimate_calculation_policy_period", "effective_to_utc IS NULL OR effective_to_utc > effective_from_utc");
+
+                            t.HasCheckConstraint("ck_estimate_calculation_policy_status", "status IN ('draft', 'published', 'superseded', 'disabled')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Estimates.Estimate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1054,6 +1338,421 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateApprovalDecision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CalculationSnapshotHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("calculation_snapshot_hash");
+
+                    b.Property<DateTimeOffset>("DecidedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at_utc");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("decision");
+
+                    b.Property<Guid>("EstimateApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_approval_request_id");
+
+                    b.Property<Guid>("EstimateApprovalStepId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_approval_step_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("ReasonCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("reason_code");
+
+                    b.Property<Guid>("ReviewerMembershipId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewer_membership_id");
+
+                    b.Property<Guid>("ReviewerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewer_user_id");
+
+                    b.Property<string>("RouteHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("route_hash");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("EstimateApprovalRequestId", "OrganizationId");
+
+                    b.HasIndex("EstimateApprovalStepId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "EstimateApprovalStepId")
+                        .IsUnique();
+
+                    b.ToTable("estimate_approval_decisions", "estimates", t =>
+                        {
+                            t.HasCheckConstraint("ck_estimate_approval_decisions_decision", "decision IN ('approved', 'returned')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateApprovalRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CalculationInputHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("calculation_input_hash");
+
+                    b.Property<string>("CalculationSnapshotHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("calculation_snapshot_hash");
+
+                    b.Property<int>("CalculationVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("calculation_version");
+
+                    b.Property<DateTimeOffset?>("ClosedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at_utc");
+
+                    b.Property<Guid>("EstimateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_id");
+
+                    b.Property<Guid>("EstimateRevisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_revision_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("PolicyCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("policy_code");
+
+                    b.Property<int>("PolicyVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("policy_version");
+
+                    b.Property<DateTimeOffset>("RequestedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at_utc");
+
+                    b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_by_user_id");
+
+                    b.Property<int>("RevisionNo")
+                        .HasColumnType("integer")
+                        .HasColumnName("revision_no");
+
+                    b.Property<string>("RouteHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("route_hash");
+
+                    b.Property<string>("RouteSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("route_snapshot_json");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SubmissionNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("submission_note");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EstimateId", "OrganizationId");
+
+                    b.HasIndex("EstimateRevisionId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "EstimateRevisionId")
+                        .IsUnique()
+                        .HasFilter("status = 'open'");
+
+                    b.ToTable("estimate_approval_requests", "estimates", t =>
+                        {
+                            t.HasCheckConstraint("ck_estimate_approval_requests_status", "status IN ('open', 'approved', 'returned', 'cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateApprovalSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ApprovedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at_utc");
+
+                    b.Property<Guid>("ApprovedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approved_by_user_id");
+
+                    b.Property<string>("CalculationInputHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("calculation_input_hash");
+
+                    b.Property<string>("CalculationSnapshotHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("calculation_snapshot_hash");
+
+                    b.Property<int>("CalculationVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("calculation_version");
+
+                    b.Property<Guid>("EstimateApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_approval_request_id");
+
+                    b.Property<Guid>("EstimateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_id");
+
+                    b.Property<Guid>("EstimateRevisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_revision_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("RouteHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("route_hash");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("snapshot_json");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("EstimateApprovalRequestId", "OrganizationId");
+
+                    b.HasIndex("EstimateId", "OrganizationId");
+
+                    b.HasIndex("EstimateRevisionId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "EstimateRevisionId")
+                        .IsUnique();
+
+                    b.ToTable("estimate_approval_snapshots", "estimates", t =>
+                        {
+                            t.HasCheckConstraint("ck_estimate_approval_snapshots_calculation_version", "calculation_version > 0");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateApprovalStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("EstimateApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_approval_request_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("PermissionKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("permission_key");
+
+                    b.Property<Guid>("ReviewerMembershipId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewer_membership_id");
+
+                    b.Property<Guid>("ReviewerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewer_user_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<Guid>("ScopeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("scope_id");
+
+                    b.Property<string>("ScopeType")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("scope_type");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EstimateApprovalRequestId", "OrganizationId");
+
+                    b.HasIndex("ReviewerMembershipId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "EstimateApprovalRequestId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("estimate_approval_steps", "estimates", t =>
+                        {
+                            t.HasCheckConstraint("ck_estimate_approval_steps_scope", "scope_type IN ('organization', 'branch')");
+
+                            t.HasCheckConstraint("ck_estimate_approval_steps_status", "status IN ('pending', 'approved', 'returned')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateCalculationSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CalculationPolicyHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("calculation_policy_hash");
+
+                    b.Property<string>("CalculationPolicyVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("calculation_policy_version");
+
+                    b.Property<Guid?>("CalculationPolicyVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("calculation_policy_version_id");
+
+                    b.Property<int>("CalculationVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("calculation_version");
+
+                    b.Property<DateTimeOffset>("CapturedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("captured_at_utc");
+
+                    b.Property<Guid>("CapturedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("captured_by_user_id");
+
+                    b.Property<Guid>("EstimateRevisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("estimate_revision_id");
+
+                    b.Property<string>("InputHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("input_hash");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("snapshot_json");
+
+                    b.Property<string>("TaxPolicyHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("tax_policy_hash");
+
+                    b.Property<string>("TaxPolicyVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("tax_policy_version");
+
+                    b.Property<Guid?>("TaxPolicyVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tax_policy_version_id");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("CalculationPolicyVersionId", "OrganizationId");
+
+                    b.HasIndex("EstimateRevisionId", "OrganizationId");
+
+                    b.HasIndex("TaxPolicyVersionId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "EstimateRevisionId", "CalculationVersion")
+                        .IsUnique();
+
+                    b.ToTable("estimate_calculation_snapshots", "estimates", t =>
+                        {
+                            t.HasCheckConstraint("ck_estimate_calculation_snapshots_version", "calculation_version > 0");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Estimates.EstimateCostComponent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1065,6 +1764,16 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamptz")
                         .HasColumnName("cost_effective_from_utc");
 
+                    b.Property<Guid?>("CostEvidenceFileIdSnapshot")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cost_evidence_file_id_snapshot");
+
+                    b.Property<string>("CostOrigin")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("cost_origin");
+
                     b.Property<string>("CostPolicyVersion")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -1074,6 +1783,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("cost_record_id");
 
+                    b.Property<string>("CostRecordReasonSnapshot")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("cost_record_reason_snapshot");
+
                     b.Property<int?>("CostRecordVersion")
                         .HasColumnType("integer")
                         .HasColumnName("cost_record_version");
@@ -1082,6 +1796,20 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)")
                         .HasColumnName("cost_scope_snapshot");
+
+                    b.Property<string>("CostSourceCodeSnapshot")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("cost_source_code_snapshot");
+
+                    b.Property<Guid?>("CostSourceIdSnapshot")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cost_source_id_snapshot");
+
+                    b.Property<string>("CostSourceReferenceSnapshot")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cost_source_reference_snapshot");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -1120,6 +1848,16 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
+
+                    b.Property<string>("ProvisionalNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("provisional_note");
+
+                    b.Property<string>("ProvisionalReasonCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provisional_reason_code");
 
                     b.Property<decimal>("Quantity")
                         .HasPrecision(18, 4)
@@ -1182,6 +1920,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("estimate_cost_components", "estimates", t =>
                         {
+                            t.HasCheckConstraint("ck_estimate_cost_components_cost_origin", "cost_origin IN ('manual', 'catalog')");
+
                             t.HasCheckConstraint("ck_estimate_cost_components_quantity", "quantity > 0");
 
                             t.HasCheckConstraint("ck_estimate_cost_components_type", "type IN ('material', 'labor', 'subcontract', 'service', 'other_direct')");
@@ -1196,6 +1936,22 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("ApprovalSnapshotJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("approval_snapshot_json");
+
+                    b.Property<DateTimeOffset?>("ApprovedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at_utc");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approved_by_user_id");
+
+                    b.Property<bool>("CalculationOutdated")
+                        .HasColumnType("boolean")
+                        .HasColumnName("calculation_outdated");
 
                     b.Property<string>("CalculationPolicyVersion")
                         .IsRequired()
@@ -1226,6 +1982,22 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("discount_amount");
 
+                    b.Property<string>("DiscountReasonCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("discount_reason_code");
+
+                    b.Property<string>("DiscountType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("discount_type");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("numeric(19,6)")
+                        .HasColumnName("discount_value");
+
                     b.Property<Guid>("EstimateId")
                         .HasColumnType("uuid")
                         .HasColumnName("estimate_id");
@@ -1234,6 +2006,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("grand_total");
+
+                    b.Property<Guid?>("LastFinancialEditorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_financial_editor_user_id");
 
                     b.Property<decimal>("MarginAmount")
                         .HasPrecision(18, 2)
@@ -1284,6 +2060,14 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("status");
 
+                    b.Property<DateTimeOffset?>("SubmittedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at_utc");
+
+                    b.Property<Guid?>("SubmittedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("submitted_by_user_id");
+
                     b.Property<decimal>("TaxAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
@@ -1308,6 +2092,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("estimate_revisions", "estimates", t =>
                         {
+                            t.HasCheckConstraint("ck_estimate_revisions_discount_type", "discount_type IN ('none', 'percent', 'fixed-amount')");
+
+                            t.HasCheckConstraint("ck_estimate_revisions_discount_value", "discount_value >= 0 AND (discount_type <> 'percent' OR discount_value <= 1) AND (discount_type <> 'none' OR discount_value = 0)");
+
                             t.HasCheckConstraint("ck_estimate_revisions_grand_total", "grand_total >= 0");
 
                             t.HasCheckConstraint("ck_estimate_revisions_net_cost", "net_cost >= 0");
@@ -1402,14 +2190,48 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("estimate_section_id");
 
+                    b.Property<string>("ItemCodeSnapshot")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("item_code_snapshot");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<string>("ItemNameEnSnapshot")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("item_name_en_snapshot");
+
+                    b.Property<string>("ItemNameThSnapshot")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("item_name_th_snapshot");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
+
+                    b.Property<string>("OverrideReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("override_reason");
+
+                    b.Property<string>("OverrideReasonCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("override_reason_code");
 
                     b.Property<decimal>("Quantity")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("quantity");
+
+                    b.Property<string>("SellingRuleReasonCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("selling_rule_reason_code");
 
                     b.Property<string>("SellingRuleType")
                         .IsRequired()
@@ -1456,6 +2278,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("EstimateSectionId", "OrganizationId");
 
+                    b.HasIndex("ItemId", "OrganizationId");
+
                     b.HasIndex("OrganizationId", "EstimateSectionId", "Code")
                         .IsUnique();
 
@@ -1464,6 +2288,103 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_estimate_work_items_quantity", "quantity > 0");
 
                             t.HasCheckConstraint("ck_estimate_work_items_selling_rule_type", "selling_rule_type IN ('margin', 'markup', 'fixed_price')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.TaxPolicyVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("content_hash");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTimeOffset>("EffectiveFromUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_from_utc");
+
+                    b.Property<DateTimeOffset?>("EffectiveToUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_to_utc");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("PolicyCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("policy_code");
+
+                    b.Property<DateTimeOffset?>("PublishedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at_utc");
+
+                    b.Property<Guid?>("PublishedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("published_by_user_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TaxCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("tax_code");
+
+                    b.Property<string>("TaxMode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("tax_mode");
+
+                    b.Property<decimal>("TaxRate")
+                        .HasPrecision(12, 6)
+                        .HasColumnType("numeric(12,6)")
+                        .HasColumnName("tax_rate");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "PolicyCode", "Version")
+                        .IsUnique()
+                        .HasFilter("branch_id IS NULL");
+
+                    b.HasIndex("OrganizationId", "BranchId", "PolicyCode", "Version")
+                        .IsUnique()
+                        .HasFilter("branch_id IS NOT NULL");
+
+                    b.ToTable("tax_policy_versions", "estimates", t =>
+                        {
+                            t.HasCheckConstraint("ck_estimate_tax_policy_mode", "tax_mode IN ('exclusive', 'inclusive', 'exempt')");
+
+                            t.HasCheckConstraint("ck_estimate_tax_policy_period", "effective_to_utc IS NULL OR effective_to_utc > effective_from_utc");
+
+                            t.HasCheckConstraint("ck_estimate_tax_policy_rate", "tax_rate >= 0 AND tax_rate <= 1 AND (tax_mode <> 'exempt' OR tax_rate = 0)");
+
+                            t.HasCheckConstraint("ck_estimate_tax_policy_status", "status IN ('draft', 'published', 'superseded', 'disabled')");
                         });
                 });
 
@@ -2010,7 +2931,7 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("cost_records", "item_master", t =>
                         {
-                            t.HasCheckConstraint("CK_cost_records_amount", "amount > 0");
+                            t.HasCheckConstraint("CK_cost_records_amount", "amount >= 0");
 
                             t.HasCheckConstraint("CK_cost_records_effective_period", "effective_to_utc IS NULL OR effective_to_utc >= effective_from_utc");
 
@@ -2116,6 +3037,12 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("row_version");
 
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("source_type");
+
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("timestamptz")
                         .HasColumnName("updated_at_utc");
@@ -2125,7 +3052,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId", "Code")
                         .IsUnique();
 
-                    b.ToTable("cost_sources", "item_master");
+                    b.ToTable("cost_sources", "item_master", t =>
+                        {
+                            t.HasCheckConstraint("CK_cost_sources_source_type", "source_type IN ('manual', 'legacy')");
+                        });
                 });
 
             modelBuilder.Entity("TanErp.Domain.Items.Item", b =>
@@ -2308,7 +3238,7 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_items_description_shape", "description IS NULL OR (jsonb_typeof(description) = 'object' AND (description - 'th' - 'en') = '{}'::jsonb)");
 
-                            t.HasCheckConstraint("CK_items_item_type", "item_type IN ('material', 'labor', 'service', 'subcontract', 'other')");
+                            t.HasCheckConstraint("CK_items_item_type", "item_type IN ('material', 'labor', 'service', 'subcontract', 'other', 'product')");
 
                             t.HasCheckConstraint("CK_items_name_shape", "jsonb_typeof(name) = 'object' AND (name - 'th' - 'en') = '{}'::jsonb");
 
@@ -2397,6 +3327,113 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_item_aliases_alias_shape", "jsonb_typeof(alias) = 'object' AND (alias - 'th' - 'en') = '{}'::jsonb");
 
                             t.HasCheckConstraint("CK_item_aliases_status", "status IN ('active', 'inactive')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Items.ItemBarcode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<string>("IdentifierType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("identifier_type");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_primary");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<string>("NormalizedValue")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("normalized_value");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("PackagingLevel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("packaging_level");
+
+                    b.Property<decimal>("QuantityInBaseUnit")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity_in_base_unit");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by_user_id");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("ItemId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "NormalizedValue")
+                        .IsUnique();
+
+                    b.HasIndex("UnitId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "ItemId", "PackagingLevel")
+                        .IsUnique()
+                        .HasDatabaseName("ix_item_barcodes_single_active_primary")
+                        .HasFilter("is_primary = true AND status = 'active'");
+
+                    b.ToTable("item_barcodes", "item_master", t =>
+                        {
+                            t.HasCheckConstraint("CK_item_barcodes_identifier_type", "identifier_type IN ('gtin', 'internal')");
+
+                            t.HasCheckConstraint("CK_item_barcodes_packaging_level", "packaging_level IN ('each', 'inner', 'case', 'pallet')");
+
+                            t.HasCheckConstraint("CK_item_barcodes_quantity", "quantity_in_base_unit > 0");
+
+                            t.HasCheckConstraint("CK_item_barcodes_status", "status IN ('active', 'inactive')");
                         });
                 });
 
@@ -2505,6 +3542,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("description");
 
+                    b.Property<Guid?>("ImageFileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("image_file_id");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -2544,6 +3585,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnName("updated_by_user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ImageFileId");
 
                     b.HasIndex("OrganizationId", "NormalizedCode")
                         .IsUnique();
@@ -2592,6 +3635,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("description");
 
+                    b.Property<Guid?>("ImageFileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("image_file_id");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -2635,6 +3682,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnName("updated_by_user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ImageFileId");
 
                     b.HasIndex("OrganizationId", "NormalizedCode")
                         .IsUnique();
@@ -2757,6 +3806,250 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_item_images_role", "role IN ('primary', 'gallery', 'technical')");
 
                             t.HasCheckConstraint("CK_item_images_status", "status IN ('active', 'inactive')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Items.ItemTaxCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("normalized_code");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "NormalizedCode")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "Status", "SortOrder", "Id");
+
+                    b.ToTable("item_tax_categories", "item_master", t =>
+                        {
+                            t.HasCheckConstraint("CK_item_tax_categories_name_shape", "jsonb_typeof(name) = 'object' AND (name - 'th' - 'en') = '{}'::jsonb");
+
+                            t.HasCheckConstraint("CK_item_tax_categories_sort_order", "sort_order >= 0");
+
+                            t.HasCheckConstraint("CK_item_tax_categories_status", "status IN ('active', 'inactive')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Items.ItemUnitConversion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateOnly?>("EffectiveTo")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_to");
+
+                    b.Property<decimal>("Factor")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("factor");
+
+                    b.Property<Guid>("FromUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_unit_id");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("ToUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_unit_id");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("FromUnitId", "OrganizationId");
+
+                    b.HasIndex("ItemId", "OrganizationId");
+
+                    b.HasIndex("ToUnitId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "ItemId", "FromUnitId", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("item_unit_conversions", "item_master", t =>
+                        {
+                            t.HasCheckConstraint("CK_item_unit_conversions_distinct_units", "from_unit_id <> to_unit_id");
+
+                            t.HasCheckConstraint("CK_item_unit_conversions_effective_period", "effective_to IS NULL OR effective_to >= effective_from");
+
+                            t.HasCheckConstraint("CK_item_unit_conversions_factor", "factor > 0");
+
+                            t.HasCheckConstraint("CK_item_unit_conversions_status", "status IN ('active', 'inactive')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Items.UnitConversion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateOnly?>("EffectiveTo")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_to");
+
+                    b.Property<decimal>("Factor")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("factor");
+
+                    b.Property<Guid>("FromUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_unit_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("ToUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_unit_id");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "OrganizationId");
+
+                    b.HasIndex("FromUnitId", "OrganizationId");
+
+                    b.HasIndex("ToUnitId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "FromUnitId", "ToUnitId", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("unit_conversions", "item_master", t =>
+                        {
+                            t.HasCheckConstraint("CK_unit_conversions_distinct_units", "from_unit_id <> to_unit_id");
+
+                            t.HasCheckConstraint("CK_unit_conversions_effective_period", "effective_to IS NULL OR effective_to >= effective_from");
+
+                            t.HasCheckConstraint("CK_unit_conversions_factor", "factor > 0");
+
+                            t.HasCheckConstraint("CK_unit_conversions_status", "status IN ('active', 'inactive')");
                         });
                 });
 
@@ -3467,6 +4760,22 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Crm.Customers.CustomerAddress", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Crm.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Crm.Customers.CustomerContact", b =>
                 {
                     b.HasOne("TanErp.Domain.Crm.Customers.Customer", "Customer")
@@ -3611,6 +4920,21 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Estimates.CalculationPolicyVersion", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("TanErp.Domain.Estimates.Estimate", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Organization", null)
@@ -3645,6 +4969,103 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("SiteSurveyRevisionId", "OrganizationId")
                         .HasPrincipalKey("Id", "OrganizationId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateApprovalDecision", b =>
+                {
+                    b.HasOne("TanErp.Domain.Estimates.EstimateApprovalRequest", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateApprovalRequestId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Estimates.EstimateApprovalStep", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateApprovalStepId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateApprovalRequest", b =>
+                {
+                    b.HasOne("TanErp.Domain.Estimates.Estimate", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Estimates.EstimateRevision", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateRevisionId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateApprovalSnapshot", b =>
+                {
+                    b.HasOne("TanErp.Domain.Estimates.EstimateApprovalRequest", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateApprovalRequestId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Estimates.Estimate", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Estimates.EstimateRevision", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateRevisionId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateApprovalStep", b =>
+                {
+                    b.HasOne("TanErp.Domain.Estimates.EstimateApprovalRequest", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateApprovalRequestId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewerMembershipId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.EstimateCalculationSnapshot", b =>
+                {
+                    b.HasOne("TanErp.Domain.Estimates.CalculationPolicyVersion", null)
+                        .WithMany()
+                        .HasForeignKey("CalculationPolicyVersionId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Estimates.EstimateRevision", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateRevisionId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Estimates.TaxPolicyVersion", null)
+                        .WithMany()
+                        .HasForeignKey("TaxPolicyVersionId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("TanErp.Domain.Estimates.EstimateCostComponent", b =>
@@ -3721,6 +5142,27 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("Id", "OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Estimates.TaxPolicyVersion", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("TanErp.Domain.Files.FileUploadSlot", b =>
@@ -3914,6 +5356,33 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Navigation("Item");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Items.ItemBarcode", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.Item", "Item")
+                        .WithMany("Barcodes")
+                        .HasForeignKey("ItemId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.UnitOfMeasure", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Unit");
+                });
+
             modelBuilder.Entity("TanErp.Domain.Items.ItemBranchAvailability", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Organization", null)
@@ -3941,6 +5410,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TanErp.Domain.Items.ItemBrand", b =>
                 {
+                    b.HasOne("TanErp.Domain.Files.UploadedFile", null)
+                        .WithMany()
+                        .HasForeignKey("ImageFileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TanErp.Domain.Organization.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
@@ -3950,6 +5424,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TanErp.Domain.Items.ItemCategory", b =>
                 {
+                    b.HasOne("TanErp.Domain.Files.UploadedFile", null)
+                        .WithMany()
+                        .HasForeignKey("ImageFileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TanErp.Domain.Organization.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
@@ -3988,6 +5467,68 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Items.ItemTaxCategory", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Items.ItemUnitConversion", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.UnitOfMeasure", null)
+                        .WithMany()
+                        .HasForeignKey("FromUnitId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.UnitOfMeasure", null)
+                        .WithMany()
+                        .HasForeignKey("ToUnitId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Items.UnitConversion", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.UnitOfMeasure", null)
+                        .WithMany()
+                        .HasForeignKey("FromUnitId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.UnitOfMeasure", null)
+                        .WithMany()
+                        .HasForeignKey("ToUnitId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TanErp.Domain.Items.UnitOfMeasure", b =>
@@ -4205,6 +5746,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TanErp.Domain.Items.Item", b =>
                 {
                     b.Navigation("Aliases");
+
+                    b.Navigation("Barcodes");
 
                     b.Navigation("BranchAvailabilities");
 

@@ -12,6 +12,11 @@ using TanErp.Application.Estimates.GetEstimate;
 using TanErp.Application.Estimates.IssueQuotation;
 using TanErp.Application.Estimates.AcceptQuotation;
 using TanErp.Application.Estimates.UpdateEstimateDraft;
+using TanErp.Application.Estimates.SubmitEstimate;
+using TanErp.Application.Estimates.ReviewEstimate;
+using TanErp.Application.Estimates.CreateEstimateRevision;
+using TanErp.Application.Estimates.CancelEstimate;
+using TanErp.Domain.Estimates;
 
 namespace TanErp.Api.Controllers;
 
@@ -25,6 +30,10 @@ public class EstimatesController : ControllerBase
     private readonly CalculateEstimateHandler _calculateHandler;
     private readonly IssueQuotationHandler _issueQuotationHandler;
     private readonly AcceptQuotationHandler _acceptQuotationHandler;
+    private readonly SubmitEstimateHandler _submitEstimateHandler;
+    private readonly ReviewEstimateHandler _reviewEstimateHandler;
+    private readonly CreateEstimateRevisionHandler _createRevisionHandler;
+    private readonly CancelEstimateHandler _cancelHandler;
 
     public EstimatesController(
         CreateEstimateDraftHandler createHandler,
@@ -32,7 +41,11 @@ public class EstimatesController : ControllerBase
         UpdateEstimateDraftHandler updateDraftHandler,
         CalculateEstimateHandler calculateHandler,
         IssueQuotationHandler issueQuotationHandler,
-        AcceptQuotationHandler acceptQuotationHandler)
+        AcceptQuotationHandler acceptQuotationHandler,
+        SubmitEstimateHandler submitEstimateHandler,
+        ReviewEstimateHandler reviewEstimateHandler,
+        CreateEstimateRevisionHandler createRevisionHandler,
+        CancelEstimateHandler cancelHandler)
     {
         _createHandler = createHandler;
         _getHandler = getHandler;
@@ -40,6 +53,122 @@ public class EstimatesController : ControllerBase
         _calculateHandler = calculateHandler;
         _issueQuotationHandler = issueQuotationHandler;
         _acceptQuotationHandler = acceptQuotationHandler;
+        _submitEstimateHandler = submitEstimateHandler;
+        _reviewEstimateHandler = reviewEstimateHandler;
+        _createRevisionHandler = createRevisionHandler;
+        _cancelHandler = cancelHandler;
+    }
+
+    [HttpPost("api/v1/estimates/{id:guid}/cancel")]
+    [ProducesResponseType<EstimateDetailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> Cancel(
+        [FromRoute] Guid id,
+        [FromBody] CancelEstimateRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+
+        var auth = contextResult.Value!;
+        var result = await _cancelHandler.HandleAsync(new CancelEstimateCommand(
+            auth.FirebaseUid, auth.MembershipId, id, auth.IfMatchRowVersion, request.Reason),
+            auth.IdempotencyKey, cancellationToken);
+        if (result.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+
+        var response = EstimateDetailResponse.FromProjection(result.Value!);
+        Response.Headers.ETag = $"\"{response.RowVersion}\"";
+        return Ok(response);
+    }
+
+    [HttpPost("api/v1/estimates/{id:guid}/revisions")]
+    [ProducesResponseType<EstimateDetailResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateRevision(
+        [FromRoute] Guid id,
+        [FromBody] CreateEstimateRevisionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+
+        var auth = contextResult.Value!;
+        var result = await _createRevisionHandler.HandleAsync(new CreateEstimateRevisionCommand(
+            auth.FirebaseUid, auth.MembershipId, id, auth.IfMatchRowVersion, request.Reason),
+            auth.IdempotencyKey, cancellationToken);
+        if (result.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+
+        var response = EstimateDetailResponse.FromProjection(result.Value!);
+        Response.Headers.ETag = $"\"{response.RowVersion}\"";
+        return StatusCode(StatusCodes.Status201Created, response);
+    }
+
+    [HttpPost("api/v1/estimates/{id:guid}/submit")]
+    [ProducesResponseType<EstimateDetailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Submit(
+        [FromRoute] Guid id,
+        [FromBody] SubmitEstimateRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+
+        var auth = contextResult.Value!;
+        var result = await _submitEstimateHandler.HandleAsync(new SubmitEstimateCommand(
+            auth.FirebaseUid, auth.MembershipId, id, auth.IfMatchRowVersion,
+            request.RevisionNo, request.CalculationVersion, request.Note), auth.IdempotencyKey, cancellationToken);
+        if (result.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+
+        var response = EstimateDetailResponse.FromProjection(result.Value!);
+        Response.Headers.ETag = $"\"{response.RowVersion}\"";
+        return Ok(response);
+    }
+
+    [HttpPost("api/v1/estimates/{id:guid}/review-decisions")]
+    [ProducesResponseType<EstimateDetailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Review(
+        [FromRoute] Guid id,
+        [FromBody] ReviewEstimateRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+
+        var auth = contextResult.Value!;
+        var result = await _reviewEstimateHandler.HandleAsync(new ReviewEstimateCommand(
+            auth.FirebaseUid, auth.MembershipId, id, auth.IfMatchRowVersion,
+            request.RevisionNo,
+            request.Decision, request.ReasonCode, request.Note), auth.IdempotencyKey, cancellationToken);
+        if (result.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+
+        var response = EstimateDetailResponse.FromProjection(result.Value!);
+        Response.Headers.ETag = $"\"{response.RowVersion}\"";
+        return Ok(response);
     }
 
     [HttpPost("api/v1/estimates")]
@@ -103,6 +232,28 @@ public class EstimatesController : ControllerBase
         var response = EstimateDetailResponse.FromProjection(result.Value!);
         Response.Headers.ETag = $"\"{response.RowVersion}\"";
         return Ok(response);
+    }
+
+    [HttpGet("api/v1/estimates/{id:guid}/revisions/{revisionId:guid}/calculations")]
+    [ProducesResponseType<IReadOnlyList<EstimateCalculationSnapshotResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetCalculationSnapshots(
+        [FromRoute] Guid id,
+        [FromRoute] Guid revisionId,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+
+        var auth = contextResult.Value!;
+        var result = await _getHandler.HandleCalculationSnapshotsAsync(
+            new GetEstimateQuery(auth.FirebaseUid, auth.MembershipId, id), revisionId, cancellationToken);
+        if (result.IsFailure)
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+
+        return Ok(result.Value!.Select(EstimateCalculationSnapshotResponse.FromProjection).ToList());
     }
 
     [HttpGet("api/v1/opportunities/{opportunityId:guid}/estimates")]
@@ -185,7 +336,13 @@ public class EstimatesController : ControllerBase
                     c.SortOrder,
                     c.ItemId,
                     c.CostRecordId,
-                    c.CostRecordVersion)).ToList())).ToList())).ToList();
+                    c.CostRecordVersion,
+                    c.ProvisionalReasonCode,
+                    c.ProvisionalNote)).ToList(),
+                w.SellingRuleReasonCode,
+                w.ItemId,
+                w.OverrideReasonCode,
+                w.OverrideReason)).ToList())).ToList();
 
         var command = new UpdateEstimateDraftCommand(
             auth.FirebaseUid,
@@ -213,12 +370,16 @@ public class EstimatesController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Calculate(
         [FromRoute] Guid id,
         [FromRoute] Guid revisionId,
         [FromBody] CalculateEstimateRequest request,
         CancellationToken cancellationToken)
     {
+        if (request.DiscountType is not null && request.DiscountValue is null)
+            return ProblemDetailsMapper.CreateProblemResult("ESTIMATE_INPUT_INVALID", HttpContext);
+
         var contextResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
         if (contextResult.IsFailure)
         {
@@ -232,7 +393,11 @@ public class EstimatesController : ControllerBase
             id,
             revisionId,
             request.ExpectedRevisionVersion,
-            request.DiscountAmount);
+            request.DiscountType is null
+                ? request.DiscountAmount == 0m
+                    ? new EstimateDiscount(EstimateDiscount.None, 0m, null)
+                    : EstimateDiscount.LegacyFixedAmount(request.DiscountAmount)
+                : new EstimateDiscount(request.DiscountType, request.DiscountValue ?? 0m, request.DiscountReasonCode));
 
         var result = await _calculateHandler.HandleAsync(command, auth.IdempotencyKey, cancellationToken);
         if (result.IsFailure)

@@ -13,6 +13,8 @@ describe("estimate-catalog-client", () => {
     name: { thai: "ไม้อัดยาง 10มม.", english: "Plywood 10mm" },
     description: { thai: "เกรด A", english: "Grade A" },
     itemType: "material",
+    costComponentType: "material",
+    attributes: { fixture: "item_catalog_filter_test_only", thickness_mm: "10" },
     category: {
       id: "019a3cf8-0002-7000-8000-000000000002",
       code: "WOOD",
@@ -50,6 +52,7 @@ describe("estimate-catalog-client", () => {
     const result = validateAndMapCatalogItem(validRawItem);
     expect(result.id).toBe(validRawItem.id);
     expect(result.code).toBe("MAT-WOOD-001");
+    expect(result.attributes).toEqual({ fixture: "item_catalog_filter_test_only", thickness_mm: "10" });
     expect(result.resolvedCost?.amount).toBe(450.5);
     expect(result.primaryImage?.fileId).toBe("019a3cf8-0005-7000-8000-000000000005");
   });
@@ -92,6 +95,25 @@ describe("estimate-catalog-client", () => {
     expect(() => validateAndMapCatalogItem(badCostItem)).toThrow(EstimateCatalogContractError);
   });
 
+  it("rejects missing price snapshot metadata rather than inventing it", () => {
+    for (const field of ["version", "scope", "effectiveFromUtc"] as const) {
+      const resolvedCost = { ...validRawItem.resolvedCost, [field]: undefined };
+      expect(() => validateAndMapCatalogItem({ ...validRawItem, resolvedCost })).toThrow(
+        EstimateCatalogContractError
+      );
+    }
+  });
+
+  it("rejects incomplete relation and page contracts", () => {
+    expect(() => validateAndMapCatalogItem({
+      ...validRawItem,
+      category: { ...validRawItem.category, code: undefined },
+    })).toThrow(EstimateCatalogContractError);
+    expect(() => validateAndMapCatalogResponse({ items: [validRawItem] })).toThrow(
+      EstimateCatalogContractError
+    );
+  });
+
   it("maps catalog response with facets and pagination", () => {
     const rawResponse = {
       items: [validRawItem],
@@ -105,6 +127,7 @@ describe("estimate-catalog-client", () => {
           },
         ],
         brands: [],
+        attributes: [],
       },
       pageInfo: {
         nextCursor: "cursor-token-123",
@@ -125,9 +148,9 @@ describe("estimate-catalog-client", () => {
       expect(getLocalizedText(text, "en")).toBe("Wood");
     });
 
-    it("falls back to Thai when locale is en but english is empty", () => {
+    it("shows the explicit empty marker when English text is absent", () => {
       const text = { thai: "ไม้", english: "" };
-      expect(getLocalizedText(text, "en")).toBe("ไม้");
+      expect(getLocalizedText(text, "en")).toBe("-");
     });
 
     it("returns Thai when locale is th", () => {

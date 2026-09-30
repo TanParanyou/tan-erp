@@ -20,9 +20,9 @@ Backend Resolve Membership/Scope จาก PostgreSQL ทุก Request, Error �
 | ค้นหา/อ่าน Customer | `GET /api/v1/customers`, `GET /api/v1/customers/{id}` | `customers.read` | 200 |
 | สร้าง/แก้ Customer | `POST /api/v1/customers`, `PATCH /api/v1/customers/{id}` | `customers.create`, `customers.update` | 201/200 |
 | Activate/Deactivate | `POST /api/v1/customers/{id}/activate`, `/deactivate` | `customers.activate`, `customers.deactivate` | 200 |
-| เพิ่ม/แก้ Contact | `POST /api/v1/customers/{id}/contacts`, `PATCH /api/v1/contacts/{id}` | `customer-contacts.manage` | 201/200 |
-| เพิ่ม/แก้ Address | `POST /api/v1/customers/{id}/addresses`, `PATCH /api/v1/customer-addresses/{id}` | `customer-contacts.manage` | 201/200 |
-| สร้าง/แก้ Site | `POST /api/v1/customers/{id}/sites`, `PATCH /api/v1/sites/{id}` | `sites.manage` | 201/200 |
+| Contact list/create/update/primary/deactivate | `/api/v1/customers/{id}/contacts` และ nested contact actions | `customer-contacts.manage` | 200/201 |
+| Address list/create/update/primary/deactivate | `/api/v1/customers/{id}/addresses` และ nested address actions | `customer-contacts.manage` | 200/201 |
+| Site create/update/deactivate | `/api/v1/customers/{customerId}/sites` และ nested site actions | `sites.manage` | 200/201 |
 | ค้นหา/อ่าน Opportunity | `GET /api/v1/opportunities`, `GET /api/v1/opportunities/{id}` | `opportunities.read` | 200 |
 | สร้าง/แก้ Opportunity | `POST /api/v1/opportunities`, `PATCH /api/v1/opportunities/{id}` | `opportunities.create`, `opportunities.update` | 201/200 |
 | เปลี่ยน Stage | `POST /api/v1/opportunities/{id}/stage-transitions` | `opportunities.transition` | 200 |
@@ -115,6 +115,15 @@ Detail และ Create response ส่งคืน Customer object พร้อ
 
 
 ## Customer Activation + Opportunity + Site Slice 2 Specification
+
+## Customer Completion Extension
+
+- `PATCH /api/v1/customers/{id}` uses `If-Match` and `Idempotency-Key`; it updates the profile, registered name/tax identifier/branch, credit and billing terms. Tax identifiers use the Thai 13-digit checksum validator. Audit events store changed field names only.
+- Activation checks only draft state and one active primary contact. Tax data does not gate activation.
+- `POST /api/v1/customers/{id}/deactivate` requires a reason, `If-Match`, and `Idempotency-Key`; deactivation returns `CUSTOMER_HAS_OPEN_OPPORTUNITY` while the customer has an open opportunity. `/reactivate` applies the same concurrency/idempotency headers.
+- Contacts and addresses are scoped by both organization and route customer ID. Mutations require `If-Match`; creates require `Idempotency-Key`.
+- Address primary uniqueness applies to active billing addresses. Site update/deactivation endpoints require `If-Match`.
+- Quotation issuance applies the billing-readiness gate to every customer, including legacy active customers: organizations require legal name, valid tax number, branch code and an active primary billing address; persons require an active primary billing address, with tax identifier optional. The issued quotation stores immutable billing JSON and a SHA-256 snapshot hash. Existing quotations remain readable and acceptable without a retroactive snapshot.
 
 ### 1. Activate Customer
 ```http

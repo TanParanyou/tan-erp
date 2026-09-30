@@ -13,6 +13,8 @@ public class Quotation
     public string Status { get; private set; } = "issued";
     public decimal TotalAmount { get; private set; }
     public string? SnapshotHash { get; private set; }
+    public string? CustomerBillingSnapshotJson { get; private set; }
+    public string? CustomerBillingSnapshotHash { get; private set; }
     public DateTimeOffset IssuedAtUtc { get; private set; }
     public DateTimeOffset? AcceptedAtUtc { get; private set; }
     public Guid RowVersion { get; private set; }
@@ -32,7 +34,9 @@ public class Quotation
         string number,
         decimal totalAmount,
         string? snapshotHash,
-        DateTimeOffset issuedAtUtc)
+        DateTimeOffset issuedAtUtc,
+        string? customerBillingSnapshotJson = null,
+        string? customerBillingSnapshotHash = null)
     {
         if (id == Guid.Empty) throw new ArgumentException("Quotation ID cannot be empty.", nameof(id));
         if (organizationId == Guid.Empty) throw new ArgumentException("Organization ID cannot be empty.", nameof(organizationId));
@@ -54,6 +58,8 @@ public class Quotation
         Status = "issued";
         TotalAmount = totalAmount;
         SnapshotHash = string.IsNullOrWhiteSpace(snapshotHash) ? null : snapshotHash.Trim();
+        CustomerBillingSnapshotJson = customerBillingSnapshotJson;
+        CustomerBillingSnapshotHash = string.IsNullOrWhiteSpace(customerBillingSnapshotHash) ? null : customerBillingSnapshotHash.Trim();
         IssuedAtUtc = issuedAtUtc;
         RowVersion = Guid.NewGuid();
         CreatedAtUtc = issuedAtUtc;

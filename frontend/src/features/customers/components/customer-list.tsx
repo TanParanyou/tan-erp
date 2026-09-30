@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useCustomerList } from "../api/customer-queries";
-import { isAuthenticationRequiredError, isMembershipRequiredError } from "@/lib/api/api-error";
+import { getCustomerQueryErrorMessage } from "../customer-errors";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -34,11 +34,12 @@ import {
 } from "@/components/common/Icons";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
-import { getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
+import { getCustomerDisplayNames, getCustomerStatusLabelKey, getCustomerTypeLabelKey } from "../customer-labels";
 import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
 import { useRowSelection } from "@/hooks/useRowSelection";
-import { useCsvExport } from "@/hooks/useCsvExport";
-import type { CsvColumn } from "@/lib/export/export-csv";
+import { useDataExport } from "@/hooks/useDataExport";
+import type { ExportColumn } from "@/lib/export/export-types";
+import { ExportDropdown } from "@/components/ui/ExportDropdown";
 import { apiClient, type CustomerListItemResponse } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 
@@ -92,13 +93,11 @@ export function CustomerList() {
   };
 
   const resolveListErrorMessage = (error: Error | null): string => {
-    if (isAuthenticationRequiredError(error)) {
-      return t("errors.authenticationRequired");
-    }
-    if (isMembershipRequiredError(error)) {
-      return t("errors.membershipRequired");
-    }
-    return t("errors.loadList");
+    return getCustomerQueryErrorMessage(error, {
+      authenticationRequired: t("errors.authenticationRequired"),
+      membershipRequired: t("errors.membershipRequired"),
+      fallback: t("errors.loadList"),
+    });
   };
 
   const {
@@ -150,13 +149,13 @@ export function CustomerList() {
     listState.actions.clearFilters();
   };
 
-  // Reusable CSV Export Hook
-  const csvColumns = useMemo<CsvColumn<CustomerListItemResponse>[]>(
+  // Reusable Data Export Hook (CSV & Excel)
+  const exportColumns = useMemo<ExportColumn<CustomerListItemResponse>[]>(
     () => [
       { header: t("code"), accessor: (c) => c.code ?? "" },
       {
         header: tCommon("fields.name"),
-        accessor: (c) => (locale === "en" ? c.displayNameEn || c.displayNameTh : c.displayNameTh || c.displayNameEn) ?? "",
+        accessor: (c) => getCustomerDisplayNames(c.displayNameTh, c.displayNameEn, locale === "en" ? "en" : "th", "").primary,
       },
       { header: t("customerType"), accessor: (c) => resolveCustomerTypeLabel(c.customerType) },
       { header: t("primaryContact"), accessor: (c) => c.primaryContact?.name ?? "" },
@@ -167,9 +166,9 @@ export function CustomerList() {
     [locale, t, tCommon]
   );
 
-  const { exportAll, exportSelected, isExporting } = useCsvExport<CustomerListItemResponse>({
+  const { exportAll, exportSelected, isExporting } = useDataExport<CustomerListItemResponse>({
     filename: "customers",
-    columns: csvColumns,
+    columns: exportColumns,
     data: customers,
     selectedIds,
     getId: (c) => c.id,
@@ -222,16 +221,11 @@ export function CustomerList() {
         sortable: true,
         accessorKey: "displayNameTh",
         cell: (_value: unknown, customer: CustomerListItemResponse) => {
-          const customerName =
-            locale === "en" && customer.displayNameEn
-              ? customer.displayNameEn
-              : customer.displayNameTh || customer.displayNameEn || "-";
-          const secondaryName =
-            customer.displayNameEn && customer.displayNameTh
-              ? locale === "en"
-                ? customer.displayNameTh
-                : customer.displayNameEn
-              : null;
+          const { primary: customerName, secondary: secondaryName } = getCustomerDisplayNames(
+            customer.displayNameTh,
+            customer.displayNameEn,
+            locale === "en" ? "en" : "th",
+          );
 
           return (
             <TableEntityCell
@@ -397,19 +391,16 @@ export function CustomerList() {
           />
         </div>
 
-        {/* Export CSV Button (Aligned to bottom edge of inputs) */}
+        {/* Export Dropdown Button (CSV & Excel, Aligned to bottom edge of inputs) */}
         <div className="flex items-end self-end">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={exportAll}
+          <ExportDropdown
+            onExport={(format) => exportAll(format)}
             isLoading={isExporting}
             disabled={totalItems === 0}
-            icon={<IconDownload size={15} />}
-          >
-            {t("exportCsv")}
-          </Button>
+            label={t("export")}
+            variant="outline"
+            size="sm"
+          />
         </div>
       </ListToolbar>
 
@@ -457,12 +448,12 @@ export function CustomerList() {
 
           {/* Floating Bulk Action Toolbar */}
           <BulkActionToolbar selectedCount={selectedCount} onClear={clearSelection}>
-            <BulkActionButton
-              icon={<IconDownload size={15} />}
+            <ExportDropdown
+              onExport={(format) => exportSelected(format)}
+              isLoading={isExporting}
               label={t("exportSelected", { count: selectedCount })}
-              onClick={exportSelected}
-              showLabel={true}
-              variant="default"
+              variant="bulk"
+              direction="up"
             />
           </BulkActionToolbar>
         </div>
@@ -477,4 +468,3 @@ export function CustomerList() {
     </div>
   );
 }
-

@@ -9,6 +9,7 @@ public class ItemCategory : Entity
     public string NormalizedCode { get; private set; } = string.Empty;
     public LocalizedText Name { get; private set; } = null!;
     public LocalizedText? Description { get; private set; }
+    public Guid? ImageFileId { get; private set; }
     public Guid? ParentCategoryId { get; private set; }
     public string[] AllowedItemTypes { get; private set; } = [];
     public int SortOrder { get; private set; }
@@ -34,7 +35,8 @@ public class ItemCategory : Entity
         string[] allowedItemTypes,
         int sortOrder,
         Guid createdByUserId,
-        DateTimeOffset createdAtUtc) : base(id)
+        DateTimeOffset createdAtUtc,
+        Guid? imageFileId = null) : base(id)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
@@ -51,6 +53,7 @@ public class ItemCategory : Entity
         NormalizedCode = code.Trim().ToUpperInvariant();
         Name = name;
         Description = description;
+        ImageFileId = imageFileId;
         ParentCategoryId = parentCategoryId;
         AllowedItemTypes = allowedItemTypes.Length == 0 ? ItemType.All : allowedItemTypes;
         SortOrder = Math.Max(0, sortOrder);
@@ -70,7 +73,8 @@ public class ItemCategory : Entity
         string[] allowedItemTypes,
         int sortOrder,
         Guid updatedByUserId,
-        DateTimeOffset updatedAtUtc)
+        DateTimeOffset updatedAtUtc,
+        Guid? imageFileId = null)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
@@ -86,6 +90,7 @@ public class ItemCategory : Entity
         NormalizedCode = code.Trim().ToUpperInvariant();
         Name = name;
         Description = description;
+        ImageFileId = imageFileId;
         ParentCategoryId = parentCategoryId;
         AllowedItemTypes = allowedItemTypes.Length == 0 ? ItemType.All : allowedItemTypes;
         SortOrder = Math.Max(0, sortOrder);

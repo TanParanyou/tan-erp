@@ -86,11 +86,60 @@ public class Estimate
         UpdatedAtUtc = DateTimeOffset.UtcNow;
     }
 
+    public EstimateRevision CreateNextDraftRevision(string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("A revision reason is required.", nameof(reason));
+        var current = CurrentRevision ?? throw new EstimateInvalidStateException("Estimate has no current revision.");
+        if (current.Status != EstimateRevisionStatus.Approved && current.Status != EstimateRevisionStatus.Quoted)
+            throw new EstimateInvalidStateException("A new revision can only be created from an approved or quoted revision.");
+
+        var revision = EstimateRevision.CloneAsDraft(Guid.NewGuid(), CurrentRevisionNo + 1, current);
+        AddRevision(revision);
+        return revision;
+    }
+
     public void MarkQuoted()
     {
         CurrentRevision?.MarkQuoted();
         Status = EstimateStatus.Quoted;
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = DateTimeOffset.UtcNow;
+    }
+
+    public void SubmitCurrentRevision(Guid submittedByUserId, DateTimeOffset submittedAtUtc)
+    {
+        var revision = CurrentRevision ?? throw new EstimateInvalidStateException("Estimate has no current revision.");
+        revision.Submit(submittedByUserId, submittedAtUtc);
+        Status = EstimateStatus.Submitted;
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = submittedAtUtc;
+    }
+
+    public void ApproveCurrentRevision(Guid reviewerUserId, DateTimeOffset approvedAtUtc, string approvalSnapshotJson)
+    {
+        var revision = CurrentRevision ?? throw new EstimateInvalidStateException("Estimate has no current revision.");
+        revision.Approve(reviewerUserId, approvedAtUtc, approvalSnapshotJson);
+        Status = EstimateStatus.Approved;
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = approvedAtUtc;
+    }
+
+    public void ReturnCurrentRevision(Guid reviewerUserId, DateTimeOffset returnedAtUtc, string reasonCode, string note)
+    {
+        var revision = CurrentRevision ?? throw new EstimateInvalidStateException("Estimate has no current revision.");
+        revision.Return(reviewerUserId, returnedAtUtc, reasonCode, note);
+        Status = EstimateStatus.Returned;
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = returnedAtUtc;
+    }
+
+    public void CancelCurrentRevision(DateTimeOffset cancelledAtUtc, string reason)
+    {
+        var revision = CurrentRevision ?? throw new EstimateInvalidStateException("Estimate has no current revision.");
+        revision.Cancel(cancelledAtUtc, reason);
+        Status = EstimateStatus.Cancelled;
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = cancelledAtUtc;
     }
 }

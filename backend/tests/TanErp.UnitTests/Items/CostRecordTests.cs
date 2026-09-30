@@ -114,6 +114,16 @@ public class CostRecordTests
     }
 
     [Fact]
+    public void CreateDraft_ZeroAmountRequiresReason()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var ex = Assert.Throws<ItemValidationException>(() => CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB", 0m,
+            0m, null, now, null, 1, Guid.NewGuid(), "REF-1", null, null, _makerId, now));
+        Assert.Equal("COST_ZERO_AMOUNT_REASON_REQUIRED", ex.Code);
+    }
+
+    [Fact]
     public void CreateDraft_MaxQuantityLessThanMinQuantity_ThrowsValidationException()
     {
         var now = DateTimeOffset.UtcNow;
@@ -230,6 +240,37 @@ public class CostRecordTests
 
         Assert.Equal(CostRecordStatus.Published, record.Status);
         Assert.Equal(publisherId, record.PublishedByUserId);
+    }
+
+    [Fact]
+    public void Publish_WhenOnlySubmitted_RequiresApproval()
+    {
+        var record = CreateStandardDraft();
+        var now = DateTimeOffset.UtcNow;
+        record.Submit(_makerId, now);
+
+        var error = Assert.Throws<ItemDomainException>(() => record.Publish(_checkerId, now));
+
+        Assert.Equal("COST_INVALID_STATUS_TRANSITION", error.Code);
+        Assert.Equal(CostRecordStatus.Submitted, record.Status);
+    }
+
+    [Fact]
+    public void Supersede_EndsOldEffectivePeriodImmediatelyBeforeReplacement()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var replacementStart = now.AddDays(2);
+        var record = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            100m, 0m, null, now.AddDays(-2), null, 1, null, null, null, null, _makerId, now);
+        record.Submit(_makerId, now);
+        record.Approve(_checkerId, now);
+        record.Publish(_checkerId, now);
+
+        record.Supersede(_checkerId, replacementStart, now);
+
+        Assert.Equal(CostRecordStatus.Superseded, record.Status);
+        Assert.Equal(replacementStart.AddTicks(-10), record.EffectiveToUtc);
     }
 
     [Fact]

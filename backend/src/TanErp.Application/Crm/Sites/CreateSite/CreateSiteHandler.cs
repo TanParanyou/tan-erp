@@ -1,6 +1,7 @@
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
+using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Sites;
 
 namespace TanErp.Application.Crm.Sites.CreateSite;
@@ -41,16 +42,8 @@ public class CreateSiteHandler
             return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "Site label is required."));
         if (string.IsNullOrWhiteSpace(command.AddressLine1))
             return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "Address line 1 is required."));
-        if (string.IsNullOrWhiteSpace(command.Subdistrict))
-            return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "Subdistrict is required."));
-        if (string.IsNullOrWhiteSpace(command.District))
-            return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "District is required."));
-        if (string.IsNullOrWhiteSpace(command.Province))
-            return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "Province is required."));
-        if (string.IsNullOrWhiteSpace(command.PostalCode))
-            return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "Postal code is required."));
-        if (string.IsNullOrWhiteSpace(command.CountryCode))
-            return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "Country code is required."));
+        if (!AddressLocationValidator.IsValid(command.Subdistrict, command.District, command.Province, command.PostalCode, command.CountryCode))
+            return Result<SiteProjection>.Failure(new Error("SITE_FIELD_REQUIRED", "Site address location is invalid."));
 
         // Validate coordinate pairing & ranges
         if ((command.Latitude.HasValue && !command.Longitude.HasValue) || (!command.Latitude.HasValue && command.Longitude.HasValue))

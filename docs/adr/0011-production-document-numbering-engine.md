@@ -67,3 +67,9 @@ status: accepted
 - โครงการ `TanErp.Infrastructure` จะมีตาราง `common.document_sequence_definitions` และ `common.sequence_counters`
 - `EstimateStore.cs` และ Store เอกสารอื่น ๆ จะถูก Refactor ให้เรียกใช้ `IDocumentNumberGenerator` แทนการนับ `CountAsync()` เดิม
 - มี API และหน้าจอ Admin Settings สำหรับปรับแต่ง Format Pattern และพรีวิวแบบเรียลไทม์
+
+## Master Data Code Policy (2026-09)
+
+Document Numbering Engine ใช้กับ Master Data Code ด้วย แต่แยก sequence ต่อชนิดข้อมูล: `items`, `item-categories`, `item-brands`, `units-of-measure`, `item-tax-categories`, `cost-sources` โดย Item ทุกประเภทแชร์ชุด `items` ระดับองค์กร ค่าเริ่มต้นใช้ prefix `ITM-`, `CAT-`, `BRD-`, `UOM-`, `TAX-`, `SRC-` และเลข 5 หลัก; ไม่ผูกสาขาและไม่ reset. การตั้งค่าสำหรับชนิดเหล่านี้จำกัดรูปแบบเป็น prefix + sequence เพื่อรักษาความหมายรหัสอ้างอิงถาวร
+
+Create รับ code ว่างในความหมาย `null` เพื่อ GEN หรือรหัสกำหนดเองที่ไม่ซ้ำ เมื่อ GEN ระบบจัดสรร counter ภายใน transaction เดียวกับข้อมูล, idempotency และ audit; หากรหัสที่สร้างไปแล้วมีอยู่จากข้อมูลเก่าจะข้ามเลขนั้น Preview เป็นตัวอย่างเท่านั้นและไม่จองเลข Customer และเลขเอกสารธุรกรรมอยู่นอกนโยบายใหม่และคงพฤติกรรมเดิม รายละเอียด API อยู่ใน [Item Master API Contract](../03-contracts/item-master-api-contract.md).

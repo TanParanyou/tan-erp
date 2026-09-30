@@ -6,10 +6,16 @@ import {
   type CreateEstimateDraftRequest,
   type UpdateEstimateDraftRequest,
   type CalculateEstimateRequest,
+  type SubmitEstimateRequest,
+  type ReviewEstimateRequest,
+  type CreateEstimateRevisionRequest,
+  type CancelEstimateRequest,
   type IssueQuotationRequest,
   type QuotationResponse,
   type AcceptQuotationRequest,
   type AcceptQuotationResponse,
+  type EstimateReviewQueueParams,
+  type EstimateReviewQueueResponse,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError, ApiError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -34,6 +40,31 @@ export function estimateDetailQueryKey(
   estimateId: string | null | undefined
 ): readonly ["business", string | null | undefined, "th" | "en", "estimates", "detail", string | null | undefined] {
   return ["business", membershipId, locale, "estimates", "detail", estimateId] as const;
+}
+
+export const estimateReviewQueueQueryKey = (
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  params: EstimateReviewQueueParams
+) => ["business", membershipId, locale, "estimates", "review-queue", params] as const;
+
+export function useEstimateReviewQueue(params: EstimateReviewQueueParams): UseQueryResult<EstimateReviewQueueResponse, Error> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery({
+    queryKey: estimateReviewQueueQueryKey(membershipId, normalizedLocale, params),
+    enabled: Boolean(membershipId),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.listEstimateReviewQueue(params, { token, membershipId, locale: normalizedLocale, signal });
+    },
+    staleTime: 30 * 1000,
+  });
 }
 
 export function useOpportunityEstimate(
@@ -109,6 +140,24 @@ export function useCreateEstimate(
   });
 }
 
+/** Publish mutation responses to both existing estimate views before background refetches. */
+function updateRevisionCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  opportunityId: string,
+  estimateId: string,
+  revisionId: string,
+  revision: EstimateRevisionResponse,
+) {
+  const apply = (current: EstimateDetailResponse | null | undefined) =>
+    current?.id === estimateId && current.currentRevision?.id === revisionId
+      ? { ...current, currentRevision: revision }
+      : current;
+  queryClient.setQueryData<EstimateDetailResponse | null>(opportunityEstimateQueryKey(membershipId, locale, opportunityId), apply);
+  queryClient.setQueryData<EstimateDetailResponse | null>(estimateDetailQueryKey(membershipId, locale, estimateId), apply);
+}
+
 export function useUpdateEstimateDraft(
   opportunityId: string,
   estimateId: string,
@@ -133,7 +182,9 @@ export function useUpdateEstimateDraft(
         locale: normalizedLocale,
       });
     },
-    onSuccess: () => {
+    onSuccess: (revision) => {
+      updateRevisionCache(queryClient, membershipId, normalizedLocale, opportunityId, estimateId, revisionId, revision);
+      void queryClient.invalidateQueries({ queryKey: estimateDetailQueryKey(membershipId, normalizedLocale, estimateId) });
       void queryClient.invalidateQueries({
         queryKey: opportunityEstimateQueryKey(membershipId, normalizedLocale, opportunityId),
       });
@@ -165,11 +216,144 @@ export function useCalculateEstimate(
         locale: normalizedLocale,
       });
     },
-    onSuccess: () => {
+    onSuccess: (revision) => {
+      updateRevisionCache(queryClient, membershipId, normalizedLocale, opportunityId, estimateId, revisionId, revision);
+      void queryClient.invalidateQueries({ queryKey: estimateDetailQueryKey(membershipId, normalizedLocale, estimateId) });
       void queryClient.invalidateQueries({
         queryKey: opportunityEstimateQueryKey(membershipId, normalizedLocale, opportunityId),
       });
     },
+  });
+}
+
+type ConditionalEstimateMutation<TRequest> = {
+  payload: TRequest;
+  ifMatch: string;
+  idempotencyKey?: string;
+};
+
+function invalidateEstimateAndOpportunity(
+  queryClient: ReturnType<typeof useQueryClient>,
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  opportunityId: string
+): void {
+  void queryClient.invalidateQueries({
+    queryKey: opportunityEstimateQueryKey(membershipId, locale, opportunityId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: opportunityDetailQueryKey(membershipId, locale, opportunityId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: opportunityStageHistoryQueryKey(membershipId, opportunityId),
+  });
+}
+
+export function useSubmitEstimate(
+  opportunityId: string,
+  estimateId: string
+): UseMutationResult<EstimateDetailResponse, Error, ConditionalEstimateMutation<SubmitEstimateRequest>> {
+  const queryClient = useQueryClient();
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async ({ payload, ifMatch, idempotencyKey }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.submitEstimate(estimateId, payload, {
+        token,
+        membershipId,
+        ifMatch,
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => invalidateEstimateAndOpportunity(queryClient, membershipId, normalizedLocale, opportunityId),
+  });
+}
+
+export function useReviewEstimate(
+  opportunityId: string,
+  estimateId: string
+): UseMutationResult<EstimateDetailResponse, Error, ConditionalEstimateMutation<ReviewEstimateRequest>> {
+  const queryClient = useQueryClient();
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async ({ payload, ifMatch, idempotencyKey }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.reviewEstimate(estimateId, payload, {
+        token,
+        membershipId,
+        ifMatch,
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => invalidateEstimateAndOpportunity(queryClient, membershipId, normalizedLocale, opportunityId),
+  });
+}
+
+export function useCreateEstimateRevision(
+  opportunityId: string,
+  estimateId: string
+): UseMutationResult<EstimateDetailResponse, Error, ConditionalEstimateMutation<CreateEstimateRevisionRequest>> {
+  const queryClient = useQueryClient();
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async ({ payload, ifMatch, idempotencyKey }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.createEstimateRevision(estimateId, payload, {
+        token,
+        membershipId,
+        ifMatch,
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => invalidateEstimateAndOpportunity(queryClient, membershipId, normalizedLocale, opportunityId),
+  });
+}
+
+export function useCancelEstimate(
+  opportunityId: string,
+  estimateId: string
+): UseMutationResult<EstimateDetailResponse, Error, ConditionalEstimateMutation<CancelEstimateRequest>> {
+  const queryClient = useQueryClient();
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useMutation({
+    mutationFn: async ({ payload, ifMatch, idempotencyKey }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.cancelEstimate(estimateId, payload, {
+        token,
+        membershipId,
+        ifMatch,
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => invalidateEstimateAndOpportunity(queryClient, membershipId, normalizedLocale, opportunityId),
   });
 }
 

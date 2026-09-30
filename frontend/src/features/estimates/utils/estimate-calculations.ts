@@ -2,6 +2,7 @@ import type {
   CostComponentFormData,
   WorkItemFormData,
   SectionFormData,
+  EstimateDiscountType,
 } from "../schemas/estimate-workspace-schema";
 
 export interface WorkItemFinancialSummary {
@@ -123,7 +124,8 @@ export function isGrossProfitHealthy(marginRate: number, benchmark: number = 30)
  */
 export function calculateLiveWorkspaceHud(
   sections: SectionFormData[] | undefined | null,
-  discountAmount: number | undefined | null,
+  discountValue: number | undefined | null,
+  discountType: EstimateDiscountType = "fixed-amount",
   benchmark: number = 30
 ): WorkspaceFinancialSummary {
   let totalCost = 0;
@@ -143,7 +145,20 @@ export function calculateLiveWorkspaceHud(
     }
   }
 
-  const discount = Math.max(0, Number(discountAmount) || 0);
+  const value = Math.max(0, Number(discountValue) || 0);
+  let discount = 0;
+  switch (discountType) {
+    case "":
+    case "none":
+      discount = 0;
+      break;
+    case "percent":
+      discount = Math.round(sellingBeforeDiscount * (value / 100) * 100) / 100;
+      break;
+    case "fixed-amount":
+      discount = value;
+      break;
+  }
   const netSelling = Math.max(0, sellingBeforeDiscount - discount);
   const grossProfit = netSelling - totalCost;
   const marginRate = netSelling > 0 ? (grossProfit / netSelling) * 100 : 0;
@@ -206,4 +221,3 @@ export function calculateSectionSummary(
     isGpHealthy,
   };
 }
-

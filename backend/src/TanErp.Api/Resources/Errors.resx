@@ -131,6 +131,14 @@
   <data name="CUSTOMER_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>ลูกค้าต้องอยู่ในสถานะฉบับร่างและมีผู้ติดต่อหลักที่เปิดใช้งานอยู่</value>
   </data>
+  <data name="CUSTOMER_HAS_OPEN_OPPORTUNITY_TITLE" xml:space="preserve"><value>ยังมีงานขายที่เปิดอยู่</value></data>
+  <data name="CUSTOMER_HAS_OPEN_OPPORTUNITY_DETAIL" xml:space="preserve"><value>ปิดหรือย้ายงานขายที่ยังเปิดอยู่ก่อนปิดใช้งานลูกค้า</value></data>
+  <data name="CUSTOMER_INVALID_PROFILE_TITLE" xml:space="preserve"><value>ข้อมูลภาษีหรือเงื่อนไขทางการค้าไม่ถูกต้อง</value></data>
+  <data name="CUSTOMER_INVALID_PROFILE_DETAIL" xml:space="preserve"><value>ตรวจสอบเลขประจำตัวผู้เสียภาษี รหัสสาขา และค่าทางการค้าอีกครั้ง</value></data>
+  <data name="CUSTOMER_ADDRESS_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลที่อยู่ไม่ถูกต้อง</value></data>
+  <data name="CUSTOMER_ADDRESS_INVALID_DETAIL" xml:space="preserve"><value>กรุณาตรวจสอบช่องที่อยู่และรหัสไปรษณีย์ 5 หลัก</value></data>
+  <data name="CUSTOMER_QUOTATION_BILLING_NOT_READY_TITLE" xml:space="preserve"><value>ข้อมูลสำหรับใบเสนอราคายังไม่ครบ</value></data>
+  <data name="CUSTOMER_QUOTATION_BILLING_NOT_READY_DETAIL" xml:space="preserve"><value>กรุณากรอกข้อมูลภาษีและที่อยู่ออกบิลของลูกค้าให้ครบก่อนออกใบเสนอราคา</value></data>
   <data name="IF_MATCH_REQUIRED_TITLE" xml:space="preserve">
     <value>จำเป็นต้องระบุเงื่อนไขเวอร์ชัน</value>
   </data>
@@ -233,6 +241,46 @@
   <data name="ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>ไม่สามารถแก้ไขหรือดำเนินการในสถานะปัจจุบันของใบประมาณการได้</value>
   </data>
+  <data name="ESTIMATE_INPUT_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลการประเมินราคาไม่ถูกต้อง</value>
+  </data>
+  <data name="ESTIMATE_INPUT_INVALID_DETAIL" xml:space="preserve">
+    <value>ตรวจสอบอัตรากำไร ส่วนลด และจำนวนเงินที่กรอกอีกครั้ง</value>
+  </data>
+  <data name="ESTIMATE_DISCOUNT_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผลส่วนลด</value></data>
+  <data name="ESTIMATE_DISCOUNT_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ส่วนลดที่มากกว่าศูนย์ต้องมีรหัสเหตุผลที่ตรวจสอบย้อนหลังได้</value></data>
+  <data name="ESTIMATE_FIXED_PRICE_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผลราคาคงที่</value></data>
+  <data name="ESTIMATE_FIXED_PRICE_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>การกำหนดราคาขายคงที่ต้องมีรหัสเหตุผลเพื่อให้ตรวจสอบย้อนหลังได้</value></data>
+  <data name="ESTIMATE_POLICY_UNAVAILABLE_TITLE" xml:space="preserve">
+    <value>ยังไม่มีนโยบายคำนวณราคาที่ใช้งานได้</value>
+  </data>
+  <data name="ESTIMATE_POLICY_UNAVAILABLE_DETAIL" xml:space="preserve">
+    <value>ต้องมีนโยบายคำนวณราคา/ภาษีที่มีผล หรือผู้ตรวจอิสระที่มีสิทธิ์และขอบเขตตรงกับสาขานี้</value>
+  </data>
+  <data name="ESTIMATE_READINESS_BLOCKED_TITLE" xml:space="preserve"><value>ข้อมูลประเมินราคายังไม่พร้อมส่งตรวจ</value></data>
+  <data name="ESTIMATE_READINESS_BLOCKED_DETAIL" xml:space="preserve"><value>แก้ไขรายการที่ยังขาดตามเหตุผลและตำแหน่งที่ระบบแจ้งก่อนส่งตรวจ</value></data>
+  <data name="ESTIMATE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลประเมินราคายังไม่ครบ</value></data>
+  <data name="ESTIMATE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องมีอย่างน้อยหนึ่งหมวดงานและหมวดงานต้องมีรายการประเมินราคา</value></data>
+  <data name="ESTIMATE_UNIT_INVALID_TITLE" xml:space="preserve"><value>หน่วยต้นทุนไม่ตรงกับหน่วยฐานของสินค้า</value></data>
+  <data name="ESTIMATE_UNIT_INVALID_DETAIL" xml:space="preserve"><value>เลือกหน่วยต้นทุนให้ตรงกับหน่วยฐานของสินค้า หรือใช้ต้นทุนที่บันทึกด้วยหน่วยฐานนั้น</value></data>
+  <data name="ESTIMATE_COST_INCOMPLETE_TITLE" xml:space="preserve"><value>รายการงานยังไม่มีต้นทุน</value></data>
+  <data name="ESTIMATE_COST_INCOMPLETE_DETAIL" xml:space="preserve"><value>เพิ่มองค์ประกอบต้นทุนอย่างน้อยหนึ่งรายการให้แต่ละรายการงานก่อนส่งตรวจ</value></data>
+  <data name="ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผลต้นทุนชั่วคราว</value></data>
+  <data name="ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>โปรดระบุเหตุผลของต้นทุนชั่วคราวก่อนส่งตรวจ</value></data>
+  <data name="ESTIMATE_CALCULATION_OUTDATED_TITLE" xml:space="preserve"><value>ผลคำนวณไม่ตรงกับข้อมูลล่าสุด</value></data>
+  <data name="ESTIMATE_CALCULATION_OUTDATED_DETAIL" xml:space="preserve"><value>บันทึกหรือคำนวณข้อมูลการเงินใหม่ก่อนดำเนินการ</value></data>
+  <data name="ESTIMATE_ZERO_DENOMINATOR_TITLE" xml:space="preserve"><value>ต้องตรวจสอบอัตรากำไร</value></data>
+  <data name="ESTIMATE_ZERO_DENOMINATOR_DETAIL" xml:space="preserve"><value>ต้นทุนสุทธิหรือยอดก่อนภาษีเป็นศูนย์ จึงต้องให้ผู้ตรวจพิจารณา</value></data>
+  <data name="ESTIMATE_REVIEW_DECISION_INVALID_TITLE" xml:space="preserve"><value>ผลการตรวจสอบไม่ถูกต้อง</value></data>
+  <data name="ESTIMATE_REVIEW_DECISION_INVALID_DETAIL" xml:space="preserve"><value>ผลการตรวจต้องเป็นอนุมัติหรือส่งกลับ</value></data>
+  <data name="ESTIMATE_REVIEW_REASON_REQUIRED_TITLE" xml:space="preserve"><value>กรุณาระบุเหตุผลส่งกลับ</value></data>
+  <data name="ESTIMATE_REVIEW_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>การส่งกลับต้องมีรหัสเหตุผลและหมายเหตุ</value></data>
+  <data name="ESTIMATE_APPROVAL_SELF_REVIEW_TITLE" xml:space="preserve"><value>ผู้จัดทำตรวจอนุมัติงานตนเองไม่ได้</value></data>
+  <data name="ESTIMATE_APPROVAL_SELF_REVIEW_DETAIL" xml:space="preserve"><value>ผู้ส่งขออนุมัติและผู้แก้ไขข้อมูลการเงินล่าสุดต้องไม่เป็นผู้ตรวจ</value></data>
+  <data name="ESTIMATE_CANCEL_AUTHORITY_REQUIRED_TITLE" xml:space="preserve"><value>ไม่มีสิทธิ์ยกเลิกการประเมินนี้</value></data>
+  <data name="ESTIMATE_CANCEL_AUTHORITY_REQUIRED_DETAIL" xml:space="preserve"><value>ฉบับที่ส่งตรวจต้องยกเลิกโดยผู้ตรวจที่ได้รับมอบหมายและมีสิทธิ์ยกเลิก</value></data>
+  <data name="ESTIMATE_CANCEL_REASON_REQUIRED_TITLE" xml:space="preserve"><value>กรุณาระบุเหตุผลการยกเลิก</value></data>
+  <data name="ESTIMATE_CANCEL_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>การยกเลิกต้องระบุเหตุผล</value></data>
   <data name="FILE_PARENT_TYPE_INVALID_TITLE" xml:space="preserve">
     <value>ประเภทข้อมูลหลักของไฟล์ไม่ถูกต้อง</value>
   </data>
@@ -323,6 +371,12 @@
   <data name="ITEM_BRAND_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>ไม่พบแบรนด์สินค้าที่ระบุในองค์กรนี้</value>
   </data>
+  <data name="ITEM_TAX_CATEGORY_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบหมวดภาษีสินค้า</value>
+  </data>
+  <data name="ITEM_TAX_CATEGORY_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบหมวดภาษีสินค้าที่ระบุในองค์กรนี้</value>
+  </data>
   <data name="ITEM_UNIT_NOT_FOUND_TITLE" xml:space="preserve">
     <value>ไม่พบหน่วยนับ</value>
   </data>
@@ -393,7 +447,19 @@
     <value>ประเภทสินค้าไม่ถูกต้อง</value>
   </data>
   <data name="ITEM_TYPE_INVALID_DETAIL" xml:space="preserve">
-    <value>ประเภทสินค้าต้องเป็น material, labor, service, subcontract หรือ other</value>
+    <value>ประเภทสินค้าต้องเป็น material, labor, service, subcontract, other หรือ product</value>
+  </data>
+  <data name="ITEM_CODE_INVALID_TITLE" xml:space="preserve">
+    <value>รหัสสินค้าไม่ถูกต้อง</value>
+  </data>
+  <data name="ITEM_CODE_INVALID_DETAIL" xml:space="preserve">
+    <value>รหัสภายใน/SKU ต้องมีความยาวไม่เกิน 50 ตัวอักษร</value>
+  </data>
+  <data name="ITEM_TAX_CATEGORY_INVALID_TITLE" xml:space="preserve">
+    <value>หมวดภาษีไม่ถูกต้อง</value>
+  </data>
+  <data name="ITEM_TAX_CATEGORY_INVALID_DETAIL" xml:space="preserve">
+    <value>รหัสหมวดภาษีต้องมีความยาวไม่เกิน 30 ตัวอักษร</value>
   </data>
   <data name="ITEM_AVAILABILITY_MODE_INVALID_TITLE" xml:space="preserve">
     <value>โหมดความพร้อมใช้งานของสินค้าไม่ถูกต้อง</value>
@@ -533,6 +599,12 @@
   <data name="ITEM_COST_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>ไม่พบต้นทุนที่เผยแพร่และมีผลบังคับใช้สำหรับสินค้านี้ในสาขาหรือองค์กรที่ระบุ</value>
   </data>
+  <data name="ITEM_COST_STALE_TITLE" xml:space="preserve">
+    <value>ต้นทุนไม่มีผลในวันที่เลือก</value>
+  </data>
+  <data name="ITEM_COST_STALE_DETAIL" xml:space="preserve">
+    <value>มีต้นทุนที่เผยแพร่ แต่ไม่มีรายการที่มีผล ณ วันที่ประเมินราคา</value>
+  </data>
   <data name="ITEM_COST_VERSION_CONFLICT_TITLE" xml:space="preserve">
     <value>เวอร์ชันต้นทุนสินค้าเปลี่ยนแปลง</value>
   </data>
@@ -569,5 +641,86 @@
   <data name="BRANCH_INACTIVE_DETAIL" xml:space="preserve">
     <value>สาขาที่ระบุถูกปิดใช้งานแล้ว ไม่สามารถดำเนินการได้</value>
   </data>
+  <data name="COST_SOURCE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลแหล่งที่มาถูกแก้ไขแล้ว</value></data>
+  <data name="COST_SOURCE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ข้อมูลแหล่งที่มาถูกเปลี่ยนโดยผู้ใช้อื่น กรุณาโหลดข้อมูลล่าสุดก่อนบันทึก</value></data>
+  <data name="COST_SOURCE_CODE_DUPLICATE_TITLE" xml:space="preserve"><value>รหัสแหล่งที่มาซ้ำ</value></data>
+  <data name="COST_SOURCE_CODE_DUPLICATE_DETAIL" xml:space="preserve"><value>มีรหัสแหล่งที่มานี้ในองค์กรแล้ว</value></data>
+  <data name="ITEM_CODE_CONFLICT_TITLE" xml:space="preserve"><value>รหัสข้อมูลหลักซ้ำ</value></data>
+  <data name="ITEM_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>มีรหัสนี้ในองค์กรแล้ว กรุณาใช้รหัสอื่น</value></data>
+  <data name="MASTER_DATA_CODE_CONFIGURATION_INVALID_TITLE" xml:space="preserve"><value>รูปแบบรหัส Master Data ไม่ถูกต้อง</value></data>
+  <data name="MASTER_DATA_CODE_CONFIGURATION_INVALID_DETAIL" xml:space="preserve"><value>รูปแบบเลขที่ตั้งค่าไว้สร้างรหัสที่ยาวเกินข้อกำหนด กรุณาตรวจสอบ Document Numbering</value></data>
+  <data name="COST_SOURCE_TYPE_INVALID_TITLE" xml:space="preserve"><value>ประเภทแหล่งที่มาไม่ถูกต้อง</value></data>
+  <data name="COST_SOURCE_TYPE_INVALID_DETAIL" xml:space="preserve"><value>สร้างหรือแก้ไขได้เฉพาะแหล่งที่มาประเภท Manual</value></data>
+  <data name="COST_SOURCE_NOT_FOUND_TITLE" xml:space="preserve"><value>ไม่พบแหล่งที่มาต้นทุน</value></data>
+  <data name="COST_SOURCE_NOT_FOUND_DETAIL" xml:space="preserve"><value>ไม่พบแหล่งที่มาต้นทุนในองค์กรนี้</value></data>
+  <data name="COST_SOURCE_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุแหล่งที่มาต้นทุน</value></data>
+  <data name="COST_SOURCE_REQUIRED_DETAIL" xml:space="preserve"><value>กรุณาเลือกแหล่งที่มาประเภท Manual ที่เปิดใช้งาน</value></data>
+  <data name="COST_SOURCE_INACTIVE_TITLE" xml:space="preserve"><value>แหล่งที่มาต้นทุนใช้ไม่ได้</value></data>
+  <data name="COST_SOURCE_INACTIVE_DETAIL" xml:space="preserve"><value>รายการต้นทุนใหม่ต้องใช้แหล่งที่มา Manual ที่เปิดใช้งาน</value></data>
+  <data name="COST_SOURCE_CODE_IMMUTABLE_TITLE" xml:space="preserve"><value>แก้รหัสแหล่งที่มาไม่ได้</value></data>
+  <data name="COST_SOURCE_CODE_IMMUTABLE_DETAIL" xml:space="preserve"><value>รหัสแหล่งที่มาที่มีรายการต้นทุนอ้างอิงแล้วไม่สามารถเปลี่ยนได้</value></data>
+  <data name="COST_RECORD_PROVENANCE_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลที่มาของต้นทุนไม่ครบ</value></data>
+  <data name="COST_RECORD_PROVENANCE_REQUIRED_DETAIL" xml:space="preserve"><value>กรุณาระบุเหตุผลและเลขอ้างอิงหรือแนบหลักฐานที่ตรวจสอบแล้ว</value></data>
+  <data name="COST_EVIDENCE_INVALID_TITLE" xml:space="preserve"><value>หลักฐานต้นทุนไม่ถูกต้อง</value></data>
+  <data name="COST_EVIDENCE_INVALID_DETAIL" xml:space="preserve"><value>ไฟล์ต้องตรวจสอบแล้วและแนบกับรายการต้นทุนนี้</value></data>
+  <data name="COST_ZERO_AMOUNT_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ราคาศูนย์ต้องมีเหตุผล</value></data>
+  <data name="COST_ZERO_AMOUNT_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ระบุเหตุผลสำหรับราคาศูนย์ และให้ผู้ตรวจอิสระอนุมัติก่อนเผยแพร่</value></data>
+  <data name="ITEM_BARCODE_NOT_FOUND_TITLE" xml:space="preserve"><value>ไม่พบบาร์โค้ด</value></data>
+  <data name="ITEM_BARCODE_NOT_FOUND_DETAIL" xml:space="preserve"><value>ไม่พบบาร์โค้ดที่ใช้งานได้ในองค์กรนี้</value></data>
+  <data name="ITEM_BARCODE_CONFLICT_TITLE" xml:space="preserve"><value>บาร์โค้ดซ้ำ</value></data>
+  <data name="ITEM_BARCODE_CONFLICT_DETAIL" xml:space="preserve"><value>บาร์โค้ดนี้มีอยู่แล้วในองค์กร</value></data>
+  <data name="ITEM_BARCODE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลบาร์โค้ดถูกเปลี่ยนแล้ว</value></data>
+  <data name="ITEM_BARCODE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>กรุณาโหลดข้อมูลบาร์โค้ดล่าสุดก่อนบันทึก</value></data>
+  <data name="ITEM_BARCODE_INACTIVE_TITLE" xml:space="preserve"><value>บาร์โค้ดปิดใช้แล้ว</value></data>
+  <data name="ITEM_BARCODE_INACTIVE_DETAIL" xml:space="preserve"><value>บาร์โค้ดนี้ไม่พร้อมใช้ในธุรกรรมใหม่</value></data>
+  <data name="ITEM_BARCODE_INVALID_TITLE" xml:space="preserve"><value>บาร์โค้ดไม่ถูกต้อง</value></data>
+  <data name="ITEM_BARCODE_INVALID_DETAIL" xml:space="preserve"><value>กรุณาตรวจชนิด ค่า เลขตรวจสอบ GTIN และจำนวนต่อบรรจุ</value></data>
+  <data name="ITEM_BARCODE_UNIT_INVALID_TITLE" xml:space="preserve"><value>หน่วยของบาร์โค้ดไม่ถูกต้อง</value></data>
+  <data name="ITEM_BARCODE_UNIT_INVALID_DETAIL" xml:space="preserve"><value>หน่วยของบาร์โค้ดต้องเปิดใช้ในองค์กรนี้</value></data>
+  <data name="ITEM_BARCODE_UNIT_CONVERSION_REQUIRED_TITLE" xml:space="preserve"><value>ต้องกำหนดอัตราแปลงหน่วย</value></data>
+  <data name="ITEM_BARCODE_UNIT_CONVERSION_REQUIRED_DETAIL" xml:space="preserve"><value>จำนวนต่อบาร์โค้ดต้องตรงกับอัตราแปลงหน่วยของรายการที่มีผลอยู่</value></data>
+  <data name="ITEM_UNIT_CONVERSION_PERIOD_OVERLAP_TITLE" xml:space="preserve"><value>ช่วงวันที่แปลงหน่วยซ้ำกัน</value></data>
+  <data name="ITEM_UNIT_CONVERSION_PERIOD_OVERLAP_DETAIL" xml:space="preserve"><value>มีอัตราแปลงหน่วยของรายการนี้ครอบคลุมบางส่วนของช่วงวันที่แล้ว</value></data>
+  <data name="ITEM_UNIT_CONVERSION_FACTOR_INVALID_TITLE" xml:space="preserve"><value>อัตราแปลงหน่วยไม่ถูกต้อง</value></data>
+  <data name="ITEM_UNIT_CONVERSION_FACTOR_INVALID_DETAIL" xml:space="preserve"><value>อัตราแปลงหน่วยต้องมากกว่าศูนย์และอยู่ในรูปแบบตัวเลข</value></data>
+  <data name="ITEM_UNIT_CONVERSION_SELF_LOOP_TITLE" xml:space="preserve"><value>หน่วยต้นทางและปลายทางซ้ำกัน</value></data>
+  <data name="ITEM_UNIT_CONVERSION_SELF_LOOP_DETAIL" xml:space="preserve"><value>หน่วยต้นทางต้องต่างจากหน่วยปลายทาง</value></data>
+  <data name="ITEM_UNIT_CONVERSION_PERIOD_INVALID_TITLE" xml:space="preserve"><value>ช่วงวันที่มีผลไม่ถูกต้อง</value></data>
+  <data name="ITEM_UNIT_CONVERSION_PERIOD_INVALID_DETAIL" xml:space="preserve"><value>วันที่สิ้นสุดต้องไม่อยู่ก่อนวันที่เริ่มต้น</value></data>
+  <data name="ITEM_UNIT_CONVERSION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="ITEM_UNIT_CONVERSION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>กรุณาระบุเหตุผลของอัตราแปลงหน่วย</value></data>
+  <data name="ITEM_UNIT_CONVERSION_TARGET_INVALID_TITLE" xml:space="preserve"><value>หน่วยปลายทางไม่ใช่หน่วยฐาน</value></data>
+  <data name="ITEM_UNIT_CONVERSION_TARGET_INVALID_DETAIL" xml:space="preserve"><value>อัตราแปลงของรายการต้องแปลงไปยังหน่วยฐานของรายการนั้น</value></data>
+  <data name="ITEM_UNIT_CONVERSION_UNIT_INVALID_TITLE" xml:space="preserve"><value>หน่วยไม่พร้อมใช้งาน</value></data>
+  <data name="ITEM_UNIT_CONVERSION_UNIT_INVALID_DETAIL" xml:space="preserve"><value>หน่วยต้นทางและหน่วยปลายทางต้องเปิดใช้ในองค์กรเดียวกัน</value></data>
+  <data name="ITEM_UNIT_CONVERSION_DIMENSION_MISMATCH_TITLE" xml:space="preserve"><value>ประเภทมิติของหน่วยไม่ตรงกัน</value></data>
+  <data name="ITEM_UNIT_CONVERSION_DIMENSION_MISMATCH_DETAIL" xml:space="preserve"><value>หน่วยต้นทางและปลายทางต้องอยู่ในมิติเดียวกัน</value></data>
+  <data name="UNIT_CONVERSION_PERIOD_OVERLAP_TITLE" xml:space="preserve"><value>ช่วงวันที่แปลงหน่วยซ้ำกัน</value></data>
+  <data name="UNIT_CONVERSION_PERIOD_OVERLAP_DETAIL" xml:space="preserve"><value>มีอัตราแปลงหน่วยคู่นี้ครอบคลุมบางส่วนของช่วงวันที่แล้ว</value></data>
+  <data name="UNIT_CONVERSION_CYCLE_TITLE" xml:space="preserve"><value>อัตราแปลงหน่วยทำให้เกิดวงจร</value></data>
+  <data name="UNIT_CONVERSION_CYCLE_DETAIL" xml:space="preserve"><value>เส้นทางการแปลงหน่วยนี้ย้อนกลับไปยังหน่วยต้นทาง กรุณาเลือกเส้นทางที่ไม่มีวงจร</value></data>
+  <data name="UNIT_CONVERSION_FACTOR_INVALID_TITLE" xml:space="preserve"><value>อัตราแปลงหน่วยไม่ถูกต้อง</value></data>
+  <data name="UNIT_CONVERSION_FACTOR_INVALID_DETAIL" xml:space="preserve"><value>อัตราต้องมากกว่าศูนย์และมีทศนิยมไม่เกิน 6 ตำแหน่ง</value></data>
+  <data name="UNIT_CONVERSION_SELF_LOOP_TITLE" xml:space="preserve"><value>หน่วยต้นทางและปลายทางซ้ำกัน</value></data>
+  <data name="UNIT_CONVERSION_SELF_LOOP_DETAIL" xml:space="preserve"><value>หน่วยต้นทางต้องต่างจากหน่วยปลายทาง</value></data>
+  <data name="UNIT_CONVERSION_PERIOD_INVALID_TITLE" xml:space="preserve"><value>ช่วงวันที่มีผลไม่ถูกต้อง</value></data>
+  <data name="UNIT_CONVERSION_PERIOD_INVALID_DETAIL" xml:space="preserve"><value>วันที่สิ้นสุดต้องไม่อยู่ก่อนวันที่เริ่มต้น</value></data>
+  <data name="UNIT_CONVERSION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="UNIT_CONVERSION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>กรุณาระบุเหตุผลของอัตราแปลงหน่วย</value></data>
+  <data name="UNIT_CONVERSION_UNIT_INVALID_TITLE" xml:space="preserve"><value>หน่วยไม่พร้อมใช้งาน</value></data>
+  <data name="UNIT_CONVERSION_UNIT_INVALID_DETAIL" xml:space="preserve"><value>หน่วยต้นทางและหน่วยปลายทางต้องเปิดใช้ในองค์กรเดียวกัน</value></data>
+  <data name="UNIT_CONVERSION_DIMENSION_MISMATCH_TITLE" xml:space="preserve"><value>ประเภทมิติของหน่วยไม่ตรงกัน</value></data>
+  <data name="UNIT_CONVERSION_DIMENSION_MISMATCH_DETAIL" xml:space="preserve"><value>หน่วยต้นทางและปลายทางต้องอยู่ในมิติเดียวกัน</value></data>
+  <data name="ITEM_BRANCH_IDS_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุสาขา</value></data>
+  <data name="ITEM_BRANCH_IDS_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องส่งรายการสาขาเมื่อเปลี่ยนขอบเขตการใช้งานสินค้า</value></data>
+  <data name="ITEM_SORT_INVALID_TITLE" xml:space="preserve"><value>ฟิลด์เรียงลำดับไม่ถูกต้อง</value></data>
+  <data name="ITEM_SORT_INVALID_DETAIL" xml:space="preserve"><value>ฟิลด์เรียงลำดับสินค้าต้องเป็น code, itemType หรือ status</value></data>
+  <data name="ITEM_SORT_ORDER_INVALID_TITLE" xml:space="preserve"><value>ทิศทางเรียงลำดับไม่ถูกต้อง</value></data>
+  <data name="ITEM_SORT_ORDER_INVALID_DETAIL" xml:space="preserve"><value>ทิศทางเรียงลำดับต้องเป็น asc หรือ desc</value></data>
+  <data name="ITEM_UNIT_ROUNDING_MODE_INVALID_TITLE" xml:space="preserve"><value>วิธีปัดเศษหน่วยไม่ถูกต้อง</value></data>
+  <data name="ITEM_UNIT_ROUNDING_MODE_INVALID_DETAIL" xml:space="preserve"><value>เลือกวิธีปัดเศษจากค่าที่ระบบรองรับ</value></data>
+  <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_CODE_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุรหัสเหตุผลรายการงานกำหนดเอง</value></data>
+  <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_CODE_REQUIRED_DETAIL" xml:space="preserve"><value>รายการงานที่ไม่ได้ผูกกับ Item Master ต้องมีรหัสเหตุผลที่ตรวจสอบย้อนหลังได้</value></data>
+  <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผลรายการงานกำหนดเอง</value></data>
+  <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>รายการงานที่ไม่ได้ผูกกับ Item Master ต้องมีหมายเหตุระบุเหตุผล</value></data>
 </root>
-

@@ -20,6 +20,7 @@ export interface MultiLangInputProps {
   error?: string;
   defaultLang?: "th" | "en";
   id?: string;
+  disabled?: boolean;
 }
 
 const langs = [
@@ -37,6 +38,7 @@ export function MultiLangInput({
   error,
   defaultLang,
   id,
+  disabled = false,
 }: MultiLangInputProps) {
   const systemLocale = useLocale();
   const validSystemLang = (systemLocale === "en" ? "en" : "th") as "th" | "en";
@@ -82,7 +84,7 @@ export function MultiLangInput({
           <button
             type="button"
             onClick={handleCopySource}
-            disabled={!safeValue.th?.trim()}
+            disabled={disabled || !safeValue.th?.trim()}
             title="Copy TH to EN"
             aria-label="Copy TH to EN"
             className="h-6 w-6 border border-erp-border bg-erp-surface hover:bg-erp-surface-muted text-erp-text-muted hover:text-erp-text-main disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-erp-navy rounded-none"
@@ -99,6 +101,7 @@ export function MultiLangInput({
                   key={lang.key}
                   type="button"
                   onClick={() => setSelectedLang(lang.key)}
+                  disabled={disabled}
                   className={cn(
                     "px-2 h-full text-xs font-semibold uppercase transition-colors inline-flex items-center justify-center gap-1 focus-visible:outline-2 focus-visible:outline-erp-navy",
                     isActive
@@ -131,6 +134,7 @@ export function MultiLangInput({
             onChange={(e) => handleChange(e.target.value)}
             placeholder={currentPlaceholder}
             required={required && activeLang === "th"}
+            disabled={disabled}
             rows={3}
             className={cn(
               "erp-textarea",
@@ -145,6 +149,7 @@ export function MultiLangInput({
             onChange={(e) => handleChange(e.target.value)}
             placeholder={currentPlaceholder}
             required={required && activeLang === "th"}
+            disabled={disabled}
             className={cn(
               "erp-input",
               error && "erp-input-error"

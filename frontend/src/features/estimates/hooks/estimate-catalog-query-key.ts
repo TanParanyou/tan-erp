@@ -16,6 +16,8 @@ export function estimateCatalogQueryKey(
     query.itemType,
     query.categoryId,
     query.brandId,
+    query.attributeKey,
+    query.attributeValue,
     query.hasCost,
     query.cursor,
     query.pageSize,

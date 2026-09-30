@@ -14,6 +14,8 @@
 | CRM | `customers.activate` | เปิดใช้ Customer ที่ผ่าน Gate | Organization/Branch |
 | CRM | `customers.deactivate` | ปิดใช้ Customer พร้อมเหตุผล | Organization/Branch |
 | CRM | `customer-contacts.manage` | จัด Contact/Address และข้อมูลส่วนบุคคล | Organization/Branch/Own |
+| CRM | `customers.credit.read` | อ่านเครดิตเทอม วงเงิน และเงื่อนไขวางบิล | Organization/Branch |
+| CRM | `customers.credit.manage` | แก้เครดิตเทอม วงเงิน และเงื่อนไขวางบิล | Organization/Branch |
 | CRM | `sites.read` | ดู Site ตาม Data Allowlist | Organization/Branch/Own |
 | CRM | `sites.manage` | สร้าง/แก้/ปิดใช้ Site | Organization/Branch/Own |
 | CRM | `opportunities.read` | ดู Opportunity ตาม Scope | Organization/Branch/Own |
@@ -25,7 +27,13 @@
 | Item Master | `items.update` | แก้ Item Draft/Active ที่อนุญาต | Organization |
 | Item Master | `items.activate` | เปิดใช้ Item ที่ผ่าน Gate | Organization |
 | Item Master | `items.deactivate` | ปิดใช้ Item พร้อมเหตุผล | Organization |
+| Item Master | `items.manage-taxonomy` | สร้างและแก้ Category/Brand/Tax Category/Unit | Organization |
+| Item Master | `items.manage-branches` | กำหนดสาขาที่ Item ใช้ได้ | Organization |
+| Item Master | `items.manage-images` | แนบและจัดลำดับภาพ Item | Organization |
+| Item Master (planned) | `items.manage-barcodes` | เพิ่ม ตั้ง Primary และปิดใช้ Barcode/GTIN ของ Item; ยังไม่ seed จน API พร้อม | Organization |
 | Item Cost | `cost-records.read` | ดูต้นทุน/Evidence ตาม Scope | Organization/Branch |
+| Item Cost | `cost-sources.read` | ดูแหล่งต้นทุนที่ใช้เลือกและประวัติ | Organization |
+| Item Cost | `cost-sources.manage` | สร้าง แก้ และปิดใช้ Manual Cost Source | Organization |
 | Item Cost | `cost-records.create` | สร้าง Cost Record Draft | Organization/Branch |
 | Item Cost | `cost-records.submit` | ส่ง Cost Record ให้ตรวจ | Organization/Branch |
 | Item Cost | `cost-records.approve` | Approve/Return ตาม Cost Authority | Organization/Branch |
@@ -63,8 +71,9 @@
 | Estimation | `estimates.update` | แก้ Draft/Returned Estimate | Branch/Project/Own |
 | Estimation | `estimates.submit` | ส่งขออนุมัติ | Branch/Project/Own |
 | Estimation | `estimates.approve` | อนุมัติตาม Authority Matrix | Organization/Branch/Project |
+| Estimation | `estimates.revise` | สร้าง Draft Revision จาก Approved/Quoted | Branch/Project/Own |
 | Estimation | `estimates.override-price` | Override ราคาตามกฎ | Organization/Branch/Project |
-| Estimation | `estimates.cancel` | ยกเลิก Draft/Returned; Submitted ต้องผ่าน Cancel Authority | Branch/Project/Own |
+| Estimation | `estimates.cancel` | ยกเลิก Draft/Returned; Submitted ต้องเป็นผู้ตรวจที่ได้รับมอบหมาย | Branch/Project/Own |
 | Quotation | `quotations.issue` | ออกใบเสนอราคาจาก Approved Revision | Branch/Project |
 | Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
 

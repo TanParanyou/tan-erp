@@ -19,6 +19,7 @@ public class CostSourceConfiguration : IEntityTypeConfiguration<CostSource>
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
         builder.Property(x => x.Code).HasColumnName("code").HasMaxLength(32).IsRequired();
+        builder.Property(x => x.SourceType).HasColumnName("source_type").HasMaxLength(16).IsRequired();
         builder.Property(x => x.Priority).HasColumnName("priority").IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
@@ -36,6 +37,7 @@ public class CostSourceConfiguration : IEntityTypeConfiguration<CostSource>
             .IsRequired();
 
         builder.HasIndex(x => new { x.OrganizationId, x.Code }).IsUnique();
+        builder.ToTable("cost_sources", "item_master", table => table.HasCheckConstraint("CK_cost_sources_source_type", "source_type IN ('manual', 'legacy')"));
 
         builder.HasOne<Organization>()
             .WithMany()

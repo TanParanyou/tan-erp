@@ -78,6 +78,7 @@ export function OpportunityOwnerReassignModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      closeDisabled={reassignMutation.isPending}
       title={t("reassignOwnerModalTitle")}
       description={t("reassignOwnerModalDesc")}
       size="lg"

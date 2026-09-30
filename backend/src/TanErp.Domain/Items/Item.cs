@@ -39,6 +39,7 @@ public class Item : Entity
     public List<ItemAlias> Aliases { get; private set; } = [];
     public List<ItemBranchAvailability> BranchAvailabilities { get; private set; } = [];
     public List<ItemImage> Images { get; private set; } = [];
+    public List<ItemBarcode> Barcodes { get; private set; } = [];
 
     // EF constructor
     protected Item() : base() { }
@@ -58,10 +59,11 @@ public class Item : Entity
         Dictionary<string, string>? attributes,
         int? attributesSchemaVersion,
         Guid createdByUserId,
-        DateTimeOffset createdAtUtc) : base(id)
+        DateTimeOffset createdAtUtc,
+        string? taxCategoryCode) : base(id)
     {
         OrganizationId = organizationId;
-        Code = code;
+        Code = code.Trim();
         NormalizedCode = NormalizeCode(code);
         ItemType = itemType;
         CategoryId = categoryId;
@@ -73,6 +75,7 @@ public class Item : Entity
         Capabilities = capabilities;
         Attributes = attributes;
         AttributesSchemaVersion = attributesSchemaVersion;
+        TaxCategoryCode = NormalizeTaxCategoryCode(taxCategoryCode);
         Status = ItemStatus.Draft;
         ActivatedOnce = false;
         RowVersion = Guid.NewGuid();
@@ -97,12 +100,15 @@ public class Item : Entity
         Dictionary<string, string>? attributes,
         int? attributesSchemaVersion,
         Guid createdByUserId,
-        DateTimeOffset createdAtUtc)
+        DateTimeOffset createdAtUtc,
+        string? taxCategoryCode = null)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
             throw new ItemValidationException("ITEM_FIELD_REQUIRED", "Item code is required.");
         }
+        if (code.Trim().Length > 50)
+            throw new ItemValidationException("ITEM_CODE_INVALID", "Item code cannot exceed 50 characters.");
 
         if (!Items.ItemType.IsValid(itemType))
         {
@@ -115,6 +121,7 @@ public class Item : Entity
         }
 
         ValidateAttributes(attributes);
+        var normalizedTaxCategoryCode = NormalizeTaxCategoryCode(taxCategoryCode);
 
         return new Item(
             id,
@@ -131,7 +138,8 @@ public class Item : Entity
             attributes,
             attributesSchemaVersion,
             createdByUserId,
-            createdAtUtc);
+            createdAtUtc,
+            normalizedTaxCategoryCode);
     }
 
     public void UpdateDetails(
@@ -147,7 +155,8 @@ public class Item : Entity
         Dictionary<string, string>? attributes,
         int? attributesSchemaVersion,
         Guid updatedByUserId,
-        DateTimeOffset updatedAtUtc)
+        DateTimeOffset updatedAtUtc,
+        string? taxCategoryCode = null)
     {
         if (Status == ItemStatus.Inactive)
         {
@@ -164,6 +173,8 @@ public class Item : Entity
         {
             throw new ItemValidationException("ITEM_TYPE_INVALID", $"Item type '{itemType}' is invalid.");
         }
+        if (code.Trim().Length > 50)
+            throw new ItemValidationException("ITEM_CODE_INVALID", "Item code cannot exceed 50 characters.");
 
         if (!ItemAvailabilityMode.IsValid(availabilityMode))
         {
@@ -171,6 +182,7 @@ public class Item : Entity
         }
 
         ValidateAttributes(attributes);
+        var normalizedTaxCategoryCode = NormalizeTaxCategoryCode(taxCategoryCode);
 
         Code = code.Trim();
         NormalizedCode = normalizedNewCode;
@@ -184,13 +196,27 @@ public class Item : Entity
         Capabilities = capabilities;
         Attributes = attributes;
         AttributesSchemaVersion = attributesSchemaVersion;
+        TaxCategoryCode = normalizedTaxCategoryCode;
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = updatedAtUtc;
         UpdatedByUserId = updatedByUserId;
     }
 
-    public void Activate(Guid actorUserId, DateTimeOffset now, bool hasActiveSelectedBranch)
+    public void Activate(
+        Guid actorUserId,
+        DateTimeOffset now,
+        bool hasActiveSelectedBranch,
+        bool categoryActive,
+        bool unitActive,
+        bool brandActive)
     {
+        if (!categoryActive)
+            throw new ItemValidationException("ITEM_CATEGORY_INACTIVE", "Category is inactive or missing.");
+        if (!unitActive)
+            throw new ItemValidationException("ITEM_UNIT_INACTIVE", "Base unit is inactive or missing.");
+        if (!brandActive)
+            throw new ItemValidationException("ITEM_BRAND_INACTIVE", "Brand is inactive or missing.");
+
         if (string.IsNullOrWhiteSpace(Name.Thai))
         {
             throw new ItemValidationException("ITEM_FIELD_REQUIRED", "Thai name is required for activation.");
@@ -247,6 +273,15 @@ public class Item : Entity
     }
 
     private static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();
+
+    private static string? NormalizeTaxCategoryCode(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return null;
+        var normalized = code.Trim().ToUpperInvariant();
+        if (normalized.Length > 30)
+            throw new ItemValidationException("ITEM_TAX_CATEGORY_INVALID", "Tax category code cannot exceed 30 characters.");
+        return normalized;
+    }
 
     private static void ValidateAttributes(Dictionary<string, string>? attributes)
     {

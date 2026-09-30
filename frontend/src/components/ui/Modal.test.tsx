@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { Modal } from "./Modal";
 
 describe("Modal component", () => {
@@ -37,5 +38,28 @@ describe("Modal component", () => {
     const closeBtn = screen.getByLabelText("Close modal");
     fireEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps focus in the active input when an inline onClose callback changes", async () => {
+    function ControlledModal() {
+      const [value, setValue] = useState("");
+      return (
+        <Modal isOpen onClose={() => undefined} title="Reference">
+          <input aria-label="First input" />
+          <input aria-label="Second input" value={value} onChange={(event) => setValue(event.target.value)} />
+        </Modal>
+      );
+    }
+
+    render(<ControlledModal />);
+    const secondInput = screen.getByLabelText("Second input");
+    await waitFor(() => expect(screen.getByLabelText("Close modal")).toHaveFocus());
+
+    secondInput.focus();
+    expect(secondInput).toHaveFocus();
+    fireEvent.change(secondInput, { target: { value: "a" } });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(secondInput).toHaveFocus();
   });
 });

@@ -29,6 +29,7 @@ public class RequestAccessResolver : IRequestAccessResolver
         }
 
         var now = _clock.UtcNow;
+        var allowBranchScopedEstimatePermission = permissionKey is "estimates.read" or "estimates.update" or "estimates.approve";
 
         var context = await _db.Memberships
             .AsNoTracking()
@@ -42,8 +43,9 @@ public class RequestAccessResolver : IRequestAccessResolver
                 .SelectMany(mr => mr.Role!.RolePermissions
                     .Where(rp => rp.Permission!.IsActive
                         && rp.Permission.Key == permissionKey
-                        && rp.Scope == PermissionScope.Organization
-                        && rp.ScopeId == m.OrganizationId)
+                        && ((rp.Scope == PermissionScope.Organization && rp.ScopeId == m.OrganizationId) ||
+                            (allowBranchScopedEstimatePermission && rp.Scope == PermissionScope.Branch && m.BranchId.HasValue &&
+                             rp.ScopeId == m.BranchId && rp.BranchId == m.BranchId)))
                     .Select(rp => new RequestAccessContext(
                         m.UserId,
                         m.Id,
@@ -83,9 +85,42 @@ public class RequestAccessResolver : IRequestAccessResolver
         CancellationToken cancellationToken = default)
     {
         var baseResult = await ResolveAsync(firebaseUid, membershipId, permissionKey, cancellationToken);
-        if (baseResult.IsFailure) return baseResult;
+        RequestAccessContext? context = baseResult.IsSuccess ? baseResult.Value : null;
+        if (context is null && baseResult.Error.Code == "PERMISSION_DENIED")
+        {
+            var now = _clock.UtcNow;
+            context = await _db.Memberships
+                .AsNoTracking()
+                .Where(m => m.Id == membershipId && m.User!.FirebaseUid == firebaseUid)
+                .Where(m => m.IsActive && m.User!.IsActive && m.Organization!.IsActive)
+                .Where(m => m.BranchId == null || m.BranchId == targetBranchId)
+                .Where(m => m.StartsAtUtc == null || m.StartsAtUtc <= now)
+                .Where(m => m.ExpiresAtUtc == null || m.ExpiresAtUtc > now)
+                .SelectMany(m => m.MembershipRoles
+                    .Where(mr => mr.Role!.IsActive)
+                    .SelectMany(mr => mr.Role!.RolePermissions
+                        .Where(rp => rp.Permission!.IsActive
+                            && rp.Permission.Key == permissionKey
+                            && rp.Scope == PermissionScope.Branch
+                            && rp.ScopeId == targetBranchId
+                            && rp.BranchId == targetBranchId
+                            && rp.OrganizationId == m.OrganizationId)
+                        .Select(rp => new RequestAccessContext(
+                            m.UserId,
+                            m.Id,
+                            m.OrganizationId,
+                            m.BranchId,
+                            rp.Permission!.Key,
+                            rp.Scope))))
+                .FirstOrDefaultAsync(cancellationToken);
 
-        var context = baseResult.Value!;
+            if (context is null)
+                return baseResult;
+        }
+        else if (context is null)
+        {
+            return baseResult;
+        }
 
         // 1. Verify branch exists in caller's organization
         var branch = await _db.Branches

@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import thMessages from "@/messages/th.json";
@@ -46,10 +46,31 @@ vi.mock("@/lib/api/api-client", async (importOriginal) => {
   };
 });
 
+vi.mock("@/lib/api/file-client", () => ({
+  fileClient: {
+    createSession: vi.fn(),
+    completeSession: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/media/image-optimization", () => ({
+  optimizeImageToWebP: vi.fn(async (file: File) => ({
+    file,
+    width: 800,
+    height: 600,
+    format: "webp",
+    blob: new Blob([file], { type: "image/webp" }),
+  })),
+}));
+
+import { fileClient } from "@/lib/api/file-client";
+
 const mockedCreate = vi.mocked(apiClient.createCustomer);
 const mockedCheckDuplicates = vi.mocked(apiClient.checkCustomerDuplicates);
 const mockedGetCustomer = vi.mocked(apiClient.getCustomer);
 const mockedListCustomerSites = vi.mocked(apiClient.listCustomerSites);
+const mockedCreateSession = vi.mocked(fileClient.createSession);
+const mockedCompleteSession = vi.mocked(fileClient.completeSession);
 
 import { ToastProvider } from "@/hooks/useToast";
 
@@ -87,6 +108,8 @@ describe("CustomerEditor create intent", () => {
       count += 1;
       return `key-${count}` as `${string}-${string}-${string}-${string}-${string}`;
     });
+    global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    global.URL.revokeObjectURL = vi.fn();
   });
 
   it("sends one POST on valid double click", async () => {
@@ -341,7 +364,7 @@ describe("CustomerEditor create intent", () => {
     // Wait for live duplicates to resolve
     await waitFor(() => {
       expect(screen.getByText(/ระบบตรวจพบรายชื่อลูกค้าที่อาจซ้ำซ้อนในระบบ/)).toBeDefined();
-    });
+    }, { timeout: 4000 });
 
     // Click Save
     const saveButton = screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" });
@@ -350,7 +373,7 @@ describe("CustomerEditor create intent", () => {
     // Modal should appear without calling createCustomer yet
     await waitFor(() => {
       expect(screen.getByText(thMessages.customers.duplicateConfirmTitle)).toBeDefined();
-    });
+    }, { timeout: 4000 });
     expect(mockedCreate).not.toHaveBeenCalled();
 
     // In modal, click "ยืนยันสร้างลูกค้ารายใหม่"
@@ -453,6 +476,76 @@ describe("CustomerEditor create intent", () => {
       expect(screen.getAllByText("กรุงเทพมหานคร").length).toBeGreaterThan(0);
       expect(screen.getAllByText("10110").length).toBeGreaterThan(0);
     });
+
+    const quickView = screen.getByRole("dialog", { name: thMessages.customers.quickViewTitle });
+    expect(within(quickView).queryByRole("link", { name: thMessages.sites.createSite })).not.toBeInTheDocument();
+    expect(within(quickView).queryByRole("button", { name: thMessages.common.actions.edit })).not.toBeInTheDocument();
+  });
+
+  it("uploads customer image with parentType customer, creationIntentId, slotId, and passes fileUploadIntentId to createCustomer", async () => {
+    mockedCheckDuplicates.mockResolvedValue([]);
+    mockedCreateSession.mockResolvedValue({
+      sessionId: "session-cust-1",
+      expiresAtUtc: "2099-01-01T00:00:00Z",
+      slots: [{ slotId: "slot-cust-1", filename: "avatar.webp", mediaType: "image/webp", fileSizeBytes: 1024 }],
+    });
+    mockedCompleteSession.mockResolvedValue({
+      sessionId: "session-cust-1",
+      files: [{ fileId: "file-cust-123", filename: "avatar.webp", mediaType: "image/webp", fileSizeBytes: 1024, servingUrl: "http://example.com/file" }],
+    });
+    mockedCreate.mockResolvedValue({
+      id: "customer-new-1",
+      code: "CUST-0001",
+      displayNameTh: "ลูกค้ามีรูปภาพ",
+      customerType: "individual",
+      preferredLocale: "th",
+      status: "active",
+      createdAtUtc: "2026-09-29T00:00:00Z",
+      rowVersion: "AAAA",
+      duplicateCandidates: null,
+    });
+
+    renderEditor(client);
+    fillValidForm(document.body as unknown as HTMLElement);
+
+    const file = new File(["dummy image content"], "avatar.webp", { type: "image/webp" });
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "ดูตัวอย่างรูปภาพ" })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกข้อมูลลูกค้า" }));
+
+    await waitFor(() => {
+      expect(mockedCreateSession).toHaveBeenCalledTimes(1);
+    });
+
+    const sessionReq = mockedCreateSession.mock.calls[0][0];
+    expect(sessionReq.parentType).toBe("customer");
+    expect(sessionReq.parentId).toBeNull();
+    expect(typeof sessionReq.creationIntentId).toBe("string");
+    expect(sessionReq.creationIntentId).toBeTruthy();
+
+    await waitFor(() => {
+      expect(mockedCompleteSession).toHaveBeenCalledTimes(1);
+    });
+    const completeCall = mockedCompleteSession.mock.calls[0];
+    expect(completeCall[0]).toBe("session-cust-1");
+    expect(completeCall[1]).toEqual([{ slotId: "slot-cust-1", file }]);
+
+    await waitFor(() => {
+      expect(mockedCreate).toHaveBeenCalledTimes(1);
+    });
+
+    const createCustPayload = mockedCreate.mock.calls[0][0];
+    expect(createCustPayload.imageFileId).toBe("file-cust-123");
+    expect(createCustPayload.fileUploadIntentId).toBe(sessionReq.creationIntentId);
+    expect(mockPush).toHaveBeenCalledWith("/th/customers/customer-new-1");
   });
 });
-

@@ -63,6 +63,7 @@ export function Avatar({
         <AuthenticatedFileImage
           fileId={fileId}
           alt={alt}
+          fallback={icon ?? <span>{resolvedInitial ?? "-"}</span>}
           className="w-full h-full object-cover rounded-none"
         />
       ) : src && !imageError ? (

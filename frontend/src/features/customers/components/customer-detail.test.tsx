@@ -77,6 +77,9 @@ vi.mock("../api/customer-queries", () => ({
     error: null,
     refetch: mockRefetch,
   }),
+  useCustomerAddresses: () => ({ data: { items: [] }, isLoading: false }),
+  useCustomerContacts: () => ({ data: { items: [] }, isLoading: false }),
+  customerQueryRootKey: vi.fn(() => ["customers"]),
 }));
 
 import { ToastProvider } from "@/hooks/useToast";

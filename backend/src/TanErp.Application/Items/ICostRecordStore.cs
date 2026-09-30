@@ -36,13 +36,13 @@ public sealed record UpdateCostRecordData(
 
 public interface ICostRecordStore
 {
-    Task<Result<CostRecordDetailProjection>> CreateDraftAsync(CreateCostRecordData data, RequestAccessContext access, CancellationToken ct);
-    Task<Result<CostRecordDetailProjection>> UpdateDraftAsync(UpdateCostRecordData data, RequestAccessContext access, Guid? ifMatch, CancellationToken ct);
-    Task<Result<CostRecordDetailProjection>> SubmitAsync(Guid orgId, Guid itemId, Guid costId, RequestAccessContext access, Guid? ifMatch, CancellationToken ct);
-    Task<Result<CostRecordDetailProjection>> ApproveAsync(Guid orgId, Guid itemId, Guid costId, RequestAccessContext access, Guid? ifMatch, CancellationToken ct);
-    Task<Result<CostRecordDetailProjection>> ReturnAsync(Guid orgId, Guid itemId, Guid costId, string reason, RequestAccessContext access, Guid? ifMatch, CancellationToken ct);
-    Task<Result<CostRecordDetailProjection>> PublishAsync(Guid orgId, Guid itemId, Guid costId, RequestAccessContext access, Guid? ifMatch, CancellationToken ct);
-    Task<Result<CostRecordDetailProjection>> DisableAsync(Guid orgId, Guid itemId, Guid costId, string reason, RequestAccessContext access, Guid? ifMatch, CancellationToken ct);
+    Task<Result<CostRecordDetailProjection>> CreateDraftAsync(CreateCostRecordData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
+    Task<Result<CostRecordDetailProjection>> UpdateDraftAsync(UpdateCostRecordData data, RequestAccessContext access, Guid ifMatch, CancellationToken ct);
+    Task<Result<CostRecordDetailProjection>> SubmitAsync(Guid orgId, Guid itemId, Guid costId, RequestAccessContext access, Guid ifMatch, CancellationToken ct);
+    Task<Result<CostRecordDetailProjection>> ApproveAsync(Guid orgId, Guid itemId, Guid costId, RequestAccessContext access, Guid ifMatch, CancellationToken ct);
+    Task<Result<CostRecordDetailProjection>> ReturnAsync(Guid orgId, Guid itemId, Guid costId, string reason, RequestAccessContext access, Guid ifMatch, CancellationToken ct);
+    Task<Result<CostRecordDetailProjection>> PublishAsync(Guid orgId, Guid itemId, Guid costId, RequestAccessContext access, Guid ifMatch, string idempotencyKey, CancellationToken ct);
+    Task<Result<CostRecordDetailProjection>> DisableAsync(Guid orgId, Guid itemId, Guid costId, string reason, RequestAccessContext access, Guid ifMatch, CancellationToken ct);
     Task<CostRecordDetailProjection?> GetByIdAsync(Guid orgId, Guid itemId, Guid costId, CancellationToken ct);
     Task<IReadOnlyList<CostRecordDetailProjection>> ListForItemAsync(Guid orgId, Guid itemId, CancellationToken ct);
 }

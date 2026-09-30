@@ -13,7 +13,7 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
     {
         builder.ToTable("items", "item_master", t =>
         {
-            t.HasCheckConstraint("CK_items_item_type", "item_type IN ('material', 'labor', 'service', 'subcontract', 'other')");
+            t.HasCheckConstraint("CK_items_item_type", "item_type IN ('material', 'labor', 'service', 'subcontract', 'other', 'product')");
             t.HasCheckConstraint("CK_items_status", "status IN ('draft', 'active', 'inactive')");
             t.HasCheckConstraint("CK_items_availability_mode", "availability_mode IN ('all_branches', 'selected_branches')");
             t.HasCheckConstraint("CK_items_at_least_one_capability", "can_sell OR can_cost OR can_purchase OR can_stock OR can_produce");

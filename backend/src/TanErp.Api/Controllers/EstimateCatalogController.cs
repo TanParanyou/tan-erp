@@ -30,12 +30,16 @@ public class EstimateCatalogController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Search(
         [FromQuery, Required] Guid branchId,
         [FromQuery] string? search,
         [FromQuery] string? itemType,
         [FromQuery] Guid? categoryId,
         [FromQuery] Guid? brandId,
+        [FromQuery] string? attributeKey,
+        [FromQuery] string? attributeValue,
         [FromQuery] bool? hasCost,
         [FromQuery] string? cursor,
         [FromQuery] int pageSize = 25,
@@ -57,6 +61,8 @@ public class EstimateCatalogController : ControllerBase
             itemType,
             categoryId,
             brandId,
+            attributeKey,
+            attributeValue,
             hasCost,
             cursor,
             pageSize);

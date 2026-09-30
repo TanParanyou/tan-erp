@@ -34,7 +34,7 @@ describe("ImageUpload component", () => {
     });
 
     expect(onChange).toHaveBeenCalledWith(expect.any(File));
-    expect(screen.getByAltText("Preview")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "ดูตัวอย่างรูปภาพ" })).toBeInTheDocument();
   });
 
   it("revokes object URL on remove and calls onChange with null", async () => {

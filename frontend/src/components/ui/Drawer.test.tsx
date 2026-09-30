@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { Modal } from "./Modal";
 import { Drawer } from "./Drawer";
 
 describe("Drawer component", () => {
@@ -53,4 +54,41 @@ describe("Drawer component", () => {
     expect(screen.queryByLabelText("Close drawer")).not.toBeInTheDocument();
     expect(screen.getByText("No Header Content")).toBeInTheDocument();
   });
+  it("contains keyboard focus and restores it to the opener", async () => {
+    const opener = document.createElement("button");
+    document.body.append(opener);
+    opener.focus();
+    const { unmount } = render(<Drawer isOpen onClose={vi.fn()} title="Edit"><input aria-label="Name" /><button>Save</button></Drawer>);
+    const close = screen.getByLabelText("Close drawer");
+    await waitFor(() => expect(close).toHaveFocus());
+    screen.getByRole("button", { name: "Save" }).focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(close).toHaveFocus();
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(screen.getByRole("button", { name: "Save" })).toHaveFocus();
+    unmount();
+    expect(opener).toHaveFocus();
+    opener.remove();
+  });
+
+  it("locks every close route while saving", () => {
+    const onClose = vi.fn();
+    render(<Drawer isOpen closeDisabled onClose={onClose} title="Saving">Content</Drawer>);
+    expect(screen.getByLabelText("Close drawer")).toBeDisabled();
+    fireEvent.click(screen.getByLabelText("Close drawer"));
+    fireEvent.click(screen.getByRole("dialog").parentElement!);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("lets only the top confirmation handle Escape", async () => {
+    const closeDrawer = vi.fn();
+    const closeModal = vi.fn();
+    render(<><Drawer isOpen onClose={closeDrawer} title="Edit"><input aria-label="Name" /></Drawer><Modal isOpen onClose={closeModal} title="Discard"><button>Keep editing</button></Modal></>);
+    await waitFor(() => expect(screen.getByLabelText("Close modal")).toHaveFocus());
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(closeModal).toHaveBeenCalledOnce();
+    expect(closeDrawer).not.toHaveBeenCalled();
+  });
+
 });

@@ -51,18 +51,23 @@ Estimate เป็น Identity/Lifecycle ส่วน Revision เป็น Busi
 | `calculation_outdated` | Boolean | true เมื่อ Financial Input เปลี่ยน |
 | `net_cost`, `selling_before_discount` | Decimal Money | Server-derived |
 | `discount_amount`, `net_before_tax` | Decimal Money | Server-derived |
+| `discount_type`, `discount_value`, `discount_reason_code` | Enum/Decimal/Stable Code | Typed document discount input; reason is required when the computed amount is non-zero |
 | `tax_amount`, `grand_total` | Decimal Money | Server-derived |
 | `margin_amount`, `margin_rate`, `markup_rate` | Decimal | เก็บทั้งผลและฐานสูตร |
 | `calculation_snapshot` | JSONB | Immutable ต่อ Calculation Version |
 | `approved_at_utc`, `published_at_utc` | UTC/null | Lifecycle marker |
 | `row_version` | Token | Draft concurrency |
 
+### `estimate_calculation_snapshots`
+
+แต่ละการคำนวณสำเร็จเพิ่มแถวใหม่ ห้ามแก้หรือเขียนทับประวัติเดิม; unique key คือ `(organization_id, estimate_revision_id, calculation_version)`. เก็บ `input_hash`, snapshot payload, calculation/tax policy ID/version/hash, ผู้คำนวณ และ UTC capture time. Policy ID/hash เป็น nullable เพื่อรักษาประวัติ snapshot ก่อนเริ่มใช้ versioned policy โดยไม่แต่งข้อมูลย้อนหลัง; calculation ใหม่ต้องอ้าง policy ที่ Published เสมอ. Revision เก็บเฉพาะผลล่าสุดสำหรับ workspace projection.
+
 ### BOQ Entities
 
 | Entity | Typed Field สำคัญ | Constraint |
 | --- | --- | --- |
 | `estimate_sections` | revision, code, nameTh/nameEn, description, sortOrder, subtotal | Unique code/sort ต่อ Revision |
-| `estimate_work_items` | section, code, itemId, descriptionTh/En, scopeNote, quantity, unit, sellingRuleType/value, cost/selling/margin, sortOrder | Quantity > 0; Unit Active; totals Server-derived |
+| `estimate_work_items` | section, code, nullable `item_id` + code/name snapshots, descriptionTh/En, quantity, unit, sellingRuleType/value, `selling_rule_reason_code`, nullable `override_reason_code`/`override_reason`, cost/selling/margin, sortOrder | Item Master link is organization-scoped; without `item_id`, custom work item requires auditable reason code/note and adds an approval trigger; fixed price requires auditable reason and override permission; totals Server-derived |
 | `estimate_cost_components` | workItem, type, item/service ID, description, quantity, unit, unitCost, currency, costRecord ID/version, costSource snapshot, conversion snapshot, cost policy version, effectiveAt, provisional flag/reason | Type material/labor/subcontract/service/other-direct; Amount ≥0; Master Data เปลี่ยนแล้ว Snapshot เดิมไม่เปลี่ยน |
 | `estimate_adjustments` | revision/workItem scope, type, basis, value, reason, permission context | Published rule หรือ authorized override |
 | `estimate_tax_lines` | revision, taxCode, rate, taxableBase, amount, effectiveAt | Server-derived จาก Tax Policy |
@@ -77,8 +82,8 @@ Cost Record/Conversion/Resolver Source of Truth อยู่ที่ [Item Mast
 
 | Entity | Field สำคัญ | Rule |
 | --- | --- | --- |
-| `calculation_policy_versions` | organization/branch scope, code, version, effective period, pricing/overhead/rounding config, status, hash | Published Version immutable; Effective Period ไม่ซ้อนใน Scope เดียวกัน |
-| `tax_policy_versions` | organization/branch scope, code, version, effective period, tax/display config, status, hash | Published Version immutable; Rate ไม่ Hard-code ใน Estimate Logic |
+| `calculation_policy_versions` | organization/branch scope, code, version, effective period, overhead/rounding config, status, hash | Published Version immutable; Branch policy ชนะ Organization policy; หากมี effective policy ซ้อนหรือกำกวม resolver ต้อง fail-closed |
+| `tax_policy_versions` | organization/branch scope, code, version, effective period, tax mode/rate/code, status, hash | Published Version immutable; Branch policy ชนะ Organization policy; Rate ไม่ Hard-code ใน Estimate Logic |
 | `approval_policy_versions` | organization/branch scope, code, version, effective period, trigger/authority/route config, status, hash | Published Version immutable; Production Bootstrap แยกเป็น System Policy |
 | `approval_authorities` | policy version, subject/permission/scope, amount/margin/discount limits, effective period | Permission ไม่แทน Authority; Query ต้องใช้ Decimal/Currency เดียวกับ Policy |
 
@@ -97,6 +102,8 @@ Policy Configuration ใช้ Typed Header/Scope/Status/Effective Period แล
 | `common.document_sequence_counters` | id, organization_id, document_type, period_key, current_value | ตัวนับเลขที่เอกสารระดับ atomic sequence |
 
 `estimate_approval_requests` ต้องอ้าง `approval_policy_version_id`, Calculation Snapshot Hash และ Frozen Route Hash ส่วน `In Review` derive จาก Open Request/Active Step ไม่เก็บเป็น Revision Status
+
+Quotation ต้องอ้าง Approved Revision และ Calculation/Approval Snapshot Hash ที่ Freeze แล้วเท่านั้น; Draft, Submitted, Returned หรือ Calculation ที่ล้าสมัยออก Quotation ไม่ได้.
 
 ## JSONB Boundary
 
@@ -157,6 +164,7 @@ JSONB ที่อนุญาต:
 - Quantity ใช้ Decimal(18,4), Unit Cost Decimal(19,4), Rate Decimal(12,6) และ Money Decimal(19,2)
 - Client เขียน Total, Margin, Tax หรือ Approval State โดยตรงไม่ได้
 - Draft เปลี่ยน Financial Input ต้องตั้ง `calculation_outdated=true`
+- Autosave ไม่คำนวณแทน Calculate และไม่ลบ Calculation Snapshot รุ่นล่าสุด; Calculate เท่านั้นที่ทำ `calculation_outdated=false` หลังสร้าง Snapshot สำเร็จ
 - Submit ต้องอ้าง Calculation Version ล่าสุดและผ่าน Blocking Validation
 - Approved/Quoted Revision, Calculation/Approval/Quotation Snapshot แก้หรือลบไม่ได้
 - Revision ใหม่ Clone เนื้อหาผ่าน Application Use Case และอ้าง Parent; ไม่ Share Row ระหว่าง Revision

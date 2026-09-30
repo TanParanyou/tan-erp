@@ -65,5 +65,7 @@ public sealed record ResolvedCostProjection(
     Guid? CostSourceId,
     string? CostSourceCode,
     string? SourceReference,
+    string? Reason,
+    Guid? EvidenceFileId,
     DateTimeOffset ResolvedAtUtc,
     string? PolicyVersion = null);

@@ -104,6 +104,22 @@ _Avoid_: Opportunity, Job เมื่อหมายถึงโครงกา
 รายการมาตรฐานที่นำกลับมาใช้ในประมาณการ จัดซื้อ คลัง หรือการผลิต พร้อมหน่วยและสถานะใช้งาน
 _Avoid_: Estimate Line, Free-text Item
 
+**Product (สินค้าสำเร็จรูป)**:
+Item ทางกายภาพที่มีรูปแบบซ้ำได้และแยกสั่ง ซื้อ เก็บ หรือผลิตตามรหัสของตน; งานบิวต์อินเฉพาะโครงการยังเป็น Work Item
+_Avoid_: Material, Work Item, Product Family
+
+**Item Code / SKU (รหัสรายการภายใน)**:
+รหัสเฉพาะของ Item ในองค์กร; เมื่อ Item เป็นสินค้าที่ซื้อหรือเก็บคลังได้ รหัสเดียวกันนี้คือ SKU ภายในที่ใช้สื่อสารและค้นหา
+_Avoid_: Barcode, GTIN, Supplier Part Number
+
+**Item Barcode (รหัสสแกนของรายการ)**:
+ตัวระบุที่อ่านด้วยเครื่องสแกนและชี้ไปยัง Item พร้อมหน่วยหรือระดับบรรจุที่แน่นอน โดย Item หนึ่งรายการมีได้หลายรหัส
+_Avoid_: Item Code, SKU, Lot Number, Serial Number
+
+**GTIN (รหัสสินค้าสากล)**:
+ตัวระบุสินค้าตามมาตรฐาน GS1 สำหรับสินค้าหรือระดับบรรจุที่แยกกันได้ เป็นหนึ่งชนิดของ Item Barcode
+_Avoid_: Internal Barcode, SKU, Supplier Part Number
+
 **Item Capability (ความสามารถของรายการ)**:
 ขอบเขตการนำ Item ไปใช้ เช่น ขาย คิดต้นทุน จัดซื้อ เก็บคลัง หรือผลิต โดยไม่เปลี่ยนความหมายของประเภท Item
 _Avoid_: Item Type, Permission
@@ -137,8 +153,8 @@ _Avoid_: Package Size, Conversion Factor
 _Avoid_: Estimate Formula, Assumed Factor
 
 **Cost Source (แหล่งต้นทุน)**:
-หลักฐานหรือที่มาของต้นทุน เช่น ใบเสนอราคาผู้ขาย รายการราคา สัญญา หรือข้อมูลที่บันทึกด้วยเหตุผล
-_Avoid_: Cost Record, Reference Rate
+รายการแหล่งที่มาของต้นทุนระดับองค์กรที่เลือกใช้ซ้ำได้ เช่น แหล่งต้นทุนที่บันทึกด้วยมือ; เลขอ้างอิง เหตุผล และไฟล์หลักฐานของราคาหนึ่งฉบับอยู่กับ Cost Record ฉบับนั้น
+_Avoid_: Cost Record, Evidence File, Reference Rate
 
 **Cost Record (รายการต้นทุนอ้างอิง)**:
 ต้นทุนภายในที่มีหน่วย สกุลเงิน ขอบเขต และช่วงเวลามีผลสำหรับใช้สร้าง Official Estimate

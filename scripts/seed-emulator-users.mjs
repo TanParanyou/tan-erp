@@ -29,6 +29,13 @@ const TEST_USERS = [
     displayName: "ผู้ใช้ TEST_ONLY B",
     emailVerified: true,
   },
+  {
+    localId: "foundation-estimate-reviewer-test-only",
+    email: "foundation-estimate-reviewer@example.test",
+    password: "TestPassword123!",
+    displayName: "ผู้ตรวจประเมิน TEST_ONLY",
+    emailVerified: true,
+  },
 ];
 
 async function seedUsers() {

@@ -6,4 +6,8 @@ public sealed record RequestAccessContext(
     Guid OrganizationId,
     Guid? BranchId,
     string PermissionKey,
-    string PermissionScope);
+    string PermissionScope)
+{
+    public bool HasBranchAccess(Guid targetBranchId) =>
+        BranchId is null || BranchId == targetBranchId;
+}

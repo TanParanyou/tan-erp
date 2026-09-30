@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useCallback, useId } from "react";
+import React, { useId } from "react";
 import { createPortal } from "react-dom";
 import { IconClose } from "@/components/common/Icons";
+import { useDialogFocus } from "@/hooks/useDialogFocus";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { cn } from "@/lib/utils/cn";
 
@@ -17,6 +18,7 @@ export interface DrawerProps {
   footer?: React.ReactNode;
   size?: DrawerSize;
   closeOnOverlayClick?: boolean;
+  closeDisabled?: boolean;
   closeLabel?: string;
   contentClassName?: string;
   overlayClassName?: string;
@@ -42,6 +44,7 @@ export function Drawer({
   footer,
   size = "md",
   closeOnOverlayClick = true,
+  closeDisabled = false,
   closeLabel = "Close drawer",
   contentClassName,
   overlayClassName,
@@ -53,30 +56,18 @@ export function Drawer({
   const descriptionId = useId();
   useScrollLock(isOpen);
 
-  const handleEscape = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    },
-    [onClose]
-  );
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-    }
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen, handleEscape]);
+  const drawerRef = useDialogFocus(isOpen, onClose, closeDisabled);
 
   if (!isOpen || typeof document === "undefined") return null;
 
   return createPortal(
     <div
       className={cn("erp-drawer-overlay", overlayClassName)}
-      onClick={closeOnOverlayClick ? onClose : undefined}
+      onClick={closeOnOverlayClick && !closeDisabled ? onClose : undefined}
     >
       <div
+        ref={drawerRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
@@ -107,7 +98,8 @@ export function Drawer({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 text-erp-text-muted hover:text-erp-text-main hover:bg-erp-surface-muted rounded-none transition-colors focus-visible:outline-2 focus-visible:outline-erp-navy"
+                disabled={closeDisabled}
+                className="flex min-h-11 min-w-11 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50 text-erp-text-muted hover:text-erp-text-main hover:bg-erp-surface-muted rounded-none transition-colors focus-visible:outline-2 focus-visible:outline-erp-navy"
                 aria-label={closeLabel}
               >
                 <IconClose size={20} />

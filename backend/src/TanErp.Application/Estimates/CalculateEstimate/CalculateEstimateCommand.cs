@@ -6,4 +6,4 @@ public sealed record CalculateEstimateCommand(
     Guid EstimateId,
     Guid RevisionId,
     Guid ExpectedRevisionVersion,
-    decimal DiscountAmount);
+    TanErp.Domain.Estimates.EstimateDiscount Discount);

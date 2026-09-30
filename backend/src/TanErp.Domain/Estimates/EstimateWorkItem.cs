@@ -14,6 +14,13 @@ public class EstimateWorkItem
     public string UnitCode { get; private set; } = string.Empty;
     public string SellingRuleType { get; private set; } = Estimates.SellingRuleType.Margin;
     public decimal SellingRuleValue { get; private set; }
+    public string? SellingRuleReasonCode { get; private set; }
+    public Guid? ItemId { get; private set; }
+    public string? ItemCodeSnapshot { get; private set; }
+    public string? ItemNameThSnapshot { get; private set; }
+    public string? ItemNameEnSnapshot { get; private set; }
+    public string? OverrideReasonCode { get; private set; }
+    public string? OverrideReason { get; private set; }
     public decimal UnitCost { get; private set; }
     public decimal TotalCost { get; private set; }
     public decimal UnitSellingPrice { get; private set; }
@@ -35,7 +42,8 @@ public class EstimateWorkItem
         string unitCode,
         string sellingRuleType = Estimates.SellingRuleType.Margin,
         decimal sellingRuleValue = 0.30m,
-        int sortOrder = 1)
+        int sortOrder = 1,
+        string? sellingRuleReasonCode = null)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Work item ID cannot be empty.", nameof(id));
@@ -53,6 +61,8 @@ public class EstimateWorkItem
             throw new ArgumentException("Unit code cannot be empty.", nameof(unitCode));
         if (!Estimates.SellingRuleType.IsValid(sellingRuleType))
             throw new ArgumentException($"Invalid selling rule type: '{sellingRuleType}'.", nameof(sellingRuleType));
+        var normalizedSellingRuleValue = decimal.Round(sellingRuleValue, 4, MidpointRounding.AwayFromZero);
+        ValidateSellingRuleValue(sellingRuleType, normalizedSellingRuleValue);
 
         Id = id;
         OrganizationId = organizationId;
@@ -63,7 +73,8 @@ public class EstimateWorkItem
         Quantity = decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
         UnitCode = unitCode.Trim();
         SellingRuleType = sellingRuleType.Trim();
-        SellingRuleValue = decimal.Round(sellingRuleValue, 4, MidpointRounding.AwayFromZero);
+        SellingRuleValue = normalizedSellingRuleValue;
+        SellingRuleReasonCode = NormalizeSellingRuleReason(sellingRuleType, sellingRuleReasonCode);
         SortOrder = sortOrder;
     }
 
@@ -80,6 +91,36 @@ public class EstimateWorkItem
         Recalculate();
     }
 
+    public void SetItemMasterLink(Guid? itemId, string? itemCode, string? itemNameTh, string? itemNameEn)
+    {
+        if (!itemId.HasValue)
+        {
+            ItemId = null;
+            ItemCodeSnapshot = null;
+            ItemNameThSnapshot = null;
+            ItemNameEnSnapshot = null;
+            return;
+        }
+
+        if (itemId == Guid.Empty || string.IsNullOrWhiteSpace(itemCode) || string.IsNullOrWhiteSpace(itemNameTh))
+            throw new ArgumentException("A linked Item Master reference requires its ID, code, and Thai name.");
+
+        ItemId = itemId;
+        ItemCodeSnapshot = itemCode.Trim();
+        ItemNameThSnapshot = itemNameTh.Trim();
+        ItemNameEnSnapshot = string.IsNullOrWhiteSpace(itemNameEn) ? null : itemNameEn.Trim();
+    }
+
+    public void SetCustomWorkItemReason(string? reasonCode, string? reason)
+    {
+        OverrideReasonCode = string.IsNullOrWhiteSpace(reasonCode) ? null : reasonCode.Trim();
+        OverrideReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+        if (OverrideReasonCode?.Length > 64)
+            throw new ArgumentException("Custom work item reason code cannot exceed 64 characters.", nameof(reasonCode));
+        if (OverrideReason?.Length > 500)
+            throw new ArgumentException("Custom work item reason cannot exceed 500 characters.", nameof(reason));
+    }
+
     public void Update(
         string code,
         string descriptionTh,
@@ -88,7 +129,8 @@ public class EstimateWorkItem
         string unitCode,
         string sellingRuleType,
         decimal sellingRuleValue,
-        int sortOrder)
+        int sortOrder,
+        string? sellingRuleReasonCode = null)
     {
         if (string.IsNullOrWhiteSpace(code))
             throw new ArgumentException("Work item code cannot be empty.", nameof(code));
@@ -100,6 +142,11 @@ public class EstimateWorkItem
             throw new ArgumentException("Unit code cannot be empty.", nameof(unitCode));
         if (!Estimates.SellingRuleType.IsValid(sellingRuleType))
             throw new ArgumentException($"Invalid selling rule type: '{sellingRuleType}'.", nameof(sellingRuleType));
+        var normalizedReason = NormalizeSellingRuleReason(sellingRuleType, sellingRuleReasonCode);
+        if (sellingRuleType == Estimates.SellingRuleType.FixedPrice && normalizedReason is null)
+            throw new EstimateFixedPriceReasonRequiredException();
+        var normalizedSellingRuleValue = decimal.Round(sellingRuleValue, 4, MidpointRounding.AwayFromZero);
+        ValidateSellingRuleValue(sellingRuleType, normalizedSellingRuleValue);
 
         Code = code.Trim();
         DescriptionTh = descriptionTh.Trim();
@@ -107,37 +154,34 @@ public class EstimateWorkItem
         Quantity = decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
         UnitCode = unitCode.Trim();
         SellingRuleType = sellingRuleType.Trim();
-        SellingRuleValue = decimal.Round(sellingRuleValue, 4, MidpointRounding.AwayFromZero);
+        SellingRuleValue = normalizedSellingRuleValue;
+        SellingRuleReasonCode = normalizedReason;
         SortOrder = sortOrder;
         Recalculate();
     }
 
     public void Recalculate()
     {
-        TotalCost = decimal.Round(_costComponents.Sum(c => c.TotalCost), 2, MidpointRounding.AwayFromZero);
+        RecalculateWithCostBase(_costComponents.Sum(c => c.TotalCost));
+    }
+
+    public void RecalculateWithCostBase(decimal totalCost)
+    {
+        if (totalCost < 0m)
+            throw new ArgumentOutOfRangeException(nameof(totalCost));
+
+        TotalCost = decimal.Round(totalCost, 2, MidpointRounding.AwayFromZero);
         UnitCost = Quantity > 0
             ? decimal.Round(TotalCost / Quantity, 4, MidpointRounding.AwayFromZero)
             : 0;
 
-        decimal effectiveRuleValue = (SellingRuleType == Estimates.SellingRuleType.Margin || SellingRuleType == Estimates.SellingRuleType.Markup) && SellingRuleValue > 1m
-            ? SellingRuleValue / 100m
-            : SellingRuleValue;
-
         if (SellingRuleType == Estimates.SellingRuleType.Margin)
         {
-            decimal divisor = 1m - effectiveRuleValue;
-            if (divisor <= 0)
-            {
-                TotalSellingPrice = TotalCost;
-            }
-            else
-            {
-                TotalSellingPrice = decimal.Round(TotalCost / divisor, 2, MidpointRounding.AwayFromZero);
-            }
+            TotalSellingPrice = decimal.Round(TotalCost / (1m - SellingRuleValue), 2, MidpointRounding.AwayFromZero);
         }
         else if (SellingRuleType == Estimates.SellingRuleType.Markup)
         {
-            TotalSellingPrice = decimal.Round(TotalCost * (1m + effectiveRuleValue), 2, MidpointRounding.AwayFromZero);
+            TotalSellingPrice = decimal.Round(TotalCost * (1m + SellingRuleValue), 2, MidpointRounding.AwayFromZero);
         }
         else
         {
@@ -147,5 +191,26 @@ public class EstimateWorkItem
         UnitSellingPrice = Quantity > 0
             ? decimal.Round(TotalSellingPrice / Quantity, 4, MidpointRounding.AwayFromZero)
             : 0;
+    }
+
+    private static void ValidateSellingRuleValue(string ruleType, decimal value)
+    {
+        if (ruleType == Estimates.SellingRuleType.Margin && (value < 0m || value >= 1m))
+            throw new ArgumentOutOfRangeException(nameof(value), "Margin rate must be greater than or equal to zero and less than one.");
+
+        if (ruleType == Estimates.SellingRuleType.Markup && value < 0m)
+            throw new ArgumentOutOfRangeException(nameof(value), "Markup rate cannot be negative.");
+
+        if (ruleType == Estimates.SellingRuleType.FixedPrice && value < 0m)
+            throw new ArgumentOutOfRangeException(nameof(value), "Fixed price cannot be negative.");
+    }
+
+    private static string? NormalizeSellingRuleReason(string ruleType, string? reasonCode)
+    {
+        var normalizedReason = string.IsNullOrWhiteSpace(reasonCode) ? null : reasonCode.Trim();
+        if (normalizedReason is { Length: > 64 })
+            throw new ArgumentOutOfRangeException(nameof(reasonCode), "Selling rule reason code cannot exceed 64 characters.");
+
+        return ruleType == Estimates.SellingRuleType.FixedPrice ? normalizedReason : null;
     }
 }

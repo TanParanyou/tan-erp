@@ -30,7 +30,17 @@ vi.mock("@/lib/membership/selected-membership-context", () => ({
       permissions: mockPermissions.map((k) => ({ key: k, scope: "organization" })),
     },
   }),
+  useOptionalSelectedMembership: () => ({
+    selectedMembership: {
+      id: "mem-1",
+      role: "admin",
+      organizationId: "org-1",
+      permissions: mockPermissions.map((key) => ({ key, scope: "organization" })),
+    },
+  }),
 }));
+
+vi.mock("@/lib/i18n/i18n-context", () => ({ useSafeLocale: () => "th" }));
 
 // Mock useConfirm
 vi.mock("@/hooks/useConfirm", () => ({
@@ -42,6 +52,7 @@ vi.mock("@/hooks/useConfirm", () => ({
 
 // Mock next-intl
 vi.mock("next-intl", () => ({
+  useLocale: () => "th",
   useTranslations: (namespace: string) => (key: string, params?: Record<string, unknown>) => {
     if (namespace === "estimates") {
       const translations: Record<string, string> = {
@@ -63,6 +74,7 @@ vi.mock("next-intl", () => ({
         quotationIssuedFailed: "ไม่สามารถออกใบเสนอราคาได้",
         "statuses.quoted": "ออกใบเสนอราคาแล้ว (Quoted)",
         "statuses.draft": "ฉบับร่าง (Draft)",
+        "statuses.approved": "อนุมัติแล้ว (Approved)",
       };
       return translations[key] ?? key;
     }
@@ -140,6 +152,13 @@ describe("EstimateCard", () => {
         calculationVersion: 1,
         calculationPolicyVersion: "v1",
         taxPolicyVersion: "v1",
+        readiness: "blocked",
+        readinessReasons: [{
+          code: "ESTIMATE_COST_INCOMPLETE",
+          targetType: "workItem",
+          targetId: "work-item-1",
+          targetField: "costComponents",
+        }],
         netCost: 50000,
         sellingBeforeDiscount: 70000,
         discountAmount: 5000,
@@ -157,7 +176,7 @@ describe("EstimateCard", () => {
       },
     };
 
-    renderWithClient(
+    const { unmount: unmountDraft } = renderWithClient(
       <EstimateCard
         estimate={mockEstimate}
         opportunityId="opp-1"
@@ -175,9 +194,102 @@ describe("EstimateCard", () => {
     expect(screen.getByText(/5,000\.00/)).toBeInTheDocument();
     expect(screen.getByText(/69,550\.00/)).toBeInTheDocument();
     expect(screen.getByText(/0\.23%/)).toBeInTheDocument();
+    expect(screen.getByText("readiness.status.blocked")).toBeInTheDocument();
+    expect(screen.getByText("readiness.reasons.costIncomplete")).toBeInTheDocument();
   });
 
-  it("renders issue quotation button and opens confirmation modal when draft has positive total", () => {
+  it("opens the workspace and focuses the work item from its readiness reason", async () => {
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    const estimate: EstimateDetailResponse = {
+      id: "estimate-readiness",
+      organizationId: "org-1",
+      branchId: "branch-1",
+      customerId: "customer-1",
+      opportunityId: "opportunity-1",
+      siteSurveyRevisionId: null,
+      siteSurveySnapshotHash: null,
+      number: "EST-READINESS",
+      status: "draft",
+      currentRevisionNo: 1,
+      rowVersion: "estimate-version",
+      createdAtUtc: "2026-09-27T00:00:00Z",
+      updatedAtUtc: "2026-09-27T00:00:00Z",
+      currentRevision: {
+        id: "revision-1",
+        estimateId: "estimate-readiness",
+        revisionNo: 1,
+        status: "draft",
+        currency: "THB",
+        calculationVersion: 1,
+        calculationPolicyVersion: "TEST_ONLY_CALC-v1",
+        taxPolicyVersion: "TEST_ONLY_TAX-v1",
+        discountType: "none",
+        discountValue: 0,
+        discountReasonCode: null,
+        discountAmount: 0,
+        readiness: "blocked",
+        readinessReasons: [{
+          code: "ESTIMATE_COST_INCOMPLETE",
+          targetType: "workItem",
+          targetId: "work-item-1",
+          targetField: "costComponents",
+        }],
+        calculationOutdated: false,
+        netCost: 0,
+        sellingBeforeDiscount: 0,
+        netBeforeTax: 0,
+        taxAmount: 0,
+        grandTotal: 0,
+        marginAmount: 0,
+        marginRate: 0,
+        markupRate: 0,
+        calculationSnapshotJson: "{}",
+        rowVersion: "revision-version",
+        createdAtUtc: "2026-09-27T00:00:00Z",
+        updatedAtUtc: "2026-09-27T00:00:00Z",
+        sections: [{
+          id: "section-1",
+          estimateRevisionId: "revision-1",
+          code: "SEC-01",
+          nameTh: "งานทดสอบ",
+          nameEn: "Test works",
+          sortOrder: 1,
+          subtotalCost: 0,
+          subtotalSellingPrice: 0,
+          workItems: [{
+            id: "work-item-1",
+            estimateSectionId: "section-1",
+            code: "WI-01",
+            descriptionTh: "งานที่ไม่มีต้นทุน",
+            descriptionEn: "Work item without cost",
+            quantity: 1,
+            unitCode: "unit",
+            sellingRuleType: "fixed_price",
+            sellingRuleValue: 0,
+            unitCost: 0,
+            totalCost: 0,
+            unitSellingPrice: 0,
+            totalSellingPrice: 0,
+            sortOrder: 1,
+            costComponents: [],
+          }],
+        }],
+      },
+    };
+
+    renderWithClient(<EstimateCard estimate={estimate} canEdit />);
+    fireEvent.click(screen.getByRole("button", { name: /readiness\.reasons\.costIncomplete/ }));
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(document.getElementById("estimate-target-work-item-1"));
+    });
+    expect(document.getElementById("estimate-target-work-item-1")).toHaveFocus();
+  });
+
+  it("does not render issue quotation button for a calculated draft", () => {
     const mockEstimate: EstimateDetailResponse = {
       id: "est-1234",
       organizationId: "org-1",
@@ -227,11 +339,7 @@ describe("EstimateCard", () => {
       />
     );
 
-    const issueBtn = screen.getByRole("button", { name: "ออกใบเสนอราคา" });
-    expect(issueBtn).toBeInTheDocument();
-
-    fireEvent.click(issueBtn);
-    expect(screen.getByText("ยืนยันการออกใบเสนอราคา")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "ออกใบเสนอราคา" })).not.toBeInTheDocument();
   });
 
   it("renders quoted badge and does not display issue button when already quoted", () => {
@@ -288,7 +396,7 @@ describe("EstimateCard", () => {
     expect(screen.queryByRole("button", { name: "ออกใบเสนอราคา" })).not.toBeInTheDocument();
   });
 
-  it("canIssue requires only quotations.issue permission regardless of canEdit prop", () => {
+  it("canIssue requires an approved revision and quotations.issue permission", () => {
     const mockEstimate: EstimateDetailResponse = {
       id: "est-1234",
       organizationId: "org-1",
@@ -342,11 +450,52 @@ describe("EstimateCard", () => {
     expect(screen.queryByRole("button", { name: "ออกใบเสนอราคา" })).not.toBeInTheDocument();
     unmount();
 
-    // Case 2: user has quotations.issue even if canEdit is false
+    // Case 2: permission alone cannot issue from a draft revision.
     mockPermissions = ["quotations.issue"];
-    renderWithClient(
+    const { unmount: unmountDraft } = renderWithClient(
       <EstimateCard
         estimate={mockEstimate}
+        opportunityId="opp-1"
+        opportunityRowVersion="opp-ver-1"
+        canEdit={false}
+      />
+    );
+    expect(screen.queryByRole("button", { name: "ออกใบเสนอราคา" })).not.toBeInTheDocument();
+    unmountDraft();
+
+    // Case 3: an approved revision and the required permission expose the action.
+    const approvedEstimate: EstimateDetailResponse = {
+      ...mockEstimate,
+      status: "approved",
+      currentRevision: {
+        ...mockEstimate.currentRevision!,
+        status: "approved",
+        calculationOutdated: false,
+        calculationSnapshotJson: "{\"calculationVersion\":1}",
+      },
+    };
+
+    const outdatedApprovedEstimate: EstimateDetailResponse = {
+      ...approvedEstimate,
+      currentRevision: {
+        ...approvedEstimate.currentRevision!,
+        calculationOutdated: true,
+      },
+    };
+    const { unmount: unmountOutdated } = renderWithClient(
+      <EstimateCard
+        estimate={outdatedApprovedEstimate}
+        opportunityId="opp-1"
+        opportunityRowVersion="opp-ver-1"
+        canEdit={false}
+      />
+    );
+    expect(screen.queryByRole("button", { name: "ออกใบเสนอราคา" })).not.toBeInTheDocument();
+    unmountOutdated();
+
+    renderWithClient(
+      <EstimateCard
+        estimate={approvedEstimate}
         opportunityId="opp-1"
         opportunityRowVersion="opp-ver-1"
         canEdit={false}
@@ -365,7 +514,7 @@ describe("EstimateCard", () => {
       siteSurveyRevisionId: null,
       siteSurveySnapshotHash: null,
       number: "EST-2026-0002",
-      status: "draft",
+      status: "approved",
       currentRevisionNo: 1,
       rowVersion: "est-version-123",
       createdAtUtc: "2026-09-18T00:00:00Z",
@@ -374,9 +523,10 @@ describe("EstimateCard", () => {
         id: "rev-1",
         estimateId: "est-1234",
         revisionNo: 1,
-        status: "draft",
+        status: "approved",
         currency: "THB",
         calculationVersion: 1,
+        calculationOutdated: false,
         calculationPolicyVersion: "v1",
         taxPolicyVersion: "v1",
         netCost: 50000,
@@ -388,7 +538,7 @@ describe("EstimateCard", () => {
         marginAmount: 20000,
         marginRate: 0.2857,
         markupRate: 0.4,
-        calculationSnapshotJson: null,
+        calculationSnapshotJson: "{\"calculationVersion\":1}",
         rowVersion: "rev-version-1",
         createdAtUtc: "2026-09-18T00:00:00Z",
         updatedAtUtc: "2026-09-18T00:00:00Z",

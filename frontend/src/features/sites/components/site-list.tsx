@@ -1,38 +1,38 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
+import React, { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useCustomerSiteList } from "../api/site-queries";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
-import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Button } from "@/components/ui/Button";
+import { DataTable, type Column } from "@/components/ui/DataTable";
 import { ListSearchInput } from "@/components/ui/ListSearchInput";
 import { ListFilterSelect } from "@/components/ui/ListFilterSelect";
-import { IconPlus, IconAlertCircle, IconMapPin, IconEye, IconFilter } from "@/components/common/Icons";
+import { IconPlus, IconMapPin, IconEye, IconFilter } from "@/components/common/Icons";
 import { SiteDetailDrawer } from "./site-detail-drawer";
 import type { SiteResponse } from "@/lib/api/api-client";
 
 interface SiteListProps {
   customerId: string;
   isCustomerActive: boolean;
+  mode?: "manage" | "view";
 }
 
-export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
+export function SiteList({ customerId, isCustomerActive, mode = "manage" }: SiteListProps) {
   const t = useTranslations("sites");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
 
-  const [selectedSite, setSelectedSite] = React.useState<SiteResponse | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+  const [selectedSite, setSelectedSite] = useState<SiteResponse | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Search and filter states
-  const [isFilterVisible, setIsFilterVisible] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [statusFilter, setStatusFilter] = React.useState("");
-  const [photoFilter, setPhotoFilter] = React.useState("");
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [photoFilter, setPhotoFilter] = useState("");
 
   const handleOpenSiteDrawer = (site: SiteResponse) => {
     setSelectedSite(site);
@@ -52,7 +52,7 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
     setPhotoFilter("");
   };
 
-  const filteredItems = React.useMemo(() => {
+  const filteredItems = useMemo(() => {
     if (!data?.items) return [];
     return data.items.filter((site) => {
       // Status filter
@@ -92,11 +92,99 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
     });
   }, [data?.items, searchQuery, statusFilter, photoFilter]);
 
+  const columns = useMemo<Column<SiteResponse>[]>(
+    () => [
+      {
+        id: "label",
+        header: t("label"),
+        className: "min-w-[180px]",
+        cell: (_val, site) => (
+          <button
+            type="button"
+            className="text-left font-semibold text-erp-navy hover:underline focus:outline-none cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenSiteDrawer(site);
+            }}
+          >
+            {site.label}
+          </button>
+        ),
+      },
+      {
+        id: "addressLine1",
+        header: t("addressLine1"),
+        className: "min-w-[200px]",
+        cell: (_val, site) => <div>{site.addressLine1}</div>,
+      },
+      {
+        id: "province",
+        header: t("province"),
+        className: "min-w-[120px]",
+        cell: (_val, site) => <div>{site.province}</div>,
+      },
+      {
+        id: "postalCode",
+        header: t("postalCode"),
+        className: "min-w-[100px]",
+        cell: (_val, site) => <span className="font-mono">{site.postalCode}</span>,
+      },
+      {
+        id: "sitePhotos",
+        header: t("sitePhotos"),
+        className: "text-center min-w-[120px]",
+        cell: (_val, site) =>
+          site.images && site.images.length > 0 ? (
+            <span className="erp-badge erp-badge-navy font-mono text-xs">
+              {t("photoCount", { count: site.images.length })}
+            </span>
+          ) : (
+            <span className="text-xs text-neutral-400">{t("noPhotos")}</span>
+          ),
+      },
+      {
+        id: "status",
+        header: t("status"),
+        className: "text-center min-w-[100px]",
+        cell: (_val, site) => (
+          <span
+            className={`erp-badge ${
+              site.status === "active" ? "erp-badge-success" : "erp-badge-neutral"
+            }`}
+          >
+            {site.status === "active" ? t("statusActive") : t("statusInactive")}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: tCommon("actions.view"),
+        isAction: true,
+        className: "text-center min-w-[100px]",
+        cell: (_val, site) => (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleOpenSiteDrawer(site)}
+            icon={<IconEye size={14} className="text-erp-navy" />}
+            className="inline-flex items-center gap-1 text-xs"
+          >
+            {t("viewDetails")}
+          </Button>
+        ),
+      },
+    ],
+    [t, tCommon]
+  );
+
   if (!hasReadPermission) {
     return null;
   }
 
-  const canCreateSite = isCustomerActive && hasManagePermission;
+  const canManageSites = mode === "manage" && hasManagePermission;
+  const canCreateSite = isCustomerActive && canManageSites;
+  const isZeroSites = !isLoading && !isError && (!data?.items || data.items.length === 0);
 
   return (
     <div className="erp-card p-6 flex flex-col gap-5">
@@ -194,25 +282,8 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
         </div>
       )}
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <MonoSpinner size="md" label={tCommon("states.loading")} aria-busy="true" />
-        </div>
-      ) : isError ? (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="p-4 border border-erp-danger-border bg-erp-danger-bg text-center flex flex-col items-center gap-3"
-        >
-          <IconAlertCircle size={24} className="text-erp-danger" />
-          <p className="text-sm text-erp-danger font-medium m-0">
-            {error?.message || t("errors.loadList")}
-          </p>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
-            {tCommon("actions.retry")}
-          </Button>
-        </div>
-      ) : !data?.items || data.items.length === 0 ? (
+      {/* Main Content Area: Table-Preserved Architecture */}
+      {isZeroSites ? (
         <div className="text-center py-8 border border-dashed border-erp-border bg-erp-surface-muted p-6">
           <IconMapPin size={32} className="mx-auto text-erp-text-muted mb-2" />
           <h3 className="text-sm font-semibold text-erp-text-main mb-1">
@@ -222,106 +293,26 @@ export function SiteList({ customerId, isCustomerActive }: SiteListProps) {
             {t("emptyDetail")}
           </p>
         </div>
-      ) : filteredItems.length === 0 ? (
-        <div className="text-center py-8 border border-dashed border-erp-border bg-erp-surface-muted p-6 flex flex-col items-center gap-2">
-          <IconMapPin size={32} className="text-erp-text-muted mb-1" />
-          <h3 className="text-sm font-semibold text-erp-text-main m-0">
-            {t("filteredEmptyTitle")}
-          </h3>
-          <p className="text-xs text-erp-text-muted m-0">
-            {t("filteredEmptyDetail")}
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleResetFilters}
-            className="mt-2"
-          >
-            {t("resetFilters")}
-          </Button>
-        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="erp-table w-full">
-            <thead>
-              <tr className="erp-tr">
-                <th className="erp-th text-left">{t("label")}</th>
-                <th className="erp-th text-left">{t("addressLine1")}</th>
-                <th className="erp-th text-left">{t("province")}</th>
-                <th className="erp-th text-left">{t("postalCode")}</th>
-                <th className="erp-th text-center">{t("sitePhotos")}</th>
-                <th className="erp-th text-center">{t("status")}</th>
-                <th className="erp-th text-center">{tCommon("actions.view")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredItems.map((site) => (
-                <tr
-                  key={site.id}
-                  className="erp-tr hover:bg-erp-surface-subtle cursor-pointer transition-colors"
-                  onClick={() => handleOpenSiteDrawer(site)}
-                >
-                  <td className="erp-td font-semibold text-erp-navy">
-                    <button
-                      type="button"
-                      className="text-left font-semibold text-erp-navy hover:underline focus:outline-none cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenSiteDrawer(site);
-                      }}
-                    >
-                      {site.label}
-                    </button>
-                  </td>
-                  <td className="erp-td">
-                    <div>{site.addressLine1}</div>
-                  </td>
-                  <td className="erp-td">{site.province}</td>
-                  <td className="erp-td font-mono">{site.postalCode}</td>
-                  <td className="erp-td text-center">
-                    {site.images && site.images.length > 0 ? (
-                      <span className="erp-badge erp-badge-navy font-mono text-xs">
-                        {t("photoCount", { count: site.images.length })}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-neutral-400">
-                        {t("noPhotos")}
-                      </span>
-                    )}
-                  </td>
-                  <td className="erp-td text-center">
-                    <span
-                      className={`erp-badge ${
-                        site.status === "active" ? "erp-badge-success" : "erp-badge-neutral"
-                      }`}
-                    >
-                      {site.status === "active" ? t("statusActive") : t("statusInactive")}
-                    </span>
-                  </td>
-                  <td className="erp-td text-center" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenSiteDrawer(site)}
-                      icon={<IconEye size={14} className="text-erp-navy" />}
-                      className="inline-flex items-center gap-1 text-xs"
-                    >
-                      {t("viewDetails")}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable<SiteResponse>
+          columns={columns}
+          data={filteredItems}
+          isLoading={isLoading}
+          isError={isError}
+          error={error?.message || t("errors.loadList")}
+          onRetry={() => { void refetch(); }}
+          emptyTitle={t("filteredEmptyTitle")}
+          emptyDescription={t("filteredEmptyDetail")}
+          hidePagination={true}
+        />
       )}
 
       {/* Site Detail Drawer */}
       <SiteDetailDrawer
         site={selectedSite}
         isOpen={isDrawerOpen}
+        canManage={canManageSites}
+        onUpdated={() => { void refetch(); }}
         onClose={() => {
           setIsDrawerOpen(false);
           setSelectedSite(null);

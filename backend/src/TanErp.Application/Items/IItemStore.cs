@@ -4,7 +4,7 @@ using TanErp.Application.Common.Results;
 namespace TanErp.Application.Items;
 
 public sealed record CreateItemData(
-    string Code,
+    string? Code,
     string ItemType,
     Guid CategoryId,
     Guid? BrandId,
@@ -16,7 +16,8 @@ public sealed record CreateItemData(
     IReadOnlyList<Guid>? SelectedBranchIds,
     IReadOnlyList<LocalizedTextDto>? Aliases,
     Dictionary<string, string>? Attributes,
-    int? AttributesSchemaVersion);
+    int? AttributesSchemaVersion,
+    string? TaxCategoryCode = null);
 
 public sealed record UpdateItemData(
     Guid ItemId,
@@ -31,7 +32,9 @@ public sealed record UpdateItemData(
     string AvailabilityMode,
     ItemCapabilitiesDto Capabilities,
     Dictionary<string, string>? Attributes,
-    int? AttributesSchemaVersion);
+    int? AttributesSchemaVersion,
+    string? TaxCategoryCode = null,
+    IReadOnlyList<Guid>? SelectedBranchIds = null);
 
 public sealed record ItemQuery(
     Guid OrganizationId,
@@ -40,6 +43,8 @@ public sealed record ItemQuery(
     Guid? CategoryId,
     Guid? BrandId,
     string? Status,
+    string SortBy,
+    string SortOrder,
     int PageNumber,
     int PageSize);
 
@@ -50,7 +55,7 @@ public sealed record PagedItemsResult(
     int PageSize);
 
 public sealed record CreateCategoryData(
-    string Code,
+    string? Code,
     LocalizedTextDto Name,
     LocalizedTextDto? Description,
     Guid? ParentCategoryId,
@@ -65,10 +70,11 @@ public sealed record UpdateCategoryData(
     LocalizedTextDto? Description,
     Guid? ParentCategoryId,
     IReadOnlyList<string>? AllowedItemTypes,
-    int SortOrder);
+    int SortOrder,
+    Guid? ImageFileId = null);
 
 public sealed record CreateBrandData(
-    string Code,
+    string? Code,
     LocalizedTextDto Name,
     LocalizedTextDto? Description,
     int SortOrder);
@@ -79,10 +85,15 @@ public sealed record UpdateBrandData(
     string Code,
     LocalizedTextDto Name,
     LocalizedTextDto? Description,
-    int SortOrder);
+    int SortOrder,
+    Guid? ImageFileId = null);
+
+public sealed record CreateTaxCategoryData(string? Code, LocalizedTextDto Name, int SortOrder);
+
+public sealed record UpdateTaxCategoryData(Guid TaxCategoryId, Guid ExpectedRowVersion, string Code, LocalizedTextDto Name, int SortOrder);
 
 public sealed record CreateUnitData(
-    string Code,
+    string? Code,
     LocalizedTextDto Name,
     string Symbol,
     string Dimension,
@@ -99,9 +110,81 @@ public sealed record UpdateUnitData(
     int DecimalScale,
     string RoundingMode);
 
+public sealed record CreateItemBarcodeData(
+    Guid ItemId,
+    string IdentifierType,
+    string Value,
+    Guid UnitId,
+    decimal QuantityInBaseUnit,
+    string PackagingLevel,
+    bool IsPrimary);
+
+public sealed record ItemBarcodeProjection(
+    Guid Id,
+    Guid ItemId,
+    string ItemCode,
+    LocalizedTextDto ItemName,
+    string ItemStatus,
+    string IdentifierType,
+    string Value,
+    Guid UnitId,
+    string UnitCode,
+    LocalizedTextDto UnitName,
+    string UnitSymbol,
+    decimal QuantityInBaseUnit,
+    string PackagingLevel,
+    bool IsPrimary,
+    string Status,
+    Guid RowVersion);
+
+public sealed record CreateItemUnitConversionData(
+    Guid ItemId,
+    Guid FromUnitId,
+    Guid ToUnitId,
+    decimal Factor,
+    DateOnly EffectiveFrom,
+    DateOnly? EffectiveTo,
+    string Reason);
+
+public sealed record ItemUnitConversionProjection(
+    Guid Id,
+    Guid ItemId,
+    string ItemCode,
+    Guid FromUnitId,
+    string FromUnitCode,
+    Guid ToUnitId,
+    string ToUnitCode,
+    decimal Factor,
+    DateOnly EffectiveFrom,
+    DateOnly? EffectiveTo,
+    string Reason,
+    string Status,
+    Guid RowVersion);
+
+public sealed record CreateUnitConversionData(
+    Guid FromUnitId,
+    Guid ToUnitId,
+    decimal Factor,
+    DateOnly EffectiveFrom,
+    DateOnly? EffectiveTo,
+    string Reason);
+
+public sealed record UnitConversionProjection(
+    Guid Id,
+    Guid FromUnitId,
+    string FromUnitCode,
+    Guid ToUnitId,
+    string ToUnitCode,
+    decimal Factor,
+    DateOnly EffectiveFrom,
+    DateOnly? EffectiveTo,
+    string Reason,
+    string Status,
+    Guid RowVersion);
+
 public interface IItemStore
 {
-    Task<Result<ItemDetailProjection>> CreateItemAsync(CreateItemData data, RequestAccessContext access, CancellationToken ct);
+    Task<Result<ItemDetailProjection>> CreateItemAsync(CreateItemData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
     Task<ItemDetailProjection?> GetItemAsync(Guid organizationId, Guid itemId, CancellationToken ct);
     Task<PagedItemsResult> ListItemsAsync(ItemQuery query, CancellationToken ct);
     Task<Result<ItemDetailProjection>> UpdateItemAsync(UpdateItemData data, RequestAccessContext access, CancellationToken ct);
@@ -111,19 +194,34 @@ public interface IItemStore
 
     Task<IReadOnlyList<ItemCategoryDetailProjection>> ListCategoriesAsync(Guid organizationId, CancellationToken ct);
     Task<ItemCategoryDetailProjection?> GetCategoryAsync(Guid organizationId, Guid categoryId, CancellationToken ct);
-    Task<Result<ItemCategoryDetailProjection>> CreateCategoryAsync(CreateCategoryData data, RequestAccessContext access, CancellationToken ct);
+    Task<Result<ItemCategoryDetailProjection>> CreateCategoryAsync(CreateCategoryData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
     Task<Result<ItemCategoryDetailProjection>> UpdateCategoryAsync(UpdateCategoryData data, RequestAccessContext access, CancellationToken ct);
 
     Task<IReadOnlyList<ItemBrandDetailProjection>> ListBrandsAsync(Guid organizationId, CancellationToken ct);
     Task<ItemBrandDetailProjection?> GetBrandAsync(Guid organizationId, Guid brandId, CancellationToken ct);
-    Task<Result<ItemBrandDetailProjection>> CreateBrandAsync(CreateBrandData data, RequestAccessContext access, CancellationToken ct);
+    Task<Result<ItemBrandDetailProjection>> CreateBrandAsync(CreateBrandData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
     Task<Result<ItemBrandDetailProjection>> UpdateBrandAsync(UpdateBrandData data, RequestAccessContext access, CancellationToken ct);
+
+    Task<IReadOnlyList<ItemTaxCategoryDetailProjection>> ListTaxCategoriesAsync(Guid organizationId, CancellationToken ct);
+    Task<ItemTaxCategoryDetailProjection?> GetTaxCategoryAsync(Guid organizationId, Guid taxCategoryId, CancellationToken ct);
+    Task<Result<ItemTaxCategoryDetailProjection>> CreateTaxCategoryAsync(CreateTaxCategoryData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
+    Task<Result<ItemTaxCategoryDetailProjection>> UpdateTaxCategoryAsync(UpdateTaxCategoryData data, RequestAccessContext access, CancellationToken ct);
 
     Task<IReadOnlyList<UnitOfMeasureDetailProjection>> ListUnitsAsync(Guid organizationId, CancellationToken ct);
     Task<UnitOfMeasureDetailProjection?> GetUnitAsync(Guid organizationId, Guid unitId, CancellationToken ct);
-    Task<Result<UnitOfMeasureDetailProjection>> CreateUnitAsync(CreateUnitData data, RequestAccessContext access, CancellationToken ct);
+    Task<Result<UnitOfMeasureDetailProjection>> CreateUnitAsync(CreateUnitData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
     Task<Result<UnitOfMeasureDetailProjection>> UpdateUnitAsync(UpdateUnitData data, RequestAccessContext access, CancellationToken ct);
 
     Task<Result<ItemDetailProjection>> AddAliasAsync(Guid organizationId, Guid itemId, LocalizedTextDto alias, RequestAccessContext access, CancellationToken ct);
     Task<Result<ItemDetailProjection>> RemoveAliasAsync(Guid organizationId, Guid itemId, Guid aliasId, RequestAccessContext access, CancellationToken ct);
+
+    Task<IReadOnlyList<ItemBarcodeProjection>> ListBarcodesAsync(Guid organizationId, Guid itemId, CancellationToken ct);
+    Task<Result<ItemBarcodeProjection>> CreateBarcodeAsync(CreateItemBarcodeData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
+    Task<Result<ItemBarcodeProjection>> SetBarcodePrimaryAsync(Guid organizationId, Guid itemId, Guid barcodeId, Guid expectedRowVersion, RequestAccessContext access, CancellationToken ct);
+    Task<Result<ItemBarcodeProjection>> DeactivateBarcodeAsync(Guid organizationId, Guid itemId, Guid barcodeId, Guid expectedRowVersion, RequestAccessContext access, CancellationToken ct);
+    Task<ItemBarcodeProjection?> FindActiveBarcodeAsync(Guid organizationId, Guid? branchId, string value, CancellationToken ct);
+    Task<IReadOnlyList<ItemUnitConversionProjection>> ListItemUnitConversionsAsync(Guid organizationId, Guid itemId, CancellationToken ct);
+    Task<Result<ItemUnitConversionProjection>> CreateItemUnitConversionAsync(CreateItemUnitConversionData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
+    Task<IReadOnlyList<UnitConversionProjection>> ListUnitConversionsAsync(Guid organizationId, CancellationToken ct);
+    Task<Result<UnitConversionProjection>> CreateUnitConversionAsync(CreateUnitConversionData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
 }

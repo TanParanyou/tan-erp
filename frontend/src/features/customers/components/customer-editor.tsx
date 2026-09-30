@@ -11,26 +11,25 @@ import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { Alert } from "@/components/ui/Alert";
 import { FormContainer } from "@/components/forms/FormContainer";
 import { FormActionBar } from "@/components/forms/FormActionBar";
 import { FormSection } from "@/components/forms/FormSection";
-import { PhoneInput } from "@/components/forms/PhoneInput";
-import { SelectWithOther } from "@/components/forms/SelectWithOther";
 import { ImageUpload } from "@/components/forms/ImageUpload";
-import { fileClient } from "@/lib/api/file-client";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 import { useToast } from "@/hooks/useToast";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
 import { IconAlertCircle } from "@/components/common/Icons";
 import { ApiError } from "@/lib/api/api-error";
 import { DuplicateCandidateCard } from "./duplicate-candidate-card";
 import { DuplicateConfirmationModal } from "./duplicate-confirmation-modal";
 import { CustomerQuickViewDrawer } from "./customer-quick-view-drawer";
-import { useCustomerDuplicateCheck } from "../api/customer-queries";
+import { CustomerIdentityFields, type CustomerLeadSource, type CustomerType, type CustomerLocale } from "./customer-identity-fields";
+import { CustomerContactFields, type CustomerContactChannel } from "./customer-contact-fields";
+import { customerQueryRootKey, useCustomerDuplicateCheck } from "../api/customer-queries";
 import type { CustomerResponse } from "@/lib/api/api-client";
 
 export function CustomerEditor() {
@@ -43,6 +42,10 @@ export function CustomerEditor() {
   const queryClient = useQueryClient();
   const { selectedMembership } = useSelectedMembership();
   const { toast } = useToast();
+
+  const { uploadSingleFile, resetIntent: resetFileUploadIntent } = useDeferredFileUpload({
+    parentType: "customer",
+  });
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [duplicateCandidates, setDuplicateCandidates] = useState<CustomerResponse["duplicateCandidates"]>(null);
@@ -64,6 +67,7 @@ export function CustomerEditor() {
     hasConfirmedDuplicatesRef.current = false;
     if (failedSubmissionRef.current) {
       idempotencyKeyRef.current = null;
+      resetFileUploadIntent();
       failedSubmissionRef.current = false;
     }
   };
@@ -86,6 +90,7 @@ export function CustomerEditor() {
 
   const {
     control,
+    setValue,
     handleSubmit,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<CustomerFormValues>({
@@ -114,6 +119,22 @@ export function CustomerEditor() {
   const watchedDisplayNameTh = useWatch({ control, name: "displayNameTh" });
   const watchedPhone = useWatch({ control, name: "primaryContact.phone" });
   const watchedEmail = useWatch({ control, name: "primaryContact.email" });
+  const contactValues = {
+    name: useWatch({ control, name: "primaryContact.name" }) ?? "",
+    roleTitle: useWatch({ control, name: "primaryContact.roleTitle" }) ?? "",
+    phone: watchedPhone ?? "",
+    email: watchedEmail ?? "",
+    lineId: useWatch({ control, name: "primaryContact.lineId" }) ?? "",
+    preferredChannel: useWatch({ control, name: "primaryContact.preferredChannel" }) ?? "phone",
+  };
+  const identityValues = {
+    customerType: useWatch({ control, name: "customerType" }),
+    preferredLocale: useWatch({ control, name: "preferredLocale" }),
+    displayNameTh: watchedDisplayNameTh,
+    displayNameEn: useWatch({ control, name: "displayNameEn" }) ?? "",
+    leadSource: useWatch({ control, name: "leadSource" }) ?? "",
+    leadSourceNote: useWatch({ control, name: "leadSourceNote" }) ?? "",
+  };
 
   const debouncedName = useDebounce(watchedDisplayNameTh || "", 400);
   const debouncedPhone = useDebounce(watchedPhone || "", 400);
@@ -167,42 +188,16 @@ export function CustomerEditor() {
       idempotencyKeyRef.current ??= crypto.randomUUID();
 
       let uploadedImageFileId: string | undefined = values.imageFileId || undefined;
+      let uploadIntentId: string | undefined = undefined;
+
       if (values.imageFile && values.imageFile instanceof File) {
-        const sessionRes = await fileClient.createSession(
-          {
-            files: [
-              {
-                filename: values.imageFile.name,
-                mediaType: values.imageFile.type || "image/webp",
-                fileSizeBytes: values.imageFile.size,
-              },
-            ],
-          },
-          {
-            token,
-            membershipId,
-            idempotencyKey: `file-sess-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
-            locale: locale === "en" ? "en" : "th",
-          }
-        );
-
-        if (!sessionRes.sessionId) {
-          throw new Error("Failed to create file upload session.");
-        }
-
-        const completeRes = await fileClient.completeSession(
-          sessionRes.sessionId,
-          [values.imageFile],
-          {
-            token,
-            membershipId,
-            locale: locale === "en" ? "en" : "th",
-          }
-        );
-
-        if (completeRes.files && completeRes.files.length > 0 && completeRes.files[0].fileId) {
-          uploadedImageFileId = completeRes.files[0].fileId;
-        }
+        const uploadRes = await uploadSingleFile(values.imageFile, {
+          token,
+          membershipId,
+          locale: locale === "en" ? "en" : "th",
+        });
+        uploadedImageFileId = uploadRes.fileId;
+        uploadIntentId = uploadRes.uploadIntentId ?? undefined;
       }
 
       const created = await apiClient.createCustomer(
@@ -214,6 +209,7 @@ export function CustomerEditor() {
           leadSource: values.leadSource || undefined,
           leadSourceNote: values.leadSource === "other" ? values.leadSourceNote || undefined : undefined,
           imageFileId: uploadedImageFileId,
+          fileUploadIntentId: uploadIntentId,
           primaryContact: {
             name: values.primaryContact.name,
             roleTitle: values.primaryContact.roleTitle || undefined,
@@ -232,7 +228,7 @@ export function CustomerEditor() {
       );
 
       // Invalidate customer lists
-      await queryClient.invalidateQueries({ queryKey: ["business"] });
+      await queryClient.invalidateQueries({ queryKey: customerQueryRootKey(membershipId, locale === "en" ? "en" : "th") });
       failedSubmissionRef.current = false;
 
       // If backend returned duplicate candidates (and user hadn't confirmed yet or fallback)
@@ -365,233 +361,48 @@ export function CustomerEditor() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Customer Type */}
-            <Controller
-              name="customerType"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  id="customerType"
-                  label={t("customerType")}
-                  required
-                  disabled={isSubmitting || isCreateComplete}
-                  options={[
-                    { value: "organization", label: t("organization") },
-                    { value: "person", label: t("person") },
-                  ]}
-                  {...field}
-                />
-              )}
-            />
-
-            {/* Preferred Locale */}
-            <Controller
-              name="preferredLocale"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  id="preferredLocale"
-                  label={t("preferredLocale")}
-                  required
-                  disabled={isSubmitting || isCreateComplete}
-                  options={[
-                    { value: "th", label: t("localeThai") },
-                    { value: "en", label: t("localeEnglish") },
-                  ]}
-                  {...field}
-                />
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Name TH */}
-            <Controller
-              name="displayNameTh"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  id="displayNameTh"
-                  label={t("displayNameTh")}
-                  placeholder={t("displayNameThPlaceholder")}
-                  required
-                  disabled={isSubmitting || isCreateComplete}
-                  error={errors.displayNameTh?.message}
-                  {...field}
-                />
-              )}
-            />
-
-            {/* Name EN */}
-            <Controller
-              name="displayNameEn"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  id="displayNameEn"
-                  label={t("displayNameEn")}
-                  placeholder={t("displayNameEnPlaceholder")}
-                  disabled={isSubmitting || isCreateComplete}
-                  error={errors.displayNameEn?.message}
-                  {...field}
-                />
-              )}
-            />
-          </div>
-
-          {/* Lead Source */}
-          <Controller
-            name="leadSource"
-            control={control}
-            render={({ field: leadSourceField }) => (
-              <Controller
-                name="leadSourceNote"
-                control={control}
-                render={({ field: leadSourceNoteField }) => (
-                  <SelectWithOther
-                    triggerValue="other"
-                    selectProps={{
-                      id: "leadSource",
-                      label: t("leadSource"),
-                      placeholder: t("leadSourceSelect"),
-                      error: errors.leadSource?.message,
-                      disabled: isSubmitting || isCreateComplete,
-                      options: [
-                        { value: "walk_in", label: t("leadSourceWalkIn") },
-                        { value: "facebook_ads", label: t("leadSourceFacebookAds") },
-                        { value: "referral", label: t("leadSourceReferral") },
-                        { value: "project_developer", label: t("leadSourceProjectDeveloper") },
-                        { value: "website", label: t("leadSourceWebsite") },
-                        { value: "other", label: t("leadSourceOther") },
-                      ],
-                      ...leadSourceField,
-                    }}
-                    otherProps={{
-                      id: "leadSourceNote",
-                      label: t("leadSourceNote"),
-                      placeholder: t("leadSourceNotePlaceholder"),
-                      error: errors.leadSourceNote?.message,
-                      disabled: isSubmitting || isCreateComplete,
-                      maxLength: 200,
-                      ...leadSourceNoteField,
-                    }}
-                  />
-                )}
-              />
-            )}
+          <CustomerIdentityFields
+            values={identityValues}
+            errors={{
+              displayNameTh: errors.displayNameTh?.message,
+              displayNameEn: errors.displayNameEn?.message,
+              leadSource: errors.leadSource?.message,
+              leadSourceNote: errors.leadSourceNote?.message,
+            }}
+            disabled={isSubmitting || isCreateComplete}
+            showPlaceholders
+            leadSourceNoteRequired
+            onCustomerTypeChange={(value: CustomerType) => { setValue("customerType", value, { shouldDirty: true, shouldValidate: true }); handleFormChange(); }}
+            onPreferredLocaleChange={(value: CustomerLocale) => { setValue("preferredLocale", value, { shouldDirty: true, shouldValidate: true }); handleFormChange(); }}
+            onDisplayNameThChange={(value) => { setValue("displayNameTh", value, { shouldDirty: true, shouldValidate: true }); handleFormChange(); }}
+            onDisplayNameEnChange={(value) => { setValue("displayNameEn", value, { shouldDirty: true, shouldValidate: true }); handleFormChange(); }}
+            onLeadSourceChange={(value: CustomerLeadSource) => { setValue("leadSource", value, { shouldDirty: true, shouldValidate: true }); handleFormChange(); }}
+            onLeadSourceNoteChange={(value) => { setValue("leadSourceNote", value, { shouldDirty: true, shouldValidate: true }); handleFormChange(); }}
           />
         </FormSection>
 
         {/* Card 2: Primary Contact Section */}
         <FormSection title={t("primaryContact")}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Contact Name */}
-            <Controller
-              name="primaryContact.name"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  id="primaryContactName"
-                  label={t("contactName")}
-                  placeholder={t("contactNamePlaceholder")}
-                  required
-                  disabled={isSubmitting || isCreateComplete}
-                  error={errors.primaryContact?.name?.message}
-                  {...field}
-                />
-              )}
-            />
-
-            {/* Role Title */}
-            <Controller
-              name="primaryContact.roleTitle"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  id="primaryContactRoleTitle"
-                  label={t("roleTitle")}
-                  placeholder={t("roleTitlePlaceholder")}
-                  disabled={isSubmitting || isCreateComplete}
-                  error={errors.primaryContact?.roleTitle?.message}
-                  {...field}
-                />
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Phone */}
-            <Controller
-              name="primaryContact.phone"
-              control={control}
-              render={({ field }) => (
-                <PhoneInput
-                  id="primaryContactPhone"
-                  label={t("phone")}
-                  placeholder={t("phonePlaceholder")}
-                  disabled={isSubmitting || isCreateComplete}
-                  error={errors.primaryContact?.phone?.message}
-                  {...field}
-                />
-              )}
-            />
-
-            {/* Email */}
-            <Controller
-              name="primaryContact.email"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  id="primaryContactEmail"
-                  label={t("email")}
-                  type="email"
-                  placeholder={t("emailPlaceholder")}
-                  disabled={isSubmitting || isCreateComplete}
-                  error={errors.primaryContact?.email?.message}
-                  {...field}
-                />
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* LINE ID */}
-            <Controller
-              name="primaryContact.lineId"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  id="primaryContactLineId"
-                  label={t("lineId")}
-                  placeholder={t("lineIdPlaceholder")}
-                  disabled={isSubmitting || isCreateComplete}
-                  error={errors.primaryContact?.lineId?.message}
-                  {...field}
-                />
-              )}
-            />
-
-            {/* Preferred Channel */}
-            <Controller
-              name="primaryContact.preferredChannel"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  id="preferredChannel"
-                  label={t("preferredChannel")}
-                  disabled={isSubmitting || isCreateComplete}
-                  options={[
-                    { value: "phone", label: t("channelPhone") },
-                    { value: "email", label: t("channelEmail") },
-                    { value: "line", label: t("channelLine") },
-                    { value: "other", label: t("channelOther") },
-                  ]}
-                  {...field}
-                />
-              )}
-            />
-          </div>
+          <CustomerContactFields
+            values={contactValues}
+            idPrefix="primaryContact"
+            showPlaceholders
+            disabled={isSubmitting || isCreateComplete}
+            errors={{
+              name: errors.primaryContact?.name?.message,
+              roleTitle: errors.primaryContact?.roleTitle?.message,
+              phone: errors.primaryContact?.phone?.message,
+              email: errors.primaryContact?.email?.message,
+              lineId: errors.primaryContact?.lineId?.message,
+              preferredChannel: errors.primaryContact?.preferredChannel?.message,
+            }}
+            onNameChange={(value) => setValue("primaryContact.name", value, { shouldDirty: true, shouldValidate: true })}
+            onRoleTitleChange={(value) => setValue("primaryContact.roleTitle", value, { shouldDirty: true, shouldValidate: true })}
+            onPhoneChange={(value) => { setValue("primaryContact.phone", value, { shouldDirty: true, shouldValidate: true }); handleFormChange(); }}
+            onEmailChange={(value) => setValue("primaryContact.email", value, { shouldDirty: true, shouldValidate: true })}
+            onLineIdChange={(value) => setValue("primaryContact.lineId", value, { shouldDirty: true, shouldValidate: true })}
+            onPreferredChannelChange={(value: CustomerContactChannel) => setValue("primaryContact.preferredChannel", value, { shouldDirty: true, shouldValidate: true })}
+          />
         </FormSection>
       </div>
 

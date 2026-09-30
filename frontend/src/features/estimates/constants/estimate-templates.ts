@@ -14,7 +14,7 @@ export interface EstimateTemplateItem {
   itemDescEn: string;
   quantity: number;
   unitCode: string;
-  sellingRule: "margin" | "markup" | "fixed";
+  sellingRule: "margin" | "markup" | "fixed_price";
   sellingRuleValue: number;
   costComponents: TemplateCostComponent[];
 }

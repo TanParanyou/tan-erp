@@ -59,6 +59,10 @@ public class ActivateCustomerHandlerTests
             LastPayloadHash = payloadHash;
             return Task.FromResult(ResultToReturn);
         }
+
+        public Task<Result<CustomerProjection>> DeactivateAsync(RequestAccessContext access, Guid customerId, Guid expectedRowVersion, string reason, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken = default) => Task.FromResult(ResultToReturn);
+
+        public Task<Result<CustomerProjection>> ReactivateAsync(RequestAccessContext access, Guid customerId, Guid expectedRowVersion, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken = default) => Task.FromResult(ResultToReturn);
     }
 
     [Fact]

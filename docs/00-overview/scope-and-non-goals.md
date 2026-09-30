@@ -2,6 +2,8 @@
 
 **สถานะ:** Accepted สำหรับทิศทาง; รายละเอียดธุรกิจเป็น Draft จนผ่าน Workshop
 
+เอกสารนี้กำหนดขอบเขตผลิตภัณฑ์และสิ่งที่ยังไม่ทำ ส่วนสถานะโค้ดและหลักฐานปัจจุบันอยู่ใน [Implementation Roadmap](implementation-roadmap.md). แผนปิดช่องว่างและลำดับเตรียมโมดูลใหม่อยู่ใน [ERP Completion Plan](../superpowers/plans/2026-09-29-erp-completion-master-plan.md). การอยู่ใน Phase ไม่ได้หมายความว่าทุก capability ถูกสร้างหรืออนุมัติให้พัฒนาแล้ว.
+
 ## Phase 1: Estimation Foundation
 
 - Organization, Branch, User, Role, Permission และ Scope
@@ -14,6 +16,9 @@
 
 ## Phase ถัดไป
 
+- เอกสาร Quotation สำหรับลูกค้า: Preview, Export/PDF, Printing และ Signatures
+- Quotation Amendment/Void และช่องทาง Customer Acceptance ภายนอก
+- การจัดการ Organization/Branch/Membership/Role ผ่านหน้าผู้ดูแลครบวงจร
 - Quick Estimate สำหรับ Built-in, ผ้าม่าน และ Wallpaper เป็น Optional Module หลัง Official Estimate Foundation พร้อม
 - Project Planning และ Budget Control
 - Procurement และ Supplier

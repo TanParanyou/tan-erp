@@ -8,9 +8,19 @@ public static class FileParentTypes
     public const string Customer = "customer";
     public const string Site = "site";
     public const string Item = "item";
+    public const string ItemCategory = "item-category";
+    public const string ItemBrand = "item-brand";
+    public const string CostRecord = "costrecord";
 
     public static bool IsValid(string? parentType) =>
-        parentType is Opportunity or Customer or Site or Item;
+        parentType is not null &&
+        (string.Equals(parentType, Opportunity, StringComparison.OrdinalIgnoreCase)
+         || string.Equals(parentType, Customer, StringComparison.OrdinalIgnoreCase)
+         || string.Equals(parentType, Site, StringComparison.OrdinalIgnoreCase)
+         || string.Equals(parentType, Item, StringComparison.OrdinalIgnoreCase)
+         || string.Equals(parentType, ItemCategory, StringComparison.OrdinalIgnoreCase)
+         || string.Equals(parentType, ItemBrand, StringComparison.OrdinalIgnoreCase)
+         || string.Equals(parentType, CostRecord, StringComparison.OrdinalIgnoreCase));
 }
 
 public static class FileUploadSessionStatus

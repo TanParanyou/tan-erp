@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Estimates;
@@ -9,7 +10,9 @@ using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Estimates;
+using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Items;
+using TanErp.Domain.Organization;
 using TanErp.Domain.Surveys;
 
 namespace TanErp.Infrastructure.Persistence.Estimates;
@@ -20,17 +23,21 @@ public class EstimateStore : IEstimateStore
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _documentNumberGenerator;
     private readonly ICostResolver _costResolver;
+    private readonly bool _useTestOnlyApprovalPolicy;
 
     public EstimateStore(
         AppDbContext db,
         IClock clock,
         IDocumentNumberGenerator documentNumberGenerator,
-        ICostResolver costResolver)
+        ICostResolver costResolver,
+        IConfiguration configuration)
     {
         _db = db;
         _clock = clock;
         _documentNumberGenerator = documentNumberGenerator;
         _costResolver = costResolver;
+        _useTestOnlyApprovalPolicy = string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Test", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(configuration["Estimates:ApprovalPolicy"], TestOnlyEstimateApprovalPolicy.PolicyCode, StringComparison.Ordinal);
     }
 
     public async Task<Result<EstimateDetailProjection>> CreateDraftAsync(
@@ -159,6 +166,7 @@ public class EstimateStore : IEstimateStore
                 siteSurveyRevisionId,
                 snapshotHash,
                 currency);
+            estimate.CurrentRevision!.MarkFinancialInputChanged(actorUserId);
 
             _db.Estimates.Add(estimate);
 
@@ -255,6 +263,36 @@ public class EstimateStore : IEstimateStore
         return estimate is null ? null : MapToDetailProjection(estimate);
     }
 
+    public async Task<IReadOnlyList<EstimateCalculationSnapshotProjection>> GetCalculationSnapshotsAsync(
+        Guid organizationId,
+        Guid estimateId,
+        Guid revisionId,
+        CancellationToken cancellationToken)
+    {
+        return await _db.EstimateCalculationSnapshots
+            .AsNoTracking()
+            .Where(snapshot => snapshot.OrganizationId == organizationId &&
+                snapshot.EstimateRevisionId == revisionId &&
+                _db.EstimateRevisions.Any(revision => revision.Id == revisionId &&
+                    revision.EstimateId == estimateId && revision.OrganizationId == organizationId))
+            .OrderBy(snapshot => snapshot.CalculationVersion)
+            .Select(snapshot => new EstimateCalculationSnapshotProjection(
+                snapshot.Id,
+                snapshot.EstimateRevisionId,
+                snapshot.CalculationVersion,
+                snapshot.InputHash,
+                snapshot.SnapshotJson,
+                snapshot.CalculationPolicyVersionId,
+                snapshot.TaxPolicyVersionId,
+                snapshot.CalculationPolicyVersion,
+                snapshot.TaxPolicyVersion,
+                snapshot.CalculationPolicyHash,
+                snapshot.TaxPolicyHash,
+                snapshot.CapturedByUserId,
+                snapshot.CapturedAtUtc))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<EstimateRevisionProjection> UpdateDraftAsync(
         Guid organizationId,
         Guid estimateId,
@@ -269,6 +307,12 @@ public class EstimateStore : IEstimateStore
         {
             await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
 
+            var estimate = await _db.Estimates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.Id == estimateId, cancellationToken);
+            if (estimate is null)
+                throw new EstimateNotFoundException(estimateId);
+
             var revision = await _db.EstimateRevisions
                 .Include(r => r.Sections)
                     .ThenInclude(s => s.WorkItems)
@@ -276,13 +320,6 @@ public class EstimateStore : IEstimateStore
                 .FirstOrDefaultAsync(r => r.OrganizationId == organizationId && r.EstimateId == estimateId && r.Id == revisionId, cancellationToken);
 
             if (revision is null)
-                throw new EstimateNotFoundException(estimateId);
-
-            var estimate = await _db.Estimates
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.Id == estimateId, cancellationToken);
-
-            if (estimate is null)
                 throw new EstimateNotFoundException(estimateId);
 
             if (revision.RowVersion != expectedRevisionVersion)
@@ -324,7 +361,24 @@ public class EstimateStore : IEstimateStore
                         wDto.UnitCode,
                         wDto.SellingRuleType,
                         wDto.SellingRuleValue,
-                        wDto.SortOrder);
+                        wDto.SortOrder,
+                        wDto.SellingRuleReasonCode);
+
+                    if (wDto.ItemId.HasValue)
+                    {
+                        var catalogItem = await _db.Items.AsNoTracking().Include(item => item.BranchAvailabilities)
+                            .FirstOrDefaultAsync(item => item.Id == wDto.ItemId.Value && item.OrganizationId == organizationId, cancellationToken);
+                        if (catalogItem is null || catalogItem.Status != ItemStatus.Active || !catalogItem.Capabilities.CanCost)
+                            throw new ItemCostConflictException("ITEM_NOT_AVAILABLE", "The selected work item is not available for estimates.");
+                        if (catalogItem.AvailabilityMode == ItemAvailabilityMode.SelectedBranches &&
+                            !catalogItem.BranchAvailabilities.Any(availability => availability.BranchId == estimate.BranchId && availability.Status == "active"))
+                            throw new ItemCostConflictException("ITEM_NOT_AVAILABLE", "The selected work item is not available in this branch.");
+                        workItem.SetItemMasterLink(catalogItem.Id, catalogItem.Code, catalogItem.Name.Thai, catalogItem.Name.English);
+                    }
+                    else
+                    {
+                        workItem.SetCustomWorkItemReason(wDto.OverrideReasonCode, wDto.OverrideReason);
+                    }
 
                     foreach (var cDto in wDto.CostComponents.OrderBy(c => c.SortOrder))
                     {
@@ -362,6 +416,13 @@ public class EstimateStore : IEstimateStore
                                 !item.BranchAvailabilities.Any(ba => ba.BranchId == estimate.BranchId && ba.Status == "active"))
                             {
                                 throw new ItemCostConflictException("ITEM_NOT_AVAILABLE", $"Item '{item.Code}' is not available in branch '{estimate.BranchId}'.");
+                            }
+
+                            if (item.BaseUnit is null ||
+                                !string.Equals(cDto.UnitCode.Trim(), item.BaseUnit.NormalizedCode, StringComparison.OrdinalIgnoreCase))
+                            {
+                                throw new ItemCostConflictException("ESTIMATE_UNIT_INVALID",
+                                    $"Cost component unit '{cDto.UnitCode}' must match the catalog item's base unit '{item.BaseUnit?.Code ?? string.Empty}'.");
                             }
 
                             var resolveResult = await _costResolver.ResolveAsync(new ResolveCostRequest(
@@ -413,8 +474,15 @@ public class EstimateStore : IEstimateStore
                                 resolved.Scope,
                                 resolved.EffectiveFromUtc,
                                 "v1",
-                                resolved.ResolvedAtUtc);
+                                resolved.ResolvedAtUtc,
+                                resolved.CostSourceId,
+                                resolved.CostSourceCode,
+                                resolved.SourceReference,
+                                resolved.EvidenceFileId,
+                                resolved.Reason);
                         }
+
+                        comp.SetProvisionalReason(cDto.ProvisionalReasonCode, cDto.ProvisionalNote);
 
                         workItem.AddCostComponent(comp);
                         _db.EstimateCostComponents.Add(comp);
@@ -428,8 +496,8 @@ public class EstimateStore : IEstimateStore
                 _db.EstimateSections.Add(section);
             }
 
-            // Recalculate financial summary
-            revision.Calculate(revision.DiscountAmount);
+            // The saved inputs no longer match the last calculated snapshot.
+            revision.MarkFinancialInputChanged(actorUserId);
 
             var auditEvent = new AuditEvent(
                 Guid.NewGuid(),
@@ -456,15 +524,57 @@ public class EstimateStore : IEstimateStore
         Guid estimateId,
         Guid revisionId,
         Guid expectedRevisionVersion,
-        decimal discountAmount,
+        EstimateDiscount discount,
         Guid actorUserId,
-        string idempotencyKey,
+        string keyHash,
+        string payloadHash,
         CancellationToken cancellationToken)
     {
         var strategy = _db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
             await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            const string operation = "estimates.calculate";
+            var idempotencyLockKey = $"{organizationId:N}:{operation}:{keyHash}";
+            await _db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({idempotencyLockKey}, 0))", cancellationToken);
+            var existingRecord = await _db.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(record =>
+                record.OrganizationId == organizationId && record.Operation == operation && record.KeyHash == keyHash,
+                cancellationToken);
+            if (existingRecord is not null)
+            {
+                if (existingRecord.PayloadHash != payloadHash)
+                    throw new EstimateIdempotencyKeyReusedException();
+
+                var resourceParts = existingRecord.ResourceId.Split('|');
+                if (resourceParts.Length != 3 ||
+                    !Guid.TryParseExact(resourceParts[0], "N", out var replayEstimateId) || replayEstimateId != estimateId ||
+                    !Guid.TryParseExact(resourceParts[1], "N", out var replayRevisionId) || replayRevisionId != revisionId ||
+                    !int.TryParse(resourceParts[2], out var replayCalculationVersion))
+                    throw new EstimateIdempotencyKeyReusedException();
+
+                var replayRevision = await _db.EstimateRevisions
+                    .Include(row => row.Sections)
+                        .ThenInclude(section => section.WorkItems)
+                            .ThenInclude(workItem => workItem.CostComponents)
+                    .FirstOrDefaultAsync(row => row.OrganizationId == organizationId && row.EstimateId == estimateId &&
+                        row.Id == revisionId && row.CalculationVersion == replayCalculationVersion, cancellationToken);
+                var hasReplaySnapshot = await _db.EstimateCalculationSnapshots.AsNoTracking().AnyAsync(snapshot =>
+                    snapshot.OrganizationId == organizationId && snapshot.EstimateRevisionId == revisionId &&
+                    snapshot.CalculationVersion == replayCalculationVersion, cancellationToken);
+                if (replayRevision is null || !hasReplaySnapshot)
+                    throw new EstimateNotFoundException(estimateId);
+
+                await tx.CommitAsync(cancellationToken);
+                return MapToRevisionProjection(replayRevision);
+            }
+
+            var estimate = await _db.Estimates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.OrganizationId == organizationId && e.Id == estimateId, cancellationToken);
+            if (estimate is null)
+                throw new EstimateNotFoundException(estimateId);
 
             var revision = await _db.EstimateRevisions
                 .Include(r => r.Sections)
@@ -478,7 +588,37 @@ public class EstimateStore : IEstimateStore
             if (revision.RowVersion != expectedRevisionVersion)
                 throw new DbUpdateConcurrencyException("Revision version conflict.");
 
-            revision.Calculate(discountAmount);
+            var calculationPolicy = await ResolvePolicyAsync(
+                _db.CalculationPolicyVersions,
+                organizationId,
+                estimate.BranchId,
+                _clock.UtcNow,
+                cancellationToken);
+            var taxPolicy = await ResolvePolicyAsync(
+                _db.TaxPolicyVersions,
+                organizationId,
+                estimate.BranchId,
+                _clock.UtcNow,
+                cancellationToken);
+            if (calculationPolicy is null || taxPolicy is null)
+                throw new EstimatePolicyUnavailableException("A single effective published calculation and tax policy are required.");
+
+            revision.Calculate(discount, calculationPolicy, taxPolicy, _clock.UtcNow);
+            var calculationSnapshot = new EstimateCalculationSnapshot(
+                Guid.NewGuid(),
+                organizationId,
+                revision.Id,
+                revision.CalculationVersion,
+                CalculateInputHash(revision, discount, calculationPolicy, taxPolicy),
+                revision.CalculationSnapshotJson!,
+                calculationPolicy,
+                taxPolicy,
+                actorUserId,
+                _clock.UtcNow);
+            _db.EstimateCalculationSnapshots.Add(calculationSnapshot);
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(
+                Guid.NewGuid(), organizationId, operation, keyHash, payloadHash,
+                $"{estimateId:N}|{revisionId:N}|{revision.CalculationVersion}", _clock.UtcNow));
 
             var auditEvent = new AuditEvent(
                 Guid.NewGuid(),
@@ -498,6 +638,584 @@ public class EstimateStore : IEstimateStore
 
             return MapToRevisionProjection(revision);
         });
+    }
+
+    public async Task<Result<EstimateDetailProjection>> SubmitAsync(
+        Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, int revisionNo,
+        int calculationVersion, string? note, Guid actorUserId, string keyHash,
+        string payloadHash, CancellationToken cancellationToken)
+    {
+        const string operation = "estimates.submit";
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+            var replay = await GetIdempotencyReplayAsync(organizationId, estimateId, operation, keyHash, payloadHash, cancellationToken);
+            if (replay is not null)
+                return replay;
+
+            var estimate = await LoadEstimateDetails()
+                .FirstOrDefaultAsync(row => row.Id == estimateId && row.OrganizationId == organizationId, cancellationToken);
+            if (estimate is null)
+                return Result<EstimateDetailProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Estimate not found."));
+            if (estimate.RowVersion != expectedEstimateVersion)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_VERSION_CONFLICT", "The estimate version does not match the current state."));
+
+            var revision = estimate.CurrentRevision;
+            if (revision is null || revision.RevisionNo != revisionNo || revision.CalculationVersion != calculationVersion ||
+                revision.CalculationOutdated || string.IsNullOrWhiteSpace(revision.CalculationSnapshotJson))
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", "Submit requires the current revision and its latest calculation snapshot."));
+
+            var readiness = revision.EvaluateReadiness();
+            if (readiness.Status == EstimateReadinessStatus.Blocked)
+            {
+                var blockingReason = readiness.Reasons.First();
+                return Result<EstimateDetailProjection>.Failure(new Error(blockingReason.Code, "The estimate is blocked by one or more readiness requirements."));
+            }
+
+            var calculationSnapshot = await _db.EstimateCalculationSnapshots
+                .FirstOrDefaultAsync(snapshot => snapshot.OrganizationId == organizationId &&
+                    snapshot.EstimateRevisionId == revision.Id && snapshot.CalculationVersion == calculationVersion,
+                    cancellationToken);
+            if (calculationSnapshot is null)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", "The latest calculation snapshot is unavailable."));
+
+            var now = _clock.UtcNow;
+            var approvalPolicy = _useTestOnlyApprovalPolicy
+                ? ApprovalPolicyVersion.TestOnlyThailandEstimateV1
+                : ApprovalPolicyVersion.BootstrapIndependentChecker;
+            var testOnlyRoute = _useTestOnlyApprovalPolicy
+                ? TestOnlyEstimateApprovalPolicy.Resolve(
+                    revision.GrandTotal,
+                    revision.MarginRate,
+                    revision.SellingBeforeDiscount,
+                    revision.DiscountAmount,
+                    readiness.Reasons.Select(reason => reason.Code))
+                : null;
+            var requiredReviewerRoles = testOnlyRoute?.ReviewerRoleNames ?? ["INDEPENDENT_CHECKER"];
+            var reviewers = new List<ApprovalCandidate>(requiredReviewerRoles.Count);
+            foreach (var reviewerRole in requiredReviewerRoles)
+            {
+                var reviewer = await FindIndependentReviewerAsync(
+                    organizationId,
+                    estimate.BranchId,
+                    actorUserId,
+                    revision.LastFinancialEditorUserId,
+                    now,
+                    cancellationToken,
+                    _useTestOnlyApprovalPolicy ? reviewerRole : null,
+                    reviewers.Select(candidate => candidate.UserId).ToArray());
+                if (reviewer is null)
+                    return Result<EstimateDetailProjection>.Failure(new Error(
+                        "ESTIMATE_POLICY_UNAVAILABLE",
+                        $"No independent reviewer is available for required approval role '{reviewerRole}'."));
+                reviewers.Add(reviewer);
+            }
+
+            var snapshotHash = HashSnapshot(calculationSnapshot.SnapshotJson);
+            var route = JsonSerializer.Serialize(new
+            {
+                policyCode = approvalPolicy.PolicyCode,
+                policyVersion = approvalPolicy.Version,
+                approvalPolicyHash = testOnlyRoute?.PolicyHash ?? approvalPolicy.ContentHash,
+                thresholdSnapshot = testOnlyRoute?.Thresholds,
+                triggerSnapshot = testOnlyRoute?.Triggers ?? [],
+                estimateId = estimate.Id,
+                revisionId = revision.Id,
+                revisionNo,
+                calculationVersion,
+                calculationInputHash = calculationSnapshot.InputHash,
+                calculationSnapshotHash = snapshotHash,
+                submissionNote = note,
+                candidateRule = new { permissionKey = "estimates.approve", scope = new[] { "organization", "branch" } },
+                steps = reviewers.Select((reviewer, index) => new
+                {
+                    sequence = index + 1,
+                    requiredRole = requiredReviewerRoles[index],
+                    reviewer.ScopeType,
+                    reviewer.ScopeId,
+                    reviewer.UserId,
+                    reviewer.MembershipId,
+                    permissionKey = "estimates.approve"
+                })
+            }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var routeHash = HashSnapshot(route);
+            var request = new EstimateApprovalRequest(
+                Guid.NewGuid(), organizationId, estimate.Id, revision.Id, revisionNo,
+                calculationVersion, calculationSnapshot.InputHash, snapshotHash,
+                approvalPolicy.PolicyCode, approvalPolicy.Version, route, routeHash,
+                actorUserId, now, note);
+            var steps = reviewers.Select((reviewer, index) => new EstimateApprovalStep(
+                Guid.NewGuid(), organizationId, request.Id, index + 1, reviewer.UserId,
+                reviewer.MembershipId, reviewer.ScopeType, reviewer.ScopeId)).ToArray();
+
+            try
+            {
+                estimate.SubmitCurrentRevision(actorUserId, now);
+            }
+            catch (EstimateInvalidStateException ex)
+            {
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", ex.Message));
+            }
+
+            _db.EstimateApprovalRequests.Add(request);
+            _db.EstimateApprovalSteps.AddRange(steps);
+            AddEstimateAudit(organizationId, actorUserId, "estimates.submitted", estimate.Id,
+                new { revisionId = revision.Id, revisionNo, calculationVersion, routeHash,
+                    reviewerMembershipIds = reviewers.Select(reviewer => reviewer.MembershipId).ToArray(),
+                    triggerCodes = testOnlyRoute?.Triggers.Select(trigger => trigger.Code).ToArray() ?? [] });
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), organizationId, operation,
+                keyHash, payloadHash, estimate.Id.ToString(), now));
+
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+                return Result<EstimateDetailProjection>.Success(MapToDetailProjection(estimate));
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException pg && pg.SqlState == "23505")
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+                var winner = await GetIdempotencyReplayAsync(organizationId, estimateId, operation, keyHash, payloadHash, cancellationToken);
+                if (winner is not null)
+                    return winner;
+                throw;
+            }
+        });
+    }
+
+    public async Task<Result<EstimateDetailProjection>> CreateRevisionAsync(
+        Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, string reason, Guid actorUserId,
+        string keyHash, string payloadHash, CancellationToken cancellationToken)
+    {
+        const string operation = "estimates.revisions.create";
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+            var replay = await GetIdempotencyReplayAsync(organizationId, estimateId, operation, keyHash, payloadHash, cancellationToken);
+            if (replay is not null)
+                return replay;
+
+            var estimate = await LoadEstimateDetails()
+                .FirstOrDefaultAsync(row => row.Id == estimateId && row.OrganizationId == organizationId, cancellationToken);
+            if (estimate is null)
+                return Result<EstimateDetailProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Estimate not found."));
+            if (estimate.RowVersion != expectedEstimateVersion)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_VERSION_CONFLICT", "The estimate version does not match the current state."));
+
+            EstimateRevision revision;
+            try
+            {
+                revision = estimate.CreateNextDraftRevision(reason);
+            }
+            catch (EstimateInvalidStateException ex)
+            {
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INPUT_INVALID", ex.Message));
+            }
+
+            var now = _clock.UtcNow;
+            _db.EstimateRevisions.Add(revision);
+            AddEstimateAudit(organizationId, actorUserId, "estimates.revision_created", estimate.Id,
+                new { revisionId = revision.Id, revisionNo = revision.RevisionNo, sourceRevisionNo = revision.RevisionNo - 1, reason = reason.Trim() });
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), organizationId, operation,
+                keyHash, payloadHash, estimate.Id.ToString(), now));
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+                return Result<EstimateDetailProjection>.Success(MapToDetailProjection(estimate));
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException pg && pg.SqlState == "23505")
+            {
+                await tx.RollbackAsync(cancellationToken);
+                _db.ChangeTracker.Clear();
+                var winner = await GetIdempotencyReplayAsync(organizationId, estimateId, operation, keyHash, payloadHash, cancellationToken);
+                if (winner is not null)
+                    return winner;
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_VERSION_CONFLICT", "A revision was created concurrently."));
+            }
+        });
+    }
+
+    public async Task<Result<EstimateDetailProjection>> ReviewAsync(
+        Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, int revisionNo,
+        string decision, string? reasonCode, string? note, Guid actorUserId,
+        Guid reviewerMembershipId, string keyHash, string payloadHash,
+        CancellationToken cancellationToken)
+    {
+        const string operation = "estimates.review";
+        var strategy = _db.Database.CreateExecutionStrategy();
+        try
+        {
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+            var replay = await GetIdempotencyReplayAsync(organizationId, estimateId, operation, keyHash, payloadHash, cancellationToken);
+            if (replay is not null)
+                return replay;
+
+            if (decision is not (EstimateApprovalStepStatus.Approved or EstimateApprovalStepStatus.Returned))
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_REVIEW_DECISION_INVALID", "Decision must be approved or returned."));
+            if (decision == EstimateApprovalStepStatus.Returned && (string.IsNullOrWhiteSpace(reasonCode) || string.IsNullOrWhiteSpace(note)))
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_REVIEW_REASON_REQUIRED", "Returning an estimate requires a reason code and note."));
+
+            var estimate = await LoadEstimateDetails()
+                .FirstOrDefaultAsync(row => row.Id == estimateId && row.OrganizationId == organizationId, cancellationToken);
+            if (estimate is null)
+                return Result<EstimateDetailProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Estimate not found."));
+            if (estimate.RowVersion != expectedEstimateVersion)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_VERSION_CONFLICT", "The estimate version does not match the current state."));
+
+            var revision = estimate.CurrentRevision;
+            if (revision is null || revision.RevisionNo != revisionNo || revision.Status != EstimateRevisionStatus.Submitted)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", "Only the submitted current revision can be reviewed."));
+
+            var request = await _db.EstimateApprovalRequests
+                .FirstOrDefaultAsync(row => row.OrganizationId == organizationId && row.EstimateId == estimateId &&
+                    row.EstimateRevisionId == revision.Id && row.Status == EstimateApprovalRequestStatus.Open, cancellationToken);
+            if (request is null)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", "An open approval request was not found."));
+            var activeSequence = await _db.EstimateApprovalSteps
+                .Where(row => row.OrganizationId == organizationId && row.EstimateApprovalRequestId == request.Id &&
+                    row.Status == EstimateApprovalStepStatus.Pending)
+                .Select(row => (int?)row.Sequence)
+                .MinAsync(cancellationToken);
+            var step = activeSequence.HasValue
+                ? await _db.EstimateApprovalSteps.FirstOrDefaultAsync(row => row.OrganizationId == organizationId &&
+                    row.EstimateApprovalRequestId == request.Id && row.Sequence == activeSequence.Value &&
+                    row.ReviewerMembershipId == reviewerMembershipId && row.ReviewerUserId == actorUserId &&
+                    row.Status == EstimateApprovalStepStatus.Pending, cancellationToken)
+                : null;
+            if (step is null)
+                return Result<EstimateDetailProjection>.Failure(new Error("PERMISSION_DENIED", "This membership is not assigned to the active approval step."));
+
+            var hasAuthority = await HasCurrentApprovalPermissionAsync(organizationId, estimate.BranchId,
+                reviewerMembershipId, actorUserId, _clock.UtcNow, cancellationToken);
+            if (!hasAuthority)
+                return Result<EstimateDetailProjection>.Failure(new Error("PERMISSION_DENIED", "The assigned reviewer no longer has estimate approval authority."));
+            if (actorUserId == revision.SubmittedByUserId || actorUserId == revision.LastFinancialEditorUserId)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_APPROVAL_SELF_REVIEW", "The submitter and last financial editor cannot approve or return this estimate."));
+
+            var now = _clock.UtcNow;
+            var approvalDecision = new EstimateApprovalDecision(
+                Guid.NewGuid(), organizationId, request.Id, step.Id, actorUserId,
+                reviewerMembershipId, decision, reasonCode, note,
+                request.CalculationSnapshotHash, request.RouteHash, now);
+            step.Decide(decision);
+            _db.EstimateApprovalDecisions.Add(approvalDecision);
+
+            var auditAction = "estimates.returned";
+            if (decision == EstimateApprovalStepStatus.Approved)
+            {
+                var hasPendingStep = await _db.EstimateApprovalSteps.AnyAsync(row =>
+                    row.OrganizationId == organizationId && row.EstimateApprovalRequestId == request.Id &&
+                    row.Id != step.Id && row.Status == EstimateApprovalStepStatus.Pending, cancellationToken);
+                if (hasPendingStep)
+                {
+                    auditAction = "estimates.approval_step_approved";
+                }
+                else
+                {
+                    request.Close(EstimateApprovalRequestStatus.Approved, now);
+                    var priorDecisions = await _db.EstimateApprovalDecisions.AsNoTracking()
+                        .Where(row => row.OrganizationId == organizationId && row.EstimateApprovalRequestId == request.Id)
+                        .OrderBy(row => row.DecidedAtUtc)
+                        .ToListAsync(cancellationToken);
+                    priorDecisions.Add(approvalDecision);
+                    var approvalSnapshotJson = JsonSerializer.Serialize(new
+                    {
+                        request.PolicyCode,
+                        request.PolicyVersion,
+                        request.CalculationInputHash,
+                        request.CalculationSnapshotHash,
+                        request.RouteHash,
+                        request.RouteSnapshotJson,
+                        decisions = priorDecisions
+                    });
+                    _db.EstimateApprovalSnapshots.Add(new EstimateApprovalSnapshot(
+                        Guid.NewGuid(), organizationId, estimate.Id, revision.Id, request.Id,
+                        request.CalculationVersion, request.CalculationInputHash,
+                        request.CalculationSnapshotHash, request.RouteHash, approvalSnapshotJson,
+                        actorUserId, now));
+                    estimate.ApproveCurrentRevision(actorUserId, now, approvalSnapshotJson);
+                    auditAction = "estimates.approved";
+                }
+            }
+            else
+            {
+                request.Close(EstimateApprovalRequestStatus.Returned, now);
+                estimate.ReturnCurrentRevision(actorUserId, now, reasonCode!, note!);
+            }
+
+            AddEstimateAudit(organizationId, actorUserId, auditAction, estimate.Id,
+                new { revisionId = revision.Id, revisionNo, approvalRequestId = request.Id, decision, reasonCode });
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), organizationId, operation,
+                keyHash, payloadHash, estimate.Id.ToString(), now));
+                await _db.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+                return Result<EstimateDetailProjection>.Success(MapToDetailProjection(estimate));
+            });
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<EstimateDetailProjection>.Failure(new Error(
+                "ESTIMATE_VERSION_CONFLICT", "The estimate changed while the review decision was being recorded."));
+        }
+        catch (DbUpdateException exception) when (exception.InnerException is Npgsql.PostgresException
+            { SqlState: "23505" or "40001" or "40P01" })
+        {
+            return Result<EstimateDetailProjection>.Failure(new Error(
+                "ESTIMATE_VERSION_CONFLICT", "The approval route changed while the review decision was being recorded."));
+        }
+    }
+
+    public async Task<Result<EstimateDetailProjection>> CancelAsync(
+        Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, string reason, Guid actorUserId,
+        Guid actorMembershipId, string keyHash, string payloadHash, CancellationToken cancellationToken)
+    {
+        const string operation = "estimates.cancel";
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+            var replay = await GetIdempotencyReplayAsync(organizationId, estimateId, operation, keyHash, payloadHash, cancellationToken);
+            if (replay is not null)
+                return replay;
+
+            var estimate = await LoadEstimateDetails()
+                .FirstOrDefaultAsync(row => row.Id == estimateId && row.OrganizationId == organizationId, cancellationToken);
+            if (estimate is null)
+                return Result<EstimateDetailProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Estimate not found."));
+            if (estimate.RowVersion != expectedEstimateVersion)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_VERSION_CONFLICT", "The estimate version does not match the current state."));
+            if (string.IsNullOrWhiteSpace(reason))
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_CANCEL_REASON_REQUIRED", "A cancellation reason is required."));
+
+            var revision = estimate.CurrentRevision;
+            if (revision is null)
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", "Estimate has no current revision."));
+
+            EstimateApprovalRequest? openRequest = null;
+            if (revision.Status == EstimateRevisionStatus.Submitted)
+            {
+                openRequest = await _db.EstimateApprovalRequests.FirstOrDefaultAsync(request =>
+                    request.OrganizationId == organizationId && request.EstimateId == estimateId &&
+                    request.EstimateRevisionId == revision.Id && request.Status == EstimateApprovalRequestStatus.Open,
+                    cancellationToken);
+                if (openRequest is null)
+                    return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", "An open approval request was not found."));
+
+                var assignedStep = await _db.EstimateApprovalSteps.FirstOrDefaultAsync(step =>
+                    step.OrganizationId == organizationId && step.EstimateApprovalRequestId == openRequest.Id &&
+                    step.ReviewerMembershipId == actorMembershipId && step.ReviewerUserId == actorUserId &&
+                    step.Status == EstimateApprovalStepStatus.Pending, cancellationToken);
+                if (assignedStep is null)
+                    return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_CANCEL_AUTHORITY_REQUIRED", "Cancelling a submitted estimate requires the assigned reviewer."));
+
+                var hasCancelAuthority = await HasCurrentEstimatePermissionAsync(organizationId, estimate.BranchId,
+                    actorMembershipId, actorUserId, "estimates.cancel", _clock.UtcNow, cancellationToken);
+                if (!hasCancelAuthority)
+                    return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_CANCEL_AUTHORITY_REQUIRED", "The assigned reviewer no longer has cancellation authority."));
+            }
+            else if (revision.Status is not (EstimateRevisionStatus.Draft or EstimateRevisionStatus.Returned))
+            {
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", $"Cannot cancel estimate revision in status '{revision.Status}'."));
+            }
+
+            var now = _clock.UtcNow;
+            try
+            {
+                estimate.CancelCurrentRevision(now, reason);
+            }
+            catch (EstimateInvalidStateException ex)
+            {
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_INVALID_STATE", ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_CANCEL_REASON_REQUIRED", ex.Message));
+            }
+
+            openRequest?.Close(EstimateApprovalRequestStatus.Cancelled, now);
+            AddEstimateAudit(organizationId, actorUserId, "estimates.cancelled", estimate.Id,
+                new { revisionId = revision.Id, revisionNo = revision.RevisionNo, approvalRequestId = openRequest?.Id, routeHash = openRequest?.RouteHash, reason = reason.Trim() });
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), organizationId, operation,
+                keyHash, payloadHash, estimate.Id.ToString(), now));
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+            return Result<EstimateDetailProjection>.Success(MapToDetailProjection(estimate));
+        });
+    }
+
+    private IQueryable<Estimate> LoadEstimateDetails() => _db.Estimates
+        .Include(estimate => estimate.Revisions)
+            .ThenInclude(revision => revision.Sections)
+                .ThenInclude(section => section.WorkItems)
+                    .ThenInclude(workItem => workItem.CostComponents);
+
+    private async Task<Result<EstimateDetailProjection>?> GetIdempotencyReplayAsync(
+        Guid organizationId, Guid estimateId, string operation, string keyHash,
+        string payloadHash, CancellationToken cancellationToken)
+    {
+        var existing = await _db.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(record =>
+            record.OrganizationId == organizationId && record.Operation == operation && record.KeyHash == keyHash,
+            cancellationToken);
+        if (existing is null)
+            return null;
+        if (existing.PayloadHash != payloadHash)
+            return Result<EstimateDetailProjection>.Failure(new Error("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload."));
+        if (!Guid.TryParse(existing.ResourceId, out var replayEstimateId) || replayEstimateId != estimateId)
+            return Result<EstimateDetailProjection>.Failure(new Error("IDEMPOTENCY_KEY_REUSED", "The idempotency key belongs to a different estimate."));
+        var estimate = await LoadEstimateDetails().AsNoTracking().FirstOrDefaultAsync(row =>
+            row.Id == estimateId && row.OrganizationId == organizationId, cancellationToken);
+        return estimate is null
+            ? Result<EstimateDetailProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Estimate not found."))
+            : Result<EstimateDetailProjection>.Success(MapToDetailProjection(estimate));
+    }
+
+    private async Task<ApprovalCandidate?> FindIndependentReviewerAsync(
+        Guid organizationId, Guid branchId, Guid submitterUserId, Guid? lastEditorUserId,
+        DateTimeOffset atUtc, CancellationToken cancellationToken,
+        string? requiredRoleName = null, IReadOnlyCollection<Guid>? excludedReviewerUserIds = null)
+    {
+        var excludedUsers = excludedReviewerUserIds?.ToArray() ?? [];
+        var candidates = await (from membership in _db.Memberships
+            join membershipRole in _db.MembershipRoles on new { MembershipId = membership.Id, membership.OrganizationId } equals new { membershipRole.MembershipId, membershipRole.OrganizationId }
+            join rolePermission in _db.RolePermissions on new { membershipRole.RoleId, membershipRole.OrganizationId } equals new { rolePermission.RoleId, rolePermission.OrganizationId }
+            join permission in _db.Permissions on rolePermission.PermissionId equals permission.Id
+            join role in _db.Roles on new { membershipRole.RoleId, membershipRole.OrganizationId } equals new { RoleId = role.Id, role.OrganizationId }
+            join user in _db.Users on membership.UserId equals user.Id
+            where membership.OrganizationId == organizationId && membership.IsActive && user.IsActive && role.IsActive && permission.IsActive &&
+                permission.Key == "estimates.approve" && membership.UserId != submitterUserId &&
+                (lastEditorUserId == null || membership.UserId != lastEditorUserId) &&
+                !excludedUsers.Contains(membership.UserId) &&
+                (requiredRoleName == null || role.NormalizedName == requiredRoleName) &&
+                (membership.BranchId == null || membership.BranchId == branchId) &&
+                (membership.StartsAtUtc == null || membership.StartsAtUtc <= atUtc) &&
+                (membership.ExpiresAtUtc == null || membership.ExpiresAtUtc > atUtc) &&
+                ((rolePermission.Scope == PermissionScope.Organization && rolePermission.ScopeId == organizationId) ||
+                 (rolePermission.Scope == PermissionScope.Branch && rolePermission.BranchId == branchId))
+            select new
+            {
+                UserId = membership.UserId,
+                MembershipId = membership.Id,
+                ScopeType = rolePermission.Scope == PermissionScope.Branch ? "branch" : "organization",
+                ScopeId = rolePermission.Scope == PermissionScope.Branch ? branchId : organizationId
+            })
+            .Distinct().OrderBy(candidate => candidate.MembershipId).ToListAsync(cancellationToken);
+        var candidate = candidates.FirstOrDefault();
+        return candidate is null
+            ? null
+            : new ApprovalCandidate(candidate.UserId, candidate.MembershipId, candidate.ScopeType, candidate.ScopeId);
+    }
+
+    private async Task<bool> HasCurrentApprovalPermissionAsync(
+        Guid organizationId, Guid branchId, Guid membershipId, Guid userId,
+        DateTimeOffset atUtc, CancellationToken cancellationToken) =>
+        await HasCurrentEstimatePermissionAsync(organizationId, branchId, membershipId, userId,
+            "estimates.approve", atUtc, cancellationToken);
+
+    private async Task<bool> HasCurrentEstimatePermissionAsync(
+        Guid organizationId, Guid branchId, Guid membershipId, Guid userId, string permissionKey,
+        DateTimeOffset atUtc, CancellationToken cancellationToken) =>
+        await (from membership in _db.Memberships
+            join membershipRole in _db.MembershipRoles on new { MembershipId = membership.Id, membership.OrganizationId } equals new { membershipRole.MembershipId, membershipRole.OrganizationId }
+            join rolePermission in _db.RolePermissions on new { membershipRole.RoleId, membershipRole.OrganizationId } equals new { rolePermission.RoleId, rolePermission.OrganizationId }
+            join permission in _db.Permissions on rolePermission.PermissionId equals permission.Id
+            join role in _db.Roles on new { membershipRole.RoleId, membershipRole.OrganizationId } equals new { RoleId = role.Id, role.OrganizationId }
+            join user in _db.Users on membership.UserId equals user.Id
+            where membership.Id == membershipId && membership.OrganizationId == organizationId && membership.UserId == userId &&
+                membership.IsActive && user.IsActive && role.IsActive && permission.IsActive && permission.Key == permissionKey &&
+                (membership.BranchId == null || membership.BranchId == branchId) &&
+                (membership.StartsAtUtc == null || membership.StartsAtUtc <= atUtc) &&
+                (membership.ExpiresAtUtc == null || membership.ExpiresAtUtc > atUtc) &&
+                ((rolePermission.Scope == PermissionScope.Organization && rolePermission.ScopeId == organizationId) ||
+                 (rolePermission.Scope == PermissionScope.Branch && rolePermission.BranchId == branchId))
+            select membership.Id).AnyAsync(cancellationToken);
+
+    private void AddEstimateAudit(Guid organizationId, Guid actorUserId, string eventType, Guid estimateId, object payload)
+    {
+        _db.AddAuditEvent(new AuditEvent(Guid.NewGuid(), organizationId, actorUserId, eventType,
+            "Estimate", estimateId.ToString(), _clock.UtcNow, string.Empty, JsonSerializer.Serialize(payload)));
+    }
+
+    private static string HashSnapshot(string value) => Convert.ToHexString(
+        System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+
+    private static bool SnapshotsMatch(string left, string right)
+    {
+        try
+        {
+            return System.Text.Json.Nodes.JsonNode.DeepEquals(
+                System.Text.Json.Nodes.JsonNode.Parse(left),
+                System.Text.Json.Nodes.JsonNode.Parse(right));
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
+    }
+
+    private sealed record ApprovalCandidate(Guid UserId, Guid MembershipId, string ScopeType, Guid ScopeId);
+
+    private static async Task<TPolicy?> ResolvePolicyAsync<TPolicy>(
+        IQueryable<TPolicy> policies,
+        Guid organizationId,
+        Guid branchId,
+        DateTimeOffset atUtc,
+        CancellationToken cancellationToken)
+        where TPolicy : class
+    {
+        if (typeof(TPolicy) == typeof(CalculationPolicyVersion))
+        {
+            var rows = await policies.Cast<CalculationPolicyVersion>()
+                .Where(row => row.OrganizationId == organizationId && row.Status == EstimatePolicyStatus.Published &&
+                    row.EffectiveFromUtc <= atUtc && (row.EffectiveToUtc == null || row.EffectiveToUtc > atUtc) &&
+                    (row.BranchId == branchId || row.BranchId == null))
+                .ToListAsync(cancellationToken);
+            return (TPolicy?)(object?)SelectPolicy(rows, branchId);
+        }
+
+        if (typeof(TPolicy) == typeof(TaxPolicyVersion))
+        {
+            var rows = await policies.Cast<TaxPolicyVersion>()
+                .Where(row => row.OrganizationId == organizationId && row.Status == EstimatePolicyStatus.Published &&
+                    row.EffectiveFromUtc <= atUtc && (row.EffectiveToUtc == null || row.EffectiveToUtc > atUtc) &&
+                    (row.BranchId == branchId || row.BranchId == null))
+                .ToListAsync(cancellationToken);
+            return (TPolicy?)(object?)SelectPolicy(rows, branchId);
+        }
+
+        throw new InvalidOperationException("Unsupported estimate policy type.");
+    }
+
+    private static TPolicy? SelectPolicy<TPolicy>(IReadOnlyCollection<TPolicy> rows, Guid branchId)
+        where TPolicy : class
+    {
+        var branchRows = rows.Where(row => row switch
+        {
+            CalculationPolicyVersion calculation => calculation.BranchId == branchId,
+            TaxPolicyVersion tax => tax.BranchId == branchId,
+            _ => false
+        }).ToArray();
+        if (branchRows.Length > 1)
+            return null;
+        if (branchRows.Length == 1)
+            return branchRows[0];
+
+        var organizationRows = rows.Where(row => row switch
+        {
+            CalculationPolicyVersion calculation => calculation.BranchId is null,
+            TaxPolicyVersion tax => tax.BranchId is null,
+            _ => false
+        }).ToArray();
+        return organizationRows.Length == 1 ? organizationRows[0] : null;
     }
 
     public async Task<Result<QuotationDetailProjection>> IssueQuotationAsync(
@@ -610,6 +1328,39 @@ public class EstimateStore : IEstimateStore
                     new Error("ESTIMATE_INVALID_STATE", "Estimate has no revisions."));
             }
 
+            if (currentRev.Status != EstimateRevisionStatus.Approved ||
+                currentRev.CalculationOutdated ||
+                string.IsNullOrWhiteSpace(currentRev.CalculationSnapshotJson) ||
+                string.IsNullOrWhiteSpace(currentRev.ApprovalSnapshotJson))
+            {
+                return Result<QuotationDetailProjection>.Failure(
+                    new Error("ESTIMATE_INVALID_STATE", "Only an approved estimate revision with a calculation snapshot can be quoted."));
+            }
+
+            var calculationSnapshot = await _db.EstimateCalculationSnapshots
+                .AsNoTracking()
+                .FirstOrDefaultAsync(snapshot => snapshot.OrganizationId == organizationId &&
+                    snapshot.EstimateRevisionId == currentRev.Id &&
+                    snapshot.CalculationVersion == currentRev.CalculationVersion,
+                    cancellationToken);
+            var approvalSnapshot = await _db.EstimateApprovalSnapshots
+                .AsNoTracking()
+                .FirstOrDefaultAsync(snapshot => snapshot.OrganizationId == organizationId &&
+                    snapshot.EstimateId == estimate.Id &&
+                    snapshot.EstimateRevisionId == currentRev.Id,
+                    cancellationToken);
+
+            if (calculationSnapshot is null || approvalSnapshot is null ||
+                approvalSnapshot.CalculationVersion != currentRev.CalculationVersion ||
+                approvalSnapshot.CalculationInputHash != calculationSnapshot.InputHash ||
+                approvalSnapshot.CalculationSnapshotHash != HashSnapshot(calculationSnapshot.SnapshotJson) ||
+                !SnapshotsMatch(currentRev.CalculationSnapshotJson, calculationSnapshot.SnapshotJson) ||
+                !SnapshotsMatch(currentRev.ApprovalSnapshotJson, approvalSnapshot.SnapshotJson))
+            {
+                return Result<QuotationDetailProjection>.Failure(
+                    new Error("ESTIMATE_INVALID_STATE", "The approved estimate snapshots do not match the current calculation."));
+            }
+
             if (currentRev.GrandTotal <= 0)
             {
                 return Result<QuotationDetailProjection>.Failure(
@@ -621,6 +1372,42 @@ public class EstimateStore : IEstimateStore
                 return Result<QuotationDetailProjection>.Failure(
                     new Error("OPPORTUNITY_INVALID_TRANSITION", $"Opportunity must be in 'estimating' stage to issue a quotation. Current stage is '{opp.Stage}'."));
             }
+
+            var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(
+                candidate => candidate.OrganizationId == organizationId && candidate.Id == estimate.CustomerId,
+                cancellationToken);
+            if (customer is null || customer.Status != TanErp.Domain.Crm.Customers.CustomerStatus.Active)
+                return Result<QuotationDetailProjection>.Failure(new Error("CUSTOMER_QUOTATION_BILLING_NOT_READY", "Customer must be active before issuing a quotation."));
+
+            var billingAddress = await _db.CustomerAddresses.AsNoTracking().FirstOrDefaultAsync(
+                address => address.OrganizationId == organizationId && address.CustomerId == customer.Id &&
+                    address.AddressType == "billing" && address.Status == "active" && address.IsPrimary,
+                cancellationToken);
+            if (billingAddress is null || (customer.CustomerType == "organization" &&
+                    (string.IsNullOrWhiteSpace(customer.LegalName) || string.IsNullOrWhiteSpace(customer.TaxIdentifier) || string.IsNullOrWhiteSpace(customer.BranchCode))))
+                return Result<QuotationDetailProjection>.Failure(new Error("CUSTOMER_QUOTATION_BILLING_NOT_READY", "Customer tax and billing details are incomplete."));
+
+            var billingSnapshotJson = JsonSerializer.Serialize(new
+            {
+                customerId = customer.Id,
+                customerType = customer.CustomerType,
+                displayNameTh = customer.DisplayNameTh,
+                displayNameEn = customer.DisplayNameEn,
+                legalName = customer.LegalName,
+                taxIdentifier = customer.TaxIdentifier,
+                branchCode = customer.BranchCode,
+                address = new
+                {
+                    billingAddress.Label,
+                    billingAddress.AddressLine1,
+                    billingAddress.Subdistrict,
+                    billingAddress.District,
+                    billingAddress.Province,
+                    billingAddress.PostalCode,
+                    billingAddress.CountryCode
+                }
+            });
+            var billingSnapshotHash = HashSnapshot(billingSnapshotJson);
 
             // 4. Atomic document numbering (no catch-all and no CountAsync()+1 fallback)
             string quotationNumber;
@@ -643,9 +1430,7 @@ public class EstimateStore : IEstimateStore
             opp.EnterProposed(expectedOpportunityVersion);
             estimate.MarkQuoted();
 
-            var snapshotHash = !string.IsNullOrWhiteSpace(currentRev.CalculationSnapshotJson)
-                ? Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(currentRev.CalculationSnapshotJson))).ToLowerInvariant()
-                : null;
+            var snapshotHash = approvalSnapshot.CalculationSnapshotHash;
 
             var quotation = new Quotation(
                 Guid.NewGuid(),
@@ -658,7 +1443,9 @@ public class EstimateStore : IEstimateStore
                 quotationNumber,
                 currentRev.GrandTotal,
                 snapshotHash,
-                _clock.UtcNow);
+                _clock.UtcNow,
+                billingSnapshotJson,
+                billingSnapshotHash);
 
             _db.Quotations.Add(quotation);
 
@@ -1086,6 +1873,7 @@ public class EstimateStore : IEstimateStore
                         w.UnitCode,
                         w.SellingRuleType,
                         w.SellingRuleValue,
+                        w.SellingRuleReasonCode,
                         w.UnitCost,
                         w.TotalCost,
                         w.UnitSellingPrice,
@@ -1115,8 +1903,23 @@ public class EstimateStore : IEstimateStore
                                 c.CostScopeSnapshot,
                                 c.CostEffectiveFromUtc,
                                 c.CostPolicyVersion,
-                                c.ResolvedAtUtc))
-                            .ToList()))
+                                c.ResolvedAtUtc,
+                                c.CostOrigin,
+                                c.CostSourceIdSnapshot,
+                                c.CostSourceCodeSnapshot,
+                                c.CostSourceReferenceSnapshot,
+                                c.CostEvidenceFileIdSnapshot,
+                                c.CostRecordReasonSnapshot,
+                                c.ProvisionalReasonCode,
+                                c.ProvisionalNote,
+                                c.IsProvisional))
+                            .ToList(),
+                        w.ItemId,
+                        w.ItemCodeSnapshot,
+                        w.ItemNameThSnapshot,
+                        w.ItemNameEnSnapshot,
+                        w.OverrideReasonCode,
+                        w.OverrideReason))
                     .ToList()))
             .ToList();
 
@@ -1127,10 +1930,14 @@ public class EstimateStore : IEstimateStore
             rev.Status,
             rev.Currency,
             rev.CalculationVersion,
+            rev.CalculationOutdated,
             rev.CalculationPolicyVersion,
             rev.TaxPolicyVersion,
             rev.NetCost,
             rev.SellingBeforeDiscount,
+            rev.DiscountType,
+            rev.DiscountValue,
+            rev.DiscountReasonCode,
             rev.DiscountAmount,
             rev.NetBeforeTax,
             rev.TaxAmount,
@@ -1142,6 +1949,64 @@ public class EstimateStore : IEstimateStore
             rev.RowVersion,
             rev.CreatedAtUtc,
             rev.UpdatedAtUtc,
-            sectionsProj);
+            sectionsProj,
+            rev.EvaluateReadiness());
+    }
+
+    private static string CalculateInputHash(
+        EstimateRevision revision,
+        EstimateDiscount discount,
+        CalculationPolicyVersion calculationPolicy,
+        TaxPolicyVersion taxPolicy)
+    {
+        var input = new
+        {
+            revision.Id,
+            revision.RevisionNo,
+            revision.Currency,
+            discountType = discount.Type,
+            discountValue = discount.Value,
+            discountReasonCode = discount.ReasonCode,
+            calculationPolicyHash = calculationPolicy.ContentHash,
+            taxPolicyHash = taxPolicy.ContentHash,
+            Sections = revision.Sections.OrderBy(section => section.SortOrder).Select(section => new
+            {
+                section.Code,
+                section.SortOrder,
+                WorkItems = section.WorkItems.OrderBy(workItem => workItem.SortOrder).Select(workItem => new
+                {
+                    workItem.Code,
+                    workItem.Quantity,
+                    workItem.UnitCode,
+                    workItem.SellingRuleType,
+                    workItem.SellingRuleValue,
+                    workItem.SellingRuleReasonCode,
+                    CostComponents = workItem.CostComponents.OrderBy(component => component.SortOrder).Select(component => new
+                    {
+                        component.Type,
+                        component.Quantity,
+                        component.UnitCode,
+                        component.UnitCost,
+                        component.Currency,
+                        component.ItemId,
+                        component.CostRecordId,
+                        component.CostRecordVersion,
+                        component.CostEffectiveFromUtc,
+                        component.CostPolicyVersion,
+                        component.CostOrigin,
+                        component.CostSourceIdSnapshot,
+                        component.CostSourceCodeSnapshot,
+                        component.CostSourceReferenceSnapshot,
+                        component.CostEvidenceFileIdSnapshot,
+                        component.CostRecordReasonSnapshot,
+                        component.ProvisionalReasonCode,
+                        component.ProvisionalNote
+                    })
+                })
+            })
+        };
+
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(input);
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant();
     }
 }

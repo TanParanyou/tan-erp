@@ -6,7 +6,11 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
+import { Avatar } from "@/components/ui/Avatar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { cn } from "@/lib/utils/cn";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 import {
   IconSearch,
   IconFilter,
@@ -31,6 +35,7 @@ export interface EstimateItemCatalogModalProps {
   onSelectItems: (items: CatalogItemModel[]) => void;
   currency: string;
   branchId?: string;
+  singleSelect?: boolean;
 }
 
 export type CatalogScope = "all" | "cost";
@@ -86,10 +91,13 @@ export function EstimateItemCatalogModal({
   onSelectItems,
   currency,
   branchId,
+  singleSelect = false,
 }: EstimateItemCatalogModalProps) {
   const t = useTranslations("estimates");
   const tc = useTranslations("common");
+  const ti = useTranslations("itemMaster");
   const locale = useLocale();
+  const isMobile = useIsMobile();
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -97,6 +105,8 @@ export function EstimateItemCatalogModal({
   const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
   const [selectedBrandId, setSelectedBrandId] = useState<string | undefined>(undefined);
+  const [selectedAttributeKey, setSelectedAttributeKey] = useState<string | undefined>(undefined);
+  const [selectedAttributeValue, setSelectedAttributeValue] = useState<string | undefined>(undefined);
 
   // Pagination state: cursor stack for backwards navigation
   const [cursor, setCursor] = useState<string | undefined>(undefined);
@@ -138,6 +148,19 @@ export function EstimateItemCatalogModal({
     setCursorHistory([undefined]);
   };
 
+  const handleAttributeKeyChange = (key: string) => {
+    setSelectedAttributeKey(key || undefined);
+    setSelectedAttributeValue(undefined);
+    setCursor(undefined);
+    setCursorHistory([undefined]);
+  };
+
+  const handleAttributeValueChange = (value: string) => {
+    setSelectedAttributeValue(value || undefined);
+    setCursor(undefined);
+    setCursorHistory([undefined]);
+  };
+
   const handleScopeChange = (newScope: CatalogScope) => {
     setScope(newScope);
     setCursor(undefined);
@@ -153,26 +176,64 @@ export function EstimateItemCatalogModal({
       setSelectedType(undefined);
       setSelectedCategoryId(undefined);
       setSelectedBrandId(undefined);
+      setSelectedAttributeKey(undefined);
+      setSelectedAttributeValue(undefined);
       setCursor(undefined);
       setCursorHistory([undefined]);
     }
   }, [isOpen]);
 
-  const { data, isLoading, isError, refetch } = useEstimateCatalog({
+  const { data, isLoading: isQueryLoading, isPlaceholderData, isError, refetch } = useEstimateCatalog({
     branchId: branchId || "",
     search: debouncedSearch || undefined,
     itemType: selectedType,
     categoryId: selectedCategoryId,
     brandId: selectedBrandId,
+    attributeKey: selectedAttributeKey,
+    attributeValue: selectedAttributeValue,
     hasCost: scope === "cost" ? true : undefined,
     cursor,
     pageSize: 20,
     enabled: Boolean(isOpen && branchId),
   });
 
+  const isLoading = isQueryLoading || Boolean(isPlaceholderData);
   const items = data?.items ?? [];
   const facets = data?.facets;
   const pageInfo = data?.pageInfo;
+  const itemTypeLabels: Record<string, string> = {
+    material: ti("itemTypeMaterial"),
+    labor: ti("itemTypeLabor"),
+    service: ti("itemTypeService"),
+    product: ti("itemTypeProduct"),
+    subcontract: ti("itemTypeSubcontract"),
+    other: ti("itemTypeOther"),
+  };
+  const attributeFacets = facets?.attributes ?? [];
+  const attributeKeys = Array.from(
+    new Set(attributeFacets.map((facet) => facet.key ?? "").filter(Boolean))
+  );
+  const attributeValues = attributeFacets.filter(
+    (facet) => facet.key === selectedAttributeKey
+  );
+
+  const getAttributeLabel = (key: string) => {
+    const labels: Record<string, string> = {
+      fixture: t("catalogFacets.attributeKeys.fixture"),
+      item_type: t("catalogFacets.attributeKeys.itemType"),
+      variant: t("catalogFacets.attributeKeys.variant"),
+      material: t("catalogFacets.attributeKeys.material"),
+      thickness_mm: t("catalogFacets.attributeKeys.thickness"),
+      width_mm: t("catalogFacets.attributeKeys.width"),
+      length_mm: t("catalogFacets.attributeKeys.length"),
+      finish: t("catalogFacets.attributeKeys.finish"),
+      surface: t("catalogFacets.attributeKeys.surface"),
+      color: t("catalogFacets.attributeKeys.color"),
+      grade: t("catalogFacets.attributeKeys.grade"),
+    };
+
+    return labels[key] ?? key.replaceAll("_", " ");
+  };
 
   const isAllCurrentPageSelected = useMemo(() => {
     if (items.length === 0) return false;
@@ -180,6 +241,7 @@ export function EstimateItemCatalogModal({
   }, [items, selectedItemsMap]);
 
   const handleToggleSelectAll = useCallback(() => {
+    if (singleSelect) return;
     setSelectedItemsMap((prev) => {
       const next = new Map(prev);
       if (isAllCurrentPageSelected) {
@@ -189,10 +251,11 @@ export function EstimateItemCatalogModal({
       }
       return next;
     });
-  }, [items, isAllCurrentPageSelected]);
+  }, [items, isAllCurrentPageSelected, singleSelect]);
 
   const handleToggleItem = useCallback((item: CatalogItemModel) => {
     setSelectedItemsMap((prev) => {
+      if (singleSelect) return prev.has(item.id) ? new Map() : new Map([[item.id, item]]);
       const next = new Map(prev);
       if (next.has(item.id)) {
         next.delete(item.id);
@@ -201,7 +264,7 @@ export function EstimateItemCatalogModal({
       }
       return next;
     });
-  }, []);
+  }, [singleSelect]);
 
   const handleNextPage = () => {
     if (pageInfo?.nextCursor) {
@@ -226,6 +289,8 @@ export function EstimateItemCatalogModal({
     setSelectedType(undefined);
     setSelectedCategoryId(undefined);
     setSelectedBrandId(undefined);
+    setSelectedAttributeKey(undefined);
+    setSelectedAttributeValue(undefined);
     setScope("cost");
     setCursor(undefined);
     setCursorHistory([undefined]);
@@ -243,9 +308,91 @@ export function EstimateItemCatalogModal({
     (selectedType ? 1 : 0) +
     (selectedCategoryId ? 1 : 0) +
     (selectedBrandId ? 1 : 0) +
+    (selectedAttributeKey ? 1 : 0) +
     (search ? 1 : 0);
 
   const currentPageNumber = cursorHistory.length;
+
+  const attributeFilters = attributeKeys.length > 0 && (
+    <div className="shrink-0 border-b border-erp-border bg-erp-surface p-2.5 space-y-2">
+      <div className="text-xs font-semibold text-erp-navy">
+        {t("catalogFacets.attributesTitle")}
+      </div>
+      <div
+        role="group"
+        aria-label={t("catalogFacets.attributeName")}
+        className="flex flex-wrap gap-x-1 gap-y-0.5"
+      >
+        <Button
+          type="button"
+          size="md"
+          variant="ghost"
+          aria-pressed={!selectedAttributeKey}
+          onClick={() => handleAttributeKeyChange("")}
+          className={cn("border-b-2 border-b-transparent px-2.5 text-xs font-normal", !selectedAttributeKey && "border-b-erp-navy bg-erp-navy-light text-erp-navy")}
+        >
+          {t("catalogFacets.allAttributeNames")}
+        </Button>
+        {attributeKeys.map((key) => (
+          <Button
+            key={key}
+            type="button"
+            size="md"
+            variant="ghost"
+            aria-pressed={selectedAttributeKey === key}
+            onClick={() => handleAttributeKeyChange(key)}
+            className={cn("border-b-2 border-b-transparent px-2.5 text-xs font-normal whitespace-normal", selectedAttributeKey === key && "border-b-erp-navy bg-erp-navy-light text-erp-navy")}
+          >
+            {getAttributeLabel(key)}
+          </Button>
+        ))}
+      </div>
+      {selectedAttributeKey && (
+        <fieldset className="border-t border-erp-border-subtle pt-2 space-y-1.5">
+          <legend className="text-[11px] text-erp-text-muted">
+            {getAttributeLabel(selectedAttributeKey)}
+          </legend>
+          <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+            <label className="relative cursor-pointer">
+              <input
+                type="radio"
+                name="catalog-attribute-value"
+                value=""
+                checked={!selectedAttributeValue}
+                onChange={() => handleAttributeValueChange("")}
+                className="peer sr-only"
+              />
+              <span className="flex min-h-[44px] items-center justify-center border border-erp-border bg-erp-surface px-3 text-center text-[11px] text-erp-text-main peer-checked:border-erp-navy peer-checked:bg-erp-navy-light peer-checked:text-erp-navy peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-erp-navy">
+                {t("catalogFacets.allAttributeValues")}
+              </span>
+            </label>
+            {attributeValues.map((facet) => {
+              const value = facet.value ?? "";
+              if (!value) return null;
+              return (
+                <label key={`${facet.key}:${value}`} className="relative cursor-pointer">
+                  <input
+                    type="radio"
+                    name="catalog-attribute-value"
+                    value={value}
+                    checked={selectedAttributeValue === value}
+                    onChange={() => handleAttributeValueChange(value)}
+                    className="peer sr-only"
+                  />
+                  <span className="flex min-h-[44px] items-center justify-between gap-1 border border-erp-border bg-erp-surface px-3 text-[11px] text-erp-text-main peer-checked:border-erp-navy peer-checked:bg-erp-navy-light peer-checked:text-erp-navy peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-erp-navy">
+                    <span className="truncate" title={value}>{value}</span>
+                    <span className="shrink-0 font-mono tabular-nums text-[10px] opacity-70">
+                      ({facet.count ?? 0})
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+    </div>
+  );
 
   return (
     <Modal
@@ -256,7 +403,11 @@ export function EstimateItemCatalogModal({
       description={t("catalogModalDesc")}
       className="h-full sm:h-[92vh] sm:max-w-6xl w-full"
       contentClassName="p-3 sm:p-4 overflow-hidden flex flex-col flex-1 h-full min-h-0"
-      footer={
+      footer={isMobile && showMobileFilters ? (
+        <Button type="button" size="md" variant="primary" onClick={() => setShowMobileFilters(false)} className="w-full text-xs">
+          {t("catalogFacets.showResults")}
+        </Button>
+      ) : (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between w-full gap-2 sm:gap-3">
           <div className="flex items-center justify-between sm:justify-start gap-2">
             <Button
@@ -265,13 +416,10 @@ export function EstimateItemCatalogModal({
               size="md"
               onClick={handleToggleSelectAll}
               disabled={items.length === 0 || isLoading}
-              className="!rounded-none text-xs min-h-[44px]"
+              className="text-xs"
             >
               {isAllCurrentPageSelected ? t("deselectAll") : t("selectAll")}
             </Button>
-            <span className="text-xs text-erp-text-muted font-mono">
-              {t("matchingCount", { count: items.length })}
-            </span>
           </div>
 
           <div className="flex items-center justify-end gap-2">
@@ -280,7 +428,7 @@ export function EstimateItemCatalogModal({
               variant="outline"
               size="md"
               onClick={onClose}
-              className="!rounded-none text-xs min-h-[44px] flex-1 sm:flex-initial"
+              className="text-xs flex-1 sm:flex-initial"
             >
               {tc("actions.cancel")}
             </Button>
@@ -290,13 +438,13 @@ export function EstimateItemCatalogModal({
               size="md"
               disabled={selectedItemsMap.size === 0}
               onClick={handleConfirmInsert}
-              className="!rounded-none text-xs min-h-[44px] bg-erp-navy hover:bg-erp-navy-hover text-white flex-1 sm:flex-initial"
+              className="text-xs flex-1 sm:flex-initial"
             >
               {t("insertSelectedCount", { count: selectedItemsMap.size })}
             </Button>
           </div>
         </div>
-      }
+      )}
     >
       <div className="flex flex-col space-y-2.5 sm:space-y-3 flex-1 overflow-hidden h-full min-h-0">
         {/* Top Controls: Search, Filter Toggle, Scope */}
@@ -308,15 +456,18 @@ export function EstimateItemCatalogModal({
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<IconSearch size={14} />}
               wrapperClassName="mb-0"
-              className="text-xs !h-10 !min-h-[40px] py-1.5"
+              className="text-xs !h-11 !min-h-[44px] py-1.5"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              size="md"
+              variant="outline"
               onClick={() => setShowMobileFilters((prev) => !prev)}
-              className="md:hidden flex items-center gap-1.5 px-3 h-10 min-h-[40px] text-xs border border-erp-border bg-erp-surface hover:bg-erp-surface-subtle font-medium text-erp-text-main rounded-none"
+              className="md:hidden gap-1.5 text-xs"
+              aria-expanded={showMobileFilters}
               aria-label={
                 showMobileFilters
                   ? t("catalogFacets.hideFilters")
@@ -334,17 +485,17 @@ export function EstimateItemCatalogModal({
                   {activeFiltersCount}
                 </span>
               )}
-            </button>
+            </Button>
 
-            <SegmentedControl
+            <SegmentedControl<CatalogScope>
               value={scope}
-              onChange={(val) => handleScopeChange(val as CatalogScope)}
-              size="sm"
+              onChange={handleScopeChange}
+              size="md"
               options={[
                 { value: "all", label: t("catalogFacets.allScopes") },
                 { value: "cost", label: t("catalogFacets.costScope") },
               ]}
-              className="h-10 min-h-[40px] text-xs"
+              className="text-xs"
             />
           </div>
         </div>
@@ -361,49 +512,39 @@ export function EstimateItemCatalogModal({
           <div className="flex flex-col md:flex-row gap-2.5 sm:gap-3 flex-1 overflow-hidden min-h-0">
             {/* Left Filter Sidebar */}
             <aside
-              className={`md:w-60 md:flex flex-col border border-erp-border bg-erp-surface text-xs shrink-0 overflow-y-auto ${
-                showMobileFilters ? "flex max-h-56 sm:max-h-72" : "hidden"
-              }`}
+              className={cn("md:w-56 md:flex md:flex-none flex-col border border-erp-border bg-erp-surface text-xs overflow-y-auto min-h-0", showMobileFilters ? "flex flex-1" : "hidden")}
             >
-              <div className="p-2.5 border-b border-erp-border flex items-center justify-between font-bold text-erp-navy">
-                <span>{t("catalogFacets.costType")}</span>
+              <div className="sticky top-0 z-10 pl-2.5 border-b border-erp-border bg-erp-surface flex min-h-11 items-center justify-between font-bold text-erp-navy">
+                <span>{t("catalogFacets.filtersTitle")}</span>
                 {activeFiltersCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleResetFilters}
-                    className="text-[11px] font-normal text-erp-navy hover:underline"
-                  >
+                  <Button type="button" size="md" variant="ghost" onClick={handleResetFilters} className="px-2 text-[11px] font-normal">
                     {t("catalogFacets.clearFilters")}
-                  </button>
+                  </Button>
                 )}
               </div>
 
               {/* Types Filter */}
-              <div className="p-2.5 border-b border-erp-border/60 space-y-1">
-                {(facets?.itemTypes ?? []).map((tFacet) => {
-                  const typeValue = tFacet.value || "";
-                  if (!typeValue) return null;
-                  const isChecked = selectedType === typeValue;
-                  return (
-                    <label
-                      key={typeValue}
-                      className="flex items-center justify-between py-1 px-1.5 hover:bg-erp-surface-subtle cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={isChecked}
-                          onChange={() => handleTypeChange(typeValue)}
-                          wrapperClassName="mb-0"
-                          className="w-3.5 h-3.5"
-                        />
-                        <span className="capitalize">{typeValue}</span>
-                      </div>
-                      <span className="text-[10px] text-erp-text-muted font-mono">
-                        ({tFacet.count ?? 0})
-                      </span>
-                    </label>
-                  );
-                })}
+              <div className="p-2.5 border-b border-erp-border-subtle">
+                <div className="grid grid-cols-2 gap-1" role="group" aria-label={t("catalogFacets.costType")}>
+                  {(facets?.itemTypes ?? []).map((facet) => {
+                    const value = facet.value;
+                    if (!value) return null;
+                    return (
+                      <Button
+                        key={value}
+                        type="button"
+                        size="md"
+                        variant="ghost"
+                        aria-pressed={selectedType === value}
+                        onClick={() => handleTypeChange(value)}
+                        className={cn("justify-between px-2 text-xs font-normal", selectedType === value && "bg-erp-navy-light text-erp-navy")}
+                      >
+                        <span>{itemTypeLabels[value] ?? value}</span>
+                        <span className="font-mono tabular-nums text-[10px] text-erp-text-muted">{facet.count ?? 0}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Category Filter */}
@@ -411,7 +552,7 @@ export function EstimateItemCatalogModal({
                 <div className="font-semibold text-erp-text-secondary mb-1.5">
                   {t("catalogFacets.category")}
                 </div>
-                <div className="space-y-1 max-h-40 overflow-y-auto">
+                <div className="space-y-0.5 max-h-32 overflow-y-auto">
                   {(facets?.categories ?? []).map((cat) => {
                     const catId = cat.id || "";
                     if (!catId) return null;
@@ -420,9 +561,10 @@ export function EstimateItemCatalogModal({
                     return (
                       <label
                         key={catId}
-                        className="flex items-center justify-between py-1 px-1.5 hover:bg-erp-surface-subtle cursor-pointer select-none"
+                        className="flex min-h-11 items-center justify-between gap-1 px-1 hover:bg-erp-surface-subtle cursor-pointer select-none"
                       >
                         <div className="flex items-center gap-2 truncate">
+                          <Avatar initial={catName} fileId={cat.imageFileId} alt={catName} size="sm" />
                           <Checkbox
                             checked={isChecked}
                             onChange={() => handleCategoryChange(catId)}
@@ -447,7 +589,7 @@ export function EstimateItemCatalogModal({
                 <div className="font-semibold text-erp-text-secondary mb-1.5">
                   {t("catalogFacets.brand")}
                 </div>
-                <div className="space-y-1 max-h-40 overflow-y-auto">
+                <div className="space-y-0.5 max-h-32 overflow-y-auto">
                   {(facets?.brands ?? []).map((brand) => {
                     const brandId = brand.id || "";
                     if (!brandId) return null;
@@ -456,9 +598,10 @@ export function EstimateItemCatalogModal({
                     return (
                       <label
                         key={brandId}
-                        className="flex items-center justify-between py-1 px-1.5 hover:bg-erp-surface-subtle cursor-pointer select-none"
+                        className="flex min-h-11 items-center justify-between gap-1 px-1 hover:bg-erp-surface-subtle cursor-pointer select-none"
                       >
                         <div className="flex items-center gap-2 truncate">
+                          <Avatar initial={brandName} fileId={brand.imageFileId} alt={brandName} size="sm" />
                           <Checkbox
                             checked={isChecked}
                             onChange={() => handleBrandChange(brandId)}
@@ -477,10 +620,12 @@ export function EstimateItemCatalogModal({
                   })}
                 </div>
               </div>
+              {isMobile && attributeFilters}
             </aside>
 
             {/* Right Table */}
-            <div className="flex-1 flex flex-col overflow-hidden border border-erp-border bg-erp-surface min-h-0 min-w-0">
+            <div className={cn("flex-1 flex-col overflow-hidden border border-erp-border bg-erp-surface min-h-0 min-w-0", isMobile && showMobileFilters ? "hidden" : "flex")}>
+              {!isMobile && attributeFilters}
               <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
                 {isLoading ? (
                   <div className="py-20 text-center text-xs text-erp-text-muted flex flex-col items-center justify-center gap-2">
@@ -506,10 +651,10 @@ export function EstimateItemCatalogModal({
                     {t("noMatchingItems")}
                   </div>
                 ) : (
-                  <table className="w-full text-left border-collapse text-xs table-fixed">
-                    <thead className="sticky top-0 bg-erp-surface-subtle text-erp-text-secondary border-b border-erp-border font-bold text-[11px] z-10">
-                      <tr>
-                        <th scope="col" className="p-2 w-8 text-center">
+                  <Table wrapperClassName="w-full border-none" className="text-xs table-fixed">
+                    <TableHeader className="sticky top-0 bg-erp-surface-subtle text-erp-text-secondary border-b border-erp-border font-bold text-[11px] z-10">
+                      <TableRow>
+                        <TableHead scope="col" className={cn("p-2 w-8 text-center", singleSelect && "sr-only")}>
                           <Checkbox
                             checked={isAllCurrentPageSelected}
                             onChange={handleToggleSelectAll}
@@ -521,22 +666,22 @@ export function EstimateItemCatalogModal({
                             wrapperClassName="mb-0"
                             className="w-3.5 h-3.5"
                           />
-                        </th>
-                        <th scope="col" className="p-2 w-12 text-center border-r border-erp-border/60">
-                          <span className="sr-only">Thumbnail</span>
-                        </th>
-                        <th scope="col" className="p-2 border-r border-erp-border/60">
+                        </TableHead>
+                        <TableHead scope="col" className="p-2 w-12 text-center border-r border-erp-border/60">
+                          <span className="sr-only">{t("catalogFacets.thumbnail")}</span>
+                        </TableHead>
+                        <TableHead scope="col" className="p-2 border-r border-erp-border/60">
                           {t("itemCodeAndDesc")}
-                        </th>
-                        <th scope="col" className="p-2 w-44 border-r border-erp-border/60 hidden sm:table-cell">
+                        </TableHead>
+                        <TableHead scope="col" className="p-2 w-44 border-r border-erp-border/60 hidden sm:table-cell">
                           {t("catalogFacets.brand")} / {t("catalogFacets.category")}
-                        </th>
-                        <th scope="col" className="p-2 w-32 text-right">
+                        </TableHead>
+                        <TableHead scope="col" className="p-2 w-32 text-right">
                           {t("unitCost")} ({currency})
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-erp-border/60">
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-erp-border/60">
                       {items.map((item) => {
                         const isSelected = selectedItemsMap.has(item.id);
                         const itemName = getLocalizedText(item.name, locale);
@@ -549,7 +694,7 @@ export function EstimateItemCatalogModal({
                         const categoryName = getLocalizedText(item.category.name, locale);
 
                         return (
-                          <tr
+                          <TableRow
                             key={item.id}
                             onClick={() => handleToggleItem(item)}
                             className={`cursor-pointer transition-colors ${
@@ -558,7 +703,7 @@ export function EstimateItemCatalogModal({
                                 : "hover:bg-erp-surface-subtle/50"
                             }`}
                           >
-                            <td
+                            <TableCell
                               className="p-2 text-center align-top"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -571,8 +716,8 @@ export function EstimateItemCatalogModal({
                                   className="w-3.5 h-3.5"
                                 />
                               </div>
-                            </td>
-                            <td
+                            </TableCell>
+                            <TableCell
                               className="p-1.5 text-center border-r border-erp-border/60 align-top"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -580,8 +725,8 @@ export function EstimateItemCatalogModal({
                                 fileId={item.primaryImage?.fileId}
                                 altText={itemAlt}
                               />
-                            </td>
-                            <td className="p-2 border-r border-erp-border/60 align-top">
+                            </TableCell>
+                            <TableCell className="p-2 border-r border-erp-border/60 align-top">
                               <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
                                 <span className="font-mono font-bold text-erp-navy text-xs">
                                   {item.code}
@@ -598,16 +743,25 @@ export function EstimateItemCatalogModal({
                                   {getLocalizedText(item.description, locale, "")}
                                 </div>
                               )}
-                            </td>
-                            <td className="p-2 border-r border-erp-border/60 align-top hidden sm:table-cell">
+                              {Object.keys(item.attributes ?? {}).length > 0 && (
+                                <div className="text-[10px] text-erp-text-muted mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+                                  {Object.entries(item.attributes ?? {}).map(([key, value]) => (
+                                    <span key={key}>
+                                      <span className="font-medium">{getAttributeLabel(key)}:</span> {value}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="p-2 border-r border-erp-border/60 align-top hidden sm:table-cell">
                               <div className="font-medium text-erp-text-main text-xs truncate">
                                 {brandName}
                               </div>
                               <div className="text-[11px] text-erp-text-muted truncate mt-0.5">
                                 {categoryName}
                               </div>
-                            </td>
-                            <td className="p-2 text-right align-top">
+                            </TableCell>
+                            <TableCell className="p-2 text-right align-top">
                               {item.resolvedCost ? (
                                 <>
                                   <div className="font-mono font-bold text-erp-navy text-xs">
@@ -620,12 +774,12 @@ export function EstimateItemCatalogModal({
                               ) : (
                                 <span className="text-erp-text-muted font-mono">-</span>
                               )}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         );
                       })}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 )}
               </div>
 

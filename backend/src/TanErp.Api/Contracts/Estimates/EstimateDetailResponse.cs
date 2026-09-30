@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using TanErp.Api.Contracts.Items;
 using TanErp.Application.Estimates;
 
@@ -25,7 +26,53 @@ public sealed record EstimateCostComponentResponse(
     string? CostScopeSnapshot = null,
     DateTimeOffset? CostEffectiveFromUtc = null,
     string? CostPolicyVersion = null,
-    DateTimeOffset? ResolvedAtUtc = null);
+    DateTimeOffset? ResolvedAtUtc = null,
+    string? CostOrigin = null,
+    Guid? CostSourceIdSnapshot = null,
+    string? CostSourceCodeSnapshot = null,
+    string? CostSourceReferenceSnapshot = null,
+    Guid? CostEvidenceFileIdSnapshot = null,
+    string? CostRecordReasonSnapshot = null,
+    string? ProvisionalReasonCode = null,
+    string? ProvisionalNote = null,
+    bool IsProvisional = false);
+
+public sealed record EstimateCalculationSnapshotResponse(
+    Guid Id,
+    Guid EstimateRevisionId,
+    int CalculationVersion,
+    string InputHash,
+    string SnapshotJson,
+    Guid? CalculationPolicyVersionId,
+    Guid? TaxPolicyVersionId,
+    string CalculationPolicyVersion,
+    string TaxPolicyVersion,
+    string? CalculationPolicyHash,
+    string? TaxPolicyHash,
+    Guid CapturedByUserId,
+    DateTimeOffset CapturedAtUtc)
+{
+    public static EstimateCalculationSnapshotResponse FromProjection(EstimateCalculationSnapshotProjection projection) => new(
+        projection.Id,
+        projection.EstimateRevisionId,
+        projection.CalculationVersion,
+        projection.InputHash,
+        projection.SnapshotJson,
+        projection.CalculationPolicyVersionId,
+        projection.TaxPolicyVersionId,
+        projection.CalculationPolicyVersion,
+        projection.TaxPolicyVersion,
+        projection.CalculationPolicyHash,
+        projection.TaxPolicyHash,
+        projection.CapturedByUserId,
+        projection.CapturedAtUtc);
+}
+
+public sealed record EstimateWorkItemItemResponse(
+    [property: Required] Guid Id,
+    [property: Required] string Code,
+    [property: Required] string NameTh,
+    string? NameEn);
 
 public sealed record EstimateWorkItemResponse(
     Guid Id,
@@ -37,12 +84,16 @@ public sealed record EstimateWorkItemResponse(
     string UnitCode,
     string SellingRuleType,
     decimal SellingRuleValue,
+    string? SellingRuleReasonCode,
     decimal UnitCost,
     decimal TotalCost,
     decimal UnitSellingPrice,
     decimal TotalSellingPrice,
     int SortOrder,
-    IReadOnlyList<EstimateCostComponentResponse> CostComponents);
+    IReadOnlyList<EstimateCostComponentResponse> CostComponents,
+    EstimateWorkItemItemResponse? Item = null,
+    string? OverrideReasonCode = null,
+    string? OverrideReason = null);
 
 public sealed record EstimateSectionResponse(
     Guid Id,
@@ -55,6 +106,12 @@ public sealed record EstimateSectionResponse(
     decimal SubtotalSellingPrice,
     IReadOnlyList<EstimateWorkItemResponse> WorkItems);
 
+public sealed record EstimateReadinessReasonResponse(
+    string Code,
+    string TargetType,
+    Guid? TargetId,
+    string TargetField);
+
 public sealed record EstimateRevisionResponse(
     Guid Id,
     Guid EstimateId,
@@ -62,10 +119,14 @@ public sealed record EstimateRevisionResponse(
     string Status,
     string Currency,
     int CalculationVersion,
+    bool CalculationOutdated,
     string CalculationPolicyVersion,
     string TaxPolicyVersion,
     decimal NetCost,
     decimal SellingBeforeDiscount,
+    string DiscountType,
+    decimal DiscountValue,
+    string? DiscountReasonCode,
     decimal DiscountAmount,
     decimal NetBeforeTax,
     decimal TaxAmount,
@@ -77,7 +138,9 @@ public sealed record EstimateRevisionResponse(
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset UpdatedAtUtc,
-    IReadOnlyList<EstimateSectionResponse> Sections);
+    IReadOnlyList<EstimateSectionResponse> Sections,
+    string Readiness,
+    IReadOnlyList<EstimateReadinessReasonResponse> ReadinessReasons);
 
 public sealed record EstimateDetailResponse(
     Guid Id,
@@ -137,6 +200,7 @@ public sealed record EstimateDetailResponse(
                 w.UnitCode,
                 w.SellingRuleType,
                 w.SellingRuleValue,
+                w.SellingRuleReasonCode,
                 w.UnitCost,
                 w.TotalCost,
                 w.UnitSellingPrice,
@@ -164,7 +228,21 @@ public sealed record EstimateDetailResponse(
                     c.CostScopeSnapshot,
                     c.CostEffectiveFromUtc,
                     c.CostPolicyVersion,
-                    c.ResolvedAtUtc)).ToList())).ToList())).ToList();
+                    c.ResolvedAtUtc,
+                    c.CostOrigin,
+                    c.CostSourceIdSnapshot,
+                    c.CostSourceCodeSnapshot,
+                    c.CostSourceReferenceSnapshot,
+                    c.CostEvidenceFileIdSnapshot,
+                    c.CostRecordReasonSnapshot,
+                    c.ProvisionalReasonCode,
+                    c.ProvisionalNote,
+                    c.IsProvisional)).ToList(),
+                w.ItemId.HasValue && w.ItemCodeSnapshot is not null && w.ItemNameThSnapshot is not null
+                    ? new EstimateWorkItemItemResponse(w.ItemId.Value, w.ItemCodeSnapshot, w.ItemNameThSnapshot, w.ItemNameEnSnapshot)
+                    : null,
+                w.OverrideReasonCode,
+                w.OverrideReason)).ToList())).ToList();
 
         return new EstimateRevisionResponse(
             r.Id,
@@ -173,10 +251,14 @@ public sealed record EstimateDetailResponse(
             r.Status,
             r.Currency,
             r.CalculationVersion,
+            r.CalculationOutdated,
             r.CalculationPolicyVersion,
             r.TaxPolicyVersion,
             r.NetCost,
             r.SellingBeforeDiscount,
+            r.DiscountType,
+            r.DiscountValue,
+            r.DiscountReasonCode,
             r.DiscountAmount,
             r.NetBeforeTax,
             r.TaxAmount,
@@ -188,6 +270,9 @@ public sealed record EstimateDetailResponse(
             r.RowVersion,
             r.CreatedAtUtc,
             r.UpdatedAtUtc,
-            sections);
+            sections,
+            r.Readiness.Status,
+            r.Readiness.Reasons.Select(reason => new EstimateReadinessReasonResponse(
+                reason.Code, reason.TargetType, reason.TargetId, reason.TargetField)).ToList());
     }
 }

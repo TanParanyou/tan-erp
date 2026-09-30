@@ -26,13 +26,14 @@ Customer และ Opportunity เป็น CRM Aggregate แยกกัน Sit
 
 | Entity | Typed Field สำคัญ | Constraint |
 | --- | --- | --- |
-| `customers` | organization, code, type, display/legal name, preferred locale, status, inactive reason, row version, audit | Unique `(organization_id, code)`; no hard delete after reference |
-| `customer_private_identifiers` | customer, identifier type, normalized hash, protected value, mask | Permission/Encryption policy; Unique เมื่อ Business Policy ยืนยัน |
+| `customers` | organization, code, type, display/legal name, tax identifier + normalized tax identifier, branch, credit terms, billing terms, preferred locale, status, inactive reason, row version | Unique `(organization_id, code)`; no hard delete after reference; check constraints for credit and billing day |
 | `customer_contacts` | customer, name, role, normalized/display phone/email, channel, primary, status, row version | อย่างน้อย Phone/Email; partial unique primary per Customer |
-| `customer_addresses` | customer, address type, structured address, status, row version | Billing/Contact address; version/audit เมื่อถูก Snapshot |
+| `customer_addresses` | customer, address type, structured address, status, primary flag, row version | Billing/Contact address; one active primary billing address per customer; version/audit |
 | `sites` | customer, label, structured address, geo, access note, status, row version | Organization/Customer เดียวกัน; historical reference preserved |
 
-Tax/Private Identifier แยก Table เพื่อจำกัด Projection/Permission/Encryption โดยไม่ทำให้ Customer Core เป็น JSONB
+ข้อมูลภาษีอยู่ใน Customer relational row เพื่อให้ API ตรวจ readiness ได้ใน transaction; Tax identifier เป็น personal data ห้ามใส่ค่าดิบใน audit/log และต้องจำกัด projection ตาม permission. การเข้ารหัส at-rest และการแยก identifier table เป็น hardening แยกต่างหาก.
+
+`commercial.quotations` เก็บ `customer_billing_snapshot_json` (`jsonb`) และ `customer_billing_snapshot_hash` สำหรับ snapshot ข้อมูลลูกค้า/ที่อยู่ออกบิลขณะออกใบเสนอราคา ข้อมูล snapshot ใช้เพื่อรักษาเอกสารย้อนหลัง ไม่อ่านกลับจากข้อมูลลูกค้าที่แก้ไขภายหลัง.
 
 ### Opportunity
 

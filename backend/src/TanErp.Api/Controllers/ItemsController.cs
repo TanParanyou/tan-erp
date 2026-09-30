@@ -5,6 +5,7 @@ using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Items;
+using TanErp.Domain.Items;
 
 namespace TanErp.Api.Controllers;
 
@@ -32,15 +33,20 @@ public class ItemsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create(
         [FromBody] CreateItemRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
         CancellationToken cancellationToken)
     {
-        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        var authResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
         if (authResult.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
         }
 
         var auth = authResult.Value!;
+        if (!string.Equals(auth.IdempotencyKey, idempotencyKey, StringComparison.Ordinal))
+        {
+            return ProblemDetailsMapper.CreateProblemResult("IDEMPOTENCY_KEY_INVALID", HttpContext);
+        }
         var accessResult = await _accessResolver.ResolveAsync(
             auth.FirebaseUid,
             auth.MembershipId,
@@ -72,9 +78,10 @@ public class ItemsController : ControllerBase
             request.SelectedBranchIds,
             request.Aliases?.Select(a => new LocalizedTextDto(a.Thai, a.English)).ToList(),
             request.Attributes,
-            request.AttributesSchemaVersion);
+            request.AttributesSchemaVersion,
+            request.TaxCategoryCode);
 
-        var result = await _store.CreateItemAsync(data, access, cancellationToken);
+        var result = await _store.CreateItemAsync(data, access, auth.IdempotencyKey, cancellationToken);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -134,8 +141,10 @@ public class ItemsController : ControllerBase
         [FromQuery] Guid? categoryId,
         [FromQuery] Guid? brandId,
         [FromQuery] string? status,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = null,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
+        [FromQuery] int pageSize = 25,
         CancellationToken cancellationToken = default)
     {
         var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
@@ -157,6 +166,21 @@ public class ItemsController : ControllerBase
         }
 
         var access = accessResult.Value!;
+        var normalizedSortBy = string.IsNullOrWhiteSpace(sortBy) ? ItemSortKey.Code : sortBy.Trim();
+        if (!ItemSortKey.IsValid(normalizedSortBy))
+        {
+            return ProblemDetailsMapper.CreateProblemResult("ITEM_SORT_INVALID", HttpContext);
+        }
+        normalizedSortBy = normalizedSortBy.Equals(ItemSortKey.ItemType, StringComparison.OrdinalIgnoreCase)
+            ? ItemSortKey.ItemType
+            : normalizedSortBy.ToLowerInvariant();
+
+        var normalizedSortOrder = string.IsNullOrWhiteSpace(sortOrder) ? ItemSortOrder.Asc : sortOrder.Trim().ToLowerInvariant();
+        if (!ItemSortOrder.IsValid(normalizedSortOrder))
+        {
+            return ProblemDetailsMapper.CreateProblemResult("ITEM_SORT_ORDER_INVALID", HttpContext);
+        }
+
         var query = new ItemQuery(
             access.OrganizationId,
             search,
@@ -164,8 +188,10 @@ public class ItemsController : ControllerBase
             categoryId,
             brandId,
             status,
-            pageNumber,
-            pageSize);
+            normalizedSortBy,
+            normalizedSortOrder,
+            Math.Max(pageNumber, 1),
+            pageSize < 1 ? 25 : Math.Min(pageSize, 100));
 
         var paged = await _store.ListItemsAsync(query, cancellationToken);
         var response = new PagedItemsResponse
@@ -230,7 +256,9 @@ public class ItemsController : ControllerBase
                 request.Capabilities.CanStock,
                 request.Capabilities.CanProduce),
             request.Attributes,
-            request.AttributesSchemaVersion);
+            request.AttributesSchemaVersion,
+            request.TaxCategoryCode,
+            request.SelectedBranchIds);
 
         var result = await _store.UpdateItemAsync(data, access, cancellationToken);
         if (result.IsFailure)

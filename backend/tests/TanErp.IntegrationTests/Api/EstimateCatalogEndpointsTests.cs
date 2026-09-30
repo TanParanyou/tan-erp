@@ -1,17 +1,22 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TanErp.Api;
 using TanErp.Api.Contracts.Items;
+using TanErp.Domain.Estimates;
 using TanErp.Domain.Items;
+using TanErp.Domain.Files;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
+using TanErp.IntegrationTests.Support;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -24,6 +29,7 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
 
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
+    private readonly InMemoryLoggerProvider _loggerProvider = new();
 
     private const string Uid = TestOnlyDataSeeder.TestFirebaseUid;
     private static readonly Guid OrgId = TestOnlyDataSeeder.TestOrgId;
@@ -46,6 +52,7 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Test");
+            builder.ConfigureLogging(logging => logging.AddProvider(_loggerProvider));
             builder.ConfigureAppConfiguration((_, config) =>
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
@@ -100,7 +107,10 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
         db.Branches.Add(branchB);
 
         // 1. Categories
-        var catSolar = new ItemCategory(Guid.NewGuid(), OrgId, "SOLAR", LocalizedText.Create("โซลาร์เซลล์", "Solar Cell"), null, null, [ItemType.Material], 1, actorId, now);
+        var solarImage = new UploadedFile(Guid.NewGuid(), OrgId, "test/solar-category-image", "solar-category.png", "image/png", 128, "test-solar-category-session", actorId, now);
+        var jinkoImage = new UploadedFile(Guid.NewGuid(), OrgId, "test/jinko-brand-image", "jinko-brand.png", "image/png", 128, "test-jinko-brand-session", actorId, now);
+        db.UploadedFiles.AddRange(solarImage, jinkoImage);
+        var catSolar = new ItemCategory(Guid.NewGuid(), OrgId, "SOLAR", LocalizedText.Create("โซลาร์เซลล์", "Solar Cell"), null, null, [ItemType.Material], 1, actorId, now, solarImage.Id);
         var catMount = new ItemCategory(Guid.NewGuid(), OrgId, "MOUNT", LocalizedText.Create("โครงสร้างยึด", "Mounting Structure"), null, null, [ItemType.Material], 2, actorId, now);
         db.ItemCategories.AddRange(catSolar, catMount);
 
@@ -110,7 +120,7 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
         db.Units.AddRange(unitPiece, unitSet);
 
         // 3. Brands
-        var brandJinko = new ItemBrand(Guid.NewGuid(), OrgId, "JINKO", LocalizedText.Create("จินโกะ", "Jinko Solar"), null, 1, actorId, now);
+        var brandJinko = new ItemBrand(Guid.NewGuid(), OrgId, "JINKO", LocalizedText.Create("จินโกะ", "Jinko Solar"), null, 1, actorId, now, jinkoImage.Id);
         db.ItemBrands.Add(brandJinko);
 
         // 4. Item 1: Active, AllBranches, with Published Cost
@@ -118,8 +128,8 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
             Guid.NewGuid(), OrgId, "SOLAR-PANEL-550W", ItemType.Material, catSolar.Id, brandJinko.Id,
             LocalizedText.Create("แผงโซลาร์ 550W", "Solar Panel 550W"), null, unitPiece.Id,
             ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false),
-            null, null, actorId, now);
-        item1.Activate(actorId, now, false);
+            new Dictionary<string, string> { ["fixture"] = "item_catalog_filter_test_only", ["thickness_mm"] = "10" }, 1, actorId, now);
+        item1.Activate(actorId, now, false, true, true, true);
         db.Items.Add(item1);
 
         var cost1 = CostRecord.CreateDraft(
@@ -138,7 +148,7 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
             null, null, actorId, now);
         var branchAvail = new ItemBranchAvailability(Guid.NewGuid(), OrgId, item2.Id, BranchAId, null, null, actorId, now);
         db.ItemBranchAvailabilities.Add(branchAvail);
-        item2.Activate(actorId, now, true);
+        item2.Activate(actorId, now, true, true, true, true);
         db.Items.Add(item2);
 
         var cost2 = CostRecord.CreateDraft(
@@ -163,7 +173,7 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
             LocalizedText.Create("สินค้าไม่มีต้นทุน", "No Cost Item"), null, unitPiece.Id,
             ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, false, true, true, false),
             null, null, actorId, now);
-        item4.Activate(actorId, now, false);
+        item4.Activate(actorId, now, false, true, true, true);
         db.Items.Add(item4);
 
         await db.SaveChangesAsync();
@@ -272,11 +282,11 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
             var actorId = Guid.NewGuid();
 
             var unpriced1 = Item.CreateDraft(Guid.NewGuid(), OrgId, "AAA-NO-COST", ItemType.Material, cat.Id, null, LocalizedText.Create("ของไม่มีราคา 1", null), null, unit.Id, ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false), null, null, actorId, now);
-            unpriced1.Activate(actorId, now, false);
+            unpriced1.Activate(actorId, now, false, true, true, true);
             var unpriced2 = Item.CreateDraft(Guid.NewGuid(), OrgId, "BBB-NO-COST", ItemType.Material, cat.Id, null, LocalizedText.Create("ของไม่มีราคา 2", null), null, unit.Id, ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false), null, null, actorId, now);
-            unpriced2.Activate(actorId, now, false);
+            unpriced2.Activate(actorId, now, false, true, true, true);
             var unpriced3 = Item.CreateDraft(Guid.NewGuid(), OrgId, "CCC-NO-COST", ItemType.Material, cat.Id, null, LocalizedText.Create("ของไม่มีราคา 3", null), null, unit.Id, ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false), null, null, actorId, now);
-            unpriced3.Activate(actorId, now, false);
+            unpriced3.Activate(actorId, now, false, true, true, true);
 
             db.Items.AddRange(unpriced1, unpriced2, unpriced3);
             await db.SaveChangesAsync();
@@ -293,6 +303,167 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
         Assert.NotNull(body);
         Assert.Equal(2, body.Items.Count);
         Assert.All(body.Items, i => Assert.NotNull(i.ResolvedCost));
+
+        var defaultRequest = CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&pageSize=2");
+        var defaultResponse = await _client.SendAsync(defaultRequest);
+        var defaultBody = await defaultResponse.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(defaultBody);
+        Assert.Equal(2, defaultBody.Items.Count);
+        Assert.All(defaultBody.Items, i => Assert.NotNull(i.ResolvedCost));
+    }
+
+    [Fact]
+    public async Task SearchCatalog_ProductItem_MapsToMaterialCostComponent()
+    {
+        Guid productId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var unit = await db.Units.FirstAsync(u => u.OrganizationId == OrgId);
+            var now = DateTimeOffset.UtcNow;
+            var actorId = Guid.NewGuid();
+            var category = new ItemCategory(Guid.NewGuid(), OrgId, "TEST-PRODUCT-CATALOG",
+                LocalizedText.Create("สินค้าสำเร็จรูปทดสอบ", "Test Finished Product"), null, null,
+                [ItemType.Product], 10, actorId, now);
+            var product = Item.CreateDraft(Guid.NewGuid(), OrgId, "TEST-PRODUCT-CATALOG-01", ItemType.Product,
+                category.Id, null, LocalizedText.Create("ชุดสินค้าสำเร็จรูป", "Finished Product Set"), null,
+                unit.Id, ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false),
+                null, null, actorId, now);
+            product.Activate(actorId, now, false, true, true, true);
+            db.ItemCategories.Add(category);
+            db.Items.Add(product);
+
+            var cost = CostRecord.CreateDraft(Guid.NewGuid(), OrgId, product.Id, CostScopeType.Organization,
+                null, unit.Id, "THB", 1250m, 0m, null, now.AddDays(-1), null, 1, null, null, null, null,
+                actorId, now);
+            cost.Submit(actorId, now);
+            cost.Approve(Guid.NewGuid(), now);
+            cost.Publish(Guid.NewGuid(), now);
+            db.CostRecords.Add(cost);
+            await db.SaveChangesAsync();
+            productId = product.Id;
+        }
+
+        var request = CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&hasCost=true&itemType=product&pageSize=20");
+        var response = await _client.SendAsync(request);
+
+        Assert.True(response.StatusCode == HttpStatusCode.OK,
+            $"Expected 200 but received {(int)response.StatusCode}. {string.Join(Environment.NewLine, _loggerProvider.Messages)}");
+        var body = await response.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(body);
+        var item = Assert.Single(body.Items);
+        Assert.Equal(productId, item.Id);
+        Assert.Equal(ItemType.Product, item.ItemType);
+        Assert.Equal(CostComponentType.Material, item.CostComponentType);
+    }
+
+    [Fact]
+    public async Task SearchCatalog_FacetsRemainStableWhenFiltersOrSearchChange()
+    {
+        Guid solarCategoryId;
+        Guid brandId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            solarCategoryId = await db.ItemCategories.Where(c => c.OrganizationId == OrgId && c.Code == "SOLAR")
+                .Select(c => c.Id).SingleAsync();
+            brandId = await db.ItemBrands.Where(b => b.OrganizationId == OrgId && b.Code == "JINKO")
+                .Select(b => b.Id).SingleAsync();
+        }
+
+        var baselineResponse = await _client.SendAsync(CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}"));
+        Assert.Equal(HttpStatusCode.OK, baselineResponse.StatusCode);
+        var baseline = await baselineResponse.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(baseline);
+
+        var request = CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&categoryId={solarCategoryId}&brandId={brandId}&itemType=material&attributeKey=thickness_mm&attributeValue=10&search=SOLAR&pageSize=1");
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(body);
+        Assert.Single(body.Items);
+        Assert.Equal("SOLAR-PANEL-550W", body.Items[0].Code);
+        Assert.Equal(JsonSerializer.Serialize(baseline.Facets), JsonSerializer.Serialize(body.Facets));
+        var categoryFacet = body.Facets.Categories.Single(facet => facet.Id == solarCategoryId);
+        var brandFacet = body.Facets.Brands.Single(facet => facet.Id == brandId);
+        Assert.NotNull(categoryFacet.ImageFileId);
+        Assert.NotNull(brandFacet.ImageFileId);
+        var solarItem = body.Items.Single();
+        Assert.Equal(categoryFacet.ImageFileId, solarItem.Category.ImageFileId);
+        Assert.Equal(brandFacet.ImageFileId, solarItem.Brand?.ImageFileId);
+
+        var emptyResponse = await _client.SendAsync(CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&search=NO-MATCH-TEST-ONLY"));
+        Assert.Equal(HttpStatusCode.OK, emptyResponse.StatusCode);
+        var empty = await emptyResponse.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(empty);
+        Assert.Empty(empty.Items);
+        Assert.Equal(JsonSerializer.Serialize(baseline.Facets), JsonSerializer.Serialize(empty.Facets));
+    }
+
+    [Fact]
+    public async Task SearchCatalog_FiltersByAttributeAndReturnsAttributeFacets()
+    {
+        var request = CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&attributeKey=thickness_mm&attributeValue=10");
+        var response = await _client.SendAsync(request);
+
+        Assert.True(response.StatusCode == HttpStatusCode.OK,
+            $"Expected 200 but received {(int)response.StatusCode}. {string.Join(Environment.NewLine, _loggerProvider.Messages)}");
+        var body = await response.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(body);
+        var item = Assert.Single(body.Items);
+        Assert.Equal("SOLAR-PANEL-550W", item.Code);
+        Assert.Equal("10", item.Attributes.RootElement.GetProperty("thickness_mm").GetString());
+        Assert.Contains(body.Facets.Attributes, facet => facet.Key == "thickness_mm" && facet.Value == "10" && facet.Count == 1);
+
+        var keyOnlyRequest = CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&attributeKey=fixture");
+        var keyOnlyResponse = await _client.SendAsync(keyOnlyRequest);
+        Assert.Equal(HttpStatusCode.OK, keyOnlyResponse.StatusCode);
+        var keyOnlyBody = await keyOnlyResponse.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(keyOnlyBody);
+        Assert.Contains(keyOnlyBody.Items, result => result.Code == "SOLAR-PANEL-550W");
+    }
+
+    [Fact]
+    public async Task SearchCatalog_AmbiguousCost_DoesNotOccupyPricedPageOrFacets()
+    {
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var category = await db.ItemCategories.FirstAsync(c => c.OrganizationId == OrgId);
+            var unit = await db.Units.FirstAsync(u => u.OrganizationId == OrgId);
+            var now = DateTimeOffset.UtcNow;
+            var actorId = Guid.NewGuid();
+            var ambiguousItem = Item.CreateDraft(
+                Guid.NewGuid(), OrgId, "AAA-AMBIGUOUS", ItemType.Material, category.Id, null,
+                LocalizedText.Create("ราคากำกวม", "Ambiguous Cost"), null, unit.Id,
+                ItemAvailabilityMode.AllBranches, new ItemCapabilities(true, true, true, true, false),
+                null, null, actorId, now);
+            ambiguousItem.Activate(actorId, now, false, true, true, true);
+            db.Items.Add(ambiguousItem);
+
+            foreach (var amount in new[] { 100m, 120m })
+            {
+                var cost = CostRecord.CreateDraft(
+                    Guid.NewGuid(), OrgId, ambiguousItem.Id, CostScopeType.Organization, null, unit.Id, "THB",
+                    amount, 0m, null, now.AddDays(-1), null, 1, null, null, null, null, actorId, now);
+                cost.Submit(actorId, now);
+                cost.Approve(Guid.NewGuid(), now);
+                cost.Publish(Guid.NewGuid(), now);
+                db.CostRecords.Add(cost);
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        var request = CreateRequest($"/api/v1/estimate-catalog/items?branchId={BranchAId}&pageSize=1");
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<EstimateCatalogResponse>();
+        Assert.NotNull(body);
+        Assert.Single(body.Items);
+        Assert.NotEqual("AAA-AMBIGUOUS", body.Items[0].Code);
+        Assert.NotNull(body.Items[0].ResolvedCost);
+        Assert.Equal(2, body.Facets.ItemTypes.Single(f => f.Value == ItemType.Material).Count);
     }
 
     [Fact]

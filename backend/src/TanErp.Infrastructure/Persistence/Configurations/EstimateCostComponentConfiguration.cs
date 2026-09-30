@@ -17,6 +17,7 @@ public class EstimateCostComponentConfiguration : IEntityTypeConfiguration<Estim
             t.HasCheckConstraint("ck_estimate_cost_components_type", "type IN ('material', 'labor', 'subcontract', 'service', 'other_direct')");
             t.HasCheckConstraint("ck_estimate_cost_components_quantity", "quantity > 0");
             t.HasCheckConstraint("ck_estimate_cost_components_unit_cost", "unit_cost >= 0");
+            t.HasCheckConstraint("ck_estimate_cost_components_cost_origin", "cost_origin IN ('manual', 'catalog')");
         });
 
         builder.HasKey(x => x.Id);
@@ -54,6 +55,14 @@ public class EstimateCostComponentConfiguration : IEntityTypeConfiguration<Estim
         builder.Property(x => x.CostEffectiveFromUtc).HasColumnName("cost_effective_from_utc").HasColumnType("timestamptz");
         builder.Property(x => x.CostPolicyVersion).HasColumnName("cost_policy_version").HasMaxLength(50);
         builder.Property(x => x.ResolvedAtUtc).HasColumnName("resolved_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.CostOrigin).HasColumnName("cost_origin").HasMaxLength(16).IsRequired();
+        builder.Property(x => x.CostSourceIdSnapshot).HasColumnName("cost_source_id_snapshot");
+        builder.Property(x => x.CostSourceCodeSnapshot).HasColumnName("cost_source_code_snapshot").HasMaxLength(50);
+        builder.Property(x => x.CostSourceReferenceSnapshot).HasColumnName("cost_source_reference_snapshot").HasMaxLength(500);
+        builder.Property(x => x.CostEvidenceFileIdSnapshot).HasColumnName("cost_evidence_file_id_snapshot");
+        builder.Property(x => x.CostRecordReasonSnapshot).HasColumnName("cost_record_reason_snapshot").HasMaxLength(1000);
+        builder.Property(x => x.ProvisionalReasonCode).HasColumnName("provisional_reason_code").HasMaxLength(64);
+        builder.Property(x => x.ProvisionalNote).HasColumnName("provisional_note").HasMaxLength(1000);
 
         builder.HasIndex(x => new { x.OrganizationId, x.EstimateWorkItemId });
         builder.HasIndex(x => new { x.OrganizationId, x.ItemId });

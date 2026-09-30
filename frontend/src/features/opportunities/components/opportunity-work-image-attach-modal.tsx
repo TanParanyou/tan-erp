@@ -196,6 +196,7 @@ export function OpportunityWorkImageAttachModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
+      closeDisabled={isSubmitting}
       title={t("attachImagesModalTitle")}
       size="xl"
     >

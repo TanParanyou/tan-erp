@@ -57,12 +57,24 @@ public class ItemTests
         var item = CreateStandardDraftItem();
         var now = DateTimeOffset.UtcNow;
 
-        item.Activate(_actorId, now, hasActiveSelectedBranch: false);
+        item.Activate(_actorId, now, hasActiveSelectedBranch: false, categoryActive: true, unitActive: true, brandActive: true);
 
         Assert.Equal(ItemStatus.Active, item.Status);
         Assert.True(item.ActivatedOnce);
         Assert.Equal(_actorId, item.ActivatedByUserId);
         Assert.Equal(now, item.ActivatedAtUtc);
+    }
+
+    [Fact]
+    public void Activate_WhenCategoryIsInactive_RejectsBeforeChangingStatus()
+    {
+        var item = CreateStandardDraftItem();
+
+        var error = Assert.Throws<ItemValidationException>(() =>
+            item.Activate(_actorId, DateTimeOffset.UtcNow, false, false, true, true));
+
+        Assert.Equal("ITEM_CATEGORY_INACTIVE", error.Code);
+        Assert.Equal(ItemStatus.Draft, item.Status);
     }
 
     [Fact]
@@ -88,7 +100,7 @@ public class ItemTests
             DateTimeOffset.UtcNow);
 
         var ex = Assert.Throws<ItemValidationException>(() =>
-            item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false));
+            item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false, categoryActive: true, unitActive: true, brandActive: true));
 
         Assert.Equal("ITEM_BRANCH_REQUIRED", ex.Code);
     }
@@ -116,7 +128,7 @@ public class ItemTests
             DateTimeOffset.UtcNow);
 
         var ex = Assert.Throws<ItemValidationException>(() =>
-            item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false));
+            item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false, categoryActive: true, unitActive: true, brandActive: true));
 
         Assert.Equal("ITEM_CAPABILITY_REQUIRED", ex.Code);
     }
@@ -125,7 +137,7 @@ public class ItemTests
     public void UpdateDetails_WhenActivatedOnce_ThrowsIfCodeChanged()
     {
         var item = CreateStandardDraftItem();
-        item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false);
+        item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false, categoryActive: true, unitActive: true, brandActive: true);
 
         var ex = Assert.Throws<ItemValidationException>(() =>
             item.UpdateDetails(
@@ -150,7 +162,7 @@ public class ItemTests
     public void Deactivate_WithValidReason_TransitionsToInactive()
     {
         var item = CreateStandardDraftItem();
-        item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false);
+        item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false, categoryActive: true, unitActive: true, brandActive: true);
 
         var now = DateTimeOffset.UtcNow;
         item.Deactivate(_actorId, now, "DISCONTINUED", "ยกเลิกการผลิตจากโรงงาน");
@@ -166,7 +178,7 @@ public class ItemTests
     public void Deactivate_WithoutReasonCode_ThrowsItemValidationException()
     {
         var item = CreateStandardDraftItem();
-        item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false);
+        item.Activate(_actorId, DateTimeOffset.UtcNow, hasActiveSelectedBranch: false, categoryActive: true, unitActive: true, brandActive: true);
 
         var ex = Assert.Throws<ItemValidationException>(() =>
             item.Deactivate(_actorId, DateTimeOffset.UtcNow, "", null));

@@ -9,6 +9,10 @@ export const PERMISSIONS = {
   USERS_MANAGE: "users.manage",
   ROLES_MANAGE: "roles.manage",
 
+  // Item Master
+  ITEMS_READ: "items.read",
+  ITEMS_CREATE: "items.create",
+
   // CRM - Customers
   CUSTOMERS_READ: "customers.read",
   CUSTOMERS_CREATE: "customers.create",

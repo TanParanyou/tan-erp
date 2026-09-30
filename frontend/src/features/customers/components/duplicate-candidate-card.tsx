@@ -4,7 +4,8 @@ import React from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { CustomerResponse } from "@/lib/api/api-client";
-import { IconAlertTriangle, IconEye } from "@/components/common/Icons";
+import { IconAlertTriangle } from "@/components/common/Icons";
+import { DuplicateCandidateRow } from "./duplicate-candidate-row";
 
 type DuplicateCandidate = NonNullable<CustomerResponse["duplicateCandidates"]>[number];
 
@@ -48,43 +49,16 @@ export function DuplicateCandidateCard({
       </p>
 
       <ul className="list-none p-0 m-0 flex flex-col gap-2">
-        {candidates.map((candidate) => (
-          <li
-            key={candidate.id}
-            className="p-3 bg-erp-surface border border-erp-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm"
-          >
-            <div className="flex flex-col">
-              <span className="font-semibold text-erp-navy">
-                {candidate.code} — {candidate.displayNameTh}
-              </span>
-              <span className="text-xs text-erp-text-muted mt-0.5">
-                {[candidate.maskedPhone, candidate.maskedEmail].filter(Boolean).join(" • ") || "-"}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              {onViewCandidate && candidate.id && (
-                <button
-                  type="button"
-                  onClick={() => onViewCandidate(candidate.id!)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-erp-navy bg-erp-surface border border-erp-border hover:bg-erp-surface-subtle transition-colors"
-                >
-                  <IconEye size={14} className="text-erp-navy" />
-                  {t("viewInDrawer")}
-                </button>
-              )}
-              {onSelectExisting && candidate.id && (
-                <button
-                  type="button"
-                  onClick={() => onSelectExisting(candidate.id!)}
-                  className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-white bg-erp-navy hover:bg-erp-navy-hover transition-colors"
-                >
-                  {t("useExistingCustomer")}
-                </button>
-              )}
-            </div>
-          </li>
-        ))}
+        {candidates.map((candidate) => <DuplicateCandidateRow
+          key={candidate.id}
+          id={candidate.id}
+          code={candidate.code}
+          displayName={candidate.displayNameTh}
+          maskedPhone={candidate.maskedPhone}
+          maskedEmail={candidate.maskedEmail}
+          onView={onViewCandidate}
+          onSelect={onSelectExisting}
+        />)}
       </ul>
 
       {createdCustomerHref ? (

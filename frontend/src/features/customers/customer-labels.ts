@@ -1,6 +1,23 @@
 export type CustomerTypeLabelKey = "organization" | "person";
 export type CustomerStatusLabelKey = "draft" | "active" | "inactive";
 export type ContactChannelLabelKey = "channelPhone" | "channelEmail" | "channelLine" | "channelOther";
+export type CustomerDisplayLocale = "th" | "en";
+
+export function getCustomerDisplayNames(
+  displayNameTh: string | null | undefined,
+  displayNameEn: string | null | undefined,
+  locale: CustomerDisplayLocale,
+  fallback = "-",
+): { primary: string; secondary: string | null } {
+  const primary = locale === "en" && displayNameEn
+    ? displayNameEn
+    : displayNameTh || displayNameEn || fallback;
+  const secondary = displayNameTh && displayNameEn
+    ? locale === "en" ? displayNameTh : displayNameEn
+    : null;
+
+  return { primary, secondary };
+}
 
 export function getCustomerTypeLabelKey(value: string | null | undefined): CustomerTypeLabelKey | null {
   if (value === "organization" || value === "person") {

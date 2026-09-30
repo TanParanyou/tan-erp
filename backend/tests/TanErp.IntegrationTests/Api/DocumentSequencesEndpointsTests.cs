@@ -118,6 +118,32 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
         Assert.Equal("Never", customerSeq.ResetPeriod);
         Assert.Equal(5, customerSeq.Padding);
         Assert.Equal("CUS-00001", customerSeq.SamplePreview);
+
+        var expectedMasterSequences = new (string Type, string Prefix)[]
+        {
+            (DocumentTypes.Items, "ITM-"),
+            (DocumentTypes.ItemCategories, "CAT-"),
+            (DocumentTypes.ItemBrands, "BRD-"),
+            (DocumentTypes.UnitsOfMeasure, "UOM-"),
+            (DocumentTypes.ItemTaxCategories, "TAX-"),
+            (DocumentTypes.CostSources, "SRC-")
+        };
+        foreach (var expected in expectedMasterSequences)
+        {
+            var sequence = Assert.Single(list, entry => entry.DocumentType == expected.Type);
+            Assert.Equal(expected.Prefix, sequence.Prefix);
+            Assert.Equal("{PREFIX}{SEQ:5}", sequence.FormatPattern);
+            Assert.Equal("Never", sequence.ResetPeriod);
+            Assert.Equal(5, sequence.Padding);
+            Assert.False(sequence.IsBranchSpecific);
+            Assert.Equal($"{expected.Prefix}00001", sequence.SamplePreview);
+        }
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(0, await db.DocumentSequenceCounters.CountAsync(counter =>
+            counter.OrganizationId == TestOnlyDataSeeder.TestOrgId &&
+            expectedMasterSequences.Select(sequence => sequence.Type).Contains(counter.DocumentType)));
     }
 
     [Fact]
@@ -397,4 +423,3 @@ public class DocumentSequencesEndpointsTests : IAsyncLifetime
         }
     }
 }
-

@@ -15,6 +15,7 @@ public class EstimateCostComponent
     public string Currency { get; private set; } = EstimateDefaults.DefaultCurrency;
     public decimal TotalCost { get; private set; }
     public int SortOrder { get; private set; }
+    public string CostOrigin { get; private set; } = "manual";
 
     // Catalog item snapshot
     public Guid? ItemId { get; private set; }
@@ -29,6 +30,17 @@ public class EstimateCostComponent
     public DateTimeOffset? CostEffectiveFromUtc { get; private set; }
     public string? CostPolicyVersion { get; private set; }
     public DateTimeOffset? ResolvedAtUtc { get; private set; }
+    public Guid? CostSourceIdSnapshot { get; private set; }
+    public string? CostSourceCodeSnapshot { get; private set; }
+    public string? CostSourceReferenceSnapshot { get; private set; }
+    public Guid? CostEvidenceFileIdSnapshot { get; private set; }
+    public string? CostRecordReasonSnapshot { get; private set; }
+    public string? ProvisionalReasonCode { get; private set; }
+    public string? ProvisionalNote { get; private set; }
+
+    public bool IsProvisional => CostOrigin == "manual" ||
+        (CostOrigin == "catalog" && (CostSourceIdSnapshot is null ||
+            (string.IsNullOrWhiteSpace(CostSourceReferenceSnapshot) && CostEvidenceFileIdSnapshot is null)));
 
     private EstimateCostComponent() { }
 
@@ -114,7 +126,12 @@ public class EstimateCostComponent
         string costScopeSnapshot,
         DateTimeOffset? costEffectiveFromUtc,
         string? costPolicyVersion,
-        DateTimeOffset resolvedAtUtc)
+        DateTimeOffset resolvedAtUtc,
+        Guid? costSourceIdSnapshot = null,
+        string? costSourceCodeSnapshot = null,
+        string? costSourceReferenceSnapshot = null,
+        Guid? costEvidenceFileIdSnapshot = null,
+        string? costRecordReasonSnapshot = null)
     {
         if (itemId == Guid.Empty)
             throw new ArgumentException("Item ID cannot be empty.", nameof(itemId));
@@ -143,10 +160,41 @@ public class EstimateCostComponent
         CostEffectiveFromUtc = costEffectiveFromUtc;
         CostPolicyVersion = string.IsNullOrWhiteSpace(costPolicyVersion) ? null : costPolicyVersion.Trim();
         ResolvedAtUtc = resolvedAtUtc;
+        CostOrigin = "catalog";
+        CostSourceIdSnapshot = costSourceIdSnapshot;
+        CostSourceCodeSnapshot = string.IsNullOrWhiteSpace(costSourceCodeSnapshot) ? null : costSourceCodeSnapshot.Trim();
+        CostSourceReferenceSnapshot = string.IsNullOrWhiteSpace(costSourceReferenceSnapshot) ? null : costSourceReferenceSnapshot.Trim();
+        CostEvidenceFileIdSnapshot = costEvidenceFileIdSnapshot;
+        CostRecordReasonSnapshot = string.IsNullOrWhiteSpace(costRecordReasonSnapshot) ? null : costRecordReasonSnapshot.Trim();
+        if (!IsProvisional)
+        {
+            ProvisionalReasonCode = null;
+            ProvisionalNote = null;
+        }
 
         // Authoritatively update UnitCost & TotalCost from snapshot
         UnitCost = UnitCostSnapshot.Value;
         TotalCost = decimal.Round(Quantity * UnitCost, 2, MidpointRounding.AwayFromZero);
+    }
+
+    public void SetProvisionalReason(string? reasonCode, string? note)
+    {
+        if (reasonCode?.Trim().Length > 64)
+            throw new ArgumentException("Provisional reason code cannot exceed 64 characters.", nameof(reasonCode));
+        if (note?.Trim().Length > 1000)
+            throw new ArgumentException("Provisional note cannot exceed 1000 characters.", nameof(note));
+        if (!string.IsNullOrWhiteSpace(note) && string.IsNullOrWhiteSpace(reasonCode))
+            throw new ArgumentException("A provisional reason code is required when a note is provided.", nameof(reasonCode));
+
+        if (!IsProvisional)
+        {
+            ProvisionalReasonCode = null;
+            ProvisionalNote = null;
+            return;
+        }
+
+        ProvisionalReasonCode = string.IsNullOrWhiteSpace(reasonCode) ? null : reasonCode.Trim();
+        ProvisionalNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
     }
 
     public void ClearCatalogCostSnapshot()
@@ -163,5 +211,13 @@ public class EstimateCostComponent
         CostEffectiveFromUtc = null;
         CostPolicyVersion = null;
         ResolvedAtUtc = null;
+        CostOrigin = "manual";
+        CostSourceIdSnapshot = null;
+        CostSourceCodeSnapshot = null;
+        CostSourceReferenceSnapshot = null;
+        CostEvidenceFileIdSnapshot = null;
+        CostRecordReasonSnapshot = null;
+        ProvisionalReasonCode = null;
+        ProvisionalNote = null;
     }
 }

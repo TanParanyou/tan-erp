@@ -3,29 +3,19 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
-using TanErp.Infrastructure.Identity;
-using TanErp.Infrastructure.Persistence;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace TanErp.IntegrationTests.Api;
 
-public class OpenApiContractTests : IAsyncLifetime
+public class OpenApiContractTests : IDisposable
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
-        .Build();
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly HttpClient _client;
 
-    private WebApplicationFactory<Program> _factory = null!;
-    private HttpClient _client = null!;
-
-    public async Task InitializeAsync()
+    public OpenApiContractTests()
     {
-        await _postgres.StartAsync();
-
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Test");
@@ -33,27 +23,18 @@ public class OpenApiContractTests : IAsyncLifetime
             {
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["ConnectionStrings:Database"] = _postgres.GetConnectionString()
+                    ["ConnectionStrings:Database"] = "Host=127.0.0.1;Port=1;Database=openapi_contract;Username=unused;Password=unused"
                 });
-            });
-            builder.ConfigureServices(services =>
-            {
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-                if (descriptor != null) services.Remove(descriptor);
-
-                services.AddDbContext<AppDbContext>(options =>
-                    options.UseNpgsql(_postgres.GetConnectionString()));
             });
         });
 
         _client = _factory.CreateClient();
     }
 
-    public async Task DisposeAsync()
+    public void Dispose()
     {
         _client.Dispose();
-        await _factory.DisposeAsync();
-        await _postgres.DisposeAsync();
+        _factory.Dispose();
     }
 
     [Fact]
@@ -232,6 +213,22 @@ public class OpenApiContractTests : IAsyncLifetime
         Assert.NotNull(acceptProperties);
         Assert.True(acceptProperties.ContainsKey("expectedOpportunityVersion"));
 
+        var linkedItemSchema = schemas["EstimateWorkItemItemResponse"]?.AsObject();
+        Assert.NotNull(linkedItemSchema);
+        var linkedItemRequired = linkedItemSchema["required"]?.AsArray().Select(node => node?.GetValue<string>()).ToList();
+        Assert.NotNull(linkedItemRequired);
+        Assert.Contains("id", linkedItemRequired);
+        Assert.Contains("code", linkedItemRequired);
+        Assert.Contains("nameTh", linkedItemRequired);
+
+        var updateWorkItemSchema = schemas["UpdateEstimateWorkItemDto"]?.AsObject();
+        Assert.NotNull(updateWorkItemSchema);
+        Assert.True(updateWorkItemSchema["properties"]!.AsObject().ContainsKey("sellingRuleReasonCode"));
+
+        var reviewQueueSchema = schemas["EstimateReviewQueueItemResponse"]?.AsObject();
+        Assert.NotNull(reviewQueueSchema);
+        Assert.True(reviewQueueSchema["properties"]!.AsObject().ContainsKey("priceOverrides"));
+
         var updateSeqSchema = schemas["UpdateDocumentSequenceRequest"]?.AsObject();
         Assert.NotNull(updateSeqSchema);
         var updateSeqRequired = updateSeqSchema["required"]?.AsArray().Select(n => n?.GetValue<string>()).ToList();
@@ -259,8 +256,6 @@ public class OpenApiContractTests : IAsyncLifetime
         var committedDoc = JsonNode.Parse(committedContent);
 
         // Assert structural equality
-        Assert.Equal(
-            JsonSerializer.Serialize(doc),
-            JsonSerializer.Serialize(committedDoc));
+        Assert.True(JsonNode.DeepEquals(doc, committedDoc), "Committed OpenAPI must match the generated document structurally.");
     }
 }

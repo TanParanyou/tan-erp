@@ -100,9 +100,17 @@ builder.Services.AddScoped<TanErp.Application.Crm.Customers.GetCustomer.GetCusto
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.CheckDuplicates.CheckCustomerDuplicatesHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerLifecycleStore, TanErp.Infrastructure.Persistence.Crm.CustomerLifecycleStore>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerUpdateStore, TanErp.Infrastructure.Persistence.Crm.CustomerUpdateStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.UpdateCustomer.UpdateCustomerHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerContactStore, TanErp.Infrastructure.Persistence.Crm.CustomerContactStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.CustomerContactHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ChangeCustomerStatus.ChangeCustomerStatusHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerAddressStore, TanErp.Infrastructure.Persistence.Crm.CustomerAddressStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.CustomerAddressHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Sites.ISiteStore, TanErp.Infrastructure.Persistence.Crm.SiteStore>();
 builder.Services.AddScoped<TanErp.Application.Crm.Sites.CreateSite.CreateSiteHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Sites.ListSites.ListSitesHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Sites.ManageCustomerSiteHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.IOpportunityStore, TanErp.Infrastructure.Persistence.Crm.OpportunityStore>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.CreateOpportunity.CreateOpportunityHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.ListOpportunities.ListOpportunitiesHandler>();
@@ -125,6 +133,10 @@ builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateDraft.Crea
 builder.Services.AddScoped<TanErp.Application.Estimates.GetEstimate.GetEstimateHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.UpdateEstimateDraft.UpdateEstimateDraftHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.CalculateEstimate.CalculateEstimateHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.SubmitEstimate.SubmitEstimateHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.ReviewEstimate.ReviewEstimateHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateRevision.CreateEstimateRevisionHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.CancelEstimate.CancelEstimateHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.IssueQuotation.IssueQuotationHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.AcceptQuotation.AcceptQuotationHandler>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.IAddressLookupCache, TanErp.Infrastructure.MasterData.AddressLookupCache>();
@@ -133,8 +145,12 @@ builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddress
 
 // Item Master Catalog & Taxonomy Store
 builder.Services.AddScoped<TanErp.Application.Items.IItemStore, TanErp.Infrastructure.Persistence.Items.ItemStore>();
+builder.Services.AddScoped<TanErp.Application.Common.Abstractions.IOrganizationBranchReader, TanErp.Infrastructure.Persistence.OrganizationBranchReader>();
 builder.Services.AddScoped<TanErp.Application.Items.IItemImageStore, TanErp.Infrastructure.Persistence.Items.ItemImageStore>();
 builder.Services.AddScoped<TanErp.Application.Items.ICostRecordStore, TanErp.Infrastructure.Persistence.Items.CostRecordStore>();
+builder.Services.AddScoped<TanErp.Application.Items.ICostSourceStore, TanErp.Infrastructure.Persistence.Items.CostSourceStore>();
+builder.Services.AddScoped<TanErp.Application.Items.ICostReviewQueueReader, TanErp.Infrastructure.Persistence.Items.CostReviewQueueReader>();
+builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateReviewQueueReader, TanErp.Infrastructure.Persistence.Estimates.EstimateReviewQueueReader>();
 builder.Services.AddScoped<TanErp.Application.Items.ICostResolver, TanErp.Infrastructure.Persistence.Items.CostResolver>();
 builder.Services.AddScoped<TanErp.Application.Items.Catalog.IEstimateCatalogReader, TanErp.Infrastructure.Persistence.Items.EstimateCatalogReader>();
 
@@ -201,7 +217,13 @@ if (app.Environment.IsEnvironment("Test") && app.Configuration.GetValue<bool>("S
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await TestOnlyDataSeeder.SeedAsync(db, app.Environment.EnvironmentName, true);
+    await TestOnlyDataSeeder.SeedAsync(
+        db,
+        app.Environment.EnvironmentName,
+        true,
+        app.Configuration.GetValue<bool>("SeedDedicatedEstimateReviewer"),
+        app.Configuration.GetValue<bool>("SeedEstimateDemoData"),
+        app.Configuration.GetValue<bool>("SeedItemCatalogDemoData"));
     await TanErp.Infrastructure.MasterData.Seed.AddressMasterDataSeeder.SeedAsync(db);
 }
 

@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { Table, TableHeader, TableBody, TableRow, TableHead } from "@/components/ui/Table";
 import { IconPlus, IconTrash, IconBox3D } from "@/components/common/Icons";
 import { ThreeBoxVisualizer } from "@/components/ui/ThreeBoxVisualizer";
 import { SurveyMeasurementRow } from "./survey-measurement-row";
@@ -188,39 +189,37 @@ export function SurveyAreaCard({ areaIndex, isReady, onRemoveArea }: SurveyAreaC
           </div>
         )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
-            <thead className="hidden md:table-header-group">
-              <tr className="bg-erp-surface-subtle text-erp-text-body text-xs font-semibold">
-                <th className="p-2 border border-erp-border w-36">
-                  {t("measurementTypeLabel")}
-                </th>
-                <th className="p-2 border border-erp-border w-56">
-                  {t("measurementComboLabel")}
-                </th>
-                <th className="p-2 border border-erp-border">
-                  {t("measurementNotesLabel")}
-                </th>
-                {!isReady && (
-                  <th className="p-2 border border-erp-border w-14 text-center">
-                    {tc("actions.delete")}
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {fields.map((fieldItem, mIdx) => (
-                <SurveyMeasurementRow
-                  key={fieldItem.id}
-                  areaIndex={areaIndex}
-                  measurementIndex={mIdx}
-                  isReady={isReady}
-                  onRemove={() => remove(mIdx)}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader className="hidden md:table-header-group">
+            <TableRow className="bg-erp-surface-subtle text-erp-text-body text-xs font-semibold">
+              <TableHead className="p-2 border border-erp-border w-36">
+                {t("measurementTypeLabel")}
+              </TableHead>
+              <TableHead className="p-2 border border-erp-border w-56">
+                {t("measurementComboLabel")}
+              </TableHead>
+              <TableHead className="p-2 border border-erp-border">
+                {t("measurementNotesLabel")}
+              </TableHead>
+              {!isReady && (
+                <TableHead className="p-2 border border-erp-border w-14 text-center">
+                  {tc("actions.delete")}
+                </TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {fields.map((fieldItem, mIdx) => (
+              <SurveyMeasurementRow
+                key={fieldItem.id}
+                areaIndex={areaIndex}
+                measurementIndex={mIdx}
+                isReady={isReady}
+                onRemove={() => remove(mIdx)}
+              />
+            ))}
+          </TableBody>
+        </Table>
 
         {!isReady && (
           <div className="pt-2">

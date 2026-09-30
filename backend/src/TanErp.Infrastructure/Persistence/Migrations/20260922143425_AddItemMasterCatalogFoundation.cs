@@ -35,8 +35,22 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                 table: "uploaded_files",
                 type: "character varying(32)",
                 maxLength: 32,
+                nullable: true);
+
+            migrationBuilder.Sql(
+                "UPDATE files.uploaded_files SET scan_status = 'pending' WHERE scan_status IS NULL");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "scan_status",
+                schema: "files",
+                table: "uploaded_files",
+                type: "character varying(32)",
+                maxLength: 32,
                 nullable: false,
-                defaultValue: "");
+                oldClrType: typeof(string),
+                oldType: "character varying(32)",
+                oldMaxLength: 32,
+                oldNullable: true);
 
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "verified_at_utc",

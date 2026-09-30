@@ -32,6 +32,15 @@ type YearFormat = "bb" | "bbbb" | "yyyy" | "yy" | "none";
 type MonthFormat = "mm" | "mmdd" | "none";
 type Separator = "" | "-" | "/";
 
+const MASTER_DATA_SEQUENCE_TYPES = [
+  "items",
+  "item-categories",
+  "item-brands",
+  "units-of-measure",
+  "item-tax-categories",
+  "cost-sources",
+] as const;
+
 export function DocumentSequenceDrawer({
   item,
   isOpen,
@@ -56,6 +65,7 @@ export function DocumentSequenceDrawer({
   const [seqSeparator, setSeqSeparator] = useState<Separator>("-");
 
   const updateMutation = useUpdateDocumentSequence();
+  const isMasterData = item !== null && MASTER_DATA_SEQUENCE_TYPES.includes(item.documentType as (typeof MASTER_DATA_SEQUENCE_TYPES)[number]);
 
   // Helper to construct pattern from visual segments
   const constructPattern = useCallback(
@@ -95,9 +105,11 @@ export function DocumentSequenceDrawer({
     if (item) {
       setPrefix(item.prefix);
       setFormatPattern(item.formatPattern);
-      setResetPeriod(item.resetPeriod);
+      const masterData = MASTER_DATA_SEQUENCE_TYPES.includes(item.documentType as (typeof MASTER_DATA_SEQUENCE_TYPES)[number]);
+      if (masterData) setIsAdvancedMode(false);
+      setResetPeriod(masterData ? "Never" : item.resetPeriod);
       setPadding(item.padding);
-      setIsBranchSpecific(item.isBranchSpecific);
+      setIsBranchSpecific(masterData ? false : item.isBranchSpecific);
       setError(null);
 
       // Analyze existing pattern to match Segment Builder
@@ -131,7 +143,7 @@ export function DocumentSequenceDrawer({
       const isComplex =
         !pat.includes("{SEQ") ||
         (matchedYear === "none" && matchedMonth === "none" && !pat.endsWith("{SEQ:4}") && !pat.endsWith("{SEQ:5}") && !pat.endsWith("{SEQ:6}"));
-      setIsAdvancedMode(Boolean(isComplex && item.id));
+      setIsAdvancedMode(Boolean(isComplex && item.id && !masterData));
     }
   }, [item]);
 
@@ -159,6 +171,15 @@ export function DocumentSequenceDrawer({
     if (updates.padding !== undefined) setPadding(updates.padding);
     if (updates.isBranchSpecific !== undefined) setIsBranchSpecific(updates.isBranchSpecific);
     if (updates.resetPeriod !== undefined) setResetPeriod(updates.resetPeriod);
+
+    if (isMasterData) {
+      setYearFormat("none");
+      setMonthFormat("none");
+      setResetPeriod("Never");
+      setIsBranchSpecific(false);
+      setFormatPattern(`{PREFIX}${nextSeqSep}{SEQ:${nextPadding}}`);
+      return;
+    }
 
     const newPat = constructPattern(
       nextPrefixSep,
@@ -231,10 +252,11 @@ export function DocumentSequenceDrawer({
   );
 
   const handleSelectPreset = (p: (typeof PRESETS)[number]) => {
+    if (isMasterData && p.id !== "continuous") return;
     setFormatPattern(p.pattern);
-    setResetPeriod(p.resetPeriod);
+      setResetPeriod(isMasterData ? "Never" : p.resetPeriod);
     setPadding(p.padding);
-    setIsBranchSpecific(p.isBranchSpecific);
+      setIsBranchSpecific(isMasterData ? false : p.isBranchSpecific);
     setYearFormat(p.yearFormat);
     setMonthFormat(p.monthFormat);
     setPrefixSeparator(p.prefixSeparator);
@@ -360,6 +382,7 @@ export function DocumentSequenceDrawer({
               {livePreview || "-"}
             </span>
           </div>
+          {isMasterData && <p className="text-xs text-erp-text-muted">{t("masterDataPreviewHelp")}</p>}
 
           {/* Color-Coded Breakdown Chips */}
           <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-200 dark:border-slate-800 text-xs font-mono">
@@ -408,7 +431,7 @@ export function DocumentSequenceDrawer({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {PRESETS.map((preset) => {
+        {PRESETS.filter((preset) => !isMasterData || preset.id === "continuous").map((preset) => {
               const isSelected = formatPattern === preset.pattern && isBranchSpecific === preset.isBranchSpecific;
               return (
                 <button
@@ -467,6 +490,7 @@ export function DocumentSequenceDrawer({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Year Format */}
+              {!isMasterData && <>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   {t("yearFormat")}
@@ -499,8 +523,10 @@ export function DocumentSequenceDrawer({
                   <option value="none">{t("monthOptions.none")}</option>
                 </select>
               </div>
+              </>}
 
               {/* Prefix Separator */}
+              {!isMasterData && <>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   {t("separatorPrefix")}
@@ -515,6 +541,7 @@ export function DocumentSequenceDrawer({
                   <option value="/">{t("separatorOptions.slash")}</option>
                 </select>
               </div>
+              </>}
 
               {/* Sequence Separator */}
               <div className="flex flex-col gap-1.5">
@@ -556,7 +583,7 @@ export function DocumentSequenceDrawer({
               </div>
 
               {/* Reset Cycle */}
-              <div className="flex flex-col gap-1.5">
+              {!isMasterData ? <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   {t("resetPeriod")}
                 </label>
@@ -570,11 +597,11 @@ export function DocumentSequenceDrawer({
                   <option value="Daily">{t("resetOptions.daily")}</option>
                   <option value="Never">{t("resetOptions.never")}</option>
                 </select>
-              </div>
+              </div> : <p className="flex items-center text-sm text-slate-600 dark:text-slate-300">{t("masterDataNeverReset")}</p>}
             </div>
 
             {/* Branch Specific Toggle */}
-            <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-erp-border">
+            {!isMasterData && <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-erp-border">
               <input
                 type="checkbox"
                 className="w-4 h-4 border border-erp-border text-erp-navy focus:ring-0"
@@ -584,7 +611,7 @@ export function DocumentSequenceDrawer({
               <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
                 {t("isBranchSpecific")}
               </span>
-            </label>
+            </label>}
           </div>
         ) : (
           /* Section 3: Advanced Mode (Raw Pattern + Token Pills) */
@@ -672,7 +699,7 @@ export function DocumentSequenceDrawer({
         )}
 
         {/* Advanced Mode Toggle Switch */}
-        <div className="flex items-center justify-between pt-2 border-t border-erp-border">
+        {!isMasterData && <div className="flex items-center justify-between pt-2 border-t border-erp-border">
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
               {t("advancedModeToggle")}
@@ -692,7 +719,7 @@ export function DocumentSequenceDrawer({
           >
             <div className="w-4 h-4 bg-white shadow-sm" />
           </button>
-        </div>
+        </div>}
       </div>
     </Drawer>
   );

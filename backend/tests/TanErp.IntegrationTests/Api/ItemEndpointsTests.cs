@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
 using TanErp.Api.Contracts.Items;
+using TanErp.Api.ErrorHandling;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
@@ -102,7 +104,8 @@ public class ItemEndpointsTests : IAsyncLifetime
         string url,
         string token = "token-org-a",
         Guid? membershipId = null,
-        Guid? ifMatch = null)
+        Guid? ifMatch = null,
+        string? idempotencyKey = null)
     {
         var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -111,6 +114,11 @@ public class ItemEndpointsTests : IAsyncLifetime
         if (ifMatch.HasValue)
         {
             request.Headers.Add("If-Match", $"\"{ifMatch.Value}\"");
+        }
+
+        if (method == HttpMethod.Post && url is "/api/v1/items" or "/api/v1/item-categories" or "/api/v1/item-brands" or "/api/v1/item-tax-categories" or "/api/v1/units-of-measure")
+        {
+            request.Headers.Add("Idempotency-Key", idempotencyKey ?? Guid.NewGuid().ToString("N"));
         }
 
         return request;
@@ -191,8 +199,8 @@ public class ItemEndpointsTests : IAsyncLifetime
         var (categoryId, unitId, brandId) = await SeedTaxonomyAsync();
 
         var itemCode = "ITEM-" + Guid.NewGuid().ToString("N")[..6];
-        var request = CreateRequest(HttpMethod.Post, "/api/v1/items");
-        request.Content = JsonContent.Create(new CreateItemRequest
+        var idempotencyKey = $"item-create-{Guid.NewGuid():N}";
+        var payload = new CreateItemRequest
         {
             Code = itemCode,
             ItemType = "material",
@@ -214,7 +222,9 @@ public class ItemEndpointsTests : IAsyncLifetime
             {
                 new() { Thai = "โซลาร์ 550W", English = "Solar 550W" }
             }
-        });
+        };
+        var request = CreateRequest(HttpMethod.Post, "/api/v1/items", idempotencyKey: idempotencyKey);
+        request.Content = JsonContent.Create(payload);
 
         var response = await _client.SendAsync(request);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -237,6 +247,629 @@ public class ItemEndpointsTests : IAsyncLifetime
         var audit = await db.AuditEvents.FirstOrDefaultAsync(a => a.ResourceId == item.Id.ToString() && a.Action == "items.create");
         Assert.NotNull(audit);
         Assert.Equal("item", audit.ResourceType);
+        Assert.Equal(1, await db.AuditEvents.CountAsync(a => a.ResourceId == item.Id.ToString() && a.Action == "items.create"));
+
+        var replayRequest = CreateRequest(HttpMethod.Post, "/api/v1/items", idempotencyKey: idempotencyKey);
+        replayRequest.Content = JsonContent.Create(payload);
+        var replayResponse = await _client.SendAsync(replayRequest);
+        Assert.Equal(HttpStatusCode.Created, replayResponse.StatusCode);
+        var replayed = await replayResponse.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.Equal(item.Id, replayed!.Id);
+
+        var changedPayload = new CreateItemRequest
+        {
+            Code = itemCode + "-OTHER",
+            ItemType = payload.ItemType,
+            CategoryId = payload.CategoryId,
+            BrandId = payload.BrandId,
+            BaseUnitId = payload.BaseUnitId,
+            Name = payload.Name,
+            Description = payload.Description,
+            AvailabilityMode = payload.AvailabilityMode,
+            Capabilities = payload.Capabilities,
+            Aliases = payload.Aliases,
+        };
+        var conflictRequest = CreateRequest(HttpMethod.Post, "/api/v1/items", idempotencyKey: idempotencyKey);
+        conflictRequest.Content = JsonContent.Create(changedPayload);
+        var conflictResponse = await _client.SendAsync(conflictRequest);
+        Assert.Equal(HttpStatusCode.Conflict, conflictResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateMasterData_WithoutCodes_GeneratesCodesWithinSuccessfulCreateFlow()
+    {
+        var categoryRequest = CreateRequest(HttpMethod.Post, "/api/v1/item-categories");
+        categoryRequest.Content = JsonContent.Create(new CreateItemCategoryRequest { Name = new LocalizedTextInput { Thai = "GEN category" } });
+        using var categoryResponse = await _client.SendAsync(categoryRequest);
+        Assert.Equal(HttpStatusCode.Created, categoryResponse.StatusCode);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<ItemCategoryDetailResponse>();
+        Assert.NotNull(category);
+        Assert.StartsWith("CAT-", category.Code);
+
+        var brandRequest = CreateRequest(HttpMethod.Post, "/api/v1/item-brands");
+        brandRequest.Content = JsonContent.Create(new CreateItemBrandRequest { Name = new LocalizedTextInput { Thai = "GEN brand" } });
+        using var brandResponse = await _client.SendAsync(brandRequest);
+        Assert.Equal(HttpStatusCode.Created, brandResponse.StatusCode);
+        var brand = await brandResponse.Content.ReadFromJsonAsync<ItemBrandDetailResponse>();
+        Assert.NotNull(brand);
+        Assert.StartsWith("BRD-", brand.Code);
+
+        var unitRequest = CreateRequest(HttpMethod.Post, "/api/v1/units-of-measure");
+        unitRequest.Content = JsonContent.Create(new CreateUnitOfMeasureRequest
+        {
+            Name = new LocalizedTextInput { Thai = "GEN unit" }, Symbol = "gen", Dimension = "count", DecimalScale = 0
+        });
+        using var unitResponse = await _client.SendAsync(unitRequest);
+        Assert.Equal(HttpStatusCode.Created, unitResponse.StatusCode);
+        var unit = await unitResponse.Content.ReadFromJsonAsync<UnitOfMeasureDetailResponse>();
+        Assert.NotNull(unit);
+        Assert.StartsWith("UOM-", unit.Code);
+
+        var taxRequest = CreateRequest(HttpMethod.Post, "/api/v1/item-tax-categories");
+        taxRequest.Content = JsonContent.Create(new CreateItemTaxCategoryRequest { Name = new LocalizedTextInput { Thai = "GEN tax" } });
+        using var taxResponse = await _client.SendAsync(taxRequest);
+        Assert.Equal(HttpStatusCode.Created, taxResponse.StatusCode);
+        var taxCategory = await taxResponse.Content.ReadFromJsonAsync<ItemTaxCategoryDetailResponse>();
+        Assert.NotNull(taxCategory);
+        Assert.StartsWith("TAX-", taxCategory.Code);
+
+        var itemRequest = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        itemRequest.Content = JsonContent.Create(new CreateItemRequest
+        {
+            ItemType = "material", CategoryId = category.Id, BaseUnitId = unit.Id,
+            Name = new LocalizedTextInput { Thai = "GEN item" }, AvailabilityMode = "all_branches"
+        });
+        using var itemResponse = await _client.SendAsync(itemRequest);
+        Assert.Equal(HttpStatusCode.Created, itemResponse.StatusCode);
+        var item = await itemResponse.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.NotNull(item);
+        Assert.StartsWith("ITM-", item.Code);
+
+        var duplicateItemRequest = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        duplicateItemRequest.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = item.Code, ItemType = "material", CategoryId = category.Id, BaseUnitId = unit.Id,
+            Name = new LocalizedTextInput { Thai = "รหัสซ้ำ" }, AvailabilityMode = "all_branches"
+        });
+        using var duplicateItemResponse = await _client.SendAsync(duplicateItemRequest);
+        Assert.Equal(HttpStatusCode.Conflict, duplicateItemResponse.StatusCode);
+        var duplicateProblem = await duplicateItemResponse.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.Equal("ITEM_CODE_CONFLICT", duplicateProblem?.Code);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var audit = await db.AuditEvents.SingleAsync(entry => entry.ResourceType == "item" && entry.ResourceId == item.Id.ToString());
+        using var auditJson = JsonDocument.Parse(audit.ChangesJson);
+        Assert.True(auditJson.RootElement.GetProperty("codeGenerated").GetBoolean());
+    }
+
+    [Fact]
+    public async Task ListItems_SortsWithStablePaging_AndRejectsUnknownSortKeys()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+
+        async Task CreateItem(string code, string itemType)
+        {
+            var request = CreateRequest(HttpMethod.Post, "/api/v1/items");
+            request.Content = JsonContent.Create(new CreateItemRequest
+            {
+                Code = code,
+                ItemType = itemType,
+                CategoryId = categoryId,
+                BaseUnitId = unitId,
+                Name = new LocalizedTextInput { Thai = code, English = code },
+                AvailabilityMode = "all_branches",
+                Capabilities = new ItemCapabilitiesInput
+                {
+                    CanCost = true,
+                    CanPurchase = itemType == "material",
+                    CanSell = false,
+                    CanStock = false,
+                    CanProduce = false
+                }
+            });
+            var created = await _client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        }
+
+        await CreateItem("SORT-A", "material");
+        await CreateItem("SORT-Z", "product");
+
+        var sortedRequest = CreateRequest(HttpMethod.Get, "/api/v1/items?sortBy=itemType&sortOrder=desc&pageNumber=1&pageSize=1000");
+        var sortedResponse = await _client.SendAsync(sortedRequest);
+        Assert.Equal(HttpStatusCode.OK, sortedResponse.StatusCode);
+        var sorted = await sortedResponse.Content.ReadFromJsonAsync<PagedItemsResponse>();
+        Assert.NotNull(sorted);
+        Assert.Equal(100, sorted.PageSize);
+        Assert.Equal(new[] { "product", "material" }, sorted.Items.Select(item => item.ItemType));
+
+        var invalidSortRequest = CreateRequest(HttpMethod.Get, "/api/v1/items?sortBy=name");
+        var invalidSortResponse = await _client.SendAsync(invalidSortRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, invalidSortResponse.StatusCode);
+        var invalidSort = await invalidSortResponse.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.Equal("ITEM_SORT_INVALID", invalidSort?.Code);
+
+        var invalidOrderRequest = CreateRequest(HttpMethod.Get, "/api/v1/items?sortOrder=sideways");
+        var invalidOrderResponse = await _client.SendAsync(invalidOrderRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, invalidOrderResponse.StatusCode);
+        var invalidOrder = await invalidOrderResponse.Content.ReadFromJsonAsync<ApiProblemDetails>();
+        Assert.Equal("ITEM_SORT_ORDER_INVALID", invalidOrder?.Code);
+    }
+
+    [Fact]
+    public async Task Barcode_CreateReplayScanAndDeactivate_RespectsOrganizationAndUnit()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+        var createItem = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        createItem.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "BAR-" + Guid.NewGuid().ToString("N")[..8],
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "แผ่นทดสอบ", English = "Test sheet" }
+        });
+        var createItemResponse = await _client.SendAsync(createItem);
+        Assert.Equal(HttpStatusCode.Created, createItemResponse.StatusCode);
+        var item = await createItemResponse.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.NotNull(item);
+
+        var payload = new CreateItemBarcodeRequest
+        {
+            IdentifierType = "gtin", Value = "6291041500213", UnitId = unitId,
+            QuantityInBaseUnit = "12.0000", PackagingLevel = "case", IsPrimary = true
+        };
+        var key = $"barcode-create-{Guid.NewGuid():N}";
+        HttpRequestMessage BarcodeCreate(CreateItemBarcodeRequest body)
+        {
+            var request = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes");
+            request.Headers.Add("Idempotency-Key", key);
+            request.Content = JsonContent.Create(body);
+            return request;
+        }
+
+        var createdResponse = await _client.SendAsync(BarcodeCreate(payload));
+        Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
+        var barcode = await createdResponse.Content.ReadFromJsonAsync<ItemBarcodeResponse>();
+        Assert.NotNull(barcode);
+        Assert.Equal("12.0000", barcode.QuantityInBaseUnit);
+        Assert.Equal(item.Id, barcode.Item.Id);
+        Assert.Equal(unitId, barcode.Unit.Id);
+
+        var replayResponse = await _client.SendAsync(BarcodeCreate(payload));
+        Assert.Equal(HttpStatusCode.Created, replayResponse.StatusCode);
+        Assert.Equal(barcode.Id, (await replayResponse.Content.ReadFromJsonAsync<ItemBarcodeResponse>())!.Id);
+
+        var changed = new CreateItemBarcodeRequest
+        {
+            IdentifierType = "gtin", Value = "6291041500213", UnitId = unitId,
+            QuantityInBaseUnit = "1.0000", PackagingLevel = "case", IsPrimary = true
+        };
+        Assert.Equal(HttpStatusCode.Conflict, (await _client.SendAsync(BarcodeCreate(changed))).StatusCode);
+
+        var duplicate = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes");
+        duplicate.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        duplicate.Content = JsonContent.Create(new CreateItemBarcodeRequest
+        {
+            IdentifierType = "gtin", Value = "06291041500213", UnitId = unitId,
+            QuantityInBaseUnit = "12.0000", PackagingLevel = "case"
+        });
+        Assert.Equal(HttpStatusCode.Conflict, (await _client.SendAsync(duplicate)).StatusCode);
+
+        var wrongUnit = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes");
+        wrongUnit.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        wrongUnit.Content = JsonContent.Create(new CreateItemBarcodeRequest
+        {
+            IdentifierType = "internal", Value = "SHEET-CASE", UnitId = Guid.NewGuid(),
+            QuantityInBaseUnit = "12.0000", PackagingLevel = "case"
+        });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(wrongUnit)).StatusCode);
+
+        var malformedGtin = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes");
+        malformedGtin.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        malformedGtin.Content = JsonContent.Create(new CreateItemBarcodeRequest
+        {
+            IdentifierType = "gtin", Value = "6291041500214", UnitId = unitId,
+            QuantityInBaseUnit = "1.0000", PackagingLevel = "each"
+        });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(malformedGtin)).StatusCode);
+
+        var leadingZero = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes");
+        leadingZero.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        leadingZero.Content = JsonContent.Create(new CreateItemBarcodeRequest
+        {
+            IdentifierType = "internal", Value = "0000123", UnitId = unitId,
+            QuantityInBaseUnit = "1.0000", PackagingLevel = "inner"
+        });
+        var leadingZeroResponse = await _client.SendAsync(leadingZero);
+        Assert.Equal(HttpStatusCode.Created, leadingZeroResponse.StatusCode);
+        Assert.Equal("0000123", (await leadingZeroResponse.Content.ReadFromJsonAsync<ItemBarcodeResponse>())!.Value);
+
+        var stalePrimary = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes/{barcode.Id}/primary", ifMatch: Guid.NewGuid());
+        Assert.Equal(HttpStatusCode.Conflict, (await _client.SendAsync(stalePrimary)).StatusCode);
+
+        var crossOrg = CreateRequest(HttpMethod.Get, $"/api/v1/items/{item.Id}/barcodes", "token-org-b", TestOnlyDataSeeder.TestMembershipBId);
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.SendAsync(crossOrg)).StatusCode);
+
+        var activate = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/activate", ifMatch: item.RowVersion);
+        var activateResponse = await _client.SendAsync(activate);
+        Assert.Equal(HttpStatusCode.OK, activateResponse.StatusCode);
+
+        var lookup = CreateRequest(HttpMethod.Get, "/api/v1/items/by-barcode?value=06291041500213");
+        var lookupResponse = await _client.SendAsync(lookup);
+        Assert.Equal(HttpStatusCode.OK, lookupResponse.StatusCode);
+        Assert.Equal(barcode.Id, (await lookupResponse.Content.ReadFromJsonAsync<ItemBarcodeResponse>())!.Id);
+
+        var deactivate = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes/{barcode.Id}/deactivate", ifMatch: barcode.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(deactivate)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.SendAsync(CreateRequest(HttpMethod.Get, "/api/v1/items/by-barcode?value=6291041500213"))).StatusCode);
+
+        var reuseInactiveValue = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes");
+        reuseInactiveValue.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        reuseInactiveValue.Content = JsonContent.Create(new CreateItemBarcodeRequest
+        {
+            IdentifierType = "gtin", Value = "6291041500213", UnitId = unitId,
+            QuantityInBaseUnit = "12.0000", PackagingLevel = "case"
+        });
+        Assert.Equal(HttpStatusCode.Conflict, (await _client.SendAsync(reuseInactiveValue)).StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(1, await db.AuditEvents.CountAsync(a => a.ResourceId == barcode.Id.ToString() && a.Action == "item-barcode.created"));
+    }
+
+    [Fact]
+    public async Task ItemUnitConversion_RequiresEffectiveConversionAndSnapshotsBarcodeQuantity()
+    {
+        var (categoryId, baseUnitId, _) = await SeedTaxonomyAsync();
+        var itemRequest = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        itemRequest.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "CONV-" + Guid.NewGuid().ToString("N")[..8],
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = baseUnitId,
+            Name = new LocalizedTextInput { Thai = "สินค้าแปลงหน่วย", English = "Converted item" }
+        });
+        var itemResponse = await _client.SendAsync(itemRequest);
+        Assert.Equal(HttpStatusCode.Created, itemResponse.StatusCode);
+        var item = (await itemResponse.Content.ReadFromJsonAsync<ItemResponse>())!;
+
+        var alternateUnitRequest = CreateRequest(HttpMethod.Post, "/api/v1/units-of-measure");
+        alternateUnitRequest.Content = JsonContent.Create(new CreateUnitOfMeasureRequest
+        {
+            Code = "BOX-" + Guid.NewGuid().ToString("N")[..6],
+            Name = new LocalizedTextInput { Thai = "กล่อง", English = "Box" },
+            Symbol = "box",
+            Dimension = "Count",
+            DecimalScale = 0,
+            RoundingMode = "HalfUp"
+        });
+        var alternateUnitResponse = await _client.SendAsync(alternateUnitRequest);
+        Assert.Equal(HttpStatusCode.Created, alternateUnitResponse.StatusCode);
+        var alternateUnit = (await alternateUnitResponse.Content.ReadFromJsonAsync<UnitOfMeasureDetailResponse>())!;
+
+        var barcodeValue = "CONV-" + Guid.NewGuid().ToString("N")[..12];
+        HttpRequestMessage CreateBarcode(Guid selectedUnitId, string quantity)
+        {
+            var request = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes");
+            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+            request.Content = JsonContent.Create(new CreateItemBarcodeRequest
+            {
+                IdentifierType = "internal", Value = barcodeValue, UnitId = selectedUnitId,
+                QuantityInBaseUnit = quantity, PackagingLevel = "case"
+            });
+            return request;
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(CreateBarcode(alternateUnit.Id, "12.0000"))).StatusCode);
+        var conversionPayload = new CreateItemUnitConversionRequest
+        {
+            FromUnitId = alternateUnit.Id,
+            ToUnitId = baseUnitId,
+            Factor = "12",
+            EffectiveFrom = today,
+            EffectiveTo = today,
+            Reason = "Package contains twelve base units"
+        };
+        HttpRequestMessage CreateConversion(CreateItemUnitConversionRequest body)
+        {
+            var request = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/unit-conversions");
+            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+            request.Content = JsonContent.Create(body);
+            return request;
+        }
+
+        CreateItemUnitConversionRequest InvalidConversion(Guid fromUnitId, string factor) => new()
+        {
+            FromUnitId = fromUnitId,
+            ToUnitId = baseUnitId,
+            Factor = factor,
+            EffectiveFrom = today,
+            Reason = "Invalid conversion test"
+        };
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(CreateConversion(InvalidConversion(alternateUnit.Id, "0")))).StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(CreateConversion(InvalidConversion(baseUnitId, "1")))).StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(CreateConversion(InvalidConversion(Guid.NewGuid(), "12")))).StatusCode);
+
+        var conversionResponse = await _client.SendAsync(CreateConversion(conversionPayload));
+        Assert.Equal(HttpStatusCode.Created, conversionResponse.StatusCode);
+        var conversion = (await conversionResponse.Content.ReadFromJsonAsync<ItemUnitConversionResponse>())!;
+        Assert.Equal("12", conversion.Factor);
+        Assert.Equal(baseUnitId, conversion.ToUnitId);
+        var conversionList = await _client.SendAsync(CreateRequest(HttpMethod.Get, $"/api/v1/items/{item.Id}/unit-conversions"));
+        Assert.Equal(HttpStatusCode.OK, conversionList.StatusCode);
+        Assert.Contains(await conversionList.Content.ReadFromJsonAsync<List<ItemUnitConversionResponse>>() ?? [], row => row.Id == conversion.Id);
+
+        Assert.Equal(HttpStatusCode.Conflict, (await _client.SendAsync(CreateConversion(conversionPayload))).StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(CreateBarcode(alternateUnit.Id, "24.0000"))).StatusCode);
+
+        var expiredUnitRequest = CreateRequest(HttpMethod.Post, "/api/v1/units-of-measure");
+        expiredUnitRequest.Content = JsonContent.Create(new CreateUnitOfMeasureRequest
+        {
+            Code = "OLD-" + Guid.NewGuid().ToString("N")[..6],
+            Name = new LocalizedTextInput { Thai = "หน่วยเดิม", English = "Old unit" },
+            Symbol = "old",
+            Dimension = "Count",
+            DecimalScale = 0,
+            RoundingMode = "HalfUp"
+        });
+        var expiredUnitResponse = await _client.SendAsync(expiredUnitRequest);
+        Assert.Equal(HttpStatusCode.Created, expiredUnitResponse.StatusCode);
+        var expiredUnit = (await expiredUnitResponse.Content.ReadFromJsonAsync<UnitOfMeasureDetailResponse>())!;
+        var expiredConversion = await _client.SendAsync(CreateConversion(new CreateItemUnitConversionRequest
+        {
+            FromUnitId = expiredUnit.Id,
+            ToUnitId = baseUnitId,
+            Factor = "1",
+            EffectiveFrom = today.AddDays(-7),
+            EffectiveTo = today.AddDays(-1),
+            Reason = "Expired package definition"
+        }));
+        Assert.Equal(HttpStatusCode.Created, expiredConversion.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(CreateBarcode(expiredUnit.Id, "1.0000"))).StatusCode);
+
+        var nextVersion = await _client.SendAsync(CreateConversion(new CreateItemUnitConversionRequest
+        {
+            FromUnitId = alternateUnit.Id,
+            ToUnitId = baseUnitId,
+            Factor = "24",
+            EffectiveFrom = today.AddDays(1),
+            Reason = "Next package version"
+        }));
+        Assert.Equal(HttpStatusCode.Created, nextVersion.StatusCode);
+
+        var barcodeResponse = await _client.SendAsync(CreateBarcode(alternateUnit.Id, "12.0000"));
+        Assert.Equal(HttpStatusCode.Created, barcodeResponse.StatusCode);
+        var barcode = (await barcodeResponse.Content.ReadFromJsonAsync<ItemBarcodeResponse>())!;
+        Assert.Equal("12.0000", barcode.QuantityInBaseUnit);
+        Assert.Equal(alternateUnit.Id, barcode.Unit.Id);
+
+        var activate = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/activate", ifMatch: item.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(activate)).StatusCode);
+
+        var scanResponse = await _client.SendAsync(CreateRequest(HttpMethod.Get, $"/api/v1/items/by-barcode?value={barcodeValue}"));
+        Assert.Equal(HttpStatusCode.OK, scanResponse.StatusCode);
+        var scanned = (await scanResponse.Content.ReadFromJsonAsync<ItemBarcodeResponse>())!;
+        Assert.Equal("12.0000", scanned.QuantityInBaseUnit);
+        Assert.Equal(item.Id, scanned.Item.Id);
+
+        var crossOrg = CreateRequest(HttpMethod.Get, $"/api/v1/items/{item.Id}/unit-conversions", "token-org-b", TestOnlyDataSeeder.TestMembershipBId);
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.SendAsync(crossOrg)).StatusCode);
+    }
+
+    [Fact]
+    public async Task SharedUnitConversion_RejectsCyclesAndScopesByOrganization()
+    {
+        async Task<Guid> CreateUnit(string suffix)
+        {
+            var request = CreateRequest(HttpMethod.Post, "/api/v1/units-of-measure");
+            request.Content = JsonContent.Create(new CreateUnitOfMeasureRequest
+            {
+                Code = "SHARED-" + suffix + Guid.NewGuid().ToString("N")[..5],
+                Name = new LocalizedTextInput { Thai = "หน่วยทดสอบ", English = "Test unit" },
+                Symbol = suffix,
+                Dimension = "count",
+                DecimalScale = 4,
+                RoundingMode = "HalfUp"
+            });
+            var response = await _client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            return (await response.Content.ReadFromJsonAsync<UnitOfMeasureDetailResponse>())!.Id;
+        }
+
+        var unitA = await CreateUnit("a");
+        var unitB = await CreateUnit("b");
+        var unitC = await CreateUnit("c");
+        var effectiveFrom = DateOnly.FromDateTime(DateTime.UtcNow);
+        HttpRequestMessage CreateConversion(Guid from, Guid to, string factor)
+        {
+            var request = CreateRequest(HttpMethod.Post, "/api/v1/unit-conversions");
+            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+            request.Content = JsonContent.Create(new CreateItemUnitConversionRequest
+            {
+                FromUnitId = from,
+                ToUnitId = to,
+                Factor = factor,
+                EffectiveFrom = effectiveFrom,
+                Reason = "Shared exact conversion test"
+            });
+            return request;
+        }
+
+        var first = await _client.SendAsync(CreateConversion(unitA, unitB, "12"));
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+        var second = await _client.SendAsync(CreateConversion(unitB, unitC, "2"));
+        Assert.Equal(HttpStatusCode.Created, second.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await _client.SendAsync(CreateConversion(unitC, unitA, "0.5"))).StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await _client.SendAsync(CreateConversion(unitC, unitA, "0"))).StatusCode);
+
+        var list = await _client.SendAsync(CreateRequest(HttpMethod.Get, "/api/v1/unit-conversions"));
+        Assert.Equal(HttpStatusCode.OK, list.StatusCode);
+        var rows = await list.Content.ReadFromJsonAsync<List<UnitConversionResponse>>();
+        Assert.Contains(rows!, row => row.FromUnitId == unitA && row.ToUnitId == unitB);
+        var crossOrg = CreateRequest(HttpMethod.Get, "/api/v1/unit-conversions", "token-org-b", TestOnlyDataSeeder.TestMembershipBId);
+        var otherOrganizationRows = await _client.SendAsync(crossOrg);
+        Assert.Equal(HttpStatusCode.OK, otherOrganizationRows.StatusCode);
+        var otherRows = await otherOrganizationRows.Content.ReadFromJsonAsync<List<UnitConversionResponse>>() ?? [];
+        Assert.DoesNotContain(otherRows, row => row.Id == rows!.Single(x => x.FromUnitId == unitA).Id);
+
+        var (categoryId, _, _) = await SeedTaxonomyAsync();
+        var itemCreate = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        itemCreate.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "SHARED-ITEM-" + Guid.NewGuid().ToString("N")[..6],
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitB,
+            Name = new LocalizedTextInput { Thai = "สินค้าหน่วยกลาง", English = "Shared unit item" }
+        });
+        var itemCreateResponse = await _client.SendAsync(itemCreate);
+        Assert.Equal(HttpStatusCode.Created, itemCreateResponse.StatusCode);
+        var item = (await itemCreateResponse.Content.ReadFromJsonAsync<ItemResponse>())!;
+        var barcodeValue = "SHARED-" + Guid.NewGuid().ToString("N")[..10];
+        var barcodeRequest = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/barcodes");
+        barcodeRequest.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        barcodeRequest.Content = JsonContent.Create(new CreateItemBarcodeRequest
+        {
+            IdentifierType = "internal", Value = barcodeValue, UnitId = unitA,
+            QuantityInBaseUnit = "12.0000", PackagingLevel = "case"
+        });
+        var barcodeResponse = await _client.SendAsync(barcodeRequest);
+        Assert.Equal(HttpStatusCode.Created, barcodeResponse.StatusCode);
+        var activate = CreateRequest(HttpMethod.Post, $"/api/v1/items/{item.Id}/activate", ifMatch: item.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(activate)).StatusCode);
+        var scan = await _client.SendAsync(CreateRequest(HttpMethod.Get, $"/api/v1/items/by-barcode?value={barcodeValue}"));
+        Assert.Equal(HttpStatusCode.OK, scan.StatusCode);
+        Assert.Equal("12.0000", (await scan.Content.ReadFromJsonAsync<ItemBarcodeResponse>())!.QuantityInBaseUnit);
+    }
+
+    [Fact]
+    public async Task Item_ProductTaxCategoryAndCodeLength_RoundTrip()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+        var overlongCode = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        overlongCode.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = new string('X', 51),
+            ItemType = "product",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "สินค้า", English = "Product" }
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.SendAsync(overlongCode)).StatusCode);
+
+        var create = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        create.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "prd-finished-01",
+            ItemType = "product",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "ตู้สำเร็จรูป", English = "Finished cabinet" },
+            TaxCategoryCode = " retail "
+        });
+        var createResponse = await _client.SendAsync(create);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.NotNull(created);
+        Assert.Equal("prd-finished-01", created.Code);
+        Assert.Equal("product", created.ItemType);
+        Assert.Equal("RETAIL", created.TaxCategoryCode);
+
+        var update = CreateRequest(HttpMethod.Put, $"/api/v1/items/{created.Id}", ifMatch: created.RowVersion);
+        update.Content = JsonContent.Create(new UpdateItemRequest
+        {
+            Code = created.Code,
+            ItemType = "product",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            Name = new LocalizedTextInput { Thai = "ตู้พร้อมติดตั้ง", English = "Ready-to-install cabinet" },
+            TaxCategoryCode = " finished_good "
+        });
+        var updatedResponse = await _client.SendAsync(update);
+        Assert.Equal(HttpStatusCode.OK, updatedResponse.StatusCode);
+        var updated = await updatedResponse.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("product", updated.ItemType);
+        Assert.Equal("FINISHED_GOOD", updated.TaxCategoryCode);
+        Assert.Equal("prd-finished-01", updated.Code);
+
+        var activate = CreateRequest(HttpMethod.Post, $"/api/v1/items/{created.Id}/activate", ifMatch: updated.RowVersion);
+        var activateResponse = await _client.SendAsync(activate);
+        Assert.Equal(HttpStatusCode.OK, activateResponse.StatusCode);
+        var activated = await activateResponse.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.NotNull(activated);
+        Assert.Equal("active", activated.Status);
+        Assert.Equal("FINISHED_GOOD", activated.TaxCategoryCode);
+    }
+
+    [Fact]
+    public async Task TaxonomyCodes_EnforceFieldCatalogLengths()
+    {
+        var categoryRequest = CreateRequest(HttpMethod.Post, "/api/v1/item-categories");
+        categoryRequest.Content = JsonContent.Create(new CreateItemCategoryRequest
+        {
+            Code = new string('C', 31),
+            Name = new LocalizedTextInput { Thai = "หมวด", English = "Category" }
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.SendAsync(categoryRequest)).StatusCode);
+
+        var brandRequest = CreateRequest(HttpMethod.Post, "/api/v1/item-brands");
+        brandRequest.Content = JsonContent.Create(new CreateItemBrandRequest
+        {
+            Code = new string('B', 31),
+            Name = new LocalizedTextInput { Thai = "ยี่ห้อ", English = "Brand" }
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.SendAsync(brandRequest)).StatusCode);
+
+        var unitRequest = CreateRequest(HttpMethod.Post, "/api/v1/units-of-measure");
+        unitRequest.Content = JsonContent.Create(new CreateUnitOfMeasureRequest
+        {
+            Code = new string('U', 21),
+            Name = new LocalizedTextInput { Thai = "หน่วย", English = "Unit" },
+            Symbol = "u",
+            Dimension = "count"
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.SendAsync(unitRequest)).StatusCode);
+    }
+
+    [Fact]
+    public async Task TaxCategoryMaster_CreatesListsAndUpdatesWithinOrganization()
+    {
+        var code = "VAT-" + Guid.NewGuid().ToString("N")[..6];
+        var create = CreateRequest(HttpMethod.Post, "/api/v1/item-tax-categories");
+        create.Content = JsonContent.Create(new CreateItemTaxCategoryRequest
+        {
+            Code = code,
+            Name = new LocalizedTextInput { Thai = "ภาษีมูลค่าเพิ่ม", English = "Value added tax" },
+            SortOrder = 2
+        });
+
+        var createdResponse = await _client.SendAsync(create);
+        Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
+        var created = await createdResponse.Content.ReadFromJsonAsync<ItemTaxCategoryDetailResponse>();
+        Assert.NotNull(created);
+        Assert.Equal(code, created.Code);
+
+        var listResponse = await _client.SendAsync(CreateRequest(HttpMethod.Get, "/api/v1/item-tax-categories"));
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        var listed = await listResponse.Content.ReadFromJsonAsync<List<ItemTaxCategoryDetailResponse>>();
+        Assert.Contains(listed ?? [], category => category.Id == created.Id);
+
+        var update = CreateRequest(HttpMethod.Put, $"/api/v1/item-tax-categories/{created.Id}", ifMatch: created.RowVersion);
+        update.Content = JsonContent.Create(new UpdateItemTaxCategoryRequest
+        {
+            Code = code,
+            Name = new LocalizedTextInput { Thai = "ภาษีขาย", English = "Sales tax" },
+            SortOrder = 3
+        });
+        var updatedResponse = await _client.SendAsync(update);
+        Assert.Equal(HttpStatusCode.OK, updatedResponse.StatusCode);
+        var updated = await updatedResponse.Content.ReadFromJsonAsync<ItemTaxCategoryDetailResponse>();
+        Assert.Equal("ภาษีขาย", updated?.Name.Thai);
+        Assert.Equal(3, updated?.SortOrder);
     }
 
     [Fact]
@@ -394,6 +1027,58 @@ public class ItemEndpointsTests : IAsyncLifetime
 
         var updated = await branchRes.Content.ReadFromJsonAsync<ItemResponse>();
         Assert.Equal("selected_branches", updated!.AvailabilityMode);
+        Assert.Single(updated.BranchAvailabilities);
+        Assert.Equal(TestOnlyDataSeeder.TestBranchId, updated.BranchAvailabilities[0].BranchId);
+    }
+
+    [Fact]
+    public async Task Item_Update_RoundTripsSelectedBranchesCapabilitiesAttributesAndTaxCategory()
+    {
+        var (categoryId, unitId, _) = await SeedTaxonomyAsync();
+        var createRequest = CreateRequest(HttpMethod.Post, "/api/v1/items");
+        createRequest.Content = JsonContent.Create(new CreateItemRequest
+        {
+            Code = "ROUNDTRIP-" + Guid.NewGuid().ToString("N")[..6],
+            ItemType = "material",
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            AvailabilityMode = "selected_branches",
+            SelectedBranchIds = [TestOnlyDataSeeder.TestBranchId],
+            TaxCategoryCode = "MATERIAL",
+            Capabilities = new ItemCapabilitiesInput { CanSell = false, CanCost = true, CanPurchase = true, CanStock = false, CanProduce = false },
+            Attributes = new Dictionary<string, string> { ["thickness"] = "18mm" },
+            AttributesSchemaVersion = 1,
+            Name = new LocalizedTextInput { Thai = "วัสดุเดิม", English = "Original material" }
+        });
+        var createdResponse = await _client.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
+        var created = await createdResponse.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.NotNull(created);
+
+        var updateRequest = CreateRequest(HttpMethod.Put, $"/api/v1/items/{created.Id}", ifMatch: created.RowVersion);
+        updateRequest.Content = JsonContent.Create(new UpdateItemRequest
+        {
+            Code = created.Code,
+            ItemType = created.ItemType,
+            CategoryId = categoryId,
+            BaseUnitId = unitId,
+            AvailabilityMode = "selected_branches",
+            SelectedBranchIds = [TestOnlyDataSeeder.TestBranchId],
+            TaxCategoryCode = "MATERIAL",
+            Capabilities = new ItemCapabilitiesInput { CanSell = false, CanCost = true, CanPurchase = true, CanStock = false, CanProduce = false },
+            Attributes = new Dictionary<string, string> { ["thickness"] = "18mm" },
+            AttributesSchemaVersion = 1,
+            Name = new LocalizedTextInput { Thai = "วัสดุแก้ไขแล้ว", English = "Updated material" }
+        });
+        var updatedResponse = await _client.SendAsync(updateRequest);
+        Assert.Equal(HttpStatusCode.OK, updatedResponse.StatusCode);
+        var updated = await updatedResponse.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("selected_branches", updated.AvailabilityMode);
+        Assert.Equal("MATERIAL", updated.TaxCategoryCode);
+        Assert.Equal("18mm", updated.Attributes!["thickness"]);
+        Assert.False(updated.Capabilities.CanSell);
+        Assert.True(updated.Capabilities.CanCost);
         Assert.Single(updated.BranchAvailabilities);
         Assert.Equal(TestOnlyDataSeeder.TestBranchId, updated.BranchAvailabilities[0].BranchId);
     }

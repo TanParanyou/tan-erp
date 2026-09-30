@@ -2,7 +2,7 @@
 
 **สถานะ:** Accepted Direction — Production Baseline; ค่า Cost ทั้งหมดในตัวอย่างเป็น `TEST_ONLY`
 
-เอกสารนี้เป็นแหล่งอ้างอิงหลักของ Field, Type, Required Gate และ Visibility สำหรับ Item, Category, Brand, Alias, Branch Availability, Item Image, Unit, Conversion, Cost Source และ Cost Record
+เอกสารนี้เป็นแหล่งอ้างอิงหลักของ Field, Type, Required Gate และ Visibility สำหรับ Item, Category, Brand, Alias, Branch Availability, Item Image, Item Barcode, Unit, Conversion, Cost Source และ Cost Record
 
 ## Gate Legend
 
@@ -18,18 +18,48 @@
 | --- | --- | --- | --- |
 | `organizationId` | UUID | D | จาก Active Membership; Client เปลี่ยนไม่ได้ |
 | `code` | String ≤50 | D | Normalize Uppercase; Unique ใน Organization; immutable หลัง Active ครั้งแรก |
-| `itemType` | Enum | D | `material`, `labor`, `service`, `subcontract`, `other` |
+| `itemType` | Enum | D | `material`, `labor`, `service`, `subcontract`, `other`, `product` |
 | `categoryId` | UUID | A | Active Category ใน Organization เดียวกัน |
 | `brandId` | UUID/null | Optional | Active Brand ใน Organization เดียวกัน; Material/Product ใช้ได้แต่ Labor/Service ว่างได้ |
 | `name` | Localized JSON `{th,en?}` | A | `th` บังคับ ≤250; อนุญาตเฉพาะ `th`,`en`; Trim/Normalize |
 | `description` | Localized JSON `{th?,en?}` | Optional | แต่ละภาษา ≤2,000; Plain text; ไม่ส่งลูกค้าอัตโนมัติ |
 | `baseUnitCode` | String ≤20 | A | Active Unit และเข้ากับ Item |
-| `taxCategoryCode` | String ≤30/null | Optional | เป็น Classification ไม่ใช่ Tax Rate |
+| `taxCategoryCode` | String ≤30/null | Optional | เลือกรหัสจาก Tax Category Master ของ Organization; เป็น Classification ไม่ใช่ Tax Rate |
 | `availabilityMode` | Enum | D | `allBranches` หรือ `selectedBranches`; ไม่อนุมานจาก Branch List |
 | `attributes` | JSON Object | Optional | String values สำหรับแสดงผล/กรอง; ห้ามควบคุมราคา สิทธิ์ Lifecycle หรือ Calculation |
 | `attributesSchemaVersion` | Integer | Conditional | บังคับเมื่อมี Attributes |
 | `status` | Enum | System | `draft`, `active`, `inactive` |
 | `rowVersion` | Token | System | เปลี่ยนทุก Write |
+
+### ตัวตนสินค้า: Item Code, SKU และ Barcode
+
+- `Item.id` เป็นตัวตนอ้างอิงถาวรของระบบ; `Item.code` เป็นรหัสภายในองค์กรที่ไม่ซ้ำ และใช้เป็น **SKU ภายใน** เมื่อ Item เป็นสินค้าที่ซื้อหรือเก็บคลังได้. หน้าจออาจแสดงป้าย “SKU / รหัสสินค้า” สำหรับรายการดังกล่าว แต่ API และฐานข้อมูลมี authoritative field เดียวคือ `code`. Labor/Service ยังคงมี Item Code โดยไม่เรียกว่า SKU
+- SKU แยกใหม่จะสร้างข้อมูลซ้ำและต้องมีกฎตัดสินว่าเอกสาร/การค้นหาอ้างรหัสใด; จึงไม่เพิ่ม `sku` อีกคอลัมน์ในฐานนี้. Code เปลี่ยนไม่ได้หลัง Activate ครั้งแรก และห้ามนำ Code ของ Item ที่ปิดใช้แล้วไปใช้ซ้ำใน Organization เดียวกัน
+- Barcode เป็นตัวระบุที่เครื่องสแกนอ่านได้ ไม่ใช่ SKU. `GTIN` คือรหัสสินค้าตาม GS1 ที่อาจอยู่ใต้สัญลักษณ์ EAN/UPC/ITF/DataMatrix; Internal Barcode เป็นรหัสที่องค์กรออกเองและห้ามแสดงว่าเป็น GTIN. รหัสผู้ขายหรือผู้ผลิตเป็นความสัมพันธ์กับ Supplier/Manufacturer ในโมดูลจัดซื้อ ไม่ใช่ SKU หรือ Barcode หลักของ Item
+- Item หนึ่งตัวมีรหัสภายในสำรองและ Barcode ได้หลายรายการตามหน่วย/ระดับบรรจุ เช่น แผ่นกับลัง; รหัสเหล่านี้ช่วยค้นหรือสแกน Item เดิมและไม่สร้าง SKU หลักเพิ่มเติม. Barcode ที่แยกความต่างด้านขนาด สี หรือสเปกซึ่งมีผลต่อการสั่ง/เก็บ/คิดต้นทุน ต้องชี้ไปคนละ Item ตาม [GS1 variant guidance](https://support.gs1.org/support/solutions/articles/43000734083-how-many-gs1-gtins-do-i-need-when-i-have-a-product-with-many-sizes-and-colours-). ระดับบรรจุที่ต่างกันมี GTIN ของตัวเองตามมาตรฐาน GS1; การแปลงจำนวนไปหน่วยฐานต้องมี conversion ที่ยืนยันแล้วก่อนใช้ธุรกรรมคลัง
+- ฟอร์ม Item มีปุ่มสร้างเร็วข้าง Category, Brand และ Unit สำหรับผู้มีสิทธิ์ `items.manage-taxonomy`; เมื่อสร้างสำเร็จ ระบบเลือกค่าที่สร้างให้ Item ปัจจุบันทันที. `itemType` ยังคงเป็น Enum ที่ระบบกำหนด เพราะใช้ควบคุมความสามารถของ Item และไม่ใช่ taxonomy ที่องค์กรสร้างเอง
+- Tax Category มี Master แยกเฉพาะรหัส/ชื่อสองภาษา/ลำดับ/สถานะ และสร้างหรือแก้ไขจากหน้าข้อมูลอ้างอิงได้; ปุ่มสร้างเร็วใน Item เลือก Category ที่สร้างให้ทันที. รหัสนี้ไม่เก็บอัตราภาษีและไม่เปลี่ยนผลคำนวณ VAT
+
+## Item Barcode
+
+| Field | Type | Gate | Rule |
+| --- | --- | --- | --- |
+| `itemId` | UUID | D | Item ใน Organization เดียวกัน; Barcode ผูกกับ Item เดียวตลอดอายุ |
+| `identifierType` | Enum | D | `gtin` หรือ `internal`; ระบุแหล่งของรหัส ไม่ใช่รูปแบบภาพ Barcode |
+| `value` | String | D | เก็บเป็นข้อความเพื่อรักษาเลขศูนย์นำหน้า; ไม่ซ้ำใน Organization รวมรายการที่ปิดใช้แล้ว |
+| `unitId` | UUID | D | หน่วยที่สแกนแล้วหมายถึง; ต้องอยู่ Organization เดียวกัน |
+| `quantityInBaseUnit` | Decimal(18,4) | D | มากกว่า 0; ต้องสอดคล้องกับ Unit Conversion ที่ยืนยันแล้วก่อนนำไปใช้ในธุรกรรม |
+| `packagingLevel` | Enum | D | `each`, `inner`, `case`, `pallet`; สำหรับระดับที่ซื้อ/เก็บ/ขายจริง |
+| `isPrimary` | Boolean | D | Primary ได้หนึ่งรายการต่อ Item และระดับบรรจุ |
+| `status`, `rowVersion` | Enum/Token | System | `active|inactive`; ปิดใช้แทน Hard Delete และใช้ ETag เมื่อเปลี่ยน |
+
+`gtin` รับเลข 8, 12, 13 หรือ 14 หลักและตรวจ GS1 check digit; การผ่าน check digit ไม่พิสูจน์สิทธิ์เจ้าของหรือการจดทะเบียนกับ GS1. `internal` ใช้กับระบบภายในเท่านั้นและต้องไม่ชน Barcode ใดใน Organization. Item ที่ไม่มี Barcode ยังสร้างและ Activate ได้. การสแกนต้องคืน Item + หน่วย/จำนวนที่ตรงแน่นอนเพียงรายการเดียว; Barcode ที่ Inactive ไม่ถูกเลือกในธุรกรรมใหม่ แต่ประวัติเดิมยังอ่านได้. อ้างอิง [GS1 GTIN vs Barcode](https://support.gs1.org/support/solutions/articles/43000734124-what-is-the-difference-between-a-gs1-gtin-a-barcode-an-ean-and-a-upc-), [Check Digit](https://www.gs1.org/services/check-digit-calculator) และ [GTIN Packaging Rules](https://www.gs1.org/1/gtinrules/en/rule/270/packcase-quantity)
+
+### ขอบเขตรากฐานก่อนเปิดโมดูลถัดไป
+
+- Item Type `product` ใช้กับสินค้าสำเร็จรูปที่ทำซ้ำได้ ส่วน Product Family/Variant grouping และ Technical Specification Revision เป็น aggregate แยกในระยะถัดไปเมื่อมีกฎจัดซื้อ/คลัง/ผลิตชัดเจน. รูปแบบสินค้า/ขนาด/สีที่ต้องสั่งซื้อ เก็บคลัง หรือตั้งต้นทุนแยกกันต้องเป็น Item คนละตัวพร้อม Code/SKU ของตน; ไม่อัดความแตกต่างที่มีผลต่อธุรกรรมลง `attributes` อิสระ. งานบิวต์อินสั่งทำเฉพาะโครงการยังเป็น Work Item ไม่สร้าง SKU ใหม่ทุกครั้งโดยอัตโนมัติ
+- สเปกเชิงเทคนิคที่มีผลต่อสูตรคำนวณ/การผลิต เช่น ขนาดจริง วัสดุ เกรด ผิว สี หรือ Revision ของแบบ ต้องมี Typed, Versioned Contract ตาม Category เมื่อโมดูลนั้นเป็นเจ้าของกฎ; `attributes` ปัจจุบันใช้แสดง/กรองเท่านั้น
+- Supplier Part Number, ราคาซื้อ, MOQ และ Lead Time อยู่กับ Item–Supplier/Quotation; Lot/Serial, ที่เก็บ และจำนวนคงเหลืออยู่กับ Inventory; BOM/Router/Work Center อยู่กับ Production. Item เก็บตัวตนและ Capability เพื่อให้โมดูลเหล่านั้นอ้าง Item เดียวกัน
 
 ## Item Capabilities
 
@@ -80,6 +110,7 @@ Original File จำกัด 10 MB; Backend ตรวจ MIME และ Magic N
 | `parentCategoryId` | UUID/null | Optional | ห้าม Cycle; Parent อยู่ Organization เดียวกัน |
 | `allowedItemTypes` | Enum Set | A | Item ต้องอยู่ใน Allowlist |
 | `sortOrder` | Integer ≥0 | D | Stable Sort ด้วย `sortOrder,id` |
+| `imageFileId` | UUID/null | Optional | ภาพหลักที่ผ่านการตรวจสอบและ Upload Session ผูกกับ Category เดียวกัน; ไฟล์เป็น Private และอ่านได้ตามสิทธิ์ใน Organization |
 | `status` | Enum | System | Active/Inactive; Category ที่ถูกใช้ห้ามลบ |
 
 Category และ Subcategory ใช้ Entity เดียวกัน โดย Subcategory คือ Category ที่มี `parentCategoryId`
@@ -92,6 +123,7 @@ Category และ Subcategory ใช้ Entity เดียวกัน โด�
 | `name` | Localized JSON `{th,en?}` | A | ภาษาไทยบังคับ; แต่ละภาษา ≤250 |
 | `description` | Localized JSON `{th?,en?}` | Optional | แต่ละภาษา ≤1,000; Plain text |
 | `sortOrder` | Integer ≥0 | D | Stable Sort ด้วย `sortOrder,id` |
+| `imageFileId` | UUID/null | Optional | โลโก้/ภาพหลักที่ผ่านการตรวจสอบและ Upload Session ผูกกับ Brand เดียวกัน; ไฟล์เป็น Private และอ่านได้ตามสิทธิ์ใน Organization |
 | `status` | Enum | System | Active/Inactive; Brand ที่ถูกใช้ห้าม Hard Delete |
 
 ## Item Alias
@@ -110,10 +142,13 @@ Alias ใช้ค้นหาคำเรียกอื่น เช่น “
 | --- | --- | --- | --- |
 | `code` | String ≤20 | D | Unique ใน Organization เช่น `m`, `m2`, `sheet`, `day` |
 | `name` | Localized JSON `{th,en?}` | A | ภาษาไทยบังคับ; แต่ละภาษา ≤100 |
-| `symbol` | String ≤20 | A | ใช้แสดงผล ไม่ใช้เป็น Identifier |
+| `symbol` | String ≤16 | A | ใช้แสดงผล ไม่ใช้เป็น Identifier |
 | `dimension` | Enum | A | `length`, `area`, `volume`, `mass`, `time`, `count`, `custom` |
-| `decimalScale` | Integer 0–4 | A | ควบคุมการรับ/แสดง Quantity |
+| `decimalScale` | Integer 0–6 | A | ควบคุมการรับ/แสดง Quantity |
+| `roundingMode` | Enum | A | `half_up`, `half_even`, `up`, `down`, `ceiling`, `floor`; กำหนดนโยบายปัดเศษของหน่วยและต้องคงเดิมเมื่อแก้ฟิลด์อื่น |
 | `status` | Enum | System | Active/Inactive |
+
+`half_up` ปัดค่ากึ่งกลางออกจากศูนย์, `half_even` ปัดค่ากึ่งกลางไปเลขคู่, `up` ปัดออกจากศูนย์, `down` ปัดเข้าหาศูนย์, `ceiling` ปัดไปทางค่าบวก และ `floor` ปัดไปทางค่าลบ โดยใช้ `decimalScale` เป็นจำนวนหลักทศนิยม
 
 ## Unit Conversion
 
@@ -131,15 +166,16 @@ Conversion กลางต้องเป็น Dimension เดียวกั�
 
 ## Cost Source
 
+Cost Source เป็นรายการประเภทแหล่งต้นทุนระดับ Organization ที่เลือกใช้ซ้ำได้ ไม่ใช่หลักฐานของราคาฉบับใดฉบับหนึ่ง รอบแรกสร้างและเลือกใช้เฉพาะชนิด `manual`; ข้อมูล Supplier และชนิดอื่นเป็นงานภายหลัง รายละเอียดอ้างอิงและหลักฐานของราคาหนึ่งฉบับอยู่ที่ Cost Record
+
 | Field | Type | Gate | Rule |
 | --- | --- | --- | --- |
-| `code` | String ≤50 | S | Unique ใน Organization |
-| `sourceType` | Enum | S | `supplier-quote`, `price-list`, `contract`, `historical`, `manual` |
-| `supplierId` | UUID/null | Conditional | บังคับเมื่อ Source Type อ้าง Supplier |
-| `referenceNumber` | String ≤100/null | Conditional | เลขเอกสาร/รายการราคา |
-| `evidenceFileId` | UUID/null | Conditional | ตาม Cost Policy; File อยู่ Scope เดียวกัน |
-| `capturedAtUtc` | UTC | S | Server-owned หรือข้อมูลนำเข้าที่ Validate |
-| `note` | String ≤1,000/null | Optional | Internal เท่านั้น |
+| `code` | String ≤32 | S | Unique ใน Organization; คงเดิมหลังถูกอ้างอิง |
+| `name` | Localized Text | S | `th` บังคับ; `en` ว่างได้ |
+| `sourceType` | Enum | S | สร้างใหม่ได้เฉพาะ `manual`; `legacy` ใช้อ่านข้อมูลเดิมที่ระบุชนิดไม่ได้และเลือกใหม่ไม่ได้ |
+| `priority` | Integer | System | Metadata ของ Source; Cost Resolver รอบแรกไม่ใช้ตัดสินราคา |
+| `isActive` | Boolean | System | Source ที่ปิดใช้ยังอ่านประวัติได้ แต่เลือกกับ Cost ใหม่ไม่ได้ |
+| `rowVersion` | UUID | System | ใช้กับ ETag เมื่อแก้/ปิดใช้ |
 
 ## Cost Record
 
@@ -147,17 +183,18 @@ Conversion กลางต้องเป็น Dimension เดียวกั�
 | --- | --- | --- | --- |
 | `itemId` | UUID | S | Active และ `canCost=true` |
 | `branchId` | UUID/null | S | null = Organization Default; ค่าอื่นต้องอยู่ Scope |
-| `costSourceId` | UUID | S | Source ใน Organization เดียวกัน |
-| `unitCode` | String ≤20 | S | Base Unit หรือมี Valid Conversion |
+| `costSourceId` | UUID | S | Source ชนิด Manual ที่ Active และอยู่ Organization เดียวกัน; บังคับสำหรับ Draft ใหม่ |
+| `sourceReference` | String ≤128/null | Conditional | ระบุที่มาที่ตรวจสอบได้ของราคาฉบับนี้เมื่อไม่มีไฟล์หลักฐาน |
+| `reason` | String ≤500/null | Conditional | บังคับสำหรับ Manual Source, Zero Cost, รุ่นใหม่หรือ Disable ตาม Governance |
+| `evidenceFileId` | UUID/null | Conditional | File ที่ Verified และผูกกับ Cost Record นี้; ถ้าไม่มีไฟล์ต้องมี `sourceReference` ที่ตรวจสอบได้ |
+| `unitId` | UUID | S | Base Unit หรือมี Valid Conversion; `unitCode` เป็นข้อมูลแสดงผลจาก Unit |
 | `currency` | ISO 4217 | S | Phase แรก Resolve เป็น THB สำหรับ Estimate THB |
 | `amount` | Decimal(19,4) | S | ≥0; Zero Cost ต้องมี Reason |
 | `minimumQuantity` | Decimal(18,4) | S | ≥0; ค่าเริ่มต้น 0 |
 | `maximumQuantity` | Decimal(18,4)/null | Optional | ต้องมากกว่า Minimum |
 | `effectiveFrom` | UTC | S | ใช้ Business Time Zone แปลงก่อนเก็บ UTC |
 | `effectiveTo` | UTC/null | Optional | Exclusive End; ต้องมากกว่า From |
-| `sourcePriority` | Integer/null | P | มาจาก Cost Policy; User ไม่กำหนดเองโดยทั่วไป |
 | `status` | Enum | System | draft/submitted/returned/approved/published/superseded/disabled |
-| `changeReasonCode`, `changeReason` | String/null | Conditional | บังคับเมื่อ Version 2+ หรือ Disable |
 | `rowVersion` | Token | System | Draft concurrency |
 
 Natural Key สำหรับ Period Overlap คือ Organization + Item + Branch Scope + Unit + Currency + Quantity Range + Published Status

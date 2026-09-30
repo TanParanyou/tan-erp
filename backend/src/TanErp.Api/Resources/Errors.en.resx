@@ -131,6 +131,14 @@
   <data name="CUSTOMER_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>Customer must be in draft status and have an active primary contact.</value>
   </data>
+  <data name="CUSTOMER_HAS_OPEN_OPPORTUNITY_TITLE" xml:space="preserve"><value>Open opportunities remain</value></data>
+  <data name="CUSTOMER_HAS_OPEN_OPPORTUNITY_DETAIL" xml:space="preserve"><value>Close or transfer open opportunities before deactivating the customer.</value></data>
+  <data name="CUSTOMER_INVALID_PROFILE_TITLE" xml:space="preserve"><value>Customer tax or commercial terms are invalid</value></data>
+  <data name="CUSTOMER_INVALID_PROFILE_DETAIL" xml:space="preserve"><value>Check the tax identifier, branch code, and commercial values.</value></data>
+  <data name="CUSTOMER_ADDRESS_INVALID_TITLE" xml:space="preserve"><value>Address details are invalid</value></data>
+  <data name="CUSTOMER_ADDRESS_INVALID_DETAIL" xml:space="preserve"><value>Check the address fields and five-digit postal code.</value></data>
+  <data name="CUSTOMER_QUOTATION_BILLING_NOT_READY_TITLE" xml:space="preserve"><value>Quotation details are incomplete</value></data>
+  <data name="CUSTOMER_QUOTATION_BILLING_NOT_READY_DETAIL" xml:space="preserve"><value>Complete the customer's tax and billing address details before issuing a quotation.</value></data>
   <data name="IF_MATCH_REQUIRED_TITLE" xml:space="preserve">
     <value>Precondition Required</value>
   </data>
@@ -233,6 +241,46 @@
   <data name="ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>The operation cannot be performed on the estimate in its current status.</value>
   </data>
+  <data name="ESTIMATE_INPUT_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid estimate input</value>
+  </data>
+  <data name="ESTIMATE_INPUT_INVALID_DETAIL" xml:space="preserve">
+    <value>Review the margin rate, discount, and entered amounts.</value>
+  </data>
+  <data name="ESTIMATE_DISCOUNT_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Discount Reason Required</value></data>
+  <data name="ESTIMATE_DISCOUNT_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A non-zero discount requires an auditable reason code.</value></data>
+  <data name="ESTIMATE_FIXED_PRICE_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Fixed Price Reason Required</value></data>
+  <data name="ESTIMATE_FIXED_PRICE_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A fixed selling price requires an auditable reason code.</value></data>
+  <data name="ESTIMATE_POLICY_UNAVAILABLE_TITLE" xml:space="preserve">
+    <value>No Active Estimate Policy</value>
+  </data>
+  <data name="ESTIMATE_POLICY_UNAVAILABLE_DETAIL" xml:space="preserve">
+    <value>An effective calculation or tax policy, or an independent reviewer with matching permission and branch scope, is required.</value>
+  </data>
+  <data name="ESTIMATE_READINESS_BLOCKED_TITLE" xml:space="preserve"><value>Estimate Is Not Ready for Review</value></data>
+  <data name="ESTIMATE_READINESS_BLOCKED_DETAIL" xml:space="preserve"><value>Resolve the missing items using the reason and target location returned by the API before submitting.</value></data>
+  <data name="ESTIMATE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Estimate Fields Are Incomplete</value></data>
+  <data name="ESTIMATE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>At least one section is required, and each section must contain an estimate work item.</value></data>
+  <data name="ESTIMATE_UNIT_INVALID_TITLE" xml:space="preserve"><value>Cost unit does not match the item's base unit</value></data>
+  <data name="ESTIMATE_UNIT_INVALID_DETAIL" xml:space="preserve"><value>Select the item's base unit or use a cost record published in that base unit.</value></data>
+  <data name="ESTIMATE_COST_INCOMPLETE_TITLE" xml:space="preserve"><value>Work Item Has No Cost</value></data>
+  <data name="ESTIMATE_COST_INCOMPLETE_DETAIL" xml:space="preserve"><value>Add at least one cost component to each work item before submitting.</value></data>
+  <data name="ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Provisional Cost Reason Required</value></data>
+  <data name="ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>Provide a reason for each provisional cost before submission.</value></data>
+  <data name="ESTIMATE_CALCULATION_OUTDATED_TITLE" xml:space="preserve"><value>Calculation Is Outdated</value></data>
+  <data name="ESTIMATE_CALCULATION_OUTDATED_DETAIL" xml:space="preserve"><value>Save or recalculate the latest financial inputs before continuing.</value></data>
+  <data name="ESTIMATE_ZERO_DENOMINATOR_TITLE" xml:space="preserve"><value>Margin Requires Review</value></data>
+  <data name="ESTIMATE_ZERO_DENOMINATOR_DETAIL" xml:space="preserve"><value>Net cost or pre-tax selling amount is zero and requires reviewer attention.</value></data>
+  <data name="ESTIMATE_REVIEW_DECISION_INVALID_TITLE" xml:space="preserve"><value>Invalid Review Decision</value></data>
+  <data name="ESTIMATE_REVIEW_DECISION_INVALID_DETAIL" xml:space="preserve"><value>A review decision must be approved or returned.</value></data>
+  <data name="ESTIMATE_REVIEW_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Return Reason Required</value></data>
+  <data name="ESTIMATE_REVIEW_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>Returning an estimate requires a reason code and note.</value></data>
+  <data name="ESTIMATE_APPROVAL_SELF_REVIEW_TITLE" xml:space="preserve"><value>Self Review Is Not Allowed</value></data>
+  <data name="ESTIMATE_APPROVAL_SELF_REVIEW_DETAIL" xml:space="preserve"><value>The submitter and last financial editor cannot review the estimate.</value></data>
+  <data name="ESTIMATE_CANCEL_AUTHORITY_REQUIRED_TITLE" xml:space="preserve"><value>Cancellation Authority Required</value></data>
+  <data name="ESTIMATE_CANCEL_AUTHORITY_REQUIRED_DETAIL" xml:space="preserve"><value>A submitted estimate must be cancelled by its assigned reviewer with active cancellation permission.</value></data>
+  <data name="ESTIMATE_CANCEL_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Cancellation Reason Required</value></data>
+  <data name="ESTIMATE_CANCEL_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A cancellation reason is required.</value></data>
   <data name="FILE_PARENT_TYPE_INVALID_TITLE" xml:space="preserve">
     <value>Invalid File Parent Type</value>
   </data>
@@ -320,8 +368,20 @@
   <data name="ITEM_COST_NOT_FOUND_TITLE" xml:space="preserve">
     <value>Cost Record Not Found</value>
   </data>
+  <data name="ITEM_TAX_CATEGORY_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Item Tax Category Not Found</value>
+  </data>
+  <data name="ITEM_TAX_CATEGORY_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>No item tax category with this ID exists in the organization.</value>
+  </data>
   <data name="ITEM_COST_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>No published cost record was found matching the criteria.</value>
+  </data>
+  <data name="ITEM_COST_STALE_TITLE" xml:space="preserve">
+    <value>Cost Is Not Effective on the Selected Date</value>
+  </data>
+  <data name="ITEM_COST_STALE_DETAIL" xml:space="preserve">
+    <value>Published costs exist, but none are effective on the estimate date.</value>
   </data>
   <data name="ITEM_COST_AMBIGUOUS_TITLE" xml:space="preserve">
     <value>Cost Record Ambiguous</value>
@@ -413,5 +473,92 @@
   <data name="ITEM_ATTRIBUTE_RESERVED_DETAIL" xml:space="preserve">
     <value>Reserved system attribute keys cannot be used.</value>
   </data>
+  <data name="COST_SOURCE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Cost Source Has Changed</value></data>
+  <data name="COST_SOURCE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>Another user changed this Cost Source. Reload the latest version before saving.</value></data>
+  <data name="COST_SOURCE_CODE_DUPLICATE_TITLE" xml:space="preserve"><value>Duplicate Cost Source Code</value></data>
+  <data name="COST_SOURCE_CODE_DUPLICATE_DETAIL" xml:space="preserve"><value>This Cost Source code already exists in the organization.</value></data>
+  <data name="ITEM_CODE_CONFLICT_TITLE" xml:space="preserve"><value>Duplicate Master Data Code</value></data>
+  <data name="ITEM_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>This code already exists in the organization. Enter a different code.</value></data>
+  <data name="MASTER_DATA_CODE_CONFIGURATION_INVALID_TITLE" xml:space="preserve"><value>Invalid Master Data Code Configuration</value></data>
+  <data name="MASTER_DATA_CODE_CONFIGURATION_INVALID_DETAIL" xml:space="preserve"><value>The configured sequence generates a code that exceeds the resource length limit. Review Document Numbering settings.</value></data>
+  <data name="COST_SOURCE_TYPE_INVALID_TITLE" xml:space="preserve"><value>Invalid Cost Source Type</value></data>
+  <data name="COST_SOURCE_TYPE_INVALID_DETAIL" xml:space="preserve"><value>Only Manual Cost Sources can be created or updated.</value></data>
+  <data name="COST_SOURCE_NOT_FOUND_TITLE" xml:space="preserve"><value>Cost Source Not Found</value></data>
+  <data name="COST_SOURCE_NOT_FOUND_DETAIL" xml:space="preserve"><value>No Cost Source with this ID exists in the organization.</value></data>
+  <data name="COST_SOURCE_REQUIRED_TITLE" xml:space="preserve"><value>Cost Source Required</value></data>
+  <data name="COST_SOURCE_REQUIRED_DETAIL" xml:space="preserve"><value>Select an active Manual Cost Source.</value></data>
+  <data name="COST_SOURCE_INACTIVE_TITLE" xml:space="preserve"><value>Cost Source Unavailable</value></data>
+  <data name="COST_SOURCE_INACTIVE_DETAIL" xml:space="preserve"><value>New cost records require an active Manual Cost Source.</value></data>
+  <data name="COST_SOURCE_CODE_IMMUTABLE_TITLE" xml:space="preserve"><value>Cost Source Code Is Immutable</value></data>
+  <data name="COST_SOURCE_CODE_IMMUTABLE_DETAIL" xml:space="preserve"><value>A Cost Source code cannot change after a Cost Record references it.</value></data>
+  <data name="COST_RECORD_PROVENANCE_REQUIRED_TITLE" xml:space="preserve"><value>Cost Provenance Required</value></data>
+  <data name="COST_RECORD_PROVENANCE_REQUIRED_DETAIL" xml:space="preserve"><value>Provide a reason and a source reference or verified evidence.</value></data>
+  <data name="COST_EVIDENCE_INVALID_TITLE" xml:space="preserve"><value>Invalid Cost Evidence</value></data>
+  <data name="COST_EVIDENCE_INVALID_DETAIL" xml:space="preserve"><value>The file must be verified and attached to this Cost Record.</value></data>
+  <data name="COST_ZERO_AMOUNT_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Zero Amount Requires a Reason</value></data>
+  <data name="COST_ZERO_AMOUNT_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>Provide a reason for a zero amount and obtain independent checker approval before publishing.</value></data>
+  <data name="ITEM_BARCODE_NOT_FOUND_TITLE" xml:space="preserve"><value>Barcode Not Found</value></data>
+  <data name="ITEM_BARCODE_NOT_FOUND_DETAIL" xml:space="preserve"><value>No active barcode with this value exists in the organization.</value></data>
+  <data name="ITEM_BARCODE_CONFLICT_TITLE" xml:space="preserve"><value>Barcode Already Exists</value></data>
+  <data name="ITEM_BARCODE_CONFLICT_DETAIL" xml:space="preserve"><value>This barcode value is already reserved in the organization.</value></data>
+  <data name="ITEM_BARCODE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Barcode Version Conflict</value></data>
+  <data name="ITEM_BARCODE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>Reload the latest barcode before changing it.</value></data>
+  <data name="ITEM_BARCODE_INACTIVE_TITLE" xml:space="preserve"><value>Barcode Inactive</value></data>
+  <data name="ITEM_BARCODE_INACTIVE_DETAIL" xml:space="preserve"><value>This barcode cannot be used in new transactions.</value></data>
+  <data name="ITEM_BARCODE_INVALID_TITLE" xml:space="preserve"><value>Invalid Barcode</value></data>
+  <data name="ITEM_BARCODE_INVALID_DETAIL" xml:space="preserve"><value>Check the identifier type, value, GTIN check digit, and package quantity.</value></data>
+  <data name="ITEM_BARCODE_UNIT_INVALID_TITLE" xml:space="preserve"><value>Invalid Barcode Unit</value></data>
+  <data name="ITEM_BARCODE_UNIT_INVALID_DETAIL" xml:space="preserve"><value>The barcode unit must be active in this organization.</value></data>
+  <data name="ITEM_BARCODE_UNIT_CONVERSION_REQUIRED_TITLE" xml:space="preserve"><value>Unit Conversion Required</value></data>
+  <data name="ITEM_BARCODE_UNIT_CONVERSION_REQUIRED_DETAIL" xml:space="preserve"><value>The barcode quantity must match an effective conversion configured for this item.</value></data>
+  <data name="ITEM_UNIT_CONVERSION_PERIOD_OVERLAP_TITLE" xml:space="preserve"><value>Overlapping Conversion Period</value></data>
+  <data name="ITEM_UNIT_CONVERSION_PERIOD_OVERLAP_DETAIL" xml:space="preserve"><value>An item conversion already covers part of this period.</value></data>
+  <data name="ITEM_UNIT_CONVERSION_FACTOR_INVALID_TITLE" xml:space="preserve"><value>Invalid Conversion Factor</value></data>
+  <data name="ITEM_UNIT_CONVERSION_FACTOR_INVALID_DETAIL" xml:space="preserve"><value>The conversion factor must be a positive numeric value.</value></data>
+  <data name="ITEM_UNIT_CONVERSION_SELF_LOOP_TITLE" xml:space="preserve"><value>Same Source and Target Unit</value></data>
+  <data name="ITEM_UNIT_CONVERSION_SELF_LOOP_DETAIL" xml:space="preserve"><value>The source unit must differ from the target unit.</value></data>
+  <data name="ITEM_UNIT_CONVERSION_PERIOD_INVALID_TITLE" xml:space="preserve"><value>Invalid Effective Period</value></data>
+  <data name="ITEM_UNIT_CONVERSION_PERIOD_INVALID_DETAIL" xml:space="preserve"><value>The end date cannot be earlier than the start date.</value></data>
+  <data name="ITEM_UNIT_CONVERSION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="ITEM_UNIT_CONVERSION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>Provide a reason for this unit conversion.</value></data>
+  <data name="ITEM_UNIT_CONVERSION_TARGET_INVALID_TITLE" xml:space="preserve"><value>Target Is Not the Base Unit</value></data>
+  <data name="ITEM_UNIT_CONVERSION_TARGET_INVALID_DETAIL" xml:space="preserve"><value>An item conversion must target the item's base unit.</value></data>
+  <data name="ITEM_UNIT_CONVERSION_UNIT_INVALID_TITLE" xml:space="preserve"><value>Unit Unavailable</value></data>
+  <data name="ITEM_UNIT_CONVERSION_UNIT_INVALID_DETAIL" xml:space="preserve"><value>Both units must be active in the same organization.</value></data>
+  <data name="ITEM_UNIT_CONVERSION_DIMENSION_MISMATCH_TITLE" xml:space="preserve"><value>Unit Dimensions Do Not Match</value></data>
+  <data name="ITEM_UNIT_CONVERSION_DIMENSION_MISMATCH_DETAIL" xml:space="preserve"><value>The source and target units must have the same dimension.</value></data>
+  <data name="UNIT_CONVERSION_PERIOD_OVERLAP_TITLE" xml:space="preserve"><value>Overlapping Conversion Period</value></data>
+  <data name="UNIT_CONVERSION_PERIOD_OVERLAP_DETAIL" xml:space="preserve"><value>A conversion for this unit pair already covers part of this period.</value></data>
+  <data name="UNIT_CONVERSION_CYCLE_TITLE" xml:space="preserve"><value>Unit Conversion Cycle</value></data>
+  <data name="UNIT_CONVERSION_CYCLE_DETAIL" xml:space="preserve"><value>This conversion path leads back to its source unit. Choose a path without a cycle.</value></data>
+  <data name="UNIT_CONVERSION_FACTOR_INVALID_TITLE" xml:space="preserve"><value>Invalid Conversion Factor</value></data>
+  <data name="UNIT_CONVERSION_FACTOR_INVALID_DETAIL" xml:space="preserve"><value>The factor must be positive and have no more than six decimal places.</value></data>
+  <data name="UNIT_CONVERSION_SELF_LOOP_TITLE" xml:space="preserve"><value>Same Source and Target Unit</value></data>
+  <data name="UNIT_CONVERSION_SELF_LOOP_DETAIL" xml:space="preserve"><value>The source unit must differ from the target unit.</value></data>
+  <data name="UNIT_CONVERSION_PERIOD_INVALID_TITLE" xml:space="preserve"><value>Invalid Effective Period</value></data>
+  <data name="UNIT_CONVERSION_PERIOD_INVALID_DETAIL" xml:space="preserve"><value>The end date cannot be earlier than the start date.</value></data>
+  <data name="UNIT_CONVERSION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="UNIT_CONVERSION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>Provide a reason for this unit conversion.</value></data>
+  <data name="UNIT_CONVERSION_UNIT_INVALID_TITLE" xml:space="preserve"><value>Unit Unavailable</value></data>
+  <data name="UNIT_CONVERSION_UNIT_INVALID_DETAIL" xml:space="preserve"><value>Both units must be active in the same organization.</value></data>
+  <data name="UNIT_CONVERSION_DIMENSION_MISMATCH_TITLE" xml:space="preserve"><value>Unit Dimensions Do Not Match</value></data>
+  <data name="UNIT_CONVERSION_DIMENSION_MISMATCH_DETAIL" xml:space="preserve"><value>The source and target units must have the same dimension.</value></data>
+  <data name="ITEM_TYPE_INVALID_TITLE" xml:space="preserve"><value>Invalid Item Type</value></data>
+  <data name="ITEM_TYPE_INVALID_DETAIL" xml:space="preserve"><value>Item type must be material, labor, service, subcontract, other, or product.</value></data>
+  <data name="ITEM_CODE_INVALID_TITLE" xml:space="preserve"><value>Invalid Item Code</value></data>
+  <data name="ITEM_CODE_INVALID_DETAIL" xml:space="preserve"><value>Internal item code/SKU cannot exceed 50 characters.</value></data>
+  <data name="ITEM_TAX_CATEGORY_INVALID_TITLE" xml:space="preserve"><value>Invalid Tax Category</value></data>
+  <data name="ITEM_TAX_CATEGORY_INVALID_DETAIL" xml:space="preserve"><value>Tax category code cannot exceed 30 characters.</value></data>
+  <data name="ITEM_BRANCH_IDS_REQUIRED_TITLE" xml:space="preserve"><value>Branch Selection Required</value></data>
+  <data name="ITEM_BRANCH_IDS_REQUIRED_DETAIL" xml:space="preserve"><value>Branch IDs are required when changing item availability mode.</value></data>
+  <data name="ITEM_SORT_INVALID_TITLE" xml:space="preserve"><value>Invalid Sort Field</value></data>
+  <data name="ITEM_SORT_INVALID_DETAIL" xml:space="preserve"><value>Item sort field must be code, itemType, or status.</value></data>
+  <data name="ITEM_SORT_ORDER_INVALID_TITLE" xml:space="preserve"><value>Invalid Sort Order</value></data>
+  <data name="ITEM_SORT_ORDER_INVALID_DETAIL" xml:space="preserve"><value>Sort order must be asc or desc.</value></data>
+  <data name="ITEM_UNIT_ROUNDING_MODE_INVALID_TITLE" xml:space="preserve"><value>Unsupported Unit Rounding Mode</value></data>
+  <data name="ITEM_UNIT_ROUNDING_MODE_INVALID_DETAIL" xml:space="preserve"><value>Select a rounding mode supported by the system.</value></data>
+  <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_CODE_REQUIRED_TITLE" xml:space="preserve"><value>Custom Work Item Reason Code Required</value></data>
+  <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_CODE_REQUIRED_DETAIL" xml:space="preserve"><value>A work item without an Item Master link requires an auditable reason code.</value></data>
+  <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Custom Work Item Reason Required</value></data>
+  <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A work item without an Item Master link requires a reason note.</value></data>
 </root>
-

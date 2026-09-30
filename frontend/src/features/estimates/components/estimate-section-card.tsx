@@ -1,21 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
-import { useFormContext, useFieldArray, Controller } from "react-hook-form";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useFormContext, useFieldArray, Controller, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils/cn";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableCaption,
+} from "@/components/ui/Table";
+import { MultiLangInput } from "@/components/forms/MultiLangInput";
 import { IconTrash, IconPlus, IconChevronDown } from "@/components/common/Icons";
 import { useConfirm } from "@/hooks/useConfirm";
 import type { EstimateWorkspaceFormData } from "../schemas/estimate-workspace-schema";
-import { calculateSectionSummary } from "../utils/estimate-calculations";
-import {
-  formatFinancialNumber,
-  formatPercentRate,
-} from "../utils/estimate-formatters";
+import { calculateSectionSummary, calculateWorkItemSummary } from "../utils/estimate-calculations";
+import { formatFinancialNumber, formatPercentRate } from "../utils/estimate-formatters";
 import { EstimateWorkItemCard } from "./estimate-work-item-card";
 import { EstimateTemplateModal } from "./estimate-template-modal";
 import type { EstimateTemplateItem } from "../constants/estimate-templates";
+import { useEstimateWorkspace, scrollEstimateTarget } from "./estimate-workspace-context";
+import { workspaceWorkMatches } from "../utils/estimate-workspace-filter";
 
 interface EstimateSectionCardProps {
   sectionIndex: number;
@@ -25,307 +36,180 @@ interface EstimateSectionCardProps {
   onRemoveSection: (sectionIndex: number) => void;
 }
 
-export function EstimateSectionCard({
-  sectionIndex,
-  currency,
-  isInitiallyExpanded = true,
-  branchId,
-  onRemoveSection,
-}: EstimateSectionCardProps) {
+export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpanded = true, branchId, onRemoveSection }: EstimateSectionCardProps) {
   const t = useTranslations("estimates");
   const { confirm, ConfirmDialog } = useConfirm();
+  const workspace = useEstimateWorkspace();
   const [isExpanded, setIsExpanded] = useState(isInitiallyExpanded);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const { control, getValues, setValue, formState: { errors } } = useFormContext<EstimateWorkspaceFormData>();
+  const currentSection = useWatch({ control, name: `sections.${sectionIndex}` });
+  const sectionSummary = calculateSectionSummary(currentSection ?? {});
+  const { fields, append, remove, move } = useFieldArray({ control, name: `sections.${sectionIndex}.workItems` });
+  const focusHandled = useRef<string | undefined>(undefined);
+  const focusTargetId = workspace?.focusTargetId;
 
-  const { control, watch, getValues } = useFormContext<EstimateWorkspaceFormData>();
+  useEffect(() => {
+    if (!focusTargetId) { focusHandled.current = undefined; return; }
+    if (focusHandled.current === focusTargetId || !workspace) return;
+    const work = currentSection?.workItems.find((item) => item.id === focusTargetId || item.costComponents.some((cost) => cost.id === focusTargetId));
+    if (currentSection?.id !== focusTargetId && !work) return;
+    focusHandled.current = focusTargetId;
+    setIsExpanded(true);
+    if (work?.uiKey) workspace.selectWork(work.uiKey);
+    requestAnimationFrame(() => {
+      const target = document.getElementById(`estimate-target-${focusTargetId}`);
+      if (target) scrollEstimateTarget(target);
+      target?.focus({ preventScroll: true });
+    });
+  }, [focusTargetId, currentSection, workspace]);
 
-  const currentSection = watch(`sections.${sectionIndex}`);
-  const sectionSummary = calculateSectionSummary(currentSection || {});
+  useEffect(() => {
+    if (errors.sections?.[sectionIndex]) setIsExpanded(true);
+  }, [errors.sections, sectionIndex]);
 
-  const { fields, append, remove, move } = useFieldArray({
-    control,
-    name: `sections.${sectionIndex}.workItems`,
-  });
-
-  const handleAddWorkItem = () => {
-    const nextIdx = fields.length + 1;
-    const secCode = currentSection?.code || `SEC-${sectionIndex + 1}`;
-
+  function handleAddWorkItem() {
+    const next = fields.length + 1;
+    const uiKey = crypto.randomUUID();
     append({
-      code: `ITM-${secCode}-${nextIdx}`,
-      descriptionTh: "",
-      descriptionEn: "",
-      quantity: 1,
-      unitCode: "lot",
-      sellingRuleType: "margin",
-      sellingRuleValue: 25,
-      sortOrder: nextIdx,
-      costComponents: [
-        {
-          type: "material",
-          description: t("defaultMaterial"),
-          quantity: 1,
-          unitCode: "lot",
-          unitCost: 0,
-          currency,
-          sortOrder: 1,
-        },
-      ],
+      uiKey, code: `ITM-${currentSection.code}-${next}`, descriptionTh: "", descriptionEn: "", quantity: 1,
+      itemId: null, overrideReasonCode: "", overrideReason: "",
+      unitCode: "lot", sellingRuleType: "margin", sellingRuleValue: 25, sortOrder: next,
+      costComponents: [{ type: "material", description: t("defaultMaterial"), quantity: 1, unitCode: "lot", unitCost: 0, currency, sortOrder: 1, isProvisional: true }],
     });
-
-    if (!isExpanded) {
-      setIsExpanded(true);
-    }
-  };
-
-  const handleInsertTemplates = (templates: EstimateTemplateItem[]) => {
-    templates.forEach((tpl) => {
-      const nextIdx = fields.length + 1;
-      const secCode = currentSection?.code || `SEC-${sectionIndex + 1}`;
-
-      append({
-        code: `${tpl.itemCode}-${secCode}-${nextIdx}`,
-        descriptionTh: tpl.itemDescTh,
-        descriptionEn: tpl.itemDescEn,
-        quantity: tpl.quantity,
-        unitCode: tpl.unitCode,
-        sellingRuleType: tpl.sellingRule,
-        sellingRuleValue: tpl.sellingRuleValue,
-        sortOrder: nextIdx,
-        costComponents: tpl.costComponents.map((c, cIdx) => ({
-          type: c.type,
-          description: c.description,
-          quantity: 1,
-          unitCode: "lot",
-          unitCost: c.unitCost,
-          currency,
-          sortOrder: cIdx + 1,
-        })),
-      });
+    setIsExpanded(true); workspace?.selectWork(uiKey);
+  }
+  function handleInsertTemplates(templates: EstimateTemplateItem[]) {
+    const additions = templates.map((template, offset) => ({
+      uiKey: crypto.randomUUID(), code: `${template.itemCode}-${currentSection.code}-${fields.length + offset + 1}`,
+      descriptionTh: template.itemDescTh, descriptionEn: template.itemDescEn, quantity: template.quantity,
+      unitCode: template.unitCode, sellingRuleType: template.sellingRule, sellingRuleValue: template.sellingRuleValue,
+      sortOrder: fields.length + offset + 1,
+      costComponents: template.costComponents.map((cost, c) => ({ type: cost.type, description: cost.description, quantity: 1, unitCode: "lot", unitCost: cost.unitCost, currency, sortOrder: c + 1, isProvisional: true })),
+    }));
+    append(additions); setIsExpanded(true);
+    if (additions[0]) workspace?.selectWork(additions[0].uiKey);
+  }
+  function handleDuplicateItem(index: number) {
+    const source = getValues(`sections.${sectionIndex}.workItems.${index}`);
+    const uiKey = crypto.randomUUID();
+    append({ ...source, id: null, uiKey, code: `ITM-${currentSection.code}-${fields.length + 1}`,
+      descriptionTh: t("workspace.copyDescription", { description: source.descriptionTh }),
+      descriptionEn: source.descriptionEn ? t("workspace.copyDescriptionEn", { description: source.descriptionEn }) : "",
+      sortOrder: fields.length + 1, costComponents: source.costComponents.map((cost, c) => ({ ...cost, id: null, sortOrder: c + 1 })),
     });
-
-    if (!isExpanded) {
-      setIsExpanded(true);
+    setIsExpanded(true); workspace?.selectWork(uiKey);
+  }
+  function handleRemoveItem(index: number) {
+    const work = getValues(`sections.${sectionIndex}.workItems.${index}`);
+    if (workspace && workspace.selectedKey === work.uiKey) {
+      const next = currentSection.workItems[index + 1] ?? currentSection.workItems[index - 1];
+      if (next?.uiKey) workspace.selectWork(next.uiKey);
     }
-  };
+    remove(index);
+  }
+  async function handleRequestRemoveSection() {
+    if (await confirm({ title: t("confirmDeleteSection"), message: currentSection.nameTh, confirmText: t("removeSection"), variant: "danger" })) onRemoveSection(sectionIndex);
+  }
+  if (!currentSection) return null;
+  const visible = currentSection.workItems.map((work, index) => ({ work, index })).filter(({ work }) => workspaceWorkMatches(currentSection, work, workspace?.searchQuery ?? "", workspace?.filterMode ?? "all"));
+  const query = workspace?.searchQuery.trim().toLowerCase() ?? "";
+  const sectionMatches = [currentSection.code, currentSection.nameTh, currentSection.nameEn].some((value) => value.toLowerCase().includes(query));
+  const sectionVisible = visible.length > 0 || ((workspace?.filterMode ?? "all") === "all" && sectionMatches);
+  const cards = fields.map((field, index) => (
+    <div key={field.id} className={workspace && workspace.selectedKey !== field.uiKey ? "hidden" : ""}>
+      <EstimateWorkItemCard sectionIndex={sectionIndex} itemIndex={index} currency={currency} branchId={branchId}
+        isFirst={index === 0} isLast={index === fields.length - 1} onDuplicateItem={handleDuplicateItem} onRemoveItem={handleRemoveItem}
+        onMoveUp={(i) => move(i, i - 1)} onMoveDown={(i) => move(i, i + 1)} />
+    </div>
+  ));
 
-  const handleDuplicateItem = (itemIndex: number) => {
-    const sourceItem = getValues(`sections.${sectionIndex}.workItems.${itemIndex}`);
-    if (!sourceItem) return;
-
-    const nextIdx = fields.length + 1;
-    const secCode = currentSection?.code || `SEC-${sectionIndex + 1}`;
-
-    append({
-      ...sourceItem,
-      id: null,
-      code: `ITM-${secCode}-${nextIdx}`,
-      descriptionTh: `${sourceItem.descriptionTh || ""} (Copy)`,
-      descriptionEn: sourceItem.descriptionEn ? `${sourceItem.descriptionEn} (Copy)` : "",
-      sortOrder: nextIdx,
-      costComponents: (sourceItem.costComponents || []).map((c, cIdx) => ({
-        ...c,
-        id: null,
-        sortOrder: cIdx + 1,
-      })),
-    });
-  };
-
-  const handleMoveUp = (itemIndex: number) => {
-    if (itemIndex > 0) {
-      move(itemIndex, itemIndex - 1);
-    }
-  };
-
-  const handleMoveDown = (itemIndex: number) => {
-    if (itemIndex < fields.length - 1) {
-      move(itemIndex, itemIndex + 1);
-    }
-  };
-
-  const handleRemoveItem = (itemIndex: number) => {
-    remove(itemIndex);
-  };
-
-  const handleRequestRemoveSection = async () => {
-    const secName = currentSection?.nameTh || currentSection?.code;
-    const ok = await confirm({
-      title: t("confirmDeleteSection"),
-      message: secName ? `"${secName}"` : t("confirmDeleteSection"),
-      confirmText: t("removeSection"),
-      variant: "danger",
-    });
-
-    if (ok) {
-      onRemoveSection(sectionIndex);
-    }
-  };
-
-  return (
-    <div className="bg-erp-surface border border-erp-border shadow-sm">
-      {/* Section Header: Uniform 36px Height (h-9) across all elements */}
-      <div className="bg-erp-surface-subtle p-3 border-b border-erp-border flex flex-wrap items-center justify-between gap-3">
-        {/* Left Side: Chevron, Section Code, and Section Name in horizontal alignment */}
-        <div className="flex items-center gap-2 flex-1 min-w-[300px]">
-          {/* Accordion Expand/Collapse Button */}
-          <button
-            type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
-            className="w-9 h-9 text-erp-text-muted hover:text-erp-navy hover:bg-erp-surface transition-colors flex items-center justify-center border border-erp-border shrink-0"
-            aria-label={isExpanded ? t("collapseAll") : t("expandAll")}
-          >
-            <span
-              className={`inline-block transition-transform duration-150 ${
-                isExpanded ? "rotate-0" : "-rotate-90"
-              }`}
-            >
-              <IconChevronDown size={18} />
-            </span>
-          </button>
-
-          {/* Section Code Input (Uniform 36px height) */}
-          <div className="w-28 sm:w-36 shrink-0">
-            <Controller
-              control={control}
-              name={`sections.${sectionIndex}.code`}
-              render={({ field }) => (
-                <Input
-                  placeholder={t("sectionCode")}
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  wrapperClassName="mb-0"
-                  className="font-mono text-xs h-9 min-h-[36px] py-1"
-                />
-              )}
-            />
-          </div>
-
-          {/* Section Name TH Input (Uniform 36px height, fills remaining space) */}
-          <div className="flex-1 min-w-[160px]">
-            <Controller
-              control={control}
-              name={`sections.${sectionIndex}.nameTh`}
-              render={({ field }) => (
-                <Input
-                  placeholder={t("defaultSectionNameTh", { number: sectionIndex + 1 })}
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  wrapperClassName="mb-0"
-                  className="text-xs h-9 min-h-[36px] py-1 font-medium"
-                />
-              )}
-            />
-          </div>
+  return <>
+    <section id={currentSection.id ? `estimate-target-${currentSection.id}` : undefined} tabIndex={-1} aria-label={currentSection.code}
+      className={cn("border border-erp-border bg-erp-surface focus-visible:outline-2 focus-visible:outline-erp-navy", !sectionVisible && "hidden")}>
+      <div className="flex flex-col gap-2 border-b border-erp-border bg-erp-surface-subtle p-2">
+        <div className="flex min-w-0 flex-wrap items-start gap-2 sm:flex-nowrap">
+          <Button variant="ghost" size="icon" onClick={() => setIsExpanded((value) => !value)} aria-expanded={isExpanded} aria-label={isExpanded ? t("collapseAll") : t("expandAll")} icon={<IconChevronDown size={18} className={isExpanded ? "" : "-rotate-90"} />} />
+          <div className="w-24 shrink-0"><Controller control={control} name={`sections.${sectionIndex}.code`} render={({ field, fieldState }) => <Input {...field} id={`estimate-section-code-${sectionIndex}`} aria-label={t("sectionCode")} placeholder={t("sectionCode")} error={fieldState.error ? t("workspace.codeRequired") : undefined} wrapperClassName="mb-0" className="font-mono" />} /></div>
+          <div className="w-full min-w-0 sm:w-auto sm:flex-1 [&>.erp-form-group]:mb-0"><MultiLangInput id={`section-name-${sectionIndex}`} label={t("workspace.sectionName")} value={{ th: currentSection.nameTh, en: currentSection.nameEn }} onChange={(value) => { setValue(`sections.${sectionIndex}.nameTh`, value.th ?? "", { shouldDirty: true }); setValue(`sections.${sectionIndex}.nameEn`, value.en ?? "", { shouldDirty: true }); }} /></div>
         </div>
-
-        {/* Right Side: Financial Subtotal & Action Bar (All h-9 equal height) */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Section Financial Subtotal Pill */}
-          <div className="h-9 flex items-center gap-2 px-3 bg-erp-surface border border-erp-border text-xs font-mono">
-            <span className="text-erp-text-muted font-sans hidden lg:inline">
-              {t("sectionSubtotal")}:
-            </span>
-            <span className="font-bold text-erp-navy">
-              {formatFinancialNumber(sectionSummary.totalSellingPrice)} {currency}
-            </span>
-            <span
-              className={`text-[11px] px-1.5 py-0.2 border ${
-                sectionSummary.marginRate >= 30
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                  : "bg-rose-50 text-rose-700 border-rose-300"
-              }`}
-              title={`GP: ${formatFinancialNumber(sectionSummary.grossProfit)} ${currency}`}
-            >
-              {formatPercentRate(sectionSummary.marginRate, 1)}
-            </span>
-          </div>
-
-          {/* Insert Template Button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsTemplateModalOpen(true)}
-            className="!rounded-none h-9 text-xs border-erp-border hover:bg-erp-surface text-erp-text-main"
-            title={t("quickTemplatesDesc")}
-          >
-            <svg
-              className="w-3.5 h-3.5 mr-1 text-erp-navy"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="0" />
-              <path d="M3 9h18" />
-              <path d="M9 21V9" />
-            </svg>
-            {t("insertTemplate")}
-          </Button>
-
-          {/* Add Work Item Button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddWorkItem}
-            className="!rounded-none h-9 text-xs border-erp-navy text-erp-navy hover:bg-erp-surface"
-          >
-            <IconPlus size={14} className="mr-1" />
-            {t("addWorkItem")}
-          </Button>
-
-          {/* Remove Section Button */}
-          <button
-            type="button"
-            onClick={handleRequestRemoveSection}
-            className="w-9 h-9 text-erp-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center border border-erp-border shrink-0"
-            title={t("removeSection")}
-            aria-label={t("removeSection")}
-          >
-            <IconTrash size={16} />
-          </button>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="mr-auto break-words text-xs font-bold font-mono text-erp-navy" title={t("sectionSubtotal")}>{formatFinancialNumber(sectionSummary.totalSellingPrice)} {currency} <span className="text-xs">({formatPercentRate(sectionSummary.marginRate, 1)})</span></span>
+          <Button size="sm" variant="outline" className="px-3 text-xs sm:text-sm" onClick={() => setIsTemplateModalOpen(true)} title={t("quickTemplatesDesc")}>{t("insertTemplate")}</Button>
+          <Button size="sm" variant="outline" className="px-3 text-xs sm:text-sm" onClick={handleAddWorkItem} icon={<IconPlus size={16} />}>{t("addWorkItem")}</Button>
+          <Button variant="ghost" size="icon" onClick={handleRequestRemoveSection} aria-label={t("removeSection")} icon={<IconTrash size={16} />} />
         </div>
       </div>
-
-      {/* Section Work Items Body */}
-      {isExpanded && (
-        <div className="p-3 sm:p-4 space-y-4 bg-erp-canvas/40">
-          {fields.length === 0 ? (
-            <div className="text-center py-6 text-xs text-erp-text-muted border border-dashed border-erp-border bg-erp-surface">
-              {t("addWorkItem")}
-            </div>
-          ) : (
-            fields.map((field, wIdx) => (
-              <EstimateWorkItemCard
-                key={field.id}
-                sectionIndex={sectionIndex}
-                itemIndex={wIdx}
-                currency={currency}
-                branchId={branchId}
-                isFirst={wIdx === 0}
-                isLast={wIdx === fields.length - 1}
-                onDuplicateItem={handleDuplicateItem}
-                onRemoveItem={handleRemoveItem}
-                onMoveUp={handleMoveUp}
-                onMoveDown={handleMoveDown}
-              />
-            ))
-          )}
-        </div>
-      )}
-
-      {/* Template Selection Modal */}
-      <EstimateTemplateModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        onInsertTemplates={handleInsertTemplates}
-        sectionTitle={currentSection?.nameTh || currentSection?.code}
-      />
-
-      <ConfirmDialog />
-    </div>
-  );
+      <div className={isExpanded ? "overflow-auto" : "hidden"}>
+        {fields.length === 0 ? (
+          <p className="p-5 text-center text-sm text-erp-text-muted">{t("addWorkItem")}</p>
+        ) : (
+          <Table wrapperClassName="min-w-[620px]" className="text-xs">
+            <TableCaption className="sr-only">
+              {t("workspace.boq")}: {currentSection.nameTh}
+            </TableCaption>
+            <TableHeader className="bg-erp-surface-subtle text-xs text-erp-text-muted">
+              <TableRow>
+                <TableHead className="px-2 py-2 text-left">{t("itemCodeAndDesc")}</TableHead>
+                <TableHead className="px-2 py-2 text-right">{t("quantity")}</TableHead>
+                <TableHead className="px-2 py-2 text-right">{t("totalCost")}</TableHead>
+                <TableHead className="px-2 py-2 text-right">{t("totalSellingPrice")}</TableHead>
+                <TableHead className="px-2 py-2 text-right">{t("grossProfit")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visible.map(({ work, index }) => {
+                const summary = calculateWorkItemSummary(work);
+                const selected = workspace?.selectedKey === work.uiKey;
+                return (
+                  <TableRow
+                    key={work.uiKey}
+                    aria-selected={selected}
+                    className={cn("border-t border-erp-border", selected && "bg-erp-surface-subtle")}
+                  >
+                    <TableCell
+                      className={cn(
+                        "sticky left-0 px-2 py-1 border-l-4",
+                        selected ? "border-l-erp-navy bg-erp-surface-subtle" : "border-l-transparent bg-erp-surface"
+                      )}
+                    >
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start px-2 text-xs text-left whitespace-normal"
+                        onClick={() => {
+                          if (work.uiKey) workspace?.selectWork(work.uiKey);
+                        }}
+                        aria-label={t("workspace.selectWorkCode", { code: work.code })}
+                      >
+                        <span className="block">
+                          <span className="block text-xs font-mono text-erp-text-muted">{work.code}</span>
+                          <span className="block font-bold">{work.descriptionTh || "-"}</span>
+                        </span>
+                      </Button>
+                    </TableCell>
+                    <TableCell className="px-2 py-2 text-right whitespace-nowrap font-mono">
+                      {formatFinancialNumber(work.quantity)} <span className="font-sans text-xs">{work.unitCode}</span>
+                    </TableCell>
+                    <TableCell className="px-2 py-2 text-right font-mono">{formatFinancialNumber(summary.totalCost)}</TableCell>
+                    <TableCell className="px-2 py-2 text-right font-mono font-bold text-erp-navy">
+                      {formatFinancialNumber(summary.totalSellingPrice)}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 text-right font-mono">
+                      <span className={summary.marginRate < 30 ? "text-erp-danger" : "text-erp-success"}>
+                        {formatPercentRate(summary.marginRate, 1)}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+      {!workspace && cards}
+    </section>
+    {workspace?.inspector && createPortal(cards, workspace.inspector)}
+    <EstimateTemplateModal isOpen={isTemplateModalOpen} onClose={() => setIsTemplateModalOpen(false)} onInsertTemplates={handleInsertTemplates} sectionTitle={currentSection.nameTh} />
+    <ConfirmDialog />
+  </>;
 }

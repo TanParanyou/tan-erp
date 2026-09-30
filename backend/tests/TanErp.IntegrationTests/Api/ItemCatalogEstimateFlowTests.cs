@@ -115,11 +115,16 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
-    private HttpRequestMessage CreateAuthRequest(HttpMethod method, string url, string token = "token-maker", Guid? membershipId = null)
+    private HttpRequestMessage CreateAuthRequest(HttpMethod method, string url, string token = "token-maker", Guid? membershipId = null, Guid? ifMatch = null)
     {
         var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Add("X-Membership-Id", (membershipId ?? MembershipMakerId).ToString());
+        if (ifMatch.HasValue) request.Headers.Add("If-Match", $"\"{ifMatch.Value}\"");
+        if (method == HttpMethod.Post && url.EndsWith("/costs", StringComparison.Ordinal))
+            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        else if (method == HttpMethod.Post && url is "/api/v1/items" or "/api/v1/item-categories" or "/api/v1/item-brands" or "/api/v1/units-of-measure")
+            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
         return request;
     }
 
@@ -128,34 +133,37 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         var catReq = CreateAuthRequest(HttpMethod.Post, "/api/v1/item-categories");
         catReq.Content = JsonContent.Create(new CreateItemCategoryRequest
         {
-            Code = $"CAT-{prefix}-" + Guid.NewGuid().ToString("N")[..6],
             Name = new LocalizedTextInput { Thai = "หมวด", English = "Cat" },
             AllowedItemTypes = new List<string> { "material" }
         });
         var catRes = await _client.SendAsync(catReq);
+        Assert.Equal(HttpStatusCode.Created, catRes.StatusCode);
         var cat = await catRes.Content.ReadFromJsonAsync<ItemCategoryDetailResponse>();
+        Assert.StartsWith("CAT-", cat!.Code);
 
         var unitReq = CreateAuthRequest(HttpMethod.Post, "/api/v1/units-of-measure");
         unitReq.Content = JsonContent.Create(new CreateUnitOfMeasureRequest
         {
-            Code = $"UOM-{prefix}-" + Guid.NewGuid().ToString("N")[..6],
             Name = new LocalizedTextInput { Thai = "หน่วย", English = "Unit" },
             Symbol = "u"
         });
         var unitRes = await _client.SendAsync(unitReq);
+        Assert.Equal(HttpStatusCode.Created, unitRes.StatusCode);
         var unit = await unitRes.Content.ReadFromJsonAsync<UnitOfMeasureDetailResponse>();
+        Assert.StartsWith("UOM-", unit!.Code);
 
         var itmReq = CreateAuthRequest(HttpMethod.Post, "/api/v1/items");
         itmReq.Content = JsonContent.Create(new CreateItemRequest
         {
-            Code = $"ITM-{prefix}-" + Guid.NewGuid().ToString("N")[..6],
             ItemType = "material",
             CategoryId = cat!.Id,
             BaseUnitId = unit!.Id,
-            Name = new LocalizedTextInput { Thai = "สินค้า", English = "Item" }
+            Name = new LocalizedTextInput { Thai = $"สินค้า {prefix}", English = $"Item {prefix}" }
         });
         var itmRes = await _client.SendAsync(itmReq);
+        Assert.Equal(HttpStatusCode.Created, itmRes.StatusCode);
         var itm = await itmRes.Content.ReadFromJsonAsync<ItemResponse>();
+        Assert.StartsWith("ITM-", itm!.Code);
 
         return (itm!.Id, unit.Id);
     }
@@ -249,25 +257,29 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         var costReq = CreateAuthRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs");
         costReq.Content = JsonContent.Create(new CreateCostRecordRequest
         {
+            CostSourceId = TestOnlyDataSeeder.TestCostSourceId,
+            Reason = "Test cost basis",
+            SourceReference = "TEST-QUOTE",
             Scope = "organization",
             UnitId = unitId,
             Currency = "THB",
             Amount = 120.00m,
             MinimumQuantity = 0,
             EffectiveFromUtc = DateTimeOffset.UtcNow,
-            SourceReference = "Maker cost record"
         });
         var costRes = await _client.SendAsync(costReq);
         Assert.Equal(HttpStatusCode.Created, costRes.StatusCode);
         var cost = await costRes.Content.ReadFromJsonAsync<CostRecordResponse>();
 
         // 3. Maker submits
-        var subRes = await _client.SendAsync(CreateAuthRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost!.Id}/submit"));
+        var subRes = await _client.SendAsync(CreateAuthRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost!.Id}/submit", ifMatch: cost.RowVersion));
         Assert.Equal(HttpStatusCode.OK, subRes.StatusCode);
+        var submitted = await subRes.Content.ReadFromJsonAsync<CostRecordResponse>();
 
         // 4. Maker attempts self-approval -> 422 Maker-Checker violation
-        var selfApproveReq = CreateAuthRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost.Id}/approve");
+        var selfApproveReq = CreateAuthRequest(HttpMethod.Post, $"/api/v1/items/{itemId}/costs/{cost.Id}/approve", ifMatch: submitted!.RowVersion);
         var selfApproveRes = await _client.SendAsync(selfApproveReq);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, selfApproveRes.StatusCode);
 
     }
 

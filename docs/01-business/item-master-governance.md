@@ -26,6 +26,15 @@
 - Deactivate บังคับเหตุผล; Snapshot เดิมไม่เปลี่ยนและ Item กลับ Active ได้เมื่อผ่าน Validation
 - Item ที่เคยถูกอ้างห้าม Hard Delete
 
+## Item Identity and Barcode Rules
+
+- ใช้ `Item.code` เป็น SKU ภายในสำหรับสินค้าที่ซื้อหรือเก็บคลังได้; ไม่สร้างรหัส SKU อีกชุดให้ขัดกัน. Labor/Service ใช้ Item Code โดยไม่ต้องมี Barcode
+- `Item.code` เป็น SKU หลักหนึ่งค่า; Item เดียวเพิ่ม Internal Code สำรองและ Barcode/GTIN ได้หลายรายการเพื่อค้นหา/สแกนตามหน่วยและระดับบรรจุ โดยรหัสสำรองไม่ใช่ SKU หลักอีกตัว
+- Barcode/GTIN เป็นความสัมพันธ์ลูกของ Item ตามหน่วยและระดับบรรจุ และไม่ใช่ตัวตนของ Item; ห้ามนำ Barcode เดิมไปชี้ Item อื่นหรือใช้ซ้ำใน Organization แม้รายการเดิม Inactive แล้ว
+- GTIN ต้องผ่านรูปแบบและ check digit ก่อนบันทึก แต่การตรวจสิทธิ์เจ้าของกับ GS1 เป็นกระบวนการแยก; ห้ามแสดง Internal Barcode ว่าเป็น GTIN
+- การเปลี่ยนหน่วย จำนวนต่อบรรจุ หรือรายการสินค้าที่ Barcode ระบุหลังใช้งาน ต้องสร้าง Barcode ใหม่/Version ใหม่และเก็บประวัติธุรกรรมเดิม. การสแกนต้องไม่แก้ Cost Record หรือ Estimate Snapshot ย้อนหลัง
+- ไม่มี Barcode ไม่ขวางการ Activate Item ในรอบประมาณราคา; Workflow คลังหรือรับสินค้าที่บังคับสแกนต้องกำหนด Gate เพิ่มในโมดูลเจ้าของ
+
 ## Localized Text Rules
 
 - `name`/`description` ใช้ JSON Object ที่อนุญาตเฉพาะ `th`, `en`; ไม่รับ Array, Scalar, HTML หรือ Key อิสระ
@@ -84,7 +93,7 @@
 | Historical | Transaction Reference/Date | อาจไม่สะท้อนราคาปัจจุบัน |
 | Manual | Reason, Owner, Captured Date | บังคับ Checker/อายุสั้นตาม Policy |
 
-Cost Source ไม่มีสิทธิ์หรือราคาด้วยตัวเอง เป็นหลักฐานที่ Cost Record อ้าง
+Cost Source เป็นรายการแหล่งต้นทุนที่เลือกใช้ซ้ำได้ ไม่ถือสิทธิ์หรือราคาและไม่ใช่หลักฐานของราคาฉบับใดโดยลำพัง. `sourceReference`, Reason และ Verified Evidence File ของราคาอยู่กับ Cost Record ฉบับนั้น; รอบแรกเปิดใช้เฉพาะ Manual Source
 
 ## Deterministic Cost Resolution
 
