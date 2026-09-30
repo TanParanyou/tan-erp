@@ -1,6 +1,6 @@
-# บันทึกผลการตรวจสอบ Opportunity Module Hardening & Production Readiness Record (Slice 6)
+# บันทึกผลการตรวจสอบ Opportunity Module Hardening (Slice 6)
 
-เอกสารนี้บันทึกผลการทดสอบเชิงลึกด้านความมั่นคงปลอดภัย ความถูกต้องของข้อมูล และ Concurrency ใน **Slice 6: Module Hardening** ตามแผนงาน [Opportunity Module Completion Master Plan](../superpowers/plans/2026-09-12-opportunity-module-completion-master-plan.md) เพื่อรับรองความพร้อมระดับ Production-ready
+เอกสารนี้บันทึกผลการทดสอบเชิงลึกด้านความมั่นคงปลอดภัย ความถูกต้องของข้อมูล และ Concurrency ใน **Slice 6: Module Hardening** ตามแผนงาน [Opportunity Module Completion Master Plan](../superpowers/plans/2026-09-12-opportunity-module-completion-master-plan.md). ผล technical verification เป็นหลักฐานของโค้ด ไม่ใช่การรับรอง Production หรือ business UAT.
 
 ---
 
@@ -33,6 +33,8 @@
 
 ## 2. ผลการรัน Verification Gates
 
+ตารางนี้เป็นผล verification baseline จากรอบก่อนหน้า; ผลตรวจล่าสุดหลังแก้ case-insensitive search อยู่ในหัวข้อ 4.
+
 | หมวดหมู่การทดสอบ | คำสั่งที่ใช้ | ผลลัพธ์ | รายละเอียด |
 |---|---|:---:|---|
 | **Backend Unit Tests** | `dotnet test backend/TanErp.slnx` | ✅ ผ่าน | 141 tests (Domain + Handler + CQRS) |
@@ -47,6 +49,15 @@
 
 ---
 
-## 3. สรุปผลการรับรอง (Production Readiness Decision)
+## 3. ขอบเขตการรับรอง
 
-โมดูล **Opportunity** ได้รับการพัฒนาและทดสอบครบวงจร (Create, Qualify, Draft Repair, Open Record Maintenance, Owner Reassignment, Close Outcome, Reopen, Stage History Timeline และ Module Hardening) ผ่านเกณฑ์ Definition of Done ครบถ้วนทุกข้อ พร้อมสำหรับการใช้งานจริงในระดับ Production
+โมดูล **Opportunity** มี implementation สำหรับ Create, Qualify, Draft Repair, Open Record Maintenance, Owner Reassignment, Close Outcome, Reopen, Stage History Timeline และ hardening ตามหลักฐานของ slice. เอกสารนี้ไม่รับรองความพร้อม Production; authorized-role UAT, release scope และ operations gates ยังคงอ้างอิง [Implementation Roadmap](../00-overview/implementation-roadmap.md) และ [ERP Completion Plan](../superpowers/plans/2026-09-29-erp-completion-master-plan.md).
+
+## 4. Case-insensitive search recheck (2026-09-30)
+
+- เพิ่ม regression test `ListOpportunities_SearchMatchesTitleWithoutCaseSensitivity` ให้ตรวจการค้นหาชื่อด้วยตัวพิมพ์ใหญ่ และรหัสด้วยตัวพิมพ์เล็ก; test ผ่าน 1/1 บน PostgreSQL Testcontainers.
+- แก้ Opportunity list query ให้ normalize search term เป็น lowercase และเทียบ `Code` แบบไม่สนตัวพิมพ์เล็ก/ใหญ่.
+- `dotnet build backend/TanErp.slnx --no-restore -m:1`: ผ่าน 0 warnings/errors.
+- `dotnet test backend/TanErp.slnx --no-restore -m:1`: Architecture 3/3 และ Unit 288/288 ผ่าน; Integration 290/291 ผ่าน. รายการที่ล้มคือ `DocumentSequencesEndpointsTests.UpdateDocumentSequence_WithInvalidDocType_Returns400BadRequest` ระหว่าง PostgreSQL fixture startup ด้วย `Received unknown response H for SSLRequest`; regression test ของ Opportunity ผ่านใน full run.
+- รัน `DocumentSequencesEndpointsTests.UpdateDocumentSequence_WithInvalidDocType_Returns400BadRequest` แยกหลัง full suite ผ่าน 1/1 ใน 11 วินาที; ผลนี้ชี้ว่า failure อาจเกิดจาก fixture startup ชั่วคราว แต่ยังไม่ยืนยัน root cause และไม่ทำให้ full suite run ที่มี 1 failure กลายเป็น green gate.
+- Full suite run นี้ยังไม่เป็น green gate; ให้รันซ้ำเมื่อ PostgreSQL Testcontainers เริ่มต้นได้เสถียร.
