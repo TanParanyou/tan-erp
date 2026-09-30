@@ -368,6 +368,59 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ListOpportunities_SearchMatchesTitleWithoutCaseSensitivity()
+    {
+        var customer = await SeedActiveCustomerAsync(OrgAId);
+        var body = new CreateOpportunityRequest(
+            customer.Id,
+            null,
+            "TEST_ONLY Searchable Built-in",
+            "ค้นหาเคสทดสอบ",
+            ["built-in"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+        var createRequest = CreateRequest(
+            HttpMethod.Post,
+            "/api/v1/opportunities",
+            "token-org-a",
+            MembershipAId,
+            "opp-key-case-insensitive-search");
+        createRequest.Content = JsonContent.Create(body);
+        var createResponse = await _client.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<OpportunityResponse>();
+        Assert.NotNull(created);
+
+        var listRequest = CreateRequest(
+            HttpMethod.Get,
+            "/api/v1/opportunities?search=TEST_ONLY",
+            "token-org-a",
+            MembershipAId);
+        var listResponse = await _client.SendAsync(listRequest);
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        var list = await listResponse.Content.ReadFromJsonAsync<OpportunityListResponse>();
+
+        Assert.NotNull(list);
+        Assert.Contains(list.Items, item => item.Id == created.Id);
+
+        var codeSearchRequest = CreateRequest(
+            HttpMethod.Get,
+            $"/api/v1/opportunities?search={created.Code.ToLowerInvariant()}",
+            "token-org-a",
+            MembershipAId);
+        var codeSearchResponse = await _client.SendAsync(codeSearchRequest);
+        Assert.Equal(HttpStatusCode.OK, codeSearchResponse.StatusCode);
+        var codeSearchList = await codeSearchResponse.Content.ReadFromJsonAsync<OpportunityListResponse>();
+
+        Assert.NotNull(codeSearchList);
+        Assert.Contains(codeSearchList.Items, item => item.Id == created.Id);
+    }
+
+    [Fact]
     public async Task ListAndGetOpportunity_CrossTenant_Returns404()
     {
         // Create opportunity in Org A
@@ -1170,4 +1223,3 @@ public class OpportunitySiteEndpointsTests : IAsyncLifetime
         Assert.NotNull(dbFile);
     }
 }
-
