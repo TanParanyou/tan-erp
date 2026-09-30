@@ -31,7 +31,7 @@ FRONTEND_DIR  := frontend
 
 .PHONY: help \
         check-ports kill-ports \
-        dev dev-setup dev-backend dev-frontend dev-env \
+        dev dev-setup dev-backend dev-backend-demo dev-frontend dev-env \
         up down stop restart logs ps db-up db-stop emulator-up \
         db-wait db-migrate db-rollback db-status db-seed seed seed-users db-reset fresh \
         api-gen api-check \
@@ -55,6 +55,7 @@ help:
 	@echo "    make dev-setup      - เซ็ตอัปสภาพแวดล้อมครบวงจรในคำสั่งเดียว (Docker -> รอ DB พร้อม -> Seed ข้อมูล -> Migrate DB -> สร้าง .env)"
 	@echo "    make dev-frontend   - รันเฉพาะ Next.js Frontend บนพอร์ต $(FE_PORT)"
 	@echo "    make dev-backend    - รันเฉพาะ Backend API บนพอร์ต $(BE_PORT)"
+	@echo "    make dev-backend-demo - รัน Backend พร้อม TEST_ONLY Estimate และ Item Catalog fixtures"
 	@echo "    make dev-env        - เตรียมไฟล์ frontend/.env.local จาก .env.example (หากยังไม่มี)"
 	@echo "    make deps / install - ติดตั้ง dependencies ทั้งหมดในโปรเจกต์ (npm + dotnet restore)"
 	@echo "    make open           - เปิดเบราว์เซอร์ไปยังหน้า Login (http://localhost:$(FE_PORT)/th/login)"
@@ -234,10 +235,16 @@ dev-backend:
 	@echo "กำลังรัน Backend API บนพอร์ต $(BE_PORT)..."
 	ASPNETCORE_ENVIRONMENT=Test \
 	SeedTestData=true \
+	SeedEstimateDemoData=$(if $(filter true,$(SEED_ESTIMATE_DEMO_DATA)),true,false) \
+	SeedItemCatalogDemoData=$(if $(filter true,$(SEED_ITEM_CATALOG_DEMO_DATA)),true,false) \
 	FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:$(EMULATOR_PORT) \
 	Firebase__ProjectId=tan-erp-test-only \
 	ConnectionStrings__Database=$(DB_CONN) \
 	$(DOTNET) run --no-launch-profile --project $(BACKEND_API) --urls http://localhost:$(BE_PORT)
+
+# รัน Backend พร้อม Estimate และ Item Catalog demo fixtures ที่เป็น TEST_ONLY เท่านั้น
+dev-backend-demo:
+	@$(MAKE) dev-backend SEED_ESTIMATE_DEMO_DATA=true SEED_ITEM_CATALOG_DEMO_DATA=true
 
 # รันเฉพาะ Frontend Next.js Dev Server
 dev-frontend: dev-env

@@ -54,6 +54,9 @@ FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
 Firebase__ProjectId=tan-erp-test-only \
 dotnet run --project backend/src/TanErp.Api --urls http://localhost:5005
 
+# หากต้องการ Customer/Site/Survey/Estimate demo และ Item Catalog ที่มี Published TEST_ONLY costs
+make dev-backend-demo
+
 # 6. หยุดการทำงานของ Container โดยไม่ลบ Volume (หรือรัน 'make stop')
 docker compose -f deploy/compose.yml stop
 ```
@@ -67,3 +70,4 @@ docker compose -f deploy/compose.yml stop
 - `FIREBASE_AUTH_EMULATOR_HOST` — Host และ Port สำหรับ Firebase Auth Emulator (เฉพาะ Non-Production เช่น `127.0.0.1:9099`)
 - `GOOGLE_APPLICATION_CREDENTIALS` — พาธไปยัง Firebase service account JSON (เมื่ออยู่นอกโหมด Emulator)
 - `SeedTestData` — แฟล็กเปิดใช้ข้อมูลสังเคราะห์ `TEST_ONLY` (เฉพาะ Environment `Test` เท่านั้น หากเปิดใน Production จะถูกปฏิเสธทันที)
+- `SeedEstimateDemoData` และ `SeedItemCatalogDemoData` — เปิดชุดข้อมูล Estimate และ Item Catalog สำหรับ Demo เพิ่มเติม; ใช้ `make dev-backend-demo` ซึ่งจำกัดการทำงานไว้ที่ Test environment และข้อมูลทุกชุดเป็น `TEST_ONLY` ไม่ใช่ราคา/นโยบาย Production

@@ -320,6 +320,47 @@ public class EstimateEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TestOnlyDataSeeder_SeedsEstimateAndCatalogDemoDataTogetherIdempotently()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        await TestOnlyDataSeeder.SeedAsync(
+            db,
+            "Test",
+            true,
+            seedEstimateDemoData: true,
+            seedItemCatalogDemoData: true);
+
+        Assert.True(await db.Estimates.AnyAsync(estimate => estimate.Id == TestOnlyDataSeeder.TestEstimateDemoId));
+        Assert.Equal(3, await db.OpportunityStageHistories.CountAsync(history =>
+            history.OpportunityId == TestOnlyDataSeeder.TestEstimateDemoOpportunityId));
+        Assert.Equal(75, await db.Items.CountAsync(item => item.Code.Contains("-FILTER-") ||
+            item.Id == TestOnlyDataSeeder.TestItemCatalogPlywoodId ||
+            item.Id == TestOnlyDataSeeder.TestItemCatalogLaminateId ||
+            item.Id == TestOnlyDataSeeder.TestItemCatalogEdgebandId));
+        Assert.Equal(27, await db.CostRecords.CountAsync(cost =>
+            cost.SourceReference != null && cost.SourceReference.StartsWith("TEST_ONLY")));
+
+        await TestOnlyDataSeeder.SeedAsync(
+            db,
+            "Test",
+            true,
+            seedEstimateDemoData: true,
+            seedItemCatalogDemoData: true);
+
+        Assert.Equal(1, await db.Estimates.CountAsync(estimate => estimate.Id == TestOnlyDataSeeder.TestEstimateDemoId));
+        Assert.Equal(3, await db.OpportunityStageHistories.CountAsync(history =>
+            history.OpportunityId == TestOnlyDataSeeder.TestEstimateDemoOpportunityId));
+        Assert.Equal(75, await db.Items.CountAsync(item => item.Code.Contains("-FILTER-") ||
+            item.Id == TestOnlyDataSeeder.TestItemCatalogPlywoodId ||
+            item.Id == TestOnlyDataSeeder.TestItemCatalogLaminateId ||
+            item.Id == TestOnlyDataSeeder.TestItemCatalogEdgebandId));
+        Assert.Equal(27, await db.CostRecords.CountAsync(cost =>
+            cost.SourceReference != null && cost.SourceReference.StartsWith("TEST_ONLY")));
+    }
+
+    [Fact]
     public async Task CreateEstimate_ReadySurvey_DerivesCustomerBranchAndSnapshot()
     {
         var (customerId, _, oppId, _, surveyRevId, snapshotHash) = await SetupEstimatingOpportunityAsync();
