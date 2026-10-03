@@ -90,6 +90,8 @@
 | แผนและขอบเขต CP-02 | [Identity/Organization Administration Plan](superpowers/plans/2026-10-03-identity-organization-administration.md) |
 | ผลตรวจ CP-02 | [Identity Administration Verification](05-engineering/identity-administration-verification.md) |
 | กู้สิทธิ์ผู้ดูแลที่หายไป | [Administrator Recovery Runbook](06-operations/administrator-recovery.md) |
+| แบบบันทึก Go/No-go ต่อ release candidate | [Go/No-go Record Template](06-operations/go-no-go-record-template.md) |
+| เช็กลิสต์ซ้อมบน Staging | [Staging Rehearsal Checklist](06-operations/staging-rehearsal-checklist.md) |
 | แผนพัฒนา Customer + Contact Vertical Slice | [Customer + Contact Vertical Slice Plan](superpowers/plans/2026-09-07-customer-contact-vertical-slice.md) |
 | แผนแก้ไข Customer + Contact จาก Code Review | [Customer + Contact Remediation Plan](superpowers/plans/2026-09-08-customer-contact-remediation.md) |
 | บันทึกผลการตรวจสอบ Customer + Contact Slice | [Customer + Contact Verification](05-engineering/customer-contact-verification.md) |
