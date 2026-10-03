@@ -723,4 +723,70 @@
   <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_CODE_REQUIRED_DETAIL" xml:space="preserve"><value>รายการงานที่ไม่ได้ผูกกับ Item Master ต้องมีรหัสเหตุผลที่ตรวจสอบย้อนหลังได้</value></data>
   <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผลรายการงานกำหนดเอง</value></data>
   <data name="ESTIMATE_CUSTOM_WORK_ITEM_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>รายการงานที่ไม่ได้ผูกกับ Item Master ต้องมีหมายเหตุระบุเหตุผล</value></data>
+  <data name="USER_EMAIL_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>อีเมลนี้ถูกใช้งานแล้ว</value>
+  </data>
+  <data name="USER_EMAIL_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>มีผู้ใช้ที่ใช้อีเมลนี้อยู่ในระบบแล้ว</value>
+  </data>
+  <data name="ADMIN_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลถูกแก้ไขโดยผู้อื่น</value>
+  </data>
+  <data name="ADMIN_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ข้อมูลผู้ใช้หรือสิทธิ์ถูกเปลี่ยนไปแล้ว กรุณาโหลดใหม่และลองอีกครั้ง</value>
+  </data>
+  <data name="LAST_ADMINISTRATOR_REQUIRED_TITLE" xml:space="preserve">
+    <value>ต้องมีผู้ดูแลอย่างน้อยหนึ่งคน</value>
+  </data>
+  <data name="LAST_ADMINISTRATOR_REQUIRED_DETAIL" xml:space="preserve">
+    <value>องค์กรต้องมีผู้ดูแลที่ใช้งานอยู่อย่างน้อยหนึ่งคน จึงไม่สามารถดำเนินการนี้ได้</value>
+  </data>
+  <data name="ROLE_ESCALATION_DENIED_TITLE" xml:space="preserve">
+    <value>ไม่สามารถมอบบทบาทนี้ได้</value>
+  </data>
+  <data name="ROLE_ESCALATION_DENIED_DETAIL" xml:space="preserve">
+    <value>บทบาทนี้ให้สิทธิ์เกินกว่าที่คุณมี</value>
+  </data>
+  <data name="SELF_ROLE_CHANGE_FORBIDDEN_TITLE" xml:space="preserve">
+    <value>ไม่สามารถเปลี่ยนบทบาทของตนเองได้</value>
+  </data>
+  <data name="SELF_ROLE_CHANGE_FORBIDDEN_DETAIL" xml:space="preserve">
+    <value>ห้ามมอบ ถอน หรืออนุมัติบทบาทของสมาชิกภาพของตนเอง</value>
+  </data>
+  <data name="ROLE_ALREADY_ASSIGNED_TITLE" xml:space="preserve">
+    <value>มอบบทบาทนี้แล้ว</value>
+  </data>
+  <data name="ROLE_ALREADY_ASSIGNED_DETAIL" xml:space="preserve">
+    <value>สมาชิกภาพนี้มีบทบาทดังกล่าวอยู่แล้ว</value>
+  </data>
+  <data name="ROLE_ASSIGNMENT_REQUEST_PENDING_TITLE" xml:space="preserve">
+    <value>มีคำขอที่รออนุมัติอยู่แล้ว</value>
+  </data>
+  <data name="ROLE_ASSIGNMENT_REQUEST_PENDING_DETAIL" xml:space="preserve">
+    <value>มีคำขอมอบบทบาทนี้ที่รอผู้ตรวจอนุมัติอยู่แล้ว</value>
+  </data>
+  <data name="ROLE_ASSIGNMENT_REQUEST_NOT_PENDING_TITLE" xml:space="preserve">
+    <value>คำขอถูกตัดสินแล้ว</value>
+  </data>
+  <data name="ROLE_ASSIGNMENT_REQUEST_NOT_PENDING_DETAIL" xml:space="preserve">
+    <value>คำขอมอบบทบาทนี้ไม่ได้อยู่ในสถานะรออนุมัติ</value>
+  </data>
+  <data name="ROLE_ASSIGNMENT_INDEPENDENT_CHECKER_REQUIRED_TITLE" xml:space="preserve">
+    <value>ต้องเป็นผู้ตรวจที่เป็นคนละคน</value>
+  </data>
+  <data name="ROLE_ASSIGNMENT_INDEPENDENT_CHECKER_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ผู้ขอไม่สามารถอนุมัติหรือปฏิเสธคำขอของตนเองได้</value>
+  </data>
+  <data name="ROLE_NOT_ASSIGNED_TITLE" xml:space="preserve">
+    <value>ไม่พบการมอบบทบาท</value>
+  </data>
+  <data name="ROLE_NOT_ASSIGNED_DETAIL" xml:space="preserve">
+    <value>สมาชิกภาพนี้ไม่มีบทบาทดังกล่าว</value>
+  </data>
+  <data name="USER_SHARED_ACROSS_ORGANIZATIONS_TITLE" xml:space="preserve">
+    <value>ผู้ใช้อยู่หลายองค์กร</value>
+  </data>
+  <data name="USER_SHARED_ACROSS_ORGANIZATIONS_DETAIL" xml:space="preserve">
+    <value>ผู้ใช้นี้มีสมาชิกภาพในองค์กรอื่นด้วย จึงไม่สามารถเปิดหรือปิดบัญชีจากองค์กรนี้ได้</value>
+  </data>
 </root>

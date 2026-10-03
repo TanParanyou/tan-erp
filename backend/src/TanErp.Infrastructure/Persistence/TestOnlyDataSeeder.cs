@@ -140,6 +140,11 @@ public static class TestOnlyDataSeeder
             ("estimates.cancel", "Cancel Estimates"),
             ("estimates.revise", "Create Estimate Revisions"),
             ("estimates.approve", "Review and Approve Estimates"),
+            ("users.read", "Read Users and Memberships"),
+            ("users.manage", "Manage Users"),
+            ("memberships.manage", "Manage Memberships"),
+            ("roles.assign", "Assign Roles"),
+            ("roles.assign-approval", "Approve Role Assignments"),
             ("quotations.issue", "Issue Quotations"),
             ("quotations.accept", "Accept Quotations"),
             ("document-sequences.read", "Read Document Sequences"),
@@ -198,6 +203,25 @@ public static class TestOnlyDataSeeder
             if (!exists)
             {
                 db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), role.Id, TestOrgId, perm.Id, PermissionScope.Organization, TestOrgId));
+            }
+        }
+
+        // Seed a low-privilege role so user administration can be exercised without approval permissions.
+        var readOnlyRole = await db.Roles.FirstOrDefaultAsync(r => r.OrganizationId == TestOrgId && r.Name == "Test Read Only");
+        if (readOnlyRole == null)
+        {
+            readOnlyRole = new Role(Guid.NewGuid(), TestOrgId, "Test Read Only", "Read-only opportunities and customers", isActive: true);
+            db.Roles.Add(readOnlyRole);
+        }
+
+        foreach (var perm in seededPerms.Where(p => p.Key is "opportunities.read" or "customers.read"))
+        {
+            var exists = await db.RolePermissions.AnyAsync(rp =>
+                rp.RoleId == readOnlyRole.Id && rp.PermissionId == perm.Id
+                && rp.Scope == PermissionScope.Organization && rp.ScopeId == TestOrgId);
+            if (!exists)
+            {
+                db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), readOnlyRole.Id, TestOrgId, perm.Id, PermissionScope.Organization, TestOrgId));
             }
         }
 

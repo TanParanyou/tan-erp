@@ -18,6 +18,7 @@ public class Membership : Entity
     public DateTimeOffset? StartsAtUtc { get; private set; }
     public DateTimeOffset? ExpiresAtUtc { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
+    public Guid RowVersion { get; private set; } = Guid.NewGuid();
 
     private readonly List<MembershipRole> _membershipRoles = new();
     public IReadOnlyCollection<MembershipRole> MembershipRoles => _membershipRoles.AsReadOnly();
@@ -60,6 +61,19 @@ public class Membership : Entity
         return true;
     }
 
-    public void Deactivate() => IsActive = false;
-    public void Activate() => IsActive = true;
+    public void Deactivate() { IsActive = false; RowVersion = Guid.NewGuid(); }
+    public void Activate() { IsActive = true; RowVersion = Guid.NewGuid(); }
+
+    public void UpdateAssignment(Guid? branchId, DateTimeOffset? startsAtUtc, DateTimeOffset? expiresAtUtc)
+    {
+        if (startsAtUtc.HasValue && expiresAtUtc.HasValue && expiresAtUtc <= startsAtUtc)
+            throw new ArgumentException("Expiry must be after the start time.", nameof(expiresAtUtc));
+
+        BranchId = branchId;
+        StartsAtUtc = startsAtUtc;
+        ExpiresAtUtc = expiresAtUtc;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void AdvanceVersion() => RowVersion = Guid.NewGuid();
 }

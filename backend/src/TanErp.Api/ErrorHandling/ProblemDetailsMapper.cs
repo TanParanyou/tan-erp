@@ -11,6 +11,17 @@ public static class ProblemDetailsMapper
     public static int GetStatus(string code) => code switch
     {
         "AUTHENTICATION_REQUIRED" => StatusCodes.Status401Unauthorized,
+        "USER_EMAIL_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+        "ADMIN_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+        "LAST_ADMINISTRATOR_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "ROLE_ESCALATION_DENIED" => StatusCodes.Status403Forbidden,
+        "SELF_ROLE_CHANGE_FORBIDDEN" => StatusCodes.Status403Forbidden,
+        "ROLE_ALREADY_ASSIGNED" => StatusCodes.Status409Conflict,
+        "ROLE_ASSIGNMENT_REQUEST_PENDING" => StatusCodes.Status409Conflict,
+        "ROLE_ASSIGNMENT_REQUEST_NOT_PENDING" => StatusCodes.Status409Conflict,
+        "ROLE_ASSIGNMENT_INDEPENDENT_CHECKER_REQUIRED" => StatusCodes.Status403Forbidden,
+        "ROLE_NOT_ASSIGNED" => StatusCodes.Status404NotFound,
+        "USER_SHARED_ACROSS_ORGANIZATIONS" => StatusCodes.Status422UnprocessableEntity,
         "AUTHENTICATION_INVALID" => StatusCodes.Status401Unauthorized,
         "MEMBERSHIP_CONTEXT_REQUIRED" => StatusCodes.Status400BadRequest,
         "REQUEST_VALIDATION_FAILED" => StatusCodes.Status400BadRequest,

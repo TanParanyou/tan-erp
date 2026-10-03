@@ -88,6 +88,9 @@ builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<Ap
 builder.Services.AddSingleton<IClock, TanErp.Infrastructure.Common.SystemClock>();
 builder.Services.AddSingleton<IFirebaseTokenVerifier, FirebaseTokenVerifier>();
 builder.Services.AddScoped<ICurrentUserReader, CurrentUserReader>();
+builder.Services.AddScoped<IFirebaseIdentityLinker, TanErp.Infrastructure.Persistence.FirebaseIdentityLinker>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.IIdentityAdministrationStore, TanErp.Infrastructure.Persistence.IdentityAccess.IdentityAdministrationStore>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.IdentityAdministrationService>();
 builder.Services.AddScoped<IRequestAccessResolver, RequestAccessResolver>();
 builder.Services.AddScoped<GetCurrentUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Users.IUserReadStore, TanErp.Infrastructure.Persistence.IdentityAccess.UserReadStore>();
