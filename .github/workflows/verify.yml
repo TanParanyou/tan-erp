@@ -109,6 +109,9 @@ jobs:
         run: npx --prefix frontend playwright install chromium --with-deps
 
       - name: Run Database Migrations
+        env:
+          # The design-time DbContext factory reads the connection string from the environment (see the Makefile db-migrate target).
+          ConnectionStrings__Database: "Host=localhost;Database=tan_erp;Username=postgres;Password=postgres"
         run: |
           dotnet ef database update \
             --project backend/src/TanErp.Infrastructure \
