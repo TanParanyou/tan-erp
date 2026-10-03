@@ -627,4 +627,16 @@
   <data name="USER_SHARED_ACROSS_ORGANIZATIONS_DETAIL" xml:space="preserve">
     <value>This user also has memberships in other organizations, so the account cannot be switched from here.</value>
   </data>
+  <data name="USER_SORT_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid sort</value>
+  </data>
+  <data name="USER_SORT_INVALID_DETAIL" xml:space="preserve">
+    <value>The sort key for the user list is not valid.</value>
+  </data>
+  <data name="USER_SORT_ORDER_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid sort order</value>
+  </data>
+  <data name="USER_SORT_ORDER_INVALID_DETAIL" xml:space="preserve">
+    <value>The sort order must be asc or desc.</value>
+  </data>
 </root>

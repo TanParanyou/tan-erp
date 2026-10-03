@@ -114,6 +114,20 @@
             }
           },
           {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -123,7 +137,7 @@
             }
           },
           {
-            "name": "pageSize",
+            "name": "limit",
             "in": "query",
             "schema": {
               "type": "integer",

@@ -154,6 +154,67 @@ public class IdentityAdministrationEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CreateUser_WithoutIdempotencyKey_Returns400()
+    {
+        var response = await Send(HttpMethod.Post, "/api/v1/admin/users", AdminToken, new CreateAdminUserRequest(
+            "A", "no-key@example.test", null, new[] { _viewerRoleId }), withoutIdempotencyKey: true);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("IDEMPOTENCY_KEY_REQUIRED", await ReadCode(response));
+    }
+
+    [Fact]
+    public async Task CreateUser_ReplayWithSameKey_ReturnsSameUserWithoutDuplicates()
+    {
+        var key = "create-user-replay-" + Guid.NewGuid();
+        var body = new CreateAdminUserRequest("Replay", "replay@example.test", null, new[] { _viewerRoleId });
+
+        var first = await Send(HttpMethod.Post, "/api/v1/admin/users", AdminToken, body, idempotencyKey: key);
+        var second = await Send(HttpMethod.Post, "/api/v1/admin/users", AdminToken, body, idempotencyKey: key);
+
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, second.StatusCode);
+        var firstUser = (await first.Content.ReadFromJsonAsync<AdminUserResponse>())!;
+        var secondUser = (await second.Content.ReadFromJsonAsync<AdminUserResponse>())!;
+        Assert.Equal(firstUser.Id, secondUser.Id);
+        await using var db = NewDb();
+        Assert.Equal(1, await db.Users.CountAsync(u => u.NormalizedEmail == "replay@example.test"));
+        Assert.Equal(1, await db.AuditEvents.CountAsync(a => a.Action == "users.created" && a.ResourceId == firstUser.Id.ToString()));
+    }
+
+    [Fact]
+    public async Task CreateUser_SameKeyWithDifferentPayload_Returns409()
+    {
+        var key = "create-user-reuse-" + Guid.NewGuid();
+        var first = await Send(HttpMethod.Post, "/api/v1/admin/users", AdminToken,
+            new CreateAdminUserRequest("One", "one@example.test", null, new[] { _viewerRoleId }), idempotencyKey: key);
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+
+        var reused = await Send(HttpMethod.Post, "/api/v1/admin/users", AdminToken,
+            new CreateAdminUserRequest("Two", "two@example.test", null, new[] { _viewerRoleId }), idempotencyKey: key);
+
+        Assert.Equal(HttpStatusCode.Conflict, reused.StatusCode);
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", await ReadCode(reused));
+    }
+
+    [Fact]
+    public async Task AssignRole_ReplayWithSameKey_DoesNotCreateASecondRequest()
+    {
+        var created = await CreateUserAsync("assign-replay@example.test", _viewerRoleId);
+        var key = "assign-role-replay-" + Guid.NewGuid();
+        var url = $"/api/v1/admin/memberships/{created.Memberships[0].Id}/roles";
+
+        var first = await Send(HttpMethod.Post, url, AdminToken, new AssignAdminRoleRequest(_approverRoleId), idempotencyKey: key);
+        var second = await Send(HttpMethod.Post, url, AdminToken, new AssignAdminRoleRequest(_approverRoleId), idempotencyKey: key);
+
+        Assert.Equal(HttpStatusCode.Accepted, first.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, second.StatusCode);
+        var firstRequest = (await first.Content.ReadFromJsonAsync<AdminAssignRoleResponse>())!.PendingRequest!;
+        var secondRequest = (await second.Content.ReadFromJsonAsync<AdminAssignRoleResponse>())!.PendingRequest!;
+        Assert.Equal(firstRequest.Id, secondRequest.Id);
+    }
+
+    [Fact]
     public async Task CreateUser_WithInvalidInput_Returns400()
     {
         var noRoles = await Send(HttpMethod.Post, "/api/v1/admin/users", AdminToken, new CreateAdminUserRequest(
@@ -367,7 +428,7 @@ public class IdentityAdministrationEndpointsTests : IAsyncLifetime
         await CreateUserAsync("searchable-one@example.test", _viewerRoleId);
         await CreateUserAsync("searchable-two@example.test", _viewerRoleId);
 
-        var response = await Send(HttpMethod.Get, "/api/v1/admin/users?search=searchable-&status=pending&pageSize=1&page=2", AdminToken);
+        var response = await Send(HttpMethod.Get, "/api/v1/admin/users?search=searchable-&status=pending&limit=1&page=2&sortBy=email&sortOrder=asc", AdminToken);
         var page = (await response.Content.ReadFromJsonAsync<AdminUserListResponse>())!;
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -375,8 +436,22 @@ public class IdentityAdministrationEndpointsTests : IAsyncLifetime
         Assert.Equal(2, page.Pagination.TotalPages);
         Assert.Single(page.Items);
 
+        Assert.Equal("searchable-two@example.test", page.Items[0].Email);
+
         var badStatus = await Send(HttpMethod.Get, "/api/v1/admin/users?status=bogus", AdminToken);
         Assert.Equal(HttpStatusCode.BadRequest, badStatus.StatusCode);
+
+        var badSort = await Send(HttpMethod.Get, "/api/v1/admin/users?sortBy=password", AdminToken);
+        Assert.Equal(HttpStatusCode.BadRequest, badSort.StatusCode);
+        Assert.Equal("USER_SORT_INVALID", await ReadCode(badSort));
+
+        var badOrder = await Send(HttpMethod.Get, "/api/v1/admin/users?sortOrder=sideways", AdminToken);
+        Assert.Equal("USER_SORT_ORDER_INVALID", await ReadCode(badOrder));
+
+        var descending = await Send(HttpMethod.Get, "/api/v1/admin/users?search=searchable-&sortBy=email&sortOrder=desc&limit=500", AdminToken);
+        var descPage = (await descending.Content.ReadFromJsonAsync<AdminUserListResponse>())!;
+        Assert.Equal("searchable-two@example.test", descPage.Items[0].Email);
+        Assert.Equal(100, descPage.Pagination.PageSize);
     }
 
     [Fact]
@@ -506,9 +581,16 @@ public class IdentityAdministrationEndpointsTests : IAsyncLifetime
     }
 
     private Task<HttpResponseMessage> Send(
-        HttpMethod method, string url, string token, object? body = null, Guid? ifMatch = null, Guid? membershipId = null)
+        HttpMethod method, string url, string token, object? body = null, Guid? ifMatch = null, Guid? membershipId = null,
+        string? idempotencyKey = null, bool withoutIdempotencyKey = false)
     {
         var request = new HttpRequestMessage(method, url);
+        var isCreate = method == HttpMethod.Post && (url.EndsWith("/admin/users", StringComparison.Ordinal) || url.EndsWith("/roles", StringComparison.Ordinal));
+        if (isCreate && !withoutIdempotencyKey)
+        {
+            request.Headers.Add("Idempotency-Key", idempotencyKey ?? Guid.NewGuid().ToString());
+        }
+
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Add("X-Membership-Id", (membershipId ?? TestOnlyDataSeeder.TestMembershipId).ToString());
         if (ifMatch.HasValue) request.Headers.Add("If-Match", $"\"{ifMatch.Value}\"");

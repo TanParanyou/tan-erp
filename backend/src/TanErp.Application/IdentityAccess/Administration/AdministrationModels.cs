@@ -1,3 +1,5 @@
+using TanErp.Domain.IdentityAccess;
+
 namespace TanErp.Application.IdentityAccess.Administration;
 
 public static class AdministrationPermissions
@@ -8,6 +10,12 @@ public static class AdministrationPermissions
     public const string RolesAssign = "roles.assign";
     public const string RolesAssignApproval = "roles.assign-approval";
 }
+
+/// <summary>A permission a role grants or a caller holds: key plus the scope it applies to.</summary>
+public sealed record PermissionGrant(string Key, string Scope, Guid? ScopeId);
+
+/// <summary>One active administrator membership holding a role that grants <c>users.manage</c>.</summary>
+public sealed record AdministratorRow(Guid UserId, Guid MembershipId, Guid RoleId);
 
 public static class AdministrationPolicy
 {
@@ -25,7 +33,34 @@ public static class AdministrationPolicy
         rolePermissionKeys.Any(ApprovalPermissionKeys.Contains);
 
     public const int MaxPageSize = 100;
+    public const int DefaultPageSize = 25;
     public const int MaxRolesPerRequest = 20;
+
+    /// <summary>
+    /// Anti-escalation: a caller may only hand out permissions it holds. A wanted permission is covered when the
+    /// caller holds the same key with organization scope in this organization, or with an identical narrower scope.
+    /// </summary>
+    public static bool Covers(IReadOnlyCollection<PermissionGrant> held, Guid organizationId, IReadOnlyCollection<PermissionGrant> wanted) =>
+        wanted.All(w => held.Any(h =>
+            h.Key == w.Key &&
+            ((h.Scope == PermissionScope.Organization && h.ScopeId == organizationId) ||
+             (h.Scope == w.Scope && h.ScopeId == w.ScopeId))));
+
+    /// <summary>
+    /// Last-administrator guard: true when <paramref name="removed"/> matches at least one current administrator row
+    /// and no other row would remain. A change that touches no administrator never trips the guard.
+    /// </summary>
+    public static bool WouldRemoveLastAdministrator(IReadOnlyCollection<AdministratorRow> administrators, Func<AdministratorRow, bool> removed) =>
+        administrators.Any(removed) && !administrators.Any(row => !removed(row));
+}
+
+public static class AdminUserSortKey
+{
+    public const string DisplayName = "displayName";
+    public const string Email = "email";
+    public const string CreatedAt = "createdAt";
+
+    public static bool IsValid(string value) => value is DisplayName or Email or CreatedAt;
 }
 
 public sealed record AdminActor(Guid UserId, Guid MembershipId);

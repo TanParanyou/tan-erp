@@ -1,6 +1,8 @@
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Common.Security;
+using TanErp.Domain.IdentityAccess;
 
 namespace TanErp.Application.IdentityAccess.Administration;
 
@@ -23,7 +25,7 @@ public class IdentityAdministrationService
     }
 
     public async Task<Result<AdminUserPage>> ListUsersAsync(
-        AdminCaller caller, string? search, string? status, int page, int pageSize, CancellationToken cancellationToken)
+        AdminCaller caller, string? search, string? status, string? sortBy, string? sortOrder, int page, int limit, CancellationToken cancellationToken)
     {
         var access = await _access.ResolveAsync(caller.FirebaseUid, caller.MembershipId, AdministrationPermissions.UsersRead, cancellationToken);
         if (access.IsFailure) return Result<AdminUserPage>.Failure(access.Error);
@@ -31,11 +33,20 @@ public class IdentityAdministrationService
         if (status is not null && !UserStatuses.Contains(status))
             return Result<AdminUserPage>.Failure(new Error("REQUEST_VALIDATION_FAILED", "Unknown user status filter."));
 
+        var resolvedSort = string.IsNullOrWhiteSpace(sortBy) ? AdminUserSortKey.CreatedAt : sortBy.Trim();
+        if (!AdminUserSortKey.IsValid(resolvedSort))
+            return Result<AdminUserPage>.Failure(new Error("USER_SORT_INVALID", "Invalid user sort key."));
+
+        var resolvedOrder = string.IsNullOrWhiteSpace(sortOrder) ? "desc" : sortOrder.Trim().ToLowerInvariant();
+        if (resolvedOrder is not ("asc" or "desc"))
+            return Result<AdminUserPage>.Failure(new Error("USER_SORT_ORDER_INVALID", "Invalid sort order."));
+
         var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
         var safePage = Math.Max(page, 1);
-        var safeSize = Math.Clamp(pageSize, 1, AdministrationPolicy.MaxPageSize);
+        var safeLimit = limit < 1 ? AdministrationPolicy.DefaultPageSize : Math.Min(limit, AdministrationPolicy.MaxPageSize);
         return Result<AdminUserPage>.Success(
-            await _store.ListUsersAsync(access.Value!.OrganizationId, normalizedSearch, status, safePage, safeSize, cancellationToken));
+            await _store.ListUsersAsync(
+                access.Value!.OrganizationId, normalizedSearch, status, resolvedSort, resolvedOrder == "desc", safePage, safeLimit, cancellationToken));
     }
 
     public async Task<Result<AdminUser>> GetUserAsync(AdminCaller caller, Guid userId, CancellationToken cancellationToken)
@@ -48,7 +59,8 @@ public class IdentityAdministrationService
     }
 
     public async Task<Result<AdminUser>> CreateUserAsync(
-        AdminCaller caller, string? displayName, string? email, Guid? branchId, IReadOnlyList<Guid>? roleIds, string traceId, CancellationToken cancellationToken)
+        AdminCaller caller, string idempotencyKey, string? displayName, string? email, Guid? branchId, IReadOnlyList<Guid>? roleIds,
+        string traceId, CancellationToken cancellationToken)
     {
         var actorResult = await ResolveAllAsync(caller, cancellationToken,
             AdministrationPermissions.UsersManage, AdministrationPermissions.MembershipsManage, AdministrationPermissions.RolesAssign);
@@ -67,10 +79,14 @@ public class IdentityAdministrationService
         if (distinctRoles.Count == 0 || distinctRoles.Count > AdministrationPolicy.MaxRolesPerRequest || distinctRoles.Contains(Guid.Empty))
             return Validation<AdminUser>("Between 1 and 20 roles are required.");
 
+        var sortedRoles = string.Join(",", distinctRoles.OrderBy(id => id));
+        var payloadHash = Sha256Hex.Compute($"{name}|{User.NormalizeEmail(normalizedEmail)}|{branchId}|{sortedRoles}");
         return await _store.CreateUserAsync(
             access.OrganizationId,
             new CreateAdminUserInput(name, normalizedEmail!, branchId, distinctRoles),
             new AdminActor(access.ActorUserId, access.MembershipId),
+            Sha256Hex.Compute(idempotencyKey),
+            payloadHash,
             traceId,
             cancellationToken);
     }
@@ -134,13 +150,15 @@ public class IdentityAdministrationService
     }
 
     public async Task<Result<AssignRoleOutcome>> AssignRoleAsync(
-        AdminCaller caller, Guid membershipId, Guid roleId, string traceId, CancellationToken cancellationToken)
+        AdminCaller caller, string idempotencyKey, Guid membershipId, Guid roleId, string traceId, CancellationToken cancellationToken)
     {
         var access = await _access.ResolveAsync(caller.FirebaseUid, caller.MembershipId, AdministrationPermissions.RolesAssign, cancellationToken);
         if (access.IsFailure) return Result<AssignRoleOutcome>.Failure(access.Error);
 
         var a = access.Value!;
-        return await _store.AssignRoleAsync(a.OrganizationId, membershipId, roleId, new AdminActor(a.ActorUserId, a.MembershipId), traceId, cancellationToken);
+        return await _store.AssignRoleAsync(
+            a.OrganizationId, membershipId, roleId, new AdminActor(a.ActorUserId, a.MembershipId),
+            Sha256Hex.Compute(idempotencyKey), Sha256Hex.Compute($"{membershipId}|{roleId}"), traceId, cancellationToken);
     }
 
     public async Task<Result<AdminUser>> RevokeRoleAsync(

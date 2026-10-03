@@ -789,4 +789,16 @@
   <data name="USER_SHARED_ACROSS_ORGANIZATIONS_DETAIL" xml:space="preserve">
     <value>ผู้ใช้นี้มีสมาชิกภาพในองค์กรอื่นด้วย จึงไม่สามารถเปิดหรือปิดบัญชีจากองค์กรนี้ได้</value>
   </data>
+  <data name="USER_SORT_INVALID_TITLE" xml:space="preserve">
+    <value>เรียงลำดับไม่ถูกต้อง</value>
+  </data>
+  <data name="USER_SORT_INVALID_DETAIL" xml:space="preserve">
+    <value>คีย์สำหรับเรียงลำดับรายการผู้ใช้ไม่ถูกต้อง</value>
+  </data>
+  <data name="USER_SORT_ORDER_INVALID_TITLE" xml:space="preserve">
+    <value>ทิศทางการเรียงไม่ถูกต้อง</value>
+  </data>
+  <data name="USER_SORT_ORDER_INVALID_DETAIL" xml:space="preserve">
+    <value>ทิศทางการเรียงต้องเป็น asc หรือ desc</value>
+  </data>
 </root>

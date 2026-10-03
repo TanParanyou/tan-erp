@@ -25,7 +25,7 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
     // ---------------------------------------------------------------- reads
 
     public async Task<AdminUserPage> ListUsersAsync(
-        Guid organizationId, string? search, string? status, int page, int pageSize, CancellationToken cancellationToken)
+        Guid organizationId, string? search, string? status, string sortBy, bool descending, int page, int limit, CancellationToken cancellationToken)
     {
         var query = _db.Users.AsNoTracking()
             .Where(u => u.Memberships.Any(m => m.OrganizationId == organizationId));
@@ -44,15 +44,26 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
             _ => query
         };
 
+        var ordered = (sortBy, descending) switch
+        {
+            (AdminUserSortKey.DisplayName, false) => query.OrderBy(u => u.DisplayName),
+            (AdminUserSortKey.DisplayName, true) => query.OrderByDescending(u => u.DisplayName),
+            (AdminUserSortKey.Email, false) => query.OrderBy(u => u.NormalizedEmail),
+            (AdminUserSortKey.Email, true) => query.OrderByDescending(u => u.NormalizedEmail),
+            (_, false) => query.OrderBy(u => u.CreatedAtUtc),
+            _ => query.OrderByDescending(u => u.CreatedAtUtc)
+        };
+
         var total = await query.CountAsync(cancellationToken);
-        var ids = await query
-            .OrderBy(u => u.DisplayName).ThenBy(u => u.Id)
-            .Skip((page - 1) * pageSize).Take(pageSize)
+        // The id is a stable tie-breaker so paging never skips or repeats rows.
+        var ids = await ordered
+            .ThenBy(u => u.Id)
+            .Skip((page - 1) * limit).Take(limit)
             .Select(u => u.Id)
             .ToListAsync(cancellationToken);
 
         var items = await LoadUsersAsync(organizationId, ids, cancellationToken);
-        return new AdminUserPage(items, total, page, pageSize);
+        return new AdminUserPage(items, total, page, limit);
     }
 
     public async Task<AdminUser?> GetUserAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken)
@@ -81,7 +92,7 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
         return roles.Select(r => new AdminRole(
             r.Id,
             r.Name,
-            Covers(actorPermissions, organizationId, r.Permissions),
+            AdministrationPolicy.Covers(actorPermissions, organizationId, r.Permissions),
             AdministrationPolicy.RequiresApproval(r.Permissions.Select(p => p.Key)),
             r.Permissions.Select(p => p.Key).Distinct().OrderBy(k => k, StringComparer.Ordinal).ToList())).ToList();
     }
@@ -97,9 +108,16 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
     // ---------------------------------------------------------------- users
 
     public Task<Result<AdminUser>> CreateUserAsync(
-        Guid organizationId, CreateAdminUserInput input, AdminActor actor, string traceId, CancellationToken cancellationToken) =>
+        Guid organizationId, CreateAdminUserInput input, AdminActor actor, string keyHash, string payloadHash, string traceId,
+        CancellationToken cancellationToken) =>
         RunAsync(async () =>
         {
+            const string operation = "admin.users.create";
+            var replay = await FindReplayAsync(organizationId, operation, keyHash, payloadHash, cancellationToken);
+            if (replay.IsFailure) return Result<AdminUser>.Failure(replay.Error);
+            if (replay.Value is not null && Guid.TryParse(replay.Value.ResourceId, out var replayedUserId))
+                return await ReloadUserAsync(organizationId, replayedUserId, cancellationToken);
+
             var now = _clock.UtcNow;
 
             Branch? branch = null;
@@ -115,7 +133,7 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
             if (roles.Count != input.RoleIds.Count) return NotFound<AdminUser>("Role");
 
             var actorPermissions = await LoadPermissionsAsync(actor.MembershipId, cancellationToken);
-            if (roles.Any(r => !Covers(actorPermissions, organizationId, r.Permissions)))
+            if (roles.Any(r => !AdministrationPolicy.Covers(actorPermissions, organizationId, r.Permissions)))
                 return Fail<AdminUser>("ROLE_ESCALATION_DENIED", "A role grants permissions the caller does not hold.");
 
             var normalizedEmail = User.NormalizeEmail(input.Email);
@@ -150,6 +168,9 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                     assignedRoleIds = roles.Where(r => !r.RequiresApproval).Select(r => r.Id).ToArray(),
                     requestedRoleIds
                 });
+
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(
+                Guid.NewGuid(), organizationId, operation, keyHash, payloadHash, user.Id.ToString(), now));
 
             try
             {
@@ -273,9 +294,16 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
     // ---------------------------------------------------------------- roles
 
     public Task<Result<AssignRoleOutcome>> AssignRoleAsync(
-        Guid organizationId, Guid membershipId, Guid roleId, AdminActor actor, string traceId, CancellationToken cancellationToken) =>
+        Guid organizationId, Guid membershipId, Guid roleId, AdminActor actor, string keyHash, string payloadHash, string traceId,
+        CancellationToken cancellationToken) =>
         RunAsync(async () =>
         {
+            const string operation = "admin.roles.assign";
+            var replay = await FindReplayAsync(organizationId, operation, keyHash, payloadHash, cancellationToken);
+            if (replay.IsFailure) return Result<AssignRoleOutcome>.Failure(replay.Error);
+            if (replay.Value is not null)
+                return await ReplayAssignAsync(organizationId, replay.Value.ResourceId, cancellationToken);
+
             var membership = await _db.Memberships
                 .FirstOrDefaultAsync(m => m.Id == membershipId && m.OrganizationId == organizationId, cancellationToken);
             if (membership is null) return NotFound<AssignRoleOutcome>("Membership");
@@ -290,7 +318,7 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 return Fail<AssignRoleOutcome>("ROLE_ALREADY_ASSIGNED", "The role is already assigned.");
 
             var actorPermissions = await LoadPermissionsAsync(actor.MembershipId, cancellationToken);
-            if (!Covers(actorPermissions, organizationId, role.Permissions))
+            if (!AdministrationPolicy.Covers(actorPermissions, organizationId, role.Permissions))
                 return Fail<AssignRoleOutcome>("ROLE_ESCALATION_DENIED", "The role grants permissions the caller does not hold.");
 
             var now = _clock.UtcNow;
@@ -304,7 +332,9 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 _db.RoleAssignmentRequests.Add(request);
                 AddAudit(organizationId, actor, "roles.assignment-requested", "RoleAssignmentRequest", request.Id.ToString(), traceId, now,
                     new { membershipId, roleId });
-                await SaveOrPendingConflictAsync(cancellationToken);
+                _db.IdempotencyRecords.Add(new IdempotencyRecord(
+                    Guid.NewGuid(), organizationId, operation, keyHash, payloadHash, $"request:{request.Id}", now));
+                await _db.SaveChangesAsync(cancellationToken);
 
                 var user = await ReloadUserAsync(organizationId, membership.UserId, cancellationToken);
                 var requestId = request.Id;
@@ -317,6 +347,8 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
             membership.AdvanceVersion();
             AddAudit(organizationId, actor, "roles.assigned", "Membership", membershipId.ToString(), traceId, now,
                 new { roleId }, before, membership.RowVersion);
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(
+                Guid.NewGuid(), organizationId, operation, keyHash, payloadHash, $"membership:{membershipId}", now));
             await _db.SaveChangesAsync(cancellationToken);
 
             var reloaded = await ReloadUserAsync(organizationId, membership.UserId, cancellationToken);
@@ -395,7 +427,7 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                     if (role is null) return NotFound<AdminRoleRequest>("Role");
 
                     var actorPermissions = await LoadPermissionsAsync(actor.MembershipId, cancellationToken);
-                    if (!Covers(actorPermissions, organizationId, role.Permissions))
+                    if (!AdministrationPolicy.Covers(actorPermissions, organizationId, role.Permissions))
                         return Fail<AdminRoleRequest>("ROLE_ESCALATION_DENIED", "The role grants permissions the caller does not hold.");
 
                     if (await _db.MembershipRoles.AsNoTracking()
@@ -417,14 +449,10 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
 
     // ---------------------------------------------------------------- helpers
 
-    private sealed record PermissionGrant(string Key, string Scope, Guid? ScopeId);
-
     private sealed record RoleWithPermissions(Guid Id, string Name, IReadOnlyList<PermissionGrant> Permissions)
     {
         public bool RequiresApproval => AdministrationPolicy.RequiresApproval(Permissions.Select(p => p.Key));
     }
-
-    private sealed record AdministratorRow(Guid UserId, Guid MembershipId, Guid RoleId);
 
     private sealed record RoleRequestRow(
         RoleAssignmentRequest Request,
@@ -481,10 +509,45 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
     private static bool IsUniqueViolation(DbUpdateException ex) =>
         ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 
-    private async Task SaveOrPendingConflictAsync(CancellationToken cancellationToken)
+    /// <summary>Replay check: same key and payload returns the recorded resource; same key with another payload is rejected.</summary>
+    private async Task<Result<IdempotencyRecord?>> FindReplayAsync(
+        Guid organizationId, string operation, string keyHash, string payloadHash, CancellationToken cancellationToken)
     {
-        await _db.SaveChangesAsync(cancellationToken);
+        var record = await _db.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(
+            r => r.OrganizationId == organizationId && r.Operation == operation && r.KeyHash == keyHash, cancellationToken);
+        if (record is not null && record.PayloadHash != payloadHash)
+            return Result<IdempotencyRecord?>.Failure(new Error(
+                "IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload."));
+
+        return Result<IdempotencyRecord?>.Success(record);
     }
+
+    private async Task<Result<AssignRoleOutcome>> ReplayAssignAsync(Guid organizationId, string resourceId, CancellationToken cancellationToken)
+    {
+        if (resourceId.StartsWith("request:", StringComparison.Ordinal) && Guid.TryParse(resourceId["request:".Length..], out var requestId))
+        {
+            var row = await RoleRequestQuery(organizationId, r => r.Id == requestId).FirstOrDefaultAsync(cancellationToken);
+            if (row is null) return NotFound<AssignRoleOutcome>("Role assignment request");
+
+            var pendingUser = await ReloadUserAsync(organizationId, await MembershipUserIdAsync(row.Request.MembershipId, cancellationToken), cancellationToken);
+            return pendingUser.IsFailure
+                ? Result<AssignRoleOutcome>.Failure(pendingUser.Error)
+                : Result<AssignRoleOutcome>.Success(new AssignRoleOutcome(true, pendingUser.Value!, ToRoleRequest(row)));
+        }
+
+        if (resourceId.StartsWith("membership:", StringComparison.Ordinal) && Guid.TryParse(resourceId["membership:".Length..], out var membershipId))
+        {
+            var user = await ReloadUserAsync(organizationId, await MembershipUserIdAsync(membershipId, cancellationToken), cancellationToken);
+            return user.IsFailure
+                ? Result<AssignRoleOutcome>.Failure(user.Error)
+                : Result<AssignRoleOutcome>.Success(new AssignRoleOutcome(false, user.Value!, null));
+        }
+
+        return NotFound<AssignRoleOutcome>("Role assignment");
+    }
+
+    private async Task<Guid> MembershipUserIdAsync(Guid membershipId, CancellationToken cancellationToken) =>
+        await _db.Memberships.AsNoTracking().Where(m => m.Id == membershipId).Select(m => m.UserId).FirstAsync(cancellationToken);
 
     private async Task<User?> FindUserInOrganizationAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken) =>
         await _db.Users.FirstOrDefaultAsync(
@@ -601,16 +664,6 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
         return rows.Select(r => new RoleWithPermissions(r.Id, r.Name, r.Permissions)).ToList();
     }
 
-    /// <summary>
-    /// A caller may only hand out permissions it holds: same key, and either organization scope in this
-    /// organization or an identical narrower scope.
-    /// </summary>
-    private static bool Covers(IReadOnlyList<PermissionGrant> held, Guid organizationId, IReadOnlyList<PermissionGrant> wanted) =>
-        wanted.All(w => held.Any(h =>
-            h.Key == w.Key &&
-            ((h.Scope == PermissionScope.Organization && h.ScopeId == organizationId) ||
-             (h.Scope == w.Scope && h.ScopeId == w.ScopeId))));
-
     private async Task<bool> WouldRemoveLastAdministratorAsync(
         Guid organizationId, Func<AdministratorRow, bool> removed, CancellationToken cancellationToken)
     {
@@ -631,8 +684,7 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 .Select(mr => new AdministratorRow(m.UserId, m.Id, mr.RoleId)))
             .ToListAsync(cancellationToken);
 
-        if (!rows.Any(removed)) return false;
-        return !rows.Any(row => !removed(row));
+        return AdministrationPolicy.WouldRemoveLastAdministrator(rows, removed);
     }
 
     private void AddAudit(

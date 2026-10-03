@@ -27,14 +27,16 @@ public class AdminUsersController : ControllerBase
     public async Task<IActionResult> ListUsers(
         [FromQuery] string? search = null,
         [FromQuery] string? status = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = null,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 25,
+        [FromQuery] int limit = 25,
         CancellationToken cancellationToken = default)
     {
         var auth = ReadAuth(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.ListUsersAsync(auth!, search, status, page, pageSize, cancellationToken);
+        var result = await _service.ListUsersAsync(auth!, search, status, sortBy, sortOrder, page, limit, cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
         var data = result.Value!;
@@ -61,11 +63,11 @@ public class AdminUsersController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateUser([FromBody] CreateAdminUserRequest request, CancellationToken cancellationToken)
     {
-        var auth = ReadAuth(out var failure);
+        var idempotent = ReadIdempotent(out var failure);
         if (failure is not null) return failure;
 
         var result = await _service.CreateUserAsync(
-            auth!, request.DisplayName, request.Email, request.BranchId, request.RoleIds, HttpContext.TraceIdentifier, cancellationToken);
+            idempotent!.Caller, idempotent.Key, request.DisplayName, request.Email, request.BranchId, request.RoleIds, HttpContext.TraceIdentifier, cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
         var user = result.Value!;
@@ -139,10 +141,11 @@ public class AdminUsersController : ControllerBase
     public async Task<IActionResult> AssignRole(
         [FromRoute] Guid membershipId, [FromBody] AssignAdminRoleRequest request, CancellationToken cancellationToken)
     {
-        var auth = ReadAuth(out var failure);
+        var idempotent = ReadIdempotent(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.AssignRoleAsync(auth!, membershipId, request.RoleId, HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _service.AssignRoleAsync(
+            idempotent!.Caller, idempotent.Key, membershipId, request.RoleId, HttpContext.TraceIdentifier, cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
         var outcome = result.Value!;
@@ -260,5 +263,20 @@ public class AdminUsersController : ControllerBase
         return new ConditionalCaller(new AdminCaller(context.Value!.FirebaseUid, context.Value.MembershipId), context.Value.IfMatchRowVersion);
     }
 
+    private IdempotentCaller? ReadIdempotent(out IActionResult? failure)
+    {
+        var context = RequestContextReader.ReadIdempotentRequest(HttpContext);
+        if (context.IsFailure)
+        {
+            failure = Problem(context.Error);
+            return null;
+        }
+
+        failure = null;
+        return new IdempotentCaller(new AdminCaller(context.Value!.FirebaseUid, context.Value.MembershipId), context.Value.IdempotencyKey);
+    }
+
     private sealed record ConditionalCaller(AdminCaller Caller, Guid RowVersion);
+
+    private sealed record IdempotentCaller(AdminCaller Caller, string Key);
 }

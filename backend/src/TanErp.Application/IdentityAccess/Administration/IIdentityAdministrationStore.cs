@@ -9,11 +9,11 @@ namespace TanErp.Application.IdentityAccess.Administration;
 /// </summary>
 public interface IIdentityAdministrationStore
 {
-    Task<AdminUserPage> ListUsersAsync(Guid organizationId, string? search, string? status, int page, int pageSize, CancellationToken cancellationToken);
+    Task<AdminUserPage> ListUsersAsync(Guid organizationId, string? search, string? status, string sortBy, bool descending, int page, int limit, CancellationToken cancellationToken);
 
     Task<AdminUser?> GetUserAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken);
 
-    Task<Result<AdminUser>> CreateUserAsync(Guid organizationId, CreateAdminUserInput input, AdminActor actor, string traceId, CancellationToken cancellationToken);
+    Task<Result<AdminUser>> CreateUserAsync(Guid organizationId, CreateAdminUserInput input, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken);
 
     Task<Result<AdminUser>> RenameUserAsync(Guid organizationId, Guid userId, Guid expectedRowVersion, string displayName, AdminActor actor, string traceId, CancellationToken cancellationToken);
 
@@ -25,7 +25,7 @@ public interface IIdentityAdministrationStore
 
     Task<IReadOnlyList<AdminRole>> ListRolesAsync(Guid organizationId, Guid actorMembershipId, CancellationToken cancellationToken);
 
-    Task<Result<AssignRoleOutcome>> AssignRoleAsync(Guid organizationId, Guid membershipId, Guid roleId, AdminActor actor, string traceId, CancellationToken cancellationToken);
+    Task<Result<AssignRoleOutcome>> AssignRoleAsync(Guid organizationId, Guid membershipId, Guid roleId, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken);
 
     Task<Result<AdminUser>> RevokeRoleAsync(Guid organizationId, Guid membershipId, Guid roleId, AdminActor actor, string traceId, CancellationToken cancellationToken);
 

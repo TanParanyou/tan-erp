@@ -11,6 +11,8 @@ public static class ProblemDetailsMapper
     public static int GetStatus(string code) => code switch
     {
         "AUTHENTICATION_REQUIRED" => StatusCodes.Status401Unauthorized,
+        "USER_SORT_INVALID" => StatusCodes.Status400BadRequest,
+        "USER_SORT_ORDER_INVALID" => StatusCodes.Status400BadRequest,
         "USER_EMAIL_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
         "ADMIN_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
         "LAST_ADMINISTRATOR_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
