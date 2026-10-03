@@ -4,11 +4,12 @@
 
 อ้างอิง: [Environments](environments.md), [Deployment](deployment.md), [Observability](observability.md), [Backup/Restore](backup-and-restore.md), [Incident Response](incident-response.md), [Administrator Recovery](administrator-recovery.md)
 
-## ช่องว่างที่ต้องปิดก่อนซ้อมได้จริง (พบจากการตรวจ repo)
+## ช่องว่างที่ต้องปิดก่อนซ้อมได้จริง (พบจากการตรวจ repo และ CI, 2026-10-03)
 
-- **ไม่มี health endpoint:** Backend ยังไม่มี liveness/readiness (`Program.cs` ไม่มี health checks) ทั้งที่ [Observability](observability.md) กำหนดไว้ ต้องสร้างก่อนตรวจข้อ 4
-- **ยังไม่มี pipeline / artifact:** `deploy/` มีเฉพาะ `compose.yml` สำหรับ local (PostgreSQL + Firebase Emulator) ยังไม่มี build ของ immutable artifact หรือขั้นตอน promote
-- **ยังไม่ได้กำหนด Production Firebase project, storage bucket, secrets และ RPO/RTO** — ต้องมีเจ้าของตัดสินใจก่อน
+- **Health endpoint:** ยังไม่อยู่ใน `main` — เสนอไว้ใน PR #13 (`/health/live`, `/health/ready`); ข้อ 4 ของเช็กลิสต์พึ่ง PR นั้น
+- **CI verify:** `.github/workflows/verify.yml` ไม่เคยรันสำเร็จ (ล้มที่ 0 วินาทีเพราะ workflow ไม่ถูกต้อง) — PR #12 แก้ให้เริ่มรันได้และแก้เทสต์ที่ล้มบน Linux; ขั้นหลังจากนั้น (frontend verify, migration, Playwright) ต้องดูผลรันจริง
+- **ยังไม่มี build/publish ของ immutable artifact:** `verify.yml` ตรวจอย่างเดียว ไม่สร้างหรือเก็บ artifact และ `deploy/` มีเฉพาะ `compose.yml` สำหรับ local (PostgreSQL + Firebase Emulator) ยังไม่มีขั้นตอน promote ข้าม environment
+- **ยังไม่ได้กำหนด Hosting, Production Firebase project, storage bucket, secrets และ RPO/RTO** — ต้องมีเจ้าของตัดสินใจก่อน
 
 ## 0. ก่อนเริ่ม
 
