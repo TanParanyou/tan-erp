@@ -30,9 +30,9 @@
 
 | Method | Path | Permission | หมายเหตุ |
 | --- | --- | --- | --- |
-| GET | `/api/v1/admin/users` | `users.read` | `search`, `status` (`pending|active|inactive`), `page`, `pageSize` |
+| GET | `/api/v1/admin/users` | `users.read` | `search`, `status` (`pending|active|inactive`), `sortBy` (`displayName|email|createdAt`, default `createdAt`), `sortOrder` (`asc|desc`, default `desc`), `page`, `limit` (default 25, max 100); id เป็น tie-breaker |
 | GET | `/api/v1/admin/users/{userId}` | `users.read` | ETag = `rowVersion` |
-| POST | `/api/v1/admin/users` | `users.manage` + `memberships.manage` + `roles.assign` | 201; body `{ displayName, email, branchId?, roleIds[] }` |
+| POST | `/api/v1/admin/users` | `users.manage` + `memberships.manage` + `roles.assign` | 201; `Idempotency-Key` บังคับ; body `{ displayName, email, branchId?, roleIds[] }` |
 | PATCH | `/api/v1/admin/users/{userId}` | `users.manage` | `If-Match`; body `{ displayName }` |
 | POST | `/api/v1/admin/users/{userId}/deactivate` | `users.manage` | `If-Match`; last-admin guard |
 | POST | `/api/v1/admin/users/{userId}/activate` | `users.manage` | `If-Match` |
@@ -40,14 +40,14 @@
 | POST | `/api/v1/admin/memberships/{membershipId}/deactivate` | `memberships.manage` | `If-Match`; last-admin guard |
 | POST | `/api/v1/admin/memberships/{membershipId}/activate` | `memberships.manage` | `If-Match` |
 | GET | `/api/v1/admin/roles` | `roles.assign` | Role ใน Organization พร้อม `assignable`, `requiresApproval` |
-| POST | `/api/v1/admin/memberships/{membershipId}/roles` | `roles.assign` | body `{ roleId }`; 201 assigned หรือ 202 pending request |
+| POST | `/api/v1/admin/memberships/{membershipId}/roles` | `roles.assign` | `Idempotency-Key` บังคับ; body `{ roleId }`; 201 assigned หรือ 202 pending request |
 | DELETE | `/api/v1/admin/memberships/{membershipId}/roles/{roleId}` | `roles.assign` | 204; last-admin guard |
 | GET | `/api/v1/admin/role-assignment-requests` | `roles.assign-approval` | `status` default `pending` |
 | POST | `/api/v1/admin/role-assignment-requests/{requestId}/approve` | `roles.assign-approval` | `If-Match`; ผู้ขอ approve เองไม่ได้ (`403 ROLE_ASSIGNMENT_INDEPENDENT_CHECKER_REQUIRED`) |
 | POST | `/api/v1/admin/role-assignment-requests/{requestId}/reject` | `roles.assign-approval` | `If-Match` |
 | POST | `/api/v1/admin/role-assignment-requests/{requestId}/cancel` | `roles.assign` | `If-Match`; เฉพาะผู้ขอ |
 
-Mutating request ไม่ใช้ Idempotency-Key ในรอบนี้: ความซ้ำถูกกันด้วย unique constraint (อีเมล, คำขอ pending) และ `If-Match`.
+**Idempotency:** `POST` ที่สร้างข้อมูล (`/admin/users`, `/admin/memberships/{id}/roles`) ต้องมี `Idempotency-Key` (16–128 ตัวอักษร) ตาม [API Conventions](api-conventions.md): key และ payload เดิมคืนผลเดิมโดยไม่สร้างซ้ำ (ไม่เพิ่ม Audit); key เดิมแต่ payload ต่างคืน `409 IDEMPOTENCY_KEY_REUSED`; ไม่มี key คืน `400 IDEMPOTENCY_KEY_REQUIRED`. Action ที่เปลี่ยนสถานะ (PATCH/activate/deactivate/approve/reject/cancel) ใช้ `If-Match`; `DELETE` role ซ้ำคืน `404 ROLE_NOT_ASSIGNED`.
 
 ## User resource (ย่อ)
 
@@ -67,7 +67,7 @@ Mutating request ไม่ใช้ Idempotency-Key ในรอบนี้: �
 
 ## Error codes ใหม่
 
-`USER_EMAIL_ALREADY_EXISTS` 409, `ADMIN_VERSION_CONFLICT` 409, `LAST_ADMINISTRATOR_REQUIRED` 422, `ROLE_ESCALATION_DENIED` 403, `SELF_ROLE_CHANGE_FORBIDDEN` 403, `ROLE_ALREADY_ASSIGNED` 409, `ROLE_ASSIGNMENT_REQUEST_PENDING` 409, `ROLE_ASSIGNMENT_REQUEST_NOT_PENDING` 409, `ROLE_ASSIGNMENT_INDEPENDENT_CHECKER_REQUIRED` 403, `ROLE_NOT_ASSIGNED` 404 (นอกจากนั้นใช้ `RESOURCE_NOT_FOUND`, `PERMISSION_DENIED`, `IF_MATCH_REQUIRED`, `REQUEST_VALIDATION_FAILED` ที่มีอยู่)
+`USER_EMAIL_ALREADY_EXISTS` 409, `ADMIN_VERSION_CONFLICT` 409, `LAST_ADMINISTRATOR_REQUIRED` 422, `ROLE_ESCALATION_DENIED` 403, `SELF_ROLE_CHANGE_FORBIDDEN` 403, `ROLE_ALREADY_ASSIGNED` 409, `ROLE_ASSIGNMENT_REQUEST_PENDING` 409, `ROLE_ASSIGNMENT_REQUEST_NOT_PENDING` 409, `ROLE_ASSIGNMENT_INDEPENDENT_CHECKER_REQUIRED` 403, `ROLE_NOT_ASSIGNED` 404, `USER_SORT_INVALID` 400, `USER_SORT_ORDER_INVALID` 400, `USER_SHARED_ACROSS_ORGANIZATIONS` 422 (นอกจากนั้นใช้ `RESOURCE_NOT_FOUND`, `PERMISSION_DENIED`, `IF_MATCH_REQUIRED`, `REQUEST_VALIDATION_FAILED` ที่มีอยู่)
 
 ## Data
 

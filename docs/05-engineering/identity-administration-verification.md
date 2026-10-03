@@ -13,8 +13,14 @@
 - Backend `dotnet build backend/TanErp.slnx`: 0 warnings/errors. Full `dotnet test`: Architecture 3/3, Integration 312/312, Unit 288/288 (Integration เพิ่ม 20 เคสของ `IdentityAdministrationEndpointsTests`). หลังเพิ่ม `rowVersion` ของคำขอและ role seed ที่หลังสุด รันซ้ำเฉพาะ OpenApi/IdentityAdministration/CurrentUser/Users: 44/44
 - เคสที่ครอบคลุม: สร้างผู้ใช้ pending + Audit ไม่มีข้อมูลส่วนบุคคล, อีเมลซ้ำ (ไม่สนตัวพิมพ์/ช่องว่าง), input ไม่ถูกต้อง, role เกินสิทธิ์ผู้มอบ (403), Role อนุมัติ → คำขอ pending, ผู้ขออนุมัติเองไม่ได้ / ผู้ตรวจอื่นอนุมัติได้ / ยกเลิกได้เฉพาะผู้ขอ, ถอน Role ของตนเองไม่ได้, last administrator (ปิด Membership, ปิดผู้ใช้, ผู้ดูแล pending ไม่นับ), If-Match ขาด/ล้าสมัย, ข้ามองค์กร 404, ผู้ไม่มีสิทธิ์ 403/401, ค้นหา/กรอง/แบ่งหน้า, `GET /me` ผูกตัวตน (ต้อง verified; ไม่ผูกซ้ำ; ไม่ผูก pending ที่ถูกปิด), ถอน Role / ปิด Membership / ปิดผู้ใช้ แล้ว request ถัดไปถูกปฏิเสธ
 - Migration `AddIdentityAdministration` ทดสอบ up/down/up บน DB ที่มีข้อมูลและ backfill `normalized_email`/`row_version`
-- Frontend: `npm run check:api`, `npm run lint`, `tsc --noEmit`, `npm run build` ผ่าน; Vitest ทั้งชุด 624/624 (`--testTimeout=60000`)
+- Frontend: `npm run check:api`, `npm run lint`, `tsc --noEmit`, `npm run build` ผ่าน; Vitest ทั้งชุด 630/630 (`--testTimeout=60000`)
 - Playwright `e2e/user-administration.spec.ts` 1/1 กับ stack จริง (PostgreSQL, Firebase Emulator, backend, frontend): เชิญผู้ใช้ → ผู้ใช้ล็อกอินด้วยบัญชี emulator ที่ยืนยันอีเมล → สถานะเปลี่ยนเป็นใช้งานอยู่ → ผู้ดูแลถอน Role ผ่าน dialog → ผู้ใช้เสียเมนูทันทีหลังโหลดใหม่
+
+## การปรับตาม `AGENTS.md`, `design.md` และสกิล API (หลังตรวจย้อนกลับ)
+
+หลังตรวจงานเทียบกฎของ repo พบและแก้: `Idempotency-Key` บังคับสำหรับ `POST` ที่สร้างข้อมูล (สร้างผู้ใช้, มอบ Role) พร้อม replay/ปฏิเสธ payload ต่าง; พารามิเตอร์รายการเป็น `limit`, `sortBy`, `sortOrder` (whitelist, id tie-breaker); ย้ายกฎล้วน (anti-escalation, last-administrator) จาก Infrastructure ไปไว้ใน `AdministrationPolicy` ของ Application พร้อม unit test 14 เคส (Store ยังเป็นผู้จัด transaction/การโหลดข้อมูล เหมือน `EstimateStore`); query key มี locale; ชนิดพารามิเตอร์ FE ดึงจาก generated paths; ฟอร์มใช้ `noValidate` เหมือน editor อื่น (ไม่เช่นนั้นข้อความตรวจสอบเป็นของเบราว์เซอร์ ไม่ใช่ i18n); FE ส่ง Idempotency-Key ต่อ intent และใช้ key เดิมเมื่อ retry.
+
+ข้อที่ยังเป็น deviation ที่ยอมรับชั่วคราว: use case รวมอยู่ใน `IdentityAdministrationService` เดียว (ไม่แยก Command/Handler ต่อ use case); ตรรกะกำกับ transaction และการโหลดข้อมูลอยู่ใน Store.
 
 ## ที่พบระหว่างทดสอบและแก้แล้ว
 
