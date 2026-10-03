@@ -66,6 +66,20 @@ cp frontend/.env.example frontend/.env.local
 npm --prefix frontend run dev -- -p 3005
 ```
 
+### ข้อมูลตัวอย่างใบเสนอราคา (TEST_ONLY, ไม่ใช่ข้อมูลจริง)
+
+ระบบยังไม่มีผู้ใช้จริง จึงมีชุดข้อมูลตัวอย่างสำหรับดู/ซ้อม UAT หน้า Preview เอกสารใบเสนอราคา โดยพา Estimate ตัวอย่างผ่าน API จริง (คำนวณ → ส่งตรวจ → ผู้ตรวจอิสระอนุมัติ → ออกใบเสนอราคา) ไม่ลัดผ่านฐานข้อมูล:
+
+```bash
+# 1. เริ่ม Backend พร้อมข้อมูลตัวอย่างและผู้ตรวจอิสระ (ต้องมี Emulator + ผู้ใช้จาก make seed-users)
+make dev-backend-demo SEED_DEDICATED_ESTIMATE_REVIEWER=true
+
+# 2. ออกใบเสนอราคาตัวอย่าง (รันซ้ำได้; หยุดเองเมื่อออกแล้ว)
+make seed-quotation-demo
+```
+
+สคริปต์ `scripts/seed-quotation-demo.mjs` ปฏิเสธการทำงานหากไม่ได้ชี้ไปที่ Emulator/API ในเครื่อง. เปิดดูที่ `/th/estimates/019a3cf8-96f0-7c9f-b207-93aa818f4c04/quotation`. ข้อมูลและราคาเป็นค่าสมมติ ห้ามใช้เป็นหลักฐาน UAT หรือ pilot data. หมายเหตุ: `SEED_DEDICATED_ESTIMATE_REVIEWER=true` ตัด `estimates.approve` ออกจากผู้ใช้อื่น จึงไม่ควรใช้ร่วมกับ Playwright journey ที่ใช้ผู้ใช้เดียวอนุมัติ.
+
 ## 4. การตรวจสอบความพร้อมใช้งาน (Health & Readiness Checks)
 
 - **PostgreSQL 17**: `docker exec tan-erp-postgres pg_isready -U postgres -d tan_erp`

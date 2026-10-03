@@ -33,7 +33,7 @@ FRONTEND_DIR  := frontend
         check-ports kill-ports \
         dev dev-setup dev-backend dev-backend-demo dev-frontend dev-env \
         up down stop restart logs ps db-up db-stop emulator-up \
-        db-wait db-migrate db-rollback db-status db-seed seed seed-users db-reset fresh \
+        db-wait db-migrate db-rollback db-status db-seed seed seed-users seed-quotation-demo db-reset fresh \
         api-gen api-check \
         verify verify-backend verify-frontend \
         test test-backend test-frontend test-e2e e2e test-fixtures \
@@ -211,6 +211,11 @@ db-seed:
 # Alias สำหรับ Seed ผู้ใช้ทดสอบ
 seed seed-users: db-seed
 
+# พา Estimate ตัวอย่าง (TEST_ONLY) ผ่าน API จนออกใบเสนอราคา เพื่อดูหน้า Preview เอกสาร
+# ต้องรัน Backend ด้วย: make dev-backend SEED_ESTIMATE_DEMO_DATA=true SEED_DEDICATED_ESTIMATE_REVIEWER=true
+seed-quotation-demo:
+	FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:$(EMULATOR_PORT)" API_ORIGIN="http://localhost:$(BE_PORT)" node scripts/seed-quotation-demo.mjs
+
 # ล้างและตั้งค่าฐานข้อมูลใหม่ทั้งหมด (Rollback -> Migrate -> Seed)
 db-reset fresh: db-rollback db-migrate db-seed
 	@echo "รีเซ็ตฐานข้อมูลและข้อมูลผู้ใช้ทดสอบเรียบร้อยแล้ว"
@@ -235,6 +240,7 @@ dev-backend:
 	@echo "กำลังรัน Backend API บนพอร์ต $(BE_PORT)..."
 	ASPNETCORE_ENVIRONMENT=Test \
 	SeedTestData=true \
+	SeedDedicatedEstimateReviewer=$(if $(filter true,$(SEED_DEDICATED_ESTIMATE_REVIEWER)),true,false) \
 	SeedEstimateDemoData=$(if $(filter true,$(SEED_ESTIMATE_DEMO_DATA)),true,false) \
 	SeedItemCatalogDemoData=$(if $(filter true,$(SEED_ITEM_CATALOG_DEMO_DATA)),true,false) \
 	FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:$(EMULATOR_PORT) \
