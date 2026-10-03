@@ -14,6 +14,7 @@ import {
   type QuotationResponse,
   type AcceptQuotationRequest,
   type AcceptQuotationResponse,
+  type QuotationDocumentResponse,
   type EstimateReviewQueueParams,
   type EstimateReviewQueueResponse,
 } from "@/lib/api/api-client";
@@ -40,6 +41,15 @@ export function estimateDetailQueryKey(
   estimateId: string | null | undefined
 ): readonly ["business", string | null | undefined, "th" | "en", "estimates", "detail", string | null | undefined] {
   return ["business", membershipId, locale, "estimates", "detail", estimateId] as const;
+}
+
+export function quotationDocumentQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  estimateId: string | null | undefined,
+  documentLocale: "th" | "en"
+): readonly ["business", string | null | undefined, "th" | "en", "estimates", "quotation-document", string | null | undefined, "th" | "en"] {
+  return ["business", membershipId, locale, "estimates", "quotation-document", estimateId, documentLocale] as const;
 }
 
 export const estimateReviewQueueQueryKey = (
@@ -426,6 +436,32 @@ export function useAcceptQuotation(
       });
       void queryClient.invalidateQueries({
         queryKey: opportunityStageHistoryQueryKey(membershipId, opportunityId),
+      });
+    },
+  });
+}
+
+export function useQuotationDocument(
+  estimateId: string,
+  documentLocale: "th" | "en"
+): UseQueryResult<QuotationDocumentResponse, Error> {
+  const uiLocale = useSafeLocale();
+  const normalizedUiLocale = uiLocale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery({
+    queryKey: quotationDocumentQueryKey(membershipId, normalizedUiLocale, estimateId, documentLocale),
+    enabled: Boolean(membershipId && estimateId),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.getQuotationDocument(estimateId, documentLocale, {
+        token,
+        membershipId,
+        locale: documentLocale,
+        signal,
       });
     },
   });

@@ -7205,6 +7205,113 @@
         }
       }
     },
+    "/api/v1/estimates/{id}/quotation/document": {
+      "get": {
+        "tags": [
+          "Estimates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotationDocumentResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotationDocumentResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotationDocumentResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/files/upload-sessions": {
       "post": {
         "tags": [
@@ -20561,6 +20668,115 @@
         },
         "additionalProperties": false
       },
+      "QuotationAddressResponse": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "addressLine1": {
+            "type": "string",
+            "nullable": true
+          },
+          "subdistrict": {
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "countryCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuotationCustomerResponse": {
+        "type": "object",
+        "properties": {
+          "customerType": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayNameTh": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayNameEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "legalName": {
+            "type": "string",
+            "nullable": true
+          },
+          "taxIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "branchCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "$ref": "#/components/schemas/QuotationAddressResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuotationDocumentResponse": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "issuedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasIncompleteTranslations": {
+            "type": "boolean"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/QuotationCustomerResponse"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuotationSectionResponse"
+            },
+            "nullable": true
+          },
+          "totals": {
+            "$ref": "#/components/schemas/QuotationTotalsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
       "QuotationResponse": {
         "type": "object",
         "properties": {
@@ -20611,6 +20827,111 @@
           "estimateRowVersion": {
             "type": "string",
             "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuotationSectionResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameTh": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "workItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuotationWorkItemResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuotationTotalsResponse": {
+        "type": "object",
+        "properties": {
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "discountType": {
+            "type": "string",
+            "nullable": true
+          },
+          "discountValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "discountAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "netBeforeTax": {
+            "type": "number",
+            "format": "double"
+          },
+          "taxAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "grandTotal": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuotationWorkItemResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionTh": {
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "unitCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "lineTotal": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false

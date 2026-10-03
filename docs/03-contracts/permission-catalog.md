@@ -79,6 +79,8 @@
 | Estimation | `estimates.override-price` | Override ราคาตามกฎ | Organization/Branch/Project |
 | Estimation | `estimates.cancel` | ยกเลิก Draft/Returned; Submitted ต้องเป็นผู้ตรวจที่ได้รับมอบหมาย | Branch/Project/Own |
 | Quotation | `quotations.issue` | ออกใบเสนอราคาจาก Approved Revision | Branch/Project |
+| Quotation | `quotations.accept` | บันทึกการตอบรับใบเสนอราคาภายใน | Branch/Project |
+| Quotation | `quotations.read` | ดู/พิมพ์เอกสาร Quotation ที่ออกแล้ว (Customer-safe Document) | Branch/Project |
 | Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
 
 การตรวจวงเงิน กำไรขั้นต่ำ Discount, Exception และ Maker–Checker เป็น Approval Policy เพิ่มจาก Permission; การมี `estimates.approve` ไม่ได้แปลว่าอนุมัติได้ทุกยอดหรืออนุมัติงานตนเองได้ หากยังไม่มี Published Policy/Independent Checker ระบบต้อง Fail-closed ตาม [Approval Matrix](../01-business/approval-matrix.md)

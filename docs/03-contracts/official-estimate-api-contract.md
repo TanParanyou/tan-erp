@@ -28,6 +28,7 @@ Backend สร้าง Organization/Branch Scope จาก PostgreSQL Membershi
 | สร้าง Revision | `POST /api/v1/estimates/{id}/revisions` | `estimates.revise` | 201 |
 | ออก Quotation | `POST /api/v1/estimates/{id}/quotation` | `quotations.issue` | 201 |
 | ตอบรับ Quotation | `POST /api/v1/estimates/{id}/quotation/accept` | `quotations.accept` | 200 |
+| อ่านเอกสาร Quotation (Customer-safe) | `GET /api/v1/estimates/{id}/quotation/document?locale=th\|en` | `quotations.read` | 200 |
 | อ่านเลขที่เอกสาร | `GET /api/v1/settings/document-sequences` | `document-sequences.read` | 200 |
 | ทดสอบเลขที่เอกสาร | `POST /api/v1/settings/document-sequences/preview` | `document-sequences.manage` | 200 |
 | ตั้งค่าเลขที่เอกสาร | `PUT /api/v1/settings/document-sequences/{documentType}` | `document-sequences.manage` | 200 |
@@ -239,7 +240,7 @@ Content-Type: application/json
 - Permission: `quotations.issue`
 - Preconditions: Current Revision เป็น `approved` และมี Calculation Snapshot ที่ยังตรงกับ Revision, Opportunity อยู่ใน stage `estimating`, replay check มาก่อน version/state check
 - Atomic Effects: ออกเลขที่เอกสารด้วย Atomic Sequence Engine, บันทึก Snapshot, ปรับ Estimate/Revision เป็น `quoted`, ปรับ Opportunity เป็น `proposed`, บันทึก 1 Stage History, 2 Audits, 1 Idempotency Record
-- Response `201` ใช้ `QuotationResponse` และมีเฉพาะ `quotationId`, `estimateId`, `opportunityId`, `number`, `status`, `grandTotal`, `issuedAtUtc`, `estimateRevisionId`, `revisionNo`, `opportunityStage`, `opportunityRowVersion` และ `estimateRowVersion`. Integration test `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` ตรวจชื่อ property ทั้งชุดตรงกับ allowlist นี้. Response นี้เป็นผลการออก Quotation สำหรับแอปภายใน; ยังไม่มี endpoint สำหรับ customer preview/export หรือ rendered document และไม่ใช่ Customer-facing Output ตาม FR-QUO-002.
+- Response `201` ใช้ `QuotationResponse` และมีเฉพาะ `quotationId`, `estimateId`, `opportunityId`, `number`, `status`, `grandTotal`, `issuedAtUtc`, `estimateRevisionId`, `revisionNo`, `opportunityStage`, `opportunityRowVersion` และ `estimateRowVersion`. Integration test `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` ตรวจชื่อ property ทั้งชุดตรงกับ allowlist นี้. Response นี้เป็นผลการออก Quotation สำหรับแอปภายใน ไม่ใช่ Customer-facing Output ตาม FR-QUO-002; เอกสารสำหรับลูกค้าอยู่ใน [Quotation Document](#quotation-document).
 
 ```json
 {
@@ -257,6 +258,28 @@ Content-Type: application/json
   "estimateRowVersion": "<guid>"
 }
 ```
+
+## Quotation Document
+
+```http
+GET /api/v1/estimates/{estimateId}/quotation/document?locale=th|en
+Authorization: Bearer <firebase-id-token>
+```
+
+**สถานะ:** Implemented เป็น read-only projection; field allowlist และเงื่อนไขเอกสารเป็น **Proposed default (TEST_ONLY)** จนกว่า Sales + Finance ยืนยัน (CP-04).
+
+- Permission: `quotations.read` (แยกจาก `quotations.issue` เพื่อให้ผู้ดู/พิมพ์เอกสารไม่ต้องมีสิทธิ์ออกใบเสนอราคา). Role ที่มีอยู่ใน Production ต้องได้รับ `quotations.read` ก่อนเปิดใช้ ไม่เช่นนั้นผู้ใช้จะเปิดเอกสารไม่ได้ (403)
+- `locale` รับ `th` (default) หรือ `en`; ค่าอื่นถือเป็น `th`
+- Quotation ที่ใช้: ฉบับที่ออกล่าสุดของ Estimate (เรียง `issuedAtUtc` ลดหลั่น แล้ว `number`)
+- แหล่งข้อมูล: Revision ที่ผูกกับ Quotation (แก้ไขไม่ได้หลัง Approve) และ Customer Billing Snapshot ณ วันออก; ไม่อ่าน Customer/Item master ปัจจุบัน และไม่คำนวณยอดใหม่
+- Estimate ไม่มี Quotation หรืออยู่นอก Organization/Branch Scope คืน `404 RESOURCE_NOT_FOUND`; Billing Snapshot เสียคืน `409 ESTIMATE_INVALID_STATE`
+- เมื่อ `locale=en` และไม่มีข้อความอังกฤษ ฟิลด์ที่เลือกตามภาษา (`name`, `description`, `displayName`) เป็น `null` และ `hasIncompleteTranslations=true`; ไม่ fallback เป็นข้อความไทย
+
+**Allowlist (Response):** `number`, `issuedAtUtc`, `currency`, `locale`, `hasIncompleteTranslations`, `customer{customerType, displayName, displayNameTh, displayNameEn, legalName, taxIdentifier, branchCode, address{label, addressLine1, subdistrict, district, province, postalCode, countryCode}}`, `sections[]{code, name, nameTh, nameEn, subtotal, workItems[]{code, description, descriptionTh, descriptionEn, quantity, unitCode, unitPrice, lineTotal}}`, `totals{subtotal, discountType, discountValue, discountAmount, netBeforeTax, taxAmount, grandTotal}`
+
+**ห้ามอยู่ใน Response:** unit/total cost, margin/markup, selling rule และ reason, internal note, override reason, cost record/source id, approval trigger/threshold/route/reviewer, `itemId`, snapshot hash, row version, user id
+
+**ยังไม่มีในเอกสาร (รอ Business / slice ถัดไป):** `customerReference`, `validityDays`, `scopeNote`, payment/delivery terms, branding, เลขที่ Quotation ของลูกค้า, ลายเซ็น (CP-07) — ต้องเพิ่มใน Domain และ migration
 
 ## Accept Quotation
 

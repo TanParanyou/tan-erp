@@ -396,6 +396,64 @@ describe("EstimateCard", () => {
     expect(screen.queryByRole("button", { name: "ออกใบเสนอราคา" })).not.toBeInTheDocument();
   });
 
+  it("links to the quotation document only for quoted estimates when the user has quotations.read", () => {
+    const quotedEstimate: EstimateDetailResponse = {
+      id: "est-1234",
+      organizationId: "org-1",
+      branchId: "branch-1",
+      customerId: "cust-1",
+      opportunityId: "opp-1",
+      siteSurveyRevisionId: null,
+      siteSurveySnapshotHash: null,
+      number: "EST-2026-0099",
+      status: "quoted",
+      currentRevisionNo: 1,
+      rowVersion: "version-2",
+      createdAtUtc: "2026-09-18T00:00:00Z",
+      updatedAtUtc: "2026-09-18T00:00:00Z",
+      currentRevision: {
+        id: "rev-1",
+        estimateId: "est-1234",
+        revisionNo: 1,
+        status: "quoted",
+        currency: "THB",
+        calculationVersion: 1,
+        calculationPolicyVersion: "v1",
+        taxPolicyVersion: "v1",
+        netCost: 50000,
+        sellingBeforeDiscount: 70000,
+        discountAmount: 0,
+        netBeforeTax: 70000,
+        taxAmount: 4900,
+        grandTotal: 74900,
+        marginAmount: 20000,
+        marginRate: 0.2857,
+        markupRate: 0.4,
+        calculationSnapshotJson: null,
+        rowVersion: "rev-version-1",
+        createdAtUtc: "2026-09-18T00:00:00Z",
+        updatedAtUtc: "2026-09-18T00:00:00Z",
+        sections: [],
+      },
+    };
+
+    mockPermissions = ["quotations.issue"];
+    const { unmount } = renderWithClient(
+      <EstimateCard estimate={quotedEstimate} opportunityId="opp-1" opportunityRowVersion="opp-ver-1" canEdit={true} />
+    );
+    expect(screen.queryByRole("link", { name: "viewDocument" })).not.toBeInTheDocument();
+    unmount();
+
+    mockPermissions = ["quotations.read"];
+    renderWithClient(
+      <EstimateCard estimate={quotedEstimate} opportunityId="opp-1" opportunityRowVersion="opp-ver-1" canEdit={true} />
+    );
+    expect(screen.getByRole("link", { name: "viewDocument" })).toHaveAttribute(
+      "href",
+      "/th/estimates/est-1234/quotation"
+    );
+  });
+
   it("canIssue requires an approved revision and quotations.issue permission", () => {
     const mockEstimate: EstimateDetailResponse = {
       id: "est-1234",

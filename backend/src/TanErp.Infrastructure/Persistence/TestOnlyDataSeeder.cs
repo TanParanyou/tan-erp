@@ -145,6 +145,7 @@ public static class TestOnlyDataSeeder
             ("memberships.manage", "Manage Memberships"),
             ("roles.assign", "Assign Roles"),
             ("roles.assign-approval", "Approve Role Assignments"),
+            ("quotations.read", "Read Quotation Documents"),
             ("quotations.issue", "Issue Quotations"),
             ("quotations.accept", "Accept Quotations"),
             ("document-sequences.read", "Read Document Sequences"),
@@ -403,6 +404,9 @@ public static class TestOnlyDataSeeder
     {
         if (await db.Estimates.AnyAsync(estimate => estimate.Id == TestEstimateDemoId))
         {
+            // Databases seeded before the billing address fixture existed still need it to issue a quotation.
+            await EnsureEstimateDemoBillingAddressAsync(db, DateTimeOffset.UtcNow);
+            await EnsureEstimateDemoWorkItemReasonsAsync(db);
             return;
         }
 
@@ -420,6 +424,7 @@ public static class TestOnlyDataSeeder
             customerCode: "TEST-EST-CUSTOMER");
         customer.Activate(customer.RowVersion);
         db.Customers.Add(customer);
+        await EnsureEstimateDemoBillingAddressAsync(db, now);
 
         var address = new SiteAddressInput("1 ถนนสุขุมวิท", "คลองเตย", "คลองเตย", "กรุงเทพมหานคร", "10110", "TH");
         var site = Site.CreateActive(
@@ -512,6 +517,52 @@ public static class TestOnlyDataSeeder
             (CostComponentType.Labor, "ค่าแรงติดตั้ง TEST_ONLY", 1800m));
         revision.AddSection(section);
         db.Estimates.Add(estimate);
+    }
+
+    private const string DemoCustomWorkItemReasonCode = "TEST_ONLY_DEMO_CUSTOM_WORK";
+    private const string DemoCustomWorkItemReason = "รายการสมมติสำหรับทดสอบเท่านั้น";
+
+    private static async Task EnsureEstimateDemoWorkItemReasonsAsync(AppDbContext db)
+    {
+        // Demo work items are custom (no Item Master link); older seeds lack the reason required to submit.
+        var draftWorkItems = await db.EstimateWorkItems
+            .Where(item => item.OverrideReasonCode == null &&
+                           db.EstimateSections.Any(section => section.Id == item.EstimateSectionId &&
+                               db.EstimateRevisions.Any(revision => revision.Id == section.EstimateRevisionId &&
+                                   revision.EstimateId == TestEstimateDemoId &&
+                                   (revision.Status == EstimateRevisionStatus.Draft || revision.Status == EstimateRevisionStatus.Returned))))
+            .ToListAsync();
+        foreach (var item in draftWorkItems)
+        {
+            item.SetCustomWorkItemReason(DemoCustomWorkItemReasonCode, DemoCustomWorkItemReason);
+        }
+    }
+
+    private static async Task EnsureEstimateDemoBillingAddressAsync(AppDbContext db, DateTimeOffset now)
+    {
+        var hasBillingAddress = await db.CustomerAddresses.AnyAsync(address =>
+            address.CustomerId == TestEstimateDemoCustomerId && address.AddressType == "billing" && address.IsPrimary);
+        if (hasBillingAddress)
+        {
+            return;
+        }
+
+        // TEST_ONLY billing address so the demo estimate can be taken through quotation issuance.
+        db.CustomerAddresses.Add(new CustomerAddress(
+            Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4c41"),
+            TestEstimateDemoCustomerId,
+            TestOrgId,
+            TestUserId,
+            "billing",
+            "ที่อยู่เรียกเก็บเงิน TEST_ONLY",
+            "1 ถนนสุขุมวิท",
+            "คลองเตย",
+            "คลองเตย",
+            "กรุงเทพมหานคร",
+            "10110",
+            "TH",
+            true,
+            now));
     }
 
     private static async Task SeedItemCatalogDemoDataAsync(AppDbContext db)
@@ -953,6 +1004,7 @@ public static class TestOnlyDataSeeder
             workItem.AddCostComponent(component);
         }
 
+        workItem.SetCustomWorkItemReason(DemoCustomWorkItemReasonCode, DemoCustomWorkItemReason);
         section.AddWorkItem(workItem);
     }
 }

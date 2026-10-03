@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import type { EstimateDetailResponse } from "@/lib/api/api-client";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -43,6 +43,8 @@ export function EstimateCard({
   isCreating = false,
 }: EstimateCardProps) {
   const t = useTranslations("estimates");
+  const tQuotationDocument = useTranslations("quotationDocument");
+  const uiLocale = useLocale();
   const tCommon = useTranslations("common");
   const { toast } = useToast();
   const { selectedMembership } = useSelectedMembership();
@@ -57,6 +59,7 @@ export function EstimateCard({
   );
 
   const canIssue = can(selectedMembership, PERMISSIONS.QUOTATIONS_ISSUE);
+  const canReadQuotationDocument = can(selectedMembership, PERMISSIONS.QUOTATIONS_READ);
   const isApproved = estimate?.currentRevision?.status === "approved";
   const hasCalculationSnapshot = Boolean(estimate?.currentRevision?.calculationSnapshotJson);
   const grandTotal = estimate?.currentRevision?.grandTotal ?? 0;
@@ -207,6 +210,16 @@ export function EstimateCard({
           </div>
 
           <div className="flex items-center gap-2">
+            {estimate.currentRevision?.status === "quoted" && canReadQuotationDocument && (
+              <Button
+                href={`/${uiLocale}/estimates/${estimate.id}/quotation`}
+                variant="outline"
+                size="sm"
+              >
+                {tQuotationDocument("viewDocument")}
+              </Button>
+            )}
+
             {canIssueQuotation && (
               <Button
                 type="button"

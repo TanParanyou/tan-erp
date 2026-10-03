@@ -4739,6 +4739,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/estimates/{id}/quotation/document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    locale?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuotationDocumentResponse"];
+                        "application/json": components["schemas"]["QuotationDocumentResponse"];
+                        "text/json": components["schemas"]["QuotationDocumentResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/files/upload-sessions": {
         parameters: {
             query?: never;
@@ -11655,6 +11729,36 @@ export interface components {
         PreviewDocumentSequenceResponse: {
             preview?: string | null;
         };
+        QuotationAddressResponse: {
+            label?: string | null;
+            addressLine1?: string | null;
+            subdistrict?: string | null;
+            district?: string | null;
+            province?: string | null;
+            postalCode?: string | null;
+            countryCode?: string | null;
+        };
+        QuotationCustomerResponse: {
+            customerType?: string | null;
+            displayName?: string | null;
+            displayNameTh?: string | null;
+            displayNameEn?: string | null;
+            legalName?: string | null;
+            taxIdentifier?: string | null;
+            branchCode?: string | null;
+            address?: components["schemas"]["QuotationAddressResponse"];
+        };
+        QuotationDocumentResponse: {
+            number?: string | null;
+            /** Format: date-time */
+            issuedAtUtc?: string;
+            currency?: string | null;
+            locale?: string | null;
+            hasIncompleteTranslations?: boolean;
+            customer?: components["schemas"]["QuotationCustomerResponse"];
+            sections?: components["schemas"]["QuotationSectionResponse"][] | null;
+            totals?: components["schemas"]["QuotationTotalsResponse"];
+        };
         QuotationResponse: {
             /** Format: uuid */
             quotationId?: string;
@@ -11677,6 +11781,43 @@ export interface components {
             opportunityRowVersion?: string;
             /** Format: uuid */
             estimateRowVersion?: string;
+        };
+        QuotationSectionResponse: {
+            code?: string | null;
+            name?: string | null;
+            nameTh?: string | null;
+            nameEn?: string | null;
+            /** Format: double */
+            subtotal?: number;
+            workItems?: components["schemas"]["QuotationWorkItemResponse"][] | null;
+        };
+        QuotationTotalsResponse: {
+            /** Format: double */
+            subtotal?: number;
+            discountType?: string | null;
+            /** Format: double */
+            discountValue?: number;
+            /** Format: double */
+            discountAmount?: number;
+            /** Format: double */
+            netBeforeTax?: number;
+            /** Format: double */
+            taxAmount?: number;
+            /** Format: double */
+            grandTotal?: number;
+        };
+        QuotationWorkItemResponse: {
+            code?: string | null;
+            description?: string | null;
+            descriptionTh?: string | null;
+            descriptionEn?: string | null;
+            /** Format: double */
+            quantity?: number;
+            unitCode?: string | null;
+            /** Format: double */
+            unitPrice?: number;
+            /** Format: double */
+            lineTotal?: number;
         };
         ReassignOpportunityOwnerRequest: {
             /** Format: uuid */

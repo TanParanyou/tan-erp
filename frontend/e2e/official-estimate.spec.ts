@@ -417,6 +417,25 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
     const wonTimelineBadge = page.locator("div[class*='border-l-2']").getByText(/ปิดการขายสำเร็จ \(Won\)/i);
     await expect(wonTimelineBadge).toHaveCount(1);
 
+    // 12b. Customer-safe quotation document: preview, language switch, no internal data, narrow screen.
+    await page.getByRole("link", { name: "ดูเอกสารใบเสนอราคา" }).click();
+    await page.waitForURL(/\/th\/estimates\/[^/]+\/quotation$/);
+    const quotationDocument = page.getByTestId("quotation-document");
+    await expect(quotationDocument).toBeVisible();
+    await expect(quotationDocument.getByRole("heading", { name: "ใบเสนอราคา" })).toBeVisible();
+    await expect(quotationDocument).toContainText(customerNameTh);
+    await expect(quotationDocument).not.toContainText(/ต้นทุน|margin|markup|กำไร/i);
+    await page.getByRole("button", { name: "English" }).click();
+    await expect(quotationDocument.getByRole("heading", { name: "Quotation" })).toBeVisible();
+    await page.setViewportSize({ width: 320, height: 800 });
+    const documentPageDimensions = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      contentWidth: document.documentElement.scrollWidth,
+    }));
+    expect(documentPageDimensions.contentWidth).toBeLessThanOrEqual(documentPageDimensions.viewportWidth);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/th/opportunities/${oppData.id}`);
+
     // 13. Preserve the accepted quotation and start a separately versioned revision.
     const createRevisionButton = page.getByRole("button", { name: "สร้างรุ่นแก้ไข" });
     await expect(createRevisionButton).toBeVisible();
