@@ -88,12 +88,7 @@ export type RenameAdminUserRequest = components["schemas"]["RenameAdminUserReque
 export type UpdateAdminMembershipRequest = components["schemas"]["UpdateAdminMembershipRequest"];
 export type AssignAdminRoleRequest = components["schemas"]["AssignAdminRoleRequest"];
 
-export interface AdminUserListParams {
-  search?: string;
-  status?: string;
-  page?: number;
-  pageSize?: number;
-}
+export type AdminUserListParams = NonNullable<paths["/api/v1/admin/users"]["get"]["parameters"]["query"]>;
 
 export interface RequestOptions {
   token: string;
@@ -775,8 +770,10 @@ export class ApiClient {
     const query = new URLSearchParams();
     if (params.search) query.set("search", params.search);
     if (params.status) query.set("status", params.status);
+    if (params.sortBy) query.set("sortBy", params.sortBy);
+    if (params.sortOrder) query.set("sortOrder", params.sortOrder);
     if (params.page) query.set("page", String(params.page));
-    if (params.pageSize) query.set("pageSize", String(params.pageSize));
+    if (params.limit) query.set("limit", String(params.limit));
     const suffix = query.toString();
     return this.request<AdminUserListResponse>(`/api/v1/admin/users${suffix ? `?${suffix}` : ""}`, "GET", options);
   }

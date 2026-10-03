@@ -41,6 +41,7 @@ vi.mock("../api/user-admin-queries", () => {
           { id: "r-estimator", name: "Estimator", assignable: true, requiresApproval: false, permissionKeys: [] },
           { id: "r-approver", name: "Approver", assignable: true, requiresApproval: true, permissionKeys: [] },
           { id: "r-super", name: "Super", assignable: false, requiresApproval: false, permissionKeys: [] },
+          { id: "r-reader", name: "Reader", assignable: true, requiresApproval: false, permissionKeys: [] },
         ],
       },
     }),
@@ -129,6 +130,19 @@ describe("UserAdminDetail", () => {
     expect(labels).not.toContain("Estimator");
     expect(labels).not.toContain("Super");
     expect(labels).not.toContain("Approver (ต้องมีผู้ตรวจอนุมัติ)");
+  });
+
+  it("assigns a role with an idempotency key", async () => {
+    render(<UserAdminDetail userId="u1" />);
+
+    fireEvent.change(screen.getByLabelText("มอบบทบาทเพิ่ม"), { target: { value: "r-reader" } });
+    fireEvent.click(screen.getByRole("button", { name: "มอบบทบาท" }));
+
+    await waitFor(() => expect(mocks.assign).toHaveBeenCalledTimes(1));
+    const call = mocks.assign.mock.calls[0][0] as { membershipId: string; roleId: string; idempotencyKey: string };
+    expect(call.membershipId).toBe("m1");
+    expect(call.roleId).toBe("r-reader");
+    expect(call.idempotencyKey).toMatch(/[0-9a-f-]{36}/);
   });
 
   it("cancels a pending request with the request row version", async () => {

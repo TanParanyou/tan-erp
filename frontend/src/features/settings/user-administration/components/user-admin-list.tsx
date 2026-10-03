@@ -45,16 +45,23 @@ export function UserAdminList() {
     can(selectedMembership, PERMISSIONS.ROLES_ASSIGN);
 
   const listState = useListState<UserAdminFilters>({
-    schema: { single: ["status"] },
+    schema: {
+      defaultSort: "createdAt",
+      defaultOrder: "desc",
+      single: ["status"],
+      allowedSorts: ["displayName", "email", "createdAt"],
+    },
     debounceMs: 350,
   });
-  const { search, page, limit, filters } = listState.params;
+  const { search, page, limit, sort, order, filters } = listState.params;
 
   const { data, isLoading, isError, refetch } = useAdminUsers({
     search: search || undefined,
     status: filters.status || undefined,
+    sortBy: sort,
+    sortOrder: order,
     page,
-    pageSize: limit,
+    limit,
   });
 
   const users = data?.items ?? [];
@@ -68,6 +75,8 @@ export function UserAdminList() {
       {
         id: "user",
         header: t("table.user"),
+        sortable: true,
+        accessorKey: "displayName",
         className: "min-w-[240px]",
         cell: (_value, user) => (
           <TableEntityCell
@@ -179,6 +188,8 @@ export function UserAdminList() {
           onRetry={() => refetch()}
           emptyTitle={tCommon("table.noData")}
           emptyDescription={t("searchPlaceholder")}
+          sorting={{ key: sort ?? null, order }}
+          onSort={(key) => listState.actions.setSort(key)}
           pagination={{ page, limit, totalPages, totalItems }}
           onPageChange={(next) => listState.actions.setPage(next)}
           onLimitChange={(next) => listState.actions.setLimit(next as ListPageSize)}

@@ -27,14 +27,15 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 type AdminLocale = "th" | "en";
 
 export const userAdminKeys = {
-  all: (membershipId: string | null | undefined) => ["business", membershipId, "user-admin"] as const,
-  list: (membershipId: string | null | undefined, params: AdminUserListParams) =>
-    ["business", membershipId, "user-admin", "list", params] as const,
-  detail: (membershipId: string | null | undefined, userId: string) =>
-    ["business", membershipId, "user-admin", "detail", userId] as const,
-  roles: (membershipId: string | null | undefined) => ["business", membershipId, "user-admin", "roles"] as const,
-  requests: (membershipId: string | null | undefined, status: string) =>
-    ["business", membershipId, "user-admin", "role-requests", status] as const,
+  all: (membershipId: string | null | undefined) => ["business", membershipId] as const,
+  list: (membershipId: string | null | undefined, locale: AdminLocale, params: AdminUserListParams) =>
+    ["business", membershipId, locale, "user-admin", "list", params] as const,
+  detail: (membershipId: string | null | undefined, locale: AdminLocale, userId: string) =>
+    ["business", membershipId, locale, "user-admin", "detail", userId] as const,
+  roles: (membershipId: string | null | undefined, locale: AdminLocale) =>
+    ["business", membershipId, locale, "user-admin", "roles"] as const,
+  requests: (membershipId: string | null | undefined, locale: AdminLocale, status: string) =>
+    ["business", membershipId, locale, "user-admin", "role-requests", status] as const,
 };
 
 interface AdminContext {
@@ -61,6 +62,7 @@ function useAdminContext(): AdminContext {
   };
 }
 
+/** Access changes also change what /me and every permission-gated screen allow, so refresh all business queries. */
 function invalidateAdmin(queryClient: QueryClient, membershipId: string | undefined): void {
   void queryClient.invalidateQueries({ queryKey: userAdminKeys.all(membershipId) });
 }
@@ -68,7 +70,7 @@ function invalidateAdmin(queryClient: QueryClient, membershipId: string | undefi
 export function useAdminUsers(params: AdminUserListParams): UseQueryResult<AdminUserListResponse, Error> {
   const context = useAdminContext();
   return useQuery({
-    queryKey: userAdminKeys.list(context.membershipId, params),
+    queryKey: userAdminKeys.list(context.membershipId, context.locale, params),
     enabled: Boolean(context.membershipId),
     queryFn: async ({ signal }) => apiClient.listAdminUsers(params, await context.options({ signal })),
   });
@@ -77,7 +79,7 @@ export function useAdminUsers(params: AdminUserListParams): UseQueryResult<Admin
 export function useAdminUser(userId: string, enabled: boolean): UseQueryResult<AdminUserResponse, Error> {
   const context = useAdminContext();
   return useQuery({
-    queryKey: userAdminKeys.detail(context.membershipId, userId),
+    queryKey: userAdminKeys.detail(context.membershipId, context.locale, userId),
     enabled: Boolean(context.membershipId) && enabled,
     queryFn: async ({ signal }) => apiClient.getAdminUser(userId, await context.options({ signal })),
   });
@@ -86,7 +88,7 @@ export function useAdminUser(userId: string, enabled: boolean): UseQueryResult<A
 export function useAdminRoles(enabled = true): UseQueryResult<AdminRoleListResponse, Error> {
   const context = useAdminContext();
   return useQuery({
-    queryKey: userAdminKeys.roles(context.membershipId),
+    queryKey: userAdminKeys.roles(context.membershipId, context.locale),
     enabled: Boolean(context.membershipId) && enabled,
     queryFn: async ({ signal }) => apiClient.listAdminRoles(await context.options({ signal })),
   });
@@ -95,17 +97,22 @@ export function useAdminRoles(enabled = true): UseQueryResult<AdminRoleListRespo
 export function useAdminRoleRequests(status: string, enabled = true): UseQueryResult<AdminRoleRequestListResponse, Error> {
   const context = useAdminContext();
   return useQuery({
-    queryKey: userAdminKeys.requests(context.membershipId, status),
+    queryKey: userAdminKeys.requests(context.membershipId, context.locale, status),
     enabled: Boolean(context.membershipId) && enabled,
     queryFn: async ({ signal }) => apiClient.listAdminRoleRequests(status, await context.options({ signal })),
   });
 }
 
-export function useCreateAdminUser(): UseMutationResult<AdminUserResponse, Error, CreateAdminUserRequest> {
+export function useCreateAdminUser(): UseMutationResult<
+  AdminUserResponse,
+  Error,
+  { payload: CreateAdminUserRequest; idempotencyKey: string }
+> {
   const queryClient = useQueryClient();
   const context = useAdminContext();
   return useMutation({
-    mutationFn: async (payload) => apiClient.createAdminUser(payload, await context.options()),
+    mutationFn: async ({ payload, idempotencyKey }) =>
+      apiClient.createAdminUser(payload, await context.options({ idempotencyKey })),
     onSuccess: () => invalidateAdmin(queryClient, context.membershipId),
   });
 }
@@ -158,11 +165,16 @@ export function useSetAdminMembershipActive(): UseMutationResult<
   });
 }
 
-export function useAssignAdminRole(): UseMutationResult<AdminAssignRoleResponse, Error, { membershipId: string; roleId: string }> {
+export function useAssignAdminRole(): UseMutationResult<
+  AdminAssignRoleResponse,
+  Error,
+  { membershipId: string; roleId: string; idempotencyKey: string }
+> {
   const queryClient = useQueryClient();
   const context = useAdminContext();
   return useMutation({
-    mutationFn: async ({ membershipId, roleId }) => apiClient.assignAdminRole(membershipId, { roleId }, await context.options()),
+    mutationFn: async ({ membershipId, roleId, idempotencyKey }) =>
+      apiClient.assignAdminRole(membershipId, { roleId }, await context.options({ idempotencyKey })),
     onSuccess: () => invalidateAdmin(queryClient, context.membershipId),
   });
 }

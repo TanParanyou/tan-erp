@@ -78,8 +78,10 @@ export interface paths {
                 query?: {
                     search?: string;
                     status?: string;
+                    sortBy?: string;
+                    sortOrder?: string;
                     page?: number;
-                    pageSize?: number;
+                    limit?: number;
                 };
                 header?: never;
                 path?: never;

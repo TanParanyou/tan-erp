@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
@@ -37,6 +37,8 @@ export function UserAdminEditor() {
   const router = useRouter();
   const { toast } = useToast();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // One key per submit intent: a retry after a network failure replays the same request instead of creating twice.
+  const intentRef = useRef<{ fingerprint: string; key: string } | null>(null);
 
   const rolesQuery = useAdminRoles();
   const branchesQuery = useOrganizationBranches();
@@ -61,13 +63,19 @@ export function UserAdminEditor() {
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
+    const payload = {
+      displayName: values.displayName.trim(),
+      email: values.email.trim(),
+      branchId: values.branchId || null,
+      roleIds: values.roleIds,
+    };
+    const fingerprint = JSON.stringify(payload);
+    if (intentRef.current?.fingerprint !== fingerprint) {
+      intentRef.current = { fingerprint, key: crypto.randomUUID() };
+    }
     try {
-      const user = await createMutation.mutateAsync({
-        displayName: values.displayName.trim(),
-        email: values.email.trim(),
-        branchId: values.branchId || null,
-        roleIds: values.roleIds,
-      });
+      const user = await createMutation.mutateAsync({ payload, idempotencyKey: intentRef.current.key });
+      intentRef.current = null;
       toast.success(t("createSuccess"));
       router.push(`/${locale}/settings/users/${user.id}`);
     } catch (error: unknown) {
@@ -81,6 +89,7 @@ export function UserAdminEditor() {
   return (
     <FormContainer
       asForm
+      noValidate
       onSubmit={onSubmit}
       maxWidth="lg"
       header={

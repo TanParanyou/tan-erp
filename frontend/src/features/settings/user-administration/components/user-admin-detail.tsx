@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Alert } from "@/components/ui/Alert";
@@ -82,6 +82,7 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
   const revokeMutation = useRevokeAdminRole();
   const decideMutation = useDecideAdminRoleRequest();
 
+  const assignIntentRef = useRef<{ fingerprint: string; key: string } | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState<string | null>(null);
@@ -158,8 +159,17 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
     const roleId = roleChoice[membership.id ?? ""];
     if (!membership.id || !roleId) return;
     setErrorMessage(null);
+    const fingerprint = `${membership.id}|${roleId}`;
+    if (assignIntentRef.current?.fingerprint !== fingerprint) {
+      assignIntentRef.current = { fingerprint, key: crypto.randomUUID() };
+    }
     try {
-      const outcome = await assignMutation.mutateAsync({ membershipId: membership.id, roleId });
+      const outcome = await assignMutation.mutateAsync({
+        membershipId: membership.id,
+        roleId,
+        idempotencyKey: assignIntentRef.current.key,
+      });
+      assignIntentRef.current = null;
       setRoleChoice((current) => ({ ...current, [membership.id ?? ""]: "" }));
       toast.success(outcome.pendingRequest ? t("assignPendingApproval") : t("assigned"));
     } catch (error: unknown) {
