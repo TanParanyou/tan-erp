@@ -13,6 +13,7 @@ import enMessages from "@/messages/en.json";
 import { useQuotationDocument } from "../api/estimate-queries";
 import { QuotationDocumentView, type QuotationDocumentLabel } from "./quotation-document-view";
 import { QuotationLifecyclePanel } from "./quotation-lifecycle-panel";
+import { AcceptanceLinksPanel } from "./acceptance-links-panel";
 
 interface QuotationDocumentPageProps {
   estimateId: string;
@@ -100,6 +101,7 @@ export function QuotationDocumentPage({ estimateId, uiLocale }: QuotationDocumen
       )}
 
       <QuotationLifecyclePanel estimateId={estimateId} />
+      <AcceptanceLinksPanel estimateId={estimateId} />
 
       {query.data && (
         <QuotationDocumentView document={query.data} documentLocale={documentLocale} label={label} />

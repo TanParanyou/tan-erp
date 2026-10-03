@@ -50,6 +50,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Production.WorkOrderMaterial> WorkOrderMaterials => Set<TanErp.Domain.Production.WorkOrderMaterial>();
     public DbSet<TanErp.Domain.Production.WorkOrderTransaction> WorkOrderTransactions => Set<TanErp.Domain.Production.WorkOrderTransaction>();
     public DbSet<TanErp.Domain.Mrp.MrpRun> MrpRuns => Set<TanErp.Domain.Mrp.MrpRun>();
+    public DbSet<TanErp.Domain.Commercial.QuotationAcceptanceLink> QuotationAcceptanceLinks => Set<TanErp.Domain.Commercial.QuotationAcceptanceLink>();
+    public DbSet<TanErp.Domain.Commercial.QuotationAcceptanceEvidence> QuotationAcceptanceEvidences => Set<TanErp.Domain.Commercial.QuotationAcceptanceEvidence>();
     public DbSet<TanErp.Domain.Mrp.MrpRecommendation> MrpRecommendations => Set<TanErp.Domain.Mrp.MrpRecommendation>();
     public DbSet<TanErp.Domain.Inventory.StockBalance> StockBalances => Set<TanErp.Domain.Inventory.StockBalance>();
     public DbSet<TanErp.Domain.Inventory.StockDocument> StockDocuments => Set<TanErp.Domain.Inventory.StockDocument>();

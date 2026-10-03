@@ -11987,6 +11987,158 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/v1/quotation-acceptance/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    locale?: string;
+                };
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PublicAcceptanceViewResponse"];
+                        "application/json": components["schemas"]["PublicAcceptanceViewResponse"];
+                        "text/json": components["schemas"]["PublicAcceptanceViewResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/v1/quotation-acceptance/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PublicAcceptRequest"];
+                    "text/json": components["schemas"]["PublicAcceptRequest"];
+                    "application/*+json": components["schemas"]["PublicAcceptRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PublicAcceptanceResponse"];
+                        "application/json": components["schemas"]["PublicAcceptanceResponse"];
+                        "text/json": components["schemas"]["PublicAcceptanceResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/purchase-orders": {
         parameters: {
             query?: never;
@@ -12526,6 +12678,157 @@ export interface paths {
                 };
                 /** @description Unprocessable Content */
                 422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quotations/{id}/acceptance-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AcceptanceLinkListResponse"];
+                        "application/json": components["schemas"]["AcceptanceLinkListResponse"];
+                        "text/json": components["schemas"]["AcceptanceLinkListResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateAcceptanceLinkRequest"];
+                    "text/json": components["schemas"]["CreateAcceptanceLinkRequest"];
+                    "application/*+json": components["schemas"]["CreateAcceptanceLinkRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreatedAcceptanceLinkResponse"];
+                        "application/json": components["schemas"]["CreatedAcceptanceLinkResponse"];
+                        "text/json": components["schemas"]["CreatedAcceptanceLinkResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/acceptance-links/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AcceptanceLinkResponse"];
+                        "application/json": components["schemas"]["AcceptanceLinkResponse"];
+                        "text/json": components["schemas"]["AcceptanceLinkResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -15022,6 +15325,39 @@ export interface components {
             /** Format: date-time */
             acceptedAtUtc?: string;
         };
+        AcceptanceEvidenceResponse: {
+            signerName?: string | null;
+            signerRole?: string | null;
+            consentVersion?: string | null;
+            hasSignatureImage?: boolean;
+            signatureHash?: string | null;
+            /** Format: date-time */
+            acceptedAtUtc?: string;
+        };
+        AcceptanceLinkListResponse: {
+            items?: components["schemas"]["AcceptanceLinkResponse"][] | null;
+        };
+        AcceptanceLinkResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            quotationId?: string;
+            quotationNumber?: string | null;
+            status?: string | null;
+            quotationStatus?: string | null;
+            isUsable?: boolean;
+            signerHint?: string | null;
+            /** Format: date-time */
+            expiresAtUtc?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            createdBy?: components["schemas"]["QuotationPersonResponse"];
+            /** Format: date-time */
+            revokedAtUtc?: string | null;
+            /** Format: date-time */
+            acceptedAtUtc?: string | null;
+            evidence?: components["schemas"]["AcceptanceEvidenceResponse"];
+        };
         ActorSummaryResponse: {
             /** Format: uuid */
             id?: string;
@@ -15518,6 +15854,11 @@ export interface components {
             /** Format: uuid */
             rowVersion?: string;
         };
+        CreateAcceptanceLinkRequest: {
+            /** Format: int32 */
+            lifetimeDays?: number | null;
+            signerHint?: string | null;
+        };
         CreateAdminUserRequest: {
             displayName?: string | null;
             email?: string | null;
@@ -15751,6 +16092,11 @@ export interface components {
             /** Format: date-time */
             expiresAtUtc?: string;
             slots?: components["schemas"]["UploadSlotResponse"][] | null;
+        };
+        CreatedAcceptanceLinkResponse: {
+            link?: components["schemas"]["AcceptanceLinkResponse"];
+            token?: string | null;
+            publicPath?: string | null;
         };
         CurrentUserResponse: {
             user?: components["schemas"]["UserDto"];
@@ -17185,6 +17531,30 @@ export interface components {
             actor?: components["schemas"]["ProjectPersonResponse"];
             /** Format: date-time */
             occurredAtUtc?: string;
+        };
+        PublicAcceptRequest: {
+            signerName?: string | null;
+            signerRole?: string | null;
+            consentAccepted?: boolean;
+            consentVersion?: string | null;
+            signatureImage?: string | null;
+        };
+        PublicAcceptanceResponse: {
+            status?: string | null;
+            /** Format: date-time */
+            acceptedAtUtc?: string;
+            quotationNumber?: string | null;
+            evidence?: components["schemas"]["AcceptanceEvidenceResponse"];
+        };
+        PublicAcceptanceViewResponse: {
+            status?: string | null;
+            /** Format: date-time */
+            expiresAtUtc?: string;
+            signerHint?: string | null;
+            consentVersion?: string | null;
+            /** Format: date-time */
+            acceptedAtUtc?: string | null;
+            document?: components["schemas"]["QuotationDocumentResponse"];
         };
         PurchaseOrderActionRequest: {
             note?: string | null;

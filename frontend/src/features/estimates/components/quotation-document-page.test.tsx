@@ -27,6 +27,7 @@ vi.mock("@/lib/membership/selected-membership-context", () => ({
 
 // The lifecycle panel has its own tests; this page test only covers the document itself.
 vi.mock("./quotation-lifecycle-panel", () => ({ QuotationLifecyclePanel: () => null }));
+vi.mock("./acceptance-links-panel", () => ({ AcceptanceLinksPanel: () => null }));
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => `${namespace}.${key}`,

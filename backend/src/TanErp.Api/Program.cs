@@ -173,6 +173,8 @@ builder.Services.AddScoped<TanErp.Application.Procurement.IProcurementStore, Tan
 builder.Services.AddScoped<TanErp.Application.Procurement.ProcurementHandler>();
 builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationLifecycleStore, TanErp.Infrastructure.Persistence.Commercial.QuotationLifecycleStore>();
 builder.Services.AddScoped<TanErp.Application.Commercial.QuotationLifecycleHandler>();
+builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationAcceptanceStore, TanErp.Infrastructure.Persistence.Commercial.QuotationAcceptanceStore>();
+builder.Services.AddScoped<TanErp.Application.Commercial.QuotationAcceptanceHandler>();
 builder.Services.AddScoped<TanErp.Application.Production.IProductionStore, TanErp.Infrastructure.Persistence.Production.ProductionStore>();
 builder.Services.AddScoped<TanErp.Application.Production.ProductionHandler>();
 builder.Services.AddScoped<TanErp.Application.Mrp.IMrpStore, TanErp.Infrastructure.Persistence.Mrp.MrpStore>();
@@ -215,6 +217,7 @@ builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
         FirebaseAuthenticationHandler.SchemeName, null);
 
 builder.Services.AddAuthorization();
+TanErp.Api.PublicRateLimiting.AddPublicRateLimiting(builder.Services, builder.Configuration);
 
 // Liveness (process is up) and readiness (dependencies usable); see docs/06-operations/observability.md.
 builder.Services.AddHealthChecks()
@@ -252,6 +255,7 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Test"))
     app.UseHttpsRedirection();
 }
 
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

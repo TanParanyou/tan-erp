@@ -47,3 +47,36 @@ export function useQuotationLifecycleMutation(estimateId: string) {
     },
   });
 }
+
+export function acceptanceLinksKey(membershipId: string | null | undefined, locale: UiLocale, quotationId: string | null | undefined) {
+  return ["business", membershipId, locale, "estimates", "acceptance-links", quotationId] as const;
+}
+
+export function useAcceptanceLinks(quotationId: string | undefined, enabled = true) {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: acceptanceLinksKey(membershipId, locale, quotationId),
+    enabled: Boolean(membershipId && quotationId) && enabled,
+    queryFn: async ({ signal }) => apiClient.listAcceptanceLinks(quotationId ?? "", await options(undefined, signal)),
+  });
+}
+
+/** Creating returns the token once; revoking refreshes the list. Quotation history is refreshed because acceptance changes its status. */
+export function useAcceptanceLinkMutations(quotationId: string) {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+  const refresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: acceptanceLinksKey(membershipId, locale, quotationId) });
+    await queryClient.invalidateQueries({ queryKey: ["business", membershipId, locale, "estimates"] });
+  };
+  const create = useMutation({
+    mutationFn: async (input: { lifetimeDays: number; signerHint: string | null }) =>
+      apiClient.createAcceptanceLink(quotationId, { lifetimeDays: input.lifetimeDays, signerHint: input.signerHint }, await options()),
+    onSuccess: refresh,
+  });
+  const revoke = useMutation({
+    mutationFn: async (input: { linkId: string }) => apiClient.revokeAcceptanceLink(input.linkId, await options()),
+    onSuccess: refresh,
+  });
+  return { create, revoke };
+}

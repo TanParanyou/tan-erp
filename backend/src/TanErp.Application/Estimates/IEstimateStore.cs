@@ -89,7 +89,8 @@ public interface IEstimateStore
         string keyHash,
         string payloadHash,
         string traceId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? expectedQuotationId = null);
 
     Task<Result<TanErp.Application.Estimates.GetQuotationDocument.QuotationDocumentProjection>> GetQuotationDocumentAsync(
         Guid organizationId,

@@ -2860,5 +2860,62 @@
       "CUSTOMER_QUOTATION_BILLING_NOT_READY": "The customer's tax and billing details are incomplete.",
       "IDEMPOTENCY_KEY_REUSED": "This request was already used with different data. Please retry."
     }
+  },
+  "externalAcceptance": {
+    "links": {
+      "title": "Customer acceptance links for {number}",
+      "create": "Create link",
+      "createTitle": "Create a customer acceptance link",
+      "createDescription": "The customer opens the link to review and accept without signing in. The link is shown only once and stored only as a hash.",
+      "lifetimeDays": "Link lifetime (days, 1-30)",
+      "signerHint": "Expected signer (optional)",
+      "confirmCreate": "Create link",
+      "shownOnce": "Copy this link now — it will not be shown again.",
+      "copy": "Copy",
+      "copied": "Link copied.",
+      "copyFailed": "Could not copy. Please copy it manually.",
+      "empty": "No links yet.",
+      "expires": "Expires {date}",
+      "revoke": "Revoke",
+      "revoked": "Link revoked.",
+      "evidence": "Signed by {name} ({role}) on {date}",
+      "hasSignature": "signature image attached",
+      "states": {
+        "active": "Active",
+        "expired": "Expired",
+        "revoked": "Revoked",
+        "accepted": "Accepted",
+        "unavailable": "Unavailable"
+      }
+    },
+    "public": {
+      "unavailableTitle": "This link is not available",
+      "unavailableDetail": "The link may have expired, been revoked, or the quotation may have been replaced. Please contact the sender for a new link.",
+      "documentLanguage": "Document language",
+      "languageTh": "TH",
+      "languageEn": "EN",
+      "acceptTitle": "Accept this quotation",
+      "expires": "This link is valid until {date}",
+      "signerName": "Signer's full name",
+      "signerRole": "Position",
+      "signature": "Signature (optional)",
+      "clearSignature": "Clear signature",
+      "consentText": "I am authorised to sign for the customer and accept this quotation as shown, including its totals.",
+      "accept": "Accept quotation",
+      "nameRequired": "Enter a full name of at least 2 characters.",
+      "consentRequired": "You must tick the consent statement.",
+      "acceptedTitle": "The quotation has been accepted",
+      "acceptedDetail": "Recorded on {date}. Thank you."
+    },
+    "errors": {
+      "failed": "The action failed. Please try again.",
+      "ACCEPTANCE_LINK_UNAVAILABLE": "This link is not available.",
+      "ACCEPTANCE_LINK_INVALID_STATE": "The link status does not allow this action.",
+      "ACCEPTANCE_LINK_LIFETIME_INVALID": "The lifetime must be 1-30 days and the signer hint at most 200 characters.",
+      "ACCEPTANCE_SUBMISSION_INVALID": "Invalid data. The name needs 2-200 characters and the signature must be a PNG of limited size.",
+      "ACCEPTANCE_CONSENT_REQUIRED": "The current consent statement must be accepted.",
+      "ACCEPTANCE_CONFLICT": "The document changed. Please reload the page and try again.",
+      "QUOTATION_INVALID_STATE": "The quotation status does not allow this action."
+    }
   }
 }

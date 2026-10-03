@@ -146,10 +146,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-07 — External Acceptance/Signatures
 
-- [ ] ยืนยันผู้มีอำนาจแทนลูกค้า, identity/link lifetime/revocation, consent, ลายเซ็นและหลักฐานที่ต้องเก็บ พร้อม retention/legal review
-- [ ] สร้าง public/customer projection contract ที่แยกจาก internal ERP; ป้องกัน token replay/leakage, enumeration และ rate abuse ตาม threat model
-- [ ] ทำ customer journey ดูเอกสาร/ยอมรับ/ลงนาม และ internal audit โดย reuse acceptance transaction/idempotency; reject เอกสาร superseded/void ตาม CP-06
-- [ ] ทดสอบ expired/revoked link, double accept, race กับ amendment/void, unauthorized signer และทุก response/artifact ไม่มีข้อมูลต้นทุน
+- [x] ยืนยันผู้มีอำนาจแทนลูกค้า, identity/link lifetime/revocation, consent, ลายเซ็นและหลักฐานที่ต้องเก็บ พร้อม retention/legal review
+- [x] สร้าง public/customer projection contract ที่แยกจาก internal ERP; ป้องกัน token replay/leakage, enumeration และ rate abuse ตาม threat model
+- [x] ทำ customer journey ดูเอกสาร/ยอมรับ/ลงนาม และ internal audit โดย reuse acceptance transaction/idempotency; reject เอกสาร superseded/void ตาม CP-06
+- [x] ทดสอบ expired/revoked link, double accept, race กับ amendment/void, unauthorized signer และทุก response/artifact ไม่มีข้อมูลต้นทุน
 
 **ผลส่งมอบ/เกณฑ์จบ:** Acceptance ผูกกับ quotation version และผู้ยืนยัน/หลักฐานที่ตรวจย้อนหลังได้; ไม่ถือภาพลายเซ็นเพียงอย่างเดียวเป็นนโยบายการลงนามที่ธุรกิจอนุมัติ.
 

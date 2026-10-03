@@ -211,6 +211,13 @@ export interface ListMrpRunsParams {
 export type QuotationHistoryResponse = components["schemas"]["QuotationHistoryResponse"];
 export type QuotationHistoryItemResponse = components["schemas"]["QuotationHistoryItemResponse"];
 export type QuotationLifecycleAction = "void" | "amend";
+export type CreateAcceptanceLinkRequest = components["schemas"]["CreateAcceptanceLinkRequest"];
+export type CreatedAcceptanceLinkResponse = components["schemas"]["CreatedAcceptanceLinkResponse"];
+export type AcceptanceLinkResponse = components["schemas"]["AcceptanceLinkResponse"];
+export type AcceptanceLinkListResponse = components["schemas"]["AcceptanceLinkListResponse"];
+export type PublicAcceptanceViewResponse = components["schemas"]["PublicAcceptanceViewResponse"];
+export type PublicAcceptRequest = components["schemas"]["PublicAcceptRequest"];
+export type PublicAcceptanceResponse = components["schemas"]["PublicAcceptanceResponse"];
 export type WarehouseRequest = components["schemas"]["WarehouseRequest"];
 export type WarehouseResponse = components["schemas"]["WarehouseResponse"];
 export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
@@ -346,6 +353,17 @@ export class ApiClient {
       headers["Content-Type"] = "application/json";
     }
 
+    return this.execute<T>(endpoint, method, headers, body, signal);
+  }
+
+  /** Sends the request and maps problem-details responses to ApiError; shared by authenticated and public calls. */
+  private async execute<T>(
+    endpoint: string,
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
+    headers: Record<string, string>,
+    body: unknown,
+    signal?: AbortSignal
+  ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
     try {
@@ -941,6 +959,38 @@ export class ApiClient {
 
   async quotationLifecycle(quotationId: string, action: QuotationLifecycleAction, rowVersion: string, reason: string, options: RequestOptions): Promise<QuotationHistoryResponse> {
     return this.request<QuotationHistoryResponse>(`/api/v1/quotations/${encodeURIComponent(quotationId)}/${action}`, "POST", { ...options, ifMatch: rowVersion }, { reason });
+  }
+
+  async createAcceptanceLink(quotationId: string, payload: CreateAcceptanceLinkRequest, options: RequestOptions): Promise<CreatedAcceptanceLinkResponse> {
+    return this.request<CreatedAcceptanceLinkResponse>(`/api/v1/quotations/${encodeURIComponent(quotationId)}/acceptance-links`, "POST", options, payload);
+  }
+
+  async listAcceptanceLinks(quotationId: string, options: RequestOptions): Promise<AcceptanceLinkListResponse> {
+    return this.request<AcceptanceLinkListResponse>(`/api/v1/quotations/${encodeURIComponent(quotationId)}/acceptance-links`, "GET", options);
+  }
+
+  async revokeAcceptanceLink(linkId: string, options: RequestOptions): Promise<AcceptanceLinkResponse> {
+    return this.request<AcceptanceLinkResponse>(`/api/v1/acceptance-links/${encodeURIComponent(linkId)}/revoke`, "POST", options);
+  }
+
+  /** Customer-facing calls: no ERP login; the token in the path is the credential. */
+  async getPublicAcceptance(token: string, locale: "th" | "en", signal?: AbortSignal): Promise<PublicAcceptanceViewResponse> {
+    return this.execute<PublicAcceptanceViewResponse>(
+      `/api/public/v1/quotation-acceptance/${encodeURIComponent(token)}?locale=${locale}`,
+      "GET",
+      { Accept: "application/json", "Accept-Language": locale },
+      undefined,
+      signal
+    );
+  }
+
+  async acceptPublicQuotation(token: string, payload: PublicAcceptRequest, locale: "th" | "en"): Promise<PublicAcceptanceResponse> {
+    return this.execute<PublicAcceptanceResponse>(
+      `/api/public/v1/quotation-acceptance/${encodeURIComponent(token)}/accept`,
+      "POST",
+      { Accept: "application/json", "Accept-Language": locale, "Content-Type": "application/json" },
+      payload
+    );
   }
 
   async getQuotationDocument(

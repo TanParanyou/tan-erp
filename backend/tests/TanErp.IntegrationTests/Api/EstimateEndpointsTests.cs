@@ -3102,4 +3102,176 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal(1, await db.AuditEvents.CountAsync(a => a.Action == "quotations.voided" && a.ResourceId == quotation.QuotationId.ToString()));
         Assert.DoesNotContain("ลูกค้าถอนคำขอ", await db.AuditEvents.Where(a => a.ResourceId == quotation.QuotationId.ToString()).Select(a => a.ChangesJson).FirstAsync());
     }
+
+    private async Task<(Guid LinkId, string Token)> CreateAcceptanceLinkAsync(Guid quotationId, int? days = null)
+    {
+        var request = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/quotations/{quotationId}/acceptance-links", "token-org-a", MembershipAId);
+        request.Content = JsonContent.Create(new TanErp.Api.Contracts.Commercial.CreateAcceptanceLinkRequest(days, "คุณสมชาย"));
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
+        var created = (await response.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.CreatedAcceptanceLinkResponse>())!;
+        Assert.True(created.Token.Length >= 40);
+        Assert.Equal($"/accept/{created.Token}", created.PublicPath);
+        return (created.Link.Id, created.Token);
+    }
+
+    private Task<HttpResponseMessage> PublicGetAsync(string token, HttpClient? client = null) =>
+        (client ?? _client).SendAsync(new HttpRequestMessage(HttpMethod.Get, $"/api/public/v1/quotation-acceptance/{token}?locale=th"));
+
+    private static TanErp.Api.Contracts.Commercial.PublicAcceptRequest Submission(string name = "คุณสมชาย ใจดี", bool consent = true, string? signature = null, string? version = "2026-10-v1") =>
+        new(name, "กรรมการผู้จัดการ", consent, version, signature);
+
+    private Task<HttpResponseMessage> PublicAcceptAsync(string token, TanErp.Api.Contracts.Commercial.PublicAcceptRequest body, HttpClient? client = null) =>
+        (client ?? _client).SendAsync(new HttpRequestMessage(HttpMethod.Post, $"/api/public/v1/quotation-acceptance/{token}/accept") { Content = JsonContent.Create(body) });
+
+    // 1x1 transparent PNG.
+    private const string TinyPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
+    [Fact]
+    public async Task ExternalAcceptance_CustomerAcceptsOnce_WithEvidence_AndNoCostData()
+    {
+        var (estimateId, oppId, quotation) = await IssueQuotedEstimateAsync("ext-accept");
+        var (linkId, token) = await CreateAcceptanceLinkAsync(quotation.QuotationId);
+
+        // The token is stored only as a hash and never listed again.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var row = await db.QuotationAcceptanceLinks.AsNoTracking().SingleAsync(l => l.Id == linkId);
+            Assert.NotEqual(token, row.TokenHash);
+            Assert.Equal(64, row.TokenHash.Length);
+        }
+
+        var listBody = await (await _client.SendAsync(CreateAuthenticatedRequest(HttpMethod.Get, $"/api/v1/quotations/{quotation.QuotationId}/acceptance-links", "token-org-a", MembershipAId))).Content.ReadAsStringAsync();
+        Assert.DoesNotContain(token, listBody);
+
+        var view = await PublicGetAsync(token);
+        Assert.Equal(HttpStatusCode.OK, view.StatusCode);
+        Assert.Equal("no-store", view.Headers.CacheControl?.ToString());
+        var viewBody = await view.Content.ReadAsStringAsync();
+        Assert.Contains(quotation.Number, viewBody);
+        foreach (var forbidden in new[] { "costComponent", "unitCost", "margin", "supplier", "estimateId", "organizationId", "createdByUserId" })
+        {
+            Assert.DoesNotContain(forbidden, viewBody, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Missing consent, wrong consent version, short name and a non-PNG signature are all refused without accepting.
+        Assert.Equal("ACCEPTANCE_CONSENT_REQUIRED", await ProblemCodeAsync(await PublicAcceptAsync(token, Submission(consent: false))));
+        Assert.Equal("ACCEPTANCE_CONSENT_REQUIRED", await ProblemCodeAsync(await PublicAcceptAsync(token, Submission(version: "old"))));
+        Assert.Equal("ACCEPTANCE_SUBMISSION_INVALID", await ProblemCodeAsync(await PublicAcceptAsync(token, Submission(name: "ก"))));
+        Assert.Equal("ACCEPTANCE_SUBMISSION_INVALID", await ProblemCodeAsync(await PublicAcceptAsync(token, Submission(signature: "bm90LWEtcG5n"))));
+        Assert.Equal("issued", (await HistoryAsync(estimateId)).Items.Single().Status);
+
+        var accepted = await PublicAcceptAsync(token, Submission(signature: TinyPng));
+        Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+        var result = (await accepted.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.PublicAcceptanceResponse>())!;
+        Assert.Equal(("accepted", quotation.Number, true), (result.Status, result.QuotationNumber, result.Evidence.HasSignatureImage));
+
+        // A repeated submission (refresh/double click) returns the same result and records nothing new.
+        var again = await PublicAcceptAsync(token, Submission(name: "คนอื่น"));
+        Assert.Equal(HttpStatusCode.OK, again.StatusCode);
+        Assert.Equal(result.Evidence.SignerName, (await again.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.PublicAcceptanceResponse>())!.Evidence.SignerName);
+
+        using var verify = _factory.Services.CreateScope();
+        var verifyDb = verify.ServiceProvider.GetRequiredService<AppDbContext>();
+        var evidence = await verifyDb.QuotationAcceptanceEvidences.AsNoTracking().SingleAsync(e => e.LinkId == linkId);
+        Assert.Equal(("คุณสมชาย ใจดี", "2026-10-v1", 64), (evidence.SignerName, evidence.ConsentVersion, evidence.ClientAddressHash.Length));
+        Assert.Equal(64, evidence.SignatureHash!.Length);
+        Assert.Equal("accepted", (await verifyDb.Quotations.AsNoTracking().SingleAsync(q => q.Id == quotation.QuotationId)).Status);
+        Assert.Equal(OpportunityStage.Won, (await verifyDb.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId)).Stage);
+        Assert.Equal(1, await verifyDb.OpportunityStageHistories.CountAsync(h => h.OpportunityId == oppId && h.ToStage == OpportunityStage.Won));
+        Assert.DoesNotContain("คุณสมชาย ใจดี", string.Join("|", await verifyDb.AuditEvents.Where(a => a.ResourceId == linkId.ToString()).Select(a => a.ChangesJson).ToListAsync()));
+
+        // The internal list now shows the evidence summary.
+        var afterList = (await (await _client.SendAsync(CreateAuthenticatedRequest(HttpMethod.Get, $"/api/v1/quotations/{quotation.QuotationId}/acceptance-links", "token-org-a", MembershipAId)))
+            .Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.AcceptanceLinkListResponse>())!;
+        Assert.Equal("accepted", afterList.Items.Single().Status);
+        Assert.Equal("คุณสมชาย ใจดี", afterList.Items.Single().Evidence!.SignerName);
+    }
+
+    [Fact]
+    public async Task ExternalAcceptance_UnusableLinks_AreIndistinguishableFromUnknownTokens()
+    {
+        var (estimateId, _, quotation) = await IssueQuotedEstimateAsync("ext-unusable");
+
+        // Unknown, malformed and too-short tokens all look the same.
+        foreach (var token in new[] { "short", new string('x', 43), "Zm9vYmFyYmF6cXV4Zm9vYmFyYmF6cXV4Zm9vYmFy" })
+        {
+            var response = await PublicGetAsync(token);
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal("ACCEPTANCE_LINK_UNAVAILABLE", await ProblemCodeAsync(response));
+            Assert.Equal("ACCEPTANCE_LINK_UNAVAILABLE", await ProblemCodeAsync(await PublicAcceptAsync(token, Submission())));
+        }
+
+        // Revoked.
+        var (revokedId, revokedToken) = await CreateAcceptanceLinkAsync(quotation.QuotationId);
+        var revoke = await _client.SendAsync(CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/acceptance-links/{revokedId}/revoke", "token-org-a", MembershipAId));
+        Assert.Equal(HttpStatusCode.OK, revoke.StatusCode);
+        Assert.Equal("ACCEPTANCE_LINK_INVALID_STATE", await ProblemCodeAsync(await _client.SendAsync(CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/acceptance-links/{revokedId}/revoke", "token-org-a", MembershipAId))));
+        Assert.Equal(HttpStatusCode.NotFound, (await PublicGetAsync(revokedToken)).StatusCode);
+        Assert.Equal("ACCEPTANCE_LINK_UNAVAILABLE", await ProblemCodeAsync(await PublicAcceptAsync(revokedToken, Submission())));
+
+        // Expired.
+        var (expiredId, expiredToken) = await CreateAcceptanceLinkAsync(quotation.QuotationId, 1);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE commercial.quotation_acceptance_links SET created_at_utc = now() - interval '3 days', expires_at_utc = now() - interval '1 day' WHERE id = {expiredId}");
+        }
+
+        Assert.Equal(HttpStatusCode.NotFound, (await PublicGetAsync(expiredToken)).StatusCode);
+        Assert.Equal("ACCEPTANCE_LINK_UNAVAILABLE", await ProblemCodeAsync(await PublicAcceptAsync(expiredToken, Submission())));
+
+        // Lifetime rules for staff.
+        var tooLong = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/quotations/{quotation.QuotationId}/acceptance-links", "token-org-a", MembershipAId);
+        tooLong.Content = JsonContent.Create(new TanErp.Api.Contracts.Commercial.CreateAcceptanceLinkRequest(31, null));
+        Assert.Equal("ACCEPTANCE_LINK_LIFETIME_INVALID", await ProblemCodeAsync(await _client.SendAsync(tooLong)));
+
+        // A quotation that is no longer issued cannot get a link, and its existing links stop working (void).
+        var (_, voidToken) = await CreateAcceptanceLinkAsync(quotation.QuotationId);
+        var issued = (await HistoryAsync(estimateId)).Items.Single();
+        Assert.Equal(HttpStatusCode.OK, (await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{quotation.QuotationId}/void", issued.RowVersion, "ถอนคำขอ"))).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await PublicGetAsync(voidToken)).StatusCode);
+        Assert.Equal("ACCEPTANCE_LINK_UNAVAILABLE", await ProblemCodeAsync(await PublicAcceptAsync(voidToken, Submission())));
+        var noLink = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/quotations/{quotation.QuotationId}/acceptance-links", "token-org-a", MembershipAId);
+        noLink.Content = JsonContent.Create(new TanErp.Api.Contracts.Commercial.CreateAcceptanceLinkRequest(null, null));
+        Assert.Equal("QUOTATION_INVALID_STATE", await ProblemCodeAsync(await _client.SendAsync(noLink)));
+    }
+
+    [Fact]
+    public async Task ExternalAcceptance_LinkOfAReplacedQuotation_CannotAcceptTheReplacement()
+    {
+        var (estimateId, oppId, original) = await IssueQuotedEstimateAsync("ext-race");
+        var (_, oldToken) = await CreateAcceptanceLinkAsync(original.QuotationId);
+        var issued = (await HistoryAsync(estimateId)).Items.Single();
+        var amended = await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/amend", issued.RowVersion, "แก้ไข", $"ext-race-amend-{Guid.NewGuid():N}"));
+        Assert.Equal(HttpStatusCode.Created, amended.StatusCode);
+
+        Assert.Equal(HttpStatusCode.NotFound, (await PublicGetAsync(oldToken)).StatusCode);
+        Assert.Equal("ACCEPTANCE_LINK_UNAVAILABLE", await ProblemCodeAsync(await PublicAcceptAsync(oldToken, Submission())));
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(OpportunityStage.Proposed, (await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId)).Stage);
+        Assert.Empty(await db.QuotationAcceptanceEvidences.Where(e => e.QuotationId == original.QuotationId).ToListAsync());
+
+        // The replacement gets its own link and that one works.
+        var replacement = (await HistoryAsync(estimateId)).Items.Single(i => i.Status == "issued");
+        var (_, newToken) = await CreateAcceptanceLinkAsync(replacement.Id);
+        Assert.Equal(HttpStatusCode.OK, (await PublicAcceptAsync(newToken, Submission())).StatusCode);
+        Assert.Equal("accepted", (await HistoryAsync(estimateId)).Items.Single(i => i.Id == replacement.Id).Status);
+    }
+
+    [Fact]
+    public async Task ExternalAcceptance_PublicEndpointsAreRateLimitedPerClient()
+    {
+        using var limited = _factory.WithWebHostBuilder(builder => builder.UseSetting("PublicAcceptance:PermitsPerMinute", "3"));
+        var client = limited.CreateClient();
+        var statuses = new List<HttpStatusCode>();
+        for (var i = 0; i < 5; i++) statuses.Add((await PublicGetAsync("short-guess-" + i, client)).StatusCode);
+
+        Assert.Equal(new[] { HttpStatusCode.NotFound, HttpStatusCode.NotFound, HttpStatusCode.NotFound, HttpStatusCode.TooManyRequests, HttpStatusCode.TooManyRequests }, statuses);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await PublicAcceptAsync("short-guess-x", Submission(), client)).StatusCode);
+    }
 }

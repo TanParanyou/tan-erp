@@ -1578,7 +1578,8 @@ public class EstimateStore : IEstimateStore
         string keyHash,
         string payloadHash,
         string traceId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? expectedQuotationId = null)
     {
         var strategy = _db.Database.CreateExecutionStrategy();
         const string operation = "quotations.accept";
@@ -1659,6 +1660,13 @@ public class EstimateStore : IEstimateStore
                 return Result<AcceptQuotationProjection>.Failure(hasHistory
                     ? new Error("QUOTATION_INVALID_STATE", "The quotation was voided or superseded; there is no live quotation to accept.")
                     : new Error("RESOURCE_NOT_FOUND", $"No quotation found for estimate '{estimateId}'."));
+            }
+
+            // A customer link points at one specific document; if it was replaced meanwhile, the live one must not be accepted by mistake.
+            if (expectedQuotationId.HasValue && quotation.Id != expectedQuotationId.Value)
+            {
+                return Result<AcceptQuotationProjection>.Failure(
+                    new Error("QUOTATION_INVALID_STATE", "The quotation was voided or superseded; there is no live quotation to accept."));
             }
 
             // 3. Stage and Concurrency validation

@@ -1035,4 +1035,16 @@
   <data name="QUOTATION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
   <data name="QUOTATION_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
   <data name="QUOTATION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="ACCEPTANCE_LINK_UNAVAILABLE_TITLE" xml:space="preserve"><value>ลิงก์นี้ใช้งานไม่ได้</value></data>
+  <data name="ACCEPTANCE_LINK_UNAVAILABLE_DETAIL" xml:space="preserve"><value>ลิงก์นี้ใช้งานไม่ได้</value></data>
+  <data name="ACCEPTANCE_LINK_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะลิงก์ไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="ACCEPTANCE_LINK_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะลิงก์ไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="ACCEPTANCE_LINK_LIFETIME_INVALID_TITLE" xml:space="preserve"><value>อายุลิงก์ไม่ถูกต้อง</value></data>
+  <data name="ACCEPTANCE_LINK_LIFETIME_INVALID_DETAIL" xml:space="preserve"><value>อายุลิงก์ไม่ถูกต้อง</value></data>
+  <data name="ACCEPTANCE_SUBMISSION_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลการยอมรับไม่ถูกต้อง</value></data>
+  <data name="ACCEPTANCE_SUBMISSION_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลการยอมรับไม่ถูกต้อง</value></data>
+  <data name="ACCEPTANCE_CONSENT_REQUIRED_TITLE" xml:space="preserve"><value>ต้องยอมรับข้อความยินยอมฉบับปัจจุบัน</value></data>
+  <data name="ACCEPTANCE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องยอมรับข้อความยินยอมฉบับปัจจุบัน</value></data>
+  <data name="ACCEPTANCE_CONFLICT_TITLE" xml:space="preserve"><value>เอกสารมีการเปลี่ยนแปลง</value></data>
+  <data name="ACCEPTANCE_CONFLICT_DETAIL" xml:space="preserve"><value>เอกสารมีการเปลี่ยนแปลง</value></data>
 </root>

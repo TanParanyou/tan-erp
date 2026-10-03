@@ -62,6 +62,7 @@
 | API ของ BOM/ใบสั่งผลิต | [Production API Contract](03-contracts/production-api-contract.md) |
 | API ของ MRP | [MRP API Contract](03-contracts/mrp-api-contract.md) |
 | API แก้ไข/ยกเลิกใบเสนอราคา | [Quotation Lifecycle API Contract](03-contracts/quotation-lifecycle-api-contract.md) |
+| API ลูกค้ายอมรับใบเสนอราคาผ่านลิงก์ | [External Acceptance API Contract](03-contracts/external-acceptance-api-contract.md) |
 | API ของ Item/Unit/Cost | [Item Master API Contract](03-contracts/item-master-api-contract.md) |
 | API ของ Customer/Opportunity/Site Survey | [CRM and Site Survey API Contract](03-contracts/crm-site-survey-api-contract.md) |
 | Error หลายภาษา | [Error Contract](03-contracts/error-contract.md) |

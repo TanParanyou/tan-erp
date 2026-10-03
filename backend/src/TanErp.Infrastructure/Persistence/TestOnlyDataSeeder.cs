@@ -152,6 +152,7 @@ public static class TestOnlyDataSeeder
             ("quotations.accept", "Accept Quotations"),
             ("quotations.void", "Void Issued Quotations"),
             ("quotations.amend", "Amend Issued Quotations"),
+            ("quotations.share", "Create and Revoke Customer Acceptance Links"),
             ("suppliers.read", "Read Suppliers"),
             ("suppliers.manage", "Manage Suppliers"),
             ("purchase-orders.read", "Read Purchase Orders"),

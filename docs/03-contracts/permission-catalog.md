@@ -112,6 +112,7 @@
 | Quotation | `quotations.accept` | บันทึกการตอบรับใบเสนอราคาภายใน | Branch/Project |
 | Quotation | `quotations.void` | ยกเลิกใบเสนอราคาที่ออกแล้วและยังไม่ถูกยอมรับ | Organization |
 | Quotation | `quotations.amend` | ออกใบเสนอราคาฉบับแทนที่ | Organization |
+| Quotation | `quotations.share` | สร้าง/เพิกถอนลิงก์ให้ลูกค้ายอมรับ | Organization |
 | Quotation | `quotations.read` | ดู/พิมพ์เอกสาร Quotation ที่ออกแล้ว (Customer-safe Document) | Branch/Project |
 | Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
 

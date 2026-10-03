@@ -87,6 +87,7 @@ export const PERMISSIONS = {
   QUOTATIONS_ACCEPT: "quotations.accept",
   QUOTATIONS_VOID: "quotations.void",
   QUOTATIONS_AMEND: "quotations.amend",
+  QUOTATIONS_SHARE: "quotations.share",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

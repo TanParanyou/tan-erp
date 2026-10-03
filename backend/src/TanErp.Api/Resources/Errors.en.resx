@@ -873,4 +873,16 @@
   <data name="QUOTATION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason is required.</value></data>
   <data name="QUOTATION_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
   <data name="QUOTATION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
+  <data name="ACCEPTANCE_LINK_UNAVAILABLE_TITLE" xml:space="preserve"><value>Link Unavailable</value></data>
+  <data name="ACCEPTANCE_LINK_UNAVAILABLE_DETAIL" xml:space="preserve"><value>This acceptance link is not available.</value></data>
+  <data name="ACCEPTANCE_LINK_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Link State</value></data>
+  <data name="ACCEPTANCE_LINK_INVALID_STATE_DETAIL" xml:space="preserve"><value>The link status does not allow this action.</value></data>
+  <data name="ACCEPTANCE_LINK_LIFETIME_INVALID_TITLE" xml:space="preserve"><value>Invalid Link Lifetime</value></data>
+  <data name="ACCEPTANCE_LINK_LIFETIME_INVALID_DETAIL" xml:space="preserve"><value>A link must live between 1 and 30 days and the signer hint must be at most 200 characters.</value></data>
+  <data name="ACCEPTANCE_SUBMISSION_INVALID_TITLE" xml:space="preserve"><value>Invalid Submission</value></data>
+  <data name="ACCEPTANCE_SUBMISSION_INVALID_DETAIL" xml:space="preserve"><value>A signer name of 2-200 characters is required and a signature image must be a PNG of limited size.</value></data>
+  <data name="ACCEPTANCE_CONSENT_REQUIRED_TITLE" xml:space="preserve"><value>Consent Required</value></data>
+  <data name="ACCEPTANCE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>The current consent statement must be accepted.</value></data>
+  <data name="ACCEPTANCE_CONFLICT_TITLE" xml:space="preserve"><value>Acceptance Conflict</value></data>
+  <data name="ACCEPTANCE_CONFLICT_DETAIL" xml:space="preserve"><value>The document changed while you were reviewing it. Please reload and try again.</value></data>
 </root>
