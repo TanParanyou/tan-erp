@@ -150,6 +150,8 @@ public static class TestOnlyDataSeeder
             ("quotations.read", "Read Quotation Documents"),
             ("quotations.issue", "Issue Quotations"),
             ("quotations.accept", "Accept Quotations"),
+            ("projects.read", "Read Projects"),
+            ("projects.create", "Create Projects From Handover"),
             ("document-sequences.read", "Read Document Sequences"),
             ("document-sequences.manage", "Manage Document Sequences"),
             ("document-sequences.manual-override", "Manual Override Document Numbers"),

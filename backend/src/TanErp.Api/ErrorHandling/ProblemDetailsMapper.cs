@@ -121,6 +121,11 @@ public static class ProblemDetailsMapper
 
         "ITEM_CODE_EXISTS" => StatusCodes.Status409Conflict,
         "ITEM_CODE_CONFLICT" => StatusCodes.Status409Conflict,
+        "PROJECT_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+        "PROJECT_HANDOVER_NOT_ALLOWED" => StatusCodes.Status409Conflict,
+        "QUOTATION_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+        "PROJECT_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
+        "PROJECT_FIELD_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "ITEM_IMPORT_FILE_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "ITEM_IMPORT_VALIDATION_FAILED" => StatusCodes.Status422UnprocessableEntity,
         "ITEM_IMPORT_CONTENT_CHANGED" => StatusCodes.Status409Conflict,

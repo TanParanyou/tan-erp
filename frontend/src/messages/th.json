@@ -72,7 +72,8 @@
     "expandAll": "ขยายทั้งหมด",
     "collapseAll": "ยุบทั้งหมด",
     "userAdmin": "ผู้ใช้และสิทธิ์",
-    "roleRequests": "คำขอมอบบทบาท"
+    "roleRequests": "คำขอมอบบทบาท",
+    "projects": "โครงการ"
   },
   "common": {
     "actions": {
@@ -1531,7 +1532,8 @@
       "item-brands": "รหัสแบรนด์สินค้า (Item Brand)",
       "units-of-measure": "รหัสหน่วยนับ (Unit of Measure)",
       "item-tax-categories": "รหัสหมวดภาษีสินค้า (Tax Category)",
-      "cost-sources": "รหัสแหล่งที่มาต้นทุน (Cost Source)"
+      "cost-sources": "รหัสแหล่งที่มาต้นทุน (Cost Source)",
+      "projects": "โครงการ (Project)"
     },
     "tokens": {
       "prefix": "คำนำหน้า (Prefix)",
@@ -2047,5 +2049,61 @@
     "loadFailed": "ไม่สามารถโหลดเอกสารใบเสนอราคาได้",
     "noPermission": "คุณไม่มีสิทธิ์ดูเอกสารใบเสนอราคา",
     "viewDocument": "ดูเอกสารใบเสนอราคา"
+  },
+  "projects": {
+    "title": "โครงการ",
+    "subtitle": "โครงการที่ส่งต่อจากใบเสนอราคาที่ลูกค้ายืนยันแล้ว",
+    "search": "ค้นหารหัส ชื่อโครงการ หรือเลขที่ใบเสนอราคา",
+    "empty": "ยังไม่มีโครงการ",
+    "emptyDetail": "โครงการสร้างได้จากโอกาสทางการขายที่ชนะ (Won) พร้อมใบเสนอราคาที่ลูกค้ายืนยันแล้ว",
+    "noResults": "ไม่พบโครงการที่ตรงกับเงื่อนไข",
+    "code": "รหัสโครงการ",
+    "name": "ชื่อโครงการ",
+    "customer": "ลูกค้า",
+    "site": "สถานที่",
+    "owner": "ผู้รับผิดชอบโครงการ",
+    "ownerPlaceholder": "เลือกผู้รับผิดชอบโครงการ...",
+    "ownerRequired": "กรุณาเลือกผู้รับผิดชอบโครงการ",
+    "status": "สถานะ",
+    "contractAmount": "มูลค่าตามใบเสนอราคา",
+    "plannedStartDate": "วันเริ่มงานที่วางแผน",
+    "opportunity": "โอกาสทางการขาย",
+    "createdAt": "สร้างเมื่อ",
+    "detailSubtitle": "รายละเอียดโครงการและข้อมูลฐานที่ตรึงไว้ตอนส่งต่องาน",
+    "overview": "ภาพรวมโครงการ",
+    "loadError": "โหลดข้อมูลโครงการไม่สำเร็จ",
+    "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึงโครงการ",
+    "accessDeniedDetail": "คุณไม่มีสิทธิ์ดูข้อมูลโครงการ",
+    "baselineTitle": "ข้อมูลฐาน (Baseline)",
+    "baselineDesc": "คัดลอกจากใบเสนอราคาและประมาณราคา ณ วันที่ส่งต่องาน และจะไม่เปลี่ยนแม้ข้อมูลต้นทางถูกแก้ไขภายหลัง",
+    "quotationNumber": "เลขที่ใบเสนอราคา",
+    "baselineHash": "Baseline Hash",
+    "quotationHash": "Quotation Snapshot Hash",
+    "surveyHash": "Survey Snapshot Hash",
+    "statuses": {
+      "planned": "วางแผน",
+      "active": "กำลังดำเนินการ",
+      "on_hold": "พักงาน",
+      "ready_for_handover": "พร้อมส่งมอบ",
+      "completed": "เสร็จสิ้น",
+      "cancelled": "ยกเลิก"
+    },
+    "handoverTitle": "ส่งต่อเป็นโครงการ",
+    "handoverSource": "ใบเสนอราคา {number} • มูลค่า {amount}",
+    "handoverAction": "ส่งต่อเป็นโครงการ",
+    "handoverPermissionRequired": "ต้องมีสิทธิ์สร้างโครงการเพื่อส่งต่องาน",
+    "openProject": "เปิดโครงการ {code}",
+    "handoverModalTitle": "ส่งต่อใบเสนอราคาเป็นโครงการ",
+    "handoverModalDesc": "สร้างโครงการสถานะ 'วางแผน' หนึ่งโครงการต่อหนึ่งใบเสนอราคา และตรึงข้อมูลฐานจากใบเสนอราคาที่ยืนยันแล้ว ระบบไม่สั่งจัดซื้อหรือผลิตให้อัตโนมัติ",
+    "handoverConfirm": "ยืนยันส่งต่อ",
+    "projectName": "ชื่อโครงการ",
+    "projectNameHelp": "เว้นว่างเพื่อใช้ชื่อโอกาสทางการขาย",
+    "handoverSuccess": "สร้างโครงการ {code} เรียบร้อยแล้ว",
+    "errors": {
+      "alreadyExists": "ใบเสนอราคานี้ถูกส่งต่อเป็นโครงการแล้ว",
+      "notAllowed": "ต้องเป็นใบเสนอราคาที่ยืนยันแล้วและโอกาสอยู่ในสถานะ Won",
+      "versionConflict": "ใบเสนอราคาถูกแก้ไขโดยผู้อื่น กรุณาโหลดข้อมูลใหม่",
+      "failed": "ส่งต่อเป็นโครงการไม่สำเร็จ กรุณาลองใหม่"
+    }
   }
 }

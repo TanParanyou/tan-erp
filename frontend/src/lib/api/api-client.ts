@@ -139,6 +139,17 @@ export type AttachItemImageRequest = components["schemas"]["AttachItemImageReque
 export type CreateItemRequest = components["schemas"]["CreateItemRequest"];
 export type UpdateItemRequest = components["schemas"]["UpdateItemRequest"];
 export type PagedItemsResponse = components["schemas"]["PagedItemsResponse"];
+export type ProjectResponse = components["schemas"]["ProjectResponse"];
+export type ProjectListResponse = components["schemas"]["ProjectListResponse"];
+export type ProjectListItemResponse = components["schemas"]["ProjectListItemResponse"];
+export type ProjectHandoverSourceResponse = components["schemas"]["ProjectHandoverSourceResponse"];
+export type CreateProjectFromHandoverRequest = components["schemas"]["CreateProjectFromHandoverRequest"];
+export interface ListProjectsParams {
+  search?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
 export type PreviewItemImportRequest = components["schemas"]["PreviewItemImportRequest"];
 export type CommitItemImportRequest = components["schemas"]["CommitItemImportRequest"];
 export type ItemImportPreviewResponse = components["schemas"]["ItemImportPreviewResponse"];
@@ -1007,6 +1018,31 @@ export class ApiClient {
 
   async commitItemImport(payload: CommitItemImportRequest, options: RequestOptions): Promise<ItemImportCommitResponse> {
     return this.request<ItemImportCommitResponse>("/api/v1/items/imports/commit", "POST", options, payload);
+  }
+
+  async listProjects(options: RequestOptions, query: ListProjectsParams): Promise<ProjectListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<ProjectListResponse>(`/api/v1/projects?${params.toString()}`, "GET", options);
+  }
+
+  async getProject(id: string, options: RequestOptions): Promise<ProjectResponse> {
+    return this.request<ProjectResponse>(`/api/v1/projects/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async getProjectHandoverSource(opportunityId: string, options: RequestOptions): Promise<ProjectHandoverSourceResponse> {
+    return this.request<ProjectHandoverSourceResponse>(
+      `/api/v1/projects/handover-source?opportunityId=${encodeURIComponent(opportunityId)}`,
+      "GET",
+      options
+    );
+  }
+
+  async createProjectFromHandover(payload: CreateProjectFromHandoverRequest, options: RequestOptions): Promise<ProjectResponse> {
+    return this.request<ProjectResponse>("/api/v1/projects", "POST", options, payload);
   }
 
   async listOrganizationBranches(options: RequestOptions): Promise<OrganizationBranchResponse[]> {

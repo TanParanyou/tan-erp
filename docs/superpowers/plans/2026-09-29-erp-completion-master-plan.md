@@ -45,7 +45,7 @@
 | CP-05 | Release/UAT/Operations | Checklist มีแล้ว; ยังต้องหลักฐาน release | ทุก critical slice ใน release ที่เลือก | Business/Finance/Security + Operations |
 | CP-06 | Quotation Amendment/Void | Draft slice ใหม่ | Quotation/Snapshot contracts; CP-04 สำหรับเอกสาร | Sales + Finance |
 | CP-07 | External Customer Acceptance/Signatures | Draft slice ใหม่ | CP-04 + authentication/access policy | Sales + Security + Legal/Business |
-| CP-08 | Won → Project Handover | Future slice | Accepted Quotation; CP-06 rules เมื่อเปิดใช้ | Sales + Project Owner |
+| CP-08 | Won → Project Handover | Implemented 2026-10-04 (ค่าเริ่มต้นที่ทีมพัฒนาเลือก รอ Sales/Project Owner ยืนยัน) | Accepted Quotation; CP-06 rules เมื่อเปิดใช้ | Sales + Project Owner |
 | CP-09 | Project Budget/Plan/Change Order/Progress | Future slice | CP-08 | Project Manager + Finance |
 | CP-10 | Supplier/Procurement | Future slice | Item/Unit + CP-09 demand/budget | Procurement + Finance |
 | CP-11 | Inventory/Warehouse | Future slice | CP-10 receipt contract + Item/Unit | Warehouse + Procurement |
@@ -157,10 +157,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 อ้าง FR-PRJ-001 และ [Project Lifecycle](../../01-business/project-lifecycle.md).
 
-- [ ] ยืนยันจำนวน Project ต่อ Quotation, การแบ่งงาน, Project Owner/Branch, วันเริ่มและข้อมูลขั้นต่ำของ Planned Project
-- [ ] ออกแบบ Project baseline จาก accepted quotation/approved estimate/ready survey พร้อม revision/hash refs; ไม่ผูกงบกับ master price ที่เปลี่ยนได้
-- [ ] สร้าง handover command/transaction และ UI review โดย reuse numbering/audit/idempotency; การสร้าง Project ไม่เรียก Procurement/Production โดยอัตโนมัติหากไม่ได้อนุมัติ flow
-- [ ] ทดสอบ duplicate handover, stale version, out-of-scope, failed transaction และ baseline ที่คงเดิมเมื่อมีฉบับใหม่
+- [x] ยืนยันจำนวน Project ต่อ Quotation, การแบ่งงาน, Project Owner/Branch, วันเริ่มและข้อมูลขั้นต่ำของ Planned Project
+- [x] ออกแบบ Project baseline จาก accepted quotation/approved estimate/ready survey พร้อม revision/hash refs; ไม่ผูกงบกับ master price ที่เปลี่ยนได้
+- [x] สร้าง handover command/transaction และ UI review โดย reuse numbering/audit/idempotency; การสร้าง Project ไม่เรียก Procurement/Production โดยอัตโนมัติหากไม่ได้อนุมัติ flow
+- [x] ทดสอบ duplicate handover, stale version, out-of-scope, failed transaction และ baseline ที่คงเดิมเมื่อมีฉบับใหม่
 
 **ผลส่งมอบ/เกณฑ์จบ:** งาน Won ที่เข้าเงื่อนไขส่งต่อเป็น Planned Project ได้ตาม cardinality ที่ยืนยัน พร้อม immutable source baseline และผู้รับงาน.
 

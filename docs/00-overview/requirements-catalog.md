@@ -52,7 +52,7 @@
 | FR-APP-004 | Permission, Resource Scope และ Approval Authority ต้องผ่านพร้อมกัน | 2 | Accepted direction |
 | FR-QUO-001 | Quotation อ้างอิง Estimate Revision ที่อนุมัติ | 2–3 | Accepted principle |
 | FR-QUO-002 | Customer-facing Output ใช้ Allowlist และไม่เผย Cost, Margin, Internal Note หรือ Approval Detail | 2–3 | Accepted direction |
-| FR-PRJ-001 | Quotation ที่ยืนยันแล้วส่งต่อเป็น Project/Baseline ได้ | 3–4 | Future |
+| FR-PRJ-001 | Quotation ที่ยืนยันแล้วส่งต่อเป็น Project/Baseline ได้ | 3–4 | Implemented (Handover → Planned, 1 Project ต่อ Quotation; 2026-10-04) |
 | FR-MRP-001 | MRP คำนวณความต้องการวัสดุจาก BOM, Inventory และ Production Plan | 5 | Future |
 
 ## Non-functional Requirements

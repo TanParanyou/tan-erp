@@ -72,7 +72,8 @@
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
     "userAdmin": "Users and Access",
-    "roleRequests": "Role Requests"
+    "roleRequests": "Role Requests",
+    "projects": "Projects"
   },
   "common": {
     "actions": {
@@ -1531,7 +1532,8 @@
       "item-brands": "Item Brand Code",
       "units-of-measure": "Unit of Measure Code",
       "item-tax-categories": "Item Tax Category Code",
-      "cost-sources": "Cost Source Code"
+      "cost-sources": "Cost Source Code",
+      "projects": "Project"
     },
     "tokens": {
       "prefix": "Prefix",
@@ -2047,5 +2049,61 @@
     "loadFailed": "Unable to load the quotation document.",
     "noPermission": "You do not have permission to view the quotation document.",
     "viewDocument": "View Quotation Document"
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Projects handed over from customer-accepted quotations",
+    "search": "Search by code, project name or quotation number",
+    "empty": "No projects yet",
+    "emptyDetail": "Projects are created from a Won opportunity with a customer-accepted quotation.",
+    "noResults": "No projects match the filters.",
+    "code": "Project code",
+    "name": "Project name",
+    "customer": "Customer",
+    "site": "Site",
+    "owner": "Project owner",
+    "ownerPlaceholder": "Select the project owner...",
+    "ownerRequired": "Select the project owner.",
+    "status": "Status",
+    "contractAmount": "Quoted value",
+    "plannedStartDate": "Planned start date",
+    "opportunity": "Opportunity",
+    "createdAt": "Created",
+    "detailSubtitle": "Project details and the baseline frozen at handover",
+    "overview": "Project overview",
+    "loadError": "Could not load the project.",
+    "accessDeniedTitle": "No access to projects",
+    "accessDeniedDetail": "You do not have permission to view projects.",
+    "baselineTitle": "Baseline",
+    "baselineDesc": "Copied from the quotation and estimate at handover time; it does not change when the source data is edited later.",
+    "quotationNumber": "Quotation number",
+    "baselineHash": "Baseline hash",
+    "quotationHash": "Quotation snapshot hash",
+    "surveyHash": "Survey snapshot hash",
+    "statuses": {
+      "planned": "Planned",
+      "active": "Active",
+      "on_hold": "On hold",
+      "ready_for_handover": "Ready for handover",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "handoverTitle": "Hand over to a project",
+    "handoverSource": "Quotation {number} • value {amount}",
+    "handoverAction": "Hand over to project",
+    "handoverPermissionRequired": "You need permission to create projects to hand over.",
+    "openProject": "Open project {code}",
+    "handoverModalTitle": "Hand over the quotation to a project",
+    "handoverModalDesc": "Creates one Planned project per quotation and freezes the baseline from the accepted quotation. No purchasing or production is triggered automatically.",
+    "handoverConfirm": "Confirm handover",
+    "projectName": "Project name",
+    "projectNameHelp": "Leave empty to use the opportunity title.",
+    "handoverSuccess": "Project {code} created.",
+    "errors": {
+      "alreadyExists": "This quotation has already been handed over to a project.",
+      "notAllowed": "Only an accepted quotation on a Won opportunity can be handed over.",
+      "versionConflict": "The quotation was modified by someone else. Reload and try again.",
+      "failed": "The handover failed. Please try again."
+    }
   }
 }

@@ -52,6 +52,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const activeMembership = memberships[0];
 
   const hasCustomersRead = can(activeMembership, "customers.read");
+  const hasProjectsRead = can(activeMembership, "projects.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
   const hasSettingsRead =
@@ -67,6 +68,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/`;
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
+  const isProjectsActive = pathname.startsWith(`/${locale}/projects`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
@@ -95,11 +97,21 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         permission: hasOpportunitiesRead,
       });
     }
+    if (hasProjectsRead) {
+      items.push({
+        id: "projects",
+        href: `/${locale}/projects`,
+        label: tShell("projects"),
+        icon: <IconGrid size={20} />,
+        isActive: isProjectsActive,
+        permission: hasProjectsRead,
+      });
+    }
     if (hasEstimateApproval) {
       items.push({ id: "estimate-reviews", href: `/${locale}/estimates/review-queue`, label: tShell("estimateReviews"), icon: <IconFileText size={20} />, isActive: isEstimateReviewActive, permission: hasEstimateApproval });
     }
     return items;
-  }, [hasCustomersRead, hasOpportunitiesRead, hasEstimateApproval, locale, tShell, isCustomersActive, isOpportunitiesActive, isEstimateReviewActive]);
+  }, [hasCustomersRead, hasOpportunitiesRead, hasProjectsRead, hasEstimateApproval, locale, tShell, isCustomersActive, isOpportunitiesActive, isProjectsActive, isEstimateReviewActive]);
 
   const productItems: NavItemDef[] = useMemo(() => {
     const items: NavItemDef[] = [];
@@ -170,7 +182,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   // Accordion open/close state tracking
   const [openSubgroups, setOpenSubgroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    if (isCustomersActive || isOpportunitiesActive) initial["crm"] = true;
+    if (isCustomersActive || isOpportunitiesActive || isProjectsActive) initial["crm"] = true;
     if (isItemMasterActive) initial["products"] = true;
     // Default open all if none active
     if (Object.keys(initial).length === 0) {

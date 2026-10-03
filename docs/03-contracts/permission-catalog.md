@@ -54,6 +54,8 @@
 | Survey | `surveys.create-revision` | Clone เป็น Draft Revision ใหม่ | Branch/Opportunity/Own |
 | Survey | `surveys.void` | Void Revision พร้อมเหตุผล | Organization/Branch/Opportunity |
 | Survey | `surveys.export` | Export Survey/Evidence ตาม Allowlist | Organization/Branch/Opportunity |
+| Project | `projects.read` | ดู Project และ Handover source | Organization |
+| Project | `projects.create` | ส่งต่อ Quotation ที่ยืนยันแล้วเป็น Project | Organization |
 | Quick Estimate | `quick-estimates.read` | ดู Quick Estimate ตามขอบเขตที่ได้รับ | Organization/Branch/Opportunity/Own |
 | Quick Estimate | `quick-estimates.create` | สร้าง Quick Estimate | Branch/Opportunity/Own |
 | Quick Estimate | `quick-estimates.update` | แก้ Draft/Calculated หรือสร้าง Version ใหม่ตามกฎ | Branch/Opportunity/Own |

@@ -163,6 +163,11 @@ builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddress
 
 // Item Master Catalog & Taxonomy Store
 builder.Services.AddScoped<TanErp.Application.Items.IItemStore, TanErp.Infrastructure.Persistence.Items.ItemStore>();
+builder.Services.AddScoped<TanErp.Application.Projects.IProjectStore, TanErp.Infrastructure.Persistence.Projects.ProjectStore>();
+builder.Services.AddScoped<TanErp.Application.Projects.CreateProjectFromHandover.CreateProjectFromHandoverHandler>();
+builder.Services.AddScoped<TanErp.Application.Projects.GetProject.GetProjectHandler>();
+builder.Services.AddScoped<TanErp.Application.Projects.GetHandoverSource.GetHandoverSourceHandler>();
+builder.Services.AddScoped<TanErp.Application.Projects.ListProjects.ListProjectsHandler>();
 builder.Services.AddScoped<TanErp.Application.Items.IItemImportStore, TanErp.Infrastructure.Persistence.Items.ItemImportStore>();
 builder.Services.AddScoped<TanErp.Application.Items.Import.PreviewItemImport.PreviewItemImportHandler>();
 builder.Services.AddScoped<TanErp.Application.Items.Import.CommitItemImport.CommitItemImportHandler>();

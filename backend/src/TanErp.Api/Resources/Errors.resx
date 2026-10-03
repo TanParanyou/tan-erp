@@ -681,6 +681,16 @@
   <data name="ITEM_IMPORT_VALIDATION_FAILED_DETAIL" xml:space="preserve"><value>มีบางแถวไม่ผ่านการตรวจสอบ ระบบไม่ได้นำเข้าข้อมูลใด ๆ กรุณาแก้ไขแล้วตรวจสอบก่อนนำเข้าอีกครั้ง</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_TITLE" xml:space="preserve"><value>ไฟล์ไม่ตรงกับที่ตรวจสอบไว้</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_DETAIL" xml:space="preserve"><value>เนื้อหาไฟล์ต่างจากฉบับที่ตรวจสอบก่อนนำเข้า กรุณาตรวจสอบไฟล์ใหม่อีกครั้ง</value></data>
+  <data name="PROJECT_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>มีโครงการสำหรับใบเสนอราคานี้แล้ว</value></data>
+  <data name="PROJECT_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>ใบเสนอราคานี้ถูกส่งต่อเป็นโครงการแล้ว หนึ่งใบเสนอราคาสร้างได้หนึ่งโครงการ</value></data>
+  <data name="PROJECT_HANDOVER_NOT_ALLOWED_TITLE" xml:space="preserve"><value>ยังส่งต่อเป็นโครงการไม่ได้</value></data>
+  <data name="PROJECT_HANDOVER_NOT_ALLOWED_DETAIL" xml:space="preserve"><value>ต้องเป็นใบเสนอราคาที่ลูกค้ายืนยันแล้วและโอกาสทางการขายอยู่ในสถานะชนะ (Won) จึงจะส่งต่อเป็นโครงการได้</value></data>
+  <data name="QUOTATION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลใบเสนอราคาถูกแก้ไข</value></data>
+  <data name="QUOTATION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ใบเสนอราคาถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="PROJECT_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลโครงการไม่ครบ</value></data>
+  <data name="PROJECT_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุใบเสนอราคา เวอร์ชันของใบเสนอราคา และผู้รับผิดชอบโครงการ</value></data>
+  <data name="PROJECT_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลโครงการไม่ถูกต้อง</value></data>
+  <data name="PROJECT_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลโครงการไม่ถูกต้อง เช่น ชื่อโครงการยาวเกิน 200 ตัวอักษร</value></data>
   <data name="ITEM_CODE_CONFLICT_TITLE" xml:space="preserve"><value>รหัสข้อมูลหลักซ้ำ</value></data>
   <data name="ITEM_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>มีรหัสนี้ในองค์กรแล้ว กรุณาใช้รหัสอื่น</value></data>
   <data name="MASTER_DATA_CODE_CONFIGURATION_INVALID_TITLE" xml:space="preserve"><value>รูปแบบรหัส Master Data ไม่ถูกต้อง</value></data>

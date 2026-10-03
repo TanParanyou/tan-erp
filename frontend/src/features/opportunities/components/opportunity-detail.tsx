@@ -43,6 +43,7 @@ import { OpportunityWorkImagesSection } from "./opportunity-work-images-section"
 import { useOpportunitySurvey } from "@/features/surveys/api/survey-queries";
 import { SurveyAppointmentModal } from "@/features/surveys/components/survey-appointment-modal";
 import { SurveyCard } from "@/features/surveys/components/survey-card";
+import { ProjectHandoverSection } from "@/features/projects/components/project-handover-section";
 import { useOpportunityEstimate, useCreateEstimate, useAcceptQuotation } from "@/features/estimates/api/estimate-queries";
 import { EstimateCard } from "@/features/estimates/components/estimate-card";
 import { cn } from "@/lib/utils/cn";
@@ -186,6 +187,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const canTransition = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_TRANSITION);
   const canUpdate = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_UPDATE);
   const canCreateSurvey = can(selectedMembership, PERMISSIONS.SURVEYS_CREATE);
+  const canReadProjects = can(selectedMembership, PERMISSIONS.PROJECTS_READ);
+  const canCreateProjects = can(selectedMembership, PERMISSIONS.PROJECTS_CREATE);
   const canCloneSurveyRevision = can(selectedMembership, PERMISSIONS.SURVEYS_CREATE_REVISION);
   const canVoidSurveyRevision = can(selectedMembership, PERMISSIONS.SURVEYS_VOID);
   const canAccept = can(selectedMembership, PERMISSIONS.QUOTATIONS_ACCEPT);
@@ -600,6 +603,18 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                 />
               </div>
             )}
+
+            {/* Project handover (Won opportunities with an accepted quotation) */}
+            <div className="mb-6">
+              <ProjectHandoverSection
+                opportunityId={opportunityId}
+                opportunityName={opportunity.title ?? ""}
+                branchId={opportunity.branch?.id ?? undefined}
+                isWon={opportunity.stage === "won"}
+                canRead={canReadProjects}
+                canCreate={canCreateProjects}
+              />
+            </div>
 
             {/* Official Estimate Card */}
             {(opportunity.stage === "estimating" || estimate) && (
