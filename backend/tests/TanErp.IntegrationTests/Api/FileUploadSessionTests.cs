@@ -271,7 +271,8 @@ public class FileUploadSessionTests : IAsyncLifetime
 
         // Must return identical session ID, slots, and expiry
         Assert.Equal(resp1.SessionId, resp2.SessionId);
-        Assert.Equal(resp1.ExpiresAtUtc, resp2.ExpiresAtUtc);
+        // The first response carries the in-memory value, the replay the database value (microsecond precision).
+        Assert.Equal(resp1.ExpiresAtUtc.ToMicroseconds(), resp2.ExpiresAtUtc.ToMicroseconds());
         Assert.Equal(resp1.Slots.Count, resp2.Slots.Count);
         for (var i = 0; i < resp1.Slots.Count; i++)
         {
