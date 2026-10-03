@@ -57,7 +57,7 @@ Backend สร้าง Organization/Branch Scope จาก PostgreSQL Membershi
 
 Create/Update ของ Category ใช้ `code` ไม่เกิน 30 ตัว, `name`, `description?`, `parentCategoryId?`, `allowedItemTypes` และ `sortOrder`; Update เป็นการบันทึกค่าฟิลด์ทั้งหมดและเพิ่ม `imageFileId?` ดังนั้น Client ต้องส่งค่าเดิมของ Parent, Allowlist, Sort Order และ Image File ID มาด้วยเมื่อแก้เพียงบางฟิลด์. Brand ใช้ `code` ไม่เกิน 30 ตัว, `name`, `description?` และ `sortOrder`; Update เพิ่ม `imageFileId?`. ภาพแนบได้หนึ่งภาพต่อรายการ: สร้างรายการก่อน จากนั้นสร้าง Upload Session ด้วย parent type `item-category` หรือ `item-brand`, อัปโหลด/ตรวจสอบไฟล์ แล้วบันทึก ID ด้วย `PUT` และ ETag ล่าสุด; การถอดภาพให้ส่ง `imageFileId: null`. Upload จริงทำหลังผู้ใช้กดบันทึกเท่านั้น. Unit ใช้ `code` ไม่เกิน 20 ตัว, `name`, `symbol` ไม่เกิน 16 ตัว, `dimension`, `decimalScale` 0–6 และ `roundingMode` จาก enum `half_up`, `half_even`, `up`, `down`, `ceiling`, `floor`; API ปฏิเสธค่าอื่น และ Update ต้องรักษา precision/rounding เดิมไว้เมื่อแก้ฟิลด์อื่น. UI แสดงคำอธิบายที่แปลแล้วแทน enum code.
 
-`GET /api/v1/items` รองรับ `search`, `itemType`, `categoryId`, `brandId`, `status`, `sortBy`, `sortOrder`, `pageNumber` และ `pageSize`. `sortBy` รับ `code`, `itemType` หรือ `status`; `sortOrder` รับ `asc`/`desc`; ค่าเริ่มต้นคือ `code asc`. การเรียงใช้ Item ID เป็น stable tie-breaker และ `pageSize` ถูกจำกัดไม่เกิน 100 (ค่าเริ่มต้น 25). Item Import ยังเป็น Future Contract.
+`GET /api/v1/items` รองรับ `search`, `itemType`, `categoryId`, `brandId`, `status`, `sortBy`, `sortOrder`, `pageNumber` และ `pageSize`. `sortBy` รับ `code`, `itemType` หรือ `status`; `sortOrder` รับ `asc`/`desc`; ค่าเริ่มต้นคือ `code asc`. การเรียงใช้ Item ID เป็น stable tie-breaker และ `pageSize` ถูกจำกัดไม่เกิน 100 (ค่าเริ่มต้น 25). Item Import มี Phase 1 `createOnly` แบบ CSV ตาม [Import Contract](#import-contract).
 
 ## Planned Item Identity and Barcode Contract
 
@@ -226,6 +226,24 @@ GET /api/v1/items/{id}/resolved-cost?branchId=...&unitCode=sheet&currency=THB&qu
 Resolver เรียง Branch scope ก่อน Organization scope จากนั้นเลือก `EffectiveFromUtc` ล่าสุดและ `MinimumQuantity` สูงสุดที่ครอบคลุมจำนวนที่ร้องขอ ถ้ายังมีผู้ชนะมากกว่าหนึ่งรายการคืน `ITEM_COST_AMBIGUOUS` โดยไม่ใช้ Source Priority, Version หรือ ID ตัดสิน หากไม่พบคืน `ITEM_COST_NOT_FOUND` Catalog นับเฉพาะ Item ที่มีผู้ชนะราคาเพียงหนึ่งรายการก่อนแบ่งหน้าและคำนวณ Facets
 
 ## Import Contract
+
+### Phase 1 — implemented 2026-10-04 (`createOnly`, CSV, synchronous)
+
+ทีมพัฒนาเลือกขอบเขตเริ่มต้นนี้แทน Batch/File Service/`upsert` ด้านล่าง (ผู้ใช้มอบหมายให้ตัดสินใจ) ยังไม่ผ่าน Item Master Owner/Data Steward; ส่วนที่ไม่ทำคือ Future.
+
+| Action | Method/Path | Permission | Success |
+| --- | --- | --- | --- |
+| Preview/Validate | `POST /api/v1/items/imports/preview` body `{ content }` | `items.create` | 200 |
+| Commit | `POST /api/v1/items/imports/commit` body `{ content, expectedContentSha256? }` + `Idempotency-Key` | `items.create` | 201 |
+
+- ไฟล์เป็น CSV UTF-8 (BOM ได้) RFC 4180, ส่งเนื้อหาเป็น text ใน JSON (ไม่เก็บไฟล์), ≤ 1,000,000 ตัวอักษร, ≤ 500 แถวข้อมูล. Header ต้องตรงตามลำดับ: `code,itemType,categoryCode,brandCode,baseUnitCode,nameTh,nameEn,descriptionTh,descriptionEn,taxCategoryCode,canSell,canCost,canPurchase,canStock,canProduce`. ผิดทั้งไฟล์ → `422 ITEM_IMPORT_FILE_INVALID`.
+- Preview ไม่เขียนข้อมูล; คืน `{ contentSha256, totalRows, validRows, invalidRows, rows: [{ rowNumber, code, nameTh, isValid, errors: [{ field, code }] }] }`. error code: `REQUIRED`, `INVALID`, `TOO_LONG`, `NOT_FOUND`, `INACTIVE`, `DUPLICATE_IN_FILE`, `ALREADY_EXISTS`; `field` คือชื่อคอลัมน์หรือ `capabilities` (ต้องมี capability อย่างน้อย 1 ค่า).
+- `categoryCode`/`brandCode`/`baseUnitCode`/`taxCategoryCode` อ้างรหัสที่มีและ `active` ใน Organization (ไม่สร้างให้); `code` ว่าง = ออกรหัสผ่าน Document Numbering; รหัสซ้ำในไฟล์หรือซ้ำกับของเดิมถูกปฏิเสธ; `canX` รับ `true/false/1/0` (ว่าง = false).
+- Commit ตรวจซ้ำทั้งไฟล์: ถ้ามีแถวไม่ถูกต้องคืน `422 ITEM_IMPORT_VALIDATION_FAILED` และไม่สร้างอะไร; ถ้า `expectedContentSha256` ไม่ตรงคืน `409 ITEM_IMPORT_CONTENT_CHANGED`; สำเร็จสร้าง Item ทั้งหมดเป็น `draft` (AvailabilityMode = all branches) ใน Transaction เดียว ไม่สร้าง/เผยแพร่ Cost และไม่ Activate. ตอบ `{ batchId, createdCount, contentSha256, replayed }`.
+- Idempotency: Key + content hash เดิมคืนผลเดิม (`replayed: true`); Key เดิม content ต่าง → `409 IDEMPOTENCY_KEY_REUSED`. ชนรหัสพร้อมกันขณะ Commit → `409 ITEM_CODE_CONFLICT`.
+- Audit: `items.create` ต่อ Item (มี `importBatchId`) และ `items.import` หนึ่งรายการต่อ Batch (`createdCount`, `contentSha256`).
+
+### Planned full contract (Future: Batch, File Service, upsert, Cost)
 
 1. Client Upload ไฟล์ผ่าน File Service แล้วส่ง `fileId`, `templateVersion`, `mode=createOnly|upsert` เพื่อสร้าง Batch
 2. Backend Parse แบบ Data-only และคืนสถานะ `parsing|invalid|readyToCommit`

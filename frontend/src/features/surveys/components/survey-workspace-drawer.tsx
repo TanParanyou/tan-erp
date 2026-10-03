@@ -18,8 +18,10 @@ import {
   type UpdateSurveyDraftRequest,
   type UpdateSurveyAreaRequest,
   type UpdateSurveyMeasurementRequest,
+  type SiteSurveyChecklistResultResponse,
+  type SiteSurveyEvidenceResponse,
 } from "@/lib/api/api-client";
-import { useUpdateSurveyDraft, useMarkSurveyReady } from "@/features/surveys/api/survey-queries";
+import { useUpdateSurveyDraft, useMarkSurveyReady, useSurveyTemplateVersions } from "@/features/surveys/api/survey-queries";
 import {
   surveyWorkspaceSchema,
   validateSurveyReadiness,
@@ -29,6 +31,8 @@ import { getDefaultVisitDateTime } from "../hooks/use-measurement-metadata";
 import { SurveyScopeSection } from "./survey-scope-section";
 import { SurveyAreasSection } from "./survey-areas-section";
 import { SurveyNotesSection } from "./survey-notes-section";
+import { SurveyChecklistSection } from "./survey-checklist-section";
+import { SurveyEvidenceSection } from "./survey-evidence-section";
 
 interface SurveyWorkspaceDrawerProps {
   isOpen: boolean;
@@ -61,6 +65,14 @@ export function SurveyWorkspaceDrawer({
   const updateDraftMutation = useUpdateSurveyDraft(opportunityId, survey.id ?? "", revisionId);
   const markReadyMutation = useMarkSurveyReady(opportunityId, survey.id ?? "", revisionId);
 
+  // The revision's template decides which checklist items and how much evidence it needs.
+  const templatesQuery = useSurveyTemplateVersions();
+  const template = templatesQuery.data?.items?.find((item) => item.code === currentRevision?.surveyTemplateVersion) ?? null;
+  const requiredChecklistItems = template?.requiredChecklistItems ?? [];
+  const minimumEvidenceCount = template?.minimumEvidenceCount ?? 0;
+  const showChecklist = requiredChecklistItems.length > 0;
+  const showEvidence = minimumEvidenceCount > 0 || (currentRevision?.evidence?.length ?? 0) > 0;
+
   // Initialize React Hook Form
   const methods = useForm<SurveyWorkspaceFormData>({
     resolver: zodResolver(surveyWorkspaceSchema),
@@ -71,6 +83,8 @@ export function SurveyWorkspaceDrawer({
       constraints: [],
       missingDetails: [],
       areas: [],
+      checklist: [],
+      evidence: [],
     },
   });
 
@@ -117,6 +131,17 @@ export function SurveyWorkspaceDrawer({
         constraints: currentRevision.constraints ? [...currentRevision.constraints] : [],
         missingDetails: currentRevision.missingDetails ? [...currentRevision.missingDetails] : [],
         areas: initialAreas,
+        checklist: (currentRevision.checklist ?? []).map((c: SiteSurveyChecklistResultResponse) => ({
+          itemCode: c.itemCode ?? "",
+          result: (c.result as SurveyWorkspaceFormData["checklist"][number]["result"]) ?? "pass",
+          note: c.note ?? null,
+        })),
+        evidence: (currentRevision.evidence ?? []).map((e: SiteSurveyEvidenceResponse, idx: number) => ({
+          fileId: e.fileId ?? "",
+          kind: (e.kind as SurveyWorkspaceFormData["evidence"][number]["kind"]) ?? "site_photo",
+          caption: e.caption ?? null,
+          sortOrder: e.sortOrder ?? idx + 1,
+        })),
       });
     }
   }, [currentRevision, reset]);
@@ -154,6 +179,18 @@ export function SurveyWorkspaceDrawer({
       constraints: data.constraints,
       missingDetails: data.missingDetails,
       areas: areaRequests,
+      // Only send what the template uses; omitted lists leave the stored values untouched.
+      checklist: showChecklist
+        ? data.checklist.map((c) => ({ itemCode: c.itemCode, result: c.result, note: c.note?.trim() || null }))
+        : undefined,
+      evidence: showEvidence
+        ? data.evidence.map((e, idx) => ({
+            fileId: e.fileId,
+            kind: e.kind,
+            caption: e.caption?.trim() || null,
+            sortOrder: e.sortOrder ?? idx + 1,
+          }))
+        : undefined,
     };
   };
 
@@ -194,7 +231,10 @@ export function SurveyWorkspaceDrawer({
   // Validate & Open Confirmation for Mark Ready
   const handleOpenConfirmMarkReady = () => {
     const formData = getValues();
-    const result = validateSurveyReadiness(formData);
+    const result = validateSurveyReadiness(
+      formData,
+      template ? { requiredChecklistItems, minimumEvidenceCount } : null
+    );
 
     if (!result.isValid && result.errorKey) {
       const translatedMsg = result.errorParams
@@ -326,7 +366,19 @@ export function SurveyWorkspaceDrawer({
           {/* 2. Areas and Measurements Section */}
           <SurveyAreasSection isReady={isReady} />
 
-          {/* 3. Notes, Constraints, and Missing Details Section */}
+          {/* 3. Template checklist and photo evidence */}
+          {showChecklist && (
+            <SurveyChecklistSection requiredItems={requiredChecklistItems} isReady={isReady} />
+          )}
+          {showEvidence && (
+            <SurveyEvidenceSection
+              opportunityId={opportunityId}
+              minimumEvidenceCount={minimumEvidenceCount}
+              isReady={isReady}
+            />
+          )}
+
+          {/* 4. Notes, Constraints, and Missing Details Section */}
           <SurveyNotesSection isReady={isReady} />
         </div>
       </Drawer>

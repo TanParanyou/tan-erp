@@ -223,6 +223,36 @@
   <data name="SURVEY_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>ไม่สามารถแก้ไขหรือดำเนินการในสถานะปัจจุบันของฉบับสำรวจได้</value>
   </data>
+  <data name="SURVEY_DRAFT_EXISTS_TITLE" xml:space="preserve">
+    <value>มีฉบับร่างอยู่แล้ว</value>
+  </data>
+  <data name="SURVEY_DRAFT_EXISTS_DETAIL" xml:space="preserve">
+    <value>มีฉบับสำรวจที่ยังเป็นฉบับร่างอยู่แล้ว กรุณาแก้ไขหรือยกเลิกฉบับร่างนั้นก่อนสร้างฉบับใหม่</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_UNAVAILABLE_TITLE" xml:space="preserve">
+    <value>ไม่พบแบบฟอร์มสำรวจ</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_UNAVAILABLE_DETAIL" xml:space="preserve">
+    <value>ไม่พบแบบฟอร์มสำรวจที่ฉบับสำรวจนี้อ้างอิงอยู่</value>
+  </data>
+  <data name="SURVEY_CHECKLIST_INVALID_TITLE" xml:space="preserve">
+    <value>รายการตรวจสอบไม่ถูกต้อง</value>
+  </data>
+  <data name="SURVEY_CHECKLIST_INVALID_DETAIL" xml:space="preserve">
+    <value>รายการตรวจสอบหน้างานไม่ตรงกับแบบฟอร์มสำรวจ หรือมีผลตรวจซ้ำ/ไม่ถูกต้อง</value>
+  </data>
+  <data name="SURVEY_EVIDENCE_INVALID_TITLE" xml:space="preserve">
+    <value>หลักฐานไม่ถูกต้อง</value>
+  </data>
+  <data name="SURVEY_EVIDENCE_INVALID_DETAIL" xml:space="preserve">
+    <value>ข้อมูลหลักฐานไม่ถูกต้อง ต้องมีไฟล์ที่ไม่ซ้ำและประเภทหลักฐานที่ถูกต้อง</value>
+  </data>
+  <data name="SURVEY_EVIDENCE_NOT_READY_TITLE" xml:space="preserve">
+    <value>ไฟล์หลักฐานยังไม่พร้อม</value>
+  </data>
+  <data name="SURVEY_EVIDENCE_NOT_READY_DETAIL" xml:space="preserve">
+    <value>ไฟล์หลักฐานต้องอัปโหลดและตรวจสอบเสร็จ และผูกกับโอกาสทางการขายนี้ก่อน</value>
+  </data>
   <data name="SURVEY_MEASUREMENT_INVALID_TITLE" xml:space="preserve">
     <value>ข้อมูลระยะวัดไม่ถูกต้อง</value>
   </data>
@@ -645,6 +675,12 @@
   <data name="COST_SOURCE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ข้อมูลแหล่งที่มาถูกเปลี่ยนโดยผู้ใช้อื่น กรุณาโหลดข้อมูลล่าสุดก่อนบันทึก</value></data>
   <data name="COST_SOURCE_CODE_DUPLICATE_TITLE" xml:space="preserve"><value>รหัสแหล่งที่มาซ้ำ</value></data>
   <data name="COST_SOURCE_CODE_DUPLICATE_DETAIL" xml:space="preserve"><value>มีรหัสแหล่งที่มานี้ในองค์กรแล้ว</value></data>
+  <data name="ITEM_IMPORT_FILE_INVALID_TITLE" xml:space="preserve"><value>ไฟล์นำเข้าไม่ถูกต้อง</value></data>
+  <data name="ITEM_IMPORT_FILE_INVALID_DETAIL" xml:space="preserve"><value>ไฟล์ CSV ไม่ถูกต้อง กรุณาตรวจหัวคอลัมน์ ขนาดไฟล์ และจำนวนแถวตามคู่มือ</value></data>
+  <data name="ITEM_IMPORT_VALIDATION_FAILED_TITLE" xml:space="preserve"><value>ข้อมูลนำเข้ามีแถวที่ไม่ถูกต้อง</value></data>
+  <data name="ITEM_IMPORT_VALIDATION_FAILED_DETAIL" xml:space="preserve"><value>มีบางแถวไม่ผ่านการตรวจสอบ ระบบไม่ได้นำเข้าข้อมูลใด ๆ กรุณาแก้ไขแล้วตรวจสอบก่อนนำเข้าอีกครั้ง</value></data>
+  <data name="ITEM_IMPORT_CONTENT_CHANGED_TITLE" xml:space="preserve"><value>ไฟล์ไม่ตรงกับที่ตรวจสอบไว้</value></data>
+  <data name="ITEM_IMPORT_CONTENT_CHANGED_DETAIL" xml:space="preserve"><value>เนื้อหาไฟล์ต่างจากฉบับที่ตรวจสอบก่อนนำเข้า กรุณาตรวจสอบไฟล์ใหม่อีกครั้ง</value></data>
   <data name="ITEM_CODE_CONFLICT_TITLE" xml:space="preserve"><value>รหัสข้อมูลหลักซ้ำ</value></data>
   <data name="ITEM_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>มีรหัสนี้ในองค์กรแล้ว กรุณาใช้รหัสอื่น</value></data>
   <data name="MASTER_DATA_CODE_CONFIGURATION_INVALID_TITLE" xml:space="preserve"><value>รูปแบบรหัส Master Data ไม่ถูกต้อง</value></data>

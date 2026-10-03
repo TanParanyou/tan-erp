@@ -256,3 +256,12 @@ The 2026-09-28 UI session verified three freely selectable editor tabs, preserve
 The default full Backend run and a retry with `xUnit.MaxParallelThreads=2` were stopped after PostgreSQL connection timeouts during host startup/migration, before their affected business assertions ran. The isolated failing cases passed. This evidence does not establish a specific root cause or a passing default full-suite run.
 
 The full non-parallel run passed using the same assertions and disposable PostgreSQL containers. [xUnit RunSettings](https://xunit.net/docs/config-runsettings) documents the CLI property used for this verification. Use the explicit command above to reproduce this result; it does not establish that the default parallel execution is stable. No application or Backend test code was changed during this verification follow-up.
+
+## Item Import Phase 1 (2026-10-04)
+
+Implemented FR-ITEM-006 baseline: CSV `createOnly` Preview/Validate/Atomic Commit ตาม [Import Contract](../03-contracts/item-master-api-contract.md#phase-1--implemented-2026-10-04-createonly-csv-synchronous) (`ItemImportsController`, `ItemImportCsv`, `ItemImportStore`) และ UI นำเข้าในหน้ารายการ Item (`ItemImportModal`).
+
+**ผลที่รันจริง (targeted):** `ItemImportEndpointsTests` 6/6 บน PostgreSQL (preview ต่อแถว/ไม่เขียนข้อมูล, ไฟล์ผิด 422, แถวผิดทำให้ไม่นำเข้าเลย, สร้าง Draft + Audit + ไม่แตะ Cost, replay/Key reuse, ไฟล์เปลี่ยนหลัง preview 409, ข้าม Organization); Unit 323/323 (รวม `ItemImportCsvTests`); Frontend `features/item-master` Vitest 48/48, `tsc --noEmit`, `eslint .` ผ่าน. **ยังไม่ได้รัน** full Integration/Vitest suite, `next build`, Playwright, UAT.
+
+**ข้อจำกัด:** ขอบเขต/รูปแบบไฟล์/จำนวน 500 แถวเป็น default ที่ทีมพัฒนาเลือก ยังไม่ผ่าน Item Master Owner/Data Steward; ไม่มี `upsert`, Cost import, Barcode/Alias/Branch availability/Attributes, ตาราง Batch/Staging, อัปโหลดผ่าน File Service หรือรายงาน Error แบบดาวน์โหลด; สิทธิ์ใช้ `items.create` (ยังไม่แยก `item-imports.commit`); ไม่ตรวจ `AllowedItemTypes` ของหมวดหมู่ (ตรงกับ Create ปัจจุบัน); ยังไม่ตรวจ 200% zoom/keyboard/screen-reader ของ modal.
+

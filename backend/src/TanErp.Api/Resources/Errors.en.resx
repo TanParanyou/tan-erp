@@ -223,6 +223,36 @@
   <data name="SURVEY_INVALID_STATE_DETAIL" xml:space="preserve">
     <value>The operation cannot be performed on the survey revision in its current status.</value>
   </data>
+  <data name="SURVEY_DRAFT_EXISTS_TITLE" xml:space="preserve">
+    <value>Draft Revision Exists</value>
+  </data>
+  <data name="SURVEY_DRAFT_EXISTS_DETAIL" xml:space="preserve">
+    <value>A draft revision already exists for this survey. Finish or void it before creating a new one.</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_UNAVAILABLE_TITLE" xml:space="preserve">
+    <value>Survey Template Unavailable</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_UNAVAILABLE_DETAIL" xml:space="preserve">
+    <value>The survey template referenced by this revision is not available.</value>
+  </data>
+  <data name="SURVEY_CHECKLIST_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Checklist</value>
+  </data>
+  <data name="SURVEY_CHECKLIST_INVALID_DETAIL" xml:space="preserve">
+    <value>The checklist does not match the survey template, or has an invalid or duplicate result.</value>
+  </data>
+  <data name="SURVEY_EVIDENCE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Evidence</value>
+  </data>
+  <data name="SURVEY_EVIDENCE_INVALID_DETAIL" xml:space="preserve">
+    <value>Evidence entries need a unique file and a valid kind.</value>
+  </data>
+  <data name="SURVEY_EVIDENCE_NOT_READY_TITLE" xml:space="preserve">
+    <value>Evidence File Not Ready</value>
+  </data>
+  <data name="SURVEY_EVIDENCE_NOT_READY_DETAIL" xml:space="preserve">
+    <value>Evidence files must be uploaded, verified and linked to this opportunity first.</value>
+  </data>
   <data name="SURVEY_MEASUREMENT_INVALID_TITLE" xml:space="preserve">
     <value>Invalid Measurement</value>
   </data>
@@ -477,6 +507,12 @@
   <data name="COST_SOURCE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>Another user changed this Cost Source. Reload the latest version before saving.</value></data>
   <data name="COST_SOURCE_CODE_DUPLICATE_TITLE" xml:space="preserve"><value>Duplicate Cost Source Code</value></data>
   <data name="COST_SOURCE_CODE_DUPLICATE_DETAIL" xml:space="preserve"><value>This Cost Source code already exists in the organization.</value></data>
+  <data name="ITEM_IMPORT_FILE_INVALID_TITLE" xml:space="preserve"><value>Invalid Import File</value></data>
+  <data name="ITEM_IMPORT_FILE_INVALID_DETAIL" xml:space="preserve"><value>The CSV file is invalid. Check the header, file size and row count.</value></data>
+  <data name="ITEM_IMPORT_VALIDATION_FAILED_TITLE" xml:space="preserve"><value>Import Has Invalid Rows</value></data>
+  <data name="ITEM_IMPORT_VALIDATION_FAILED_DETAIL" xml:space="preserve"><value>Some rows failed validation. Nothing was imported. Fix them and preview again before importing.</value></data>
+  <data name="ITEM_IMPORT_CONTENT_CHANGED_TITLE" xml:space="preserve"><value>File Differs From Preview</value></data>
+  <data name="ITEM_IMPORT_CONTENT_CHANGED_DETAIL" xml:space="preserve"><value>The file content differs from the previewed file. Preview the file again.</value></data>
   <data name="ITEM_CODE_CONFLICT_TITLE" xml:space="preserve"><value>Duplicate Master Data Code</value></data>
   <data name="ITEM_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>This code already exists in the organization. Enter a different code.</value></data>
   <data name="MASTER_DATA_CODE_CONFIGURATION_INVALID_TITLE" xml:space="preserve"><value>Invalid Master Data Code Configuration</value></data>

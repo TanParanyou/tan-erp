@@ -91,3 +91,24 @@ The full backend rerun after this change passed Architecture 3/3, Integration 28
 ## 5. Full suite recheck (2026-09-30)
 
 On the same code, backend build passed with 0 warnings/errors; Architecture passed 3/3 and Unit passed 288/288. Integration passed 288/289. `ReviewEstimate_RevokedApprovalPermissionIsRecheckedAtDecisionTime` failed during PostgreSQL fixture initialization with `Received unknown response 2 for SSLRequest`; two isolated reruns each passed 1/1. No code or test source changed between these runs, so the startup failure was not reproducible in isolation and its root cause remains unconfirmed. Frontend `npm run lint` and `npm run build` passed; Next.js reported the existing multiple-lockfiles root warning. Record the full suite as intermittently failing at fixture startup; isolated passes do not turn the 288/289 run into a full-suite pass.
+
+## 6. Revision Clone/Void (2026-10-04)
+
+Implemented FR-SRV-002 Clone/Void ตาม [API contract](../03-contracts/crm-site-survey-api-contract.md#revision-lifecycle--clone-and-void-implemented-2026-10-04); Mark Ready supersede Revision ready เดิม. เพิ่ม migration `AddSurveyRevisionCloneVoid`, permissions `surveys.create-revision` และ `surveys.void` ใน TEST_ONLY seeder, integration tests 2 รายการใน `SiteSurveyEndpointsTests`.
+
+**สถานะ verification (2026-10-04, targeted เท่านั้น):**
+
+- Backend: `SiteSurveyEndpointsTests` + `OpenApiContractTests` ผ่าน 6/6 บน PostgreSQL (Testcontainers); Unit 306/306; Architecture 3/3. **ยังไม่ได้รัน full Integration suite** (เฉพาะคลาสที่เกี่ยวกับ survey/OpenAPI).
+- Frontend: เพิ่ม `latestReadyRevision` ใน `SiteSurveyResponse` (Estimate ใช้ Revision ที่ Ready ล่าสุดแทน `currentRevision` ซึ่งอาจเป็น draft/void), UI Clone/Void ใน `SurveyCard` (`SurveyRevisionActions`), OpenAPI/types regenerate แล้ว. `tsc --noEmit` และ `eslint .` ผ่าน; Vitest เฉพาะ `features/surveys` + `features/opportunities` ผ่าน 69/69. **ยังไม่ได้รัน** full Vitest, `next build`, `npm run check:api` และ Playwright.
+- ยังไม่ตรวจ 200% zoom/keyboard/screen-reader ของ modal ใหม่ และยังไม่มี UAT.
+- Production ต้องมอบสิทธิ์ `surveys.create-revision` และ `surveys.void` ให้ Role จริงก่อนใช้.
+- ยังไม่ทำ: Checklist/Evidence, Published Versioned Template, hash version ใหม่ (ต้องรอ business ยืนยัน checklist/template ตาม [Governance](../01-business/crm-site-survey-governance.md)).
+
+## 7. Checklist / Evidence / Template v2 (2026-10-04)
+
+Implemented FR-SRV-001/003/004 baseline ตาม [API contract](../03-contracts/crm-site-survey-api-contract.md#checklist-evidence-and-template-versions-implemented-2026-10-04): template registry `SURVEY-BASELINE-v1/v2`, checklist + evidence (migration `AddSurveyChecklistEvidence`), Mark Ready fail-closed gate, hash `v3`, `GET /api/v1/survey-template-versions`, และ UI ใน Survey Workspace (`SurveyChecklistSection`, `SurveyEvidenceSection` เลือกจากภาพงานของ Opportunity).
+
+**ผลที่รันจริง (targeted):** `SiteSurveyEndpointsTests` 9/9 (รวมกรณี Estimate อ้าง Revision ที่ถูก Void/มี Ready ใหม่) + `OpenApiContractTests` บน PostgreSQL; Unit 323/323; Frontend `tsc --noEmit`, `eslint .`, Vitest `features/surveys` 28/28 และ `features/surveys`+`features/opportunities` ผ่านทั้งหมด. **ยังไม่ได้รัน** full Integration/Vitest suite, `next build`, Playwright, UAT.
+
+**ข้อจำกัด/การตัดสินใจที่ต้องยืนยัน:** รายการ checklist 4 ข้อ, จำนวนหลักฐานขั้นต่ำ 1 ไฟล์ และชนิดหลักฐานเป็นค่าที่ทีมพัฒนาเลือกเป็น default ยังไม่ผ่าน Survey Owner; template เป็น code-registry (เปลี่ยนต้อง release ใหม่); evidence ต้องผ่านการอัปโหลดภาพงานของ Opportunity ก่อน (ไม่มีอัปโหลดตรงใน Workspace); ใบสำรวจที่สร้างก่อนหน้า (template v1) ไม่ต้องมี checklist/evidence; ไม่มี evidence ต่อ Area และยังไม่มี Export/Retention/Redaction workflow ของไฟล์หลักฐาน.
+

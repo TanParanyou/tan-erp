@@ -63,6 +63,10 @@ Relational Field ใช้กับ Identity, Scope, State, Measurement, Evidenc
 
 ห้ามเก็บ Customer/Contact/Opportunity ทั้งก้อน, Permission, Error Translation หรือ Binary File ใน JSONB Published Template Schema ทุก Version ต้องยังอ่านได้ตลอด Retention ของ Revision ที่อ้าง
 
+`site_survey_revisions` มีคอลัมน์ lifecycle เพิ่ม (migration `AddSurveyRevisionCloneVoid`): `source_revision_id` (FK self, Restrict), `clone_reason`, `void_reason`, `voided_at_utc`, `voided_by_user_id`; check constraint บังคับ void reason/เวลา/ผู้ทำเมื่อ `status = 'void'`.
+
+ตารางที่ implement เพิ่ม (migration `AddSurveyChecklistEvidence`): `crm.site_survey_checklist_results` (revision, `item_code`, `result` check `pass|fail|not_applicable`, `note`; unique `(organization_id, site_survey_revision_id, item_code)`) และ `crm.site_survey_evidence` (revision, `file_id` FK → `files.uploaded_files` Restrict, `kind` check, `caption`, `sort_order`; unique `(organization_id, site_survey_revision_id, file_id)`); ลูกของ Revision แบบ cascade. Template registry เป็น code (ไม่มีตาราง `survey_template_versions` ใน phase นี้; ตามกฎ Phase แรก System-owned/immutable).
+
 ## Snapshot Contract
 
 เมื่อ Mark Ready ให้ Canonicalize แล้ว Hash:
@@ -74,7 +78,7 @@ Relational Field ใช้กับ Identity, Scope, State, Measurement, Evidenc
 - Evidence file ID/checksum/manifest; ไม่ฝัง Binary
 - Readiness result, warnings, actor/time
 
-Baseline ที่มี implementation ณ 2026-09-30 ใช้ `v2:<sha256>` สำหรับ Survey Number, Revision/Template Version, เวลาเข้าพื้นที่, Scope Summary, Assumptions/Constraints/Missing Details, Area และ Measurement ทุกฟิลด์ที่บันทึกอยู่ รวมค่าการวัด/หน่วย/วิธีวัด/หมายเหตุ โดยเรียงลำดับข้อมูลก่อน hash และ normalize decimal/เวลาให้คงที่. Hash เดิมที่เป็น SHA-256 เปล่า 64 ตัวอักษรยังเป็นหลักฐานของ Ready Revision เดิมและห้ามคำนวณทับ. Customer-safe labels, Checklist, Evidence Manifest และ Ready actor/time ในสัญญาเต็มข้างต้นยังไม่มีข้อมูลครบใน baseline นี้; เมื่อ implement ต้องเพิ่ม hash version ใหม่พร้อม migration/compatibility decision ไม่ตีความ `v2` ว่าครอบคลุมฟิลด์ที่ยังไม่มี.
+Baseline ที่มี implementation ณ 2026-09-30 ใช้ `v2:<sha256>` สำหรับ Survey Number, Revision/Template Version, เวลาเข้าพื้นที่, Scope Summary, Assumptions/Constraints/Missing Details, Area และ Measurement ทุกฟิลด์ที่บันทึกอยู่ รวมค่าการวัด/หน่วย/วิธีวัด/หมายเหตุ โดยเรียงลำดับข้อมูลก่อน hash และ normalize decimal/เวลาให้คงที่. Hash เดิมที่เป็น SHA-256 เปล่า 64 ตัวอักษรยังเป็นหลักฐานของ Ready Revision เดิมและห้ามคำนวณทับ. `v2` ไม่รวม Checklist/Evidence จึงคงไว้สำหรับ template `SURVEY-BASELINE-v1`. Template `SURVEY-BASELINE-v2` ใช้ `v3:<sha256>` ที่เพิ่ม Checklist และ Evidence Manifest (fileId, content SHA-256, kind, caption, sortOrder). Customer-safe labels และ Ready actor/time ในสัญญาเต็มยังไม่อยู่ใน `v3`; ต้องเพิ่ม hash version ใหม่เมื่อเพิ่ม.
 
 Official Estimate เก็บ `site_survey_revision_id` + snapshot hash + Source Summary ที่ต้องใช้ หาก Source ถูก Void ภายหลังให้แจ้ง Risk แต่ห้ามสลับ Revision อัตโนมัติ
 

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { IconCheckCircle, IconClock, IconUser, IconMapPin, IconEdit, IconEye } from "@/components/common/Icons";
 import { SurveyWorkspaceDrawer } from "./survey-workspace-drawer";
+import { SurveyRevisionActions } from "./survey-revision-actions";
 
 interface SurveyCardProps {
   survey: SiteSurveyResponse;
@@ -17,6 +18,8 @@ interface SurveyCardProps {
   opportunityId?: string;
   opportunityRowVersion?: string;
   canEdit?: boolean;
+  canCloneRevision?: boolean;
+  canVoidRevision?: boolean;
 }
 
 export function SurveyCard({
@@ -26,6 +29,8 @@ export function SurveyCard({
   opportunityId,
   opportunityRowVersion,
   canEdit = true,
+  canCloneRevision = false,
+  canVoidRevision = false,
 }: SurveyCardProps) {
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const t = useTranslations("surveys");
@@ -164,6 +169,15 @@ export function SurveyCard({
           </Button>
         )}
       </div>
+
+      {opportunityId && (
+        <SurveyRevisionActions
+          survey={survey}
+          opportunityId={opportunityId}
+          canClone={canCloneRevision}
+          canVoid={canVoidRevision}
+        />
+      )}
 
       {opportunityId && opportunityRowVersion && (
         <SurveyWorkspaceDrawer

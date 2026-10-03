@@ -19,6 +19,19 @@ public sealed record SiteSurveyAreaProjection(
     int SortOrder,
     IReadOnlyList<SiteSurveyMeasurementProjection> Measurements);
 
+public sealed record SiteSurveyChecklistResultProjection(
+    Guid Id,
+    string ItemCode,
+    string Result,
+    string? Note);
+
+public sealed record SiteSurveyEvidenceProjection(
+    Guid Id,
+    Guid FileId,
+    string Kind,
+    string? Caption,
+    int SortOrder);
+
 public sealed record SiteSurveyRevisionProjection(
     Guid Id,
     Guid SiteSurveyId,
@@ -37,8 +50,15 @@ public sealed record SiteSurveyRevisionProjection(
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
     Guid CreatedByUserId,
-    IReadOnlyList<SiteSurveyAreaProjection>? Areas = null);
+    IReadOnlyList<SiteSurveyAreaProjection>? Areas = null,
+    IReadOnlyList<SiteSurveyChecklistResultProjection>? Checklist = null,
+    IReadOnlyList<SiteSurveyEvidenceProjection>? Evidence = null);
 
+
+public sealed record SiteSurveyReadyRevisionProjection(
+    Guid Id,
+    int RevisionNumber,
+    string? SnapshotHash);
 
 public sealed record SurveyorSummaryProjection(
     Guid Id,
@@ -66,4 +86,5 @@ public sealed record SiteSurveyProjection(
     Guid CreatedByUserId,
     SiteSurveyRevisionProjection? CurrentRevision = null,
     SurveyorSummaryProjection? AssignedSurveyor = null,
-    SiteSummaryProjection? Site = null);
+    SiteSummaryProjection? Site = null,
+    SiteSurveyReadyRevisionProjection? LatestReadyRevision = null);

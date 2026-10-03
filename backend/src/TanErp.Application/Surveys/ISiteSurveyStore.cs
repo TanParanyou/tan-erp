@@ -29,5 +29,18 @@ public interface ISiteSurveyStore
         string keyHash,
         string payloadHash,
         CancellationToken cancellationToken = default);
-}
 
+    Task<Result<SiteSurveyRevisionProjection>> CloneRevisionAsync(
+        RequestAccessContext access,
+        CloneSurveyRevision.CloneSurveyRevisionCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<SiteSurveyRevisionProjection>> VoidRevisionAsync(
+        RequestAccessContext access,
+        VoidSurveyRevision.VoidSurveyRevisionCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default);
+}

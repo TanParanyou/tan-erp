@@ -497,6 +497,51 @@ Backend Validate Cross-resource Scope, Published Template, Field/Measurement/Che
 
 Clone Request ระบุ `sourceRevisionId`, `reasonCode`, `reason` และใช้ Idempotency Key Response คืน Draft Revision ใหม่พร้อม ETag; Source ไม่เปลี่ยน
 
+## Revision Lifecycle — Clone and Void (implemented 2026-10-04)
+
+Routes ใต้ Opportunity เดียวกับ Mark Ready (ไม่ใช้ path `/site-survey-revisions/...` ในตาราง baseline ด้านบน). ทั้งสอง endpoint ต้องมี `X-Membership-Id` และ `Idempotency-Key`; Response ส่ง `ETag` ของ Revision.
+
+| Action | Method/Path | Permission | Success |
+| --- | --- | --- | --- |
+| Clone Revision | `POST /api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions` | `surveys.create-revision` | 201 |
+| Void Revision | `POST /api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions/{revisionId}/void` | `surveys.void` | 200 |
+
+```json
+// Clone — body
+{ "sourceRevisionId": "<uuid>", "reason": "ลูกค้าแก้แบบ" }
+// Void — body
+{ "expectedRevisionVersion": "<uuid>", "reason": "วัดผิดห้อง" }
+```
+
+กฎที่ implement:
+
+- `reason` จำเป็น 1–500 ตัวอักษร ไม่งั้น `422 SURVEY_FIELD_REQUIRED`. `reasonCode` ใน baseline ยังไม่ใช้; มีเฉพาะ free-text reason.
+- Clone รับ Source สถานะ `ready`, `superseded` หรือ `void` (Void ใช้เริ่มใหม่เมื่อไม่มี Ready เหลือ); Source `draft` → `409 SURVEY_INVALID_STATE` และ Opportunity ต้องอยู่ stage `surveying`, `estimating` หรือ `proposed` (อื่น ๆ → `409 OPPORTUNITY_INVALID_TRANSITION`).
+- Survey หนึ่งมี Draft ได้ครั้งละหนึ่งฉบับ; Clone ตอนมี Draft ค้างคืน `409 SURVEY_DRAFT_EXISTS`. เลขรุ่น = max + 1 และ unique index กัน race (แพ้ race คืน `409 SURVEY_VERSION_CONFLICT`).
+- Clone คัดลอก visit/scope/assumptions/constraints/missing details และ Area/Measurement ด้วย ID ใหม่ + `sourceRevisionId` + `cloneReason`; Source ไม่เปลี่ยน; ไม่คัดลอก readiness/snapshot hash.
+- Mark Ready ของ Revision ใหม่ (revision > 1) ขณะ Opportunity เป็น `estimating` ไม่เปลี่ยน stage และ Supersede Revision `ready` ก่อนหน้า (audit `survey.revision-superseded`). Estimate ที่อ้าง Revision เดิมไม่เปลี่ยน.
+- Void ทำได้จาก `draft`/`ready`/`superseded`; ซ้ำคืน `409 SURVEY_INVALID_STATE`. บันทึก `voidReason/voidedAtUtc/voidedByUserId`. หาก Estimate อ้าง Revision นั้น ระบบไม่บล็อก ไม่สลับ Source แต่ audit `survey.revision-voided` มี `referencedByEstimate: true`.
+- Retry Key เดิม + payload เดิมคืน Revision เดิม; payload ต่างคืน `409 IDEMPOTENCY_KEY_REUSED`.
+- `GET .../surveys` คืน `currentRevision` = เลขรุ่นสูงสุด (อาจเป็น draft/void) และ `latestReadyRevision` `{id, revisionNumber, snapshotHash}` = รุ่น `ready` สูงสุด ใช้เป็น Source ของ Estimate/Clone; `null` เมื่อไม่มี.
+
+## Checklist, Evidence and Template Versions (implemented 2026-10-04)
+
+กฎด้านล่างเป็น **Production Bootstrap default ที่เลือกโดยทีมพัฒนา** (ผู้ใช้มอบหมายให้ตัดสินใจแทน) ยังไม่ใช่ Business Template ที่ Survey Owner อนุมัติ; ต้องยืนยันก่อน Production ตาม [Governance](../01-business/crm-site-survey-governance.md#production-sign-off).
+
+- `GET /api/v1/survey-template-versions` (`surveys.read`) คืน `{ items: [{ code, requiredChecklistItems[], minimumEvidenceCount, snapshotHashVersion, isCurrent }] }` จาก registry ที่ system-owned และ immutable ใน code.
+  - `SURVEY-BASELINE-v1`: ไม่มี checklist/evidence ที่บังคับ, hash `v2` (ใบสำรวจเดิม).
+  - `SURVEY-BASELINE-v2` (current สำหรับใบสำรวจใหม่): checklist 4 ข้อ `site_access_confirmed`, `utilities_checked`, `existing_conditions_inspected`, `customer_requirements_confirmed` และหลักฐาน ≥ 1 ไฟล์, hash `v3`.
+  - Clone คง template version ของ Source; รุ่นใหม่ของ template ไม่เปลี่ยน Ready Revision เดิม.
+- `PUT .../revisions/{id}/draft` รับ `checklist: [{ itemCode, result, note }]` และ `evidence: [{ fileId, kind, caption, sortOrder }]` เพิ่มเติม. `null`/ไม่ส่ง = ไม่เปลี่ยน; `[]` = ล้าง.
+  - `result` ∈ `pass | fail | not_applicable`; `kind` ∈ `site_photo | measurement_sketch | other`; note/caption ≤ 500 ตัวอักษร.
+  - `itemCode` ต้องอยู่ใน template ของ Revision ไม่ซ้ำ ไม่งั้น `422 SURVEY_CHECKLIST_INVALID`; ไฟล์ซ้ำ/kind ผิด `422 SURVEY_EVIDENCE_INVALID`.
+  - ไฟล์หลักฐานใหม่ต้องอัปโหลดผ่าน File Service ด้วย `parentType = "opportunity"` ของ Opportunity เดียวกัน (เช่นภาพงาน) และ verified ไม่ งั้น `422 SURVEY_EVIDENCE_NOT_READY`; ไฟล์ที่ผูกกับ Revision อยู่แล้วคงไว้ได้.
+  - Revision ที่ template ไม่รู้จักคืน `409 SURVEY_TEMPLATE_UNAVAILABLE` (fail-closed).
+- Revision response เพิ่ม `checklist[]` และ `evidence[]`; อ่านไฟล์ผ่าน `GET /api/v1/files/{fileId}/content` เดิม (สิทธิ์ `opportunities.read`).
+- Mark Ready ตรวจ: ครบทุก checklist item, ข้อที่ไม่ใช่ `pass` ต้องมี note, หลักฐานครบตามขั้นต่ำ และไฟล์ทุกไฟล์ยัง verified ไม่งั้น `422 SURVEY_NOT_READY` และ Revision คงเป็น Draft.
+- Snapshot hash `v3:<sha256>` (template v2) ครอบคลุมข้อมูลเดิมทั้งหมด + checklist + evidence manifest (fileId, content SHA-256, kind, caption, sortOrder); template v1 ยังใช้ `v2:` ตามเดิม.
+- Clone คัดลอก checklist/evidence (ID ใหม่ ไฟล์เดิม).
+
 ## Concurrency, Retry and Privacy
 
 - Draft Patch ใช้ ETag; ค่าเก่าคืน `*_VERSION_CONFLICT` โดยไม่ Merge อัตโนมัติ

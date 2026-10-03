@@ -125,6 +125,8 @@ Migration เพิ่ม `source_type` ให้ `cost_sources` แบบ addit
 
 ### Review and Import
 
+Phase 1 `createOnly` CSV import (2026-10-04) ไม่มีตาราง `item_import_batches`/`item_import_rows`: Preview/Commit ทำงานแบบ stateless จากเนื้อหาไฟล์ที่ส่งมา, Batch ถูกบันทึกเฉพาะเป็น `IdempotencyRecord` (`item-master.item.import`) และ Audit `items.import` ตารางด้านล่างเป็นสัญญา Future สำหรับ Batch/Staging/upsert.
+
 - `cost_record_reviews`: Cost Record, decision, reason code/note, actor, authority snapshot, decided at; Append-only
 - `item_import_batches`: file id/hash, template version, mode, status, row counts, created/committed actor/time, idempotency fingerprint, row version, validation summary JSONB
 - `item_import_rows`: batch, row number, normalized natural key, operation, status, field errors JSONB, raw values JSONB, resolved target id/version

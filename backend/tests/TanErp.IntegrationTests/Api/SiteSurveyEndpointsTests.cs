@@ -12,6 +12,7 @@ using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
+using TanErp.Domain.Files;
 using TanErp.Domain.Surveys;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
@@ -155,7 +156,7 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
         Assert.NotNull(survey.CurrentRevision);
         Assert.Equal(1, survey.CurrentRevision.RevisionNumber);
         Assert.Equal(SurveyRevisionStatus.Draft, survey.CurrentRevision.Status);
-        Assert.Equal(SurveyDefaults.BaselineTemplateVersion, survey.CurrentRevision.SurveyTemplateVersion);
+        Assert.Equal(SurveyDefaults.CurrentTemplateVersion, survey.CurrentRevision.SurveyTemplateVersion);
 
         // Verify Opportunity transitioned to Surveying in DB
         using var scope = _factory.Services.CreateScope();
@@ -271,7 +272,9 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
             new List<string> { "ผนังปูนฉาบเรียบ" },
             new List<string> { "มีเบรกเกอร์แอร์ที่ผนังด้านขวา" },
             new List<string>(),
-            areas));
+            areas,
+            FullChecklist(),
+            new List<UpdateSurveyEvidenceRequest> { new(await SeedEvidenceFileAsync(oppId), EvidenceKind.SitePhoto, "ผนังด้านขวา", 1) }));
 
         var updateResp = await _client.SendAsync(updateReq);
         Assert.Equal(HttpStatusCode.OK, updateResp.StatusCode);
@@ -310,7 +313,7 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
             Assert.Equal(SurveyRevisionStatus.Ready, readyRev.Status);
             Assert.Equal(SurveyReadiness.Ready, readyRev.Readiness);
             Assert.NotNull(readyRev.SnapshotHash);
-            Assert.StartsWith("v2:", readyRev.SnapshotHash);
+            Assert.StartsWith("v3:", readyRev.SnapshotHash);
 
             // Verify Opportunity transitioned to Estimating
             var finalOpp = await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId);
@@ -324,4 +327,363 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
             Assert.Equal(OpportunityStage.Surveying, estimatingHistory.FromStage);
         }
     }
+
+
+    private static List<UpdateSurveyChecklistRequest> FullChecklist() => new()
+    {
+        new(SurveyChecklistItems.SiteAccessConfirmed, ChecklistResultValue.Pass, null),
+        new(SurveyChecklistItems.UtilitiesChecked, ChecklistResultValue.NotApplicable, "ไม่มีงานระบบ"),
+        new(SurveyChecklistItems.ExistingConditionsInspected, ChecklistResultValue.Pass, null),
+        new(SurveyChecklistItems.CustomerRequirementsConfirmed, ChecklistResultValue.Pass, null)
+    };
+
+    private async Task<Guid> SeedEvidenceFileAsync(Guid opportunityId, string parentType = FileParentTypes.Opportunity)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var session = new FileUploadSession(
+            Guid.NewGuid(), OrgAId, parentType, opportunityId, null, UserAId, now, now.AddHours(1),
+            Guid.NewGuid().ToString("N"), Guid.NewGuid().ToString("N"));
+        db.FileUploadSessions.Add(session);
+
+        var file = new UploadedFile(
+            Guid.NewGuid(), OrgAId, $"{OrgAId}/{session.Id}/evidence.webp", "evidence.webp", "image/webp", 2048,
+            session.Id.ToString(), UserAId, now, contentSha256: Guid.NewGuid().ToString("N"));
+        db.UploadedFiles.Add(file);
+
+        await db.SaveChangesAsync();
+        return file.Id;
+    }
+
+    private async Task<HttpResponseMessage> PutDraftAsync(Guid oppId, Guid surveyId, SiteSurveyRevisionResponse revision, UpdateSurveyDraftRequest body)
+    {
+        var request = CreateAuthenticatedRequest(
+            HttpMethod.Put,
+            $"/api/v1/opportunities/{oppId}/surveys/{surveyId}/revisions/{revision.Id}/draft",
+            "token-org-a",
+            MembershipAId);
+        request.Headers.Add("If-Match", $"\"{revision.RowVersion}\"");
+        request.Content = JsonContent.Create(body);
+        return await _client.SendAsync(request);
+    }
+
+    private static UpdateSurveyDraftRequest DraftBody(
+        SiteSurveyRevisionResponse revision,
+        List<UpdateSurveyChecklistRequest>? checklist,
+        List<UpdateSurveyEvidenceRequest>? evidence) => new(
+            revision.RowVersion,
+            DateTimeOffset.UtcNow,
+            "สำรวจห้องนอน",
+            new List<string> { "ผนังปูน" },
+            new List<string>(),
+            new List<string>(),
+            new List<UpdateSurveyAreaRequest>
+            {
+                new(null, "AREA-01", "ห้องนอน", null, 1, new List<UpdateSurveyMeasurementRequest>
+                {
+                    new(null, "width", 3.2m, "m", "measured", null, 1)
+                })
+            },
+            checklist,
+            evidence);
+
+    private async Task<HttpResponseMessage> PostAsync(string url, string idempotencyKey, object body)
+    {
+        var request = CreateAuthenticatedRequest(HttpMethod.Post, url, "token-org-a", MembershipAId);
+        request.Headers.Add("Idempotency-Key", idempotencyKey);
+        request.Content = JsonContent.Create(body);
+        return await _client.SendAsync(request);
+    }
+
+    private async Task<(Guid oppId, Guid surveyId, SiteSurveyRevisionResponse ready)> CreateReadySurveyAsync(string keyPrefix)
+    {
+        var (_, siteId, oppId, oppVersion) = await SetupQualifiedOpportunityAsync();
+        var now = DateTimeOffset.UtcNow;
+
+        var createResp = await PostAsync(
+            $"/api/v1/opportunities/{oppId}/surveys",
+            $"{keyPrefix}-create-0001",
+            new CreateSiteSurveyRequest(siteId, UserAId, now.AddDays(1), now.AddDays(1).AddHours(2), oppVersion));
+        Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
+        var survey = (await createResp.Content.ReadFromJsonAsync<SiteSurveyResponse>())!;
+        var draft = survey.CurrentRevision!;
+
+        var evidenceFileId = await SeedEvidenceFileAsync(oppId);
+        var updateResp = await PutDraftAsync(oppId, survey.Id, draft, DraftBody(
+            draft,
+            FullChecklist(),
+            new List<UpdateSurveyEvidenceRequest> { new(evidenceFileId, EvidenceKind.SitePhoto, "มุมห้อง", 1) }));
+        Assert.Equal(HttpStatusCode.OK, updateResp.StatusCode);
+        var updated = (await updateResp.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+
+        var ready = await MarkReadyAsync(oppId, survey.Id, updated, $"{keyPrefix}-ready-0001");
+        return (oppId, survey.Id, ready);
+    }
+
+    private async Task<SiteSurveyRevisionResponse> MarkReadyAsync(Guid oppId, Guid surveyId, SiteSurveyRevisionResponse revision, string idempotencyKey)
+    {
+        Guid oppVersion;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            oppVersion = (await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId)).RowVersion;
+        }
+
+        var response = await PostAsync(
+            $"/api/v1/opportunities/{oppId}/surveys/{surveyId}/revisions/{revision.Id}/mark-ready",
+            idempotencyKey,
+            new MarkSurveyReadyRequest(revision.RowVersion, oppVersion));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+    }
+
+    [Fact]
+    public async Task CloneVoidAndReReady_FullLifecycle_SupersedesAndKeepsHistory()
+    {
+        var (oppId, surveyId, ready1) = await CreateReadySurveyAsync("rev-lifecycle");
+        var revisionsUrl = $"/api/v1/opportunities/{oppId}/surveys/{surveyId}/revisions";
+
+        // Clone requires a reason
+        var noReason = await PostAsync(revisionsUrl, "rev-lifecycle-clone-noreason", new CloneSurveyRevisionRequest(ready1.Id, " "));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, noReason.StatusCode);
+
+        // Clone the ready revision into a new draft; source stays untouched
+        var cloneBody = new CloneSurveyRevisionRequest(ready1.Id, "ลูกค้าแก้แบบ");
+        var cloneResp = await PostAsync(revisionsUrl, "rev-lifecycle-clone-0001", cloneBody);
+        Assert.Equal(HttpStatusCode.Created, cloneResp.StatusCode);
+        var clone = (await cloneResp.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+        Assert.Equal(2, clone.RevisionNumber);
+        Assert.Equal(SurveyRevisionStatus.Draft, clone.Status);
+        Assert.Null(clone.SnapshotHash);
+        Assert.Equal(ready1.ScopeSummary, clone.ScopeSummary);
+        Assert.Single(clone.Areas!);
+        Assert.NotEqual(ready1.Areas![0].Id, clone.Areas![0].Id);
+
+        // Replay with same key returns the same revision; a second draft is rejected
+        var replay = await PostAsync(revisionsUrl, "rev-lifecycle-clone-0001", cloneBody);
+        Assert.Equal(HttpStatusCode.Created, replay.StatusCode);
+        Assert.Equal(clone.Id, (await replay.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!.Id);
+
+        var second = await PostAsync(revisionsUrl, "rev-lifecycle-clone-0002", cloneBody);
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+
+        // Mark the clone ready: previous ready revision is superseded, opportunity stays estimating
+        var ready2 = await MarkReadyAsync(oppId, surveyId, clone, "rev-lifecycle-ready-0002");
+        Assert.Equal(SurveyRevisionStatus.Ready, ready2.Status);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var first = await db.SiteSurveyRevisions.AsNoTracking().SingleAsync(r => r.Id == ready1.Id);
+            Assert.Equal(SurveyRevisionStatus.Superseded, first.Status);
+            Assert.Equal(ready1.SnapshotHash, first.SnapshotHash);
+            Assert.Equal(OpportunityStage.Estimating, (await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId)).Stage);
+        }
+
+        // Void needs a reason, then succeeds once and is not repeatable
+        var voidUrl = $"{revisionsUrl}/{ready2.Id}/void";
+        var voidNoReason = await PostAsync(voidUrl, "rev-lifecycle-void-noreason", new VoidSurveyRevisionRequest(ready2.RowVersion, ""));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, voidNoReason.StatusCode);
+
+        var voidResp = await PostAsync(voidUrl, "rev-lifecycle-void-0001", new VoidSurveyRevisionRequest(ready2.RowVersion, "วัดผิดห้อง"));
+        Assert.Equal(HttpStatusCode.OK, voidResp.StatusCode);
+        var voided = (await voidResp.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+        Assert.Equal(SurveyRevisionStatus.Void, voided.Status);
+
+        var voidAgain = await PostAsync(voidUrl, "rev-lifecycle-void-0002", new VoidSurveyRevisionRequest(voided.RowVersion, "ซ้ำ"));
+        Assert.Equal(HttpStatusCode.Conflict, voidAgain.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var row = await db.SiteSurveyRevisions.AsNoTracking().SingleAsync(r => r.Id == ready2.Id);
+            Assert.Equal("วัดผิดห้อง", row.VoidReason);
+            Assert.NotNull(row.VoidedAtUtc);
+            Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "survey.revision-voided" && a.ResourceId == ready2.Id.ToString()));
+        }
+    }
+
+    [Fact]
+    public async Task CloneRevision_DraftSource_Returns409()
+    {
+        var (oppId, surveyId, ready) = await CreateReadySurveyAsync("rev-draftsrc");
+        var revisionsUrl = $"/api/v1/opportunities/{oppId}/surveys/{surveyId}/revisions";
+
+        var cloneResp = await PostAsync(revisionsUrl, "rev-draftsrc-clone-0001", new CloneSurveyRevisionRequest(ready.Id, "แก้ไข"));
+        var draft = (await cloneResp.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+
+        var response = await PostAsync(revisionsUrl, "rev-draftsrc-clone-0002", new CloneSurveyRevisionRequest(draft.Id, "แก้ไขอีก"));
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task MarkReady_MissingChecklistOrEvidence_Returns422AndStaysDraft()
+    {
+        var (_, siteId, oppId, oppVersion) = await SetupQualifiedOpportunityAsync();
+        var now = DateTimeOffset.UtcNow;
+        var createResp = await PostAsync(
+            $"/api/v1/opportunities/{oppId}/surveys",
+            "rev-gate-create-0001",
+            new CreateSiteSurveyRequest(siteId, UserAId, now.AddDays(1), now.AddDays(1).AddHours(2), oppVersion));
+        var survey = (await createResp.Content.ReadFromJsonAsync<SiteSurveyResponse>())!;
+        var draft = survey.CurrentRevision!;
+
+        // Measurements only: no checklist and no evidence
+        var updated = (await (await PutDraftAsync(oppId, survey.Id, draft, DraftBody(draft, null, null)))
+            .Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+
+        var markUrl = $"/api/v1/opportunities/{oppId}/surveys/{survey.Id}/revisions/{updated.Id}/mark-ready";
+        Guid oppVersionNow;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            oppVersionNow = (await scope.ServiceProvider.GetRequiredService<AppDbContext>().Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId)).RowVersion;
+        }
+
+        var noChecklist = await PostAsync(markUrl, "rev-gate-ready-0001", new MarkSurveyReadyRequest(updated.RowVersion, oppVersionNow));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, noChecklist.StatusCode);
+
+        // Checklist answered but a non-pass answer without a note is still rejected
+        var checklist = FullChecklist();
+        checklist[1] = new(SurveyChecklistItems.UtilitiesChecked, ChecklistResultValue.Fail, null);
+        var withChecklist = (await (await PutDraftAsync(oppId, survey.Id, updated, DraftBody(updated, checklist, null)))
+            .Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+        var noNote = await PostAsync(markUrl, "rev-gate-ready-0002", new MarkSurveyReadyRequest(withChecklist.RowVersion, oppVersionNow));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, noNote.StatusCode);
+
+        // Complete checklist but no evidence file
+        var withNote = (await (await PutDraftAsync(oppId, survey.Id, withChecklist, DraftBody(withChecklist, FullChecklist(), null)))
+            .Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+        var noEvidence = await PostAsync(markUrl, "rev-gate-ready-0003", new MarkSurveyReadyRequest(withNote.RowVersion, oppVersionNow));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, noEvidence.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var row = await db.SiteSurveyRevisions.AsNoTracking().SingleAsync(r => r.Id == updated.Id);
+            Assert.Equal(SurveyRevisionStatus.Draft, row.Status);
+            Assert.Null(row.SnapshotHash);
+            Assert.Equal(OpportunityStage.Surveying, (await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId)).Stage);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateDraft_InvalidChecklistOrForeignEvidence_Returns422()
+    {
+        var (_, siteId, oppId, oppVersion) = await SetupQualifiedOpportunityAsync();
+        var now = DateTimeOffset.UtcNow;
+        var createResp = await PostAsync(
+            $"/api/v1/opportunities/{oppId}/surveys",
+            "rev-invalid-create-0001",
+            new CreateSiteSurveyRequest(siteId, UserAId, now.AddDays(1), now.AddDays(1).AddHours(2), oppVersion));
+        var survey = (await createResp.Content.ReadFromJsonAsync<SiteSurveyResponse>())!;
+        var draft = survey.CurrentRevision!;
+
+        var unknownItem = await PutDraftAsync(oppId, survey.Id, draft, DraftBody(
+            draft,
+            new List<UpdateSurveyChecklistRequest> { new("not_a_template_item", ChecklistResultValue.Pass, null) },
+            null));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, unknownItem.StatusCode);
+
+        // A file uploaded for a different parent type cannot be used as evidence
+        var wrongParentFile = await SeedEvidenceFileAsync(oppId, FileParentTypes.Customer);
+        var foreign = await PutDraftAsync(oppId, survey.Id, draft, DraftBody(
+            draft,
+            null,
+            new List<UpdateSurveyEvidenceRequest> { new(wrongParentFile, EvidenceKind.SitePhoto, null, 1) }));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, foreign.StatusCode);
+
+        var badKind = await PutDraftAsync(oppId, survey.Id, draft, DraftBody(
+            draft,
+            null,
+            new List<UpdateSurveyEvidenceRequest> { new(Guid.NewGuid(), "video", null, 1) }));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, badKind.StatusCode);
+    }
+
+    [Fact]
+    public async Task CloneRevision_CopiesChecklistAndEvidence_AndTemplateEndpointListsCurrentVersion()
+    {
+        var (oppId, surveyId, ready) = await CreateReadySurveyAsync("rev-copy");
+        Assert.StartsWith("v3:", ready.SnapshotHash);
+
+        var cloneResp = await PostAsync(
+            $"/api/v1/opportunities/{oppId}/surveys/{surveyId}/revisions",
+            "rev-copy-clone-0001",
+            new CloneSurveyRevisionRequest(ready.Id, "แก้แบบ"));
+        var clone = (await cloneResp.Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+
+        Assert.Equal(4, clone.Checklist!.Count);
+        Assert.Single(clone.Evidence!);
+        Assert.Equal(ready.Evidence![0].FileId, clone.Evidence![0].FileId);
+        Assert.NotEqual(ready.Evidence[0].Id, clone.Evidence[0].Id);
+        Assert.Equal(ready.SurveyTemplateVersion, clone.SurveyTemplateVersion);
+
+        var templatesReq = CreateAuthenticatedRequest(HttpMethod.Get, "/api/v1/survey-template-versions", "token-org-a", MembershipAId);
+        var templatesResp = await _client.SendAsync(templatesReq);
+        Assert.Equal(HttpStatusCode.OK, templatesResp.StatusCode);
+        var templates = (await templatesResp.Content.ReadFromJsonAsync<SurveyTemplateVersionListResponse>())!;
+        var current = Assert.Single(templates.Items, t => t.IsCurrent);
+        Assert.Equal(SurveyDefaults.CurrentTemplateVersion, current.Code);
+        Assert.Equal(4, current.RequiredChecklistItems.Count);
+        Assert.Equal(1, current.MinimumEvidenceCount);
+    }
+
+    [Fact]
+    public async Task NewReadyRevisionAndVoid_LeaveEstimateReferenceUntouched_AndAuditTheRisk()
+    {
+        var (oppId, surveyId, ready1) = await CreateReadySurveyAsync("rev-estimate");
+        Guid estimateId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var opp = await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId);
+            var estimate = TanErp.Domain.Estimates.Estimate.CreateDraft(
+                Guid.NewGuid(), OrgAId, BranchAId, opp.CustomerId, oppId, $"EST-{Guid.NewGuid():N}"[..16],
+                ready1.Id, ready1.SnapshotHash);
+            db.Estimates.Add(estimate);
+            await db.SaveChangesAsync();
+            estimateId = estimate.Id;
+        }
+
+        var revisionsUrl = $"/api/v1/opportunities/{oppId}/surveys/{surveyId}/revisions";
+        var clone = (await (await PostAsync(revisionsUrl, "rev-estimate-clone-0001", new CloneSurveyRevisionRequest(ready1.Id, "แก้แบบ")))
+            .Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+        var ready2 = await MarkReadyAsync(oppId, surveyId, clone, "rev-estimate-ready-0002");
+
+        // Void the revision the estimate references: allowed, never re-pointed, risk recorded.
+        var voidResp = await PostAsync(
+            $"{revisionsUrl}/{ready1.Id}/void",
+            "rev-estimate-void-0001",
+            new VoidSurveyRevisionRequest((await GetRevisionVersionAsync(ready1.Id)), "วัดผิด"));
+        Assert.Equal(HttpStatusCode.OK, voidResp.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var estimate = await db.Estimates.AsNoTracking().SingleAsync(e => e.Id == estimateId);
+            Assert.Equal(ready1.Id, estimate.SiteSurveyRevisionId);
+            Assert.Equal(ready1.SnapshotHash, estimate.SiteSurveySnapshotHash);
+
+            var original = await db.SiteSurveyRevisions.AsNoTracking().SingleAsync(r => r.Id == ready1.Id);
+            Assert.Equal(SurveyRevisionStatus.Void, original.Status);
+            Assert.Equal(ready1.SnapshotHash, original.SnapshotHash);
+
+            var latest = await db.SiteSurveyRevisions.AsNoTracking().SingleAsync(r => r.Id == ready2.Id);
+            Assert.Equal(SurveyRevisionStatus.Ready, latest.Status);
+
+            var audit = await db.AuditEvents.AsNoTracking()
+                .Where(a => a.Action == "survey.revision-voided" && a.ResourceId == ready1.Id.ToString())
+                .SingleAsync();
+            Assert.Contains("\"referencedByEstimate\":true", audit.ChangesJson.Replace(" ", string.Empty));
+        }
+    }
+
+    private async Task<Guid> GetRevisionVersionAsync(Guid revisionId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return (await db.SiteSurveyRevisions.AsNoTracking().SingleAsync(r => r.Id == revisionId)).RowVersion;
+    }
 }
+

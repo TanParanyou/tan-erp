@@ -473,3 +473,28 @@ export function useItemMasterMutations(): ItemMasterMutations {
   const deactivateCostSource = useMutation({ mutationFn: async ({ id, rowVersion }: { id: string; rowVersion: string }) => apiClient.deactivateCostSource(id, await options(rowVersion)), onSuccess: () => queryClient.invalidateQueries({ queryKey: costSourcesQueryKey(membershipId, locale) }) });
   return { createItem, attachItemImage, updateItem, setBranchAvailability, activateItem, deactivateItem, createCostSource, updateCostSource, deactivateCostSource };
 }
+
+export function useItemImport() {
+  const queryClient = useQueryClient();
+  const locale: "th" | "en" = useSafeLocale() === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const options = async (idempotencyKey?: string): Promise<RequestOptions> => {
+    const token = await getAuthToken();
+    if (!token) throw new AuthenticationRequiredError();
+    if (!membershipId) throw new MembershipRequiredError();
+    return { token, membershipId, locale, idempotencyKey };
+  };
+  const preview = useMutation({
+    mutationFn: async (content: string) => apiClient.previewItemImport({ content }, await options()),
+  });
+  const commit = useMutation({
+    mutationFn: async ({ content, expectedContentSha256, idempotencyKey }: { content: string; expectedContentSha256: string; idempotencyKey: string }) =>
+      apiClient.commitItemImport({ content, expectedContentSha256 }, await options(idempotencyKey)),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "items"] });
+    },
+  });
+  return { preview, commit };
+}
+

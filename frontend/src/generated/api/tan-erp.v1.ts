@@ -5962,6 +5962,191 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/items/imports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PreviewItemImportRequest"];
+                    "text/json": components["schemas"]["PreviewItemImportRequest"];
+                    "application/*+json": components["schemas"]["PreviewItemImportRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ItemImportPreviewResponse"];
+                        "application/json": components["schemas"]["ItemImportPreviewResponse"];
+                        "text/json": components["schemas"]["ItemImportPreviewResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/items/imports/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CommitItemImportRequest"];
+                    "text/json": components["schemas"]["CommitItemImportRequest"];
+                    "application/*+json": components["schemas"]["CommitItemImportRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ItemImportCommitResponse"];
+                        "application/json": components["schemas"]["ItemImportCommitResponse"];
+                        "text/json": components["schemas"]["ItemImportCommitResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/items": {
         parameters: {
             query?: never;
@@ -10021,6 +10206,301 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    opportunityId: string;
+                    surveyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CloneSurveyRevisionRequest"];
+                    "text/json": components["schemas"]["CloneSurveyRevisionRequest"];
+                    "application/*+json": components["schemas"]["CloneSurveyRevisionRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SiteSurveyRevisionResponse"];
+                        "application/json": components["schemas"]["SiteSurveyRevisionResponse"];
+                        "text/json": components["schemas"]["SiteSurveyRevisionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions/{revisionId}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    opportunityId: string;
+                    surveyId: string;
+                    revisionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VoidSurveyRevisionRequest"];
+                    "text/json": components["schemas"]["VoidSurveyRevisionRequest"];
+                    "application/*+json": components["schemas"]["VoidSurveyRevisionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SiteSurveyRevisionResponse"];
+                        "application/json": components["schemas"]["SiteSurveyRevisionResponse"];
+                        "text/json": components["schemas"]["SiteSurveyRevisionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/survey-template-versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyTemplateVersionListResponse"];
+                        "application/json": components["schemas"]["SurveyTemplateVersionListResponse"];
+                        "text/json": components["schemas"]["SurveyTemplateVersionListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/unit-conversions": {
         parameters: {
             query?: never;
@@ -10454,6 +10934,15 @@ export interface components {
             parentCategoryId?: string | null;
             /** Format: uuid */
             imageFileId?: string | null;
+        };
+        CloneSurveyRevisionRequest: {
+            /** Format: uuid */
+            sourceRevisionId?: string;
+            reason?: string | null;
+        };
+        CommitItemImportRequest: {
+            content?: string | null;
+            expectedContentSha256?: string | null;
         };
         CompleteUploadSessionResponse: {
             /** Format: uuid */
@@ -11498,6 +11987,36 @@ export interface components {
             altText?: components["schemas"]["LocalizedTextResponse"];
             caption?: components["schemas"]["LocalizedTextResponse"];
         };
+        ItemImportCommitResponse: {
+            /** Format: uuid */
+            batchId?: string;
+            /** Format: int32 */
+            createdCount?: number;
+            contentSha256?: string | null;
+            replayed?: boolean;
+        };
+        ItemImportPreviewResponse: {
+            contentSha256?: string | null;
+            /** Format: int32 */
+            totalRows?: number;
+            /** Format: int32 */
+            validRows?: number;
+            /** Format: int32 */
+            invalidRows?: number;
+            rows?: components["schemas"]["ItemImportRowResponse"][] | null;
+        };
+        ItemImportRowErrorResponse: {
+            field?: string | null;
+            code?: string | null;
+        };
+        ItemImportRowResponse: {
+            /** Format: int32 */
+            rowNumber?: number;
+            code?: string | null;
+            nameTh?: string | null;
+            isValid?: boolean;
+            errors?: components["schemas"]["ItemImportRowErrorResponse"][] | null;
+        };
         ItemResponse: {
             /** Format: uuid */
             id?: string;
@@ -11729,6 +12248,9 @@ export interface components {
         PreviewDocumentSequenceResponse: {
             preview?: string | null;
         };
+        PreviewItemImportRequest: {
+            content?: string | null;
+        };
         QuotationAddressResponse: {
             label?: string | null;
             addressLine1?: string | null;
@@ -11906,6 +12428,23 @@ export interface components {
             sortOrder?: number;
             measurements?: components["schemas"]["SiteSurveyMeasurementResponse"][] | null;
         };
+        SiteSurveyChecklistResultResponse: {
+            /** Format: uuid */
+            id?: string;
+            itemCode?: string | null;
+            result?: string | null;
+            note?: string | null;
+        };
+        SiteSurveyEvidenceResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            fileId?: string;
+            kind?: string | null;
+            caption?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
         SiteSurveyMeasurementResponse: {
             /** Format: uuid */
             id?: string;
@@ -11919,6 +12458,13 @@ export interface components {
             notes?: string | null;
             /** Format: int32 */
             sortOrder?: number;
+        };
+        SiteSurveyReadyRevisionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            revisionNumber?: number;
+            snapshotHash?: string | null;
         };
         SiteSurveyResponse: {
             /** Format: uuid */
@@ -11948,6 +12494,7 @@ export interface components {
             currentRevision?: components["schemas"]["SiteSurveyRevisionResponse"];
             assignedSurveyor?: components["schemas"]["SurveyorSummaryResponse"];
             site?: components["schemas"]["SiteSummaryResponse"];
+            latestReadyRevision?: components["schemas"]["SiteSurveyReadyRevisionResponse"];
         };
         SiteSurveyRevisionResponse: {
             /** Format: uuid */
@@ -11977,6 +12524,8 @@ export interface components {
             /** Format: uuid */
             createdByUserId?: string;
             areas?: components["schemas"]["SiteSurveyAreaResponse"][] | null;
+            checklist?: components["schemas"]["SiteSurveyChecklistResultResponse"][] | null;
+            evidence?: components["schemas"]["SiteSurveyEvidenceResponse"][] | null;
         };
         SubmitEstimateRequest: {
             /** Format: int32 */
@@ -11984,6 +12533,17 @@ export interface components {
             /** Format: int32 */
             calculationVersion?: number;
             note?: string | null;
+        };
+        SurveyTemplateVersionListResponse: {
+            items?: components["schemas"]["SurveyTemplateVersionResponse"][] | null;
+        };
+        SurveyTemplateVersionResponse: {
+            code?: string | null;
+            requiredChecklistItems?: string[] | null;
+            /** Format: int32 */
+            minimumEvidenceCount?: number;
+            snapshotHashVersion?: string | null;
+            isCurrent?: boolean;
         };
         SurveyorSummaryResponse: {
             /** Format: uuid */
@@ -12269,6 +12829,11 @@ export interface components {
             sortOrder?: number;
             measurements?: components["schemas"]["UpdateSurveyMeasurementRequest"][] | null;
         };
+        UpdateSurveyChecklistRequest: {
+            itemCode?: string | null;
+            result?: string | null;
+            note?: string | null;
+        };
         UpdateSurveyDraftRequest: {
             /** Format: uuid */
             expectedRevisionVersion?: string;
@@ -12279,6 +12844,16 @@ export interface components {
             constraints?: string[] | null;
             missingDetails?: string[] | null;
             areas?: components["schemas"]["UpdateSurveyAreaRequest"][] | null;
+            checklist?: components["schemas"]["UpdateSurveyChecklistRequest"][] | null;
+            evidence?: components["schemas"]["UpdateSurveyEvidenceRequest"][] | null;
+        };
+        UpdateSurveyEvidenceRequest: {
+            /** Format: uuid */
+            fileId?: string;
+            kind?: string | null;
+            caption?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
         };
         UpdateSurveyMeasurementRequest: {
             /** Format: uuid */
@@ -12327,6 +12902,11 @@ export interface components {
             items?: components["schemas"]["UserListItemResponse"][] | null;
             /** Format: int32 */
             totalCount?: number;
+        };
+        VoidSurveyRevisionRequest: {
+            /** Format: uuid */
+            expectedRevisionVersion?: string;
+            reason?: string | null;
         };
         WorkImageUserSummaryResponse: {
             /** Format: uuid */

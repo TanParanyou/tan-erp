@@ -17,6 +17,17 @@ public sealed record AreaInput(
     int SortOrder,
     IReadOnlyList<MeasurementInput> Measurements);
 
+public sealed record ChecklistInput(
+    string ItemCode,
+    string Result,
+    string? Note);
+
+public sealed record EvidenceInput(
+    Guid FileId,
+    string Kind,
+    string? Caption,
+    int SortOrder);
+
 public sealed record UpdateSurveyDraftCommand(
     Guid SiteSurveyId,
     Guid RevisionId,
@@ -27,6 +38,8 @@ public sealed record UpdateSurveyDraftCommand(
     IReadOnlyList<string> Constraints,
     IReadOnlyList<string> MissingDetails,
     IReadOnlyList<AreaInput> Areas,
+    IReadOnlyList<ChecklistInput>? Checklist,
+    IReadOnlyList<EvidenceInput>? Evidence,
     string FirebaseUid,
     Guid MembershipId,
     string TraceId);

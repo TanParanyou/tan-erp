@@ -17,6 +17,17 @@ public sealed record UpdateSurveyAreaRequest(
     int SortOrder,
     List<UpdateSurveyMeasurementRequest> Measurements);
 
+public sealed record UpdateSurveyChecklistRequest(
+    string ItemCode,
+    string Result,
+    string? Note);
+
+public sealed record UpdateSurveyEvidenceRequest(
+    Guid FileId,
+    string Kind,
+    string? Caption,
+    int SortOrder);
+
 public sealed record UpdateSurveyDraftRequest(
     Guid ExpectedRevisionVersion,
     DateTimeOffset? VisitedAtUtc,
@@ -24,4 +35,6 @@ public sealed record UpdateSurveyDraftRequest(
     List<string>? Assumptions,
     List<string>? Constraints,
     List<string>? MissingDetails,
-    List<UpdateSurveyAreaRequest>? Areas);
+    List<UpdateSurveyAreaRequest>? Areas,
+    List<UpdateSurveyChecklistRequest>? Checklist = null,
+    List<UpdateSurveyEvidenceRequest>? Evidence = null);

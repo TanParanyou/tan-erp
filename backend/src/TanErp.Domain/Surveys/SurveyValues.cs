@@ -55,6 +55,40 @@ public static class SurveyReadiness
 public static class SurveyDefaults
 {
     public const string BaselineTemplateVersion = "SURVEY-BASELINE-v1";
+    public const string ChecklistTemplateVersion = "SURVEY-BASELINE-v2";
+    public const string CurrentTemplateVersion = ChecklistTemplateVersion;
+}
+
+public static class ChecklistResultValue
+{
+    public const string Pass = "pass";
+    public const string Fail = "fail";
+    public const string NotApplicable = "not_applicable";
+
+    public static readonly HashSet<string> All = new(StringComparer.Ordinal)
+    {
+        Pass,
+        Fail,
+        NotApplicable
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}
+
+public static class EvidenceKind
+{
+    public const string SitePhoto = "site_photo";
+    public const string MeasurementSketch = "measurement_sketch";
+    public const string Other = "other";
+
+    public static readonly HashSet<string> All = new(StringComparer.Ordinal)
+    {
+        SitePhoto,
+        MeasurementSketch,
+        Other
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
 }
 
 public static class MeasurementType

@@ -38,6 +38,8 @@ export const PERMISSIONS = {
   // Surveys
   SURVEYS_READ: "surveys.read",
   SURVEYS_CREATE: "surveys.create",
+  SURVEYS_CREATE_REVISION: "surveys.create-revision",
+  SURVEYS_VOID: "surveys.void",
 
   // Commercial - Quotations
   QUOTATIONS_READ: "quotations.read",

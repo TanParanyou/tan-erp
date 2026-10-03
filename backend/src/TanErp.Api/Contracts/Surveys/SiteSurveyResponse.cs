@@ -21,6 +21,19 @@ public sealed record SiteSurveyAreaResponse(
     int SortOrder,
     IReadOnlyList<SiteSurveyMeasurementResponse> Measurements);
 
+public sealed record SiteSurveyChecklistResultResponse(
+    Guid Id,
+    string ItemCode,
+    string Result,
+    string? Note);
+
+public sealed record SiteSurveyEvidenceResponse(
+    Guid Id,
+    Guid FileId,
+    string Kind,
+    string? Caption,
+    int SortOrder);
+
 public sealed record SiteSurveyRevisionResponse(
     Guid Id,
     Guid SiteSurveyId,
@@ -39,8 +52,15 @@ public sealed record SiteSurveyRevisionResponse(
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
     Guid CreatedByUserId,
-    IReadOnlyList<SiteSurveyAreaResponse>? Areas = null);
+    IReadOnlyList<SiteSurveyAreaResponse>? Areas = null,
+    IReadOnlyList<SiteSurveyChecklistResultResponse>? Checklist = null,
+    IReadOnlyList<SiteSurveyEvidenceResponse>? Evidence = null);
 
+
+public sealed record SiteSurveyReadyRevisionResponse(
+    Guid Id,
+    int RevisionNumber,
+    string? SnapshotHash);
 
 public sealed record SurveyorSummaryResponse(
     Guid Id,
@@ -63,4 +83,5 @@ public sealed record SiteSurveyResponse(
     Guid CreatedByUserId,
     SiteSurveyRevisionResponse? CurrentRevision = null,
     SurveyorSummaryResponse? AssignedSurveyor = null,
-    SiteSummaryResponse? Site = null);
+    SiteSummaryResponse? Site = null,
+    SiteSurveyReadyRevisionResponse? LatestReadyRevision = null);

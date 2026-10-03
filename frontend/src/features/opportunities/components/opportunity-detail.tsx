@@ -186,6 +186,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const canTransition = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_TRANSITION);
   const canUpdate = can(selectedMembership, PERMISSIONS.OPPORTUNITIES_UPDATE);
   const canCreateSurvey = can(selectedMembership, PERMISSIONS.SURVEYS_CREATE);
+  const canCloneSurveyRevision = can(selectedMembership, PERMISSIONS.SURVEYS_CREATE_REVISION);
+  const canVoidSurveyRevision = can(selectedMembership, PERMISSIONS.SURVEYS_VOID);
   const canAccept = can(selectedMembership, PERMISSIONS.QUOTATIONS_ACCEPT);
   const canQualify = isDraft && canTransition && isQGateEligible;
   const canScheduleSurvey = isQualified && canCreateSurvey;
@@ -593,6 +595,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                   opportunityId={opportunity.id}
                   opportunityRowVersion={opportunity.rowVersion}
                   canEdit={canUpdate}
+                  canCloneRevision={canCloneSurveyRevision}
+                  canVoidRevision={canVoidSurveyRevision}
                 />
               </div>
             )}
@@ -606,8 +610,8 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                   opportunityRowVersion={opportunity.rowVersion}
                   customerId={opportunity.customer?.id}
                   branchId={opportunity.branch?.id}
-                  siteSurveyRevisionId={survey?.currentRevision?.id}
-                  siteSurveySnapshotHash={survey?.currentRevision?.snapshotHash}
+                  siteSurveyRevisionId={survey?.latestReadyRevision?.id}
+                  siteSurveySnapshotHash={survey?.latestReadyRevision?.snapshotHash}
                   canEdit={canUpdate}
                   isCreating={createEstimateMutation.isPending}
                   onCreateEstimate={async () => {
@@ -615,7 +619,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                     try {
                       await createEstimateMutation.mutateAsync({
                         opportunityId: opportunity.id,
-                        siteSurveyRevisionId: survey?.currentRevision?.id,
+                        siteSurveyRevisionId: survey?.latestReadyRevision?.id,
                         currency: "THB",
                       });
                     } catch (err: unknown) {

@@ -142,6 +142,9 @@ builder.Services.AddScoped<TanErp.Application.Surveys.CreateSiteSurvey.CreateSit
 builder.Services.AddScoped<TanErp.Application.Surveys.GetSiteSurvey.GetSiteSurveyHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.UpdateSurveyDraft.UpdateSurveyDraftHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.MarkSurveyReady.MarkSurveyReadyHandler>();
+builder.Services.AddScoped<TanErp.Application.Surveys.CloneSurveyRevision.CloneSurveyRevisionHandler>();
+builder.Services.AddScoped<TanErp.Application.Surveys.VoidSurveyRevision.VoidSurveyRevisionHandler>();
+builder.Services.AddScoped<TanErp.Application.Surveys.ListSurveyTemplateVersions.ListSurveyTemplateVersionsHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateStore, TanErp.Infrastructure.Persistence.Estimates.EstimateStore>();
 builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateDraft.CreateEstimateDraftHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.GetEstimate.GetEstimateHandler>();
@@ -160,6 +163,9 @@ builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddress
 
 // Item Master Catalog & Taxonomy Store
 builder.Services.AddScoped<TanErp.Application.Items.IItemStore, TanErp.Infrastructure.Persistence.Items.ItemStore>();
+builder.Services.AddScoped<TanErp.Application.Items.IItemImportStore, TanErp.Infrastructure.Persistence.Items.ItemImportStore>();
+builder.Services.AddScoped<TanErp.Application.Items.Import.PreviewItemImport.PreviewItemImportHandler>();
+builder.Services.AddScoped<TanErp.Application.Items.Import.CommitItemImport.CommitItemImportHandler>();
 builder.Services.AddScoped<TanErp.Application.Common.Abstractions.IOrganizationBranchReader, TanErp.Infrastructure.Persistence.OrganizationBranchReader>();
 builder.Services.AddScoped<TanErp.Application.Items.IItemImageStore, TanErp.Infrastructure.Persistence.Items.ItemImageStore>();
 builder.Services.AddScoped<TanErp.Application.Items.ICostRecordStore, TanErp.Infrastructure.Persistence.Items.CostRecordStore>();

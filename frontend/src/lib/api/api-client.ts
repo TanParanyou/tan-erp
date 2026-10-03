@@ -51,6 +51,15 @@ export type UpdateSurveyDraftRequest = components["schemas"]["UpdateSurveyDraftR
 export type UpdateSurveyAreaRequest = components["schemas"]["UpdateSurveyAreaRequest"];
 export type UpdateSurveyMeasurementRequest = components["schemas"]["UpdateSurveyMeasurementRequest"];
 export type MarkSurveyReadyRequest = components["schemas"]["MarkSurveyReadyRequest"];
+export type CloneSurveyRevisionRequest = components["schemas"]["CloneSurveyRevisionRequest"];
+export type VoidSurveyRevisionRequest = components["schemas"]["VoidSurveyRevisionRequest"];
+export type SiteSurveyReadyRevisionResponse = components["schemas"]["SiteSurveyReadyRevisionResponse"];
+export type SiteSurveyChecklistResultResponse = components["schemas"]["SiteSurveyChecklistResultResponse"];
+export type SiteSurveyEvidenceResponse = components["schemas"]["SiteSurveyEvidenceResponse"];
+export type UpdateSurveyChecklistRequest = components["schemas"]["UpdateSurveyChecklistRequest"];
+export type UpdateSurveyEvidenceRequest = components["schemas"]["UpdateSurveyEvidenceRequest"];
+export type SurveyTemplateVersionResponse = components["schemas"]["SurveyTemplateVersionResponse"];
+export type SurveyTemplateVersionListResponse = components["schemas"]["SurveyTemplateVersionListResponse"];
 
 export type EstimateDetailResponse = components["schemas"]["EstimateDetailResponse"];
 export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionResponse"];
@@ -130,6 +139,11 @@ export type AttachItemImageRequest = components["schemas"]["AttachItemImageReque
 export type CreateItemRequest = components["schemas"]["CreateItemRequest"];
 export type UpdateItemRequest = components["schemas"]["UpdateItemRequest"];
 export type PagedItemsResponse = components["schemas"]["PagedItemsResponse"];
+export type PreviewItemImportRequest = components["schemas"]["PreviewItemImportRequest"];
+export type CommitItemImportRequest = components["schemas"]["CommitItemImportRequest"];
+export type ItemImportPreviewResponse = components["schemas"]["ItemImportPreviewResponse"];
+export type ItemImportRowResponse = components["schemas"]["ItemImportRowResponse"];
+export type ItemImportCommitResponse = components["schemas"]["ItemImportCommitResponse"];
 export type CostSourceResponse = components["schemas"]["CostSourceResponse"];
 export type CostSourceRequest = components["schemas"]["CostSourceRequest"];
 export type UpdateCostSourceRequest = components["schemas"]["UpdateCostSourceRequest"];
@@ -619,6 +633,45 @@ export class ApiClient {
     );
   }
 
+  async listSurveyTemplateVersions(
+    options: RequestOptions
+  ): Promise<SurveyTemplateVersionListResponse> {
+    return this.request<SurveyTemplateVersionListResponse>(
+      "/api/v1/survey-template-versions",
+      "GET",
+      options
+    );
+  }
+
+  async cloneSurveyRevision(
+    opportunityId: string,
+    surveyId: string,
+    payload: CloneSurveyRevisionRequest,
+    options: RequestOptions
+  ): Promise<SiteSurveyRevisionResponse> {
+    return this.request<SiteSurveyRevisionResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys/${encodeURIComponent(surveyId)}/revisions`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async voidSurveyRevision(
+    opportunityId: string,
+    surveyId: string,
+    revisionId: string,
+    payload: VoidSurveyRevisionRequest,
+    options: RequestOptions
+  ): Promise<SiteSurveyRevisionResponse> {
+    return this.request<SiteSurveyRevisionResponse>(
+      `/api/v1/opportunities/${encodeURIComponent(opportunityId)}/surveys/${encodeURIComponent(surveyId)}/revisions/${encodeURIComponent(revisionId)}/void`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
   async getEstimate(
     id: string,
     options: RequestOptions
@@ -946,6 +999,14 @@ export class ApiClient {
     params.set("pageNumber", String(query.pageNumber ?? 1));
     params.set("pageSize", String(query.pageSize ?? 25));
     return this.request<PagedItemsResponse>(`/api/v1/items?${params.toString()}`, "GET", options);
+  }
+
+  async previewItemImport(payload: PreviewItemImportRequest, options: RequestOptions): Promise<ItemImportPreviewResponse> {
+    return this.request<ItemImportPreviewResponse>("/api/v1/items/imports/preview", "POST", options, payload);
+  }
+
+  async commitItemImport(payload: CommitItemImportRequest, options: RequestOptions): Promise<ItemImportCommitResponse> {
+    return this.request<ItemImportCommitResponse>("/api/v1/items/imports/commit", "POST", options, payload);
   }
 
   async listOrganizationBranches(options: RequestOptions): Promise<OrganizationBranchResponse[]> {

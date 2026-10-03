@@ -4611,6 +4611,100 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.ToTable("site_survey_areas", "crm");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyChecklistResult", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("item_code");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("result");
+
+                    b.Property<Guid>("SiteSurveyRevisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("site_survey_revision_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteSurveyRevisionId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "SiteSurveyRevisionId", "ItemCode")
+                        .IsUnique();
+
+                    b.ToTable("site_survey_checklist_results", "crm", t =>
+                        {
+                            t.HasCheckConstraint("CK_site_survey_checklist_results_result", "result IN ('pass', 'fail', 'not_applicable')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("caption");
+
+                    b.Property<Guid>("FileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("file_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("SiteSurveyRevisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("site_survey_revision_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileId");
+
+                    b.HasIndex("SiteSurveyRevisionId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "SiteSurveyRevisionId", "FileId")
+                        .IsUnique();
+
+                    b.ToTable("site_survey_evidence", "crm", t =>
+                        {
+                            t.HasCheckConstraint("CK_site_survey_evidence_kind", "kind IN ('site_photo', 'measurement_sketch', 'other')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyMeasurement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4690,6 +4784,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("text[]")
                         .HasColumnName("assumptions");
 
+                    b.Property<string>("CloneReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("clone_reason");
+
                     b.PrimitiveCollection<string[]>("Constraints")
                         .IsRequired()
                         .HasColumnType("text[]")
@@ -4749,6 +4848,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("snapshot_hash");
 
+                    b.Property<Guid?>("SourceRevisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_revision_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -4765,11 +4868,28 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamptz")
                         .HasColumnName("visited_at_utc");
 
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTimeOffset?>("VoidedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("voided_at_utc");
+
+                    b.Property<Guid?>("VoidedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("voided_by_user_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("ReadyByUserId");
+
+                    b.HasIndex("SourceRevisionId");
+
+                    b.HasIndex("VoidedByUserId");
 
                     b.HasIndex("SiteSurveyId", "OrganizationId");
 
@@ -4785,6 +4905,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_site_survey_revisions_revision_number", "revision_number > 0");
 
                             t.HasCheckConstraint("CK_site_survey_revisions_status", "status IN ('draft', 'ready', 'superseded', 'void')");
+
+                            t.HasCheckConstraint("CK_site_survey_revisions_void_reason", "status <> 'void' OR (void_reason IS NOT NULL AND voided_at_utc IS NOT NULL AND voided_by_user_id IS NOT NULL)");
                         });
                 });
 
@@ -5770,6 +5892,44 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyChecklistResult", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Surveys.SiteSurveyRevision", null)
+                        .WithMany("ChecklistResults")
+                        .HasForeignKey("SiteSurveyRevisionId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyEvidence", b =>
+                {
+                    b.HasOne("TanErp.Domain.Files.UploadedFile", null)
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Surveys.SiteSurveyRevision", null)
+                        .WithMany("Evidence")
+                        .HasForeignKey("SiteSurveyRevisionId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyMeasurement", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Organization", null)
@@ -5803,6 +5963,16 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasOne("TanErp.Domain.IdentityAccess.User", null)
                         .WithMany()
                         .HasForeignKey("ReadyByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Surveys.SiteSurveyRevision", null)
+                        .WithMany()
+                        .HasForeignKey("SourceRevisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("VoidedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("TanErp.Domain.Surveys.SiteSurvey", null)
@@ -5913,6 +6083,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TanErp.Domain.Surveys.SiteSurveyRevision", b =>
                 {
                     b.Navigation("Areas");
+
+                    b.Navigation("ChecklistResults");
+
+                    b.Navigation("Evidence");
                 });
 #pragma warning restore 612, 618
         }

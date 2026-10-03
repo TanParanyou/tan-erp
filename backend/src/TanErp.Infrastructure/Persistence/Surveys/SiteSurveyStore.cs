@@ -2,11 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Files;
 using TanErp.Application.Surveys;
+using TanErp.Application.Surveys.CloneSurveyRevision;
 using TanErp.Application.Surveys.CreateSiteSurvey;
 using TanErp.Application.Surveys.MarkSurveyReady;
 using TanErp.Application.Surveys.UpdateSurveyDraft;
+using TanErp.Application.Surveys.VoidSurveyRevision;
 using TanErp.Domain.Common;
+using TanErp.Domain.Files;
 using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
@@ -19,11 +23,13 @@ public class SiteSurveyStore : ISiteSurveyStore
 {
     private readonly AppDbContext _db;
     private readonly IClock _clock;
+    private readonly IFileStore _fileStore;
 
-    public SiteSurveyStore(AppDbContext db, IClock clock)
+    public SiteSurveyStore(AppDbContext db, IClock clock, IFileStore fileStore)
     {
         _db = db;
         _clock = clock;
+        _fileStore = fileStore;
     }
 
     public async Task<Result<SiteSurveyProjection>> CreateAsync(
@@ -142,7 +148,8 @@ public class SiteSurveyStore : ISiteSurveyStore
                 orgId,
                 survey.Id,
                 access.ActorUserId,
-                now);
+                now,
+                SurveyDefaults.CurrentTemplateVersion);
 
             _db.SiteSurveys.Add(survey);
             _db.SiteSurveyRevisions.Add(revision);
@@ -263,6 +270,10 @@ public class SiteSurveyStore : ISiteSurveyStore
             .Include(s => s.Revisions)
                 .ThenInclude(r => r.Areas)
                     .ThenInclude(a => a.Measurements)
+            .Include(s => s.Revisions)
+                .ThenInclude(r => r.ChecklistResults)
+            .Include(s => s.Revisions)
+                .ThenInclude(r => r.Evidence)
             .FirstOrDefaultAsync(s => s.OpportunityId == opportunityId && s.OrganizationId == organizationId, cancellationToken);
 
         if (survey == null) return null;
@@ -308,6 +319,8 @@ public class SiteSurveyStore : ISiteSurveyStore
             var revision = await _db.SiteSurveyRevisions
                 .Include(r => r.Areas)
                     .ThenInclude(a => a.Measurements)
+                .Include(r => r.ChecklistResults)
+                .Include(r => r.Evidence)
                 .FirstOrDefaultAsync(r => r.Id == command.RevisionId && r.SiteSurveyId == survey.Id && r.OrganizationId == orgId, cancellationToken);
 
             if (revision == null)
@@ -422,9 +435,34 @@ public class SiteSurveyStore : ISiteSurveyStore
                 }
             }
 
+            var changedFields = new List<string> { "visitedAtUtc", "scopeSummary", "areas" };
+
+            if (command.Checklist is not null)
+            {
+                var checklistError = ApplyChecklist(revision, orgId, command.Checklist);
+                if (checklistError is not null)
+                {
+                    return Result<SiteSurveyRevisionProjection>.Failure(checklistError);
+                }
+
+                changedFields.Add("checklist");
+            }
+
+            if (command.Evidence is not null)
+            {
+                var evidenceError = await ApplyEvidenceAsync(revision, survey, orgId, access.ActorUserId, command.Evidence, cancellationToken);
+                if (evidenceError is not null)
+                {
+                    return Result<SiteSurveyRevisionProjection>.Failure(evidenceError);
+                }
+
+                changedFields.Add("evidence");
+            }
+
             var now = _clock.UtcNow;
+            var changedFieldsJson = string.Join(",", changedFields.Select(f => $"\"{f}\""));
             var auditChanges = FormattableString.Invariant(
-                $"{{\"changedFields\":[\"visitedAtUtc\",\"scopeSummary\",\"areas\"],\"revisionNumber\":{revision.RevisionNumber}}}");
+                $"{{\"changedFields\":[{changedFieldsJson}],\"revisionNumber\":{revision.RevisionNumber}}}");
             var auditEvent = new AuditEvent(
                 Guid.NewGuid(),
                 orgId,
@@ -444,6 +482,8 @@ public class SiteSurveyStore : ISiteSurveyStore
                 .AsNoTracking()
                 .Include(r => r.Areas)
                     .ThenInclude(a => a.Measurements)
+                .Include(r => r.ChecklistResults)
+                .Include(r => r.Evidence)
                 .SingleAsync(r => r.Id == revision.Id, cancellationToken);
 
             return Result<SiteSurveyRevisionProjection>.Success(ToRevisionProjection(refreshedRevision, refreshedRevision.Areas.ToList()));
@@ -480,6 +520,8 @@ public class SiteSurveyStore : ISiteSurveyStore
                     .AsNoTracking()
                     .Include(r => r.Areas)
                         .ThenInclude(a => a.Measurements)
+                    .Include(r => r.ChecklistResults)
+                    .Include(r => r.Evidence)
                     .SingleOrDefaultAsync(r => r.Id == command.RevisionId && r.OrganizationId == orgId, cancellationToken);
 
                 if (cachedRevision != null)
@@ -500,6 +542,8 @@ public class SiteSurveyStore : ISiteSurveyStore
             var revision = await _db.SiteSurveyRevisions
                 .Include(r => r.Areas)
                     .ThenInclude(a => a.Measurements)
+                .Include(r => r.ChecklistResults)
+                .Include(r => r.Evidence)
                 .FirstOrDefaultAsync(r => r.Id == command.RevisionId && r.SiteSurveyId == survey.Id && r.OrganizationId == orgId, cancellationToken);
 
             if (revision == null)
@@ -529,14 +573,41 @@ public class SiteSurveyStore : ISiteSurveyStore
                     new Error("OPPORTUNITY_VERSION_CONFLICT", "Opportunity version conflict."));
             }
 
-            if (opp.Stage != OpportunityStage.Surveying)
+            var previousReadyRevisions = await _db.SiteSurveyRevisions
+                .Where(r => r.SiteSurveyId == survey.Id
+                    && r.OrganizationId == orgId
+                    && r.Id != revision.Id
+                    && r.Status == SurveyRevisionStatus.Ready)
+                .ToListAsync(cancellationToken);
+
+            // A clone re-marked ready while the opportunity is already estimating keeps the stage;
+            // only the first ready revision advances surveying -> estimating.
+            var advancesStage = opp.Stage == OpportunityStage.Surveying;
+            var isLaterReadyRevision = opp.Stage == OpportunityStage.Estimating && revision.RevisionNumber > 1;
+
+            if (!advancesStage && !isLaterReadyRevision)
             {
                 return Result<SiteSurveyRevisionProjection>.Failure(
                     new Error("OPPORTUNITY_INVALID_TRANSITION", $"Opportunity must be in 'surveying' stage to enter estimating. Current stage: '{opp.Stage}'."));
             }
 
             var now = _clock.UtcNow;
-            var snapshotHash = SurveySnapshotHasher.Compute(survey.SurveyNumber, revision);
+
+            var evidenceFileIds = revision.Evidence.Select(e => e.FileId).ToList();
+            var evidenceFiles = evidenceFileIds.Count == 0
+                ? new Dictionary<Guid, string?>()
+                : await _db.UploadedFiles
+                    .AsNoTracking()
+                    .Where(f => evidenceFileIds.Contains(f.Id) && f.OrganizationId == orgId && f.Status == UploadedFileStatus.Verified)
+                    .ToDictionaryAsync(f => f.Id, f => f.ContentSha256, cancellationToken);
+
+            if (evidenceFileIds.Any(id => !evidenceFiles.ContainsKey(id)))
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_NOT_READY", "Every evidence file must be uploaded and verified before the revision is ready."));
+            }
+
+            var snapshotHash = SurveySnapshotHasher.Compute(survey.SurveyNumber, revision, evidenceFiles);
 
             try
             {
@@ -553,38 +624,57 @@ public class SiteSurveyStore : ISiteSurveyStore
                     new Error("SURVEY_INVALID_STATE", ex.Message));
             }
 
-            // Milestone: Advance Opportunity to estimating
-            var previousOppStage = opp.Stage;
-            opp.EnterEstimating(command.ExpectedOpportunityVersion);
+            if (advancesStage)
+            {
+                // Milestone: Advance Opportunity to estimating
+                var previousOppStage = opp.Stage;
+                opp.EnterEstimating(command.ExpectedOpportunityVersion);
 
-            var history = new OpportunityStageHistory(
-                Guid.NewGuid(),
-                orgId,
-                opp.Id,
-                previousOppStage,
-                OpportunityStage.Estimating,
-                reasonCode: null,
-                note: $"Survey {survey.SurveyNumber} revision {revision.RevisionNumber} marked ready.",
-                access.ActorUserId,
-                now,
-                OpportunityStagePolicy.Version,
-                command.TraceId);
-            _db.OpportunityStageHistories.Add(history);
+                var history = new OpportunityStageHistory(
+                    Guid.NewGuid(),
+                    orgId,
+                    opp.Id,
+                    previousOppStage,
+                    OpportunityStage.Estimating,
+                    reasonCode: null,
+                    note: $"Survey {survey.SurveyNumber} revision {revision.RevisionNumber} marked ready.",
+                    access.ActorUserId,
+                    now,
+                    OpportunityStagePolicy.Version,
+                    command.TraceId);
+                _db.OpportunityStageHistories.Add(history);
 
-            // Audit
-            var oppAuditChanges = FormattableString.Invariant(
-                $"{{\"changedFields\":[\"stage\"],\"fromStage\":\"{previousOppStage}\",\"toStage\":\"{OpportunityStage.Estimating}\",\"surveyNumber\":\"{survey.SurveyNumber}\",\"revisionNumber\":{revision.RevisionNumber}}}");
-            var oppAuditEvent = new AuditEvent(
-                Guid.NewGuid(),
-                orgId,
-                access.ActorUserId,
-                "opportunity.stage-changed",
-                "Opportunity",
-                opp.Id.ToString(),
-                now,
-                command.TraceId,
-                oppAuditChanges);
-            _db.AddAuditEvent(oppAuditEvent);
+                // Audit
+                var oppAuditChanges = FormattableString.Invariant(
+                    $"{{\"changedFields\":[\"stage\"],\"fromStage\":\"{previousOppStage}\",\"toStage\":\"{OpportunityStage.Estimating}\",\"surveyNumber\":\"{survey.SurveyNumber}\",\"revisionNumber\":{revision.RevisionNumber}}}");
+                var oppAuditEvent = new AuditEvent(
+                    Guid.NewGuid(),
+                    orgId,
+                    access.ActorUserId,
+                    "opportunity.stage-changed",
+                    "Opportunity",
+                    opp.Id.ToString(),
+                    now,
+                    command.TraceId,
+                    oppAuditChanges);
+                _db.AddAuditEvent(oppAuditEvent);
+            }
+
+            foreach (var previous in previousReadyRevisions)
+            {
+                previous.Supersede();
+                _db.AddAuditEvent(new AuditEvent(
+                    Guid.NewGuid(),
+                    orgId,
+                    access.ActorUserId,
+                    "survey.revision-superseded",
+                    "SiteSurveyRevision",
+                    previous.Id.ToString(),
+                    now,
+                    command.TraceId,
+                    FormattableString.Invariant(
+                        $"{{\"changedFields\":[\"status\"],\"revisionNumber\":{previous.RevisionNumber},\"supersededByRevisionNumber\":{revision.RevisionNumber}}}")));
+            }
 
             var surveyAuditChanges = FormattableString.Invariant(
                 $"{{\"changedFields\":[\"status\",\"readiness\",\"snapshotHash\"],\"revisionNumber\":{revision.RevisionNumber},\"snapshotHash\":\"{snapshotHash}\"}}");
@@ -618,6 +708,388 @@ public class SiteSurveyStore : ISiteSurveyStore
         });
     }
 
+    public async Task<Result<SiteSurveyRevisionProjection>> CloneRevisionAsync(
+        RequestAccessContext access,
+        CloneSurveyRevisionCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        const string operation = "site_survey_revision.clone";
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            var replay = await TryLoadRevisionReplayAsync(orgId, operation, keyHash, payloadHash, cancellationToken);
+            if (replay is not null)
+            {
+                return replay;
+            }
+
+            var survey = await _db.SiteSurveys
+                .FirstOrDefaultAsync(s => s.Id == command.SiteSurveyId && s.OpportunityId == command.OpportunityId && s.OrganizationId == orgId, cancellationToken);
+
+            if (survey == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey not found."));
+            }
+
+            var revisions = await _db.SiteSurveyRevisions
+                .Include(r => r.Areas)
+                    .ThenInclude(a => a.Measurements)
+                .Include(r => r.ChecklistResults)
+                .Include(r => r.Evidence)
+                .Where(r => r.SiteSurveyId == survey.Id && r.OrganizationId == orgId)
+                .ToListAsync(cancellationToken);
+
+            var source = revisions.FirstOrDefault(r => r.Id == command.SourceRevisionId);
+            if (source == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey revision not found."));
+            }
+
+            var opp = await _db.Opportunities
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == survey.OpportunityId && o.OrganizationId == orgId, cancellationToken);
+
+            if (opp == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Associated opportunity not found."));
+            }
+
+            if (!IsRevisableStage(opp.Stage))
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("OPPORTUNITY_INVALID_TRANSITION", $"Survey revisions cannot be cloned while the opportunity is '{opp.Stage}'."));
+            }
+
+            if (revisions.Any(r => r.Status == SurveyRevisionStatus.Draft))
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_DRAFT_EXISTS", "A draft revision already exists for this survey."));
+            }
+
+            var now = _clock.UtcNow;
+            SiteSurveyRevision clone;
+            try
+            {
+                clone = SiteSurveyRevision.CloneFrom(
+                    source,
+                    revisions.Max(r => r.RevisionNumber) + 1,
+                    command.Reason,
+                    access.ActorUserId,
+                    now);
+            }
+            catch (SurveyInvalidStateException ex)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_INVALID_STATE", ex.Message));
+            }
+
+            _db.SiteSurveyRevisions.Add(clone);
+
+            _db.AddAuditEvent(new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "survey.revision-cloned",
+                "SiteSurveyRevision",
+                clone.Id.ToString(),
+                now,
+                command.TraceId,
+                FormattableString.Invariant(
+                    $"{{\"changedFields\":[\"revision\"],\"revisionNumber\":{clone.RevisionNumber},\"sourceRevisionNumber\":{source.RevisionNumber}}}")));
+
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(
+                Guid.NewGuid(),
+                orgId,
+                operation,
+                keyHash,
+                payloadHash,
+                clone.Id.ToString(),
+                now));
+
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException)
+            {
+                // Concurrent clone won the unique (survey, revision_number) slot.
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_VERSION_CONFLICT", "Survey revision number was taken by a concurrent request."));
+            }
+
+            await tx.CommitAsync(cancellationToken);
+
+            return Result<SiteSurveyRevisionProjection>.Success(ToRevisionProjection(clone, clone.Areas.ToList()));
+        });
+    }
+
+    public async Task<Result<SiteSurveyRevisionProjection>> VoidRevisionAsync(
+        RequestAccessContext access,
+        VoidSurveyRevisionCommand command,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        const string operation = "site_survey_revision.void";
+        var strategy = _db.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            var replay = await TryLoadRevisionReplayAsync(orgId, operation, keyHash, payloadHash, cancellationToken);
+            if (replay is not null)
+            {
+                return replay;
+            }
+
+            var survey = await _db.SiteSurveys
+                .FirstOrDefaultAsync(s => s.Id == command.SiteSurveyId && s.OpportunityId == command.OpportunityId && s.OrganizationId == orgId, cancellationToken);
+
+            if (survey == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey not found."));
+            }
+
+            var revision = await _db.SiteSurveyRevisions
+                .Include(r => r.Areas)
+                    .ThenInclude(a => a.Measurements)
+                .Include(r => r.ChecklistResults)
+                .Include(r => r.Evidence)
+                .FirstOrDefaultAsync(r => r.Id == command.RevisionId && r.SiteSurveyId == survey.Id && r.OrganizationId == orgId, cancellationToken);
+
+            if (revision == null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("RESOURCE_NOT_FOUND", "Site survey revision not found."));
+            }
+
+            if (revision.RowVersion != command.ExpectedRevisionVersion)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_VERSION_CONFLICT", "Survey revision version conflict."));
+            }
+
+            // Voiding never deletes or re-points an Estimate; it only records the risk in the audit trail.
+            var referencedByEstimate = await _db.Estimates
+                .AsNoTracking()
+                .AnyAsync(e => e.OrganizationId == orgId && e.SiteSurveyRevisionId == revision.Id, cancellationToken);
+
+            var now = _clock.UtcNow;
+            var previousStatus = revision.Status;
+            try
+            {
+                revision.Void(access.ActorUserId, now, command.Reason);
+            }
+            catch (SurveyInvalidStateException ex)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_INVALID_STATE", ex.Message));
+            }
+
+            _db.AddAuditEvent(new AuditEvent(
+                Guid.NewGuid(),
+                orgId,
+                access.ActorUserId,
+                "survey.revision-voided",
+                "SiteSurveyRevision",
+                revision.Id.ToString(),
+                now,
+                command.TraceId,
+                FormattableString.Invariant(
+                    $"{{\"changedFields\":[\"status\"],\"revisionNumber\":{revision.RevisionNumber},\"fromStatus\":\"{previousStatus}\",\"referencedByEstimate\":{(referencedByEstimate ? "true" : "false")}}}")));
+
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(
+                Guid.NewGuid(),
+                orgId,
+                operation,
+                keyHash,
+                payloadHash,
+                revision.Id.ToString(),
+                now));
+
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+
+            return Result<SiteSurveyRevisionProjection>.Success(ToRevisionProjection(revision, revision.Areas.ToList()));
+        });
+    }
+
+    private Error? ApplyChecklist(
+        SiteSurveyRevision revision,
+        Guid orgId,
+        IReadOnlyList<ChecklistInput> inputs)
+    {
+        var template = SurveyTemplates.Find(revision.SurveyTemplateVersion);
+        if (template is null)
+        {
+            return new Error("SURVEY_TEMPLATE_UNAVAILABLE", $"Survey template '{revision.SurveyTemplateVersion}' is not available.");
+        }
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var input in inputs)
+        {
+            var code = input.ItemCode?.Trim() ?? string.Empty;
+            if (!template.RequiredChecklistItems.Contains(code, StringComparer.Ordinal))
+            {
+                return new Error("SURVEY_CHECKLIST_INVALID", $"Checklist item '{code}' does not belong to template '{template.Code}'.");
+            }
+
+            if (!ChecklistResultValue.IsValid(input.Result) || !seen.Add(code))
+            {
+                return new Error("SURVEY_CHECKLIST_INVALID", $"Checklist item '{code}' has an invalid or duplicate result.");
+            }
+
+            if (input.Note is { Length: > 500 })
+            {
+                return new Error("SURVEY_CHECKLIST_INVALID", $"Checklist item '{code}' note is too long.");
+            }
+        }
+
+        var existing = revision.ChecklistResults.ToList();
+        foreach (var removed in existing.Where(e => !seen.Contains(e.ItemCode)))
+        {
+            _db.SiteSurveyChecklistResults.Remove(removed);
+        }
+
+        foreach (var input in inputs)
+        {
+            var code = input.ItemCode.Trim();
+            var note = string.IsNullOrWhiteSpace(input.Note) ? null : input.Note.Trim();
+            var current = existing.FirstOrDefault(e => e.ItemCode == code);
+            if (current is null)
+            {
+                _db.SiteSurveyChecklistResults.Add(new SiteSurveyChecklistResult(
+                    Guid.NewGuid(), orgId, revision.Id, code, input.Result, note));
+            }
+            else
+            {
+                _db.Entry(current).Property(p => p.Result).CurrentValue = input.Result.Trim();
+                _db.Entry(current).Property(p => p.Note).CurrentValue = note;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<Error?> ApplyEvidenceAsync(
+        SiteSurveyRevision revision,
+        SiteSurvey survey,
+        Guid orgId,
+        Guid actorUserId,
+        IReadOnlyList<EvidenceInput> inputs,
+        CancellationToken cancellationToken)
+    {
+        var fileIds = new HashSet<Guid>();
+        foreach (var input in inputs)
+        {
+            if (input.FileId == Guid.Empty || !EvidenceKind.IsValid(input.Kind) || !fileIds.Add(input.FileId))
+            {
+                return new Error("SURVEY_EVIDENCE_INVALID", "Evidence entries need a unique file ID and a valid kind.");
+            }
+
+            if (input.Caption is { Length: > 500 })
+            {
+                return new Error("SURVEY_EVIDENCE_INVALID", "Evidence caption is too long.");
+            }
+        }
+
+        var existing = revision.Evidence.ToList();
+        // Files already attached to this revision stay valid; only newly added ones must come from the opportunity's upload sessions.
+        var newFileIds = fileIds.Where(id => existing.All(e => e.FileId != id)).ToList();
+        if (newFileIds.Count > 0)
+        {
+            var validation = await _fileStore.ValidateVerifiedFilesForParentAsync(
+                orgId,
+                actorUserId,
+                FileParentTypes.Opportunity,
+                survey.OpportunityId,
+                null,
+                newFileIds,
+                cancellationToken);
+
+            if (validation.IsFailure)
+            {
+                return new Error("SURVEY_EVIDENCE_NOT_READY", validation.Error.Message ?? "One or more evidence files are not verified.");
+            }
+        }
+
+        foreach (var removed in existing.Where(e => !fileIds.Contains(e.FileId)))
+        {
+            _db.SiteSurveyEvidence.Remove(removed);
+        }
+
+        foreach (var input in inputs)
+        {
+            var caption = string.IsNullOrWhiteSpace(input.Caption) ? null : input.Caption.Trim();
+            var current = existing.FirstOrDefault(e => e.FileId == input.FileId);
+            if (current is null)
+            {
+                _db.SiteSurveyEvidence.Add(new SiteSurveyEvidence(
+                    Guid.NewGuid(), orgId, revision.Id, input.FileId, input.Kind, caption, input.SortOrder));
+            }
+            else
+            {
+                _db.Entry(current).Property(p => p.Kind).CurrentValue = input.Kind.Trim();
+                _db.Entry(current).Property(p => p.Caption).CurrentValue = caption;
+                _db.Entry(current).Property(p => p.SortOrder).CurrentValue = input.SortOrder;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsRevisableStage(string stage) =>
+        stage is OpportunityStage.Surveying or OpportunityStage.Estimating or OpportunityStage.Proposed;
+
+    private async Task<Result<SiteSurveyRevisionProjection>?> TryLoadRevisionReplayAsync(
+        Guid organizationId,
+        string operation,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken)
+    {
+        var record = await _db.IdempotencyRecords
+            .AsNoTracking()
+            .SingleOrDefaultAsync(row =>
+                row.OrganizationId == organizationId &&
+                row.Operation == operation &&
+                row.KeyHash == keyHash,
+                cancellationToken);
+
+        if (record is null) return null;
+        if (record.PayloadHash != payloadHash)
+        {
+            return Result<SiteSurveyRevisionProjection>.Failure(new Error(
+                "IDEMPOTENCY_KEY_REUSED",
+                "The idempotency key has already been used with a different payload."));
+        }
+
+        if (!Guid.TryParse(record.ResourceId, out var revisionId)) return null;
+        var revision = await _db.SiteSurveyRevisions
+            .AsNoTracking()
+            .Include(r => r.Areas)
+                .ThenInclude(a => a.Measurements)
+            .Include(r => r.ChecklistResults)
+            .Include(r => r.Evidence)
+            .SingleOrDefaultAsync(r => r.Id == revisionId && r.OrganizationId == organizationId, cancellationToken);
+
+        return revision is null
+            ? null
+            : Result<SiteSurveyRevisionProjection>.Success(ToRevisionProjection(revision, revision.Areas.ToList()));
+    }
+
     private async Task<Result<SiteSurveyProjection>?> TryLoadReplayAsync(
         Guid organizationId,
         string operation,
@@ -645,6 +1117,10 @@ public class SiteSurveyStore : ISiteSurveyStore
             .Include(s => s.Revisions)
                 .ThenInclude(r => r.Areas)
                     .ThenInclude(a => a.Measurements)
+            .Include(s => s.Revisions)
+                .ThenInclude(r => r.ChecklistResults)
+            .Include(s => s.Revisions)
+                .ThenInclude(r => r.Evidence)
             .SingleOrDefaultAsync(
                 candidate => candidate.Id == surveyId && candidate.OrganizationId == organizationId,
                 cancellationToken);
@@ -693,7 +1169,16 @@ public class SiteSurveyStore : ISiteSurveyStore
             r.RowVersion,
             r.CreatedAtUtc,
             r.CreatedByUserId,
-            areaList);
+            areaList,
+            r.ChecklistResults
+                .OrderBy(c => c.ItemCode, StringComparer.Ordinal)
+                .Select(c => new SiteSurveyChecklistResultProjection(c.Id, c.ItemCode, c.Result, c.Note))
+                .ToList(),
+            r.Evidence
+                .OrderBy(e => e.SortOrder)
+                .ThenBy(e => e.FileId)
+                .Select(e => new SiteSurveyEvidenceProjection(e.Id, e.FileId, e.Kind, e.Caption, e.SortOrder))
+                .ToList());
     }
 
     private static SiteSurveyProjection ToProjection(
@@ -724,6 +1209,11 @@ public class SiteSurveyStore : ISiteSurveyStore
             s.CreatedByUserId,
             revProj,
             surveyor,
-            site);
+            site,
+            s.Revisions
+                .Where(x => x.Status == SurveyRevisionStatus.Ready)
+                .OrderByDescending(x => x.RevisionNumber)
+                .Select(x => new SiteSurveyReadyRevisionProjection(x.Id, x.RevisionNumber, x.SnapshotHash))
+                .FirstOrDefault());
     }
 }

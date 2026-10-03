@@ -898,7 +898,10 @@
       "missingScope": "Scope summary is required",
       "missingArea": "At least one survey area is required",
       "missingAreaName": "Please enter a name for area code {code}",
-      "missingMeasurement": "Each area must have at least one measurement with a positive value"
+      "missingMeasurement": "Each area must have at least one measurement with a positive value",
+      "missingChecklistItem": "Answer the checklist item: {item}",
+      "checklistNoteRequired": "A failed or not-applicable checklist item needs a note: {item}",
+      "missingEvidence": "At least {count} photo(s) of evidence are required"
     },
     "types": {
       "width": "Width",
@@ -964,7 +967,50 @@
         "front": "Front",
         "side": "Side"
       }
-    }
+    },
+    "revisionActionsTitle": "Survey revision actions",
+    "cloneRevisionAction": "Create revision",
+    "cloneRevisionTitle": "Create a revised survey",
+    "cloneRevisionDesc": "Copies the latest ready revision into a new draft. The original revision and any Estimate referencing it stay unchanged.",
+    "cloneReasonLabel": "Reason for the new revision",
+    "cloneSuccess": "New draft revision created.",
+    "voidRevisionAction": "Void revision",
+    "voidRevisionTitle": "Void this survey revision",
+    "voidRevisionDesc": "A voided revision is kept, and any Estimate referencing it is not switched automatically, but the risk is recorded in the audit trail.",
+    "voidReasonLabel": "Reason for voiding",
+    "voidSuccess": "Survey revision voided.",
+    "revisionReasonRequired": "Enter a reason.",
+    "revisionDraftExists": "A draft revision already exists. Finish or void it first.",
+    "revisionActionFailed": "The action failed. Check your permission and the revision status.",
+    "checklistTitle": "Site Checklist",
+    "checklistDesc": "Answer every item before marking ready. Failed or not-applicable items need a note.",
+    "checklistResultLabel": "Result",
+    "checklistNoteLabel": "Note",
+    "checklistUnanswered": "-- Not answered --",
+    "checklistResults": {
+      "pass": "Pass",
+      "fail": "Fail",
+      "not_applicable": "Not applicable"
+    },
+    "checklistItems": {
+      "site_access_confirmed": "Site access and working hours confirmed with the customer/building office",
+      "utilities_checked": "Power, water and related utilities checked",
+      "existing_conditions_inspected": "Existing walls, floor, ceiling and obstructions inspected",
+      "customer_requirements_confirmed": "Requirements and scope confirmed with the customer"
+    },
+    "evidenceTitle": "Photo Evidence",
+    "evidenceDesc": "Select at least {count} photo(s) from this opportunity's work images. Attach photos in the Work Images section first if none exist.",
+    "evidenceUseAction": "Use as survey evidence",
+    "evidenceKindLabel": "Evidence kind",
+    "evidenceCaptionLabel": "Caption",
+    "evidenceKinds": {
+      "site_photo": "Site photo",
+      "measurement_sketch": "Measurement sketch",
+      "other": "Other"
+    },
+    "evidenceEmptyHint": "This opportunity has no work images yet. Attach photos in the Work Images section, then come back to select them.",
+    "evidenceLoadError": "Could not load work images.",
+    "evidenceLoadMore": "Load more photos"
   },
   "estimates": {
     "reviewQueueTitle": "Estimate Review Queue",
@@ -1792,7 +1838,58 @@
     "amountPrecisionError": "Amount must have at most 4 decimal places and fit the supported range",
     "finishCostDraft": "Continue saving cost draft",
     "saveCostDraft": "Save Cost Draft",
-    "evidenceDeferredHelp": "The file uploads and is verified after the cost draft is saved"
+    "evidenceDeferredHelp": "The file uploads and is verified after the cost draft is saved",
+    "import": {
+      "action": "Import from CSV",
+      "title": "Import items from a CSV file",
+      "description": "Preview the file before importing. Items are created as drafts only; no costs are published and no item is activated automatically.",
+      "rules": "UTF-8 CSV with the template header, up to 500 rows and 1 MB. Use existing category, brand, unit and tax codes. Leave the item code empty to have one generated. If any row is invalid, no row is imported.",
+      "chooseFile": "Choose CSV file",
+      "downloadTemplate": "Download template",
+      "summary": "{total} rows • {valid} valid • {invalid} invalid",
+      "fixBeforeCommit": "Fix the invalid rows in the file and choose it again to enable the import.",
+      "columnRow": "Row",
+      "columnCode": "Code",
+      "columnName": "Name",
+      "columnResult": "Result",
+      "rowValid": "Valid",
+      "truncated": "Showing {shown} of {total} rows (invalid rows first)",
+      "commitAction": "Import {count} items",
+      "success": "Imported {count} items as drafts.",
+      "fileTooLarge": "The file is larger than 1 MB.",
+      "fileInvalid": "The file is invalid. Check the header, file size and row count.",
+      "validationFailed": "Some rows are invalid. Nothing was imported.",
+      "contentChanged": "The file differs from the previewed one. Choose it again.",
+      "codeConflict": "An item code was just taken by another request. Preview the file again.",
+      "failed": "The import failed. Please try again.",
+      "fields": {
+        "code": "Item code",
+        "itemType": "Type",
+        "categoryCode": "Category code",
+        "brandCode": "Brand code",
+        "baseUnitCode": "Base unit code",
+        "nameTh": "Name (Thai)",
+        "nameEn": "Name (English)",
+        "descriptionTh": "Description (Thai)",
+        "descriptionEn": "Description (English)",
+        "taxCategoryCode": "Tax category code",
+        "canSell": "Can sell",
+        "canCost": "Can cost",
+        "canPurchase": "Can purchase",
+        "canStock": "Can stock",
+        "canProduce": "Can produce",
+        "capabilities": "Item capabilities"
+      },
+      "errors": {
+        "REQUIRED": "Required",
+        "INVALID": "Invalid value",
+        "TOO_LONG": "Too long",
+        "NOT_FOUND": "Not found",
+        "INACTIVE": "Not active",
+        "DUPLICATE_IN_FILE": "Duplicate of another row in the file",
+        "ALREADY_EXISTS": "This code already exists"
+      }
+    }
   },
   "userAdmin": {
     "title": "Users and Access",

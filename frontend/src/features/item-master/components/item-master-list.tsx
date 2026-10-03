@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { BulkActionToolbar, BulkActionButton } from "@/components/ui/BulkActionToolbar";
 import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { IconDownload, IconEdit, IconPlus } from "@/components/common/Icons";
+import { IconDownload, IconEdit, IconPlus, IconUpload } from "@/components/common/Icons";
 import { Avatar } from "@/components/ui/Avatar";
 import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
 import { useRowSelection } from "@/hooks/useRowSelection";
@@ -29,6 +29,7 @@ import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useToast } from "@/hooks/useToast";
 import { itemFormSchema } from "@/features/item-master/schemas/item-form-schema";
+import { ItemImportModal } from "./item-import-modal";
 
 interface ItemFilters extends ListFilterRecord {
   status?: string;
@@ -52,6 +53,7 @@ export function ItemMasterList() {
     debounceMs: 300,
   });
   const rowSelection = useRowSelection<string>();
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const query = useMemo<ListItemsParams>(() => ({
     search: state.params.search || undefined,
     itemType: state.params.filters.itemType || undefined,
@@ -214,6 +216,7 @@ export function ItemMasterList() {
           {canReadTaxonomy && <Button variant="outline" href={`/${locale}/item-master/reference-data`}>{t("referenceData")}</Button>}
           {canReadCostSources && <Button variant="outline" href={`/${locale}/item-master/cost-sources`}>{t("costSources")}</Button>}
           <Button variant="outline" href={`/${locale}/item-master/cost-reviews`}>{t("reviewQueue")}</Button>
+          {writable && <Button variant="outline" icon={<IconUpload size={16} />} onClick={() => setIsImportOpen(true)}>{t("import.action")}</Button>}
           {writable && <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/item-master/create`}>{t("create")}</Button>}
         </div>}
       />
@@ -289,6 +292,7 @@ export function ItemMasterList() {
           </BulkActionToolbar>
         </div>
       )}
+      {writable && <ItemImportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} />}
     </section>
   );
 }

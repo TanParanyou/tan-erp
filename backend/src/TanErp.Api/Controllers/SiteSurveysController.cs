@@ -5,10 +5,12 @@ using TanErp.Api.Contracts.Surveys;
 using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Surveys;
+using TanErp.Application.Surveys.CloneSurveyRevision;
 using TanErp.Application.Surveys.CreateSiteSurvey;
 using TanErp.Application.Surveys.GetSiteSurvey;
 using TanErp.Application.Surveys.MarkSurveyReady;
 using TanErp.Application.Surveys.UpdateSurveyDraft;
+using TanErp.Application.Surveys.VoidSurveyRevision;
 
 namespace TanErp.Api.Controllers;
 
@@ -21,17 +23,23 @@ public class SiteSurveysController : ControllerBase
     private readonly GetSiteSurveyHandler _getHandler;
     private readonly UpdateSurveyDraftHandler _updateDraftHandler;
     private readonly MarkSurveyReadyHandler _markReadyHandler;
+    private readonly CloneSurveyRevisionHandler _cloneRevisionHandler;
+    private readonly VoidSurveyRevisionHandler _voidRevisionHandler;
 
     public SiteSurveysController(
         CreateSiteSurveyHandler createHandler,
         GetSiteSurveyHandler getHandler,
         UpdateSurveyDraftHandler updateDraftHandler,
-        MarkSurveyReadyHandler markReadyHandler)
+        MarkSurveyReadyHandler markReadyHandler,
+        CloneSurveyRevisionHandler cloneRevisionHandler,
+        VoidSurveyRevisionHandler voidRevisionHandler)
     {
         _createHandler = createHandler;
         _getHandler = getHandler;
         _updateDraftHandler = updateDraftHandler;
         _markReadyHandler = markReadyHandler;
+        _cloneRevisionHandler = cloneRevisionHandler;
+        _voidRevisionHandler = voidRevisionHandler;
     }
 
     [HttpPost]
@@ -171,6 +179,8 @@ public class SiteSurveysController : ControllerBase
             request.Constraints ?? new List<string>(),
             request.MissingDetails ?? new List<string>(),
             areas,
+            request.Checklist?.Select(c => new ChecklistInput(c.ItemCode, c.Result, c.Note)).ToList(),
+            request.Evidence?.Select(e => new EvidenceInput(e.FileId, e.Kind, e.Caption, e.SortOrder)).ToList(),
             auth.FirebaseUid,
             auth.MembershipId,
             traceId);
@@ -233,6 +243,96 @@ public class SiteSurveysController : ControllerBase
         return Ok(ToRevisionResponse(revision));
     }
 
+    [HttpPost("{surveyId:guid}/revisions")]
+    [ProducesResponseType<SiteSurveyRevisionResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CloneRevision(
+        [FromRoute] Guid opportunityId,
+        [FromRoute] Guid surveyId,
+        [FromBody] CloneSurveyRevisionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+
+        var command = new CloneSurveyRevisionCommand(
+            opportunityId,
+            surveyId,
+            request.SourceRevisionId,
+            request.Reason,
+            auth.FirebaseUid,
+            auth.MembershipId,
+            auth.IdempotencyKey,
+            HttpContext.TraceIdentifier);
+
+        var result = await _cloneRevisionHandler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var revision = result.Value!;
+        Response.Headers.ETag = $"\"{revision.RowVersion}\"";
+
+        return StatusCode(StatusCodes.Status201Created, ToRevisionResponse(revision));
+    }
+
+    [HttpPost("{surveyId:guid}/revisions/{revisionId:guid}/void")]
+    [ProducesResponseType<SiteSurveyRevisionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> VoidRevision(
+        [FromRoute] Guid opportunityId,
+        [FromRoute] Guid surveyId,
+        [FromRoute] Guid revisionId,
+        [FromBody] VoidSurveyRevisionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+
+        var command = new VoidSurveyRevisionCommand(
+            opportunityId,
+            surveyId,
+            revisionId,
+            request.ExpectedRevisionVersion,
+            request.Reason,
+            auth.FirebaseUid,
+            auth.MembershipId,
+            auth.IdempotencyKey,
+            HttpContext.TraceIdentifier);
+
+        var result = await _voidRevisionHandler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var revision = result.Value!;
+        Response.Headers.ETag = $"\"{revision.RowVersion}\"";
+
+        return Ok(ToRevisionResponse(revision));
+    }
+
     private static SiteSurveyRevisionResponse ToRevisionResponse(SiteSurveyRevisionProjection r)
     {
         var areas = r.Areas?.Select(a => new SiteSurveyAreaResponse(
@@ -270,7 +370,9 @@ public class SiteSurveysController : ControllerBase
             r.RowVersion,
             r.CreatedAtUtc,
             r.CreatedByUserId,
-            areas);
+            areas,
+            r.Checklist?.Select(c => new SiteSurveyChecklistResultResponse(c.Id, c.ItemCode, c.Result, c.Note)).ToList(),
+            r.Evidence?.Select(e => new SiteSurveyEvidenceResponse(e.Id, e.FileId, e.Kind, e.Caption, e.SortOrder)).ToList());
     }
 
     private static SiteSurveyResponse ToResponse(SiteSurveyProjection s)
@@ -305,6 +407,9 @@ public class SiteSurveysController : ControllerBase
             s.CreatedByUserId,
             currentRev,
             assignedSurveyor,
-            site);
+            site,
+            s.LatestReadyRevision != null
+                ? new SiteSurveyReadyRevisionResponse(s.LatestReadyRevision.Id, s.LatestReadyRevision.RevisionNumber, s.LatestReadyRevision.SnapshotHash)
+                : null);
     }
 }

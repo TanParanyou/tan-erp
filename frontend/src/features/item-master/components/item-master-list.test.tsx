@@ -20,7 +20,13 @@ vi.mock("next/navigation", () => ({
   useRouter: () => state.router,
   useSearchParams: () => state.searchParams,
 }));
-vi.mock("@/features/item-master/api/item-master-queries", () => ({ useItemList: vi.fn() }));
+vi.mock("@/features/item-master/api/item-master-queries", () => ({
+  useItemList: vi.fn(),
+  useItemImport: () => ({
+    preview: { mutateAsync: vi.fn(), isPending: false },
+    commit: { mutateAsync: vi.fn(), isPending: false },
+  }),
+}));
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({ selectedMembership: { id: "membership-1", permissions: state.permissions } }),
 }));
@@ -78,6 +84,22 @@ describe("ItemMasterList", () => {
     fireEvent.click(screen.getByRole("button", { name: "เพิ่มสินค้า" }));
 
     expect(state.router.push).toHaveBeenCalledWith("/th/item-master/create");
+  });
+
+  it("offers CSV import only to users who can create items and opens the import dialog", () => {
+    mockItems([item]);
+    renderList();
+
+    fireEvent.click(screen.getByRole("button", { name: messagesTh.itemMaster.import.action }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("hides CSV import without the create permission", () => {
+    state.permissions = ["items.read"];
+    mockItems([item]);
+    renderList();
+
+    expect(screen.queryByRole("button", { name: messagesTh.itemMaster.import.action })).toBeNull();
   });
 
   it("uses shared table actions, filters, row selection and current-page selected export", () => {

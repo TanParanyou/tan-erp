@@ -15,6 +15,7 @@ public class SiteSurveyRevisionConfiguration : IEntityTypeConfiguration<SiteSurv
             t.HasCheckConstraint("CK_site_survey_revisions_status", "status IN ('draft', 'ready', 'superseded', 'void')");
             t.HasCheckConstraint("CK_site_survey_revisions_readiness", "readiness IN ('incomplete', 'requiresAttention', 'ready')");
             t.HasCheckConstraint("CK_site_survey_revisions_revision_number", "revision_number > 0");
+            t.HasCheckConstraint("CK_site_survey_revisions_void_reason", "status <> 'void' OR (void_reason IS NOT NULL AND voided_at_utc IS NOT NULL AND voided_by_user_id IS NOT NULL)");
         });
 
         builder.HasKey(x => x.Id);
@@ -35,6 +36,11 @@ public class SiteSurveyRevisionConfiguration : IEntityTypeConfiguration<SiteSurv
         builder.Property(x => x.ReadyAtUtc).HasColumnName("ready_at_utc").HasColumnType("timestamptz");
         builder.Property(x => x.ReadyByUserId).HasColumnName("ready_by_user_id");
         builder.Property(x => x.SnapshotHash).HasColumnName("snapshot_hash").HasMaxLength(128);
+        builder.Property(x => x.SourceRevisionId).HasColumnName("source_revision_id");
+        builder.Property(x => x.CloneReason).HasColumnName("clone_reason").HasMaxLength(500);
+        builder.Property(x => x.VoidReason).HasColumnName("void_reason").HasMaxLength(500);
+        builder.Property(x => x.VoidedAtUtc).HasColumnName("voided_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.VoidedByUserId).HasColumnName("voided_by_user_id");
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
@@ -61,6 +67,16 @@ public class SiteSurveyRevisionConfiguration : IEntityTypeConfiguration<SiteSurv
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(x => x.ReadyByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.VoidedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<SiteSurveyRevision>()
+            .WithMany()
+            .HasForeignKey(x => x.SourceRevisionId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
