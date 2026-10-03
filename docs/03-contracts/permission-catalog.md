@@ -85,6 +85,11 @@
 | Service | `warranties.read` | ดูการรับประกัน | Organization |
 | Service | `service-requests.read` | ดูงานบริการหลังการขาย | Organization |
 | Service | `service-requests.manage` | รับเรื่องและดำเนินงานบริการ | Organization |
+| Finance | `billings.read` | ดูใบแจ้งหนี้และสรุปการวางบิลโครงการ | Organization |
+| Finance | `billings.manage` | ออก/ยกเลิกใบแจ้งหนี้ | Organization |
+| Finance | `payments.manage` | บันทึก/กลับรายการรับชำระ | Organization |
+| Finance | `finance-sync.read` | ดูคิวส่งข้อมูลบัญชีและการกระทบยอด | Organization |
+| Finance | `finance-sync.run` | ส่ง ยืนยัน และส่งใหม่รายการไประบบบัญชี | Organization |
 | Project | `projects.read` | ดู Project และ Handover source | Organization |
 | Project | `projects.create` | ส่งต่อ Quotation ที่ยืนยันแล้วเป็น Project | Organization |
 | Project | `projects.update` | แก้แผนเวลา งบ Baseline (ก่อนตรึง) และ Milestone | Organization |

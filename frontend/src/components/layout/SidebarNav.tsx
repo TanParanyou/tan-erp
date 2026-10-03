@@ -61,6 +61,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasWorkOrdersRead = can(activeMembership, "work-orders.read");
   const hasMrpRead = can(activeMembership, "mrp.read");
   const hasInstallationsRead = can(activeMembership, "installations.read");
+  const hasBillingsRead = can(activeMembership, "billings.read");
+  const hasFinanceSyncRead = can(activeMembership, "finance-sync.read");
   const hasWarrantiesRead = can(activeMembership, "warranties.read");
   const hasServiceRequestsRead = can(activeMembership, "service-requests.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
@@ -83,6 +85,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isInventoryActive = pathname.startsWith(`/${locale}/inventory`);
   const isProductionActive = pathname.startsWith(`/${locale}/production`);
   const isServiceActive = pathname.startsWith(`/${locale}/service`);
+  const isFinanceActive = pathname.startsWith(`/${locale}/finance`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
@@ -302,6 +305,31 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     return items;
   }, [hasInstallationsRead, hasWarrantiesRead, hasServiceRequestsRead, locale, pathname, tShell]);
 
+  const financeItems: NavItemDef[] = useMemo(() => {
+    const items: NavItemDef[] = [];
+    if (hasBillingsRead) {
+      items.push({
+        id: "billings",
+        href: `/${locale}/finance/billings`,
+        label: tShell("billings"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/finance/billings`),
+        permission: hasBillingsRead,
+      });
+    }
+    if (hasFinanceSyncRead) {
+      items.push({
+        id: "finance-sync",
+        href: `/${locale}/finance/sync`,
+        label: tShell("financeSync"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/finance/sync`),
+        permission: hasFinanceSyncRead,
+      });
+    }
+    return items;
+  }, [hasBillingsRead, hasFinanceSyncRead, locale, pathname, tShell]);
+
   const subgroups: NavSubgroupDef[] = useMemo(() => {
     const groups: NavSubgroupDef[] = [];
     if (crmItems.length > 0) {
@@ -339,6 +367,13 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         items: serviceItems,
       });
     }
+    if (financeItems.length > 0) {
+      groups.push({
+        id: "finance",
+        label: tShell("financeSubgroup"),
+        items: financeItems,
+      });
+    }
     if (productItems.length > 0) {
       groups.push({
         id: "products",
@@ -347,7 +382,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       });
     }
     return groups;
-  }, [crmItems, procurementItems, inventoryItems, productionItems, serviceItems, productItems, tShell]);
+  }, [crmItems, procurementItems, inventoryItems, productionItems, serviceItems, financeItems, productItems, tShell]);
 
   // Accordion open/close state tracking
   const [openSubgroups, setOpenSubgroups] = useState<Record<string, boolean>>(() => {
@@ -357,6 +392,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     if (isInventoryActive) initial["inventory"] = true;
     if (isProductionActive) initial["production"] = true;
     if (isServiceActive) initial["service"] = true;
+    if (isFinanceActive) initial["finance"] = true;
     if (isItemMasterActive) initial["products"] = true;
     // Default open all if none active
     if (Object.keys(initial).length === 0) {
@@ -365,6 +401,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       initial["inventory"] = true;
       initial["production"] = true;
       initial["service"] = true;
+      initial["finance"] = true;
       initial["products"] = true;
     }
     return initial;

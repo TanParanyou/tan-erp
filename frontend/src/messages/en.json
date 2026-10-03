@@ -88,7 +88,10 @@
     "installations": "Installations",
     "warranties": "Warranties",
     "serviceRequests": "Service requests",
-    "serviceSubgroup": "Installation and service"
+    "serviceSubgroup": "Installation and service",
+    "billings": "Billings",
+    "financeSync": "Accounting sync",
+    "financeSubgroup": "Finance"
   },
   "common": {
     "actions": {
@@ -1564,7 +1567,9 @@
       "mrp-runs": "MRP Run",
       "installation-jobs": "Installation",
       "warranties": "Warranty",
-      "service-requests": "Service Request"
+      "service-requests": "Service Request",
+      "billing-documents": "Billing",
+      "payments": "Payment"
     },
     "tokens": {
       "prefix": "Prefix",
@@ -3148,6 +3153,156 @@
           "description": "Enter why it must be reopened."
         }
       }
+    }
+  },
+  "finance": {
+    "accessDeniedTitle": "No access to finance",
+    "accessDeniedDetail": "This account has not been granted access to this section.",
+    "errors": {
+      "failed": "The action failed. Please try again.",
+      "BILLING_VERSION_CONFLICT": "The billing was changed by someone else. Reload and try again.",
+      "BILLING_INVALID_STATE": "The billing status does not allow this action.",
+      "BILLING_HAS_PAYMENTS": "Reverse every payment before voiding the billing.",
+      "BILLING_PROJECT_NOT_BILLABLE": "A cancelled project cannot be billed.",
+      "BILLING_EXCEEDS_CONTRACT": "The billed total would exceed the project's contract amount.",
+      "BILLING_REASON_REQUIRED": "A reason is required.",
+      "BILLING_FIELD_REQUIRED": "A required field is missing.",
+      "BILLING_FIELD_INVALID": "A value is invalid. The amount must be above zero with at most two decimals.",
+      "PAYMENT_DUPLICATE_REFERENCE": "This payment reference was already recorded (including reversed payments).",
+      "PAYMENT_EXCEEDS_OUTSTANDING": "The payment exceeds the outstanding amount.",
+      "PAYMENT_INVALID_STATE": "The payment status does not allow this action.",
+      "PAYMENT_FIELD_INVALID": "The payment is invalid. The received date cannot be in the future.",
+      "OUTBOX_INVALID_STATE": "The message status does not allow this action.",
+      "OUTBOX_CONFIRMATION_CONFLICT": "The message was already confirmed with other data.",
+      "OUTBOX_FIELD_INVALID": "A value is invalid."
+    },
+    "billings": {
+      "title": "Billings",
+      "subtitle": "Bill against a project's contract amount, receive payments and hand data to accounting",
+      "search": "Search by number, description or project",
+      "empty": "No billings yet",
+      "emptyDetail": "Issue a billing for a project with a contract amount.",
+      "noResults": "No billings match the filters.",
+      "create": "Issue billing",
+      "createTitle": "Issue billing",
+      "editorSubtitle": "The billed total cannot exceed the contract amount. An issued billing cannot be edited — void it and issue a new one.",
+      "loadError": "Could not load the billing.",
+      "fieldsInvalid": "Select a project, enter a description and an amount above zero (two decimals at most).",
+      "number": "Number",
+      "project": "Project",
+      "selectProject": "Select a project",
+      "kind": "Kind",
+      "kinds": {
+        "deposit": "Deposit",
+        "milestone": "Milestone",
+        "final": "Final",
+        "other": "Other"
+      },
+      "status": "Status",
+      "statuses": {
+        "issued": "Issued",
+        "partially_paid": "Partially paid",
+        "paid": "Paid",
+        "voided": "Voided"
+      },
+      "description": "Description",
+      "amount": "Billed amount",
+      "paid": "Paid",
+      "outstanding": "Outstanding",
+      "dueDate": "Due date",
+      "createdBy": "Issued by",
+      "summaryTitle": "Project billing summary",
+      "contractAmount": "Contract amount",
+      "billed": "Billed",
+      "unbilled": "Unbilled",
+      "issue": "Issue billing",
+      "created": "Billing issued.",
+      "referenceHash": "Financial reference (hash)",
+      "immutableNote": "The amount, kind and issue date are frozen by the hash. To correct, void and issue a new billing.",
+      "void": "Void billing",
+      "voidTitle": "Void billing",
+      "voidDescription": "Possible only with no payments. A reason is required and the amount returns to the contract headroom.",
+      "voided": "Billing voided.",
+      "voidReasonLine": "Void reason: {reason}",
+      "recordPayment": "Record a payment",
+      "paymentAmount": "Payment amount",
+      "method": "Method",
+      "methods": {
+        "transfer": "Transfer",
+        "cheque": "Cheque",
+        "cash": "Cash",
+        "card": "Card"
+      },
+      "paymentReference": "Reference (slip/cheque)",
+      "receivedDate": "Received date",
+      "savePayment": "Save payment",
+      "paymentInvalid": "Enter an amount above zero (two decimals at most), a reference and a received date.",
+      "paymentRecorded": "Payment recorded.",
+      "paymentsTitle": "Payments",
+      "paymentsEmpty": "No payments yet.",
+      "paymentActive": "Active",
+      "paymentReversed": "Reversed",
+      "reverse": "Reverse",
+      "reverseTitle": "Reverse payment",
+      "reverseDescription": "Reverse when the money did not arrive, e.g. a bounced cheque. A reason is required and the reference cannot be reused.",
+      "reversed": "Payment reversed.",
+      "reversalReasonLine": "Reversal reason: {reason}",
+      "reason": "Reason",
+      "reasonRequired": "Enter a reason.",
+      "confirm": "Confirm"
+    },
+    "sync": {
+      "title": "Accounting sync",
+      "subtitle": "Queue of billing and payment data to send, retries and reconciliation",
+      "notConfigured": "No accounting system is connected yet. Messages wait in the queue and are retried; nothing counts as posted until accounting confirms.",
+      "dispatch": "Send due messages",
+      "dispatched": "Processed {processed}: {sent} sent, {failed} failed, {dead} stopped.",
+      "requeue": "Requeue",
+      "requeued": "Message requeued.",
+      "loadError": "Could not load the data.",
+      "reconciliationTitle": "Reconciliation",
+      "reconciled": "Everything matches and nothing is pending.",
+      "erpBilled": "Billed in ERP",
+      "confirmedBilled": "Billed confirmed by accounting",
+      "erpPaid": "Paid in ERP",
+      "confirmedPaid": "Paid confirmed by accounting",
+      "issues": {
+        "unsynced": "Not synced",
+        "awaiting_confirmation": "Sent, awaiting confirmation",
+        "amount_mismatch": "Amount differs from accounting",
+        "missing_message": "Missing from the queue"
+      },
+      "outboxTitle": "Outbox",
+      "outboxEmpty": "No messages.",
+      "statusFilter": "Status",
+      "allStatuses": "All statuses",
+      "statuses": {
+        "pending": "Pending",
+        "sent": "Sent",
+        "failed": "Failed (will retry)",
+        "dead": "Stopped"
+      },
+      "kinds": {
+        "billing": {
+          "issued": "Billing issued",
+          "voided": "Billing voided"
+        },
+        "payment": {
+          "recorded": "Payment recorded",
+          "reversed": "Payment reversed"
+        }
+      },
+      "kind": "Kind",
+      "document": "Document",
+      "amount": "Amount",
+      "status": "Status",
+      "attempts": "Attempts",
+      "lastError": "Last error",
+      "externalRef": "Accounting ref",
+      "actions": "Actions",
+      "nextAttempt": "Retry {date}",
+      "previous": "Previous",
+      "next": "Next"
     }
   }
 }

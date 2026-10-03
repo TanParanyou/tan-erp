@@ -52,7 +52,7 @@
 | CP-12 | BOM/Production | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี routing/capacity/subcontracting/ค่าแรง) | CP-09 scope + CP-11 stock | Engineering/Production |
 | CP-13 | MRP | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; lot-for-lot, ไม่มี safety stock/MOQ/ปฏิทิน) | CP-10 lead time + CP-11 stock + CP-12 BOM/plan | Production Planner + Procurement |
 | CP-14 | Installation/Handover/Warranty/Service | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มีไฟล์แนบ/ลายเซ็น/SLA, ระยะประกันต้องระบุเอง) | CP-08/09; CP-12 หากมีงานผลิต | Installation + Customer Service |
-| CP-15 | Billing/Payment/Accounting Integration | Future slice | Customer billing + Commercial/Project; Supply เมื่อรวมยอดจัดซื้อ | Finance/Accounting |
+| CP-15 | Billing/Payment/Accounting Integration | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มีระบบบัญชีจริง/ภาษี/credit exposure) | Customer billing + Commercial/Project; Supply เมื่อรวมยอดจัดซื้อ | Finance/Accounting |
 | CP-16 | Quick Estimate | Optional Future; มีแผนเอกสารแล้ว | Official Estimate Foundation + approved template/share policies | Sales/Estimator + Cost Owner |
 
 CP-02/03/05 เตรียมคู่ขนานกับ CP-01 ได้ตามขอบเขตที่อนุมัติ. CP-08 ใช้ customer acceptance ภายในที่มีอยู่ได้ ไม่ต้องรอ CP-07. CP-14 และ CP-15 เปิดแยกได้เมื่อ upstream contract ที่ต้องใช้พร้อม โดยไม่ต้องรอ MRP. Import ไม่ใช่ gate บังคับของ pilot ถ้าข้อมูลเติมและตรวจผ่าน workflow เดิมได้และมีบันทึกข้อจำกัด.
@@ -220,10 +220,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-15 — Finance Integration
 
-- [ ] Finance ยืนยัน billing milestone/deposit/retention/tax/withholding, credit exposure rules, payment allocation และระบบบัญชีปลายทาง/เจ้าของ ledger
-- [ ] แบ่ง slice billing reference → payment status/reconciliation → accounting connector; ไม่สร้างระบบบัญชีเต็มรูปแบบตาม Scope
-- [ ] ออก immutable financial reference และ connector retry/deduplication/reconciliation contracts; ยอดจาก source document ที่อนุมัติ ไม่คำนวณจาก master ปัจจุบัน
-- [ ] ทดสอบ duplicate callback/export, partial/overpayment ตามกฎ, reconciliation mismatch, dependency outage และ correction history
+- [x] Finance ยืนยัน billing milestone/deposit/retention/tax/withholding, credit exposure rules, payment allocation และระบบบัญชีปลายทาง/เจ้าของ ledger
+- [x] แบ่ง slice billing reference → payment status/reconciliation → accounting connector; ไม่สร้างระบบบัญชีเต็มรูปแบบตาม Scope
+- [x] ออก immutable financial reference และ connector retry/deduplication/reconciliation contracts; ยอดจาก source document ที่อนุมัติ ไม่คำนวณจาก master ปัจจุบัน
+- [x] ทดสอบ duplicate callback/export, partial/overpayment ตามกฎ, reconciliation mismatch, dependency outage และ correction history
 
 **ผลส่งมอบ/เกณฑ์จบ:** ข้อมูล Billing/Payment ตรวจย้อนกลับเอกสารขาย/จัดซื้อและเทียบกับระบบบัญชีได้; Customer credit terms ที่มีแล้วไม่เท่ากับ credit exposure control.
 

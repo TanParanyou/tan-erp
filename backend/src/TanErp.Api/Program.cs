@@ -181,6 +181,10 @@ builder.Services.AddScoped<TanErp.Application.Mrp.IMrpStore, TanErp.Infrastructu
 builder.Services.AddScoped<TanErp.Application.Mrp.MrpHandler>();
 builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infrastructure.Persistence.Service.ServiceStore>();
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
+builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();
+builder.Services.AddScoped<TanErp.Application.Finance.FinanceHandler>();
+// No accounting system is wired yet; this placeholder never reports success. Replace it with a real connector when one is chosen.
+builder.Services.AddScoped<TanErp.Application.Finance.IAccountingConnector, TanErp.Infrastructure.Persistence.Finance.UnconfiguredAccountingConnector>();
 builder.Services.AddScoped<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>();
 builder.Services.AddScoped<TanErp.Application.Inventory.IInventoryStore>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());
 builder.Services.AddScoped<TanErp.Application.Inventory.IProductionStockPort>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());

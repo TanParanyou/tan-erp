@@ -921,4 +921,34 @@
   <data name="SERVICE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
   <data name="PROJECT_OPEN_INSTALLATION_TITLE" xml:space="preserve"><value>Open Installation</value></data>
   <data name="PROJECT_OPEN_INSTALLATION_DETAIL" xml:space="preserve"><value>Every installation must be handed over or cancelled before the project is completed.</value></data>
+  <data name="BILLING_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Billing Version Conflict</value></data>
+  <data name="BILLING_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The billing was changed by someone else. Reload and retry.</value></data>
+  <data name="BILLING_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Billing State</value></data>
+  <data name="BILLING_INVALID_STATE_DETAIL" xml:space="preserve"><value>The billing status does not allow this action.</value></data>
+  <data name="BILLING_HAS_PAYMENTS_TITLE" xml:space="preserve"><value>Billing Has Payments</value></data>
+  <data name="BILLING_HAS_PAYMENTS_DETAIL" xml:space="preserve"><value>Reverse the payments before voiding the billing.</value></data>
+  <data name="BILLING_PROJECT_NOT_BILLABLE_TITLE" xml:space="preserve"><value>Project Not Billable</value></data>
+  <data name="BILLING_PROJECT_NOT_BILLABLE_DETAIL" xml:space="preserve"><value>A cancelled project cannot be billed.</value></data>
+  <data name="BILLING_EXCEEDS_CONTRACT_TITLE" xml:space="preserve"><value>Exceeds Contract</value></data>
+  <data name="BILLING_EXCEEDS_CONTRACT_DETAIL" xml:space="preserve"><value>The billed total would exceed the project's contract amount.</value></data>
+  <data name="BILLING_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="BILLING_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason is required.</value></data>
+  <data name="BILLING_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Field Required</value></data>
+  <data name="BILLING_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>A required field is missing.</value></data>
+  <data name="BILLING_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
+  <data name="BILLING_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
+  <data name="PAYMENT_DUPLICATE_REFERENCE_TITLE" xml:space="preserve"><value>Duplicate Payment Reference</value></data>
+  <data name="PAYMENT_DUPLICATE_REFERENCE_DETAIL" xml:space="preserve"><value>A payment with this reference has already been recorded.</value></data>
+  <data name="PAYMENT_EXCEEDS_OUTSTANDING_TITLE" xml:space="preserve"><value>Payment Exceeds Outstanding</value></data>
+  <data name="PAYMENT_EXCEEDS_OUTSTANDING_DETAIL" xml:space="preserve"><value>The payment exceeds the outstanding amount.</value></data>
+  <data name="PAYMENT_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Payment State</value></data>
+  <data name="PAYMENT_INVALID_STATE_DETAIL" xml:space="preserve"><value>The payment status does not allow this action.</value></data>
+  <data name="PAYMENT_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Payment</value></data>
+  <data name="PAYMENT_FIELD_INVALID_DETAIL" xml:space="preserve"><value>The payment needs an amount above zero, a valid method, a reference and a received date that is not in the future.</value></data>
+  <data name="OUTBOX_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Message State</value></data>
+  <data name="OUTBOX_INVALID_STATE_DETAIL" xml:space="preserve"><value>The message status does not allow this action.</value></data>
+  <data name="OUTBOX_CONFIRMATION_CONFLICT_TITLE" xml:space="preserve"><value>Confirmation Conflict</value></data>
+  <data name="OUTBOX_CONFIRMATION_CONFLICT_DETAIL" xml:space="preserve"><value>The message was already confirmed with a different reference or amount.</value></data>
+  <data name="OUTBOX_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
+  <data name="OUTBOX_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A value is invalid: an external reference and a non-negative amount are required.</value></data>
 </root>

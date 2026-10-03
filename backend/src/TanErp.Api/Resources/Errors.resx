@@ -1083,4 +1083,34 @@
   <data name="SERVICE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
   <data name="PROJECT_OPEN_INSTALLATION_TITLE" xml:space="preserve"><value>ยังมีงานติดตั้งที่ไม่ปิด</value></data>
   <data name="PROJECT_OPEN_INSTALLATION_DETAIL" xml:space="preserve"><value>ยังมีงานติดตั้งที่ไม่ปิด</value></data>
+  <data name="BILLING_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ใบแจ้งหนี้ถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="BILLING_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ใบแจ้งหนี้ถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="BILLING_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบแจ้งหนี้ไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="BILLING_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะใบแจ้งหนี้ไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="BILLING_HAS_PAYMENTS_TITLE" xml:space="preserve"><value>ยังมีการรับชำระ ต้องกลับรายการก่อนยกเลิก</value></data>
+  <data name="BILLING_HAS_PAYMENTS_DETAIL" xml:space="preserve"><value>ยังมีการรับชำระ ต้องกลับรายการก่อนยกเลิก</value></data>
+  <data name="BILLING_PROJECT_NOT_BILLABLE_TITLE" xml:space="preserve"><value>โครงการที่ยกเลิกแล้วออกใบแจ้งหนี้ไม่ได้</value></data>
+  <data name="BILLING_PROJECT_NOT_BILLABLE_DETAIL" xml:space="preserve"><value>โครงการที่ยกเลิกแล้วออกใบแจ้งหนี้ไม่ได้</value></data>
+  <data name="BILLING_EXCEEDS_CONTRACT_TITLE" xml:space="preserve"><value>ยอดวางบิลรวมเกินมูลค่าสัญญา</value></data>
+  <data name="BILLING_EXCEEDS_CONTRACT_DETAIL" xml:space="preserve"><value>ยอดวางบิลรวมเกินมูลค่าสัญญา</value></data>
+  <data name="BILLING_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="BILLING_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="BILLING_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="BILLING_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="BILLING_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="BILLING_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="PAYMENT_DUPLICATE_REFERENCE_TITLE" xml:space="preserve"><value>เลขอ้างอิงการรับชำระนี้ถูกบันทึกแล้ว</value></data>
+  <data name="PAYMENT_DUPLICATE_REFERENCE_DETAIL" xml:space="preserve"><value>เลขอ้างอิงการรับชำระนี้ถูกบันทึกแล้ว</value></data>
+  <data name="PAYMENT_EXCEEDS_OUTSTANDING_TITLE" xml:space="preserve"><value>ยอดรับชำระเกินยอดค้างชำระ</value></data>
+  <data name="PAYMENT_EXCEEDS_OUTSTANDING_DETAIL" xml:space="preserve"><value>ยอดรับชำระเกินยอดค้างชำระ</value></data>
+  <data name="PAYMENT_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะการรับชำระไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="PAYMENT_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะการรับชำระไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="PAYMENT_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลการรับชำระไม่ถูกต้อง</value></data>
+  <data name="PAYMENT_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลการรับชำระไม่ถูกต้อง</value></data>
+  <data name="OUTBOX_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะรายการส่งบัญชีไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="OUTBOX_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะรายการส่งบัญชีไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="OUTBOX_CONFIRMATION_CONFLICT_TITLE" xml:space="preserve"><value>รายการนี้ยืนยันแล้วด้วยข้อมูลอื่น</value></data>
+  <data name="OUTBOX_CONFIRMATION_CONFLICT_DETAIL" xml:space="preserve"><value>รายการนี้ยืนยันแล้วด้วยข้อมูลอื่น</value></data>
+  <data name="OUTBOX_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="OUTBOX_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
 </root>

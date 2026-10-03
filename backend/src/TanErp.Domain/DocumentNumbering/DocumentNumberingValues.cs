@@ -31,6 +31,8 @@ public static class DocumentTypes
     public const string InstallationJobs = "installation-jobs";
     public const string Warranties = "warranties";
     public const string ServiceRequests = "service-requests";
+    public const string BillingDocuments = "billing-documents";
+    public const string Payments = "payments";
     public const string Customers = "customers";
     public const string Items = "items";
     public const string ItemCategories = "item-categories";
@@ -89,6 +91,8 @@ public static class DocumentTypes
         InstallationJobs,
         Warranties,
         ServiceRequests,
+        BillingDocuments,
+        Payments,
         Customers,
         Items,
         ItemCategories,
@@ -159,6 +163,8 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.InstallationJobs => "INS",
             DocumentTypes.Warranties => "WAR",
             DocumentTypes.ServiceRequests => "SRV",
+            DocumentTypes.BillingDocuments => "BIL",
+            DocumentTypes.Payments => "PAY",
             _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Unknown document type.")
         };
 

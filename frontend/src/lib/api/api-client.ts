@@ -270,6 +270,30 @@ export interface ListServiceRequestsParams {
   page?: number;
   pageSize?: number;
 }
+export type BillingRequest = components["schemas"]["BillingRequest"];
+export type BillingResponse = components["schemas"]["BillingResponse"];
+export type BillingListResponse = components["schemas"]["BillingListResponse"];
+export type BillingListItemResponse = components["schemas"]["BillingListItemResponse"];
+export type PaymentRequest = components["schemas"]["PaymentRequest"];
+export type PaymentResponse = components["schemas"]["PaymentResponse"];
+export type ProjectBillingSummaryResponse = components["schemas"]["ProjectBillingSummaryResponse"];
+export type OutboxListResponse = components["schemas"]["OutboxListResponse"];
+export type OutboxMessageResponse = components["schemas"]["OutboxMessageResponse"];
+export type DispatchResultResponse = components["schemas"]["DispatchResultResponse"];
+export type FinanceReconciliationResponse = components["schemas"]["FinanceReconciliationResponse"];
+export interface ListBillingsParams {
+  search?: string;
+  status?: string;
+  projectId?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListOutboxParams {
+  status?: string;
+  kind?: string;
+  page?: number;
+  pageSize?: number;
+}
 export type WarehouseRequest = components["schemas"]["WarehouseRequest"];
 export type WarehouseResponse = components["schemas"]["WarehouseResponse"];
 export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
@@ -1551,6 +1575,61 @@ export class ApiClient {
       case "close":
         return this.request<ServiceRequestResponse>(url, "POST", conditional);
     }
+  }
+
+  async listBillings(options: RequestOptions, query: ListBillingsParams): Promise<BillingListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.projectId) params.set("projectId", query.projectId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<BillingListResponse>(`/api/v1/billings?${params.toString()}`, "GET", options);
+  }
+
+  async getBilling(id: string, options: RequestOptions): Promise<BillingResponse> {
+    return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async getProjectBillingSummary(projectId: string, options: RequestOptions): Promise<ProjectBillingSummaryResponse> {
+    return this.request<ProjectBillingSummaryResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/billing-summary`, "GET", options);
+  }
+
+  async createBilling(payload: BillingRequest, options: RequestOptions): Promise<BillingResponse> {
+    return this.request<BillingResponse>("/api/v1/billings", "POST", options, payload);
+  }
+
+  async voidBilling(id: string, rowVersion: string, reason: string, options: RequestOptions): Promise<BillingResponse> {
+    return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(id)}/void`, "POST", { ...options, ifMatch: rowVersion }, { reason });
+  }
+
+  async recordPayment(billingId: string, payload: PaymentRequest, options: RequestOptions): Promise<BillingResponse> {
+    return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(billingId)}/payments`, "POST", options, payload);
+  }
+
+  async reversePayment(billingId: string, paymentId: string, rowVersion: string, reason: string, options: RequestOptions): Promise<BillingResponse> {
+    return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(billingId)}/payments/${encodeURIComponent(paymentId)}/reverse`, "POST", { ...options, ifMatch: rowVersion }, { reason });
+  }
+
+  async listAccountingOutbox(options: RequestOptions, query: ListOutboxParams): Promise<OutboxListResponse> {
+    const params = new URLSearchParams();
+    if (query.status) params.set("status", query.status);
+    if (query.kind) params.set("kind", query.kind);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<OutboxListResponse>(`/api/v1/finance/outbox?${params.toString()}`, "GET", options);
+  }
+
+  async dispatchAccountingOutbox(options: RequestOptions): Promise<DispatchResultResponse> {
+    return this.request<DispatchResultResponse>("/api/v1/finance/outbox/dispatch", "POST", options);
+  }
+
+  async requeueAccountingMessage(id: string, options: RequestOptions): Promise<OutboxMessageResponse> {
+    return this.request<OutboxMessageResponse>(`/api/v1/finance/outbox/${encodeURIComponent(id)}/requeue`, "POST", options);
+  }
+
+  async getFinanceReconciliation(options: RequestOptions): Promise<FinanceReconciliationResponse> {
+    return this.request<FinanceReconciliationResponse>("/api/v1/finance/reconciliation", "GET", options);
   }
 
   async listWarehouses(options: RequestOptions, query: ListWarehousesParams): Promise<WarehouseListResponse> {

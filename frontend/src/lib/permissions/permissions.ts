@@ -76,6 +76,13 @@ export const PERMISSIONS = {
   SERVICE_REQUESTS_READ: "service-requests.read",
   SERVICE_REQUESTS_MANAGE: "service-requests.manage",
 
+  // Finance
+  BILLINGS_READ: "billings.read",
+  BILLINGS_MANAGE: "billings.manage",
+  PAYMENTS_MANAGE: "payments.manage",
+  FINANCE_SYNC_READ: "finance-sync.read",
+  FINANCE_SYNC_RUN: "finance-sync.run",
+
   // MRP
   MRP_READ: "mrp.read",
   MRP_RUN: "mrp.run",

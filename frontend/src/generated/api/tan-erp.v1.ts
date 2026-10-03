@@ -724,6 +724,411 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    projectId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingListResponse"];
+                        "application/json": components["schemas"]["BillingListResponse"];
+                        "text/json": components["schemas"]["BillingListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BillingRequest"];
+                    "text/json": components["schemas"]["BillingRequest"];
+                    "application/*+json": components["schemas"]["BillingRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingResponse"];
+                        "application/json": components["schemas"]["BillingResponse"];
+                        "text/json": components["schemas"]["BillingResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingResponse"];
+                        "application/json": components["schemas"]["BillingResponse"];
+                        "text/json": components["schemas"]["BillingResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/billing-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectBillingSummaryResponse"];
+                        "application/json": components["schemas"]["ProjectBillingSummaryResponse"];
+                        "text/json": components["schemas"]["ProjectBillingSummaryResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billings/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["FinanceReasonRequest"];
+                    "text/json": components["schemas"]["FinanceReasonRequest"];
+                    "application/*+json": components["schemas"]["FinanceReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingResponse"];
+                        "application/json": components["schemas"]["BillingResponse"];
+                        "text/json": components["schemas"]["BillingResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billings/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PaymentRequest"];
+                    "text/json": components["schemas"]["PaymentRequest"];
+                    "application/*+json": components["schemas"]["PaymentRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingResponse"];
+                        "application/json": components["schemas"]["BillingResponse"];
+                        "text/json": components["schemas"]["BillingResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billings/{id}/payments/{paymentId}/reverse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    paymentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["FinanceReasonRequest"];
+                    "text/json": components["schemas"]["FinanceReasonRequest"];
+                    "application/*+json": components["schemas"]["FinanceReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingResponse"];
+                        "application/json": components["schemas"]["BillingResponse"];
+                        "text/json": components["schemas"]["BillingResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/boms": {
         parameters: {
             query?: never;
@@ -5696,6 +6101,252 @@ export interface paths {
                         "text/plain": components["schemas"]["ApiProblemDetails"];
                         "application/json": components["schemas"]["ApiProblemDetails"];
                         "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/outbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                    kind?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OutboxListResponse"];
+                        "application/json": components["schemas"]["OutboxListResponse"];
+                        "text/json": components["schemas"]["OutboxListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/outbox/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    batchSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DispatchResultResponse"];
+                        "application/json": components["schemas"]["DispatchResultResponse"];
+                        "text/json": components["schemas"]["DispatchResultResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/outbox/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ConfirmRequest"];
+                    "text/json": components["schemas"]["ConfirmRequest"];
+                    "application/*+json": components["schemas"]["ConfirmRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OutboxMessageResponse"];
+                        "application/json": components["schemas"]["OutboxMessageResponse"];
+                        "text/json": components["schemas"]["OutboxMessageResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/outbox/{id}/requeue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OutboxMessageResponse"];
+                        "application/json": components["schemas"]["OutboxMessageResponse"];
+                        "text/json": components["schemas"]["OutboxMessageResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["FinanceReconciliationResponse"];
+                        "application/json": components["schemas"]["FinanceReconciliationResponse"];
+                        "text/json": components["schemas"]["FinanceReconciliationResponse"];
                     };
                 };
             };
@@ -16805,6 +17456,66 @@ export interface components {
             /** Format: uuid */
             opportunityRowVersion?: string;
         };
+        BillingListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            projectCode?: string | null;
+            kind?: string | null;
+            /** Format: double */
+            amount?: number;
+            /** Format: double */
+            paidAmount?: number;
+            status?: string | null;
+            /** Format: date */
+            dueDate?: string | null;
+            /** Format: date-time */
+            issuedAtUtc?: string;
+        };
+        BillingListResponse: {
+            items?: components["schemas"]["BillingListItemResponse"][] | null;
+            pagination?: components["schemas"]["FinancePaginationResponse"];
+        };
+        BillingRequest: {
+            /** Format: uuid */
+            projectId?: string;
+            kind?: string | null;
+            description?: string | null;
+            /** Format: double */
+            amount?: number;
+            /** Format: date */
+            dueDate?: string | null;
+        };
+        BillingResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string;
+            number?: string | null;
+            project?: components["schemas"]["FinanceProjectRefResponse"];
+            kind?: string | null;
+            description?: string | null;
+            /** Format: double */
+            amount?: number;
+            /** Format: double */
+            paidAmount?: number;
+            /** Format: double */
+            outstanding?: number;
+            currency?: string | null;
+            /** Format: date */
+            dueDate?: string | null;
+            status?: string | null;
+            referenceHash?: string | null;
+            voidReason?: string | null;
+            /** Format: date-time */
+            voidedAtUtc?: string | null;
+            createdBy?: components["schemas"]["FinancePersonResponse"];
+            /** Format: date-time */
+            issuedAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+            payments?: components["schemas"]["PaymentResponse"][] | null;
+        };
         BomDraftRequest: {
             /** Format: double */
             outputQuantity?: number;
@@ -17029,6 +17740,11 @@ export interface components {
             /** Format: int64 */
             fileSizeBytes?: number;
             servingUrl?: string | null;
+        };
+        ConfirmRequest: {
+            externalRef?: string | null;
+            /** Format: double */
+            externalAmount?: number;
         };
         CostRecordResponse: {
             /** Format: uuid */
@@ -17542,6 +18258,16 @@ export interface components {
         DisableCostRecordRequest: {
             reason: string;
         };
+        DispatchResultResponse: {
+            /** Format: int32 */
+            processed?: number;
+            /** Format: int32 */
+            sent?: number;
+            /** Format: int32 */
+            failed?: number;
+            /** Format: int32 */
+            dead?: number;
+        };
         DocumentSequenceResponse: {
             /** Format: uuid */
             id?: string | null;
@@ -17959,6 +18685,58 @@ export interface components {
             mediaType?: string | null;
             /** Format: int64 */
             fileSizeBytes?: number;
+        };
+        FinancePaginationResponse: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        FinancePersonResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+        };
+        FinanceProjectRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+        };
+        FinanceReasonRequest: {
+            reason?: string | null;
+        };
+        FinanceReconciliationResponse: {
+            /** Format: double */
+            erpBilled?: number;
+            /** Format: double */
+            erpPaid?: number;
+            /** Format: double */
+            confirmedBilled?: number;
+            /** Format: double */
+            confirmedPaid?: number;
+            /** Format: int32 */
+            pendingCount?: number;
+            /** Format: int32 */
+            failedCount?: number;
+            /** Format: int32 */
+            deadCount?: number;
+            rows?: components["schemas"]["FinanceReconciliationRowResponse"][] | null;
+        };
+        FinanceReconciliationRowResponse: {
+            issue?: string | null;
+            kind?: string | null;
+            resourceNumber?: string | null;
+            /** Format: uuid */
+            messageId?: string | null;
+            /** Format: double */
+            erpAmount?: number;
+            /** Format: double */
+            externalAmount?: number | null;
         };
         GoodsReceiptLineRequest: {
             /** Format: uuid */
@@ -18619,6 +19397,35 @@ export interface components {
             id?: string;
             name?: string | null;
         };
+        OutboxListResponse: {
+            items?: components["schemas"]["OutboxMessageResponse"][] | null;
+            pagination?: components["schemas"]["FinancePaginationResponse"];
+        };
+        OutboxMessageResponse: {
+            /** Format: uuid */
+            id?: string;
+            kind?: string | null;
+            resourceNumber?: string | null;
+            /** Format: double */
+            amount?: number;
+            status?: string | null;
+            /** Format: int32 */
+            attempts?: number;
+            /** Format: date-time */
+            nextAttemptAtUtc?: string;
+            lastError?: string | null;
+            externalRef?: string | null;
+            /** Format: double */
+            externalAmount?: number | null;
+            /** Format: date-time */
+            confirmedAtUtc?: string | null;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            sentAtUtc?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
         OwnerSummaryResponse: {
             /** Format: uuid */
             id?: string;
@@ -18644,6 +19451,32 @@ export interface components {
             /** Format: int32 */
             totalPages?: number;
             nextCursor?: string | null;
+        };
+        PaymentRequest: {
+            /** Format: double */
+            amount?: number;
+            method?: string | null;
+            reference?: string | null;
+            /** Format: date */
+            receivedDate?: string;
+        };
+        PaymentResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            /** Format: double */
+            amount?: number;
+            method?: string | null;
+            reference?: string | null;
+            /** Format: date */
+            receivedDate?: string;
+            status?: string | null;
+            reversalReason?: string | null;
+            /** Format: date-time */
+            reversedAtUtc?: string | null;
+            recordedBy?: components["schemas"]["FinancePersonResponse"];
+            /** Format: date-time */
+            recordedAtUtc?: string;
         };
         PermissionDto: {
             key?: string | null;
@@ -18720,6 +19553,19 @@ export interface components {
             siteSurveyRevisionId?: string | null;
             siteSurveySnapshotHash?: string | null;
             baselineHash?: string | null;
+        };
+        ProjectBillingSummaryResponse: {
+            project?: components["schemas"]["FinanceProjectRefResponse"];
+            /** Format: double */
+            contractAmount?: number;
+            /** Format: double */
+            billed?: number;
+            /** Format: double */
+            paid?: number;
+            /** Format: double */
+            outstanding?: number;
+            /** Format: double */
+            unbilled?: number;
         };
         ProjectBudgetLineRequest: {
             category?: string | null;

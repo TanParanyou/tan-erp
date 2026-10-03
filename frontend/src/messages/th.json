@@ -88,7 +88,10 @@
     "installations": "งานติดตั้ง",
     "warranties": "การรับประกัน",
     "serviceRequests": "งานบริการ",
-    "serviceSubgroup": "ติดตั้งและบริการ"
+    "serviceSubgroup": "ติดตั้งและบริการ",
+    "billings": "ใบแจ้งหนี้",
+    "financeSync": "ส่งข้อมูลบัญชี",
+    "financeSubgroup": "การเงิน"
   },
   "common": {
     "actions": {
@@ -1564,7 +1567,9 @@
       "mrp-runs": "รอบคำนวณ MRP",
       "installation-jobs": "งานติดตั้ง",
       "warranties": "การรับประกัน",
-      "service-requests": "งานบริการ"
+      "service-requests": "งานบริการ",
+      "billing-documents": "ใบแจ้งหนี้",
+      "payments": "การรับชำระ"
     },
     "tokens": {
       "prefix": "คำนำหน้า (Prefix)",
@@ -3148,6 +3153,156 @@
           "description": "ระบุเหตุผลที่ต้องเปิดซ้ำ"
         }
       }
+    }
+  },
+  "finance": {
+    "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึงการเงิน",
+    "accessDeniedDetail": "บัญชีนี้ยังไม่ได้รับสิทธิ์ใช้งานส่วนนี้",
+    "errors": {
+      "failed": "ดำเนินการไม่สำเร็จ โปรดลองอีกครั้ง",
+      "BILLING_VERSION_CONFLICT": "ใบแจ้งหนี้ถูกแก้ไขโดยผู้อื่น โปรดโหลดใหม่แล้วลองอีกครั้ง",
+      "BILLING_INVALID_STATE": "สถานะใบแจ้งหนี้ไม่อนุญาตให้ทำรายการนี้",
+      "BILLING_HAS_PAYMENTS": "ยังมีการรับชำระ ต้องกลับรายการให้หมดก่อนยกเลิก",
+      "BILLING_PROJECT_NOT_BILLABLE": "โครงการที่ยกเลิกแล้วออกใบแจ้งหนี้ไม่ได้",
+      "BILLING_EXCEEDS_CONTRACT": "ยอดวางบิลรวมเกินมูลค่าสัญญาของโครงการ",
+      "BILLING_REASON_REQUIRED": "ต้องระบุเหตุผล",
+      "BILLING_FIELD_REQUIRED": "ข้อมูลไม่ครบถ้วน",
+      "BILLING_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง ยอดต้องมากกว่า 0 และไม่เกิน 2 ตำแหน่งทศนิยม",
+      "PAYMENT_DUPLICATE_REFERENCE": "เลขอ้างอิงการรับชำระนี้ถูกบันทึกแล้ว (รวมรายการที่กลับรายการ)",
+      "PAYMENT_EXCEEDS_OUTSTANDING": "ยอดรับชำระเกินยอดค้างชำระ",
+      "PAYMENT_INVALID_STATE": "สถานะการรับชำระไม่อนุญาตให้ทำรายการนี้",
+      "PAYMENT_FIELD_INVALID": "ข้อมูลการรับชำระไม่ถูกต้อง วันที่รับต้องไม่เป็นอนาคต",
+      "OUTBOX_INVALID_STATE": "สถานะรายการส่งบัญชีไม่อนุญาตให้ทำรายการนี้",
+      "OUTBOX_CONFIRMATION_CONFLICT": "รายการนี้ยืนยันแล้วด้วยข้อมูลอื่น",
+      "OUTBOX_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง"
+    },
+    "billings": {
+      "title": "ใบแจ้งหนี้ / การวางบิล",
+      "subtitle": "วางบิลตามมูลค่าสัญญาของโครงการ รับชำระ และส่งข้อมูลให้ระบบบัญชี",
+      "search": "ค้นหาด้วยเลขที่ รายละเอียด หรือโครงการ",
+      "empty": "ยังไม่มีใบแจ้งหนี้",
+      "emptyDetail": "ออกใบแจ้งหนี้จากโครงการที่มีมูลค่าสัญญา",
+      "noResults": "ไม่พบใบแจ้งหนี้ตามเงื่อนไข",
+      "create": "ออกใบแจ้งหนี้",
+      "createTitle": "ออกใบแจ้งหนี้",
+      "editorSubtitle": "ยอดวางบิลรวมต้องไม่เกินมูลค่าสัญญา ออกแล้วแก้ยอดไม่ได้ — แก้ไขด้วยการยกเลิกแล้วออกใหม่",
+      "loadError": "โหลดใบแจ้งหนี้ไม่สำเร็จ",
+      "fieldsInvalid": "เลือกโครงการ กรอกรายละเอียด และยอดที่มากกว่า 0 (ไม่เกิน 2 ทศนิยม)",
+      "number": "เลขที่",
+      "project": "โครงการ",
+      "selectProject": "เลือกโครงการ",
+      "kind": "ประเภท",
+      "kinds": {
+        "deposit": "มัดจำ",
+        "milestone": "ตามงวดงาน",
+        "final": "งวดสุดท้าย",
+        "other": "อื่น ๆ"
+      },
+      "status": "สถานะ",
+      "statuses": {
+        "issued": "ออกแล้ว",
+        "partially_paid": "ชำระบางส่วน",
+        "paid": "ชำระแล้ว",
+        "voided": "ยกเลิก"
+      },
+      "description": "รายละเอียด",
+      "amount": "ยอดวางบิล",
+      "paid": "ชำระแล้ว",
+      "outstanding": "ค้างชำระ",
+      "dueDate": "ครบกำหนด",
+      "createdBy": "ออกโดย",
+      "summaryTitle": "สรุปการวางบิลของโครงการ",
+      "contractAmount": "มูลค่าสัญญา",
+      "billed": "วางบิลแล้ว",
+      "unbilled": "ยังไม่วางบิล",
+      "issue": "ออกใบแจ้งหนี้",
+      "created": "ออกใบแจ้งหนี้แล้ว",
+      "referenceHash": "เลขอ้างอิงทางการเงิน (hash)",
+      "immutableNote": "ยอด ประเภท และวันที่ออกถูกตรึงด้วย hash แก้ไขไม่ได้ การแก้ไขทำโดยยกเลิกแล้วออกใหม่",
+      "void": "ยกเลิกใบแจ้งหนี้",
+      "voidTitle": "ยกเลิกใบแจ้งหนี้",
+      "voidDescription": "ยกเลิกได้เมื่อยังไม่มีการรับชำระ ต้องระบุเหตุผล ยอดจะถูกคืนเข้าวงเงินสัญญา",
+      "voided": "ยกเลิกใบแจ้งหนี้แล้ว",
+      "voidReasonLine": "เหตุผลที่ยกเลิก: {reason}",
+      "recordPayment": "บันทึกการรับชำระ",
+      "paymentAmount": "ยอดรับชำระ",
+      "method": "วิธีชำระ",
+      "methods": {
+        "transfer": "โอนเงิน",
+        "cheque": "เช็ค",
+        "cash": "เงินสด",
+        "card": "บัตร"
+      },
+      "paymentReference": "เลขอ้างอิง (สลิป/เช็ค)",
+      "receivedDate": "วันที่รับ",
+      "savePayment": "บันทึกการรับชำระ",
+      "paymentInvalid": "กรอกยอดมากกว่า 0 (ไม่เกิน 2 ทศนิยม) เลขอ้างอิง และวันที่รับ",
+      "paymentRecorded": "บันทึกการรับชำระแล้ว",
+      "paymentsTitle": "การรับชำระ",
+      "paymentsEmpty": "ยังไม่มีการรับชำระ",
+      "paymentActive": "ใช้งาน",
+      "paymentReversed": "กลับรายการแล้ว",
+      "reverse": "กลับรายการ",
+      "reverseTitle": "กลับรายการรับชำระ",
+      "reverseDescription": "กลับรายการเมื่อเงินไม่เข้าจริง เช่น เช็คเด้ง ต้องระบุเหตุผล เลขอ้างอิงเดิมใช้ซ้ำไม่ได้",
+      "reversed": "กลับรายการแล้ว",
+      "reversalReasonLine": "เหตุผลที่กลับรายการ: {reason}",
+      "reason": "เหตุผล",
+      "reasonRequired": "กรอกเหตุผล",
+      "confirm": "ยืนยัน"
+    },
+    "sync": {
+      "title": "ส่งข้อมูลให้ระบบบัญชี",
+      "subtitle": "คิวข้อมูลใบแจ้งหนี้และการรับชำระที่รอส่ง ผลการส่งซ้ำ และการกระทบยอด",
+      "notConfigured": "ยังไม่ได้เชื่อมต่อระบบบัญชีจริง ข้อมูลจะค้างในคิวและส่งซ้ำตามกำหนด ไม่ถือว่าบันทึกบัญชีแล้วจนกว่าระบบบัญชียืนยัน",
+      "dispatch": "ส่งรายการที่ครบกำหนด",
+      "dispatched": "ประมวลผล {processed} สำเร็จ {sent} ล้มเหลว {failed} หยุดส่ง {dead}",
+      "requeue": "ส่งใหม่",
+      "requeued": "ส่งกลับเข้าคิวแล้ว",
+      "loadError": "โหลดข้อมูลไม่สำเร็จ",
+      "reconciliationTitle": "การกระทบยอด",
+      "reconciled": "ยอดตรงกันและไม่มีรายการค้าง",
+      "erpBilled": "ยอดวางบิลในระบบ ERP",
+      "confirmedBilled": "ยอดวางบิลที่บัญชียืนยัน",
+      "erpPaid": "ยอดรับชำระในระบบ ERP",
+      "confirmedPaid": "ยอดรับชำระที่บัญชียืนยัน",
+      "issues": {
+        "unsynced": "ยังส่งไม่สำเร็จ",
+        "awaiting_confirmation": "ส่งแล้ว รอบัญชียืนยัน",
+        "amount_mismatch": "ยอดไม่ตรงกับที่บัญชียืนยัน",
+        "missing_message": "ไม่มีรายการในคิว"
+      },
+      "outboxTitle": "คิวส่งข้อมูล",
+      "outboxEmpty": "ไม่มีรายการ",
+      "statusFilter": "สถานะ",
+      "allStatuses": "ทุกสถานะ",
+      "statuses": {
+        "pending": "รอส่ง",
+        "sent": "ส่งแล้ว",
+        "failed": "ล้มเหลว (รอลองใหม่)",
+        "dead": "หยุดส่ง"
+      },
+      "kinds": {
+        "billing": {
+          "issued": "ออกใบแจ้งหนี้",
+          "voided": "ยกเลิกใบแจ้งหนี้"
+        },
+        "payment": {
+          "recorded": "รับชำระ",
+          "reversed": "กลับรายการรับชำระ"
+        }
+      },
+      "kind": "ประเภท",
+      "document": "เอกสาร",
+      "amount": "ยอด",
+      "status": "สถานะ",
+      "attempts": "ครั้งที่ส่ง",
+      "lastError": "ข้อผิดพลาดล่าสุด",
+      "externalRef": "เลขอ้างอิงบัญชี",
+      "actions": "จัดการ",
+      "nextAttempt": "ลองใหม่ {date}",
+      "previous": "ก่อนหน้า",
+      "next": "ถัดไป"
     }
   }
 }
