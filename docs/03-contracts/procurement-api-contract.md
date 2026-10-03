@@ -39,6 +39,6 @@ Receipt response คือ PO ที่อัปเดตแล้ว (บรร
 
 `suppliers` (unique `(organization_id, normalized_code)`), `purchase_orders` (unique number, status/total/decider checks, FK Restrict ไป Supplier/Project/Branch/Users), `purchase_order_lines` (item/unit snapshot, checks `quantity > 0`, `unit_price >= 0`, `0 <= received_quantity <= quantity`), `goods_receipts` (unique number), `goods_receipt_lines` (quantity > 0). Audit: `supplier.*`, `purchase-order.*`, `goods-receipt.posted`.
 
-## Handoff to Inventory (CP-11)
+## Handoff to Inventory (CP-11, implemented)
 
-`goods_receipts` + `goods_receipt_lines` (item, unit, quantity, unit price, PO/line/Project/Branch) เป็นแหล่งเดียวที่ Inventory อ่านเพื่อสร้าง Movement; Procurement ไม่เขียนตารางของ Inventory.
+`goods_receipts` + `goods_receipt_lines` (item, unit, quantity, unit price, PO/line/Project/Branch) เป็นแหล่งเดียวที่ Inventory อ่านเพื่อสร้าง Movement (implemented ใน [Inventory API Contract](inventory-api-contract.md): `POST /api/v1/inventory/receipts`, หนึ่งใบรับเข้าได้ครั้งเดียว); Procurement ไม่เขียนตารางของ Inventory. `receipts[].stockDocumentNumber` ใน Response ของ PO แสดงเลขเอกสารสต็อกเมื่อรับเข้าแล้ว.

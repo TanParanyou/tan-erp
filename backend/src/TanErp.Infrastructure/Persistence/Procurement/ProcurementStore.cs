@@ -429,6 +429,12 @@ public class ProcurementStore : IProcurementStore
             .Where(r => r.OrganizationId == organizationId && r.PurchaseOrderId == order.Id)
             .OrderByDescending(r => r.ReceivedAtUtc).ThenByDescending(r => r.Id).ToListAsync(ct);
 
+        // Receipts already put into stock show the inventory document number (read-only link to Inventory).
+        var receiptIds = receipts.Select(r => (Guid?)r.Id).ToList();
+        var stockDocuments = await _db.StockDocuments.AsNoTracking()
+            .Where(d => d.OrganizationId == organizationId && d.SourceType == TanErp.Domain.Inventory.StockSourceType.GoodsReceipt && receiptIds.Contains(d.SourceId))
+            .ToDictionaryAsync(d => d.SourceId!.Value, d => d.Number, ct);
+
         var userIds = new[] { order.CreatedByUserId, order.DecidedByUserId ?? Guid.Empty }.Concat(receipts.Select(r => r.ReceivedByUserId)).Where(id => id != Guid.Empty).Distinct().ToList();
         var people = await _db.Users.AsNoTracking().Where(u => userIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => new ProcurementPerson(u.Id, u.DisplayName, u.Email), ct);
         ProcurementPerson Person(Guid id) => people.TryGetValue(id, out var p) ? p : new ProcurementPerson(id, string.Empty, null);
@@ -442,7 +448,7 @@ public class ProcurementStore : IProcurementStore
             order.DecidedAtUtc, order.DecisionNote, order.CancelReason, order.RowVersion,
             order.Lines.OrderBy(l => l.LineNo).Select(l => new PurchaseOrderLineProjection(
                 l.Id, l.LineNo, l.ItemId, l.ItemCode, l.ItemNameTh, l.UnitId, l.UnitCode, l.Quantity, l.UnitPrice, l.LineTotal, l.ReceivedQuantity, l.RemainingQuantity)).ToList(),
-            receipts.Select(r => new GoodsReceiptSummaryProjection(r.Id, r.Number, r.ReceivedAtUtc, r.Note, Person(r.ReceivedByUserId), r.Lines.Count, r.Lines.Sum(l => l.Quantity))).ToList());
+            receipts.Select(r => new GoodsReceiptSummaryProjection(r.Id, r.Number, r.ReceivedAtUtc, r.Note, Person(r.ReceivedByUserId), r.Lines.Count, r.Lines.Sum(l => l.Quantity), stockDocuments.TryGetValue(r.Id, out var stockNumber) ? stockNumber : null)).ToList());
     }
 
     public async Task<PagedPurchaseOrders> ListPurchaseOrdersAsync(Guid organizationId, PurchaseOrderListQuery query, CancellationToken ct = default)

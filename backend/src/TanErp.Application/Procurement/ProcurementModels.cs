@@ -56,7 +56,8 @@ public sealed record GoodsReceiptSummaryProjection(
     string? Note,
     ProcurementPerson ReceivedBy,
     int LineCount,
-    decimal TotalQuantity);
+    decimal TotalQuantity,
+    string? StockDocumentNumber);
 
 public sealed record PurchaseOrderProjection(
     Guid Id,

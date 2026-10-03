@@ -2883,6 +2883,413 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.ToTable("users", "identity_access");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockBalance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<decimal>("OnHand")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("on_hand");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<decimal>("Reserved")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("reserved");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<decimal>("TotalValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_value");
+
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("WarehouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.HasIndex("OrganizationId", "ItemId");
+
+                    b.HasIndex("OrganizationId", "WarehouseId", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("stock_balances", "inventory", t =>
+                        {
+                            t.HasCheckConstraint("ck_stock_balances_on_hand", "on_hand >= 0");
+
+                            t.HasCheckConstraint("ck_stock_balances_reserved", "reserved >= 0 AND reserved <= on_hand");
+
+                            t.HasCheckConstraint("ck_stock_balances_total_value", "total_value >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("document_type");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("number");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<DateTimeOffset>("PostedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("posted_at_utc");
+
+                    b.Property<Guid>("PostedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("posted_by_user_id");
+
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid?>("SourceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_id");
+
+                    b.Property<string>("SourceType")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("source_type");
+
+                    b.Property<Guid?>("ToWarehouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_warehouse_id");
+
+                    b.Property<Guid>("WarehouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("PostedByUserId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ToWarehouseId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.HasIndex("OrganizationId", "Number")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "SourceType", "SourceId")
+                        .IsUnique()
+                        .HasFilter("source_id IS NOT NULL");
+
+                    b.HasIndex("OrganizationId", "WarehouseId", "PostedAtUtc");
+
+                    b.ToTable("stock_documents", "inventory", t =>
+                        {
+                            t.HasCheckConstraint("ck_stock_documents_type", "document_type IN ('receipt', 'issue', 'transfer', 'adjustment')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<decimal>("OnHandAfter")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("on_hand_after");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<DateTimeOffset>("PostedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("posted_at_utc");
+
+                    b.Property<decimal>("QuantityDelta")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity_delta");
+
+                    b.Property<Guid>("StockDocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("stock_document_id");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<Guid>("UnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unit_id");
+
+                    b.Property<decimal>("ValueDelta")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("value_delta");
+
+                    b.Property<Guid>("WarehouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("StockDocumentId");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.HasIndex("OrganizationId", "WarehouseId", "ItemId", "PostedAtUtc");
+
+                    b.ToTable("stock_movements", "inventory", t =>
+                        {
+                            t.HasCheckConstraint("ck_stock_movements_kind", "kind IN ('receipt', 'issue', 'transfer_out', 'transfer_in', 'adjustment_in', 'adjustment_out')");
+
+                            t.HasCheckConstraint("ck_stock_movements_on_hand_after", "on_hand_after >= 0");
+
+                            t.HasCheckConstraint("ck_stock_movements_quantity", "quantity_delta <> 0");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockReservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("WarehouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.HasIndex("OrganizationId", "ProjectId", "Status");
+
+                    b.HasIndex("OrganizationId", "WarehouseId", "ItemId", "Status");
+
+                    b.ToTable("stock_reservations", "inventory", t =>
+                        {
+                            t.HasCheckConstraint("ck_stock_reservations_quantity", "quantity >= 0");
+
+                            t.HasCheckConstraint("ck_stock_reservations_status", "status IN ('active', 'released', 'consumed')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.Warehouse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("address");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("normalized_code");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("normalized_name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("OrganizationId", "NormalizedCode")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "BranchId", "Status");
+
+                    b.ToTable("warehouses", "inventory", t =>
+                        {
+                            t.HasCheckConstraint("ck_warehouses_status", "status IN ('active', 'inactive')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Items.CostRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -6350,6 +6757,139 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockBalance", b =>
+                {
+                    b.HasOne("TanErp.Domain.Items.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.UnitOfMeasure", null)
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Inventory.Warehouse", null)
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockDocument", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("PostedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Projects.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Inventory.Warehouse", null)
+                        .WithMany()
+                        .HasForeignKey("ToWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Inventory.Warehouse", null)
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockMovement", b =>
+                {
+                    b.HasOne("TanErp.Domain.Items.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Inventory.StockDocument", null)
+                        .WithMany("Movements")
+                        .HasForeignKey("StockDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.UnitOfMeasure", null)
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Inventory.Warehouse", null)
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockReservation", b =>
+                {
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Items.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Projects.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Inventory.Warehouse", null)
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.Warehouse", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Items.CostRecord", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Branch", null)
@@ -7162,6 +7702,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TanErp.Domain.IdentityAccess.User", b =>
                 {
                     b.Navigation("Memberships");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Inventory.StockDocument", b =>
+                {
+                    b.Navigation("Movements");
                 });
 
             modelBuilder.Entity("TanErp.Domain.Items.CostRecord", b =>

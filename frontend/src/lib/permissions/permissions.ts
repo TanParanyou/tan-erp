@@ -49,6 +49,16 @@ export const PERMISSIONS = {
   PURCHASE_ORDERS_APPROVE: "purchase-orders.approve",
   GOODS_RECEIPTS_CREATE: "goods-receipts.create",
 
+  // Inventory
+  WAREHOUSES_READ: "warehouses.read",
+  WAREHOUSES_MANAGE: "warehouses.manage",
+  INVENTORY_READ: "inventory.read",
+  INVENTORY_RECEIVE: "inventory.receive",
+  INVENTORY_ISSUE: "inventory.issue",
+  INVENTORY_TRANSFER: "inventory.transfer",
+  INVENTORY_ADJUST: "inventory.adjust",
+  INVENTORY_RESERVE: "inventory.reserve",
+
   // Projects
   PROJECTS_READ: "projects.read",
   PROJECTS_CREATE: "projects.create",

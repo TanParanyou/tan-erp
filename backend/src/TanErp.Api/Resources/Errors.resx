@@ -749,6 +749,52 @@
   <data name="GOODS_RECEIPT_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีรายการรับอย่างน้อย 1 รายการ จำนวนมากกว่า 0 และเป็นรายการของใบสั่งซื้อนี้</value></data>
   <data name="GOODS_RECEIPT_OVER_RECEIVED_TITLE" xml:space="preserve"><value>รับเกินจำนวนที่สั่ง</value></data>
   <data name="GOODS_RECEIPT_OVER_RECEIVED_DETAIL" xml:space="preserve"><value>จำนวนที่รับรวมต้องไม่เกินจำนวนที่สั่งซื้อ</value></data>
+  <data name="WAREHOUSE_CODE_CONFLICT_TITLE" xml:space="preserve"><value>รหัสคลังซ้ำ</value></data>
+  <data name="WAREHOUSE_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>รหัสคลังนี้มีอยู่แล้ว กรุณาลองใหม่</value></data>
+  <data name="WAREHOUSE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลคลังถูกแก้ไข</value></data>
+  <data name="WAREHOUSE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>คลังถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="WAREHOUSE_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะคลังไม่รองรับ</value></data>
+  <data name="WAREHOUSE_INVALID_STATE_DETAIL" xml:space="preserve"><value>คลังอยู่ในสถานะนี้อยู่แล้ว</value></data>
+  <data name="WAREHOUSE_HAS_STOCK_TITLE" xml:space="preserve"><value>คลังยังมีสต็อก</value></data>
+  <data name="WAREHOUSE_HAS_STOCK_DETAIL" xml:space="preserve"><value>ปิดใช้งานคลังที่ยังมีสต็อกหรือการจองไม่ได้ กรุณาโอนหรือปรับยอดออกก่อน</value></data>
+  <data name="WAREHOUSE_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลคลังไม่ถูกต้อง</value></data>
+  <data name="WAREHOUSE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีชื่อคลัง (≤200) และที่อยู่ไม่เกิน 500 ตัวอักษร</value></data>
+  <data name="INVENTORY_WAREHOUSE_INACTIVE_TITLE" xml:space="preserve"><value>คลังไม่ได้เปิดใช้งาน</value></data>
+  <data name="INVENTORY_WAREHOUSE_INACTIVE_DETAIL" xml:space="preserve"><value>ไม่สามารถทำรายการกับคลังที่ไม่ได้เปิดใช้งาน</value></data>
+  <data name="INVENTORY_WAREHOUSE_BRANCH_MISMATCH_TITLE" xml:space="preserve"><value>คลังไม่ตรงสาขา</value></data>
+  <data name="INVENTORY_WAREHOUSE_BRANCH_MISMATCH_DETAIL" xml:space="preserve"><value>คลังต้องอยู่สาขาเดียวกับสาขาที่รับสินค้า</value></data>
+  <data name="INVENTORY_RECEIPT_ALREADY_POSTED_TITLE" xml:space="preserve"><value>รับเข้าคลังแล้ว</value></data>
+  <data name="INVENTORY_RECEIPT_ALREADY_POSTED_DETAIL" xml:space="preserve"><value>ใบรับสินค้านี้ถูกรับเข้าคลังแล้ว</value></data>
+  <data name="INVENTORY_ITEM_NOT_STOCKABLE_TITLE" xml:space="preserve"><value>สินค้าไม่ใช่สินค้าสต็อก</value></data>
+  <data name="INVENTORY_ITEM_NOT_STOCKABLE_DETAIL" xml:space="preserve"><value>สินค้าต้องมีความสามารถเก็บสต็อก</value></data>
+  <data name="INVENTORY_INSUFFICIENT_STOCK_TITLE" xml:space="preserve"><value>สต็อกไม่พอ</value></data>
+  <data name="INVENTORY_INSUFFICIENT_STOCK_DETAIL" xml:space="preserve"><value>สต็อกที่ใช้ได้ไม่เพียงพอ ระบบไม่อนุญาตให้ติดลบ</value></data>
+  <data name="INVENTORY_QUANTITY_INVALID_TITLE" xml:space="preserve"><value>จำนวนไม่ถูกต้อง</value></data>
+  <data name="INVENTORY_QUANTITY_INVALID_DETAIL" xml:space="preserve"><value>จำนวนต้องมากกว่า 0</value></data>
+  <data name="INVENTORY_COST_INVALID_TITLE" xml:space="preserve"><value>ต้นทุนไม่ถูกต้อง</value></data>
+  <data name="INVENTORY_COST_INVALID_DETAIL" xml:space="preserve"><value>ต้นทุนต้องไม่ติดลบ</value></data>
+  <data name="INVENTORY_COST_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุต้นทุน</value></data>
+  <data name="INVENTORY_COST_REQUIRED_DETAIL" xml:space="preserve"><value>การเพิ่มสต็อกให้ยอดคงเหลือที่เป็นศูนย์ต้องระบุต้นทุนต่อหน่วย</value></data>
+  <data name="INVENTORY_NO_CHANGE_TITLE" xml:space="preserve"><value>ไม่มีส่วนต่าง</value></data>
+  <data name="INVENTORY_NO_CHANGE_DETAIL" xml:space="preserve"><value>จำนวนที่นับตรงกับระบบแล้ว ไม่มีรายการให้ปรับ</value></data>
+  <data name="INVENTORY_LINE_INVALID_TITLE" xml:space="preserve"><value>รายการไม่ถูกต้อง</value></data>
+  <data name="INVENTORY_LINE_INVALID_DETAIL" xml:space="preserve"><value>ต้องมี 1-200 รายการ สินค้าไม่ซ้ำ และจำนวนถูกต้อง</value></data>
+  <data name="INVENTORY_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="INVENTORY_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>การปรับยอดสต็อกต้องระบุเหตุผล</value></data>
+  <data name="INVENTORY_TRANSFER_SAME_WAREHOUSE_TITLE" xml:space="preserve"><value>คลังต้นทางและปลายทางซ้ำกัน</value></data>
+  <data name="INVENTORY_TRANSFER_SAME_WAREHOUSE_DETAIL" xml:space="preserve"><value>คลังต้นทางและปลายทางต้องต่างกัน</value></data>
+  <data name="INVENTORY_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve"><value>โครงการปิดแล้ว</value></data>
+  <data name="INVENTORY_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve"><value>เบิกหรือจองสต็อกให้โครงการที่เสร็จสิ้น/ยกเลิกไม่ได้</value></data>
+  <data name="INVENTORY_RESERVATION_INVALID_TITLE" xml:space="preserve"><value>การจองไม่ถูกต้อง</value></data>
+  <data name="INVENTORY_RESERVATION_INVALID_DETAIL" xml:space="preserve"><value>ไม่สามารถปล่อยการจองที่ไม่ได้อยู่ในสถานะใช้งาน</value></data>
+  <data name="INVENTORY_RESERVATION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>การจองถูกแก้ไข</value></data>
+  <data name="INVENTORY_RESERVATION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>การจองถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="INVENTORY_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>สต็อกถูกเปลี่ยนพร้อมกัน</value></data>
+  <data name="INVENTORY_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>สต็อกถูกเปลี่ยนโดยรายการอื่นพร้อมกัน กรุณาลองใหม่</value></data>
+  <data name="INVENTORY_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="INVENTORY_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุข้อมูลที่จำเป็นให้ครบ</value></data>
+  <data name="INVENTORY_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="INVENTORY_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลที่ระบุไม่ถูกต้อง</value></data>
   <data name="PROJECT_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>มีโครงการสำหรับใบเสนอราคานี้แล้ว</value></data>
   <data name="PROJECT_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>ใบเสนอราคานี้ถูกส่งต่อเป็นโครงการแล้ว หนึ่งใบเสนอราคาสร้างได้หนึ่งโครงการ</value></data>
   <data name="PROJECT_HANDOVER_NOT_ALLOWED_TITLE" xml:space="preserve"><value>ยังส่งต่อเป็นโครงการไม่ได้</value></data>

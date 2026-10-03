@@ -42,6 +42,11 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Procurement.PurchaseOrderLine> PurchaseOrderLines => Set<TanErp.Domain.Procurement.PurchaseOrderLine>();
     public DbSet<TanErp.Domain.Procurement.GoodsReceipt> GoodsReceipts => Set<TanErp.Domain.Procurement.GoodsReceipt>();
     public DbSet<TanErp.Domain.Procurement.GoodsReceiptLine> GoodsReceiptLines => Set<TanErp.Domain.Procurement.GoodsReceiptLine>();
+    public DbSet<TanErp.Domain.Inventory.Warehouse> Warehouses => Set<TanErp.Domain.Inventory.Warehouse>();
+    public DbSet<TanErp.Domain.Inventory.StockBalance> StockBalances => Set<TanErp.Domain.Inventory.StockBalance>();
+    public DbSet<TanErp.Domain.Inventory.StockDocument> StockDocuments => Set<TanErp.Domain.Inventory.StockDocument>();
+    public DbSet<TanErp.Domain.Inventory.StockMovement> StockMovements => Set<TanErp.Domain.Inventory.StockMovement>();
+    public DbSet<TanErp.Domain.Inventory.StockReservation> StockReservations => Set<TanErp.Domain.Inventory.StockReservation>();
     public DbSet<TanErp.Domain.Projects.Project> Projects => Set<TanErp.Domain.Projects.Project>();
     public DbSet<TanErp.Domain.Projects.ProjectBudgetLine> ProjectBudgetLines => Set<TanErp.Domain.Projects.ProjectBudgetLine>();
     public DbSet<TanErp.Domain.Projects.ProjectMilestone> ProjectMilestones => Set<TanErp.Domain.Projects.ProjectMilestone>();

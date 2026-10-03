@@ -5309,6 +5309,613 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inventory/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReceiveGoodsReceiptRequest"];
+                    "text/json": components["schemas"]["ReceiveGoodsReceiptRequest"];
+                    "application/*+json": components["schemas"]["ReceiveGoodsReceiptRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockDocumentResponse"];
+                        "application/json": components["schemas"]["StockDocumentResponse"];
+                        "text/json": components["schemas"]["StockDocumentResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["IssueStockRequest"];
+                    "text/json": components["schemas"]["IssueStockRequest"];
+                    "application/*+json": components["schemas"]["IssueStockRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockDocumentResponse"];
+                        "application/json": components["schemas"]["StockDocumentResponse"];
+                        "text/json": components["schemas"]["StockDocumentResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TransferStockRequest"];
+                    "text/json": components["schemas"]["TransferStockRequest"];
+                    "application/*+json": components["schemas"]["TransferStockRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockDocumentResponse"];
+                        "application/json": components["schemas"]["StockDocumentResponse"];
+                        "text/json": components["schemas"]["StockDocumentResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AdjustStockRequest"];
+                    "text/json": components["schemas"]["AdjustStockRequest"];
+                    "application/*+json": components["schemas"]["AdjustStockRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockDocumentResponse"];
+                        "application/json": components["schemas"]["StockDocumentResponse"];
+                        "text/json": components["schemas"]["StockDocumentResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/reservations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    projectId?: string;
+                    warehouseId?: string;
+                    status?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ReservationListResponse"];
+                        "application/json": components["schemas"]["ReservationListResponse"];
+                        "text/json": components["schemas"]["ReservationListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReserveStockRequest"];
+                    "text/json": components["schemas"]["ReserveStockRequest"];
+                    "application/*+json": components["schemas"]["ReserveStockRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ReservationResponse"];
+                        "application/json": components["schemas"]["ReservationResponse"];
+                        "text/json": components["schemas"]["ReservationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/reservations/{id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReleaseReservationRequest"];
+                    "text/json": components["schemas"]["ReleaseReservationRequest"];
+                    "application/*+json": components["schemas"]["ReleaseReservationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ReservationResponse"];
+                        "application/json": components["schemas"]["ReservationResponse"];
+                        "text/json": components["schemas"]["ReservationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockDocumentResponse"];
+                        "application/json": components["schemas"]["StockDocumentResponse"];
+                        "text/json": components["schemas"]["StockDocumentResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    warehouseId?: string;
+                    itemId?: string;
+                    search?: string;
+                    inStockOnly?: boolean;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockBalanceListResponse"];
+                        "application/json": components["schemas"]["StockBalanceListResponse"];
+                        "text/json": components["schemas"]["StockBalanceListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    warehouseId?: string;
+                    itemId?: string;
+                    kind?: string;
+                    documentId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockMovementListResponse"];
+                        "application/json": components["schemas"]["StockMovementListResponse"];
+                        "text/json": components["schemas"]["StockMovementListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    warehouseId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ReconciliationResponse"];
+                        "application/json": components["schemas"]["ReconciliationResponse"];
+                        "text/json": components["schemas"]["ReconciliationResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/items/{itemId}/barcodes": {
         parameters: {
             query?: never;
@@ -12695,6 +13302,309 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/warehouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseListResponse"];
+                        "application/json": components["schemas"]["WarehouseListResponse"];
+                        "text/json": components["schemas"]["WarehouseListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WarehouseRequest"];
+                    "text/json": components["schemas"]["WarehouseRequest"];
+                    "application/*+json": components["schemas"]["WarehouseRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseResponse"];
+                        "application/json": components["schemas"]["WarehouseResponse"];
+                        "text/json": components["schemas"]["WarehouseResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/warehouses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseResponse"];
+                        "application/json": components["schemas"]["WarehouseResponse"];
+                        "text/json": components["schemas"]["WarehouseResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WarehouseRequest"];
+                    "text/json": components["schemas"]["WarehouseRequest"];
+                    "application/*+json": components["schemas"]["WarehouseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseResponse"];
+                        "application/json": components["schemas"]["WarehouseResponse"];
+                        "text/json": components["schemas"]["WarehouseResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/warehouses/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseResponse"];
+                        "application/json": components["schemas"]["WarehouseResponse"];
+                        "text/json": components["schemas"]["WarehouseResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/warehouses/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseResponse"];
+                        "application/json": components["schemas"]["WarehouseResponse"];
+                        "text/json": components["schemas"]["WarehouseResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -12745,6 +13655,20 @@ export interface components {
             /** Format: double */
             longitude?: number | null;
             displayText?: string | null;
+        };
+        AdjustStockRequest: {
+            /** Format: uuid */
+            warehouseId?: string;
+            reason?: string | null;
+            lines?: components["schemas"]["AdjustmentLineRequest"][] | null;
+        };
+        AdjustmentLineRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: double */
+            countedQuantity?: number;
+            /** Format: double */
+            unitCost?: number | null;
         };
         AdminAssignRoleResponse: {
             user?: components["schemas"]["AdminUserResponse"];
@@ -13915,12 +14839,50 @@ export interface components {
             lineCount?: number;
             /** Format: double */
             totalQuantity?: number;
+            stockDocumentNumber?: string | null;
+        };
+        InventoryItemRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            nameTh?: string | null;
+            unitCode?: string | null;
+        };
+        InventoryPaginationResponse: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        InventoryPersonResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+            email?: string | null;
+        };
+        InventoryWarehouseRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
         };
         IssueQuotationRequest: {
             /** Format: uuid */
             expectedEstimateVersion?: string;
             /** Format: uuid */
             expectedOpportunityVersion?: string;
+        };
+        IssueStockRequest: {
+            /** Format: uuid */
+            warehouseId?: string;
+            /** Format: uuid */
+            projectId?: string | null;
+            reason?: string | null;
+            lines?: components["schemas"]["StockLineRequest"][] | null;
         };
         ItemAliasResponse: {
             /** Format: uuid */
@@ -14788,6 +15750,36 @@ export interface components {
             /** Format: uuid */
             expectedVersion?: string;
         };
+        ReceiveGoodsReceiptRequest: {
+            /** Format: uuid */
+            goodsReceiptId?: string;
+            /** Format: uuid */
+            warehouseId?: string;
+        };
+        ReconciliationResponse: {
+            /** Format: int32 */
+            rowCount?: number;
+            /** Format: int32 */
+            inconsistentCount?: number;
+            rows?: components["schemas"]["ReconciliationRowResponse"][] | null;
+        };
+        ReconciliationRowResponse: {
+            warehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            item?: components["schemas"]["InventoryItemRefResponse"];
+            /** Format: double */
+            balanceOnHand?: number;
+            /** Format: double */
+            ledgerQuantity?: number;
+            /** Format: double */
+            balanceValue?: number;
+            /** Format: double */
+            ledgerValue?: number;
+            isConsistent?: boolean;
+        };
+        ReleaseReservationRequest: {
+            /** Format: uuid */
+            expectedVersion?: string;
+        };
         RenameAdminUserRequest: {
             displayName?: string | null;
         };
@@ -14796,6 +15788,38 @@ export interface components {
         };
         ReplaceProjectBudgetRequest: {
             lines?: components["schemas"]["ProjectBudgetLineRequest"][] | null;
+        };
+        ReservationListResponse: {
+            items?: components["schemas"]["ReservationResponse"][] | null;
+            pagination?: components["schemas"]["InventoryPaginationResponse"];
+        };
+        ReservationResponse: {
+            /** Format: uuid */
+            id?: string;
+            warehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            item?: components["schemas"]["InventoryItemRefResponse"];
+            /** Format: uuid */
+            projectId?: string;
+            projectCode?: string | null;
+            /** Format: double */
+            quantity?: number;
+            status?: string | null;
+            note?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        ReserveStockRequest: {
+            /** Format: uuid */
+            warehouseId?: string;
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: double */
+            quantity?: number;
+            note?: string | null;
         };
         ReturnCostRecordRequest: {
             reason: string;
@@ -14977,6 +16001,83 @@ export interface components {
             checklist?: components["schemas"]["SiteSurveyChecklistResultResponse"][] | null;
             evidence?: components["schemas"]["SiteSurveyEvidenceResponse"][] | null;
         };
+        StockBalanceListResponse: {
+            items?: components["schemas"]["StockBalanceResponse"][] | null;
+            pagination?: components["schemas"]["InventoryPaginationResponse"];
+            /** Format: double */
+            totalValue?: number;
+        };
+        StockBalanceResponse: {
+            /** Format: uuid */
+            id?: string;
+            warehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            item?: components["schemas"]["InventoryItemRefResponse"];
+            /** Format: double */
+            onHand?: number;
+            /** Format: double */
+            reserved?: number;
+            /** Format: double */
+            available?: number;
+            /** Format: double */
+            averageCost?: number;
+            /** Format: double */
+            totalValue?: number;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+        };
+        StockDocumentResponse: {
+            /** Format: uuid */
+            id?: string;
+            documentType?: string | null;
+            number?: string | null;
+            warehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            toWarehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            /** Format: uuid */
+            projectId?: string | null;
+            sourceType?: string | null;
+            /** Format: uuid */
+            sourceId?: string | null;
+            reason?: string | null;
+            /** Format: date-time */
+            occurredAtUtc?: string;
+            postedBy?: components["schemas"]["InventoryPersonResponse"];
+            /** Format: date-time */
+            postedAtUtc?: string;
+            movements?: components["schemas"]["StockMovementResponse"][] | null;
+        };
+        StockLineRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: double */
+            quantity?: number;
+        };
+        StockMovementListResponse: {
+            items?: components["schemas"]["StockMovementResponse"][] | null;
+            pagination?: components["schemas"]["InventoryPaginationResponse"];
+        };
+        StockMovementResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            stockDocumentId?: string;
+            documentType?: string | null;
+            documentNumber?: string | null;
+            warehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            item?: components["schemas"]["InventoryItemRefResponse"];
+            kind?: string | null;
+            /** Format: double */
+            quantityDelta?: number;
+            /** Format: double */
+            unitCost?: number;
+            /** Format: double */
+            valueDelta?: number;
+            /** Format: double */
+            onHandAfter?: number;
+            /** Format: date-time */
+            occurredAtUtc?: string;
+            /** Format: date-time */
+            postedAtUtc?: string;
+        };
         SubmitEstimateRequest: {
             /** Format: int32 */
             revisionNo?: number;
@@ -15032,6 +16133,14 @@ export interface components {
             id?: string;
             displayName?: string | null;
             email?: string | null;
+        };
+        TransferStockRequest: {
+            /** Format: uuid */
+            fromWarehouseId?: string;
+            /** Format: uuid */
+            toWarehouseId?: string;
+            reason?: string | null;
+            lines?: components["schemas"]["StockLineRequest"][] | null;
         };
         TransitionOpportunityStageRequest: {
             targetStage?: string | null;
@@ -15402,6 +16511,28 @@ export interface components {
             /** Format: uuid */
             expectedRevisionVersion?: string;
             reason?: string | null;
+        };
+        WarehouseListResponse: {
+            items?: components["schemas"]["WarehouseResponse"][] | null;
+            pagination?: components["schemas"]["InventoryPaginationResponse"];
+        };
+        WarehouseRequest: {
+            name?: string | null;
+            address?: string | null;
+        };
+        WarehouseResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string;
+            code?: string | null;
+            name?: string | null;
+            address?: string | null;
+            status?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
         };
         WorkImageUserSummaryResponse: {
             /** Format: uuid */

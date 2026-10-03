@@ -165,6 +165,42 @@ export type PurchaseOrderListItemResponse = components["schemas"]["PurchaseOrder
 export type GoodsReceiptRequest = components["schemas"]["GoodsReceiptRequest"];
 export type GoodsReceiptLineRequest = components["schemas"]["GoodsReceiptLineRequest"];
 export type PurchaseOrderAction = "submit" | "approve" | "reject" | "cancel";
+export type WarehouseRequest = components["schemas"]["WarehouseRequest"];
+export type WarehouseResponse = components["schemas"]["WarehouseResponse"];
+export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
+export type StockBalanceResponse = components["schemas"]["StockBalanceResponse"];
+export type StockBalanceListResponse = components["schemas"]["StockBalanceListResponse"];
+export type StockMovementResponse = components["schemas"]["StockMovementResponse"];
+export type StockMovementListResponse = components["schemas"]["StockMovementListResponse"];
+export type StockDocumentResponse = components["schemas"]["StockDocumentResponse"];
+export type ReservationResponse = components["schemas"]["ReservationResponse"];
+export type ReservationListResponse = components["schemas"]["ReservationListResponse"];
+export type ReconciliationResponse = components["schemas"]["ReconciliationResponse"];
+export type IssueStockRequest = components["schemas"]["IssueStockRequest"];
+export type TransferStockRequest = components["schemas"]["TransferStockRequest"];
+export type AdjustStockRequest = components["schemas"]["AdjustStockRequest"];
+export type ReserveStockRequest = components["schemas"]["ReserveStockRequest"];
+export interface ListWarehousesParams {
+  search?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListStockBalancesParams {
+  warehouseId?: string;
+  itemId?: string;
+  search?: string;
+  inStockOnly?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListStockMovementsParams {
+  warehouseId?: string;
+  itemId?: string;
+  kind?: string;
+  page?: number;
+  pageSize?: number;
+}
 export interface ListSuppliersParams {
   search?: string;
   status?: string;
@@ -1186,6 +1222,72 @@ export class ApiClient {
 
   async postGoodsReceipt(id: string, payload: GoodsReceiptRequest, options: RequestOptions): Promise<PurchaseOrderResponse> {
     return this.request<PurchaseOrderResponse>(`/api/v1/purchase-orders/${encodeURIComponent(id)}/receipts`, "POST", options, payload);
+  }
+
+  async listWarehouses(options: RequestOptions, query: ListWarehousesParams): Promise<WarehouseListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<WarehouseListResponse>(`/api/v1/warehouses?${params.toString()}`, "GET", options);
+  }
+
+  async createWarehouse(payload: WarehouseRequest, options: RequestOptions): Promise<WarehouseResponse> {
+    return this.request<WarehouseResponse>("/api/v1/warehouses", "POST", options, payload);
+  }
+
+  async updateWarehouse(id: string, rowVersion: string, payload: WarehouseRequest, options: RequestOptions): Promise<WarehouseResponse> {
+    return this.request<WarehouseResponse>(`/api/v1/warehouses/${encodeURIComponent(id)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async setWarehouseActive(id: string, rowVersion: string, active: boolean, options: RequestOptions): Promise<WarehouseResponse> {
+    return this.request<WarehouseResponse>(`/api/v1/warehouses/${encodeURIComponent(id)}/${active ? "activate" : "deactivate"}`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async listStockBalances(options: RequestOptions, query: ListStockBalancesParams): Promise<StockBalanceListResponse> {
+    const params = new URLSearchParams();
+    if (query.warehouseId) params.set("warehouseId", query.warehouseId);
+    if (query.itemId) params.set("itemId", query.itemId);
+    if (query.search) params.set("search", query.search);
+    if (query.inStockOnly) params.set("inStockOnly", "true");
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<StockBalanceListResponse>(`/api/v1/inventory/balances?${params.toString()}`, "GET", options);
+  }
+
+  async listStockMovements(options: RequestOptions, query: ListStockMovementsParams): Promise<StockMovementListResponse> {
+    const params = new URLSearchParams();
+    if (query.warehouseId) params.set("warehouseId", query.warehouseId);
+    if (query.itemId) params.set("itemId", query.itemId);
+    if (query.kind) params.set("kind", query.kind);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<StockMovementListResponse>(`/api/v1/inventory/movements?${params.toString()}`, "GET", options);
+  }
+
+  async getStockReconciliation(options: RequestOptions): Promise<ReconciliationResponse> {
+    return this.request<ReconciliationResponse>("/api/v1/inventory/reconciliation", "GET", options);
+  }
+
+  async receiveGoodsReceiptIntoStock(goodsReceiptId: string, warehouseId: string, options: RequestOptions): Promise<StockDocumentResponse> {
+    return this.request<StockDocumentResponse>("/api/v1/inventory/receipts", "POST", options, { goodsReceiptId, warehouseId });
+  }
+
+  async issueStock(payload: IssueStockRequest, options: RequestOptions): Promise<StockDocumentResponse> {
+    return this.request<StockDocumentResponse>("/api/v1/inventory/issues", "POST", options, payload);
+  }
+
+  async transferStock(payload: TransferStockRequest, options: RequestOptions): Promise<StockDocumentResponse> {
+    return this.request<StockDocumentResponse>("/api/v1/inventory/transfers", "POST", options, payload);
+  }
+
+  async adjustStock(payload: AdjustStockRequest, options: RequestOptions): Promise<StockDocumentResponse> {
+    return this.request<StockDocumentResponse>("/api/v1/inventory/adjustments", "POST", options, payload);
+  }
+
+  async reserveStock(payload: ReserveStockRequest, options: RequestOptions): Promise<ReservationResponse> {
+    return this.request<ReservationResponse>("/api/v1/inventory/reservations", "POST", options, payload);
   }
 
   async listOrganizationBranches(options: RequestOptions): Promise<OrganizationBranchResponse[]> {

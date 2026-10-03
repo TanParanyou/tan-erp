@@ -76,7 +76,11 @@
     "projects": "Projects",
     "suppliers": "Suppliers",
     "purchaseOrders": "Purchase orders",
-    "procurementSubgroup": "Procurement"
+    "procurementSubgroup": "Procurement",
+    "stockBalances": "Stock balances",
+    "stockMovements": "Stock movements",
+    "warehouses": "Warehouses",
+    "inventorySubgroup": "Inventory"
   },
   "common": {
     "actions": {
@@ -1540,7 +1544,12 @@
       "suppliers": "Supplier",
       "purchase-orders": "Purchase Order",
       "goods-receipts": "Goods Receipt",
-      "project-change-orders": "Project Change Order"
+      "project-change-orders": "Project Change Order",
+      "warehouses": "Warehouse",
+      "stock-receipts": "Stock Receipt",
+      "stock-issues": "Stock Issue",
+      "stock-transfers": "Stock Transfer",
+      "stock-adjustments": "Stock Adjustment"
     },
     "tokens": {
       "prefix": "Prefix",
@@ -2382,7 +2391,171 @@
       "receiptPosted": "Goods receipt posted.",
       "receiptsTitle": "Goods receipts",
       "receiptsEmpty": "No goods received yet.",
-      "receiptSummary": "{lines} lines, total quantity {quantity}"
+      "receiptSummary": "{lines} lines, total quantity {quantity}",
+      "putIntoStockDone": "In stock (document {number})",
+      "notInStock": "Not put into stock yet"
+    }
+  },
+  "inventory": {
+    "accessDeniedTitle": "No access to inventory",
+    "accessDeniedDetail": "You do not have permission to view this area.",
+    "errors": {
+      "failed": "The action failed. Please try again.",
+      "WAREHOUSE_CODE_CONFLICT": "The warehouse code already exists. Try again.",
+      "WAREHOUSE_VERSION_CONFLICT": "The warehouse was modified by someone else. Reload and try again.",
+      "WAREHOUSE_INVALID_STATE": "The warehouse is already in this status.",
+      "WAREHOUSE_HAS_STOCK": "A warehouse that still holds stock or reservations cannot be deactivated.",
+      "WAREHOUSE_FIELD_INVALID": "The warehouse data is invalid.",
+      "INVENTORY_WAREHOUSE_INACTIVE": "The warehouse is not active.",
+      "INVENTORY_WAREHOUSE_BRANCH_MISMATCH": "The warehouse must belong to the branch that received the goods.",
+      "INVENTORY_RECEIPT_ALREADY_POSTED": "This goods receipt has already been put into stock.",
+      "INVENTORY_ITEM_NOT_STOCKABLE": "This item is not stockable.",
+      "INVENTORY_INSUFFICIENT_STOCK": "Not enough available stock (negative stock is not allowed).",
+      "INVENTORY_QUANTITY_INVALID": "Quantity must be greater than zero.",
+      "INVENTORY_COST_INVALID": "Cost cannot be negative.",
+      "INVENTORY_COST_REQUIRED": "A unit cost is required when adding stock to an empty balance.",
+      "INVENTORY_NO_CHANGE": "The counted quantities match the system; nothing to adjust.",
+      "INVENTORY_LINE_INVALID": "The lines are invalid (1-200 lines, unique items).",
+      "INVENTORY_REASON_REQUIRED": "A reason is required.",
+      "INVENTORY_TRANSFER_SAME_WAREHOUSE": "Source and destination warehouses must differ.",
+      "INVENTORY_PROJECT_NOT_ACTIVE": "The project is closed; stock cannot be issued or reserved.",
+      "INVENTORY_RESERVATION_INVALID": "Only an active reservation can be released.",
+      "INVENTORY_RESERVATION_VERSION_CONFLICT": "The reservation was modified by someone else.",
+      "INVENTORY_VERSION_CONFLICT": "Stock changed concurrently. Try again.",
+      "INVENTORY_FIELD_REQUIRED": "Required data is missing.",
+      "INVENTORY_FIELD_INVALID": "The data is invalid."
+    },
+    "warehouses": {
+      "title": "Warehouses",
+      "subtitle": "Warehouses that hold stock; a warehouse can be deactivated once it holds none",
+      "search": "Search by warehouse code or name",
+      "empty": "No warehouses yet",
+      "emptyDetail": "Add a warehouse to start receiving goods into stock.",
+      "noResults": "No warehouses match the filters.",
+      "create": "Add warehouse",
+      "edit": "Edit",
+      "code": "Code",
+      "name": "Warehouse name",
+      "address": "Address",
+      "status": "Status",
+      "actions": "Actions",
+      "statuses": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "invalid": "A warehouse name is required.",
+      "created": "Warehouse added.",
+      "updated": "Warehouse saved.",
+      "activated": "Warehouse activated.",
+      "deactivated": "Warehouse deactivated."
+    },
+    "stock": {
+      "title": "Stock balances",
+      "subtitle": "On hand, reserved and value (moving average cost) per warehouse and item",
+      "search": "Search by item code or name",
+      "empty": "No stock yet",
+      "emptyDetail": "Put goods receipts into a warehouse (from the purchase order page) to start holding stock.",
+      "noResults": "No balances match the filters.",
+      "warehouse": "Warehouse",
+      "item": "Item",
+      "unit": "Unit",
+      "onHand": "On hand",
+      "reserved": "Reserved",
+      "available": "Available",
+      "averageCost": "Average cost",
+      "totalValue": "Value",
+      "actions": "Actions",
+      "reserve": "Reserve",
+      "issue": "Issue stock",
+      "transfer": "Transfer between warehouses",
+      "adjust": "Adjust from count",
+      "stockFilter": "Stock",
+      "inStockOnly": "Only with stock on hand",
+      "totalValueLine": "Total value for the current filters: {amount}"
+    },
+    "movements": {
+      "title": "Stock movements",
+      "subtitle": "Ledger of receipts, issues, transfers and adjustments (cannot be edited afterwards)",
+      "empty": "No movements yet",
+      "emptyDetail": "Movements appear once stock is received, issued, transferred or adjusted.",
+      "noResults": "No movements found.",
+      "postedAt": "Posted at",
+      "document": "Document",
+      "kind": "Type",
+      "warehouse": "Warehouse",
+      "item": "Item",
+      "quantity": "Quantity",
+      "unitCost": "Cost/unit",
+      "value": "Value",
+      "onHandAfter": "On hand after",
+      "reconciled": "Balances match the ledger ({count} rows)",
+      "mismatch": "{count} balances do not match the ledger",
+      "kinds": {
+        "receipt": "Receipt",
+        "issue": "Issue",
+        "transfer_out": "Transfer out",
+        "transfer_in": "Transfer in",
+        "adjustment_in": "Adjustment up",
+        "adjustment_out": "Adjustment down"
+      }
+    },
+    "documents": {
+      "post": "Post",
+      "warehouse": "Warehouse",
+      "fromWarehouse": "From warehouse",
+      "toWarehouse": "To warehouse",
+      "selectWarehouse": "Select a warehouse",
+      "warehouseRequired": "Select a warehouse.",
+      "project": "Project (its own reservation is used first)",
+      "noProject": "No project",
+      "reason": "Reason",
+      "reasonRequired": "Enter the reason for the adjustment.",
+      "quantity": "Quantity",
+      "countedQuantity": "Counted quantity",
+      "unitCost": "Unit cost (optional)",
+      "addItem": "Add item",
+      "removeLine": "Remove",
+      "linesEmpty": "No lines yet. Search and select an item below.",
+      "linesInvalid": "At least one line with a valid quantity is required (an adjustment may count 0).",
+      "adjustmentHint": "The counted quantity is compared with the system and adjusted up or down by the difference. Stock added uses the average cost unless the balance is empty, which needs a cost.",
+      "titles": {
+        "issue": "Issue stock",
+        "transfer": "Transfer stock between warehouses",
+        "adjustment": "Adjust stock from a count"
+      },
+      "descriptions": {
+        "issue": "Issued at the average cost. Stock cannot go negative and stock reserved for another project cannot be issued.",
+        "transfer": "Both legs post together; the value moves at the source's average cost.",
+        "adjustment": "Use when a physical count differs from the system. A reason is required."
+      },
+      "posted": {
+        "issue": "Stock issued.",
+        "transfer": "Stock transferred.",
+        "adjustment": "Stock adjusted."
+      }
+    },
+    "reserve": {
+      "title": "Reserve stock for a project",
+      "description": "Item {item}, available {available}",
+      "project": "Project",
+      "selectProject": "Select a project",
+      "quantity": "Quantity to reserve",
+      "note": "Note",
+      "confirm": "Reserve",
+      "invalid": "Select a project and a quantity above zero.",
+      "success": "Stock reserved."
+    },
+    "receive": {
+      "action": "Put into stock",
+      "title": "Put goods into stock",
+      "description": "Choose the warehouse that receives the goods of this receipt. Allowed once per receipt.",
+      "warehouse": "Warehouse",
+      "selectWarehouse": "Select a warehouse",
+      "warehouseRequired": "Select a warehouse.",
+      "confirm": "Put into stock",
+      "success": "Put into stock (document {number})."
     }
   }
 }

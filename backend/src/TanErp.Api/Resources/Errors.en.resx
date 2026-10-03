@@ -581,6 +581,52 @@
   <data name="GOODS_RECEIPT_INVALID_DETAIL" xml:space="preserve"><value>A receipt needs at least one line of this order with a quantity above zero.</value></data>
   <data name="GOODS_RECEIPT_OVER_RECEIVED_TITLE" xml:space="preserve"><value>Over-receipt</value></data>
   <data name="GOODS_RECEIPT_OVER_RECEIVED_DETAIL" xml:space="preserve"><value>The received quantity cannot exceed the ordered quantity.</value></data>
+  <data name="WAREHOUSE_CODE_CONFLICT_TITLE" xml:space="preserve"><value>Duplicate Warehouse Code</value></data>
+  <data name="WAREHOUSE_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>This warehouse code already exists. Try again.</value></data>
+  <data name="WAREHOUSE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Warehouse Changed</value></data>
+  <data name="WAREHOUSE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The warehouse was modified by someone else. Reload and try again.</value></data>
+  <data name="WAREHOUSE_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Warehouse Status</value></data>
+  <data name="WAREHOUSE_INVALID_STATE_DETAIL" xml:space="preserve"><value>The warehouse is already in this status.</value></data>
+  <data name="WAREHOUSE_HAS_STOCK_TITLE" xml:space="preserve"><value>Warehouse Still Holds Stock</value></data>
+  <data name="WAREHOUSE_HAS_STOCK_DETAIL" xml:space="preserve"><value>A warehouse that still holds stock or reservations cannot be deactivated.</value></data>
+  <data name="WAREHOUSE_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Warehouse Data</value></data>
+  <data name="WAREHOUSE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A warehouse name (≤200) is required and the address cannot exceed 500 characters.</value></data>
+  <data name="INVENTORY_WAREHOUSE_INACTIVE_TITLE" xml:space="preserve"><value>Warehouse Not Active</value></data>
+  <data name="INVENTORY_WAREHOUSE_INACTIVE_DETAIL" xml:space="preserve"><value>Transactions are not allowed for an inactive warehouse.</value></data>
+  <data name="INVENTORY_WAREHOUSE_BRANCH_MISMATCH_TITLE" xml:space="preserve"><value>Warehouse Branch Mismatch</value></data>
+  <data name="INVENTORY_WAREHOUSE_BRANCH_MISMATCH_DETAIL" xml:space="preserve"><value>The warehouse must belong to the branch that received the goods.</value></data>
+  <data name="INVENTORY_RECEIPT_ALREADY_POSTED_TITLE" xml:space="preserve"><value>Already Put Into Stock</value></data>
+  <data name="INVENTORY_RECEIPT_ALREADY_POSTED_DETAIL" xml:space="preserve"><value>This goods receipt has already been put into stock.</value></data>
+  <data name="INVENTORY_ITEM_NOT_STOCKABLE_TITLE" xml:space="preserve"><value>Item Not Stockable</value></data>
+  <data name="INVENTORY_ITEM_NOT_STOCKABLE_DETAIL" xml:space="preserve"><value>The item must be stockable.</value></data>
+  <data name="INVENTORY_INSUFFICIENT_STOCK_TITLE" xml:space="preserve"><value>Insufficient Stock</value></data>
+  <data name="INVENTORY_INSUFFICIENT_STOCK_DETAIL" xml:space="preserve"><value>Not enough available stock; negative stock is not allowed.</value></data>
+  <data name="INVENTORY_QUANTITY_INVALID_TITLE" xml:space="preserve"><value>Invalid Quantity</value></data>
+  <data name="INVENTORY_QUANTITY_INVALID_DETAIL" xml:space="preserve"><value>Quantity must be greater than zero.</value></data>
+  <data name="INVENTORY_COST_INVALID_TITLE" xml:space="preserve"><value>Invalid Cost</value></data>
+  <data name="INVENTORY_COST_INVALID_DETAIL" xml:space="preserve"><value>Cost cannot be negative.</value></data>
+  <data name="INVENTORY_COST_REQUIRED_TITLE" xml:space="preserve"><value>Cost Required</value></data>
+  <data name="INVENTORY_COST_REQUIRED_DETAIL" xml:space="preserve"><value>A unit cost is required to add stock to an empty balance.</value></data>
+  <data name="INVENTORY_NO_CHANGE_TITLE" xml:space="preserve"><value>Nothing To Adjust</value></data>
+  <data name="INVENTORY_NO_CHANGE_DETAIL" xml:space="preserve"><value>The counted quantities already match the system.</value></data>
+  <data name="INVENTORY_LINE_INVALID_TITLE" xml:space="preserve"><value>Invalid Lines</value></data>
+  <data name="INVENTORY_LINE_INVALID_DETAIL" xml:space="preserve"><value>1-200 lines, unique items and valid quantities are required.</value></data>
+  <data name="INVENTORY_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="INVENTORY_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason is required for a stock adjustment.</value></data>
+  <data name="INVENTORY_TRANSFER_SAME_WAREHOUSE_TITLE" xml:space="preserve"><value>Same Warehouse</value></data>
+  <data name="INVENTORY_TRANSFER_SAME_WAREHOUSE_DETAIL" xml:space="preserve"><value>Source and destination warehouses must differ.</value></data>
+  <data name="INVENTORY_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve"><value>Project Closed</value></data>
+  <data name="INVENTORY_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve"><value>Stock cannot be issued or reserved for a completed or cancelled project.</value></data>
+  <data name="INVENTORY_RESERVATION_INVALID_TITLE" xml:space="preserve"><value>Invalid Reservation</value></data>
+  <data name="INVENTORY_RESERVATION_INVALID_DETAIL" xml:space="preserve"><value>Only an active reservation can be released.</value></data>
+  <data name="INVENTORY_RESERVATION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Reservation Changed</value></data>
+  <data name="INVENTORY_RESERVATION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The reservation was modified by someone else. Reload and try again.</value></data>
+  <data name="INVENTORY_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Stock Changed Concurrently</value></data>
+  <data name="INVENTORY_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>Stock was changed by another transaction. Try again.</value></data>
+  <data name="INVENTORY_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Required Data Missing</value></data>
+  <data name="INVENTORY_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>The required data is missing.</value></data>
+  <data name="INVENTORY_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Data</value></data>
+  <data name="INVENTORY_FIELD_INVALID_DETAIL" xml:space="preserve"><value>The supplied data is invalid.</value></data>
   <data name="PROJECT_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>Project Already Exists</value></data>
   <data name="PROJECT_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>This quotation has already been handed over. One quotation creates one project.</value></data>
   <data name="PROJECT_HANDOVER_NOT_ALLOWED_TITLE" xml:space="preserve"><value>Handover Not Allowed</value></data>

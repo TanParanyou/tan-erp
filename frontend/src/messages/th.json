@@ -76,7 +76,11 @@
     "projects": "โครงการ",
     "suppliers": "ผู้ขาย",
     "purchaseOrders": "ใบสั่งซื้อ",
-    "procurementSubgroup": "จัดซื้อ"
+    "procurementSubgroup": "จัดซื้อ",
+    "stockBalances": "สต็อกคงเหลือ",
+    "stockMovements": "การเคลื่อนไหวสต็อก",
+    "warehouses": "คลังสินค้า",
+    "inventorySubgroup": "คลังสินค้า"
   },
   "common": {
     "actions": {
@@ -1540,7 +1544,12 @@
       "suppliers": "ผู้ขาย (Supplier)",
       "purchase-orders": "ใบสั่งซื้อ (Purchase Order)",
       "goods-receipts": "ใบรับสินค้า (Goods Receipt)",
-      "project-change-orders": "Change Order โครงการ"
+      "project-change-orders": "Change Order โครงการ",
+      "warehouses": "คลังสินค้า (Warehouse)",
+      "stock-receipts": "เอกสารรับเข้าคลัง",
+      "stock-issues": "เอกสารเบิกสินค้า",
+      "stock-transfers": "เอกสารโอนสินค้า",
+      "stock-adjustments": "เอกสารปรับยอดสต็อก"
     },
     "tokens": {
       "prefix": "คำนำหน้า (Prefix)",
@@ -2382,7 +2391,171 @@
       "receiptPosted": "บันทึกการรับสินค้าเรียบร้อยแล้ว",
       "receiptsTitle": "ประวัติการรับสินค้า",
       "receiptsEmpty": "ยังไม่มีการรับสินค้า",
-      "receiptSummary": "{lines} รายการ จำนวนรวม {quantity}"
+      "receiptSummary": "{lines} รายการ จำนวนรวม {quantity}",
+      "putIntoStockDone": "รับเข้าคลังแล้ว (เอกสาร {number})",
+      "notInStock": "ยังไม่ได้รับเข้าคลัง"
+    }
+  },
+  "inventory": {
+    "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึงคลังสินค้า",
+    "accessDeniedDetail": "คุณไม่มีสิทธิ์ดูข้อมูลส่วนนี้",
+    "errors": {
+      "failed": "ดำเนินการไม่สำเร็จ กรุณาลองใหม่",
+      "WAREHOUSE_CODE_CONFLICT": "รหัสคลังซ้ำ กรุณาลองใหม่",
+      "WAREHOUSE_VERSION_CONFLICT": "คลังถูกแก้ไขโดยผู้อื่น กรุณาโหลดข้อมูลใหม่",
+      "WAREHOUSE_INVALID_STATE": "คลังอยู่ในสถานะนี้อยู่แล้ว",
+      "WAREHOUSE_HAS_STOCK": "ปิดใช้งานคลังที่ยังมีสต็อกหรือการจองไม่ได้",
+      "WAREHOUSE_FIELD_INVALID": "ข้อมูลคลังไม่ถูกต้อง",
+      "INVENTORY_WAREHOUSE_INACTIVE": "คลังไม่ได้เปิดใช้งาน",
+      "INVENTORY_WAREHOUSE_BRANCH_MISMATCH": "คลังต้องอยู่สาขาเดียวกับสาขาที่รับสินค้า",
+      "INVENTORY_RECEIPT_ALREADY_POSTED": "ใบรับสินค้านี้ถูกรับเข้าคลังแล้ว",
+      "INVENTORY_ITEM_NOT_STOCKABLE": "สินค้านี้ไม่ใช่สินค้าสต็อก",
+      "INVENTORY_INSUFFICIENT_STOCK": "สต็อกที่ใช้ได้ไม่พอ (ไม่อนุญาตให้ติดลบ)",
+      "INVENTORY_QUANTITY_INVALID": "จำนวนต้องมากกว่า 0",
+      "INVENTORY_COST_INVALID": "ต้นทุนต้องไม่ติดลบ",
+      "INVENTORY_COST_REQUIRED": "ต้องระบุต้นทุนต่อหน่วยเมื่อเพิ่มสต็อกให้ยอดที่เป็นศูนย์",
+      "INVENTORY_NO_CHANGE": "จำนวนที่นับตรงกับระบบ ไม่มีรายการให้ปรับ",
+      "INVENTORY_LINE_INVALID": "รายการไม่ถูกต้อง (1-200 รายการ สินค้าไม่ซ้ำ)",
+      "INVENTORY_REASON_REQUIRED": "ต้องระบุเหตุผล",
+      "INVENTORY_TRANSFER_SAME_WAREHOUSE": "คลังต้นทางและปลายทางต้องต่างกัน",
+      "INVENTORY_PROJECT_NOT_ACTIVE": "โครงการปิดแล้ว เบิกหรือจองไม่ได้",
+      "INVENTORY_RESERVATION_INVALID": "ปล่อยการจองที่ไม่ได้ใช้งานไม่ได้",
+      "INVENTORY_RESERVATION_VERSION_CONFLICT": "การจองถูกแก้ไขโดยผู้อื่น",
+      "INVENTORY_VERSION_CONFLICT": "สต็อกถูกเปลี่ยนพร้อมกัน กรุณาลองใหม่",
+      "INVENTORY_FIELD_REQUIRED": "ข้อมูลไม่ครบ",
+      "INVENTORY_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง"
+    },
+    "warehouses": {
+      "title": "คลังสินค้า",
+      "subtitle": "คลังที่เก็บสต็อก ปิดใช้งานได้เมื่อไม่มีสต็อกคงเหลือ",
+      "search": "ค้นหารหัสหรือชื่อคลัง",
+      "empty": "ยังไม่มีคลังสินค้า",
+      "emptyDetail": "เพิ่มคลังเพื่อเริ่มรับสินค้าเข้าสต็อก",
+      "noResults": "ไม่พบคลังที่ตรงกับเงื่อนไข",
+      "create": "เพิ่มคลัง",
+      "edit": "แก้ไข",
+      "code": "รหัส",
+      "name": "ชื่อคลัง",
+      "address": "ที่อยู่",
+      "status": "สถานะ",
+      "actions": "การดำเนินการ",
+      "statuses": {
+        "active": "ใช้งาน",
+        "inactive": "ไม่ใช้งาน"
+      },
+      "activate": "เปิดใช้งาน",
+      "deactivate": "ปิดใช้งาน",
+      "invalid": "ต้องระบุชื่อคลัง",
+      "created": "เพิ่มคลังเรียบร้อยแล้ว",
+      "updated": "บันทึกคลังเรียบร้อยแล้ว",
+      "activated": "เปิดใช้งานคลังแล้ว",
+      "deactivated": "ปิดใช้งานคลังแล้ว"
+    },
+    "stock": {
+      "title": "สต็อกคงเหลือ",
+      "subtitle": "ยอดคงเหลือ ยอดจอง และมูลค่า (ต้นทุนเฉลี่ยถ่วงน้ำหนัก) ต่อคลังและสินค้า",
+      "search": "ค้นหารหัสหรือชื่อสินค้า",
+      "empty": "ยังไม่มีสต็อก",
+      "emptyDetail": "รับสินค้าเข้าคลังจากใบรับสินค้า (ในหน้าใบสั่งซื้อ) เพื่อเริ่มมีสต็อก",
+      "noResults": "ไม่พบรายการที่ตรงกับเงื่อนไข",
+      "warehouse": "คลัง",
+      "item": "สินค้า",
+      "unit": "หน่วย",
+      "onHand": "คงเหลือ",
+      "reserved": "จอง",
+      "available": "ใช้ได้",
+      "averageCost": "ต้นทุนเฉลี่ย",
+      "totalValue": "มูลค่า",
+      "actions": "การดำเนินการ",
+      "reserve": "จอง",
+      "issue": "เบิกสินค้า",
+      "transfer": "โอนระหว่างคลัง",
+      "adjust": "ปรับยอดจากการนับ",
+      "stockFilter": "สต็อก",
+      "inStockOnly": "เฉพาะที่มีคงเหลือ",
+      "totalValueLine": "มูลค่ารวมตามเงื่อนไข {amount}"
+    },
+    "movements": {
+      "title": "ประวัติการเคลื่อนไหวสต็อก",
+      "subtitle": "บันทึกการรับ เบิก โอน และปรับยอด (แก้ไขย้อนหลังไม่ได้)",
+      "empty": "ยังไม่มีการเคลื่อนไหว",
+      "emptyDetail": "รายการจะแสดงเมื่อมีการรับ เบิก โอน หรือปรับยอดสต็อก",
+      "noResults": "ไม่พบรายการ",
+      "postedAt": "เวลาที่บันทึก",
+      "document": "เอกสาร",
+      "kind": "ประเภท",
+      "warehouse": "คลัง",
+      "item": "สินค้า",
+      "quantity": "จำนวน",
+      "unitCost": "ต้นทุน/หน่วย",
+      "value": "มูลค่า",
+      "onHandAfter": "คงเหลือหลังรายการ",
+      "reconciled": "ยอดตรงกับบัญชีเคลื่อนไหว ({count} รายการ)",
+      "mismatch": "พบยอดไม่ตรง {count} รายการ",
+      "kinds": {
+        "receipt": "รับเข้า",
+        "issue": "เบิกออก",
+        "transfer_out": "โอนออก",
+        "transfer_in": "โอนเข้า",
+        "adjustment_in": "ปรับเพิ่ม",
+        "adjustment_out": "ปรับลด"
+      }
+    },
+    "documents": {
+      "post": "บันทึกรายการ",
+      "warehouse": "คลัง",
+      "fromWarehouse": "คลังต้นทาง",
+      "toWarehouse": "คลังปลายทาง",
+      "selectWarehouse": "เลือกคลัง",
+      "warehouseRequired": "กรุณาเลือกคลัง",
+      "project": "โครงการ (ใช้การจองของโครงการก่อน)",
+      "noProject": "ไม่ระบุโครงการ",
+      "reason": "เหตุผล",
+      "reasonRequired": "กรุณาระบุเหตุผลการปรับยอด",
+      "quantity": "จำนวน",
+      "countedQuantity": "จำนวนที่นับได้",
+      "unitCost": "ต้นทุน/หน่วย (ถ้ามี)",
+      "addItem": "เพิ่มสินค้า",
+      "removeLine": "ลบ",
+      "linesEmpty": "ยังไม่มีรายการ ค้นหาและเลือกสินค้าด้านล่าง",
+      "linesInvalid": "ต้องมีอย่างน้อย 1 รายการ จำนวนต้องถูกต้อง (ปรับยอดใส่ 0 ได้)",
+      "adjustmentHint": "ระบบเทียบจำนวนที่นับกับยอดในระบบ แล้วสร้างรายการปรับเพิ่ม/ลดตามส่วนต่าง ต้นทุนที่ปรับเพิ่มใช้ต้นทุนเฉลี่ย เว้นแต่ยอดเป็นศูนย์ต้องระบุต้นทุน",
+      "titles": {
+        "issue": "เบิกสินค้า",
+        "transfer": "โอนสินค้าระหว่างคลัง",
+        "adjustment": "ปรับยอดจากการนับสต็อก"
+      },
+      "descriptions": {
+        "issue": "เบิกออกที่ต้นทุนเฉลี่ย ระบบไม่ให้สต็อกติดลบ และไม่ให้เบิกส่วนที่ถูกจองไว้ให้โครงการอื่น",
+        "transfer": "โอนแบบทั้งสองฝั่งสำเร็จพร้อมกัน มูลค่าย้ายตามต้นทุนเฉลี่ยของคลังต้นทาง",
+        "adjustment": "ใช้เมื่อนับสต็อกจริงแล้วต่างจากระบบ ต้องระบุเหตุผล"
+      },
+      "posted": {
+        "issue": "บันทึกการเบิกสินค้าเรียบร้อยแล้ว",
+        "transfer": "บันทึกการโอนสินค้าเรียบร้อยแล้ว",
+        "adjustment": "บันทึกการปรับยอดเรียบร้อยแล้ว"
+      }
+    },
+    "reserve": {
+      "title": "จองสต็อกให้โครงการ",
+      "description": "สินค้า {item} ใช้ได้ {available}",
+      "project": "โครงการ",
+      "selectProject": "เลือกโครงการ",
+      "quantity": "จำนวนที่จอง",
+      "note": "หมายเหตุ",
+      "confirm": "จอง",
+      "invalid": "ต้องเลือกโครงการและระบุจำนวนมากกว่า 0",
+      "success": "จองสต็อกเรียบร้อยแล้ว"
+    },
+    "receive": {
+      "action": "รับเข้าคลัง",
+      "title": "รับสินค้าเข้าคลัง",
+      "description": "เลือกคลังที่จะรับสินค้าตามใบรับสินค้านี้ ทำได้ครั้งเดียวต่อใบรับ",
+      "warehouse": "คลัง",
+      "selectWarehouse": "เลือกคลัง",
+      "warehouseRequired": "กรุณาเลือกคลัง",
+      "confirm": "รับเข้าคลัง",
+      "success": "รับเข้าคลังแล้ว (เอกสาร {number})"
     }
   }
 }

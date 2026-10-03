@@ -60,6 +60,14 @@
 | Procurement | `purchase-orders.create` | สร้าง/แก้ฉบับร่าง/ส่ง/ยกเลิกใบสั่งซื้อ | Organization |
 | Procurement | `purchase-orders.approve` | อนุมัติ/ปฏิเสธใบสั่งซื้อ (ผู้ตัดสินต้องไม่ใช่ผู้สร้าง) | Organization |
 | Procurement | `goods-receipts.create` | บันทึกการรับสินค้า | Organization |
+| Inventory | `warehouses.read` | ดูคลังสินค้า | Organization |
+| Inventory | `warehouses.manage` | สร้าง/แก้/เปิด-ปิดคลัง | Organization |
+| Inventory | `inventory.read` | ดูยอดคงเหลือ ประวัติเคลื่อนไหว การจอง และ reconciliation | Organization |
+| Inventory | `inventory.receive` | รับ Goods Receipt เข้าคลัง | Organization |
+| Inventory | `inventory.issue` | เบิกสินค้า | Organization |
+| Inventory | `inventory.transfer` | โอนระหว่างคลัง | Organization |
+| Inventory | `inventory.adjust` | ปรับยอดจากการนับ | Organization |
+| Inventory | `inventory.reserve` | จอง/ปล่อยการจองสต็อก | Organization |
 | Project | `projects.read` | ดู Project และ Handover source | Organization |
 | Project | `projects.create` | ส่งต่อ Quotation ที่ยืนยันแล้วเป็น Project | Organization |
 | Project | `projects.update` | แก้แผนเวลา งบ Baseline (ก่อนตรึง) และ Milestone | Organization |

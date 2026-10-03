@@ -62,7 +62,8 @@ public sealed record GoodsReceiptSummaryResponse(
     string? Note,
     ProcurementPersonResponse ReceivedBy,
     int LineCount,
-    decimal TotalQuantity);
+    decimal TotalQuantity,
+    string? StockDocumentNumber);
 
 public sealed record PurchaseOrderResponse(
     Guid Id,

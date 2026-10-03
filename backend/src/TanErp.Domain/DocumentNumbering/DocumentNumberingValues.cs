@@ -19,6 +19,11 @@ public static class DocumentTypes
     public const string Suppliers = "suppliers";
     public const string PurchaseOrders = "purchase-orders";
     public const string GoodsReceipts = "goods-receipts";
+    public const string Warehouses = "warehouses";
+    public const string StockReceipts = "stock-receipts";
+    public const string StockIssues = "stock-issues";
+    public const string StockTransfers = "stock-transfers";
+    public const string StockAdjustments = "stock-adjustments";
     public const string Customers = "customers";
     public const string Items = "items";
     public const string ItemCategories = "item-categories";
@@ -36,7 +41,8 @@ public static class DocumentTypes
         UnitsOfMeasure,
         ItemTaxCategories,
         CostSources,
-        Suppliers
+        Suppliers,
+        Warehouses
     };
 
     public static readonly IReadOnlyCollection<string> GeneratedMasterData = new[]
@@ -47,7 +53,8 @@ public static class DocumentTypes
         UnitsOfMeasure,
         ItemTaxCategories,
         CostSources,
-        Suppliers
+        Suppliers,
+        Warehouses
     };
 
     public static readonly IReadOnlyCollection<string> All = new[]
@@ -61,6 +68,11 @@ public static class DocumentTypes
         Suppliers,
         PurchaseOrders,
         GoodsReceipts,
+        Warehouses,
+        StockReceipts,
+        StockIssues,
+        StockTransfers,
+        StockAdjustments,
         Customers,
         Items,
         ItemCategories,
@@ -101,6 +113,7 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.ItemTaxCategories => "TAX-",
             DocumentTypes.CostSources => "SRC-",
             DocumentTypes.Suppliers => "SUP-",
+            DocumentTypes.Warehouses => "WH-",
             _ => null
         };
 
@@ -119,6 +132,10 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.ProjectChangeOrders => "PCO",
             DocumentTypes.PurchaseOrders => "PO",
             DocumentTypes.GoodsReceipts => "GR",
+            DocumentTypes.StockReceipts => "SR",
+            DocumentTypes.StockIssues => "SI",
+            DocumentTypes.StockTransfers => "ST",
+            DocumentTypes.StockAdjustments => "SA",
             _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Unknown document type.")
         };
 

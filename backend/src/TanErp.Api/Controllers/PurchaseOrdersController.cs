@@ -138,5 +138,5 @@ public class PurchaseOrdersController : ProcurementControllerBase
         o.Project is null ? null : new PurchaseOrderProjectResponse(o.Project.Id, o.Project.Code, o.Project.Name),
         ToPerson(o.CreatedBy)!, o.CreatedAtUtc, o.SubmittedAtUtc, ToPerson(o.DecidedBy), o.DecidedAtUtc, o.DecisionNote, o.CancelReason, o.RowVersion,
         o.Lines.Select(l => new PurchaseOrderLineResponse(l.Id, l.LineNo, l.ItemId, l.ItemCode, l.ItemNameTh, l.UnitId, l.UnitCode, l.Quantity, l.UnitPrice, l.LineTotal, l.ReceivedQuantity, l.RemainingQuantity)).ToList(),
-        o.Receipts.Select(r => new GoodsReceiptSummaryResponse(r.Id, r.Number, r.ReceivedAtUtc, r.Note, ToPerson(r.ReceivedBy)!, r.LineCount, r.TotalQuantity)).ToList());
+        o.Receipts.Select(r => new GoodsReceiptSummaryResponse(r.Id, r.Number, r.ReceivedAtUtc, r.Note, ToPerson(r.ReceivedBy)!, r.LineCount, r.TotalQuantity, r.StockDocumentNumber)).ToList());
 }

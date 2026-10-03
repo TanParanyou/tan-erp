@@ -48,7 +48,7 @@
 | CP-08 | Won → Project Handover | Implemented 2026-10-04 (ค่าเริ่มต้นที่ทีมพัฒนาเลือก รอ Sales/Project Owner ยืนยัน) | Accepted Quotation; CP-06 rules เมื่อเปิดใช้ | Sales + Project Owner |
 | CP-09 | Project Budget/Plan/Change Order/Progress | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี Actual Cost/WBS) | CP-08 | Project Manager + Finance |
 | CP-10 | Supplier/Procurement | Implemented 2026-10-04 (Supplier → PO → Receipt; กฎที่ทีมพัฒนาเลือก; ไม่มี PR/Return) | Item/Unit + CP-09 demand/budget | Procurement + Finance |
-| CP-11 | Inventory/Warehouse | Future slice | CP-10 receipt contract + Item/Unit | Warehouse + Procurement |
+| CP-11 | Inventory/Warehouse | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี lot/serial/location/ปิดงวด) | CP-10 receipt contract + Item/Unit | Warehouse + Procurement |
 | CP-12 | BOM/Production | Future slice | CP-09 scope + CP-11 stock | Engineering/Production |
 | CP-13 | MRP | Future slice | CP-10 lead time + CP-11 stock + CP-12 BOM/plan | Production Planner + Procurement |
 | CP-14 | Installation/Handover/Warranty/Service | Future slice | CP-08/09; CP-12 หากมีงานผลิต | Installation + Customer Service |
@@ -184,10 +184,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-11 — Inventory/Warehouse
 
-- [ ] ยืนยัน Warehouse/location, base unit, valuation method, negative stock, lot/serial, reservation และ stock count/adjustment rules
-- [ ] ออกแบบ movement ledger และ balance/reservation projection; freeze valuation/conversion evidence ตามนโยบายที่ยืนยัน
-- [ ] ทำ receive/issue/transfer/reserve/count-adjustment เป็น slice ตามลำดับที่เลือก โดยรับข้อมูลจาก Procurement/Project contracts
-- [ ] ทดสอบ concurrent reservation/issue, atomic transfer, duplicate movement, backdate/period rules และ balance reconciliation
+- [x] ยืนยัน Warehouse/location, base unit, valuation method, negative stock, lot/serial, reservation และ stock count/adjustment rules
+- [x] ออกแบบ movement ledger และ balance/reservation projection; freeze valuation/conversion evidence ตามนโยบายที่ยืนยัน
+- [x] ทำ receive/issue/transfer/reserve/count-adjustment เป็น slice ตามลำดับที่เลือก โดยรับข้อมูลจาก Procurement/Project contracts
+- [x] ทดสอบ concurrent reservation/issue, atomic transfer, duplicate movement, backdate/period rules และ balance reconciliation
 
 **ผลส่งมอบ/เกณฑ์จบ:** สต็อกตรวจจาก movement ถึงเอกสารต้นทางได้; Stock Accuracy/valuation ผ่าน Finance/Warehouse UAT ก่อนเป็น input ของ MRP.
 

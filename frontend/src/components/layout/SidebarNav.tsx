@@ -54,6 +54,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasCustomersRead = can(activeMembership, "customers.read");
   const hasProjectsRead = can(activeMembership, "projects.read");
   const hasSuppliersRead = can(activeMembership, "suppliers.read");
+  const hasWarehousesRead = can(activeMembership, "warehouses.read");
+  const hasInventoryRead = can(activeMembership, "inventory.read");
   const hasPurchaseOrdersRead = can(activeMembership, "purchase-orders.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
@@ -72,6 +74,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
   const isProjectsActive = pathname.startsWith(`/${locale}/projects`);
   const isProcurementActive = pathname.startsWith(`/${locale}/procurement`);
+  const isInventoryActive = pathname.startsWith(`/${locale}/inventory`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
@@ -188,6 +191,39 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     return items;
   }, [hasSuppliersRead, hasPurchaseOrdersRead, locale, pathname, tShell]);
 
+  const inventoryItems: NavItemDef[] = useMemo(() => {
+    const items: NavItemDef[] = [];
+    if (hasInventoryRead) {
+      items.push({
+        id: "stock",
+        href: `/${locale}/inventory/stock`,
+        label: tShell("stockBalances"),
+        icon: <IconBox3D size={20} />,
+        isActive: pathname.startsWith(`/${locale}/inventory/stock`),
+        permission: hasInventoryRead,
+      });
+      items.push({
+        id: "stock-movements",
+        href: `/${locale}/inventory/movements`,
+        label: tShell("stockMovements"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/inventory/movements`),
+        permission: hasInventoryRead,
+      });
+    }
+    if (hasWarehousesRead) {
+      items.push({
+        id: "warehouses",
+        href: `/${locale}/inventory/warehouses`,
+        label: tShell("warehouses"),
+        icon: <IconBuilding size={20} />,
+        isActive: pathname.startsWith(`/${locale}/inventory/warehouses`),
+        permission: hasWarehousesRead,
+      });
+    }
+    return items;
+  }, [hasInventoryRead, hasWarehousesRead, locale, pathname, tShell]);
+
   const subgroups: NavSubgroupDef[] = useMemo(() => {
     const groups: NavSubgroupDef[] = [];
     if (crmItems.length > 0) {
@@ -204,6 +240,13 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         items: procurementItems,
       });
     }
+    if (inventoryItems.length > 0) {
+      groups.push({
+        id: "inventory",
+        label: tShell("inventorySubgroup"),
+        items: inventoryItems,
+      });
+    }
     if (productItems.length > 0) {
       groups.push({
         id: "products",
@@ -212,18 +255,20 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       });
     }
     return groups;
-  }, [crmItems, procurementItems, productItems, tShell]);
+  }, [crmItems, procurementItems, inventoryItems, productItems, tShell]);
 
   // Accordion open/close state tracking
   const [openSubgroups, setOpenSubgroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     if (isCustomersActive || isOpportunitiesActive || isProjectsActive) initial["crm"] = true;
     if (isProcurementActive) initial["procurement"] = true;
+    if (isInventoryActive) initial["inventory"] = true;
     if (isItemMasterActive) initial["products"] = true;
     // Default open all if none active
     if (Object.keys(initial).length === 0) {
       initial["crm"] = true;
       initial["procurement"] = true;
+      initial["inventory"] = true;
       initial["products"] = true;
     }
     return initial;

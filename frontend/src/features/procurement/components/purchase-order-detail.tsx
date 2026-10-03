@@ -17,6 +17,7 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { PurchaseOrderAction, PurchaseOrderResponse } from "@/lib/api/api-client";
+import { PutIntoStockButton } from "@/features/inventory/components/put-into-stock-button";
 import { usePurchaseOrder, usePurchaseOrderMutations } from "../api/procurement-queries";
 import { isPurchaseOrderStatus, procurementErrorCode, purchaseOrderStatusVariant } from "../procurement-status";
 
@@ -49,6 +50,7 @@ function DetailView({ order }: { order: PurchaseOrderResponse }) {
   const canCreate = can(selectedMembership, PERMISSIONS.PURCHASE_ORDERS_CREATE);
   const canApprove = can(selectedMembership, PERMISSIONS.PURCHASE_ORDERS_APPROVE);
   const canReceive = can(selectedMembership, PERMISSIONS.GOODS_RECEIPTS_CREATE);
+  const canPutIntoStock = can(selectedMembership, PERMISSIONS.INVENTORY_RECEIVE);
   const mutations = usePurchaseOrderMutations();
 
   const status = order.status ?? "";
@@ -228,6 +230,15 @@ function DetailView({ order }: { order: PurchaseOrderResponse }) {
                 <div className="font-semibold text-erp-text-main"><span className="font-mono">{receipt.number}</span> • {t("receiptSummary", { lines: receipt.lineCount ?? 0, quantity: formatNumber(receipt.totalQuantity) })}</div>
                 <div className="text-erp-text-muted">{receipt.receivedBy?.displayName ?? "-"} • {receipt.receivedAtUtc ? formatDateTime(receipt.receivedAtUtc, locale) : "-"}</div>
                 {receipt.note && <div className="mt-1 text-erp-text-body">{receipt.note}</div>}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {receipt.stockDocumentNumber ? (
+                    <span className="font-mono text-erp-success">{t("putIntoStockDone", { number: receipt.stockDocumentNumber })}</span>
+                  ) : canPutIntoStock ? (
+                    <PutIntoStockButton goodsReceiptId={receipt.id ?? ""} />
+                  ) : (
+                    <span className="text-erp-text-muted">{t("notInStock")}</span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
