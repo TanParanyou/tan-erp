@@ -20,7 +20,7 @@
 
 หลังตรวจงานเทียบกฎของ repo พบและแก้: `Idempotency-Key` บังคับสำหรับ `POST` ที่สร้างข้อมูล (สร้างผู้ใช้, มอบ Role) พร้อม replay/ปฏิเสธ payload ต่าง; พารามิเตอร์รายการเป็น `limit`, `sortBy`, `sortOrder` (whitelist, id tie-breaker); ย้ายกฎล้วน (anti-escalation, last-administrator) จาก Infrastructure ไปไว้ใน `AdministrationPolicy` ของ Application พร้อม unit test 14 เคส (Store ยังเป็นผู้จัด transaction/การโหลดข้อมูล เหมือน `EstimateStore`); query key มี locale; ชนิดพารามิเตอร์ FE ดึงจาก generated paths; ฟอร์มใช้ `noValidate` เหมือน editor อื่น (ไม่เช่นนั้นข้อความตรวจสอบเป็นของเบราว์เซอร์ ไม่ใช่ i18n); FE ส่ง Idempotency-Key ต่อ intent และใช้ key เดิมเมื่อ retry.
 
-ข้อที่ยังเป็น deviation ที่ยอมรับชั่วคราว: use case รวมอยู่ใน `IdentityAdministrationService` เดียว (ไม่แยก Command/Handler ต่อ use case); ตรรกะกำกับ transaction และการโหลดข้อมูลอยู่ใน Store.
+แยก use case เป็น Command/Query + Handler ต่อ use case ใน `Application/IdentityAccess/Administration/<UseCase>/` (12 handler) แล้ว; Store รับผิดชอบการโหลดข้อมูลและ transaction เหมือน `EstimateStore`. Hook `useApiRequestContext` (`src/lib/api/`) ใช้ร่วมกันสำหรับ query hooks.
 
 ## ที่พบระหว่างทดสอบและแก้แล้ว
 

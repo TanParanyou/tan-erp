@@ -5,6 +5,18 @@ using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Common.Results;
 using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Application.IdentityAccess.Administration.AssignRole;
+using TanErp.Application.IdentityAccess.Administration.CreateUser;
+using TanErp.Application.IdentityAccess.Administration.DecideRoleRequest;
+using TanErp.Application.IdentityAccess.Administration.GetUser;
+using TanErp.Application.IdentityAccess.Administration.ListRoleRequests;
+using TanErp.Application.IdentityAccess.Administration.ListRoles;
+using TanErp.Application.IdentityAccess.Administration.ListUsers;
+using TanErp.Application.IdentityAccess.Administration.RenameUser;
+using TanErp.Application.IdentityAccess.Administration.RevokeRole;
+using TanErp.Application.IdentityAccess.Administration.SetMembershipActive;
+using TanErp.Application.IdentityAccess.Administration.SetUserActive;
+using TanErp.Application.IdentityAccess.Administration.UpdateMembership;
 
 namespace TanErp.Api.Controllers;
 
@@ -14,11 +26,45 @@ namespace TanErp.Api.Controllers;
 [Route("api/v1/admin")]
 public class AdminUsersController : ControllerBase
 {
-    private readonly IdentityAdministrationService _service;
+    private readonly ListAdminUsersHandler _listUsers;
+    private readonly GetAdminUserHandler _getUser;
+    private readonly CreateAdminUserHandler _createUser;
+    private readonly RenameAdminUserHandler _renameUser;
+    private readonly SetAdminUserActiveHandler _setUserActive;
+    private readonly UpdateAdminMembershipHandler _updateMembership;
+    private readonly SetAdminMembershipActiveHandler _setMembershipActive;
+    private readonly ListAdminRolesHandler _listRoles;
+    private readonly AssignAdminRoleHandler _assignRole;
+    private readonly RevokeAdminRoleHandler _revokeRole;
+    private readonly ListAdminRoleRequestsHandler _listRoleRequests;
+    private readonly DecideAdminRoleRequestHandler _decideRoleRequest;
 
-    public AdminUsersController(IdentityAdministrationService service)
+    public AdminUsersController(
+        ListAdminUsersHandler listUsers,
+        GetAdminUserHandler getUser,
+        CreateAdminUserHandler createUser,
+        RenameAdminUserHandler renameUser,
+        SetAdminUserActiveHandler setUserActive,
+        UpdateAdminMembershipHandler updateMembership,
+        SetAdminMembershipActiveHandler setMembershipActive,
+        ListAdminRolesHandler listRoles,
+        AssignAdminRoleHandler assignRole,
+        RevokeAdminRoleHandler revokeRole,
+        ListAdminRoleRequestsHandler listRoleRequests,
+        DecideAdminRoleRequestHandler decideRoleRequest)
     {
-        _service = service;
+        _listUsers = listUsers;
+        _getUser = getUser;
+        _createUser = createUser;
+        _renameUser = renameUser;
+        _setUserActive = setUserActive;
+        _updateMembership = updateMembership;
+        _setMembershipActive = setMembershipActive;
+        _listRoles = listRoles;
+        _assignRole = assignRole;
+        _revokeRole = revokeRole;
+        _listRoleRequests = listRoleRequests;
+        _decideRoleRequest = decideRoleRequest;
     }
 
     [HttpGet("users")]
@@ -36,7 +82,7 @@ public class AdminUsersController : ControllerBase
         var auth = ReadAuth(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.ListUsersAsync(auth!, search, status, sortBy, sortOrder, page, limit, cancellationToken);
+        var result = await _listUsers.Handle(new ListAdminUsersQuery(auth!, search, status, sortBy, sortOrder, page, limit), cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
         var data = result.Value!;
@@ -54,7 +100,7 @@ public class AdminUsersController : ControllerBase
         var auth = ReadAuth(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.GetUserAsync(auth!, userId, cancellationToken);
+        var result = await _getUser.Handle(new GetAdminUserQuery(auth!, userId), cancellationToken);
         return UserResult(result);
     }
 
@@ -66,8 +112,10 @@ public class AdminUsersController : ControllerBase
         var idempotent = ReadIdempotent(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.CreateUserAsync(
-            idempotent!.Caller, idempotent.Key, request.DisplayName, request.Email, request.BranchId, request.RoleIds, HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _createUser.Handle(
+            new CreateAdminUserCommand(
+                idempotent!.Caller, idempotent.Key, request.DisplayName, request.Email, request.BranchId, request.RoleIds, HttpContext.TraceIdentifier),
+            cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
         var user = result.Value!;
@@ -82,8 +130,9 @@ public class AdminUsersController : ControllerBase
         var conditional = ReadConditional(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.RenameUserAsync(
-            conditional!.Caller, userId, conditional.RowVersion, request.DisplayName, HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _renameUser.Handle(
+            new RenameAdminUserCommand(conditional!.Caller, userId, conditional.RowVersion, request.DisplayName, HttpContext.TraceIdentifier),
+            cancellationToken);
         return UserResult(result);
     }
 
@@ -105,9 +154,11 @@ public class AdminUsersController : ControllerBase
         var conditional = ReadConditional(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.UpdateMembershipAsync(
-            conditional!.Caller, membershipId, conditional.RowVersion, request.BranchId, request.StartsAtUtc, request.ExpiresAtUtc,
-            HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _updateMembership.Handle(
+            new UpdateAdminMembershipCommand(
+                conditional!.Caller, membershipId, conditional.RowVersion, request.BranchId, request.StartsAtUtc, request.ExpiresAtUtc,
+                HttpContext.TraceIdentifier),
+            cancellationToken);
         return UserResult(result);
     }
 
@@ -128,7 +179,7 @@ public class AdminUsersController : ControllerBase
         var auth = ReadAuth(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.ListRolesAsync(auth!, cancellationToken);
+        var result = await _listRoles.Handle(new ListAdminRolesQuery(auth!), cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
         return Ok(new AdminRoleListResponse(result.Value!
@@ -144,8 +195,9 @@ public class AdminUsersController : ControllerBase
         var idempotent = ReadIdempotent(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.AssignRoleAsync(
-            idempotent!.Caller, idempotent.Key, membershipId, request.RoleId, HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _assignRole.Handle(
+            new AssignAdminRoleCommand(idempotent!.Caller, idempotent.Key, membershipId, request.RoleId, HttpContext.TraceIdentifier),
+            cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
         var outcome = result.Value!;
@@ -164,7 +216,8 @@ public class AdminUsersController : ControllerBase
         var auth = ReadAuth(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.RevokeRoleAsync(auth!, membershipId, roleId, HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _revokeRole.Handle(
+            new RevokeAdminRoleCommand(auth!, membershipId, roleId, HttpContext.TraceIdentifier), cancellationToken);
         return result.IsFailure ? Problem(result.Error) : NoContent();
     }
 
@@ -175,7 +228,7 @@ public class AdminUsersController : ControllerBase
         var auth = ReadAuth(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.ListRoleRequestsAsync(auth!, status, cancellationToken);
+        var result = await _listRoleRequests.Handle(new ListAdminRoleRequestsQuery(auth!, status), cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
         return Ok(new AdminRoleRequestListResponse(result.Value!.Select(AdminRoleRequestResponse.From).ToList()));
@@ -201,8 +254,9 @@ public class AdminUsersController : ControllerBase
         var conditional = ReadConditional(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.SetUserActiveAsync(
-            conditional!.Caller, userId, conditional.RowVersion, active, HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _setUserActive.Handle(
+            new SetAdminUserActiveCommand(conditional!.Caller, userId, conditional.RowVersion, active, HttpContext.TraceIdentifier),
+            cancellationToken);
         return UserResult(result);
     }
 
@@ -211,8 +265,9 @@ public class AdminUsersController : ControllerBase
         var conditional = ReadConditional(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.SetMembershipActiveAsync(
-            conditional!.Caller, membershipId, conditional.RowVersion, active, HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _setMembershipActive.Handle(
+            new SetAdminMembershipActiveCommand(conditional!.Caller, membershipId, conditional.RowVersion, active, HttpContext.TraceIdentifier),
+            cancellationToken);
         return UserResult(result);
     }
 
@@ -221,8 +276,9 @@ public class AdminUsersController : ControllerBase
         var conditional = ReadConditional(out var failure);
         if (failure is not null) return failure;
 
-        var result = await _service.DecideRoleRequestAsync(
-            conditional!.Caller, requestId, conditional.RowVersion, decision, HttpContext.TraceIdentifier, cancellationToken);
+        var result = await _decideRoleRequest.Handle(
+            new DecideAdminRoleRequestCommand(conditional!.Caller, requestId, conditional.RowVersion, decision, HttpContext.TraceIdentifier),
+            cancellationToken);
         return result.IsFailure ? Problem(result.Error) : Ok(AdminRoleRequestResponse.From(result.Value!));
     }
 

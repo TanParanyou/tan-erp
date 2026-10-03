@@ -63,6 +63,8 @@ public static class AdminUserSortKey
     public static bool IsValid(string value) => value is DisplayName or Email or CreatedAt;
 }
 
+public sealed record AdminCaller(string FirebaseUid, Guid MembershipId);
+
 public sealed record AdminActor(Guid UserId, Guid MembershipId);
 
 public sealed record AdminRef(Guid Id, string Name);
