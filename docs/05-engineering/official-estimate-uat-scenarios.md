@@ -68,7 +68,7 @@ Fixture สร้าง Customer, Site, Opportunity ที่อยู่ใน�
 | UAT-EST-010 | API New Revision/replay coverage and Playwright New Revision journey | Not run |
 | UAT-EST-011 | `CreateEstimate_ReadySurvey_DerivesCustomerBranchAndSnapshot` issues once, then replays the same approved-estimate request with the same idempotency key; verifies same quotation ID/number, one row, unchanged sequence, and one stage-history transition. | Not run; automated replay evidence added |
 | UAT-EST-012 | PostgreSQL API matrix verifies cross-organization and other-branch users receive a non-disclosing 404 for Estimate read, draft update, calculate, and approve; denied writes leave revision version, calculation snapshots, approval state, and decisions unchanged. | `EstimateActions_CrossOrganizationAndBranchAccessReturnNotFoundWithoutDisclosure` and Estimate API class passed 40/40 on disposable PostgreSQL; authorized-user UAT remains open |
-| UAT-EST-013 | Current API boundary is recorded in [Issue Quotation contract](../03-contracts/official-estimate-api-contract.md#issue-quotation): `QuotationResponse` contains quotation/estimate/opportunity identity, number/status, grand total, issue time, revision/stage, and row versions. `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` verifies the serialized property set against the allowlist and retains issue/replay assertions; no Preview/Export/Document endpoint exists in this slice. | API projection boundary verified; customer output and document UAT deferred to CP-04 |
+| UAT-EST-013 | `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` (Quotation Document allowlist, forbidden-term scan, immutability, latest quotation, cross-organization 404, 403) และ Vitest `quotation-document-view.test.tsx` / `quotation-document-page.test.tsx` | Automated evidence added; Business/Finance allowlist sign-off, artifact UAT (print/PDF), 320px/200% zoom และ keyboard review ยังเปิด |
 | UAT-EST-014 | `HistoricalCalculationCanBeReproducedFromRevisionInputsAndOriginalPolicies`; PostgreSQL history/reproduction API case | Not run |
 | UAT-EST-015 | `UpdateDraft_OutdatedVersion_Returns409Conflict`; revision concurrency token tests | Not run; two-user editing workflow remains |
 | UAT-EST-016 | `CancelSubmittedEstimate_RequiresAssignedCheckerAndClosesApprovalRoute`; cancellation replay/concurrency tests | Not run |
@@ -206,16 +206,16 @@ The API/component gates for UAT-EST-003 and the Estimate authorization matrices 
 
 ## UAT-EST-013 — Customer-safe Output
 
-**Current implementation boundary:** `POST /api/v1/estimates/{estimateId}/quotation` returns only the typed `QuotationResponse` projection documented in the [API contract](../03-contracts/official-estimate-api-contract.md#issue-quotation). It does not expose line items or provide Preview, Export, PDF, or print output. Automated quotation issuance/replay tests do not certify a customer document.
+**Current implementation boundary:** `POST /api/v1/estimates/{estimateId}/quotation` returns only the typed `QuotationResponse`. Customer output is provided by `GET /api/v1/estimates/{estimateId}/quotation/document` ([contract](../03-contracts/official-estimate-api-contract.md#quotation-document)) and the Preview/Print page `/{locale}/estimates/{id}/quotation`; PDF is produced by browser print (see [ADR 0016](../adr/0016-browser-print-for-quotation-pdf.md)). Automated tests do not certify the document for customers until Business/Finance approve the allowlist.
 
 **Role:** Quotation Issuer/Customer Viewer
 
-**Status:** API projection boundary documented; customer-facing output remains deferred to CP-04 until Business/Finance approve its field allowlist and document rules.
+**Status:** Preview/Print implemented with a proposed (TEST_ONLY) allowlist; Business/Finance sign-off and artifact UAT remain open.
 
 1. Preview และ Export Quotation ภาษาไทย
 2. ตรวจ Payload/Document ที่ลูกค้าได้รับ
 
-**Future expected result after CP-04:** มีเฉพาะฟิลด์ที่ Business/Finance อนุมัติ; ไม่มี Unit Cost, Total Cost, Margin/Markup, Internal Note, Trigger, Threshold หรือ Approval Detail. ยังไม่มี allowlist/เอกสารที่อนุมัติให้ใช้ตรวจรับในปัจจุบัน.
+**Future expected result after CP-04:** มีเฉพาะฟิลด์ที่ Business/Finance อนุมัติ; ไม่มี Unit Cost, Total Cost, Margin/Markup, Internal Note, Trigger, Threshold หรือ Approval Detail. allowlist ปัจจุบันเป็น Proposed default (TEST_ONLY) ที่ยังไม่ได้รับการอนุมัติให้ใช้ตรวจรับ.
 
 ## UAT-EST-014 — Historical Reproducibility
 

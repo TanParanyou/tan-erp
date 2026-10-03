@@ -99,3 +99,21 @@ Verified complete commercial flow against live stack (PostgreSQL 17, Firebase Em
 8. **Quotation Issuance:** Issue commercial quotation via atomic document numbering; advance opportunity to `proposed`.
 9. **Customer Acceptance:** Customer accepts quotation; advance opportunity to `won`.
 10. **Timeline Verification:** Stage history timeline displays exact transitions (`proposed` and `won`).
+
+---
+
+## 4. Customer-safe Quotation Document (CP-04, 2026-10-03)
+
+**Scope:** read-only projection `GET /api/v1/estimates/{id}/quotation/document`, Preview/Print page `/{locale}/estimates/{id}/quotation`, entry link on the Estimate card when the current revision is `quoted`. Allowlist and document rules are **Proposed (TEST_ONLY)**; see [API contract](../03-contracts/official-estimate-api-contract.md#quotation-document) and [ADR 0016](../adr/0016-browser-print-for-quotation-pdf.md).
+
+**Automated evidence**
+- Backend (`dotnet build backend/TanErp.slnx`, `dotnet test`): 0 warnings/errors; Architecture 3/3, Integration 292/292, Unit 292/292 on the backend slice (before the latest-quotation fix); after it, `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` re-ran 1/1. The full backend suite was not re-run after that fix.
+- The integration case verifies: serialized property allowlist at every level, forbidden-term scan, totals vs. issued quotation, section/line totals consistency, `locale=en` without English text (null + `hasIncompleteTranslations`), billing snapshot immutability after Customer master edit, latest-quotation selection with two quotations, cross-Organization 404, 403 without permission.
+- Frontend: `tsc --noEmit`, `npm run lint`, `npm run build` passed; `quotation-document-view.test.tsx` and `quotation-document-page.test.tsx` passed; `estimates` test folder passed except `estimate-workspace-layout.test.tsx` timeouts (5s default) that also occur on the unmodified tree and pass with `--testTimeout=60000` (5/5). A full `vitest run` was not recorded after the change.
+
+**Not verified / open**
+- Business/Finance sign-off of the field allowlist, terms, branding and page size; manual UAT of the printed/PDF artifact.
+- 320px, 200% zoom, keyboard and screen-reader review; browser-print pagination for long descriptions.
+- Playwright journey does not yet cover the document page.
+- No stored rendered file or hash (ADR 0016); `customerReference`, `validityDays`, `scopeNote` and payment/delivery terms are not in the Quotation domain.
+- Dedicated `quotations.read` permission is proposed, not implemented.

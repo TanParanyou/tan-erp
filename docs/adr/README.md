@@ -17,3 +17,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0013 — Organization Item และ Branch Availability](0013-organization-items-with-branch-availability.md)
 - [0014 — Reusable Cost Source และ Cost Record Evidence](0014-reusable-cost-source-with-record-evidence.md)
 - [0015 — Item Code เป็น SKU ภายใน และ Barcode หลายค่าต่อ Item](0015-item-code-sku-and-multiple-barcodes.md)
+- [0016 — ใช้ Browser Print สร้าง PDF ของ Quotation ในรอบแรก](0016-browser-print-for-quotation-pdf.md)

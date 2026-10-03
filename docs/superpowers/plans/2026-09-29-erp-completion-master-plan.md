@@ -111,10 +111,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 อ้าง FR-QUO-001/002, UAT-EST-013 และ [Estimate Field Catalog](../../01-business/official-estimate-field-catalog.md). Reuse immutable calculation/approval/customer billing snapshots และ numbering; ไม่ใช้ข้อมูล master ปัจจุบันสร้างเอกสารย้อนหลัง.
 
-- [ ] ยืนยัน field allowlist ภาษา/รายละเอียดงาน, ยอดและส่วนลด/ภาษี, validity/payment/delivery terms, branding, page size และวิธีจัดเก็บ rendered document/version/hash
-- [ ] กำหนด server projection ของรายการ Quotation และเอกสาร; ใช้ approved snapshot totals โดยไม่คำนวณยอดใหม่บน FE และไม่ส่ง cost/margin/internal note/approval detail
-- [ ] ทำ Preview/Export/PDF/Printing ไทย/อังกฤษพร้อม pagination, font/asset ownership และ long-description layout; เสนอ reuse ของ document renderer/export ก่อนสร้างของใหม่
-- [ ] ทดสอบ payload และไฟล์จริงด้วย allowlist, cross-scope access, ข้อมูล billing ณ วันออก, re-render ฉบับเก่าเมื่อ master เปลี่ยน, keyboard/320px/200% zoom และ print layout
+- [ ] ยืนยัน field allowlist ภาษา/รายละเอียดงาน, ยอดและส่วนลด/ภาษี, validity/payment/delivery terms, branding, page size และวิธีจัดเก็บ rendered document/version/hash (ใช้ Proposed default TEST_ONLY ใน [CP-04 plan](2026-10-03-customer-safe-quotation-document.md); ยังรอ Business)
+- [x] กำหนด server projection ของรายการ Quotation และเอกสาร (implemented 2026-10-03, proposed allowlist); ใช้ approved snapshot totals โดยไม่คำนวณยอดใหม่บน FE และไม่ส่ง cost/margin/internal note/approval detail
+- [ ] (บางส่วน: Preview + Browser Print ไทย/อังกฤษ ตาม [ADR 0016](../../adr/0016-browser-print-for-quotation-pdf.md); ยังไม่มี server-side PDF/artifact/hash และยังไม่ตรวจ long-description layout จริง) ทำ Preview/Export/PDF/Printing ไทย/อังกฤษพร้อม pagination, font/asset ownership และ long-description layout; เสนอ reuse ของ document renderer/export ก่อนสร้างของใหม่
+- [ ] (บางส่วน: payload allowlist, cross-scope, billing snapshot ณ วันออกมี automated test; ไฟล์จริง, keyboard/320px/200% zoom และ print layout ยังไม่ตรวจ) ทดสอบ payload และไฟล์จริงด้วย allowlist, cross-scope access, ข้อมูล billing ณ วันออก, re-render ฉบับเก่าเมื่อ master เปลี่ยน, keyboard/320px/200% zoom และ print layout
 
 **ผลส่งมอบ/เกณฑ์จบ:** ลูกค้าได้รับเอกสารที่ Business ยืนยัน ซึ่งย้อนกลับ quotation/revision/snapshot ได้และไม่เผยข้อมูลภายใน; UAT-EST-013 ตรวจทั้ง response และ artifact. Signatures ที่ต้องมีการยืนยันตัวตน/หลักฐานการลงนามอยู่ CP-07.
 
