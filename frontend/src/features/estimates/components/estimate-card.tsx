@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import type { EstimateDetailResponse } from "@/lib/api/api-client";
 import { Button } from "@/components/ui/Button";
@@ -212,12 +211,13 @@ export function EstimateCard({
 
           <div className="flex items-center gap-2">
             {estimate.currentRevision?.status === "quoted" && canReadQuotationDocument && (
-              <Link
+              <Button
                 href={`/${uiLocale}/estimates/${estimate.id}/quotation`}
-                className="inline-flex items-center border border-erp-navy px-3 py-1.5 text-sm font-medium text-erp-navy hover:bg-erp-surface-subtle"
+                variant="outline"
+                size="sm"
               >
                 {tQuotationDocument("viewDocument")}
-              </Link>
+              </Button>
             )}
 
             {canIssueQuotation && (

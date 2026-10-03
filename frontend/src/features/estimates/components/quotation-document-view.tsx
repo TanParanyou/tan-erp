@@ -18,7 +18,8 @@ function textOrEmpty(value: string | null | undefined): string {
 }
 
 export function QuotationDocumentView({ document, documentLocale, label }: QuotationDocumentViewProps) {
-  const currency = document.currency ?? "THB";
+  // The currency comes from the issued revision; never assume one when it is missing.
+  const currency = document.currency ?? null;
   const customer = document.customer;
   const address = customer?.address;
   const addressLines = address
@@ -34,6 +35,7 @@ export function QuotationDocumentView({ document, documentLocale, label }: Quota
   const totals = document.totals;
 
   return (
+    // A quotation is a paper document: it stays white with black text in dark mode and on print.
     <article
       data-testid="quotation-document"
       className="mx-auto w-full max-w-[210mm] bg-white p-8 text-sm text-black shadow-sm print:max-w-none print:p-0 print:shadow-none"
@@ -46,7 +48,7 @@ export function QuotationDocumentView({ document, documentLocale, label }: Quota
           <dt className="font-semibold">{label("issuedDate")}</dt>
           <dd>{formatDate(document.issuedAtUtc, documentLocale)}</dd>
           <dt className="font-semibold">{label("currency")}</dt>
-          <dd>{currency}</dd>
+          <dd>{textOrEmpty(currency)}</dd>
         </dl>
       </header>
 
@@ -125,7 +127,9 @@ export function QuotationDocumentView({ document, documentLocale, label }: Quota
           <dd className="text-right">{formatFinancialNumber(totals?.taxAmount)}</dd>
           <dt className="border-t-2 border-erp-navy pt-1 text-base font-bold">{label("grandTotal")}</dt>
           <dd className="border-t-2 border-erp-navy pt-1 text-right text-base font-bold">
-            {formatCurrencyAmount(totals?.grandTotal, currency, documentLocale)}
+            {currency
+              ? formatCurrencyAmount(totals?.grandTotal, currency, documentLocale)
+              : formatFinancialNumber(totals?.grandTotal)}
           </dd>
         </dl>
       </section>

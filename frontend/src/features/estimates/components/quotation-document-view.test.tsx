@@ -108,6 +108,14 @@ describe("QuotationDocumentView", () => {
     expect(screen.getAllByText("-").length).toBeGreaterThan(0);
   });
 
+  it("never assumes a currency when the document has none", () => {
+    render(<QuotationDocumentView document={buildDocument({ currency: null })} documentLocale="th" label={label} />);
+
+    expect(screen.queryByText(/THB/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/฿/)).not.toBeInTheDocument();
+    expect(screen.getByText("37,450.00")).toBeInTheDocument();
+  });
+
   it("never renders internal cost or margin labels", () => {
     render(<QuotationDocumentView document={buildDocument()} documentLocale="th" label={label} />);
     expect(screen.queryByText(/cost|margin|markup/i)).not.toBeInTheDocument();

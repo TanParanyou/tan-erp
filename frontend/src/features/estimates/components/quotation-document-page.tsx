@@ -57,7 +57,6 @@ export function QuotationDocumentPage({ estimateId, uiLocale }: QuotationDocumen
               variant={documentLocale === "th" ? "primary" : "outline"}
               aria-pressed={documentLocale === "th"}
               onClick={() => setDocumentLocale("th")}
-              className="!rounded-none"
             >
               {t("languageTh")}
             </Button>
@@ -67,18 +66,16 @@ export function QuotationDocumentPage({ estimateId, uiLocale }: QuotationDocumen
               variant={documentLocale === "en" ? "primary" : "outline"}
               aria-pressed={documentLocale === "en"}
               onClick={() => setDocumentLocale("en")}
-              className="!rounded-none"
             >
               {t("languageEn")}
             </Button>
           </div>
           <Button
             type="button"
-            size="sm"
+            size="md"
             variant="primary"
             disabled={!query.data}
             onClick={() => window.print()}
-            className="!rounded-none bg-erp-navy text-white hover:bg-erp-navy-hover"
           >
             {t("print")}
           </Button>

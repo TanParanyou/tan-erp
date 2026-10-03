@@ -45,10 +45,11 @@ export function estimateDetailQueryKey(
 
 export function quotationDocumentQueryKey(
   membershipId: string | null | undefined,
+  locale: "th" | "en",
   estimateId: string | null | undefined,
   documentLocale: "th" | "en"
-): readonly ["business", string | null | undefined, "estimates", "quotation-document", string | null | undefined, "th" | "en"] {
-  return ["business", membershipId, "estimates", "quotation-document", estimateId, documentLocale] as const;
+): readonly ["business", string | null | undefined, "th" | "en", "estimates", "quotation-document", string | null | undefined, "th" | "en"] {
+  return ["business", membershipId, locale, "estimates", "quotation-document", estimateId, documentLocale] as const;
 }
 
 export const estimateReviewQueueQueryKey = (
@@ -444,11 +445,13 @@ export function useQuotationDocument(
   estimateId: string,
   documentLocale: "th" | "en"
 ): UseQueryResult<QuotationDocumentResponse, Error> {
+  const uiLocale = useSafeLocale();
+  const normalizedUiLocale = uiLocale === "en" ? "en" : "th";
   const { selectedMembership } = useSelectedMembership();
   const membershipId = selectedMembership?.id;
 
   return useQuery({
-    queryKey: quotationDocumentQueryKey(membershipId, estimateId, documentLocale),
+    queryKey: quotationDocumentQueryKey(membershipId, normalizedUiLocale, estimateId, documentLocale),
     enabled: Boolean(membershipId && estimateId),
     queryFn: async ({ signal }) => {
       const token = await getAuthToken();

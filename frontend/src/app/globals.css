@@ -69,6 +69,10 @@ textarea {
   }
 }
 
+/*
+ * Print-only rules. Tailwind print: variants cannot reach the application shell (header/sidebar) that
+ * wraps every page, and @page is a browser-level at-rule, so this small block stays in CSS.
+ */
 @media print {
   @page {
     size: A4;
