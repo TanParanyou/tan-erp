@@ -60,7 +60,7 @@ public class GetQuotationDocumentHandlerTests
         public Task<Result<EstimateDetailProjection>> SubmitAsync(Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, int revisionNo, int calculationVersion, string? note, Guid actorUserId, string keyHash, string payloadHash, CancellationToken cancellationToken) => throw new NotImplementedException();
         public Task<Result<EstimateDetailProjection>> ReviewAsync(Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, int revisionNo, string decision, string? reasonCode, string? note, Guid actorUserId, Guid reviewerMembershipId, string keyHash, string payloadHash, CancellationToken cancellationToken) => throw new NotImplementedException();
         public Task<Result<QuotationDetailProjection>> IssueQuotationAsync(Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, Guid expectedOpportunityVersion, Guid actorUserId, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken) => throw new NotImplementedException();
-        public Task<Result<AcceptQuotationProjection>> AcceptQuotationAsync(Guid organizationId, Guid estimateId, Guid expectedOpportunityVersion, string? decisionNote, Guid actorUserId, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task<Result<AcceptQuotationProjection>> AcceptQuotationAsync(Guid organizationId, Guid estimateId, Guid expectedOpportunityVersion, string? decisionNote, Guid actorUserId, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken, Guid? expectedQuotationId = null) => throw new NotImplementedException();
     }
 
     [Fact]

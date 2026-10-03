@@ -84,7 +84,11 @@
     "boms": "BOM สูตรการผลิต",
     "workOrders": "ใบสั่งผลิต",
     "productionSubgroup": "การผลิต",
-    "mrpRuns": "แผนวัสดุ (MRP)"
+    "mrpRuns": "แผนวัสดุ (MRP)",
+    "installations": "งานติดตั้ง",
+    "warranties": "การรับประกัน",
+    "serviceRequests": "งานบริการ",
+    "serviceSubgroup": "ติดตั้งและบริการ"
   },
   "common": {
     "actions": {
@@ -1557,7 +1561,10 @@
       "stock-returns": "คืนวัตถุดิบเข้าสต็อก",
       "boms": "รหัส BOM",
       "work-orders": "ใบสั่งผลิต",
-      "mrp-runs": "รอบคำนวณ MRP"
+      "mrp-runs": "รอบคำนวณ MRP",
+      "installation-jobs": "งานติดตั้ง",
+      "warranties": "การรับประกัน",
+      "service-requests": "งานบริการ"
     },
     "tokens": {
       "prefix": "คำนำหน้า (Prefix)",
@@ -2258,7 +2265,8 @@
         "PROJECT_REASON_REQUIRED": "ต้องระบุเหตุผลหรือหมายเหตุ",
         "PROJECT_MILESTONE_INVALID": "ข้อมูล Milestone ไม่ถูกต้อง",
         "PROJECT_CHANGE_ORDER_INVALID": "ข้อมูล Change Order ไม่ถูกต้อง",
-        "PROJECT_CHANGE_ORDER_SELF_APPROVAL": "ผู้สร้าง Change Order อนุมัติหรือปฏิเสธรายการของตนเองไม่ได้"
+        "PROJECT_CHANGE_ORDER_SELF_APPROVAL": "ผู้สร้าง Change Order อนุมัติหรือปฏิเสธรายการของตนเองไม่ได้",
+        "PROJECT_OPEN_INSTALLATION": "ยังมีงานติดตั้งที่ไม่ปิด ต้องส่งมอบหรือยกเลิกให้ครบก่อนปิดโครงการ"
       },
       "committedAmount": "ภาระผูกพัน (ใบสั่งซื้อที่อนุมัติ)",
       "availableBudget": "งบคงเหลือ"
@@ -2916,6 +2924,230 @@
       "ACCEPTANCE_CONSENT_REQUIRED": "ต้องยอมรับข้อความยินยอมฉบับปัจจุบัน",
       "ACCEPTANCE_CONFLICT": "เอกสารมีการเปลี่ยนแปลง โปรดโหลดหน้าใหม่แล้วลองอีกครั้ง",
       "QUOTATION_INVALID_STATE": "สถานะใบเสนอราคาไม่อนุญาตให้ทำรายการนี้"
+    }
+  },
+  "service": {
+    "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึงงานบริการ",
+    "accessDeniedDetail": "บัญชีนี้ยังไม่ได้รับสิทธิ์ใช้งานส่วนนี้",
+    "errors": {
+      "failed": "ดำเนินการไม่สำเร็จ โปรดลองอีกครั้ง",
+      "INSTALLATION_VERSION_CONFLICT": "งานติดตั้งถูกแก้ไขโดยผู้อื่น โปรดโหลดใหม่แล้วลองอีกครั้ง",
+      "INSTALLATION_INVALID_STATE": "สถานะงานติดตั้งไม่อนุญาตให้ทำรายการนี้",
+      "INSTALLATION_PROJECT_NOT_ACTIVE": "โครงการที่เสร็จสิ้นหรือยกเลิกแล้วติดตั้งไม่ได้",
+      "INSTALLATION_CHECKLIST_INCOMPLETE": "ยังทำรายการตรวจที่บังคับไม่ครบ",
+      "INSTALLATION_DEFECTS_OPEN": "ยังมีข้อบกพร่องที่ไม่ได้แก้และตรวจยืนยัน",
+      "INSTALLATION_SELF_VERIFICATION": "ผู้แก้ข้อบกพร่องตรวจยืนยันงานของตนเองไม่ได้",
+      "INSTALLATION_DEFECT_INVALID_STATE": "สถานะข้อบกพร่องไม่อนุญาตให้ทำรายการนี้",
+      "INSTALLATION_ITEM_NOT_FOUND": "ไม่พบรายการหรือข้อบกพร่อง",
+      "INSTALLATION_REASON_REQUIRED": "ต้องระบุเหตุผลหรือหมายเหตุ",
+      "INSTALLATION_FIELD_REQUIRED": "ข้อมูลไม่ครบถ้วน",
+      "INSTALLATION_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง ต้องระบุระยะประกัน (0 = ไม่มีประกัน) ชัดเจน และวันส่งมอบห้ามเป็นอนาคต",
+      "SERVICE_VERSION_CONFLICT": "งานบริการถูกแก้ไขโดยผู้อื่น โปรดโหลดใหม่แล้วลองอีกครั้ง",
+      "SERVICE_INVALID_STATE": "สถานะงานบริการไม่อนุญาตให้ทำรายการนี้",
+      "SERVICE_PROJECT_INVALID": "โครงการที่ยกเลิกแล้วรับงานบริการไม่ได้",
+      "SERVICE_REASON_REQUIRED": "ต้องระบุหมายเหตุ",
+      "SERVICE_FIELD_REQUIRED": "ข้อมูลไม่ครบถ้วน",
+      "SERVICE_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง วันนัดต้องไม่เป็นอดีต"
+    },
+    "installations": {
+      "title": "งานติดตั้ง",
+      "subtitle": "วางแผน ติดตั้ง ตรวจรับงาน และส่งมอบให้ลูกค้าพร้อมเริ่มประกัน",
+      "search": "ค้นหาด้วยเลขที่งานหรือโครงการ",
+      "empty": "ยังไม่มีงานติดตั้ง",
+      "emptyDetail": "วางแผนงานติดตั้งจากโครงการที่เริ่มแล้ว",
+      "noResults": "ไม่พบงานติดตั้งตามเงื่อนไข",
+      "create": "วางแผนงานติดตั้ง",
+      "createTitle": "วางแผนงานติดตั้ง",
+      "editorSubtitle": "กำหนดโครงการ วันที่ ทีมงาน และรายการตรวจที่ต้องทำก่อนส่งมอบ",
+      "detailSubtitle": "ความคืบหน้า รายการตรวจ ข้อบกพร่อง และการส่งมอบ",
+      "loadError": "โหลดงานติดตั้งไม่สำเร็จ",
+      "fieldsInvalid": "เลือกโครงการ และระบุวันเริ่ม-สิ้นสุดที่ถูกต้อง",
+      "number": "เลขที่",
+      "project": "โครงการ",
+      "selectProject": "เลือกโครงการ",
+      "status": "สถานะ",
+      "statuses": {
+        "planned": "วางแผนแล้ว",
+        "in_progress": "กำลังติดตั้ง",
+        "ready_for_handover": "พร้อมส่งมอบ",
+        "handed_over": "ส่งมอบแล้ว",
+        "cancelled": "ยกเลิก"
+      },
+      "schedule": "กำหนดการ",
+      "scheduledStart": "วันเริ่ม",
+      "scheduledEnd": "วันสิ้นสุด",
+      "crew": "ทีมติดตั้ง",
+      "note": "หมายเหตุ",
+      "noteLine": "หมายเหตุ: {note}",
+      "cancelReason": "เหตุผลที่ยกเลิก: {reason}",
+      "lastDispute": "ลูกค้าโต้แย้ง {count} ครั้ง ล่าสุด: {note}",
+      "createdBy": "สร้างโดย",
+      "checklistTitle": "รายการตรวจ",
+      "checklistEmpty": "ยังไม่มีรายการตรวจ",
+      "checklistProgress": "รายการตรวจ",
+      "newChecklistItem": "รายการตรวจใหม่",
+      "addChecklistItem": "เพิ่มรายการ",
+      "removeLine": "ลบ",
+      "required": "บังคับ",
+      "defectsTitle": "ข้อบกพร่อง (Punch list)",
+      "defectsEmpty": "ยังไม่มีข้อบกพร่อง",
+      "openDefects": "ข้อบกพร่องค้าง",
+      "severity": "ความรุนแรง",
+      "severities": {
+        "minor": "เล็กน้อย",
+        "major": "ปานกลาง",
+        "critical": "วิกฤต"
+      },
+      "defectStatuses": {
+        "open": "เปิด",
+        "resolved": "แก้แล้ว รอตรวจยืนยัน",
+        "verified": "ตรวจยืนยันแล้ว",
+        "reopened": "เปิดซ้ำ"
+      },
+      "resolutionLine": "แก้โดย {name}: {note}",
+      "verifiedLine": "ตรวจยืนยันโดย {name}",
+      "reopenedLine": "เปิดซ้ำ {count} ครั้ง ล่าสุด: {reason}",
+      "reportDefect": "แจ้งข้อบกพร่อง",
+      "resolve": "บันทึกการแก้ไข",
+      "verify": "ตรวจยืนยัน",
+      "reopen": "เปิดซ้ำ",
+      "start": "เริ่มติดตั้ง",
+      "markReady": "พร้อมส่งมอบ",
+      "recordHandover": "บันทึกการส่งมอบ",
+      "cancel": "ยกเลิกงานติดตั้ง",
+      "confirm": "ยืนยัน",
+      "text": "รายละเอียด",
+      "textRequired": "กรอกรายละเอียด",
+      "saved": "บันทึกแล้ว",
+      "created": "วางแผนงานติดตั้งแล้ว",
+      "started": "เริ่มงานติดตั้งแล้ว",
+      "markedReady": "พร้อมส่งมอบแล้ว",
+      "verified": "ตรวจยืนยันแล้ว",
+      "handedOver": "บันทึกการส่งมอบและเริ่มประกันแล้ว",
+      "disputed": "บันทึกการโต้แย้งและส่งกลับไปแก้ไขแล้ว",
+      "handoverTitle": "การส่งมอบ",
+      "handoverSummary": "{name} รับมอบเมื่อ {date} ประกัน {months} เดือน",
+      "outcome": "ผลการตรวจรับ",
+      "outcomes": {
+        "accepted": "ลูกค้ารับมอบ",
+        "disputed": "ลูกค้าโต้แย้ง"
+      },
+      "signerName": "ชื่อผู้รับมอบ (ลูกค้า)",
+      "warrantyMonths": "ระยะประกัน (เดือน, 0 = ไม่มี)",
+      "handoverDate": "วันที่ส่งมอบ (ว่าง = วันนี้)",
+      "handoverNote": "หมายเหตุ",
+      "disputeReason": "เหตุผลที่ลูกค้าโต้แย้ง",
+      "handoverAcceptInvalid": "ระบุชื่อผู้รับมอบและระยะประกัน 0-120 เดือน",
+      "handoverDisputeInvalid": "ระบุชื่อผู้รับมอบและเหตุผลที่โต้แย้ง",
+      "dialogs": {
+        "cancel": {
+          "title": "ยกเลิกงานติดตั้ง",
+          "description": "ระบุเหตุผลที่ยกเลิก การกระทำนี้ย้อนกลับไม่ได้"
+        },
+        "report-defect": {
+          "title": "แจ้งข้อบกพร่อง",
+          "description": "งานที่พร้อมส่งมอบจะถูกส่งกลับไปแก้ไข"
+        },
+        "resolve-defect": {
+          "title": "บันทึกการแก้ไข",
+          "description": "อธิบายสิ่งที่แก้ ผู้อื่นต้องตรวจยืนยันอีกครั้ง"
+        },
+        "reopen-defect": {
+          "title": "เปิดข้อบกพร่องซ้ำ",
+          "description": "ระบุเหตุผลที่ต้องเปิดซ้ำ"
+        },
+        "handover": {
+          "title": "บันทึกการส่งมอบ",
+          "description": "ระบุผลการตรวจรับของลูกค้า การรับมอบต้องระบุระยะประกันชัดเจน"
+        }
+      }
+    },
+    "warranties": {
+      "title": "การรับประกัน",
+      "subtitle": "การรับประกันที่เกิดจากการส่งมอบงานติดตั้ง",
+      "search": "ค้นหาด้วยเลขที่หรือโครงการ",
+      "empty": "ยังไม่มีการรับประกัน",
+      "emptyDetail": "การรับประกันเกิดเมื่อส่งมอบงานติดตั้งพร้อมระบุระยะประกัน",
+      "noResults": "ไม่พบการรับประกันตามเงื่อนไข",
+      "number": "เลขที่",
+      "project": "โครงการ",
+      "installation": "งานติดตั้ง",
+      "term": "ระยะประกัน (เดือน)",
+      "state": "สถานะ",
+      "requests": "งานบริการ",
+      "states": {
+        "active": "ยังอยู่ในประกัน",
+        "expired": "หมดประกัน"
+      }
+    },
+    "requests": {
+      "title": "งานบริการหลังการขาย",
+      "subtitle": "รับเรื่อง นัดหมาย แก้ไข และปิดงานบริการ พร้อมระบุว่าอยู่ในประกันหรือไม่",
+      "search": "ค้นหาด้วยเลขที่หรือหัวข้อ",
+      "empty": "ยังไม่มีงานบริการ",
+      "emptyDetail": "สร้างงานบริการเมื่อลูกค้าแจ้งปัญหาหลังส่งมอบ",
+      "noResults": "ไม่พบงานบริการตามเงื่อนไข",
+      "create": "รับเรื่องบริการ",
+      "createTitle": "รับเรื่องบริการ",
+      "editorSubtitle": "ระบบตรวจว่าอยู่ในประกันหรือไม่จากวันที่แจ้ง โดยไม่ปฏิเสธการรับเรื่อง",
+      "loadError": "โหลดงานบริการไม่สำเร็จ",
+      "fieldsInvalid": "เลือกโครงการ และกรอกหัวข้อกับรายละเอียด",
+      "number": "เลขที่",
+      "titleField": "หัวข้อ",
+      "description": "รายละเอียด",
+      "project": "โครงการ",
+      "selectProject": "เลือกโครงการ",
+      "priority": "ความเร่งด่วน",
+      "priorities": {
+        "low": "ต่ำ",
+        "normal": "ปกติ",
+        "high": "สูง",
+        "urgent": "เร่งด่วน"
+      },
+      "status": "สถานะ",
+      "statuses": {
+        "open": "รับเรื่อง",
+        "scheduled": "นัดหมายแล้ว",
+        "in_progress": "กำลังดำเนินการ",
+        "resolved": "แก้ไขแล้ว",
+        "closed": "ปิดงาน"
+      },
+      "warranty": "การรับประกัน",
+      "inWarranty": "อยู่ในประกัน",
+      "outOfWarranty": "นอกประกัน",
+      "outOfWarrantyNote": "ไม่มีการรับประกันที่ครอบคลุมวันที่แจ้ง งานนี้อาจคิดค่าบริการ — ตามนโยบายของบริษัท",
+      "createdAt": "แจ้งเมื่อ",
+      "createdBy": "รับเรื่องโดย",
+      "scheduledDate": "วันนัด",
+      "resolutionLine": "วิธีแก้ไข: {note}",
+      "schedule": "นัดหมาย",
+      "start": "เริ่มดำเนินการ",
+      "resolve": "บันทึกการแก้ไข",
+      "close": "ปิดงาน",
+      "reopen": "เปิดซ้ำ",
+      "visitDate": "วันที่นัดเข้าบริการ",
+      "resolutionNote": "วิธีแก้ไข",
+      "reopenReason": "เหตุผลที่เปิดซ้ำ",
+      "dateRequired": "เลือกวันที่",
+      "textRequired": "กรอกรายละเอียด",
+      "confirm": "ยืนยัน",
+      "saved": "บันทึกแล้ว",
+      "created": "รับเรื่องบริการแล้ว",
+      "historyTitle": "ประวัติสถานะ",
+      "dialogs": {
+        "schedule": {
+          "title": "นัดหมายเข้าบริการ",
+          "description": "เลือกวันที่นัด (ไม่ย้อนหลัง)"
+        },
+        "resolve": {
+          "title": "บันทึกการแก้ไข",
+          "description": "อธิบายวิธีแก้ไขที่ทำ"
+        },
+        "reopen": {
+          "title": "เปิดงานซ้ำ",
+          "description": "ระบุเหตุผลที่ต้องเปิดซ้ำ"
+        }
+      }
     }
   }
 }

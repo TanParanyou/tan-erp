@@ -179,6 +179,8 @@ builder.Services.AddScoped<TanErp.Application.Production.IProductionStore, TanEr
 builder.Services.AddScoped<TanErp.Application.Production.ProductionHandler>();
 builder.Services.AddScoped<TanErp.Application.Mrp.IMrpStore, TanErp.Infrastructure.Persistence.Mrp.MrpStore>();
 builder.Services.AddScoped<TanErp.Application.Mrp.MrpHandler>();
+builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infrastructure.Persistence.Service.ServiceStore>();
+builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
 builder.Services.AddScoped<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>();
 builder.Services.AddScoped<TanErp.Application.Inventory.IInventoryStore>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());
 builder.Services.AddScoped<TanErp.Application.Inventory.IProductionStockPort>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());

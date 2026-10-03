@@ -60,6 +60,9 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasBomsRead = can(activeMembership, "boms.read");
   const hasWorkOrdersRead = can(activeMembership, "work-orders.read");
   const hasMrpRead = can(activeMembership, "mrp.read");
+  const hasInstallationsRead = can(activeMembership, "installations.read");
+  const hasWarrantiesRead = can(activeMembership, "warranties.read");
+  const hasServiceRequestsRead = can(activeMembership, "service-requests.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
   const hasSettingsRead =
@@ -79,6 +82,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isProcurementActive = pathname.startsWith(`/${locale}/procurement`);
   const isInventoryActive = pathname.startsWith(`/${locale}/inventory`);
   const isProductionActive = pathname.startsWith(`/${locale}/production`);
+  const isServiceActive = pathname.startsWith(`/${locale}/service`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
@@ -263,6 +267,41 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     return items;
   }, [hasBomsRead, hasWorkOrdersRead, hasMrpRead, locale, pathname, tShell]);
 
+  const serviceItems: NavItemDef[] = useMemo(() => {
+    const items: NavItemDef[] = [];
+    if (hasInstallationsRead) {
+      items.push({
+        id: "installations",
+        href: `/${locale}/service/installations`,
+        label: tShell("installations"),
+        icon: <IconBox3D size={20} />,
+        isActive: pathname.startsWith(`/${locale}/service/installations`),
+        permission: hasInstallationsRead,
+      });
+    }
+    if (hasWarrantiesRead) {
+      items.push({
+        id: "warranties",
+        href: `/${locale}/service/warranties`,
+        label: tShell("warranties"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/service/warranties`),
+        permission: hasWarrantiesRead,
+      });
+    }
+    if (hasServiceRequestsRead) {
+      items.push({
+        id: "service-requests",
+        href: `/${locale}/service/requests`,
+        label: tShell("serviceRequests"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/service/requests`),
+        permission: hasServiceRequestsRead,
+      });
+    }
+    return items;
+  }, [hasInstallationsRead, hasWarrantiesRead, hasServiceRequestsRead, locale, pathname, tShell]);
+
   const subgroups: NavSubgroupDef[] = useMemo(() => {
     const groups: NavSubgroupDef[] = [];
     if (crmItems.length > 0) {
@@ -293,6 +332,13 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         items: productionItems,
       });
     }
+    if (serviceItems.length > 0) {
+      groups.push({
+        id: "service",
+        label: tShell("serviceSubgroup"),
+        items: serviceItems,
+      });
+    }
     if (productItems.length > 0) {
       groups.push({
         id: "products",
@@ -301,7 +347,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       });
     }
     return groups;
-  }, [crmItems, procurementItems, inventoryItems, productionItems, productItems, tShell]);
+  }, [crmItems, procurementItems, inventoryItems, productionItems, serviceItems, productItems, tShell]);
 
   // Accordion open/close state tracking
   const [openSubgroups, setOpenSubgroups] = useState<Record<string, boolean>>(() => {
@@ -310,6 +356,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     if (isProcurementActive) initial["procurement"] = true;
     if (isInventoryActive) initial["inventory"] = true;
     if (isProductionActive) initial["production"] = true;
+    if (isServiceActive) initial["service"] = true;
     if (isItemMasterActive) initial["products"] = true;
     // Default open all if none active
     if (Object.keys(initial).length === 0) {
@@ -317,6 +364,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       initial["procurement"] = true;
       initial["inventory"] = true;
       initial["production"] = true;
+      initial["service"] = true;
       initial["products"] = true;
     }
     return initial;

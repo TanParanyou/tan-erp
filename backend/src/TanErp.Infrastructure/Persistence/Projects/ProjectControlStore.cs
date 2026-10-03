@@ -176,6 +176,14 @@ public class ProjectControlStore : IProjectControlStore
                 }
             }
 
+            // Closing a project needs every installation handed over or cancelled (handover gate).
+            if (targetStatus == ProjectStatus.Completed
+                && await _db.InstallationJobs.AnyAsync(j => j.OrganizationId == access.OrganizationId && j.ProjectId == project.Id
+                    && j.Status != TanErp.Domain.Service.InstallationStatus.HandedOver && j.Status != TanErp.Domain.Service.InstallationStatus.Cancelled, ct))
+            {
+                return Fail("PROJECT_OPEN_INSTALLATION", "Every installation must be handed over or cancelled before the project is completed.");
+            }
+
             project.TransitionTo(targetStatus, reason, lineCount, now);
             _db.ProjectStatusHistories.Add(new ProjectStatusHistory(Guid.NewGuid(), access.OrganizationId, project.Id, fromStatus, project.Status, reason, access.ActorUserId, now));
             Audit(access, "project.status-changed", project.Id, traceId, new { fromStatus, toStatus = project.Status }, project.RowVersion, now);

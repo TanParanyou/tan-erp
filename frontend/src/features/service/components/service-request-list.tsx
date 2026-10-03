@@ -1,0 +1,109 @@
+"use client";
+
+import { useMemo } from "react";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { ListToolbar } from "@/components/ui/ListToolbar";
+import { ListSearchInput } from "@/components/ui/ListSearchInput";
+import { ListFilterSelect } from "@/components/ui/ListFilterSelect";
+import { ActiveFilterChips, type ActiveFilterChipItem } from "@/components/ui/ActiveFilterChips";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { IconPlus } from "@/components/common/Icons";
+import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
+import { formatDateTime } from "@/lib/formatters/formatters";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { can } from "@/lib/permissions/can";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import type { ServiceRequestListItemResponse } from "@/lib/api/api-client";
+import { useServiceRequestList } from "../api/service-queries";
+import { SERVICE_REQUEST_STATUSES, isServicePriority, isServiceRequestStatus, serviceRequestStatusVariant } from "../service-status";
+
+interface Filters extends ListFilterRecord {
+  status?: string;
+}
+
+export function ServiceRequestList() {
+  const t = useTranslations("service.requests");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const { selectedMembership } = useSelectedMembership();
+  const canManage = can(selectedMembership, PERMISSIONS.SERVICE_REQUESTS_MANAGE);
+  const state = useListState<Filters>({
+    schema: { single: ["status"], defaultSort: "createdAt", defaultOrder: "desc", allowedSorts: ["createdAt"] },
+    debounceMs: 300,
+  });
+  const result = useServiceRequestList({
+    search: state.params.search || undefined,
+    status: state.params.filters.status || undefined,
+    page: state.params.page,
+    pageSize: state.params.limit,
+  });
+
+  const rows = result.data?.items ?? [];
+  const pagination = result.data?.pagination;
+  const totalCount = pagination?.totalCount ?? 0;
+  const isZero = !result.isLoading && !result.isError && totalCount === 0 && !state.params.search && !state.params.filters.status;
+
+  const activeFilters = useMemo<ActiveFilterChipItem[]>(() => {
+    const status = state.params.filters.status;
+    return status && isServiceRequestStatus(status) ? [{ key: "status", value: status, label: `${t("status")}: ${t(`statuses.${status}`)}` }] : [];
+  }, [state.params.filters.status, t]);
+
+  const columns: Column<ServiceRequestListItemResponse>[] = [
+    { id: "number", header: t("number"), className: "min-w-32 font-mono", cell: (_v, row) => <Link href={`/${locale}/service/requests/${row.id}`} className="font-mono font-semibold text-erp-navy underline">{row.number ?? "-"}</Link> },
+    { id: "title", header: t("titleField"), className: "min-w-48", cell: (_v, row) => row.title ?? "-" },
+    { id: "project", header: t("project"), cell: (_v, row) => row.projectCode ?? "-" },
+    { id: "priority", header: t("priority"), cell: (_v, row) => (isServicePriority(row.priority) ? t(`priorities.${row.priority}`) : "-") },
+    { id: "status", header: t("status"), cell: (_v, row) => <StatusBadge label={isServiceRequestStatus(row.status) ? t(`statuses.${row.status}`) : "-"} variant={serviceRequestStatusVariant(row.status)} /> },
+    { id: "warranty", header: t("warranty"), cell: (_v, row) => <StatusBadge label={t(row.inWarranty ? "inWarranty" : "outOfWarranty")} variant={row.inWarranty ? "success" : "neutral"} /> },
+    { id: "created", header: t("createdAt"), cell: (_v, row) => (row.createdAtUtc ? formatDateTime(row.createdAtUtc, locale) : "-") },
+  ];
+
+  return (
+    <section className="space-y-5" aria-busy={result.isLoading}>
+      <PageHeader
+        title={t("title")}
+        subtitle={t("subtitle")}
+        breadcrumbs={[{ label: t("title") }]}
+        actions={canManage ? <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/service/requests/create`}>{t("create")}</Button> : undefined}
+      />
+      <ListToolbar activeFilters={<ActiveFilterChips filters={activeFilters} onRemove={() => state.actions.setFilter("status", undefined)} onClear={state.actions.clearFilters} />}>
+        <div className="flex w-full flex-wrap items-end gap-3">
+          <ListSearchInput
+            id="service-request-search"
+            label={tCommon("actions.search")}
+            value={state.draftSearch}
+            isDebouncing={state.isDebouncing}
+            onChange={(value) => state.actions.setSearch(value)}
+            onClear={() => state.actions.setSearch("", true)}
+            onSubmit={(value) => state.actions.setSearch(value, true)}
+            placeholder={t("search")}
+            widthClassName="w-full max-w-xl"
+          />
+          <ListFilterSelect id="service-request-status-filter" label={t("status")} value={state.params.filters.status ?? ""} onChange={(value) => state.actions.setFilter("status", value || undefined)} options={SERVICE_REQUEST_STATUSES.map((value) => ({ value, label: t(`statuses.${value}`) }))} />
+        </div>
+      </ListToolbar>
+      {isZero ? (
+        <EmptyState icon="empty" title={t("empty")} description={t("emptyDetail")} />
+      ) : (
+        <DataTable<ServiceRequestListItemResponse>
+          columns={columns}
+          data={rows}
+          isLoading={result.isLoading}
+          isError={result.isError}
+          error={result.error}
+          onRetry={() => { void result.refetch(); }}
+          emptyTitle={t("noResults")}
+          emptyDescription={t("search")}
+          pagination={{ page: state.params.page, limit: state.params.limit, totalPages: pagination?.totalPages ?? 0, total: totalCount }}
+          onPageChange={state.actions.setPage}
+          onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
+        />
+      )}
+    </section>
+  );
+}

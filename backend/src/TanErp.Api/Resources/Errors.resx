@@ -1047,4 +1047,40 @@
   <data name="ACCEPTANCE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องยอมรับข้อความยินยอมฉบับปัจจุบัน</value></data>
   <data name="ACCEPTANCE_CONFLICT_TITLE" xml:space="preserve"><value>เอกสารมีการเปลี่ยนแปลง</value></data>
   <data name="ACCEPTANCE_CONFLICT_DETAIL" xml:space="preserve"><value>เอกสารมีการเปลี่ยนแปลง</value></data>
+  <data name="INSTALLATION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>งานติดตั้งถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="INSTALLATION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>งานติดตั้งถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="INSTALLATION_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะงานติดตั้งไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="INSTALLATION_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะงานติดตั้งไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="INSTALLATION_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve"><value>โครงการที่เสร็จสิ้นหรือยกเลิกแล้วติดตั้งไม่ได้</value></data>
+  <data name="INSTALLATION_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve"><value>โครงการที่เสร็จสิ้นหรือยกเลิกแล้วติดตั้งไม่ได้</value></data>
+  <data name="INSTALLATION_CHECKLIST_INCOMPLETE_TITLE" xml:space="preserve"><value>ยังทำรายการตรวจที่บังคับไม่ครบ</value></data>
+  <data name="INSTALLATION_CHECKLIST_INCOMPLETE_DETAIL" xml:space="preserve"><value>ยังทำรายการตรวจที่บังคับไม่ครบ</value></data>
+  <data name="INSTALLATION_DEFECTS_OPEN_TITLE" xml:space="preserve"><value>ยังมีข้อบกพร่องที่ไม่ได้ตรวจยืนยัน</value></data>
+  <data name="INSTALLATION_DEFECTS_OPEN_DETAIL" xml:space="preserve"><value>ยังมีข้อบกพร่องที่ไม่ได้ตรวจยืนยัน</value></data>
+  <data name="INSTALLATION_SELF_VERIFICATION_TITLE" xml:space="preserve"><value>ผู้แก้ข้อบกพร่องตรวจยืนยันเองไม่ได้</value></data>
+  <data name="INSTALLATION_SELF_VERIFICATION_DETAIL" xml:space="preserve"><value>ผู้แก้ข้อบกพร่องตรวจยืนยันเองไม่ได้</value></data>
+  <data name="INSTALLATION_DEFECT_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะข้อบกพร่องไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="INSTALLATION_DEFECT_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะข้อบกพร่องไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="INSTALLATION_ITEM_NOT_FOUND_TITLE" xml:space="preserve"><value>ไม่พบรายการ</value></data>
+  <data name="INSTALLATION_ITEM_NOT_FOUND_DETAIL" xml:space="preserve"><value>ไม่พบรายการ</value></data>
+  <data name="INSTALLATION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผลหรือหมายเหตุ</value></data>
+  <data name="INSTALLATION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุเหตุผลหรือหมายเหตุ</value></data>
+  <data name="INSTALLATION_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="INSTALLATION_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="INSTALLATION_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="INSTALLATION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="SERVICE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>งานบริการถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="SERVICE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>งานบริการถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="SERVICE_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะงานบริการไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="SERVICE_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะงานบริการไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="SERVICE_PROJECT_INVALID_TITLE" xml:space="preserve"><value>โครงการที่ยกเลิกแล้วรับงานบริการไม่ได้</value></data>
+  <data name="SERVICE_PROJECT_INVALID_DETAIL" xml:space="preserve"><value>โครงการที่ยกเลิกแล้วรับงานบริการไม่ได้</value></data>
+  <data name="SERVICE_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุหมายเหตุ</value></data>
+  <data name="SERVICE_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุหมายเหตุ</value></data>
+  <data name="SERVICE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="SERVICE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="SERVICE_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="SERVICE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="PROJECT_OPEN_INSTALLATION_TITLE" xml:space="preserve"><value>ยังมีงานติดตั้งที่ไม่ปิด</value></data>
+  <data name="PROJECT_OPEN_INSTALLATION_DETAIL" xml:space="preserve"><value>ยังมีงานติดตั้งที่ไม่ปิด</value></data>
 </root>

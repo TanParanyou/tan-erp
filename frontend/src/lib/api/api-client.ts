@@ -218,6 +218,58 @@ export type AcceptanceLinkListResponse = components["schemas"]["AcceptanceLinkLi
 export type PublicAcceptanceViewResponse = components["schemas"]["PublicAcceptanceViewResponse"];
 export type PublicAcceptRequest = components["schemas"]["PublicAcceptRequest"];
 export type PublicAcceptanceResponse = components["schemas"]["PublicAcceptanceResponse"];
+export type InstallationRequest = components["schemas"]["InstallationRequest"];
+export type InstallationResponse = components["schemas"]["InstallationResponse"];
+export type InstallationsListResponse = components["schemas"]["InstallationsListResponse"];
+export type InstallationListItemResponse = components["schemas"]["InstallationListItemResponse"];
+export type DefectResponse = components["schemas"]["DefectResponse"];
+export type ChecklistItemResponse = components["schemas"]["ChecklistItemResponse"];
+export type HandoverRequest = components["schemas"]["HandoverRequest"];
+export type WarrantyResponse = components["schemas"]["WarrantyResponse"];
+export type WarrantiesListResponse = components["schemas"]["WarrantiesListResponse"];
+export type ServiceRequestRequest = components["schemas"]["ServiceRequestRequest"];
+export type ServiceRequestResponse = components["schemas"]["ServiceRequestResponse"];
+export type ServiceRequestsListResponse = components["schemas"]["ServiceRequestsListResponse"];
+export type ServiceRequestListItemResponse = components["schemas"]["ServiceRequestListItemResponse"];
+/** One step on an installation; `path` is the endpoint segment after the installation id. */
+export type InstallationStep =
+  | { kind: "start" }
+  | { kind: "ready" }
+  | { kind: "cancel"; reason: string }
+  | { kind: "handover"; request: HandoverRequest }
+  | { kind: "checklist"; itemId: string; done: boolean }
+  | { kind: "report-defect"; description: string; severity: string }
+  | { kind: "resolve-defect"; defectId: string; note: string }
+  | { kind: "verify-defect"; defectId: string }
+  | { kind: "reopen-defect"; defectId: string; reason: string };
+export type ServiceRequestStep =
+  | { kind: "schedule"; date: string }
+  | { kind: "start" }
+  | { kind: "resolve"; note: string }
+  | { kind: "close" }
+  | { kind: "reopen"; reason: string };
+export interface ListInstallationsParams {
+  search?: string;
+  status?: string;
+  projectId?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListWarrantiesParams {
+  search?: string;
+  state?: string;
+  projectId?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListServiceRequestsParams {
+  search?: string;
+  status?: string;
+  projectId?: string;
+  inWarranty?: boolean;
+  page?: number;
+  pageSize?: number;
+}
 export type WarehouseRequest = components["schemas"]["WarehouseRequest"];
 export type WarehouseResponse = components["schemas"]["WarehouseResponse"];
 export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
@@ -1412,6 +1464,93 @@ export class ApiClient {
 
   async convertMrpRecommendation(runId: string, recommendationId: string, rowVersion: string, payload: MrpConvertRequest, options: RequestOptions): Promise<MrpRunResponse> {
     return this.request<MrpRunResponse>(`/api/v1/mrp/runs/${encodeURIComponent(runId)}/recommendations/${encodeURIComponent(recommendationId)}/convert`, "POST", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async listInstallations(options: RequestOptions, query: ListInstallationsParams): Promise<InstallationsListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.projectId) params.set("projectId", query.projectId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<InstallationsListResponse>(`/api/v1/installations?${params.toString()}`, "GET", options);
+  }
+
+  async getInstallation(id: string, options: RequestOptions): Promise<InstallationResponse> {
+    return this.request<InstallationResponse>(`/api/v1/installations/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createInstallation(payload: InstallationRequest, options: RequestOptions): Promise<InstallationResponse> {
+    return this.request<InstallationResponse>("/api/v1/installations", "POST", options, payload);
+  }
+
+  async installationStep(id: string, rowVersion: string, step: InstallationStep, options: RequestOptions): Promise<InstallationResponse> {
+    const base = `/api/v1/installations/${encodeURIComponent(id)}`;
+    const conditional = { ...options, ifMatch: rowVersion };
+    switch (step.kind) {
+      case "start":
+      case "ready":
+        return this.request<InstallationResponse>(`${base}/${step.kind}`, "POST", conditional);
+      case "cancel":
+        return this.request<InstallationResponse>(`${base}/cancel`, "POST", conditional, { reason: step.reason });
+      case "handover":
+        return this.request<InstallationResponse>(`${base}/handover`, "POST", conditional, step.request);
+      case "checklist":
+        return this.request<InstallationResponse>(`${base}/checklist/${encodeURIComponent(step.itemId)}`, "PUT", conditional, { done: step.done });
+      case "report-defect":
+        return this.request<InstallationResponse>(`${base}/defects`, "POST", conditional, { description: step.description, severity: step.severity });
+      case "resolve-defect":
+        return this.request<InstallationResponse>(`${base}/defects/${encodeURIComponent(step.defectId)}/resolve`, "POST", conditional, { note: step.note });
+      case "verify-defect":
+        return this.request<InstallationResponse>(`${base}/defects/${encodeURIComponent(step.defectId)}/verify`, "POST", conditional);
+      case "reopen-defect":
+        return this.request<InstallationResponse>(`${base}/defects/${encodeURIComponent(step.defectId)}/reopen`, "POST", conditional, { reason: step.reason });
+    }
+  }
+
+  async listWarranties(options: RequestOptions, query: ListWarrantiesParams): Promise<WarrantiesListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.state) params.set("state", query.state);
+    if (query.projectId) params.set("projectId", query.projectId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<WarrantiesListResponse>(`/api/v1/warranties?${params.toString()}`, "GET", options);
+  }
+
+  async listServiceRequests(options: RequestOptions, query: ListServiceRequestsParams): Promise<ServiceRequestsListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.projectId) params.set("projectId", query.projectId);
+    if (query.inWarranty !== undefined) params.set("inWarranty", String(query.inWarranty));
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<ServiceRequestsListResponse>(`/api/v1/service-requests?${params.toString()}`, "GET", options);
+  }
+
+  async getServiceRequest(id: string, options: RequestOptions): Promise<ServiceRequestResponse> {
+    return this.request<ServiceRequestResponse>(`/api/v1/service-requests/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createServiceRequest(payload: ServiceRequestRequest, options: RequestOptions): Promise<ServiceRequestResponse> {
+    return this.request<ServiceRequestResponse>("/api/v1/service-requests", "POST", options, payload);
+  }
+
+  async serviceRequestStep(id: string, rowVersion: string, step: ServiceRequestStep, options: RequestOptions): Promise<ServiceRequestResponse> {
+    const url = `/api/v1/service-requests/${encodeURIComponent(id)}/${step.kind}`;
+    const conditional = { ...options, ifMatch: rowVersion };
+    switch (step.kind) {
+      case "schedule":
+        return this.request<ServiceRequestResponse>(url, "POST", conditional, { date: step.date });
+      case "resolve":
+        return this.request<ServiceRequestResponse>(url, "POST", conditional, { note: step.note });
+      case "reopen":
+        return this.request<ServiceRequestResponse>(url, "POST", conditional, { reason: step.reason });
+      case "start":
+      case "close":
+        return this.request<ServiceRequestResponse>(url, "POST", conditional);
+    }
   }
 
   async listWarehouses(options: RequestOptions, query: ListWarehousesParams): Promise<WarehouseListResponse> {

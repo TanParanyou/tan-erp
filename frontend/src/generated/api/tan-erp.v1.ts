@@ -5708,6 +5708,726 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/installations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    projectId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationsListResponse"];
+                        "application/json": components["schemas"]["InstallationsListResponse"];
+                        "text/json": components["schemas"]["InstallationsListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["InstallationRequest"];
+                    "text/json": components["schemas"]["InstallationRequest"];
+                    "application/*+json": components["schemas"]["InstallationRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/checklist/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChecklistDoneRequest"];
+                    "text/json": components["schemas"]["ChecklistDoneRequest"];
+                    "application/*+json": components["schemas"]["ChecklistDoneRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/defects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DefectRequest"];
+                    "text/json": components["schemas"]["DefectRequest"];
+                    "application/*+json": components["schemas"]["DefectRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/defects/{defectId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    defectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NoteRequest"];
+                    "text/json": components["schemas"]["NoteRequest"];
+                    "application/*+json": components["schemas"]["NoteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/defects/{defectId}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    defectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/defects/{defectId}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    defectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReasonRequest"];
+                    "text/json": components["schemas"]["ReasonRequest"];
+                    "application/*+json": components["schemas"]["ReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/handover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["HandoverRequest"];
+                    "text/json": components["schemas"]["HandoverRequest"];
+                    "application/*+json": components["schemas"]["HandoverRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/installations/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReasonRequest"];
+                    "text/json": components["schemas"]["ReasonRequest"];
+                    "application/*+json": components["schemas"]["ReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InstallationResponse"];
+                        "application/json": components["schemas"]["InstallationResponse"];
+                        "text/json": components["schemas"]["InstallationResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/inventory/receipts": {
         parameters: {
             query?: never;
@@ -13030,6 +13750,461 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/service-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    projectId?: string;
+                    inWarranty?: boolean;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestsListResponse"];
+                        "application/json": components["schemas"]["ServiceRequestsListResponse"];
+                        "text/json": components["schemas"]["ServiceRequestsListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ServiceRequestRequest"];
+                    "text/json": components["schemas"]["ServiceRequestRequest"];
+                    "application/*+json": components["schemas"]["ServiceRequestRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/{id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ScheduleRequest"];
+                    "text/json": components["schemas"]["ScheduleRequest"];
+                    "application/*+json": components["schemas"]["ScheduleRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NoteRequest"];
+                    "text/json": components["schemas"]["NoteRequest"];
+                    "application/*+json": components["schemas"]["NoteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReasonRequest"];
+                    "text/json": components["schemas"]["ReasonRequest"];
+                    "application/*+json": components["schemas"]["ReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customers/{customerId}/sites": {
         parameters: {
             query?: never;
@@ -14834,6 +16009,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/warranties/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarrantyResponse"];
+                        "application/json": components["schemas"]["WarrantyResponse"];
+                        "text/json": components["schemas"]["WarrantyResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/warranties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    state?: string;
+                    projectId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarrantiesListResponse"];
+                        "application/json": components["schemas"]["WarrantiesListResponse"];
+                        "text/json": components["schemas"]["WarrantiesListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/work-orders": {
         parameters: {
             query?: never;
@@ -15709,6 +16988,25 @@ export interface components {
             /** Format: uuid */
             imageFileId?: string | null;
         };
+        ChecklistDoneRequest: {
+            done?: boolean;
+        };
+        ChecklistItemRequest: {
+            title?: string | null;
+            required?: boolean;
+        };
+        ChecklistItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            sortOrder?: number;
+            title?: string | null;
+            required?: boolean;
+            done?: boolean;
+            doneBy?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date-time */
+            doneAtUtc?: string | null;
+        };
         CloneSurveyRevisionRequest: {
             /** Format: uuid */
             sourceRevisionId?: string;
@@ -16215,6 +17513,32 @@ export interface components {
             reasonCode: string;
             reason?: string | null;
         };
+        DefectRequest: {
+            description?: string | null;
+            severity?: string | null;
+        };
+        DefectResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            no?: number;
+            description?: string | null;
+            severity?: string | null;
+            status?: string | null;
+            reportedBy?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date-time */
+            reportedAtUtc?: string;
+            resolvedBy?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date-time */
+            resolvedAtUtc?: string | null;
+            resolutionNote?: string | null;
+            verifiedBy?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date-time */
+            verifiedAtUtc?: string | null;
+            /** Format: int32 */
+            reopenCount?: number;
+            lastReopenReason?: string | null;
+        };
         DisableCostRecordRequest: {
             reason: string;
         };
@@ -16661,6 +17985,88 @@ export interface components {
             /** Format: double */
             totalQuantity?: number;
             stockDocumentNumber?: string | null;
+        };
+        HandoverRequest: {
+            outcome?: string | null;
+            signerName?: string | null;
+            note?: string | null;
+            /** Format: int32 */
+            warrantyMonths?: number | null;
+            /** Format: date */
+            handoverDate?: string | null;
+        };
+        HandoverResponse: {
+            /** Format: date */
+            date?: string;
+            signerName?: string | null;
+            note?: string | null;
+            /** Format: int32 */
+            warrantyMonths?: number;
+        };
+        InstallationListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            status?: string | null;
+            projectCode?: string | null;
+            projectName?: string | null;
+            /** Format: date */
+            scheduledStart?: string;
+            /** Format: date */
+            scheduledEnd?: string;
+            /** Format: int32 */
+            checklistDone?: number;
+            /** Format: int32 */
+            checklistTotal?: number;
+            /** Format: int32 */
+            openDefects?: number;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        InstallationRequest: {
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: date */
+            scheduledStart?: string;
+            /** Format: date */
+            scheduledEnd?: string;
+            crewName?: string | null;
+            note?: string | null;
+            checklist?: components["schemas"]["ChecklistItemRequest"][] | null;
+        };
+        InstallationResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string;
+            number?: string | null;
+            status?: string | null;
+            project?: components["schemas"]["ServiceProjectRefResponse"];
+            /** Format: date */
+            scheduledStart?: string;
+            /** Format: date */
+            scheduledEnd?: string;
+            crewName?: string | null;
+            note?: string | null;
+            cancelReason?: string | null;
+            /** Format: date-time */
+            readyAtUtc?: string | null;
+            handover?: components["schemas"]["HandoverResponse"];
+            /** Format: int32 */
+            disputeCount?: number;
+            lastDisputeNote?: string | null;
+            warranty?: components["schemas"]["WarrantyRefResponse"];
+            createdBy?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+            checklist?: components["schemas"]["ChecklistItemResponse"][] | null;
+            defects?: components["schemas"]["DefectResponse"][] | null;
+        };
+        InstallationsListResponse: {
+            items?: components["schemas"]["InstallationListItemResponse"][] | null;
+            pagination?: components["schemas"]["ServicePaginationResponse"];
         };
         InventoryItemRefResponse: {
             /** Format: uuid */
@@ -17132,6 +18538,9 @@ export interface components {
             bomCount?: number;
             /** Format: int32 */
             stockItemCount?: number;
+        };
+        NoteRequest: {
+            note?: string | null;
         };
         OpportunityListResponse: {
             items?: components["schemas"]["OpportunityResponse"][] | null;
@@ -17794,6 +19203,9 @@ export interface components {
             /** Format: double */
             lineTotal?: number;
         };
+        ReasonRequest: {
+            reason?: string | null;
+        };
         ReassignOpportunityOwnerRequest: {
             /** Format: uuid */
             targetOwnerUserId?: string;
@@ -17880,6 +19292,87 @@ export interface components {
             decision?: string | null;
             reasonCode?: string | null;
             note?: string | null;
+        };
+        ScheduleRequest: {
+            /** Format: date */
+            date?: string;
+        };
+        ServicePaginationResponse: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        ServicePersonResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+        };
+        ServiceProjectRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+        };
+        ServiceRequestEventResponse: {
+            fromStatus?: string | null;
+            toStatus?: string | null;
+            note?: string | null;
+            actor?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date-time */
+            occurredAtUtc?: string;
+        };
+        ServiceRequestListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            title?: string | null;
+            priority?: string | null;
+            status?: string | null;
+            inWarranty?: boolean;
+            projectCode?: string | null;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        ServiceRequestRequest: {
+            /** Format: uuid */
+            projectId?: string;
+            title?: string | null;
+            description?: string | null;
+            priority?: string | null;
+        };
+        ServiceRequestResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string;
+            number?: string | null;
+            title?: string | null;
+            description?: string | null;
+            priority?: string | null;
+            status?: string | null;
+            inWarranty?: boolean;
+            warranty?: components["schemas"]["WarrantyRefResponse"];
+            project?: components["schemas"]["ServiceProjectRefResponse"];
+            /** Format: date */
+            scheduledDate?: string | null;
+            resolutionNote?: string | null;
+            /** Format: int32 */
+            reopenCount?: number;
+            createdBy?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+            events?: components["schemas"]["ServiceRequestEventResponse"][] | null;
+        };
+        ServiceRequestsListResponse: {
+            items?: components["schemas"]["ServiceRequestListItemResponse"][] | null;
+            pagination?: components["schemas"]["ServicePaginationResponse"];
         };
         SetBranchAvailabilityRequest: {
             mode: string;
@@ -18583,6 +20076,37 @@ export interface components {
             rowVersion?: string;
             /** Format: date-time */
             createdAtUtc?: string;
+        };
+        WarrantiesListResponse: {
+            items?: components["schemas"]["WarrantyResponse"][] | null;
+            pagination?: components["schemas"]["ServicePaginationResponse"];
+        };
+        WarrantyRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+        };
+        WarrantyResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            project?: components["schemas"]["ServiceProjectRefResponse"];
+            /** Format: uuid */
+            installationJobId?: string;
+            installationNumber?: string | null;
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            /** Format: int32 */
+            months?: number;
+            isActive?: boolean;
+            /** Format: int32 */
+            serviceRequestCount?: number;
         };
         WorkImageUserSummaryResponse: {
             /** Format: uuid */

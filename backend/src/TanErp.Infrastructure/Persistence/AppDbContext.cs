@@ -50,6 +50,12 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Production.WorkOrderMaterial> WorkOrderMaterials => Set<TanErp.Domain.Production.WorkOrderMaterial>();
     public DbSet<TanErp.Domain.Production.WorkOrderTransaction> WorkOrderTransactions => Set<TanErp.Domain.Production.WorkOrderTransaction>();
     public DbSet<TanErp.Domain.Mrp.MrpRun> MrpRuns => Set<TanErp.Domain.Mrp.MrpRun>();
+    public DbSet<TanErp.Domain.Service.InstallationJob> InstallationJobs => Set<TanErp.Domain.Service.InstallationJob>();
+    public DbSet<TanErp.Domain.Service.InstallationChecklistItem> InstallationChecklistItems => Set<TanErp.Domain.Service.InstallationChecklistItem>();
+    public DbSet<TanErp.Domain.Service.InstallationDefect> InstallationDefects => Set<TanErp.Domain.Service.InstallationDefect>();
+    public DbSet<TanErp.Domain.Service.Warranty> Warranties => Set<TanErp.Domain.Service.Warranty>();
+    public DbSet<TanErp.Domain.Service.ServiceRequest> ServiceRequests => Set<TanErp.Domain.Service.ServiceRequest>();
+    public DbSet<TanErp.Domain.Service.ServiceRequestEvent> ServiceRequestEvents => Set<TanErp.Domain.Service.ServiceRequestEvent>();
     public DbSet<TanErp.Domain.Commercial.QuotationAcceptanceLink> QuotationAcceptanceLinks => Set<TanErp.Domain.Commercial.QuotationAcceptanceLink>();
     public DbSet<TanErp.Domain.Commercial.QuotationAcceptanceEvidence> QuotationAcceptanceEvidences => Set<TanErp.Domain.Commercial.QuotationAcceptanceEvidence>();
     public DbSet<TanErp.Domain.Mrp.MrpRecommendation> MrpRecommendations => Set<TanErp.Domain.Mrp.MrpRecommendation>();

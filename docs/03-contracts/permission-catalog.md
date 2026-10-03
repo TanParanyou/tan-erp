@@ -78,6 +78,13 @@
 | MRP | `mrp.run` | สร้างรอบคำนวณ MRP | Organization |
 | MRP | `mrp.approve` | อนุมัติ/ปฏิเสธข้อเสนอแนะ (ไม่ใช่ผู้สั่งคำนวณ) | Organization |
 | MRP | `mrp.convert` | แปลงข้อเสนอแนะเป็น PO/Work Order ฉบับร่าง | Organization |
+| Service | `installations.read` | ดูงานติดตั้ง | Organization |
+| Service | `installations.manage` | วางแผน/ยกเลิกงานติดตั้ง | Organization |
+| Service | `installations.operate` | เริ่มงาน ติ๊ก checklist แจ้ง/แก้/ตรวจยืนยันข้อบกพร่อง ทำให้พร้อมส่งมอบ | Organization |
+| Service | `installations.handover` | บันทึกผลการส่งมอบของลูกค้า (สร้างใบประกัน) | Organization |
+| Service | `warranties.read` | ดูการรับประกัน | Organization |
+| Service | `service-requests.read` | ดูงานบริการหลังการขาย | Organization |
+| Service | `service-requests.manage` | รับเรื่องและดำเนินงานบริการ | Organization |
 | Project | `projects.read` | ดู Project และ Handover source | Organization |
 | Project | `projects.create` | ส่งต่อ Quotation ที่ยืนยันแล้วเป็น Project | Organization |
 | Project | `projects.update` | แก้แผนเวลา งบ Baseline (ก่อนตรึง) และ Milestone | Organization |

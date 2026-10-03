@@ -44,14 +44,14 @@
 | CP-04 | Customer-safe Quotation Document | Draft slice ใหม่ | Approved Estimate + Billing Snapshot + Numbering | Sales + Finance |
 | CP-05 | Release/UAT/Operations | Checklist มีแล้ว; ยังต้องหลักฐาน release | ทุก critical slice ใน release ที่เลือก | Business/Finance/Security + Operations |
 | CP-06 | Quotation Amendment/Void | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; accepted ถูกล็อก, void ไม่ย้อน Opportunity) | Quotation/Snapshot contracts; CP-04 สำหรับเอกสาร | Sales + Finance |
-| CP-07 | External Customer Acceptance/Signatures | Draft slice ใหม่ | CP-04 + authentication/access policy | Sales + Security + Legal/Business |
+| CP-07 | External Customer Acceptance/Signatures | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; bearer link ไม่มี OTP, รอ Sales/Legal) | CP-04 + authentication/access policy | Sales + Security + Legal/Business |
 | CP-08 | Won → Project Handover | Implemented 2026-10-04 (ค่าเริ่มต้นที่ทีมพัฒนาเลือก รอ Sales/Project Owner ยืนยัน) | Accepted Quotation; CP-06 rules เมื่อเปิดใช้ | Sales + Project Owner |
 | CP-09 | Project Budget/Plan/Change Order/Progress | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี Actual Cost/WBS) | CP-08 | Project Manager + Finance |
 | CP-10 | Supplier/Procurement | Implemented 2026-10-04 (Supplier → PO → Receipt; กฎที่ทีมพัฒนาเลือก; ไม่มี PR/Return) | Item/Unit + CP-09 demand/budget | Procurement + Finance |
 | CP-11 | Inventory/Warehouse | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี lot/serial/location/ปิดงวด) | CP-10 receipt contract + Item/Unit | Warehouse + Procurement |
 | CP-12 | BOM/Production | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี routing/capacity/subcontracting/ค่าแรง) | CP-09 scope + CP-11 stock | Engineering/Production |
 | CP-13 | MRP | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; lot-for-lot, ไม่มี safety stock/MOQ/ปฏิทิน) | CP-10 lead time + CP-11 stock + CP-12 BOM/plan | Production Planner + Procurement |
-| CP-14 | Installation/Handover/Warranty/Service | Future slice | CP-08/09; CP-12 หากมีงานผลิต | Installation + Customer Service |
+| CP-14 | Installation/Handover/Warranty/Service | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มีไฟล์แนบ/ลายเซ็น/SLA, ระยะประกันต้องระบุเอง) | CP-08/09; CP-12 หากมีงานผลิต | Installation + Customer Service |
 | CP-15 | Billing/Payment/Accounting Integration | Future slice | Customer billing + Commercial/Project; Supply เมื่อรวมยอดจัดซื้อ | Finance/Accounting |
 | CP-16 | Quick Estimate | Optional Future; มีแผนเอกสารแล้ว | Official Estimate Foundation + approved template/share policies | Sales/Estimator + Cost Owner |
 
@@ -211,10 +211,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-14 — Installation/Handover/Warranty/Service
 
-- [ ] ยืนยัน installation scope/crew/checklist, defects/punch list, customer handover evidence และวันเริ่ม/เงื่อนไข warranty
-- [ ] แบ่ง slice installation appointment/progress → acceptance/handover → warranty/service request โดยอ้าง Project และ output ของ Production เมื่อเกี่ยวข้อง
-- [ ] ทำ attachments/readiness/approval ด้วย shared file access และ confirmation; ผูกการปิด Project กับ handover gates ที่ Business ยืนยัน
-- [ ] ทดสอบ incomplete checklist, disputed acceptance, reopened defect, warranty eligibility, cross-scope/private evidence และ history
+- [x] ยืนยัน installation scope/crew/checklist, defects/punch list, customer handover evidence และวันเริ่ม/เงื่อนไข warranty
+- [x] แบ่ง slice installation appointment/progress → acceptance/handover → warranty/service request โดยอ้าง Project และ output ของ Production เมื่อเกี่ยวข้อง
+- [x] ทำ attachments/readiness/approval ด้วย shared file access และ confirmation; ผูกการปิด Project กับ handover gates ที่ Business ยืนยัน
+- [x] ทดสอบ incomplete checklist, disputed acceptance, reopened defect, warranty eligibility, cross-scope/private evidence และ history
 
 **ผลส่งมอบ/เกณฑ์จบ:** งานหนึ่งโครงการส่งมอบและเปิดบริการหลังขายจากหลักฐานจริงได้; ไม่กำหนด warranty duration หรือเงื่อนไขชดเชยแทนธุรกิจ.
 

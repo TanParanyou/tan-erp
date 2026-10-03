@@ -67,6 +67,15 @@ export const PERMISSIONS = {
   WORK_ORDERS_MANAGE: "work-orders.manage",
   WORK_ORDERS_OPERATE: "work-orders.operate",
 
+  // Installation and after-sales service
+  INSTALLATIONS_READ: "installations.read",
+  INSTALLATIONS_MANAGE: "installations.manage",
+  INSTALLATIONS_OPERATE: "installations.operate",
+  INSTALLATIONS_HANDOVER: "installations.handover",
+  WARRANTIES_READ: "warranties.read",
+  SERVICE_REQUESTS_READ: "service-requests.read",
+  SERVICE_REQUESTS_MANAGE: "service-requests.manage",
+
   // MRP
   MRP_READ: "mrp.read",
   MRP_RUN: "mrp.run",

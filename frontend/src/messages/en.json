@@ -84,7 +84,11 @@
     "boms": "Bills of materials",
     "workOrders": "Work orders",
     "productionSubgroup": "Production",
-    "mrpRuns": "Material planning"
+    "mrpRuns": "Material planning",
+    "installations": "Installations",
+    "warranties": "Warranties",
+    "serviceRequests": "Service requests",
+    "serviceSubgroup": "Installation and service"
   },
   "common": {
     "actions": {
@@ -1557,7 +1561,10 @@
       "stock-returns": "Stock Return",
       "boms": "BOM Code",
       "work-orders": "Work Order",
-      "mrp-runs": "MRP Run"
+      "mrp-runs": "MRP Run",
+      "installation-jobs": "Installation",
+      "warranties": "Warranty",
+      "service-requests": "Service Request"
     },
     "tokens": {
       "prefix": "Prefix",
@@ -2258,7 +2265,8 @@
         "PROJECT_REASON_REQUIRED": "A reason or note is required.",
         "PROJECT_MILESTONE_INVALID": "The milestone data is invalid.",
         "PROJECT_CHANGE_ORDER_INVALID": "The change order data is invalid.",
-        "PROJECT_CHANGE_ORDER_SELF_APPROVAL": "A change order cannot be approved or rejected by its creator."
+        "PROJECT_CHANGE_ORDER_SELF_APPROVAL": "A change order cannot be approved or rejected by its creator.",
+        "PROJECT_OPEN_INSTALLATION": "An installation is still open. Hand over or cancel every installation before completing the project."
       },
       "committedAmount": "Commitments (approved orders)",
       "availableBudget": "Available budget"
@@ -2916,6 +2924,230 @@
       "ACCEPTANCE_CONSENT_REQUIRED": "The current consent statement must be accepted.",
       "ACCEPTANCE_CONFLICT": "The document changed. Please reload the page and try again.",
       "QUOTATION_INVALID_STATE": "The quotation status does not allow this action."
+    }
+  },
+  "service": {
+    "accessDeniedTitle": "No access to service",
+    "accessDeniedDetail": "This account has not been granted access to this section.",
+    "errors": {
+      "failed": "The action failed. Please try again.",
+      "INSTALLATION_VERSION_CONFLICT": "The installation was changed by someone else. Reload and try again.",
+      "INSTALLATION_INVALID_STATE": "The installation status does not allow this action.",
+      "INSTALLATION_PROJECT_NOT_ACTIVE": "Installations cannot be planned for a completed or cancelled project.",
+      "INSTALLATION_CHECKLIST_INCOMPLETE": "Every required checklist item must be done first.",
+      "INSTALLATION_DEFECTS_OPEN": "Every defect must be resolved and verified first.",
+      "INSTALLATION_SELF_VERIFICATION": "The person who resolved a defect cannot verify it.",
+      "INSTALLATION_DEFECT_INVALID_STATE": "The defect status does not allow this action.",
+      "INSTALLATION_ITEM_NOT_FOUND": "The checklist item or defect was not found.",
+      "INSTALLATION_REASON_REQUIRED": "A reason or note is required.",
+      "INSTALLATION_FIELD_REQUIRED": "A required field is missing.",
+      "INSTALLATION_FIELD_INVALID": "A value is invalid. State the warranty months explicitly (0 for none); the handover date cannot be in the future.",
+      "SERVICE_VERSION_CONFLICT": "The service request was changed by someone else. Reload and try again.",
+      "SERVICE_INVALID_STATE": "The service request status does not allow this action.",
+      "SERVICE_PROJECT_INVALID": "Service requests cannot be raised for a cancelled project.",
+      "SERVICE_REASON_REQUIRED": "A note is required.",
+      "SERVICE_FIELD_REQUIRED": "A required field is missing.",
+      "SERVICE_FIELD_INVALID": "A value is invalid. The visit date cannot be in the past."
+    },
+    "installations": {
+      "title": "Installations",
+      "subtitle": "Plan, install, check and hand over to the customer, starting the warranty",
+      "search": "Search by number or project",
+      "empty": "No installations yet",
+      "emptyDetail": "Plan an installation from a started project.",
+      "noResults": "No installations match the filters.",
+      "create": "Plan installation",
+      "createTitle": "Plan installation",
+      "editorSubtitle": "Set the project, dates, crew and the checks needed before handover.",
+      "detailSubtitle": "Progress, checklist, defects and handover",
+      "loadError": "Could not load the installation.",
+      "fieldsInvalid": "Select a project and valid start and end dates.",
+      "number": "Number",
+      "project": "Project",
+      "selectProject": "Select a project",
+      "status": "Status",
+      "statuses": {
+        "planned": "Planned",
+        "in_progress": "In progress",
+        "ready_for_handover": "Ready for handover",
+        "handed_over": "Handed over",
+        "cancelled": "Cancelled"
+      },
+      "schedule": "Schedule",
+      "scheduledStart": "Start date",
+      "scheduledEnd": "End date",
+      "crew": "Crew",
+      "note": "Note",
+      "noteLine": "Note: {note}",
+      "cancelReason": "Cancellation reason: {reason}",
+      "lastDispute": "Disputed {count} time(s), latest: {note}",
+      "createdBy": "Created by",
+      "checklistTitle": "Checklist",
+      "checklistEmpty": "No checklist items.",
+      "checklistProgress": "Checklist",
+      "newChecklistItem": "New checklist item",
+      "addChecklistItem": "Add item",
+      "removeLine": "Remove",
+      "required": "Required",
+      "defectsTitle": "Defects (punch list)",
+      "defectsEmpty": "No defects.",
+      "openDefects": "Open defects",
+      "severity": "Severity",
+      "severities": {
+        "minor": "Minor",
+        "major": "Major",
+        "critical": "Critical"
+      },
+      "defectStatuses": {
+        "open": "Open",
+        "resolved": "Resolved",
+        "verified": "Verified",
+        "reopened": "Reopened"
+      },
+      "resolutionLine": "Fixed by {name}: {note}",
+      "verifiedLine": "Verified by {name}",
+      "reopenedLine": "Reopened {count} time(s), latest: {reason}",
+      "reportDefect": "Report defect",
+      "resolve": "Mark resolved",
+      "verify": "Verify",
+      "reopen": "Reopen",
+      "start": "Start installation",
+      "markReady": "Mark ready for handover",
+      "recordHandover": "Record handover",
+      "cancel": "Cancel installation",
+      "confirm": "Confirm",
+      "text": "Details",
+      "textRequired": "Enter the details.",
+      "saved": "Saved.",
+      "created": "Installation planned.",
+      "started": "Installation started.",
+      "markedReady": "Marked ready for handover.",
+      "verified": "Defect verified.",
+      "handedOver": "Handover recorded and warranty started.",
+      "disputed": "Dispute recorded; the job is back in progress.",
+      "handoverTitle": "Handover",
+      "handoverSummary": "Accepted by {name} on {date}, {months} month(s) warranty",
+      "outcome": "Outcome",
+      "outcomes": {
+        "accepted": "Customer accepts",
+        "disputed": "Customer disputes"
+      },
+      "signerName": "Customer representative",
+      "warrantyMonths": "Warranty (months, 0 = none)",
+      "handoverDate": "Handover date (blank = today)",
+      "handoverNote": "Note",
+      "disputeReason": "Reason for the dispute",
+      "handoverAcceptInvalid": "Enter the representative and a warranty of 0-120 months.",
+      "handoverDisputeInvalid": "Enter the representative and the reason for the dispute.",
+      "dialogs": {
+        "cancel": {
+          "title": "Cancel installation",
+          "description": "Enter the reason. This cannot be undone."
+        },
+        "report-defect": {
+          "title": "Report defect",
+          "description": "A job that was ready for handover goes back to in-progress."
+        },
+        "resolve-defect": {
+          "title": "Record the fix",
+          "description": "Describe the fix. Someone else must verify it."
+        },
+        "reopen-defect": {
+          "title": "Reopen defect",
+          "description": "Enter why it must be reopened."
+        },
+        "handover": {
+          "title": "Record handover",
+          "description": "Record the customer's decision. Acceptance needs an explicit warranty term."
+        }
+      }
+    },
+    "warranties": {
+      "title": "Warranties",
+      "subtitle": "Warranties created by installation handovers",
+      "search": "Search by number or project",
+      "empty": "No warranties yet",
+      "emptyDetail": "A warranty is created when an installation is handed over with a warranty term.",
+      "noResults": "No warranties match the filters.",
+      "number": "Number",
+      "project": "Project",
+      "installation": "Installation",
+      "term": "Term (months)",
+      "state": "State",
+      "requests": "Service requests",
+      "states": {
+        "active": "Active",
+        "expired": "Expired"
+      }
+    },
+    "requests": {
+      "title": "After-sales service",
+      "subtitle": "Receive, schedule, fix and close service requests, flagging warranty cover",
+      "search": "Search by number or title",
+      "empty": "No service requests yet",
+      "emptyDetail": "Create a request when a customer reports a problem after handover.",
+      "noResults": "No service requests match the filters.",
+      "create": "New service request",
+      "createTitle": "New service request",
+      "editorSubtitle": "Warranty cover is checked from the report date and never blocks the request.",
+      "loadError": "Could not load the service request.",
+      "fieldsInvalid": "Select a project and enter a title and description.",
+      "number": "Number",
+      "titleField": "Title",
+      "description": "Description",
+      "project": "Project",
+      "selectProject": "Select a project",
+      "priority": "Priority",
+      "priorities": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "urgent": "Urgent"
+      },
+      "status": "Status",
+      "statuses": {
+        "open": "Open",
+        "scheduled": "Scheduled",
+        "in_progress": "In progress",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "warranty": "Warranty",
+      "inWarranty": "In warranty",
+      "outOfWarranty": "Out of warranty",
+      "outOfWarrantyNote": "No warranty covered the report date. The work may be chargeable under company policy.",
+      "createdAt": "Reported at",
+      "createdBy": "Received by",
+      "scheduledDate": "Visit date",
+      "resolutionLine": "Resolution: {note}",
+      "schedule": "Schedule",
+      "start": "Start work",
+      "resolve": "Mark resolved",
+      "close": "Close",
+      "reopen": "Reopen",
+      "visitDate": "Visit date",
+      "resolutionNote": "Resolution",
+      "reopenReason": "Reason to reopen",
+      "dateRequired": "Choose a date.",
+      "textRequired": "Enter the details.",
+      "confirm": "Confirm",
+      "saved": "Saved.",
+      "created": "Service request created.",
+      "historyTitle": "Status history",
+      "dialogs": {
+        "schedule": {
+          "title": "Schedule a visit",
+          "description": "Choose the visit date (not in the past)."
+        },
+        "resolve": {
+          "title": "Record the resolution",
+          "description": "Describe what was done."
+        },
+        "reopen": {
+          "title": "Reopen the request",
+          "description": "Enter why it must be reopened."
+        }
+      }
     }
   }
 }

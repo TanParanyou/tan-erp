@@ -885,4 +885,40 @@
   <data name="ACCEPTANCE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>The current consent statement must be accepted.</value></data>
   <data name="ACCEPTANCE_CONFLICT_TITLE" xml:space="preserve"><value>Acceptance Conflict</value></data>
   <data name="ACCEPTANCE_CONFLICT_DETAIL" xml:space="preserve"><value>The document changed while you were reviewing it. Please reload and try again.</value></data>
+  <data name="INSTALLATION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Installation Version Conflict</value></data>
+  <data name="INSTALLATION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The installation was changed by someone else. Reload and retry.</value></data>
+  <data name="INSTALLATION_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Installation State</value></data>
+  <data name="INSTALLATION_INVALID_STATE_DETAIL" xml:space="preserve"><value>The installation status does not allow this action.</value></data>
+  <data name="INSTALLATION_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve"><value>Project Not Active</value></data>
+  <data name="INSTALLATION_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve"><value>Installations cannot be planned for a completed or cancelled project.</value></data>
+  <data name="INSTALLATION_CHECKLIST_INCOMPLETE_TITLE" xml:space="preserve"><value>Checklist Incomplete</value></data>
+  <data name="INSTALLATION_CHECKLIST_INCOMPLETE_DETAIL" xml:space="preserve"><value>Every required checklist item must be done before handover.</value></data>
+  <data name="INSTALLATION_DEFECTS_OPEN_TITLE" xml:space="preserve"><value>Defects Open</value></data>
+  <data name="INSTALLATION_DEFECTS_OPEN_DETAIL" xml:space="preserve"><value>Every defect must be resolved and verified before handover.</value></data>
+  <data name="INSTALLATION_SELF_VERIFICATION_TITLE" xml:space="preserve"><value>Self Verification</value></data>
+  <data name="INSTALLATION_SELF_VERIFICATION_DETAIL" xml:space="preserve"><value>The person who resolved a defect cannot verify it.</value></data>
+  <data name="INSTALLATION_DEFECT_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Defect State</value></data>
+  <data name="INSTALLATION_DEFECT_INVALID_STATE_DETAIL" xml:space="preserve"><value>The defect status does not allow this action.</value></data>
+  <data name="INSTALLATION_ITEM_NOT_FOUND_TITLE" xml:space="preserve"><value>Item Not Found</value></data>
+  <data name="INSTALLATION_ITEM_NOT_FOUND_DETAIL" xml:space="preserve"><value>The checklist item or defect was not found.</value></data>
+  <data name="INSTALLATION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="INSTALLATION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason or note is required.</value></data>
+  <data name="INSTALLATION_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Field Required</value></data>
+  <data name="INSTALLATION_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>A required field is missing.</value></data>
+  <data name="INSTALLATION_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
+  <data name="INSTALLATION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid. Warranty months must be stated explicitly (0 for none).</value></data>
+  <data name="SERVICE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Service Version Conflict</value></data>
+  <data name="SERVICE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The service request was changed by someone else. Reload and retry.</value></data>
+  <data name="SERVICE_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Service State</value></data>
+  <data name="SERVICE_INVALID_STATE_DETAIL" xml:space="preserve"><value>The service request status does not allow this action.</value></data>
+  <data name="SERVICE_PROJECT_INVALID_TITLE" xml:space="preserve"><value>Project Invalid</value></data>
+  <data name="SERVICE_PROJECT_INVALID_DETAIL" xml:space="preserve"><value>Service requests cannot be raised for a cancelled project.</value></data>
+  <data name="SERVICE_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Note Required</value></data>
+  <data name="SERVICE_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A note is required.</value></data>
+  <data name="SERVICE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Field Required</value></data>
+  <data name="SERVICE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>A required field is missing.</value></data>
+  <data name="SERVICE_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
+  <data name="SERVICE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
+  <data name="PROJECT_OPEN_INSTALLATION_TITLE" xml:space="preserve"><value>Open Installation</value></data>
+  <data name="PROJECT_OPEN_INSTALLATION_DETAIL" xml:space="preserve"><value>Every installation must be handed over or cancelled before the project is completed.</value></data>
 </root>

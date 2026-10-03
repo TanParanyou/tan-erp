@@ -28,6 +28,9 @@ public static class DocumentTypes
     public const string Boms = "boms";
     public const string WorkOrders = "work-orders";
     public const string MrpRuns = "mrp-runs";
+    public const string InstallationJobs = "installation-jobs";
+    public const string Warranties = "warranties";
+    public const string ServiceRequests = "service-requests";
     public const string Customers = "customers";
     public const string Items = "items";
     public const string ItemCategories = "item-categories";
@@ -83,6 +86,9 @@ public static class DocumentTypes
         Boms,
         WorkOrders,
         MrpRuns,
+        InstallationJobs,
+        Warranties,
+        ServiceRequests,
         Customers,
         Items,
         ItemCategories,
@@ -150,6 +156,9 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.StockReturns => "SRT",
             DocumentTypes.WorkOrders => "WO",
             DocumentTypes.MrpRuns => "MRP",
+            DocumentTypes.InstallationJobs => "INS",
+            DocumentTypes.Warranties => "WAR",
+            DocumentTypes.ServiceRequests => "SRV",
             _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Unknown document type.")
         };
 
