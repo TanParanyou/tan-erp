@@ -29,6 +29,7 @@ public class CustomerContactConfiguration : IEntityTypeConfiguration<CustomerCon
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32).IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().HasDefaultValueSql("gen_random_uuid()").IsRequired();
 
         builder.HasIndex(x => x.CustomerId)
             .HasFilter("is_primary = true AND status = 'active'")

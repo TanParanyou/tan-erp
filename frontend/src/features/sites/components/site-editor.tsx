@@ -24,9 +24,9 @@ import { AddressAreaField } from "@/components/forms/AddressAreaField";
 import { QuickNoteChips } from "@/components/forms/QuickNoteChips";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MultiImagePicker, type PendingImageItem } from "@/components/forms/MultiImagePicker";
-import { fileClient } from "@/lib/api/file-client";
 import { useToast } from "@/hooks/useToast";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
 import { IconAlertCircle, IconMapPin } from "@/components/common/Icons";
 import { ApiError } from "@/lib/api/api-error";
 
@@ -46,6 +46,10 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
   const { selectedMembership } = useSelectedMembership();
   const { toast } = useToast();
 
+  const { uploadFiles, resetIntent: resetFileUploadIntent } = useDeferredFileUpload({
+    parentType: "site",
+  });
+
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [pendingImages, setPendingImages] = useState<PendingImageItem[]>([]);
@@ -56,6 +60,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
   const handleFormChange = (): void => {
     if (failedSubmissionRef.current) {
       idempotencyKeyRef.current = null;
+      resetFileUploadIntent();
       failedSubmissionRef.current = false;
     }
   };
@@ -186,45 +191,25 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
       }
 
       let uploadedImages: { fileId: string; caption?: string }[] | undefined = undefined;
+      let uploadIntentId: string | undefined = undefined;
 
       if (pendingImages.length > 0) {
-        const filesToUpload = pendingImages.map((i) => i.optimizedFile ?? i.originalFile);
-        const sessionRes = await fileClient.createSession(
-          {
-            files: filesToUpload.map((f) => ({
-              filename: f.name,
-              mediaType: f.type || "image/webp",
-              fileSizeBytes: f.size,
-            })),
-          },
-          {
-            token,
-            membershipId,
-            idempotencyKey: crypto.randomUUID(),
-            locale: locale === "en" ? "en" : "th",
-          }
-        );
+        const itemsToUpload = pendingImages.map((i) => ({
+          file: i.optimizedFile ?? i.originalFile,
+          caption: i.caption?.trim() || undefined,
+        }));
 
-        if (!sessionRes.sessionId) {
-          throw new Error("Failed to create file upload session.");
-        }
+        const uploadRes = await uploadFiles(itemsToUpload, {
+          token,
+          membershipId,
+          locale: locale === "en" ? "en" : "th",
+        });
 
-        const completeRes = await fileClient.completeSession(
-          sessionRes.sessionId,
-          filesToUpload,
-          {
-            token,
-            membershipId,
-            locale: locale === "en" ? "en" : "th",
-          }
-        );
-
-        if (completeRes.files && completeRes.files.length > 0) {
-          uploadedImages = completeRes.files.map((cf, idx) => ({
-            fileId: cf.fileId ?? "",
-            caption: pendingImages[idx]?.caption?.trim() || undefined,
-          })).filter((item) => Boolean(item.fileId));
-        }
+        uploadIntentId = uploadRes.uploadIntentId ?? undefined;
+        uploadedImages = uploadRes.files.map((f) => ({
+          fileId: f.fileId,
+          caption: f.caption,
+        }));
       }
 
       idempotencyKeyRef.current ??= crypto.randomUUID();
@@ -242,6 +227,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
           longitude: values.longitude !== null && values.longitude !== undefined ? Number(values.longitude) : undefined,
           accessNote: values.accessNote || undefined,
           images: uploadedImages,
+          fileUploadIntentId: uploadIntentId,
         },
         {
           token,

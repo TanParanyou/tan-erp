@@ -43,17 +43,24 @@ public class FirebaseAuthenticationHandler : AuthenticationHandler<Authenticatio
             return AuthenticateResult.Fail("AUTHENTICATION_INVALID");
         }
 
-        var uid = await _tokenVerifier.VerifyTokenAsync(token, Context.RequestAborted);
-        if (string.IsNullOrWhiteSpace(uid))
+        var identityResult = await _tokenVerifier.VerifyIdentityAsync(token, Context.RequestAborted);
+        if (identityResult is null || string.IsNullOrWhiteSpace(identityResult.Uid))
         {
             return AuthenticateResult.Fail("AUTHENTICATION_INVALID");
         }
 
-        var claims = new[]
+        var uid = identityResult.Uid;
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, uid),
-            new Claim("firebase_uid", uid)
+            new(ClaimTypes.NameIdentifier, uid),
+            new("firebase_uid", uid)
         };
+
+        // Only a verified email can ever be used to link an invited user.
+        if (identityResult.EmailVerified && !string.IsNullOrWhiteSpace(identityResult.Email))
+        {
+            claims.Add(new Claim("verified_email", identityResult.Email));
+        }
 
         var identity = new ClaimsIdentity(claims, SchemeName);
         var principal = new ClaimsPrincipal(identity);

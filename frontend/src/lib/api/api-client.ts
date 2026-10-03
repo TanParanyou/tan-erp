@@ -8,10 +8,20 @@ export type CustomerListItemResponse = components["schemas"]["CustomerListItemRe
 export type CustomerResponse = components["schemas"]["CustomerResponse"];
 export type DuplicateCustomerResponse = components["schemas"]["DuplicateCustomerResponse"];
 export type CreateCustomerRequest = components["schemas"]["CreateCustomerRequest"];
+export type UpdateCustomerRequest = components["schemas"]["UpdateCustomerRequest"];
+export type CustomerAddressResponse = components["schemas"]["CustomerAddressResponse"];
+export type CustomerAddressListResponse = components["schemas"]["CustomerAddressListResponse"];
+export type CreateCustomerAddressRequest = components["schemas"]["CreateCustomerAddressRequest"];
+export type UpdateCustomerAddressRequest = components["schemas"]["UpdateCustomerAddressRequest"];
+export type CustomerContactDetailResponse = components["schemas"]["CustomerContactDetailResponse"];
+export type CustomerContactListResponse = components["schemas"]["CustomerContactListResponse"];
+export type CreatePrimaryContactRequest = components["schemas"]["CreatePrimaryContactRequest"];
+export type DeactivateCustomerRequest = components["schemas"]["DeactivateCustomerRequest"];
 
 export type SiteResponse = components["schemas"]["SiteResponse"];
 export type SiteListResponse = components["schemas"]["SiteListResponse"];
 export type CreateSiteRequest = components["schemas"]["CreateSiteRequest"];
+export type UpdateSiteRequest = components["schemas"]["UpdateSiteRequest"];
 export type SiteImageResponse = components["schemas"]["SiteImageResponse"];
 export type CreateSiteImageRequest = components["schemas"]["CreateSiteImageRequest"];
 
@@ -47,10 +57,15 @@ export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionRe
 export type CreateEstimateDraftRequest = components["schemas"]["CreateEstimateDraftRequest"];
 export type UpdateEstimateDraftRequest = components["schemas"]["UpdateEstimateDraftRequest"];
 export type CalculateEstimateRequest = components["schemas"]["CalculateEstimateRequest"];
+export type SubmitEstimateRequest = components["schemas"]["SubmitEstimateRequest"];
+export type ReviewEstimateRequest = components["schemas"]["ReviewEstimateRequest"];
+export type CreateEstimateRevisionRequest = components["schemas"]["CreateEstimateRevisionRequest"];
+export type CancelEstimateRequest = components["schemas"]["CancelEstimateRequest"];
 export type IssueQuotationRequest = components["schemas"]["IssueQuotationRequest"];
 export type QuotationResponse = components["schemas"]["QuotationResponse"];
 export type AcceptQuotationRequest = components["schemas"]["AcceptQuotationRequest"];
 export type AcceptQuotationResponse = components["schemas"]["AcceptQuotationResponse"];
+export type QuotationDocumentResponse = components["schemas"]["QuotationDocumentResponse"];
 export type EstimateCatalogResponse = components["schemas"]["EstimateCatalogResponse"];
 export type EstimateCatalogItemResponse = components["schemas"]["EstimateCatalogItemResponse"];
 
@@ -61,6 +76,21 @@ export type AddressSearchResultItem = components["schemas"]["AddressSearchResult
 export type UserListItemResponse = components["schemas"]["UserListItemResponse"];
 export type UserListResponse = components["schemas"]["UserListResponse"];
 
+export type AdminUserResponse = components["schemas"]["AdminUserResponse"];
+export type AdminMembershipResponse = components["schemas"]["AdminMembershipResponse"];
+export type AdminUserListResponse = components["schemas"]["AdminUserListResponse"];
+export type AdminRoleResponse = components["schemas"]["AdminRoleResponse"];
+export type AdminRoleListResponse = components["schemas"]["AdminRoleListResponse"];
+export type AdminRoleRequestResponse = components["schemas"]["AdminRoleRequestResponse"];
+export type AdminRoleRequestListResponse = components["schemas"]["AdminRoleRequestListResponse"];
+export type AdminAssignRoleResponse = components["schemas"]["AdminAssignRoleResponse"];
+export type CreateAdminUserRequest = components["schemas"]["CreateAdminUserRequest"];
+export type RenameAdminUserRequest = components["schemas"]["RenameAdminUserRequest"];
+export type UpdateAdminMembershipRequest = components["schemas"]["UpdateAdminMembershipRequest"];
+export type AssignAdminRoleRequest = components["schemas"]["AssignAdminRoleRequest"];
+
+export type AdminUserListParams = NonNullable<paths["/api/v1/admin/users"]["get"]["parameters"]["query"]>;
+
 export interface RequestOptions {
   token: string;
   membershipId?: string;
@@ -68,6 +98,12 @@ export interface RequestOptions {
   ifMatch?: string;
   locale?: "th" | "en";
   signal?: AbortSignal;
+}
+
+export interface OrganizationBranchResponse {
+  id: string;
+  code: string;
+  name: string;
 }
 
 export type ListCustomersParams = NonNullable<
@@ -81,6 +117,47 @@ export type ListOpportunitiesParams = NonNullable<
 export type ListUsersParams = NonNullable<
   paths["/api/v1/users"]["get"]["parameters"]["query"]
 >;
+
+export type EstimateCatalogParams = NonNullable<
+  paths["/api/v1/estimate-catalog/items"]["get"]["parameters"]["query"]
+>;
+
+export type ItemResponse = components["schemas"]["ItemResponse"];
+export type ItemBranchAvailabilityResponse = components["schemas"]["ItemBranchAvailabilityResponse"];
+export type AddAliasRequest = components["schemas"]["AddAliasRequest"];
+export type ItemImageDetailResponse = components["schemas"]["ItemImageDetailResponse"];
+export type AttachItemImageRequest = components["schemas"]["AttachItemImageRequest"];
+export type CreateItemRequest = components["schemas"]["CreateItemRequest"];
+export type UpdateItemRequest = components["schemas"]["UpdateItemRequest"];
+export type PagedItemsResponse = components["schemas"]["PagedItemsResponse"];
+export type CostSourceResponse = components["schemas"]["CostSourceResponse"];
+export type CostSourceRequest = components["schemas"]["CostSourceRequest"];
+export type UpdateCostSourceRequest = components["schemas"]["UpdateCostSourceRequest"];
+export type ItemBarcodeResponse = components["schemas"]["ItemBarcodeResponse"];
+export type CreateItemBarcodeRequest = components["schemas"]["CreateItemBarcodeRequest"];
+export type ItemUnitConversionResponse = components["schemas"]["ItemUnitConversionResponse"];
+export type CreateItemUnitConversionRequest = components["schemas"]["CreateItemUnitConversionRequest"];
+export type UnitConversionResponse = components["schemas"]["UnitConversionResponse"];
+export type CostReviewQueueResponse = components["schemas"]["CostReviewQueueResponse"];
+export type CostRecordResponse = components["schemas"]["CostRecordResponse"];
+export type CreateCostRecordRequest = components["schemas"]["CreateCostRecordRequest"];
+export type UpdateCostRecordRequest = components["schemas"]["UpdateCostRecordRequest"];
+export type ItemCategoryResponse = components["schemas"]["ItemCategoryDetailResponse"];
+export type UnitOfMeasureResponse = components["schemas"]["UnitOfMeasureDetailResponse"];
+export type ItemBrandResponse = components["schemas"]["ItemBrandDetailResponse"];
+export type ItemTaxCategoryResponse = components["schemas"]["ItemTaxCategoryDetailResponse"];
+export type CreateItemCategoryRequest = components["schemas"]["CreateItemCategoryRequest"];
+export type UpdateItemCategoryRequest = components["schemas"]["UpdateItemCategoryRequest"];
+export type CreateItemBrandRequest = components["schemas"]["CreateItemBrandRequest"];
+export type UpdateItemBrandRequest = components["schemas"]["UpdateItemBrandRequest"];
+export type CreateItemTaxCategoryRequest = components["schemas"]["CreateItemTaxCategoryRequest"];
+export type UpdateItemTaxCategoryRequest = components["schemas"]["UpdateItemTaxCategoryRequest"];
+export type CreateUnitOfMeasureRequest = components["schemas"]["CreateUnitOfMeasureRequest"];
+export type UpdateUnitOfMeasureRequest = components["schemas"]["UpdateUnitOfMeasureRequest"];
+export type ListItemsParams = NonNullable<paths["/api/v1/items"]["get"]["parameters"]["query"]>;
+export type CostReviewQueueParams = NonNullable<paths["/api/v1/cost-review-queue"]["get"]["parameters"]["query"]>;
+export type EstimateReviewQueueResponse = components["schemas"]["EstimateReviewQueueResponse"];
+export type EstimateReviewQueueParams = NonNullable<paths["/api/v1/estimates/review-queue"]["get"]["parameters"]["query"]>;
 
 export class ApiClient {
   private readonly baseUrl: string;
@@ -237,6 +314,62 @@ export class ApiClient {
     return this.request<CustomerResponse>(`/api/v1/customers/${encodeURIComponent(id)}/activate`, "POST", options);
   }
 
+  async updateCustomer(
+    id: string,
+    payload: UpdateCustomerRequest,
+    options: RequestOptions
+  ): Promise<CustomerResponse> {
+    return this.request<CustomerResponse>(`/api/v1/customers/${encodeURIComponent(id)}`, "PATCH", options, payload);
+  }
+
+  async deactivateCustomer(id: string, payload: DeactivateCustomerRequest, options: RequestOptions): Promise<CustomerResponse> {
+    return this.request<CustomerResponse>(`/api/v1/customers/${encodeURIComponent(id)}/deactivate`, "POST", options, payload);
+  }
+
+  async reactivateCustomer(id: string, options: RequestOptions): Promise<CustomerResponse> {
+    return this.request<CustomerResponse>(`/api/v1/customers/${encodeURIComponent(id)}/reactivate`, "POST", options);
+  }
+
+  async listCustomerAddresses(customerId: string, options: RequestOptions): Promise<CustomerAddressListResponse> {
+    return this.request<CustomerAddressListResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/addresses`, "GET", options);
+  }
+
+  async createCustomerAddress(customerId: string, payload: CreateCustomerAddressRequest, options: RequestOptions): Promise<CustomerAddressResponse> {
+    return this.request<CustomerAddressResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/addresses`, "POST", options, payload);
+  }
+
+  async updateCustomerAddress(customerId: string, addressId: string, payload: UpdateCustomerAddressRequest, options: RequestOptions): Promise<CustomerAddressResponse> {
+    return this.request<CustomerAddressResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/addresses/${encodeURIComponent(addressId)}`, "PATCH", options, payload);
+  }
+
+  async setPrimaryCustomerAddress(customerId: string, addressId: string, options: RequestOptions): Promise<CustomerAddressResponse> {
+    return this.request<CustomerAddressResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/addresses/${encodeURIComponent(addressId)}/primary`, "POST", options);
+  }
+
+  async deactivateCustomerAddress(customerId: string, addressId: string, options: RequestOptions): Promise<CustomerAddressResponse> {
+    return this.request<CustomerAddressResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/addresses/${encodeURIComponent(addressId)}/deactivate`, "POST", options);
+  }
+
+  async listCustomerContacts(customerId: string, options: RequestOptions): Promise<CustomerContactListResponse> {
+    return this.request<CustomerContactListResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/contacts`, "GET", options);
+  }
+
+  async createCustomerContact(customerId: string, payload: CreatePrimaryContactRequest, options: RequestOptions): Promise<CustomerContactDetailResponse> {
+    return this.request<CustomerContactDetailResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/contacts`, "POST", options, payload);
+  }
+
+  async updateCustomerContact(customerId: string, contactId: string, payload: CreatePrimaryContactRequest, options: RequestOptions): Promise<CustomerContactDetailResponse> {
+    return this.request<CustomerContactDetailResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/contacts/${encodeURIComponent(contactId)}`, "PATCH", options, payload);
+  }
+
+  async setPrimaryCustomerContact(customerId: string, contactId: string, options: RequestOptions): Promise<CustomerContactDetailResponse> {
+    return this.request<CustomerContactDetailResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/contacts/${encodeURIComponent(contactId)}/primary`, "POST", options);
+  }
+
+  async deactivateCustomerContact(customerId: string, contactId: string, options: RequestOptions): Promise<CustomerContactDetailResponse> {
+    return this.request<CustomerContactDetailResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/contacts/${encodeURIComponent(contactId)}/deactivate`, "POST", options);
+  }
+
   async listCustomerSites(
     customerId: string,
     options: RequestOptions
@@ -250,6 +383,14 @@ export class ApiClient {
     options: RequestOptions
   ): Promise<SiteResponse> {
     return this.request<SiteResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/sites`, "POST", options, payload);
+  }
+
+  async updateSite(customerId: string, siteId: string, payload: UpdateSiteRequest, options: RequestOptions): Promise<SiteResponse> {
+    return this.request<SiteResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/sites/${encodeURIComponent(siteId)}`, "PATCH", options, payload);
+  }
+
+  async deactivateSite(customerId: string, siteId: string, options: RequestOptions): Promise<SiteResponse> {
+    return this.request<SiteResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/sites/${encodeURIComponent(siteId)}/deactivate`, "POST", options);
   }
 
   async listOpportunities(
@@ -548,6 +689,58 @@ export class ApiClient {
     );
   }
 
+  async submitEstimate(
+    id: string,
+    payload: SubmitEstimateRequest,
+    options: RequestOptions
+  ): Promise<EstimateDetailResponse> {
+    return this.request<EstimateDetailResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/submit`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async reviewEstimate(
+    id: string,
+    payload: ReviewEstimateRequest,
+    options: RequestOptions
+  ): Promise<EstimateDetailResponse> {
+    return this.request<EstimateDetailResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/review-decisions`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async createEstimateRevision(
+    id: string,
+    payload: CreateEstimateRevisionRequest,
+    options: RequestOptions
+  ): Promise<EstimateDetailResponse> {
+    return this.request<EstimateDetailResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/revisions`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async cancelEstimate(
+    id: string,
+    payload: CancelEstimateRequest,
+    options: RequestOptions
+  ): Promise<EstimateDetailResponse> {
+    return this.request<EstimateDetailResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/cancel`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
   async issueQuotation(
     id: string,
     payload: IssueQuotationRequest,
@@ -561,6 +754,18 @@ export class ApiClient {
     );
   }
 
+  async getQuotationDocument(
+    id: string,
+    documentLocale: "th" | "en",
+    options: RequestOptions
+  ): Promise<QuotationDocumentResponse> {
+    return this.request<QuotationDocumentResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/quotation/document?locale=${documentLocale}`,
+      "GET",
+      options
+    );
+  }
+
   async acceptQuotation(
     id: string,
     payload: AcceptQuotationRequest,
@@ -571,6 +776,104 @@ export class ApiClient {
       "POST",
       options,
       payload
+    );
+  }
+
+  async listAdminUsers(params: AdminUserListParams, options: RequestOptions): Promise<AdminUserListResponse> {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.status) query.set("status", params.status);
+    if (params.sortBy) query.set("sortBy", params.sortBy);
+    if (params.sortOrder) query.set("sortOrder", params.sortOrder);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString();
+    return this.request<AdminUserListResponse>(`/api/v1/admin/users${suffix ? `?${suffix}` : ""}`, "GET", options);
+  }
+
+  async getAdminUser(userId: string, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}`, "GET", options);
+  }
+
+  async createAdminUser(payload: CreateAdminUserRequest, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>("/api/v1/admin/users", "POST", options, payload);
+  }
+
+  async renameAdminUser(userId: string, payload: RenameAdminUserRequest, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}`, "PATCH", options, payload);
+  }
+
+  async setAdminUserActive(userId: string, active: boolean, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(
+      `/api/v1/admin/users/${encodeURIComponent(userId)}/${active ? "activate" : "deactivate"}`,
+      "POST",
+      options
+    );
+  }
+
+  async updateAdminMembership(
+    membershipId: string,
+    payload: UpdateAdminMembershipRequest,
+    options: RequestOptions
+  ): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(
+      `/api/v1/admin/memberships/${encodeURIComponent(membershipId)}`,
+      "PATCH",
+      options,
+      payload
+    );
+  }
+
+  async setAdminMembershipActive(membershipId: string, active: boolean, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(
+      `/api/v1/admin/memberships/${encodeURIComponent(membershipId)}/${active ? "activate" : "deactivate"}`,
+      "POST",
+      options
+    );
+  }
+
+  async listAdminRoles(options: RequestOptions): Promise<AdminRoleListResponse> {
+    return this.request<AdminRoleListResponse>("/api/v1/admin/roles", "GET", options);
+  }
+
+  async assignAdminRole(
+    membershipId: string,
+    payload: AssignAdminRoleRequest,
+    options: RequestOptions
+  ): Promise<AdminAssignRoleResponse> {
+    return this.request<AdminAssignRoleResponse>(
+      `/api/v1/admin/memberships/${encodeURIComponent(membershipId)}/roles`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async revokeAdminRole(membershipId: string, roleId: string, options: RequestOptions): Promise<void> {
+    await this.request<unknown>(
+      `/api/v1/admin/memberships/${encodeURIComponent(membershipId)}/roles/${encodeURIComponent(roleId)}`,
+      "DELETE",
+      options
+    );
+  }
+
+  async listAdminRoleRequests(status: string, options: RequestOptions): Promise<AdminRoleRequestListResponse> {
+    return this.request<AdminRoleRequestListResponse>(
+      `/api/v1/admin/role-assignment-requests?status=${encodeURIComponent(status)}`,
+      "GET",
+      options
+    );
+  }
+
+  async decideAdminRoleRequest(
+    requestId: string,
+    decision: "approve" | "reject" | "cancel",
+    options: RequestOptions
+  ): Promise<AdminRoleRequestResponse> {
+    return this.request<AdminRoleRequestResponse>(
+      `/api/v1/admin/role-assignment-requests/${encodeURIComponent(requestId)}/${decision}`,
+      "POST",
+      options
     );
   }
 
@@ -610,16 +913,7 @@ export class ApiClient {
   }
 
   async getEstimateCatalog(
-    query: {
-      branchId: string;
-      search?: string;
-      itemType?: string;
-      categoryId?: string;
-      brandId?: string;
-      hasCost?: boolean;
-      cursor?: string;
-      pageSize?: number;
-    },
+    query: EstimateCatalogParams,
     options: RequestOptions
   ): Promise<components["schemas"]["EstimateCatalogResponse"]> {
     const params = new URLSearchParams();
@@ -628,6 +922,8 @@ export class ApiClient {
     if (query.itemType) params.set("itemType", query.itemType);
     if (query.categoryId) params.set("categoryId", query.categoryId);
     if (query.brandId) params.set("brandId", query.brandId);
+    if (query.attributeKey) params.set("attributeKey", query.attributeKey);
+    if (query.attributeValue) params.set("attributeValue", query.attributeValue);
     if (query.hasCost !== undefined) params.set("hasCost", String(query.hasCost));
     if (query.cursor) params.set("cursor", query.cursor);
     if (query.pageSize) params.set("pageSize", String(query.pageSize));
@@ -638,7 +934,212 @@ export class ApiClient {
       options
     );
   }
+
+  async listItems(options: RequestOptions, query: ListItemsParams): Promise<PagedItemsResponse> {
+    const params = new URLSearchParams();
+    for (const key of ["search", "itemType", "categoryId", "brandId", "status"] as const) {
+      const value = query[key];
+      if (value) params.set(key, value);
+    }
+    if (query.sortBy) params.set("sortBy", query.sortBy);
+    if (query.sortOrder) params.set("sortOrder", query.sortOrder);
+    params.set("pageNumber", String(query.pageNumber ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<PagedItemsResponse>(`/api/v1/items?${params.toString()}`, "GET", options);
+  }
+
+  async listOrganizationBranches(options: RequestOptions): Promise<OrganizationBranchResponse[]> {
+    return this.request<OrganizationBranchResponse[]>("/api/v1/branches", "GET", options);
+  }
+
+  async listItemCategories(options: RequestOptions): Promise<ItemCategoryResponse[]> {
+    return this.request<ItemCategoryResponse[]>("/api/v1/item-categories", "GET", options);
+  }
+
+  async listUnitsOfMeasure(options: RequestOptions): Promise<UnitOfMeasureResponse[]> {
+    return this.request<UnitOfMeasureResponse[]>("/api/v1/units-of-measure", "GET", options);
+  }
+
+  async listItemBrands(options: RequestOptions): Promise<ItemBrandResponse[]> {
+    return this.request<ItemBrandResponse[]>("/api/v1/item-brands", "GET", options);
+  }
+
+  async listItemTaxCategories(options: RequestOptions): Promise<ItemTaxCategoryResponse[]> {
+    return this.request<ItemTaxCategoryResponse[]>("/api/v1/item-tax-categories", "GET", options);
+  }
+
+  async createItemCategory(payload: CreateItemCategoryRequest, options: RequestOptions): Promise<ItemCategoryResponse> {
+    return this.request<ItemCategoryResponse>("/api/v1/item-categories", "POST", options, payload);
+  }
+
+  async updateItemCategory(id: string, payload: UpdateItemCategoryRequest, options: RequestOptions): Promise<ItemCategoryResponse> {
+    return this.request<ItemCategoryResponse>(`/api/v1/item-categories/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async createItemBrand(payload: CreateItemBrandRequest, options: RequestOptions): Promise<ItemBrandResponse> {
+    return this.request<ItemBrandResponse>("/api/v1/item-brands", "POST", options, payload);
+  }
+
+  async updateItemBrand(id: string, payload: UpdateItemBrandRequest, options: RequestOptions): Promise<ItemBrandResponse> {
+    return this.request<ItemBrandResponse>(`/api/v1/item-brands/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async createItemTaxCategory(payload: CreateItemTaxCategoryRequest, options: RequestOptions): Promise<ItemTaxCategoryResponse> {
+    return this.request<ItemTaxCategoryResponse>("/api/v1/item-tax-categories", "POST", options, payload);
+  }
+
+  async updateItemTaxCategory(id: string, payload: UpdateItemTaxCategoryRequest, options: RequestOptions): Promise<ItemTaxCategoryResponse> {
+    return this.request<ItemTaxCategoryResponse>(`/api/v1/item-tax-categories/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async createUnitOfMeasure(payload: CreateUnitOfMeasureRequest, options: RequestOptions): Promise<UnitOfMeasureResponse> {
+    return this.request<UnitOfMeasureResponse>("/api/v1/units-of-measure", "POST", options, payload);
+  }
+
+  async updateUnitOfMeasure(id: string, payload: UpdateUnitOfMeasureRequest, options: RequestOptions): Promise<UnitOfMeasureResponse> {
+    return this.request<UnitOfMeasureResponse>(`/api/v1/units-of-measure/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async getItem(id: string, options: RequestOptions): Promise<ItemResponse> {
+    return this.request<ItemResponse>(`/api/v1/items/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createItem(payload: CreateItemRequest, options: RequestOptions): Promise<ItemResponse> {
+    return this.request<ItemResponse>("/api/v1/items", "POST", options, payload);
+  }
+
+  async updateItem(id: string, payload: UpdateItemRequest, options: RequestOptions): Promise<ItemResponse> {
+    return this.request<ItemResponse>(`/api/v1/items/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async setItemBranchAvailability(id: string, payload: components["schemas"]["SetBranchAvailabilityRequest"], options: RequestOptions): Promise<ItemResponse> {
+    return this.request<ItemResponse>(`/api/v1/items/${encodeURIComponent(id)}/branch-availability`, "PUT", options, payload);
+  }
+
+  async addItemAlias(id: string, payload: AddAliasRequest, options: RequestOptions): Promise<ItemResponse> {
+    return this.request<ItemResponse>(`/api/v1/items/${encodeURIComponent(id)}/aliases`, "POST", options, payload);
+  }
+
+  async removeItemAlias(id: string, aliasId: string, options: RequestOptions): Promise<ItemResponse> {
+    return this.request<ItemResponse>(`/api/v1/items/${encodeURIComponent(id)}/aliases/${encodeURIComponent(aliasId)}`, "DELETE", options);
+  }
+
+  async listItemImages(id: string, options: RequestOptions): Promise<ItemImageDetailResponse[]> {
+    return this.request<ItemImageDetailResponse[]>(`/api/v1/items/${encodeURIComponent(id)}/images`, "GET", options);
+  }
+
+  async attachItemImage(id: string, payload: AttachItemImageRequest, options: RequestOptions): Promise<ItemImageDetailResponse> {
+    return this.request<ItemImageDetailResponse>(`/api/v1/items/${encodeURIComponent(id)}/images`, "POST", options, payload);
+  }
+
+  async setPrimaryItemImage(id: string, imageId: string, options: RequestOptions): Promise<ItemImageDetailResponse> {
+    return this.request<ItemImageDetailResponse>(`/api/v1/items/${encodeURIComponent(id)}/images/${encodeURIComponent(imageId)}/primary`, "POST", options);
+  }
+
+  async detachItemImage(id: string, imageId: string, options: RequestOptions): Promise<void> {
+    await this.request<void>(`/api/v1/items/${encodeURIComponent(id)}/images/${encodeURIComponent(imageId)}`, "DELETE", options);
+  }
+
+  async activateItem(id: string, options: RequestOptions): Promise<ItemResponse> {
+    return this.request<ItemResponse>(`/api/v1/items/${encodeURIComponent(id)}/activate`, "POST", options);
+  }
+
+  async deactivateItem(id: string, payload: components["schemas"]["DeactivateItemRequest"], options: RequestOptions): Promise<ItemResponse> {
+    return this.request<ItemResponse>(`/api/v1/items/${encodeURIComponent(id)}/deactivate`, "POST", options, payload);
+  }
+
+  async listItemBarcodes(itemId: string, options: RequestOptions): Promise<ItemBarcodeResponse[]> {
+    return this.request<ItemBarcodeResponse[]>(`/api/v1/items/${encodeURIComponent(itemId)}/barcodes`, "GET", options);
+  }
+
+  async createItemBarcode(itemId: string, payload: CreateItemBarcodeRequest, options: RequestOptions): Promise<ItemBarcodeResponse> {
+    return this.request<ItemBarcodeResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/barcodes`, "POST", options, payload);
+  }
+
+  async setItemBarcodePrimary(itemId: string, barcodeId: string, rowVersion: string, options: RequestOptions): Promise<ItemBarcodeResponse> {
+    return this.request<ItemBarcodeResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/barcodes/${encodeURIComponent(barcodeId)}/primary`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async deactivateItemBarcode(itemId: string, barcodeId: string, rowVersion: string, options: RequestOptions): Promise<ItemBarcodeResponse> {
+    return this.request<ItemBarcodeResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/barcodes/${encodeURIComponent(barcodeId)}/deactivate`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async listItemUnitConversions(itemId: string, options: RequestOptions): Promise<ItemUnitConversionResponse[]> {
+    return this.request<ItemUnitConversionResponse[]>(`/api/v1/items/${encodeURIComponent(itemId)}/unit-conversions`, "GET", options);
+  }
+
+  async createItemUnitConversion(itemId: string, payload: CreateItemUnitConversionRequest, options: RequestOptions): Promise<ItemUnitConversionResponse> {
+    return this.request<ItemUnitConversionResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/unit-conversions`, "POST", options, payload);
+  }
+
+  async listUnitConversions(options: RequestOptions): Promise<UnitConversionResponse[]> {
+    return this.request<UnitConversionResponse[]>("/api/v1/unit-conversions", "GET", options);
+  }
+
+  async createUnitConversion(payload: CreateItemUnitConversionRequest, options: RequestOptions): Promise<UnitConversionResponse> {
+    return this.request<UnitConversionResponse>("/api/v1/unit-conversions", "POST", options, payload);
+  }
+
+  async listCostSources(options: RequestOptions): Promise<CostSourceResponse[]> {
+    return this.request<CostSourceResponse[]>("/api/v1/cost-sources", "GET", options);
+  }
+
+  async createCostSource(payload: CostSourceRequest, options: RequestOptions): Promise<CostSourceResponse> {
+    return this.request<CostSourceResponse>("/api/v1/cost-sources", "POST", options, payload);
+  }
+
+  async updateCostSource(id: string, payload: UpdateCostSourceRequest, options: RequestOptions): Promise<CostSourceResponse> {
+    return this.request<CostSourceResponse>(`/api/v1/cost-sources/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async deactivateCostSource(id: string, options: RequestOptions): Promise<CostSourceResponse> {
+    return this.request<CostSourceResponse>(`/api/v1/cost-sources/${encodeURIComponent(id)}/deactivate`, "POST", options);
+  }
+
+  async listCostReviewQueue(query: CostReviewQueueParams, options: RequestOptions): Promise<CostReviewQueueResponse> {
+    const params = new URLSearchParams();
+    if (query.status) params.set("status", query.status);
+    if (query.search) params.set("search", query.search);
+    params.set("pageNumber", String(query.pageNumber ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 20));
+    return this.request<CostReviewQueueResponse>(`/api/v1/cost-review-queue?${params.toString()}`, "GET", options);
+  }
+
+  async listEstimateReviewQueue(query: EstimateReviewQueueParams, options: RequestOptions): Promise<EstimateReviewQueueResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    params.set("pageNumber", String(query.pageNumber ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 20));
+    return this.request<EstimateReviewQueueResponse>(`/api/v1/estimates/review-queue?${params.toString()}`, "GET", options);
+  }
+
+  async approveCostRecord(itemId: string, costId: string, rowVersion: string, options: RequestOptions): Promise<CostRecordResponse> {
+    return this.request<CostRecordResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/costs/${encodeURIComponent(costId)}/approve`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async returnCostRecord(itemId: string, costId: string, rowVersion: string, reason: string, options: RequestOptions): Promise<CostRecordResponse> {
+    return this.request<CostRecordResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/costs/${encodeURIComponent(costId)}/return`, "POST", { ...options, ifMatch: rowVersion }, { reason });
+  }
+
+  async publishCostRecord(itemId: string, costId: string, rowVersion: string, idempotencyKey: string, options: RequestOptions): Promise<CostRecordResponse> {
+    return this.request<CostRecordResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/costs/${encodeURIComponent(costId)}/publish`, "POST", { ...options, ifMatch: rowVersion, idempotencyKey });
+  }
+
+  async listItemCosts(itemId: string, options: RequestOptions): Promise<CostRecordResponse[]> {
+    return this.request<CostRecordResponse[]>(`/api/v1/items/${encodeURIComponent(itemId)}/costs`, "GET", options);
+  }
+
+  async createCostRecord(itemId: string, payload: CreateCostRecordRequest, options: RequestOptions): Promise<CostRecordResponse> {
+    return this.request<CostRecordResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/costs`, "POST", options, payload);
+  }
+
+  async updateCostRecord(itemId: string, costId: string, payload: UpdateCostRecordRequest, options: RequestOptions): Promise<CostRecordResponse> {
+    return this.request<CostRecordResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/costs/${encodeURIComponent(costId)}`, "PUT", options, payload);
+  }
+
+  async submitCostRecord(itemId: string, costId: string, rowVersion: string, options: RequestOptions): Promise<CostRecordResponse> {
+    return this.request<CostRecordResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/costs/${encodeURIComponent(costId)}/submit`, "POST", { ...options, ifMatch: rowVersion });
+  }
 }
 
 export const apiClient = new ApiClient();
-

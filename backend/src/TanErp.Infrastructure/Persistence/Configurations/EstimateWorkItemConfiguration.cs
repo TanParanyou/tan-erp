@@ -28,6 +28,13 @@ public class EstimateWorkItemConfiguration : IEntityTypeConfiguration<EstimateWo
         builder.Property(x => x.UnitCode).HasColumnName("unit_code").HasMaxLength(32).IsRequired();
         builder.Property(x => x.SellingRuleType).HasColumnName("selling_rule_type").HasMaxLength(32).IsRequired();
         builder.Property(x => x.SellingRuleValue).HasColumnName("selling_rule_value").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.SellingRuleReasonCode).HasColumnName("selling_rule_reason_code").HasMaxLength(64);
+        builder.Property(x => x.ItemId).HasColumnName("item_id");
+        builder.Property(x => x.ItemCodeSnapshot).HasColumnName("item_code_snapshot").HasMaxLength(64);
+        builder.Property(x => x.ItemNameThSnapshot).HasColumnName("item_name_th_snapshot").HasMaxLength(200);
+        builder.Property(x => x.ItemNameEnSnapshot).HasColumnName("item_name_en_snapshot").HasMaxLength(200);
+        builder.Property(x => x.OverrideReasonCode).HasColumnName("override_reason_code").HasMaxLength(64);
+        builder.Property(x => x.OverrideReason).HasColumnName("override_reason").HasMaxLength(500);
         builder.Property(x => x.UnitCost).HasColumnName("unit_cost").HasPrecision(18, 4).IsRequired();
         builder.Property(x => x.TotalCost).HasColumnName("total_cost").HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.UnitSellingPrice).HasColumnName("unit_selling_price").HasPrecision(18, 4).IsRequired();
@@ -40,6 +47,14 @@ public class EstimateWorkItemConfiguration : IEntityTypeConfiguration<EstimateWo
             .WithMany()
             .HasForeignKey(x => x.OrganizationId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<TanErp.Domain.Items.Item>()
+            .WithMany()
+            .HasForeignKey(x => new { x.ItemId, x.OrganizationId })
+            .HasPrincipalKey(x => new { x.Id, x.OrganizationId })
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.ItemId, x.OrganizationId });
 
         builder.HasMany(x => x.CostComponents)
             .WithOne()

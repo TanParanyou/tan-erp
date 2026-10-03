@@ -27,8 +27,9 @@ import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { getOpportunityStageLabelKey, CANONICAL_OPPORTUNITY_STAGES } from "../opportunity-labels";
 import { useListState, type ListFilterRecord } from "@/hooks/useListState";
-import { useCsvExport } from "@/hooks/useCsvExport";
-import type { CsvColumn } from "@/lib/export/export-csv";
+import { useDataExport } from "@/hooks/useDataExport";
+import type { ExportColumn } from "@/lib/export/export-types";
+import { ExportDropdown } from "@/components/ui/ExportDropdown";
 import { apiClient, type OpportunityResponse } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 
@@ -132,7 +133,7 @@ export function OpportunityList() {
     [data]
   );
 
-  const csvColumns = useMemo<CsvColumn<OpportunityResponse>[]>(
+  const exportColumns = useMemo<ExportColumn<OpportunityResponse>[]>(
     () => [
       { header: t("code"), accessor: (o) => o.code ?? o.id },
       { header: t("titleField"), accessor: (o) => o.title || "" },
@@ -146,9 +147,9 @@ export function OpportunityList() {
     [t]
   );
 
-  const { exportAll, isExporting } = useCsvExport<OpportunityResponse>({
+  const { exportAll, isExporting } = useDataExport<OpportunityResponse>({
     filename: "opportunities",
-    columns: csvColumns,
+    columns: exportColumns,
     data: allItems,
     fetchAll: async () => {
       const token = await getAuthToken();
@@ -316,20 +317,16 @@ export function OpportunityList() {
           />
         </div>
 
-        {/* Export CSV Button (Aligned to bottom edge of inputs) */}
+        {/* Export Dropdown Button (CSV & Excel, Aligned to bottom edge of inputs) */}
         <div className="flex items-end self-end">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={exportAll}
+          <ExportDropdown
+            onExport={(format) => exportAll(format)}
             isLoading={isExporting}
             disabled={allItems.length === 0}
-            icon={<IconDownload size={15} />}
-            className="h-10 text-xs font-medium min-h-[40px]"
-          >
-            {t("exportCsv")}
-          </Button>
+            label={t("export")}
+            variant="outline"
+            size="sm"
+          />
         </div>
       </ListToolbar>
 

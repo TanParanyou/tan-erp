@@ -6,8 +6,16 @@ export const PERMISSIONS = {
   // Organization & Access
   ORGANIZATIONS_READ: "organizations.read",
   BRANCHES_MANAGE: "branches.manage",
+  USERS_READ: "users.read",
   USERS_MANAGE: "users.manage",
+  MEMBERSHIPS_MANAGE: "memberships.manage",
+  ROLES_ASSIGN: "roles.assign",
+  ROLES_ASSIGN_APPROVAL: "roles.assign-approval",
   ROLES_MANAGE: "roles.manage",
+
+  // Item Master
+  ITEMS_READ: "items.read",
+  ITEMS_CREATE: "items.create",
 
   // CRM - Customers
   CUSTOMERS_READ: "customers.read",
@@ -32,6 +40,7 @@ export const PERMISSIONS = {
   SURVEYS_CREATE: "surveys.create",
 
   // Commercial - Quotations
+  QUOTATIONS_READ: "quotations.read",
   QUOTATIONS_ISSUE: "quotations.issue",
   QUOTATIONS_ACCEPT: "quotations.accept",
 } as const;

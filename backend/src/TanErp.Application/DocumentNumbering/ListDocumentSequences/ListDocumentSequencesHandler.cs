@@ -65,44 +65,19 @@ public class ListDocumentSequencesHandler
             }
             else
             {
-                string defaultPrefix;
-                string defaultPattern;
-                ResetPeriod defaultResetPeriod;
-                int defaultPadding;
+                var defaults = DocumentSequenceDefaults.For(docType);
 
-                if (docType == DocumentTypes.Customers)
-                {
-                    defaultPrefix = "CUS-";
-                    defaultPattern = "{PREFIX}{SEQ:5}";
-                    defaultResetPeriod = ResetPeriod.Never;
-                    defaultPadding = 5;
-                }
-                else
-                {
-                    defaultPrefix = docType switch
-                    {
-                        DocumentTypes.Estimates => "EST",
-                        DocumentTypes.Surveys => "SRV",
-                        DocumentTypes.Opportunities => "OPP",
-                        DocumentTypes.Quotations => "QT",
-                        _ => docType.ToUpperInvariant().Substring(0, Math.Min(3, docType.Length))
-                    };
-                    defaultPattern = "{PREFIX}-{YYYY}-{SEQ:4}";
-                    defaultResetPeriod = ResetPeriod.Yearly;
-                    defaultPadding = 4;
-                }
-
-                var preview = _generator.Preview(defaultPattern, defaultPrefix, "HQ", sampleSequence: 1, defaultPadding: defaultPadding);
+                var preview = _generator.Preview(defaults.FormatPattern, defaults.Prefix, "HQ", sampleSequence: 1, defaultPadding: defaults.Padding);
                 var defaultRowVersion = DocumentSequenceDefinition.ComputeDefaultRowVersion(orgId, docType);
 
                 results.Add(new DocumentSequenceProjection(
                     null,
                     docType,
-                    defaultPrefix,
-                    defaultPattern,
-                    defaultResetPeriod.ToString(),
-                    defaultPadding,
-                    false,
+                    defaults.Prefix,
+                    defaults.FormatPattern,
+                    defaults.ResetPeriod.ToString(),
+                    defaults.Padding,
+                    defaults.IsBranchSpecific,
                     true,
                     preview,
                     defaultRowVersion));

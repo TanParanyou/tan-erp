@@ -16,13 +16,16 @@ public class SitesController : ControllerBase
 {
     private readonly CreateSiteHandler _createHandler;
     private readonly ListSitesHandler _listHandler;
+    private readonly TanErp.Application.Crm.Sites.ManageCustomerSiteHandler _manageHandler;
 
     public SitesController(
         CreateSiteHandler createHandler,
-        ListSitesHandler listHandler)
+        ListSitesHandler listHandler,
+        TanErp.Application.Crm.Sites.ManageCustomerSiteHandler manageHandler)
     {
         _createHandler = createHandler;
         _listHandler = listHandler;
+        _manageHandler = manageHandler;
     }
 
     [HttpPost]
@@ -115,6 +118,37 @@ public class SitesController : ControllerBase
 
         var items = result.Value!.Select(ToResponse).ToList();
         return Ok(new SiteListResponse(items));
+    }
+
+    [HttpPatch("{siteId:guid}")]
+    [ProducesResponseType<SiteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> Update([FromRoute] Guid customerId, [FromRoute] Guid siteId, [FromBody] UpdateSiteRequest request, CancellationToken cancellationToken)
+    {
+        var context = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (context.IsFailure) return ProblemDetailsMapper.CreateProblemResult(context.Error.Code, HttpContext);
+        var auth = context.Value!;
+        var data = new TanErp.Application.Crm.Sites.UpdateSiteData(request.Label, request.AddressLine1, request.Subdistrict, request.District, request.Province, request.PostalCode, request.CountryCode, request.Latitude, request.Longitude, request.AccessNote);
+        var result = await _manageHandler.UpdateAsync(auth.FirebaseUid, auth.MembershipId, customerId, siteId, auth.IfMatchRowVersion, data, HttpContext.TraceIdentifier, cancellationToken);
+        if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Ok(ToResponse(result.Value));
+    }
+
+    [HttpPost("{siteId:guid}/deactivate")]
+    [ProducesResponseType<SiteResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> Deactivate([FromRoute] Guid customerId, [FromRoute] Guid siteId, CancellationToken cancellationToken)
+    {
+        var context = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (context.IsFailure) return ProblemDetailsMapper.CreateProblemResult(context.Error.Code, HttpContext);
+        var auth = context.Value!;
+        var result = await _manageHandler.DeactivateAsync(auth.FirebaseUid, auth.MembershipId, customerId, siteId, auth.IfMatchRowVersion, HttpContext.TraceIdentifier, cancellationToken);
+        if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Ok(ToResponse(result.Value));
     }
 
     private static SiteResponse ToResponse(SiteProjection s) => new(

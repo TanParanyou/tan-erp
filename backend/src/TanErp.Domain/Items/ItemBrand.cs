@@ -9,6 +9,7 @@ public class ItemBrand : Entity
     public string NormalizedCode { get; private set; } = string.Empty;
     public LocalizedText Name { get; private set; } = null!;
     public LocalizedText? Description { get; private set; }
+    public Guid? ImageFileId { get; private set; }
     public int SortOrder { get; private set; }
     public string Status { get; private set; } = ItemStatus.Active;
     public Guid RowVersion { get; private set; }
@@ -27,7 +28,8 @@ public class ItemBrand : Entity
         LocalizedText? description,
         int sortOrder,
         Guid createdByUserId,
-        DateTimeOffset createdAtUtc) : base(id)
+        DateTimeOffset createdAtUtc,
+        Guid? imageFileId = null) : base(id)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
@@ -39,6 +41,7 @@ public class ItemBrand : Entity
         NormalizedCode = code.Trim().ToUpperInvariant();
         Name = name;
         Description = description;
+        ImageFileId = imageFileId;
         SortOrder = Math.Max(0, sortOrder);
         Status = ItemStatus.Active;
         RowVersion = Guid.NewGuid();
@@ -54,7 +57,8 @@ public class ItemBrand : Entity
         LocalizedText? description,
         int sortOrder,
         Guid updatedByUserId,
-        DateTimeOffset updatedAtUtc)
+        DateTimeOffset updatedAtUtc,
+        Guid? imageFileId = null)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
@@ -65,6 +69,7 @@ public class ItemBrand : Entity
         NormalizedCode = code.Trim().ToUpperInvariant();
         Name = name;
         Description = description;
+        ImageFileId = imageFileId;
         SortOrder = Math.Max(0, sortOrder);
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = updatedAtUtc;

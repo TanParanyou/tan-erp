@@ -51,6 +51,8 @@ Section Total เป็นผลคำนวณจาก Server ไม่ใช�
 | --- | --- | --- | --- | --- | --- |
 | `code` | String ≤30 | C | ไม่ซ้ำใน Revision | Estimator | Customer |
 | `itemId` | UUID/null | Optional | อ้าง Active Item Master; null คือ Custom Work Item | Estimator | Internal |
+| `overrideReasonCode` | String ≤64/null | Conditional | บังคับเมื่อไม่มี `itemId`; เก็บเป็นข้อมูลภายใน | Estimator | Internal |
+| `overrideReason` | String ≤500/null | Conditional | บังคับเมื่อไม่มี `itemId`; แสดงผู้ตรวจอิสระ | Estimator | Internal |
 | `descriptionTh` | String ≤500 | C | ห้ามว่าง | Estimator | Customer |
 | `descriptionEn` | String ≤500/null | Conditional Q | บังคับเมื่อ Quotation Locale เป็นอังกฤษ | Estimator | Customer |
 | `quantity` | Decimal(18,4) | C | มากกว่า 0 | Estimator | Customer |
@@ -60,7 +62,7 @@ Section Total เป็นผลคำนวณจาก Server ไม่ใช�
 | `sellingRuleValue` | Decimal(18,6) | C | อยู่ใน Policy Range; Override ต้องมีเหตุผล | Estimator/Authorized | Internal |
 | `sortOrder` | Integer ≥10 | C | ไม่ซ้ำภายใน Section | Estimator/System | Customer |
 
-Custom Work Item ต้องมี `overrideReasonCode`, `overrideReason` และ Approval Trigger จนกว่าจะถูกยืนยันเป็น Item Master
+Custom Work Item ต้องมี `overrideReasonCode`, `overrideReason` และ Approval Trigger จนกว่าจะถูกยืนยันเป็น Item Master. เมื่อผูก Item Master ระบบเก็บ ID, Code และชื่อไทย/อังกฤษ snapshot กับ Revision; Estimate Catalog picker จะกำหนด code, description และหน่วยจากรายการที่เลือก. Trigger `CUSTOM_WORK_ITEM` มี route พิเศษใน `TEST_ONLY-TH-EST-V1`; Production Bootstrap ยังคง Independent Checker หนึ่งคนและต้องแสดง Exception ให้ผู้ตรวจเห็นจนกว่าจะอนุมัตินโยบายจริง.
 
 ## Cost Component
 
@@ -70,14 +72,14 @@ Custom Work Item ต้องมี `overrideReasonCode`, `overrideReason` แ�
 | `itemId` | UUID/null | Optional | Active Item/Service ใน Scope | Estimator | Internal |
 | `description` | String ≤500 | C | บังคับเมื่อไม่มี `itemId` | Estimator | Internal |
 | `quantity` | Decimal(18,4) | C | มากกว่า 0 | Estimator | Internal |
-| `unitCode` | String ≤20 | C | ต้องเข้ากับ Cost Source | Estimator | Internal |
+| `unitCode` | String ≤20 | C | เมื่อเลือก Catalog Item ต้องตรงกับหน่วยฐานของ Item และ Cost Record ที่ Resolver เลือก; หน่วยแปลงที่ต่างจากหน่วยฐานยังไม่รองรับใน Estimate | Estimator | Internal |
 | `unitCost` | Decimal(19,4) | C | ≥0; Client ส่ง Total ไม่ได้ | Estimator/Cost Resolver | Internal |
 | `currency` | ISO 4217 | C | ต้องตรง Revision ใน Phase 1 | System | Internal |
 | `costRecordId` | UUID/null | S | Published Cost ที่ Resolver เลือก; null ได้เฉพาะ Provisional Cost | Cost Resolver | Internal |
 | `costRecordVersion` | Integer/null | S | Freeze คู่กับ Cost Record | Cost Resolver | Internal |
 | `costSourceId` | UUID/null | S | Snapshot จาก Cost Record; null ได้เฉพาะ Provisional Cost | Cost Resolver | Internal |
 | `costResolutionPolicyVersion` | String/null | S | Version ที่ใช้ Resolve; null ได้เฉพาะ Provisional Cost | Cost Resolver | Internal |
-| `conversionSnapshot` | Object/null | Conditional S | บังคับเมื่อ Unit ที่ขอกับ Cost Record ต่างกัน | Cost Resolver | Internal |
+| `conversionSnapshot` | Object/null | Deferred | การแปลงหน่วยใน Estimate ต้องมีงานรองรับ immutable snapshot ก่อนเปิดใช้; ปัจจุบันรับเฉพาะหน่วยฐานของ Item | Cost Resolver | Internal |
 | `effectiveAt` | UTC/null | S | ใช้ตรวจ Stale Cost ตาม Policy | System/Estimator | Internal |
 | `isProvisional` | Boolean | S | true เมื่อ Source ไม่สมบูรณ์ | System | Internal |
 | `provisionalReasonCode` | Stable Code/null | Conditional S | บังคับเมื่อ `isProvisional=true` | Estimator | Internal |

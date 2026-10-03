@@ -83,4 +83,17 @@ public class EstimateSection
         SubtotalCost = decimal.Round(_workItems.Sum(w => w.TotalCost), 2, MidpointRounding.AwayFromZero);
         SubtotalSellingPrice = decimal.Round(_workItems.Sum(w => w.TotalSellingPrice), 2, MidpointRounding.AwayFromZero);
     }
+
+    public void RecalculateWithCostBases(IReadOnlyDictionary<Guid, decimal> costBases)
+    {
+        foreach (var item in _workItems)
+        {
+            if (!costBases.TryGetValue(item.Id, out var costBase))
+                throw new ArgumentException("A cost base is required for every work item.", nameof(costBases));
+            item.RecalculateWithCostBase(costBase);
+        }
+
+        SubtotalCost = decimal.Round(_workItems.Sum(workItem => workItem.TotalCost), 2, MidpointRounding.AwayFromZero);
+        SubtotalSellingPrice = decimal.Round(_workItems.Sum(workItem => workItem.TotalSellingPrice), 2, MidpointRounding.AwayFromZero);
+    }
 }

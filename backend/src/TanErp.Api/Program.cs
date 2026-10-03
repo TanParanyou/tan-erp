@@ -88,6 +88,20 @@ builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<Ap
 builder.Services.AddSingleton<IClock, TanErp.Infrastructure.Common.SystemClock>();
 builder.Services.AddSingleton<IFirebaseTokenVerifier, FirebaseTokenVerifier>();
 builder.Services.AddScoped<ICurrentUserReader, CurrentUserReader>();
+builder.Services.AddScoped<IFirebaseIdentityLinker, TanErp.Infrastructure.Persistence.FirebaseIdentityLinker>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.IIdentityAdministrationStore, TanErp.Infrastructure.Persistence.IdentityAccess.IdentityAdministrationStore>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.ListUsers.ListAdminUsersHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.GetUser.GetAdminUserHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.CreateUser.CreateAdminUserHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.RenameUser.RenameAdminUserHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.SetUserActive.SetAdminUserActiveHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.UpdateMembership.UpdateAdminMembershipHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.SetMembershipActive.SetAdminMembershipActiveHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.ListRoles.ListAdminRolesHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.AssignRole.AssignAdminRoleHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.RevokeRole.RevokeAdminRoleHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.ListRoleRequests.ListAdminRoleRequestsHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.DecideRoleRequest.DecideAdminRoleRequestHandler>();
 builder.Services.AddScoped<IRequestAccessResolver, RequestAccessResolver>();
 builder.Services.AddScoped<GetCurrentUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Users.IUserReadStore, TanErp.Infrastructure.Persistence.IdentityAccess.UserReadStore>();
@@ -100,9 +114,17 @@ builder.Services.AddScoped<TanErp.Application.Crm.Customers.GetCustomer.GetCusto
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.CheckDuplicates.CheckCustomerDuplicatesHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerLifecycleStore, TanErp.Infrastructure.Persistence.Crm.CustomerLifecycleStore>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ActivateCustomer.ActivateCustomerHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerUpdateStore, TanErp.Infrastructure.Persistence.Crm.CustomerUpdateStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.UpdateCustomer.UpdateCustomerHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerContactStore, TanErp.Infrastructure.Persistence.Crm.CustomerContactStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.CustomerContactHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ChangeCustomerStatus.ChangeCustomerStatusHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerAddressStore, TanErp.Infrastructure.Persistence.Crm.CustomerAddressStore>();
+builder.Services.AddScoped<TanErp.Application.Crm.Customers.CustomerAddressHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Sites.ISiteStore, TanErp.Infrastructure.Persistence.Crm.SiteStore>();
 builder.Services.AddScoped<TanErp.Application.Crm.Sites.CreateSite.CreateSiteHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Sites.ListSites.ListSitesHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Sites.ManageCustomerSiteHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.IOpportunityStore, TanErp.Infrastructure.Persistence.Crm.OpportunityStore>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.CreateOpportunity.CreateOpportunityHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.ListOpportunities.ListOpportunitiesHandler>();
@@ -125,16 +147,25 @@ builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateDraft.Crea
 builder.Services.AddScoped<TanErp.Application.Estimates.GetEstimate.GetEstimateHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.UpdateEstimateDraft.UpdateEstimateDraftHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.CalculateEstimate.CalculateEstimateHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.SubmitEstimate.SubmitEstimateHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.ReviewEstimate.ReviewEstimateHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateRevision.CreateEstimateRevisionHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.CancelEstimate.CancelEstimateHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.IssueQuotation.IssueQuotationHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.AcceptQuotation.AcceptQuotationHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.GetQuotationDocument.GetQuotationDocumentHandler>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.IAddressLookupCache, TanErp.Infrastructure.MasterData.AddressLookupCache>();
 
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();
 
 // Item Master Catalog & Taxonomy Store
 builder.Services.AddScoped<TanErp.Application.Items.IItemStore, TanErp.Infrastructure.Persistence.Items.ItemStore>();
+builder.Services.AddScoped<TanErp.Application.Common.Abstractions.IOrganizationBranchReader, TanErp.Infrastructure.Persistence.OrganizationBranchReader>();
 builder.Services.AddScoped<TanErp.Application.Items.IItemImageStore, TanErp.Infrastructure.Persistence.Items.ItemImageStore>();
 builder.Services.AddScoped<TanErp.Application.Items.ICostRecordStore, TanErp.Infrastructure.Persistence.Items.CostRecordStore>();
+builder.Services.AddScoped<TanErp.Application.Items.ICostSourceStore, TanErp.Infrastructure.Persistence.Items.CostSourceStore>();
+builder.Services.AddScoped<TanErp.Application.Items.ICostReviewQueueReader, TanErp.Infrastructure.Persistence.Items.CostReviewQueueReader>();
+builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateReviewQueueReader, TanErp.Infrastructure.Persistence.Estimates.EstimateReviewQueueReader>();
 builder.Services.AddScoped<TanErp.Application.Items.ICostResolver, TanErp.Infrastructure.Persistence.Items.CostResolver>();
 builder.Services.AddScoped<TanErp.Application.Items.Catalog.IEstimateCatalogReader, TanErp.Infrastructure.Persistence.Items.EstimateCatalogReader>();
 
@@ -159,6 +190,10 @@ builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
         FirebaseAuthenticationHandler.SchemeName, null);
 
 builder.Services.AddAuthorization();
+
+// Liveness (process is up) and readiness (dependencies usable); see docs/06-operations/observability.md.
+builder.Services.AddHealthChecks()
+    .AddCheck<TanErp.Api.Health.DatabaseHealthCheck>("database", tags: new[] { "ready" });
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
@@ -197,11 +232,29 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = TanErp.Api.Health.HealthResponseWriter.WriteAsync
+}).AllowAnonymous();
+
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("ready"),
+    ResponseWriter = TanErp.Api.Health.HealthResponseWriter.WriteAsync
+}).AllowAnonymous();
+
 if (app.Environment.IsEnvironment("Test") && app.Configuration.GetValue<bool>("SeedTestData"))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await TestOnlyDataSeeder.SeedAsync(db, app.Environment.EnvironmentName, true);
+    await TestOnlyDataSeeder.SeedAsync(
+        db,
+        app.Environment.EnvironmentName,
+        true,
+        app.Configuration.GetValue<bool>("SeedDedicatedEstimateReviewer"),
+        app.Configuration.GetValue<bool>("SeedEstimateDemoData"),
+        app.Configuration.GetValue<bool>("SeedItemCatalogDemoData"));
     await TanErp.Infrastructure.MasterData.Seed.AddressMasterDataSeeder.SeedAsync(db);
 }
 

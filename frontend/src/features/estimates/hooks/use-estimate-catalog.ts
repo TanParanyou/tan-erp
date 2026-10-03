@@ -9,6 +9,7 @@ import {
   type CatalogModel,
   type FetchCatalogQuery,
 } from "../api/estimate-catalog-client";
+import { estimateCatalogQueryKey } from "./estimate-catalog-query-key";
 
 export interface UseEstimateCatalogParams {
   branchId: string;
@@ -16,6 +17,8 @@ export interface UseEstimateCatalogParams {
   itemType?: string;
   categoryId?: string;
   brandId?: string;
+  attributeKey?: string;
+  attributeValue?: string;
   hasCost?: boolean;
   cursor?: string;
   pageSize?: number;
@@ -28,6 +31,8 @@ export function useEstimateCatalog({
   itemType,
   categoryId,
   brandId,
+  attributeKey,
+  attributeValue,
   hasCost,
   cursor,
   pageSize = 50,
@@ -43,25 +48,15 @@ export function useEstimateCatalog({
     itemType: itemType || undefined,
     categoryId: categoryId || undefined,
     brandId: brandId || undefined,
+    attributeKey: attributeKey || undefined,
+    attributeValue: attributeValue || undefined,
     hasCost,
     cursor: cursor || undefined,
     pageSize,
   };
 
   return useQuery<CatalogModel>({
-    queryKey: [
-      "estimates",
-      "catalog",
-      membershipId,
-      branchId,
-      query.search,
-      query.itemType,
-      query.categoryId,
-      query.brandId,
-      query.hasCost,
-      query.cursor,
-      query.pageSize,
-    ],
+    queryKey: estimateCatalogQueryKey(membershipId, locale, query),
     queryFn: async ({ signal }) => {
       const token = await getAuthToken();
       if (!token || !membershipId) {
@@ -76,6 +71,16 @@ export function useEstimateCatalog({
       });
     },
     enabled: Boolean(enabled && branchId && membershipId),
+    placeholderData: (previousData, previousQuery) => {
+      const previousKey = previousQuery?.queryKey;
+      if (!previousKey) return undefined;
+      return previousKey[1] === membershipId
+        && previousKey[2] === locale
+        && previousKey[5] === branchId
+        && previousKey[12] === hasCost
+        ? previousData
+        : undefined;
+    },
     staleTime: 60 * 1000,
   });
 }

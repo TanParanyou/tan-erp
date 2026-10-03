@@ -32,7 +32,8 @@ public class CurrentUserController : ControllerBase
             return ProblemDetailsMapper.CreateProblemResult("AUTHENTICATION_REQUIRED", HttpContext);
         }
 
-        var result = await _handler.Handle(new GetCurrentUserQuery(firebaseUid), cancellationToken);
+        var verifiedEmail = User.FindFirst("verified_email")?.Value;
+        var result = await _handler.Handle(new GetCurrentUserQuery(firebaseUid, verifiedEmail), cancellationToken);
 
         if (result.IsFailure)
         {

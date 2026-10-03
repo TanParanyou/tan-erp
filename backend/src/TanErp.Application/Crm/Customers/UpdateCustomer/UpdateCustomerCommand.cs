@@ -1,0 +1,27 @@
+namespace TanErp.Application.Crm.Customers.UpdateCustomer;
+
+public sealed record UpdateCustomerCommand(
+    string FirebaseUid,
+    Guid MembershipId,
+    Guid CustomerId,
+    Guid ExpectedRowVersion,
+    string IdempotencyKey,
+    string CustomerType,
+    string DisplayNameTh,
+    string? DisplayNameEn,
+    string PreferredLocale,
+    string? LeadSource,
+    string? LeadSourceNote,
+    Guid? ImageFileId,
+    string TraceId,
+    string? LegalName = null,
+    string? TaxIdentifier = null,
+    string? BranchCode = null,
+    int? CreditTermDays = null,
+    decimal? CreditLimit = null,
+    string? CurrencyCode = null,
+    string? BillingCycle = null,
+    int? BillingDay = null,
+    string? PaymentConditionNote = null,
+    bool HasCreditProfile = false,
+    bool HasTaxIdentifier = false);

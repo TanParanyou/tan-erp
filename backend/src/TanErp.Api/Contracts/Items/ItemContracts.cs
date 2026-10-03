@@ -23,9 +23,8 @@ public sealed class ItemCapabilitiesInput
 
 public sealed class CreateItemRequest
 {
-    [Required]
-    [MaxLength(64)]
-    public string Code { get; set; } = string.Empty;
+    [MaxLength(50)]
+    public string? Code { get; set; }
 
     [Required]
     [MaxLength(32)]
@@ -56,12 +55,15 @@ public sealed class CreateItemRequest
 
     public Dictionary<string, string>? Attributes { get; set; }
     public int? AttributesSchemaVersion { get; set; }
+
+    [MaxLength(30)]
+    public string? TaxCategoryCode { get; set; }
 }
 
 public sealed class UpdateItemRequest
 {
     [Required]
-    [MaxLength(64)]
+    [MaxLength(50)]
     public string Code { get; set; } = string.Empty;
 
     [Required]
@@ -87,8 +89,13 @@ public sealed class UpdateItemRequest
 
     public ItemCapabilitiesInput Capabilities { get; set; } = new();
 
+    public List<Guid>? SelectedBranchIds { get; set; }
+
     public Dictionary<string, string>? Attributes { get; set; }
     public int? AttributesSchemaVersion { get; set; }
+
+    [MaxLength(30)]
+    public string? TaxCategoryCode { get; set; }
 }
 
 public sealed class DeactivateItemRequest
@@ -128,6 +135,7 @@ public sealed class CategorySummaryResponse
     public string Code { get; set; } = string.Empty;
     public LocalizedTextResponse Name { get; set; } = new();
     public Guid? ParentCategoryId { get; set; }
+    public Guid? ImageFileId { get; set; }
 }
 
 public sealed class BrandSummaryResponse
@@ -135,6 +143,7 @@ public sealed class BrandSummaryResponse
     public Guid Id { get; set; }
     public string Code { get; set; } = string.Empty;
     public LocalizedTextResponse Name { get; set; } = new();
+    public Guid? ImageFileId { get; set; }
 }
 
 public sealed class UnitSummaryResponse

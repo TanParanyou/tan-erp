@@ -36,6 +36,12 @@ public class CalculateEstimateHandler
         }
 
         var access = accessResult.Value!;
+        var estimate = await _store.GetByIdAsync(access.OrganizationId, command.EstimateId, cancellationToken);
+        if (estimate is null || !access.HasBranchAccess(estimate.BranchId))
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("RESOURCE_NOT_FOUND", $"Estimate '{command.EstimateId}' was not found."));
+        }
         try
         {
             var result = await _store.CalculateAsync(
@@ -43,9 +49,11 @@ public class CalculateEstimateHandler
                 command.EstimateId,
                 command.RevisionId,
                 command.ExpectedRevisionVersion,
-                command.DiscountAmount,
+                command.Discount,
                 access.ActorUserId,
-                idempotencyKey,
+                Sha256Hex.Compute(idempotencyKey),
+                Sha256Hex.Compute(FormattableString.Invariant(
+                    $"{command.EstimateId:N}|{command.RevisionId:N}|{command.ExpectedRevisionVersion:N}|{command.Discount.Type}|{command.Discount.Value}|{command.Discount.ReasonCode}")),
                 cancellationToken);
 
             return Result<EstimateRevisionProjection>.Success(result);
@@ -64,6 +72,26 @@ public class CalculateEstimateHandler
         {
             return Result<EstimateRevisionProjection>.Failure(
                 new Error("ESTIMATE_INVALID_STATE", ex.Message));
+        }
+        catch (EstimatePolicyUnavailableException ex)
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("ESTIMATE_POLICY_UNAVAILABLE", ex.Message));
+        }
+        catch (EstimateDiscountReasonRequiredException ex)
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("ESTIMATE_DISCOUNT_REASON_REQUIRED", ex.Message));
+        }
+        catch (EstimateIdempotencyKeyReusedException ex)
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("IDEMPOTENCY_KEY_REUSED", ex.Message));
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("ESTIMATE_INPUT_INVALID", ex.Message));
         }
     }
 }

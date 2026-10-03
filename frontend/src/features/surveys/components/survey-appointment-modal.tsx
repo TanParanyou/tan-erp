@@ -118,6 +118,7 @@ export function SurveyAppointmentModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      closeDisabled={createMutation.isPending}
       title={t("scheduleModalTitle")}
       description={t("scheduleModalDesc")}
       size="lg"

@@ -4,9 +4,8 @@ namespace TanErp.Api.Contracts.Items;
 
 public sealed class CreateItemCategoryRequest
 {
-    [Required]
-    [MaxLength(64)]
-    public string Code { get; set; } = string.Empty;
+    [MaxLength(30)]
+    public string? Code { get; set; }
 
     [Required]
     public LocalizedTextInput Name { get; set; } = new();
@@ -23,7 +22,7 @@ public sealed class CreateItemCategoryRequest
 public sealed class UpdateItemCategoryRequest
 {
     [Required]
-    [MaxLength(64)]
+    [MaxLength(30)]
     public string Code { get; set; } = string.Empty;
 
     [Required]
@@ -36,6 +35,7 @@ public sealed class UpdateItemCategoryRequest
     public List<string>? AllowedItemTypes { get; set; }
 
     public int SortOrder { get; set; } = 0;
+    public Guid? ImageFileId { get; set; }
 }
 
 public sealed class ItemCategoryDetailResponse
@@ -50,6 +50,7 @@ public sealed class ItemCategoryDetailResponse
     public IReadOnlyList<string> AllowedItemTypes { get; set; } = Array.Empty<string>();
     public int SortOrder { get; set; }
     public string Status { get; set; } = string.Empty;
+    public Guid? ImageFileId { get; set; }
     public Guid RowVersion { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
@@ -57,9 +58,8 @@ public sealed class ItemCategoryDetailResponse
 
 public sealed class CreateItemBrandRequest
 {
-    [Required]
-    [MaxLength(64)]
-    public string Code { get; set; } = string.Empty;
+    [MaxLength(30)]
+    public string? Code { get; set; }
 
     [Required]
     public LocalizedTextInput Name { get; set; } = new();
@@ -72,7 +72,7 @@ public sealed class CreateItemBrandRequest
 public sealed class UpdateItemBrandRequest
 {
     [Required]
-    [MaxLength(64)]
+    [MaxLength(30)]
     public string Code { get; set; } = string.Empty;
 
     [Required]
@@ -81,6 +81,7 @@ public sealed class UpdateItemBrandRequest
     public LocalizedTextInput? Description { get; set; }
 
     public int SortOrder { get; set; } = 0;
+    public Guid? ImageFileId { get; set; }
 }
 
 public sealed class ItemBrandDetailResponse
@@ -92,6 +93,43 @@ public sealed class ItemBrandDetailResponse
     public LocalizedTextResponse? Description { get; set; }
     public int SortOrder { get; set; }
     public string Status { get; set; } = string.Empty;
+    public Guid? ImageFileId { get; set; }
+    public Guid RowVersion { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; set; }
+    public DateTimeOffset UpdatedAtUtc { get; set; }
+}
+
+public sealed class CreateItemTaxCategoryRequest
+{
+    [MaxLength(30)]
+    public string? Code { get; set; }
+
+    [Required]
+    public LocalizedTextInput Name { get; set; } = new();
+
+    public int SortOrder { get; set; }
+}
+
+public sealed class UpdateItemTaxCategoryRequest
+{
+    [Required]
+    [MaxLength(30)]
+    public string Code { get; set; } = string.Empty;
+
+    [Required]
+    public LocalizedTextInput Name { get; set; } = new();
+
+    public int SortOrder { get; set; }
+}
+
+public sealed class ItemTaxCategoryDetailResponse
+{
+    public Guid Id { get; set; }
+    public Guid OrganizationId { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public LocalizedTextResponse Name { get; set; } = new();
+    public int SortOrder { get; set; }
+    public string Status { get; set; } = string.Empty;
     public Guid RowVersion { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
@@ -99,9 +137,8 @@ public sealed class ItemBrandDetailResponse
 
 public sealed class CreateUnitOfMeasureRequest
 {
-    [Required]
-    [MaxLength(64)]
-    public string Code { get; set; } = string.Empty;
+    [MaxLength(20)]
+    public string? Code { get; set; }
 
     [Required]
     public LocalizedTextInput Name { get; set; } = new();
@@ -123,7 +160,7 @@ public sealed class CreateUnitOfMeasureRequest
 public sealed class UpdateUnitOfMeasureRequest
 {
     [Required]
-    [MaxLength(64)]
+    [MaxLength(20)]
     public string Code { get; set; } = string.Empty;
 
     [Required]

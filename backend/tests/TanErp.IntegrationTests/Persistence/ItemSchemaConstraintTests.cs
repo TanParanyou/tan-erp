@@ -37,6 +37,77 @@ public class ItemSchemaConstraintTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Migration_PreservesElevenLegacyUploadedFilesAsPending()
+    {
+        await using var db = CreateDbContext();
+        await db.Database.MigrateAsync("20260921151336_ScopeFileUploadIdempotencyByActor");
+
+        var itemMasterDidNotExistBeforeMigration = await db.Database.SqlQueryRaw<bool>(@"
+            SELECT NOT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'item_master' AND table_name = 'items') AS ""Value""")
+            .SingleAsync();
+        Assert.True(itemMasterDidNotExistBeforeMigration);
+
+        var organizationId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var createdAtUtc = DateTimeOffset.UtcNow;
+        var legacyFiles = Enumerable.Range(1, 11)
+            .Select(index => new
+            {
+                Id = Guid.NewGuid(),
+                StoragePath = $"/legacy/image-{index}.jpg",
+                OriginalFilename = $"image-{index}.jpg",
+                UploadSessionId = $"legacy-session-{index}",
+            })
+            .ToArray();
+
+        foreach (var legacyFile in legacyFiles)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($@"
+                INSERT INTO files.uploaded_files
+                    (id, organization_id, storage_path, original_filename, media_type,
+                     file_size_bytes, upload_session_id, status, uploaded_by_user_id, created_at_utc)
+                VALUES
+                    ({legacyFile.Id}, {organizationId}, {legacyFile.StoragePath}, {legacyFile.OriginalFilename}, 'image/jpeg',
+                     1024, {legacyFile.UploadSessionId}, 'verified', {userId}, {createdAtUtc})");
+        }
+
+        await db.Database.MigrateAsync();
+
+        var itemMasterTablesExist = await db.Database.SqlQueryRaw<bool>(@"
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'item_master' AND table_name = 'items')
+                AND EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'item_master' AND table_name = 'item_barcodes') AS ""Value""")
+            .SingleAsync();
+        Assert.True(itemMasterTablesExist);
+
+        var migratedFiles = await db.UploadedFiles.AsNoTracking()
+            .Where(file => legacyFiles.Select(legacyFile => legacyFile.Id).Contains(file.Id))
+            .ToDictionaryAsync(file => file.Id);
+        Assert.Equal(legacyFiles.Length, migratedFiles.Count);
+        foreach (var legacyFile in legacyFiles)
+        {
+            Assert.True(migratedFiles.TryGetValue(legacyFile.Id, out var migratedFile));
+            Assert.Equal(legacyFile.StoragePath, migratedFile!.StoragePath);
+            Assert.Equal(legacyFile.OriginalFilename, migratedFile.OriginalFilename);
+            Assert.Equal(FileScanStatus.Pending, migratedFile.ScanStatus);
+            Assert.Null(migratedFile.ContentSha256);
+            Assert.Null(migratedFile.VerifiedAtUtc);
+        }
+
+        var hasNoDefault = await db.Database.SqlQueryRaw<bool>(@"
+            SELECT column_default IS NULL AS ""Value""
+            FROM information_schema.columns
+            WHERE table_schema = 'files' AND table_name = 'uploaded_files' AND column_name = 'scan_status'")
+            .SingleAsync();
+        Assert.True(hasNoDefault);
+    }
+
+    [Fact]
     public async Task CostRecord_EvidenceFileFromAnotherOrganization_ThrowsDbUpdateException()
     {
         await using var db = CreateDbContext();
@@ -484,5 +555,101 @@ public class ItemSchemaConstraintTests : IAsyncLifetime
         var ex = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
         Assert.NotNull(ex.InnerException);
         Assert.IsType<PostgresException>(ex.InnerException);
+    }
+
+    [Fact]
+    public async Task ItemUnitConversion_EnforcesFactorSelfLoopAndOrganizationForeignKeys()
+    {
+        await using (var db = CreateDbContext())
+        {
+            await TestOnlyDataSeeder.SeedAsync(db, "Test", true);
+            var now = DateTimeOffset.UtcNow;
+            var orgAId = TestOnlyDataSeeder.TestOrgId;
+            var orgBId = TestOnlyDataSeeder.TestOrgBId;
+            var actorId = TestOnlyDataSeeder.TestUserId;
+            var categoryA = new ItemCategory(Guid.NewGuid(), orgAId, "CONV-CAT-A", LocalizedText.Create("หมวดแปลง A", null), null, null, ItemType.All, 0, actorId, now);
+            var categoryB = new ItemCategory(Guid.NewGuid(), orgBId, "CONV-CAT-B", LocalizedText.Create("หมวดแปลง B", null), null, null, ItemType.All, 0, actorId, now);
+            var baseUnit = new UnitOfMeasure(Guid.NewGuid(), orgAId, "CONV-BASE-A", LocalizedText.Create("ชิ้น", null), "ea", "count", 0, "half_up", actorId, now);
+            var sourceUnit = new UnitOfMeasure(Guid.NewGuid(), orgAId, "CONV-BOX-A", LocalizedText.Create("กล่อง", null), "box", "count", 0, "half_up", actorId, now);
+            var foreignUnit = new UnitOfMeasure(Guid.NewGuid(), orgBId, "CONV-FOREIGN-B", LocalizedText.Create("กล่อง B", null), "box", "count", 0, "half_up", actorId, now);
+            var item = Item.CreateDraft(Guid.NewGuid(), orgAId, "CONV-ITEM-A", ItemType.Material, categoryA.Id, null,
+                LocalizedText.Create("สินค้าแปลงหน่วย", null), null, baseUnit.Id, ItemAvailabilityMode.AllBranches,
+                ItemCapabilities.DefaultMaterial, null, null, actorId, now);
+            var itemB = Item.CreateDraft(Guid.NewGuid(), orgBId, "CONV-ITEM-B", ItemType.Material, categoryB.Id, null,
+                LocalizedText.Create("สินค้าองค์กร B", null), null, foreignUnit.Id, ItemAvailabilityMode.AllBranches,
+                ItemCapabilities.DefaultMaterial, null, null, actorId, now);
+            db.ItemCategories.AddRange(categoryA, categoryB);
+            db.Units.AddRange(baseUnit, sourceUnit, foreignUnit);
+            db.Items.AddRange(item, itemB);
+            await db.SaveChangesAsync();
+
+            var conversion = new ItemUnitConversion(Guid.NewGuid(), orgAId, item.Id, sourceUnit.Id, baseUnit.Id,
+                12m, DateOnly.FromDateTime(now.UtcDateTime), null, "Box contains twelve", actorId, now);
+            db.ItemUnitConversions.Add(conversion);
+            await db.SaveChangesAsync();
+
+            var barcode = new ItemBarcode(Guid.NewGuid(), orgAId, item.Id, "internal", "CONV-UNIT-A",
+                sourceUnit.Id, 12m, "case", false, actorId, now);
+            db.ItemBarcodes.Add(barcode);
+            await db.SaveChangesAsync();
+            db.ItemBarcodes.Add(new ItemBarcode(Guid.NewGuid(), orgBId, itemB.Id, "internal", "CONV-UNIT-A",
+                foreignUnit.Id, 12m, "case", false, actorId, now));
+            await db.SaveChangesAsync();
+            await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE item_master.item_barcodes SET quantity_in_base_unit = 0 WHERE id = {barcode.Id}"));
+
+            await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE item_master.item_unit_conversions SET factor = 0 WHERE id = {conversion.Id}"));
+            await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE item_master.item_unit_conversions SET from_unit_id = to_unit_id WHERE id = {conversion.Id}"));
+        }
+
+        await using (var db = CreateDbContext())
+        {
+            var orgAId = TestOnlyDataSeeder.TestOrgId;
+            var item = await db.Items.AsNoTracking().SingleAsync(x => x.Code == "CONV-ITEM-A");
+            var foreignUnitId = await db.Units.AsNoTracking().Where(x => x.OrganizationId == TestOnlyDataSeeder.TestOrgBId && x.Code == "CONV-FOREIGN-B")
+                .Select(x => x.Id).SingleAsync();
+            var crossOrganization = new ItemUnitConversion(Guid.NewGuid(), orgAId, item.Id, foreignUnitId, item.BaseUnitId,
+                12m, DateOnly.FromDateTime(DateTime.UtcNow), null, "Cross-organization test", TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow);
+            db.ItemUnitConversions.Add(crossOrganization);
+            var crossOrganizationBarcode = new ItemBarcode(Guid.NewGuid(), orgAId, item.Id, "internal", "CONV-FOREIGN-A",
+                foreignUnitId, 12m, "case", false, TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow);
+            db.ItemBarcodes.Add(crossOrganizationBarcode);
+            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        }
+
+        await using (var db = CreateDbContext())
+        {
+            var itemFromOrgB = await db.Items.AsNoTracking().SingleAsync(x => x.Code == "CONV-ITEM-B");
+            db.ItemBarcodes.Add(new ItemBarcode(Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, itemFromOrgB.Id, "internal", "CONV-FOREIGN-ITEM",
+                itemFromOrgB.BaseUnitId, 1m, "each", false, TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow));
+            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        }
+
+        await using (var db = CreateDbContext())
+        {
+            var item = await db.Items.AsNoTracking().SingleAsync(x => x.Code == "CONV-ITEM-A");
+            db.ItemBarcodes.Add(new ItemBarcode(Guid.NewGuid(), item.OrganizationId, item.Id, "internal", "CONV-UNIT-A",
+                item.BaseUnitId, 1m, "each", false, TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow));
+            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        }
+
+        var primaryBarcodeId = Guid.NewGuid();
+        await using (var db = CreateDbContext())
+        {
+            var item = await db.Items.AsNoTracking().SingleAsync(x => x.Code == "CONV-ITEM-A");
+            db.ItemBarcodes.Add(new ItemBarcode(primaryBarcodeId, item.OrganizationId, item.Id, "internal", "PRIMARY-ONE",
+                item.BaseUnitId, 1m, "case", true, TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = CreateDbContext())
+        {
+            var item = await db.Items.AsNoTracking().SingleAsync(x => x.Code == "CONV-ITEM-A");
+            db.ItemBarcodes.Add(new ItemBarcode(Guid.NewGuid(), item.OrganizationId, item.Id, "internal", "PRIMARY-TWO",
+                item.BaseUnitId, 1m, "case", true, TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow));
+            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        }
     }
 }

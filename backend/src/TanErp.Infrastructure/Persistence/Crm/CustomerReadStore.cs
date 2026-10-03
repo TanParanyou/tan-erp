@@ -146,7 +146,17 @@ public class CustomerReadStore : ICustomerReadStore
             customer.CreatedAtUtc,
             customer.LeadSource,
             customer.LeadSourceNote,
-            customer.ImageFileId);
+            customer.ImageFileId,
+            customer.LegalName,
+            customer.TaxIdentifier,
+            customer.BranchCode,
+            customer.CreditTermDays,
+            customer.CreditLimit,
+            customer.CurrencyCode,
+            customer.BillingCycle,
+            customer.BillingDay,
+            customer.PaymentConditionNote,
+            customer.InactiveReason);
 
     }
 
@@ -190,4 +200,3 @@ public class CustomerReadStore : ICustomerReadStore
         }).ToList();
     }
 }
-

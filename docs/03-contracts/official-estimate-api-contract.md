@@ -21,12 +21,14 @@ Backend สร้าง Organization/Branch Scope จาก PostgreSQL Membershi
 | อ่าน Workspace | `GET /api/v1/estimates/{id}` | `estimates.read` | 200 |
 | Autosave Draft | `PUT /api/v1/estimates/{id}/revisions/{revisionId}/draft` | `estimates.update` | 200 |
 | คำนวณ | `POST /api/v1/estimates/{id}/revisions/{revisionId}/calculate` | `estimates.update` | 200 |
-| ส่งตรวจ | `POST /api/v1/estimates/{id}/submit` | `estimates.submit` | 202 |
-| Approve/Return | `POST /api/v1/estimates/{id}/review-decisions` | `estimates.approve` | 201 |
+| อ่าน Calculation Snapshot History | `GET /api/v1/estimates/{id}/revisions/{revisionId}/calculations` | `estimates.read` | 200 |
+| ส่งตรวจ | `POST /api/v1/estimates/{id}/submit` | `estimates.submit` | 200 |
+| Approve/Return | `POST /api/v1/estimates/{id}/review-decisions` | `estimates.approve` | 200 |
 | ยกเลิก | `POST /api/v1/estimates/{id}/cancel` | `estimates.cancel` | 200 |
-| สร้าง Revision | `POST /api/v1/estimates/{id}/revisions` | `estimates.update` | 201 |
+| สร้าง Revision | `POST /api/v1/estimates/{id}/revisions` | `estimates.revise` | 201 |
 | ออก Quotation | `POST /api/v1/estimates/{id}/quotation` | `quotations.issue` | 201 |
 | ตอบรับ Quotation | `POST /api/v1/estimates/{id}/quotation/accept` | `quotations.accept` | 200 |
+| อ่านเอกสาร Quotation (Customer-safe) | `GET /api/v1/estimates/{id}/quotation/document?locale=th\|en` | `quotations.read` | 200 |
 | อ่านเลขที่เอกสาร | `GET /api/v1/settings/document-sequences` | `document-sequences.read` | 200 |
 | ทดสอบเลขที่เอกสาร | `POST /api/v1/settings/document-sequences/preview` | `document-sequences.manage` | 200 |
 | ตั้งค่าเลขที่เอกสาร | `PUT /api/v1/settings/document-sequences/{documentType}` | `document-sequences.manage` | 200 |
@@ -64,14 +66,14 @@ Backend derives `customerId`, `branchId`, และ `siteSurveySnapshotHash` จ
 ## Autosave Draft
 
 ```http
-PATCH /api/v1/estimates/{id}/draft
-Content-Type: application/merge-patch+json
-If-Match: "est-rv-7"
+PUT /api/v1/estimates/{id}/revisions/{revisionId}/draft
+Content-Type: application/json
+If-Match: "<expectedRevisionVersion>"
 ```
 
 ```json
 {
-  "revision": 2,
+  "expectedRevisionVersion": "8b584988-cb94-4363-8a3a-2325c8ceb7e6",
   "sections": [{
     "id": "a1db5bb5-9533-4af4-91c8-345289f582ee",
     "nameTh": "งาน Built-in ห้องนอนใหญ่",
@@ -100,16 +102,32 @@ If-Match: "est-rv-7"
 }
 ```
 
-ตัวอย่างตัวเลขเป็น `TEST_ONLY` `unitCost` ที่ Client ส่งเป็น Draft Input เท่านั้น Server ต้อง Resolve/Validate Cost Record และสร้าง Cost/Source/Conversion/Policy Snapshot ตอน Calculate; Provisional Cost ใช้ Workflow/Reason แยกตาม Policy Client ห้ามส่ง Total/GP เป็นค่าที่เชื่อถือได้ Server คำนวณและคืน ETag ใหม่ `If-Match` เก่าคืน 409 `ESTIMATE_VERSION_CONFLICT`
+Work Item ใช้ `sellingRuleType` เป็น `margin|markup|fixed_price`, `sellingRuleValue` เป็นค่า Rule และ `sellingRuleReasonCode` เป็น nullable string สูงสุด 64 ตัวอักษร. เมื่อเลือก `fixed_price`, Backend ตรวจ Permission `estimates.override-price` กับ Branch ของ Estimate และบังคับ reason code; Unauthorized คืน 403 `PERMISSION_DENIED`, reason ว่างคืน 400 `ESTIMATE_FIXED_PRICE_REASON_REQUIRED`. Readiness เพิ่ม `ESTIMATE_FIXED_PRICE_OVERRIDE` และ calculation snapshot ตรึง reason ที่ใช้ ผู้ตรวจที่ได้รับมอบหมายเห็น reason/ราคาคงที่ใน review queue; Customer Quotation projection ไม่ส่งฟิลด์นี้
+
+ตัวอย่างตัวเลขเป็น `TEST_ONLY` `unitCost` ที่ Client ส่งเป็น Draft Input เท่านั้น Server ต้อง Resolve/Validate Cost Record และตรึง Cost/Source ใน Draft; Calculation Snapshot จะตรึง Policy และผลคำนวณ. Estimate ปัจจุบันรับ Catalog Cost เฉพาะหน่วยฐานของ Item และยังไม่ใช้ Item/Shared Unit Conversion. หากส่ง Cost Component Unit ที่ไม่ตรงหน่วยฐาน API ตอบ 422 `ESTIMATE_UNIT_INVALID` โดยไม่เขียน Draft; conversion snapshot ใน Estimate เป็นงานต่อเนื่องและห้ามตีความว่ามีการแปลงหน่วยแล้ว. Provisional Cost ใช้ Workflow/Reason แยกตาม Policy Client ห้ามส่ง Total/GP เป็นค่าที่เชื่อถือได้ Server คำนวณและคืน ETag ใหม่ `If-Match` เก่าคืน 409 `ESTIMATE_VERSION_CONFLICT`
 
 Field, Required Gate, Precision และ Customer Visibility อ้าง [Official Estimate Field Catalog](../01-business/official-estimate-field-catalog.md) Request ที่ส่ง Derived Total, Margin, Tax หรือ Approval State ให้ Reject/Ignore ตาม Contract โดยห้ามใช้เป็นค่าจริง
 
+Autosave เปลี่ยน `calculationOutdated` เป็น `true` และคง Calculation Snapshot ล่าสุดไว้เพื่อดูประวัติ แต่ Submit และ Issue Quotation ใช้ผลนั้นไม่ได้จน Calculate สำเร็จใหม่
+
 ## Calculate
 
-```json
-POST /api/v1/estimates/{id}/calculate
-{ "revision": 2, "expectedDraftVersion": 8 }
+```http
+POST /api/v1/estimates/{id}/revisions/{revisionId}/calculate
+Idempotency-Key: <16-128 chars>
+Content-Type: application/json
 ```
+
+```json
+{
+  "expectedRevisionVersion": "8b584988-cb94-4363-8a3a-2325c8ceb7e6",
+  "discountType": "percent",
+  "discountValue": 0.10,
+  "discountReasonCode": "TEST_ONLY_DISCOUNT"
+}
+```
+
+`discountType` รับ `none|percent|fixed-amount`; `discountValue` เป็น Rate 0–1 เมื่อเป็น percent และเป็นจำนวนเงินเมื่อเป็น fixed-amount. `discountReasonCode` ต้องระบุเมื่อมูลค่าส่วนลดมากกว่าศูนย์. `discountAmount` เป็น input compatibility เดิมสำหรับ no-discount; การสร้างส่วนลดใหม่ต้องใช้ฟิลด์ชนิด/ค่า/เหตุผลแบบ typed.
 
 ```json
 {
@@ -126,63 +144,82 @@ POST /api/v1/estimates/{id}/calculate
     "marginRate": "0.3081"
   },
   "readiness": "requiresAttention",
-  "reasonCodes": ["PROVISIONAL_COST"],
+  "readinessReasons": [
+    { "code": "ESTIMATE_ZERO_DENOMINATOR", "targetType": "revision", "targetId": "00000000-0000-0000-0000-000000000001", "targetField": "marginRate" }
+  ],
   "calculatedAtUtc": "2026-09-06T04:20:00Z"
 }
 ```
 
 ตัวเลขเป็น `TEST_ONLY` Calculation Snapshot ต้องทำซ้ำได้จาก Input/Cost/Rule Version เดิม
 
+Response ของ Revision คืน `calculationOutdated: false` เมื่อ snapshot ตรงกับ Financial Input ปัจจุบัน; การแก้ Draft ภายหลังทำให้เป็น `true` จนกว่าจะ Calculate ใหม่ ส่วนลดที่มากกว่า Selling Before Discount และ Margin Rate ที่อยู่นอกช่วง `[0, 1)` ถูก Reject ด้วย `ESTIMATE_INPUT_INVALID`
+
+`GET /api/v1/estimates/{id}/revisions/{revisionId}/calculations` คืน Snapshot ที่บันทึกแบบ append-only เรียงตาม Calculation Version โดยแต่ละรายการมี Input Hash, Policy Version, Actor และ Captured Time
+
 ## Submit and Review
 
 ```json
-POST /api/v1/estimates/{id}/submit
-{ "revision": 2, "calculationVersion": 4, "note": "ตรวจ BOQ และกำไร" }
+{ "revisionNo": 2, "calculationVersion": 4, "note": "TEST_ONLY review note" }
 ```
 
-Submit ต้องใช้ผลคำนวณล่าสุดและไม่มี Blocking Error Backend Resolve Approval Route จากยอด, Margin, Discount, Exception และ Scope
+Request ใช้ `If-Match: "<estimate-row-version>"` และ `Idempotency-Key`. Submit ต้องใช้ผลคำนวณล่าสุดและ readiness ต้องไม่เป็น `blocked`; Backend ตรึง Calculation Hash/Policy Version และ route ที่มี Independent Checker หนึ่งคนตาม Bootstrap system policy; ยังไม่มี threshold วงเงินจริง. Calculate/Revision response ส่ง `readiness` (`blocked|requiresAttention|ready`) และ `readinessReasons[]` ที่มี `code`, `targetType`, `targetId`, `targetField`. Readiness ตรวจ snapshot freshness, section/work item presence, cost component presence, fixed price reason/override trigger, custom work item reason/trigger, provisional cost และ zero denominator; stale/ambiguous resolved cost ถูกปฏิเสธระหว่างการคำนวณ.
+
+`UpdateEstimateWorkItemDto` รับ `itemId` เพื่อผูกกับ Item Master หรือ `overrideReasonCode` และ `overrideReason` สำหรับรายการงานกำหนดเอง หากไม่มี `itemId` ต้องระบุเหตุผลทั้งสองช่อง มิฉะนั้น readiness เป็น `blocked`; รายการที่มีเหตุผลครบจะเพิ่ม trigger `CUSTOM_WORK_ITEM` เพื่อเลือก approval route และผู้ตรวจเห็นเหตุผลภายใน รายละเอียด Revision ส่ง Item Master เป็น object `{ id, code, nameTh, nameEn }` พร้อม snapshot ณ เวลาบันทึก.
 
 หากไม่มี Published Approval Policy หรือไม่มี Independent Checker ที่เข้า Permission/Scope/Authority ให้คืน 409 `ESTIMATE_POLICY_UNAVAILABLE` และไม่เปลี่ยนสถานะ
 
-```json
+```http
 POST /api/v1/estimates/{id}/review-decisions
+If-Match: "<estimate-row-version>"
+Idempotency-Key: <16-128 chars>
+Content-Type: application/json
+```
+
+```json
 {
-  "revision": 2,
+  "revisionNo": 2,
   "decision": "returned",
   "reasonCode": "MISSING_LABOR_COST",
   "note": "เพิ่มค่าแรงติดตั้งใน WI-002"
 }
 ```
 
-Decision เป็น `approved` หรือ `returned` Approve บันทึก Approval Snapshot และทำ Revision เป็น Immutable Maker ห้าม Approve งานตนเองเมื่อ Maker–Checker มีผล
+Decision เป็น `approved` หรือ `returned`; API สำเร็จตอบ 200. Approve บันทึก Approval Snapshot และทำ Revision เป็น Immutable. Maker/Last Financial Editor ห้าม approve หรือ return. Reviewer Membership ต้องตรงกับ step ที่ assign และ permission/scope ต้องยัง active ตอนตัดสิน.
+
+Approve/Return ที่แข่งกันบน approval step เดียวกันต้องบันทึกได้เพียงหนึ่ง decision. Backend serialize การอ่านและเขียน review ของ Estimate เดียวกันภายใน transaction; เมื่อ decision ก่อนหน้าเปลี่ยน Estimate RowVersion แล้ว request ที่ถือเวอร์ชันเก่าตอบ 409 `ESTIMATE_VERSION_CONFLICT`. Same-key/same-payload replay ยังคงคืนผลสำเร็จเดิมโดยไม่เพิ่ม decision.
 
 `In Review` เป็น Derived UI State จาก Approval Request/Step; Revision ยังคง `submitted` จนได้ผล `approved` หรือ `returned`
 
 ## Cancel
 
-```json
+```http
 POST /api/v1/estimates/{id}/cancel
-{
-  "revision": 2,
-  "reasonCode": "CUSTOMER_WITHDREW",
-  "reason": "ลูกค้าชะลอโครงการโดยไม่มีกำหนด"
-}
+If-Match: "<estimate-row-version>"
+Idempotency-Key: <16-128 chars>
+Content-Type: application/json
 ```
 
-Draft/Returned ยกเลิกได้ด้วย `estimates.cancel`; Submitted ต้องมี Cancel Authority ตาม Approval Policy การยกเลิกต้องปิด Open Approval Route และเปลี่ยน Revision เป็น `cancelled` ใน Transaction เดียว Approved/Quoted ต้องสร้างกระบวนการ Commercial ที่เหมาะสม ไม่ใช้ Endpoint นี้
+```json
+{ "reason": "TEST_ONLY customer withdrew" }
+```
+
+Draft/Returned ยกเลิกได้เมื่อมี `estimates.cancel`; Submitted ต้องเป็นผู้ตรวจที่ถูก assign ใน Open Approval Route และยังมี `estimates.cancel` ภายใน scope ที่ active. Backend ปิด Approval Request และเปลี่ยน Estimate/Revision เป็น `cancelled` ใน Transaction เดียว. Approved/Quoted ยกเลิกไม่ได้และยังไม่มี Commercial cancellation flow. Same-key replay ตรวจมาก่อน ETag/state.
 
 ## New Revision
 
-```json
+```http
 POST /api/v1/estimates/{id}/revisions
-{
-  "sourceRevision": 2,
-  "reasonCode": "CUSTOMER_SCOPE_CHANGED",
-  "reason": "เพิ่มตู้เก็บของบริเวณโถง"
-}
+If-Match: "<estimate-row-version>"
+Idempotency-Key: <16-128 chars>
+Content-Type: application/json
 ```
 
-Response 201 คืน Draft Revision ใหม่ที่ Clone Business Snapshot แต่มี ID/Concurrency Token ใหม่ Revision เดิมไม่เปลี่ยน
+```json
+{ "reason": "TEST_ONLY scope change" }
+```
+
+Request ปัจจุบันรับเหตุผลเท่านั้น; Source คือ Current Revision ที่ Approved หรือ Quoted. Response 201 คืน Estimate Detail ที่มี Draft Revision ใหม่และ BOQ ที่ Clone ด้วย ID/Concurrency Token ใหม่. Calculate Snapshot ถูกทิ้งใน revision ใหม่และต้อง Calculate/Submit/Approve ใหม่; Revision เดิมและ Quotation เดิมไม่เปลี่ยน. Idempotency replay ตรวจมาก่อน ETag ปัจจุบัน.
 
 ## Issue Quotation
 
@@ -201,8 +238,48 @@ Content-Type: application/json
 ```
 
 - Permission: `quotations.issue`
-- Preconditions: Estimate อยู่ในสถานะคำนวณแล้ว, Opportunity อยู่ใน stage `estimating`, replay check มาก่อน version check
+- Preconditions: Current Revision เป็น `approved` และมี Calculation Snapshot ที่ยังตรงกับ Revision, Opportunity อยู่ใน stage `estimating`, replay check มาก่อน version/state check
 - Atomic Effects: ออกเลขที่เอกสารด้วย Atomic Sequence Engine, บันทึก Snapshot, ปรับ Estimate/Revision เป็น `quoted`, ปรับ Opportunity เป็น `proposed`, บันทึก 1 Stage History, 2 Audits, 1 Idempotency Record
+- Response `201` ใช้ `QuotationResponse` และมีเฉพาะ `quotationId`, `estimateId`, `opportunityId`, `number`, `status`, `grandTotal`, `issuedAtUtc`, `estimateRevisionId`, `revisionNo`, `opportunityStage`, `opportunityRowVersion` และ `estimateRowVersion`. Integration test `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` ตรวจชื่อ property ทั้งชุดตรงกับ allowlist นี้. Response นี้เป็นผลการออก Quotation สำหรับแอปภายใน ไม่ใช่ Customer-facing Output ตาม FR-QUO-002; เอกสารสำหรับลูกค้าอยู่ใน [Quotation Document](#quotation-document).
+
+```json
+{
+  "quotationId": "<guid>",
+  "estimateId": "<guid>",
+  "opportunityId": "<guid>",
+  "number": "<quotation-number>",
+  "status": "issued",
+  "grandTotal": 37450.00,
+  "issuedAtUtc": "<timestamp>",
+  "estimateRevisionId": "<guid>",
+  "revisionNo": 1,
+  "opportunityStage": "proposed",
+  "opportunityRowVersion": "<guid>",
+  "estimateRowVersion": "<guid>"
+}
+```
+
+## Quotation Document
+
+```http
+GET /api/v1/estimates/{estimateId}/quotation/document?locale=th|en
+Authorization: Bearer <firebase-id-token>
+```
+
+**สถานะ:** Implemented เป็น read-only projection; field allowlist และเงื่อนไขเอกสารเป็น **Proposed default (TEST_ONLY)** จนกว่า Sales + Finance ยืนยัน (CP-04).
+
+- Permission: `quotations.read` (แยกจาก `quotations.issue` เพื่อให้ผู้ดู/พิมพ์เอกสารไม่ต้องมีสิทธิ์ออกใบเสนอราคา). Role ที่มีอยู่ใน Production ต้องได้รับ `quotations.read` ก่อนเปิดใช้ ไม่เช่นนั้นผู้ใช้จะเปิดเอกสารไม่ได้ (403)
+- `locale` รับ `th` (default) หรือ `en`; ค่าอื่นถือเป็น `th`
+- Quotation ที่ใช้: ฉบับที่ออกล่าสุดของ Estimate (เรียง `issuedAtUtc` ลดหลั่น แล้ว `number`)
+- แหล่งข้อมูล: Revision ที่ผูกกับ Quotation (แก้ไขไม่ได้หลัง Approve) และ Customer Billing Snapshot ณ วันออก; ไม่อ่าน Customer/Item master ปัจจุบัน และไม่คำนวณยอดใหม่
+- Estimate ไม่มี Quotation หรืออยู่นอก Organization/Branch Scope คืน `404 RESOURCE_NOT_FOUND`; Billing Snapshot เสียคืน `409 ESTIMATE_INVALID_STATE`
+- เมื่อ `locale=en` และไม่มีข้อความอังกฤษ ฟิลด์ที่เลือกตามภาษา (`name`, `description`, `displayName`) เป็น `null` และ `hasIncompleteTranslations=true`; ไม่ fallback เป็นข้อความไทย
+
+**Allowlist (Response):** `number`, `issuedAtUtc`, `currency`, `locale`, `hasIncompleteTranslations`, `customer{customerType, displayName, displayNameTh, displayNameEn, legalName, taxIdentifier, branchCode, address{label, addressLine1, subdistrict, district, province, postalCode, countryCode}}`, `sections[]{code, name, nameTh, nameEn, subtotal, workItems[]{code, description, descriptionTh, descriptionEn, quantity, unitCode, unitPrice, lineTotal}}`, `totals{subtotal, discountType, discountValue, discountAmount, netBeforeTax, taxAmount, grandTotal}`
+
+**ห้ามอยู่ใน Response:** unit/total cost, margin/markup, selling rule และ reason, internal note, override reason, cost record/source id, approval trigger/threshold/route/reviewer, `itemId`, snapshot hash, row version, user id
+
+**ยังไม่มีในเอกสาร (รอ Business / slice ถัดไป):** `customerReference`, `validityDays`, `scopeNote`, payment/delivery terms, branding, เลขที่ Quotation ของลูกค้า, ลายเซ็น (CP-07) — ต้องเพิ่มใน Domain และ migration
 
 ## Accept Quotation
 

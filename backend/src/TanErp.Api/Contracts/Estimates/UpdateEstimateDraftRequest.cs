@@ -13,7 +13,9 @@ public sealed record UpdateEstimateCostComponentDto(
     int SortOrder = 1,
     Guid? ItemId = null,
     Guid? CostRecordId = null,
-    int? CostRecordVersion = null);
+    int? CostRecordVersion = null,
+    [MaxLength(64)] string? ProvisionalReasonCode = null,
+    [MaxLength(1000)] string? ProvisionalNote = null);
 
 public sealed record UpdateEstimateWorkItemDto(
     Guid? Id,
@@ -25,7 +27,11 @@ public sealed record UpdateEstimateWorkItemDto(
     [Required] string SellingRuleType,
     decimal SellingRuleValue,
     int SortOrder = 1,
-    IReadOnlyList<UpdateEstimateCostComponentDto>? CostComponents = null);
+    IReadOnlyList<UpdateEstimateCostComponentDto>? CostComponents = null,
+    [MaxLength(64)] string? SellingRuleReasonCode = null,
+    Guid? ItemId = null,
+    [MaxLength(64)] string? OverrideReasonCode = null,
+    [MaxLength(500)] string? OverrideReason = null);
 
 public sealed record UpdateEstimateSectionDto(
     Guid? Id,

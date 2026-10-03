@@ -1,6 +1,6 @@
 # Official Estimate UAT Scenarios (สถานการณ์ทดสอบกับผู้ใช้)
 
-**สถานะ:** Accepted UAT Baseline — ต้องบันทึกผลและ Business Sign-off ก่อนเริ่ม Application Implementation
+**สถานะ:** Accepted UAT Baseline — ยังไม่ดำเนิน UAT กับบทบาทธุรกิจที่ได้รับอนุญาต; ต้องบันทึกผลและ Business Sign-off ก่อนเปิดใช้จริง
 
 เอกสารนี้เป็นคู่มือ Workshop/UAT สำหรับยืนยันว่า Official Estimate รองรับงานจริง ตัวเลขทั้งหมดเป็น `TEST_ONLY` และไม่ใช่ Rate, Margin, Tax หรือวงเงินอนุมัติของบริษัท
 
@@ -28,6 +28,14 @@
 
 Test Data ต้องอยู่ Organization/Branch สำหรับ UAT เท่านั้นและลบหรือ Archive ตาม Data Retention หลังจบ Workshop
 
+### Seeded Estimate Workspace (TEST_ONLY)
+
+เปิด fixture นี้เฉพาะฐานข้อมูลทดสอบ โดยกำหนด `ASPNETCORE_ENVIRONMENT=Test`, `SeedTestData=true` และ `SeedEstimateDemoData=true` ก่อนเริ่ม API. หากต้องการทดสอบ Item Catalog ให้เปิด `SeedItemCatalogDemoData=true` เพิ่มเติม. Flag สำหรับข้อมูลตัวอย่างจะทำงานได้ภายใน Test environment และเมื่อเปิด `SeedTestData` เท่านั้น; ห้ามใช้กับฐานข้อมูล Production.
+
+Fixture สร้าง Customer, Site, Opportunity ที่อยู่ในขั้น `estimating`, Survey Revision สถานะ Ready และ Estimate Draft `TEST-ONLY-ESTIMATE-0001` พร้อมสอง Work Items, ต้นทุนวัสดุ/ค่าแรงสมมติ, Margin 30%, Calculation Policy และ Tax Policy 7% ที่ติดป้าย `TEST_ONLY`. ต้นทุนเป็น provisional พร้อมเหตุผลทดสอบ จึงควรคาดว่า readiness ต้องให้ผู้ตรวจรับทราบ ไม่ใช่ราคาจริงหรือราคาที่อนุมัติแล้ว. Seed ทำซ้ำได้โดยไม่สร้าง Estimate หรือประวัติ stage ซ้ำ และไม่เขียนทับ fixture ที่ผู้ทดสอบแก้ภายหลัง.
+
+ข้อมูลทดสอบ Item Catalog 75 รายการครอบคลุม item type ทั้งหก สถานะ active/draft/inactive หมวดหมู่ แบรนด์ การค้นหา และ pagination ดูรายละเอียดได้ใน [Item Master verification](item-master-estimate-catalog-verification.md); 27 รายการมีต้นทุน published สำหรับทดสอบการเลือก Cost Source ใน BOQ และทุกแถวยังคงเป็น `TEST_ONLY`.
+
 ## วิธีบันทึกผล
 
 แต่ละ Scenario บันทึก:
@@ -39,6 +47,39 @@ Test Data ต้องอยู่ Organization/Branch สำหรับ UAT �
 | Evidence | Screenshot, Trace ID, Audit Event หรือ Export |
 | Business Decision | ยอมรับ/ขอเปลี่ยน พร้อมเหตุผล |
 | Sign-off | ชื่อผู้รับผิดชอบ บทบาท วันที่ |
+
+## Execution Register (2026-09-28)
+
+หลักฐานอัตโนมัติด้านล่างยืนยันเฉพาะพฤติกรรมซอฟต์แวร์ตามขอบเขต test ที่ระบุ ไม่ถือเป็นผล UAT จากผู้ใช้ธุรกิจ ผลทดสอบกับผู้ใช้จริงยังเป็น `Not run` ทุกกรณี ช่องสถานะชี้เฉพาะความพร้อมของหลักฐานระบบ
+
+ชื่อ test อ้างอิงจาก [Estimate API integration tests](../../backend/tests/TanErp.IntegrationTests/Api/EstimateEndpointsTests.cs), [Estimate domain tests](../../backend/tests/TanErp.UnitTests/Estimates/EstimateTests.cs), [Document Sequence integration tests](../../backend/tests/TanErp.IntegrationTests/Api/DocumentSequencesEndpointsTests.cs) และ [Playwright journey](../../frontend/e2e/official-estimate.spec.ts).
+
+| Scenario | Automated evidence / readiness | UAT result |
+| --- | --- | --- |
+| UAT-EST-001 | `CreateEstimate_ReadySurvey_DerivesCustomerBranchAndSnapshot`; two-user Playwright journey | Not run |
+| UAT-EST-002 | Estimate domain calculation matrix, PostgreSQL `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot`, Playwright BOQ/calculation | Not run |
+| UAT-EST-003 | `UpdateDraft_WithUnresolvableCatalogCost_ReturnsStructuredConflictWithoutWriting` includes invalid catalog unit and asserts retained Draft; `estimate-workspace-drawer.test.tsx` verifies localized unit error and retained user input; missing Work Item Unit is rejected by request validation. | Focused API case 4/4 and Estimate API class 40/40 passed on disposable PostgreSQL; component test passed; manual UAT not run |
+| UAT-EST-004 | `FinancialEdit_MarksCalculationOutdatedAndPreservesPriorSnapshot`; domain invalidation tests | Not run |
+| UAT-EST-005 | `EvaluateReadiness_BlocksUnexplainedProvisionalCostAndRequiresAttentionAfterReasonIsProvided`; reviewer queue PostgreSQL journey | Not run |
+| UAT-EST-006 | Sequential review lifecycle is implemented. Test environment can opt into `TEST_ONLY-TH-EST-V1`, which combines amount, margin, discount, fixed-price, custom-work-item, and provisional-cost triggers, selects the strongest route, and freezes trigger/threshold snapshots with distinct reviewers. Review Queue projects and displays the frozen triggers. Production stays on the bootstrap checker. | Estimate API class passed 40/40 and Item Catalog Estimate flow passed 1/1 on PostgreSQL, including custom-work-item reason gating, trigger routing, and structured Item Master snapshots. Authorized-user UAT and production policy sign-off remain open |
+| UAT-EST-007 | `Approve_RejectsMakerAndAcceptsIndependentChecker`; API approval journey checks maker rejection | Not run |
+| UAT-EST-008 | PostgreSQL API approval journey and two-user Playwright Return → edit/recalculate → resubmit | Not run |
+| UAT-EST-009 | API approval journey checks writes to Approved revisions are rejected and snapshots stay unchanged | Not run |
+| UAT-EST-010 | API New Revision/replay coverage and Playwright New Revision journey | Not run |
+| UAT-EST-011 | `CreateEstimate_ReadySurvey_DerivesCustomerBranchAndSnapshot` issues once, then replays the same approved-estimate request with the same idempotency key; verifies same quotation ID/number, one row, unchanged sequence, and one stage-history transition. | Not run; automated replay evidence added |
+| UAT-EST-012 | PostgreSQL API matrix verifies cross-organization and other-branch users receive a non-disclosing 404 for Estimate read, draft update, calculate, and approve; denied writes leave revision version, calculation snapshots, approval state, and decisions unchanged. | `EstimateActions_CrossOrganizationAndBranchAccessReturnNotFoundWithoutDisclosure` and Estimate API class passed 40/40 on disposable PostgreSQL; authorized-user UAT remains open |
+| UAT-EST-013 | `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` (Quotation Document allowlist, forbidden-term scan, immutability, latest quotation, cross-organization 404, 403) และ Vitest `quotation-document-view.test.tsx` / `quotation-document-page.test.tsx` | Automated evidence added; Business/Finance allowlist sign-off, artifact UAT (print/PDF), 320px/200% zoom และ keyboard review ยังเปิด |
+| UAT-EST-014 | `HistoricalCalculationCanBeReproducedFromRevisionInputsAndOriginalPolicies`; PostgreSQL history/reproduction API case | Not run |
+| UAT-EST-015 | `UpdateDraft_OutdatedVersion_Returns409Conflict`; revision concurrency token tests | Not run; two-user editing workflow remains |
+| UAT-EST-016 | `CancelSubmittedEstimate_RequiresAssignedCheckerAndClosesApprovalRoute`; cancellation replay/concurrency tests | Not run |
+| UAT-EST-017 | `CreateEstimate_ReadySurvey_DerivesCustomerBranchAndSnapshot`; forged/unready relationship rejection tests | Not run |
+| UAT-EST-018 | PostgreSQL issue quotation journey verifies approved revision and opportunity progression; the same-key replay assertions verify no duplicate quotation, number allocation, or stage transition. | Not run; automated replay evidence added |
+| UAT-EST-019 | Two-user Playwright journey verifies customer acceptance and Won progression | Not run |
+| UAT-EST-020 | `DocumentSequencesEndpointsTests` covers format, permissions, ETag/version and invalid patterns | Not run |
+| UAT-EST-021 | Fixed Price API tests cover missing permission/reason, persisted override reason and reviewer projection | Not run |
+| UAT-EST-022 | Calculation replay/history tests plus `HistoricalCalculationCanBeReproducedFromRevisionInputsAndOriginalPolicies` | Not run |
+
+The API/component gates for UAT-EST-003 and the Estimate authorization matrices for UAT-EST-006/012 have automated evidence; authorized-user UAT remains open and Estimate unit conversion snapshots are deferred. UAT-EST-013 retains deferred output scope. Same-key quotation replay now has automated evidence for UAT-EST-011/018, but business UAT remains unrun. See [official estimate plan](../superpowers/plans/2026-09-27-official-estimate-completion.md) for release scope and remaining owners.
 
 ## UAT-EST-001 — Create Direct Draft
 
@@ -68,10 +109,10 @@ Test Data ต้องอยู่ Organization/Branch สำหรับ UAT �
 
 **Role:** Estimator
 
-1. ลบ Unit ของ Work Item แล้ว Calculate
-2. เลือก Unit ที่ไม่เข้ากับ Cost Source แล้ว Calculate
+1. ลองบันทึก Work Item โดยไม่มี Unit
+2. เลือก Unit ของ Cost Component ที่ไม่ตรงกับหน่วยฐานของ Catalog Item แล้วบันทึก Draft
 
-**Expected:** ไม่คำนวณหรือ Submit; คืน `ESTIMATE_FIELD_REQUIRED`/`ESTIMATE_UNIT_INVALID`; UI Focus Field ที่ผิดและ Draft ไม่หาย
+**Expected:** ขั้น 1 ถูกปฏิเสธด้วย request validation ก่อนบันทึก. ขั้น 2 API ตอบ `422 ESTIMATE_UNIT_INVALID` และ Draft/Row Version เดิมไม่เปลี่ยน; UI แสดงข้อความหน่วยไม่ถูกต้องและคงค่าที่ผู้ใช้แก้ไว้. Work Item Unit เป็นหน่วยขายของงานและไม่จำเป็นต้องเท่ากับหน่วยของ Cost Component. Estimate ยังไม่รองรับการแปลงหน่วยจาก Item/Shared Unit Conversion; ต้องเลือกหน่วยฐานของ Item จนกว่าจะมี conversion snapshot แบบ immutable.
 
 ## UAT-EST-004 — Calculation Becomes Outdated
 
@@ -94,6 +135,8 @@ Test Data ต้องอยู่ Organization/Branch สำหรับ UAT �
 **Expected:** ขั้น 2 ถูก Block ด้วย `ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED`; ขั้น 3 คืน `requiresAttention`, มี `PROVISIONAL_COST` Trigger และ Route มี Specialist/Checker ตาม Policy
 
 ## UAT-EST-006 — Strongest Approval Route
+
+`TEST_ONLY-TH-EST-V1` is enabled only when the host environment is `Test` and `Estimates:ApprovalPolicy` explicitly names the profile. It evaluates combined amount, margin, discount, fixed-price override, custom-work-item, and provisional-cost signals at submission, selects the strongest sequential route, and stores the policy hash, thresholds, trigger values, and reviewer assignments in the immutable route snapshot. The Review Queue exposes the trigger code and actual/threshold values to the assigned reviewer. PostgreSQL integration verifies the four-step strongest route including the custom-work-item trigger and queue projection. Production remains on `SYSTEM_BOOTSTRAP_INDEPENDENT_CHECKER` pending Business/Finance policy approval. Authorized-user UAT remains open; this test-only profile is not production financial policy.
 
 **Role:** Estimator/Manager
 
@@ -163,12 +206,16 @@ Test Data ต้องอยู่ Organization/Branch สำหรับ UAT �
 
 ## UAT-EST-013 — Customer-safe Output
 
+**Current implementation boundary:** `POST /api/v1/estimates/{estimateId}/quotation` returns only the typed `QuotationResponse`. Customer output is provided by `GET /api/v1/estimates/{estimateId}/quotation/document` ([contract](../03-contracts/official-estimate-api-contract.md#quotation-document)) and the Preview/Print page `/{locale}/estimates/{id}/quotation`; PDF is produced by browser print (see [ADR 0016](../adr/0016-browser-print-for-quotation-pdf.md)). Automated tests do not certify the document for customers until Business/Finance approve the allowlist.
+
 **Role:** Quotation Issuer/Customer Viewer
+
+**Status:** Preview/Print implemented with a proposed (TEST_ONLY) allowlist; Business/Finance sign-off and artifact UAT remain open.
 
 1. Preview และ Export Quotation ภาษาไทย
 2. ตรวจ Payload/Document ที่ลูกค้าได้รับ
 
-**Expected:** มีเฉพาะ Description, Quantity/Unit, Selling Price, Discount, Tax, Total และเงื่อนไขที่อนุญาต; ไม่มี Unit Cost, Total Cost, Margin/Markup, Internal Note, Trigger, Threshold หรือ Approval Detail
+**Future expected result after CP-04:** มีเฉพาะฟิลด์ที่ Business/Finance อนุมัติ; ไม่มี Unit Cost, Total Cost, Margin/Markup, Internal Note, Trigger, Threshold หรือ Approval Detail. allowlist ปัจจุบันเป็น Proposed default (TEST_ONLY) ที่ยังไม่ได้รับการอนุมัติให้ใช้ตรวจรับ.
 
 ## UAT-EST-014 — Historical Reproducibility
 
@@ -241,9 +288,35 @@ Test Data ต้องอยู่ Organization/Branch สำหรับ UAT �
 
 **Expected:** Pattern ที่ไม่ถูกต้องถูกปฏิเสธพร้อม Problem Details ที่มี error code ชัดเจน; การอัปเดตที่ส่ง If-Match ถูกต้องจะหมุน ETag/rowVersion ใหม่
 
+## UAT-EST-021 — Fixed Price Override Authority
+
+**Role:** Estimator ที่มี/ไม่มี `estimates.override-price`, Independent Reviewer, Auditor
+
+1. ผู้ประเมินที่ไม่มี `estimates.override-price` เลือก Fixed Price และส่ง Draft พร้อม reason code
+2. ผู้ประเมินที่มีสิทธิ์แต่เว้น reason code ส่ง Draft
+3. ผู้ประเมินที่มี permission ใน Branch ของ Estimate ระบุ reason code แล้ว Save/Calculate/Submit
+4. ผู้ตรวจเปิด Review Queue และตรวจ Work Item, Fixed Price, reason code และ readiness trigger
+5. ตรวจ Customer-safe Quotation Projection ของ Revision ที่อนุมัติแล้ว
+
+**Expected:** ขั้น 1 คืน 403 `PERMISSION_DENIED` และไม่มีการเปลี่ยน Draft; ขั้น 2 คืน 400 `ESTIMATE_FIXED_PRICE_REASON_REQUIRED`; ขั้น 3 สำเร็จเฉพาะเมื่อ permission scope ตรง Branch, reason ถูกตรึงใน Input/Calculation/Approval Snapshot และ readiness เป็น `requiresAttention`; ขั้น 4 แสดง reason ให้ reviewer; ขั้น 5 ไม่มี `sellingRuleReasonCode`, ต้นทุน, Margin/Markup หรือรายละเอียดอนุมัติในข้อมูลลูกค้า
+
+## UAT-EST-022 — Calculation Replay and Historical Policy
+
+**Role:** Estimator, Finance Reviewer, Auditor
+
+**Preconditions:** มี Calculation Snapshot เดิมภายใต้ cost/policy รุ่น N และเตรียมรุ่น N+1 ที่มี effective date ชัดเจนโดยไม่แก้รุ่น N หรือข้อมูลเดิม; ผู้ทดสอบเก็บ Idempotency-Key เดิมของคำสั่งคำนวณไว้สำหรับ replay
+
+1. คำนวณ Revision ด้วย Idempotency-Key ใหม่ แล้วบันทึก Calculation Version, Input Hash, policy IDs/versions/hashes, cost provenance และยอดรวมจาก Snapshot
+2. ส่งคำขอเดิมด้วย Idempotency-Key และ payload เดิม
+3. ใช้ Key เดิมแต่เปลี่ยน discount input/reason แล้วส่งซ้ำ
+4. เมื่อ N+1 มีผล สร้าง Revision ถัดไปและคำนวณด้วย policy ใหม่; เปิด Calculation History ของ Revision เก่าและ Snapshot ใหม่ควบคู่กัน
+5. ให้ Auditor ตรวจว่าประวัติเดิมอ่านได้ครบและเทียบยอด/inputs/policy/cost hashes ของ Revision เก่ากับ Snapshot ที่ตรึงไว้
+
+**Expected:** ขั้น 2 คืนผลเดิมโดยไม่เพิ่ม Calculation Snapshot; ขั้น 3 คืน `ESTIMATE_IDEMPOTENCY_KEY_REUSED`; Revision เก่ายังคง Snapshot, policy/cost version, hashes และ totals เดิม; Revision ใหม่ใช้ N+1 เฉพาะหลัง effective date; Audit/History แสดง calculation version ต่อเนื่องโดยไม่เขียนทับประวัติ
+
 ## Exit Criteria
 
-- Scenario Critical `001–014` ผ่านหรือมี Business Decision ที่อนุมัติการเปลี่ยน
+- Scenario Critical `001–014`, `021`, และ `022` ผ่านหรือมี Business Decision ที่อนุมัติการเปลี่ยน
 - Finance ลงนาม Calculation/Tax/Precision/Rounding
 - Business Owner ลงนาม Field/Status/Approval/Customer Visibility
 - Security Owner ยืนยัน Scope, Maker–Checker และ Customer Data Leakage

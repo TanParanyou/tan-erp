@@ -51,6 +51,16 @@ public class GetCustomerHandler
                 new Error("RESOURCE_NOT_FOUND", "Customer was not found in the selected organization."));
         }
 
-        return Result<GetCustomerResult>.Success(new GetCustomerResult(customer));
+        var creditReadResult = await _accessResolver.ResolveAsync(query.FirebaseUid, query.MembershipId, "customers.credit.read", cancellationToken);
+        var projection = customer with
+        {
+            CreditTermDays = creditReadResult.IsSuccess ? customer.CreditTermDays : null,
+            CreditLimit = creditReadResult.IsSuccess ? customer.CreditLimit : null,
+            BillingCycle = creditReadResult.IsSuccess ? customer.BillingCycle : null,
+            BillingDay = creditReadResult.IsSuccess ? customer.BillingDay : null,
+            PaymentConditionNote = creditReadResult.IsSuccess ? customer.PaymentConditionNote : null,
+            TaxIdentifier = includeContactPii ? customer.TaxIdentifier : null
+        };
+        return Result<GetCustomerResult>.Success(new GetCustomerResult(projection));
     }
 }

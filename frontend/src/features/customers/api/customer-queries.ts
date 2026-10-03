@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery, type UseQueryResult, type UseInfiniteQueryResult } from "@tanstack/react-query";
-import { apiClient, type CustomerListResponse, type CustomerResponse, type DuplicateCustomerResponse, type ListCustomersParams } from "@/lib/api/api-client";
+import { apiClient, type CustomerAddressListResponse, type CustomerContactListResponse, type CustomerListResponse, type CustomerResponse, type DuplicateCustomerResponse, type ListCustomersParams } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
@@ -45,6 +45,29 @@ export function customerDetailQueryKey(
   customerId: string | null | undefined,
 ): readonly ["business", string | null | undefined, "th" | "en", "customers", "detail", string | null | undefined] {
   return ["business", membershipId, locale, "customers", "detail", customerId] as const;
+}
+
+export function customerQueryRootKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+): readonly ["business", string | null | undefined, "th" | "en", "customers"] {
+  return ["business", membershipId, locale, "customers"] as const;
+}
+
+export function customerAddressesQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  customerId: string | null | undefined,
+): readonly ["business", string | null | undefined, "th" | "en", "customers", "addresses", string | null | undefined] {
+  return [...customerQueryRootKey(membershipId, locale), "addresses", customerId] as const;
+}
+
+export function customerContactsQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  customerId: string | null | undefined,
+): readonly ["business", string | null | undefined, "th" | "en", "customers", "contacts", string | null | undefined] {
+  return [...customerQueryRootKey(membershipId, locale), "contacts", customerId] as const;
 }
 
 export function useCustomerList(
@@ -110,6 +133,60 @@ export function useCustomerDetail(
       });
     },
     enabled: Boolean(membershipId && customerId && customerId !== "create" && customerId !== "add"),
+  });
+}
+
+export function useCustomerAddresses(
+  customerId: string | null | undefined,
+  enabled = true,
+) {
+  const locale = useSafeLocale();
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery<CustomerAddressListResponse, Error>({
+    queryKey: customerAddressesQueryKey(membershipId, locale, customerId),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      if (!customerId) throw new Error("No customer ID provided");
+
+      return apiClient.listCustomerAddresses(customerId, {
+        token,
+        membershipId,
+        locale,
+        signal,
+      });
+    },
+    enabled: Boolean(enabled && membershipId && customerId),
+  });
+}
+
+export function useCustomerContacts(
+  customerId: string | null | undefined,
+  enabled = true,
+) {
+  const locale = useSafeLocale();
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery<CustomerContactListResponse, Error>({
+    queryKey: customerContactsQueryKey(membershipId, locale, customerId),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      if (!customerId) throw new Error("No customer ID provided");
+
+      return apiClient.listCustomerContacts(customerId, {
+        token,
+        membershipId,
+        locale,
+        signal,
+      });
+    },
+    enabled: Boolean(enabled && membershipId && customerId),
   });
 }
 
@@ -185,4 +262,3 @@ export function useCustomerDuplicateCheck(
     staleTime: 10_000,
   });
 }
-

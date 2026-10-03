@@ -31,6 +31,8 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32).IsRequired();
         builder.Property(x => x.TotalAmount).HasColumnName("total_amount").HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.SnapshotHash).HasColumnName("snapshot_hash").HasMaxLength(128);
+        builder.Property(x => x.CustomerBillingSnapshotJson).HasColumnName("customer_billing_snapshot_json").HasColumnType("jsonb");
+        builder.Property(x => x.CustomerBillingSnapshotHash).HasColumnName("customer_billing_snapshot_hash").HasMaxLength(128);
         builder.Property(x => x.IssuedAtUtc).HasColumnName("issued_at_utc").IsRequired();
         builder.Property(x => x.AcceptedAtUtc).HasColumnName("accepted_at_utc");
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();

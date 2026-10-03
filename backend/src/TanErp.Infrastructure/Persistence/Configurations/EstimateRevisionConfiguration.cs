@@ -15,6 +15,8 @@ public class EstimateRevisionConfiguration : IEntityTypeConfiguration<EstimateRe
             t.HasCheckConstraint("ck_estimate_revisions_revision_no", "revision_no >= 1");
             t.HasCheckConstraint("ck_estimate_revisions_net_cost", "net_cost >= 0");
             t.HasCheckConstraint("ck_estimate_revisions_grand_total", "grand_total >= 0");
+            t.HasCheckConstraint("ck_estimate_revisions_discount_type", "discount_type IN ('none', 'percent', 'fixed-amount')");
+            t.HasCheckConstraint("ck_estimate_revisions_discount_value", "discount_value >= 0 AND (discount_type <> 'percent' OR discount_value <= 1) AND (discount_type <> 'none' OR discount_value = 0)");
         });
 
         builder.HasKey(x => x.Id);
@@ -29,9 +31,18 @@ public class EstimateRevisionConfiguration : IEntityTypeConfiguration<EstimateRe
         builder.Property(x => x.CalculationVersion).HasColumnName("calculation_version").IsRequired();
         builder.Property(x => x.CalculationPolicyVersion).HasColumnName("calculation_policy_version").HasMaxLength(64).IsRequired();
         builder.Property(x => x.TaxPolicyVersion).HasColumnName("tax_policy_version").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.CalculationOutdated).HasColumnName("calculation_outdated").IsRequired();
+        builder.Property(x => x.LastFinancialEditorUserId).HasColumnName("last_financial_editor_user_id");
+        builder.Property(x => x.SubmittedByUserId).HasColumnName("submitted_by_user_id");
+        builder.Property(x => x.SubmittedAtUtc).HasColumnName("submitted_at_utc");
+        builder.Property(x => x.ApprovedByUserId).HasColumnName("approved_by_user_id");
+        builder.Property(x => x.ApprovedAtUtc).HasColumnName("approved_at_utc");
 
         builder.Property(x => x.NetCost).HasColumnName("net_cost").HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.SellingBeforeDiscount).HasColumnName("selling_before_discount").HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.DiscountType).HasColumnName("discount_type").HasMaxLength(32).IsRequired();
+        builder.Property(x => x.DiscountValue).HasColumnName("discount_value").HasPrecision(19, 6).IsRequired();
+        builder.Property(x => x.DiscountReasonCode).HasColumnName("discount_reason_code").HasMaxLength(64);
         builder.Property(x => x.DiscountAmount).HasColumnName("discount_amount").HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.NetBeforeTax).HasColumnName("net_before_tax").HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.TaxAmount).HasColumnName("tax_amount").HasPrecision(18, 2).IsRequired();
@@ -41,6 +52,7 @@ public class EstimateRevisionConfiguration : IEntityTypeConfiguration<EstimateRe
         builder.Property(x => x.MarkupRate).HasColumnName("markup_rate").HasPrecision(10, 4).IsRequired();
 
         builder.Property(x => x.CalculationSnapshotJson).HasColumnName("calculation_snapshot_json");
+        builder.Property(x => x.ApprovalSnapshotJson).HasColumnName("approval_snapshot_json").HasColumnType("jsonb");
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
         builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").IsRequired();

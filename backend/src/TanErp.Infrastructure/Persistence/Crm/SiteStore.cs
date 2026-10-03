@@ -254,6 +254,41 @@ public class SiteStore : ISiteStore
         return siteList.Select(s => ToProjection(s, imagesBySiteId.GetValueOrDefault(s.Id))).ToList();
     }
 
+    public async Task<Result<SiteProjection>> UpdateAsync(RequestAccessContext access, Guid customerId, Guid siteId, Guid expectedRowVersion, UpdateSiteData data, string traceId, CancellationToken cancellationToken = default)
+    {
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+        var site = await _db.Sites.FirstOrDefaultAsync(x => x.Id == siteId && x.CustomerId == customerId && x.OrganizationId == access.OrganizationId, cancellationToken);
+        if (site is null) return Result<SiteProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Site not found."));
+        if (site.RowVersion != expectedRowVersion) return Result<SiteProjection>.Failure(new Error("SITE_VERSION_CONFLICT", "Site version conflict."));
+        var address = new SiteAddressInput(data.AddressLine1, data.Subdistrict, data.District, data.Province, data.PostalCode, data.CountryCode);
+        if (!site.UpdateDetails(expectedRowVersion, data.Label, address, data.Latitude, data.Longitude, data.AccessNote))
+            return Result<SiteProjection>.Failure(new Error("SITE_INVALID_STATE", "Site cannot be edited in its current state."));
+        var now = _clock.UtcNow;
+        _db.AddAuditEvent(new AuditEvent(Guid.NewGuid(), access.OrganizationId, access.ActorUserId, "site.updated", "Site", site.Id.ToString(), now, traceId,
+            "{\"changedFields\":[\"label\",\"addressLine1\",\"subdistrict\",\"district\",\"province\",\"postalCode\",\"countryCode\",\"latitude\",\"longitude\",\"accessNote\"]}"));
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException) { return Result<SiteProjection>.Failure(new Error("SITE_VERSION_CONFLICT", "Site version conflict.")); }
+        await tx.CommitAsync(cancellationToken);
+        var images = await _db.SiteImages.AsNoTracking().Where(x => x.OrganizationId == access.OrganizationId && x.SiteId == siteId && !x.IsDeleted).OrderBy(x => x.DisplayOrder).ToListAsync(cancellationToken);
+        return Result<SiteProjection>.Success(ToProjection(site, images));
+    }
+
+    public async Task<Result<SiteProjection>> DeactivateAsync(RequestAccessContext access, Guid customerId, Guid siteId, Guid expectedRowVersion, string traceId, CancellationToken cancellationToken = default)
+    {
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+        var site = await _db.Sites.FirstOrDefaultAsync(x => x.Id == siteId && x.CustomerId == customerId && x.OrganizationId == access.OrganizationId, cancellationToken);
+        if (site is null) return Result<SiteProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Site not found."));
+        if (!site.Deactivate(expectedRowVersion)) return Result<SiteProjection>.Failure(new Error("SITE_VERSION_CONFLICT", "Site version conflict."));
+        var now = _clock.UtcNow;
+        _db.AddAuditEvent(new AuditEvent(Guid.NewGuid(), access.OrganizationId, access.ActorUserId, "site.deactivated", "Site", site.Id.ToString(), now, traceId,
+            "{\"changedFields\":[\"status\"]}"));
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException) { return Result<SiteProjection>.Failure(new Error("SITE_VERSION_CONFLICT", "Site version conflict.")); }
+        await tx.CommitAsync(cancellationToken);
+        var images = await _db.SiteImages.AsNoTracking().Where(x => x.OrganizationId == access.OrganizationId && x.SiteId == siteId && !x.IsDeleted).OrderBy(x => x.DisplayOrder).ToListAsync(cancellationToken);
+        return Result<SiteProjection>.Success(ToProjection(site, images));
+    }
+
     private static SiteProjection ToProjection(Site s, IReadOnlyList<SiteImage>? images = null) => new(
         s.Id,
         s.Code,

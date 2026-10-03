@@ -38,7 +38,7 @@ public class CreateUploadSessionHandler
         {
             return Result<UploadSessionProjection>.Failure(
                 new Error("FILE_PARENT_TYPE_INVALID",
-                    $"Parent type '{command.ParentType}' is invalid. Supported types: opportunity, customer, site."));
+                    $"Parent type '{command.ParentType}' is invalid. Supported types: opportunity, customer, site, item, item-category, item-brand, costRecord."));
         }
 
         // 2. Validate parentId vs creationIntentId

@@ -27,9 +27,11 @@ export interface EntityAutocompleteProps<T> {
 
   // Key & Extraction
   getItemKey: (item: T) => string;
+  selectedItem?: T | null;
+  onSelectedItemChange?: (item: T | null) => void;
 
   // Custom Renderers
-  renderSelectedCard: (onClear: () => void) => React.ReactNode;
+  renderSelectedCard: (onClear: () => void, selectedItem?: T | null) => React.ReactNode;
   renderListItem: (item: T, isHighlighted: boolean, isMobile: boolean) => React.ReactNode;
 }
 
@@ -57,6 +59,8 @@ export function EntityAutocomplete<T>({
   loadingText = "Loading...",
   onSearchChange,
   getItemKey,
+  selectedItem,
+  onSelectedItemChange,
   renderSelectedCard,
   renderListItem,
 }: EntityAutocompleteProps<T>) {
@@ -112,16 +116,18 @@ export function EntityAutocomplete<T>({
       const key = getItemKey(item);
       if (!key) return;
       onChange(key);
+      onSelectedItemChange?.(item);
       setIsOpen(false);
       setIsMobileFullscreenOpen(false);
       setQuery("");
       setActiveIndex(-1);
     },
-    [getItemKey, onChange]
+    [getItemKey, onChange, onSelectedItemChange]
   );
 
   const handleClear = useCallback(() => {
     onChange("");
+    onSelectedItemChange?.(null);
     setQuery("");
     setIsOpen(false);
     setActiveIndex(-1);
@@ -132,7 +138,7 @@ export function EntityAutocomplete<T>({
         inputRef.current?.focus();
       }
     }, 50);
-  }, [isMobile, onChange]);
+  }, [isMobile, onChange, onSelectedItemChange]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen || items.length === 0) {
@@ -186,7 +192,7 @@ export function EntityAutocomplete<T>({
 
       {/* State 1: Selected Item Summary Card */}
       {value ? (
-        renderSelectedCard(handleClear)
+        renderSelectedCard(handleClear, selectedItem)
       ) : (
         /* State 2: Search Input (Strict min-h-[44px] uniform with other form controls) */
         <div className="relative w-full">

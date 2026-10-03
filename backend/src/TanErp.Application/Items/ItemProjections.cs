@@ -2,9 +2,9 @@ namespace TanErp.Application.Items;
 
 public sealed record LocalizedTextDto(string Thai, string? English);
 
-public sealed record CategorySummaryDto(Guid Id, string Code, LocalizedTextDto Name, Guid? ParentCategoryId);
+public sealed record CategorySummaryDto(Guid Id, string Code, LocalizedTextDto Name, Guid? ParentCategoryId, Guid? ImageFileId = null);
 
-public sealed record BrandSummaryDto(Guid Id, string Code, LocalizedTextDto Name);
+public sealed record BrandSummaryDto(Guid Id, string Code, LocalizedTextDto Name, Guid? ImageFileId = null);
 
 public sealed record UnitSummaryDto(Guid Id, string Code, string Symbol, LocalizedTextDto Name);
 
@@ -73,6 +73,7 @@ public sealed record ItemCategoryDetailProjection(
     IReadOnlyList<string> AllowedItemTypes,
     int SortOrder,
     string Status,
+    Guid? ImageFileId,
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset UpdatedAtUtc);
@@ -83,6 +84,18 @@ public sealed record ItemBrandDetailProjection(
     string Code,
     LocalizedTextDto Name,
     LocalizedTextDto? Description,
+    int SortOrder,
+    string Status,
+    Guid? ImageFileId,
+    Guid RowVersion,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset UpdatedAtUtc);
+
+public sealed record ItemTaxCategoryDetailProjection(
+    Guid Id,
+    Guid OrganizationId,
+    string Code,
+    LocalizedTextDto Name,
     int SortOrder,
     string Status,
     Guid RowVersion,

@@ -13,4 +13,7 @@ public interface ICustomerLifecycleStore
         string payloadHash,
         string traceId,
         CancellationToken cancellationToken = default);
+
+    Task<Result<CustomerProjection>> DeactivateAsync(RequestAccessContext access, Guid customerId, Guid expectedRowVersion, string reason, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken = default);
+    Task<Result<CustomerProjection>> ReactivateAsync(RequestAccessContext access, Guid customerId, Guid expectedRowVersion, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken = default);
 }

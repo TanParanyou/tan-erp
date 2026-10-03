@@ -19,6 +19,7 @@ public class MembershipConfiguration : IEntityTypeConfiguration<Membership>
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.StartsAtUtc).HasColumnName("starts_at_utc").HasColumnType("timestamptz");
         builder.Property(x => x.ExpiresAtUtc).HasColumnName("expires_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
 
         builder.HasOne(x => x.Organization)

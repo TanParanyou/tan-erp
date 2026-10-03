@@ -67,6 +67,12 @@ public class SiteHandlerTests
             ListCallCount++;
             return Task.FromResult(ListResult);
         }
+
+        public Task<Result<SiteProjection>> UpdateAsync(RequestAccessContext access, Guid customerId, Guid siteId, Guid expectedRowVersion, TanErp.Application.Crm.Sites.UpdateSiteData data, string traceId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Result<SiteProjection>.Failure(new Error("UNSET", "Unset")));
+
+        public Task<Result<SiteProjection>> DeactivateAsync(RequestAccessContext access, Guid customerId, Guid siteId, Guid expectedRowVersion, string traceId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Result<SiteProjection>.Failure(new Error("UNSET", "Unset")));
     }
 
     private readonly FakeRequestAccessResolver _accessResolver = new();

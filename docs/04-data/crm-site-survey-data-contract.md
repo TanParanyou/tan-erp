@@ -26,13 +26,14 @@ Customer และ Opportunity เป็น CRM Aggregate แยกกัน Sit
 
 | Entity | Typed Field สำคัญ | Constraint |
 | --- | --- | --- |
-| `customers` | organization, code, type, display/legal name, preferred locale, status, inactive reason, row version, audit | Unique `(organization_id, code)`; no hard delete after reference |
-| `customer_private_identifiers` | customer, identifier type, normalized hash, protected value, mask | Permission/Encryption policy; Unique เมื่อ Business Policy ยืนยัน |
+| `customers` | organization, code, type, display/legal name, tax identifier + normalized tax identifier, branch, credit terms, billing terms, preferred locale, status, inactive reason, row version | Unique `(organization_id, code)`; no hard delete after reference; check constraints for credit and billing day |
 | `customer_contacts` | customer, name, role, normalized/display phone/email, channel, primary, status, row version | อย่างน้อย Phone/Email; partial unique primary per Customer |
-| `customer_addresses` | customer, address type, structured address, status, row version | Billing/Contact address; version/audit เมื่อถูก Snapshot |
+| `customer_addresses` | customer, address type, structured address, status, primary flag, row version | Billing/Contact address; one active primary billing address per customer; version/audit |
 | `sites` | customer, label, structured address, geo, access note, status, row version | Organization/Customer เดียวกัน; historical reference preserved |
 
-Tax/Private Identifier แยก Table เพื่อจำกัด Projection/Permission/Encryption โดยไม่ทำให้ Customer Core เป็น JSONB
+ข้อมูลภาษีอยู่ใน Customer relational row เพื่อให้ API ตรวจ readiness ได้ใน transaction; Tax identifier เป็น personal data ห้ามใส่ค่าดิบใน audit/log และต้องจำกัด projection ตาม permission. การเข้ารหัส at-rest และการแยก identifier table เป็น hardening แยกต่างหาก.
+
+`commercial.quotations` เก็บ `customer_billing_snapshot_json` (`jsonb`) และ `customer_billing_snapshot_hash` สำหรับ snapshot ข้อมูลลูกค้า/ที่อยู่ออกบิลขณะออกใบเสนอราคา ข้อมูล snapshot ใช้เพื่อรักษาเอกสารย้อนหลัง ไม่อ่านกลับจากข้อมูลลูกค้าที่แก้ไขภายหลัง.
 
 ### Opportunity
 
@@ -72,6 +73,8 @@ Relational Field ใช้กับ Identity, Scope, State, Measurement, Evidenc
 - Checklist results, assumptions, constraints, missing details
 - Evidence file ID/checksum/manifest; ไม่ฝัง Binary
 - Readiness result, warnings, actor/time
+
+Baseline ที่มี implementation ณ 2026-09-30 ใช้ `v2:<sha256>` สำหรับ Survey Number, Revision/Template Version, เวลาเข้าพื้นที่, Scope Summary, Assumptions/Constraints/Missing Details, Area และ Measurement ทุกฟิลด์ที่บันทึกอยู่ รวมค่าการวัด/หน่วย/วิธีวัด/หมายเหตุ โดยเรียงลำดับข้อมูลก่อน hash และ normalize decimal/เวลาให้คงที่. Hash เดิมที่เป็น SHA-256 เปล่า 64 ตัวอักษรยังเป็นหลักฐานของ Ready Revision เดิมและห้ามคำนวณทับ. Customer-safe labels, Checklist, Evidence Manifest และ Ready actor/time ในสัญญาเต็มข้างต้นยังไม่มีข้อมูลครบใน baseline นี้; เมื่อ implement ต้องเพิ่ม hash version ใหม่พร้อม migration/compatibility decision ไม่ตีความ `v2` ว่าครอบคลุมฟิลด์ที่ยังไม่มี.
 
 Official Estimate เก็บ `site_survey_revision_id` + snapshot hash + Source Summary ที่ต้องใช้ หาก Source ถูก Void ภายหลังให้แจ้ง Risk แต่ห้ามสลับ Revision อัตโนมัติ
 

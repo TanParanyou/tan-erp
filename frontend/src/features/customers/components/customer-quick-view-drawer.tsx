@@ -8,10 +8,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { IconAlertCircle } from "@/components/common/Icons";
 import { useCustomerDetail } from "../api/customer-queries";
-import { isAuthenticationRequiredError, isMembershipRequiredError } from "@/lib/api/api-error";
+import { getCustomerQueryErrorMessage } from "../customer-errors";
 import {
   getCustomerStatusLabelKey,
   getCustomerTypeLabelKey,
+  getCustomerDisplayNames,
 } from "../customer-labels";
 import { formatDateTime } from "@/lib/formatters/formatters";
 import { CustomerDetailContent } from "./customer-detail";
@@ -42,20 +43,16 @@ export function CustomerQuickViewDrawer({
   } = useCustomerDetail(customerId);
 
   const resolveDetailErrorMessage = (err: Error | null): string => {
-    if (isAuthenticationRequiredError(err)) {
-      return t("errors.authenticationRequired");
-    }
-    if (isMembershipRequiredError(err)) {
-      return t("errors.membershipRequired");
-    }
-    return t("errors.loadDetail");
+    return getCustomerQueryErrorMessage(err, {
+      authenticationRequired: t("errors.authenticationRequired"),
+      membershipRequired: t("errors.membershipRequired"),
+      fallback: t("errors.loadDetail"),
+    });
   };
 
-  const displayName = customer
-    ? locale === "en" && customer.displayNameEn
-      ? customer.displayNameEn
-      : customer.displayNameTh || customer.displayNameEn || "-"
-    : "-";
+  const displayNames = customer
+    ? getCustomerDisplayNames(customer.displayNameTh, customer.displayNameEn, locale === "en" ? "en" : "th")
+    : { primary: "-", secondary: null };
 
   const statusKey = customer ? getCustomerStatusLabelKey(customer.status) : null;
   const statusLabel = statusKey ? tCommon(`status.${statusKey}`) : "-";
@@ -145,11 +142,11 @@ export function CustomerQuickViewDrawer({
               />
             </div>
             <h2 className="text-lg font-bold text-erp-text-main leading-snug">
-              {displayName}
+              {displayNames.primary}
             </h2>
-            {customer.displayNameEn && customer.displayNameTh && (
+            {displayNames.secondary && (
               <p className="text-xs text-erp-text-muted mt-0.5">
-                {locale === "en" ? customer.displayNameTh : customer.displayNameEn}
+                {displayNames.secondary}
               </p>
             )}
             {customer.createdAtUtc && (
@@ -163,7 +160,7 @@ export function CustomerQuickViewDrawer({
           </div>
 
           {/* Single Source of Truth: Customer Detail Content (Info Card, Primary Contact Card, SiteList) */}
-          <CustomerDetailContent customer={customer} />
+          <CustomerDetailContent customer={customer} mode="view" />
         </div>
       )}
     </Drawer>

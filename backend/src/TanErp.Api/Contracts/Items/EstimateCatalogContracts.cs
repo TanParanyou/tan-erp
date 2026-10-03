@@ -16,6 +16,7 @@ public sealed record EstimateCatalogItemResponse
     public LocalizedTextResponse Name { get; init; } = new();
     public LocalizedTextResponse? Description { get; init; }
     public string ItemType { get; init; } = string.Empty;
+    public string CostComponentType { get; init; } = string.Empty;
     public CategorySummaryResponse Category { get; init; } = new();
     public BrandSummaryResponse? Brand { get; init; }
     public UnitSummaryResponse BaseUnit { get; init; } = new();
@@ -40,6 +41,10 @@ public sealed record CatalogResolvedCostResponse
     public string Scope { get; init; } = "organization";
     public DateTimeOffset EffectiveFromUtc { get; init; }
     public string PolicyVersion { get; init; } = "COST-RESOLVE-v1";
+    public Guid? CostSourceId { get; init; }
+    public string? CostSourceCode { get; init; }
+    public string? SourceReference { get; init; }
+    public Guid? EvidenceFileId { get; init; }
 }
 
 public sealed record CatalogFacetsResponse
@@ -47,6 +52,14 @@ public sealed record CatalogFacetsResponse
     public IReadOnlyList<CatalogFacetValueResponse> ItemTypes { get; init; } = Array.Empty<CatalogFacetValueResponse>();
     public IReadOnlyList<CatalogCategoryFacetResponse> Categories { get; init; } = Array.Empty<CatalogCategoryFacetResponse>();
     public IReadOnlyList<CatalogBrandFacetResponse> Brands { get; init; } = Array.Empty<CatalogBrandFacetResponse>();
+    public IReadOnlyList<CatalogAttributeFacetResponse> Attributes { get; init; } = Array.Empty<CatalogAttributeFacetResponse>();
+}
+
+public sealed record CatalogAttributeFacetResponse
+{
+    public string Key { get; init; } = string.Empty;
+    public string Value { get; init; } = string.Empty;
+    public int Count { get; init; }
 }
 
 public sealed record CatalogFacetValueResponse
@@ -59,6 +72,7 @@ public sealed record CatalogCategoryFacetResponse
 {
     public Guid Id { get; init; }
     public LocalizedTextResponse Name { get; init; } = new();
+    public Guid? ImageFileId { get; init; }
     public int Count { get; init; }
 }
 
@@ -66,6 +80,7 @@ public sealed record CatalogBrandFacetResponse
 {
     public Guid Id { get; init; }
     public LocalizedTextResponse Name { get; init; } = new();
+    public Guid? ImageFileId { get; init; }
     public int Count { get; init; }
 }
 

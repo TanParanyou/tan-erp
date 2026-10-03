@@ -1,16 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { exportToCsv, type CsvColumn } from "@/lib/export/export-csv";
+import { useCallback } from "react";
+import type { CsvColumn } from "@/lib/export/export-csv";
+import { useDataExport, type UseDataExportOptions } from "./useDataExport";
 
-export interface UseCsvExportOptions<T, TId = string | number> {
-  filename: string;
+export type UseCsvExportOptions<T, TId = string | number> = UseDataExportOptions<T, TId> & {
   columns: readonly CsvColumn<T>[];
-  data?: readonly T[];
-  selectedIds?: ReadonlySet<TId>;
-  getId?: (item: T) => TId | undefined;
-  fetchAll?: () => Promise<readonly T[]>;
-}
+};
 
 export interface UseCsvExportResult {
   isExporting: boolean;
@@ -18,62 +14,19 @@ export interface UseCsvExportResult {
   exportSelected: () => void;
 }
 
-export function useCsvExport<T, TId = string | number>({
-  filename,
-  columns,
-  data = [],
-  selectedIds,
-  getId,
-  fetchAll,
-}: UseCsvExportOptions<T, TId>): UseCsvExportResult {
-  const [isExporting, setIsExporting] = useState(false);
-
-  const getDatedFilename = useCallback(
-    (suffix: string) => {
-      const dateStr = new Date().toISOString().slice(0, 10);
-      return `${filename}_${suffix}_${dateStr}`;
-    },
-    [filename]
-  );
+export function useCsvExport<T, TId = string | number>(
+  options: UseCsvExportOptions<T, TId>
+): UseCsvExportResult {
+  const { isExporting, exportAll: baseExportAll, exportSelected: baseExportSelected } =
+    useDataExport<T, TId>(options);
 
   const exportAll = useCallback(async () => {
-    if (isExporting) return;
-
-    try {
-      setIsExporting(true);
-      let exportData: readonly T[] = data;
-      if (fetchAll) {
-        exportData = await fetchAll();
-      }
-
-      if (exportData.length === 0) return;
-
-      exportToCsv({
-        filename: getDatedFilename("all"),
-        columns,
-        data: exportData,
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  }, [columns, data, fetchAll, getDatedFilename, isExporting]);
+    await baseExportAll("csv");
+  }, [baseExportAll]);
 
   const exportSelected = useCallback(() => {
-    if (!selectedIds || selectedIds.size === 0) return;
-
-    const selectedData = data.filter((item) => {
-      const id = getId ? getId(item) : (item as Record<string, unknown>).id;
-      return id !== undefined && selectedIds.has(id as TId);
-    });
-
-    if (selectedData.length === 0) return;
-
-    exportToCsv({
-      filename: getDatedFilename("selected"),
-      columns,
-      data: selectedData,
-    });
-  }, [columns, data, getDatedFilename, getId, selectedIds]);
+    void baseExportSelected("csv");
+  }, [baseExportSelected]);
 
   return {
     isExporting,

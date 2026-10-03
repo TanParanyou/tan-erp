@@ -5,6 +5,7 @@
 ## ทางลัดตามผู้อ่าน
 
 - ผู้บริหาร/เจ้าของงาน: [Product Vision](00-overview/product-vision.md) → [Scope](00-overview/scope-and-non-goals.md) → [Roadmap](00-overview/implementation-roadmap.md)
+- ผู้วางแผนงานถัดไป: [สถานะ Implementation](00-overview/implementation-roadmap.md) → [ERP Completion Plan](superpowers/plans/2026-09-29-erp-completion-master-plan.md) → [Release Readiness](06-operations/release-readiness.md)
 - ฝ่ายประเมินราคา: [Estimation Flow](01-business/estimation-flow.md) → [Field Catalog](01-business/official-estimate-field-catalog.md) → [Calculation Rules](01-business/estimation-calculation-rules.md) → [Approval Matrix](01-business/approval-matrix.md)
 - ทีมพัฒนา Official Estimate: [Responsive Wireframe](01-business/official-estimate-responsive-wireframe.md) → [Field Catalog](01-business/official-estimate-field-catalog.md) → [API Contract](03-contracts/official-estimate-api-contract.md) → [Data Contract](04-data/official-estimate-data-contract.md) → [UAT](05-engineering/official-estimate-uat-scenarios.md)
 - ทีมดูแล/พัฒนา Item Master: [Flow](01-business/item-master-flow.md) → [Field Catalog](01-business/item-master-field-catalog.md) → [Governance](01-business/item-master-governance.md) → [Responsive Wireframe](01-business/item-master-responsive-wireframe.md) → [API Contract](03-contracts/item-master-api-contract.md) → [Data Contract](04-data/item-master-data-contract.md) → [UAT](05-engineering/item-master-uat-scenarios.md)
@@ -21,6 +22,7 @@
 | เป้าหมายผลิตภัณฑ์ | [Product Vision](00-overview/product-vision.md) |
 | ขอบเขต Release | [Scope and Non-goals](00-overview/scope-and-non-goals.md) |
 | ลำดับการพัฒนา | [Implementation Roadmap](00-overview/implementation-roadmap.md) |
+| แผนรวมปิดช่องว่างและขยาย ERP | [ERP Completion Master Plan](superpowers/plans/2026-09-29-erp-completion-master-plan.md) |
 | รายการ Requirement | [Requirements Catalog](00-overview/requirements-catalog.md) |
 | ราคาประเมินเบื้องต้นหน้างาน | [Quick Estimate Flow](01-business/quick-estimate-flow.md) |
 | สูตร Quick Estimate และ Pricing Template | [Quick Estimate Pricing Rules](01-business/quick-estimate-pricing-rules.md) |
@@ -39,6 +41,7 @@
 | Flow ของ Customer/Opportunity/Site Survey | [CRM and Site Survey Flow](01-business/crm-site-survey-flow.md) |
 | Field และ Gate ของ CRM/Survey | [CRM and Site Survey Field Catalog](01-business/crm-site-survey-field-catalog.md) |
 | ระยะการเก็บข้อมูลลูกค้า (Customer Phases) | [Customer Field Expansion Phases](01-business/customer-field-expansion-phases.md) |
+| สัญญาและ verification ของ Customer Completion | [Customer Completion Verification](05-engineering/customer-completion-verification.md) |
 | Lifecycle, Privacy และ Survey Readiness | [CRM and Site Survey Governance](01-business/crm-site-survey-governance.md) |
 | Responsive UX ของ CRM/Survey | [CRM and Site Survey Responsive Wireframe](01-business/crm-site-survey-responsive-wireframe.md) |
 | คำศัพท์ธุรกิจ | [CONTEXT.md](../CONTEXT.md) |
@@ -79,9 +82,16 @@
 | เหตุผลเลือก Foundation Application Runtime | [ADR 0010](adr/0010-foundation-application-runtime.md) |
 | เหตุผลใช้ Localized JSONB เฉพาะข้อความ Item | [ADR 0012](adr/0012-localized-jsonb-for-item-text.md) |
 | เหตุผลใช้ Organization Item + Branch Availability | [ADR 0013](adr/0013-organization-items-with-branch-availability.md) |
+| เหตุผลแยก Cost Source ที่ใช้ซ้ำจากหลักฐานราคา | [ADR 0014](adr/0014-reusable-cost-source-with-record-evidence.md) |
 | แผนแก้ไข Foundation Login จาก Code Review | [Foundation Login Remediation Plan](superpowers/plans/2026-09-06-foundation-login-current-user-remediation.md) |
 | คู่มือปฏิบัติการ Foundation Login | [Foundation Login Runbook](05-engineering/foundation-login-runbook.md) |
 | บันทึกผลการตรวจสอบ Foundation Login | [Foundation Login Verification](05-engineering/foundation-login-verification.md) |
+| ข้อตกลง API จัดการผู้ใช้และสิทธิ์ (CP-02) | [Identity Administration API Contract](03-contracts/identity-administration-api-contract.md) |
+| แผนและขอบเขต CP-02 | [Identity/Organization Administration Plan](superpowers/plans/2026-10-03-identity-organization-administration.md) |
+| ผลตรวจ CP-02 | [Identity Administration Verification](05-engineering/identity-administration-verification.md) |
+| กู้สิทธิ์ผู้ดูแลที่หายไป | [Administrator Recovery Runbook](06-operations/administrator-recovery.md) |
+| แบบบันทึก Go/No-go ต่อ release candidate | [Go/No-go Record Template](06-operations/go-no-go-record-template.md) |
+| เช็กลิสต์ซ้อมบน Staging | [Staging Rehearsal Checklist](06-operations/staging-rehearsal-checklist.md) |
 | แผนพัฒนา Customer + Contact Vertical Slice | [Customer + Contact Vertical Slice Plan](superpowers/plans/2026-09-07-customer-contact-vertical-slice.md) |
 | แผนแก้ไข Customer + Contact จาก Code Review | [Customer + Contact Remediation Plan](superpowers/plans/2026-09-08-customer-contact-remediation.md) |
 | บันทึกผลการตรวจสอบ Customer + Contact Slice | [Customer + Contact Verification](05-engineering/customer-contact-verification.md) |
@@ -97,9 +107,12 @@
 | แผนแก้ไข File Security และ Work Images | [File Security and Work Images Remediation Plan](superpowers/plans/2026-09-20-file-security-work-images-remediation.md) |
 | แผนปรับปรุง Official Estimate, Commercial และ Document Numbering | [Official Estimate and Commercial Hardening Plan](superpowers/plans/2026-09-20-official-estimate-commercial-hardening.md) |
 | แผนพัฒนา Official Estimate BOQ & Calculation Slice (5A) | [Official Estimate BOQ & Calculation Vertical Slice Plan](superpowers/plans/2026-09-18-official-estimate-boq-calculation-vertical-slice.md) |
+| แผนปิดช่องว่าง Official Estimate ก่อนใช้งานจริง | [Official Estimate Completion Plan](superpowers/plans/2026-09-27-official-estimate-completion.md) |
 | แผนพัฒนา Commercial Quotation Slice (5B) | [Commercial Quotation Vertical Slice Plan](superpowers/plans/2026-09-20-commercial-quotation-vertical-slice.md) |
 | แผนพัฒนา Item Master สำหรับ Estimate Catalog | [Item Master Estimate Catalog Foundation Plan](superpowers/plans/2026-09-21-item-master-estimate-catalog-foundation.md) |
 | แผนปิดงานค้าง Item Master Estimate Catalog | [Item Master Estimate Catalog Completion Plan](superpowers/plans/2026-09-22-item-master-estimate-catalog-completion.md) |
+| แผนหน้าดูแล Master Data สำหรับ Official Estimate | [Estimate Master Data Maintenance Plan](superpowers/plans/2026-09-23-estimate-master-data-maintenance.md) |
+| แผนรากฐาน Item Master, SKU และ Barcode | [Item Master Foundation Plan](superpowers/plans/2026-09-26-item-master-foundation-sku-barcode.md) |
 | แผนแก้ไข Item Master Catalog จาก Code Review | [Item Master Catalog Code Review Remediation Plan](superpowers/plans/2026-09-22-item-master-catalog-code-review-remediation.md) |
 | Prompt สำหรับ Antigravity ทำ Item Master Estimate Catalog | [Antigravity Item Master Execution Prompt](superpowers/prompts/2026-09-21-antigravity-item-master-estimate-catalog.md) |
 | Prompt สำหรับ Antigravity ปิดงาน Item Master Estimate Catalog | [Antigravity Item Master Completion Prompt](superpowers/prompts/2026-09-22-antigravity-item-master-estimate-catalog-completion.md) |

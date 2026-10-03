@@ -60,10 +60,8 @@ public static class SellingRuleType
 
 public static class EstimateDefaults
 {
-    public const decimal DefaultTaxRate = 0.07m;
     public const string DefaultCurrency = "THB";
-    public const string DefaultCalculationPolicyVersion = "EST-CALC-TH-v1";
-    public const string DefaultTaxPolicyVersion = "TAX-TH-v1";
+    public const string UnresolvedPolicyVersion = "unresolved";
 }
 
 public static class EstimateRevisionStatus

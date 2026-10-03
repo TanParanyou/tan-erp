@@ -4,8 +4,9 @@ import React from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { IconAlertTriangle, IconEye } from "@/components/common/Icons";
+import { IconAlertTriangle } from "@/components/common/Icons";
 import type { DuplicateCustomerResponse } from "@/lib/api/api-client";
+import { DuplicateCandidateRow } from "./duplicate-candidate-row";
 
 export interface DuplicateConfirmationModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function DuplicateConfirmationModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      closeDisabled={isLoading}
       title={t("duplicateConfirmTitle")}
       size="lg"
       footer={
@@ -50,6 +52,7 @@ export function DuplicateConfirmationModal({
             variant="primary"
             onClick={onConfirm}
             isLoading={isLoading}
+            disabled={isLoading}
             className="w-full sm:w-auto font-semibold"
           >
             {t("confirmCreateNewCustomer")}
@@ -71,44 +74,17 @@ export function DuplicateConfirmationModal({
           </h4>
 
           <ul className="list-none p-0 m-0 space-y-2 max-h-60 overflow-y-auto">
-            {candidates.map((candidate) => (
-              <li
-                key={candidate.id}
-                className="p-3 bg-erp-surface border border-erp-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm"
-              >
-                <div className="flex flex-col">
-                  <span className="font-semibold text-erp-navy">
-                    {candidate.code} — {candidate.displayNameTh}
-                  </span>
-                  <span className="text-xs text-erp-text-muted mt-0.5">
-                    {[candidate.maskedPhone, candidate.maskedEmail].filter(Boolean).join(" • ") || "-"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {candidate.id && (
-                    <button
-                      type="button"
-                      onClick={() => onViewCandidate(candidate.id!)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-erp-navy bg-erp-surface border border-erp-border hover:bg-erp-surface-subtle transition-colors"
-                    >
-                      <IconEye size={14} className="text-erp-navy" />
-                      {t("viewInDrawer")}
-                    </button>
-                  )}
-
-                  {candidate.id && (
-                    <button
-                      type="button"
-                      onClick={() => onSelectExisting(candidate.id!)}
-                      className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-white bg-erp-navy hover:bg-erp-navy-hover transition-colors"
-                    >
-                      {t("useExistingCustomer")}
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
+            {candidates.map((candidate) => <DuplicateCandidateRow
+              key={candidate.id}
+              id={candidate.id}
+              code={candidate.code}
+              displayName={candidate.displayNameTh}
+              maskedPhone={candidate.maskedPhone}
+              maskedEmail={candidate.maskedEmail}
+              onView={onViewCandidate}
+              onSelect={onSelectExisting}
+              disabled={isLoading}
+            />)}
           </ul>
         </div>
       </div>

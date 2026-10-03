@@ -31,7 +31,7 @@ public class FileParentAccessResolver : IFileParentAccessResolver
         if (string.IsNullOrWhiteSpace(parentType) || !FileParentTypes.IsValid(parentType))
         {
             return Result<FileParentAccess>.Failure(
-                new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site, item."));
+                new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site, item, item-category, item-brand, costRecord."));
         }
 
         var normalizedParentType = parentType.Trim().ToLowerInvariant();
@@ -254,9 +254,52 @@ public class FileParentAccessResolver : IFileParentAccessResolver
                     new FileParentAccess(normalizedParentType, parentId, null, access.OrganizationId));
             }
 
+            case FileParentTypes.ItemCategory:
+            case FileParentTypes.ItemBrand:
+            {
+                if (!parentId.HasValue)
+                {
+                    return Result<FileParentAccess>.Failure(new Error("FILE_PARENT_TYPE_INVALID", "Master data image upload requires an existing parentId."));
+                }
+
+                var requiredPermission = operation == FileAccessOperation.Read ? "items.read" : "items.manage-taxonomy";
+                var hasPermission = await HasPermissionAsync(access.MembershipId, requiredPermission, cancellationToken);
+                if (!hasPermission && operation == FileAccessOperation.Read)
+                {
+                    hasPermission = await HasPermissionAsync(access.MembershipId, "items.manage-taxonomy", cancellationToken);
+                }
+                if (!hasPermission)
+                {
+                    return Result<FileParentAccess>.Failure(new Error("PERMISSION_DENIED", "Access is denied for the requested operation."));
+                }
+
+                var exists = normalizedParentType == FileParentTypes.ItemCategory
+                    ? await _db.ItemCategories.AsNoTracking().AnyAsync(category => category.Id == parentId.Value && category.OrganizationId == access.OrganizationId, cancellationToken)
+                    : await _db.ItemBrands.AsNoTracking().AnyAsync(brand => brand.Id == parentId.Value && brand.OrganizationId == access.OrganizationId, cancellationToken);
+                if (!exists)
+                {
+                    return Result<FileParentAccess>.Failure(new Error("RESOURCE_NOT_FOUND", "Master data record not found."));
+                }
+
+                return Result<FileParentAccess>.Success(new FileParentAccess(normalizedParentType, parentId, null, access.OrganizationId));
+            }
+
+            case FileParentTypes.CostRecord:
+            {
+                if (!parentId.HasValue)
+                    return Result<FileParentAccess>.Failure(new Error("FILE_PARENT_TYPE_INVALID", "Cost record upload requires an existing parentId."));
+                var requiredPermission = operation == FileAccessOperation.Read ? "cost-records.read" : "cost-records.create";
+                if (!await HasPermissionAsync(access.MembershipId, requiredPermission, cancellationToken))
+                    return Result<FileParentAccess>.Failure(new Error("PERMISSION_DENIED", "Access is denied for the requested operation."));
+                var exists = await _db.CostRecords.AsNoTracking().AnyAsync(c => c.Id == parentId.Value && c.OrganizationId == access.OrganizationId, cancellationToken);
+                if (!exists)
+                    return Result<FileParentAccess>.Failure(new Error("RESOURCE_NOT_FOUND", "Cost record not found."));
+                return Result<FileParentAccess>.Success(new FileParentAccess(normalizedParentType, parentId, null, access.OrganizationId));
+            }
+
             default:
                 return Result<FileParentAccess>.Failure(
-                    new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site, item."));
+                    new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site, item, costRecord."));
         }
     }
 

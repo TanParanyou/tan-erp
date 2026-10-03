@@ -1,5 +1,7 @@
 using System.Text.Json;
 using TanErp.Application.Items;
+using TanErp.Domain.Estimates;
+using TanErp.Domain.Items;
 
 namespace TanErp.Api.Contracts.Items;
 
@@ -16,14 +18,16 @@ public static class ItemResponseMapper
         Id = dto.Id,
         Code = dto.Code,
         Name = ToResponse(dto.Name),
-        ParentCategoryId = dto.ParentCategoryId
+        ParentCategoryId = dto.ParentCategoryId,
+        ImageFileId = dto.ImageFileId
     };
 
     public static BrandSummaryResponse ToResponse(BrandSummaryDto dto) => new()
     {
         Id = dto.Id,
         Code = dto.Code,
-        Name = ToResponse(dto.Name)
+        Name = ToResponse(dto.Name),
+        ImageFileId = dto.ImageFileId
     };
 
     public static UnitSummaryResponse ToResponse(UnitSummaryDto dto) => new()
@@ -110,6 +114,7 @@ public static class ItemResponseMapper
         AllowedItemTypes = p.AllowedItemTypes,
         SortOrder = p.SortOrder,
         Status = p.Status,
+        ImageFileId = p.ImageFileId,
         RowVersion = p.RowVersion,
         CreatedAtUtc = p.CreatedAtUtc,
         UpdatedAtUtc = p.UpdatedAtUtc
@@ -122,6 +127,20 @@ public static class ItemResponseMapper
         Code = p.Code,
         Name = ToResponse(p.Name),
         Description = p.Description != null ? ToResponse(p.Description) : null,
+        SortOrder = p.SortOrder,
+        Status = p.Status,
+        ImageFileId = p.ImageFileId,
+        RowVersion = p.RowVersion,
+        CreatedAtUtc = p.CreatedAtUtc,
+        UpdatedAtUtc = p.UpdatedAtUtc
+    };
+
+    public static ItemTaxCategoryDetailResponse ToResponse(ItemTaxCategoryDetailProjection p) => new()
+    {
+        Id = p.Id,
+        OrganizationId = p.OrganizationId,
+        Code = p.Code,
+        Name = ToResponse(p.Name),
         SortOrder = p.SortOrder,
         Status = p.Status,
         RowVersion = p.RowVersion,
@@ -205,6 +224,16 @@ public static class ItemResponseMapper
             Name = new LocalizedTextResponse { Thai = i.Name.Thai, English = i.Name.English },
             Description = i.Description != null ? new LocalizedTextResponse { Thai = i.Description.Thai, English = i.Description.English } : null,
             ItemType = i.ItemType,
+            CostComponentType = i.ItemType switch
+            {
+                ItemType.Material => CostComponentType.Material,
+                ItemType.Product => CostComponentType.Material,
+                ItemType.Labor => CostComponentType.Labor,
+                ItemType.Service => CostComponentType.Service,
+                ItemType.Subcontract => CostComponentType.Subcontract,
+                ItemType.Other => CostComponentType.OtherDirect,
+                _ => throw new InvalidOperationException($"Unsupported item type '{i.ItemType}'.")
+            },
             Category = ToResponse(i.Category),
             Brand = i.Brand != null ? ToResponse(i.Brand) : null,
             BaseUnit = ToResponse(i.BaseUnit),
@@ -223,7 +252,11 @@ public static class ItemResponseMapper
                 UnitCode = i.ResolvedCost.UnitCode,
                 Scope = i.ResolvedCost.Scope,
                 EffectiveFromUtc = i.ResolvedCost.EffectiveFromUtc,
-                PolicyVersion = i.ResolvedCost.PolicyVersion
+                PolicyVersion = i.ResolvedCost.PolicyVersion,
+                CostSourceId = i.ResolvedCost.CostSourceId,
+                CostSourceCode = i.ResolvedCost.CostSourceCode,
+                SourceReference = i.ResolvedCost.SourceReference,
+                EvidenceFileId = i.ResolvedCost.EvidenceFileId
             } : null
         }).ToList(),
         Facets = new CatalogFacetsResponse
@@ -233,13 +266,21 @@ public static class ItemResponseMapper
             {
                 Id = c.Id,
                 Name = new LocalizedTextResponse { Thai = c.Name.Thai, English = c.Name.English },
+                ImageFileId = c.ImageFileId,
                 Count = c.Count
             }).ToList(),
             Brands = result.Facets.Brands.Select(b => new CatalogBrandFacetResponse
             {
                 Id = b.Id,
                 Name = new LocalizedTextResponse { Thai = b.Name.Thai, English = b.Name.English },
+                ImageFileId = b.ImageFileId,
                 Count = b.Count
+            }).ToList(),
+            Attributes = result.Facets.Attributes.Select(a => new CatalogAttributeFacetResponse
+            {
+                Key = a.Key,
+                Value = a.Value,
+                Count = a.Count
             }).ToList()
         },
         PageInfo = new CatalogPageInfoResponse

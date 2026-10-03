@@ -10,6 +10,8 @@ public sealed record EstimateCatalogQuery(
     string? ItemType = null,
     Guid? CategoryId = null,
     Guid? BrandId = null,
+    string? AttributeKey = null,
+    string? AttributeValue = null,
     bool? HasCost = null,
     string? Cursor = null,
     int PageSize = 25);
@@ -39,16 +41,22 @@ public sealed record CatalogResolvedCostProjection(
     string UnitCode,
     string Scope,
     DateTimeOffset EffectiveFromUtc,
-    string PolicyVersion = "COST-RESOLVE-v1");
+    string PolicyVersion = "COST-RESOLVE-v1",
+    Guid? CostSourceId = null,
+    string? CostSourceCode = null,
+    string? SourceReference = null,
+    Guid? EvidenceFileId = null);
 
 public sealed record CatalogFacetItem(string Value, int Count);
-public sealed record CatalogCategoryFacet(Guid Id, LocalizedTextDto Name, int Count);
-public sealed record CatalogBrandFacet(Guid Id, LocalizedTextDto Name, int Count);
+public sealed record CatalogCategoryFacet(Guid Id, LocalizedTextDto Name, Guid? ImageFileId, int Count);
+public sealed record CatalogBrandFacet(Guid Id, LocalizedTextDto Name, Guid? ImageFileId, int Count);
+public sealed record CatalogAttributeFacet(string Key, string Value, int Count);
 
 public sealed record EstimateCatalogFacets(
     IReadOnlyList<CatalogFacetItem> ItemTypes,
     IReadOnlyList<CatalogCategoryFacet> Categories,
-    IReadOnlyList<CatalogBrandFacet> Brands);
+    IReadOnlyList<CatalogBrandFacet> Brands,
+    IReadOnlyList<CatalogAttributeFacet> Attributes);
 
 public sealed record EstimateCatalogResult(
     IReadOnlyList<EstimateCatalogItemProjection> Items,

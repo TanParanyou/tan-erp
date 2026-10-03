@@ -1,338 +1,138 @@
 "use client";
 
-import React from "react";
-import { useFormContext, Controller } from "react-hook-form";
+import React, { useEffect, useState } from "react";
+import { useFormContext, Controller, useWatch, type FieldErrors } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils/cn";
 import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
+import { FormSection } from "@/components/forms/FormSection";
+import { FormTabs, useFormTabErrors } from "@/components/forms/FormTabs";
 import { MultiLangInput } from "@/components/forms/MultiLangInput";
 import { IconTrash, IconCopy } from "@/components/common/Icons";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useEstimateOptions } from "../options/estimate-options";
-import type { EstimateWorkspaceFormData } from "../schemas/estimate-workspace-schema";
+import type { EstimateWorkspaceFormData, WorkItemFormData } from "../schemas/estimate-workspace-schema";
 import { calculateWorkItemSummary } from "../utils/estimate-calculations";
-import {
-  formatFinancialNumber,
-  formatSignedFinancialAmount,
-  formatPercentRate,
-} from "../utils/estimate-formatters";
+import { formatFinancialNumber, formatSignedFinancialAmount, formatPercentRate } from "../utils/estimate-formatters";
 import { EstimateCostComponentTable } from "./estimate-cost-component-table";
+import { useEstimateWorkspace } from "./estimate-workspace-context";
+import { workspaceWorkMatches } from "../utils/estimate-workspace-filter";
 
+type DetailTab = "info" | "cost" | "pricing";
 interface EstimateWorkItemCardProps {
-  sectionIndex: number;
-  itemIndex: number;
-  currency: string;
-  branchId?: string;
-  isFirst?: boolean;
-  isLast?: boolean;
-  onDuplicateItem: (itemIndex: number) => void;
-  onRemoveItem: (itemIndex: number) => void;
-  onMoveUp?: (itemIndex: number) => void;
-  onMoveDown?: (itemIndex: number) => void;
+  sectionIndex: number; itemIndex: number; currency: string; branchId?: string;
+  isFirst?: boolean; isLast?: boolean;
+  onDuplicateItem: (index: number) => void; onRemoveItem: (index: number) => void;
+  onMoveUp?: (index: number) => void; onMoveDown?: (index: number) => void;
 }
 
-export function EstimateWorkItemCard({
-  sectionIndex,
-  itemIndex,
-  currency,
-  branchId,
-  isFirst = false,
-  isLast = false,
-  onDuplicateItem,
-  onRemoveItem,
-  onMoveUp,
-  onMoveDown,
-}: EstimateWorkItemCardProps) {
+export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branchId, isFirst = false, isLast = false, onDuplicateItem, onRemoveItem, onMoveUp, onMoveDown }: EstimateWorkItemCardProps) {
   const t = useTranslations("estimates");
   const { options } = useEstimateOptions();
   const { confirm, ConfirmDialog } = useConfirm();
-  const { control, watch, setValue } = useFormContext<EstimateWorkspaceFormData>();
-
-  const currentItem = watch(`sections.${sectionIndex}.workItems.${itemIndex}`);
-  const itemCalc = calculateWorkItemSummary(currentItem || {});
-
-  const handleRequestRemove = async () => {
-    const itemDesc = currentItem?.descriptionTh || currentItem?.code;
-    const ok = await confirm({
-      title: t("confirmDeleteWorkItem"),
-      message: itemDesc ? `"${itemDesc}"` : t("confirmDeleteWorkItem"),
-      confirmText: t("removeWorkItem"),
-      variant: "danger",
+  const workspace = useEstimateWorkspace();
+  const { control, getValues, setValue, formState: { errors } } = useFormContext<EstimateWorkspaceFormData>();
+  const path = `sections.${sectionIndex}.workItems.${itemIndex}` as const;
+  const currentItem = useWatch({ control, name: path });
+  const itemCalc = calculateWorkItemSummary(currentItem ?? {});
+  const itemErrors: FieldErrors<WorkItemFormData> = errors.sections?.[sectionIndex]?.workItems?.[itemIndex] ?? {};
+  const [activeTab, setActiveTab] = useState<DetailTab>("info");
+  const scope = `work-${sectionIndex}-${itemIndex}`;
+  const { tabErrorMap } = useFormTabErrors<DetailTab, WorkItemFormData>({
+    tabFieldsMap: { info: ["code", "descriptionTh", "descriptionEn", "quantity", "unitCode", "overrideReasonCode", "overrideReason"], cost: ["costComponents"], pricing: ["sellingRuleType", "sellingRuleValue", "sellingRuleReasonCode"] },
+    errors: itemErrors, setActiveTab,
+  });
+  const requestedError = workspace?.errorTarget;
+  useEffect(() => {
+    if (!requestedError || requestedError.key !== currentItem?.uiKey) return;
+    setActiveTab(requestedError.tab);
+    requestAnimationFrame(() => {
+      const panel = document.getElementById(`tabpanel-${scope}-${requestedError.tab}`);
+      panel?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
     });
+  }, [requestedError, currentItem?.uiKey, scope]);
+  const focusTargetId = workspace?.focusTargetId;
+  useEffect(() => {
+    if (!focusTargetId) return;
+    if (currentItem?.costComponents.some((cost) => cost.id === focusTargetId)) setActiveTab("cost");
+    else if (currentItem?.id === focusTargetId && currentItem.sellingRuleType === "fixed_price" && !currentItem.sellingRuleReasonCode) setActiveTab("pricing");
+  }, [focusTargetId, currentItem?.id, currentItem?.sellingRuleType, currentItem?.sellingRuleReasonCode, currentItem?.costComponents]);
 
-    if (ok) {
-      onRemoveItem(itemIndex);
-    }
-  };
-
+  async function handleRequestRemove() {
+    if (await confirm({ title: t("confirmDeleteWorkItem"), message: currentItem.descriptionTh, confirmText: t("removeWorkItem"), variant: "danger" })) onRemoveItem(itemIndex);
+  }
+  if (!currentItem) return null;
+  const hiddenByFilter = workspace && !workspaceWorkMatches(getValues(`sections.${sectionIndex}`), currentItem, workspace.searchQuery, workspace.filterMode);
+  const panelProps = (tab: DetailTab) => ({ role: "tabpanel", id: `tabpanel-${scope}-${tab}`, "aria-labelledby": `tab-${scope}-${tab}`, className: activeTab === tab ? "p-3" : "hidden p-3" });
   return (
-    <div className="border border-erp-border bg-erp-surface shadow-sm">
-      {/* 1. Work Item Header Bar: Identity & Actions in Perfect Alignment */}
-      <div className="bg-erp-surface-subtle/80 px-4 py-2 border-b border-erp-border flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono font-bold px-2 py-0.5 bg-erp-navy text-white">
-            #{itemIndex + 1}
-          </span>
-          <span className="text-xs font-mono font-bold text-erp-navy">
-            {currentItem?.code || `ITEM-${itemIndex + 1}`}
-          </span>
-          {currentItem?.descriptionTh && (
-            <span className="text-xs text-erp-text-muted hidden md:inline truncate max-w-[280px]">
-              — {currentItem.descriptionTh}
-            </span>
-          )}
+    <div id={currentItem?.id ? `estimate-target-${currentItem.id}` : undefined} tabIndex={-1} className="bg-erp-surface focus-visible:outline-2 focus-visible:outline-erp-navy">
+      {hiddenByFilter && <Alert variant="info">{t("workspace.selectedOutsideFilter")}</Alert>}
+      <FormSection title={currentItem.descriptionTh || t("itemDesc")} description={currentItem.code} className="!border-0 !p-3 !gap-2" headerClassName="pb-2 [&_h2]:text-sm sm:flex-row sm:items-start [&>div:first-child]:flex-1 [&_h2]:whitespace-normal [&_h2]:break-words [&_h2]:normal-case" headerAction={
+        <div className="flex flex-wrap gap-1">
+          {onMoveUp && <Button variant="ghost" size="icon" disabled={isFirst} onClick={() => onMoveUp(itemIndex)} aria-label={t("moveUp")}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 15l-6-6-6 6" /></svg></Button>}
+          {onMoveDown && <Button variant="ghost" size="icon" disabled={isLast} onClick={() => onMoveDown(itemIndex)} aria-label={t("moveDown")}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg></Button>}
+          <Button variant="ghost" size="icon" onClick={() => onDuplicateItem(itemIndex)} aria-label={t("duplicateWorkItem")} icon={<IconCopy size={16} />} />
+          <Button variant="ghost" size="icon" onClick={handleRequestRemove} aria-label={t("removeWorkItem")} icon={<IconTrash size={16} />} />
         </div>
-
-        {/* Action Controls: 32x32px Fixed Dimension Buttons */}
-        <div className="flex items-center gap-1">
-          {onMoveUp && (
-            <button
-              type="button"
-              disabled={isFirst}
-              onClick={() => onMoveUp(itemIndex)}
-              className="w-8 h-8 text-erp-text-muted hover:text-erp-navy hover:bg-erp-surface disabled:opacity-25 disabled:cursor-not-allowed transition-colors flex items-center justify-center border border-erp-border"
-              title={t("moveUp")}
-              aria-label={t("moveUp")}
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 15l-6-6-6 6" />
-              </svg>
-            </button>
-          )}
-          {onMoveDown && (
-            <button
-              type="button"
-              disabled={isLast}
-              onClick={() => onMoveDown(itemIndex)}
-              className="w-8 h-8 text-erp-text-muted hover:text-erp-navy hover:bg-erp-surface disabled:opacity-25 disabled:cursor-not-allowed transition-colors flex items-center justify-center border border-erp-border"
-              title={t("moveDown")}
-              aria-label={t("moveDown")}
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => onDuplicateItem(itemIndex)}
-            className="w-8 h-8 text-erp-text-muted hover:text-erp-navy hover:bg-erp-surface transition-colors flex items-center justify-center border border-erp-border"
-            title={t("duplicateWorkItem")}
-            aria-label={t("duplicateWorkItem")}
-          >
-            <IconCopy size={15} />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleRequestRemove}
-            className="w-8 h-8 text-erp-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center border border-erp-border"
-            title={t("removeWorkItem")}
-            aria-label={t("removeWorkItem")}
-          >
-            <IconTrash size={15} />
-          </button>
+      }>
+        <div className="flex flex-wrap justify-between items-center gap-3"><span className="text-xs text-erp-text-muted">{t("totalCost")}</span><span className="font-mono text-base font-bold text-erp-navy">{formatFinancialNumber(itemCalc.totalCost)} {currency}</span></div>
+      </FormSection>
+      <FormTabs activeTab={`${scope}-${activeTab}`} onChange={(id) => { for (const tab of ["info", "cost", "pricing"] as const) if (id === `${scope}-${tab}`) setActiveTab(tab); }} ariaLabel={t("workspace.detailTabs")}
+        tabs={[{ id: `${scope}-info`, label: t("workspace.infoTab"), hasError: tabErrorMap.info }, { id: `${scope}-cost`, label: t("workspace.costTab"), count: currentItem.costComponents.length, hasError: tabErrorMap.cost }, { id: `${scope}-pricing`, label: t("workspace.pricingTab"), hasError: tabErrorMap.pricing }]} />
+      <div {...panelProps("info")}>
+        <div className="space-y-3">
+          <Controller control={control} name={`${path}.code`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-code`} label={t("itemCode")} error={fieldState.error ? t("workspace.codeRequired") : undefined} wrapperClassName="mb-0" />} />
+          <MultiLangInput id={`work-description-${sectionIndex}-${itemIndex}`} label={t("itemDesc")} value={{ th: currentItem.descriptionTh, en: currentItem.descriptionEn }} onChange={(value) => {
+            setValue(`${path}.descriptionTh`, value.th ?? "", { shouldDirty: true, shouldValidate: true });
+            setValue(`${path}.descriptionEn`, value.en ?? "", { shouldDirty: true, shouldValidate: true });
+          }} placeholder={{ th: t("itemDescPlaceholder"), en: t("workspace.descriptionPlaceholderEn") }} />
+          <div className="grid grid-cols-2 gap-3">
+            <Controller control={control} name={`${path}.quantity`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-quantity`} type="number" min="0.001" step="any" label={t("quantity")} onChange={(e) => field.onChange(Number(e.target.value))} error={fieldState.error ? t("workspace.quantityInvalid") : undefined} wrapperClassName="mb-0" />} />
+            <Controller control={control} name={`${path}.unitCode`} render={({ field }) => <Input {...field} id={`${scope}-unitCode`} label={t("unitCode")} list={`units-${scope}`} wrapperClassName="mb-0" />} />
+            <datalist id={`units-${scope}`}>{options.units.map((unit) => <option key={unit.value} value={unit.value}>{unit.label}</option>)}</datalist>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-erp-border pt-3">
+            <div className="min-w-0 text-xs">
+              <span className="mr-2 text-erp-text-muted">{t("itemMasterLink")}</span>
+              {currentItem.item ? <span className="font-medium text-erp-navy">{currentItem.item.code} · {currentItem.item.nameTh}</span> : <span className="text-erp-text-muted">{t("customWorkItem")}</span>}
+            </div>
+            <div className="flex gap-2">
+              {currentItem.itemId && <Button type="button" size="sm" variant="outline" onClick={() => {
+                setValue(`${path}.itemId`, null, { shouldDirty: true, shouldValidate: true });
+                setValue(`${path}.item`, null, { shouldDirty: true });
+                setValue(`${path}.overrideReasonCode`, "", { shouldDirty: true, shouldValidate: true });
+                setValue(`${path}.overrideReason`, "", { shouldDirty: true, shouldValidate: true });
+              }}>{t("unlinkItemMaster")}</Button>}
+              {workspace && currentItem.uiKey && <Button type="button" size="sm" variant="outline" onClick={() => {
+                const sectionKey = getValues(`sections.${sectionIndex}.uiKey`);
+                const workKey = currentItem.uiKey;
+                if (sectionKey && workKey) workspace.openCatalog({ sectionKey, workKey, mode: "workItem" });
+              }}>{currentItem.itemId ? t("changeItemMaster") : t("selectItemMaster")}</Button>}
+            </div>
+          </div>
+          {!currentItem.itemId && <div className="grid gap-3 border-t border-erp-border pt-3 sm:grid-cols-2">
+            <Controller control={control} name={`${path}.overrideReasonCode`} render={({ field, fieldState }) => <Input {...field} value={field.value ?? ""} id={`${scope}-overrideReasonCode`} label={t("customWorkItemReasonCode")} error={fieldState.error ? t("customWorkItemReasonCodeRequired") : undefined} wrapperClassName="mb-0" />} />
+            <Controller control={control} name={`${path}.overrideReason`} render={({ field, fieldState }) => <Textarea {...field} value={field.value ?? ""} id={`${scope}-overrideReason`} label={t("customWorkItemReason")} error={fieldState.error ? t("customWorkItemReasonRequired") : undefined} rows={2} />} />
+          </div>}
         </div>
       </div>
-
-      {/* 2. Form Fields Grid: Balanced 12-Column Grid */}
-      <div className="p-4 space-y-3.5 bg-erp-surface">
-        {/* Row 1: Code & Description TH/EN */}
-        <div className="grid grid-cols-12 gap-3">
-          <div className="col-span-12 sm:col-span-3">
-            <Controller
-              control={control}
-              name={`sections.${sectionIndex}.workItems.${itemIndex}.code`}
-              render={({ field }) => (
-                <Input
-                  label={t("itemCode")}
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  wrapperClassName="mb-0"
-                  className="font-mono text-xs h-9 min-h-[36px]"
-                />
-              )}
-            />
-          </div>
-          <div className="col-span-12 sm:col-span-9">
-            <MultiLangInput
-              label={t("itemDesc")}
-              value={{
-                th: currentItem?.descriptionTh ?? "",
-                en: currentItem?.descriptionEn ?? "",
-              }}
-              onChange={(val) => {
-                setValue(`sections.${sectionIndex}.workItems.${itemIndex}.descriptionTh`, val.th ?? "", {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                });
-                setValue(`sections.${sectionIndex}.workItems.${itemIndex}.descriptionEn`, val.en ?? "", {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                });
-              }}
-              placeholder={{
-                th: t("itemDescPlaceholder"),
-                en: "e.g. Sliding Wardrobe H2400",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Row 2: Quantity, Unit, Selling Rule, Rule Value */}
-        <div className="grid grid-cols-12 gap-3">
-          <div className="col-span-6 sm:col-span-3">
-            <Controller
-              control={control}
-              name={`sections.${sectionIndex}.workItems.${itemIndex}.quantity`}
-              render={({ field }) => (
-                <Input
-                  label={t("quantity")}
-                  type="number"
-                  step="any"
-                  min="0.001"
-                  placeholder={t("quantityPlaceholder")}
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                  wrapperClassName="mb-0"
-                  className="text-right font-mono text-xs h-9 min-h-[36px]"
-                />
-              )}
-            />
-          </div>
-
-          <div className="col-span-6 sm:col-span-3">
-            <Controller
-              control={control}
-              name={`sections.${sectionIndex}.workItems.${itemIndex}.unitCode`}
-              render={({ field }) => (
-                <Input
-                  label={t("unitCode")}
-                  list={`units-list-${sectionIndex}-${itemIndex}`}
-                  value={field.value ?? "lot"}
-                  onChange={field.onChange}
-                  wrapperClassName="mb-0"
-                  className="font-mono text-xs h-9 min-h-[36px]"
-                />
-              )}
-            />
-            <datalist id={`units-list-${sectionIndex}-${itemIndex}`}>
-              {options.units.map((u) => (
-                <option key={u.value} value={u.value}>
-                  {u.label}
-                </option>
-              ))}
-            </datalist>
-          </div>
-
-          <div className="col-span-6 sm:col-span-3">
-            <Controller
-              control={control}
-              name={`sections.${sectionIndex}.workItems.${itemIndex}.sellingRuleType`}
-              render={({ field }) => (
-                <Select
-                  label={t("sellingRule")}
-                  options={options.sellingRuleTypes}
-                  value={field.value ?? "margin"}
-                  onChange={field.onChange}
-                  wrapperClassName="mb-0"
-                  className="text-xs h-9 min-h-[36px]"
-                />
-              )}
-            />
-          </div>
-
-          <div className="col-span-6 sm:col-span-3">
-            <Controller
-              control={control}
-              name={`sections.${sectionIndex}.workItems.${itemIndex}.sellingRuleValue`}
-              render={({ field }) => (
-                <Input
-                  label={t("sellingRuleValue")}
-                  type="number"
-                  step="any"
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                  wrapperClassName="mb-0"
-                  className="text-right font-mono text-xs h-9 min-h-[36px]"
-                />
-              )}
-            />
-          </div>
-        </div>
-
-        {/* 3. Cost Components Breakdown Table */}
-        <EstimateCostComponentTable
-          sectionIndex={sectionIndex}
-          itemIndex={itemIndex}
-          currency={currency}
-          branchId={branchId}
-        />
-      </div>
-
-      {/* 4. Work Item Calculated Footer */}
-      <div className="border-t border-erp-border flex flex-wrap justify-between items-center gap-3 text-xs font-mono bg-erp-surface-subtle/50 px-4 py-2.5">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <span className="text-erp-text-muted font-sans">{t("totalCost")}: </span>
-            <span className="font-bold text-erp-text-main">
-              {formatFinancialNumber(itemCalc.totalCost)} {currency}
-            </span>
-          </div>
-          <div>
-            <span className="text-erp-text-muted font-sans">{t("unitSellingPrice")}: </span>
-            <span className="font-bold text-erp-navy">
-              {formatFinancialNumber(itemCalc.unitSellingPrice)} {currency}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <span className="text-erp-text-muted font-sans">{t("totalSellingPrice")}: </span>
-            <span className="font-bold text-erp-navy text-sm">
-              {formatFinancialNumber(itemCalc.totalSellingPrice)} {currency}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-erp-text-muted font-sans">{t("grossProfit")}: </span>
-            <span
-              className={`font-bold ${
-                itemCalc.grossProfit >= 0 ? "text-emerald-700" : "text-rose-600"
-              }`}
-            >
-              {formatSignedFinancialAmount(itemCalc.grossProfit)} {currency}
-            </span>
-            <span
-              className={`text-[11px] px-1.5 py-0.5 border font-mono ${
-                itemCalc.marginRate >= 30
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                  : "bg-rose-50 text-rose-700 border-rose-300"
-              }`}
-            >
-              {formatPercentRate(itemCalc.marginRate, 1)}
-            </span>
-          </div>
+      <div {...panelProps("cost")}><EstimateCostComponentTable sectionIndex={sectionIndex} itemIndex={itemIndex} currency={currency} branchId={branchId} /></div>
+      <div {...panelProps("pricing")}>
+        <div className="space-y-3">
+          <Controller control={control} name={`${path}.sellingRuleType`} render={({ field }) => <Select {...field} id={`${scope}-sellingRuleType`} label={t("sellingRule")} options={options.sellingRuleTypes} wrapperClassName="mb-0" />} />
+          <Controller control={control} name={`${path}.sellingRuleValue`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-sellingRuleValue`} type="number" step="any" label={t("sellingRuleValue")} onChange={(e) => field.onChange(Number(e.target.value))} error={fieldState.error ? t("workspace.priceInvalid") : undefined} wrapperClassName="mb-0" />} />
+          {currentItem.sellingRuleType === "fixed_price" && <Controller control={control} name={`${path}.sellingRuleReasonCode`} render={({ field, fieldState }) => <Input {...field} value={field.value ?? ""} id={`selling-rule-reason-${sectionIndex}-${itemIndex}`} label={t("sellingRuleReasonCode")} required maxLength={64} error={fieldState.error ? t("fixedPriceReasonRequired") : undefined} wrapperClassName="mb-0" />} />}
+          <dl className="grid grid-cols-2 gap-2 border-t border-erp-border pt-3 text-xs">
+            <dt className="text-erp-text-muted">{t("unitSellingPrice")}</dt><dd className="text-right font-mono font-bold">{formatFinancialNumber(itemCalc.unitSellingPrice)} {currency}</dd>
+            <dt className="text-erp-text-muted">{t("totalSellingPrice")}</dt><dd className="text-right font-mono font-bold text-erp-navy">{formatFinancialNumber(itemCalc.totalSellingPrice)} {currency}</dd>
+            <dt className="text-erp-text-muted">{t("grossProfit")}</dt><dd className={cn("text-right font-mono", itemCalc.grossProfit < 0 ? "text-erp-danger" : "text-erp-success")}>{formatSignedFinancialAmount(itemCalc.grossProfit)} {currency} ({formatPercentRate(itemCalc.marginRate, 1)})</dd>
+          </dl>
         </div>
       </div>
-
       <ConfirmDialog />
     </div>
   );

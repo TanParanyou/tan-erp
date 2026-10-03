@@ -100,15 +100,20 @@ public class ItemTaxonomyController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> CreateCategory(
         [FromBody] CreateItemCategoryRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
         CancellationToken cancellationToken)
     {
-        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        var authResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
         if (authResult.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
         }
 
         var auth = authResult.Value!;
+        if (!string.Equals(auth.IdempotencyKey, idempotencyKey, StringComparison.Ordinal))
+        {
+            return ProblemDetailsMapper.CreateProblemResult("IDEMPOTENCY_KEY_INVALID", HttpContext);
+        }
         var accessResult = await _accessResolver.ResolveAsync(
             auth.FirebaseUid,
             auth.MembershipId,
@@ -129,7 +134,7 @@ public class ItemTaxonomyController : ControllerBase
             request.AllowedItemTypes,
             request.SortOrder);
 
-        var result = await _store.CreateCategoryAsync(data, access, cancellationToken);
+        var result = await _store.CreateCategoryAsync(data, access, auth.IdempotencyKey, cancellationToken);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -181,7 +186,8 @@ public class ItemTaxonomyController : ControllerBase
             request.Description != null ? new LocalizedTextDto(request.Description.Thai, request.Description.English) : null,
             request.ParentCategoryId,
             request.AllowedItemTypes,
-            request.SortOrder);
+            request.SortOrder,
+            request.ImageFileId);
 
         var result = await _store.UpdateCategoryAsync(data, access, cancellationToken);
         if (result.IsFailure)
@@ -273,15 +279,20 @@ public class ItemTaxonomyController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> CreateBrand(
         [FromBody] CreateItemBrandRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
         CancellationToken cancellationToken)
     {
-        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        var authResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
         if (authResult.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
         }
 
         var auth = authResult.Value!;
+        if (!string.Equals(auth.IdempotencyKey, idempotencyKey, StringComparison.Ordinal))
+        {
+            return ProblemDetailsMapper.CreateProblemResult("IDEMPOTENCY_KEY_INVALID", HttpContext);
+        }
         var accessResult = await _accessResolver.ResolveAsync(
             auth.FirebaseUid,
             auth.MembershipId,
@@ -300,7 +311,7 @@ public class ItemTaxonomyController : ControllerBase
             request.Description != null ? new LocalizedTextDto(request.Description.Thai, request.Description.English) : null,
             request.SortOrder);
 
-        var result = await _store.CreateBrandAsync(data, access, cancellationToken);
+        var result = await _store.CreateBrandAsync(data, access, auth.IdempotencyKey, cancellationToken);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
@@ -350,7 +361,8 @@ public class ItemTaxonomyController : ControllerBase
             request.Code,
             new LocalizedTextDto(request.Name.Thai, request.Name.English),
             request.Description != null ? new LocalizedTextDto(request.Description.Thai, request.Description.English) : null,
-            request.SortOrder);
+            request.SortOrder,
+            request.ImageFileId);
 
         var result = await _store.UpdateBrandAsync(data, access, cancellationToken);
         if (result.IsFailure)
@@ -442,15 +454,20 @@ public class ItemTaxonomyController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> CreateUnit(
         [FromBody] CreateUnitOfMeasureRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
         CancellationToken cancellationToken)
     {
-        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        var authResult = RequestContextReader.ReadIdempotentRequest(HttpContext);
         if (authResult.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
         }
 
         var auth = authResult.Value!;
+        if (!string.Equals(auth.IdempotencyKey, idempotencyKey, StringComparison.Ordinal))
+        {
+            return ProblemDetailsMapper.CreateProblemResult("IDEMPOTENCY_KEY_INVALID", HttpContext);
+        }
         var accessResult = await _accessResolver.ResolveAsync(
             auth.FirebaseUid,
             auth.MembershipId,
@@ -471,7 +488,7 @@ public class ItemTaxonomyController : ControllerBase
             request.DecimalScale,
             request.RoundingMode);
 
-        var result = await _store.CreateUnitAsync(data, access, cancellationToken);
+        var result = await _store.CreateUnitAsync(data, access, auth.IdempotencyKey, cancellationToken);
         if (result.IsFailure)
         {
             return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);

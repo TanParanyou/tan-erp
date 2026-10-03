@@ -314,6 +314,17 @@ public class FileStore : IFileStore
 
         if (!parentAuthorized)
         {
+            var costRecord = await _db.CostRecords.AsNoTracking()
+                .FirstOrDefaultAsync(record => record.OrganizationId == access.OrganizationId && record.EvidenceFileId == file.Id, cancellationToken);
+            if (costRecord is not null)
+            {
+                var parentAccess = await _parentAccessResolver.ResolveAsync(access, FileParentTypes.CostRecord, costRecord.Id, null, FileAccessOperation.Read, cancellationToken);
+                parentAuthorized = parentAccess.IsSuccess;
+            }
+        }
+
+        if (!parentAuthorized)
+        {
             return Result<FileContentResult>.Failure(
                 new Error("RESOURCE_NOT_FOUND", "File was not found."));
         }

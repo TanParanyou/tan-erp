@@ -18,7 +18,7 @@ public sealed record CreateCostRecordRequest
     public string Currency { get; init; } = "THB";
 
     [Required]
-    [Range(0.0001, double.MaxValue)]
+    [Range(0, double.MaxValue)]
     public decimal Amount { get; init; }
 
     public decimal MinimumQuantity { get; init; } = 0m;
@@ -44,7 +44,7 @@ public sealed record CreateCostRecordRequest
 public sealed record UpdateCostRecordRequest
 {
     [Required]
-    [Range(0.0001, double.MaxValue)]
+    [Range(0, double.MaxValue)]
     public decimal Amount { get; init; }
 
     [Required]

@@ -7,8 +7,9 @@ public static class ItemType
     public const string Service = "service";
     public const string Subcontract = "subcontract";
     public const string Other = "other";
+    public const string Product = "product";
 
-    public static readonly string[] All = [Material, Labor, Service, Subcontract, Other];
+    public static readonly string[] All = [Material, Labor, Service, Subcontract, Other, Product];
 
     public static bool IsValid(string type) => All.Contains(type, StringComparer.OrdinalIgnoreCase);
 }
@@ -20,6 +21,36 @@ public static class ItemStatus
     public const string Inactive = "inactive";
 
     public static readonly string[] All = [Draft, Active, Inactive];
+}
+
+public static class ItemSortKey
+{
+    public const string Code = "code";
+    public const string ItemType = "itemType";
+    public const string Status = "status";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Code,
+        ItemType,
+        Status
+    };
+
+    public static bool IsValid(string value) => All.Contains(value.Trim());
+}
+
+public static class ItemSortOrder
+{
+    public const string Asc = "asc";
+    public const string Desc = "desc";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Asc,
+        Desc
+    };
+
+    public static bool IsValid(string value) => All.Contains(value.Trim());
 }
 
 public static class ItemAvailabilityMode

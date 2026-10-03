@@ -18,6 +18,7 @@ public class CustomerContact : Entity
     public string Status { get; private set; } = ContactStatus.Active;
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid CreatedByUserId { get; private set; }
+    public Guid RowVersion { get; private set; }
 
     public Customer? Customer { get; private set; }
 
@@ -74,6 +75,38 @@ public class CustomerContact : Entity
         Status = ContactStatus.Active;
         CreatedByUserId = createdByUserId;
         CreatedAtUtc = createdAtUtc;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public bool Update(Guid expectedRowVersion, string name, string? roleTitle, string? phone, string? email, string? lineId, string preferredChannel)
+    {
+        if (expectedRowVersion != RowVersion || Status != ContactStatus.Active) return false;
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Contact name cannot be blank.", nameof(name));
+        var normalizedPhone = CustomerNormalizer.NormalizePhone(phone);
+        var normalizedEmail = CustomerNormalizer.NormalizeEmail(email);
+        if (normalizedPhone is null && normalizedEmail is null) throw new ArgumentException("Contact needs a phone or email.");
+        if (!ContactChannel.IsValid(preferredChannel)) throw new ArgumentException("Preferred channel is invalid.", nameof(preferredChannel));
+        Name = CustomerNormalizer.CollapseWhitespace(name); RoleTitle = string.IsNullOrWhiteSpace(roleTitle) ? null : CustomerNormalizer.CollapseWhitespace(roleTitle);
+        Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim(); NormalizedPhone = normalizedPhone;
+        Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim(); NormalizedEmail = normalizedEmail;
+        LineId = string.IsNullOrWhiteSpace(lineId) ? null : lineId.Trim(); PreferredChannel = preferredChannel.Trim(); RowVersion = Guid.NewGuid(); return true;
+    }
+
+    public bool Deactivate(Guid expectedRowVersion)
+    {
+        if (expectedRowVersion != RowVersion || Status != ContactStatus.Active || IsPrimary) return false;
+        Status = ContactStatus.Inactive; RowVersion = Guid.NewGuid(); return true;
+    }
+
+    public bool MakePrimary(Guid expectedRowVersion)
+    {
+        if (expectedRowVersion != RowVersion || Status != ContactStatus.Active) return false;
+        IsPrimary = true; RowVersion = Guid.NewGuid(); return true;
+    }
+
+    public void ClearPrimary()
+    {
+        IsPrimary = false; RowVersion = Guid.NewGuid();
     }
 
     public override string ToString() => $"CustomerContact [Id={Id}, CustomerId={CustomerId}, IsPrimary={IsPrimary}]";

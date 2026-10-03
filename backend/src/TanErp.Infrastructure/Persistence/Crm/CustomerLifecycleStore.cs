@@ -6,6 +6,7 @@ using TanErp.Application.Common.Results;
 using TanErp.Application.Crm.Customers;
 using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Customers;
+using TanErp.Domain.Crm.Opportunities;
 
 namespace TanErp.Infrastructure.Persistence.Crm;
 
@@ -171,6 +172,46 @@ public class CustomerLifecycleStore : ICustomerLifecycleStore
         });
     }
 
+    public Task<Result<CustomerProjection>> DeactivateAsync(RequestAccessContext access, Guid customerId, Guid expectedRowVersion, string reason, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken = default) =>
+        ChangeStatusAsync(access, customerId, expectedRowVersion, reason, keyHash, payloadHash, traceId, reactivate: false, cancellationToken);
+
+    public Task<Result<CustomerProjection>> ReactivateAsync(RequestAccessContext access, Guid customerId, Guid expectedRowVersion, string keyHash, string payloadHash, string traceId, CancellationToken cancellationToken = default) =>
+        ChangeStatusAsync(access, customerId, expectedRowVersion, null, keyHash, payloadHash, traceId, reactivate: true, cancellationToken);
+
+    private async Task<Result<CustomerProjection>> ChangeStatusAsync(RequestAccessContext access, Guid customerId, Guid expectedRowVersion, string? reason, string keyHash, string payloadHash, string traceId, bool reactivate, CancellationToken cancellationToken)
+    {
+        var operation = reactivate ? "crm.customer.reactivate" : "crm.customer.deactivate";
+        var orgId = access.OrganizationId;
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+        var replay = await _db.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(x => x.OrganizationId == orgId && x.Operation == operation && x.KeyHash == keyHash, cancellationToken);
+        if (replay is not null)
+        {
+            if (replay.PayloadHash != payloadHash) return Result<CustomerProjection>.Failure(new Error("IDEMPOTENCY_KEY_REUSED", "The idempotency key has been used with a different payload."));
+            var replayCustomer = await _db.Customers.Include(x => x.Contacts).AsNoTracking().FirstOrDefaultAsync(x => x.Id == customerId && x.OrganizationId == orgId, cancellationToken);
+            return replayCustomer is null ? Result<CustomerProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Customer not found.")) : Result<CustomerProjection>.Success(ProjectCustomer(replayCustomer));
+        }
+        var customer = await _db.Customers.Include(x => x.Contacts).FirstOrDefaultAsync(x => x.Id == customerId && x.OrganizationId == orgId, cancellationToken);
+        if (customer is null) return Result<CustomerProjection>.Failure(new Error("RESOURCE_NOT_FOUND", "Customer not found."));
+        if (customer.RowVersion != expectedRowVersion) return Result<CustomerProjection>.Failure(new Error("CUSTOMER_VERSION_CONFLICT", "Customer version conflict."));
+        if (!reactivate)
+        {
+            var hasOpenOpportunity = await _db.Opportunities.AsNoTracking().AnyAsync(opportunity =>
+                opportunity.OrganizationId == orgId && opportunity.CustomerId == customerId &&
+                (opportunity.Stage == OpportunityStage.Draft || opportunity.Stage == OpportunityStage.Qualified || opportunity.Stage == OpportunityStage.Surveying || opportunity.Stage == OpportunityStage.Estimating || opportunity.Stage == OpportunityStage.Proposed), cancellationToken);
+            if (hasOpenOpportunity) return Result<CustomerProjection>.Failure(new Error("CUSTOMER_HAS_OPEN_OPPORTUNITY", "Close or transfer open opportunities before deactivating the customer."));
+        }
+        var changed = reactivate ? customer.Reactivate(expectedRowVersion) : customer.Deactivate(expectedRowVersion, reason ?? string.Empty);
+        if (!changed) return Result<CustomerProjection>.Failure(new Error("CUSTOMER_INVALID_STATE", "Customer status cannot change in its current state."));
+        var now = _clock.UtcNow;
+        _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, customer.Id.ToString(), now));
+        _db.AddAuditEvent(new AuditEvent(Guid.NewGuid(), orgId, access.ActorUserId, reactivate ? "customer.activated" : "customer.deactivated", "Customer", customer.Id.ToString(), now, traceId,
+            JsonSerializer.Serialize(new { changedFields = reactivate ? new[] { "status", "inactiveReason" } : new[] { "status", "inactiveReason" } })));
+        try { await _db.SaveChangesAsync(cancellationToken); }
+        catch (DbUpdateConcurrencyException) { return Result<CustomerProjection>.Failure(new Error("CUSTOMER_VERSION_CONFLICT", "Customer version conflict.")); }
+        await tx.CommitAsync(cancellationToken);
+        return Result<CustomerProjection>.Success(ProjectCustomer(customer));
+    }
+
     private static CustomerProjection ProjectCustomer(Customer customer)
     {
         var contact = customer.Contacts.FirstOrDefault(c => c.IsPrimary) ?? customer.Contacts.FirstOrDefault();
@@ -197,7 +238,18 @@ public class CustomerLifecycleStore : ICustomerLifecycleStore
             customer.RowVersion,
             customer.CreatedAtUtc,
             customer.LeadSource,
-            customer.LeadSourceNote);
+            customer.LeadSourceNote,
+            customer.ImageFileId,
+            customer.LegalName,
+            customer.TaxIdentifier,
+            customer.BranchCode,
+            customer.CreditTermDays,
+            customer.CreditLimit,
+            customer.CurrencyCode,
+            customer.BillingCycle,
+            customer.BillingDay,
+            customer.PaymentConditionNote,
+            customer.InactiveReason);
 
     }
 }

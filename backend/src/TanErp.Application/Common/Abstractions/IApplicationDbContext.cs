@@ -14,6 +14,7 @@ public interface IApplicationDbContext
     DbSet<Role> Roles { get; }
     DbSet<Permission> Permissions { get; }
     DbSet<MembershipRole> MembershipRoles { get; }
+    DbSet<RoleAssignmentRequest> RoleAssignmentRequests { get; }
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition> DocumentSequenceDefinitions { get; }
     DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceCounter> DocumentSequenceCounters { get; }

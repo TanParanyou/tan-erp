@@ -14,7 +14,7 @@ public class CostRecordConfiguration : IEntityTypeConfiguration<CostRecord>
         {
             t.HasCheckConstraint("CK_cost_records_scope", "scope IN ('organization', 'branch')");
             t.HasCheckConstraint("CK_cost_records_status", "status IN ('draft', 'submitted', 'returned', 'approved', 'published', 'superseded', 'disabled')");
-            t.HasCheckConstraint("CK_cost_records_amount", "amount > 0");
+            t.HasCheckConstraint("CK_cost_records_amount", "amount >= 0");
             t.HasCheckConstraint("CK_cost_records_minimum_quantity", "minimum_quantity >= 0");
             t.HasCheckConstraint("CK_cost_records_maximum_quantity", "maximum_quantity IS NULL OR maximum_quantity > minimum_quantity");
             t.HasCheckConstraint("CK_cost_records_effective_period", "effective_to_utc IS NULL OR effective_to_utc >= effective_from_utc");

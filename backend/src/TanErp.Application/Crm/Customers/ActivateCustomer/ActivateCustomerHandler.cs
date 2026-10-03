@@ -38,7 +38,7 @@ public class ActivateCustomerHandler
         var canonicalPayload = $"{command.CustomerId:D}|{command.ExpectedRowVersion:D}|activate";
         var payloadHash = Sha256Hex.Compute(canonicalPayload);
 
-        return await _store.ActivateAsync(
+        var result = await _store.ActivateAsync(
             access,
             command.CustomerId,
             command.ExpectedRowVersion,
@@ -46,5 +46,17 @@ public class ActivateCustomerHandler
             payloadHash,
             command.TraceId,
             cancellationToken);
+        if (result.IsFailure) return result;
+        var creditRead = await _accessResolver.ResolveAsync(command.FirebaseUid, command.MembershipId, "customers.credit.read", cancellationToken);
+        var piiRead = await _accessResolver.ResolveAsync(command.FirebaseUid, command.MembershipId, "customer-contacts.manage", cancellationToken);
+        return Result<CustomerProjection>.Success(result.Value! with
+        {
+            CreditTermDays = creditRead.IsSuccess ? result.Value.CreditTermDays : null,
+            CreditLimit = creditRead.IsSuccess ? result.Value.CreditLimit : null,
+            BillingCycle = creditRead.IsSuccess ? result.Value.BillingCycle : null,
+            BillingDay = creditRead.IsSuccess ? result.Value.BillingDay : null,
+            PaymentConditionNote = creditRead.IsSuccess ? result.Value.PaymentConditionNote : null,
+            TaxIdentifier = piiRead.IsSuccess ? result.Value.TaxIdentifier : null
+        });
     }
 }

@@ -67,6 +67,38 @@ public class UpdateDocumentSequenceHandler
         var orgId = accessResult.Value!.OrganizationId;
         var normalizedType = command.DocumentType.Trim().ToLowerInvariant();
 
+        if (DocumentTypes.GeneratedMasterData.Contains(normalizedType, StringComparer.OrdinalIgnoreCase))
+        {
+            if (resetPeriod != ResetPeriod.Never)
+            {
+                return Result<DocumentSequenceProjection>.Failure(
+                    new Error("INVALID_RESET_PERIOD", "Master data codes must never reset."));
+            }
+
+            if (command.IsBranchSpecific ||
+                command.Prefix.Trim().Length is 0 or > 10 ||
+                !System.Text.RegularExpressions.Regex.IsMatch(
+                    command.FormatPattern.Trim(),
+                    @"^\{PREFIX\}[-_./]?\{SEQ(?::\d{1,2})?\}$",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            {
+                return Result<DocumentSequenceProjection>.Failure(
+                    new Error("INVALID_FORMAT_PATTERN", "Master data codes only support organization-wide prefix and sequence tokens."));
+            }
+
+            var maximumSample = _generator.Preview(
+                command.FormatPattern.Trim(),
+                command.Prefix.Trim(),
+                timestamp: _clock.UtcNow,
+                sampleSequence: 9_999_999_999L,
+                defaultPadding: command.Padding);
+            if (maximumSample.Length > 20)
+            {
+                return Result<DocumentSequenceProjection>.Failure(
+                    new Error("INVALID_FORMAT_PATTERN", "The master data code pattern exceeds the shortest code field limit."));
+            }
+        }
+
         var def = await _db.DocumentSequenceDefinitions
             .FirstOrDefaultAsync(d => d.OrganizationId == orgId && d.DocumentType == normalizedType, cancellationToken);
 

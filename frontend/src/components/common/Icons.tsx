@@ -159,6 +159,15 @@ export function IconArrowUpDown({ size = 16, strokeWidth = 2, ...props }: IconPr
   );
 }
 
+export function IconChevronsUpDown({ size = 16, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <polyline points="7 15 12 20 17 15" />
+      <polyline points="7 9 12 4 17 9" />
+    </svg>
+  );
+}
+
 export function IconArrowUp({ size = 16, strokeWidth = 2, ...props }: IconProps) {
   return (
     <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
@@ -472,6 +481,18 @@ export function IconGrid({ size = 18, strokeWidth = 2, ...props }: IconProps) {
       <rect x="14" y="3" width="7" height="7" />
       <rect x="14" y="14" width="7" height="7" />
       <rect x="3" y="14" width="7" height="7" />
+    </svg>
+  );
+}
+
+export function IconTable({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <rect x="3" y="3" width="18" height="18" />
+      <line x1="3" y1="9" x2="21" y2="9" />
+      <line x1="3" y1="15" x2="21" y2="15" />
+      <line x1="9" y1="3" x2="9" y2="21" />
+      <line x1="15" y1="3" x2="15" y2="21" />
     </svg>
   );
 }

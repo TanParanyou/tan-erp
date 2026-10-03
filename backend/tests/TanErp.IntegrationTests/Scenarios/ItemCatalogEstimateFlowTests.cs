@@ -14,6 +14,7 @@ using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
 using TanErp.Domain.Estimates;
+using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Items;
 using TanErp.Domain.Organization;
 using TanErp.Domain.Surveys;
@@ -96,7 +97,7 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task CompleteE2EFlow_ItemMaster_CostMakerChecker_BranchResolution_EstimateSnapshot_And_ConflictRejection()
+    public async Task PilotEstimate_CatalogCostsResolveAndSnapshotSurvivesNewCostVersion()
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -106,6 +107,23 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         var branchB = new Branch(Guid.NewGuid(), OrgId, "B02", "สาขาขอนแก่น");
         db.Branches.Add(branchB);
         var branchBId = branchB.Id;
+        var sourceMembership = await db.Memberships.Include(membership => membership.MembershipRoles)
+            .SingleAsync(membership => membership.Id == MembershipId);
+        var branchMembershipId = Guid.NewGuid();
+        db.Memberships.Add(new Membership(branchMembershipId, OrgId, branchBId, sourceMembership.UserId));
+        foreach (var role in sourceMembership.MembershipRoles)
+            db.MembershipRoles.Add(new MembershipRole(branchMembershipId, role.RoleId, OrgId));
+        var testPolicyPublishedAt = now.AddMinutes(-1);
+        var branchCalculationPolicy = new CalculationPolicyVersion(
+            Guid.NewGuid(), OrgId, branchBId, "TEST_ONLY_BRANCH_CALC", 1,
+            "none", 0m, "away-from-zero", now.AddDays(-1), null, MakerUserId);
+        branchCalculationPolicy.Publish(CheckerUserId, testPolicyPublishedAt);
+        db.CalculationPolicyVersions.Add(branchCalculationPolicy);
+        var branchTaxPolicy = new TaxPolicyVersion(
+            Guid.NewGuid(), OrgId, branchBId, "TEST_ONLY_BRANCH_TAX", 1,
+            "exclusive", 0.07m, "TEST_ONLY_VAT", now.AddDays(-1), null, MakerUserId);
+        branchTaxPolicy.Publish(CheckerUserId, testPolicyPublishedAt);
+        db.TaxPolicyVersions.Add(branchTaxPolicy);
 
         // 1. Setup Taxonomy: Category & Unit
         var category = new ItemCategory(
@@ -127,7 +145,7 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
             unit.Id, ItemAvailabilityMode.AllBranches,
             new ItemCapabilities(CanSell: true, CanCost: true, CanPurchase: true, CanStock: true, CanProduce: false),
             null, null, MakerUserId, now);
-        item.Activate(MakerUserId, now, hasActiveSelectedBranch: false);
+        item.Activate(MakerUserId, now, hasActiveSelectedBranch: false, categoryActive: true, unitActive: true, brandActive: true);
         db.Items.Add(item);
 
         // 3. Attach Primary Image
@@ -148,6 +166,20 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
             height: 600);
         db.UploadedFiles.Add(uploadedFile);
 
+        var costEvidenceFileId = Guid.NewGuid();
+        db.UploadedFiles.Add(new TanErp.Domain.Files.UploadedFile(
+            costEvidenceFileId,
+            OrgId,
+            $"cost-evidence/{item.Id}/{costEvidenceFileId}.pdf",
+            "TEST-INVOICE-EVIDENCE.pdf",
+            "application/pdf",
+            12000,
+            $"session-{Guid.NewGuid():N}",
+            MakerUserId,
+            now,
+            scanStatus: "clean",
+            verifiedAtUtc: now));
+
         var image = new ItemImage(
             Guid.NewGuid(), OrgId, item.Id, primaryImageFileId,
             ItemImageRole.Primary, true, 1,
@@ -159,6 +191,8 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         var orgCost = CostRecord.CreateDraft(
             Guid.NewGuid(), OrgId, item.Id, CostScopeType.Organization, null, unit.Id, "THB",
             1000m, 0m, null, now.AddDays(-1), null, 1, null, null, null, null, MakerUserId, now);
+        orgCost.UpdateMetadata("TEST-INVOICE-001", null, costEvidenceFileId,
+            TestOnlyDataSeeder.TestCostSourceId, MakerUserId, now);
         orgCost.Submit(MakerUserId, now);
         orgCost.Approve(CheckerUserId, now);
         orgCost.Publish(CheckerUserId, now);
@@ -168,6 +202,8 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         var branchCost = CostRecord.CreateDraft(
             Guid.NewGuid(), OrgId, item.Id, CostScopeType.Branch, branchBId, unit.Id, "THB",
             1200m, 0m, null, now.AddDays(-1), null, 1, null, null, null, null, MakerUserId, now);
+        branchCost.UpdateMetadata("TEST-INVOICE-002", null, costEvidenceFileId,
+            TestOnlyDataSeeder.TestCostSourceId, MakerUserId, now);
         branchCost.Submit(MakerUserId, now);
         branchCost.Approve(CheckerUserId, now);
         branchCost.Publish(CheckerUserId, now);
@@ -205,6 +241,8 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         db.SiteSurveys.Add(survey);
         db.SiteSurveyRevisions.Add(revision);
         await db.SaveChangesAsync();
+        Assert.Equal(TestOnlyDataSeeder.TestCostSourceId, branchCost.CostSourceId);
+        Assert.Equal(costEvidenceFileId, branchCost.EvidenceFileId);
 
         // 7. Verify Authoritative Catalog Endpoint Precedence:
         // Branch A gets Org Cost (1000 THB), Branch B gets Branch Cost (1200 THB)
@@ -215,6 +253,8 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         Assert.NotNull(catalogDataA);
         var catalogItemA = Assert.Single(catalogDataA.Items);
         Assert.Equal(1000m, catalogItemA.ResolvedCost?.Amount);
+        Assert.Equal(TestOnlyDataSeeder.TestCostSourceId, catalogItemA.ResolvedCost?.CostSourceId);
+        Assert.Equal(costEvidenceFileId, catalogItemA.ResolvedCost?.EvidenceFileId);
         Assert.Equal(CostScopeType.Organization, catalogItemA.ResolvedCost?.Scope);
         Assert.Equal(primaryImageFileId, catalogItemA.PrimaryImage?.FileId);
 
@@ -225,11 +265,13 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         Assert.NotNull(catalogDataB);
         var catalogItemB = Assert.Single(catalogDataB.Items);
         Assert.Equal(1200m, catalogItemB.ResolvedCost?.Amount);
+        Assert.Equal(TestOnlyDataSeeder.TestCostSourceId, catalogItemB.ResolvedCost?.CostSourceId);
+        Assert.Equal(costEvidenceFileId, catalogItemB.ResolvedCost?.EvidenceFileId);
         Assert.Equal(CostScopeType.Branch, catalogItemB.ResolvedCost?.Scope);
         Assert.Equal(primaryImageFileId, catalogItemB.PrimaryImage?.FileId);
 
         // 8. Create Estimate Draft from Opportunity in Branch B
-        var createEstReq = CreateAuthenticatedRequest(HttpMethod.Post, "/api/v1/estimates");
+        var createEstReq = CreateAuthenticatedRequest(HttpMethod.Post, "/api/v1/estimates", membershipId: branchMembershipId);
         createEstReq.Headers.Add("Idempotency-Key", $"idemp-e2e-estimate-{Guid.NewGuid():N}");
         createEstReq.Content = JsonContent.Create(new CreateEstimateDraftRequest(opp.Id, revision.Id, Currency: "THB"));
         var createEstRes = await _client.SendAsync(createEstReq);
@@ -239,7 +281,7 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
 
         // 9. Update Draft with Work Item containing the Catalog Item with Branch B Cost (1200 THB, Version 1)
         var currentRev = estimate.CurrentRevision!;
-        var updateReq = CreateAuthenticatedRequest(HttpMethod.Put, $"/api/v1/estimates/{estimate.Id}/revisions/{currentRev.Id}/draft");
+        var updateReq = CreateAuthenticatedRequest(HttpMethod.Put, $"/api/v1/estimates/{estimate.Id}/revisions/{currentRev.Id}/draft", membershipId: branchMembershipId);
         updateReq.Headers.Add("If-Match", $"\"{currentRev.RowVersion}\"");
         updateReq.Content = JsonContent.Create(new UpdateEstimateDraftRequest(
             ExpectedRevisionVersion: currentRev.RowVersion,
@@ -263,6 +305,7 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
                             SellingRuleType: "margin",
                             SellingRuleValue: 0.20m,
                             SortOrder: 1,
+                            ItemId: item.Id,
                             CostComponents: new[]
                             {
                                 new UpdateEstimateCostComponentDto(
@@ -276,7 +319,13 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
                                     SortOrder: 1,
                                     ItemId: item.Id,
                                     CostRecordId: branchCost.Id,
-                                    CostRecordVersion: 1)
+                                    CostRecordVersion: 1),
+                                new UpdateEstimateCostComponentDto(
+                                    Id: null, Type: "labor", Description: "ค่าแรงติดตั้งทดสอบ",
+                                    Quantity: 2m, UnitCode: "DAY", UnitCost: 1000m, Currency: "THB", SortOrder: 2),
+                                new UpdateEstimateCostComponentDto(
+                                    Id: null, Type: "subcontract", Description: "งานติดตั้งระบบทดสอบ",
+                                    Quantity: 1m, UnitCode: "SET", UnitCost: 3000m, Currency: "THB", SortOrder: 3)
                             })
                     })
             }));
@@ -284,6 +333,10 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         var updateRes = await _client.SendAsync(updateReq);
         Assert.Equal(HttpStatusCode.OK, updateRes.StatusCode);
         var updatedRevision = (await updateRes.Content.ReadFromJsonAsync<EstimateRevisionResponse>())!;
+
+        var linkedWorkItem = Assert.Single(Assert.Single(updatedRevision.Sections).WorkItems);
+        Assert.Equal(item.Id, linkedWorkItem.Item?.Id);
+        Assert.Equal(item.Code, linkedWorkItem.Item?.Code);
 
         // Verify Snapshots in Response & Database
         var costComp = updatedRevision.Sections[0].WorkItems[0].CostComponents[0];
@@ -295,6 +348,10 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         Assert.Equal("SHEET", costComp.UnitSnapshot);
         Assert.Equal(1200m, costComp.UnitCostSnapshot);
         Assert.Equal(CostScopeType.Branch, costComp.CostScopeSnapshot);
+        Assert.Equal(TestOnlyDataSeeder.TestCostSourceId, costComp.CostSourceIdSnapshot);
+        Assert.Equal(costEvidenceFileId, costComp.CostEvidenceFileIdSnapshot);
+        Assert.Equal("TEST-INVOICE-002", costComp.CostSourceReferenceSnapshot);
+        Assert.False(costComp.IsProvisional);
         Assert.NotNull(costComp.ResolvedAtUtc);
 
         // 10. Simulate Price Change: Branch B Cost Record published as Version 2 with new price (1350 THB)
@@ -303,6 +360,8 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         var newCost = CostRecord.CreateDraft(
             Guid.NewGuid(), OrgId, item.Id, CostScopeType.Branch, branchBId, unit.Id, "THB",
             1350m, 0m, null, now, null, 2, null, null, null, null, MakerUserId, now);
+        newCost.UpdateMetadata("TEST-INVOICE-003", null, costEvidenceFileId,
+            TestOnlyDataSeeder.TestCostSourceId, MakerUserId, now);
         newCost.Submit(MakerUserId, now);
         newCost.Approve(CheckerUserId, now);
         newCost.Publish(CheckerUserId, now);
@@ -311,7 +370,7 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
 
         // 11. Attempt to Update Draft using Stale Price / Stale Version (1200 THB, Version 1)
         // Expected: 409 Conflict with ITEM_COST_VERSION_CONFLICT
-        var staleReq = CreateAuthenticatedRequest(HttpMethod.Put, $"/api/v1/estimates/{estimate.Id}/revisions/{currentRev.Id}/draft");
+        var staleReq = CreateAuthenticatedRequest(HttpMethod.Put, $"/api/v1/estimates/{estimate.Id}/revisions/{currentRev.Id}/draft", membershipId: branchMembershipId);
         staleReq.Headers.Add("If-Match", $"\"{updatedRevision.RowVersion}\"");
         staleReq.Content = JsonContent.Create(new UpdateEstimateDraftRequest(
             ExpectedRevisionVersion: updatedRevision.RowVersion,
@@ -348,7 +407,13 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
                                     SortOrder: 1,
                                     ItemId: item.Id,
                                     CostRecordId: branchCost.Id, // Stale cost record!
-                                    CostRecordVersion: 1) // Stale version!
+                                    CostRecordVersion: 1), // Stale version!
+                                new UpdateEstimateCostComponentDto(
+                                    Id: null, Type: "labor", Description: "ค่าแรงติดตั้งทดสอบ",
+                                    Quantity: 2m, UnitCode: "DAY", UnitCost: 1000m, Currency: "THB", SortOrder: 2),
+                                new UpdateEstimateCostComponentDto(
+                                    Id: null, Type: "subcontract", Description: "งานติดตั้งระบบทดสอบ",
+                                    Quantity: 1m, UnitCode: "SET", UnitCost: 3000m, Currency: "THB", SortOrder: 3)
                             })
                     })
             }));
@@ -360,7 +425,7 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
 
         // 12. Update Draft using Authoritative Active Price (1350 THB, Version 2)
         // Expected: 200 OK with updated Version 2 snapshots
-        var freshReq = CreateAuthenticatedRequest(HttpMethod.Put, $"/api/v1/estimates/{estimate.Id}/revisions/{currentRev.Id}/draft");
+        var freshReq = CreateAuthenticatedRequest(HttpMethod.Put, $"/api/v1/estimates/{estimate.Id}/revisions/{currentRev.Id}/draft", membershipId: branchMembershipId);
         freshReq.Headers.Add("If-Match", $"\"{updatedRevision.RowVersion}\"");
         freshReq.Content = JsonContent.Create(new UpdateEstimateDraftRequest(
             ExpectedRevisionVersion: updatedRevision.RowVersion,
@@ -397,7 +462,13 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
                                     SortOrder: 1,
                                     ItemId: item.Id,
                                     CostRecordId: newCost.Id,
-                                    CostRecordVersion: 2)
+                                    CostRecordVersion: 2),
+                                new UpdateEstimateCostComponentDto(
+                                    Id: null, Type: "labor", Description: "ค่าแรงติดตั้งทดสอบ",
+                                    Quantity: 2m, UnitCode: "DAY", UnitCost: 1000m, Currency: "THB", SortOrder: 2),
+                                new UpdateEstimateCostComponentDto(
+                                    Id: null, Type: "subcontract", Description: "งานติดตั้งระบบทดสอบ",
+                                    Quantity: 1m, UnitCode: "SET", UnitCost: 3000m, Currency: "THB", SortOrder: 3)
                             })
                     })
             }));
@@ -411,5 +482,42 @@ public class ItemCatalogEstimateFlowTests : IAsyncLifetime
         Assert.Equal(1350m, freshCostComp.UnitCostSnapshot);
         Assert.Equal(1350m, freshCostComp.UnitCost);
         Assert.Equal(6750m, freshCostComp.TotalCost);
+
+        // Calculate and reload the estimate to prove its cost evidence remains pinned to version 2.
+        var calculateReq = CreateAuthenticatedRequest(
+            HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/revisions/{freshRevision.Id}/calculate",
+            membershipId: branchMembershipId);
+        calculateReq.Headers.Add("Idempotency-Key", $"idemp-pilot-calculate-{Guid.NewGuid():N}");
+        calculateReq.Content = JsonContent.Create(new CalculateEstimateRequest(freshRevision.RowVersion, 0m));
+        var calculateRes = await _client.SendAsync(calculateReq);
+        Assert.Equal(HttpStatusCode.OK, calculateRes.StatusCode);
+        var calculatedRevision = (await calculateRes.Content.ReadFromJsonAsync<EstimateRevisionResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(calculatedRevision.CalculationSnapshotJson));
+        Assert.Equal("TEST_ONLY_BRANCH_CALC-v1", calculatedRevision.CalculationPolicyVersion);
+        Assert.Equal("TEST_ONLY_BRANCH_TAX-v1", calculatedRevision.TaxPolicyVersion);
+
+        using var publishScope = _factory.Services.CreateScope();
+        var publishDb = publishScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var newerCost = CostRecord.CreateDraft(
+            Guid.NewGuid(), OrgId, item.Id, CostScopeType.Branch, branchBId, unit.Id, "THB",
+            1400m, 0m, null, now.AddDays(1), null, 3, null, null, null, null, MakerUserId, now.AddMinutes(1));
+        newerCost.UpdateMetadata("TEST-INVOICE-004", null, costEvidenceFileId,
+            TestOnlyDataSeeder.TestCostSourceId, MakerUserId, now.AddMinutes(1));
+        newerCost.Submit(MakerUserId, now.AddMinutes(1));
+        newerCost.Approve(CheckerUserId, now.AddMinutes(1));
+        newerCost.Publish(CheckerUserId, now.AddMinutes(1));
+        publishDb.CostRecords.Add(newerCost);
+        await publishDb.SaveChangesAsync();
+
+        var reloadReq = CreateAuthenticatedRequest(HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}", membershipId: branchMembershipId);
+        var reloadRes = await _client.SendAsync(reloadReq);
+        Assert.Equal(HttpStatusCode.OK, reloadRes.StatusCode);
+        var reloadedEstimate = (await reloadRes.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+        var reloadedCost = reloadedEstimate.CurrentRevision!.Sections[0].WorkItems[0].CostComponents[0];
+        Assert.Equal(newCost.Id, reloadedCost.CostRecordId);
+        Assert.Equal(2, reloadedCost.CostRecordVersion);
+        Assert.Equal(1350m, reloadedCost.UnitCostSnapshot);
+        Assert.Equal(3, reloadedEstimate.CurrentRevision.Sections[0].WorkItems[0].CostComponents.Count);
     }
 }

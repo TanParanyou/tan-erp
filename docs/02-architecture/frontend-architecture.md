@@ -58,6 +58,7 @@ frontend/
     ├── components/
     │   ├── ui/                     # UI พื้นฐานที่ไม่รู้กฎธุรกิจ
     │   └── layout/                 # Navigation และโครงหน้าร่วม
+    ├── hooks/                      # Shared Hooks กลาง (useDeferredFileUpload, useListState ฯลฯ)
     ├── lib/
     │   ├── api/                    # Central client และ Typed ApiError
     │   ├── auth/                   # Firebase client และ Session lifecycle
@@ -83,6 +84,7 @@ frontend/
 | Current User และข้อมูลธุรกิจจาก BE | TanStack Query | `features/<feature>/api` |
 | ค่าฟอร์มและ Error ของฟอร์ม | React Hook Form; Zod ตรวจรูปแบบ | ภายใน Feature |
 | เปิด Dialog, เลือก Tab | Component ที่ใช้งาน | Local UI state |
+| วงจรอัปโหลดไฟล์ผัดผ่อน (Deferred Upload) | `useDeferredFileUpload` | `src/hooks/useDeferredFileUpload.ts` |
 | ข้อความ UI ไทย/อังกฤษ | Message catalog | `messages` |
 
 Query key ของข้อมูลธุรกิจต้องรวมบริบทองค์กรและตัวกรองที่มีผล เมื่อ Logout หรือเปลี่ยนผู้ใช้/องค์กร ต้องยกเลิก Request และล้าง Cache ที่ผูกกับบริบทเดิมก่อนแสดงข้อมูลใหม่ เพื่อไม่ให้ข้อมูลเก่าปรากฏกับผู้ใช้คนถัดไป ทั้งนี้ BE ยังต้องตรวจ Scope ทุก Request

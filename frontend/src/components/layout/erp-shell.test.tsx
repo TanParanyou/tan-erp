@@ -90,6 +90,45 @@ describe("ErpShell Component", () => {
     expect(customerLink.getAttribute("href")).toBe("/th/customers");
   });
 
+  it("shows item reference and cost source links only with their read permissions", () => {
+    const userWithItemRead: CurrentUserResponse = {
+      ...mockCurrentUser,
+      memberships: [{
+        ...mockCurrentUser.memberships![0],
+        permissions: [...mockCurrentUser.memberships![0].permissions!, {
+          key: "items.read", scope: "organization", scopeId: "20000000-0000-0000-0000-000000000001",
+        }],
+      }],
+    };
+    const { unmount } = renderWithClient(<ErpShell currentUser={userWithItemRead} />, userWithItemRead);
+    expect(screen.getByRole("link", { name: "หมวดหมู่ แบรนด์ และหน่วย" }).getAttribute("href")).toBe("/th/item-master/reference-data");
+    expect(screen.queryByRole("link", { name: "แหล่งที่มาต้นทุน" })).toBeNull();
+    unmount();
+
+    const userWithCostSourceRead: CurrentUserResponse = {
+      ...mockCurrentUser,
+      memberships: [{
+        ...mockCurrentUser.memberships![0],
+        permissions: [...mockCurrentUser.memberships![0].permissions!, {
+          key: "cost-sources.read", scope: "organization", scopeId: "20000000-0000-0000-0000-000000000001",
+        }],
+      }],
+    };
+    renderWithClient(<ErpShell currentUser={userWithCostSourceRead} />, userWithCostSourceRead);
+    expect(screen.getByRole("link", { name: "แหล่งที่มาต้นทุน" }).getAttribute("href")).toBe("/th/item-master/cost-sources");
+    expect(screen.queryByRole("link", { name: "ข้อมูลหลักสินค้า" })).toBeNull();
+  });
+
+  it("renders clean navigation links and subgroups with search and expand/collapse controls", () => {
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
+
+    expect(screen.getByRole("navigation", { name: "เมนูหลัก" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "หน้าหลัก" })).toBeDefined();
+    expect(screen.getByText("ลูกค้าและโอกาสขาย")).toBeDefined();
+    expect(screen.getByPlaceholderText("ค้นหาเมนู...")).toBeDefined();
+    expect(screen.getByRole("button", { name: "ยุบทั้งหมด" })).toBeDefined();
+  });
+
   it("renders Opportunities navigation link when opportunities.read permission is present and hides when absent", () => {
     const userWithOppPermission: CurrentUserResponse = {
       ...mockCurrentUser,

@@ -1,4 +1,5 @@
 using TanErp.Domain.Items;
+using TanErp.Domain.Estimates;
 
 namespace TanErp.Application.Estimates;
 
@@ -24,7 +25,16 @@ public sealed record EstimateCostComponentProjection(
     string? CostScopeSnapshot = null,
     DateTimeOffset? CostEffectiveFromUtc = null,
     string? CostPolicyVersion = null,
-    DateTimeOffset? ResolvedAtUtc = null);
+    DateTimeOffset? ResolvedAtUtc = null,
+    string? CostOrigin = null,
+    Guid? CostSourceIdSnapshot = null,
+    string? CostSourceCodeSnapshot = null,
+    string? CostSourceReferenceSnapshot = null,
+    Guid? CostEvidenceFileIdSnapshot = null,
+    string? CostRecordReasonSnapshot = null,
+    string? ProvisionalReasonCode = null,
+    string? ProvisionalNote = null,
+    bool IsProvisional = false);
 
 public sealed record EstimateWorkItemProjection(
     Guid Id,
@@ -36,12 +46,19 @@ public sealed record EstimateWorkItemProjection(
     string UnitCode,
     string SellingRuleType,
     decimal SellingRuleValue,
+    string? SellingRuleReasonCode,
     decimal UnitCost,
     decimal TotalCost,
     decimal UnitSellingPrice,
     decimal TotalSellingPrice,
     int SortOrder,
-    IReadOnlyList<EstimateCostComponentProjection> CostComponents);
+    IReadOnlyList<EstimateCostComponentProjection> CostComponents,
+    Guid? ItemId = null,
+    string? ItemCodeSnapshot = null,
+    string? ItemNameThSnapshot = null,
+    string? ItemNameEnSnapshot = null,
+    string? OverrideReasonCode = null,
+    string? OverrideReason = null);
 
 public sealed record EstimateSectionProjection(
     Guid Id,
@@ -61,10 +78,14 @@ public sealed record EstimateRevisionProjection(
     string Status,
     string Currency,
     int CalculationVersion,
+    bool CalculationOutdated,
     string CalculationPolicyVersion,
     string TaxPolicyVersion,
     decimal NetCost,
     decimal SellingBeforeDiscount,
+    string DiscountType,
+    decimal DiscountValue,
+    string? DiscountReasonCode,
     decimal DiscountAmount,
     decimal NetBeforeTax,
     decimal TaxAmount,
@@ -76,7 +97,8 @@ public sealed record EstimateRevisionProjection(
     Guid RowVersion,
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset UpdatedAtUtc,
-    IReadOnlyList<EstimateSectionProjection> Sections);
+    IReadOnlyList<EstimateSectionProjection> Sections,
+    EstimateReadinessResult Readiness);
 
 public sealed record EstimateDetailProjection(
     Guid Id,
@@ -114,3 +136,18 @@ public sealed record AcceptQuotationProjection(
     string OpportunityStage,
     Guid OpportunityRowVersion,
     DateTimeOffset AcceptedAtUtc);
+
+public sealed record EstimateCalculationSnapshotProjection(
+    Guid Id,
+    Guid EstimateRevisionId,
+    int CalculationVersion,
+    string InputHash,
+    string SnapshotJson,
+    Guid? CalculationPolicyVersionId,
+    Guid? TaxPolicyVersionId,
+    string CalculationPolicyVersion,
+    string TaxPolicyVersion,
+    string? CalculationPolicyHash,
+    string? TaxPolicyHash,
+    Guid CapturedByUserId,
+    DateTimeOffset CapturedAtUtc);

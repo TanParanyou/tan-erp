@@ -1,11 +1,10 @@
-export interface CsvColumn<T> {
-  header: string;
-  accessor: (item: T) => string | number | boolean | null | undefined;
-}
+import type { ExportColumn } from "./export-types";
+
+export type CsvColumn<T> = ExportColumn<T>;
 
 export interface CsvExportOptions<T> {
   filename: string;
-  columns: readonly CsvColumn<T>[];
+  columns: readonly ExportColumn<T>[];
   data: readonly T[];
 }
 

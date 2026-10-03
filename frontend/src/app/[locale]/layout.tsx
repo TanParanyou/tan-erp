@@ -1,4 +1,3 @@
-import "./../globals.css";
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getMessages, getTranslations } from "next-intl/server";
@@ -87,14 +86,10 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <AppProviders>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            {children}
-          </NextIntlClientProvider>
-        </AppProviders>
-      </body>
-    </html>
+    <AppProviders>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        {children}
+      </NextIntlClientProvider>
+    </AppProviders>
   );
 }

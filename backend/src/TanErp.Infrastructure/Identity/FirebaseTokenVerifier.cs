@@ -5,9 +5,21 @@ using Microsoft.Extensions.Configuration;
 
 namespace TanErp.Infrastructure.Identity;
 
+public sealed record FirebaseIdentity(string Uid, string? Email, bool EmailVerified);
+
 public interface IFirebaseTokenVerifier
 {
     Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Verifies the token and returns the identity claims needed to link an invited user.
+    /// Verifiers that only know the UID return no email, so no invited user can be linked through them.
+    /// </summary>
+    async Task<FirebaseIdentity?> VerifyIdentityAsync(string idToken, CancellationToken cancellationToken = default)
+    {
+        var uid = await VerifyTokenAsync(idToken, cancellationToken);
+        return string.IsNullOrWhiteSpace(uid) ? null : new FirebaseIdentity(uid, null, false);
+    }
 }
 
 public class FirebaseTokenVerifier : IFirebaseTokenVerifier
@@ -55,11 +67,21 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
 
     public async Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default)
     {
+        var identity = await VerifyIdentityAsync(idToken, cancellationToken);
+        return identity?.Uid;
+    }
+
+    public async Task<FirebaseIdentity?> VerifyIdentityAsync(string idToken, CancellationToken cancellationToken = default)
+    {
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var decoded = await _auth.VerifyIdTokenAsync(idToken, cancellationToken);
-            return decoded?.Uid;
+            if (decoded is null) return null;
+
+            decoded.Claims.TryGetValue("email", out var email);
+            decoded.Claims.TryGetValue("email_verified", out var emailVerified);
+            return new FirebaseIdentity(decoded.Uid, email as string, emailVerified is true);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

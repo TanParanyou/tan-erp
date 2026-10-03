@@ -118,6 +118,10 @@ public class ItemImageEndpointsTests : IAsyncLifetime
         {
             request.Headers.Add("Idempotency-Key", idempotencyKey);
         }
+        else if (method == HttpMethod.Post && url is "/api/v1/items" or "/api/v1/item-categories" or "/api/v1/item-brands" or "/api/v1/units-of-measure")
+        {
+            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("N"));
+        }
 
         return request;
     }
@@ -166,14 +170,14 @@ public class ItemImageEndpointsTests : IAsyncLifetime
         0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00
     ];
 
-    private async Task<Guid> UploadFileForItemAsync(Guid itemId, string filename, byte[]? extraData = null)
+    private async Task<Guid> UploadFileForItemAsync(Guid itemId, string filename, byte[]? extraData = null, string parentType = "item")
     {
         var content = extraData == null
             ? ValidJpegBytes
             : ValidJpegBytes.Concat(extraData).ToArray();
 
         var sessionReq = new CreateUploadSessionRequest(
-            "item",
+            parentType,
             itemId,
             null,
             new List<FileSlotRequest> { new(filename, "image/jpeg", content.Length) });
@@ -196,6 +200,73 @@ public class ItemImageEndpointsTests : IAsyncLifetime
         Assert.True(compRes.StatusCode == HttpStatusCode.OK, $"Complete failed with {compRes.StatusCode}: {compBody}");
         var compData = await compRes.Content.ReadFromJsonAsync<CompleteUploadSessionResponse>();
         return compData!.Files[0].FileId;
+    }
+
+    [Fact]
+    public async Task TaxonomyImages_AreParentBoundAndCanBeReadByAuthorizedOrganizationMembers()
+    {
+        var categoryCreate = CreateRequest(HttpMethod.Post, "/api/v1/item-categories");
+        categoryCreate.Content = JsonContent.Create(new CreateItemCategoryRequest
+        {
+            Code = "CAT-IMG-" + Guid.NewGuid().ToString("N")[..6],
+            Name = new LocalizedTextInput { Thai = "หมวดพร้อมภาพ", English = "Category with image" },
+            AllowedItemTypes = ["material"]
+        });
+        var categoryResponse = await _client.SendAsync(categoryCreate);
+        Assert.Equal(HttpStatusCode.Created, categoryResponse.StatusCode);
+        var category = await categoryResponse.Content.ReadFromJsonAsync<ItemCategoryDetailResponse>();
+        Assert.NotNull(category);
+
+        var fileId = await UploadFileForItemAsync(category.Id, "category.jpg", parentType: "item-category");
+        var categoryUpdate = CreateRequest(HttpMethod.Put, $"/api/v1/item-categories/{category.Id}", ifMatch: category.RowVersion);
+        categoryUpdate.Content = JsonContent.Create(new UpdateItemCategoryRequest
+        {
+            Code = category.Code,
+            Name = new LocalizedTextInput { Thai = "หมวดพร้อมภาพ", English = "Category with image" },
+            AllowedItemTypes = ["material"],
+            ImageFileId = fileId
+        });
+        var updatedCategoryResponse = await _client.SendAsync(categoryUpdate);
+        Assert.Equal(HttpStatusCode.OK, updatedCategoryResponse.StatusCode);
+        var updatedCategory = await updatedCategoryResponse.Content.ReadFromJsonAsync<ItemCategoryDetailResponse>();
+        Assert.Equal(fileId, updatedCategory?.ImageFileId);
+
+        var fileRead = await _client.SendAsync(CreateRequest(HttpMethod.Get, $"/api/v1/files/{fileId}/content"));
+        Assert.Equal(HttpStatusCode.OK, fileRead.StatusCode);
+
+        var brandCreate = CreateRequest(HttpMethod.Post, "/api/v1/item-brands");
+        brandCreate.Content = JsonContent.Create(new CreateItemBrandRequest
+        {
+            Code = "BRD-IMG-" + Guid.NewGuid().ToString("N")[..6],
+            Name = new LocalizedTextInput { Thai = "แบรนด์พร้อมภาพ", English = "Brand with image" }
+        });
+        var brandResponse = await _client.SendAsync(brandCreate);
+        Assert.Equal(HttpStatusCode.Created, brandResponse.StatusCode);
+        var brand = await brandResponse.Content.ReadFromJsonAsync<ItemBrandDetailResponse>();
+        Assert.NotNull(brand);
+
+        var brandFileId = await UploadFileForItemAsync(brand.Id, "brand.jpg", parentType: "item-brand");
+        var validBrandUpdate = CreateRequest(HttpMethod.Put, $"/api/v1/item-brands/{brand.Id}", ifMatch: brand.RowVersion);
+        validBrandUpdate.Content = JsonContent.Create(new UpdateItemBrandRequest
+        {
+            Code = brand.Code,
+            Name = new LocalizedTextInput { Thai = "แบรนด์พร้อมภาพ", English = "Brand with image" },
+            ImageFileId = brandFileId
+        });
+        var updatedBrandResponse = await _client.SendAsync(validBrandUpdate);
+        Assert.Equal(HttpStatusCode.OK, updatedBrandResponse.StatusCode);
+        var updatedBrand = await updatedBrandResponse.Content.ReadFromJsonAsync<ItemBrandDetailResponse>();
+        Assert.Equal(brandFileId, updatedBrand?.ImageFileId);
+
+        var crossParentUpdate = CreateRequest(HttpMethod.Put, $"/api/v1/item-brands/{brand.Id}", ifMatch: updatedBrand?.RowVersion);
+        crossParentUpdate.Content = JsonContent.Create(new UpdateItemBrandRequest
+        {
+            Code = brand.Code,
+            Name = new LocalizedTextInput { Thai = "แบรนด์พร้อมภาพ", English = "Brand with image" },
+            ImageFileId = fileId
+        });
+        var rejectedResponse = await _client.SendAsync(crossParentUpdate);
+        Assert.Equal(HttpStatusCode.Conflict, rejectedResponse.StatusCode);
     }
 
     [Fact]

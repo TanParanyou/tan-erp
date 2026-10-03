@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -10,24 +10,133 @@ import { IconMapPin, IconEye } from "@/components/common/Icons";
 import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
 import { GalleryLightboxModal, type GalleryItemMetadata } from "@/components/common/GalleryLightboxModal";
 import type { SiteResponse } from "@/lib/api/api-client";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { FormActionBar } from "@/components/forms/FormActionBar";
+import { AddressAreaField } from "@/components/forms/AddressAreaField";
+import type { SelectedAddress } from "@/components/forms/AddressAutocomplete";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiClient } from "@/lib/api/api-client";
+import { getAuthToken } from "@/lib/auth/auth-session";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/useToast";
+import { ApiError } from "@/lib/api/api-error";
+import { customerSiteListQueryKey } from "../api/site-queries";
+
+const siteUpdateSchema = z.object({
+  label: z.string().trim().min(1), addressLine1: z.string().trim().min(1), subdistrict: z.string().trim().min(1),
+  district: z.string().trim().min(1), province: z.string().trim().min(1), postalCode: z.string().regex(/^\d{5}$/),
+  countryCode: z.string().regex(/^[A-Za-z]{2}$/), latitude: z.string(), longitude: z.string(), accessNote: z.string(),
+});
+type SiteUpdateValues = z.infer<typeof siteUpdateSchema>;
 
 export interface SiteDetailDrawerProps {
   site: SiteResponse | null;
   isOpen: boolean;
   onClose: () => void;
+  canManage?: boolean;
+  onUpdated?: () => void;
 }
 
 export function SiteDetailDrawer({
   site,
   isOpen,
   onClose,
+  canManage = false,
+  onUpdated,
 }: SiteDetailDrawerProps) {
   const t = useTranslations("sites");
   const tCommon = useTranslations("common");
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDeactivate, setShowDeactivate] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeactivating, setIsDeactivating] = useState(false);
+  const localeCode = useLocale();
+  const normalizedLocale: "th" | "en" = localeCode === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const form = useForm<SiteUpdateValues>({ resolver: zodResolver(siteUpdateSchema) });
+  const [subdistrict, district, province, postalCode, countryCode] = useWatch({
+    control: form.control,
+    name: ["subdistrict", "district", "province", "postalCode", "countryCode"],
+  });
+
+  React.useEffect(() => {
+    if (!site) return;
+    form.reset({ label: site.label ?? "", addressLine1: site.addressLine1 ?? "", subdistrict: site.subdistrict ?? "", district: site.district ?? "", province: site.province ?? "", postalCode: site.postalCode ?? "", countryCode: site.countryCode ?? "TH", latitude: site.latitude === null || site.latitude === undefined ? "" : String(site.latitude), longitude: site.longitude === null || site.longitude === undefined ? "" : String(site.longitude), accessNote: site.accessNote ?? "" });
+  }, [site, form]);
 
   if (!site) return null;
+
+  const refreshSites = async () => {
+    await queryClient.invalidateQueries({ queryKey: customerSiteListQueryKey(selectedMembership?.id, normalizedLocale, site.customerId) });
+    onUpdated?.();
+  };
+
+  const saveSite = form.handleSubmit(async (values) => {
+    const token = await getAuthToken();
+    const membershipId = selectedMembership?.id;
+    if (!token || !membershipId || !site.id || !site.customerId || !site.rowVersion) {
+      toast.error(t("errors.saveUnexpected"));
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await apiClient.updateSite(site.customerId, site.id, { label: values.label, addressLine1: values.addressLine1, subdistrict: values.subdistrict, district: values.district, province: values.province, postalCode: values.postalCode, countryCode: values.countryCode, latitude: values.latitude === "" ? null : Number(values.latitude), longitude: values.longitude === "" ? null : Number(values.longitude), accessNote: values.accessNote || undefined }, { token, membershipId, ifMatch: site.rowVersion, locale: normalizedLocale });
+      setShowEdit(false);
+      await refreshSites();
+      toast.success(tCommon("feedback.saveSuccess"));
+      onClose();
+    } catch (error: unknown) {
+      toast.error(error instanceof ApiError ? error.message : t("errors.saveUnexpected"));
+    } finally {
+      setIsSaving(false);
+    }
+  });
+
+  const handleAddressSelect = (address: SelectedAddress) => {
+    form.setValue("subdistrict", address.subdistrict, { shouldDirty: true, shouldValidate: true });
+    form.setValue("district", address.district, { shouldDirty: true, shouldValidate: true });
+    form.setValue("province", address.province, { shouldDirty: true, shouldValidate: true });
+    form.setValue("postalCode", address.postalCode, { shouldDirty: true, shouldValidate: true });
+    form.setValue("countryCode", address.countryCode, { shouldDirty: true, shouldValidate: true });
+  };
+
+  const handleClearAddress = () => {
+    form.setValue("subdistrict", "", { shouldDirty: true, shouldValidate: true });
+    form.setValue("district", "", { shouldDirty: true, shouldValidate: true });
+    form.setValue("province", "", { shouldDirty: true, shouldValidate: true });
+    form.setValue("postalCode", "", { shouldDirty: true, shouldValidate: true });
+    form.setValue("countryCode", "", { shouldDirty: true, shouldValidate: true });
+  };
+
+  const deactivateSite = async () => {
+    const token = await getAuthToken();
+    const membershipId = selectedMembership?.id;
+    if (!token || !membershipId || !site.id || !site.customerId || !site.rowVersion) {
+      toast.error(t("errors.saveUnexpected"));
+      return;
+    }
+    setIsDeactivating(true);
+    try {
+      await apiClient.deactivateSite(site.customerId, site.id, { token, membershipId, ifMatch: site.rowVersion, locale: normalizedLocale });
+      setShowDeactivate(false);
+      await refreshSites();
+      toast.success(tCommon("feedback.saveSuccess"));
+      onClose();
+    } catch (error: unknown) {
+      toast.error(error instanceof ApiError ? error.message : t("errors.saveUnexpected"));
+    } finally {
+      setIsDeactivating(false);
+    }
+  };
 
   const siteLabel = site.label || t("siteDetail");
   const images = site.images ?? [];
@@ -46,7 +155,8 @@ export function SiteDetailDrawer({
         description={t("siteDetail")}
         size="lg"
         footer={
-          <div className="flex justify-end w-full">
+          <div className="flex justify-between w-full">
+            {canManage && site.status === "active" ? <div className="flex gap-2"><Button variant="outline" size="sm" onClick={() => setShowEdit(true)}>{t("editSite")}</Button><Button variant="danger" size="sm" onClick={() => setShowDeactivate(true)}>{t("deactivateSite")}</Button></div> : <span />}
             <Button variant="outline" size="sm" onClick={onClose}>
               {tCommon("actions.close")}
             </Button>
@@ -182,6 +292,39 @@ export function SiteDetailDrawer({
           </div>
         </div>
       </Drawer>
+
+      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title={t("editSite")} closeDisabled={isSaving} size="lg">
+        <form onSubmit={saveSite} className="flex flex-col gap-4 p-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Input label={t("label")} {...form.register("label")} />
+            <Input label={t("addressLine1")} {...form.register("addressLine1")} />
+            <div className="md:col-span-2">
+              <Controller
+                control={form.control}
+                name="subdistrict"
+                render={() => (
+                  <AddressAreaField
+                    id={`site-address-area-${site.id}`}
+                    label={tCommon("addressAutocomplete.areaSelection")}
+                    hint={tCommon("addressAutocomplete.smartSearchHint")}
+                    required
+                    disabled={isSaving}
+                    error={form.formState.errors.subdistrict || form.formState.errors.district || form.formState.errors.province || form.formState.errors.postalCode || form.formState.errors.countryCode ? tCommon("addressAutocomplete.areaRequired") : undefined}
+                    value={{ subdistrict, district, province, postalCode, countryCode }}
+                    onSelect={handleAddressSelect}
+                    onClear={handleClearAddress}
+                  />
+                )}
+              />
+            </div>
+            <Input label={t("latitude")} type="number" step="any" {...form.register("latitude")} />
+            <Input label={t("longitude")} type="number" step="any" {...form.register("longitude")} />
+            <Input label={t("accessNote")} {...form.register("accessNote")} />
+          </div>
+          <FormActionBar isEditMode isDirty={form.formState.isDirty} isLoading={isSaving || form.formState.isSubmitting} saveText={tCommon("actions.saveChanges")} onCancel={() => setShowEdit(false)} />
+        </form>
+      </Modal>
+      <ConfirmationModal isOpen={showDeactivate} onClose={() => setShowDeactivate(false)} onConfirm={deactivateSite} title={t("deactivateSiteTitle")} message={t("deactivateSiteConfirm")} confirmText={tCommon("actions.confirm")} cancelText={tCommon("actions.cancel")} variant="danger" isLoading={isDeactivating} />
 
       {/* Lightbox Modal for Full View */}
       {lightboxIndex !== null && galleryItems.length > 0 && (

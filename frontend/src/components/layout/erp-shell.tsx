@@ -27,6 +27,8 @@ import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { SidebarNav } from "./SidebarNav";
 
 interface ErpShellProps {
   currentUser: CurrentUserResponse;
@@ -35,7 +37,10 @@ interface ErpShellProps {
 
 export function ErpShell({ currentUser, children }: ErpShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useLocalStorage<boolean>(
+    "tan_erp_sidebar_collapsed",
+    false
+  );
   const tShell = useTranslations("shell");
   const tAuth = useTranslations("auth");
   const tApp = useTranslations("app");
@@ -55,6 +60,9 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
   const hasCustomersRead = can(activeMembership, "customers.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
   const hasSettingsRead = can(activeMembership, "document-sequences.read") || can(activeMembership, "organizations.read");
+  const hasItemMasterRead = can(activeMembership, "items.read");
+  const hasCostSourcesRead = can(activeMembership, "cost-sources.read");
+  const hasCostReviewRead = can(activeMembership, "cost-records.read");
 
   const targetLocale = locale === "th" ? "en" : "th";
 
@@ -67,6 +75,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
+  const isItemMasterActive = pathname.startsWith(`/${locale}/item-master`);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "var(--erp-canvas)" }}>
@@ -179,8 +188,6 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
         {/* Navigation Sidebar / Mobile Drawer */}
         <aside
           className={`erp-sidebar ${isMobileMenuOpen ? "erp-sidebar-open" : ""} ${isSidebarCollapsed ? "erp-sidebar-collapsed" : ""}`}
-          role="navigation"
-          aria-label="Main Navigation"
         >
           {/* Mobile Drawer Header */}
           <div className="erp-drawer-header">
@@ -313,58 +320,11 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
             </div>
           </div>
 
-          <ul style={{ listStyle: "none", padding: "0.5rem 0", margin: 0, flex: 1 }}>
-            <li>
-              <Link
-                href={`/${locale}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`erp-nav-link ${isHomeActive ? "erp-nav-link-active" : ""}`}
-                title={tShell("home")}
-              >
-                <IconHome size={20} />
-                <span className="erp-nav-text">{tShell("home")}</span>
-              </Link>
-            </li>
-            {hasCustomersRead && (
-              <li>
-                <Link
-                  href={`/${locale}/customers`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`erp-nav-link ${isCustomersActive ? "erp-nav-link-active" : ""}`}
-                  title={tShell("customers")}
-                >
-                  <IconUsers size={20} />
-                  <span className="erp-nav-text">{tShell("customers")}</span>
-                </Link>
-              </li>
-            )}
-            {hasOpportunitiesRead && (
-              <li>
-                <Link
-                  href={`/${locale}/opportunities`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`erp-nav-link ${isOpportunitiesActive ? "erp-nav-link-active" : ""}`}
-                  title={tShell("opportunities")}
-                >
-                  <IconBriefcase size={20} />
-                  <span className="erp-nav-text">{tShell("opportunities")}</span>
-                </Link>
-              </li>
-            )}
-            {hasSettingsRead && (
-              <li>
-                <Link
-                  href={`/${locale}/settings/document-numbering`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`erp-nav-link ${isDocumentNumberingActive ? "erp-nav-link-active" : ""}`}
-                  title={tShell("documentNumbering")}
-                >
-                  <IconFileText size={20} />
-                  <span className="erp-nav-text">{tShell("documentNumbering")}</span>
-                </Link>
-              </li>
-            )}
-          </ul>
+          <SidebarNav
+            currentUser={currentUser}
+            isCollapsed={isSidebarCollapsed}
+            onLinkClick={() => setIsMobileMenuOpen(false)}
+          />
 
           {/* Desktop Bottom Sidebar Collapse/Expand Toggle */}
           <button

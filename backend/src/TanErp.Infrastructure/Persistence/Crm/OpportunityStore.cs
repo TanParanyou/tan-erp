@@ -897,8 +897,8 @@ public class OpportunityStore : IOpportunityStore
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
-            var normSearch = OpportunityNormalizer.CollapseWhitespace(filter.Search);
-            query = query.Where(o => o.NormalizedTitle.Contains(normSearch) || o.Code.Contains(normSearch));
+            var normSearch = OpportunityNormalizer.NormalizeTitle(filter.Search);
+            query = query.Where(o => o.NormalizedTitle.Contains(normSearch) || o.Code.ToLower().Contains(normSearch));
         }
 
         // Total count before cursor/page slice

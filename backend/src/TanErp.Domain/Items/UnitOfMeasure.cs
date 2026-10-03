@@ -11,7 +11,7 @@ public class UnitOfMeasure : Entity
     public string Symbol { get; private set; } = string.Empty;
     public string Dimension { get; private set; } = "count";
     public int DecimalScale { get; private set; } = 4;
-    public string RoundingMode { get; private set; } = "half_up";
+    public string RoundingMode { get; private set; } = UnitRoundingMode.Default;
     public string Status { get; private set; } = ItemStatus.Active;
     public Guid RowVersion { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
@@ -50,7 +50,7 @@ public class UnitOfMeasure : Entity
         Symbol = symbol.Trim();
         Dimension = string.IsNullOrWhiteSpace(dimension) ? "count" : dimension.Trim().ToLowerInvariant();
         DecimalScale = Math.Clamp(decimalScale, 0, 6);
-        RoundingMode = string.IsNullOrWhiteSpace(roundingMode) ? "half_up" : roundingMode.Trim().ToLowerInvariant();
+        RoundingMode = NormalizeRoundingMode(roundingMode);
         Status = ItemStatus.Active;
         RowVersion = Guid.NewGuid();
         CreatedAtUtc = createdAtUtc;
@@ -79,15 +79,26 @@ public class UnitOfMeasure : Entity
             throw new ItemValidationException("ITEM_FIELD_REQUIRED", "Unit symbol is required.");
         }
 
+        var normalizedRoundingMode = NormalizeRoundingMode(roundingMode);
+
         Code = code.Trim();
         NormalizedCode = code.Trim().ToUpperInvariant();
         Name = name;
         Symbol = symbol.Trim();
         Dimension = string.IsNullOrWhiteSpace(dimension) ? "count" : dimension.Trim().ToLowerInvariant();
         DecimalScale = Math.Clamp(decimalScale, 0, 6);
-        RoundingMode = string.IsNullOrWhiteSpace(roundingMode) ? "half_up" : roundingMode.Trim().ToLowerInvariant();
+        RoundingMode = normalizedRoundingMode;
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = updatedAtUtc;
         UpdatedByUserId = updatedByUserId;
+    }
+
+    public decimal RoundQuantity(decimal quantity) => UnitRoundingMode.Round(quantity, DecimalScale, RoundingMode);
+
+    private static string NormalizeRoundingMode(string roundingMode)
+    {
+        if (string.IsNullOrWhiteSpace(roundingMode)) return UnitRoundingMode.Default;
+        if (UnitRoundingMode.TryNormalize(roundingMode, out var normalized)) return normalized;
+        throw new ItemValidationException("ITEM_UNIT_ROUNDING_MODE_INVALID", "Unit rounding mode is not supported.");
     }
 }

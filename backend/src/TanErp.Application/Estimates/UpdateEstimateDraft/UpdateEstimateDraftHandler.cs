@@ -35,6 +35,36 @@ public class UpdateEstimateDraftHandler
         }
 
         var access = accessResult.Value!;
+        var estimate = await _store.GetByIdAsync(access.OrganizationId, command.EstimateId, cancellationToken);
+        if (estimate is null || !access.HasBranchAccess(estimate.BranchId))
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("RESOURCE_NOT_FOUND", $"Estimate '{command.EstimateId}' was not found."));
+        }
+        var fixedPriceItems = command.Sections
+            .SelectMany(section => section.WorkItems)
+            .Where(workItem => workItem.SellingRuleType == SellingRuleType.FixedPrice)
+            .ToArray();
+        if (fixedPriceItems.Any(workItem => string.IsNullOrWhiteSpace(workItem.SellingRuleReasonCode)))
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("ESTIMATE_FIXED_PRICE_REASON_REQUIRED", "A reason code is required when using a fixed selling price."));
+        }
+
+        if (fixedPriceItems.Length > 0)
+        {
+            var overrideAccessResult = await _accessResolver.ResolveBranchAccessAsync(
+                command.FirebaseUid,
+                command.MembershipId,
+                "estimates.override-price",
+                estimate.BranchId,
+                cancellationToken);
+            if (overrideAccessResult.IsFailure)
+            {
+                return Result<EstimateRevisionProjection>.Failure(overrideAccessResult.Error);
+            }
+        }
+
         try
         {
             var result = await _store.UpdateDraftAsync(
@@ -63,10 +93,20 @@ public class UpdateEstimateDraftHandler
             return Result<EstimateRevisionProjection>.Failure(
                 new Error("ESTIMATE_INVALID_STATE", ex.Message));
         }
+        catch (EstimateFixedPriceReasonRequiredException)
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("ESTIMATE_FIXED_PRICE_REASON_REQUIRED", "A reason code is required when using a fixed selling price."));
+        }
         catch (ItemCostConflictException ex)
         {
             return Result<EstimateRevisionProjection>.Failure(
                 new Error(ex.Code, ex.Message));
+        }
+        catch (ArgumentException ex)
+        {
+            return Result<EstimateRevisionProjection>.Failure(
+                new Error("ESTIMATE_INPUT_INVALID", ex.Message));
         }
     }
 }

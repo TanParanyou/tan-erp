@@ -137,7 +137,7 @@ public class CostResolverTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Resolve_HigherSourcePriority_TakesPrecedence()
+    public async Task Resolve_EqualEffectiveDateAndQuantity_IsAmbiguousRegardlessOfSourcePriority()
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -165,9 +165,8 @@ public class CostResolverTests : IAsyncLifetime
         var req = new ResolveCostRequest(_orgId, _branchA, _itemId, _unitId, "THB", 1, now);
         var res = await _resolver.ResolveAsync(req, CancellationToken.None);
 
-        Assert.True(res.IsSuccess);
-        Assert.Equal(175m, res.Value!.Amount);
-        Assert.Equal("SRC_HIGH", res.Value.CostSourceCode);
+        Assert.True(res.IsFailure);
+        Assert.Equal("ITEM_COST_AMBIGUOUS", res.Error.Code);
     }
 
     [Fact]
@@ -197,6 +196,54 @@ public class CostResolverTests : IAsyncLifetime
 
         Assert.True(res.IsSuccess);
         Assert.Equal(250m, res.Value!.Amount);
+    }
+
+    [Fact]
+    public async Task Resolve_OnlyExpiredPublishedCost_ReturnsStaleError()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var expiredCost = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            250m, 0m, null, now.AddDays(-20), now.AddDays(-10), 1, null, null, null, null, _actorId, now);
+        expiredCost.Submit(_actorId, now);
+        expiredCost.Approve(Guid.NewGuid(), now);
+        expiredCost.Publish(Guid.NewGuid(), now);
+        _db.CostRecords.Add(expiredCost);
+        await _db.SaveChangesAsync();
+
+        var result = await _resolver.ResolveAsync(
+            new ResolveCostRequest(_orgId, _branchA, _itemId, _unitId, "THB", 1m, now), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("ITEM_COST_STALE", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Resolve_AtSameEffectiveDate_UsesGreatestMatchingMinimumQuantity()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var effectiveFrom = now.AddDays(-1);
+        var standard = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            100m, 1m, 9m, effectiveFrom, null, 1, null, null, null, null, _actorId, now);
+        standard.Submit(_actorId, now);
+        standard.Approve(Guid.NewGuid(), now);
+        standard.Publish(Guid.NewGuid(), now);
+
+        var bulk = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            90m, 10m, null, effectiveFrom, null, 2, null, null, null, null, _actorId, now);
+        bulk.Submit(_actorId, now);
+        bulk.Approve(Guid.NewGuid(), now);
+        bulk.Publish(Guid.NewGuid(), now);
+        _db.CostRecords.AddRange(standard, bulk);
+        await _db.SaveChangesAsync();
+
+        var result = await _resolver.ResolveAsync(
+            new ResolveCostRequest(_orgId, _branchA, _itemId, _unitId, "THB", 10m, now), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(bulk.Id, result.Value!.CostRecordId);
     }
 
     [Fact]
@@ -239,6 +286,40 @@ public class CostResolverTests : IAsyncLifetime
 
         Assert.False(res.IsSuccess);
         Assert.Equal("ITEM_COST_NOT_FOUND", res.Error.Code);
+    }
+
+    [Fact]
+    public async Task Resolve_SupersededCost_RemainsAvailableBeforeFutureReplacementStarts()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var replacementStart = now.AddDays(2);
+        var oldCost = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            100m, 0m, null, now.AddDays(-10), null, 1, null, null, null, null, _actorId, now);
+        oldCost.Submit(_actorId, now);
+        oldCost.Approve(Guid.NewGuid(), now);
+        oldCost.Publish(Guid.NewGuid(), now);
+        oldCost.Supersede(Guid.NewGuid(), replacementStart, now);
+
+        var futureCost = CostRecord.CreateDraft(
+            Guid.NewGuid(), _orgId, _itemId, CostScopeType.Organization, null, _unitId, "THB",
+            120m, 0m, null, replacementStart, null, 2, null, null, null, null, _actorId, now);
+        futureCost.Submit(_actorId, now);
+        futureCost.Approve(Guid.NewGuid(), now);
+        futureCost.Publish(Guid.NewGuid(), now);
+
+        _db.CostRecords.AddRange(oldCost, futureCost);
+        await _db.SaveChangesAsync();
+
+        var current = await _resolver.ResolveAsync(
+            new ResolveCostRequest(_orgId, _branchA, _itemId, _unitId, "THB", 1m, now), CancellationToken.None);
+        Assert.True(current.IsSuccess);
+        Assert.Equal(oldCost.Id, current.Value!.CostRecordId);
+
+        var future = await _resolver.ResolveAsync(
+            new ResolveCostRequest(_orgId, _branchA, _itemId, _unitId, "THB", 1m, replacementStart.AddMinutes(1)), CancellationToken.None);
+        Assert.True(future.IsSuccess);
+        Assert.Equal(futureCost.Id, future.Value!.CostRecordId);
     }
 
     [Fact]
@@ -291,7 +372,7 @@ public class CostResolverTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ResolveForCatalog_FollowsSameSourcePriorityAndBranchPrecedence()
+    public async Task ResolveForCatalog_FollowsSameAmbiguityAndBranchPrecedence()
     {
         var now = DateTimeOffset.UtcNow;
         var sourceLow = new CostSource(Guid.NewGuid(), _orgId, "SRC_L", LocalizedText.Create("L", "L"), priority: 10, isActive: true, now);
@@ -330,10 +411,8 @@ public class CostResolverTests : IAsyncLifetime
         Assert.Equal(150m, resBranchA.Amount);
         Assert.Equal(CostScopeType.Branch, resBranchA.Scope);
 
-        // For Branch B: No branch override -> High priority cost wins (120m) over low priority (100m)
+        // For Branch B: equal business precedence must not use source priority as a tie-breaker.
         var resBranchB = _resolver.ResolveForCatalog(allRecords, _branchB);
-        Assert.NotNull(resBranchB);
-        Assert.Equal(120m, resBranchB.Amount);
-        Assert.Equal(CostScopeType.Organization, resBranchB.Scope);
+        Assert.Null(resBranchB);
     }
 }

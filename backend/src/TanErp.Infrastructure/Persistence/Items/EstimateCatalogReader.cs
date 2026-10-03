@@ -48,30 +48,33 @@ public class EstimateCatalogReader : IEstimateCatalogReader
 
         var now = DateTimeOffset.UtcNow;
 
-        // 3. Database HasCost predicate
-        if (query.HasCost.HasValue)
-        {
-            if (query.HasCost.Value)
-            {
-                queryable = queryable.Where(i => _db.CostRecords.Any(c =>
-                    c.OrganizationId == orgId
-                    && c.ItemId == i.Id
-                    && c.Status == CostRecordStatus.Published
-                    && c.EffectiveFromUtc <= now
-                    && (c.EffectiveToUtc == null || c.EffectiveToUtc >= now)
-                    && (c.Scope == CostScopeType.Organization || (c.Scope == CostScopeType.Branch && c.BranchId == branchId))));
-            }
-            else
-            {
-                queryable = queryable.Where(i => !_db.CostRecords.Any(c =>
-                    c.OrganizationId == orgId
-                    && c.ItemId == i.Id
-                    && c.Status == CostRecordStatus.Published
-                    && c.EffectiveFromUtc <= now
-                    && (c.EffectiveToUtc == null || c.EffectiveToUtc >= now)
-                    && (c.Scope == CostScopeType.Organization || (c.Scope == CostScopeType.Branch && c.BranchId == branchId))));
-            }
-        }
+        // 3. Only a unique resolver winner counts as an eligible priced item before pagination.
+        var eligibleCosts = _db.CostRecords.AsNoTracking().Where(c =>
+            c.OrganizationId == orgId
+            && (c.Status == CostRecordStatus.Published || c.Status == CostRecordStatus.Superseded)
+            && c.EffectiveFromUtc <= now
+            && (c.EffectiveToUtc == null || c.EffectiveToUtc >= now)
+            && c.MinimumQuantity <= 1m
+            && (c.MaximumQuantity == null || c.MaximumQuantity >= 1m)
+            && (c.Scope == CostScopeType.Organization || (c.Scope == CostScopeType.Branch && c.BranchId == branchId)));
+
+        var uniqueWinners = eligibleCosts.Where(c => !eligibleCosts.Any(other =>
+            other.ItemId == c.ItemId
+            && other.UnitId == c.UnitId
+            && ((other.Scope == CostScopeType.Branch && c.Scope == CostScopeType.Organization)
+                || (other.Scope == c.Scope
+                    && (other.EffectiveFromUtc > c.EffectiveFromUtc
+                        || (other.EffectiveFromUtc == c.EffectiveFromUtc
+                            && (other.MinimumQuantity > c.MinimumQuantity
+                                || (other.MinimumQuantity == c.MinimumQuantity && other.Id != c.Id))))))));
+
+        if (query.HasCost ?? true)
+            queryable = queryable.Where(i => uniqueWinners.Any(c => c.ItemId == i.Id && c.UnitId == i.BaseUnitId));
+        else
+            queryable = queryable.Where(i => !uniqueWinners.Any(c => c.ItemId == i.Id && c.UnitId == i.BaseUnitId));
+
+        // Keep filter options and counts stable within the authorized branch and cost scope.
+        var facetsBase = queryable;
 
         // 4. Server-side Search
         if (!string.IsNullOrWhiteSpace(query.Search))
@@ -86,9 +89,6 @@ public class EstimateCatalogReader : IEstimateCatalogReader
                 i.Aliases.Any(a => a.Status == "active" &&
                     (a.NormalizedTh.Contains(search) || (a.NormalizedEn != null && a.NormalizedEn.Contains(search)))));
         }
-
-        // 5. Facets query base (reflects branch, hasCost, and search query)
-        var facetsBase = queryable;
 
         // 6. Category, Brand, and ItemType Filters
         if (!string.IsNullOrWhiteSpace(query.ItemType))
@@ -105,6 +105,25 @@ public class EstimateCatalogReader : IEstimateCatalogReader
         if (query.BrandId.HasValue)
         {
             queryable = queryable.Where(i => i.BrandId == query.BrandId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.AttributeKey))
+        {
+            var attributeKey = query.AttributeKey.Trim();
+            if (!string.IsNullOrWhiteSpace(query.AttributeValue))
+            {
+                var attributeFilter = new Dictionary<string, string>
+                {
+                    [attributeKey] = query.AttributeValue.Trim()
+                };
+                queryable = queryable.Where(i => i.Attributes != null
+                    && EF.Functions.JsonContains(i.Attributes, JsonSerializer.Serialize(attributeFilter)));
+            }
+            else
+            {
+                queryable = queryable.Where(i => i.Attributes != null
+                    && EF.Functions.JsonExists(i.Attributes, attributeKey));
+            }
         }
 
         // 6. Cursor Decoding
@@ -148,7 +167,7 @@ public class EstimateCatalogReader : IEstimateCatalogReader
         // 8. Batch Load Primary Images (Zero N+1)
         var primaryImages = await _db.ItemImages
             .AsNoTracking()
-            .Where(im => itemIds.Contains(im.ItemId) && im.IsPrimary && im.Status == ItemStatus.Active)
+            .Where(im => im.OrganizationId == orgId && itemIds.Contains(im.ItemId) && im.IsPrimary && im.Status == ItemStatus.Active)
             .ToDictionaryAsync(im => im.ItemId, ct);
 
         // 9. Batch Load Costs (Zero N+1)
@@ -156,10 +175,14 @@ public class EstimateCatalogReader : IEstimateCatalogReader
             .AsNoTracking()
             .Include(c => c.Unit)
             .Include(c => c.CostSource)
-            .Where(c => itemIds.Contains(c.ItemId)
-                && c.Status == CostRecordStatus.Published
+            .Where(c => c.OrganizationId == orgId
+                && itemIds.Contains(c.ItemId)
+                && _db.Items.Any(i => i.OrganizationId == orgId && i.Id == c.ItemId && i.BaseUnitId == c.UnitId)
+                && (c.Status == CostRecordStatus.Published || c.Status == CostRecordStatus.Superseded)
                 && c.EffectiveFromUtc <= now
                 && (c.EffectiveToUtc == null || c.EffectiveToUtc >= now)
+                && c.MinimumQuantity <= 1m
+                && (c.MaximumQuantity == null || c.MaximumQuantity >= 1m)
                 && (c.Scope == CostScopeType.Organization || (c.Scope == CostScopeType.Branch && c.BranchId == branchId)))
             .ToListAsync(ct);
 
@@ -184,8 +207,8 @@ public class EstimateCatalogReader : IEstimateCatalogReader
                 new LocalizedTextDto(item.Name.Thai, item.Name.English),
                 item.Description != null ? new LocalizedTextDto(item.Description.Thai, item.Description.English) : null,
                 item.ItemType,
-                new CategorySummaryDto(item.Category!.Id, item.Category.Code, new LocalizedTextDto(item.Category.Name.Thai, item.Category.Name.English), item.Category.ParentCategoryId),
-                item.Brand != null ? new BrandSummaryDto(item.Brand.Id, item.Brand.Code, new LocalizedTextDto(item.Brand.Name.Thai, item.Brand.Name.English)) : null,
+                new CategorySummaryDto(item.Category!.Id, item.Category.Code, new LocalizedTextDto(item.Category.Name.Thai, item.Category.Name.English), item.Category.ParentCategoryId, item.Category.ImageFileId),
+                item.Brand != null ? new BrandSummaryDto(item.Brand.Id, item.Brand.Code, new LocalizedTextDto(item.Brand.Name.Thai, item.Brand.Name.English), item.Brand.ImageFileId) : null,
                 new UnitSummaryDto(item.BaseUnit!.Id, item.BaseUnit.Code, item.BaseUnit.Symbol, new LocalizedTextDto(item.BaseUnit.Name.Thai, item.BaseUnit.Name.English)),
                 item.Attributes,
                 primaryImageProj,
@@ -193,7 +216,7 @@ public class EstimateCatalogReader : IEstimateCatalogReader
         }
 
         // 11. Calculate Facets
-        var facets = await CalculateFacetsAsync(facetsBase, ct);
+        var facets = await CalculateFacetsAsync(facetsBase, orgId, ct);
 
         // 12. Next Cursor
         string? nextCursor = null;
@@ -212,7 +235,7 @@ public class EstimateCatalogReader : IEstimateCatalogReader
             hasNextPage));
     }
 
-    private async Task<EstimateCatalogFacets> CalculateFacetsAsync(IQueryable<Item> baseQuery, CancellationToken ct)
+    private async Task<EstimateCatalogFacets> CalculateFacetsAsync(IQueryable<Item> baseQuery, Guid orgId, CancellationToken ct)
     {
         var itemTypes = await baseQuery
             .GroupBy(i => i.ItemType)
@@ -227,7 +250,7 @@ public class EstimateCatalogReader : IEstimateCatalogReader
         var categoryIds = categoryCounts.Select(c => c.CategoryId).ToList();
         var categoryEntities = await _db.ItemCategories
             .AsNoTracking()
-            .Where(c => categoryIds.Contains(c.Id))
+            .Where(c => c.OrganizationId == orgId && categoryIds.Contains(c.Id))
             .ToDictionaryAsync(c => c.Id, ct);
 
         var categories = categoryCounts
@@ -235,7 +258,7 @@ public class EstimateCatalogReader : IEstimateCatalogReader
             .Select(c =>
             {
                 var cat = categoryEntities[c.CategoryId];
-                return new CatalogCategoryFacet(cat.Id, new LocalizedTextDto(cat.Name.Thai, cat.Name.English), c.Count);
+                return new CatalogCategoryFacet(cat.Id, new LocalizedTextDto(cat.Name.Thai, cat.Name.English), cat.ImageFileId, c.Count);
             })
             .ToList();
 
@@ -248,7 +271,7 @@ public class EstimateCatalogReader : IEstimateCatalogReader
         var brandIds = brandCounts.Select(b => b.BrandId).ToList();
         var brandEntities = await _db.ItemBrands
             .AsNoTracking()
-            .Where(b => brandIds.Contains(b.Id))
+            .Where(b => b.OrganizationId == orgId && brandIds.Contains(b.Id))
             .ToDictionaryAsync(b => b.Id, ct);
 
         var brands = brandCounts
@@ -256,10 +279,23 @@ public class EstimateCatalogReader : IEstimateCatalogReader
             .Select(b =>
             {
                 var br = brandEntities[b.BrandId];
-                return new CatalogBrandFacet(br.Id, new LocalizedTextDto(br.Name.Thai, br.Name.English), b.Count);
+                return new CatalogBrandFacet(br.Id, new LocalizedTextDto(br.Name.Thai, br.Name.English), br.ImageFileId, b.Count);
             })
             .ToList();
 
-        return new EstimateCatalogFacets(itemTypes, categories, brands);
+        var attributeValues = await baseQuery
+            .Where(i => i.Attributes != null)
+            .Select(i => i.Attributes!)
+            .ToListAsync(ct);
+
+        var attributes = attributeValues
+            .SelectMany(values => values)
+            .GroupBy(attribute => new { attribute.Key, attribute.Value })
+            .Select(group => new CatalogAttributeFacet(group.Key.Key, group.Key.Value, group.Count()))
+            .OrderBy(attribute => attribute.Key)
+            .ThenBy(attribute => attribute.Value)
+            .ToList();
+
+        return new EstimateCatalogFacets(itemTypes, categories, brands, attributes);
     }
 }

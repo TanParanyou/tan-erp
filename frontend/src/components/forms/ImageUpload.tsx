@@ -13,6 +13,9 @@ export interface ImageUploadProps {
   className?: string;
   error?: string;
   maxDimension?: number;
+  maxFileSizeBytes?: number;
+  disabled?: boolean;
+  onProcessingChange?: (processing: boolean) => void;
 }
 
 export function ImageUpload({
@@ -22,6 +25,9 @@ export function ImageUpload({
   className = "",
   error,
   maxDimension = 2048,
+  maxFileSizeBytes = 15 * 1024 * 1024,
+  disabled = false,
+  onProcessingChange,
 }: ImageUploadProps) {
   const t = useTranslations("common.actions");
   const tFeedback = useTranslations("common.feedback");
@@ -51,6 +57,7 @@ export function ImageUpload({
 
   const handleFile = useCallback(
     async (file: File) => {
+      if (disabled) return;
       setUploadError(null);
 
       // Validate file type
@@ -60,28 +67,31 @@ export function ImageUpload({
       }
 
       // Validate file size (15MB raw limit)
-      if (file.size > 15 * 1024 * 1024) {
+      if (file.size > maxFileSizeBytes) {
         setUploadError(tFeedback("fileTooLarge"));
         return;
       }
 
-      // Deferred Flow: Optimize image to WebP locally in browser
-      const optResult = await optimizeImageToWebP(file, { maxDimension });
-      const targetFile = optResult.file;
-
-      // Revoke previously created local preview if any to prevent memory leak
-      if (localPreviewRef.current) {
-        URL.revokeObjectURL(localPreviewRef.current);
+      onProcessingChange?.(true);
+      try {
+        const optimized = await optimizeImageToWebP(file, { maxDimension });
+        const targetFile = optimized.file;
+        if (targetFile.size > maxFileSizeBytes) {
+          setUploadError(tFeedback("fileTooLarge"));
+          return;
+        }
+        if (localPreviewRef.current) URL.revokeObjectURL(localPreviewRef.current);
+        const objectUrl = URL.createObjectURL(targetFile);
+        localPreviewRef.current = objectUrl;
+        setLocalPreview(objectUrl);
+        onChange(targetFile);
+      } catch {
+        setUploadError(tFeedback("operationFailed"));
+      } finally {
+        onProcessingChange?.(false);
       }
-
-      // Instant local preview
-      const objectUrl = URL.createObjectURL(targetFile);
-      setLocalPreview(objectUrl);
-
-      // Pass File object to parent form (to be submitted in onSubmit)
-      onChange(targetFile);
     },
-    [maxDimension, onChange, tFeedback]
+    [disabled, maxDimension, maxFileSizeBytes, onChange, onProcessingChange, tFeedback]
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,6 +102,7 @@ export function ImageUpload({
   };
 
   const handleRemove = () => {
+    if (disabled) return;
     if (localPreview) {
       URL.revokeObjectURL(localPreview);
     }
@@ -109,6 +120,7 @@ export function ImageUpload({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (disabled) return;
     setIsDragging(true);
   };
 
@@ -121,6 +133,7 @@ export function ImageUpload({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (disabled) return;
     setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
@@ -136,6 +149,7 @@ export function ImageUpload({
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        disabled={disabled}
         className="hidden"
         style={{ display: "none" }}
         onChange={handleInputChange}
@@ -152,7 +166,7 @@ export function ImageUpload({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewSrc}
-              alt="Preview"
+              alt={tForm("imagePreview")}
               className="h-full w-full object-cover rounded-none"
             />
 
@@ -173,6 +187,7 @@ export function ImageUpload({
           <button
             type="button"
             onClick={handleRemove}
+            disabled={disabled}
             className="absolute -top-2 -right-2 h-6 w-6 bg-erp-danger text-white rounded-none flex items-center justify-center shadow-md transition-colors z-10 focus-visible:outline-2 focus-visible:outline-white cursor-pointer hover:bg-red-700"
             title={t("delete")}
             aria-label={t("delete")}
@@ -182,13 +197,15 @@ export function ImageUpload({
         </div>
       ) : (
         <div
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => { if (!disabled) fileInputRef.current?.click(); }}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           role="button"
-          tabIndex={0}
+          aria-disabled={disabled}
+          tabIndex={disabled ? -1 : 0}
           onKeyDown={(e) => {
+            if (disabled) return;
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               fileInputRef.current?.click();
@@ -198,7 +215,7 @@ export function ImageUpload({
             isDragging
               ? "border-erp-navy bg-erp-navy-light"
               : "border-erp-border bg-erp-surface hover:border-erp-navy hover:bg-erp-surface-muted"
-          } rounded-none transition-all cursor-pointer group`}
+          } rounded-none transition-all cursor-pointer group ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         >
           <IconUpload
             size={22}

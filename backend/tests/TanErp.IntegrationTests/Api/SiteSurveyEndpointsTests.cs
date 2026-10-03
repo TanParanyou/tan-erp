@@ -310,6 +310,7 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
             Assert.Equal(SurveyRevisionStatus.Ready, readyRev.Status);
             Assert.Equal(SurveyReadiness.Ready, readyRev.Readiness);
             Assert.NotNull(readyRev.SnapshotHash);
+            Assert.StartsWith("v2:", readyRev.SnapshotHash);
 
             // Verify Opportunity transitioned to Estimating
             var finalOpp = await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId);
@@ -324,4 +325,3 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
         }
     }
 }
-

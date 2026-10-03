@@ -38,7 +38,28 @@ vi.mock("@/lib/api/api-client", async (importOriginal) => {
   };
 });
 
+vi.mock("@/lib/api/file-client", () => ({
+  fileClient: {
+    createSession: vi.fn(),
+    completeSession: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/media/image-optimization", () => ({
+  optimizeImageToWebP: vi.fn(async (file: File) => ({
+    file,
+    width: 800,
+    height: 600,
+    format: "webp",
+    blob: new Blob([file], { type: "image/webp" }),
+  })),
+}));
+
+import { fileClient } from "@/lib/api/file-client";
+
 const mockedCreateSite = vi.mocked(apiClient.createSite);
+const mockedCreateSession = vi.mocked(fileClient.createSession);
+const mockedCompleteSession = vi.mocked(fileClient.completeSession);
 
 function renderEditor(client: QueryClient, customerId = "customer-1"): void {
   render(
@@ -96,6 +117,8 @@ describe("SiteEditor", () => {
       count += 1;
       return `site-key-${count}` as `${string}-${string}-${string}-${string}-${string}`;
     });
+    global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    global.URL.revokeObjectURL = vi.fn();
   });
 
   it("submits valid site and navigates back to customer detail on success", async () => {
@@ -345,5 +368,70 @@ describe("SiteEditor", () => {
         screen.queryByText("หากระบุพิกัด ต้องระบุทั้งละติจูดและลองจิจูดคู่กัน")
       ).not.toBeInTheDocument();
     });
+  });
+
+  it("uploads site images with parentType site, creationIntentId, slotId, and passes fileUploadIntentId to createSite", async () => {
+    mockedCreateSession.mockResolvedValue({
+      sessionId: "session-site-1",
+      expiresAtUtc: "2099-01-01T00:00:00Z",
+      slots: [{ slotId: "slot-site-1", filename: "site.webp", mediaType: "image/webp", fileSizeBytes: 2048 }],
+    });
+    mockedCompleteSession.mockResolvedValue({
+      sessionId: "session-site-1",
+      files: [{ fileId: "file-site-123", filename: "site.webp", mediaType: "image/webp", fileSizeBytes: 2048, servingUrl: "http://example.com/site.webp" }],
+    });
+    mockedCreateSite.mockResolvedValue({
+      id: "site-new-1",
+      customerId: "customer-1",
+      label: "สำนักงานใหญ่",
+      addressLine1: "123 ถ.สุขุมวิท",
+      subdistrict: "คลองเตย",
+      district: "คลองเตย",
+      province: "กรุงเทพมหานคร",
+      postalCode: "10110",
+      countryCode: "TH",
+      status: "active",
+      createdAtUtc: "2026-09-29T00:00:00Z",
+      rowVersion: "AAAA",
+    });
+
+    renderEditor(client, "customer-1");
+    await fillValidSiteForm();
+
+    const file = new File(["dummy site image"], "site.webp", { type: "image/webp" });
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).not.toBeNull();
+
+    await waitFor(() => {
+      fireEvent.change(fileInput, { target: { files: [file] } });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกสถานที่ตั้ง" }));
+
+    await waitFor(() => {
+      expect(mockedCreateSession).toHaveBeenCalledTimes(1);
+    });
+
+    const sessionReq = mockedCreateSession.mock.calls[0][0];
+    expect(sessionReq.parentType).toBe("site");
+    expect(sessionReq.parentId).toBeNull();
+    expect(typeof sessionReq.creationIntentId).toBe("string");
+    expect(sessionReq.creationIntentId).toBeTruthy();
+
+    await waitFor(() => {
+      expect(mockedCompleteSession).toHaveBeenCalledTimes(1);
+    });
+    const completeCall = mockedCompleteSession.mock.calls[0];
+    expect(completeCall[0]).toBe("session-site-1");
+    expect(completeCall[1]).toEqual([{ slotId: "slot-site-1", file }]);
+
+    await waitFor(() => {
+      expect(mockedCreateSite).toHaveBeenCalledTimes(1);
+    });
+
+    const createSitePayload = mockedCreateSite.mock.calls[0][1];
+    expect(createSitePayload.images).toEqual([{ fileId: "file-site-123", caption: undefined }]);
+    expect(createSitePayload.fileUploadIntentId).toBe(sessionReq.creationIntentId);
+    expect(mockPush).toHaveBeenCalledWith("/th/customers/customer-1");
   });
 });

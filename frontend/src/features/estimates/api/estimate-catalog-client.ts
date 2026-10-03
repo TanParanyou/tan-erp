@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/api-client";
-import type { components } from "@/generated/api/tan-erp.v1";
+import type { components, paths } from "@/generated/api/tan-erp.v1";
 
 export class EstimateCatalogContractError extends Error {
   constructor(message: string) {
@@ -19,9 +19,10 @@ export type EstimateCatalogResponse = components["schemas"]["EstimateCatalogResp
 export interface CatalogItemModel {
   id: string;
   code: string;
-  name: LocalizedTextResponse;
+  name: LocalizedTextResponse & { thai: string };
   description?: LocalizedTextResponse;
   itemType: string;
+  costComponentType: string;
   category: {
     id: string;
     code: string;
@@ -43,6 +44,7 @@ export interface CatalogItemModel {
     fileId: string;
     altText?: LocalizedTextResponse;
   };
+  attributes?: Record<string, string>;
   resolvedCost?: {
     costRecordId: string;
     version: number;
@@ -52,6 +54,10 @@ export interface CatalogItemModel {
     scope: string;
     effectiveFromUtc: string;
     policyVersion?: string | null;
+    costSourceId?: string | null;
+    costSourceCode?: string | null;
+    sourceReference?: string | null;
+    evidenceFileId?: string | null;
   };
 }
 
@@ -87,34 +93,58 @@ export function validateAndMapCatalogItem(raw: unknown): CatalogItemModel {
     throw new EstimateCatalogContractError(`Item '${item.code}' missing required 'itemType'.`);
   }
 
-  if (!item.category || typeof item.category !== "object" || !item.category.id) {
+  if (!item.costComponentType || typeof item.costComponentType !== "string") {
+    throw new EstimateCatalogContractError(`Item '${item.code}' missing required 'costComponentType'.`);
+  }
+
+  if (!item.category || !item.category.id || !item.category.code || !item.category.name?.thai) {
     throw new EstimateCatalogContractError(`Item '${item.code}' missing required 'category'.`);
   }
 
-  if (!item.baseUnit || typeof item.baseUnit !== "object" || !item.baseUnit.id) {
+  if (!item.baseUnit || !item.baseUnit.id || !item.baseUnit.code || !item.baseUnit.name?.thai || !item.baseUnit.symbol) {
     throw new EstimateCatalogContractError(`Item '${item.code}' missing required 'baseUnit'.`);
+  }
+
+  if (item.brand && (!item.brand.id || !item.brand.code || !item.brand.name?.thai)) {
+    throw new EstimateCatalogContractError(`Item '${item.code}' has invalid 'brand'.`);
+  }
+
+  const attributes: Record<string, string> = {};
+  if (item.attributes && typeof item.attributes === "object" && !Array.isArray(item.attributes)) {
+    for (const [key, value] of Object.entries(item.attributes)) {
+      if (typeof value === "string") attributes[key] = value;
+    }
   }
 
   let resolvedCost: CatalogItemModel["resolvedCost"];
   if (item.resolvedCost) {
     const cost = item.resolvedCost;
-    if (!cost.costRecordId || typeof cost.amount !== "number" || !cost.currency || !cost.unitCode) {
+    if (!cost.costRecordId || typeof cost.amount !== "number" || !Number.isFinite(cost.amount)
+      || typeof cost.version !== "number" || cost.version < 1 || !cost.currency || !cost.unitCode
+      || !cost.scope || !cost.effectiveFromUtc || Number.isNaN(Date.parse(cost.effectiveFromUtc))) {
       throw new EstimateCatalogContractError(`Item '${item.code}' has invalid resolvedCost contract.`);
     }
     resolvedCost = {
       costRecordId: cost.costRecordId,
-      version: cost.version ?? 1,
+      version: cost.version,
       amount: cost.amount,
       currency: cost.currency,
       unitCode: cost.unitCode,
-      scope: cost.scope ?? "organization",
-      effectiveFromUtc: cost.effectiveFromUtc ?? new Date().toISOString(),
+      scope: cost.scope,
+      effectiveFromUtc: cost.effectiveFromUtc,
       policyVersion: cost.policyVersion,
+      costSourceId: cost.costSourceId,
+      costSourceCode: cost.costSourceCode,
+      sourceReference: cost.sourceReference,
+      evidenceFileId: cost.evidenceFileId,
     };
   }
 
   let primaryImage: CatalogItemModel["primaryImage"];
-  if (item.primaryImage && item.primaryImage.fileId) {
+  if (item.primaryImage && !item.primaryImage.fileId) {
+    throw new EstimateCatalogContractError(`Item '${item.code}' has invalid 'primaryImage'.`);
+  }
+  if (item.primaryImage?.fileId) {
     primaryImage = {
       fileId: item.primaryImage.fileId,
       altText: item.primaryImage.altText,
@@ -124,28 +154,30 @@ export function validateAndMapCatalogItem(raw: unknown): CatalogItemModel {
   return {
     id: item.id,
     code: item.code,
-    name: item.name,
+    name: { thai: item.name.thai, english: item.name.english },
     description: item.description,
     itemType: item.itemType,
+    costComponentType: item.costComponentType,
     category: {
       id: item.category.id,
-      code: item.category.code ?? "",
-      name: item.category.name ?? { thai: "-" },
+      code: item.category.code,
+      name: item.category.name,
       parentCategoryId: item.category.parentCategoryId,
     },
     brand: item.brand?.id
       ? {
           id: item.brand.id,
-          code: item.brand.code ?? "",
-          name: item.brand.name ?? { thai: "-" },
+          code: item.brand.code!,
+          name: item.brand.name!,
         }
       : undefined,
     baseUnit: {
       id: item.baseUnit.id,
-      code: item.baseUnit.code ?? "",
-      name: item.baseUnit.name ?? { thai: "-" },
-      symbol: item.baseUnit.symbol ?? "",
+      code: item.baseUnit.code,
+      name: item.baseUnit.name,
+      symbol: item.baseUnit.symbol,
     },
+    attributes,
     primaryImage,
     resolvedCost,
   };
@@ -157,18 +189,21 @@ export function validateAndMapCatalogResponse(response: unknown): CatalogModel {
   }
 
   const resp = response as Partial<EstimateCatalogResponse>;
-  const rawItems = resp.items ?? [];
+  if (!Array.isArray(resp.items) || !resp.facets || !Array.isArray(resp.facets.itemTypes)
+    || !Array.isArray(resp.facets.categories) || !Array.isArray(resp.facets.brands)
+    || !Array.isArray(resp.facets.attributes)
+    || !resp.pageInfo || typeof resp.pageInfo.hasNextPage !== "boolean") {
+    throw new EstimateCatalogContractError("Catalog response is missing required page or facet fields.");
+  }
+
+  const rawItems = resp.items;
   const items = rawItems.map(validateAndMapCatalogItem);
 
-  const facets: CatalogFacetsResponse = resp.facets ?? {
-    itemTypes: [],
-    categories: [],
-    brands: [],
-  };
+  const facets: CatalogFacetsResponse = resp.facets;
 
   const pageInfo = {
     nextCursor: resp.pageInfo?.nextCursor ?? null,
-    hasNextPage: Boolean(resp.pageInfo?.hasNextPage),
+    hasNextPage: resp.pageInfo.hasNextPage,
   };
 
   return { items, facets, pageInfo };
@@ -183,25 +218,13 @@ export function getLocalizedText(
   if (locale === "en" && text.english && text.english.trim().length > 0) {
     return text.english;
   }
-  if (text.thai && text.thai.trim().length > 0) {
+  if (locale !== "en" && text.thai && text.thai.trim().length > 0) {
     return text.thai;
-  }
-  if (text.english && text.english.trim().length > 0) {
-    return text.english;
   }
   return emptyFallback;
 }
 
-export interface FetchCatalogQuery {
-  branchId: string;
-  search?: string;
-  itemType?: string;
-  categoryId?: string;
-  brandId?: string;
-  hasCost?: boolean;
-  cursor?: string;
-  pageSize?: number;
-}
+export type FetchCatalogQuery = NonNullable<paths["/api/v1/estimate-catalog/items"]["get"]["parameters"]["query"]>;
 
 export interface FetchCatalogOptions {
   token: string;

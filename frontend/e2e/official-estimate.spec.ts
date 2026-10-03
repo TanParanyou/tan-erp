@@ -17,11 +17,13 @@ async function signIn(page: Page, email = "foundation-user@example.test"): Promi
     (request) => request.url().includes("/api/v1/me") && request.method() === "GET"
   );
   const meResponse = page.waitForResponse(
-    (response) => response.url().includes("/api/v1/me") && response.status() === 200
+    (response) => response.url().includes("/api/v1/me")
   );
   await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
   const [request, response] = await Promise.all([meRequest, meResponse]);
-  const body = (await response.json()) as CurrentUserResponse;
+  const currentUserPayload = await response.text();
+  expect(response.status(), `Current user request failed with ${response.status()}: ${currentUserPayload}`).toBe(200);
+  const body = JSON.parse(currentUserPayload) as CurrentUserResponse;
   const membership = body.memberships?.[0];
   if (!body.user?.id || !membership?.id) throw new Error("Incomplete test identity fixture");
   const authHeader = request.headers()["authorization"] ?? "";
@@ -36,10 +38,11 @@ async function signIn(page: Page, email = "foundation-user@example.test"): Promi
 }
 
 test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
-  test("creates estimate draft, calculates BOQ, issues quotation, and advances opportunity to proposed then won upon customer acceptance", async ({
+  test("submits, returns, recalculates, and independently approves an estimate before quotation acceptance", async ({
     page,
+    browser,
   }) => {
-    test.setTimeout(120000);
+    test.setTimeout(240000);
     await signIn(page);
 
     // 1. Create a customer with a primary site and activate
@@ -66,6 +69,37 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
     const customerId = customerData.id;
 
     await page.waitForURL(`**/th/customers/${customerId}`);
+
+    // Complete the organization billing profile required for quotation issuance.
+    const taxIdentifierBody = `0105563${suffix.padStart(5, "0")}`;
+    const taxIdentifierCheckDigit = (11 - Array.from(taxIdentifierBody).reduce(
+      (sum, digit, index) => sum + Number(digit) * (13 - index),
+      0,
+    ) % 11) % 10;
+    await page.getByRole("button", { name: "แก้ไขข้อมูลลูกค้า" }).click();
+    await page.getByRole("tab", { name: "ภาษีและเงื่อนไขการค้า" }).click();
+    await page.getByLabel("ชื่อจดทะเบียน").fill(customerNameTh);
+    await page.getByLabel("เลขประจำตัวผู้เสียภาษี").fill(`${taxIdentifierBody}${taxIdentifierCheckDigit}`);
+    await page.getByLabel("รหัสสาขาภาษี").fill("00000");
+    const updateCustomerPromise = page.waitForResponse(
+      (res) => res.url().endsWith(`/api/v1/customers/${customerId}`) && res.request().method() === "PATCH" && res.status() === 200
+    );
+    await page.getByRole("button", { name: /บันทึกการเปลี่ยนแปลง/ }).click();
+    await updateCustomerPromise;
+
+    // Add the primary billing address required by quotation issuance.
+    await page.getByLabel("ชื่อเรียกที่อยู่").fill("สำนักงานใหญ่");
+    await page.getByLabel("เลขที่ อาคาร ถนน").fill("999 ถนนวิภาวดีรังสิต");
+    const billingArea = page.getByRole("combobox", { name: /ตำบล \/ อำเภอ \/ จังหวัด \/ รหัสไปรษณีย์/ }).first();
+    await billingArea.fill("10310");
+    const billingAddressOption = page.getByRole("listbox").getByRole("option").first();
+    await expect(billingAddressOption).toBeVisible({ timeout: 10000 });
+    await billingAddressOption.click();
+    const createBillingAddressPromise = page.waitForResponse(
+      (res) => res.url().includes(`/api/v1/customers/${customerId}/addresses`) && res.request().method() === "POST"
+    );
+    await page.getByRole("button", { name: /บันทึกการเปลี่ยนแปลง/ }).last().click();
+    expect((await createBillingAddressPromise).status()).toBe(201);
 
     // Activate Customer
     const activateBtn = page.getByRole("button", { name: "เปิดใช้งานลูกค้า" });
@@ -226,6 +260,10 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
     // Fill Item description
     const itemDescInput = estimateDrawer.locator("input[placeholder*='เช่น ตู้เสื้อผ้า']").first();
     await itemDescInput.fill("ตู้เสื้อผ้าขนาดใหญ่ 3 ตอน");
+    await estimateDrawer.getByLabel("รหัสเหตุผลรายการงานกำหนดเอง").fill("TEST_ONLY_CUSTOM_WORK_ITEM");
+    await estimateDrawer.getByLabel("เหตุผลที่กำหนดรายการงานเอง").fill("รายการเฉพาะโครงการที่ยังไม่มีใน Item Master");
+
+    await estimateDrawer.getByRole("tab", { name: /^ต้นทุน/ }).click();
 
     // Fill Cost Component
     const costDescInput = estimateDrawer.locator("#cost-component-desc-0-0-0");
@@ -233,6 +271,7 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
 
     const unitCostInput = estimateDrawer.locator("#cost-component-unit-cost-0-0-0");
     await unitCostInput.fill("20000");
+    await estimateDrawer.getByRole("combobox", { name: "เหตุผลที่ใช้ต้นทุนชั่วคราว" }).selectOption("market-benchmark");
 
     // 7. Save Draft
     const saveDraftBtn = estimateDrawer.getByRole("button", { name: /บันทึกฉบับร่าง/i });
@@ -244,10 +283,12 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
     await updateDraftPromise;
 
     // 8. Apply Discount & Recalculate
-    const discountInput = estimateDrawer.locator("#estimate-discount-input");
+    await estimateDrawer.locator("#estimate-discount-type").selectOption("fixed-amount");
+    const discountInput = estimateDrawer.locator("#estimate-discount-value");
     await discountInput.fill("2000");
+    await estimateDrawer.locator("#estimate-discount-reason").fill("TEST_ONLY_DISCOUNT");
 
-    const recalculateBtn = estimateDrawer.getByRole("button", { name: /คำนวณราคาใหม่/i });
+    const recalculateBtn = estimateDrawer.getByRole("button", { name: /บันทึกและคำนวณ$/i });
     await expect(recalculateBtn).toBeEnabled();
     const calculatePromise = page.waitForResponse(
       (res) => res.url().includes("/calculate") && res.request().method() === "POST" && res.status() === 200
@@ -266,7 +307,78 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
     await expect(page.getByText(estimateData.number)).toBeVisible();
     await expect(page.getByText(/ยอดรวมสุทธิทั้งสิ้น/)).toBeVisible();
 
-    // 10. Issue Quotation (Slice 5B: Advances Opportunity to 'proposed')
+    // 10. Submit as the estimator, then approve from a separate reviewer identity.
+    const submitButton = page.getByRole("button", { name: "ส่งตรวจอนุมัติ" });
+    await expect(submitButton).toBeVisible();
+    await submitButton.click();
+    const submitDialog = page.getByRole("dialog");
+    const submitResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/submit") && res.request().method() === "POST" && res.status() === 200
+    );
+    await submitDialog.getByRole("button", { name: "ส่งตรวจอนุมัติ" }).click();
+    await submitResponsePromise;
+
+    const reviewerPage = await browser.newPage();
+    await signIn(reviewerPage, "foundation-estimate-reviewer@example.test");
+    await reviewerPage.goto("/th/estimates/review-queue");
+    await expect(reviewerPage.getByText(estimateData.number)).toBeVisible();
+    await reviewerPage.getByRole("button", { name: "รายละเอียดการตรวจสอบ" }).click();
+    await expect(reviewerPage.getByText(/SYSTEM_BOOTSTRAP_INDEPENDENT_CHECKER/)).toBeVisible();
+    await reviewerPage.getByRole("link", { name: "เปิดพื้นที่ประเมินราคา" }).click();
+    await reviewerPage.waitForURL(`**/th/opportunities/${oppData.id}`);
+
+    const returnButton = reviewerPage.getByRole("button", { name: "ส่งกลับแก้ไข" });
+    await expect(returnButton).toBeVisible();
+    await returnButton.click();
+    const returnDialog = reviewerPage.getByRole("dialog");
+    await returnDialog.getByLabel("รหัสเหตุผล").fill("E2E_ADJUSTMENT");
+    await returnDialog.getByLabel("รายละเอียดที่ต้องแก้ไข").fill("ทบทวนส่วนลดก่อนอนุมัติ");
+    const returnResponsePromise = reviewerPage.waitForResponse(
+      (res) => res.url().includes("/review-decisions") && res.request().method() === "POST" && res.status() === 200
+    );
+    await returnDialog.getByRole("button", { name: "ส่งกลับแก้ไข" }).click();
+    await returnResponsePromise;
+
+    await page.reload();
+    await page.getByRole("button", { name: /เปิดหน้าจอคิดราคา/i }).click();
+    const returnedEstimateDrawer = page.getByRole("dialog", { name: /บันทึกและคำนวณราคาต้นทุน-ขาย/i });
+    await returnedEstimateDrawer.locator("#estimate-discount-value").fill("2500");
+    const recalculateReturnedPromise = page.waitForResponse(
+      (res) => res.url().includes("/calculate") && res.request().method() === "POST" && res.status() === 200
+    );
+    await returnedEstimateDrawer.getByRole("button", { name: /บันทึกและคำนวณ$/i }).click();
+    await recalculateReturnedPromise;
+    await returnedEstimateDrawer.getByRole("button", { name: /Close drawer/i }).click();
+
+    const resubmitButton = page.getByRole("button", { name: "ส่งตรวจอนุมัติ" });
+    await expect(resubmitButton).toBeVisible();
+    await resubmitButton.click();
+    const resubmitDialog = page.getByRole("dialog");
+    const resubmitResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/submit") && res.request().method() === "POST" && res.status() === 200
+    );
+    await resubmitDialog.getByRole("button", { name: "ส่งตรวจอนุมัติ" }).click();
+    await resubmitResponsePromise;
+
+    await reviewerPage.goto("/th/estimates/review-queue");
+    await expect(reviewerPage.getByText(estimateData.number)).toBeVisible();
+    await reviewerPage.getByRole("button", { name: "รายละเอียดการตรวจสอบ" }).click();
+    await reviewerPage.getByRole("link", { name: "เปิดพื้นที่ประเมินราคา" }).click();
+    await reviewerPage.waitForURL(`**/th/opportunities/${oppData.id}`);
+    const approveButton = reviewerPage.getByRole("button", { name: "อนุมัติ" });
+    await expect(approveButton).toBeVisible();
+    await approveButton.click();
+    const approveDialog = reviewerPage.getByRole("dialog");
+    const approveResponsePromise = reviewerPage.waitForResponse(
+      (res) => res.url().includes("/review-decisions") && res.request().method() === "POST" && res.status() === 200
+    );
+    await approveDialog.getByRole("button", { name: "อนุมัติ" }).click();
+    await approveResponsePromise;
+    await reviewerPage.close();
+    await page.reload();
+    await expect(page.getByText(/อนุมัติแล้ว/)).toBeVisible();
+
+    // 11. Issue Quotation (Slice 5B: Advances Opportunity to 'proposed')
     const issueQuotationBtn = page.getByRole("button", { name: /ออกใบเสนอราคา/i });
     await expect(issueQuotationBtn).toBeVisible();
     await issueQuotationBtn.click();
@@ -286,7 +398,7 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
     const proposedTimelineBadge = page.locator("div[class*='border-l-2']").getByText(/เสนอราคาแล้ว \(Proposed\)/i);
     await expect(proposedTimelineBadge).toBeVisible();
 
-    // 11. Customer Acceptance (Slice 5B: Advances Opportunity to 'won')
+    // 12. Customer Acceptance (Slice 5B: Advances Opportunity to 'won')
     const acceptQuotationBtn = page.getByRole("button", { name: /ลูกค้ายอมรับใบเสนอราคา/i });
     await expect(acceptQuotationBtn).toBeVisible();
     await acceptQuotationBtn.click();
@@ -304,5 +416,69 @@ test.describe("Official Estimate & Commercial Journey (Slice 5A + 5B)", () => {
     await expect(page.getByText(/ปิดการขายสำเร็จ \(Won\)/i).first()).toBeVisible();
     const wonTimelineBadge = page.locator("div[class*='border-l-2']").getByText(/ปิดการขายสำเร็จ \(Won\)/i);
     await expect(wonTimelineBadge).toHaveCount(1);
+
+    // 12b. Customer-safe quotation document: preview, language switch, no internal data, narrow screen.
+    await page.getByRole("link", { name: "ดูเอกสารใบเสนอราคา" }).click();
+    await page.waitForURL(/\/th\/estimates\/[^/]+\/quotation$/);
+    const quotationDocument = page.getByTestId("quotation-document");
+    await expect(quotationDocument).toBeVisible();
+    await expect(quotationDocument.getByRole("heading", { name: "ใบเสนอราคา" })).toBeVisible();
+    await expect(quotationDocument).toContainText(customerNameTh);
+    await expect(quotationDocument).not.toContainText(/ต้นทุน|margin|markup|กำไร/i);
+    await page.getByRole("button", { name: "English" }).click();
+    await expect(quotationDocument.getByRole("heading", { name: "Quotation" })).toBeVisible();
+    await page.setViewportSize({ width: 320, height: 800 });
+    const documentPageDimensions = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      contentWidth: document.documentElement.scrollWidth,
+    }));
+    expect(documentPageDimensions.contentWidth).toBeLessThanOrEqual(documentPageDimensions.viewportWidth);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/th/opportunities/${oppData.id}`);
+
+    // 13. Preserve the accepted quotation and start a separately versioned revision.
+    const createRevisionButton = page.getByRole("button", { name: "สร้างรุ่นแก้ไข" });
+    await expect(createRevisionButton).toBeVisible();
+    await createRevisionButton.click();
+    const revisionDialog = page.getByRole("dialog");
+    await revisionDialog.getByLabel("เหตุผลที่สร้างรุ่นแก้ไข").fill("ปรับขอบเขตงานหลังลูกค้ายอมรับรุ่นแรก");
+    const revisionResponsePromise = page.waitForResponse(
+      (res) => res.url().endsWith("/revisions") && res.request().method() === "POST" && res.status() === 201
+    );
+    await revisionDialog.getByRole("button", { name: "สร้างรุ่นแก้ไข" }).click();
+    await revisionResponsePromise;
+    await expect(page.getByText("รุ่นที่ 2")).toBeVisible();
+
+    // 14. Check the estimate workspace in English, with keyboard and narrow-screen settings.
+    await page.goto(`/en/opportunities/${oppData.id}`);
+    const englishWorkspaceButtons = page.getByRole("button", { name: "Open Workspace" });
+    await expect(englishWorkspaceButtons).toHaveCount(2);
+    await englishWorkspaceButtons.last().click();
+
+    const englishEstimateDrawer = page.getByRole("dialog", { name: "Estimate & BOQ Workspace" });
+    await expect(englishEstimateDrawer).toBeVisible();
+    await expect(englishEstimateDrawer.getByRole("button", { name: "Add Section" })).toBeVisible();
+
+    await englishEstimateDrawer.screenshot({ path: "test-results/estimate-workspace-desktop.png" });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 320, height: 800 });
+    const narrowScreenDimensions = await page.evaluate(() => ({
+      viewportWidth: document.documentElement.clientWidth,
+      contentWidth: document.documentElement.scrollWidth,
+    }));
+    expect(narrowScreenDimensions.contentWidth).toBeLessThanOrEqual(narrowScreenDimensions.viewportWidth);
+
+    await englishEstimateDrawer.getByRole("tab", { name: "BOQ work items", exact: true }).click();
+    await expect(englishEstimateDrawer.getByRole("button", { name: /Edit work item/ })).toBeVisible();
+    await expect(englishEstimateDrawer.getByRole("heading", { name: "Estimate & BOQ Workspace" })).toBeVisible();
+    await expect(englishEstimateDrawer.getByRole("tab", { name: "Selected work item", exact: true })).toBeVisible();
+    await englishEstimateDrawer.screenshot({ path: "test-results/estimate-workspace-mobile.png" });
+    const sectionNameInput = englishEstimateDrawer.getByRole("textbox", { name: "Section name" });
+    await sectionNameInput.focus();
+    await page.keyboard.press("Tab");
+    const focusedElementIsInsideEstimateDrawer = await englishEstimateDrawer.evaluate((drawer) =>
+      drawer.contains(document.activeElement)
+    );
+    expect(focusedElementIsInsideEstimateDrawer).toBe(true);
   });
 });

@@ -1,5 +1,7 @@
 # Engineering Verification: Site Survey Vertical Slice (Slice 4)
 
+**Current scope:** Baseline appointment/draft/ready journey has automated coverage. FR-SRV-001–003 extensions for Checklist/Evidence, published readiness templates and New/Void Revision remain open; this record does not certify the full Survey requirement set.
+
 This document records the verification results for **Site Survey Vertical Slice (Slice 4)** in `tan-erp`, covering survey appointment scheduling, surveying stage transitions, survey workspace with areas/measurements/notes, survey revision readiness gates (Mark Ready) with snapshot hashing, and automatic progression to the estimating stage with `EstimateCard`.
 
 ## 1. Scope & Implementation Summary
@@ -76,4 +78,16 @@ Complete user journey verified:
 
 - **Implementation Plan:** `docs/superpowers/plans/2026-09-13-opportunity-work-images-vertical-slice.md` / `task.md`
 - **Verification Date:** 2026-09-18
-- **Status:** Verified and Complete. Ready for branch consolidation.
+- **Status:** Baseline slice verified; full Survey requirement set remains open.
+
+## 4. Snapshot hash follow-up (2026-09-30)
+
+The previous Mark Ready hash used Survey Number, Revision Number, visit time, scope summary, and only the counts of areas and measurements. Two drafts with the same counts but different measured values produced the same hash. `SnapshotHash_ChangesWhenMeasuredValueChanges` reproduced that failure, then passed after Mark Ready began hashing a deterministic serialization of the current draft business fields, including measurement values, units, methods, and notes. New hashes carry a `v2:` prefix; existing bare hashes and Estimates that reference them are retained.
+
+Focused verification passed: the new unit regression 1/1 and `SiteSurveyEndpointsTests` 3/3 on PostgreSQL, including the API response's `v2:` hash. This closes the baseline measurement-value hash gap, not the pending Checklist/Evidence/template/revision extensions or authorized-user UAT. See the [Survey data contract](../04-data/crm-site-survey-data-contract.md#snapshot-contract) for the version boundary.
+
+The full backend rerun after this change passed Architecture 3/3, Integration 289/289 (20m16s), and Unit 288/288. Backend build passed with 0 warnings/errors; frontend lint and production build passed. The first full test attempt encountered a Docker/PostgreSQL connection error (`unknown response H for SSLRequest`) in an unrelated AddressMaster fixture; that class passed 4/4 in isolation, and the clean full rerun passed. Changed Markdown links and `git diff --check` passed. These code gates do not replace Survey UAT or release sign-off.
+
+## 5. Full suite recheck (2026-09-30)
+
+On the same code, backend build passed with 0 warnings/errors; Architecture passed 3/3 and Unit passed 288/288. Integration passed 288/289. `ReviewEstimate_RevokedApprovalPermissionIsRecheckedAtDecisionTime` failed during PostgreSQL fixture initialization with `Received unknown response 2 for SSLRequest`; two isolated reruns each passed 1/1. No code or test source changed between these runs, so the startup failure was not reproducible in isolation and its root cause remains unconfirmed. Frontend `npm run lint` and `npm run build` passed; Next.js reported the existing multiple-lockfiles root warning. Record the full suite as intermittently failing at fixture startup; isolated passes do not turn the 288/289 run into a full-suite pass.

@@ -29,6 +29,7 @@ public class ItemCategoryConfiguration : IEntityTypeConfiguration<ItemCategory>
         builder.Property(x => x.NormalizedCode).HasColumnName("normalized_code").HasMaxLength(30).IsRequired();
         builder.Property(x => x.ParentCategoryId).HasColumnName("parent_category_id");
         builder.Property(x => x.SortOrder).HasColumnName("sort_order").IsRequired();
+        builder.Property(x => x.ImageFileId).HasColumnName("image_file_id");
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32).IsRequired();
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
@@ -70,6 +71,7 @@ public class ItemCategoryConfiguration : IEntityTypeConfiguration<ItemCategory>
         builder.HasIndex(x => new { x.OrganizationId, x.NormalizedCode }).IsUnique();
         builder.HasIndex(x => new { x.OrganizationId, x.ParentCategoryId });
         builder.HasIndex(x => new { x.OrganizationId, x.Status, x.SortOrder, x.Id });
+        builder.HasIndex(x => x.ImageFileId);
 
         // Self-referencing same-org hierarchy
         builder.HasOne(x => x.ParentCategory)
@@ -82,5 +84,10 @@ public class ItemCategoryConfiguration : IEntityTypeConfiguration<ItemCategory>
             .WithMany()
             .HasForeignKey(x => x.OrganizationId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<TanErp.Domain.Files.UploadedFile>()
+            .WithMany()
+            .HasForeignKey(x => x.ImageFileId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

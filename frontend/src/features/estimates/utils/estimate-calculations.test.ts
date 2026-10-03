@@ -32,7 +32,7 @@ describe("estimate-calculations", () => {
     expect(calculateUnitSellingPrice(4000, "markup", 25)).toBe(5000);
 
     // Fixed amount: selling = 6500
-    expect(calculateUnitSellingPrice(4000, "fixed", 6500)).toBe(6500);
+    expect(calculateUnitSellingPrice(4000, "fixed_price", 6500)).toBe(6500);
 
     // Margin edge case: margin >= 100% does not divide by zero
     expect(calculateUnitSellingPrice(4000, "margin", 100)).toBe(4000);
@@ -96,6 +96,32 @@ describe("estimate-calculations", () => {
     expect(hud.grossProfit).toBe(500);
     expect(hud.totalSections).toBe(1);
     expect(hud.totalWorkItems).toBe(1);
+  });
+
+  it("calculates percentage discount against document selling total", () => {
+    const sections = [{
+      code: "SEC-01",
+      nameTh: "TEST_ONLY",
+      nameEn: "TEST_ONLY",
+      sortOrder: 1,
+      workItems: [{
+        code: "WI-01",
+        descriptionTh: "TEST_ONLY",
+        descriptionEn: "TEST_ONLY",
+        quantity: 1,
+        unitCode: "lot",
+        sellingRuleType: "fixed_price",
+        sellingRuleValue: 1000,
+        sortOrder: 1,
+        costComponents: [{ type: "material", description: "TEST_ONLY", quantity: 1, unitCode: "lot", unitCost: 500, currency: "THB", sortOrder: 1 }],
+      }],
+    }];
+
+    const hud = calculateLiveWorkspaceHud(sections, 10, "percent");
+
+    expect(hud.sellingBeforeDiscount).toBe(1000);
+    expect(hud.discountAmount).toBe(100);
+    expect(hud.netSelling).toBe(900);
   });
 
   it("correctly identifies gross profit health benchmark", () => {

@@ -8,11 +8,13 @@
 Organization
  ├─ ItemCategory
  ├─ ItemBrand
+ ├─ ItemTaxCategory
  ├─ Unit
  ├─ CostSource
  └─ Item
      ├─ Capability Flags
      ├─ ItemAlias
+     ├─ ItemBarcode ─ Unit
      ├─ ItemBranchAvailability ─ Branch
      ├─ ItemImage ─ Verified File
      ├─ ItemUnitConversion
@@ -24,6 +26,10 @@ Estimate Cost Component ─► Item/CostRecord/Conversion Snapshot
 
 Item เป็นเจ้าของตัวตน/ประเภท/Capability/หน่วยฐาน ส่วน Cost Record เป็น Versioned Financial Record แยก Lifecycle; Item ไม่มี Column `current_cost`
 
+`items.code` คือ Item Code ภายในและเป็น SKU สำหรับ Item ที่ซื้อ/เก็บได้ จึงไม่มี `items.sku` อีกคอลัมน์. External GTIN/Internal Barcode อยู่ในตารางลูก `item_barcodes` เพื่อรองรับหลายหน่วยและระดับบรรจุ; Supplier Part Number ต้องอยู่กับความสัมพันธ์ Item–Supplier เมื่อโมดูลจัดซื้อพร้อม. กฎฟิลด์และ Gate อยู่ที่ [Item Master Field Catalog](../01-business/item-master-field-catalog.md)
+
+`item_type=product` ใช้กับสินค้าสำเร็จรูปที่ทำซ้ำได้และถูกเพิ่มด้วย additive migration; ค่าที่รองรับคือ `material|labor|service|subcontract|other|product`. Product Family/Variant grouping และ Technical Specification Revision จะเป็น aggregate แยกเมื่อมีกฎจัดซื้อ/คลัง/ผลิตชัดเจน; ไม่ใช้ `attributes` JSONB เป็น BOM หรือสูตรคำนวณ
+
 ## Relational Core
 
 ### `items`
@@ -32,7 +38,8 @@ Item เป็นเจ้าของตัวตน/ประเภท/Capabil
 | --- | --- | --- |
 | `id`, `organization_id` | UUID | PK และ Trusted Scope |
 | `code`, `normalized_code` | String | Unique `(organization_id, normalized_code)` |
-| `item_type` | Enum/String | `material|labor|service|subcontract|other` |
+| `item_type` | Enum/String | `material|labor|service|subcontract|other|product` |
+| `tax_category_code` | String/Nullable | Optional code from the organization-scoped `item_master.item_tax_categories` master; never stores a tax rate |
 | `category_id`, `brand_id`, `base_unit_id` | UUID/Nullable | ต้องอยู่ Organization/Shared Scope ที่อนุญาต |
 | `name` | JSONB | Object ที่อนุญาตเฉพาะ `th`, `en`; `th` บังคับก่อน Active; ค่าแต่ละภาษาไม่เกิน 250 ตัวอักษร |
 | `description` | JSONB | Object ที่อนุญาตเฉพาะ `th`, `en`; ค่าแต่ละภาษาไม่เกิน 2,000 ตัวอักษร; ห้าม HTML |
@@ -60,11 +67,21 @@ Localized JSONB ต้องเป็น JSON Object รูปทรงคงท
 
 ### Category, Brand and Alias
 
-`item_categories` มี `id`, `organization_id`, `code`, `normalized_code`, `name` JSONB, `description` JSONB, `parent_category_id?`, `allowed_item_types`, `sort_order`, `status`, `row_version` และ Audit Columns; Parent ต้องอยู่ Organization เดียวกันและห้าม Cycle ตารางเดียวรองรับทั้ง Category/Subcategory โดยไม่สร้าง `item_subcategories`
+`item_categories` มี `id`, `organization_id`, `code` (ไม่เกิน 30 ตัว), `normalized_code`, `name` JSONB, `description` JSONB, `image_file_id?`, `parent_category_id?`, `allowed_item_types`, `sort_order`, `status`, `row_version` และ Audit Columns; Parent ต้องอยู่ Organization เดียวกันและห้าม Cycle ตารางเดียวรองรับทั้ง Category/Subcategory โดยไม่สร้าง `item_subcategories`
 
-`item_brands` มี `id`, `organization_id`, `code`, `normalized_code`, `name` JSONB, `description` JSONB, `sort_order`, `status`, `row_version` และ Audit Columns พร้อม Unique `(organization_id, normalized_code)` Item อ้าง Brand แบบ Nullable เพื่อรองรับ Labor/Service ที่ไม่มี Brand
+`item_brands` มี `id`, `organization_id`, `code` (ไม่เกิน 30 ตัว), `normalized_code`, `name` JSONB, `description` JSONB, `image_file_id?`, `sort_order`, `status`, `row_version` และ Audit Columns พร้อม Unique `(organization_id, normalized_code)` Item อ้าง Brand แบบ Nullable เพื่อรองรับ Labor/Service ที่ไม่มี Brand
+
+Brand และ Category รองรับภาพหลักได้อย่างละหนึ่งไฟล์ โดยอ้าง `files.uploaded_files` ผ่าน `image_file_id`; ใช้ Upload Session ที่ผูก `parent_type=item-brand|item-category` และ `parent_id` ของรายการ, ไฟล์ต้องผ่านการตรวจสอบก่อนแนบ และ API อ่านภาพต้องผ่านสิทธิ์ของ Master Data ภายใน Organization เดิม การเปลี่ยน/ถอดภาพบันทึก Audit พร้อมการแก้ไขรายการ; ไม่เก็บ Binary หรือ Public URL ในตาราง Master Data
+
+`item_tax_categories` มี `id`, `organization_id`, `code` (ไม่เกิน 30 ตัว), `normalized_code`, `name` JSONB, `sort_order`, `status`, `row_version` และ Audit Columns พร้อม Unique `(organization_id, normalized_code)`. Item เก็บ code เป็น classification snapshot; Tax Category ไม่เป็นเจ้าของอัตราภาษีและไม่มีผลกับ VAT Calculation ใน Slice นี้
 
 `item_aliases` มี `id`, `organization_id`, `item_id`, `alias` JSONB, `normalized_th`, `normalized_en?`, `status`, `row_version` และ Audit Columns พร้อม Unique ต่อ Item/ภาษา/ค่าที่ Normalize แล้ว Alias ใช้เพื่อค้นหาเท่านั้น ไม่แทนชื่อ Item และไม่ถูก Snapshot เป็น Description อัตโนมัติ
+
+### Item Barcode
+
+`item_barcodes` มี `id`, `organization_id`, `item_id`, `identifier_type=gtin|internal`, `value`, `unit_id`, `quantity_in_base_unit`, `packaging_level=each|inner|case|pallet`, `is_primary`, `status=active|inactive`, `row_version` และ Audit Columns. `value` เป็นข้อความเพื่อรักษาเลขศูนย์นำหน้า; `normalized_value` เติมเลขศูนย์ซ้ายให้ครบ 14 หลักสำหรับรหัสตัวเลขความยาว 8/12/13/14 หรือ uppercase สำหรับรหัสอื่น เพื่อให้รูปแบบ GTIN ที่สมมูลกันไม่ชี้คนละ Item. Normalized Value มี Unique `(organization_id, normalized_value)` ตลอดอายุ ไม่เปิดให้ Item อื่นนำ Barcode เดิมกลับไปใช้หลัง Deactivate. `(item_id, organization_id)` และ `(unit_id, organization_id)` ใช้ Composite FK เพื่อพิสูจน์ Scope เดียวกัน และมี Partial Unique สำหรับ Active Primary ต่อ `(organization_id, item_id, packaging_level)`
+
+Domain ตรวจ GTIN ตามความยาว 8/12/13/14 และ check digit; Database ตรวจความยาว, status, positive quantity และ uniqueness. การแก้ Value หรือย้าย Barcode ไปอีก Item หลังใช้งานให้ปิดรายการเดิมแล้วสร้างรายการใหม่พร้อม Audit; Snapshot ธุรกรรมเดิมเก็บรหัสและหน่วยที่สแกนไว้. การค้นหาด้วย Barcode ทำที่ Backend ภายใต้ Organization/Branch Scope และคืน Item/Unit/Quantity เดียวหรือ stable error; ไม่ให้ Frontend ดึงทุก Item ไปเทียบเอง. ไม่ถือ Barcode เป็นตัวตนของ Batch/Serial ของสินค้าจริง ซึ่งโมดูลคลังจะเป็นเจ้าของ
 
 ### Item Images and File Metadata
 
@@ -78,31 +95,33 @@ Localized JSONB ต้องเป็น JSON Object รูปทรงคงท
 
 ### Unit and Conversion
 
-`units` มี `code`, `name` JSONB ตาม Localized Text Contract, `symbol`, `dimension`, `decimal_scale`, `rounding_mode`, `status` และ Unique Code ตาม Scope
+`units` มี `code` (ไม่เกิน 20 ตัว), `name` JSONB ตาม Localized Text Contract, `symbol` (ไม่เกิน 16 ตัว), `dimension`, `decimal_scale` (0–6), `rounding_mode` (`half_up`, `half_even`, `up`, `down`, `ceiling`, `floor`), `status` และ Unique Code ตาม Scope. API Update ต้องรับและบันทึก precision/rounding ทุกครั้ง จึงห้าม Client แก้เฉพาะชื่อโดยละค่าทั้งสองฟิลด์
 
-`unit_conversions` ใช้กับ Exact Conversion กลาง; `item_unit_conversions` ใช้ Packaging/ขนาดเฉพาะ Item โดยมี `from_unit_id`, `to_unit_id`, `factor`, `effective_from/to`, `reason`, `status`, `row_version` ห้าม Factor ≤ 0, Self-loop, Cycle และ Period ซ้อนของคู่เดียวกัน
+`unit_conversions` ใช้ Exact Conversion กลาง; `item_unit_conversions` ใช้ Packaging/ขนาดเฉพาะ Item โดยมี `organization_id`, `item_id` (เฉพาะ Item-specific), `from_unit_id`, `to_unit_id`, `factor`, `effective_from/to`, `reason`, `status`, `row_version` และ audit creator. Factor ต้องมากกว่า 0 และมีทศนิยมไม่เกิน 6 ตำแหน่ง; ห้าม Self-loop และ Period ซ้อนของคู่เดียวกัน. Item-specific conversion ต้องชี้ตรงไปยัง Base Unit ของ Item จึงไม่สามารถสร้าง Cycle ได้; Shared conversion ต้องใช้ Dimension เดียวกันและปฏิเสธเส้นทางที่สร้าง Cycle. Units ต้อง active และอยู่ใน Organization เดียวกัน. Conversion เป็น immutable version; Barcode ที่อาศัย conversion เก็บ `quantity_in_base_unit` เป็น snapshot แยกจาก conversion ในอนาคต
 
 ### `cost_sources`
 
-มี `source_type`, `name`, `supplier_id?`, `reference_number?`, `evidence_file_id?`, `captured_at_utc`, `expires_at_utc?`, `status` และ Audit Cost Source เป็นหลักฐาน ไม่เป็นราคาหรือ Permission
+เป็นรายการแหล่งต้นทุนที่เลือกใช้ซ้ำใน Organization มี `code`, `name` JSONB, `source_type=manual|legacy`, `priority`, `is_active`, `row_version`, Audit Columns และ Unique `(organization_id, code)`. รอบแรกสร้างได้เฉพาะ `manual`; `legacy` ใช้กับข้อมูลเดิมที่ระบุชนิดไม่ได้เพื่อรักษาประวัติและห้ามเลือกกับ Cost ใหม่. `priority` เป็น metadata เท่านั้นใน Cost Resolver รอบแรก Source ที่ปิดใช้ยังอ่านย้อนหลังได้ แต่ห้ามอ้างใน Cost Record ใหม่หรือส่งตรวจใหม่. Reference/Reason/File Evidence เป็นข้อมูลของ Cost Record แต่ละฉบับ ไม่เก็บซ้ำบน Source. Supplier และ Source ชนิดอื่นเป็นงานระยะถัดไป
 
 ### `cost_records`
 
 | Column | Type | Rule |
 | --- | --- | --- |
 | `id`, `organization_id`, `item_id` | UUID | PK/Scope/FK |
-| `version_number`, `source_id` | Integer/UUID | Unique ต่อ Item/Scope/Natural Key |
+| `version_number`, `cost_source_id` | Integer/UUID | Unique ต่อ Item/Scope/Natural Key; Cost ใหม่ต้องอ้าง Active Source ใน Organization เดียวกัน |
 | `scope_type`, `branch_id` | String/UUID? | `organization` ต้องไม่มี Branch; `branch` ต้องมี Branch ใน Organization |
 | `unit_id`, `currency` | UUID/CHAR(3) | Unit ใช้กับ Item ได้; ISO Currency |
 | `amount` | Numeric | `>= 0`; Zero บังคับ Reason/Policy |
 | `minimum_quantity`, `maximum_quantity` | Numeric | Min ≥ 0; Max null หรือ > Min |
 | `effective_from_utc`, `effective_to_utc` | Timestamp | To null หรือ > From |
 | `status` | String | `draft|submitted|returned|approved|published|superseded|disabled` |
-| `reason`, `evidence_file_id` | String/UUID? | บังคับตาม Source/Exception Policy |
+| `source_reference`, `reason`, `evidence_file_id` | String/String/UUID? | Manual ต้องมี Reason และ `source_reference` หรือ Verified Evidence File; Evidence File ต้องผูกกับ Cost Record เดียวกัน |
 | `created_by`, `last_financial_editor_id`, `approved_by` | UUID | Maker–Checker Constraint ที่ Use Case + DB transaction |
 | `row_version`, Audit columns | Token/Timestamp | Optimistic concurrency + trace |
 
 Published/Superseded/Disabled ห้าม Update Financial Fields; การเปลี่ยนราคา/ช่วงเวลาสร้าง Version ใหม่ PostgreSQL Exclusion Constraint หรือ Transactional Guard ป้องกัน Published Period/Quantity Range ที่ซ้อนใน Natural Key เดียวกัน
+
+Migration เพิ่ม `source_type` ให้ `cost_sources` แบบ additive และ backfill แถวเดิมเป็น `legacy` แบบอ่านได้แต่เลือกใหม่ไม่ได้; ไม่ตีความแถวเดิมว่าเป็น Manual โดยพลการ. ก่อนบังคับ `cost_source_id` ที่ฐานข้อมูลต้องสำรวจ Cost Record เดิมที่เป็น `null`; เก็บแถวเก่าให้อ่านย้อนหลังได้ และห้าม Submit/Publish แถวที่ยังไม่มี Source จนผู้มีสิทธิ์แก้ Draft/Returned หรือสร้างรุ่นใหม่ตาม Lifecycle. ห้ามเติม Source ปลอมหรือแก้ Published Snapshot ย้อนหลัง
 
 ### Review and Import
 
@@ -181,3 +200,8 @@ Frontend ส่ง Item/Cost identity ที่เลือกได้ แต�
 | `TC-DATA-ITEM-020` | Alias ซ้ำหลัง Normalize ใน Item เดียวกัน | Unique reject |
 
 Field และ Gate ฉบับเต็มอยู่ที่ [Item Master Field Catalog](../01-business/item-master-field-catalog.md)
+# Master Data Codes and Audit
+
+รหัส Item, Category, Brand, Unit, Tax Category และ Cost Source เป็นรหัสระดับองค์กร ไม่ผูกกับสาขาและไม่ reset; Item ทุกประเภทใช้ sequence `items` ร่วมกัน ส่วนรหัสอื่นแยกชุดตามชนิดข้อมูล ค่าเริ่มต้นคือ `ITM-`, `CAT-`, `BRD-`, `UOM-`, `TAX-`, `SRC-` ตามด้วย sequence 5 หลัก
+
+การ Create รองรับรหัสที่ผู้ใช้กำหนดเองหรือ `null` เพื่อ GEN ระบบตรวจสิทธิ์และ idempotency ก่อนจัดสรรเลข แล้วเขียน counter, record, idempotency และ audit ภายใน transaction เดียวกัน หาก generated code ชนกับข้อมูลเดิมจะข้ามเลขนั้น; preview ไม่จองเลข ดูรายละเอียด contract และตัวอย่างได้ที่ [Item Master API Contract](../03-contracts/item-master-api-contract.md).

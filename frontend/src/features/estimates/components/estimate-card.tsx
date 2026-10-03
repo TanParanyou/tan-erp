@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import type { EstimateDetailResponse } from "@/lib/api/api-client";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -15,6 +15,7 @@ import { can, PERMISSIONS } from "@/lib/permissions/can";
 import { ApiError } from "@/lib/api/api-error";
 import { useIssueQuotation } from "../api/estimate-queries";
 import { EstimateWorkspaceDrawer } from "./estimate-workspace-drawer";
+import { EstimateLifecycleActions } from "./estimate-lifecycle-actions";
 import {
   formatFinancialNumber,
   formatPercentRate,
@@ -42,10 +43,13 @@ export function EstimateCard({
   isCreating = false,
 }: EstimateCardProps) {
   const t = useTranslations("estimates");
+  const tQuotationDocument = useTranslations("quotationDocument");
+  const uiLocale = useLocale();
   const tCommon = useTranslations("common");
   const { toast } = useToast();
   const { selectedMembership } = useSelectedMembership();
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
+  const [readinessFocusTargetId, setReadinessFocusTargetId] = useState<string | undefined>();
   const issueQuotationModal = useDisclosure();
   const intentKeyRef = useRef<{ versionKey: string; idempotencyKey: string } | null>(null);
 
@@ -55,13 +59,17 @@ export function EstimateCard({
   );
 
   const canIssue = can(selectedMembership, PERMISSIONS.QUOTATIONS_ISSUE);
-  const isDraft = estimate?.currentRevision?.status === "draft";
+  const canReadQuotationDocument = can(selectedMembership, PERMISSIONS.QUOTATIONS_READ);
+  const isApproved = estimate?.currentRevision?.status === "approved";
+  const hasCalculationSnapshot = Boolean(estimate?.currentRevision?.calculationSnapshotJson);
   const grandTotal = estimate?.currentRevision?.grandTotal ?? 0;
   const canIssueQuotation = Boolean(
     opportunityId &&
     opportunityRowVersion &&
     estimate &&
-    isDraft &&
+    isApproved &&
+    estimate.currentRevision?.calculationOutdated === false &&
+    hasCalculationSnapshot &&
     canIssue &&
     grandTotal > 0
   );
@@ -134,11 +142,54 @@ export function EstimateCard({
   const currentRevision = estimate.currentRevision;
   const currency = currentRevision?.currency ?? "THB";
   const revisionStatus = currentRevision?.status ?? "draft";
+  const readinessStatus = currentRevision?.readiness;
+  const readinessStatusLabel = readinessStatus === "blocked"
+    ? t("readiness.status.blocked")
+    : readinessStatus === "requiresAttention"
+      ? t("readiness.status.requiresAttention")
+      : readinessStatus === "ready"
+        ? t("readiness.status.ready")
+        : undefined;
+  const readinessReasonLabel = (code: string): string => {
+    switch (code) {
+      case "ESTIMATE_FIELD_REQUIRED": return t("readiness.reasons.fieldRequired");
+      case "ESTIMATE_COST_INCOMPLETE": return t("readiness.reasons.costIncomplete");
+      case "ESTIMATE_CALCULATION_OUTDATED": return t("readiness.reasons.calculationOutdated");
+      case "ESTIMATE_ZERO_DENOMINATOR": return t("readiness.reasons.zeroDenominator");
+      case "ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED": return t("readiness.reasons.provisionalReasonRequired");
+      case "ESTIMATE_PROVISIONAL_COST": return t("readiness.reasons.provisionalCost");
+      case "ESTIMATE_FIXED_PRICE_REASON_REQUIRED": return t("readiness.reasons.fixedPriceReasonRequired");
+      case "ESTIMATE_FIXED_PRICE_OVERRIDE": return t("readiness.reasons.fixedPriceOverride");
+      default: return t("readiness.reasons.unknown");
+    }
+  };
+  const readinessTargetTypeLabel = (targetType: string): string => {
+    switch (targetType) {
+      case "revision": return t("readiness.targets.revision");
+      case "section": return t("readiness.targets.section");
+      case "workItem": return t("readiness.targets.workItem");
+      case "costComponent": return t("readiness.targets.costComponent");
+      default: return t("readiness.targets.unknown");
+    }
+  };
+  const readinessTargetFieldLabel = (targetField: string): string => {
+    switch (targetField) {
+      case "sections": return t("readiness.targets.sections");
+      case "workItems": return t("readiness.targets.workItems");
+      case "costComponents": return t("readiness.targets.costComponents");
+      case "calculation": return t("readiness.targets.calculation");
+      case "marginRate": return t("readiness.targets.marginRate");
+      case "provisionalReasonCode": return t("readiness.targets.provisionalReasonCode");
+      default: return t("readiness.targets.unknown");
+    }
+  };
   const statusLabel =
     revisionStatus === "quoted"
       ? t("statuses.quoted")
       : revisionStatus === "draft"
         ? t("statuses.draft")
+        : revisionStatus === "approved"
+          ? t("statuses.approved")
         : revisionStatus;
 
   return (
@@ -159,6 +210,16 @@ export function EstimateCard({
           </div>
 
           <div className="flex items-center gap-2">
+            {estimate.currentRevision?.status === "quoted" && canReadQuotationDocument && (
+              <Button
+                href={`/${uiLocale}/estimates/${estimate.id}/quotation`}
+                variant="outline"
+                size="sm"
+              >
+                {tQuotationDocument("viewDocument")}
+              </Button>
+            )}
+
             {canIssueQuotation && (
               <Button
                 type="button"
@@ -173,7 +234,7 @@ export function EstimateCard({
               </Button>
             )}
 
-            {canEdit && (
+            {canEdit && (revisionStatus === "draft" || revisionStatus === "returned") && (
               <Button
                 type="button"
                 variant="outline"
@@ -187,6 +248,20 @@ export function EstimateCard({
             )}
           </div>
         </div>
+
+        {opportunityId && (
+          <div className="mt-4">
+            <EstimateLifecycleActions
+              estimate={estimate}
+              opportunityId={opportunityId}
+              canEdit={canEdit}
+              onOpenWorkspace={() => {
+                setReadinessFocusTargetId(undefined);
+                setIsWorkspaceOpen(true);
+              }}
+            />
+          </div>
+        )}
 
         {/* Financial Summary Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 bg-erp-surface-subtle p-4 border border-erp-border text-sm">
@@ -215,6 +290,46 @@ export function EstimateCard({
             </span>
           </div>
         </div>
+        {readinessStatusLabel && currentRevision && (
+          <section className="mt-4 border border-erp-border p-4" aria-label={t("readiness.title")}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h4 className="text-sm font-semibold text-erp-text-main">{t("readiness.title")}</h4>
+              <Badge variant={readinessStatus === "ready" ? "success" : readinessStatus === "blocked" ? "danger" : "warning"}>
+                {readinessStatusLabel}
+              </Badge>
+            </div>
+            {(currentRevision.readinessReasons?.length ?? 0) > 0 && (
+              <ul className="mt-3 space-y-2" aria-label={t("readiness.reasonsTitle")}>
+                {currentRevision.readinessReasons?.map((reason, index) => (
+                  <li key={`${reason.code}-${reason.targetId ?? "revision"}-${index}`} className="text-sm text-erp-text-body">
+                    {canEdit && reason.targetId && (reason.targetType === "section" || reason.targetType === "workItem") ? (
+                      <button
+                        type="button"
+                        className="min-h-11 text-left underline decoration-dotted underline-offset-2 hover:text-erp-navy focus-visible:outline-2 focus-visible:outline-erp-navy"
+                        onClick={() => {
+                          setReadinessFocusTargetId(reason.targetId ?? undefined);
+                          setIsWorkspaceOpen(true);
+                        }}
+                      >
+                        <span>{readinessReasonLabel(reason.code ?? "")}</span>
+                        <span className="ml-2 text-xs text-erp-text-muted">
+                          {readinessTargetTypeLabel(reason.targetType ?? "")} · {readinessTargetFieldLabel(reason.targetField ?? "")}; {t("readiness.openTarget")}
+                        </span>
+                      </button>
+                    ) : (
+                      <>
+                        <span>{readinessReasonLabel(reason.code ?? "")}</span>
+                        <span className="ml-2 text-xs text-erp-text-muted">
+                          {readinessTargetTypeLabel(reason.targetType ?? "")} · {readinessTargetFieldLabel(reason.targetField ?? "")}
+                        </span>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
       </div>
 
       <EstimateWorkspaceDrawer
@@ -222,6 +337,7 @@ export function EstimateCard({
         onClose={() => setIsWorkspaceOpen(false)}
         opportunityId={opportunityId}
         estimate={estimate}
+        focusTargetId={readinessFocusTargetId}
       />
 
       <ConfirmationModal

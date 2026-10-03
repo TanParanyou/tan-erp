@@ -26,48 +26,27 @@ public class CostResolver : ICostResolver
                 && c.ItemId == request.ItemId
                 && c.UnitId == request.UnitId
                 && c.Currency == upperCurrency
-                && c.Status == CostRecordStatus.Published
-                && c.EffectiveFromUtc <= request.EffectiveAtUtc
-                && (c.EffectiveToUtc == null || c.EffectiveToUtc >= request.EffectiveAtUtc)
+                && (c.Status == CostRecordStatus.Published || c.Status == CostRecordStatus.Superseded)
                 && c.MinimumQuantity <= request.Quantity
                 && (c.MaximumQuantity == null || c.MaximumQuantity >= request.Quantity)
                 && (c.Scope == CostScopeType.Organization || (c.Scope == CostScopeType.Branch && c.BranchId == request.BranchId)))
             .ToListAsync(ct);
 
-        if (records.Count == 0)
+        var effectiveRecords = records.Where(record => record.EffectiveFromUtc <= request.EffectiveAtUtc &&
+            (record.EffectiveToUtc is null || record.EffectiveToUtc >= request.EffectiveAtUtc)).ToList();
+        if (effectiveRecords.Count == 0 && records.Count > 0)
         {
             return Result<ResolvedCostProjection>.Failure(
-                new Error("ITEM_COST_NOT_FOUND", "No published cost record found matching the criteria."));
+                new Error("ITEM_COST_STALE", "Published costs exist for this item, but none are effective at the requested date."));
         }
 
-        // 1. Branch scope takes precedence over Organization scope
-        var branchRecords = records.Where(r => r.Scope == CostScopeType.Branch && r.BranchId == request.BranchId).ToList();
-        var candidates = branchRecords.Count > 0 ? branchRecords : records;
-
-        // 2. Sort candidates by:
-        //    a. Source priority DESC
-        //    b. EffectiveFromUtc DESC
-        //    c. Version DESC
-        var sorted = candidates
-            .OrderByDescending(r => r.CostSource?.Priority ?? 0)
-            .ThenByDescending(r => r.EffectiveFromUtc)
-            .ThenByDescending(r => r.Version)
-            .ToList();
-
-        var top = sorted[0];
-        var topSourcePriority = top.CostSource?.Priority ?? 0;
-
-        // 3. Ambiguity check: if there are other candidates with identical top precedence (same scope, same source priority, same effective from) but DIFFERENT amount
-        var ambiguous = sorted.Where(r =>
-            (r.CostSource?.Priority ?? 0) == topSourcePriority &&
-            r.EffectiveFromUtc == top.EffectiveFromUtc &&
-            r.Amount != top.Amount).ToList();
-
-        if (ambiguous.Count > 0)
+        var selection = SelectWinner(effectiveRecords, request.BranchId, request.Quantity);
+        if (selection.IsFailure)
         {
             return Result<ResolvedCostProjection>.Failure(
-                new Error("ITEM_COST_AMBIGUOUS", "Multiple cost records match with ambiguous precedence."));
+                selection.Error);
         }
+        var top = selection.Value!;
 
         var projection = new ResolvedCostProjection(
             top.Id,
@@ -84,6 +63,8 @@ public class CostResolver : ICostResolver
             top.CostSourceId,
             top.CostSource?.Code,
             top.SourceReference,
+            top.Reason,
+            top.EvidenceFileId,
             DateTimeOffset.UtcNow,
             request.PolicyVersion ?? "v1");
 
@@ -92,41 +73,50 @@ public class CostResolver : ICostResolver
 
     public CatalogResolvedCostProjection? ResolveForCatalog(IReadOnlyList<CostRecord> records, Guid branchId)
     {
-        if (records == null || records.Count == 0) return null;
-
         var now = DateTimeOffset.UtcNow;
         var valid = records.Where(r =>
-            r.Status == CostRecordStatus.Published &&
+            (r.Status == CostRecordStatus.Published || r.Status == CostRecordStatus.Superseded) &&
             r.EffectiveFromUtc <= now &&
             (r.EffectiveToUtc == null || r.EffectiveToUtc >= now) &&
+            r.MinimumQuantity <= 1m &&
+            (r.MaximumQuantity == null || r.MaximumQuantity >= 1m) &&
             (r.Scope == CostScopeType.Organization || (r.Scope == CostScopeType.Branch && r.BranchId == branchId))
         ).ToList();
-
-        if (valid.Count == 0) return null;
-
-        // 1. Branch scope takes precedence over Organization scope
-        var branchRecords = valid.Where(r => r.Scope == CostScopeType.Branch && r.BranchId == branchId).ToList();
-        var candidates = branchRecords.Count > 0 ? branchRecords : valid;
-
-        // 2. Sort candidates by:
-        //    a. Source priority DESC
-        //    b. EffectiveFromUtc DESC
-        //    c. Version DESC
-        var winner = candidates
-            .OrderByDescending(r => r.CostSource?.Priority ?? 0)
-            .ThenByDescending(r => r.EffectiveFromUtc)
-            .ThenByDescending(r => r.Version)
-            .FirstOrDefault();
-
-        if (winner == null) return null;
+        var selection = SelectWinner(valid, branchId, 1m);
+        if (selection.IsFailure) return null;
+        var winner = selection.Value!;
 
         return new CatalogResolvedCostProjection(
             winner.Id,
             winner.Version,
             winner.Amount,
             winner.Currency,
-            winner.Unit?.Symbol ?? string.Empty,
+            winner.Unit?.Code ?? string.Empty,
             winner.Scope,
-            winner.EffectiveFromUtc);
+            winner.EffectiveFromUtc,
+            "COST-RESOLVE-v1",
+            winner.CostSourceId,
+            winner.CostSource?.Code,
+            winner.SourceReference,
+            winner.EvidenceFileId);
+    }
+
+    private static Result<CostRecord> SelectWinner(IReadOnlyList<CostRecord> records, Guid branchId, decimal quantity)
+    {
+        var eligible = records.Where(r => r.MinimumQuantity <= quantity
+            && (r.MaximumQuantity == null || r.MaximumQuantity >= quantity)).ToList();
+        if (eligible.Count == 0)
+            return Result<CostRecord>.Failure(new Error("ITEM_COST_NOT_FOUND", "No published cost record found matching the criteria."));
+
+        var branchRecords = eligible.Where(r => r.Scope == CostScopeType.Branch && r.BranchId == branchId).ToList();
+        var candidates = branchRecords.Count > 0 ? branchRecords : eligible;
+        var newestEffectiveFrom = candidates.Max(r => r.EffectiveFromUtc);
+        var newest = candidates.Where(r => r.EffectiveFromUtc == newestEffectiveFrom).ToList();
+        var greatestMinimum = newest.Max(r => r.MinimumQuantity);
+        var winners = newest.Where(r => r.MinimumQuantity == greatestMinimum).ToList();
+        if (winners.Count != 1)
+            return Result<CostRecord>.Failure(new Error("ITEM_COST_AMBIGUOUS", "Multiple cost records match with ambiguous precedence."));
+
+        return Result<CostRecord>.Success(winners[0]);
     }
 }

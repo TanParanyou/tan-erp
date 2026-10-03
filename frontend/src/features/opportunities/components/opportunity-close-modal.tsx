@@ -93,6 +93,7 @@ export function OpportunityCloseModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      closeDisabled={transitionMutation.isPending}
       title={title}
       description={desc}
       size="lg"

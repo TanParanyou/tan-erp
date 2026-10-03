@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useCallback, useId } from "react";
+import React, { useId } from "react";
 import { createPortal } from "react-dom";
 import { IconClose } from "@/components/common/Icons";
+import { useDialogFocus } from "@/hooks/useDialogFocus";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { cn } from "@/lib/utils/cn";
 
@@ -16,6 +17,7 @@ export interface ModalProps {
   children?: React.ReactNode;
   size?: ModalSize;
   showCloseButton?: boolean;
+  closeDisabled?: boolean;
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
   footer?: React.ReactNode;
@@ -41,6 +43,7 @@ export function Modal({
   children,
   size = "md",
   showCloseButton = true,
+  closeDisabled = false,
   closeOnOverlayClick = true,
   closeOnEscape = true,
   footer,
@@ -51,84 +54,15 @@ export function Modal({
   const descriptionId = useId();
   useScrollLock(isOpen);
 
-  const previousActiveElementRef = React.useRef<HTMLElement | null>(null);
-  const modalRef = React.useRef<HTMLDivElement>(null);
-
-  const handleEscape = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape" && closeOnEscape) onClose();
-    },
-    [closeOnEscape, onClose]
-  );
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      handleEscape(e);
-
-      if (e.key === "Tab" && modalRef.current) {
-        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusableElements.length === 0) return;
-
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
-            e.preventDefault();
-            lastElement?.focus();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            e.preventDefault();
-            firstElement?.focus();
-          }
-        }
-      }
-    },
-    [handleEscape]
-  );
-
-  useEffect(() => {
-    if (isOpen) {
-      previousActiveElementRef.current = document.activeElement as HTMLElement | null;
-      document.addEventListener("keydown", handleKeyDown);
-
-      // Focus first focusable element inside modal, or modal container itself
-      const timer = setTimeout(() => {
-        if (modalRef.current) {
-          const focusable = modalRef.current.querySelector<HTMLElement>(
-            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-          );
-          if (focusable) {
-            focusable.focus();
-          } else {
-            modalRef.current.focus();
-          }
-        }
-      }, 0);
-
-      return () => {
-        clearTimeout(timer);
-        document.removeEventListener("keydown", handleKeyDown);
-      };
-    } else if (previousActiveElementRef.current) {
-      previousActiveElementRef.current.focus();
-      previousActiveElementRef.current = null;
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, handleKeyDown]);
+  const modalRef = useDialogFocus(isOpen, onClose, closeDisabled, closeOnEscape);
 
   if (!isOpen || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="erp-modal-overlay" onClick={closeOnOverlayClick ? onClose : undefined}>
+    <div className="erp-modal-overlay" onClick={closeOnOverlayClick && !closeDisabled ? onClose : undefined}>
       <div
         ref={modalRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
@@ -162,7 +96,8 @@ export function Modal({
                 type="button"
                 aria-label="Close modal"
                 onClick={onClose}
-                className="shrink-0 rounded-none p-1.5 text-erp-text-muted hover:bg-erp-surface-muted hover:text-erp-text-main focus-visible:outline-2 focus-visible:outline-erp-navy"
+                disabled={closeDisabled}
+                className="shrink-0 rounded-none p-1.5 text-erp-text-muted hover:bg-erp-surface-muted hover:text-erp-text-main disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-erp-navy"
               >
                 <IconClose size={20} />
               </button>

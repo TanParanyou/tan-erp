@@ -60,6 +60,7 @@ public class CostRecord : Entity
     {
         ValidateFinancials(amount, currency, minimumQuantity, maximumQuantity, effectiveFromUtc, effectiveToUtc);
         ValidateScope(scope, branchId);
+        ValidateAmountReason(amount, reason);
 
         if (organizationId == Guid.Empty)
             throw new ItemValidationException("COST_ORG_REQUIRED", "Organization is required.");
@@ -142,6 +143,7 @@ public class CostRecord : Entity
         Reason = reason?.Trim();
         EvidenceFileId = evidenceFileId;
         CostSourceId = costSourceId;
+        ValidateAmountReason(Amount, Reason);
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = updatedAtUtc;
     }
@@ -201,7 +203,7 @@ public class CostRecord : Entity
 
     public void Publish(Guid publisherUserId, DateTimeOffset updatedAtUtc)
     {
-        if (Status != CostRecordStatus.Approved && Status != CostRecordStatus.Submitted)
+        if (Status != CostRecordStatus.Approved || ApprovedByUserId == null)
         {
             throw new ItemDomainException("COST_INVALID_STATUS_TRANSITION", $"Cannot publish cost record from status '{Status}'.");
         }
@@ -212,14 +214,21 @@ public class CostRecord : Entity
         UpdatedAtUtc = updatedAtUtc;
     }
 
-    public void Supersede(Guid actorUserId, DateTimeOffset updatedAtUtc)
+    public void Supersede(Guid actorUserId, DateTimeOffset replacementEffectiveFromUtc, DateTimeOffset updatedAtUtc)
     {
         if (Status != CostRecordStatus.Published)
         {
             throw new ItemDomainException("COST_INVALID_STATUS_TRANSITION", $"Cannot supersede cost record from status '{Status}'.");
         }
 
+        if (replacementEffectiveFromUtc <= EffectiveFromUtc
+            || (EffectiveToUtc.HasValue && replacementEffectiveFromUtc > EffectiveToUtc.Value))
+        {
+            throw new ItemDomainException("COST_RECORD_DATE_OVERLAP", "Replacement must start within the published cost period.");
+        }
+
         Status = CostRecordStatus.Superseded;
+        EffectiveToUtc = replacementEffectiveFromUtc.AddTicks(-10);
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = updatedAtUtc;
     }
@@ -278,9 +287,9 @@ public class CostRecord : Entity
         DateTimeOffset effectiveFromUtc,
         DateTimeOffset? effectiveToUtc)
     {
-        if (amount <= 0m)
+        if (amount < 0m)
         {
-            throw new ItemValidationException("COST_AMOUNT_INVALID", "Cost amount must be greater than zero.");
+            throw new ItemValidationException("COST_AMOUNT_INVALID", "Cost amount cannot be negative.");
         }
 
         if (string.IsNullOrWhiteSpace(currency))
@@ -302,5 +311,11 @@ public class CostRecord : Entity
         {
             throw new ItemValidationException("COST_EFFECTIVE_PERIOD_INVALID", "Effective to date cannot be earlier than effective from date.");
         }
+    }
+
+    private static void ValidateAmountReason(decimal amount, string? reason)
+    {
+        if (amount == 0m && string.IsNullOrWhiteSpace(reason))
+            throw new ItemValidationException("COST_ZERO_AMOUNT_REASON_REQUIRED", "A zero amount requires a reason and independent checker review.");
     }
 }

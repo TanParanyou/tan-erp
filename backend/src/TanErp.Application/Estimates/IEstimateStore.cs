@@ -4,6 +4,14 @@ namespace TanErp.Application.Estimates;
 
 public interface IEstimateStore
 {
+    Task<Result<EstimateDetailProjection>> CreateRevisionAsync(
+        Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, string reason, Guid actorUserId,
+        string keyHash, string payloadHash, CancellationToken cancellationToken);
+
+    Task<Result<EstimateDetailProjection>> CancelAsync(
+        Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, string reason, Guid actorUserId,
+        Guid actorMembershipId, string keyHash, string payloadHash, CancellationToken cancellationToken);
+
     Task<Result<EstimateDetailProjection>> CreateDraftAsync(
         Guid organizationId,
         Guid opportunityId,
@@ -24,6 +32,12 @@ public interface IEstimateStore
         Guid opportunityId,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<EstimateCalculationSnapshotProjection>> GetCalculationSnapshotsAsync(
+        Guid organizationId,
+        Guid estimateId,
+        Guid revisionId,
+        CancellationToken cancellationToken);
+
     Task<EstimateRevisionProjection> UpdateDraftAsync(
         Guid organizationId,
         Guid estimateId,
@@ -38,9 +52,21 @@ public interface IEstimateStore
         Guid estimateId,
         Guid revisionId,
         Guid expectedRevisionVersion,
-        decimal discountAmount,
+        TanErp.Domain.Estimates.EstimateDiscount discount,
         Guid actorUserId,
-        string idempotencyKey,
+        string keyHash,
+        string payloadHash,
+        CancellationToken cancellationToken);
+
+    Task<Result<EstimateDetailProjection>> SubmitAsync(
+        Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, int revisionNo,
+        int calculationVersion, string? note, Guid actorUserId, string keyHash,
+        string payloadHash, CancellationToken cancellationToken);
+
+    Task<Result<EstimateDetailProjection>> ReviewAsync(
+        Guid organizationId, Guid estimateId, Guid expectedEstimateVersion, int revisionNo,
+        string decision, string? reasonCode, string? note, Guid actorUserId,
+        Guid reviewerMembershipId, string keyHash, string payloadHash,
         CancellationToken cancellationToken);
 
     Task<Result<QuotationDetailProjection>> IssueQuotationAsync(
@@ -64,6 +90,12 @@ public interface IEstimateStore
         string payloadHash,
         string traceId,
         CancellationToken cancellationToken);
+
+    Task<Result<TanErp.Application.Estimates.GetQuotationDocument.QuotationDocumentProjection>> GetQuotationDocumentAsync(
+        Guid organizationId,
+        Guid estimateId,
+        string locale,
+        CancellationToken cancellationToken);
 }
 
 public sealed record EstimateCostComponentDraftDto(
@@ -77,7 +109,9 @@ public sealed record EstimateCostComponentDraftDto(
     int SortOrder,
     Guid? ItemId = null,
     Guid? CostRecordId = null,
-    int? CostRecordVersion = null);
+    int? CostRecordVersion = null,
+    string? ProvisionalReasonCode = null,
+    string? ProvisionalNote = null);
 
 public sealed record EstimateWorkItemDraftDto(
     Guid? Id,
@@ -89,7 +123,11 @@ public sealed record EstimateWorkItemDraftDto(
     string SellingRuleType,
     decimal SellingRuleValue,
     int SortOrder,
-    IReadOnlyList<EstimateCostComponentDraftDto> CostComponents);
+    IReadOnlyList<EstimateCostComponentDraftDto> CostComponents,
+    string? SellingRuleReasonCode = null,
+    Guid? ItemId = null,
+    string? OverrideReasonCode = null,
+    string? OverrideReason = null);
 
 public sealed record EstimateSectionDraftDto(
     Guid? Id,
