@@ -56,6 +56,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
   const hasSettingsRead =
     can(activeMembership, "document-sequences.read") || can(activeMembership, "organizations.read");
+  const hasUsersRead = can(activeMembership, "users.read");
+  const hasRoleRequestApproval = can(activeMembership, "roles.assign-approval");
   const hasItemMasterRead = can(activeMembership, "items.read");
   const hasCostSourcesRead = can(activeMembership, "cost-sources.read");
   const hasCostReviewRead = can(activeMembership, "cost-records.read");
@@ -67,6 +69,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
+  const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
+  const isRoleRequestsActive = pathname.startsWith(`/${locale}/settings/role-requests`);
   const isItemMasterActive = pathname.startsWith(`/${locale}/item-master`);
 
   const crmItems: NavItemDef[] = useMemo(() => {
@@ -213,6 +217,11 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     hasSettingsRead &&
     (!trimmedSearch || tShell("documentNumbering").toLowerCase().includes(trimmedSearch));
 
+  const isUserAdminVisible =
+    hasUsersRead && (!trimmedSearch || tShell("userAdmin").toLowerCase().includes(trimmedSearch));
+  const isRoleRequestsVisible =
+    hasRoleRequestApproval && (!trimmedSearch || tShell("roleRequests").toLowerCase().includes(trimmedSearch));
+
   const filteredSubgroups = useMemo(() => {
     if (!trimmedSearch) return subgroups;
     return subgroups
@@ -229,7 +238,11 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   }, [subgroups, trimmedSearch]);
 
   const hasAnyResults =
-    isHomeVisible || isDocNumberingVisible || filteredSubgroups.some((g) => g.items.length > 0);
+    isHomeVisible ||
+    isDocNumberingVisible ||
+    isUserAdminVisible ||
+    isRoleRequestsVisible ||
+    filteredSubgroups.some((g) => g.items.length > 0);
 
   const renderLink = (item: NavItemDef) => {
     const linkContent = (
@@ -368,6 +381,30 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
                 label: tShell("documentNumbering"),
                 icon: <IconFileText size={20} />,
                 isActive: isDocumentNumberingActive,
+              })}
+            </li>
+          )}
+
+          {/* User and role administration (Settings) */}
+          {isUserAdminVisible && (
+            <li>
+              {renderLink({
+                id: "user-admin",
+                href: `/${locale}/settings/users`,
+                label: tShell("userAdmin"),
+                icon: <IconUsers size={20} />,
+                isActive: isUserAdminActive,
+              })}
+            </li>
+          )}
+          {isRoleRequestsVisible && (
+            <li>
+              {renderLink({
+                id: "role-requests",
+                href: `/${locale}/settings/role-requests`,
+                label: tShell("roleRequests"),
+                icon: <IconFileText size={20} />,
+                isActive: isRoleRequestsActive,
               })}
             </li>
           )}

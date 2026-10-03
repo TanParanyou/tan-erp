@@ -66,6 +66,662 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserListResponse"];
+                        "application/json": components["schemas"]["AdminUserListResponse"];
+                        "text/json": components["schemas"]["AdminUserListResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateAdminUserRequest"];
+                    "text/json": components["schemas"]["CreateAdminUserRequest"];
+                    "application/*+json": components["schemas"]["CreateAdminUserRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RenameAdminUserRequest"];
+                    "text/json": components["schemas"]["RenameAdminUserRequest"];
+                    "application/*+json": components["schemas"]["RenameAdminUserRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/memberships/{membershipId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    membershipId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateAdminMembershipRequest"];
+                    "text/json": components["schemas"]["UpdateAdminMembershipRequest"];
+                    "application/*+json": components["schemas"]["UpdateAdminMembershipRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/memberships/{membershipId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    membershipId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/memberships/{membershipId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    membershipId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminRoleListResponse"];
+                        "application/json": components["schemas"]["AdminRoleListResponse"];
+                        "text/json": components["schemas"]["AdminRoleListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/memberships/{membershipId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    membershipId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AssignAdminRoleRequest"];
+                    "text/json": components["schemas"]["AssignAdminRoleRequest"];
+                    "application/*+json": components["schemas"]["AssignAdminRoleRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminAssignRoleResponse"];
+                        "application/json": components["schemas"]["AdminAssignRoleResponse"];
+                        "text/json": components["schemas"]["AdminAssignRoleResponse"];
+                    };
+                };
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminAssignRoleResponse"];
+                        "application/json": components["schemas"]["AdminAssignRoleResponse"];
+                        "text/json": components["schemas"]["AdminAssignRoleResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/memberships/{membershipId}/roles/{roleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    membershipId: string;
+                    roleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-assignment-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminRoleRequestListResponse"];
+                        "application/json": components["schemas"]["AdminRoleRequestListResponse"];
+                        "text/json": components["schemas"]["AdminRoleRequestListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-assignment-requests/{requestId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminRoleRequestResponse"];
+                        "application/json": components["schemas"]["AdminRoleRequestResponse"];
+                        "text/json": components["schemas"]["AdminRoleRequestResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-assignment-requests/{requestId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminRoleRequestResponse"];
+                        "application/json": components["schemas"]["AdminRoleRequestResponse"];
+                        "text/json": components["schemas"]["AdminRoleRequestResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-assignment-requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminRoleRequestResponse"];
+                        "application/json": components["schemas"]["AdminRoleRequestResponse"];
+                        "text/json": components["schemas"]["AdminRoleRequestResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/branches": {
         parameters: {
             query?: never;
@@ -9495,6 +10151,89 @@ export interface components {
             longitude?: number | null;
             displayText?: string | null;
         };
+        AdminAssignRoleResponse: {
+            user?: components["schemas"]["AdminUserResponse"];
+            pendingRequest?: components["schemas"]["AdminRoleRequestResponse"];
+        };
+        AdminMembershipResponse: {
+            /** Format: uuid */
+            id?: string;
+            isActive?: boolean;
+            /** Format: uuid */
+            rowVersion?: string;
+            branch?: components["schemas"]["AdminRefResponse"];
+            /** Format: date-time */
+            startsAtUtc?: string | null;
+            /** Format: date-time */
+            expiresAtUtc?: string | null;
+            roles?: components["schemas"]["AdminRefResponse"][] | null;
+            pendingRoleRequests?: components["schemas"]["AdminPendingRoleRequestResponse"][] | null;
+        };
+        AdminPaginationResponse: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        AdminPendingRoleRequestResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+            role?: components["schemas"]["AdminRefResponse"];
+            requestedBy?: components["schemas"]["AdminRefResponse"];
+            /** Format: date-time */
+            requestedAtUtc?: string;
+        };
+        AdminRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+        };
+        AdminRoleListResponse: {
+            items?: components["schemas"]["AdminRoleResponse"][] | null;
+        };
+        AdminRoleRequestListResponse: {
+            items?: components["schemas"]["AdminRoleRequestResponse"][] | null;
+        };
+        AdminRoleRequestResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+            status?: string | null;
+            role?: components["schemas"]["AdminRefResponse"];
+            membership?: components["schemas"]["AdminRefResponse"];
+            requestedBy?: components["schemas"]["AdminRefResponse"];
+            /** Format: date-time */
+            requestedAtUtc?: string;
+        };
+        AdminRoleResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+            assignable?: boolean;
+            requiresApproval?: boolean;
+            permissionKeys?: string[] | null;
+        };
+        AdminUserListResponse: {
+            items?: components["schemas"]["AdminUserResponse"][] | null;
+            pagination?: components["schemas"]["AdminPaginationResponse"];
+        };
+        AdminUserResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+            email?: string | null;
+            status?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            memberships?: components["schemas"]["AdminMembershipResponse"][] | null;
+        };
         ApiProblemDetails: {
             type?: string | null;
             title?: string | null;
@@ -9509,6 +10248,10 @@ export interface components {
             } | null;
         } & {
             [key: string]: unknown;
+        };
+        AssignAdminRoleRequest: {
+            /** Format: uuid */
+            roleId?: string;
         };
         AttachItemImageRequest: {
             /** Format: uuid */
@@ -9771,6 +10514,13 @@ export interface components {
             isActive?: boolean;
             /** Format: uuid */
             rowVersion?: string;
+        };
+        CreateAdminUserRequest: {
+            displayName?: string | null;
+            email?: string | null;
+            /** Format: uuid */
+            branchId?: string | null;
+            roleIds?: string[] | null;
         };
         CreateCostRecordRequest: {
             scope: string;
@@ -10932,6 +11682,9 @@ export interface components {
             /** Format: uuid */
             expectedVersion?: string;
         };
+        RenameAdminUserRequest: {
+            displayName?: string | null;
+        };
         ReorderItemImagesRequest: {
             orderedImageIds: string[];
         };
@@ -11147,6 +11900,14 @@ export interface components {
             code?: string | null;
             symbol?: string | null;
             name?: components["schemas"]["LocalizedTextResponse"];
+        };
+        UpdateAdminMembershipRequest: {
+            /** Format: uuid */
+            branchId?: string | null;
+            /** Format: date-time */
+            startsAtUtc?: string | null;
+            /** Format: date-time */
+            expiresAtUtc?: string | null;
         };
         UpdateCostRecordRequest: {
             /** Format: double */

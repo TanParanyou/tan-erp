@@ -75,6 +75,26 @@ export type AddressSearchResultItem = components["schemas"]["AddressSearchResult
 export type UserListItemResponse = components["schemas"]["UserListItemResponse"];
 export type UserListResponse = components["schemas"]["UserListResponse"];
 
+export type AdminUserResponse = components["schemas"]["AdminUserResponse"];
+export type AdminMembershipResponse = components["schemas"]["AdminMembershipResponse"];
+export type AdminUserListResponse = components["schemas"]["AdminUserListResponse"];
+export type AdminRoleResponse = components["schemas"]["AdminRoleResponse"];
+export type AdminRoleListResponse = components["schemas"]["AdminRoleListResponse"];
+export type AdminRoleRequestResponse = components["schemas"]["AdminRoleRequestResponse"];
+export type AdminRoleRequestListResponse = components["schemas"]["AdminRoleRequestListResponse"];
+export type AdminAssignRoleResponse = components["schemas"]["AdminAssignRoleResponse"];
+export type CreateAdminUserRequest = components["schemas"]["CreateAdminUserRequest"];
+export type RenameAdminUserRequest = components["schemas"]["RenameAdminUserRequest"];
+export type UpdateAdminMembershipRequest = components["schemas"]["UpdateAdminMembershipRequest"];
+export type AssignAdminRoleRequest = components["schemas"]["AssignAdminRoleRequest"];
+
+export interface AdminUserListParams {
+  search?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export interface RequestOptions {
   token: string;
   membershipId?: string;
@@ -748,6 +768,102 @@ export class ApiClient {
       "POST",
       options,
       payload
+    );
+  }
+
+  async listAdminUsers(params: AdminUserListParams, options: RequestOptions): Promise<AdminUserListResponse> {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.status) query.set("status", params.status);
+    if (params.page) query.set("page", String(params.page));
+    if (params.pageSize) query.set("pageSize", String(params.pageSize));
+    const suffix = query.toString();
+    return this.request<AdminUserListResponse>(`/api/v1/admin/users${suffix ? `?${suffix}` : ""}`, "GET", options);
+  }
+
+  async getAdminUser(userId: string, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}`, "GET", options);
+  }
+
+  async createAdminUser(payload: CreateAdminUserRequest, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>("/api/v1/admin/users", "POST", options, payload);
+  }
+
+  async renameAdminUser(userId: string, payload: RenameAdminUserRequest, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}`, "PATCH", options, payload);
+  }
+
+  async setAdminUserActive(userId: string, active: boolean, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(
+      `/api/v1/admin/users/${encodeURIComponent(userId)}/${active ? "activate" : "deactivate"}`,
+      "POST",
+      options
+    );
+  }
+
+  async updateAdminMembership(
+    membershipId: string,
+    payload: UpdateAdminMembershipRequest,
+    options: RequestOptions
+  ): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(
+      `/api/v1/admin/memberships/${encodeURIComponent(membershipId)}`,
+      "PATCH",
+      options,
+      payload
+    );
+  }
+
+  async setAdminMembershipActive(membershipId: string, active: boolean, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(
+      `/api/v1/admin/memberships/${encodeURIComponent(membershipId)}/${active ? "activate" : "deactivate"}`,
+      "POST",
+      options
+    );
+  }
+
+  async listAdminRoles(options: RequestOptions): Promise<AdminRoleListResponse> {
+    return this.request<AdminRoleListResponse>("/api/v1/admin/roles", "GET", options);
+  }
+
+  async assignAdminRole(
+    membershipId: string,
+    payload: AssignAdminRoleRequest,
+    options: RequestOptions
+  ): Promise<AdminAssignRoleResponse> {
+    return this.request<AdminAssignRoleResponse>(
+      `/api/v1/admin/memberships/${encodeURIComponent(membershipId)}/roles`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async revokeAdminRole(membershipId: string, roleId: string, options: RequestOptions): Promise<void> {
+    await this.request<unknown>(
+      `/api/v1/admin/memberships/${encodeURIComponent(membershipId)}/roles/${encodeURIComponent(roleId)}`,
+      "DELETE",
+      options
+    );
+  }
+
+  async listAdminRoleRequests(status: string, options: RequestOptions): Promise<AdminRoleRequestListResponse> {
+    return this.request<AdminRoleRequestListResponse>(
+      `/api/v1/admin/role-assignment-requests?status=${encodeURIComponent(status)}`,
+      "GET",
+      options
+    );
+  }
+
+  async decideAdminRoleRequest(
+    requestId: string,
+    decision: "approve" | "reject" | "cancel",
+    options: RequestOptions
+  ): Promise<AdminRoleRequestResponse> {
+    return this.request<AdminRoleRequestResponse>(
+      `/api/v1/admin/role-assignment-requests/${encodeURIComponent(requestId)}/${decision}`,
+      "POST",
+      options
     );
   }
 

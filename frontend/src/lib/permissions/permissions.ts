@@ -6,7 +6,11 @@ export const PERMISSIONS = {
   // Organization & Access
   ORGANIZATIONS_READ: "organizations.read",
   BRANCHES_MANAGE: "branches.manage",
+  USERS_READ: "users.read",
   USERS_MANAGE: "users.manage",
+  MEMBERSHIPS_MANAGE: "memberships.manage",
+  ROLES_ASSIGN: "roles.assign",
+  ROLES_ASSIGN_APPROVAL: "roles.assign-approval",
   ROLES_MANAGE: "roles.manage",
 
   // Item Master
