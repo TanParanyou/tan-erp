@@ -1,11 +1,11 @@
 # Integrated Test Guide (ทดสอบรวม CP-02, CP-04 และ Health)
 
-**สถานะ:** ใช้กับ branch `integration/test-all` ซึ่งรวม PR #10 (เอกสารใบเสนอราคา), #11 (จัดการผู้ใช้และสิทธิ์) และ #13 (health endpoints). ข้อมูลทั้งหมดเป็น `TEST_ONLY` ห้ามใช้เป็นหลักฐาน UAT หรือ pilot data
+**สถานะ:** ใช้กับ `main` หลังรวม PR #10 (เอกสารใบเสนอราคา), #11 (จัดการผู้ใช้และสิทธิ์) และ #13 (health endpoints). ข้อมูลทั้งหมดเป็น `TEST_ONLY` ห้ามใช้เป็นหลักฐาน UAT หรือ pilot data
 
 ## เตรียมระบบ
 
 ```bash
-git checkout integration/test-all
+git checkout main && git pull
 make up                  # PostgreSQL + Firebase Emulator
 make seed-users          # ผู้ใช้ทดสอบใน Emulator
 make dev-backend-demo SEED_DEDICATED_ESTIMATE_REVIEWER=true   # เทอร์มินัล 1 (API :5005)
@@ -54,7 +54,7 @@ make up       # เปิดกลับ แล้ว /health/ready ต้อง
 
 ## ผลอัตโนมัติของ branch นี้
 
-ดู [Commercial Quotation Verification](commercial-quotation-verification.md), [Identity Administration Verification](identity-administration-verification.md) และ [Observability](../06-operations/observability.md). Branch นี้เป็น branch รวมเพื่อทดสอบเท่านั้น ไม่ใช่ตัวแทน PR; แต่ละ PR ยังรีวิวแยก
+ดู [Commercial Quotation Verification](commercial-quotation-verification.md), [Identity Administration Verification](identity-administration-verification.md) และ [Observability](../06-operations/observability.md).
 
 ## เก็บกวาด
 
