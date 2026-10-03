@@ -54,12 +54,12 @@ jobs:
       - name: Security and architectural policy checks
         run: |
           echo "Running secret and policy scan..."
-          # 1. No committed private keys or service account credentials
-          if git grep -E "BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY" -- ':!*.test.*' ':!*tests*'; then
+          # 1. No committed private keys or service account credentials (docs only describe the patterns)
+          if git grep -E "BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY" -- ':!*.test.*' ':!*tests*' ':!docs'; then
             echo "ERROR: Private key detected in repository!"
             exit 1
           fi
-          if git grep -E '"type":\s*"service_account"' -- ':!*.test.*' ':!*tests*'; then
+          if git grep -E '"type":\s*"service_account"' -- ':!*.test.*' ':!*tests*' ':!docs'; then
             echo "ERROR: GCP Service Account JSON detected in repository!"
             exit 1
           fi
