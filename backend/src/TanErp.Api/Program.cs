@@ -175,6 +175,10 @@ builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
         FirebaseAuthenticationHandler.SchemeName, null);
 
 builder.Services.AddAuthorization();
+
+// Liveness (process is up) and readiness (dependencies usable); see docs/06-operations/observability.md.
+builder.Services.AddHealthChecks()
+    .AddCheck<TanErp.Api.Health.DatabaseHealthCheck>("database", tags: new[] { "ready" });
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
@@ -212,6 +216,18 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = TanErp.Api.Health.HealthResponseWriter.WriteAsync
+}).AllowAnonymous();
+
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("ready"),
+    ResponseWriter = TanErp.Api.Health.HealthResponseWriter.WriteAsync
+}).AllowAnonymous();
 
 if (app.Environment.IsEnvironment("Test") && app.Configuration.GetValue<bool>("SeedTestData"))
 {
