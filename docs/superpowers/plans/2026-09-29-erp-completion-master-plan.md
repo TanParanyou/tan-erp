@@ -43,7 +43,7 @@
 | CP-03 | Master Data/Survey Baseline Completion | มีแผนเดิมบางส่วน; Import/Survey extension เป็น Draft | Customer/Item/Survey contracts | Data Steward + Cost Owner + Survey Lead |
 | CP-04 | Customer-safe Quotation Document | Draft slice ใหม่ | Approved Estimate + Billing Snapshot + Numbering | Sales + Finance |
 | CP-05 | Release/UAT/Operations | Checklist มีแล้ว; ยังต้องหลักฐาน release | ทุก critical slice ใน release ที่เลือก | Business/Finance/Security + Operations |
-| CP-06 | Quotation Amendment/Void | Draft slice ใหม่ | Quotation/Snapshot contracts; CP-04 สำหรับเอกสาร | Sales + Finance |
+| CP-06 | Quotation Amendment/Void | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; accepted ถูกล็อก, void ไม่ย้อน Opportunity) | Quotation/Snapshot contracts; CP-04 สำหรับเอกสาร | Sales + Finance |
 | CP-07 | External Customer Acceptance/Signatures | Draft slice ใหม่ | CP-04 + authentication/access policy | Sales + Security + Legal/Business |
 | CP-08 | Won → Project Handover | Implemented 2026-10-04 (ค่าเริ่มต้นที่ทีมพัฒนาเลือก รอ Sales/Project Owner ยืนยัน) | Accepted Quotation; CP-06 rules เมื่อเปิดใช้ | Sales + Project Owner |
 | CP-09 | Project Budget/Plan/Change Order/Progress | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี Actual Cost/WBS) | CP-08 | Project Manager + Finance |
@@ -137,10 +137,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-06 — Quotation Amendment/Void
 
-- [ ] Sales/Finance ยืนยันสถานะที่แก้/ยกเลิกได้, ผลต่อ Acceptance/Opportunity/Project และเลขที่เอกสาร; นิยาม amendment แยกจาก Estimate Revision
-- [ ] ออกแบบ immutable history/linked replacement พร้อมเหตุผล/authority/expected versions/idempotency; คง snapshots เดิมและป้องกัน concurrent accept/amend/void
-- [ ] ทำ API/UI พร้อม safety confirmation/loading และ audit แบบไม่เผยข้อมูลอ่อนไหว; เอกสารใหม่ใช้ renderer ของ CP-04
-- [ ] ทดสอบย้อนหลังฉบับเก่า, replay, race conditions, denied state/scope และการส่งต่อที่เกิดขึ้นแล้ว
+- [x] Sales/Finance ยืนยันสถานะที่แก้/ยกเลิกได้, ผลต่อ Acceptance/Opportunity/Project และเลขที่เอกสาร; นิยาม amendment แยกจาก Estimate Revision
+- [x] ออกแบบ immutable history/linked replacement พร้อมเหตุผล/authority/expected versions/idempotency; คง snapshots เดิมและป้องกัน concurrent accept/amend/void
+- [x] ทำ API/UI พร้อม safety confirmation/loading และ audit แบบไม่เผยข้อมูลอ่อนไหว; เอกสารใหม่ใช้ renderer ของ CP-04
+- [x] ทดสอบย้อนหลังฉบับเก่า, replay, race conditions, denied state/scope และการส่งต่อที่เกิดขึ้นแล้ว
 
 **ผลส่งมอบ/เกณฑ์จบ:** ทุก lifecycle transition ตรงกฎที่ยืนยัน และ downstream ใช้เอกสารฉบับที่ถูกต้องโดยไม่แก้ประวัติ. ไม่กำหนดว่า Void ต้องย้อน Won อัตโนมัติจน Business ยืนยัน.
 

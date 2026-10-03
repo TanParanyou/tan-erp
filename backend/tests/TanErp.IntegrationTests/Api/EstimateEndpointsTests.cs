@@ -22,6 +22,7 @@ using TanErp.Domain.Surveys;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
+using TanErp.Domain.Commercial;
 using Xunit;
 
 namespace TanErp.IntegrationTests.Api;
@@ -1332,10 +1333,10 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal(doc.Totals.Subtotal, doc.Sections.Sum(s => s.Subtotal));
 
         // 4c. Multiple quotations for one estimate: the latest issued quotation is returned deterministically
-        var issuedQuotationRow = await snapshotDb.Quotations.AsNoTracking()
+        var issuedQuotationRow = await snapshotDb.Quotations
             .SingleAsync(row => row.Id == quotation.QuotationId);
         const string laterQuotationNumber = "QT-TEST-LATER-0001";
-        snapshotDb.Quotations.Add(new TanErp.Domain.Commercial.Quotation(
+        var laterQuotation = new TanErp.Domain.Commercial.Quotation(
             Guid.NewGuid(),
             issuedQuotationRow.OrganizationId,
             issuedQuotationRow.BranchId,
@@ -1348,7 +1349,12 @@ public class EstimateEndpointsTests : IAsyncLifetime
             issuedQuotationRow.SnapshotHash,
             issuedQuotationRow.IssuedAtUtc.AddDays(1),
             issuedQuotationRow.CustomerBillingSnapshotJson,
-            issuedQuotationRow.CustomerBillingSnapshotHash));
+            issuedQuotationRow.CustomerBillingSnapshotHash);
+        // Only one quotation per estimate can be live, so the earlier one is superseded as an amendment would do.
+        laterQuotation.MarkAsAmendmentOf(issuedQuotationRow.Id, "TEST_ONLY ordering fixture");
+        issuedQuotationRow.Supersede(laterQuotation.Id, issuedQuotationRow.IssuedAtUtc.AddDays(1));
+        await snapshotDb.SaveChangesAsync();
+        snapshotDb.Quotations.Add(laterQuotation);
         await snapshotDb.SaveChangesAsync();
         var latestDocRes = await _client.SendAsync(CreateAuthenticatedRequest(
             HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document", "token-org-a", MembershipAId));
@@ -1358,6 +1364,12 @@ public class EstimateEndpointsTests : IAsyncLifetime
         await snapshotDb.Quotations
             .Where(row => row.Number == laterQuotationNumber)
             .ExecuteDeleteAsync();
+        await snapshotDb.Quotations
+            .Where(row => row.Id == quotation.QuotationId)
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(row => row.Status, QuotationStatus.Issued)
+                .SetProperty(row => row.SupersededByQuotationId, (Guid?)null));
+        snapshotDb.ChangeTracker.Clear();
 
         // 4d. Unknown locale is normalized to Thai instead of failing
         var unknownLocaleRes = await _client.SendAsync(CreateAuthenticatedRequest(
@@ -2964,5 +2976,130 @@ public class EstimateEndpointsTests : IAsyncLifetime
         var wonHistoryCount = await db.OpportunityStageHistories
             .CountAsync(h => h.OpportunityId == opp.Id && h.ToStage == OpportunityStage.Won);
         Assert.Equal(0, wonHistoryCount);
+    }
+
+    private async Task<(Guid EstimateId, Guid OpportunityId, QuotationResponse Quotation)> IssueQuotedEstimateAsync(string prefix)
+    {
+        var (estimate, opportunity, revision) = await SetupCalculatedEstimateAsync($"{prefix}-{Guid.NewGuid():N}");
+
+        var submitRequest = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/estimates/{estimate.Id}/submit", "token-org-a", MembershipAId);
+        submitRequest.Headers.Add("If-Match", $"\"{estimate.RowVersion}\"");
+        submitRequest.Headers.Add("Idempotency-Key", $"{prefix}-submit-{Guid.NewGuid():N}");
+        submitRequest.Content = JsonContent.Create(new SubmitEstimateRequest(1, revision.CalculationVersion, "TEST_ONLY lifecycle"));
+        var submitted = (await (await _client.SendAsync(submitRequest)).Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+
+        var reviewRequest = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/estimates/{estimate.Id}/review-decisions", "token-org-b", TestOnlyDataSeeder.TestCostReviewerMembershipId);
+        reviewRequest.Headers.Add("If-Match", $"\"{submitted.RowVersion}\"");
+        reviewRequest.Headers.Add("Idempotency-Key", $"{prefix}-review-{Guid.NewGuid():N}");
+        reviewRequest.Content = JsonContent.Create(new ReviewEstimateRequest(1, "approved"));
+        var reviewResponse = await _client.SendAsync(reviewRequest);
+        Assert.Equal(HttpStatusCode.OK, reviewResponse.StatusCode);
+        var approved = (await reviewResponse.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+
+        var issueRequest = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/estimates/{estimate.Id}/quotation", "token-org-a", MembershipAId);
+        issueRequest.Headers.Add("Idempotency-Key", $"{prefix}-quote-{Guid.NewGuid():N}");
+        issueRequest.Content = JsonContent.Create(new IssueQuotationRequest(approved.RowVersion, opportunity.RowVersion));
+        var issueResponse = await _client.SendAsync(issueRequest);
+        Assert.Equal(HttpStatusCode.Created, issueResponse.StatusCode);
+        return (estimate.Id, opportunity.Id, (await issueResponse.Content.ReadFromJsonAsync<QuotationResponse>())!);
+    }
+
+    private async Task<TanErp.Api.Contracts.Commercial.QuotationHistoryResponse> HistoryAsync(Guid estimateId)
+    {
+        var response = await _client.SendAsync(CreateAuthenticatedRequest(HttpMethod.Get, $"/api/v1/estimates/{estimateId}/quotations", "token-org-a", MembershipAId));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.QuotationHistoryResponse>())!;
+    }
+
+    private HttpRequestMessage LifecycleRequest(string path, Guid version, string reason, string? key = null, string token = "token-org-a", Guid? membership = null)
+    {
+        var request = CreateAuthenticatedRequest(HttpMethod.Post, path, token, membership ?? MembershipAId);
+        request.Headers.Add("If-Match", $"\"{version}\"");
+        if (key is not null) request.Headers.Add("Idempotency-Key", key);
+        request.Content = JsonContent.Create(new TanErp.Api.Contracts.Commercial.QuotationReasonRequest(reason));
+        return request;
+    }
+
+    private static async Task<string> ProblemCodeAsync(HttpResponseMessage response) =>
+        System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement.GetProperty("code").GetString()!;
+
+    [Fact]
+    public async Task AmendQuotation_SupersedesWithLinkedReplacement_AndOnlyTheLiveOneCanBeAccepted()
+    {
+        var (estimateId, oppId, original) = await IssueQuotedEstimateAsync("amend");
+        var before = (await HistoryAsync(estimateId)).Items.Single();
+        Assert.Equal("issued", before.Status);
+
+        Assert.Equal("QUOTATION_REASON_REQUIRED", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/amend", before.RowVersion, " ", $"amend-empty-{Guid.NewGuid():N}"))));
+        Assert.Equal("QUOTATION_VERSION_CONFLICT", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/amend", Guid.NewGuid(), "ปรับเงื่อนไข", $"amend-stale-{Guid.NewGuid():N}"))));
+        Assert.Equal(HttpStatusCode.Forbidden, (await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/amend", before.RowVersion, "x", $"amend-noperm-{Guid.NewGuid():N}", token: "token-no-perm", membership: TestOnlyDataSeeder.TestMembershipId))).StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.Unauthorized ? HttpStatusCode.Forbidden : HttpStatusCode.OK);
+
+        var key = $"amend-ok-{Guid.NewGuid():N}";
+        var amended = await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/amend", before.RowVersion, "แก้ไขข้อมูลลูกค้า", key));
+        Assert.Equal(HttpStatusCode.Created, amended.StatusCode);
+        var history = (await amended.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.QuotationHistoryResponse>())!;
+        Assert.Equal(2, history.Items.Count);
+        var oldDoc = history.Items.Single(i => i.Id == original.QuotationId);
+        var newDoc = history.Items.Single(i => i.Id != original.QuotationId);
+        Assert.Equal(("superseded", newDoc.Id, newDoc.Number), (oldDoc.Status, oldDoc.SupersededByQuotationId, oldDoc.SupersededByNumber));
+        Assert.Equal(("issued", original.Number, "แก้ไขข้อมูลลูกค้า", original.GrandTotal), (newDoc.Status, newDoc.SupersedesNumber, newDoc.AmendmentReason, newDoc.TotalAmount));
+        Assert.NotEqual(original.Number, newDoc.Number);
+
+        // Replay returns the same replacement; a different reason with the same key is rejected.
+        var replay = await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/amend", before.RowVersion, "แก้ไขข้อมูลลูกค้า", key));
+        Assert.Equal(2, (await replay.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.QuotationHistoryResponse>())!.Items.Count);
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/amend", before.RowVersion, "อื่น", key))));
+
+        // The superseded document cannot change again; its snapshots stay readable.
+        Assert.Equal("QUOTATION_INVALID_STATE", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/void", oldDoc.RowVersion, "x"))));
+        Assert.Equal("QUOTATION_INVALID_STATE", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{original.QuotationId}/amend", oldDoc.RowVersion, "x", $"amend-old-{Guid.NewGuid():N}"))));
+
+        // Downstream uses the live one: accepting picks the replacement.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var opportunity = await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId);
+        var accept = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/estimates/{estimateId}/quotation/accept", "token-org-a", MembershipAId);
+        accept.Headers.Add("Idempotency-Key", $"amend-accept-{Guid.NewGuid():N}");
+        accept.Content = JsonContent.Create(new AcceptQuotationRequest(opportunity.RowVersion, null));
+        var acceptResponse = await _client.SendAsync(accept);
+        Assert.Equal(HttpStatusCode.OK, acceptResponse.StatusCode);
+        Assert.Equal(newDoc.Id, (await acceptResponse.Content.ReadFromJsonAsync<AcceptQuotationResponse>())!.QuotationId);
+
+        // An accepted quotation is locked.
+        var accepted = (await HistoryAsync(estimateId)).Items.Single(i => i.Id == newDoc.Id);
+        Assert.Equal("accepted", accepted.Status);
+        Assert.Equal("QUOTATION_ACCEPTED_LOCKED", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{newDoc.Id}/void", accepted.RowVersion, "x"))));
+        Assert.Equal("QUOTATION_ACCEPTED_LOCKED", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{newDoc.Id}/amend", accepted.RowVersion, "x", $"amend-locked-{Guid.NewGuid():N}"))));
+    }
+
+    [Fact]
+    public async Task VoidQuotation_RecordsReasonAndAuthority_AndBlocksAcceptance()
+    {
+        var (estimateId, oppId, quotation) = await IssueQuotedEstimateAsync("void");
+        var issued = (await HistoryAsync(estimateId)).Items.Single();
+
+        Assert.Equal("QUOTATION_REASON_REQUIRED", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{quotation.QuotationId}/void", issued.RowVersion, ""))));
+        Assert.Equal("QUOTATION_VERSION_CONFLICT", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{quotation.QuotationId}/void", Guid.NewGuid(), "ลูกค้าถอนคำขอ"))));
+
+        var voided = await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{quotation.QuotationId}/void", issued.RowVersion, "ลูกค้าถอนคำขอ"));
+        Assert.Equal(HttpStatusCode.OK, voided.StatusCode);
+        var item = (await voided.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.QuotationHistoryResponse>())!.Items.Single();
+        Assert.Equal(("voided", "ลูกค้าถอนคำขอ"), (item.Status, item.VoidReason));
+        Assert.NotNull(item.VoidedBy);
+        Assert.NotNull(item.VoidedAtUtc);
+        Assert.Equal("QUOTATION_INVALID_STATE", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{quotation.QuotationId}/void", item.RowVersion, "อีกครั้ง"))));
+        Assert.Equal("QUOTATION_INVALID_STATE", await ProblemCodeAsync(await _client.SendAsync(LifecycleRequest($"/api/v1/quotations/{quotation.QuotationId}/amend", item.RowVersion, "x", $"void-amend-{Guid.NewGuid():N}"))));
+
+        // Voiding does not move the opportunity, and the voided quotation can no longer be accepted.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var opportunity = await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId);
+        Assert.Equal(OpportunityStage.Proposed, opportunity.Stage);
+        var accept = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/estimates/{estimateId}/quotation/accept", "token-org-a", MembershipAId);
+        accept.Headers.Add("Idempotency-Key", $"void-accept-{Guid.NewGuid():N}");
+        accept.Content = JsonContent.Create(new AcceptQuotationRequest(opportunity.RowVersion, null));
+        Assert.Equal("QUOTATION_INVALID_STATE", await ProblemCodeAsync(await _client.SendAsync(accept)));
+        Assert.Equal(1, await db.AuditEvents.CountAsync(a => a.Action == "quotations.voided" && a.ResourceId == quotation.QuotationId.ToString()));
+        Assert.DoesNotContain("ลูกค้าถอนคำขอ", await db.AuditEvents.Where(a => a.ResourceId == quotation.QuotationId.ToString()).Select(a => a.ChangesJson).FirstAsync());
     }
 }

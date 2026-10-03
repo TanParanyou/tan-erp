@@ -1025,4 +1025,14 @@
   <data name="MRP_DEMAND_INVALID_DETAIL" xml:space="preserve"><value>ความต้องการไม่ถูกต้อง</value></data>
   <data name="MRP_CONVERT_INPUT_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลสำหรับแปลงเอกสารไม่ครบ</value></data>
   <data name="MRP_CONVERT_INPUT_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลสำหรับแปลงเอกสารไม่ครบ</value></data>
+  <data name="QUOTATION_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบเสนอราคาไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="QUOTATION_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะใบเสนอราคาไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="QUOTATION_ACCEPTED_LOCKED_TITLE" xml:space="preserve"><value>ใบเสนอราคาที่ลูกค้ายอมรับแล้วแก้ไขหรือยกเลิกไม่ได้</value></data>
+  <data name="QUOTATION_ACCEPTED_LOCKED_DETAIL" xml:space="preserve"><value>ใบเสนอราคาที่ลูกค้ายอมรับแล้วแก้ไขหรือยกเลิกไม่ได้</value></data>
+  <data name="QUOTATION_AMEND_REVISION_PENDING_TITLE" xml:space="preserve"><value>มีประมาณการฉบับใหม่ที่ยังจัดทำไม่เสร็จ</value></data>
+  <data name="QUOTATION_AMEND_REVISION_PENDING_DETAIL" xml:space="preserve"><value>มีประมาณการฉบับใหม่ที่ยังจัดทำไม่เสร็จ</value></data>
+  <data name="QUOTATION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="QUOTATION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="QUOTATION_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="QUOTATION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
 </root>

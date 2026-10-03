@@ -1382,41 +1382,11 @@ public class EstimateStore : IEstimateStore
                     new Error("OPPORTUNITY_INVALID_TRANSITION", $"Opportunity must be in 'estimating' stage to issue a quotation. Current stage is '{opp.Stage}'."));
             }
 
-            var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(
-                candidate => candidate.OrganizationId == organizationId && candidate.Id == estimate.CustomerId,
-                cancellationToken);
-            if (customer is null || customer.Status != TanErp.Domain.Crm.Customers.CustomerStatus.Active)
-                return Result<QuotationDetailProjection>.Failure(new Error("CUSTOMER_QUOTATION_BILLING_NOT_READY", "Customer must be active before issuing a quotation."));
-
-            var billingAddress = await _db.CustomerAddresses.AsNoTracking().FirstOrDefaultAsync(
-                address => address.OrganizationId == organizationId && address.CustomerId == customer.Id &&
-                    address.AddressType == "billing" && address.Status == "active" && address.IsPrimary,
-                cancellationToken);
-            if (billingAddress is null || (customer.CustomerType == "organization" &&
-                    (string.IsNullOrWhiteSpace(customer.LegalName) || string.IsNullOrWhiteSpace(customer.TaxIdentifier) || string.IsNullOrWhiteSpace(customer.BranchCode))))
-                return Result<QuotationDetailProjection>.Failure(new Error("CUSTOMER_QUOTATION_BILLING_NOT_READY", "Customer tax and billing details are incomplete."));
-
-            var billingSnapshotJson = JsonSerializer.Serialize(new
-            {
-                customerId = customer.Id,
-                customerType = customer.CustomerType,
-                displayNameTh = customer.DisplayNameTh,
-                displayNameEn = customer.DisplayNameEn,
-                legalName = customer.LegalName,
-                taxIdentifier = customer.TaxIdentifier,
-                branchCode = customer.BranchCode,
-                address = new
-                {
-                    billingAddress.Label,
-                    billingAddress.AddressLine1,
-                    billingAddress.Subdistrict,
-                    billingAddress.District,
-                    billingAddress.Province,
-                    billingAddress.PostalCode,
-                    billingAddress.CountryCode
-                }
-            });
-            var billingSnapshotHash = HashSnapshot(billingSnapshotJson);
+            var billing = await QuotationBillingSnapshotBuilder.BuildAsync(_db, organizationId, estimate.CustomerId, cancellationToken);
+            if (billing.IsFailure)
+                return Result<QuotationDetailProjection>.Failure(billing.Error);
+            var billingSnapshotJson = billing.Value!.Json;
+            var billingSnapshotHash = billing.Value.Hash;
 
             // 4. Atomic document numbering (no catch-all and no CountAsync()+1 fallback)
             string quotationNumber;
@@ -1678,13 +1648,17 @@ public class EstimateStore : IEstimateStore
                     new Error("RESOURCE_NOT_FOUND", $"Opportunity '{estimate.OpportunityId}' was not found."));
             }
 
+            // Only the live quotation can be accepted; superseded and voided ones are history.
             var quotation = await _db.Quotations
-                .FirstOrDefaultAsync(q => q.OrganizationId == organizationId && q.EstimateId == estimateId, cancellationToken);
+                .FirstOrDefaultAsync(q => q.OrganizationId == organizationId && q.EstimateId == estimateId &&
+                    (q.Status == QuotationStatus.Issued || q.Status == QuotationStatus.Accepted), cancellationToken);
 
             if (quotation is null)
             {
-                return Result<AcceptQuotationProjection>.Failure(
-                    new Error("RESOURCE_NOT_FOUND", $"No quotation found for estimate '{estimateId}'."));
+                var hasHistory = await _db.Quotations.AnyAsync(q => q.OrganizationId == organizationId && q.EstimateId == estimateId, cancellationToken);
+                return Result<AcceptQuotationProjection>.Failure(hasHistory
+                    ? new Error("QUOTATION_INVALID_STATE", "The quotation was voided or superseded; there is no live quotation to accept.")
+                    : new Error("RESOURCE_NOT_FOUND", $"No quotation found for estimate '{estimateId}'."));
             }
 
             // 3. Stage and Concurrency validation

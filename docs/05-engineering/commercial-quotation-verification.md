@@ -117,3 +117,12 @@ Verified complete commercial flow against live stack (PostgreSQL 17, Firebase Em
 - 200% zoom, keyboard and screen-reader review; browser-print pagination for long descriptions (320px overflow is covered by Playwright).
 - No stored rendered file or hash (ADR 0016); `customerReference`, `validityDays`, `scopeNote` and payment/delivery terms are not in the Quotation domain.
 - `quotations.read` is implemented in code and the test seeder only; production roles must be granted it by the owner of role bootstrap before release.
+
+## 5. Quotation Amendment/Void (CP-06, 2026-10-04)
+
+กฎ: [Quotation Lifecycle API Contract](../03-contracts/quotation-lifecycle-api-contract.md). หลักฐานเป็นชุดทดสอบเฉพาะส่วน ไม่ใช่ UAT; ค่าเริ่มต้นรอ Sales/Finance ยืนยัน.
+
+- Backend Integration (บน PostgreSQL) `EstimateEndpointsTests` 44/44 รวมสองเคสใหม่: **Amend** (ต้องมีเหตุผล, stale version, สร้างฉบับใหม่เลขใหม่ยอดเดิม, ฉบับเดิม `superseded` พร้อมลิงก์สองทิศและเหตุผล, replay Key เดิมไม่ออกซ้ำ/payload ต่าง 409, ฉบับ superseded แก้/ยกเลิกไม่ได้, การตอบรับเลือกฉบับ live, หลังยอมรับถูกล็อกทั้ง void และ amend) และ **Void** (ต้องมีเหตุผล, stale version, บันทึกผู้ยกเลิก/เวลา/เหตุผล, ยกเลิกซ้ำ/amend หลัง void ถูกปฏิเสธ, Opportunity ยังเป็น `proposed`, ตอบรับฉบับที่ยกเลิกแล้ว → `QUOTATION_INVALID_STATE`, audit ไม่มีข้อความเหตุผล). เคสเดิมที่แทรกใบเสนอราคาที่สองให้ประมาณการเดียวถูกปรับให้เป็น superseded ตามกฎใหม่ (unique index ฉบับ live). ชุด Project/OpenAPI ที่เกี่ยวข้องผ่าน.
+- Frontend Vitest `features/estimates` 17 ไฟล์/93 เคส รวม `quotation-lifecycle-panel` (ปุ่มเฉพาะฉบับ `issued` ตามสิทธิ์, ต้องกรอกเหตุผล, ส่ง row version + Idempotency-Key, แสดงข้อความ error ที่แปลแล้ว) , `tsc --noEmit`, `eslint .` ผ่าน.
+- ข้อจำกัด: ไม่ย้อน Opportunity/ประมาณการเมื่อ void (ตั้งใจ); ไม่มี void/amend หลังยอมรับ (ล็อก); ไม่มีลายน้ำ "ยกเลิก/ถูกแทนที่" บนใบพิมพ์ฉบับเก่า (หน้าแสดงสถานะในประวัติเท่านั้น); ไม่ได้ทดสอบ race ยอมรับ/amend พร้อมกันแบบขนาน (อาศัย row version + unique index); ไม่ได้รัน full Integration suite, `next build`, Playwright; ต้องมอบสิทธิ์ `quotations.void`/`quotations.amend` ให้ Role จริง.
+

@@ -12,6 +12,7 @@ import thMessages from "@/messages/th.json";
 import enMessages from "@/messages/en.json";
 import { useQuotationDocument } from "../api/estimate-queries";
 import { QuotationDocumentView, type QuotationDocumentLabel } from "./quotation-document-view";
+import { QuotationLifecyclePanel } from "./quotation-lifecycle-panel";
 
 interface QuotationDocumentPageProps {
   estimateId: string;
@@ -97,6 +98,8 @@ export function QuotationDocumentPage({ estimateId, uiLocale }: QuotationDocumen
           {t("loadFailed")}
         </div>
       )}
+
+      <QuotationLifecyclePanel estimateId={estimateId} />
 
       {query.data && (
         <QuotationDocumentView document={query.data} documentLocale={documentLocale} label={label} />

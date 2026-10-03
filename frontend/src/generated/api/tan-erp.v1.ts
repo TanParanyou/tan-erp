@@ -12543,6 +12543,190 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/quotations/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["QuotationReasonRequest"];
+                    "text/json": components["schemas"]["QuotationReasonRequest"];
+                    "application/*+json": components["schemas"]["QuotationReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuotationHistoryResponse"];
+                        "application/json": components["schemas"]["QuotationHistoryResponse"];
+                        "text/json": components["schemas"]["QuotationHistoryResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quotations/{id}/amend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["QuotationReasonRequest"];
+                    "text/json": components["schemas"]["QuotationReasonRequest"];
+                    "application/*+json": components["schemas"]["QuotationReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuotationHistoryResponse"];
+                        "application/json": components["schemas"]["QuotationHistoryResponse"];
+                        "text/json": components["schemas"]["QuotationHistoryResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/estimates/{id}/quotations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuotationHistoryResponse"];
+                        "application/json": components["schemas"]["QuotationHistoryResponse"];
+                        "text/json": components["schemas"]["QuotationHistoryResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customers/{customerId}/sites": {
         parameters: {
             query?: never;
@@ -17137,6 +17321,48 @@ export interface components {
             customer?: components["schemas"]["QuotationCustomerResponse"];
             sections?: components["schemas"]["QuotationSectionResponse"][] | null;
             totals?: components["schemas"]["QuotationTotalsResponse"];
+        };
+        QuotationHistoryItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            status?: string | null;
+            /** Format: double */
+            totalAmount?: number;
+            /** Format: uuid */
+            estimateRevisionId?: string;
+            /** Format: int32 */
+            estimateRevisionNo?: number;
+            /** Format: date-time */
+            issuedAtUtc?: string;
+            /** Format: date-time */
+            acceptedAtUtc?: string | null;
+            /** Format: uuid */
+            supersedesQuotationId?: string | null;
+            supersedesNumber?: string | null;
+            /** Format: uuid */
+            supersededByQuotationId?: string | null;
+            supersededByNumber?: string | null;
+            amendmentReason?: string | null;
+            /** Format: date-time */
+            voidedAtUtc?: string | null;
+            voidedBy?: components["schemas"]["QuotationPersonResponse"];
+            voidReason?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
+        QuotationHistoryResponse: {
+            /** Format: uuid */
+            estimateId?: string;
+            items?: components["schemas"]["QuotationHistoryItemResponse"][] | null;
+        };
+        QuotationPersonResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+        };
+        QuotationReasonRequest: {
+            reason?: string | null;
         };
         QuotationResponse: {
             /** Format: uuid */

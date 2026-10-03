@@ -171,6 +171,8 @@ builder.Services.AddScoped<TanErp.Application.Projects.Control.IProjectControlSt
 builder.Services.AddScoped<TanErp.Application.Projects.Control.ProjectControlHandler>();
 builder.Services.AddScoped<TanErp.Application.Procurement.IProcurementStore, TanErp.Infrastructure.Persistence.Procurement.ProcurementStore>();
 builder.Services.AddScoped<TanErp.Application.Procurement.ProcurementHandler>();
+builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationLifecycleStore, TanErp.Infrastructure.Persistence.Commercial.QuotationLifecycleStore>();
+builder.Services.AddScoped<TanErp.Application.Commercial.QuotationLifecycleHandler>();
 builder.Services.AddScoped<TanErp.Application.Production.IProductionStore, TanErp.Infrastructure.Persistence.Production.ProductionStore>();
 builder.Services.AddScoped<TanErp.Application.Production.ProductionHandler>();
 builder.Services.AddScoped<TanErp.Application.Mrp.IMrpStore, TanErp.Infrastructure.Persistence.Mrp.MrpStore>();

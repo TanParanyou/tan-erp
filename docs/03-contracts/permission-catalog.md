@@ -110,6 +110,8 @@
 | Estimation | `estimates.cancel` | ยกเลิก Draft/Returned; Submitted ต้องเป็นผู้ตรวจที่ได้รับมอบหมาย | Branch/Project/Own |
 | Quotation | `quotations.issue` | ออกใบเสนอราคาจาก Approved Revision | Branch/Project |
 | Quotation | `quotations.accept` | บันทึกการตอบรับใบเสนอราคาภายใน | Branch/Project |
+| Quotation | `quotations.void` | ยกเลิกใบเสนอราคาที่ออกแล้วและยังไม่ถูกยอมรับ | Organization |
+| Quotation | `quotations.amend` | ออกใบเสนอราคาฉบับแทนที่ | Organization |
 | Quotation | `quotations.read` | ดู/พิมพ์เอกสาร Quotation ที่ออกแล้ว (Customer-safe Document) | Branch/Project |
 | Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
 

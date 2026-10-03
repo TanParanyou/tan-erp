@@ -2825,5 +2825,40 @@
       "convertMakeRequired": "Select a warehouse.",
       "confirmConvert": "Create document"
     }
+  },
+  "quotationLifecycle": {
+    "title": "Quotation history",
+    "statuses": {
+      "issued": "Issued (live)",
+      "accepted": "Accepted",
+      "superseded": "Superseded",
+      "voided": "Voided"
+    },
+    "supersedes": "Replaces {number}",
+    "supersededBy": "Replaced by {number}",
+    "voidedBy": "Voided by {name} on {date}",
+    "amend": "Amend (issue replacement)",
+    "void": "Void quotation",
+    "amendTitle": "Replace quotation {number}",
+    "amendDescription": "Issue a new quotation from the latest approved estimate and the customer's current details. The original is kept as history and can no longer be accepted.",
+    "voidTitle": "Void quotation {number}",
+    "voidDescription": "Void a quotation that has not been accepted. This cannot be undone and does not change the opportunity stage.",
+    "reason": "Reason",
+    "reasonRequired": "Enter a reason.",
+    "confirm": "Confirm",
+    "voided": "Quotation voided.",
+    "amended": "Replacement quotation issued.",
+    "errors": {
+      "failed": "The action failed. Please try again.",
+      "QUOTATION_INVALID_STATE": "The quotation status does not allow this action.",
+      "QUOTATION_ACCEPTED_LOCKED": "An accepted quotation cannot be amended or voided.",
+      "QUOTATION_AMEND_REVISION_PENDING": "A newer estimate revision is still being prepared; finish or cancel it first.",
+      "QUOTATION_REASON_REQUIRED": "A reason is required.",
+      "QUOTATION_FIELD_INVALID": "A field value is invalid.",
+      "QUOTATION_VERSION_CONFLICT": "The quotation was changed by someone else. Reload and try again.",
+      "ESTIMATE_INVALID_STATE": "There is no approved estimate revision with frozen data to quote.",
+      "CUSTOMER_QUOTATION_BILLING_NOT_READY": "The customer's tax and billing details are incomplete.",
+      "IDEMPOTENCY_KEY_REUSED": "This request was already used with different data. Please retry."
+    }
   }
 }

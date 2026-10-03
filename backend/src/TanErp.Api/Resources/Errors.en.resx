@@ -863,4 +863,14 @@
   <data name="MRP_DEMAND_INVALID_DETAIL" xml:space="preserve"><value>Demands need an active item, a quantity above zero and a need date on or after the as-of date; at least one demand or open work orders is required.</value></data>
   <data name="MRP_CONVERT_INPUT_REQUIRED_TITLE" xml:space="preserve"><value>Convert Input Required</value></data>
   <data name="MRP_CONVERT_INPUT_REQUIRED_DETAIL" xml:space="preserve"><value>A work order needs a warehouse; a purchase order needs a supplier and a unit price.</value></data>
+  <data name="QUOTATION_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Quotation State</value></data>
+  <data name="QUOTATION_INVALID_STATE_DETAIL" xml:space="preserve"><value>The quotation status does not allow this action.</value></data>
+  <data name="QUOTATION_ACCEPTED_LOCKED_TITLE" xml:space="preserve"><value>Accepted Quotation Locked</value></data>
+  <data name="QUOTATION_ACCEPTED_LOCKED_DETAIL" xml:space="preserve"><value>An accepted quotation cannot be amended or voided because the won opportunity and project depend on it.</value></data>
+  <data name="QUOTATION_AMEND_REVISION_PENDING_TITLE" xml:space="preserve"><value>Estimate Revision Pending</value></data>
+  <data name="QUOTATION_AMEND_REVISION_PENDING_DETAIL" xml:space="preserve"><value>A newer estimate revision is still being prepared; finish or cancel it first.</value></data>
+  <data name="QUOTATION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="QUOTATION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason is required.</value></data>
+  <data name="QUOTATION_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
+  <data name="QUOTATION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
 </root>

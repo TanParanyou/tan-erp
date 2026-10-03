@@ -14,8 +14,10 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
     {
         builder.ToTable("quotations", "commercial", t =>
         {
-            t.HasCheckConstraint("ck_quotations_status", "status IN ('draft', 'issued', 'accepted', 'rejected', 'expired')");
+            t.HasCheckConstraint("ck_quotations_status", "status IN ('draft', 'issued', 'accepted', 'rejected', 'expired', 'superseded', 'voided')");
             t.HasCheckConstraint("ck_quotations_total_amount", "total_amount >= 0");
+            t.HasCheckConstraint("ck_quotations_void_fields", "(status = 'voided') = (void_reason IS NOT NULL)");
+            t.HasCheckConstraint("ck_quotations_superseded_fields", "(status = 'superseded') = (superseded_by_quotation_id IS NOT NULL)");
         });
 
         builder.HasKey(x => x.Id);
@@ -35,6 +37,12 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
         builder.Property(x => x.CustomerBillingSnapshotHash).HasColumnName("customer_billing_snapshot_hash").HasMaxLength(128);
         builder.Property(x => x.IssuedAtUtc).HasColumnName("issued_at_utc").IsRequired();
         builder.Property(x => x.AcceptedAtUtc).HasColumnName("accepted_at_utc");
+        builder.Property(x => x.SupersedesQuotationId).HasColumnName("supersedes_quotation_id");
+        builder.Property(x => x.SupersededByQuotationId).HasColumnName("superseded_by_quotation_id");
+        builder.Property(x => x.AmendmentReason).HasColumnName("amendment_reason").HasMaxLength(500);
+        builder.Property(x => x.VoidedAtUtc).HasColumnName("voided_at_utc");
+        builder.Property(x => x.VoidedByUserId).HasColumnName("voided_by_user_id");
+        builder.Property(x => x.VoidReason).HasColumnName("void_reason").HasMaxLength(500);
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
         builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").IsRequired();
@@ -42,6 +50,8 @@ public class QuotationConfiguration : IEntityTypeConfiguration<Quotation>
         builder.HasIndex(x => new { x.OrganizationId, x.Number }).IsUnique();
         builder.HasIndex(x => new { x.OrganizationId, x.OpportunityId });
         builder.HasIndex(x => new { x.OrganizationId, x.EstimateId });
+        // At most one live (issued or accepted) quotation per estimate; superseded and voided ones are history.
+        builder.HasIndex(x => x.EstimateId).IsUnique().HasFilter("status IN ('issued', 'accepted')").HasDatabaseName("ux_quotations_one_live_per_estimate");
 
         builder.HasOne<Organization>()
             .WithMany()

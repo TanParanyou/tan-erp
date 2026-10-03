@@ -208,6 +208,9 @@ export interface ListMrpRunsParams {
   page?: number;
   pageSize?: number;
 }
+export type QuotationHistoryResponse = components["schemas"]["QuotationHistoryResponse"];
+export type QuotationHistoryItemResponse = components["schemas"]["QuotationHistoryItemResponse"];
+export type QuotationLifecycleAction = "void" | "amend";
 export type WarehouseRequest = components["schemas"]["WarehouseRequest"];
 export type WarehouseResponse = components["schemas"]["WarehouseResponse"];
 export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
@@ -930,6 +933,14 @@ export class ApiClient {
       options,
       payload
     );
+  }
+
+  async getQuotationHistory(estimateId: string, options: RequestOptions): Promise<QuotationHistoryResponse> {
+    return this.request<QuotationHistoryResponse>(`/api/v1/estimates/${encodeURIComponent(estimateId)}/quotations`, "GET", options);
+  }
+
+  async quotationLifecycle(quotationId: string, action: QuotationLifecycleAction, rowVersion: string, reason: string, options: RequestOptions): Promise<QuotationHistoryResponse> {
+    return this.request<QuotationHistoryResponse>(`/api/v1/quotations/${encodeURIComponent(quotationId)}/${action}`, "POST", { ...options, ifMatch: rowVersion }, { reason });
   }
 
   async getQuotationDocument(

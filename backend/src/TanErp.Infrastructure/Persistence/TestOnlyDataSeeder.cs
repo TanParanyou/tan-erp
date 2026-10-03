@@ -150,6 +150,8 @@ public static class TestOnlyDataSeeder
             ("quotations.read", "Read Quotation Documents"),
             ("quotations.issue", "Issue Quotations"),
             ("quotations.accept", "Accept Quotations"),
+            ("quotations.void", "Void Issued Quotations"),
+            ("quotations.amend", "Amend Issued Quotations"),
             ("suppliers.read", "Read Suppliers"),
             ("suppliers.manage", "Manage Suppliers"),
             ("purchase-orders.read", "Read Purchase Orders"),

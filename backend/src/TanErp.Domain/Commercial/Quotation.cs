@@ -17,6 +17,12 @@ public class Quotation
     public string? CustomerBillingSnapshotHash { get; private set; }
     public DateTimeOffset IssuedAtUtc { get; private set; }
     public DateTimeOffset? AcceptedAtUtc { get; private set; }
+    public Guid? SupersedesQuotationId { get; private set; }
+    public Guid? SupersededByQuotationId { get; private set; }
+    public string? AmendmentReason { get; private set; }
+    public DateTimeOffset? VoidedAtUtc { get; private set; }
+    public Guid? VoidedByUserId { get; private set; }
+    public string? VoidReason { get; private set; }
     public Guid RowVersion { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset UpdatedAtUtc { get; private set; }
@@ -69,11 +75,74 @@ public class Quotation
     public void Accept(DateTimeOffset acceptedAtUtc)
     {
         if (Status != "issued")
-            throw new InvalidOperationException($"Cannot accept quotation in status '{Status}'.");
+            throw new QuotationLifecycleException("QUOTATION_INVALID_STATE", $"Cannot accept quotation in status '{Status}'.");
 
         Status = "accepted";
         AcceptedAtUtc = acceptedAtUtc;
         RowVersion = Guid.NewGuid();
         UpdatedAtUtc = acceptedAtUtc;
+    }
+
+    /// <summary>A new quotation that replaces an issued one. The original document stays immutable and linked.</summary>
+    public void MarkAsAmendmentOf(Guid supersededQuotationId, string reason)
+    {
+        if (supersededQuotationId == Guid.Empty) throw new ArgumentException("Superseded quotation ID cannot be empty.", nameof(supersededQuotationId));
+        if (string.IsNullOrWhiteSpace(reason)) throw new QuotationLifecycleException("QUOTATION_REASON_REQUIRED", "A reason is required to amend a quotation.");
+        SupersedesQuotationId = supersededQuotationId;
+        AmendmentReason = reason.Trim();
+    }
+
+    public void Supersede(Guid replacementQuotationId, DateTimeOffset now)
+    {
+        EnsureIssued("amended");
+        Status = QuotationStatus.Superseded;
+        SupersededByQuotationId = replacementQuotationId;
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = now;
+    }
+
+    public void Void(string reason, Guid actorUserId, DateTimeOffset now)
+    {
+        if (string.IsNullOrWhiteSpace(reason)) throw new QuotationLifecycleException("QUOTATION_REASON_REQUIRED", "A reason is required to void a quotation.");
+        if (actorUserId == Guid.Empty) throw new ArgumentException("Actor ID cannot be empty.", nameof(actorUserId));
+        EnsureIssued("voided");
+        Status = QuotationStatus.Voided;
+        VoidReason = reason.Trim();
+        VoidedByUserId = actorUserId;
+        VoidedAtUtc = now;
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = now;
+    }
+
+    /// <summary>Only an issued quotation can change. An accepted one is locked because a Won opportunity and a Project may already depend on it.</summary>
+    private void EnsureIssued(string verb)
+    {
+        if (Status == QuotationStatus.Accepted)
+        {
+            throw new QuotationLifecycleException("QUOTATION_ACCEPTED_LOCKED", $"An accepted quotation cannot be {verb}.");
+        }
+
+        if (Status != QuotationStatus.Issued)
+        {
+            throw new QuotationLifecycleException("QUOTATION_INVALID_STATE", $"A quotation in status '{Status}' cannot be {verb}.");
+        }
+    }
+}
+
+public static class QuotationStatus
+{
+    public const string Issued = "issued";
+    public const string Accepted = "accepted";
+    public const string Superseded = "superseded";
+    public const string Voided = "voided";
+}
+
+public class QuotationLifecycleException : Exception
+{
+    public string Code { get; }
+
+    public QuotationLifecycleException(string code, string message) : base(message)
+    {
+        Code = code;
     }
 }
