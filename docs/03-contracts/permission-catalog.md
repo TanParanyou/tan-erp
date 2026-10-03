@@ -6,7 +6,11 @@
 | --- | --- | --- | --- |
 | Organization | `organizations.read` | ดูข้อมูลองค์กรที่ตนสังกัด | Organization |
 | Organization | `branches.manage` | จัดการสาขา | Organization |
-| Access | `users.manage` | เชิญ ปิดใช้งาน และจัด Membership | Organization/Branch |
+| Access | `users.read` | ดูรายการ/รายละเอียดผู้ใช้และ Membership ใน Organization (หน้าจัดการผู้ใช้) | Organization |
+| Access | `users.manage` | เชิญผู้ใช้ (pending), แก้ชื่อ, เปิด/ปิดใช้ผู้ใช้; ผู้ถือสิทธิ์นี้ระดับ Organization นับเป็น "ผู้ดูแล" ตามกฎ last administrator | Organization |
+| Access | `memberships.manage` | แก้สาขา/ช่วงเวลา และเปิด/ปิด Membership | Organization |
+| Access | `roles.assign` | ดู Role ที่มอบได้, มอบ/ถอน Role (ภายในขอบเขตสิทธิ์ที่ตนถือ), ยกเลิกคำขอของตนเอง | Organization |
+| Access | `roles.assign-approval` | ตัดสินคำขอมอบ Role ที่มี Approval Permission (ผู้ตรวจต้องเป็นคนละคนกับผู้ขอ) | Organization |
 | Access | `roles.manage` | จัด Role และ Permission | Organization |
 | CRM | `customers.read` | ดู Customer และข้อมูลที่ Allowlist อนุญาต | Organization/Branch/Own |
 | CRM | `customers.create` | สร้าง Customer Draft | Organization/Branch |

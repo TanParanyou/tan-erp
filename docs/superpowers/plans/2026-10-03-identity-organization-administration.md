@@ -1,6 +1,6 @@
 # CP-02 Identity/Organization Administration — Scope and Implementation Plan
 
-**สถานะ:** Draft — ขอบเขตรอบแรกและกฎด้านล่างผ่านการตัดสินใจของเจ้าของงานเมื่อ 2026-10-03; ยังไม่เริ่ม implementation. ชื่อ Role จริงยังเป็น Draft ใน [Roles and Responsibilities](../../01-business/roles-and-responsibilities.md)
+**สถานะ:** Implemented (รอบแรก, 2026-10-03) — ขอบเขตและกฎผ่านการตัดสินใจของเจ้าของงาน; คำถามที่ยังเปิดด้านล่างใช้ค่าเริ่มต้นที่เสนอไว้จนกว่าเจ้าของงานยืนยัน. หลักฐาน: [Identity Administration Verification](../../05-engineering/identity-administration-verification.md). ชื่อ Role จริงยังเป็น Draft ใน [Roles and Responsibilities](../../01-business/roles-and-responsibilities.md)
 **แหล่งอ้างอิงหลัก:** [ERP Completion Plan CP-02](2026-09-29-erp-completion-master-plan.md), [RBAC](../../03-contracts/rbac.md), [Permission Catalog](../../03-contracts/permission-catalog.md), [Authentication](../../03-contracts/authentication.md), [Approval Matrix](../../01-business/approval-matrix.md)
 
 ## เป้าหมาย
@@ -19,10 +19,10 @@
 2. **ผู้ดูแลคนสุดท้าย:** Backend ปฏิเสธการถอน Role/ปิด Membership/ปิดผู้ใช้ที่ทำให้ Organization ไม่เหลือผู้มีสิทธิ์จัดการผู้ใช้ที่ active อย่างน้อยหนึ่งคน (ตรวจใน transaction เดียวกับการเปลี่ยน). การกู้สิทธิ์ทำผ่าน runbook โดยผู้มีอำนาจแก้ DB พร้อมบันทึกเหตุผลและ Audit.
 3. **ป้องกัน privilege escalation:** ผู้ดูแลมอบได้เฉพาะ Role ที่ permission ทั้งชุดอยู่ใน permission ที่ตนถืออยู่ (ที่ Scope เดียวกันหรือกว้างกว่า) และมอบ/ถอนสิทธิ์ของตนเองไม่ได้. Role ที่มี Approval Permission (เช่น `estimates.approve`, `cost-records.approve`) ต้องผ่านผู้ตรวจที่เป็นคนละคนกับผู้เสนอก่อนมีผล (maker–checker). Production Bootstrap ต้องมี Independent Checker อย่างน้อยหนึ่งคนตาม [Roles](../../01-business/roles-and-responsibilities.md).
 
-## คำถามที่ยังเปิด (ต้องตอบก่อนออก contract)
+## คำถามที่ยังเปิด (ใช้ค่าเริ่มต้นที่เสนอไว้ในการ implement; ต้องยืนยันก่อน production)
 
-- Permission ใหม่สำหรับงานนี้: เสนอ `users.read`, `users.manage`, `memberships.manage`, `roles.assign`, `roles.assign-approval` — ยืนยันชื่อและ Scope
-- Maker–checker ของ Approval Role: เก็บเป็น *pending assignment* ที่ผู้ตรวจยืนยัน หรือให้ผู้ตรวจสร้าง assignment เอง? (เสนอแบบ pending)
+- Permission ใหม่สำหรับงานนี้ (ใช้ตามที่เสนอ):  `users.read`, `users.manage`, `memberships.manage`, `roles.assign`, `roles.assign-approval` — ยืนยันชื่อและ Scope
+- Maker–checker ของ Approval Role: เก็บเป็น *pending assignment* ที่ผู้ตรวจยืนยัน หรือให้ผู้ตรวจสร้าง assignment เอง? (ใช้แบบ pending)
 - Membership ที่หมดอายุ (`ExpiresAtUtc`) ต้องแจ้งเตือนหรือไม่
 - อีเมลซ้ำข้าม Organization: User เป็นของ Organization เดียวหรือหนึ่ง User หลาย Membership ข้ามองค์กร (โมเดลปัจจุบัน: User ไม่มี Organization, Membership มี) 
 - ข้อมูลส่วนบุคคล (อีเมล/ชื่อ) ที่แสดงในรายการและ Audit — นโยบายการมองเห็นและ retention

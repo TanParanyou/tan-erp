@@ -75,10 +75,10 @@ CP-02/03/05 เตรียมคู่ขนานกับ CP-01 ได้ต�
 
 ฐาน Login/Current User/RBAC มีแล้ว; ยังต้องหน้าจัดการผู้ใช้และสิทธิ์ครบวงจร. อ้าง [RBAC](../../03-contracts/rbac.md), [Permissions](../../03-contracts/permission-catalog.md), [Authentication](../../03-contracts/authentication.md) และ Foundation schema เดิม.
 
-- [ ] ยืนยันวิธีเพิ่มผู้ใช้/เชื่อม Firebase identity, จัดการองค์กร/สาขา/Membership, Role Assignment และ Approval Authority; ใครมีสิทธิ์จัดการใคร และต้องมีผู้ตรวจแยกเมื่อใด
-- [ ] กำหนด administration contracts และ handlers โดย PostgreSQL เป็นเจ้าของสิทธิ์; reuse Request Context/Scope/Audit และ transaction/concurrency เดิม
-- [ ] ทำ List/Form/Confirmation ไทย/อังกฤษพร้อม conflict/retry และคำอธิบายผลกระทบการถอนสิทธิ์; ไม่มี DB write จาก FE
-- [ ] ทดสอบ cross-organization, privilege escalation, ถอน role/membership แล้ว request ถัดไปใช้สิทธิ์ไม่ได้ และ logout/cache isolation
+- [x] ยืนยันวิธีเพิ่มผู้ใช้/เชื่อม Firebase identity, Membership, Role Assignment; ใครมีสิทธิ์จัดการใคร และต้องมีผู้ตรวจแยกเมื่อใด (ตัดสินแล้ว 2026-10-03; ดู [CP-02 plan](2026-10-03-identity-organization-administration.md). Organization/Branch CRUD และ Approval Authority matrix ยังนอกขอบเขตรอบแรก)
+- [x] กำหนด administration contracts และ handlers โดย PostgreSQL เป็นเจ้าของสิทธิ์; reuse Request Context/Scope/Audit และ transaction/concurrency เดิม ([contract](../../03-contracts/identity-administration-api-contract.md))
+- [x] ทำ List/Form/Confirmation ไทย/อังกฤษพร้อม conflict/retry และคำอธิบายผลกระทบการถอนสิทธิ์; ไม่มี DB write จาก FE (ยังไม่ได้ตรวจ 200% zoom/keyboard/screen-reader)
+- [x] ทดสอบ cross-organization, privilege escalation, ถอน role/membership แล้ว request ถัดไปใช้สิทธิ์ไม่ได้ (automated; logout/cache isolation ของ FE ยังไม่มี test เฉพาะ)
 
 **ผลส่งมอบ/เกณฑ์จบ:** ผู้ดูแลที่ได้รับอนุญาตทำและถอน assignment ผ่าน UI/API ได้ พร้อม Audit; ผู้ไม่มีสิทธิ์เปลี่ยนไม่ได้. กฎป้องกันการสูญเสียผู้ดูแลทั้งหมดและการกู้สิทธิ์ต้องยืนยันก่อนออก contract.
 

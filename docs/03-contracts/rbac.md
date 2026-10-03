@@ -18,6 +18,7 @@
 - `opportunities.transition`
 - `surveys.mark-ready`
 - `roles.manage`
+- `users.read`, `users.manage`, `memberships.manage`, `roles.assign`, `roles.assign-approval` (ดู [Identity Administration API Contract](identity-administration-api-contract.md))
 
 ## Scope
 
