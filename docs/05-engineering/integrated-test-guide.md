@@ -48,7 +48,8 @@ make seed-quotation-demo # เทอร์มินัล 3: ออกใบเ�
 ```bash
 curl -i http://localhost:5005/health/live    # 200 {"status":"Healthy","checks":{}}
 curl -i http://localhost:5005/health/ready   # 200 พร้อม checks.database=Healthy
-make stop                                     # (หรือหยุด PostgreSQL) แล้วเรียก /health/ready ซ้ำ ต้องได้ 503
+make stop     # หยุด PostgreSQL และ Emulator (ไม่ลบข้อมูล) แล้วเรียก /health/ready ซ้ำ ต้องได้ 503
+make up       # เปิดกลับ แล้ว /health/ready ต้องกลับเป็น 200
 ```
 
 ## ผลอัตโนมัติของ branch นี้
@@ -58,5 +59,5 @@ make stop                                     # (หรือหยุด Postgr
 ## เก็บกวาด
 
 ```bash
-make down    # หยุดและลบ container ของ compose (ข้อมูลทดสอบหายหากลบ volume)
+make down    # หยุดและลบ container ของ compose (ข้อมูลใน volume ยังอยู่)
 ```
