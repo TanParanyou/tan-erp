@@ -24,7 +24,7 @@
 - Permission ใหม่สำหรับงานนี้ (ใช้ตามที่เสนอ):  `users.read`, `users.manage`, `memberships.manage`, `roles.assign`, `roles.assign-approval` — ยืนยันชื่อและ Scope
 - Maker–checker ของ Approval Role: เก็บเป็น *pending assignment* ที่ผู้ตรวจยืนยัน หรือให้ผู้ตรวจสร้าง assignment เอง? (ใช้แบบ pending)
 - Membership ที่หมดอายุ (`ExpiresAtUtc`) ต้องแจ้งเตือนหรือไม่
-- อีเมลซ้ำข้าม Organization: User เป็นของ Organization เดียวหรือหนึ่ง User หลาย Membership ข้ามองค์กร (โมเดลปัจจุบัน: User ไม่มี Organization, Membership มี) 
+- อีเมลซ้ำข้าม Organization: User เป็นของ Organization เดียวหรือหนึ่ง User หลาย Membership ข้ามองค์กร (โมเดลปัจจุบัน: User ไม่มี Organization, Membership มี)
 - ข้อมูลส่วนบุคคล (อีเมล/ชื่อ) ที่แสดงในรายการและ Audit — นโยบายการมองเห็นและ retention
 
 ## Pre-flight (ก่อนแก้โค้ด)
