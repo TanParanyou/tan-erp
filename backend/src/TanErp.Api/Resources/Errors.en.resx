@@ -799,4 +799,50 @@
   <data name="USER_SORT_ORDER_INVALID_DETAIL" xml:space="preserve">
     <value>The sort order must be asc or desc.</value>
   </data>
+  <data name="BOM_CODE_CONFLICT_TITLE" xml:space="preserve"><value>BOM code conflict</value></data>
+  <data name="BOM_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>The BOM code already exists.</value></data>
+  <data name="BOM_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>BOM Already Exists</value></data>
+  <data name="BOM_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>This item already has a BOM; create a new revision instead.</value></data>
+  <data name="BOM_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>BOM Version Conflict</value></data>
+  <data name="BOM_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The BOM revision was changed by someone else. Reload and retry.</value></data>
+  <data name="BOM_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid BOM State</value></data>
+  <data name="BOM_INVALID_STATE_DETAIL" xml:space="preserve"><value>The BOM revision status does not allow this action.</value></data>
+  <data name="BOM_SELF_APPROVAL_TITLE" xml:space="preserve"><value>BOM Self Approval</value></data>
+  <data name="BOM_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>The author of a BOM revision cannot approve it.</value></data>
+  <data name="BOM_LINE_INVALID_TITLE" xml:space="preserve"><value>Invalid BOM</value></data>
+  <data name="BOM_LINE_INVALID_DETAIL" xml:space="preserve"><value>A BOM needs 1-200 unique components with quantity above zero and scrap between 0 and 50 percent.</value></data>
+  <data name="BOM_CYCLE_TITLE" xml:space="preserve"><value>Circular BOM</value></data>
+  <data name="BOM_CYCLE_DETAIL" xml:space="preserve"><value>The BOM would use its own produced item, directly or indirectly, as a component.</value></data>
+  <data name="BOM_ITEM_NOT_PRODUCIBLE_TITLE" xml:space="preserve"><value>Item Not Producible</value></data>
+  <data name="BOM_ITEM_NOT_PRODUCIBLE_DETAIL" xml:space="preserve"><value>The item must be active, producible and stockable.</value></data>
+  <data name="BOM_COMPONENT_NOT_STOCKABLE_TITLE" xml:space="preserve"><value>Component Not Stockable</value></data>
+  <data name="BOM_COMPONENT_NOT_STOCKABLE_DETAIL" xml:space="preserve"><value>Components must be active, stockable items.</value></data>
+  <data name="PRODUCTION_BOM_NOT_APPROVED_TITLE" xml:space="preserve"><value>BOM Not Approved</value></data>
+  <data name="PRODUCTION_BOM_NOT_APPROVED_DETAIL" xml:space="preserve"><value>The item has no approved BOM revision.</value></data>
+  <data name="PRODUCTION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Work Order Version Conflict</value></data>
+  <data name="PRODUCTION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The work order was changed by someone else. Reload and retry.</value></data>
+  <data name="PRODUCTION_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Work Order State</value></data>
+  <data name="PRODUCTION_INVALID_STATE_DETAIL" xml:space="preserve"><value>The work order status does not allow this action.</value></data>
+  <data name="PRODUCTION_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve"><value>Project Not Active</value></data>
+  <data name="PRODUCTION_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve"><value>Work orders cannot be raised for a completed or cancelled project.</value></data>
+  <data name="PRODUCTION_HAS_ISSUED_MATERIALS_TITLE" xml:space="preserve"><value>Materials Still Issued</value></data>
+  <data name="PRODUCTION_HAS_ISSUED_MATERIALS_DETAIL" xml:space="preserve"><value>Return all issued materials before cancelling the work order.</value></data>
+  <data name="PRODUCTION_MATERIAL_SHORTAGE_TITLE" xml:space="preserve"><value>Material Shortage</value></data>
+  <data name="PRODUCTION_MATERIAL_SHORTAGE_DETAIL" xml:space="preserve"><value>Not enough material has been issued for this completion.</value></data>
+  <data name="PRODUCTION_OVER_COMPLETED_TITLE" xml:space="preserve"><value>Over Completed</value></data>
+  <data name="PRODUCTION_OVER_COMPLETED_DETAIL" xml:space="preserve"><value>Completed quantity cannot exceed the planned quantity.</value></data>
+  <data name="PRODUCTION_OVER_ISSUED_TITLE" xml:space="preserve"><value>Over Issued</value></data>
+  <data name="PRODUCTION_OVER_ISSUED_DETAIL" xml:space="preserve"><value>The quantity exceeds what the work order still requires.</value></data>
+  <data name="PRODUCTION_RETURN_EXCEEDS_TITLE" xml:space="preserve"><value>Return Exceeds</value></data>
+  <data name="PRODUCTION_RETURN_EXCEEDS_DETAIL" xml:space="preserve"><value>The quantity exceeds the materials not yet consumed by completed output.</value></data>
+  <data name="PRODUCTION_MATERIAL_INVALID_TITLE" xml:space="preserve"><value>Invalid Material</value></data>
+  <data name="PRODUCTION_MATERIAL_INVALID_DETAIL" xml:space="preserve"><value>The item is not a material of this work order.</value></data>
+  <data name="PRODUCTION_QUANTITY_INVALID_TITLE" xml:space="preserve"><value>Invalid Quantity</value></data>
+  <data name="PRODUCTION_QUANTITY_INVALID_DETAIL" xml:space="preserve"><value>Quantities must be greater than zero.</value></data>
+  <data name="PRODUCTION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="PRODUCTION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason is required.</value></data>
+  <data name="PRODUCTION_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Field Required</value></data>
+  <data name="PRODUCTION_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>A required field is missing.</value></data>
+  <data name="PRODUCTION_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
+  <data name="PRODUCTION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
 </root>

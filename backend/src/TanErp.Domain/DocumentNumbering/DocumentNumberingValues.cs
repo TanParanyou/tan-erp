@@ -24,6 +24,9 @@ public static class DocumentTypes
     public const string StockIssues = "stock-issues";
     public const string StockTransfers = "stock-transfers";
     public const string StockAdjustments = "stock-adjustments";
+    public const string StockReturns = "stock-returns";
+    public const string Boms = "boms";
+    public const string WorkOrders = "work-orders";
     public const string Customers = "customers";
     public const string Items = "items";
     public const string ItemCategories = "item-categories";
@@ -42,7 +45,8 @@ public static class DocumentTypes
         ItemTaxCategories,
         CostSources,
         Suppliers,
-        Warehouses
+        Warehouses,
+        Boms
     };
 
     public static readonly IReadOnlyCollection<string> GeneratedMasterData = new[]
@@ -54,7 +58,8 @@ public static class DocumentTypes
         ItemTaxCategories,
         CostSources,
         Suppliers,
-        Warehouses
+        Warehouses,
+        Boms
     };
 
     public static readonly IReadOnlyCollection<string> All = new[]
@@ -73,6 +78,9 @@ public static class DocumentTypes
         StockIssues,
         StockTransfers,
         StockAdjustments,
+        StockReturns,
+        Boms,
+        WorkOrders,
         Customers,
         Items,
         ItemCategories,
@@ -114,6 +122,7 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.CostSources => "SRC-",
             DocumentTypes.Suppliers => "SUP-",
             DocumentTypes.Warehouses => "WH-",
+            DocumentTypes.Boms => "BOM-",
             _ => null
         };
 
@@ -136,6 +145,8 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.StockIssues => "SI",
             DocumentTypes.StockTransfers => "ST",
             DocumentTypes.StockAdjustments => "SA",
+            DocumentTypes.StockReturns => "SRT",
+            DocumentTypes.WorkOrders => "WO",
             _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Unknown document type.")
         };
 

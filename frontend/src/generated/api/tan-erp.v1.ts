@@ -724,6 +724,405 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/boms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BomListResponse"];
+                        "application/json": components["schemas"]["BomListResponse"];
+                        "text/json": components["schemas"]["BomListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BomRequest"];
+                    "text/json": components["schemas"]["BomRequest"];
+                    "application/*+json": components["schemas"]["BomRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BomResponse"];
+                        "application/json": components["schemas"]["BomResponse"];
+                        "text/json": components["schemas"]["BomResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/boms/{id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BomDraftRequest"];
+                    "text/json": components["schemas"]["BomDraftRequest"];
+                    "application/*+json": components["schemas"]["BomDraftRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BomResponse"];
+                        "application/json": components["schemas"]["BomResponse"];
+                        "text/json": components["schemas"]["BomResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/boms/{id}/revisions/{revisionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    revisionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BomDraftRequest"];
+                    "text/json": components["schemas"]["BomDraftRequest"];
+                    "application/*+json": components["schemas"]["BomDraftRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BomResponse"];
+                        "application/json": components["schemas"]["BomResponse"];
+                        "text/json": components["schemas"]["BomResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/boms/{id}/revisions/{revisionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    revisionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BomResponse"];
+                        "application/json": components["schemas"]["BomResponse"];
+                        "text/json": components["schemas"]["BomResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/boms/{id}/revisions/{revisionId}/obsolete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    revisionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BomResponse"];
+                        "application/json": components["schemas"]["BomResponse"];
+                        "text/json": components["schemas"]["BomResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/boms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BomResponse"];
+                        "application/json": components["schemas"]["BomResponse"];
+                        "text/json": components["schemas"]["BomResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/branches": {
         parameters: {
             query?: never;
@@ -13605,6 +14004,477 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/work-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    projectId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderListResponse"];
+                        "application/json": components["schemas"]["WorkOrderListResponse"];
+                        "text/json": components["schemas"]["WorkOrderListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkOrderRequest"];
+                    "text/json": components["schemas"]["WorkOrderRequest"];
+                    "application/*+json": components["schemas"]["WorkOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-orders/{id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-orders/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkOrderActionRequest"];
+                    "text/json": components["schemas"]["WorkOrderActionRequest"];
+                    "application/*+json": components["schemas"]["WorkOrderActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-orders/{id}/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkOrderMaterialsRequest"];
+                    "text/json": components["schemas"]["WorkOrderMaterialsRequest"];
+                    "application/*+json": components["schemas"]["WorkOrderMaterialsRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-orders/{id}/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkOrderMaterialsRequest"];
+                    "text/json": components["schemas"]["WorkOrderMaterialsRequest"];
+                    "application/*+json": components["schemas"]["WorkOrderMaterialsRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-orders/{id}/completions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkOrderCompleteRequest"];
+                    "text/json": components["schemas"]["WorkOrderCompleteRequest"];
+                    "application/*+json": components["schemas"]["WorkOrderCompleteRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -13792,6 +14662,84 @@ export interface components {
             items?: components["schemas"]["OpportunityWorkImageResponse"][] | null;
             /** Format: uuid */
             opportunityRowVersion?: string;
+        };
+        BomDraftRequest: {
+            /** Format: double */
+            outputQuantity?: number;
+            note?: string | null;
+            lines?: components["schemas"]["BomLineRequest"][] | null;
+        };
+        BomLineRequest: {
+            /** Format: uuid */
+            componentItemId?: string;
+            /** Format: double */
+            quantity?: number;
+            /** Format: double */
+            scrapPercent?: number;
+        };
+        BomLineResponse: {
+            /** Format: uuid */
+            id?: string;
+            component?: components["schemas"]["ProductionItemResponse"];
+            /** Format: double */
+            quantity?: number;
+            /** Format: double */
+            scrapPercent?: number;
+            /** Format: double */
+            grossQuantity?: number;
+        };
+        BomListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            item?: components["schemas"]["ProductionItemResponse"];
+            /** Format: int32 */
+            approvedRevisionNo?: number | null;
+            /** Format: int32 */
+            latestRevisionNo?: number;
+            latestStatus?: string | null;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        BomListResponse: {
+            items?: components["schemas"]["BomListItemResponse"][] | null;
+            pagination?: components["schemas"]["ProductionPaginationResponse"];
+        };
+        BomRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: double */
+            outputQuantity?: number;
+            note?: string | null;
+            lines?: components["schemas"]["BomLineRequest"][] | null;
+        };
+        BomResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            item?: components["schemas"]["ProductionItemResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            revisions?: components["schemas"]["BomRevisionResponse"][] | null;
+        };
+        BomRevisionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            revisionNo?: number;
+            status?: string | null;
+            /** Format: double */
+            outputQuantity?: number;
+            note?: string | null;
+            createdBy?: components["schemas"]["ProductionPersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            approvedBy?: components["schemas"]["ProductionPersonResponse"];
+            /** Format: date-time */
+            approvedAtUtc?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            lines?: components["schemas"]["BomLineResponse"][] | null;
         };
         BranchDto: {
             /** Format: uuid */
@@ -15312,6 +16260,29 @@ export interface components {
             displayName?: string | null;
             email?: string | null;
         };
+        ProductionItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            nameTh?: string | null;
+            unitCode?: string | null;
+        };
+        ProductionPaginationResponse: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        ProductionPersonResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+            email?: string | null;
+        };
         ProjectBaselineResponse: {
             /** Format: uuid */
             quotationId?: string;
@@ -16538,6 +17509,123 @@ export interface components {
             /** Format: uuid */
             id?: string;
             displayName?: string | null;
+        };
+        WorkOrderActionRequest: {
+            reason?: string | null;
+        };
+        WorkOrderCompleteRequest: {
+            /** Format: double */
+            quantity?: number;
+        };
+        WorkOrderListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            status?: string | null;
+            itemCode?: string | null;
+            itemNameTh?: string | null;
+            /** Format: double */
+            plannedQuantity?: number;
+            /** Format: double */
+            completedQuantity?: number;
+            projectCode?: string | null;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        WorkOrderListResponse: {
+            items?: components["schemas"]["WorkOrderListItemResponse"][] | null;
+            pagination?: components["schemas"]["ProductionPaginationResponse"];
+        };
+        WorkOrderMaterialLineRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: double */
+            quantity?: number;
+        };
+        WorkOrderMaterialResponse: {
+            /** Format: uuid */
+            id?: string;
+            item?: components["schemas"]["ProductionItemResponse"];
+            /** Format: double */
+            requiredQuantity?: number;
+            /** Format: double */
+            issuedQuantity?: number;
+            /** Format: double */
+            returnedQuantity?: number;
+            /** Format: double */
+            netIssuedQuantity?: number;
+            /** Format: double */
+            remainingQuantity?: number;
+            /** Format: double */
+            issuedValue?: number;
+            /** Format: double */
+            returnedValue?: number;
+        };
+        WorkOrderMaterialsRequest: {
+            lines?: components["schemas"]["WorkOrderMaterialLineRequest"][] | null;
+        };
+        WorkOrderRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+        };
+        WorkOrderRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: uuid */
+            warehouseId?: string;
+            /** Format: uuid */
+            projectId?: string | null;
+            /** Format: double */
+            plannedQuantity?: number;
+            note?: string | null;
+        };
+        WorkOrderResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string;
+            number?: string | null;
+            status?: string | null;
+            item?: components["schemas"]["ProductionItemResponse"];
+            /** Format: uuid */
+            bomRevisionId?: string;
+            bomCode?: string | null;
+            /** Format: int32 */
+            bomRevisionNo?: number;
+            warehouse?: components["schemas"]["WorkOrderRefResponse"];
+            project?: components["schemas"]["WorkOrderRefResponse"];
+            /** Format: double */
+            plannedQuantity?: number;
+            /** Format: double */
+            completedQuantity?: number;
+            /** Format: double */
+            costAllocated?: number;
+            note?: string | null;
+            cancelReason?: string | null;
+            createdBy?: components["schemas"]["ProductionPersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+            materials?: components["schemas"]["WorkOrderMaterialResponse"][] | null;
+            transactions?: components["schemas"]["WorkOrderTransactionResponse"][] | null;
+        };
+        WorkOrderTransactionResponse: {
+            /** Format: uuid */
+            id?: string;
+            kind?: string | null;
+            /** Format: uuid */
+            stockDocumentId?: string;
+            stockDocumentNumber?: string | null;
+            /** Format: double */
+            quantity?: number;
+            /** Format: double */
+            value?: number;
+            actor?: components["schemas"]["ProductionPersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
         };
     };
     responses: never;

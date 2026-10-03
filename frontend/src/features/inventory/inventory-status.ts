@@ -1,4 +1,4 @@
-export const MOVEMENT_KINDS = ["receipt", "issue", "transfer_out", "transfer_in", "adjustment_in", "adjustment_out"] as const;
+export const MOVEMENT_KINDS = ["receipt", "issue", "transfer_out", "transfer_in", "adjustment_in", "adjustment_out", "return_in"] as const;
 
 export type MovementKindValue = (typeof MOVEMENT_KINDS)[number];
 

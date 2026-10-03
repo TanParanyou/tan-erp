@@ -49,7 +49,7 @@
 | CP-09 | Project Budget/Plan/Change Order/Progress | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี Actual Cost/WBS) | CP-08 | Project Manager + Finance |
 | CP-10 | Supplier/Procurement | Implemented 2026-10-04 (Supplier → PO → Receipt; กฎที่ทีมพัฒนาเลือก; ไม่มี PR/Return) | Item/Unit + CP-09 demand/budget | Procurement + Finance |
 | CP-11 | Inventory/Warehouse | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี lot/serial/location/ปิดงวด) | CP-10 receipt contract + Item/Unit | Warehouse + Procurement |
-| CP-12 | BOM/Production | Future slice | CP-09 scope + CP-11 stock | Engineering/Production |
+| CP-12 | BOM/Production | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี routing/capacity/subcontracting/ค่าแรง) | CP-09 scope + CP-11 stock | Engineering/Production |
 | CP-13 | MRP | Future slice | CP-10 lead time + CP-11 stock + CP-12 BOM/plan | Production Planner + Procurement |
 | CP-14 | Installation/Handover/Warranty/Service | Future slice | CP-08/09; CP-12 หากมีงานผลิต | Installation + Customer Service |
 | CP-15 | Billing/Payment/Accounting Integration | Future slice | Customer billing + Commercial/Project; Supply เมื่อรวมยอดจัดซื้อ | Finance/Accounting |
@@ -193,10 +193,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-12 — BOM/Production
 
-- [ ] ยืนยัน BOM revision, unit/yield/scrap, routing/capacity, subcontracting และ production states; แยก Estimate BOQ จาก production BOM
-- [ ] ทำ BOM approval/revision, Work Order/plan และ material reservation/issue/return/completion contracts กับ Inventory
-- [ ] ทำ production UI และ snapshot ของ BOM/plan ต่อ order; รักษาประวัติเมื่อ BOM ใหม่มีผล
-- [ ] ทดสอบ BOM cycle/dimension, yield/scrap rules, duplicate completion, material shortage, partial completion และ actual input/output reconciliation
+- [x] ยืนยัน BOM revision, unit/yield/scrap, routing/capacity, subcontracting และ production states; แยก Estimate BOQ จาก production BOM
+- [x] ทำ BOM approval/revision, Work Order/plan และ material reservation/issue/return/completion contracts กับ Inventory
+- [x] ทำ production UI และ snapshot ของ BOM/plan ต่อ order; รักษาประวัติเมื่อ BOM ใหม่มีผล
+- [x] ทดสอบ BOM cycle/dimension, yield/scrap rules, duplicate completion, material shortage, partial completion และ actual input/output reconciliation
 
 **ผลส่งมอบ/เกณฑ์จบ:** ผลิตหนึ่ง Work Order จาก approved BOM ผ่านเบิก/คืน/รับผลผลิตได้ พร้อม trace ต้นทุนและ stock movement.
 

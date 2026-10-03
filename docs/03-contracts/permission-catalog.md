@@ -68,6 +68,12 @@
 | Inventory | `inventory.transfer` | โอนระหว่างคลัง | Organization |
 | Inventory | `inventory.adjust` | ปรับยอดจากการนับ | Organization |
 | Inventory | `inventory.reserve` | จอง/ปล่อยการจองสต็อก | Organization |
+| Production | `boms.read` | ดู BOM และ revision | Organization |
+| Production | `boms.manage` | สร้าง/แก้ draft/เลิกใช้ BOM | Organization |
+| Production | `boms.approve` | อนุมัติ BOM revision (ต้องไม่ใช่ผู้จัดทำ) | Organization |
+| Production | `work-orders.read` | ดูใบสั่งผลิต | Organization |
+| Production | `work-orders.manage` | สร้าง/ปล่อยงาน/ยกเลิกใบสั่งผลิต | Organization |
+| Production | `work-orders.operate` | เบิก/คืนวัตถุดิบ และรับผลผลิตเข้าสต็อก | Organization |
 | Project | `projects.read` | ดู Project และ Handover source | Organization |
 | Project | `projects.create` | ส่งต่อ Quotation ที่ยืนยันแล้วเป็น Project | Organization |
 | Project | `projects.update` | แก้แผนเวลา งบ Baseline (ก่อนตรึง) และ Milestone | Organization |

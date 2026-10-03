@@ -43,6 +43,12 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Procurement.GoodsReceipt> GoodsReceipts => Set<TanErp.Domain.Procurement.GoodsReceipt>();
     public DbSet<TanErp.Domain.Procurement.GoodsReceiptLine> GoodsReceiptLines => Set<TanErp.Domain.Procurement.GoodsReceiptLine>();
     public DbSet<TanErp.Domain.Inventory.Warehouse> Warehouses => Set<TanErp.Domain.Inventory.Warehouse>();
+    public DbSet<TanErp.Domain.Production.Bom> Boms => Set<TanErp.Domain.Production.Bom>();
+    public DbSet<TanErp.Domain.Production.BomRevision> BomRevisions => Set<TanErp.Domain.Production.BomRevision>();
+    public DbSet<TanErp.Domain.Production.BomLine> BomLines => Set<TanErp.Domain.Production.BomLine>();
+    public DbSet<TanErp.Domain.Production.WorkOrder> WorkOrders => Set<TanErp.Domain.Production.WorkOrder>();
+    public DbSet<TanErp.Domain.Production.WorkOrderMaterial> WorkOrderMaterials => Set<TanErp.Domain.Production.WorkOrderMaterial>();
+    public DbSet<TanErp.Domain.Production.WorkOrderTransaction> WorkOrderTransactions => Set<TanErp.Domain.Production.WorkOrderTransaction>();
     public DbSet<TanErp.Domain.Inventory.StockBalance> StockBalances => Set<TanErp.Domain.Inventory.StockBalance>();
     public DbSet<TanErp.Domain.Inventory.StockDocument> StockDocuments => Set<TanErp.Domain.Inventory.StockDocument>();
     public DbSet<TanErp.Domain.Inventory.StockMovement> StockMovements => Set<TanErp.Domain.Inventory.StockMovement>();

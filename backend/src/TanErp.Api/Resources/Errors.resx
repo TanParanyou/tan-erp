@@ -961,4 +961,50 @@
   <data name="USER_SORT_ORDER_INVALID_DETAIL" xml:space="preserve">
     <value>ทิศทางการเรียงต้องเป็น asc หรือ desc</value>
   </data>
+  <data name="BOM_CODE_CONFLICT_TITLE" xml:space="preserve"><value>รหัส BOM ซ้ำ</value></data>
+  <data name="BOM_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>รหัส BOM ซ้ำ</value></data>
+  <data name="BOM_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>สินค้านี้มี BOM แล้ว</value></data>
+  <data name="BOM_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>สินค้านี้มี BOM แล้ว</value></data>
+  <data name="BOM_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>BOM ถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="BOM_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>BOM ถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="BOM_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะ BOM ไม่ถูกต้อง</value></data>
+  <data name="BOM_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะ BOM ไม่ถูกต้อง</value></data>
+  <data name="BOM_SELF_APPROVAL_TITLE" xml:space="preserve"><value>อนุมัติ BOM ของตนเองไม่ได้</value></data>
+  <data name="BOM_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>อนุมัติ BOM ของตนเองไม่ได้</value></data>
+  <data name="BOM_LINE_INVALID_TITLE" xml:space="preserve"><value>ข้อมูล BOM ไม่ถูกต้อง</value></data>
+  <data name="BOM_LINE_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูล BOM ไม่ถูกต้อง</value></data>
+  <data name="BOM_CYCLE_TITLE" xml:space="preserve"><value>โครงสร้าง BOM วนซ้ำ</value></data>
+  <data name="BOM_CYCLE_DETAIL" xml:space="preserve"><value>โครงสร้าง BOM วนซ้ำ</value></data>
+  <data name="BOM_ITEM_NOT_PRODUCIBLE_TITLE" xml:space="preserve"><value>สินค้านี้ผลิตไม่ได้</value></data>
+  <data name="BOM_ITEM_NOT_PRODUCIBLE_DETAIL" xml:space="preserve"><value>สินค้านี้ผลิตไม่ได้</value></data>
+  <data name="BOM_COMPONENT_NOT_STOCKABLE_TITLE" xml:space="preserve"><value>วัตถุดิบไม่ถูกต้อง</value></data>
+  <data name="BOM_COMPONENT_NOT_STOCKABLE_DETAIL" xml:space="preserve"><value>วัตถุดิบไม่ถูกต้อง</value></data>
+  <data name="PRODUCTION_BOM_NOT_APPROVED_TITLE" xml:space="preserve"><value>ยังไม่มี BOM ที่อนุมัติ</value></data>
+  <data name="PRODUCTION_BOM_NOT_APPROVED_DETAIL" xml:space="preserve"><value>ยังไม่มี BOM ที่อนุมัติ</value></data>
+  <data name="PRODUCTION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ใบสั่งผลิตถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="PRODUCTION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ใบสั่งผลิตถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="PRODUCTION_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบสั่งผลิตไม่ถูกต้อง</value></data>
+  <data name="PRODUCTION_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะใบสั่งผลิตไม่ถูกต้อง</value></data>
+  <data name="PRODUCTION_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve"><value>โครงการไม่อยู่ในสถานะใช้งาน</value></data>
+  <data name="PRODUCTION_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve"><value>โครงการไม่อยู่ในสถานะใช้งาน</value></data>
+  <data name="PRODUCTION_HAS_ISSUED_MATERIALS_TITLE" xml:space="preserve"><value>ยังมีวัตถุดิบที่เบิกอยู่</value></data>
+  <data name="PRODUCTION_HAS_ISSUED_MATERIALS_DETAIL" xml:space="preserve"><value>ยังมีวัตถุดิบที่เบิกอยู่</value></data>
+  <data name="PRODUCTION_MATERIAL_SHORTAGE_TITLE" xml:space="preserve"><value>วัตถุดิบที่เบิกไม่พอ</value></data>
+  <data name="PRODUCTION_MATERIAL_SHORTAGE_DETAIL" xml:space="preserve"><value>วัตถุดิบที่เบิกไม่พอ</value></data>
+  <data name="PRODUCTION_OVER_COMPLETED_TITLE" xml:space="preserve"><value>ผลิตเกินแผน</value></data>
+  <data name="PRODUCTION_OVER_COMPLETED_DETAIL" xml:space="preserve"><value>ผลิตเกินแผน</value></data>
+  <data name="PRODUCTION_OVER_ISSUED_TITLE" xml:space="preserve"><value>เบิกเกินที่ต้องใช้</value></data>
+  <data name="PRODUCTION_OVER_ISSUED_DETAIL" xml:space="preserve"><value>เบิกเกินที่ต้องใช้</value></data>
+  <data name="PRODUCTION_RETURN_EXCEEDS_TITLE" xml:space="preserve"><value>คืนเกินที่ยังไม่ถูกใช้</value></data>
+  <data name="PRODUCTION_RETURN_EXCEEDS_DETAIL" xml:space="preserve"><value>คืนเกินที่ยังไม่ถูกใช้</value></data>
+  <data name="PRODUCTION_MATERIAL_INVALID_TITLE" xml:space="preserve"><value>วัตถุดิบไม่อยู่ในใบสั่งผลิต</value></data>
+  <data name="PRODUCTION_MATERIAL_INVALID_DETAIL" xml:space="preserve"><value>วัตถุดิบไม่อยู่ในใบสั่งผลิต</value></data>
+  <data name="PRODUCTION_QUANTITY_INVALID_TITLE" xml:space="preserve"><value>จำนวนไม่ถูกต้อง</value></data>
+  <data name="PRODUCTION_QUANTITY_INVALID_DETAIL" xml:space="preserve"><value>จำนวนไม่ถูกต้อง</value></data>
+  <data name="PRODUCTION_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="PRODUCTION_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="PRODUCTION_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="PRODUCTION_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="PRODUCTION_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="PRODUCTION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
 </root>

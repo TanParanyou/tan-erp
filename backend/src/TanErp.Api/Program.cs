@@ -171,7 +171,11 @@ builder.Services.AddScoped<TanErp.Application.Projects.Control.IProjectControlSt
 builder.Services.AddScoped<TanErp.Application.Projects.Control.ProjectControlHandler>();
 builder.Services.AddScoped<TanErp.Application.Procurement.IProcurementStore, TanErp.Infrastructure.Persistence.Procurement.ProcurementStore>();
 builder.Services.AddScoped<TanErp.Application.Procurement.ProcurementHandler>();
-builder.Services.AddScoped<TanErp.Application.Inventory.IInventoryStore, TanErp.Infrastructure.Persistence.Inventory.InventoryStore>();
+builder.Services.AddScoped<TanErp.Application.Production.IProductionStore, TanErp.Infrastructure.Persistence.Production.ProductionStore>();
+builder.Services.AddScoped<TanErp.Application.Production.ProductionHandler>();
+builder.Services.AddScoped<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>();
+builder.Services.AddScoped<TanErp.Application.Inventory.IInventoryStore>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());
+builder.Services.AddScoped<TanErp.Application.Inventory.IProductionStockPort>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());
 builder.Services.AddScoped<TanErp.Application.Inventory.InventoryHandler>();
 builder.Services.AddScoped<TanErp.Application.Projects.ListProjects.ListProjectsHandler>();
 builder.Services.AddScoped<TanErp.Application.Items.IItemImportStore, TanErp.Infrastructure.Persistence.Items.ItemImportStore>();

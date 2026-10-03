@@ -57,6 +57,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasWarehousesRead = can(activeMembership, "warehouses.read");
   const hasInventoryRead = can(activeMembership, "inventory.read");
   const hasPurchaseOrdersRead = can(activeMembership, "purchase-orders.read");
+  const hasBomsRead = can(activeMembership, "boms.read");
+  const hasWorkOrdersRead = can(activeMembership, "work-orders.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
   const hasSettingsRead =
@@ -75,6 +77,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isProjectsActive = pathname.startsWith(`/${locale}/projects`);
   const isProcurementActive = pathname.startsWith(`/${locale}/procurement`);
   const isInventoryActive = pathname.startsWith(`/${locale}/inventory`);
+  const isProductionActive = pathname.startsWith(`/${locale}/production`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
@@ -224,6 +227,31 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     return items;
   }, [hasInventoryRead, hasWarehousesRead, locale, pathname, tShell]);
 
+  const productionItems: NavItemDef[] = useMemo(() => {
+    const items: NavItemDef[] = [];
+    if (hasBomsRead) {
+      items.push({
+        id: "boms",
+        href: `/${locale}/production/boms`,
+        label: tShell("boms"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/production/boms`),
+        permission: hasBomsRead,
+      });
+    }
+    if (hasWorkOrdersRead) {
+      items.push({
+        id: "work-orders",
+        href: `/${locale}/production/work-orders`,
+        label: tShell("workOrders"),
+        icon: <IconBox3D size={20} />,
+        isActive: pathname.startsWith(`/${locale}/production/work-orders`),
+        permission: hasWorkOrdersRead,
+      });
+    }
+    return items;
+  }, [hasBomsRead, hasWorkOrdersRead, locale, pathname, tShell]);
+
   const subgroups: NavSubgroupDef[] = useMemo(() => {
     const groups: NavSubgroupDef[] = [];
     if (crmItems.length > 0) {
@@ -247,6 +275,13 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         items: inventoryItems,
       });
     }
+    if (productionItems.length > 0) {
+      groups.push({
+        id: "production",
+        label: tShell("productionSubgroup"),
+        items: productionItems,
+      });
+    }
     if (productItems.length > 0) {
       groups.push({
         id: "products",
@@ -255,7 +290,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       });
     }
     return groups;
-  }, [crmItems, procurementItems, inventoryItems, productItems, tShell]);
+  }, [crmItems, procurementItems, inventoryItems, productionItems, productItems, tShell]);
 
   // Accordion open/close state tracking
   const [openSubgroups, setOpenSubgroups] = useState<Record<string, boolean>>(() => {
@@ -263,12 +298,14 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     if (isCustomersActive || isOpportunitiesActive || isProjectsActive) initial["crm"] = true;
     if (isProcurementActive) initial["procurement"] = true;
     if (isInventoryActive) initial["inventory"] = true;
+    if (isProductionActive) initial["production"] = true;
     if (isItemMasterActive) initial["products"] = true;
     // Default open all if none active
     if (Object.keys(initial).length === 0) {
       initial["crm"] = true;
       initial["procurement"] = true;
       initial["inventory"] = true;
+      initial["production"] = true;
       initial["products"] = true;
     }
     return initial;

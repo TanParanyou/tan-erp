@@ -15,7 +15,7 @@ using TanErp.Infrastructure.Persistence.DocumentNumbering;
 
 namespace TanErp.Infrastructure.Persistence.Inventory;
 
-public class InventoryStore : IInventoryStore
+public class InventoryStore : IInventoryStore, IProductionStockPort
 {
     private readonly AppDbContext _db;
     private readonly IClock _clock;
@@ -252,7 +252,9 @@ public class InventoryStore : IInventoryStore
         var strategy = _db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
-            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            // A caller that already opened a transaction (Production) gets stock movements inside it; otherwise this call owns one.
+            var ownsTransaction = _db.Database.CurrentTransaction is null;
+            await using var tx = ownsTransaction ? await _db.Database.BeginTransactionAsync(ct) : null;
 
             var replay = await FindReplayAsync(orgId, operation, keyHash, ct);
             if (replay is not null)
@@ -284,7 +286,7 @@ public class InventoryStore : IInventoryStore
             try
             {
                 await _db.SaveChangesAsync(ct);
-                await tx.CommitAsync(ct);
+                if (tx is not null) await tx.CommitAsync(ct);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -599,6 +601,125 @@ public class InventoryStore : IInventoryStore
 
             return Result<ReservationProjection>.Success((await GetReservationAsync(orgId, reservation.Id, ct))!);
         });
+    }
+
+
+    // ===== production port (idempotent per source id, joins the caller's transaction) =================
+
+    private static string SourceKey(string operation, Guid sourceId) => Application.Common.Security.Sha256Hex.Compute($"{operation}:{sourceId}");
+
+    private static ProductionStockResult ToPortResult(StockDocumentProjection d) =>
+        new(d.Id, d.Number, d.Movements.Select(m => new ProductionStockLine(m.Item.Id, Math.Abs(m.QuantityDelta), Math.Abs(m.ValueDelta))).ToList());
+
+    private static Result<ProductionStockResult> ToPortResult(Result<StockDocumentProjection> result) =>
+        result.IsFailure ? Result<ProductionStockResult>.Failure(result.Error) : Result<ProductionStockResult>.Success(ToPortResult(result.Value!));
+
+    public async Task<Result<ProductionStockResult>> IssueMaterialsAsync(
+        RequestAccessContext access, Guid warehouseId, Guid? projectId, Guid sourceId, string reason,
+        IReadOnlyList<ProductionIssueLine> lines, string traceId, CancellationToken ct = default)
+    {
+        const string operation = "inventory.production-issue.post";
+        var result = await PostAsync(access, operation, SourceKey(operation, sourceId), SourceKey(operation + ":payload", sourceId), async now =>
+        {
+            var orgId = access.OrganizationId;
+            var warehouse = await ResolveActiveWarehouseAsync(orgId, warehouseId, ct);
+            if (warehouse.IsFailure) return Result<StockDocument>.Failure(warehouse.Error);
+
+            var items = await ResolveItemsAsync(orgId, lines.Select(l => l.ItemId), ct);
+            if (items.IsFailure) return Result<StockDocument>.Failure(items.Error);
+
+            var number = await NextNumberAsync(orgId, DocumentTypes.StockIssues, warehouse.Value!.BranchId, now, ct);
+            var document = new StockDocument(Guid.NewGuid(), orgId, warehouse.Value.BranchId, StockDocumentType.Issue, number, warehouseId, null, projectId,
+                StockSourceType.WorkOrderIssue, sourceId, reason, now, access.ActorUserId, now);
+
+            var balances = await LockBalancesAsync(orgId, lines.Select(l => (warehouseId, l.ItemId, items.Value![l.ItemId].UnitId)), now, ct);
+            foreach (var line in lines)
+            {
+                var balance = balances[(warehouseId, line.ItemId)];
+                var reservations = projectId.HasValue
+                    ? await _db.StockReservations.Where(r => r.OrganizationId == orgId && r.WarehouseId == warehouseId && r.ItemId == line.ItemId && r.ProjectId == projectId.Value && r.Status == ReservationStatus.Active)
+                        .OrderBy(r => r.CreatedAtUtc).ToListAsync(ct)
+                    : new List<StockReservation>();
+
+                var quantity = decimal.Round(line.Quantity, 4);
+                var value = balance.Issue(quantity, reservations.Sum(r => r.Quantity), now);
+                var toConsume = quantity;
+                var consumedTotal = 0m;
+                foreach (var reservation in reservations)
+                {
+                    if (toConsume <= 0) break;
+                    var consumed = reservation.Consume(toConsume, now);
+                    consumedTotal += consumed;
+                    toConsume -= consumed;
+                }
+
+                if (consumedTotal > 0) balance.ReleaseReservation(consumedTotal, now);
+                document.AddMovement(Movement(orgId, document, balance, StockMovementKind.Issue, -quantity, CostPerUnit(value, quantity), -value, now, now));
+            }
+
+            return Result<StockDocument>.Success(document);
+        }, "stock-issue.posted", traceId, ct);
+        return ToPortResult(result);
+    }
+
+    public async Task<Result<ProductionStockResult>> ReturnMaterialsAsync(
+        RequestAccessContext access, Guid warehouseId, Guid? projectId, Guid sourceId, string reason,
+        IReadOnlyList<ProductionReturnLine> lines, string traceId, CancellationToken ct = default)
+    {
+        const string operation = "inventory.production-return.post";
+        var result = await PostAsync(access, operation, SourceKey(operation, sourceId), SourceKey(operation + ":payload", sourceId), async now =>
+        {
+            var orgId = access.OrganizationId;
+            var warehouse = await ResolveActiveWarehouseAsync(orgId, warehouseId, ct);
+            if (warehouse.IsFailure) return Result<StockDocument>.Failure(warehouse.Error);
+
+            var items = await ResolveItemsAsync(orgId, lines.Select(l => l.ItemId), ct);
+            if (items.IsFailure) return Result<StockDocument>.Failure(items.Error);
+
+            var number = await NextNumberAsync(orgId, DocumentTypes.StockReturns, warehouse.Value!.BranchId, now, ct);
+            var document = new StockDocument(Guid.NewGuid(), orgId, warehouse.Value.BranchId, StockDocumentType.Return, number, warehouseId, null, projectId,
+                StockSourceType.WorkOrderReturn, sourceId, reason, now, access.ActorUserId, now);
+
+            var balances = await LockBalancesAsync(orgId, lines.Select(l => (warehouseId, l.ItemId, items.Value![l.ItemId].UnitId)), now, ct);
+            foreach (var line in lines)
+            {
+                var balance = balances[(warehouseId, line.ItemId)];
+                var quantity = decimal.Round(line.Quantity, 4);
+                balance.ReceiveAtValue(quantity, line.Value, now);
+                document.AddMovement(Movement(orgId, document, balance, StockMovementKind.ReturnIn, quantity, CostPerUnit(line.Value, quantity), line.Value, now, now));
+            }
+
+            return Result<StockDocument>.Success(document);
+        }, "stock-return.posted", traceId, ct);
+        return ToPortResult(result);
+    }
+
+    public async Task<Result<ProductionStockResult>> ReceiveOutputAsync(
+        RequestAccessContext access, Guid warehouseId, Guid? projectId, Guid sourceId, Guid itemId,
+        decimal quantity, decimal totalValue, string traceId, CancellationToken ct = default)
+    {
+        const string operation = "inventory.production-output.post";
+        var result = await PostAsync(access, operation, SourceKey(operation, sourceId), SourceKey(operation + ":payload", sourceId), async now =>
+        {
+            var orgId = access.OrganizationId;
+            var warehouse = await ResolveActiveWarehouseAsync(orgId, warehouseId, ct);
+            if (warehouse.IsFailure) return Result<StockDocument>.Failure(warehouse.Error);
+
+            var items = await ResolveItemsAsync(orgId, new[] { itemId }, ct);
+            if (items.IsFailure) return Result<StockDocument>.Failure(items.Error);
+
+            var number = await NextNumberAsync(orgId, DocumentTypes.StockReceipts, warehouse.Value!.BranchId, now, ct);
+            var document = new StockDocument(Guid.NewGuid(), orgId, warehouse.Value.BranchId, StockDocumentType.Receipt, number, warehouseId, null, projectId,
+                StockSourceType.WorkOrderCompletion, sourceId, null, now, access.ActorUserId, now);
+
+            var balances = await LockBalancesAsync(orgId, new[] { (warehouseId, itemId, items.Value![itemId].UnitId) }, now, ct);
+            var balance = balances[(warehouseId, itemId)];
+            var rounded = decimal.Round(quantity, 4);
+            balance.ReceiveAtValue(rounded, totalValue, now);
+            document.AddMovement(Movement(orgId, document, balance, StockMovementKind.Receipt, rounded, CostPerUnit(totalValue, rounded), totalValue, now, now));
+            return Result<StockDocument>.Success(document);
+        }, "stock-receipt.posted", traceId, ct);
+        return ToPortResult(result);
     }
 
     // ===== reads =====================================================================================

@@ -165,6 +165,36 @@ export type PurchaseOrderListItemResponse = components["schemas"]["PurchaseOrder
 export type GoodsReceiptRequest = components["schemas"]["GoodsReceiptRequest"];
 export type GoodsReceiptLineRequest = components["schemas"]["GoodsReceiptLineRequest"];
 export type PurchaseOrderAction = "submit" | "approve" | "reject" | "cancel";
+export type BomRequest = components["schemas"]["BomRequest"];
+export type BomDraftRequest = components["schemas"]["BomDraftRequest"];
+export type BomLineRequest = components["schemas"]["BomLineRequest"];
+export type BomResponse = components["schemas"]["BomResponse"];
+export type BomRevisionResponse = components["schemas"]["BomRevisionResponse"];
+export type BomLineResponse = components["schemas"]["BomLineResponse"];
+export type BomListResponse = components["schemas"]["BomListResponse"];
+export type BomListItemResponse = components["schemas"]["BomListItemResponse"];
+export type WorkOrderRequest = components["schemas"]["WorkOrderRequest"];
+export type WorkOrderResponse = components["schemas"]["WorkOrderResponse"];
+export type WorkOrderMaterialResponse = components["schemas"]["WorkOrderMaterialResponse"];
+export type WorkOrderTransactionResponse = components["schemas"]["WorkOrderTransactionResponse"];
+export type WorkOrderMaterialsRequest = components["schemas"]["WorkOrderMaterialsRequest"];
+export type WorkOrderListResponse = components["schemas"]["WorkOrderListResponse"];
+export type WorkOrderListItemResponse = components["schemas"]["WorkOrderListItemResponse"];
+export type BomRevisionAction = "approve" | "obsolete";
+export type WorkOrderAction = "release" | "cancel";
+export type WorkOrderStockOperation = "issues" | "returns";
+export interface ListBomsParams {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListWorkOrdersParams {
+  search?: string;
+  status?: string;
+  projectId?: string;
+  page?: number;
+  pageSize?: number;
+}
 export type WarehouseRequest = components["schemas"]["WarehouseRequest"];
 export type WarehouseResponse = components["schemas"]["WarehouseResponse"];
 export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
@@ -1222,6 +1252,68 @@ export class ApiClient {
 
   async postGoodsReceipt(id: string, payload: GoodsReceiptRequest, options: RequestOptions): Promise<PurchaseOrderResponse> {
     return this.request<PurchaseOrderResponse>(`/api/v1/purchase-orders/${encodeURIComponent(id)}/receipts`, "POST", options, payload);
+  }
+
+  async listBoms(options: RequestOptions, query: ListBomsParams): Promise<BomListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<BomListResponse>(`/api/v1/boms?${params.toString()}`, "GET", options);
+  }
+
+  async getBom(id: string, options: RequestOptions): Promise<BomResponse> {
+    return this.request<BomResponse>(`/api/v1/boms/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createBom(payload: BomRequest, options: RequestOptions): Promise<BomResponse> {
+    return this.request<BomResponse>("/api/v1/boms", "POST", options, payload);
+  }
+
+  async createBomRevision(id: string, payload: BomDraftRequest, options: RequestOptions): Promise<BomResponse> {
+    return this.request<BomResponse>(`/api/v1/boms/${encodeURIComponent(id)}/revisions`, "POST", options, payload);
+  }
+
+  async updateBomDraft(id: string, revisionId: string, rowVersion: string, payload: BomDraftRequest, options: RequestOptions): Promise<BomResponse> {
+    return this.request<BomResponse>(`/api/v1/boms/${encodeURIComponent(id)}/revisions/${encodeURIComponent(revisionId)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async bomRevisionAction(id: string, revisionId: string, action: BomRevisionAction, rowVersion: string, options: RequestOptions): Promise<BomResponse> {
+    return this.request<BomResponse>(`/api/v1/boms/${encodeURIComponent(id)}/revisions/${encodeURIComponent(revisionId)}/${action}`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async listWorkOrders(options: RequestOptions, query: ListWorkOrdersParams): Promise<WorkOrderListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.projectId) params.set("projectId", query.projectId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<WorkOrderListResponse>(`/api/v1/work-orders?${params.toString()}`, "GET", options);
+  }
+
+  async getWorkOrder(id: string, options: RequestOptions): Promise<WorkOrderResponse> {
+    return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createWorkOrder(payload: WorkOrderRequest, options: RequestOptions): Promise<WorkOrderResponse> {
+    return this.request<WorkOrderResponse>("/api/v1/work-orders", "POST", options, payload);
+  }
+
+  async releaseWorkOrder(id: string, rowVersion: string, options: RequestOptions): Promise<WorkOrderResponse> {
+    return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}/release`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async cancelWorkOrder(id: string, rowVersion: string, reason: string, options: RequestOptions): Promise<WorkOrderResponse> {
+    return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}/cancel`, "POST", { ...options, ifMatch: rowVersion }, { reason });
+  }
+
+  async workOrderMaterials(id: string, operation: WorkOrderStockOperation, payload: WorkOrderMaterialsRequest, options: RequestOptions): Promise<WorkOrderResponse> {
+    return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}/${operation}`, "POST", options, payload);
+  }
+
+  async completeWorkOrder(id: string, quantity: number, options: RequestOptions): Promise<WorkOrderResponse> {
+    return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}/completions`, "POST", options, { quantity });
   }
 
   async listWarehouses(options: RequestOptions, query: ListWarehousesParams): Promise<WarehouseListResponse> {

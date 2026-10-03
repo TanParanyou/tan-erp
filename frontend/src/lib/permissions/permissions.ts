@@ -59,6 +59,14 @@ export const PERMISSIONS = {
   INVENTORY_ADJUST: "inventory.adjust",
   INVENTORY_RESERVE: "inventory.reserve",
 
+  // Production
+  BOMS_READ: "boms.read",
+  BOMS_MANAGE: "boms.manage",
+  BOMS_APPROVE: "boms.approve",
+  WORK_ORDERS_READ: "work-orders.read",
+  WORK_ORDERS_MANAGE: "work-orders.manage",
+  WORK_ORDERS_OPERATE: "work-orders.operate",
+
   // Projects
   PROJECTS_READ: "projects.read",
   PROJECTS_CREATE: "projects.create",

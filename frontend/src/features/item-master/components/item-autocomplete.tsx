@@ -16,6 +16,10 @@ export interface ItemAutocompleteProps {
   disabled?: boolean;
   /** Only items whose capabilities allow purchasing. */
   purchasableOnly?: boolean;
+  /** Only items that can be produced. */
+  producibleOnly?: boolean;
+  /** Only items that are tracked in stock. */
+  stockableOnly?: boolean;
   className?: string;
 }
 
@@ -31,6 +35,8 @@ export function ItemAutocomplete({
   required,
   disabled,
   purchasableOnly = false,
+  producibleOnly = false,
+  stockableOnly = false,
   className,
 }: ItemAutocompleteProps) {
   const locale = useLocale();
@@ -39,7 +45,7 @@ export function ItemAutocomplete({
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<ItemResponse | null>(null);
   const query = useItemList({ search: search.trim() || undefined, status: "active", sortBy: "code", sortOrder: "asc", pageNumber: 1, pageSize: MAX_RESULTS });
-  const items = (query.data?.items ?? []).filter((item) => item.id && (!purchasableOnly || item.capabilities?.canPurchase));
+  const items = (query.data?.items ?? []).filter((item) => item.id && (!purchasableOnly || item.capabilities?.canPurchase) && (!producibleOnly || item.capabilities?.canProduce) && (!stockableOnly || item.capabilities?.canStock));
   const nameOf = (item: ItemResponse | null | undefined): string => (locale === "en" ? item?.name?.english : item?.name?.thai) ?? "-";
 
   return (
