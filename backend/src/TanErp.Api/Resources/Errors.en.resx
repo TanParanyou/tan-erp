@@ -545,6 +545,42 @@
   <data name="PROJECT_CHANGE_ORDER_INVALID_DETAIL" xml:space="preserve"><value>A change order needs a title (≤200) and a reason (≤1000).</value></data>
   <data name="PROJECT_CHANGE_ORDER_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Self-approval Not Allowed</value></data>
   <data name="PROJECT_CHANGE_ORDER_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>A change order cannot be decided by its creator.</value></data>
+  <data name="SUPPLIER_CODE_CONFLICT_TITLE" xml:space="preserve"><value>Duplicate Supplier Code</value></data>
+  <data name="SUPPLIER_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>This supplier code already exists. Try again.</value></data>
+  <data name="SUPPLIER_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Supplier Changed</value></data>
+  <data name="SUPPLIER_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The supplier was modified by someone else. Reload and try again.</value></data>
+  <data name="SUPPLIER_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Supplier Status</value></data>
+  <data name="SUPPLIER_INVALID_STATE_DETAIL" xml:space="preserve"><value>The supplier is already in this status.</value></data>
+  <data name="SUPPLIER_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Supplier Data</value></data>
+  <data name="SUPPLIER_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A Thai name (≤200) and a payment term of 0-365 days are required; other fields must fit their limits.</value></data>
+  <data name="PURCHASE_ORDER_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Purchase Order Changed</value></data>
+  <data name="PURCHASE_ORDER_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The purchase order was modified by someone else. Reload and try again.</value></data>
+  <data name="PURCHASE_ORDER_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Purchase Order Status</value></data>
+  <data name="PURCHASE_ORDER_INVALID_STATE_DETAIL" xml:space="preserve"><value>This action is not allowed in the purchase order's current status.</value></data>
+  <data name="PURCHASE_ORDER_HAS_RECEIPTS_TITLE" xml:space="preserve"><value>Receipts Exist</value></data>
+  <data name="PURCHASE_ORDER_HAS_RECEIPTS_DETAIL" xml:space="preserve"><value>A purchase order with receipts cannot be cancelled.</value></data>
+  <data name="PURCHASE_ORDER_SUPPLIER_INACTIVE_TITLE" xml:space="preserve"><value>Supplier Not Active</value></data>
+  <data name="PURCHASE_ORDER_SUPPLIER_INACTIVE_DETAIL" xml:space="preserve"><value>Orders cannot be raised or approved for an inactive supplier.</value></data>
+  <data name="PURCHASE_ORDER_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve"><value>Project Not Active</value></data>
+  <data name="PURCHASE_ORDER_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve"><value>Orders cannot be raised for completed or cancelled projects, and are approved only for active or on-hold projects.</value></data>
+  <data name="PURCHASE_ORDER_OVER_BUDGET_TITLE" xml:space="preserve"><value>Over Project Budget</value></data>
+  <data name="PURCHASE_ORDER_OVER_BUDGET_DETAIL" xml:space="preserve"><value>Approving this order would take commitments above the project's current budget.</value></data>
+  <data name="PURCHASE_ORDER_ITEM_NOT_PURCHASABLE_TITLE" xml:space="preserve"><value>Item Not Purchasable</value></data>
+  <data name="PURCHASE_ORDER_ITEM_NOT_PURCHASABLE_DETAIL" xml:space="preserve"><value>The item must be active and purchasable.</value></data>
+  <data name="PURCHASE_ORDER_LINE_INVALID_TITLE" xml:space="preserve"><value>Invalid Purchase Order Lines</value></data>
+  <data name="PURCHASE_ORDER_LINE_INVALID_DETAIL" xml:space="preserve"><value>1-200 lines, unique items, quantity above zero and a non-negative price are required.</value></data>
+  <data name="PURCHASE_ORDER_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Self-approval Not Allowed</value></data>
+  <data name="PURCHASE_ORDER_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>A purchase order cannot be decided by its creator.</value></data>
+  <data name="PROCUREMENT_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="PROCUREMENT_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason is required to reject or cancel a purchase order.</value></data>
+  <data name="PROCUREMENT_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Required Data Missing</value></data>
+  <data name="PROCUREMENT_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>The required data is missing.</value></data>
+  <data name="PROCUREMENT_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Data</value></data>
+  <data name="PROCUREMENT_FIELD_INVALID_DETAIL" xml:space="preserve"><value>The supplied data is invalid.</value></data>
+  <data name="GOODS_RECEIPT_INVALID_TITLE" xml:space="preserve"><value>Invalid Goods Receipt</value></data>
+  <data name="GOODS_RECEIPT_INVALID_DETAIL" xml:space="preserve"><value>A receipt needs at least one line of this order with a quantity above zero.</value></data>
+  <data name="GOODS_RECEIPT_OVER_RECEIVED_TITLE" xml:space="preserve"><value>Over-receipt</value></data>
+  <data name="GOODS_RECEIPT_OVER_RECEIVED_DETAIL" xml:space="preserve"><value>The received quantity cannot exceed the ordered quantity.</value></data>
   <data name="PROJECT_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>Project Already Exists</value></data>
   <data name="PROJECT_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>This quotation has already been handed over. One quotation creates one project.</value></data>
   <data name="PROJECT_HANDOVER_NOT_ALLOWED_TITLE" xml:space="preserve"><value>Handover Not Allowed</value></data>

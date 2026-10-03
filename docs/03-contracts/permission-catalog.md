@@ -54,6 +54,12 @@
 | Survey | `surveys.create-revision` | Clone เป็น Draft Revision ใหม่ | Branch/Opportunity/Own |
 | Survey | `surveys.void` | Void Revision พร้อมเหตุผล | Organization/Branch/Opportunity |
 | Survey | `surveys.export` | Export Survey/Evidence ตาม Allowlist | Organization/Branch/Opportunity |
+| Procurement | `suppliers.read` | ดู Supplier | Organization |
+| Procurement | `suppliers.manage` | สร้าง/แก้/เปิด-ปิด Supplier | Organization |
+| Procurement | `purchase-orders.read` | ดูใบสั่งซื้อและใบรับสินค้า | Organization |
+| Procurement | `purchase-orders.create` | สร้าง/แก้ฉบับร่าง/ส่ง/ยกเลิกใบสั่งซื้อ | Organization |
+| Procurement | `purchase-orders.approve` | อนุมัติ/ปฏิเสธใบสั่งซื้อ (ผู้ตัดสินต้องไม่ใช่ผู้สร้าง) | Organization |
+| Procurement | `goods-receipts.create` | บันทึกการรับสินค้า | Organization |
 | Project | `projects.read` | ดู Project และ Handover source | Organization |
 | Project | `projects.create` | ส่งต่อ Quotation ที่ยืนยันแล้วเป็น Project | Organization |
 | Project | `projects.update` | แก้แผนเวลา งบ Baseline (ก่อนตรึง) และ Milestone | Organization |

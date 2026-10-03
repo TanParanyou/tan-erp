@@ -77,10 +77,12 @@ export function ProjectBudgetCard({ control, canEdit, mutation, describeError }:
           <h3 className="text-sm font-bold text-erp-navy">{t("budgetTitle")}</h3>
           <p className="mt-1 text-xs text-erp-text-muted">{budget?.isFrozen ? t("budgetFrozenHint") : t("budgetEditableHint")}</p>
         </div>
-        <dl className="grid grid-cols-3 gap-4 text-right text-xs">
+        <dl className="grid grid-cols-2 gap-4 text-right text-xs sm:grid-cols-5">
           <div><dt className="text-erp-text-muted">{t("baselineBudget")}</dt><dd className="font-mono font-semibold">{budget?.baselineTotal != null ? formatCurrency(budget.baselineTotal, "THB", locale) : "-"}</dd></div>
           <div><dt className="text-erp-text-muted">{t("approvedBudgetDelta")}</dt><dd className="font-mono font-semibold">{formatCurrency(budget?.approvedBudgetDelta ?? 0, "THB", locale)}</dd></div>
           <div><dt className="text-erp-text-muted">{t("currentBudget")}</dt><dd className="font-mono font-semibold">{budget?.currentTotal != null ? formatCurrency(budget.currentTotal, "THB", locale) : "-"}</dd></div>
+          <div><dt className="text-erp-text-muted">{t("committedAmount")}</dt><dd className="font-mono font-semibold">{formatCurrency(budget?.committedAmount ?? 0, "THB", locale)}</dd></div>
+          <div><dt className="text-erp-text-muted">{t("availableBudget")}</dt><dd className="font-mono font-semibold">{budget?.availableBudget != null ? formatCurrency(budget.availableBudget, "THB", locale) : "-"}</dd></div>
         </dl>
       </div>
 

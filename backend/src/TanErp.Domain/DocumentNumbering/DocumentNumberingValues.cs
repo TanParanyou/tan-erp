@@ -16,6 +16,9 @@ public static class DocumentTypes
     public const string Quotations = "quotations";
     public const string Projects = "projects";
     public const string ProjectChangeOrders = "project-change-orders";
+    public const string Suppliers = "suppliers";
+    public const string PurchaseOrders = "purchase-orders";
+    public const string GoodsReceipts = "goods-receipts";
     public const string Customers = "customers";
     public const string Items = "items";
     public const string ItemCategories = "item-categories";
@@ -32,7 +35,8 @@ public static class DocumentTypes
         ItemBrands,
         UnitsOfMeasure,
         ItemTaxCategories,
-        CostSources
+        CostSources,
+        Suppliers
     };
 
     public static readonly IReadOnlyCollection<string> GeneratedMasterData = new[]
@@ -42,7 +46,8 @@ public static class DocumentTypes
         ItemBrands,
         UnitsOfMeasure,
         ItemTaxCategories,
-        CostSources
+        CostSources,
+        Suppliers
     };
 
     public static readonly IReadOnlyCollection<string> All = new[]
@@ -53,6 +58,9 @@ public static class DocumentTypes
         Quotations,
         Projects,
         ProjectChangeOrders,
+        Suppliers,
+        PurchaseOrders,
+        GoodsReceipts,
         Customers,
         Items,
         ItemCategories,
@@ -92,6 +100,7 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.UnitsOfMeasure => "UOM-",
             DocumentTypes.ItemTaxCategories => "TAX-",
             DocumentTypes.CostSources => "SRC-",
+            DocumentTypes.Suppliers => "SUP-",
             _ => null
         };
 
@@ -108,6 +117,8 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.Quotations => "QT",
             DocumentTypes.Projects => "PRJ",
             DocumentTypes.ProjectChangeOrders => "PCO",
+            DocumentTypes.PurchaseOrders => "PO",
+            DocumentTypes.GoodsReceipts => "GR",
             _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Unknown document type.")
         };
 

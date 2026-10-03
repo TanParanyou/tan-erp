@@ -95,6 +95,8 @@ public sealed record ProjectBudgetResponse(
     DateTimeOffset? FrozenAtUtc,
     decimal ApprovedBudgetDelta,
     decimal? CurrentTotal,
+    decimal CommittedAmount,
+    decimal? AvailableBudget,
     IReadOnlyList<ProjectBudgetLineResponse> Lines);
 
 public sealed record ProjectMilestoneResponse(

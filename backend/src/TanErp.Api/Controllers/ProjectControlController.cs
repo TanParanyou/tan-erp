@@ -202,7 +202,7 @@ public class ProjectControlController : ControllerBase
     private static ProjectControlResponse ToResponse(ProjectControlProjection c) => new(
         c.ProjectId, c.Status, c.StatusReason, c.PlannedStartDate, c.PlannedEndDate, c.ActivatedAtUtc, c.CompletedAtUtc, c.RowVersion,
         new ProjectBudgetResponse(
-            c.Budget.BaselineTotal, c.Budget.BaselineHash, c.Budget.IsFrozen, c.Budget.FrozenAtUtc, c.Budget.ApprovedBudgetDelta, c.Budget.CurrentTotal,
+            c.Budget.BaselineTotal, c.Budget.BaselineHash, c.Budget.IsFrozen, c.Budget.FrozenAtUtc, c.Budget.ApprovedBudgetDelta, c.Budget.CurrentTotal, c.Budget.CommittedAmount, c.Budget.AvailableBudget,
             c.Budget.Lines.Select(l => new ProjectBudgetLineResponse(l.Id, l.Category, l.Description, l.Amount, l.SortOrder)).ToList()),
         new ProjectContractResponse(c.Contract.BaselineAmount, c.Contract.ApprovedDelta, c.Contract.CurrentAmount),
         new ProjectProgressResponse(c.Progress.TotalMilestones, c.Progress.CompletedMilestones, c.Progress.TotalWeight, c.Progress.CompletedWeight, c.Progress.Percent),

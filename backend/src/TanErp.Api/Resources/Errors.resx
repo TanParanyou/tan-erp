@@ -713,6 +713,42 @@
   <data name="PROJECT_CHANGE_ORDER_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีหัวข้อ (≤200) และเหตุผล (≤1000)</value></data>
   <data name="PROJECT_CHANGE_ORDER_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ตัดสิน Change Order ของตนเองไม่ได้</value></data>
   <data name="PROJECT_CHANGE_ORDER_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้สร้าง Change Order ไม่สามารถอนุมัติหรือปฏิเสธรายการของตนเอง</value></data>
+  <data name="SUPPLIER_CODE_CONFLICT_TITLE" xml:space="preserve"><value>รหัสผู้ขายซ้ำ</value></data>
+  <data name="SUPPLIER_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>รหัสผู้ขายนี้มีอยู่แล้ว กรุณาลองใหม่</value></data>
+  <data name="SUPPLIER_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลผู้ขายถูกแก้ไข</value></data>
+  <data name="SUPPLIER_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ผู้ขายถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="SUPPLIER_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะผู้ขายไม่รองรับ</value></data>
+  <data name="SUPPLIER_INVALID_STATE_DETAIL" xml:space="preserve"><value>ผู้ขายอยู่ในสถานะนี้อยู่แล้ว</value></data>
+  <data name="SUPPLIER_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลผู้ขายไม่ถูกต้อง</value></data>
+  <data name="SUPPLIER_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีชื่อไทย (≤200) เงื่อนไขชำระเงิน 0-365 วัน และข้อมูลติดต่อไม่ยาวเกินกำหนด</value></data>
+  <data name="PURCHASE_ORDER_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ใบสั่งซื้อถูกแก้ไข</value></data>
+  <data name="PURCHASE_ORDER_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ใบสั่งซื้อถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="PURCHASE_ORDER_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบสั่งซื้อไม่รองรับ</value></data>
+  <data name="PURCHASE_ORDER_INVALID_STATE_DETAIL" xml:space="preserve"><value>ไม่สามารถดำเนินการนี้ในสถานะปัจจุบันของใบสั่งซื้อ</value></data>
+  <data name="PURCHASE_ORDER_HAS_RECEIPTS_TITLE" xml:space="preserve"><value>มีการรับสินค้าแล้ว</value></data>
+  <data name="PURCHASE_ORDER_HAS_RECEIPTS_DETAIL" xml:space="preserve"><value>ยกเลิกใบสั่งซื้อที่มีการรับสินค้าแล้วไม่ได้</value></data>
+  <data name="PURCHASE_ORDER_SUPPLIER_INACTIVE_TITLE" xml:space="preserve"><value>ผู้ขายไม่ได้เปิดใช้งาน</value></data>
+  <data name="PURCHASE_ORDER_SUPPLIER_INACTIVE_DETAIL" xml:space="preserve"><value>ไม่สามารถสั่งซื้อหรืออนุมัติกับผู้ขายที่ไม่ได้เปิดใช้งาน</value></data>
+  <data name="PURCHASE_ORDER_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve"><value>โครงการไม่พร้อมสั่งซื้อ</value></data>
+  <data name="PURCHASE_ORDER_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve"><value>สั่งซื้อให้โครงการที่เสร็จสิ้น/ยกเลิกไม่ได้ และอนุมัติได้เฉพาะโครงการที่ดำเนินการหรือพักงาน</value></data>
+  <data name="PURCHASE_ORDER_OVER_BUDGET_TITLE" xml:space="preserve"><value>เกินงบโครงการ</value></data>
+  <data name="PURCHASE_ORDER_OVER_BUDGET_DETAIL" xml:space="preserve"><value>การอนุมัติใบสั่งซื้อนี้ทำให้ภาระผูกพันเกินงบปัจจุบันของโครงการ</value></data>
+  <data name="PURCHASE_ORDER_ITEM_NOT_PURCHASABLE_TITLE" xml:space="preserve"><value>สินค้าสั่งซื้อไม่ได้</value></data>
+  <data name="PURCHASE_ORDER_ITEM_NOT_PURCHASABLE_DETAIL" xml:space="preserve"><value>สินค้าต้องใช้งานอยู่และมีความสามารถจัดซื้อได้</value></data>
+  <data name="PURCHASE_ORDER_LINE_INVALID_TITLE" xml:space="preserve"><value>รายการสั่งซื้อไม่ถูกต้อง</value></data>
+  <data name="PURCHASE_ORDER_LINE_INVALID_DETAIL" xml:space="preserve"><value>ต้องมี 1-200 รายการ สินค้าไม่ซ้ำ จำนวนมากกว่า 0 และราคาไม่ติดลบ</value></data>
+  <data name="PURCHASE_ORDER_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ตัดสินใบสั่งซื้อของตนเองไม่ได้</value></data>
+  <data name="PURCHASE_ORDER_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้สร้างใบสั่งซื้อไม่สามารถอนุมัติหรือปฏิเสธรายการของตนเอง</value></data>
+  <data name="PROCUREMENT_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="PROCUREMENT_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>การปฏิเสธหรือยกเลิกใบสั่งซื้อต้องระบุเหตุผล</value></data>
+  <data name="PROCUREMENT_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="PROCUREMENT_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุข้อมูลที่จำเป็นให้ครบ</value></data>
+  <data name="PROCUREMENT_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="PROCUREMENT_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลที่ระบุไม่ถูกต้อง</value></data>
+  <data name="GOODS_RECEIPT_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลรับสินค้าไม่ถูกต้อง</value></data>
+  <data name="GOODS_RECEIPT_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีรายการรับอย่างน้อย 1 รายการ จำนวนมากกว่า 0 และเป็นรายการของใบสั่งซื้อนี้</value></data>
+  <data name="GOODS_RECEIPT_OVER_RECEIVED_TITLE" xml:space="preserve"><value>รับเกินจำนวนที่สั่ง</value></data>
+  <data name="GOODS_RECEIPT_OVER_RECEIVED_DETAIL" xml:space="preserve"><value>จำนวนที่รับรวมต้องไม่เกินจำนวนที่สั่งซื้อ</value></data>
   <data name="PROJECT_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>มีโครงการสำหรับใบเสนอราคานี้แล้ว</value></data>
   <data name="PROJECT_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>ใบเสนอราคานี้ถูกส่งต่อเป็นโครงการแล้ว หนึ่งใบเสนอราคาสร้างได้หนึ่งโครงการ</value></data>
   <data name="PROJECT_HANDOVER_NOT_ALLOWED_TITLE" xml:space="preserve"><value>ยังส่งต่อเป็นโครงการไม่ได้</value></data>

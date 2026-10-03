@@ -11,6 +11,8 @@ public sealed record ProjectBudgetProjection(
     DateTimeOffset? FrozenAtUtc,
     decimal ApprovedBudgetDelta,
     decimal? CurrentTotal,
+    decimal CommittedAmount,
+    decimal? AvailableBudget,
     IReadOnlyList<ProjectBudgetLineProjection> Lines);
 
 public sealed record ProjectMilestoneProjection(

@@ -47,7 +47,7 @@
 | CP-07 | External Customer Acceptance/Signatures | Draft slice ใหม่ | CP-04 + authentication/access policy | Sales + Security + Legal/Business |
 | CP-08 | Won → Project Handover | Implemented 2026-10-04 (ค่าเริ่มต้นที่ทีมพัฒนาเลือก รอ Sales/Project Owner ยืนยัน) | Accepted Quotation; CP-06 rules เมื่อเปิดใช้ | Sales + Project Owner |
 | CP-09 | Project Budget/Plan/Change Order/Progress | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี Actual Cost/WBS) | CP-08 | Project Manager + Finance |
-| CP-10 | Supplier/Procurement | Future slice | Item/Unit + CP-09 demand/budget | Procurement + Finance |
+| CP-10 | Supplier/Procurement | Implemented 2026-10-04 (Supplier → PO → Receipt; กฎที่ทีมพัฒนาเลือก; ไม่มี PR/Return) | Item/Unit + CP-09 demand/budget | Procurement + Finance |
 | CP-11 | Inventory/Warehouse | Future slice | CP-10 receipt contract + Item/Unit | Warehouse + Procurement |
 | CP-12 | BOM/Production | Future slice | CP-09 scope + CP-11 stock | Engineering/Production |
 | CP-13 | MRP | Future slice | CP-10 lead time + CP-11 stock + CP-12 BOM/plan | Production Planner + Procurement |
@@ -175,10 +175,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-10 — Supplier/Procurement
 
-- [ ] ยืนยัน Supplier identity/terms, requisition/PO approval, sourcing/pricing, receive/return/cancel rules และ budget commitment กับ Project/Finance
-- [ ] แบ่ง slice Supplier → Purchase Request → PO → Receipt โดย reuse Item/Unit/numbering/approval foundations และแยก Supplier จาก Cost Source
-- [ ] ออก contracts/transactions สำหรับ PO quantity/value และ receipt handoff ไป Inventory โดยไม่เขียน stock tables ของอีก module โดยตรง
-- [ ] ทดสอบ partial/over receipt ตามกฎที่ยืนยัน, replay, concurrent receive/cancel, scope และ trace Project → PO → Receipt
+- [x] ยืนยัน Supplier identity/terms, requisition/PO approval, sourcing/pricing, receive/return/cancel rules และ budget commitment กับ Project/Finance
+- [x] แบ่ง slice Supplier → Purchase Request → PO → Receipt โดย reuse Item/Unit/numbering/approval foundations และแยก Supplier จาก Cost Source
+- [x] ออก contracts/transactions สำหรับ PO quantity/value และ receipt handoff ไป Inventory โดยไม่เขียน stock tables ของอีก module โดยตรง
+- [x] ทดสอบ partial/over receipt ตามกฎที่ยืนยัน, replay, concurrent receive/cancel, scope และ trace Project → PO → Receipt
 
 **ผลส่งมอบ/เกณฑ์จบ:** จัดซื้อและรับหนึ่งรายการครบ workflow พร้อมหลักฐานและความรับผิดชอบงบ; costing ไม่เดาจากราคา TEST_ONLY หรือ Cost Source แทน Supplier.
 

@@ -57,6 +57,7 @@
 | API ของ Quick Estimate | [Quick Estimate API Contract](03-contracts/quick-estimate-api-contract.md) |
 | API ของ Official Estimate | [Official Estimate API Contract](03-contracts/official-estimate-api-contract.md) |
 | API ของ Project (Handover) | [Project API Contract](03-contracts/project-api-contract.md) |
+| API ของ Procurement | [Procurement API Contract](03-contracts/procurement-api-contract.md) |
 | API ของ Item/Unit/Cost | [Item Master API Contract](03-contracts/item-master-api-contract.md) |
 | API ของ Customer/Opportunity/Site Survey | [CRM and Site Survey API Contract](03-contracts/crm-site-survey-api-contract.md) |
 | Error หลายภาษา | [Error Contract](03-contracts/error-contract.md) |

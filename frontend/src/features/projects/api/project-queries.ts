@@ -39,11 +39,11 @@ function useRequestContext() {
   return { locale, membershipId, options };
 }
 
-export function useProjectList(params: ListProjectsParams): UseQueryResult<ProjectListResponse, Error> {
+export function useProjectList(params: ListProjectsParams, enabled = true): UseQueryResult<ProjectListResponse, Error> {
   const { locale, membershipId, options } = useRequestContext();
   return useQuery({
     queryKey: [...projectsKey(membershipId, locale), "list", params],
-    enabled: Boolean(membershipId),
+    enabled: Boolean(membershipId) && enabled,
     queryFn: async ({ signal }) => apiClient.listProjects(await options(undefined, signal), params),
   });
 }

@@ -9,6 +9,7 @@ using TanErp.Application.Projects;
 using TanErp.Application.Projects.Control;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
+using TanErp.Domain.Procurement;
 using TanErp.Domain.Projects;
 
 namespace TanErp.Infrastructure.Persistence.Projects;
@@ -67,6 +68,13 @@ public class ProjectControlStore : IProjectControlStore
         var approvedBudgetDelta = approved.Sum(c => c.BudgetDelta);
         var approvedContractDelta = approved.Sum(c => c.ContractDelta);
 
+        // Commitments: orders approved for this project (cancelled/rejected/draft/submitted orders do not commit budget).
+        var committedStatuses = new[] { PurchaseOrderStatus.Approved, PurchaseOrderStatus.PartiallyReceived, PurchaseOrderStatus.Received };
+        var committed = await _db.PurchaseOrders.AsNoTracking()
+            .Where(o => o.OrganizationId == organizationId && o.ProjectId == projectId && committedStatuses.Contains(o.Status))
+            .SumAsync(o => (decimal?)o.TotalAmount, ct) ?? 0m;
+        decimal? currentBudget = project.BaselineBudgetTotal.HasValue ? project.BaselineBudgetTotal.Value + approvedBudgetDelta : null;
+
         var totalWeight = milestones.Sum(m => m.Weight);
         var completedWeight = milestones.Where(m => m.CompletedAtUtc.HasValue).Sum(m => m.Weight);
         var percent = totalWeight == 0 ? 0m : decimal.Round(completedWeight * 100m / totalWeight, 2);
@@ -86,7 +94,9 @@ public class ProjectControlStore : IProjectControlStore
                 project.IsBudgetFrozen,
                 project.BudgetFrozenAtUtc,
                 approvedBudgetDelta,
-                project.BaselineBudgetTotal.HasValue ? project.BaselineBudgetTotal.Value + approvedBudgetDelta : null,
+                currentBudget,
+                committed,
+                currentBudget.HasValue ? currentBudget.Value - committed : null,
                 lines.Select(l => new ProjectBudgetLineProjection(l.Id, l.Category, l.Description, l.Amount, l.SortOrder)).ToList()),
             new ProjectContractProjection(project.BaselineContractAmount, approvedContractDelta, project.BaselineContractAmount + approvedContractDelta),
             new ProjectProgressProjection(milestones.Count, milestones.Count(m => m.CompletedAtUtc.HasValue), totalWeight, completedWeight, percent),

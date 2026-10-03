@@ -153,6 +153,32 @@ export type AddProjectMilestoneRequest = components["schemas"]["AddProjectMilest
 export type UpdateProjectMilestoneRequest = components["schemas"]["UpdateProjectMilestoneRequest"];
 export type CreateProjectChangeOrderRequest = components["schemas"]["CreateProjectChangeOrderRequest"];
 export type ProjectChangeOrderAction = "submit" | "approve" | "reject" | "cancel";
+export type SupplierRequest = components["schemas"]["SupplierRequest"];
+export type SupplierResponse = components["schemas"]["SupplierResponse"];
+export type SupplierListResponse = components["schemas"]["SupplierListResponse"];
+export type PurchaseOrderRequest = components["schemas"]["PurchaseOrderRequest"];
+export type PurchaseOrderLineRequest = components["schemas"]["PurchaseOrderLineRequest"];
+export type PurchaseOrderResponse = components["schemas"]["PurchaseOrderResponse"];
+export type PurchaseOrderLineResponse = components["schemas"]["PurchaseOrderLineResponse"];
+export type PurchaseOrderListResponse = components["schemas"]["PurchaseOrderListResponse"];
+export type PurchaseOrderListItemResponse = components["schemas"]["PurchaseOrderListItemResponse"];
+export type GoodsReceiptRequest = components["schemas"]["GoodsReceiptRequest"];
+export type GoodsReceiptLineRequest = components["schemas"]["GoodsReceiptLineRequest"];
+export type PurchaseOrderAction = "submit" | "approve" | "reject" | "cancel";
+export interface ListSuppliersParams {
+  search?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListPurchaseOrdersParams {
+  search?: string;
+  status?: string;
+  supplierId?: string;
+  projectId?: string;
+  page?: number;
+  pageSize?: number;
+}
 export interface ListProjectsParams {
   search?: string;
   status?: string;
@@ -1104,6 +1130,62 @@ export class ApiClient {
       options,
       { expectedVersion, note }
     );
+  }
+
+  async listSuppliers(options: RequestOptions, query: ListSuppliersParams): Promise<SupplierListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<SupplierListResponse>(`/api/v1/suppliers?${params.toString()}`, "GET", options);
+  }
+
+  async getSupplier(id: string, options: RequestOptions): Promise<SupplierResponse> {
+    return this.request<SupplierResponse>(`/api/v1/suppliers/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createSupplier(payload: SupplierRequest, options: RequestOptions): Promise<SupplierResponse> {
+    return this.request<SupplierResponse>("/api/v1/suppliers", "POST", options, payload);
+  }
+
+  async updateSupplier(id: string, rowVersion: string, payload: SupplierRequest, options: RequestOptions): Promise<SupplierResponse> {
+    return this.request<SupplierResponse>(`/api/v1/suppliers/${encodeURIComponent(id)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async setSupplierActive(id: string, rowVersion: string, active: boolean, options: RequestOptions): Promise<SupplierResponse> {
+    return this.request<SupplierResponse>(`/api/v1/suppliers/${encodeURIComponent(id)}/${active ? "activate" : "deactivate"}`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async listPurchaseOrders(options: RequestOptions, query: ListPurchaseOrdersParams): Promise<PurchaseOrderListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.supplierId) params.set("supplierId", query.supplierId);
+    if (query.projectId) params.set("projectId", query.projectId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<PurchaseOrderListResponse>(`/api/v1/purchase-orders?${params.toString()}`, "GET", options);
+  }
+
+  async getPurchaseOrder(id: string, options: RequestOptions): Promise<PurchaseOrderResponse> {
+    return this.request<PurchaseOrderResponse>(`/api/v1/purchase-orders/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createPurchaseOrder(payload: PurchaseOrderRequest, options: RequestOptions): Promise<PurchaseOrderResponse> {
+    return this.request<PurchaseOrderResponse>("/api/v1/purchase-orders", "POST", options, payload);
+  }
+
+  async updatePurchaseOrder(id: string, rowVersion: string, payload: PurchaseOrderRequest, options: RequestOptions): Promise<PurchaseOrderResponse> {
+    return this.request<PurchaseOrderResponse>(`/api/v1/purchase-orders/${encodeURIComponent(id)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async purchaseOrderAction(id: string, action: PurchaseOrderAction, rowVersion: string, note: string | null, options: RequestOptions): Promise<PurchaseOrderResponse> {
+    return this.request<PurchaseOrderResponse>(`/api/v1/purchase-orders/${encodeURIComponent(id)}/${action}`, "POST", { ...options, ifMatch: rowVersion }, { note });
+  }
+
+  async postGoodsReceipt(id: string, payload: GoodsReceiptRequest, options: RequestOptions): Promise<PurchaseOrderResponse> {
+    return this.request<PurchaseOrderResponse>(`/api/v1/purchase-orders/${encodeURIComponent(id)}/receipts`, "POST", options, payload);
   }
 
   async listOrganizationBranches(options: RequestOptions): Promise<OrganizationBranchResponse[]> {

@@ -41,6 +41,14 @@ export const PERMISSIONS = {
   SURVEYS_CREATE_REVISION: "surveys.create-revision",
   SURVEYS_VOID: "surveys.void",
 
+  // Procurement
+  SUPPLIERS_READ: "suppliers.read",
+  SUPPLIERS_MANAGE: "suppliers.manage",
+  PURCHASE_ORDERS_READ: "purchase-orders.read",
+  PURCHASE_ORDERS_CREATE: "purchase-orders.create",
+  PURCHASE_ORDERS_APPROVE: "purchase-orders.approve",
+  GOODS_RECEIPTS_CREATE: "goods-receipts.create",
+
   // Projects
   PROJECTS_READ: "projects.read",
   PROJECTS_CREATE: "projects.create",

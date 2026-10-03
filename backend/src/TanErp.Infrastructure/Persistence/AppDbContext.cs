@@ -37,6 +37,11 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Surveys.SiteSurveyEvidence> SiteSurveyEvidence => Set<TanErp.Domain.Surveys.SiteSurveyEvidence>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyArea> SiteSurveyAreas => Set<TanErp.Domain.Surveys.SiteSurveyArea>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyMeasurement> SiteSurveyMeasurements => Set<TanErp.Domain.Surveys.SiteSurveyMeasurement>();
+    public DbSet<TanErp.Domain.Procurement.Supplier> Suppliers => Set<TanErp.Domain.Procurement.Supplier>();
+    public DbSet<TanErp.Domain.Procurement.PurchaseOrder> PurchaseOrders => Set<TanErp.Domain.Procurement.PurchaseOrder>();
+    public DbSet<TanErp.Domain.Procurement.PurchaseOrderLine> PurchaseOrderLines => Set<TanErp.Domain.Procurement.PurchaseOrderLine>();
+    public DbSet<TanErp.Domain.Procurement.GoodsReceipt> GoodsReceipts => Set<TanErp.Domain.Procurement.GoodsReceipt>();
+    public DbSet<TanErp.Domain.Procurement.GoodsReceiptLine> GoodsReceiptLines => Set<TanErp.Domain.Procurement.GoodsReceiptLine>();
     public DbSet<TanErp.Domain.Projects.Project> Projects => Set<TanErp.Domain.Projects.Project>();
     public DbSet<TanErp.Domain.Projects.ProjectBudgetLine> ProjectBudgetLines => Set<TanErp.Domain.Projects.ProjectBudgetLine>();
     public DbSet<TanErp.Domain.Projects.ProjectMilestone> ProjectMilestones => Set<TanErp.Domain.Projects.ProjectMilestone>();

@@ -53,6 +53,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
 
   const hasCustomersRead = can(activeMembership, "customers.read");
   const hasProjectsRead = can(activeMembership, "projects.read");
+  const hasSuppliersRead = can(activeMembership, "suppliers.read");
+  const hasPurchaseOrdersRead = can(activeMembership, "purchase-orders.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
   const hasSettingsRead =
@@ -69,6 +71,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
   const isProjectsActive = pathname.startsWith(`/${locale}/projects`);
+  const isProcurementActive = pathname.startsWith(`/${locale}/procurement`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
@@ -160,6 +163,31 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     return items;
   }, [hasItemMasterRead, hasCostSourcesRead, hasCostReviewRead, locale, pathname, isItemMasterActive, tShell]);
 
+  const procurementItems: NavItemDef[] = useMemo(() => {
+    const items: NavItemDef[] = [];
+    if (hasSuppliersRead) {
+      items.push({
+        id: "suppliers",
+        href: `/${locale}/procurement/suppliers`,
+        label: tShell("suppliers"),
+        icon: <IconBuilding size={20} />,
+        isActive: pathname.startsWith(`/${locale}/procurement/suppliers`),
+        permission: hasSuppliersRead,
+      });
+    }
+    if (hasPurchaseOrdersRead) {
+      items.push({
+        id: "purchase-orders",
+        href: `/${locale}/procurement/purchase-orders`,
+        label: tShell("purchaseOrders"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/procurement/purchase-orders`),
+        permission: hasPurchaseOrdersRead,
+      });
+    }
+    return items;
+  }, [hasSuppliersRead, hasPurchaseOrdersRead, locale, pathname, tShell]);
+
   const subgroups: NavSubgroupDef[] = useMemo(() => {
     const groups: NavSubgroupDef[] = [];
     if (crmItems.length > 0) {
@@ -167,6 +195,13 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         id: "crm",
         label: tShell("crmSubgroup"),
         items: crmItems,
+      });
+    }
+    if (procurementItems.length > 0) {
+      groups.push({
+        id: "procurement",
+        label: tShell("procurementSubgroup"),
+        items: procurementItems,
       });
     }
     if (productItems.length > 0) {
@@ -177,16 +212,18 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       });
     }
     return groups;
-  }, [crmItems, productItems, tShell]);
+  }, [crmItems, procurementItems, productItems, tShell]);
 
   // Accordion open/close state tracking
   const [openSubgroups, setOpenSubgroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     if (isCustomersActive || isOpportunitiesActive || isProjectsActive) initial["crm"] = true;
+    if (isProcurementActive) initial["procurement"] = true;
     if (isItemMasterActive) initial["products"] = true;
     // Default open all if none active
     if (Object.keys(initial).length === 0) {
       initial["crm"] = true;
+      initial["procurement"] = true;
       initial["products"] = true;
     }
     return initial;
