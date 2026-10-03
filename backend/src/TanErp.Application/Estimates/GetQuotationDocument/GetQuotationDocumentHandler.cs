@@ -23,7 +23,7 @@ public class GetQuotationDocumentHandler
         var accessResult = await _accessResolver.ResolveAsync(
             query.FirebaseUid,
             query.MembershipId,
-            "quotations.issue",
+            "quotations.read",
             cancellationToken);
 
         if (accessResult.IsFailure)

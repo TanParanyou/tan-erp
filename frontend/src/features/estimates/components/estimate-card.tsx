@@ -60,6 +60,7 @@ export function EstimateCard({
   );
 
   const canIssue = can(selectedMembership, PERMISSIONS.QUOTATIONS_ISSUE);
+  const canReadQuotationDocument = can(selectedMembership, PERMISSIONS.QUOTATIONS_READ);
   const isApproved = estimate?.currentRevision?.status === "approved";
   const hasCalculationSnapshot = Boolean(estimate?.currentRevision?.calculationSnapshotJson);
   const grandTotal = estimate?.currentRevision?.grandTotal ?? 0;
@@ -210,7 +211,7 @@ export function EstimateCard({
           </div>
 
           <div className="flex items-center gap-2">
-            {estimate.currentRevision?.status === "quoted" && canIssue && (
+            {estimate.currentRevision?.status === "quoted" && canReadQuotationDocument && (
               <Link
                 href={`/${uiLocale}/estimates/${estimate.id}/quotation`}
                 className="inline-flex items-center border border-erp-navy px-3 py-1.5 text-sm font-medium text-erp-navy hover:bg-erp-surface-subtle"

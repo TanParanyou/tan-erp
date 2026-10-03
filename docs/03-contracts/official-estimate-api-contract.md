@@ -28,7 +28,7 @@ Backend สร้าง Organization/Branch Scope จาก PostgreSQL Membershi
 | สร้าง Revision | `POST /api/v1/estimates/{id}/revisions` | `estimates.revise` | 201 |
 | ออก Quotation | `POST /api/v1/estimates/{id}/quotation` | `quotations.issue` | 201 |
 | ตอบรับ Quotation | `POST /api/v1/estimates/{id}/quotation/accept` | `quotations.accept` | 200 |
-| อ่านเอกสาร Quotation (Customer-safe) | `GET /api/v1/estimates/{id}/quotation/document?locale=th\|en` | `quotations.issue` (ชั่วคราว) | 200 |
+| อ่านเอกสาร Quotation (Customer-safe) | `GET /api/v1/estimates/{id}/quotation/document?locale=th\|en` | `quotations.read` | 200 |
 | อ่านเลขที่เอกสาร | `GET /api/v1/settings/document-sequences` | `document-sequences.read` | 200 |
 | ทดสอบเลขที่เอกสาร | `POST /api/v1/settings/document-sequences/preview` | `document-sequences.manage` | 200 |
 | ตั้งค่าเลขที่เอกสาร | `PUT /api/v1/settings/document-sequences/{documentType}` | `document-sequences.manage` | 200 |
@@ -268,7 +268,7 @@ Authorization: Bearer <firebase-id-token>
 
 **สถานะ:** Implemented เป็น read-only projection; field allowlist และเงื่อนไขเอกสารเป็น **Proposed default (TEST_ONLY)** จนกว่า Sales + Finance ยืนยัน (CP-04).
 
-- Permission: `quotations.issue` ชั่วคราวตามแผน CP-04; ข้อเสนอแยกเป็น `quotations.read` ต้องอนุมัติและเพิ่มใน Permission Catalog ก่อน
+- Permission: `quotations.read` (แยกจาก `quotations.issue` เพื่อให้ผู้ดู/พิมพ์เอกสารไม่ต้องมีสิทธิ์ออกใบเสนอราคา). Role ที่มีอยู่ใน Production ต้องได้รับ `quotations.read` ก่อนเปิดใช้ ไม่เช่นนั้นผู้ใช้จะเปิดเอกสารไม่ได้ (403)
 - `locale` รับ `th` (default) หรือ `en`; ค่าอื่นถือเป็น `th`
 - Quotation ที่ใช้: ฉบับที่ออกล่าสุดของ Estimate (เรียง `issuedAtUtc` ลดหลั่น แล้ว `number`)
 - แหล่งข้อมูล: Revision ที่ผูกกับ Quotation (แก้ไขไม่ได้หลัง Approve) และ Customer Billing Snapshot ณ วันออก; ไม่อ่าน Customer/Item master ปัจจุบัน และไม่คำนวณยอดใหม่

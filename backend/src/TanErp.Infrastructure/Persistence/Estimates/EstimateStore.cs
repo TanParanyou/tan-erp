@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Estimates;
@@ -25,14 +26,17 @@ public class EstimateStore : IEstimateStore
     private readonly IDocumentNumberGenerator _documentNumberGenerator;
     private readonly ICostResolver _costResolver;
     private readonly bool _useTestOnlyApprovalPolicy;
+    private readonly ILogger<EstimateStore> _logger;
 
     public EstimateStore(
         AppDbContext db,
         IClock clock,
         IDocumentNumberGenerator documentNumberGenerator,
         ICostResolver costResolver,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILogger<EstimateStore> logger)
     {
+        _logger = logger;
         _db = db;
         _clock = clock;
         _documentNumberGenerator = documentNumberGenerator;
@@ -1871,9 +1875,10 @@ public class EstimateStore : IEstimateStore
                     quotation.CustomerBillingSnapshotJson,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
-                // Snapshot invalid
+                // Billing snapshot is stored data; never log its content (PII), only identifiers.
+                _logger.LogError(ex, "Quotation {QuotationId} has an unreadable customer billing snapshot.", quotation.Id);
             }
         }
 

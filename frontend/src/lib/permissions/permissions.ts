@@ -36,6 +36,7 @@ export const PERMISSIONS = {
   SURVEYS_CREATE: "surveys.create",
 
   // Commercial - Quotations
+  QUOTATIONS_READ: "quotations.read",
   QUOTATIONS_ISSUE: "quotations.issue",
   QUOTATIONS_ACCEPT: "quotations.accept",
 } as const;

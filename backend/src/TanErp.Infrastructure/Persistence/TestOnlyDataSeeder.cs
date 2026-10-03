@@ -140,6 +140,7 @@ public static class TestOnlyDataSeeder
             ("estimates.cancel", "Cancel Estimates"),
             ("estimates.revise", "Create Estimate Revisions"),
             ("estimates.approve", "Review and Approve Estimates"),
+            ("quotations.read", "Read Quotation Documents"),
             ("quotations.issue", "Issue Quotations"),
             ("quotations.accept", "Accept Quotations"),
             ("document-sequences.read", "Read Document Sequences"),

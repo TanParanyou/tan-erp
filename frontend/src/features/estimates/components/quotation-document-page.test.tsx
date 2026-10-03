@@ -4,7 +4,7 @@ import type { QuotationDocumentResponse } from "@/lib/api/api-client";
 import { QuotationDocumentPage } from "./quotation-document-page";
 
 const mocks = vi.hoisted(() => ({
-  permissions: ["quotations.issue"] as string[],
+  permissions: ["quotations.read"] as string[],
   queryState: {} as { data?: QuotationDocumentResponse; isPending: boolean; isError: boolean },
   useQuotationDocument: vi.fn(),
 }));
@@ -43,7 +43,7 @@ const documentPayload: QuotationDocumentResponse = {
 
 describe("QuotationDocumentPage", () => {
   beforeEach(() => {
-    mocks.permissions = ["quotations.issue"];
+    mocks.permissions = ["quotations.read"];
     mocks.queryState = { data: documentPayload, isPending: false, isError: false };
     mocks.useQuotationDocument.mockClear();
     vi.stubGlobal("print", vi.fn());

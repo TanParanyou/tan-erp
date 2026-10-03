@@ -14,6 +14,7 @@
 - `estimates.approve`
 - `estimates.cancel`
 - `quotations.issue`
+- `quotations.read`
 - `customers.read`
 - `opportunities.transition`
 - `surveys.mark-ready`

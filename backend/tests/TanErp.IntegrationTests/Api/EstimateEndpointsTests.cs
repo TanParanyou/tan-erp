@@ -1359,6 +1359,27 @@ public class EstimateEndpointsTests : IAsyncLifetime
             .Where(row => row.Number == laterQuotationNumber)
             .ExecuteDeleteAsync();
 
+        // 4d. Unknown locale is normalized to Thai instead of failing
+        var unknownLocaleRes = await _client.SendAsync(CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document?locale=fr", "token-org-a", MembershipAId));
+        Assert.Equal(HttpStatusCode.OK, unknownLocaleRes.StatusCode);
+        var unknownLocaleDoc = (await unknownLocaleRes.Content.ReadFromJsonAsync<QuotationDocumentResponse>())!;
+        Assert.Equal("th", unknownLocaleDoc.Locale);
+
+        // 4e. Billing snapshot with an unreadable shape (jsonb only stores valid JSON) fails closed with a conflict and no partial document
+        var originalBillingSnapshot = issuedQuotationRow.CustomerBillingSnapshotJson;
+        await snapshotDb.Quotations
+            .Where(row => row.Id == quotation.QuotationId)
+            .ExecuteUpdateAsync(update => update.SetProperty(row => row.CustomerBillingSnapshotJson, "{\"displayNameTh\":123}"));
+        var corruptedRes = await _client.SendAsync(CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document", "token-org-a", MembershipAId));
+        Assert.Equal(HttpStatusCode.Conflict, corruptedRes.StatusCode);
+        using (var corruptedProblem = System.Text.Json.JsonDocument.Parse(await corruptedRes.Content.ReadAsStringAsync()))
+            Assert.Equal("ESTIMATE_INVALID_STATE", corruptedProblem.RootElement.GetProperty("code").GetString());
+        await snapshotDb.Quotations
+            .Where(row => row.Id == quotation.QuotationId)
+            .ExecuteUpdateAsync(update => update.SetProperty(row => row.CustomerBillingSnapshotJson, originalBillingSnapshot));
+
         // 5. Cross organization -> 404
         var crossOrgDocReq = CreateAuthenticatedRequest(
             HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document", "token-org-b", TestOnlyDataSeeder.TestMembershipBId);

@@ -101,3 +101,19 @@ cd frontend && npx vitest run
 - ห้ามแก้ Expected Result ของ test เพื่อให้ผ่าน ถ้า test เดิมล้มให้รายงานสาเหตุ
 - ถ้าเจอสิ่งที่แผนไม่ครอบคลุมหรือขัดกับโค้ดจริง ให้หยุดและรายงานแทนการเดา
 - รายงานสุดท้ายต้องมี: ไฟล์ที่แก้/เพิ่มทั้งหมด, การตัดสินใจที่ต่างจากแผน (พร้อมเหตุผล), ผล gates ดิบ, open questions สำหรับ Business, สิ่งที่ไม่ได้ทำ
+
+## CP-04 Release readiness (production)
+
+โค้ดของ slice นี้ผ่าน automated gates ตาม [Verification §4](../../05-engineering/commercial-quotation-verification.md#4-customer-safe-quotation-document-cp-04-2026-10-03) แต่ **ยังไม่พร้อมประกาศใช้ Production** จนกว่าข้อด้านล่างมีผู้รับผิดชอบยืนยันพร้อมหลักฐานของ release เดียวกัน (ดู [Release Readiness](../../06-operations/release-readiness.md)):
+
+| # | เงื่อนไข | ผู้รับผิดชอบ | สถานะ |
+| --- | --- | --- | --- |
+| 1 | Sales + Finance ยืนยัน field allowlist, ชื่อฟิลด์ที่ลูกค้าเห็น, ภาษา, ส่วนลด/ภาษี และข้อความท้ายเอกสาร | Sales + Finance | เปิด |
+| 2 | ตัดสินใจ `customerReference`, `validityDays`, `scopeNote`, payment/delivery terms, branding, page size (ต้องมี Domain + migration หากรับ) | Sales + Finance | เปิด (ตัดสินใจรอ Business) |
+| 3 | มอบ `quotations.read` ให้ Role ที่ต้องดู/พิมพ์เอกสารใน Production ก่อนเปิดใช้ (ระบบ seed ให้เฉพาะ test) | เจ้าของ Role Bootstrap / Security | เปิด |
+| 4 | UAT-EST-013 กับ artifact จริง: พิมพ์/บันทึก PDF จาก browser ที่ใช้งานจริง, ตรวจ pagination และคำอธิบายยาว | Sales / Quotation Issuer | เปิด |
+| 5 | Accessibility: 200% zoom, keyboard ทั้งหน้า, screen reader | QA / Accessibility | เปิด (ตรวจ 320px และ overflow อัตโนมัติผ่านแล้ว) |
+| 6 | ตัดสินใจว่าต้องเก็บไฟล์ + hash ของเอกสารที่ส่งลูกค้าก่อนเปิดใช้หรือไม่ ([ADR 0016](../../adr/0016-browser-print-for-quotation-pdf.md)) | Business + Security | เปิด |
+| 7 | Release gates ของระบบ: migration จาก sanitized legacy data, pilot data, staging rehearsal, RPO/RTO, Go/No-go | ตาม CP-05 | เปิด |
+
+ไม่มี schema migration ใน slice นี้ จึงไม่มีขั้นตอน migrate/rollback เฉพาะ; rollback ทำได้โดย deploy artifact เดิม (endpoint และหน้าใหม่เป็น additive).

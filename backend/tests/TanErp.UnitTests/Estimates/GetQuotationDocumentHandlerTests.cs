@@ -22,7 +22,7 @@ public class GetQuotationDocumentHandlerTests
         public Result<RequestAccessContext> ResultToReturn { get; set; } =
             Result<RequestAccessContext>.Success(new RequestAccessContext(
                 ActorUserId, MembershipId, OrgId, BranchId,
-                "quotations.issue",
+                "quotations.read",
                 "Branch"));
 
         public Task<Result<RequestAccessContext>> ResolveAsync(

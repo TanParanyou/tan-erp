@@ -106,14 +106,14 @@ Verified complete commercial flow against live stack (PostgreSQL 17, Firebase Em
 
 **Scope:** read-only projection `GET /api/v1/estimates/{id}/quotation/document`, Preview/Print page `/{locale}/estimates/{id}/quotation`, entry link on the Estimate card when the current revision is `quoted`. Allowlist and document rules are **Proposed (TEST_ONLY)**; see [API contract](../03-contracts/official-estimate-api-contract.md#quotation-document) and [ADR 0016](../adr/0016-browser-print-for-quotation-pdf.md).
 
-**Automated evidence**
-- Backend (`dotnet build backend/TanErp.slnx`, `dotnet test`): 0 warnings/errors; Architecture 3/3, Integration 292/292, Unit 292/292 on the backend slice (before the latest-quotation fix); after it, `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` re-ran 1/1. The full backend suite was not re-run after that fix.
-- The integration case verifies: serialized property allowlist at every level, forbidden-term scan, totals vs. issued quotation, section/line totals consistency, `locale=en` without English text (null + `hasIncompleteTranslations`), billing snapshot immutability after Customer master edit, latest-quotation selection with two quotations, cross-Organization 404, 403 without permission.
-- Frontend: `tsc --noEmit`, `npm run lint`, `npm run build` passed; `quotation-document-view.test.tsx` and `quotation-document-page.test.tsx` passed; `estimates` test folder passed except `estimate-workspace-layout.test.tsx` timeouts (5s default) that also occur on the unmodified tree and pass with `--testTimeout=60000` (5/5). A full `vitest run` was not recorded after the change.
+**Automated evidence (2026-10-03, branch `feat/customer-safe-quotation-document`)**
+- Backend: `dotnet build backend/TanErp.slnx --no-restore -m:1` 0 warnings/errors; full `dotnet test` passed Architecture 3/3, Integration 292/292, Unit 292/292.
+- The integration case `CalculateEstimate_WithDiscount_ProducesAccurateFinancialSnapshot` verifies: serialized property allowlist at every level, forbidden-term scan, totals vs. issued quotation, section/line totals consistency, `locale=en` without English text (null + `hasIncompleteTranslations`), unknown locale normalized to `th`, billing snapshot immutability after Customer master edit, latest-quotation selection with two quotations, unreadable billing snapshot -> 409 `ESTIMATE_INVALID_STATE`, cross-Organization 404, 403 without `quotations.read`.
+- Frontend: `npm run check:api`, `npm run lint`, `tsc --noEmit` and `npm run build` passed; full Vitest 615/615 (run with `--testTimeout=60000`; `estimate-workspace-layout.test.tsx` exceeds the 5s default on a loaded machine, also on the unmodified tree).
+- Playwright `e2e/official-estimate.spec.ts` passed 1/1 against the local stack (Backend :5005, Frontend :3005): opens the document from the Estimate card, checks Thai content and absence of cost/margin wording, switches to English, and verifies no horizontal overflow at 320px.
 
 **Not verified / open**
 - Business/Finance sign-off of the field allowlist, terms, branding and page size; manual UAT of the printed/PDF artifact.
-- 320px, 200% zoom, keyboard and screen-reader review; browser-print pagination for long descriptions.
-- Playwright journey does not yet cover the document page.
+- 200% zoom, keyboard and screen-reader review; browser-print pagination for long descriptions (320px overflow is covered by Playwright).
 - No stored rendered file or hash (ADR 0016); `customerReference`, `validityDays`, `scopeNote` and payment/delivery terms are not in the Quotation domain.
-- Dedicated `quotations.read` permission is proposed, not implemented.
+- `quotations.read` is implemented in code and the test seeder only; production roles must be granted it by the owner of role bootstrap before release.

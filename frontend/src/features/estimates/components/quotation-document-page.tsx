@@ -22,7 +22,7 @@ export function QuotationDocumentPage({ estimateId, uiLocale }: QuotationDocumen
   const t = useTranslations("quotationDocument");
   const tCommon = useTranslations("common");
   const { selectedMembership } = useSelectedMembership();
-  const canView = can(selectedMembership, PERMISSIONS.QUOTATIONS_ISSUE);
+  const canView = can(selectedMembership, PERMISSIONS.QUOTATIONS_READ);
   const [documentLocale, setDocumentLocale] = useState<"th" | "en">(uiLocale);
   const query = useQuotationDocument(estimateId, documentLocale);
 
