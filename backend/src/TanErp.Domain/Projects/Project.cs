@@ -23,6 +23,13 @@ public class Project : Entity
     public string Status { get; private set; } = ProjectStatus.Planned;
     public Guid OwnerUserId { get; private set; }
     public DateOnly? PlannedStartDate { get; private set; }
+    public DateOnly? PlannedEndDate { get; private set; }
+    public decimal? BaselineBudgetTotal { get; private set; }
+    public string? BaselineBudgetHash { get; private set; }
+    public DateTimeOffset? BudgetFrozenAtUtc { get; private set; }
+    public DateTimeOffset? ActivatedAtUtc { get; private set; }
+    public DateTimeOffset? CompletedAtUtc { get; private set; }
+    public string? StatusReason { get; private set; }
 
     public string BaselineQuotationNumber { get; private set; } = string.Empty;
     public decimal BaselineContractAmount { get; private set; }
@@ -111,5 +118,98 @@ public class Project : Entity
             CreatedByUserId = createdByUserId,
             UpdatedAtUtc = now.ToUniversalTime()
         };
+    }
+
+    public bool IsBudgetFrozen => BudgetFrozenAtUtc.HasValue;
+
+    public void SetPlan(DateOnly? plannedStart, DateOnly? plannedEnd, DateTimeOffset now)
+    {
+        if (Status is not (ProjectStatus.Planned or ProjectStatus.Active or ProjectStatus.OnHold))
+        {
+            throw new ProjectDomainException("PROJECT_INVALID_STATE", $"The plan cannot be changed while the project is '{Status}'.");
+        }
+
+        if (plannedStart.HasValue && plannedEnd.HasValue && plannedEnd.Value < plannedStart.Value)
+        {
+            throw new ProjectDomainException("PROJECT_PLAN_INVALID", "Planned end date cannot be before the planned start date.");
+        }
+
+        PlannedStartDate = plannedStart;
+        PlannedEndDate = plannedEnd;
+        Touch(now);
+    }
+
+    /// <summary>Records the baseline budget (planned status only); the totals are frozen when the project is activated.</summary>
+    public void SetBaselineBudget(decimal total, string hash, DateTimeOffset now)
+    {
+        if (Status != ProjectStatus.Planned || IsBudgetFrozen)
+        {
+            throw new ProjectDomainException("PROJECT_BUDGET_FROZEN", "The baseline budget can only be changed while the project is planned.");
+        }
+
+        if (total < 0) throw new ArgumentOutOfRangeException(nameof(total), "Budget total cannot be negative.");
+        BaselineBudgetTotal = total;
+        BaselineBudgetHash = hash;
+        Touch(now);
+    }
+
+    public void TransitionTo(string target, string? reason, int budgetLineCount, DateTimeOffset now)
+    {
+        if (!ProjectStatus.IsValid(target))
+        {
+            throw new ProjectDomainException("PROJECT_FIELD_INVALID", $"Unknown project status '{target}'.");
+        }
+
+        var allowed = Status switch
+        {
+            ProjectStatus.Planned => new[] { ProjectStatus.Active, ProjectStatus.Cancelled },
+            ProjectStatus.Active => new[] { ProjectStatus.OnHold, ProjectStatus.ReadyForHandover, ProjectStatus.Cancelled },
+            ProjectStatus.OnHold => new[] { ProjectStatus.Active, ProjectStatus.Cancelled },
+            ProjectStatus.ReadyForHandover => new[] { ProjectStatus.Active, ProjectStatus.Completed },
+            _ => Array.Empty<string>()
+        };
+
+        if (!allowed.Contains(target))
+        {
+            throw new ProjectDomainException("PROJECT_INVALID_TRANSITION", $"Cannot move a project from '{Status}' to '{target}'.");
+        }
+
+        var needsReason = target is ProjectStatus.OnHold or ProjectStatus.Cancelled
+            || (Status == ProjectStatus.ReadyForHandover && target == ProjectStatus.Active);
+        if (needsReason && string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ProjectDomainException("PROJECT_REASON_REQUIRED", "A reason is required for this transition.");
+        }
+
+        if (Status == ProjectStatus.Planned && target == ProjectStatus.Active)
+        {
+            if (!PlannedStartDate.HasValue || !PlannedEndDate.HasValue)
+            {
+                throw new ProjectDomainException("PROJECT_NOT_READY", "Planned start and end dates are required before activation.");
+            }
+
+            if (budgetLineCount == 0 || BaselineBudgetTotal is null)
+            {
+                throw new ProjectDomainException("PROJECT_NOT_READY", "A baseline budget is required before activation.");
+            }
+
+            BudgetFrozenAtUtc = now.ToUniversalTime();
+            ActivatedAtUtc = now.ToUniversalTime();
+        }
+
+        if (target == ProjectStatus.Completed)
+        {
+            CompletedAtUtc = now.ToUniversalTime();
+        }
+
+        Status = target;
+        StatusReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+        Touch(now);
+    }
+
+    public void Touch(DateTimeOffset now)
+    {
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = now.ToUniversalTime();
     }
 }

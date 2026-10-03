@@ -46,7 +46,7 @@
 | CP-06 | Quotation Amendment/Void | Draft slice ใหม่ | Quotation/Snapshot contracts; CP-04 สำหรับเอกสาร | Sales + Finance |
 | CP-07 | External Customer Acceptance/Signatures | Draft slice ใหม่ | CP-04 + authentication/access policy | Sales + Security + Legal/Business |
 | CP-08 | Won → Project Handover | Implemented 2026-10-04 (ค่าเริ่มต้นที่ทีมพัฒนาเลือก รอ Sales/Project Owner ยืนยัน) | Accepted Quotation; CP-06 rules เมื่อเปิดใช้ | Sales + Project Owner |
-| CP-09 | Project Budget/Plan/Change Order/Progress | Future slice | CP-08 | Project Manager + Finance |
+| CP-09 | Project Budget/Plan/Change Order/Progress | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี Actual Cost/WBS) | CP-08 | Project Manager + Finance |
 | CP-10 | Supplier/Procurement | Future slice | Item/Unit + CP-09 demand/budget | Procurement + Finance |
 | CP-11 | Inventory/Warehouse | Future slice | CP-10 receipt contract + Item/Unit | Warehouse + Procurement |
 | CP-12 | BOM/Production | Future slice | CP-09 scope + CP-11 stock | Engineering/Production |
@@ -166,10 +166,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-09 — Project Control
 
-- [ ] ยืนยัน Work Breakdown, milestone/dependency/calendar, baseline budget, commitments/actuals, approval authority และ ownership ของต้นทุนก่อนออก contract
-- [ ] แบ่ง slice เป็น Planned → Active พร้อมแผน/งบ, Progress, Change Order และ lifecycle/Hold/Complete ตาม Project Lifecycle ที่ยืนยัน
-- [ ] ทำ budget revisions และ approved change orders โดยคง baseline/history; แยกการแก้ scope หลังขายออกจาก Estimate ก่อนขาย
-- [ ] ทดสอบ over-budget controls ที่ยืนยัน, progress rollup, concurrent change, permission และ trace จาก Project กลับ Commercial
+- [x] ยืนยัน Work Breakdown, milestone/dependency/calendar, baseline budget, commitments/actuals, approval authority และ ownership ของต้นทุนก่อนออก contract
+- [x] แบ่ง slice เป็น Planned → Active พร้อมแผน/งบ, Progress, Change Order และ lifecycle/Hold/Complete ตาม Project Lifecycle ที่ยืนยัน
+- [x] ทำ budget revisions และ approved change orders โดยคง baseline/history; แยกการแก้ scope หลังขายออกจาก Estimate ก่อนขาย
+- [x] ทดสอบ over-budget controls ที่ยืนยัน, progress rollup, concurrent change, permission และ trace จาก Project กลับ Commercial
 
 **ผลส่งมอบ/เกณฑ์จบ:** Project หนึ่งงานคุมแผน/งบ/ความคืบหน้าและเปลี่ยน scope ผ่าน workflow ที่อนุมัติได้; ยังไม่สร้างรายงาน actual cost จากข้อมูลที่ไม่มีเจ้าของ.
 

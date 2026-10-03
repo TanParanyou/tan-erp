@@ -17,6 +17,8 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         {
             t.HasCheckConstraint("ck_projects_status", "status IN ('planned', 'active', 'on_hold', 'ready_for_handover', 'completed', 'cancelled')");
             t.HasCheckConstraint("ck_projects_baseline_contract_amount", "baseline_contract_amount >= 0");
+            t.HasCheckConstraint("ck_projects_planned_dates", "planned_end_date IS NULL OR planned_start_date IS NULL OR planned_end_date >= planned_start_date");
+            t.HasCheckConstraint("ck_projects_baseline_budget_total", "baseline_budget_total IS NULL OR baseline_budget_total >= 0");
         });
 
         builder.HasKey(x => x.Id);
@@ -36,6 +38,13 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32).IsRequired();
         builder.Property(x => x.OwnerUserId).HasColumnName("owner_user_id").IsRequired();
         builder.Property(x => x.PlannedStartDate).HasColumnName("planned_start_date");
+        builder.Property(x => x.PlannedEndDate).HasColumnName("planned_end_date");
+        builder.Property(x => x.BaselineBudgetTotal).HasColumnName("baseline_budget_total").HasPrecision(18, 2);
+        builder.Property(x => x.BaselineBudgetHash).HasColumnName("baseline_budget_hash").HasMaxLength(128);
+        builder.Property(x => x.BudgetFrozenAtUtc).HasColumnName("budget_frozen_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.ActivatedAtUtc).HasColumnName("activated_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.CompletedAtUtc).HasColumnName("completed_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.StatusReason).HasColumnName("status_reason").HasMaxLength(500);
         builder.Property(x => x.BaselineQuotationNumber).HasColumnName("baseline_quotation_number").HasMaxLength(64).IsRequired();
         builder.Property(x => x.BaselineContractAmount).HasColumnName("baseline_contract_amount").HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.BaselineQuotationSnapshotHash).HasColumnName("baseline_quotation_snapshot_hash").HasMaxLength(128);

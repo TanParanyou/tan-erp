@@ -144,6 +144,15 @@ export type ProjectListResponse = components["schemas"]["ProjectListResponse"];
 export type ProjectListItemResponse = components["schemas"]["ProjectListItemResponse"];
 export type ProjectHandoverSourceResponse = components["schemas"]["ProjectHandoverSourceResponse"];
 export type CreateProjectFromHandoverRequest = components["schemas"]["CreateProjectFromHandoverRequest"];
+export type ProjectControlResponse = components["schemas"]["ProjectControlResponse"];
+export type ProjectMilestoneResponse = components["schemas"]["ProjectMilestoneResponse"];
+export type ProjectChangeOrderResponse = components["schemas"]["ProjectChangeOrderResponse"];
+export type ProjectBudgetLineRequest = components["schemas"]["ProjectBudgetLineRequest"];
+export type SetProjectPlanRequest = components["schemas"]["SetProjectPlanRequest"];
+export type AddProjectMilestoneRequest = components["schemas"]["AddProjectMilestoneRequest"];
+export type UpdateProjectMilestoneRequest = components["schemas"]["UpdateProjectMilestoneRequest"];
+export type CreateProjectChangeOrderRequest = components["schemas"]["CreateProjectChangeOrderRequest"];
+export type ProjectChangeOrderAction = "submit" | "approve" | "reject" | "cancel";
 export interface ListProjectsParams {
   search?: string;
   status?: string;
@@ -1043,6 +1052,58 @@ export class ApiClient {
 
   async createProjectFromHandover(payload: CreateProjectFromHandoverRequest, options: RequestOptions): Promise<ProjectResponse> {
     return this.request<ProjectResponse>("/api/v1/projects", "POST", options, payload);
+  }
+
+  async getProjectControl(projectId: string, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/control`, "GET", options);
+  }
+
+  async setProjectPlan(projectId: string, rowVersion: string, payload: SetProjectPlanRequest, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/plan`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async replaceProjectBudget(projectId: string, rowVersion: string, lines: ProjectBudgetLineRequest[], options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/budget`, "PUT", { ...options, ifMatch: rowVersion }, { lines });
+  }
+
+  async transitionProject(projectId: string, rowVersion: string, targetStatus: string, reason: string | null, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/transitions`, "POST", { ...options, ifMatch: rowVersion }, { targetStatus, reason });
+  }
+
+  async addProjectMilestone(projectId: string, payload: AddProjectMilestoneRequest, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/milestones`, "POST", options, payload);
+  }
+
+  async updateProjectMilestone(projectId: string, milestoneId: string, payload: UpdateProjectMilestoneRequest, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/milestones/${encodeURIComponent(milestoneId)}`, "PUT", options, payload);
+  }
+
+  async completeProjectMilestone(projectId: string, milestoneId: string, expectedVersion: string, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/milestones/${encodeURIComponent(milestoneId)}/complete`, "POST", options, { expectedVersion });
+  }
+
+  async deleteProjectMilestone(projectId: string, milestoneId: string, expectedVersion: string, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/milestones/${encodeURIComponent(milestoneId)}/delete`, "POST", options, { expectedVersion });
+  }
+
+  async createProjectChangeOrder(projectId: string, payload: CreateProjectChangeOrderRequest, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/change-orders`, "POST", options, payload);
+  }
+
+  async projectChangeOrderAction(
+    projectId: string,
+    changeOrderId: string,
+    action: ProjectChangeOrderAction,
+    expectedVersion: string,
+    note: string | null,
+    options: RequestOptions
+  ): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/change-orders/${encodeURIComponent(changeOrderId)}/${action}`,
+      "POST",
+      options,
+      { expectedVersion, note }
+    );
   }
 
   async listOrganizationBranches(options: RequestOptions): Promise<OrganizationBranchResponse[]> {

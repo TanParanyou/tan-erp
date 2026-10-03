@@ -56,6 +56,10 @@
 | Survey | `surveys.export` | Export Survey/Evidence ตาม Allowlist | Organization/Branch/Opportunity |
 | Project | `projects.read` | ดู Project และ Handover source | Organization |
 | Project | `projects.create` | ส่งต่อ Quotation ที่ยืนยันแล้วเป็น Project | Organization |
+| Project | `projects.update` | แก้แผนเวลา งบ Baseline (ก่อนตรึง) และ Milestone | Organization |
+| Project | `projects.transition` | เปลี่ยนสถานะ Project | Organization |
+| Project | `projects.change-orders.manage` | สร้าง/ส่ง/ยกเลิก Change Order | Organization |
+| Project | `projects.change-orders.approve` | อนุมัติ/ปฏิเสธ Change Order (ผู้ตัดสินต้องไม่ใช่ผู้สร้าง) | Organization |
 | Quick Estimate | `quick-estimates.read` | ดู Quick Estimate ตามขอบเขตที่ได้รับ | Organization/Branch/Opportunity/Own |
 | Quick Estimate | `quick-estimates.create` | สร้าง Quick Estimate | Branch/Opportunity/Own |
 | Quick Estimate | `quick-estimates.update` | แก้ Draft/Calculated หรือสร้าง Version ใหม่ตามกฎ | Branch/Opportunity/Own |

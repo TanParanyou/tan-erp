@@ -1,6 +1,6 @@
 # Project Lifecycle (วงจรโครงการ)
 
-**สถานะ:** Future สำหรับสถานะหลัง `Planned`; การสร้าง Project จาก Quotation (Handover → `Planned`) มี implementation แล้ว (2026-10-04) ดู [Project API Contract](../03-contracts/project-api-contract.md)
+**สถานะ:** Implemented 2026-10-04 (Handover → `Planned` และ lifecycle/แผน/งบ/Milestone/Change Order) ด้วยกฎที่ทีมพัฒนาเลือก ดู [Project API Contract](../03-contracts/project-api-contract.md); ยังไม่มี Actual Cost/Commitment และ WBS
 
 ## State ที่แนะนำ
 

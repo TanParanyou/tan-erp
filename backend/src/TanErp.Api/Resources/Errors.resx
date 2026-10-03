@@ -681,6 +681,38 @@
   <data name="ITEM_IMPORT_VALIDATION_FAILED_DETAIL" xml:space="preserve"><value>มีบางแถวไม่ผ่านการตรวจสอบ ระบบไม่ได้นำเข้าข้อมูลใด ๆ กรุณาแก้ไขแล้วตรวจสอบก่อนนำเข้าอีกครั้ง</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_TITLE" xml:space="preserve"><value>ไฟล์ไม่ตรงกับที่ตรวจสอบไว้</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_DETAIL" xml:space="preserve"><value>เนื้อหาไฟล์ต่างจากฉบับที่ตรวจสอบก่อนนำเข้า กรุณาตรวจสอบไฟล์ใหม่อีกครั้ง</value></data>
+  <data name="PROJECT_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลโครงการถูกแก้ไข</value></data>
+  <data name="PROJECT_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>โครงการถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="PROJECT_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะโครงการไม่รองรับ</value></data>
+  <data name="PROJECT_INVALID_STATE_DETAIL" xml:space="preserve"><value>ไม่สามารถดำเนินการนี้ในสถานะปัจจุบันของโครงการ</value></data>
+  <data name="PROJECT_BUDGET_FROZEN_TITLE" xml:space="preserve"><value>งบ Baseline ถูกตรึงแล้ว</value></data>
+  <data name="PROJECT_BUDGET_FROZEN_DETAIL" xml:space="preserve"><value>แก้งบ Baseline ได้เฉพาะตอนโครงการอยู่ในสถานะวางแผน หลังเริ่มงานให้เปลี่ยนผ่าน Change Order</value></data>
+  <data name="PROJECT_INVALID_TRANSITION_TITLE" xml:space="preserve"><value>เปลี่ยนสถานะโครงการไม่ได้</value></data>
+  <data name="PROJECT_INVALID_TRANSITION_DETAIL" xml:space="preserve"><value>ไม่อนุญาตให้เปลี่ยนสถานะโครงการตามลำดับนี้</value></data>
+  <data name="PROJECT_NOT_READY_TITLE" xml:space="preserve"><value>โครงการยังไม่พร้อม</value></data>
+  <data name="PROJECT_NOT_READY_DETAIL" xml:space="preserve"><value>ต้องมีแผนวันเริ่ม/สิ้นสุดและงบ Baseline ก่อนเริ่มงาน และต้องทำ Milestone ครบและตัดสิน Change Order ที่ส่งแล้วก่อนส่งมอบ</value></data>
+  <data name="PROJECT_MILESTONE_COMPLETED_TITLE" xml:space="preserve"><value>Milestone เสร็จแล้ว</value></data>
+  <data name="PROJECT_MILESTONE_COMPLETED_DETAIL" xml:space="preserve"><value>ไม่สามารถแก้ไขหรือลบ Milestone ที่ทำเสร็จแล้ว</value></data>
+  <data name="PROJECT_MILESTONE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Milestone ถูกแก้ไข</value></data>
+  <data name="PROJECT_MILESTONE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>Milestone ถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="PROJECT_CHANGE_ORDER_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะ Change Order ไม่รองรับ</value></data>
+  <data name="PROJECT_CHANGE_ORDER_INVALID_STATE_DETAIL" xml:space="preserve"><value>ไม่สามารถดำเนินการนี้ในสถานะปัจจุบันของ Change Order</value></data>
+  <data name="PROJECT_CHANGE_ORDER_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Change Order ถูกแก้ไข</value></data>
+  <data name="PROJECT_CHANGE_ORDER_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>Change Order ถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="PROJECT_PLAN_INVALID_TITLE" xml:space="preserve"><value>แผนเวลาไม่ถูกต้อง</value></data>
+  <data name="PROJECT_PLAN_INVALID_DETAIL" xml:space="preserve"><value>วันสิ้นสุดต้องไม่ก่อนวันเริ่มงาน</value></data>
+  <data name="PROJECT_BUDGET_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลงบไม่ถูกต้อง</value></data>
+  <data name="PROJECT_BUDGET_INVALID_DETAIL" xml:space="preserve"><value>งบต้องมี 1-100 รายการ แต่ละรายการมีหมวด คำอธิบาย (≤200) และจำนวนเงินไม่ติดลบ</value></data>
+  <data name="PROJECT_BUDGET_NEGATIVE_TITLE" xml:space="preserve"><value>งบจะติดลบ</value></data>
+  <data name="PROJECT_BUDGET_NEGATIVE_DETAIL" xml:space="preserve"><value>การอนุมัติ Change Order นี้ทำให้งบปัจจุบันของโครงการติดลบ</value></data>
+  <data name="PROJECT_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผล</value></data>
+  <data name="PROJECT_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>การดำเนินการนี้ต้องระบุเหตุผลหรือหมายเหตุ</value></data>
+  <data name="PROJECT_MILESTONE_INVALID_TITLE" xml:space="preserve"><value>ข้อมูล Milestone ไม่ถูกต้อง</value></data>
+  <data name="PROJECT_MILESTONE_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีชื่อ Milestone (≤200) และน้ำหนัก 1-1000</value></data>
+  <data name="PROJECT_CHANGE_ORDER_INVALID_TITLE" xml:space="preserve"><value>ข้อมูล Change Order ไม่ถูกต้อง</value></data>
+  <data name="PROJECT_CHANGE_ORDER_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีหัวข้อ (≤200) และเหตุผล (≤1000)</value></data>
+  <data name="PROJECT_CHANGE_ORDER_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ตัดสิน Change Order ของตนเองไม่ได้</value></data>
+  <data name="PROJECT_CHANGE_ORDER_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้สร้าง Change Order ไม่สามารถอนุมัติหรือปฏิเสธรายการของตนเอง</value></data>
   <data name="PROJECT_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>มีโครงการสำหรับใบเสนอราคานี้แล้ว</value></data>
   <data name="PROJECT_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>ใบเสนอราคานี้ถูกส่งต่อเป็นโครงการแล้ว หนึ่งใบเสนอราคาสร้างได้หนึ่งโครงการ</value></data>
   <data name="PROJECT_HANDOVER_NOT_ALLOWED_TITLE" xml:space="preserve"><value>ยังส่งต่อเป็นโครงการไม่ได้</value></data>

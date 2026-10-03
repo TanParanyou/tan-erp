@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/Alert";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatters/formatters";
 import { useProject } from "../api/project-queries";
+import { ProjectControlPanel } from "./project-control-panel";
 import { isProjectStatus, projectStatusVariant } from "../project-status";
 
 interface ProjectDetailProps {
@@ -91,6 +92,8 @@ export function ProjectDetail({ projectId }: ProjectDetailProps) {
           </Field>
         </dl>
       </div>
+
+      <ProjectControlPanel projectId={projectId} />
     </section>
   );
 }

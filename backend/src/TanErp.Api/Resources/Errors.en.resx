@@ -513,6 +513,38 @@
   <data name="ITEM_IMPORT_VALIDATION_FAILED_DETAIL" xml:space="preserve"><value>Some rows failed validation. Nothing was imported. Fix them and preview again before importing.</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_TITLE" xml:space="preserve"><value>File Differs From Preview</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_DETAIL" xml:space="preserve"><value>The file content differs from the previewed file. Preview the file again.</value></data>
+  <data name="PROJECT_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Project Changed</value></data>
+  <data name="PROJECT_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The project was modified by someone else. Reload and try again.</value></data>
+  <data name="PROJECT_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Project Status</value></data>
+  <data name="PROJECT_INVALID_STATE_DETAIL" xml:space="preserve"><value>This action is not allowed in the project's current status.</value></data>
+  <data name="PROJECT_BUDGET_FROZEN_TITLE" xml:space="preserve"><value>Baseline Budget Frozen</value></data>
+  <data name="PROJECT_BUDGET_FROZEN_DETAIL" xml:space="preserve"><value>The baseline budget can only be changed while the project is planned. Use a change order afterwards.</value></data>
+  <data name="PROJECT_INVALID_TRANSITION_TITLE" xml:space="preserve"><value>Invalid Status Transition</value></data>
+  <data name="PROJECT_INVALID_TRANSITION_DETAIL" xml:space="preserve"><value>This status change is not allowed.</value></data>
+  <data name="PROJECT_NOT_READY_TITLE" xml:space="preserve"><value>Project Not Ready</value></data>
+  <data name="PROJECT_NOT_READY_DETAIL" xml:space="preserve"><value>Dates and a baseline budget are needed to start; milestones must be complete and submitted change orders decided before handover.</value></data>
+  <data name="PROJECT_MILESTONE_COMPLETED_TITLE" xml:space="preserve"><value>Milestone Completed</value></data>
+  <data name="PROJECT_MILESTONE_COMPLETED_DETAIL" xml:space="preserve"><value>A completed milestone cannot be edited or deleted.</value></data>
+  <data name="PROJECT_MILESTONE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Milestone Changed</value></data>
+  <data name="PROJECT_MILESTONE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The milestone was modified by someone else. Reload and try again.</value></data>
+  <data name="PROJECT_CHANGE_ORDER_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Change Order Status</value></data>
+  <data name="PROJECT_CHANGE_ORDER_INVALID_STATE_DETAIL" xml:space="preserve"><value>This action is not allowed in the change order's current status.</value></data>
+  <data name="PROJECT_CHANGE_ORDER_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Change Order Changed</value></data>
+  <data name="PROJECT_CHANGE_ORDER_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The change order was modified by someone else. Reload and try again.</value></data>
+  <data name="PROJECT_PLAN_INVALID_TITLE" xml:space="preserve"><value>Invalid Plan</value></data>
+  <data name="PROJECT_PLAN_INVALID_DETAIL" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="PROJECT_BUDGET_INVALID_TITLE" xml:space="preserve"><value>Invalid Budget</value></data>
+  <data name="PROJECT_BUDGET_INVALID_DETAIL" xml:space="preserve"><value>A budget needs 1-100 lines, each with a category, a description (≤200) and a non-negative amount.</value></data>
+  <data name="PROJECT_BUDGET_NEGATIVE_TITLE" xml:space="preserve"><value>Budget Would Be Negative</value></data>
+  <data name="PROJECT_BUDGET_NEGATIVE_DETAIL" xml:space="preserve"><value>Approving this change order would make the project budget negative.</value></data>
+  <data name="PROJECT_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="PROJECT_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason or note is required for this action.</value></data>
+  <data name="PROJECT_MILESTONE_INVALID_TITLE" xml:space="preserve"><value>Invalid Milestone</value></data>
+  <data name="PROJECT_MILESTONE_INVALID_DETAIL" xml:space="preserve"><value>A milestone needs a name (≤200) and a weight between 1 and 1000.</value></data>
+  <data name="PROJECT_CHANGE_ORDER_INVALID_TITLE" xml:space="preserve"><value>Invalid Change Order</value></data>
+  <data name="PROJECT_CHANGE_ORDER_INVALID_DETAIL" xml:space="preserve"><value>A change order needs a title (≤200) and a reason (≤1000).</value></data>
+  <data name="PROJECT_CHANGE_ORDER_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Self-approval Not Allowed</value></data>
+  <data name="PROJECT_CHANGE_ORDER_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>A change order cannot be decided by its creator.</value></data>
   <data name="PROJECT_ALREADY_EXISTS_TITLE" xml:space="preserve"><value>Project Already Exists</value></data>
   <data name="PROJECT_ALREADY_EXISTS_DETAIL" xml:space="preserve"><value>This quotation has already been handed over. One quotation creates one project.</value></data>
   <data name="PROJECT_HANDOVER_NOT_ALLOWED_TITLE" xml:space="preserve"><value>Handover Not Allowed</value></data>

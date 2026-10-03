@@ -1,6 +1,6 @@
 # Project API Contract (ข้อตกลง API โครงการ)
 
-**สถานะ:** Implemented 2026-10-04 สำหรับ Handover (CP-08). ค่าเริ่มต้นด้านล่างเป็นการตัดสินใจของทีมพัฒนา (ผู้ใช้มอบหมาย) ยังไม่ผ่าน Sales/Project Owner; สถานะอื่นของ [Project Lifecycle](../01-business/project-lifecycle.md) ยังเป็น Future (CP-09).
+**สถานะ:** Implemented 2026-10-04 สำหรับ Handover (CP-08) และ Project Control (CP-09: แผนเวลา, งบ Baseline, Milestone/Progress, สถานะตาม [Project Lifecycle](../01-business/project-lifecycle.md), Change Order). ค่าเริ่มต้นเป็นการตัดสินใจของทีมพัฒนา (ผู้ใช้มอบหมาย) ยังไม่ผ่าน Sales/Project Manager/Finance.
 
 ## Decisions
 
@@ -53,3 +53,31 @@ Precedence: Idempotency replay → scope/version → state → duplicate → own
 ## Data
 
 `projects.projects` (migration `AddProjectsFromHandover`): `code` unique ต่อ Organization (เลขจาก Document Numbering ประเภท `projects`, prefix `PRJ`, รูปแบบ `PRJ-{YYYY}-{SEQ:4}`), `status` check, `baseline_contract_amount >= 0`, FK Restrict ไป Organization/Branch/Customer/Opportunity/Quotation/Users. Audit: `project.created-from-handover` (code, quotationId/number, ownerUserId, baselineHash).
+
+
+## Project Control (CP-09, implemented 2026-10-04)
+
+ทุก endpoint ใต้ `/api/v1/projects/{projectId}` คืน `ProjectControlResponse` (+ `ETag` = row version ของ Project) ยกเว้นที่ระบุ. `PUT/POST` ที่แก้ Project ใช้ `If-Match`; Milestone/Change Order ใช้ `expectedVersion` ใน body.
+
+| Action | Method/Path | Permission |
+| --- | --- | --- |
+| อ่านแผน/งบ/Progress/Milestone/Change Order/ประวัติ | `GET /control` | `projects.read` |
+| แผนเวลา | `PUT /plan` `{plannedStartDate, plannedEndDate}` | `projects.update` |
+| งบ Baseline (แทนที่ทั้งชุด) | `PUT /budget` `{lines:[{category,description,amount}]}` | `projects.update` |
+| Milestone | `POST /milestones`, `PUT /milestones/{id}`, `POST /milestones/{id}/complete`, `POST /milestones/{id}/delete` | `projects.update` |
+| เปลี่ยนสถานะ | `POST /transitions` `{targetStatus, reason}` | `projects.transition` |
+| Change Order | `POST /change-orders` (+`Idempotency-Key`), `POST /change-orders/{id}/submit`, `/cancel` | `projects.change-orders.manage` |
+| ตัดสิน Change Order | `POST /change-orders/{id}/approve`, `/reject` | `projects.change-orders.approve` |
+
+กฎที่ตัดสินใจ:
+
+- **Lifecycle:** `planned → active | cancelled`; `active → on_hold | ready_for_handover | cancelled`; `on_hold → active | cancelled`; `ready_for_handover → active | completed`; `completed`/`cancelled` เป็นปลายทาง. ต้องมีเหตุผลเมื่อไป `on_hold`, `cancelled` หรือเปิดกลับจาก `ready_for_handover` (`PROJECT_REASON_REQUIRED`). ประวัติเก็บใน `project_status_history` (append-only).
+- **เริ่มงาน (`planned → active`):** ต้องมีวันเริ่ม+สิ้นสุดและงบ Baseline อย่างน้อย 1 รายการ (`PROJECT_NOT_READY`); ระบบตรึงงบ (`budget_frozen_at_utc`) ณ ตอนนั้น. `ready_for_handover`/`completed` ต้องไม่มี Change Order สถานะ `submitted` และ `ready_for_handover` ต้องทำ Milestone ครบ.
+- **งบ Baseline:** แก้ได้เฉพาะ `planned` ก่อนตรึง (`PROJECT_BUDGET_FROZEN` หลังจากนั้น); หมวด `material|labor|subcontract|service|other`, 1–100 รายการ, จำนวนเงิน ≥ 0; เก็บ `baseline_budget_total` และ `baseline_budget_hash`. ไม่ผูกกับ master price.
+- **Milestone/Progress:** ความคืบหน้า = Σน้ำหนักที่เสร็จ ÷ Σน้ำหนักทั้งหมด (น้ำหนักเป็นจำนวนเต็ม 1–1000), ปัดทศนิยม 2 ตำแหน่ง. เพิ่ม/แก้/ลบได้ใน `planned|active|on_hold`; "ทำเสร็จ" ได้เฉพาะ `active`; ที่เสร็จแล้วแก้/ลบไม่ได้. Milestone มี row version ของตัวเอง ไม่หมุน version ของ Project.
+- **Change Order:** สร้างได้เมื่อ `active|on_hold`; `draft → submitted → approved | rejected`, `draft|submitted → cancelled`; เลขที่จาก Document Numbering (`project-change-orders`, `PCO`). **Maker–checker:** ผู้ตัดสินต้องไม่ใช่ผู้สร้าง (`PROJECT_CHANGE_ORDER_SELF_APPROVAL`, DB check constraint ด้วย); Reject ต้องมี note. อนุมัติแล้ว `currentBudget = baseline + Σ budgetDelta`, `currentContract = baseline + Σ contractDelta`; **Baseline ไม่เปลี่ยน**. ควบคุมเกินงบ: อนุมัติที่ทำให้งบปัจจุบัน < 0 → `422 PROJECT_BUDGET_NEGATIVE`.
+- ยังไม่มี actual cost/commitment (รอ CP-10/11/15), ไม่มี WBS/dependency/calendar และไม่มีการแก้/ยกเลิก Change Order หลังตัดสินใจ.
+
+Errors เพิ่มเติม: `409` `PROJECT_VERSION_CONFLICT`, `PROJECT_INVALID_STATE`, `PROJECT_BUDGET_FROZEN`, `PROJECT_INVALID_TRANSITION`, `PROJECT_NOT_READY`, `PROJECT_MILESTONE_COMPLETED`, `PROJECT_MILESTONE_VERSION_CONFLICT`, `PROJECT_CHANGE_ORDER_INVALID_STATE`, `PROJECT_CHANGE_ORDER_VERSION_CONFLICT`; `422` `PROJECT_PLAN_INVALID`, `PROJECT_BUDGET_INVALID`, `PROJECT_BUDGET_NEGATIVE`, `PROJECT_REASON_REQUIRED`, `PROJECT_MILESTONE_INVALID`, `PROJECT_CHANGE_ORDER_INVALID`; `403` `PROJECT_CHANGE_ORDER_SELF_APPROVAL`.
+
+Data (migration `AddProjectControl`): คอลัมน์ใหม่ใน `projects.projects` (`planned_end_date`, `baseline_budget_total/hash`, `budget_frozen_at_utc`, `activated_at_utc`, `completed_at_utc`, `status_reason`) และตาราง `project_budget_lines`, `project_milestones`, `project_change_orders`, `project_status_history`.

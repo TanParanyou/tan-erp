@@ -2,7 +2,14 @@ import { useMutation, useQuery, useQueryClient, type UseMutationResult, type Use
 import {
   apiClient,
   type CreateProjectFromHandoverRequest,
+  type AddProjectMilestoneRequest,
+  type CreateProjectChangeOrderRequest,
   type ListProjectsParams,
+  type ProjectBudgetLineRequest,
+  type ProjectChangeOrderAction,
+  type ProjectControlResponse,
+  type SetProjectPlanRequest,
+  type UpdateProjectMilestoneRequest,
   type ProjectHandoverSourceResponse,
   type ProjectListResponse,
   type ProjectResponse,
@@ -83,3 +90,75 @@ export function useCreateProjectFromHandover(
     },
   });
 }
+
+export function useProjectControl(projectId: string | undefined): UseQueryResult<ProjectControlResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...projectsKey(membershipId, locale), "control", projectId],
+    enabled: Boolean(membershipId && projectId),
+    queryFn: async ({ signal }) => apiClient.getProjectControl(projectId ?? "", await options(undefined, signal)),
+  });
+}
+
+/**
+ * All project-control writes. Every call returns the fresh control read model, which is written straight into
+ * the cache so the page reflects the new row version before the next refetch.
+ */
+export function useProjectControlMutations(projectId: string) {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+  const controlKey = [...projectsKey(membershipId, locale), "control", projectId];
+  const store = async (control: ProjectControlResponse) => {
+    queryClient.setQueryData(controlKey, control);
+    await queryClient.invalidateQueries({ queryKey: [...projectsKey(membershipId, locale), "detail", projectId] });
+    await queryClient.invalidateQueries({ queryKey: [...projectsKey(membershipId, locale), "list"] });
+  };
+
+  const setPlan = useMutation({
+    mutationFn: async (input: { rowVersion: string; payload: SetProjectPlanRequest }) =>
+      apiClient.setProjectPlan(projectId, input.rowVersion, input.payload, await options()),
+    onSuccess: store,
+  });
+  const replaceBudget = useMutation({
+    mutationFn: async (input: { rowVersion: string; lines: ProjectBudgetLineRequest[] }) =>
+      apiClient.replaceProjectBudget(projectId, input.rowVersion, input.lines, await options()),
+    onSuccess: store,
+  });
+  const transition = useMutation({
+    mutationFn: async (input: { rowVersion: string; targetStatus: string; reason: string | null }) =>
+      apiClient.transitionProject(projectId, input.rowVersion, input.targetStatus, input.reason, await options()),
+    onSuccess: store,
+  });
+  const addMilestone = useMutation({
+    mutationFn: async (payload: AddProjectMilestoneRequest) => apiClient.addProjectMilestone(projectId, payload, await options()),
+    onSuccess: store,
+  });
+  const updateMilestone = useMutation({
+    mutationFn: async (input: { milestoneId: string; payload: UpdateProjectMilestoneRequest }) =>
+      apiClient.updateProjectMilestone(projectId, input.milestoneId, input.payload, await options()),
+    onSuccess: store,
+  });
+  const completeMilestone = useMutation({
+    mutationFn: async (input: { milestoneId: string; expectedVersion: string }) =>
+      apiClient.completeProjectMilestone(projectId, input.milestoneId, input.expectedVersion, await options()),
+    onSuccess: store,
+  });
+  const deleteMilestone = useMutation({
+    mutationFn: async (input: { milestoneId: string; expectedVersion: string }) =>
+      apiClient.deleteProjectMilestone(projectId, input.milestoneId, input.expectedVersion, await options()),
+    onSuccess: store,
+  });
+  const createChangeOrder = useMutation({
+    mutationFn: async (input: { payload: CreateProjectChangeOrderRequest; idempotencyKey: string }) =>
+      apiClient.createProjectChangeOrder(projectId, input.payload, await options(input.idempotencyKey)),
+    onSuccess: store,
+  });
+  const changeOrderAction = useMutation({
+    mutationFn: async (input: { changeOrderId: string; action: ProjectChangeOrderAction; expectedVersion: string; note: string | null }) =>
+      apiClient.projectChangeOrderAction(projectId, input.changeOrderId, input.action, input.expectedVersion, input.note, await options()),
+    onSuccess: store,
+  });
+
+  return { setPlan, replaceBudget, transition, addMilestone, updateMilestone, completeMilestone, deleteMilestone, createChangeOrder, changeOrderAction };
+}
+

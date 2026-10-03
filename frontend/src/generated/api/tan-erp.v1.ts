@@ -9476,6 +9476,823 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectId}/control": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetProjectPlanRequest"];
+                    "text/json": components["schemas"]["SetProjectPlanRequest"];
+                    "application/*+json": components["schemas"]["SetProjectPlanRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReplaceProjectBudgetRequest"];
+                    "text/json": components["schemas"]["ReplaceProjectBudgetRequest"];
+                    "application/*+json": components["schemas"]["ReplaceProjectBudgetRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/milestones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddProjectMilestoneRequest"];
+                    "text/json": components["schemas"]["AddProjectMilestoneRequest"];
+                    "application/*+json": components["schemas"]["AddProjectMilestoneRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/milestones/{milestoneId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    milestoneId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectMilestoneRequest"];
+                    "text/json": components["schemas"]["UpdateProjectMilestoneRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectMilestoneRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/milestones/{milestoneId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    milestoneId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectMilestoneVersionRequest"];
+                    "text/json": components["schemas"]["ProjectMilestoneVersionRequest"];
+                    "application/*+json": components["schemas"]["ProjectMilestoneVersionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/milestones/{milestoneId}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    milestoneId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectMilestoneVersionRequest"];
+                    "text/json": components["schemas"]["ProjectMilestoneVersionRequest"];
+                    "application/*+json": components["schemas"]["ProjectMilestoneVersionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TransitionProjectRequest"];
+                    "text/json": components["schemas"]["TransitionProjectRequest"];
+                    "application/*+json": components["schemas"]["TransitionProjectRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/change-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectChangeOrderRequest"];
+                    "text/json": components["schemas"]["CreateProjectChangeOrderRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectChangeOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/change-orders/{changeOrderId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    changeOrderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                    "text/json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                    "application/*+json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/change-orders/{changeOrderId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    changeOrderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                    "text/json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                    "application/*+json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/change-orders/{changeOrderId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    changeOrderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                    "text/json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                    "application/*+json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/change-orders/{changeOrderId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    changeOrderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                    "text/json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                    "application/*+json": components["schemas"]["ProjectChangeOrderActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects": {
         parameters: {
             query?: never;
@@ -11036,6 +11853,13 @@ export interface components {
         AddAliasRequest: {
             alias: components["schemas"]["LocalizedTextInput"];
         };
+        AddProjectMilestoneRequest: {
+            name?: string | null;
+            /** Format: date */
+            plannedDate?: string | null;
+            /** Format: int32 */
+            weight?: number;
+        };
         AddressSearchResponse: {
             items?: components["schemas"]["AddressSearchResultItem"][] | null;
         };
@@ -11581,6 +12405,14 @@ export interface components {
             email?: string | null;
             preferredChannel?: string | null;
             lineId?: string | null;
+        };
+        CreateProjectChangeOrderRequest: {
+            title?: string | null;
+            reason?: string | null;
+            /** Format: double */
+            budgetDelta?: number;
+            /** Format: double */
+            contractDelta?: number;
         };
         CreateProjectFromHandoverRequest: {
             /** Format: uuid */
@@ -12623,6 +13455,93 @@ export interface components {
             siteSurveySnapshotHash?: string | null;
             baselineHash?: string | null;
         };
+        ProjectBudgetLineRequest: {
+            category?: string | null;
+            description?: string | null;
+            /** Format: double */
+            amount?: number;
+        };
+        ProjectBudgetLineResponse: {
+            /** Format: uuid */
+            id?: string;
+            category?: string | null;
+            description?: string | null;
+            /** Format: double */
+            amount?: number;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        ProjectBudgetResponse: {
+            /** Format: double */
+            baselineTotal?: number | null;
+            baselineHash?: string | null;
+            isFrozen?: boolean;
+            /** Format: date-time */
+            frozenAtUtc?: string | null;
+            /** Format: double */
+            approvedBudgetDelta?: number;
+            /** Format: double */
+            currentTotal?: number | null;
+            lines?: components["schemas"]["ProjectBudgetLineResponse"][] | null;
+        };
+        ProjectChangeOrderActionRequest: {
+            /** Format: uuid */
+            expectedVersion?: string;
+            note?: string | null;
+        };
+        ProjectChangeOrderResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            title?: string | null;
+            reason?: string | null;
+            /** Format: double */
+            budgetDelta?: number;
+            /** Format: double */
+            contractDelta?: number;
+            status?: string | null;
+            createdBy?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            submittedAtUtc?: string | null;
+            decidedBy?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: date-time */
+            decidedAtUtc?: string | null;
+            decisionNote?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
+        ProjectContractResponse: {
+            /** Format: double */
+            baselineAmount?: number;
+            /** Format: double */
+            approvedDelta?: number;
+            /** Format: double */
+            currentAmount?: number;
+        };
+        ProjectControlResponse: {
+            /** Format: uuid */
+            projectId?: string;
+            status?: string | null;
+            statusReason?: string | null;
+            /** Format: date */
+            plannedStartDate?: string | null;
+            /** Format: date */
+            plannedEndDate?: string | null;
+            /** Format: date-time */
+            activatedAtUtc?: string | null;
+            /** Format: date-time */
+            completedAtUtc?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            budget?: components["schemas"]["ProjectBudgetResponse"];
+            contract?: components["schemas"]["ProjectContractResponse"];
+            progress?: components["schemas"]["ProjectProgressResponse"];
+            milestones?: components["schemas"]["ProjectMilestoneResponse"][] | null;
+            changeOrders?: components["schemas"]["ProjectChangeOrderResponse"][] | null;
+            history?: components["schemas"]["ProjectStatusHistoryResponse"][] | null;
+        };
         ProjectCustomerResponse: {
             /** Format: uuid */
             id?: string;
@@ -12663,6 +13582,26 @@ export interface components {
             items?: components["schemas"]["ProjectListItemResponse"][] | null;
             pagination?: components["schemas"]["ProjectPaginationResponse"];
         };
+        ProjectMilestoneResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+            /** Format: date */
+            plannedDate?: string | null;
+            /** Format: int32 */
+            weight?: number;
+            /** Format: int32 */
+            sortOrder?: number;
+            /** Format: date-time */
+            completedAtUtc?: string | null;
+            completedBy?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: uuid */
+            rowVersion?: string;
+        };
+        ProjectMilestoneVersionRequest: {
+            /** Format: uuid */
+            expectedVersion?: string;
+        };
         ProjectOpportunityResponse: {
             /** Format: uuid */
             id?: string;
@@ -12684,6 +13623,18 @@ export interface components {
             id?: string;
             displayName?: string | null;
             email?: string | null;
+        };
+        ProjectProgressResponse: {
+            /** Format: int32 */
+            totalMilestones?: number;
+            /** Format: int32 */
+            completedMilestones?: number;
+            /** Format: int32 */
+            totalWeight?: number;
+            /** Format: int32 */
+            completedWeight?: number;
+            /** Format: double */
+            percent?: number;
         };
         ProjectResponse: {
             /** Format: uuid */
@@ -12709,6 +13660,16 @@ export interface components {
             /** Format: uuid */
             id?: string;
             label?: string | null;
+        };
+        ProjectStatusHistoryResponse: {
+            /** Format: uuid */
+            id?: string;
+            fromStatus?: string | null;
+            toStatus?: string | null;
+            reason?: string | null;
+            actor?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: date-time */
+            occurredAtUtc?: string;
         };
         QuotationAddressResponse: {
             label?: string | null;
@@ -12812,6 +13773,9 @@ export interface components {
         ReorderItemImagesRequest: {
             orderedImageIds: string[];
         };
+        ReplaceProjectBudgetRequest: {
+            lines?: components["schemas"]["ProjectBudgetLineRequest"][] | null;
+        };
         ReturnCostRecordRequest: {
             reason: string;
         };
@@ -12825,6 +13789,12 @@ export interface components {
         SetBranchAvailabilityRequest: {
             mode: string;
             branchIds?: string[] | null;
+        };
+        SetProjectPlanRequest: {
+            /** Format: date */
+            plannedStartDate?: string | null;
+            /** Format: date */
+            plannedEndDate?: string | null;
         };
         SiteImageResponse: {
             /** Format: uuid */
@@ -13016,6 +13986,10 @@ export interface components {
             expectedVersion?: string;
             reasonCode?: string | null;
             note?: string | null;
+        };
+        TransitionProjectRequest: {
+            targetStatus?: string | null;
+            reason?: string | null;
         };
         UnitConversionResponse: {
             /** Format: uuid */
@@ -13263,6 +14237,15 @@ export interface components {
             /** Format: date-time */
             nextActionAtUtc?: string | null;
             nextActionNote?: string | null;
+        };
+        UpdateProjectMilestoneRequest: {
+            name?: string | null;
+            /** Format: date */
+            plannedDate?: string | null;
+            /** Format: int32 */
+            weight?: number;
+            /** Format: uuid */
+            expectedVersion?: string;
         };
         UpdateSiteRequest: {
             label?: string | null;

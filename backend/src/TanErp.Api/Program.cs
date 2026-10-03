@@ -167,6 +167,8 @@ builder.Services.AddScoped<TanErp.Application.Projects.IProjectStore, TanErp.Inf
 builder.Services.AddScoped<TanErp.Application.Projects.CreateProjectFromHandover.CreateProjectFromHandoverHandler>();
 builder.Services.AddScoped<TanErp.Application.Projects.GetProject.GetProjectHandler>();
 builder.Services.AddScoped<TanErp.Application.Projects.GetHandoverSource.GetHandoverSourceHandler>();
+builder.Services.AddScoped<TanErp.Application.Projects.Control.IProjectControlStore, TanErp.Infrastructure.Persistence.Projects.ProjectControlStore>();
+builder.Services.AddScoped<TanErp.Application.Projects.Control.ProjectControlHandler>();
 builder.Services.AddScoped<TanErp.Application.Projects.ListProjects.ListProjectsHandler>();
 builder.Services.AddScoped<TanErp.Application.Items.IItemImportStore, TanErp.Infrastructure.Persistence.Items.ItemImportStore>();
 builder.Services.AddScoped<TanErp.Application.Items.Import.PreviewItemImport.PreviewItemImportHandler>();

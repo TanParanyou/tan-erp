@@ -15,6 +15,7 @@ public static class DocumentTypes
     public const string Opportunities = "opportunities";
     public const string Quotations = "quotations";
     public const string Projects = "projects";
+    public const string ProjectChangeOrders = "project-change-orders";
     public const string Customers = "customers";
     public const string Items = "items";
     public const string ItemCategories = "item-categories";
@@ -51,6 +52,7 @@ public static class DocumentTypes
         Opportunities,
         Quotations,
         Projects,
+        ProjectChangeOrders,
         Customers,
         Items,
         ItemCategories,
@@ -105,6 +107,7 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.Opportunities => "OPP",
             DocumentTypes.Quotations => "QT",
             DocumentTypes.Projects => "PRJ",
+            DocumentTypes.ProjectChangeOrders => "PCO",
             _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Unknown document type.")
         };
 

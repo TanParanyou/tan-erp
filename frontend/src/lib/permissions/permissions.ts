@@ -44,6 +44,10 @@ export const PERMISSIONS = {
   // Projects
   PROJECTS_READ: "projects.read",
   PROJECTS_CREATE: "projects.create",
+  PROJECTS_UPDATE: "projects.update",
+  PROJECTS_TRANSITION: "projects.transition",
+  PROJECTS_CHANGE_ORDERS_MANAGE: "projects.change-orders.manage",
+  PROJECTS_CHANGE_ORDERS_APPROVE: "projects.change-orders.approve",
 
   // Commercial - Quotations
   QUOTATIONS_READ: "quotations.read",
