@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
 import type { EstimateDetailResponse } from "@/lib/api/api-client";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -43,6 +44,8 @@ export function EstimateCard({
   isCreating = false,
 }: EstimateCardProps) {
   const t = useTranslations("estimates");
+  const tQuotationDocument = useTranslations("quotationDocument");
+  const uiLocale = useLocale();
   const tCommon = useTranslations("common");
   const { toast } = useToast();
   const { selectedMembership } = useSelectedMembership();
@@ -207,6 +210,15 @@ export function EstimateCard({
           </div>
 
           <div className="flex items-center gap-2">
+            {estimate.currentRevision?.status === "quoted" && canIssue && (
+              <Link
+                href={`/${uiLocale}/estimates/${estimate.id}/quotation`}
+                className="inline-flex items-center border border-erp-navy px-3 py-1.5 text-sm font-medium text-erp-navy hover:bg-erp-surface-subtle"
+              >
+                {tQuotationDocument("viewDocument")}
+              </Link>
+            )}
+
             {canIssueQuotation && (
               <Button
                 type="button"

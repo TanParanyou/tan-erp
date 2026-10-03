@@ -139,6 +139,7 @@ builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateRevision.C
 builder.Services.AddScoped<TanErp.Application.Estimates.CancelEstimate.CancelEstimateHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.IssueQuotation.IssueQuotationHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.AcceptQuotation.AcceptQuotationHandler>();
+builder.Services.AddScoped<TanErp.Application.Estimates.GetQuotationDocument.GetQuotationDocumentHandler>();
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.IAddressLookupCache, TanErp.Infrastructure.MasterData.AddressLookupCache>();
 
 builder.Services.AddScoped<TanErp.Application.MasterData.Addresses.SearchAddresses.SearchAddressesHandler>();

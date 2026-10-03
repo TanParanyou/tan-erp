@@ -16,6 +16,7 @@ using TanErp.Application.Estimates.SubmitEstimate;
 using TanErp.Application.Estimates.ReviewEstimate;
 using TanErp.Application.Estimates.CreateEstimateRevision;
 using TanErp.Application.Estimates.CancelEstimate;
+using TanErp.Application.Estimates.GetQuotationDocument;
 using TanErp.Domain.Estimates;
 
 namespace TanErp.Api.Controllers;
@@ -34,6 +35,7 @@ public class EstimatesController : ControllerBase
     private readonly ReviewEstimateHandler _reviewEstimateHandler;
     private readonly CreateEstimateRevisionHandler _createRevisionHandler;
     private readonly CancelEstimateHandler _cancelHandler;
+    private readonly GetQuotationDocumentHandler _getQuotationDocumentHandler;
 
     public EstimatesController(
         CreateEstimateDraftHandler createHandler,
@@ -45,7 +47,8 @@ public class EstimatesController : ControllerBase
         SubmitEstimateHandler submitEstimateHandler,
         ReviewEstimateHandler reviewEstimateHandler,
         CreateEstimateRevisionHandler createRevisionHandler,
-        CancelEstimateHandler cancelHandler)
+        CancelEstimateHandler cancelHandler,
+        GetQuotationDocumentHandler getQuotationDocumentHandler)
     {
         _createHandler = createHandler;
         _getHandler = getHandler;
@@ -57,6 +60,7 @@ public class EstimatesController : ControllerBase
         _reviewEstimateHandler = reviewEstimateHandler;
         _createRevisionHandler = createRevisionHandler;
         _cancelHandler = cancelHandler;
+        _getQuotationDocumentHandler = getQuotationDocumentHandler;
     }
 
     [HttpPost("api/v1/estimates/{id:guid}/cancel")]
@@ -505,5 +509,34 @@ public class EstimatesController : ControllerBase
 
         Response.Headers.ETag = $"\"{proj.OpportunityRowVersion}\"";
         return Ok(response);
+    }
+
+    [HttpGet("api/v1/estimates/{id:guid}/quotation/document")]
+    [ProducesResponseType<QuotationDocumentResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetQuotationDocument(
+        [FromRoute] Guid id,
+        [FromQuery] string? locale,
+        CancellationToken cancellationToken)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var result = await _getQuotationDocumentHandler.HandleAsync(
+            new GetQuotationDocumentQuery(auth.FirebaseUid, auth.MembershipId, id, locale),
+            cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        return Ok(QuotationDocumentResponse.FromProjection(result.Value!));
     }
 }

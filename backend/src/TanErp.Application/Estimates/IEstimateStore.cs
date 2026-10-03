@@ -90,6 +90,12 @@ public interface IEstimateStore
         string payloadHash,
         string traceId,
         CancellationToken cancellationToken);
+
+    Task<Result<TanErp.Application.Estimates.GetQuotationDocument.QuotationDocumentProjection>> GetQuotationDocumentAsync(
+        Guid organizationId,
+        Guid estimateId,
+        string locale,
+        CancellationToken cancellationToken);
 }
 
 public sealed record EstimateCostComponentDraftDto(

@@ -140,6 +140,10 @@ public class OpenApiContractTests : IDisposable
         var acceptQuotationPath = paths["/api/v1/estimates/{id}/quotation/accept"]?["post"]?.AsObject();
         Assert.NotNull(acceptQuotationPath);
 
+        Assert.True(paths.ContainsKey("/api/v1/estimates/{id}/quotation/document"), "OpenAPI must contain path /api/v1/estimates/{id}/quotation/document");
+        var quotationDocPath = paths["/api/v1/estimates/{id}/quotation/document"]?["get"]?.AsObject();
+        Assert.NotNull(quotationDocPath);
+
         Assert.True(paths.ContainsKey("/api/v1/users"), "OpenAPI must contain path /api/v1/users");
         var listUsersPath = paths["/api/v1/users"]?["get"]?.AsObject();
         Assert.NotNull(listUsersPath);

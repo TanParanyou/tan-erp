@@ -1176,6 +1176,209 @@ public class EstimateEndpointsTests : IAsyncLifetime
             history.OpportunityId == oppId && history.FromStage == OpportunityStage.Estimating &&
             history.ToStage == OpportunityStage.Proposed));
 
+        // --- Task 3: Quotation Document Integration Tests ---
+        // 1. Property Allowlist & Negative scan
+        var docReq = CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document", "token-org-a", MembershipAId);
+        var docRes = await _client.SendAsync(docReq);
+        Assert.Equal(HttpStatusCode.OK, docRes.StatusCode);
+
+        var rawDocJson = await docRes.Content.ReadAsStringAsync();
+        using (var docParsed = System.Text.Json.JsonDocument.Parse(rawDocJson))
+        {
+            var rootProps = docParsed.RootElement.EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
+            var expectedRootProps = new[]
+            {
+                "currency",
+                "customer",
+                "hasIncompleteTranslations",
+                "issuedAtUtc",
+                "locale",
+                "number",
+                "sections",
+                "totals"
+            }.OrderBy(n => n).ToArray();
+            Assert.Equal(expectedRootProps, rootProps);
+
+            var customerProps = docParsed.RootElement.GetProperty("customer").EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
+            var expectedCustomerProps = new[]
+            {
+                "address",
+                "branchCode",
+                "customerType",
+                "displayName",
+                "displayNameEn",
+                "displayNameTh",
+                "legalName",
+                "taxIdentifier"
+            }.OrderBy(n => n).ToArray();
+            Assert.Equal(expectedCustomerProps, customerProps);
+
+            var sectionsElem = docParsed.RootElement.GetProperty("sections");
+            Assert.True(sectionsElem.GetArrayLength() > 0);
+            var firstSection = sectionsElem[0];
+            var sectionProps = firstSection.EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
+            var expectedSectionProps = new[]
+            {
+                "code",
+                "name",
+                "nameEn",
+                "nameTh",
+                "subtotal",
+                "workItems"
+            }.OrderBy(n => n).ToArray();
+            Assert.Equal(expectedSectionProps, sectionProps);
+
+            var workItemsElem = firstSection.GetProperty("workItems");
+            Assert.True(workItemsElem.GetArrayLength() > 0);
+            var firstItem = workItemsElem[0];
+            var itemProps = firstItem.EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
+            var expectedItemProps = new[]
+            {
+                "code",
+                "description",
+                "descriptionEn",
+                "descriptionTh",
+                "lineTotal",
+                "quantity",
+                "unitCode",
+                "unitPrice"
+            }.OrderBy(n => n).ToArray();
+            Assert.Equal(expectedItemProps, itemProps);
+
+            var totalsProps = docParsed.RootElement.GetProperty("totals").EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
+            var expectedTotalsProps = new[]
+            {
+                "discountAmount",
+                "discountType",
+                "discountValue",
+                "grandTotal",
+                "netBeforeTax",
+                "subtotal",
+                "taxAmount"
+            }.OrderBy(n => n).ToArray();
+            Assert.Equal(expectedTotalsProps, totalsProps);
+        }
+
+        // Negative scan: Forbidden fields and internal fixture constants MUST NOT appear in payload
+        var forbiddenTerms = new[]
+        {
+            "unitCost",
+            "totalCost",
+            "marginAmount",
+            "marginRate",
+            "markupRate",
+            "sellingRuleType",
+            "sellingRuleValue",
+            "sellingRuleReasonCode",
+            "internalNote",
+            "overrideReasonCode",
+            "overrideReason",
+            "costRecordId",
+            "snapshotHash",
+            "rowVersion",
+            "capturedByUserId",
+            "customerId",
+            "Synthetic custom work item fixture",
+            "Synthetic integration fixture"
+        };
+        foreach (var forbidden in forbiddenTerms)
+        {
+            Assert.DoesNotContain(forbidden, rawDocJson, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // 2. Totals match calculation snapshot and quotation
+        var doc = (await docRes.Content.ReadFromJsonAsync<QuotationDocumentResponse>())!;
+        Assert.Equal(quotation.Number, doc.Number);
+        Assert.Equal("THB", doc.Currency);
+        Assert.Equal("th", doc.Locale);
+        Assert.False(doc.HasIncompleteTranslations);
+        Assert.Equal(quotation.GrandTotal, doc.Totals.GrandTotal);
+        Assert.Equal(40000m, doc.Totals.Subtotal);
+        Assert.Equal(5000m, doc.Totals.DiscountAmount);
+        Assert.Equal(35000m, doc.Totals.NetBeforeTax);
+        Assert.Equal(2450m, doc.Totals.TaxAmount);
+
+        // 3. Locale=en when descriptionEn is missing: does NOT fall back silently, flags incomplete translation
+        var docEnReq = CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document?locale=en", "token-org-a", MembershipAId);
+        var docEnRes = await _client.SendAsync(docEnReq);
+        Assert.Equal(HttpStatusCode.OK, docEnRes.StatusCode);
+        var docEn = (await docEnRes.Content.ReadFromJsonAsync<QuotationDocumentResponse>())!;
+        Assert.Equal("en", docEn.Locale);
+        Assert.True(docEn.HasIncompleteTranslations);
+        Assert.Null(docEn.Sections[0].WorkItems[0].Description);
+        Assert.Equal("ชั้นวางทีวี", docEn.Sections[0].WorkItems[0].DescriptionTh);
+
+        // 4. Immutability: Mutate Customer master in DB after quotation issue, document payload remains unchanged
+        var customerBeforeMutation = doc.Customer.DisplayNameTh;
+        await snapshotDb.Customers
+            .Where(c => c.Id == estimate.CustomerId)
+            .ExecuteUpdateAsync(u => u
+                .SetProperty(c => c.DisplayNameTh, "ชื่อลูกค้าที่ถูกแก้ไขในภายหลัง")
+                .SetProperty(c => c.LegalName, "บริษัท ถูกแก้ไข จำกัด"));
+
+        var docAfterMutationReq = CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document", "token-org-a", MembershipAId);
+        var docAfterMutationRes = await _client.SendAsync(docAfterMutationReq);
+        Assert.Equal(HttpStatusCode.OK, docAfterMutationRes.StatusCode);
+        var docAfterMutation = (await docAfterMutationRes.Content.ReadFromJsonAsync<QuotationDocumentResponse>())!;
+        Assert.Equal(customerBeforeMutation, docAfterMutation.Customer.DisplayNameTh);
+        Assert.NotEqual("ชื่อลูกค้าที่ถูกแก้ไขในภายหลัง", docAfterMutation.Customer.DisplayNameTh);
+
+        // 4b. Document is internally consistent with the stored snapshot values (no FE/BE recomputation drift)
+        Assert.All(doc.Sections, section =>
+            Assert.Equal(section.Subtotal, section.WorkItems.Sum(w => w.LineTotal)));
+        Assert.Equal(doc.Totals.Subtotal, doc.Sections.Sum(s => s.Subtotal));
+
+        // 4c. Multiple quotations for one estimate: the latest issued quotation is returned deterministically
+        var issuedQuotationRow = await snapshotDb.Quotations.AsNoTracking()
+            .SingleAsync(row => row.Id == quotation.QuotationId);
+        const string laterQuotationNumber = "QT-TEST-LATER-0001";
+        snapshotDb.Quotations.Add(new TanErp.Domain.Commercial.Quotation(
+            Guid.NewGuid(),
+            issuedQuotationRow.OrganizationId,
+            issuedQuotationRow.BranchId,
+            issuedQuotationRow.CustomerId,
+            issuedQuotationRow.OpportunityId,
+            issuedQuotationRow.EstimateId,
+            issuedQuotationRow.EstimateRevisionId,
+            laterQuotationNumber,
+            issuedQuotationRow.TotalAmount,
+            issuedQuotationRow.SnapshotHash,
+            issuedQuotationRow.IssuedAtUtc.AddDays(1),
+            issuedQuotationRow.CustomerBillingSnapshotJson,
+            issuedQuotationRow.CustomerBillingSnapshotHash));
+        await snapshotDb.SaveChangesAsync();
+        var latestDocRes = await _client.SendAsync(CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document", "token-org-a", MembershipAId));
+        Assert.Equal(HttpStatusCode.OK, latestDocRes.StatusCode);
+        var latestDoc = (await latestDocRes.Content.ReadFromJsonAsync<QuotationDocumentResponse>())!;
+        Assert.Equal(laterQuotationNumber, latestDoc.Number);
+        await snapshotDb.Quotations
+            .Where(row => row.Number == laterQuotationNumber)
+            .ExecuteDeleteAsync();
+
+        // 5. Cross organization -> 404
+        var crossOrgDocReq = CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document", "token-org-b", TestOnlyDataSeeder.TestMembershipBId);
+        var crossOrgDocRes = await _client.SendAsync(crossOrgDocReq);
+        Assert.Equal(HttpStatusCode.NotFound, crossOrgDocRes.StatusCode);
+
+        // 6. Estimate without quotation -> 404
+        var nonQuotedEstimateId = Guid.NewGuid();
+        var unquotedDocReq = CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{nonQuotedEstimateId}/quotation/document", "token-org-a", MembershipAId);
+        var unquotedDocRes = await _client.SendAsync(unquotedDocReq);
+        Assert.Equal(HttpStatusCode.NotFound, unquotedDocRes.StatusCode);
+
+        // 7. No permission -> 403
+        var noPermDocReq = CreateAuthenticatedRequest(
+            HttpMethod.Get, $"/api/v1/estimates/{estimate.Id}/quotation/document",
+            "token-estimate-reviewer", TestOnlyDataSeeder.TestEstimateReviewerMembershipId);
+        var noPermDocRes = await _client.SendAsync(noPermDocReq);
+        Assert.Equal(HttpStatusCode.Forbidden, noPermDocRes.StatusCode);
+
         var crossOrganizationRevisionRequest = CreateAuthenticatedRequest(
             HttpMethod.Post, $"/api/v1/estimates/{estimate.Id}/revisions", "token-org-b", TestOnlyDataSeeder.TestMembershipBId);
         crossOrganizationRevisionRequest.Headers.Add("If-Match", $"\"{quotation.EstimateRowVersion}\"");

@@ -65,6 +65,7 @@ export type IssueQuotationRequest = components["schemas"]["IssueQuotationRequest
 export type QuotationResponse = components["schemas"]["QuotationResponse"];
 export type AcceptQuotationRequest = components["schemas"]["AcceptQuotationRequest"];
 export type AcceptQuotationResponse = components["schemas"]["AcceptQuotationResponse"];
+export type QuotationDocumentResponse = components["schemas"]["QuotationDocumentResponse"];
 export type EstimateCatalogResponse = components["schemas"]["EstimateCatalogResponse"];
 export type EstimateCatalogItemResponse = components["schemas"]["EstimateCatalogItemResponse"];
 
@@ -735,6 +736,18 @@ export class ApiClient {
       "POST",
       options,
       payload
+    );
+  }
+
+  async getQuotationDocument(
+    id: string,
+    documentLocale: "th" | "en",
+    options: RequestOptions
+  ): Promise<QuotationDocumentResponse> {
+    return this.request<QuotationDocumentResponse>(
+      `/api/v1/estimates/${encodeURIComponent(id)}/quotation/document?locale=${documentLocale}`,
+      "GET",
+      options
     );
   }
 

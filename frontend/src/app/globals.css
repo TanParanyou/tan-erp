@@ -68,3 +68,16 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  .erp-header,
+  .erp-sidebar,
+  .erp-sidebar-backdrop {
+    display: none !important;
+  }
+}

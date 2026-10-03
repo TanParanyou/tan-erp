@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Estimates;
+using TanErp.Application.Estimates.GetQuotationDocument;
 using TanErp.Application.Items;
 using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
@@ -1829,6 +1830,197 @@ public class EstimateStore : IEstimateStore
                 quotation.AcceptedAtUtc!.Value));
         });
     }
+
+    public async Task<Result<QuotationDocumentProjection>> GetQuotationDocumentAsync(
+        Guid organizationId,
+        Guid estimateId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var quotation = await _db.Quotations
+            .AsNoTracking()
+            .Where(q => q.OrganizationId == organizationId && q.EstimateId == estimateId)
+            .OrderByDescending(q => q.IssuedAtUtc)
+            .ThenByDescending(q => q.Number)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (quotation is null)
+        {
+            return Result<QuotationDocumentProjection>.Failure(
+                new Error("RESOURCE_NOT_FOUND", $"Quotation for estimate '{estimateId}' was not found."));
+        }
+
+        var revision = await _db.EstimateRevisions
+            .AsNoTracking()
+            .Include(r => r.Sections)
+                .ThenInclude(s => s.WorkItems)
+            .FirstOrDefaultAsync(r => r.OrganizationId == organizationId && r.Id == quotation.EstimateRevisionId, cancellationToken);
+
+        if (revision is null)
+        {
+            return Result<QuotationDocumentProjection>.Failure(
+                new Error("RESOURCE_NOT_FOUND", $"Estimate revision '{quotation.EstimateRevisionId}' was not found."));
+        }
+
+        QuotationBillingSnapshotData? customerSnapshot = null;
+        if (!string.IsNullOrWhiteSpace(quotation.CustomerBillingSnapshotJson))
+        {
+            try
+            {
+                customerSnapshot = JsonSerializer.Deserialize<QuotationBillingSnapshotData>(
+                    quotation.CustomerBillingSnapshotJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (JsonException)
+            {
+                // Snapshot invalid
+            }
+        }
+
+        if (customerSnapshot is null)
+        {
+            return Result<QuotationDocumentProjection>.Failure(
+                new Error("ESTIMATE_INVALID_STATE", "Quotation billing snapshot is missing or corrupted."));
+        }
+
+        var isEn = locale.Equals("en", StringComparison.OrdinalIgnoreCase);
+        var hasIncompleteTranslations = false;
+
+        string? customerDisplayName;
+        if (isEn)
+        {
+            customerDisplayName = string.IsNullOrWhiteSpace(customerSnapshot.DisplayNameEn)
+                ? null
+                : customerSnapshot.DisplayNameEn.Trim();
+        }
+        else
+        {
+            customerDisplayName = customerSnapshot.DisplayNameTh;
+        }
+
+        var customerAddress = customerSnapshot.Address is null
+            ? null
+            : new QuotationAddressProjection(
+                customerSnapshot.Address.Label,
+                customerSnapshot.Address.AddressLine1,
+                customerSnapshot.Address.Subdistrict,
+                customerSnapshot.Address.District,
+                customerSnapshot.Address.Province,
+                customerSnapshot.Address.PostalCode,
+                customerSnapshot.Address.CountryCode);
+
+        var customerDoc = new QuotationCustomerProjection(
+            customerSnapshot.CustomerType,
+            customerDisplayName,
+            customerSnapshot.DisplayNameTh,
+            customerSnapshot.DisplayNameEn,
+            customerSnapshot.LegalName,
+            customerSnapshot.TaxIdentifier,
+            customerSnapshot.BranchCode,
+            customerAddress);
+
+        var sectionsDoc = new List<QuotationSectionProjection>();
+        foreach (var section in revision.Sections.OrderBy(s => s.SortOrder))
+        {
+            string? sectionName;
+            if (isEn)
+            {
+                if (string.IsNullOrWhiteSpace(section.NameEn))
+                {
+                    sectionName = null;
+                    hasIncompleteTranslations = true;
+                }
+                else
+                {
+                    sectionName = section.NameEn.Trim();
+                }
+            }
+            else
+            {
+                sectionName = section.NameTh;
+            }
+
+            var workItemsDoc = new List<QuotationWorkItemProjection>();
+            foreach (var item in section.WorkItems.OrderBy(w => w.SortOrder))
+            {
+                string? itemDescription;
+                if (isEn)
+                {
+                    if (string.IsNullOrWhiteSpace(item.DescriptionEn))
+                    {
+                        itemDescription = null;
+                        hasIncompleteTranslations = true;
+                    }
+                    else
+                    {
+                        itemDescription = item.DescriptionEn.Trim();
+                    }
+                }
+                else
+                {
+                    itemDescription = item.DescriptionTh;
+                }
+
+                workItemsDoc.Add(new QuotationWorkItemProjection(
+                    item.Code,
+                    itemDescription,
+                    item.DescriptionTh,
+                    item.DescriptionEn,
+                    item.Quantity,
+                    item.UnitCode,
+                    item.UnitSellingPrice,
+                    item.TotalSellingPrice));
+            }
+
+            sectionsDoc.Add(new QuotationSectionProjection(
+                section.Code,
+                sectionName,
+                section.NameTh,
+                section.NameEn,
+                section.SubtotalSellingPrice,
+                workItemsDoc));
+        }
+
+        var totalsDoc = new QuotationTotalsProjection(
+            revision.SellingBeforeDiscount,
+            revision.DiscountType,
+            revision.DiscountValue,
+            revision.DiscountAmount,
+            revision.NetBeforeTax,
+            revision.TaxAmount,
+            revision.GrandTotal);
+
+        var doc = new QuotationDocumentProjection(
+            quotation.BranchId,
+            quotation.Number,
+            quotation.IssuedAtUtc,
+            revision.Currency,
+            locale,
+            hasIncompleteTranslations,
+            customerDoc,
+            sectionsDoc,
+            totalsDoc);
+
+        return Result<QuotationDocumentProjection>.Success(doc);
+    }
+
+    private sealed record QuotationBillingSnapshotData(
+        string CustomerType,
+        string DisplayNameTh,
+        string? DisplayNameEn,
+        string? LegalName,
+        string? TaxIdentifier,
+        string? BranchCode,
+        QuotationBillingSnapshotAddress? Address);
+
+    private sealed record QuotationBillingSnapshotAddress(
+        string? Label,
+        string AddressLine1,
+        string? Subdistrict,
+        string? District,
+        string? Province,
+        string? PostalCode,
+        string? CountryCode);
 
     private static EstimateDetailProjection MapToDetailProjection(Estimate estimate)
     {
