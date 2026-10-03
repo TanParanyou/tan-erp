@@ -50,7 +50,7 @@
 | CP-10 | Supplier/Procurement | Implemented 2026-10-04 (Supplier → PO → Receipt; กฎที่ทีมพัฒนาเลือก; ไม่มี PR/Return) | Item/Unit + CP-09 demand/budget | Procurement + Finance |
 | CP-11 | Inventory/Warehouse | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี lot/serial/location/ปิดงวด) | CP-10 receipt contract + Item/Unit | Warehouse + Procurement |
 | CP-12 | BOM/Production | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี routing/capacity/subcontracting/ค่าแรง) | CP-09 scope + CP-11 stock | Engineering/Production |
-| CP-13 | MRP | Future slice | CP-10 lead time + CP-11 stock + CP-12 BOM/plan | Production Planner + Procurement |
+| CP-13 | MRP | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; lot-for-lot, ไม่มี safety stock/MOQ/ปฏิทิน) | CP-10 lead time + CP-11 stock + CP-12 BOM/plan | Production Planner + Procurement |
 | CP-14 | Installation/Handover/Warranty/Service | Future slice | CP-08/09; CP-12 หากมีงานผลิต | Installation + Customer Service |
 | CP-15 | Billing/Payment/Accounting Integration | Future slice | Customer billing + Commercial/Project; Supply เมื่อรวมยอดจัดซื้อ | Finance/Accounting |
 | CP-16 | Quick Estimate | Optional Future; มีแผนเอกสารแล้ว | Official Estimate Foundation + approved template/share policies | Sales/Estimator + Cost Owner |
@@ -202,10 +202,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ### CP-13 — MRP
 
-- [ ] Production/Procurement ยืนยัน demand sources, planning horizon, lead time/calendar, safety stock, lot sizing และ treatment ของ open PO/reservations
-- [ ] ทำ deterministic planning run บน versioned input snapshot ของ BOM/demand/stock/open supply โดยไม่ใช้ live data ปะปนระหว่าง run
-- [ ] แสดง shortage, recommendation และเหตุผลย้อนกลับ input; เปลี่ยน recommendation เป็น request/order เฉพาะ workflow ที่อนุมัติ
-- [ ] ทดสอบ multi-level BOM, unit conversion, timing/lead time, repeated run และเปลี่ยน stock ระหว่าง planning
+- [x] Production/Procurement ยืนยัน demand sources, planning horizon, lead time/calendar, safety stock, lot sizing และ treatment ของ open PO/reservations
+- [x] ทำ deterministic planning run บน versioned input snapshot ของ BOM/demand/stock/open supply โดยไม่ใช้ live data ปะปนระหว่าง run
+- [x] แสดง shortage, recommendation และเหตุผลย้อนกลับ input; เปลี่ยน recommendation เป็น request/order เฉพาะ workflow ที่อนุมัติ
+- [x] ทดสอบ multi-level BOM, unit conversion, timing/lead time, repeated run และเปลี่ยน stock ระหว่าง planning
 
 **ผลส่งมอบ/เกณฑ์จบ:** input snapshot เดิมให้ material plan เดิม และผู้วางแผนยืนยัน shortage/recommendation จากเคสจริง; ไม่เปิด MRP ก่อน CP-10/11/12 prerequisites พร้อม.
 

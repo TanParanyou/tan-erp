@@ -1007,4 +1007,22 @@
   <data name="PRODUCTION_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
   <data name="PRODUCTION_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
   <data name="PRODUCTION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="MRP_BOM_CYCLE_TITLE" xml:space="preserve"><value>โครงสร้าง BOM วนซ้ำ</value></data>
+  <data name="MRP_BOM_CYCLE_DETAIL" xml:space="preserve"><value>โครงสร้าง BOM วนซ้ำ</value></data>
+  <data name="MRP_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะข้อเสนอแนะไม่ถูกต้อง</value></data>
+  <data name="MRP_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะข้อเสนอแนะไม่ถูกต้อง</value></data>
+  <data name="MRP_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ตัดสินข้อเสนอแนะของรอบที่ตนสั่งคำนวณไม่ได้</value></data>
+  <data name="MRP_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ตัดสินข้อเสนอแนะของรอบที่ตนสั่งคำนวณไม่ได้</value></data>
+  <data name="MRP_NOT_CONVERTIBLE_TITLE" xml:space="preserve"><value>ข้อเสนอแนะนี้แปลงเป็นเอกสารไม่ได้</value></data>
+  <data name="MRP_NOT_CONVERTIBLE_DETAIL" xml:space="preserve"><value>ข้อเสนอแนะนี้แปลงเป็นเอกสารไม่ได้</value></data>
+  <data name="MRP_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อเสนอแนะถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="MRP_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ข้อเสนอแนะถูกแก้ไขโดยผู้อื่น</value></data>
+  <data name="MRP_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="MRP_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
+  <data name="MRP_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="MRP_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="MRP_DEMAND_INVALID_TITLE" xml:space="preserve"><value>ความต้องการไม่ถูกต้อง</value></data>
+  <data name="MRP_DEMAND_INVALID_DETAIL" xml:space="preserve"><value>ความต้องการไม่ถูกต้อง</value></data>
+  <data name="MRP_CONVERT_INPUT_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลสำหรับแปลงเอกสารไม่ครบ</value></data>
+  <data name="MRP_CONVERT_INPUT_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลสำหรับแปลงเอกสารไม่ครบ</value></data>
 </root>

@@ -845,4 +845,22 @@
   <data name="PRODUCTION_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>A required field is missing.</value></data>
   <data name="PRODUCTION_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
   <data name="PRODUCTION_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
+  <data name="MRP_BOM_CYCLE_TITLE" xml:space="preserve"><value>Circular BOM</value></data>
+  <data name="MRP_BOM_CYCLE_DETAIL" xml:space="preserve"><value>The BOM structure contains a cycle or is too deep to plan.</value></data>
+  <data name="MRP_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Recommendation State</value></data>
+  <data name="MRP_INVALID_STATE_DETAIL" xml:space="preserve"><value>The recommendation status does not allow this action.</value></data>
+  <data name="MRP_SELF_APPROVAL_TITLE" xml:space="preserve"><value>MRP Self Approval</value></data>
+  <data name="MRP_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>The creator of a planning run cannot decide its recommendations.</value></data>
+  <data name="MRP_NOT_CONVERTIBLE_TITLE" xml:space="preserve"><value>Not Convertible</value></data>
+  <data name="MRP_NOT_CONVERTIBLE_DETAIL" xml:space="preserve"><value>A shortage without a sourcing route needs a planner decision and cannot be converted.</value></data>
+  <data name="MRP_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>MRP Version Conflict</value></data>
+  <data name="MRP_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The recommendation was changed by someone else. Reload and retry.</value></data>
+  <data name="MRP_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Field Required</value></data>
+  <data name="MRP_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>A required field is missing.</value></data>
+  <data name="MRP_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
+  <data name="MRP_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
+  <data name="MRP_DEMAND_INVALID_TITLE" xml:space="preserve"><value>Invalid Demand</value></data>
+  <data name="MRP_DEMAND_INVALID_DETAIL" xml:space="preserve"><value>Demands need an active item, a quantity above zero and a need date on or after the as-of date; at least one demand or open work orders is required.</value></data>
+  <data name="MRP_CONVERT_INPUT_REQUIRED_TITLE" xml:space="preserve"><value>Convert Input Required</value></data>
+  <data name="MRP_CONVERT_INPUT_REQUIRED_DETAIL" xml:space="preserve"><value>A work order needs a warehouse; a purchase order needs a supplier and a unit price.</value></data>
 </root>

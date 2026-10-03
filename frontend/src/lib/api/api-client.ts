@@ -195,6 +195,19 @@ export interface ListWorkOrdersParams {
   page?: number;
   pageSize?: number;
 }
+export type MrpRunRequest = components["schemas"]["MrpRunRequest"];
+export type MrpDemandRequest = components["schemas"]["MrpDemandRequest"];
+export type MrpConvertRequest = components["schemas"]["MrpConvertRequest"];
+export type MrpRunResponse = components["schemas"]["MrpRunResponse"];
+export type MrpRecommendationResponse = components["schemas"]["MrpRecommendationResponse"];
+export type MrpRunListResponse = components["schemas"]["MrpRunListResponse"];
+export type MrpRunListItemResponse = components["schemas"]["MrpRunListItemResponse"];
+export type MrpRecommendationDecision = "approve" | "reject";
+export interface ListMrpRunsParams {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
 export type WarehouseRequest = components["schemas"]["WarehouseRequest"];
 export type WarehouseResponse = components["schemas"]["WarehouseResponse"];
 export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
@@ -1314,6 +1327,30 @@ export class ApiClient {
 
   async completeWorkOrder(id: string, quantity: number, options: RequestOptions): Promise<WorkOrderResponse> {
     return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}/completions`, "POST", options, { quantity });
+  }
+
+  async listMrpRuns(options: RequestOptions, query: ListMrpRunsParams): Promise<MrpRunListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<MrpRunListResponse>(`/api/v1/mrp/runs?${params.toString()}`, "GET", options);
+  }
+
+  async getMrpRun(id: string, options: RequestOptions): Promise<MrpRunResponse> {
+    return this.request<MrpRunResponse>(`/api/v1/mrp/runs/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createMrpRun(payload: MrpRunRequest, options: RequestOptions): Promise<MrpRunResponse> {
+    return this.request<MrpRunResponse>("/api/v1/mrp/runs", "POST", options, payload);
+  }
+
+  async decideMrpRecommendation(runId: string, recommendationId: string, decision: MrpRecommendationDecision, rowVersion: string, options: RequestOptions): Promise<MrpRunResponse> {
+    return this.request<MrpRunResponse>(`/api/v1/mrp/runs/${encodeURIComponent(runId)}/recommendations/${encodeURIComponent(recommendationId)}/${decision}`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async convertMrpRecommendation(runId: string, recommendationId: string, rowVersion: string, payload: MrpConvertRequest, options: RequestOptions): Promise<MrpRunResponse> {
+    return this.request<MrpRunResponse>(`/api/v1/mrp/runs/${encodeURIComponent(runId)}/recommendations/${encodeURIComponent(recommendationId)}/convert`, "POST", { ...options, ifMatch: rowVersion }, payload);
   }
 
   async listWarehouses(options: RequestOptions, query: ListWarehousesParams): Promise<WarehouseListResponse> {

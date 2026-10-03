@@ -67,6 +67,12 @@ export const PERMISSIONS = {
   WORK_ORDERS_MANAGE: "work-orders.manage",
   WORK_ORDERS_OPERATE: "work-orders.operate",
 
+  // MRP
+  MRP_READ: "mrp.read",
+  MRP_RUN: "mrp.run",
+  MRP_APPROVE: "mrp.approve",
+  MRP_CONVERT: "mrp.convert",
+
   // Projects
   PROJECTS_READ: "projects.read",
   PROJECTS_CREATE: "projects.create",

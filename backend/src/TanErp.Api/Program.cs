@@ -173,6 +173,8 @@ builder.Services.AddScoped<TanErp.Application.Procurement.IProcurementStore, Tan
 builder.Services.AddScoped<TanErp.Application.Procurement.ProcurementHandler>();
 builder.Services.AddScoped<TanErp.Application.Production.IProductionStore, TanErp.Infrastructure.Persistence.Production.ProductionStore>();
 builder.Services.AddScoped<TanErp.Application.Production.ProductionHandler>();
+builder.Services.AddScoped<TanErp.Application.Mrp.IMrpStore, TanErp.Infrastructure.Persistence.Mrp.MrpStore>();
+builder.Services.AddScoped<TanErp.Application.Mrp.MrpHandler>();
 builder.Services.AddScoped<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>();
 builder.Services.AddScoped<TanErp.Application.Inventory.IInventoryStore>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());
 builder.Services.AddScoped<TanErp.Application.Inventory.IProductionStockPort>(sp => sp.GetRequiredService<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>());

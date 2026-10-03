@@ -9415,6 +9415,349 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mrp/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MrpRunListResponse"];
+                        "application/json": components["schemas"]["MrpRunListResponse"];
+                        "text/json": components["schemas"]["MrpRunListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["MrpRunRequest"];
+                    "text/json": components["schemas"]["MrpRunRequest"];
+                    "application/*+json": components["schemas"]["MrpRunRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MrpRunResponse"];
+                        "application/json": components["schemas"]["MrpRunResponse"];
+                        "text/json": components["schemas"]["MrpRunResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mrp/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MrpRunResponse"];
+                        "application/json": components["schemas"]["MrpRunResponse"];
+                        "text/json": components["schemas"]["MrpRunResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mrp/runs/{id}/recommendations/{recommendationId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    recommendationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MrpRunResponse"];
+                        "application/json": components["schemas"]["MrpRunResponse"];
+                        "text/json": components["schemas"]["MrpRunResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mrp/runs/{id}/recommendations/{recommendationId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    recommendationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MrpRunResponse"];
+                        "application/json": components["schemas"]["MrpRunResponse"];
+                        "text/json": components["schemas"]["MrpRunResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mrp/runs/{id}/recommendations/{recommendationId}/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    recommendationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["MrpConvertRequest"];
+                    "text/json": components["schemas"]["MrpConvertRequest"];
+                    "application/*+json": components["schemas"]["MrpConvertRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MrpRunResponse"];
+                        "application/json": components["schemas"]["MrpRunResponse"];
+                        "text/json": components["schemas"]["MrpRunResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/opportunities": {
         parameters: {
             query?: never;
@@ -16119,6 +16462,146 @@ export interface components {
             organization?: components["schemas"]["OrganizationDto"];
             branch?: components["schemas"]["BranchDto"];
             permissions?: components["schemas"]["PermissionDto"][] | null;
+        };
+        MrpConvertRequest: {
+            /** Format: uuid */
+            supplierId?: string | null;
+            /** Format: double */
+            unitPrice?: number | null;
+            /** Format: uuid */
+            warehouseId?: string | null;
+        };
+        MrpConvertedResponse: {
+            type?: string | null;
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+        };
+        MrpDemandRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: double */
+            quantity?: number;
+            /** Format: date */
+            needBy?: string;
+            reference?: string | null;
+        };
+        MrpItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            nameTh?: string | null;
+            unitCode?: string | null;
+        };
+        MrpPaginationResponse: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        MrpPersonResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+            email?: string | null;
+        };
+        MrpReasonResponse: {
+            sourceType?: string | null;
+            sourceRef?: string | null;
+            /** Format: double */
+            quantity?: number;
+            /** Format: date */
+            needBy?: string;
+        };
+        MrpRecommendationResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            lineNo?: number;
+            item?: components["schemas"]["MrpItemResponse"];
+            action?: string | null;
+            /** Format: double */
+            quantity?: number;
+            /** Format: date */
+            needBy?: string;
+            /** Format: date */
+            orderBy?: string;
+            /** Format: int32 */
+            level?: number;
+            /** Format: double */
+            grossRequirement?: number;
+            /** Format: double */
+            stockUsed?: number;
+            /** Format: double */
+            scheduledReceiptsUsed?: number;
+            reasons?: components["schemas"]["MrpReasonResponse"][] | null;
+            status?: string | null;
+            decidedBy?: components["schemas"]["MrpPersonResponse"];
+            /** Format: date-time */
+            decidedAtUtc?: string | null;
+            converted?: components["schemas"]["MrpConvertedResponse"];
+            /** Format: uuid */
+            rowVersion?: string;
+        };
+        MrpRunListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            /** Format: date */
+            asOfDate?: string;
+            /** Format: int32 */
+            recommendationCount?: number;
+            /** Format: int32 */
+            shortageCount?: number;
+            /** Format: int32 */
+            openCount?: number;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        MrpRunListResponse: {
+            items?: components["schemas"]["MrpRunListItemResponse"][] | null;
+            pagination?: components["schemas"]["MrpPaginationResponse"];
+        };
+        MrpRunRequest: {
+            /** Format: date */
+            asOfDate?: string;
+            /** Format: int32 */
+            purchaseLeadTimeDays?: number;
+            /** Format: int32 */
+            productionLeadTimeDays?: number;
+            includeOpenWorkOrders?: boolean;
+            demands?: components["schemas"]["MrpDemandRequest"][] | null;
+        };
+        MrpRunResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            /** Format: date */
+            asOfDate?: string;
+            /** Format: int32 */
+            purchaseLeadTimeDays?: number;
+            /** Format: int32 */
+            productionLeadTimeDays?: number;
+            inputHash?: string | null;
+            snapshot?: components["schemas"]["MrpSnapshotSummaryResponse"];
+            createdBy?: components["schemas"]["MrpPersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            recommendations?: components["schemas"]["MrpRecommendationResponse"][] | null;
+        };
+        MrpSnapshotSummaryResponse: {
+            /** Format: int32 */
+            demandCount?: number;
+            /** Format: int32 */
+            supplyCount?: number;
+            /** Format: int32 */
+            bomCount?: number;
+            /** Format: int32 */
+            stockItemCount?: number;
         };
         OpportunityListResponse: {
             items?: components["schemas"]["OpportunityResponse"][] | null;

@@ -59,6 +59,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasPurchaseOrdersRead = can(activeMembership, "purchase-orders.read");
   const hasBomsRead = can(activeMembership, "boms.read");
   const hasWorkOrdersRead = can(activeMembership, "work-orders.read");
+  const hasMrpRead = can(activeMembership, "mrp.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
   const hasSettingsRead =
@@ -249,8 +250,18 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         permission: hasWorkOrdersRead,
       });
     }
+    if (hasMrpRead) {
+      items.push({
+        id: "mrp-runs",
+        href: `/${locale}/production/mrp`,
+        label: tShell("mrpRuns"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/production/mrp`),
+        permission: hasMrpRead,
+      });
+    }
     return items;
-  }, [hasBomsRead, hasWorkOrdersRead, locale, pathname, tShell]);
+  }, [hasBomsRead, hasWorkOrdersRead, hasMrpRead, locale, pathname, tShell]);
 
   const subgroups: NavSubgroupDef[] = useMemo(() => {
     const groups: NavSubgroupDef[] = [];

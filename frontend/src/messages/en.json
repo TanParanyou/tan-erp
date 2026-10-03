@@ -83,7 +83,8 @@
     "inventorySubgroup": "Inventory",
     "boms": "Bills of materials",
     "workOrders": "Work orders",
-    "productionSubgroup": "Production"
+    "productionSubgroup": "Production",
+    "mrpRuns": "Material planning"
   },
   "common": {
     "actions": {
@@ -1555,7 +1556,8 @@
       "stock-adjustments": "Stock Adjustment",
       "stock-returns": "Stock Return",
       "boms": "BOM Code",
-      "work-orders": "Work Order"
+      "work-orders": "Work Order",
+      "mrp-runs": "MRP Run"
     },
     "tokens": {
       "prefix": "Prefix",
@@ -2720,6 +2722,108 @@
       },
       "issuedToast": "Materials issued.",
       "returnedToast": "Materials returned."
+    }
+  },
+  "mrp": {
+    "accessDeniedTitle": "No access to material planning",
+    "accessDeniedDetail": "This account has not been granted access to this section.",
+    "errors": {
+      "failed": "The action failed. Please try again.",
+      "MRP_BOM_CYCLE": "The BOM structure has a cycle or is too deep to plan.",
+      "MRP_INVALID_STATE": "The recommendation status does not allow this action.",
+      "MRP_SELF_APPROVAL": "The person who ran the plan cannot decide its recommendations.",
+      "MRP_NOT_CONVERTIBLE": "A shortage with no sourcing route cannot be converted; a planner must decide.",
+      "MRP_VERSION_CONFLICT": "The recommendation was changed by someone else. Reload and try again.",
+      "MRP_FIELD_REQUIRED": "A required field is missing.",
+      "MRP_FIELD_INVALID": "A value is invalid. Lead times must be 0-365 days.",
+      "MRP_DEMAND_INVALID": "Demands need an active item, a quantity above zero and a need date on or after the as-of date.",
+      "MRP_CONVERT_INPUT_REQUIRED": "A work order needs a warehouse; a purchase order needs a supplier and a unit price.",
+      "PURCHASE_ORDER_ITEM_NOT_PURCHASABLE": "The item is not purchasable.",
+      "PURCHASE_ORDER_SUPPLIER_INACTIVE": "The supplier is not active.",
+      "PRODUCTION_BOM_NOT_APPROVED": "The item has no approved BOM revision.",
+      "INVENTORY_WAREHOUSE_INACTIVE": "The warehouse is not active.",
+      "INVENTORY_WAREHOUSE_BRANCH_MISMATCH": "The warehouse must belong to the active branch."
+    },
+    "runs": {
+      "title": "Material requirements planning",
+      "subtitle": "Plan multi-level BOM demand against stock and open supply, then recommend what to buy or make",
+      "search": "Search by run number",
+      "empty": "No planning runs yet",
+      "emptyDetail": "Create a run from product demand and open work orders.",
+      "noResults": "No runs match the filters.",
+      "create": "New planning run",
+      "createTitle": "New MRP run",
+      "editorSubtitle": "All inputs are frozen when the run is made, so the result does not change when stock changes later.",
+      "detailSubtitle": "Results, recommendations and the demand behind each one",
+      "loadError": "Could not load the planning run.",
+      "number": "Run number",
+      "asOfDate": "As-of date",
+      "purchaseLeadTime": "Purchase lead time (days)",
+      "productionLeadTime": "Production lead time (days)",
+      "includeOpenWorkOrders": "Include unissued materials of open work orders",
+      "demandsTitle": "Product demand",
+      "demandsEmpty": "No demand yet. Search and select an item below.",
+      "addDemand": "Add demanded item",
+      "quantity": "Quantity",
+      "needBy": "Needed by",
+      "orderBy": "Order by",
+      "reference": "Reference",
+      "removeLine": "Remove",
+      "paramsInvalid": "Enter the as-of date and lead times as whole non-negative numbers.",
+      "demandsInvalid": "Add at least one demand or include open work orders; quantities must be above zero and dates not before the as-of date.",
+      "runPlan": "Run plan",
+      "created": "Planning run created.",
+      "recommendationCount": "Recommendations",
+      "shortageCount": "Unsourced shortages",
+      "openCount": "Open",
+      "createdAt": "Created at",
+      "createdBy": "Created by",
+      "snapshot": "Frozen inputs",
+      "snapshotSummary": "{demands} demands · {supplies} scheduled receipts · {boms} BOMs · {stock} stocked items",
+      "inputHash": "Input fingerprint",
+      "frozenNote": "The same inputs always give the same plan. For a fresh plan, create a new run.",
+      "recommendationsTitle": "Recommendations",
+      "recommendationsEmpty": "Nothing to buy or make; stock and incoming supply cover the demand.",
+      "action": "Action",
+      "actionLabels": {
+        "buy": "Buy",
+        "make": "Make",
+        "shortage": "Shortage (no route)"
+      },
+      "item": "Item",
+      "why": "Why",
+      "netting": "Gross {gross} − stock {stock} − incoming {receipts}",
+      "sources": {
+        "manual": "Manual demand",
+        "work_order": "Work order",
+        "dependent": "From BOM"
+      },
+      "status": "Status",
+      "statuses": {
+        "proposed": "Proposed",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "converted": "Converted"
+      },
+      "actions": "Actions",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Recommendation approved.",
+      "rejected": "Recommendation rejected.",
+      "convert": "Convert",
+      "converted": "Draft document created.",
+      "convertBuyTitle": "Create a draft purchase order",
+      "convertBuyDescription": "Choose a supplier and unit price. The order still follows the normal approval workflow.",
+      "convertMakeTitle": "Create a draft work order",
+      "convertMakeDescription": "Choose the warehouse. The work order still has to be released.",
+      "supplier": "Supplier",
+      "selectSupplier": "Select a supplier",
+      "unitPrice": "Unit price",
+      "warehouse": "Warehouse",
+      "selectWarehouse": "Select a warehouse",
+      "convertBuyRequired": "Select a supplier and enter a unit price.",
+      "convertMakeRequired": "Select a warehouse.",
+      "confirmConvert": "Create document"
     }
   }
 }
