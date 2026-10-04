@@ -3274,4 +3274,84 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal(new[] { HttpStatusCode.NotFound, HttpStatusCode.NotFound, HttpStatusCode.NotFound, HttpStatusCode.TooManyRequests, HttpStatusCode.TooManyRequests }, statuses);
         Assert.Equal(HttpStatusCode.TooManyRequests, (await PublicAcceptAsync("short-guess-x", Submission(), client)).StatusCode);
     }
+
+    [Fact]
+    public async Task QuickEstimate_Conversion_StartsAnOfficialEstimateDraftOnce_AndRespectsTheSharePolicy()
+    {
+        var (_, _, oppId, _, surveyRevId, _) = await SetupEstimatingOpportunityAsync();
+        var templateId = Guid.NewGuid();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            // TEST_ONLY template, activated by someone other than its author.
+            var config = new TanErp.Domain.QuickEstimates.TemplateConfig(
+                new[] { new TanErp.Domain.QuickEstimates.TemplateGrade("standard", "Standard", 1.0m) },
+                Array.Empty<TanErp.Domain.QuickEstimates.TemplateComplexity>(), Array.Empty<TanErp.Domain.QuickEstimates.TemplateAddOn>(), 0.08m, 0.02m, 0.06m, Array.Empty<string>(), Array.Empty<string>());
+            var template = new TanErp.Domain.QuickEstimates.PricingTemplate(templateId, OrgAId, "QE-CONV-TEST", 1, "built-in", "TEST_ONLY", "area", "m2", 8000m, 20000m, 0.10m, 0.25m, 1000m, 7, 0.07m, "exclusive", 500000m, null, null, config, TestOnlyDataSeeder.TestUserId, now);
+            template.Submit(TestOnlyDataSeeder.TestUserId, now);
+            var approver = await db.Memberships.AsNoTracking().Where(m => m.Id == TestOnlyDataSeeder.TestCostReviewerMembershipId).Select(m => m.UserId).SingleAsync();
+            template.Decide(true, null, approver, now);
+            template.Activate(now);
+            db.PricingTemplates.Add(template);
+            await db.SaveChangesAsync();
+        }
+
+        async Task<TanErp.Api.Contracts.QuickEstimates.QuickEstimateResponse> PricedAsync(Guid? opportunityId, bool custom)
+        {
+            var createRequest = CreateAuthenticatedRequest(HttpMethod.Post, "/api/v1/quick-estimates", "token-org-a", MembershipAId);
+            createRequest.Headers.Add("Idempotency-Key", $"qe-conv-create-{Guid.NewGuid():N}");
+            createRequest.Content = JsonContent.Create(new TanErp.Api.Contracts.QuickEstimates.CreateQuickEstimateRequest(null, opportunityId));
+            var created = (await (await _client.SendAsync(createRequest)).Content.ReadFromJsonAsync<TanErp.Api.Contracts.QuickEstimates.QuickEstimateResponse>())!;
+
+            var patchRequest = CreateAuthenticatedRequest(HttpMethod.Patch, $"/api/v1/quick-estimates/{created.Id}/draft", "token-org-a", MembershipAId);
+            patchRequest.Headers.Add("If-Match", $"\"{created.RowVersion}\"");
+            patchRequest.Content = JsonContent.Create(new TanErp.Api.Contracts.QuickEstimates.QuickEstimateDraftRequest(
+                templateId, "house", "ห้องนอน", "standard", new List<string>(), new List<string>(), "medium", custom,
+                new List<TanErp.Api.Contracts.QuickEstimates.MeasurementRequest> { new(Guid.NewGuid(), "wardrobe", 3m, 2.6m, null, 1) }));
+            var patched = (await (await _client.SendAsync(patchRequest)).Content.ReadFromJsonAsync<TanErp.Api.Contracts.QuickEstimates.QuickEstimateResponse>())!;
+
+            var calcRequest = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/quick-estimates/{created.Id}/calculate", "token-org-a", MembershipAId);
+            calcRequest.Headers.Add("If-Match", $"\"{patched.RowVersion}\"");
+            var calcResponse = await _client.SendAsync(calcRequest);
+            Assert.Equal(HttpStatusCode.OK, calcResponse.StatusCode);
+            return (await calcResponse.Content.ReadFromJsonAsync<TanErp.Api.Contracts.QuickEstimates.QuickEstimateResponse>())!;
+        }
+
+        HttpRequestMessage ConvertRequest(Guid id, int version, Guid? survey, string key)
+        {
+            var request = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/quick-estimates/{id}/conversion", "token-org-a", MembershipAId);
+            request.Headers.Add("Idempotency-Key", key);
+            request.Content = JsonContent.Create(new TanErp.Api.Contracts.QuickEstimates.ConversionRequest(version, survey ?? Guid.Empty));
+            return request;
+        }
+
+        var estimate = await PricedAsync(oppId, custom: false);
+        Assert.Equal("shareable", estimate.CurrentCalculation!.ShareDecision);
+
+        Assert.Equal("QUICK_ESTIMATE_FIELD_REQUIRED", await ProblemCodeAsync(await _client.SendAsync(ConvertRequest(estimate.Id, 1, null, $"qe-conv-{Guid.NewGuid():N}"))));
+        var key = $"qe-conv-{Guid.NewGuid():N}";
+        var converted = await _client.SendAsync(ConvertRequest(estimate.Id, 1, surveyRevId, key));
+        Assert.Equal(HttpStatusCode.Created, converted.StatusCode);
+        var result = (await converted.Content.ReadFromJsonAsync<TanErp.Api.Contracts.QuickEstimates.QuickEstimateResponse>())!;
+        var link = Assert.Single(result.Conversions);
+        Assert.Equal(("converted", 1), (result.Status, link.SourceVersion));
+
+        // The official estimate is a fresh draft: the price range is not copied as a price.
+        var official = await _client.SendAsync(CreateAuthenticatedRequest(HttpMethod.Get, $"/api/v1/estimates/{link.OfficialEstimateId}", "token-org-a", MembershipAId));
+        Assert.Equal(HttpStatusCode.OK, official.StatusCode);
+        Assert.Contains("draft", await official.Content.ReadAsStringAsync());
+
+        // Replaying the request returns the same conversion; another key cannot convert the same calculation again.
+        var replay = (await (await _client.SendAsync(ConvertRequest(estimate.Id, 1, surveyRevId, key))).Content.ReadFromJsonAsync<TanErp.Api.Contracts.QuickEstimates.QuickEstimateResponse>())!;
+        Assert.Equal(link.OfficialEstimateId, Assert.Single(replay.Conversions).OfficialEstimateId);
+        Assert.Equal("QUICK_ESTIMATE_ALREADY_CONVERTED", await ProblemCodeAsync(await _client.SendAsync(ConvertRequest(estimate.Id, 1, surveyRevId, $"qe-conv-{Guid.NewGuid():N}"))));
+
+        // A risky estimate must be reviewed first, and an estimate without an opportunity has nothing to convert into.
+        var risky = await PricedAsync(oppId, custom: true);
+        Assert.Equal("pending_review", risky.CurrentCalculation!.ShareDecision);
+        Assert.Equal("QUICK_ESTIMATE_REVIEW_REQUIRED", await ProblemCodeAsync(await _client.SendAsync(ConvertRequest(risky.Id, 1, surveyRevId, $"qe-conv-{Guid.NewGuid():N}"))));
+        var loose = await PricedAsync(null, custom: false);
+        Assert.Equal("QUICK_ESTIMATE_OPPORTUNITY_REQUIRED", await ProblemCodeAsync(await _client.SendAsync(ConvertRequest(loose.Id, 1, surveyRevId, $"qe-conv-{Guid.NewGuid():N}"))));
+    }
 }

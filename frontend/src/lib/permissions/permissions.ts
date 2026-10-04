@@ -83,6 +83,17 @@ export const PERMISSIONS = {
   FINANCE_SYNC_READ: "finance-sync.read",
   FINANCE_SYNC_RUN: "finance-sync.run",
 
+  // Quick estimate
+  PRICING_TEMPLATES_READ: "pricing-templates.read",
+  PRICING_TEMPLATES_MANAGE: "pricing-templates.manage",
+  PRICING_TEMPLATES_APPROVE: "pricing-templates.approve",
+  QUICK_ESTIMATES_CREATE: "quick-estimates.create",
+  QUICK_ESTIMATES_READ: "quick-estimates.read",
+  QUICK_ESTIMATES_UPDATE: "quick-estimates.update",
+  QUICK_ESTIMATES_REVIEW: "quick-estimates.review",
+  QUICK_ESTIMATES_SHARE: "quick-estimates.share",
+  QUICK_ESTIMATES_CONVERT: "quick-estimates.convert",
+
   // MRP
   MRP_READ: "mrp.read",
   MRP_RUN: "mrp.run",

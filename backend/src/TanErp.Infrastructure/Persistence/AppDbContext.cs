@@ -50,6 +50,12 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Production.WorkOrderMaterial> WorkOrderMaterials => Set<TanErp.Domain.Production.WorkOrderMaterial>();
     public DbSet<TanErp.Domain.Production.WorkOrderTransaction> WorkOrderTransactions => Set<TanErp.Domain.Production.WorkOrderTransaction>();
     public DbSet<TanErp.Domain.Mrp.MrpRun> MrpRuns => Set<TanErp.Domain.Mrp.MrpRun>();
+    public DbSet<TanErp.Domain.QuickEstimates.PricingTemplate> PricingTemplates => Set<TanErp.Domain.QuickEstimates.PricingTemplate>();
+    public DbSet<TanErp.Domain.QuickEstimates.QuickEstimate> QuickEstimates => Set<TanErp.Domain.QuickEstimates.QuickEstimate>();
+    public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateCalculation> QuickEstimateCalculations => Set<TanErp.Domain.QuickEstimates.QuickEstimateCalculation>();
+    public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateReview> QuickEstimateReviews => Set<TanErp.Domain.QuickEstimates.QuickEstimateReview>();
+    public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateShare> QuickEstimateShares => Set<TanErp.Domain.QuickEstimates.QuickEstimateShare>();
+    public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateConversion> QuickEstimateConversions => Set<TanErp.Domain.QuickEstimates.QuickEstimateConversion>();
     public DbSet<TanErp.Domain.Finance.BillingDocument> BillingDocuments => Set<TanErp.Domain.Finance.BillingDocument>();
     public DbSet<TanErp.Domain.Finance.Payment> Payments => Set<TanErp.Domain.Finance.Payment>();
     public DbSet<TanErp.Domain.Finance.AccountingOutboxMessage> AccountingOutbox => Set<TanErp.Domain.Finance.AccountingOutboxMessage>();

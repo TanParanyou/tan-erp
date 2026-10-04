@@ -33,6 +33,7 @@ public static class DocumentTypes
     public const string ServiceRequests = "service-requests";
     public const string BillingDocuments = "billing-documents";
     public const string Payments = "payments";
+    public const string QuickEstimates = "quick-estimates";
     public const string Customers = "customers";
     public const string Items = "items";
     public const string ItemCategories = "item-categories";
@@ -93,6 +94,7 @@ public static class DocumentTypes
         ServiceRequests,
         BillingDocuments,
         Payments,
+        QuickEstimates,
         Customers,
         Items,
         ItemCategories,
@@ -165,6 +167,7 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.ServiceRequests => "SRV",
             DocumentTypes.BillingDocuments => "BIL",
             DocumentTypes.Payments => "PAY",
+            DocumentTypes.QuickEstimates => "QE",
             _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Unknown document type.")
         };
 

@@ -951,4 +951,48 @@
   <data name="OUTBOX_CONFIRMATION_CONFLICT_DETAIL" xml:space="preserve"><value>The message was already confirmed with a different reference or amount.</value></data>
   <data name="OUTBOX_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
   <data name="OUTBOX_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A value is invalid: an external reference and a non-negative amount are required.</value></data>
+  <data name="PRICING_TEMPLATE_INVALID_TITLE" xml:space="preserve"><value>Invalid Pricing Template</value></data>
+  <data name="PRICING_TEMPLATE_INVALID_DETAIL" xml:space="preserve"><value>The pricing template is invalid: check rates, factors, range rates and rounding.</value></data>
+  <data name="PRICING_TEMPLATE_CODE_EXISTS_TITLE" xml:space="preserve"><value>Template Code Exists</value></data>
+  <data name="PRICING_TEMPLATE_CODE_EXISTS_DETAIL" xml:space="preserve"><value>A template with this code already exists; create a new version instead.</value></data>
+  <data name="PRICING_TEMPLATE_DRAFT_EXISTS_TITLE" xml:space="preserve"><value>Draft Exists</value></data>
+  <data name="PRICING_TEMPLATE_DRAFT_EXISTS_DETAIL" xml:space="preserve"><value>This template already has a version being prepared.</value></data>
+  <data name="PRICING_TEMPLATE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Template Version Conflict</value></data>
+  <data name="PRICING_TEMPLATE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The pricing template was changed by someone else. Reload and retry.</value></data>
+  <data name="PRICING_TEMPLATE_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Template State</value></data>
+  <data name="PRICING_TEMPLATE_INVALID_STATE_DETAIL" xml:space="preserve"><value>The template status does not allow this action.</value></data>
+  <data name="PRICING_TEMPLATE_NOT_USABLE_TITLE" xml:space="preserve"><value>Template Not Usable</value></data>
+  <data name="PRICING_TEMPLATE_NOT_USABLE_DETAIL" xml:space="preserve"><value>The pricing template is not usable: it must be in calibration or active and inside its effective period.</value></data>
+  <data name="PRICING_TEMPLATE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Template Self Approval</value></data>
+  <data name="PRICING_TEMPLATE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>The author of a template cannot decide it.</value></data>
+  <data name="QUICK_ESTIMATE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Quick Estimate Version Conflict</value></data>
+  <data name="QUICK_ESTIMATE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The quick estimate was changed by someone else. Reload and retry.</value></data>
+  <data name="QUICK_ESTIMATE_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Quick Estimate State</value></data>
+  <data name="QUICK_ESTIMATE_INVALID_STATE_DETAIL" xml:space="preserve"><value>The quick estimate status does not allow this action.</value></data>
+  <data name="QUICK_ESTIMATE_STALE_VERSION_TITLE" xml:space="preserve"><value>Stale Calculation</value></data>
+  <data name="QUICK_ESTIMATE_STALE_VERSION_DETAIL" xml:space="preserve"><value>The calculation is no longer the current version; calculate again.</value></data>
+  <data name="QUICK_ESTIMATE_EXPIRED_TITLE" xml:space="preserve"><value>Calculation Expired</value></data>
+  <data name="QUICK_ESTIMATE_EXPIRED_DETAIL" xml:space="preserve"><value>The calculation has expired; calculate again.</value></data>
+  <data name="QUICK_ESTIMATE_ALREADY_CONVERTED_TITLE" xml:space="preserve"><value>Already Converted</value></data>
+  <data name="QUICK_ESTIMATE_ALREADY_CONVERTED_DETAIL" xml:space="preserve"><value>This calculation has already been converted.</value></data>
+  <data name="QUICK_ESTIMATE_SELF_REVIEW_TITLE" xml:space="preserve"><value>Self Review</value></data>
+  <data name="QUICK_ESTIMATE_SELF_REVIEW_DETAIL" xml:space="preserve"><value>The author of a quick estimate cannot review it.</value></data>
+  <data name="QUICK_ESTIMATE_INPUT_INCOMPLETE_TITLE" xml:space="preserve"><value>Input Incomplete</value></data>
+  <data name="QUICK_ESTIMATE_INPUT_INCOMPLETE_DETAIL" xml:space="preserve"><value>Required measurements are missing or invalid.</value></data>
+  <data name="QUICK_ESTIMATE_OPTION_INVALID_TITLE" xml:space="preserve"><value>Invalid Option</value></data>
+  <data name="QUICK_ESTIMATE_OPTION_INVALID_DETAIL" xml:space="preserve"><value>A selected option is not part of the template.</value></data>
+  <data name="QUICK_ESTIMATE_TEMPLATE_REQUIRED_TITLE" xml:space="preserve"><value>Template Required</value></data>
+  <data name="QUICK_ESTIMATE_TEMPLATE_REQUIRED_DETAIL" xml:space="preserve"><value>Choose a pricing template first.</value></data>
+  <data name="QUICK_ESTIMATE_SHARE_BLOCKED_TITLE" xml:space="preserve"><value>Share Blocked</value></data>
+  <data name="QUICK_ESTIMATE_SHARE_BLOCKED_DETAIL" xml:space="preserve"><value>This estimate cannot be shared.</value></data>
+  <data name="QUICK_ESTIMATE_REVIEW_REQUIRED_TITLE" xml:space="preserve"><value>Review Required</value></data>
+  <data name="QUICK_ESTIMATE_REVIEW_REQUIRED_DETAIL" xml:space="preserve"><value>A reviewer must approve this estimate first.</value></data>
+  <data name="QUICK_ESTIMATE_OPPORTUNITY_REQUIRED_TITLE" xml:space="preserve"><value>Opportunity Required</value></data>
+  <data name="QUICK_ESTIMATE_OPPORTUNITY_REQUIRED_DETAIL" xml:space="preserve"><value>Link the quick estimate to an opportunity before converting.</value></data>
+  <data name="QUICK_ESTIMATE_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Reason Required</value></data>
+  <data name="QUICK_ESTIMATE_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A reason is required.</value></data>
+  <data name="QUICK_ESTIMATE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Field Required</value></data>
+  <data name="QUICK_ESTIMATE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>A required field is missing.</value></data>
+  <data name="QUICK_ESTIMATE_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
+  <data name="QUICK_ESTIMATE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
 </root>

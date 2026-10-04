@@ -294,6 +294,29 @@ export interface ListOutboxParams {
   page?: number;
   pageSize?: number;
 }
+export type PricingTemplateRequest = components["schemas"]["PricingTemplateRequest"];
+export type PricingTemplateResponse = components["schemas"]["PricingTemplateResponse"];
+export type PricingTemplateListResponse = components["schemas"]["PricingTemplateListResponse"];
+export type PricingTemplateListItemResponse = components["schemas"]["PricingTemplateListItemResponse"];
+export type EffectiveTemplateResponse = components["schemas"]["EffectiveTemplateResponse"];
+export type QuickEstimateResponse = components["schemas"]["QuickEstimateResponse"];
+export type QuickEstimateListResponse = components["schemas"]["QuickEstimateListResponse"];
+export type QuickEstimateListItemResponse = components["schemas"]["QuickEstimateListItemResponse"];
+export type QuickEstimateDraftRequest = components["schemas"]["QuickEstimateDraftRequest"];
+export type TemplateStepName = "submit" | "calibration" | "activate" | "disable";
+export interface ListPricingTemplatesParams {
+  search?: string;
+  status?: string;
+  workType?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListQuickEstimatesParams {
+  search?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
 export type WarehouseRequest = components["schemas"]["WarehouseRequest"];
 export type WarehouseResponse = components["schemas"]["WarehouseResponse"];
 export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
@@ -1630,6 +1653,85 @@ export class ApiClient {
 
   async getFinanceReconciliation(options: RequestOptions): Promise<FinanceReconciliationResponse> {
     return this.request<FinanceReconciliationResponse>("/api/v1/finance/reconciliation", "GET", options);
+  }
+
+  async listPricingTemplates(options: RequestOptions, query: ListPricingTemplatesParams): Promise<PricingTemplateListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.workType) params.set("workType", query.workType);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<PricingTemplateListResponse>(`/api/v1/pricing-templates?${params.toString()}`, "GET", options);
+  }
+
+  async getPricingTemplate(id: string, options: RequestOptions): Promise<PricingTemplateResponse> {
+    return this.request<PricingTemplateResponse>(`/api/v1/pricing-templates/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async listEffectivePricingTemplates(options: RequestOptions): Promise<EffectiveTemplateResponse[]> {
+    return this.request<EffectiveTemplateResponse[]>("/api/v1/pricing-templates/effective", "GET", options);
+  }
+
+  async createPricingTemplate(payload: PricingTemplateRequest, options: RequestOptions): Promise<PricingTemplateResponse> {
+    return this.request<PricingTemplateResponse>("/api/v1/pricing-templates", "POST", options, payload);
+  }
+
+  async updatePricingTemplate(id: string, rowVersion: string, payload: PricingTemplateRequest, options: RequestOptions): Promise<PricingTemplateResponse> {
+    return this.request<PricingTemplateResponse>(`/api/v1/pricing-templates/${encodeURIComponent(id)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async convertQuickEstimate(id: string, sourceVersion: number, siteSurveyRevisionId: string, options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>(`/api/v1/quick-estimates/${encodeURIComponent(id)}/conversion`, "POST", options, { sourceVersion, siteSurveyRevisionId });
+  }
+
+  async newPricingTemplateVersion(id: string, options: RequestOptions): Promise<PricingTemplateResponse> {
+    return this.request<PricingTemplateResponse>(`/api/v1/pricing-templates/${encodeURIComponent(id)}/versions`, "POST", options);
+  }
+
+  async pricingTemplateStep(id: string, rowVersion: string, step: TemplateStepName, options: RequestOptions): Promise<PricingTemplateResponse> {
+    return this.request<PricingTemplateResponse>(`/api/v1/pricing-templates/${encodeURIComponent(id)}/${step}`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async decidePricingTemplate(id: string, rowVersion: string, decision: "approved" | "returned", note: string | null, options: RequestOptions): Promise<PricingTemplateResponse> {
+    return this.request<PricingTemplateResponse>(`/api/v1/pricing-templates/${encodeURIComponent(id)}/decision`, "POST", { ...options, ifMatch: rowVersion }, { decision, note });
+  }
+
+  async listQuickEstimates(options: RequestOptions, query: ListQuickEstimatesParams): Promise<QuickEstimateListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<QuickEstimateListResponse>(`/api/v1/quick-estimates?${params.toString()}`, "GET", options);
+  }
+
+  async getQuickEstimate(id: string, options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>(`/api/v1/quick-estimates/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createQuickEstimate(options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>("/api/v1/quick-estimates", "POST", options, { customerId: null, opportunityId: null });
+  }
+
+  async patchQuickEstimateDraft(id: string, rowVersion: string, payload: QuickEstimateDraftRequest, options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>(`/api/v1/quick-estimates/${encodeURIComponent(id)}/draft`, "PATCH", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async calculateQuickEstimate(id: string, rowVersion: string, options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>(`/api/v1/quick-estimates/${encodeURIComponent(id)}/calculate`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async submitQuickEstimateReview(id: string, sourceVersion: number, options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>(`/api/v1/quick-estimates/${encodeURIComponent(id)}/submit-review`, "POST", options, { sourceVersion, note: null });
+  }
+
+  async decideQuickEstimateReview(id: string, sourceVersion: number, decision: "approved" | "returned", reasonCode: string, options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>(`/api/v1/quick-estimates/${encodeURIComponent(id)}/review-decisions`, "POST", options, { sourceVersion, decision, reasonCode, note: null });
+  }
+
+  async shareQuickEstimate(id: string, sourceVersion: number, locale: "th" | "en", options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>(`/api/v1/quick-estimates/${encodeURIComponent(id)}/shares`, "POST", options, { sourceVersion, channel: "onscreen", recipient: null, locale });
   }
 
   async listWarehouses(options: RequestOptions, query: ListWarehousesParams): Promise<WarehouseListResponse> {

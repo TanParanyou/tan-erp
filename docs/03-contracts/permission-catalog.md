@@ -90,6 +90,15 @@
 | Finance | `payments.manage` | บันทึก/กลับรายการรับชำระ | Organization |
 | Finance | `finance-sync.read` | ดูคิวส่งข้อมูลบัญชีและการกระทบยอด | Organization |
 | Finance | `finance-sync.run` | ส่ง ยืนยัน และส่งใหม่รายการไประบบบัญชี | Organization |
+| Quick Estimate | `pricing-templates.read` | ดูแม่แบบราคา | Organization |
+| Quick Estimate | `pricing-templates.manage` | สร้าง/แก้/ส่งอนุมัติ/สร้างเวอร์ชันใหม่ของแม่แบบราคา | Organization |
+| Quick Estimate | `pricing-templates.approve` | อนุมัติ/ส่งกลับ/ปรับเทียบ/เปิดใช้/ปิดใช้แม่แบบราคา (ห้ามอนุมัติของตัวเอง) | Organization |
+| Quick Estimate | `quick-estimates.create` | เริ่มใบประเมินเบื้องต้น | Organization |
+| Quick Estimate | `quick-estimates.read` | ดูใบประเมินเบื้องต้น | Organization |
+| Quick Estimate | `quick-estimates.update` | แก้ฉบับร่างและคำนวณ | Organization |
+| Quick Estimate | `quick-estimates.review` | อนุมัติ/ส่งกลับการตรวจ (ห้ามตรวจของตัวเอง) | Organization |
+| Quick Estimate | `quick-estimates.share` | แชร์ช่วงราคาเบื้องต้น | Organization |
+| Quick Estimate | `quick-estimates.convert` | แปลงเป็นร่าง Official Estimate | Organization |
 | Project | `projects.read` | ดู Project และ Handover source | Organization |
 | Project | `projects.create` | ส่งต่อ Quotation ที่ยืนยันแล้วเป็น Project | Organization |
 | Project | `projects.update` | แก้แผนเวลา งบ Baseline (ก่อนตรึง) และ Milestone | Organization |

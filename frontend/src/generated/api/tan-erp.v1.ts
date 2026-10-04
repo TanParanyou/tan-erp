@@ -12196,6 +12196,589 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pricing-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    workType?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateListResponse"];
+                        "application/json": components["schemas"]["PricingTemplateListResponse"];
+                        "text/json": components["schemas"]["PricingTemplateListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PricingTemplateRequest"];
+                    "text/json": components["schemas"]["PricingTemplateRequest"];
+                    "application/*+json": components["schemas"]["PricingTemplateRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PricingTemplateRequest"];
+                    "text/json": components["schemas"]["PricingTemplateRequest"];
+                    "application/*+json": components["schemas"]["PricingTemplateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TemplateDecisionRequest"];
+                    "text/json": components["schemas"]["TemplateDecisionRequest"];
+                    "application/*+json": components["schemas"]["TemplateDecisionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{id}/calibration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PricingTemplateResponse"];
+                        "application/json": components["schemas"]["PricingTemplateResponse"];
+                        "text/json": components["schemas"]["PricingTemplateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/effective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    workType?: string;
+                    at?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EffectiveTemplateResponse"][];
+                        "application/json": components["schemas"]["EffectiveTemplateResponse"][];
+                        "text/json": components["schemas"]["EffectiveTemplateResponse"][];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/control": {
         parameters: {
             query?: never;
@@ -14034,6 +14617,593 @@ export interface paths {
                         "text/plain": components["schemas"]["PurchaseOrderResponse"];
                         "application/json": components["schemas"]["PurchaseOrderResponse"];
                         "text/json": components["schemas"]["PurchaseOrderResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-estimates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateListResponse"];
+                        "application/json": components["schemas"]["QuickEstimateListResponse"];
+                        "text/json": components["schemas"]["QuickEstimateListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateQuickEstimateRequest"];
+                    "text/json": components["schemas"]["CreateQuickEstimateRequest"];
+                    "application/*+json": components["schemas"]["CreateQuickEstimateRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateResponse"];
+                        "application/json": components["schemas"]["QuickEstimateResponse"];
+                        "text/json": components["schemas"]["QuickEstimateResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-estimates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateResponse"];
+                        "application/json": components["schemas"]["QuickEstimateResponse"];
+                        "text/json": components["schemas"]["QuickEstimateResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-estimates/{id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["QuickEstimateDraftRequest"];
+                    "application/merge-patch+json": components["schemas"]["QuickEstimateDraftRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateResponse"];
+                        "application/json": components["schemas"]["QuickEstimateResponse"];
+                        "text/json": components["schemas"]["QuickEstimateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/quick-estimates/{id}/calculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateResponse"];
+                        "application/json": components["schemas"]["QuickEstimateResponse"];
+                        "text/json": components["schemas"]["QuickEstimateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-estimates/{id}/calculations/{version}/snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    version: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CalculationSnapshotResponse"];
+                        "application/json": components["schemas"]["CalculationSnapshotResponse"];
+                        "text/json": components["schemas"]["CalculationSnapshotResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-estimates/{id}/submit-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SubmitReviewRequest"];
+                    "text/json": components["schemas"]["SubmitReviewRequest"];
+                    "application/*+json": components["schemas"]["SubmitReviewRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateResponse"];
+                        "application/json": components["schemas"]["QuickEstimateResponse"];
+                        "text/json": components["schemas"]["QuickEstimateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-estimates/{id}/review-decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReviewDecisionRequest"];
+                    "text/json": components["schemas"]["ReviewDecisionRequest"];
+                    "application/*+json": components["schemas"]["ReviewDecisionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateResponse"];
+                        "application/json": components["schemas"]["QuickEstimateResponse"];
+                        "text/json": components["schemas"]["QuickEstimateResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-estimates/{id}/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ShareRequest"];
+                    "text/json": components["schemas"]["ShareRequest"];
+                    "application/*+json": components["schemas"]["ShareRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateResponse"];
+                        "application/json": components["schemas"]["QuickEstimateResponse"];
+                        "text/json": components["schemas"]["QuickEstimateResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-estimates/{id}/conversion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ConversionRequest"];
+                    "text/json": components["schemas"]["ConversionRequest"];
+                    "application/*+json": components["schemas"]["ConversionRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuickEstimateResponse"];
+                        "application/json": components["schemas"]["QuickEstimateResponse"];
+                        "text/json": components["schemas"]["QuickEstimateResponse"];
                     };
                 };
                 /** @description Conflict */
@@ -17296,6 +18466,20 @@ export interface components {
         AddAliasRequest: {
             alias: components["schemas"]["LocalizedTextInput"];
         };
+        AddOnRequest: {
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            amount?: number;
+            perLine?: boolean;
+        };
+        AddOnResponse: {
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            amount?: number;
+            perLine?: boolean;
+        };
         AddProjectMilestoneRequest: {
             name?: string | null;
             /** Format: date */
@@ -17622,6 +18806,46 @@ export interface components {
             discountValue?: number | null;
             discountReasonCode?: string | null;
         };
+        CalculationLineResponse: {
+            /** Format: uuid */
+            lineId?: string;
+            workSubtype?: string | null;
+            /** Format: double */
+            billableQuantity?: number;
+            /** Format: double */
+            baseAmount?: number;
+            /** Format: double */
+            adjustedAmount?: number;
+        };
+        CalculationResponse: {
+            /** Format: int32 */
+            version?: number;
+            templateCode?: string | null;
+            /** Format: int32 */
+            templateVersion?: number;
+            /** Format: double */
+            netAmount?: number;
+            /** Format: double */
+            taxAmount?: number;
+            /** Format: double */
+            displayedLower?: number;
+            /** Format: double */
+            displayedUpper?: number;
+            /** Format: date */
+            validUntil?: string;
+            shareDecision?: string | null;
+            reasonCodes?: string[] | null;
+            inputHash?: string | null;
+            lines?: components["schemas"]["CalculationLineResponse"][] | null;
+            createdBy?: components["schemas"]["QePersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        CalculationSnapshotResponse: {
+            /** Format: int32 */
+            version?: number;
+            snapshotJson?: string | null;
+        };
         CancelEstimateRequest: {
             reason?: string | null;
         };
@@ -17741,10 +18965,42 @@ export interface components {
             fileSizeBytes?: number;
             servingUrl?: string | null;
         };
+        ComplexityRequest: {
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            factor?: number;
+            /** Format: double */
+            riskModifier?: number;
+        };
+        ComplexityResponse: {
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            factor?: number;
+            /** Format: double */
+            riskModifier?: number;
+        };
         ConfirmRequest: {
             externalRef?: string | null;
             /** Format: double */
             externalAmount?: number;
+        };
+        ConversionRequest: {
+            /** Format: int32 */
+            sourceVersion?: number;
+            /** Format: uuid */
+            siteSurveyRevisionId?: string;
+        };
+        ConversionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            sourceVersion?: number;
+            /** Format: uuid */
+            officialEstimateId?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
         };
         CostRecordResponse: {
             /** Format: uuid */
@@ -18049,6 +19305,12 @@ export interface components {
             plannedStartDate?: string | null;
             name?: string | null;
         };
+        CreateQuickEstimateRequest: {
+            /** Format: uuid */
+            customerId?: string | null;
+            /** Format: uuid */
+            opportunityId?: string | null;
+        };
         CreateSiteImageRequest: {
             /** Format: uuid */
             fileId?: string;
@@ -18290,6 +19552,35 @@ export interface components {
             displayNameTh?: string | null;
             maskedPhone?: string | null;
             maskedEmail?: string | null;
+        };
+        EffectiveAddOnResponse: {
+            code?: string | null;
+            name?: string | null;
+            perLine?: boolean;
+        };
+        EffectiveOptionResponse: {
+            code?: string | null;
+            name?: string | null;
+        };
+        EffectiveTemplateResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            /** Format: int32 */
+            version?: number;
+            workType?: string | null;
+            name?: string | null;
+            status?: string | null;
+            measurementRule?: string | null;
+            unitCode?: string | null;
+            taxDisplay?: string | null;
+            /** Format: int32 */
+            validityDays?: number;
+            grades?: components["schemas"]["EffectiveOptionResponse"][] | null;
+            complexities?: components["schemas"]["EffectiveOptionResponse"][] | null;
+            addOns?: components["schemas"]["EffectiveAddOnResponse"][] | null;
+            assumptions?: string[] | null;
+            exclusions?: string[] | null;
         };
         EstimateCalculationSnapshotResponse: {
             /** Format: uuid */
@@ -18764,6 +20055,18 @@ export interface components {
             totalQuantity?: number;
             stockDocumentNumber?: string | null;
         };
+        GradeRequest: {
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            factor?: number;
+        };
+        GradeResponse: {
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            factor?: number;
+        };
         HandoverRequest: {
             outcome?: string | null;
             signerName?: string | null;
@@ -19170,6 +20473,32 @@ export interface components {
             /** Format: uuid */
             expectedOpportunityVersion?: string;
         };
+        MeasurementRequest: {
+            /** Format: uuid */
+            lineId?: string;
+            workSubtype?: string | null;
+            /** Format: double */
+            widthM?: number | null;
+            /** Format: double */
+            heightM?: number | null;
+            /** Format: double */
+            depthM?: number | null;
+            /** Format: double */
+            quantity?: number;
+        };
+        MeasurementResponse: {
+            /** Format: uuid */
+            lineId?: string;
+            workSubtype?: string | null;
+            /** Format: double */
+            widthM?: number | null;
+            /** Format: double */
+            heightM?: number | null;
+            /** Format: double */
+            depthM?: number | null;
+            /** Format: double */
+            quantity?: number;
+        };
         MembershipDto: {
             /** Format: uuid */
             id?: string;
@@ -19498,6 +20827,112 @@ export interface components {
         };
         PreviewItemImportRequest: {
             content?: string | null;
+        };
+        PricingTemplateListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            /** Format: int32 */
+            version?: number;
+            workType?: string | null;
+            name?: string | null;
+            status?: string | null;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+        };
+        PricingTemplateListResponse: {
+            items?: components["schemas"]["PricingTemplateListItemResponse"][] | null;
+            pagination?: components["schemas"]["QuickEstimatePaginationResponse"];
+        };
+        PricingTemplateRequest: {
+            code?: string | null;
+            workType?: string | null;
+            name?: string | null;
+            measurementRule?: string | null;
+            unitCode?: string | null;
+            /** Format: double */
+            referenceRate?: number;
+            /** Format: double */
+            minimumCharge?: number;
+            /** Format: double */
+            baseRangeRate?: number;
+            /** Format: double */
+            maxRangeRate?: number;
+            /** Format: double */
+            roundingStep?: number;
+            /** Format: int32 */
+            validityDays?: number;
+            /** Format: double */
+            taxRate?: number;
+            taxDisplay?: string | null;
+            /** Format: double */
+            directShareLimit?: number;
+            /** Format: date */
+            effectiveFrom?: string | null;
+            /** Format: date */
+            effectiveTo?: string | null;
+            grades?: components["schemas"]["GradeRequest"][] | null;
+            complexities?: components["schemas"]["ComplexityRequest"][] | null;
+            addOns?: components["schemas"]["AddOnRequest"][] | null;
+            /** Format: double */
+            lowConfidenceModifier?: number;
+            /** Format: double */
+            mediumConfidenceModifier?: number;
+            /** Format: double */
+            customMaterialModifier?: number;
+            assumptions?: string[] | null;
+            exclusions?: string[] | null;
+        };
+        PricingTemplateResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            /** Format: int32 */
+            version?: number;
+            workType?: string | null;
+            name?: string | null;
+            status?: string | null;
+            measurementRule?: string | null;
+            unitCode?: string | null;
+            /** Format: double */
+            referenceRate?: number;
+            /** Format: double */
+            minimumCharge?: number;
+            /** Format: double */
+            baseRangeRate?: number;
+            /** Format: double */
+            maxRangeRate?: number;
+            /** Format: double */
+            roundingStep?: number;
+            /** Format: int32 */
+            validityDays?: number;
+            /** Format: double */
+            taxRate?: number;
+            taxDisplay?: string | null;
+            /** Format: double */
+            directShareLimit?: number;
+            /** Format: date */
+            effectiveFrom?: string | null;
+            /** Format: date */
+            effectiveTo?: string | null;
+            grades?: components["schemas"]["GradeResponse"][] | null;
+            complexities?: components["schemas"]["ComplexityResponse"][] | null;
+            addOns?: components["schemas"]["AddOnResponse"][] | null;
+            /** Format: double */
+            lowConfidenceModifier?: number;
+            /** Format: double */
+            mediumConfidenceModifier?: number;
+            /** Format: double */
+            customMaterialModifier?: number;
+            assumptions?: string[] | null;
+            exclusions?: string[] | null;
+            createdBy?: components["schemas"]["QePersonResponse"];
+            decidedBy?: components["schemas"]["QePersonResponse"];
+            decisionNote?: string | null;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
         };
         ProcurementPaginationResponse: {
             /** Format: int32 */
@@ -19917,6 +21352,95 @@ export interface components {
             nameTh?: string | null;
             nameEn?: string | null;
         };
+        QePersonResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
+        };
+        QuickEstimateDraftRequest: {
+            /** Format: uuid */
+            templateId?: string | null;
+            propertyType?: string | null;
+            roomOrArea?: string | null;
+            gradeCode?: string | null;
+            complexityCodes?: string[] | null;
+            addOnCodes?: string[] | null;
+            measurementConfidence?: string | null;
+            customMaterial?: boolean | null;
+            measurements?: components["schemas"]["MeasurementRequest"][] | null;
+        };
+        QuickEstimateListItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            status?: string | null;
+            roomOrArea?: string | null;
+            templateCode?: string | null;
+            /** Format: double */
+            displayedLower?: number | null;
+            /** Format: double */
+            displayedUpper?: number | null;
+            shareDecision?: string | null;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+        };
+        QuickEstimateListResponse: {
+            items?: components["schemas"]["QuickEstimateListItemResponse"][] | null;
+            pagination?: components["schemas"]["QuickEstimatePaginationResponse"];
+        };
+        QuickEstimatePaginationResponse: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        QuickEstimateResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string;
+            number?: string | null;
+            status?: string | null;
+            /** Format: uuid */
+            customerId?: string | null;
+            /** Format: uuid */
+            opportunityId?: string | null;
+            template?: components["schemas"]["QuickEstimateTemplateRefResponse"];
+            propertyType?: string | null;
+            roomOrArea?: string | null;
+            gradeCode?: string | null;
+            complexityCodes?: string[] | null;
+            addOnCodes?: string[] | null;
+            measurementConfidence?: string | null;
+            customMaterial?: boolean;
+            measurements?: components["schemas"]["MeasurementResponse"][] | null;
+            /** Format: int32 */
+            currentCalculationVersion?: number;
+            currentCalculation?: components["schemas"]["CalculationResponse"];
+            reviews?: components["schemas"]["ReviewResponse"][] | null;
+            shares?: components["schemas"]["ShareResponse"][] | null;
+            conversions?: components["schemas"]["ConversionResponse"][] | null;
+            createdBy?: components["schemas"]["QePersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
+        QuickEstimateTemplateRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            /** Format: int32 */
+            version?: number;
+            name?: string | null;
+            status?: string | null;
+        };
         QuotationAddressResponse: {
             label?: string | null;
             addressLine1?: string | null;
@@ -20132,12 +21656,35 @@ export interface components {
         ReturnCostRecordRequest: {
             reason: string;
         };
+        ReviewDecisionRequest: {
+            /** Format: int32 */
+            sourceVersion?: number;
+            decision?: string | null;
+            reasonCode?: string | null;
+            note?: string | null;
+        };
         ReviewEstimateRequest: {
             /** Format: int32 */
             revisionNo?: number;
             decision?: string | null;
             reasonCode?: string | null;
             note?: string | null;
+        };
+        ReviewResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            sourceVersion?: number;
+            status?: string | null;
+            requestNote?: string | null;
+            requestedBy?: components["schemas"]["QePersonResponse"];
+            /** Format: date-time */
+            requestedAtUtc?: string;
+            decidedBy?: components["schemas"]["QePersonResponse"];
+            /** Format: date-time */
+            decidedAtUtc?: string | null;
+            reasonCode?: string | null;
+            decisionNote?: string | null;
         };
         ScheduleRequest: {
             /** Format: date */
@@ -20229,6 +21776,26 @@ export interface components {
             plannedStartDate?: string | null;
             /** Format: date */
             plannedEndDate?: string | null;
+        };
+        ShareRequest: {
+            /** Format: int32 */
+            sourceVersion?: number;
+            channel?: string | null;
+            recipient?: string | null;
+            locale?: string | null;
+        };
+        ShareResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            sourceVersion?: number;
+            channel?: string | null;
+            recipient?: string | null;
+            locale?: string | null;
+            createdBy?: components["schemas"]["QePersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            summaryJson?: string | null;
         };
         SiteImageResponse: {
             /** Format: uuid */
@@ -20474,6 +22041,11 @@ export interface components {
             calculationVersion?: number;
             note?: string | null;
         };
+        SubmitReviewRequest: {
+            /** Format: int32 */
+            sourceVersion?: number;
+            note?: string | null;
+        };
         SupplierListResponse: {
             items?: components["schemas"]["SupplierResponse"][] | null;
             pagination?: components["schemas"]["ProcurementPaginationResponse"];
@@ -20522,6 +22094,10 @@ export interface components {
             id?: string;
             displayName?: string | null;
             email?: string | null;
+        };
+        TemplateDecisionRequest: {
+            decision?: string | null;
+            note?: string | null;
         };
         TransferStockRequest: {
             /** Format: uuid */

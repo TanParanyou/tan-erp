@@ -53,7 +53,7 @@
 | CP-13 | MRP | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; lot-for-lot, ไม่มี safety stock/MOQ/ปฏิทิน) | CP-10 lead time + CP-11 stock + CP-12 BOM/plan | Production Planner + Procurement |
 | CP-14 | Installation/Handover/Warranty/Service | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มีไฟล์แนบ/ลายเซ็น/SLA, ระยะประกันต้องระบุเอง) | CP-08/09; CP-12 หากมีงานผลิต | Installation + Customer Service |
 | CP-15 | Billing/Payment/Accounting Integration | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มีระบบบัญชีจริง/ภาษี/credit exposure) | Customer billing + Commercial/Project; Supply เมื่อรวมยอดจัดซื้อ | Finance/Accounting |
-| CP-16 | Quick Estimate | Optional Future; มีแผนเอกสารแล้ว | Official Estimate Foundation + approved template/share policies | Sales/Estimator + Cost Owner |
+| CP-16 | Quick Estimate | Implemented 2026-10-04 (กฎที่ทีมพัฒนาเลือก; ไม่มี mobile/offline/promotion/อัปโหลดหลักฐาน) | Official Estimate Foundation + approved template/share policies | Sales/Estimator + Cost Owner |
 
 CP-02/03/05 เตรียมคู่ขนานกับ CP-01 ได้ตามขอบเขตที่อนุมัติ. CP-08 ใช้ customer acceptance ภายในที่มีอยู่ได้ ไม่ต้องรอ CP-07. CP-14 และ CP-15 เปิดแยกได้เมื่อ upstream contract ที่ต้องใช้พร้อม โดยไม่ต้องรอ MRP. Import ไม่ใช่ gate บังคับของ pilot ถ้าข้อมูลเติมและตรวจผ่าน workflow เดิมได้และมีบันทึกข้อจำกัด.
 
@@ -231,10 +231,10 @@ Reuse [Item Completion Plan](2026-09-22-item-master-estimate-catalog-completion.
 
 ใช้ [Documentation Plan](2026-09-06-quick-estimate-documentation-plan.md), [Mobile Contracts Plan](2026-09-06-quick-estimate-mobile-contracts.md), [Pricing Rules](../../01-business/quick-estimate-pricing-rules.md), [Template Governance](../../01-business/pricing-template-governance.md), [API](../../03-contracts/quick-estimate-api-contract.md) และ [Data](../../04-data/quick-estimate-data-contract.md) ก่อนเปิดแผน runtime implementation แยก.
 
-- [ ] ยืนยันประเภทงาน/ข้อมูลขั้นต่ำ/Template/Reference Rate/Share Policy และผู้รับรอง; published versions ต้อง immutable
-- [ ] ทำ mobile capture/calculation snapshot/price range และ preliminary customer-safe summary; แยกจาก Official Estimate/Quotation
-- [ ] กำหนด autosave/recovery/concurrency และ convert version → Official Estimate Draft แบบ idempotent; ไม่อ้างว่ารองรับ offline-first หลายอุปกรณ์
-- [ ] ทดสอบ deterministic range/outward rounding, stale template/rate, blocked sharing, conflict recovery และ convert replay
+- [x] ยืนยันประเภทงาน/ข้อมูลขั้นต่ำ/Template/Reference Rate/Share Policy และผู้รับรอง; published versions ต้อง immutable
+- [x] ทำ calculation snapshot/price range และ preliminary customer-safe summary แยกจาก Official Estimate/Quotation (ฝั่งเว็บเท่านั้น — **ไม่ได้ทำ mobile capture/offline**)
+- [x] กำหนด concurrency (If-Match/row version) และ convert version → Official Estimate Draft แบบ idempotent; ไม่มี autosave/offline-first
+- [x] ทดสอบ deterministic range/outward rounding, stale template/rate, blocked sharing, conflict recovery และ convert replay
 
 **ผลส่งมอบ/เกณฑ์จบ:** ผู้ประเมินให้ช่วงราคาเบื้องต้นที่ตรวจจาก template/version ได้และส่งต่อ Draft ได้; ไม่ออก Quotation ที่อนุมัติจาก Quick Estimate โดยข้าม Official Estimate.
 

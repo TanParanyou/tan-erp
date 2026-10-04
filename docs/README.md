@@ -65,6 +65,7 @@
 | API ลูกค้ายอมรับใบเสนอราคาผ่านลิงก์ | [External Acceptance API Contract](03-contracts/external-acceptance-api-contract.md) |
 | API งานติดตั้ง ส่งมอบ ประกัน และบริการหลังการขาย | [Service API Contract](03-contracts/service-api-contract.md) |
 | API การวางบิล รับชำระ และส่งข้อมูลให้ระบบบัญชี | [Finance API Contract](03-contracts/finance-api-contract.md) |
+| ผลตรวจ Quick Estimate (CP-16) | [Quick Estimate Verification](05-engineering/quick-estimate-verification.md) |
 | API ของ Item/Unit/Cost | [Item Master API Contract](03-contracts/item-master-api-contract.md) |
 | API ของ Customer/Opportunity/Site Survey | [CRM and Site Survey API Contract](03-contracts/crm-site-survey-api-contract.md) |
 | Error หลายภาษา | [Error Contract](03-contracts/error-contract.md) |

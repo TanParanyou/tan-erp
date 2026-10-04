@@ -1,6 +1,6 @@
 # Quick Estimate API Contract (ข้อตกลง API ราคาหน้างาน)
 
-**สถานะ:** Accepted Direction — Baseline สำหรับ OpenAPI ก่อนเริ่ม Backend/Frontend
+**สถานะ:** Accepted Direction; Implemented บางส่วน 2026-10-04 (CP-16) — ดู [สถานะการ implement](#สถานะการ-implement-cp-16) และ [Quick Estimate Verification](../05-engineering/quick-estimate-verification.md)
 
 ## ขอบเขต
 
@@ -238,3 +238,15 @@ Client ขอ Upload Session พร้อม `parentType=quick-estimate`, `paren
 ## Data Mapping
 
 Entity, Column, JSONB Snapshot และ Index ที่รองรับ Contract นี้อยู่ที่ [Quick Estimate Data Contract](../04-data/quick-estimate-data-contract.md)
+
+## สถานะการ implement (CP-16)
+
+Implement แล้ว: Pricing Template (สร้าง/แก้ฉบับร่าง/ส่งอนุมัติ/อนุมัติ-ส่งกลับ/ปรับเทียบ/เปิดใช้/ปิดใช้/เวอร์ชันใหม่, `GET effective`), Quick Estimate (draft, calculate, review, share แบบ on-screen, snapshot, conversion) และหน้าจอเว็บ `/quick-estimates`, `/pricing-templates`. Endpoint จริงอยู่ใน `contracts/openapi/tan-erp.v1.json`.
+
+ส่วนต่างจากเอกสารทิศทางข้างต้น (ยังไม่ทำ):
+
+- ไม่มี Branch override, promotion, manual override ของราคา และไม่มีการแนบหลักฐาน/อัปโหลดรูป
+- Share รองรับเฉพาะช่องทาง `onscreen` (ไม่ส่งออกภายนอก)
+- Conversion สร้าง **ร่าง Official Estimate เปล่า** และเก็บ snapshot ของ Quick Estimate ใน `quick_estimate_conversions` เป็นอ้างอิงต้นทาง ไม่คัดลอกรายการเข้า Estimate; ต้องระบุ Site Survey Revision
+- ไม่มี mobile capture/offline; ฝั่งเว็บเป็นหน้าฟอร์มปกติ
+- ทุกอัตรา/ตัวคูณ/ช่วงราคา/เพดานแชร์เป็นข้อมูลแม่แบบที่ธุรกิจกรอกเอง ระบบไม่มีค่าตั้งต้น; กฎการตัดสินใจแชร์ (วัสดุพิเศษ, แม่แบบปรับเทียบ, ความมั่นใจต่ำ, ช่วงถึงสูงสุด, เกินเพดาน) เป็นกฎที่ทีมพัฒนาเลือก รอ Sales/Cost Owner ยืนยัน

@@ -62,6 +62,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasMrpRead = can(activeMembership, "mrp.read");
   const hasInstallationsRead = can(activeMembership, "installations.read");
   const hasBillingsRead = can(activeMembership, "billings.read");
+  const hasQuickEstimatesRead = can(activeMembership, "quick-estimates.read");
+  const hasPricingTemplatesRead = can(activeMembership, "pricing-templates.read");
   const hasFinanceSyncRead = can(activeMembership, "finance-sync.read");
   const hasWarrantiesRead = can(activeMembership, "warranties.read");
   const hasServiceRequestsRead = can(activeMembership, "service-requests.read");
@@ -86,6 +88,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isProductionActive = pathname.startsWith(`/${locale}/production`);
   const isServiceActive = pathname.startsWith(`/${locale}/service`);
   const isFinanceActive = pathname.startsWith(`/${locale}/finance`);
+  const isQuickEstimateActive = pathname.startsWith(`/${locale}/quick-estimates`) || pathname.startsWith(`/${locale}/pricing-templates`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
@@ -330,6 +333,31 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     return items;
   }, [hasBillingsRead, hasFinanceSyncRead, locale, pathname, tShell]);
 
+  const quickEstimateItems: NavItemDef[] = useMemo(() => {
+    const items: NavItemDef[] = [];
+    if (hasQuickEstimatesRead) {
+      items.push({
+        id: "quick-estimates",
+        href: `/${locale}/quick-estimates`,
+        label: tShell("quickEstimates"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/quick-estimates`),
+        permission: hasQuickEstimatesRead,
+      });
+    }
+    if (hasPricingTemplatesRead) {
+      items.push({
+        id: "pricing-templates",
+        href: `/${locale}/pricing-templates`,
+        label: tShell("pricingTemplates"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/pricing-templates`),
+        permission: hasPricingTemplatesRead,
+      });
+    }
+    return items;
+  }, [hasQuickEstimatesRead, hasPricingTemplatesRead, locale, pathname, tShell]);
+
   const subgroups: NavSubgroupDef[] = useMemo(() => {
     const groups: NavSubgroupDef[] = [];
     if (crmItems.length > 0) {
@@ -374,6 +402,13 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         items: financeItems,
       });
     }
+    if (quickEstimateItems.length > 0) {
+      groups.push({
+        id: "quick-estimate",
+        label: tShell("quickEstimateSubgroup"),
+        items: quickEstimateItems,
+      });
+    }
     if (productItems.length > 0) {
       groups.push({
         id: "products",
@@ -382,7 +417,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       });
     }
     return groups;
-  }, [crmItems, procurementItems, inventoryItems, productionItems, serviceItems, financeItems, productItems, tShell]);
+  }, [crmItems, procurementItems, inventoryItems, productionItems, serviceItems, financeItems, quickEstimateItems, productItems, tShell]);
 
   // Accordion open/close state tracking
   const [openSubgroups, setOpenSubgroups] = useState<Record<string, boolean>>(() => {
@@ -393,6 +428,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     if (isProductionActive) initial["production"] = true;
     if (isServiceActive) initial["service"] = true;
     if (isFinanceActive) initial["finance"] = true;
+    if (isQuickEstimateActive) initial["quick-estimate"] = true;
     if (isItemMasterActive) initial["products"] = true;
     // Default open all if none active
     if (Object.keys(initial).length === 0) {
@@ -402,6 +438,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       initial["production"] = true;
       initial["service"] = true;
       initial["finance"] = true;
+      initial["quick-estimate"] = true;
       initial["products"] = true;
     }
     return initial;
