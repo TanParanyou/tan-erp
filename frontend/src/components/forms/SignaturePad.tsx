@@ -36,6 +36,24 @@ export function SignaturePad({
   const [presetName, setPresetName] = useState("");
   const [showPresetInput, setShowPresetInput] = useState(false);
 
+  const valueRef = useRef<string | null | undefined>(value);
+  valueRef.current = value;
+
+  const paintValue = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const current = valueRef.current;
+    ctx.clearRect(0, 0, width, height);
+    if (!current) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, width, height);
+      setHasDrawn(true);
+    };
+    img.src = current;
+  }, []);
+
+  // Sizing resets the canvas, so it only runs on mount and resize; it must not depend on `value`,
+  // otherwise every stroke (which emits a new value) would reinitialise and flicker the canvas.
   const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -55,17 +73,8 @@ export function SignaturePad({
     ctx.lineCap = "square";
     ctx.lineJoin = "miter";
 
-    if (value) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        ctx.clearRect(0, 0, rect.width, rect.height);
-        ctx.drawImage(img, 0, 0, rect.width, rect.height);
-        setHasDrawn(true);
-      };
-      img.src = value;
-    }
-  }, [value]);
+    paintValue(ctx, rect.width, rect.height);
+  }, [paintValue]);
 
   useEffect(() => {
     setupCanvas();
@@ -73,6 +82,18 @@ export function SignaturePad({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [setupCanvas]);
+
+  // A parent-driven reset (value becomes empty) must clear the canvas and the "drawn" state.
+  useEffect(() => {
+    if (value) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (canvas && ctx) {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+    }
+    setHasDrawn(false);
+  }, [value]);
 
   const getCoordinates = (
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
