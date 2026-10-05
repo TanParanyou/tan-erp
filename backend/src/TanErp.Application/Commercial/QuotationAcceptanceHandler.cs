@@ -107,8 +107,7 @@ public class QuotationAcceptanceHandler
             return Result<PublicAcceptanceResult>.Success(new PublicAcceptanceResult("accepted", context.AcceptedAtUtc.Value, context.QuotationNumber, context.Evidence));
         }
 
-        var name = submission?.SignerName?.Trim();
-        if (submission is null || string.IsNullOrWhiteSpace(name) || name.Length is < 2 or > 200 || submission.SignerRole is { Length: > 100 })
+        if (submission is null || !SignatureEvidenceRules.TryNormalizeSigner(submission.SignerName, submission.SignerRole, out var name, out var role))
         {
             return Fail<PublicAcceptanceResult>("ACCEPTANCE_SUBMISSION_INVALID", "A signer name of 2-200 characters is required.");
         }
@@ -121,12 +120,12 @@ public class QuotationAcceptanceHandler
         string? signatureHash = null;
         if (!string.IsNullOrEmpty(submission.SignatureImage))
         {
-            if (submission.SignatureImage.Length > AcceptanceConsent.MaxSignatureImageChars || !IsPngBase64(submission.SignatureImage))
+            if (submission.SignatureImage.Length > AcceptanceConsent.MaxSignatureImageChars || !SignatureEvidenceRules.IsPngBase64(submission.SignatureImage))
             {
                 return Fail<PublicAcceptanceResult>("ACCEPTANCE_SUBMISSION_INVALID", "The signature image must be a PNG of limited size.");
             }
 
-            signatureHash = Sha256Hex.Compute(submission.SignatureImage);
+            signatureHash = SignatureEvidenceRules.HashSubmittedImage(submission.SignatureImage);
         }
 
         // The accept transaction is keyed by the link, so a retry after a partial failure replays instead of accepting twice.
@@ -144,25 +143,10 @@ public class QuotationAcceptanceHandler
 
         var addressHash = Sha256Hex.Compute($"{client.RemoteAddress}|{context.LinkId}");
         var recorded = await _store.RecordAcceptanceAsync(
-            context, submission with { SignerName = name, SignerRole = string.IsNullOrWhiteSpace(submission.SignerRole) ? null : submission.SignerRole.Trim() },
+            context, submission with { SignerName = name, SignerRole = role },
             signatureHash ?? string.Empty, addressHash, client.UserAgent is { Length: > 200 } ua ? ua[..200] : client.UserAgent, traceId, ct);
         if (recorded.IsFailure) return Result<PublicAcceptanceResult>.Failure(recorded.Error);
 
         return Result<PublicAcceptanceResult>.Success(new PublicAcceptanceResult("accepted", recorded.Value!.AcceptedAtUtc, context.QuotationNumber, recorded.Value));
-    }
-
-    private static bool IsPngBase64(string value)
-    {
-        // data URLs are accepted; the payload must decode and start with the PNG signature.
-        var payload = value.StartsWith("data:image/png;base64,", StringComparison.Ordinal) ? value["data:image/png;base64,".Length..] : value;
-        try
-        {
-            var bytes = Convert.FromBase64String(payload);
-            return bytes.Length > 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47;
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
     }
 }
