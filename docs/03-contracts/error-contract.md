@@ -106,6 +106,22 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `IDEMPOTENCY_KEY_REUSED` | 409 | ใช้ Idempotency Key เดิมกับ Payload ต่างจากคำขอแรก; ต้องสร้าง Key ใหม่เมื่อเป็นเจตนาใหม่ |
 | `IF_MATCH_REQUIRED` | 428 | Request บังคับใช้ Precondition แต่ไม่มี If-Match header หรือ format ไม่ใช่ quoted UUID string |
 
+## Shared Attachment & Signature Error Codes
+
+| Code | HTTP | ความหมาย/การกู้คืน |
+| --- | ---: | --- |
+| `ATTACHMENT_DUPLICATE` | 409 | ไฟล์เดียวกัน owner เดียวกัน และ purpose เดียวกันถูกแนบอยู่แล้ว |
+| `ATTACHMENT_LIMIT_EXCEEDED` | 409 | จำนวนไฟล์แนบ active ของ owner เกิน 50 หรือคำขอเกิน 20 ไฟล์ |
+| `ATTACHMENT_OWNER_LOCKED` | 409 | สถานะ owner ไม่อนุญาตให้แก้ไฟล์แนบหรือเซ็น |
+| `ATTACHMENT_OWNER_TYPE_INVALID` | 422 | owner type ไม่อยู่ใน registry ที่ลงทะเบียนในโค้ด |
+| `ATTACHMENT_PURPOSE_INVALID` | 422 | purpose ไม่อยู่ในรายการที่รองรับหรือใช้กับลายเซ็นไม่ได้ |
+| `ATTACHMENT_FIELD_INVALID` | 422 | Field ของคำขอไฟล์แนบไม่ผ่าน Validation |
+| `ATTACHMENT_FILE_NOT_READY` | 422 | ไฟล์ยังไม่ Verified, ไม่พบ, ต่าง Organization หรือไม่ได้อัปโหลดสำหรับ owner นี้ (ไม่เปิดเผยว่าไฟล์มีอยู่หรือไม่) |
+| `ATTACHMENT_FILE_SCOPE_MISMATCH` | 422 | ไฟล์ไม่ตรง Parent/Scope ของ owner ที่ระบุ |
+| `SIGNATURE_SUBMISSION_INVALID` | 422 | ชื่อหรือตำแหน่งผู้ลงนามไม่ผ่านเงื่อนไข หรือภาพถูกใช้เป็นลายเซ็นแล้ว |
+| `SIGNATURE_CONSENT_REQUIRED` | 422 | ไม่ได้ยินยอม หรือ consentTextVersion ไม่ตรงเวอร์ชันปัจจุบัน |
+| `SIGNATURE_IMAGE_INVALID` | 422 | ไฟล์ภาพลายเซ็นไม่ใช่ PNG ที่ผ่านการตรวจหรือไม่มี content hash |
+
 ## Item Master Error Codes
 
 | Code | HTTP | ความหมาย/การกู้คืน |

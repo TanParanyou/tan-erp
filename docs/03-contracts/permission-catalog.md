@@ -137,6 +137,8 @@
 | Quotation | `quotations.read` | ดู/พิมพ์เอกสาร Quotation ที่ออกแล้ว (Customer-safe Document) | Branch/Project |
 | Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
 
+**Shared Attachment (G-01):** ไม่มี permission key ใหม่ — การอ่าน/แนบ/เซ็นไฟล์แนบของ owner ใช้ permission ของ owner ตาม [Attachment API Contract](attachment-api-contract.md) (`installation-job` → read=installations.read, manage=installations.operate, sign=installations.handover).
+
 การตรวจวงเงิน กำไรขั้นต่ำ Discount, Exception และ Maker–Checker เป็น Approval Policy เพิ่มจาก Permission; การมี `estimates.approve` ไม่ได้แปลว่าอนุมัติได้ทุกยอดหรืออนุมัติงานตนเองได้ หากยังไม่มี Published Policy/Independent Checker ระบบต้อง Fail-closed ตาม [Approval Matrix](../01-business/approval-matrix.md)
 
 เช่นเดียวกัน การมี `quick-estimates.share` ไม่ได้ข้าม Share Policy และการมี `quick-estimates.review` ไม่ได้อนุญาตให้ตรวจงานของตนเองเมื่อ Maker–Checker มีผล Backend ต้องตรวจ Permission พร้อม Organization, Branch, Opportunity และ Own Scope ทุกครั้ง

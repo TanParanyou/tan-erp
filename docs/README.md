@@ -64,6 +64,7 @@
 | API แก้ไข/ยกเลิกใบเสนอราคา | [Quotation Lifecycle API Contract](03-contracts/quotation-lifecycle-api-contract.md) |
 | API ลูกค้ายอมรับใบเสนอราคาผ่านลิงก์ | [External Acceptance API Contract](03-contracts/external-acceptance-api-contract.md) |
 | API งานติดตั้ง ส่งมอบ ประกัน และบริการหลังการขาย | [Service API Contract](03-contracts/service-api-contract.md) |
+| API ไฟล์แนบและลายเซ็นกลาง (Shared Attachment & Signature) | [Attachment API Contract](03-contracts/attachment-api-contract.md) |
 | API การวางบิล รับชำระ และส่งข้อมูลให้ระบบบัญชี | [Finance API Contract](03-contracts/finance-api-contract.md) |
 | ผลตรวจ Quick Estimate (CP-16) | [Quick Estimate Verification](05-engineering/quick-estimate-verification.md) |
 | API ของ Item/Unit/Cost | [Item Master API Contract](03-contracts/item-master-api-contract.md) |

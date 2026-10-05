@@ -233,3 +233,15 @@ _Avoid_: Loose File Reference, Global File Pool
 **Work Images (ภาพถ่ายหน้างานตามขั้นตอน)**:
 ภาพถ่ายจริงที่แนบไว้กับ Opportunity เพื่อบันทึกสภาพหน้างานหรือหลักฐานประกอบในแต่ละขั้นตอนการขาย (Stage) โดยอ้างอิงไฟล์ที่ Verified แล้ว และรองรับการดึงข้อมูลแบบ Keyset Cursor Pagination
 _Avoid_: Site Survey Image เมื่อหมายถึงภาพประกอบ Opportunity ทั่วไป
+
+**Attachment Owner (เจ้าของไฟล์แนบ)**:
+ระเบียนธุรกิจที่ลงทะเบียนในระบบว่าแนบไฟล์และลายเซ็นได้ (เช่น งานติดตั้ง) ระบุด้วยชนิดที่กำหนดในโค้ดและรหัสระเบียน
+_Avoid_: Parent record, Attachment target
+
+**Attachment Link (การผูกไฟล์แนบ)**:
+ความสัมพันธ์ระหว่างไฟล์ที่ผ่านการตรวจแล้วกับ Attachment Owner พร้อมวัตถุประสงค์ของไฟล์ ถอดออกได้โดยไม่ลบไฟล์
+_Avoid_: Upload, File record
+
+**Signature Capture (หลักฐานลายเซ็น)**:
+ภาพลายเซ็น PNG พร้อมชื่อผู้ลงนาม เวลา เวอร์ชันถ้อยคำยินยอม และ SHA-256 ที่ผูกกับ Attachment Owner; ไม่ใช่ลายเซ็นอิเล็กทรอนิกส์ตามกฎหมาย
+_Avoid_: Digital signature, e-Signature
