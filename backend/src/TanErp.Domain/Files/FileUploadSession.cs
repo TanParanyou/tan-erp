@@ -1,3 +1,4 @@
+using TanErp.Domain.Attachments;
 using TanErp.Domain.Common;
 
 namespace TanErp.Domain.Files;
@@ -20,7 +21,9 @@ public static class FileParentTypes
          || string.Equals(parentType, Item, StringComparison.OrdinalIgnoreCase)
          || string.Equals(parentType, ItemCategory, StringComparison.OrdinalIgnoreCase)
          || string.Equals(parentType, ItemBrand, StringComparison.OrdinalIgnoreCase)
-         || string.Equals(parentType, CostRecord, StringComparison.OrdinalIgnoreCase));
+         || string.Equals(parentType, CostRecord, StringComparison.OrdinalIgnoreCase)
+         // Owner types registered for shared attachments are valid upload parents without further edits here.
+         || AttachmentOwnerTypes.IsRegistered(parentType.ToLowerInvariant()));
 }
 
 public static class FileUploadSessionStatus
