@@ -12,8 +12,10 @@
 
 ## ที่ยังไม่ได้ยืนยัน
 
-ไม่ได้รัน full Integration suite ทั้งโปรเจกต์, `next build`, Playwright (ข้ามตามที่ตกลง).
+Playwright (ข้ามตามที่ตกลง).
+
+รันครบแล้ว (2026-10-05): `next build` ผ่าน; Vitest ทั้งโปรเจกต์ 794/794; Integration suite ทั้งโปรเจกต์ 384/385 — 1 รายการ (`CurrentUserEndpointTests`) ล้มจาก handshake ของ Postgres container ตอนเริ่ม (`unknown response H for SSLRequest`) ไม่เกี่ยวกับโค้ด และผ่าน 19/19 เมื่อรันซ้ำ; ตามด้วยเทสต์ sample template 1/1.
 
 ## ข้อจำกัด
 
-ไม่มี Branch override/promotion/manual override/อัปโหลดหลักฐาน; Share เฉพาะ on-screen; Conversion สร้างร่าง Estimate เปล่า (snapshot เก็บเป็นอ้างอิง) และต้องระบุรหัส Site Survey Revision ด้วยตนเองในหน้าเว็บ; ไม่มี mobile/offline; **ไม่มีค่าตั้งต้นของราคา** ทุกอัตรา/ตัวคูณ/ช่วง/เพดานเป็นข้อมูลที่ธุรกิจต้องกรอกและอนุมัติ; กฎการตัดสินใจแชร์และการปัดเศษเป็นกฎที่ทีมพัฒนาเลือก รอ Sales/Cost Owner ยืนยัน; ต้องมอบสิทธิ์ใหม่ (`pricing-templates.read/manage/approve`, `quick-estimates.create/read/update/review/share/convert`) ให้ Role จริง.
+ไม่มี Branch override/promotion/manual override/อัปโหลดหลักฐาน; Share เฉพาะ on-screen; Conversion สร้างร่าง Estimate เปล่า (snapshot เก็บเป็นอ้างอิง) และต้องระบุรหัส Site Survey Revision ด้วยตนเองในหน้าเว็บ; ไม่มี mobile/offline; **ไม่มีค่าราคาตั้งต้นใน Production**; เฉพาะ Demo/Test seed มีแม่แบบตัวอย่าง 5 ตัว (สถานะ calibration, ค่าที่ทีมพัฒนาเลือก ดู [Template Catalog](../01-business/quick-estimate-template-catalog.md#sample-defaults-ในระบบ-demo-รอธุรกิจ-sign-off)) ธุรกิจต้องกรอกและอนุมัติแม่แบบจริงเอง; กฎการตัดสินใจแชร์และการปัดเศษเป็นกฎที่ทีมพัฒนาเลือก รอ Sales/Cost Owner ยืนยัน; ต้องมอบสิทธิ์ใหม่ (`pricing-templates.read/manage/approve`, `quick-estimates.create/read/update/review/share/convert`) ให้ Role จริง.
