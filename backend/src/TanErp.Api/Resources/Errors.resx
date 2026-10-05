@@ -1157,4 +1157,26 @@
   <data name="QUICK_ESTIMATE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>
   <data name="QUICK_ESTIMATE_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
   <data name="QUICK_ESTIMATE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="ATTACHMENT_OWNER_TYPE_INVALID_TITLE" xml:space="preserve"><value>ประเภทรายการที่แนบไฟล์ไม่ถูกต้อง</value></data>
+  <data name="ATTACHMENT_OWNER_TYPE_INVALID_DETAIL" xml:space="preserve"><value>ประเภทรายการที่แนบไฟล์ไม่ถูกต้อง</value></data>
+  <data name="ATTACHMENT_PURPOSE_INVALID_TITLE" xml:space="preserve"><value>ประเภทไฟล์แนบไม่ถูกต้อง</value></data>
+  <data name="ATTACHMENT_PURPOSE_INVALID_DETAIL" xml:space="preserve"><value>ประเภทไฟล์แนบไม่ถูกต้อง</value></data>
+  <data name="ATTACHMENT_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไฟล์แนบไม่ถูกต้อง</value></data>
+  <data name="ATTACHMENT_FIELD_INVALID_DETAIL" xml:space="preserve"><value>เลือกไฟล์ได้ 1-20 ไฟล์ต่อครั้งและไม่ซ้ำกัน</value></data>
+  <data name="ATTACHMENT_FILE_NOT_READY_TITLE" xml:space="preserve"><value>ไฟล์ยังไม่พร้อมแนบ</value></data>
+  <data name="ATTACHMENT_FILE_NOT_READY_DETAIL" xml:space="preserve"><value>ไฟล์ยังไม่ผ่านการตรวจสอบหรือไม่ได้อัปโหลดสำหรับรายการนี้</value></data>
+  <data name="ATTACHMENT_FILE_SCOPE_MISMATCH_TITLE" xml:space="preserve"><value>ไฟล์อยู่นอกองค์กร</value></data>
+  <data name="ATTACHMENT_FILE_SCOPE_MISMATCH_DETAIL" xml:space="preserve"><value>ไฟล์ไม่ได้อยู่ในองค์กรเดียวกับรายการนี้</value></data>
+  <data name="ATTACHMENT_DUPLICATE_TITLE" xml:space="preserve"><value>ไฟล์ถูกแนบแล้ว</value></data>
+  <data name="ATTACHMENT_DUPLICATE_DETAIL" xml:space="preserve"><value>ไฟล์นี้ถูกแนบกับรายการนี้ด้วยประเภทเดียวกันแล้ว</value></data>
+  <data name="ATTACHMENT_LIMIT_EXCEEDED_TITLE" xml:space="preserve"><value>แนบไฟล์เกินจำนวนที่กำหนด</value></data>
+  <data name="ATTACHMENT_LIMIT_EXCEEDED_DETAIL" xml:space="preserve"><value>แนบไฟล์ได้ไม่เกิน 50 ไฟล์ต่อรายการ</value></data>
+  <data name="ATTACHMENT_OWNER_LOCKED_TITLE" xml:space="preserve"><value>สถานะรายการไม่อนุญาต</value></data>
+  <data name="ATTACHMENT_OWNER_LOCKED_DETAIL" xml:space="preserve"><value>สถานะของรายการนี้ไม่อนุญาตให้แก้ไฟล์แนบหรือลายเซ็น</value></data>
+  <data name="SIGNATURE_SUBMISSION_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลลายเซ็นไม่ถูกต้อง</value></data>
+  <data name="SIGNATURE_SUBMISSION_INVALID_DETAIL" xml:space="preserve"><value>ชื่อผู้ลงนามต้องมี 2-200 ตัวอักษรและต้องมีภาพลายเซ็น</value></data>
+  <data name="SIGNATURE_CONSENT_REQUIRED_TITLE" xml:space="preserve"><value>ต้องยอมรับข้อความยินยอม</value></data>
+  <data name="SIGNATURE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องยอมรับข้อความยินยอมฉบับปัจจุบัน</value></data>
+  <data name="SIGNATURE_IMAGE_INVALID_TITLE" xml:space="preserve"><value>ภาพลายเซ็นไม่ถูกต้อง</value></data>
+  <data name="SIGNATURE_IMAGE_INVALID_DETAIL" xml:space="preserve"><value>ภาพลายเซ็นต้องเป็นไฟล์ PNG ที่ผ่านการตรวจสอบแล้ว</value></data>
 </root>
