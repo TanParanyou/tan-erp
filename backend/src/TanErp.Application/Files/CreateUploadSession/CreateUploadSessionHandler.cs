@@ -58,15 +58,7 @@ public class CreateUploadSessionHandler
         var accessResult = await _accessResolver.ResolveAnyAsync(
             command.FirebaseUid,
             command.MembershipId,
-            [
-                "opportunities.update",
-                "customers.update",
-                "customers.create",
-                "sites.update",
-                "sites.create",
-                "items.manage-images",
-                "items.update"
-            ],
+            FileGatePermissions.Upload,
             cancellationToken);
 
         if (accessResult.IsFailure)

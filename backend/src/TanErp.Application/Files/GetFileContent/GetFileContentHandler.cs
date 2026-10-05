@@ -24,19 +24,7 @@ public class GetFileContentHandler
         var accessResult = await _accessResolver.ResolveAnyAsync(
             query.FirebaseUid,
             query.MembershipId,
-            [
-                "opportunities.read",
-                "opportunities.update",
-                "customers.read",
-                "customers.update",
-                "customers.create",
-                "sites.read",
-                "sites.update",
-                "sites.create",
-                "items.read",
-                "items.manage-images",
-                "items.update"
-            ],
+            FileGatePermissions.Read,
             cancellationToken);
 
         if (accessResult.IsFailure)
