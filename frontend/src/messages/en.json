@@ -3751,5 +3751,68 @@
     "twoFactorProtected": "Your account is currently protected with 2FA",
     "copy": "Copy",
     "thisDevice": "This device"
+  },
+  "attachments": {
+    "title": "Attachments",
+    "subtitle": "Evidence photos for this record (JPEG, PNG, WebP up to 10 MB each)",
+    "loading": "Loading attachments",
+    "loadError": "Could not load attachments",
+    "empty": "No attachments yet",
+    "emptyHint": "Choose images, then save the attachments",
+    "selectFiles": "Choose images",
+    "purposeLabel": "Attachment type",
+    "pendingTitle": "Waiting to save ({count} files)",
+    "uploadedWaiting": "Uploaded, waiting to be linked ({count} files)",
+    "removePending": "Remove",
+    "save": "Save attachments",
+    "saved": "Attachments saved",
+    "unlinked": "Attachment removed",
+    "fileRejected": "File {name} is not JPEG/PNG/WebP or is larger than 10 MB",
+    "createdBy": "By {name}",
+    "purposes": {
+      "general": "General",
+      "evidence": "Evidence",
+      "handover": "Handover",
+      "defect": "Defect"
+    },
+    "unlink": {
+      "action": "Remove attachment",
+      "title": "Remove attachment",
+      "message": "Remove this file from the record? It will no longer be listed here."
+    },
+    "errors": {
+      "failed": "The action failed. Please try again.",
+      "ATTACHMENT_OWNER_TYPE_INVALID": "This record type cannot have attachments",
+      "ATTACHMENT_PURPOSE_INVALID": "The attachment type is invalid",
+      "ATTACHMENT_FIELD_INVALID": "Choose between 1 and 20 distinct files per request",
+      "ATTACHMENT_FILE_NOT_READY": "A file is not verified or was not uploaded for this record",
+      "ATTACHMENT_FILE_SCOPE_MISMATCH": "The file does not belong to this record's organization",
+      "ATTACHMENT_DUPLICATE": "This file is already attached to this record for the same type",
+      "ATTACHMENT_LIMIT_EXCEEDED": "A record can have at most 50 attachments",
+      "ATTACHMENT_OWNER_LOCKED": "The record's status does not allow attachment or signature changes",
+      "SIGNATURE_SUBMISSION_INVALID": "The signer name needs 2-200 characters and a signature is required",
+      "SIGNATURE_CONSENT_REQUIRED": "The current consent statement must be accepted",
+      "SIGNATURE_IMAGE_INVALID": "The signature image must be a verified PNG file",
+      "IDEMPOTENCY_KEY_REUSED": "This request was already used with different data. Please save again.",
+      "PERMISSION_DENIED": "You do not have permission to do this",
+      "RESOURCE_NOT_FOUND": "Record not found"
+    },
+    "signature": {
+      "title": "Handover signature",
+      "subtitle": "Record the signature of the person accepting the work (a PNG image with a hash, not a legal electronic signature)",
+      "loadError": "Could not load signatures",
+      "empty": "No signature yet",
+      "signerName": "Signer name",
+      "signerRole": "Role or relationship to the customer",
+      "consentLabel": "I accept the following statement",
+      "signaturePadLabel": "Signature",
+      "capture": "Save signature",
+      "saved": "Signature saved",
+      "signedBy": "{name} on {date}",
+      "hashLabel": "SHA-256: {hash}",
+      "consentVersions": {
+        "handover-2026-10-v1": "I have inspected the work against the list and confirm that this signature is mine or that of a person who authorised me, and I accept that the system keeps the signature image and signing time as evidence."
+      }
+    }
   }
 }

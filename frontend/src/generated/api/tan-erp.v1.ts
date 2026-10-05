@@ -724,6 +724,374 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attachment-owners/{ownerType}/{ownerId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ownerType: string;
+                    ownerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AttachmentListResponse"];
+                        "application/json": components["schemas"]["AttachmentListResponse"];
+                        "text/json": components["schemas"]["AttachmentListResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Idempotency-Key"?: string;
+                };
+                path: {
+                    ownerType: string;
+                    ownerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AttachFilesRequest"];
+                    "text/json": components["schemas"]["AttachFilesRequest"];
+                    "application/*+json": components["schemas"]["AttachFilesRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AttachmentListResponse"];
+                        "application/json": components["schemas"]["AttachmentListResponse"];
+                        "text/json": components["schemas"]["AttachmentListResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attachment-owners/{ownerType}/{ownerId}/attachments/{linkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ownerType: string;
+                    ownerId: string;
+                    linkId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attachment-owners/{ownerType}/{ownerId}/signatures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    ownerType: string;
+                    ownerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SignatureCaptureListResponse"];
+                        "application/json": components["schemas"]["SignatureCaptureListResponse"];
+                        "text/json": components["schemas"]["SignatureCaptureListResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Idempotency-Key"?: string;
+                };
+                path: {
+                    ownerType: string;
+                    ownerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CaptureSignatureRequest"];
+                    "text/json": components["schemas"]["CaptureSignatureRequest"];
+                    "application/*+json": components["schemas"]["CaptureSignatureRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SignatureCaptureResponse"];
+                        "application/json": components["schemas"]["SignatureCaptureResponse"];
+                        "text/json": components["schemas"]["SignatureCaptureResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billings": {
         parameters: {
             query?: never;
@@ -18753,6 +19121,10 @@ export interface components {
             /** Format: uuid */
             roleId?: string;
         };
+        AttachFilesRequest: {
+            purpose?: string | null;
+            fileIds?: string[] | null;
+        };
         AttachItemImageRequest: {
             /** Format: uuid */
             fileId: string;
@@ -18773,6 +19145,32 @@ export interface components {
             items?: components["schemas"]["OpportunityWorkImageResponse"][] | null;
             /** Format: uuid */
             opportunityRowVersion?: string;
+        };
+        AttachmentLinkResponse: {
+            /** Format: uuid */
+            id?: string;
+            ownerType?: string | null;
+            /** Format: uuid */
+            ownerId?: string;
+            /** Format: uuid */
+            fileId?: string;
+            purpose?: string | null;
+            filename?: string | null;
+            mediaType?: string | null;
+            /** Format: int64 */
+            fileSizeBytes?: number;
+            servingUrl?: string | null;
+            createdBy?: components["schemas"]["AttachmentPersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        AttachmentListResponse: {
+            items?: components["schemas"]["AttachmentLinkResponse"][] | null;
+        };
+        AttachmentPersonResponse: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string | null;
         };
         BillingListItemResponse: {
             /** Format: uuid */
@@ -18982,6 +19380,15 @@ export interface components {
         };
         CancelEstimateRequest: {
             reason?: string | null;
+        };
+        CaptureSignatureRequest: {
+            purpose?: string | null;
+            signerName?: string | null;
+            signerRole?: string | null;
+            /** Format: uuid */
+            imageFileId?: string;
+            consentAccepted?: boolean;
+            consentTextVersion?: string | null;
         };
         CatalogAttributeFacetResponse: {
             key?: string | null;
@@ -21953,6 +22360,27 @@ export interface components {
             /** Format: date-time */
             createdAtUtc?: string;
             summaryJson?: string | null;
+        };
+        SignatureCaptureListResponse: {
+            items?: components["schemas"]["SignatureCaptureResponse"][] | null;
+        };
+        SignatureCaptureResponse: {
+            /** Format: uuid */
+            id?: string;
+            ownerType?: string | null;
+            /** Format: uuid */
+            ownerId?: string;
+            purpose?: string | null;
+            signerName?: string | null;
+            signerRole?: string | null;
+            /** Format: date-time */
+            signedAtUtc?: string;
+            /** Format: uuid */
+            imageFileId?: string;
+            servingUrl?: string | null;
+            consentTextVersion?: string | null;
+            contentHash?: string | null;
+            capturedBy?: components["schemas"]["AttachmentPersonResponse"];
         };
         SiteImageResponse: {
             /** Format: uuid */

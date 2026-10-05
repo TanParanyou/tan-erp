@@ -226,6 +226,12 @@ export type DefectResponse = components["schemas"]["DefectResponse"];
 export type ChecklistItemResponse = components["schemas"]["ChecklistItemResponse"];
 export type HandoverRequest = components["schemas"]["HandoverRequest"];
 export type WarrantyResponse = components["schemas"]["WarrantyResponse"];
+export type AttachmentLinkResponse = components["schemas"]["AttachmentLinkResponse"];
+export type AttachmentListResponse = components["schemas"]["AttachmentListResponse"];
+export type AttachFilesRequest = components["schemas"]["AttachFilesRequest"];
+export type SignatureCaptureResponse = components["schemas"]["SignatureCaptureResponse"];
+export type SignatureCaptureListResponse = components["schemas"]["SignatureCaptureListResponse"];
+export type CaptureSignatureRequest = components["schemas"]["CaptureSignatureRequest"];
 export type WarrantiesListResponse = components["schemas"]["WarrantiesListResponse"];
 export type ServiceRequestRequest = components["schemas"]["ServiceRequestRequest"];
 export type ServiceRequestResponse = components["schemas"]["ServiceRequestResponse"];
@@ -1557,6 +1563,30 @@ export class ApiClient {
       case "reopen-defect":
         return this.request<InstallationResponse>(`${base}/defects/${encodeURIComponent(step.defectId)}/reopen`, "POST", conditional, { reason: step.reason });
     }
+  }
+
+  private attachmentOwnerPath(ownerType: string, ownerId: string): string {
+    return `/api/v1/attachment-owners/${encodeURIComponent(ownerType)}/${encodeURIComponent(ownerId)}`;
+  }
+
+  async listAttachments(ownerType: string, ownerId: string, options: RequestOptions): Promise<AttachmentListResponse> {
+    return this.request<AttachmentListResponse>(`${this.attachmentOwnerPath(ownerType, ownerId)}/attachments`, "GET", options);
+  }
+
+  async attachFiles(ownerType: string, ownerId: string, payload: AttachFilesRequest, options: RequestOptions): Promise<AttachmentListResponse> {
+    return this.request<AttachmentListResponse>(`${this.attachmentOwnerPath(ownerType, ownerId)}/attachments`, "POST", options, payload);
+  }
+
+  async unlinkAttachment(ownerType: string, ownerId: string, linkId: string, options: RequestOptions): Promise<void> {
+    return this.request<void>(`${this.attachmentOwnerPath(ownerType, ownerId)}/attachments/${encodeURIComponent(linkId)}`, "DELETE", options);
+  }
+
+  async listSignatures(ownerType: string, ownerId: string, options: RequestOptions): Promise<SignatureCaptureListResponse> {
+    return this.request<SignatureCaptureListResponse>(`${this.attachmentOwnerPath(ownerType, ownerId)}/signatures`, "GET", options);
+  }
+
+  async captureSignature(ownerType: string, ownerId: string, payload: CaptureSignatureRequest, options: RequestOptions): Promise<SignatureCaptureResponse> {
+    return this.request<SignatureCaptureResponse>(`${this.attachmentOwnerPath(ownerType, ownerId)}/signatures`, "POST", options, payload);
   }
 
   async listWarranties(options: RequestOptions, query: ListWarrantiesParams): Promise<WarrantiesListResponse> {
