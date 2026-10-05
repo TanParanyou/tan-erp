@@ -154,8 +154,8 @@ export function SignatureCapturePanel({ ownerType, ownerId, purpose, canCapture 
       {canCapture && (
         <div className="flex flex-col gap-4 border-t border-erp-border pt-4">
           {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
-          <Input label={t("signerName")} required value={signerName} maxLength={200} disabled={isSaving} onChange={(event) => setSignerName(event.target.value)} />
-          <Input label={t("signerRole")} value={signerRole} maxLength={100} disabled={isSaving} onChange={(event) => setSignerRole(event.target.value)} />
+          <Input label={t("signerName")} required value={signerName} maxLength={200} disabled={isSaving} onChange={(event) => { setSignerName(event.target.value); keyRef.current = null; }} />
+          <Input label={t("signerRole")} value={signerRole} maxLength={100} disabled={isSaving} onChange={(event) => { setSignerRole(event.target.value); keyRef.current = null; }} />
           <SignaturePad value={signature} onChange={handleSignatureChange} label={t("signaturePadLabel")} />
           <label className="flex items-start gap-3 text-sm">
             <input
@@ -164,7 +164,7 @@ export function SignatureCapturePanel({ ownerType, ownerId, purpose, canCapture 
               checked={consent}
               disabled={isSaving}
               aria-label={t("consentLabel")}
-              onChange={(event) => setConsent(event.target.checked)}
+              onChange={(event) => { setConsent(event.target.checked); keyRef.current = null; }}
             />
             <span>
               <span className="block font-semibold text-erp-navy">{t("consentLabel")}</span>

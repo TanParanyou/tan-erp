@@ -46,6 +46,7 @@ export function SignaturePad({
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
+      if (valueRef.current !== current) return; // value changed while the image was loading
       ctx.drawImage(img, 0, 0, width, height);
       setHasDrawn(true);
     };

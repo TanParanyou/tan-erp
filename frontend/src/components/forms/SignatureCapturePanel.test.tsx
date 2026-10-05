@@ -155,4 +155,21 @@ describe("SignatureCapturePanel", () => {
     await waitFor(() => expect(mocks.capture).toHaveBeenCalledTimes(2));
     expect(mocks.uploadSingleFile).toHaveBeenCalledTimes(1);
   });
+
+  it("uses a new idempotency key without re-uploading when the signer name changes after a failed capture", async () => {
+    mocks.capture.mockRejectedValueOnce(new ApiError({ status: 409, code: "ATTACHMENT_OWNER_LOCKED", message: "locked" }));
+    renderPanel();
+    fillValid();
+    fireEvent.click(screen.getByRole("button", { name: t.capture }));
+    await screen.findByText(thMessages.attachments.errors.ATTACHMENT_OWNER_LOCKED);
+
+    fireEvent.change(screen.getByLabelText(new RegExp(t.signerName)), { target: { value: "คุณสมหญิง ใจดี" } });
+    fireEvent.click(screen.getByRole("button", { name: t.capture }));
+    await waitFor(() => expect(mocks.capture).toHaveBeenCalledTimes(2));
+
+    const first = mocks.capture.mock.calls[0][0] as { idempotencyKey: string };
+    const second = mocks.capture.mock.calls[1][0] as { idempotencyKey: string };
+    expect(second.idempotencyKey).not.toBe(first.idempotencyKey);
+    expect(mocks.uploadSingleFile).toHaveBeenCalledTimes(1);
+  });
 });
