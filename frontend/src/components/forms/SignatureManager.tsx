@@ -4,6 +4,7 @@ import React from "react";
 import { SignaturePad } from "./SignaturePad";
 import type { SignatureManagerProps } from "@/types/signatures";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 export function SignatureManager({
   signatureMode,
@@ -17,11 +18,13 @@ export function SignatureManager({
   onSaveToPresets,
   onDeletePreset,
 }: SignatureManagerProps) {
+  const t = useTranslations("common.signatureManager");
+
   return (
     <div className="flex flex-col gap-3 border border-erp-border bg-erp-surface p-3 sm:p-4 rounded-none text-left">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-erp-border pb-2.5 gap-2">
         <span className="text-xs font-semibold uppercase tracking-wider text-erp-text-main">
-          โหมดการลงลายมือชื่อ (Signature Mode)
+          {t("modeTitle")}
         </span>
         <div className="flex items-center border border-erp-border bg-erp-surface-subtle p-0.5 rounded-none">
           <button
@@ -34,7 +37,7 @@ export function SignatureManager({
                 : "text-erp-text-muted hover:text-erp-text-main"
             )}
           >
-            จากคลัง ({presets.length})
+            {t("fromSaved", { count: presets.length })}
           </button>
           <button
             type="button"
@@ -46,7 +49,7 @@ export function SignatureManager({
                 : "text-erp-text-muted hover:text-erp-text-main"
             )}
           >
-            เซ็นสด (Live Pad)
+            {t("livePad")}
           </button>
           <button
             type="button"
@@ -58,7 +61,7 @@ export function SignatureManager({
                 : "text-erp-text-muted hover:text-erp-text-main"
             )}
           >
-            ไม่ระบุ
+            {t("none")}
           </button>
         </div>
       </div>
@@ -75,7 +78,7 @@ export function SignatureManager({
         <div className="space-y-3">
           {presets.length === 0 ? (
             <p className="py-4 text-center text-xs text-erp-text-muted">
-              ยังไม่มีลายเซ็นในคลัง กรุณาเลือกโหมด "เซ็นสด" เพื่อบันทึกใหม่
+              {t("emptySaved")}
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
@@ -105,7 +108,7 @@ export function SignatureManager({
                         }}
                         className="text-[10px] text-red-600 hover:underline ml-1"
                       >
-                        ลบ
+                        {t("delete")}
                       </button>
                     </div>
                   </div>

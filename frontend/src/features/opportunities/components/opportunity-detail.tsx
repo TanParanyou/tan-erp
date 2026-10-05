@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatDate, formatDateTime } from "@/lib/formatters/formatters";
 import { getOpportunityStageLabelKey, resolveWorkTypeLabel } from "../opportunity-labels";
+import { getCustomerDisplayNames } from "@/features/customers/customer-labels";
 import { OpportunityStageStepper } from "./opportunity-stage-stepper";
 import { OpportunityQGateEditor } from "./opportunity-q-gate-editor";
 import { OpportunityOwnerReassignModal } from "./opportunity-owner-reassign-modal";
@@ -375,16 +376,23 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
           },
           {
             label: t("customer"),
-            value: customer ? (
-              <button
-                type="button"
-                onClick={() => customerDrawer.open()}
-                className="font-semibold text-erp-navy hover:underline text-left cursor-pointer truncate max-w-full inline-block focus-visible:outline-2 focus-visible:outline-erp-navy bg-transparent border-0 p-0 text-sm"
-                title={customer.displayNameTh || customer.displayNameEn || customer.code || ""}
-              >
-                {customer.displayNameTh || customer.displayNameEn || customer.code || "-"}
-              </button>
-            ) : (
+            value: customer ? (() => {
+              const { primary } = getCustomerDisplayNames(
+                customer.displayNameTh,
+                customer.displayNameEn,
+                locale as "th" | "en",
+              );
+              return (
+                <button
+                  type="button"
+                  onClick={() => customerDrawer.open()}
+                  className="font-semibold text-erp-navy hover:underline text-left cursor-pointer truncate max-w-full inline-block focus-visible:outline-2 focus-visible:outline-erp-navy bg-transparent border-0 p-0 text-sm"
+                  title={primary}
+                >
+                  {primary}
+                </button>
+              );
+            })() : (
               "-"
             ),
           },

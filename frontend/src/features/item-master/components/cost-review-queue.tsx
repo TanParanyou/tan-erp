@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
@@ -81,7 +82,17 @@ export function CostReviewQueue() {
       <ListToolbar>
         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
           <Input label={common("actions.search")} value={state.draftSearch} onChange={(event) => state.actions.setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") state.actions.setSearch(state.draftSearch, true); }} placeholder={t("search")} />
-          <div className="erp-form-group"><label className="erp-label" htmlFor="cost-review-status">{t("reviewStatus")}</label><select id="cost-review-status" className="erp-input" value={status ?? ""} onChange={(event) => state.actions.setFilter("status", event.target.value || undefined)}><option value="">{common("filters.all")}</option><option value="submitted">{t("statusSubmitted")}</option><option value="approved">{t("statusApproved")}</option></select></div>
+          <Select
+            id="cost-review-status"
+            label={t("reviewStatus")}
+            value={status ?? ""}
+            onChange={(event) => state.actions.setFilter("status", event.target.value || undefined)}
+            placeholder={common("filters.all")}
+            options={[
+              { value: "submitted", label: t("statusSubmitted") },
+              { value: "approved", label: t("statusApproved") },
+            ]}
+          />
         </div>
       </ListToolbar>
       <DataTable<ReviewRow>

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { IconInfo, IconCheckCircle, IconAlertTriangle } from "@/components/common/Icons";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 export interface NotificationItem {
   id: string;
@@ -24,19 +25,10 @@ export function NotificationCenter({
   onMarkAllRead,
   className,
 }: NotificationCenterProps) {
+  const t = useTranslations("common.notificationCenter");
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
-    if (initialNotifications) return initialNotifications;
-    return [
-      {
-        id: "notif_1",
-        title: "ระบบบันทึกประวัติการเปลี่ยนสถานะเรียบร้อย",
-        description: "Opportunity Stage History ได้รับการอัปเดตแบบ Append-only",
-        timeText: "5 นาทีที่แล้ว",
-        type: "success",
-        isRead: false,
-      },
-    ];
+    return initialNotifications || [];
   });
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +55,7 @@ export function NotificationCenter({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="relative flex h-8 w-8 items-center justify-center border border-erp-border bg-erp-surface text-erp-text-main hover:bg-erp-surface-subtle rounded-none"
-        title="การแจ้งเตือน"
+        title={t("title")}
       >
         <IconInfo size={16} />
         {unreadCount > 0 && (
@@ -77,7 +69,7 @@ export function NotificationCenter({
         <div className="absolute right-0 top-full z-50 mt-1 w-80 border border-erp-border bg-erp-surface shadow-lg rounded-none text-left animate-in fade-in">
           <div className="flex items-center justify-between border-b border-erp-border p-3">
             <span className="text-xs font-bold text-erp-text-main uppercase tracking-wider">
-              การแจ้งเตือน ({notifications.length})
+              {t("title")} ({notifications.length})
             </span>
             {unreadCount > 0 && (
               <button
@@ -85,7 +77,7 @@ export function NotificationCenter({
                 onClick={handleMarkAll}
                 className="text-[11px] text-erp-navy hover:underline font-medium"
               >
-                อ่านทั้งหมด
+                {t("markAllRead")}
               </button>
             )}
           </div>
@@ -93,7 +85,7 @@ export function NotificationCenter({
           <div className="max-h-72 overflow-y-auto divide-y divide-erp-border">
             {notifications.length === 0 ? (
               <p className="p-4 text-center text-xs text-erp-text-muted">
-                ไม่มีการแจ้งเตือนใหม่
+                {t("empty")}
               </p>
             ) : (
               notifications.map((n) => (

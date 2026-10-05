@@ -9,17 +9,25 @@ import { cn } from "@/lib/utils/cn";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { MultiLangInput } from "@/components/forms/MultiLangInput";
 import { GeneratedCodeField } from "@/components/forms/GeneratedCodeField";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { FormActionBar } from "@/components/forms/FormActionBar";
 import { FormSection } from "@/components/forms/FormSection";
+import { ItemAttributesField } from "@/components/forms/ItemAttributesField";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { Alert } from "@/components/ui/Alert";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
+import {
+  attributePairsToRecord,
+  recordToAttributePairs,
+} from "@/lib/utils/item-attributes";
 import { can } from "@/lib/permissions/can";
 import { useItemDetail, useItemMasterLookups, useItemMasterMutations } from "@/features/item-master/api/item-master-queries";
 import { itemFormSchema, type ItemFormValues } from "@/features/item-master/schemas/item-form-schema";
@@ -75,16 +83,17 @@ export function ItemEditor({ id }: ItemEditorProps) {
       name: { th: "", en: "" }, description: { th: "", en: "" },
       availabilityMode: "all_branches", selectedBranchIds: [],
       capabilities: { canSell: false, canCost: true, canPurchase: true, canStock: false, canProduce: false },
-      attributesJson: "", aliases: [], imageFile: null, imageAltText: "",
+      attributes: [], aliases: [], imageFile: null, imageAltText: "",
     },
   });
   const selectedItemType = useWatch({ control: form.control, name: "itemType" });
+  const selectedCategoryId = useWatch({ control: form.control, name: "categoryId" });
   const aliases = useFieldArray({ control: form.control, name: "aliases" });
   const selectedImageFile = useWatch({ control: form.control, name: "imageFile" });
   const tabFieldsMap: Record<ItemFormTab, string[]> = {
     identity: ["code", "codeMode", "itemType", "categoryId", "brandId", "baseUnitId", "name"],
     details: ["description", "aliases", "imageFile", "imageAltText"],
-    operations: ["taxCategoryCode", "availabilityMode", "selectedBranchIds", "capabilities", "attributesJson"],
+    operations: ["taxCategoryCode", "availabilityMode", "selectedBranchIds", "capabilities", "attributes"],
   };
   const tabErrors = useFormTabErrors<ItemFormTab, ItemFormValues>({ tabFieldsMap, errors: form.formState.errors, setActiveTab });
 
@@ -111,7 +120,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
           canStock: item.data.capabilities?.canStock ?? false,
           canProduce: item.data.capabilities?.canProduce ?? false,
         },
-        attributesJson: item.data.attributes ? JSON.stringify(item.data.attributes, null, 2) : "",
+        attributes: recordToAttributePairs(item.data.attributes),
         aliases: [], imageFile: null, imageAltText: "",
       });
     }
@@ -124,14 +133,8 @@ export function ItemEditor({ id }: ItemEditorProps) {
     const description = values.description.th?.trim() || values.description.en?.trim()
       ? { thai: values.description.th?.trim() ?? "", english: values.description.en?.trim() || null }
       : undefined;
-    let attributes: Record<string, string> | undefined;
-    if (values.attributesJson.trim()) {
-      const parsed: unknown = JSON.parse(values.attributesJson);
-      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-        && Object.values(parsed).every((value) => typeof value === "string")) {
-        attributes = parsed as Record<string, string>;
-      }
-    }
+    const cleanAttributes = attributePairsToRecord(values.attributes);
+    const attributes = Object.keys(cleanAttributes).length > 0 ? cleanAttributes : null;
     const shared = {
       code: isCreate && values.codeMode === "generated" ? null : values.code,
       itemType: values.itemType,
@@ -144,7 +147,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
       availabilityMode: values.availabilityMode,
       selectedBranchIds: values.availabilityMode === "selected_branches" ? values.selectedBranchIds : [],
       capabilities: values.capabilities,
-      attributes: attributes ?? null,
+      attributes,
       attributesSchemaVersion: 1,
     };
     try {
@@ -228,9 +231,30 @@ export function ItemEditor({ id }: ItemEditorProps) {
         <Controller control={form.control} name="name" render={({ field, fieldState }) => <MultiLangInput label={t("name")} required disabled={!canSave || fieldsLocked} value={field.value} onChange={field.onChange} error={fieldState.error ? t("validationRequired") : undefined} />} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Controller control={form.control} name="itemType" render={({ field, fieldState }) => (
-            <div className="erp-form-group"><label className="erp-label" htmlFor="item-type">{t("type")}<span className="erp-label-required">*</span></label><select {...field} onChange={(event) => { const itemType = event.target.value; field.onChange(itemType); if (isCreate && !form.formState.dirtyFields.capabilities?.canPurchase) form.setValue("capabilities.canPurchase", itemType === "material" || itemType === "subcontract", { shouldDirty: false }); }} id="item-type" required className="erp-input" disabled={!canSave || fieldsLocked} aria-invalid={Boolean(fieldState.error)} aria-describedby={fieldState.error ? "item-type-error" : undefined}>
-              <option value="material">{t("itemTypeMaterial")}</option><option value="labor">{t("itemTypeLabor")}</option><option value="service">{t("itemTypeService")}</option><option value="subcontract">{t("itemTypeSubcontract")}</option><option value="other">{t("itemTypeOther")}</option><option value="product">{t("itemTypeProduct")}</option>
-            </select>{fieldState.error && <span id="item-type-error" role="alert" className="text-sm text-erp-danger">{t("validationRequired")}</span>}</div>
+            <Select
+              id="item-type"
+              label={t("type")}
+              required
+              placeholder={t("itemTypePlaceholder")}
+              disabled={!canSave || fieldsLocked}
+              error={fieldState.error ? t("validationRequired") : undefined}
+              options={[
+                { value: "material", label: t("itemTypeMaterial") },
+                { value: "labor", label: t("itemTypeLabor") },
+                { value: "service", label: t("itemTypeService") },
+                { value: "subcontract", label: t("itemTypeSubcontract") },
+                { value: "other", label: t("itemTypeOther") },
+                { value: "product", label: t("itemTypeProduct") },
+              ]}
+              {...field}
+              onChange={(event) => {
+                const itemType = event.target.value;
+                field.onChange(itemType);
+                if (isCreate && !form.formState.dirtyFields.capabilities?.canPurchase) {
+                  form.setValue("capabilities.canPurchase", itemType === "material" || itemType === "subcontract", { shouldDirty: false });
+                }
+              }}
+            />
           )} />
           <Controller control={form.control} name="categoryId" render={({ field, fieldState }) => (
             <CategoryAutocomplete required value={field.value} onChange={field.onChange} selectedOption={selectedCategory} onSelectedOptionChange={setSelectedCategory} itemType={selectedItemType} error={fieldState.error ? t("validationRequired") : undefined} disabled={!canSave || fieldsLocked} />
@@ -239,7 +263,19 @@ export function ItemEditor({ id }: ItemEditorProps) {
             <BrandAutocomplete value={field.value} onChange={field.onChange} selectedOption={selectedBrand} onSelectedOptionChange={setSelectedBrand} disabled={!canSave || fieldsLocked} />
           )} />
           <Controller control={form.control} name="baseUnitId" render={({ field, fieldState }) => (
-            <div className="erp-form-group"><label className="erp-label" htmlFor="item-unit">{t("unit")}<span className="erp-label-required">*</span></label><select {...field} id="item-unit" required className="erp-input" disabled={!canSave || fieldsLocked} aria-invalid={Boolean(fieldState.error)} aria-describedby={fieldState.error ? "item-unit-error" : undefined}><option value="">{common("actions.select")}</option>{activeUnits.map((unit) => <option key={unit.id} value={unit.id}>{unit.code} · {locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}</option>)}</select>{fieldState.error && <span id="item-unit-error" role="alert" className="text-sm text-erp-danger">{t("validationRequired")}</span>}</div>
+            <Select
+              id="item-unit"
+              label={t("unit")}
+              required
+              placeholder={common("actions.select")}
+              disabled={!canSave || fieldsLocked}
+              error={fieldState.error ? t("validationRequired") : undefined}
+              options={activeUnits.filter((unit): unit is typeof unit & { id: string } => Boolean(unit.id)).map((unit) => ({
+                value: unit.id,
+                label: `${unit.code ?? "-"} · ${locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}`,
+              }))}
+              {...field}
+            />
           )} />
         </div>
 
@@ -262,7 +298,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
 
         </FormSection>
         </div>
-        <div role="tabpanel" id="tabpanel-details" aria-labelledby="tab-details" hidden={activeTab !== "details"} className="space-y-5">
+        <div role="tabpanel" id="tabpanel-details" aria-labelledby="tab-details" hidden={activeTab !== "details"} className={cn("space-y-5", activeTab !== "details" && "hidden")}>
         <FormSection title={t("detailsTab")} description={t("detailsHelp")}>
 
         <Controller control={form.control} name="description" render={({ field }) => <MultiLangInput label={t("description")} type="textarea" disabled={!canSave || fieldsLocked} value={field.value} onChange={field.onChange} />} />
@@ -297,17 +333,85 @@ export function ItemEditor({ id }: ItemEditorProps) {
           {imagePreparing && <p role="status" className="text-sm text-erp-text-muted">{t("imagePreparing")}</p>}
         </FormSection>}
         </div>
-        <div role="tabpanel" id="tabpanel-operations" aria-labelledby="tab-operations" hidden={activeTab !== "operations"} className="space-y-5">
+        <div role="tabpanel" id="tabpanel-operations" aria-labelledby="tab-operations" hidden={activeTab !== "operations"} className={cn("space-y-5", activeTab !== "operations" && "hidden")}>
           <FormSection title={t("operationsTab")} description={t("operationsHelp")}>
           <div className="grid gap-4 sm:grid-cols-2">
-          <Controller control={form.control} name="taxCategoryCode" render={({ field, fieldState }) => <div className="erp-form-group"><label className="erp-label" htmlFor="item-tax-category">{t("taxCategoryCode")}</label><select {...field} value={field.value ?? ""} id="item-tax-category" className="erp-input" disabled={!canSave || fieldsLocked} aria-invalid={Boolean(fieldState.error)} aria-describedby={fieldState.error ? "item-tax-category-error" : undefined}><option value="">{common("actions.select")}</option>{field.value && !activeTaxCategories.some((taxCategory) => taxCategory.code === field.value) && <option value={field.value ?? ""} disabled>{field.value} · {t("statusInactive")}</option>}{activeTaxCategories.map((taxCategory) => <option key={taxCategory.id} value={taxCategory.code ?? ""}>{taxCategory.code ?? "-"} · {locale === "en" ? taxCategory.name?.english ?? "-" : taxCategory.name?.thai ?? "-"}</option>)}</select>{fieldState.error && <span id="item-tax-category-error" role="alert" className="text-sm text-erp-danger">{t("validationRequired")}</span>}</div>} />
-          <Controller control={form.control} name="availabilityMode" render={({ field }) => <div className="erp-form-group"><label className="erp-label" htmlFor="availability-mode">{t("availability")}</label><select {...field} id="availability-mode" className="erp-input" disabled={!canSave || fieldsLocked}><option value="all_branches">{t("allBranches")}</option><option value="selected_branches">{t("selectedBranches")}</option></select></div>} />
+          <Controller control={form.control} name="taxCategoryCode" render={({ field, fieldState }) => (
+            <Select
+              id="item-tax-category"
+              label={t("taxCategoryCode")}
+              placeholder={common("actions.select")}
+              disabled={!canSave || fieldsLocked}
+              error={fieldState.error ? t("validationRequired") : undefined}
+              options={[
+                ...(field.value && !activeTaxCategories.some((tc) => tc.code === field.value)
+                  ? [{ value: field.value, label: `${field.value} · ${t("statusInactive")}` }]
+                  : []),
+                ...activeTaxCategories.map((tc) => ({
+                  value: tc.code ?? "",
+                  label: `${tc.code ?? "-"} · ${locale === "en" ? tc.name?.english ?? "-" : tc.name?.thai ?? "-"}`,
+                })),
+              ]}
+              {...field}
+              value={field.value ?? ""}
+            />
+          )} />
+          <Controller control={form.control} name="availabilityMode" render={({ field }) => (
+            <Select
+              id="availability-mode"
+              label={t("availability")}
+              disabled={!canSave || fieldsLocked}
+              options={[
+                { value: "all_branches", label: t("allBranches") },
+                { value: "selected_branches", label: t("selectedBranches") },
+              ]}
+              {...field}
+            />
+          )} />
           </div>
-          {form.watch("availabilityMode") === "selected_branches" && <fieldset className="space-y-2"><legend className="erp-label">{t("branches")}</legend>{(branches.data ?? []).map((branch) => <label key={branch.id} className="flex min-h-11 items-center gap-2"><input type="checkbox" value={branch.id} disabled={!canSave || fieldsLocked} checked={form.watch("selectedBranchIds").includes(branch.id)} onChange={(event) => { const next = new Set(form.getValues("selectedBranchIds")); if (event.target.checked) next.add(branch.id); else next.delete(branch.id); form.setValue("selectedBranchIds", [...next], { shouldValidate: true, shouldDirty: true }); }} />{branch.code} · {branch.name}</label>)}{form.formState.errors.selectedBranchIds && <p className="text-sm text-erp-danger">{t("branchesRequired")}</p>}</fieldset>}
-          <fieldset className="grid grid-cols-1 gap-2 sm:grid-cols-2"><legend className="erp-label mb-2">{t("capabilities")}</legend>{([ ["canSell", "canSell"], ["canCost", "canCost"], ["canPurchase", "canPurchase"], ["canStock", "canStock"], ["canProduce", "canProduce"] ] as const).map(([key, label]) => <label key={key} className="flex min-h-11 items-center gap-3 border border-erp-border bg-erp-surface px-3 has-[:checked]:border-erp-navy has-[:checked]:bg-erp-surface-subtle"><input type="checkbox" disabled={!canSave || fieldsLocked} {...form.register(`capabilities.${key}`)} />{t(label)}</label>)}</fieldset>
+          {form.watch("availabilityMode") === "selected_branches" && (
+            <fieldset className="space-y-2">
+              <legend className="erp-label">{t("branches")}</legend>
+              {(branches.data ?? []).map((branch) => (
+                <Checkbox
+                  key={branch.id}
+                  value={branch.id}
+                  disabled={!canSave || fieldsLocked}
+                  checked={form.watch("selectedBranchIds").includes(branch.id)}
+                  label={`${branch.code} · ${branch.name}`}
+                  onChange={(event) => {
+                    const next = new Set(form.getValues("selectedBranchIds"));
+                    if (event.target.checked) next.add(branch.id);
+                    else next.delete(branch.id);
+                    form.setValue("selectedBranchIds", [...next], { shouldValidate: true, shouldDirty: true });
+                  }}
+                />
+              ))}
+              {form.formState.errors.selectedBranchIds && <p className="text-sm text-erp-danger">{t("branchesRequired")}</p>}
+            </fieldset>
+          )}
+          <fieldset className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <legend className="erp-label mb-2">{t("capabilities")}</legend>
+            {([ ["canSell", "canSell"], ["canCost", "canCost"], ["canPurchase", "canPurchase"], ["canStock", "canStock"], ["canProduce", "canProduce"] ] as const).map(([key, label]) => (
+              <div key={key} className="flex min-h-11 items-center border border-erp-border bg-erp-surface px-3 has-[:checked]:border-erp-navy has-[:checked]:bg-erp-surface-subtle">
+                <Checkbox
+                  label={t(label)}
+                  disabled={!canSave || fieldsLocked}
+                  wrapperClassName="mb-0"
+                  {...form.register(`capabilities.${key}`)}
+                />
+              </div>
+            ))}
+          </fieldset>
           </FormSection>
           <FormSection title={t("attributes")} description={t("attributesHelp")}>
-          <Controller control={form.control} name="attributesJson" render={({ field, fieldState }) => <div className="erp-form-group"><label className="erp-label" htmlFor="item-attributes">{t("attributes")}</label><textarea {...field} id="item-attributes" rows={6} className="erp-input font-mono" disabled={!canSave || fieldsLocked} aria-invalid={Boolean(fieldState.error)} aria-describedby={fieldState.error ? "item-attributes-error" : undefined} placeholder={t("attributesPlaceholder")} />{fieldState.error && <span id="item-attributes-error" role="alert" className="text-sm text-erp-danger">{t("attributesInvalid")}</span>}</div>} />
+            <ItemAttributesField
+              control={form.control}
+              name="attributes"
+              itemType={selectedItemType}
+              categoryId={selectedCategoryId}
+              disabled={!canSave || fieldsLocked}
+            />
           </FormSection>
           {branches.isError && <p role="alert" className="text-sm text-erp-danger">{t("branchesLoadFailed")}</p>}
         </div>

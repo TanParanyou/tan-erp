@@ -11,6 +11,7 @@ import { isSupportedLocale, defaultLocale } from "@/lib/i18n/locales";
 import { IconMaximize, IconMinimize } from "@/components/common/Icons";
 import { formatFinancialNumber } from "@/features/estimates/utils/estimate-formatters";
 import { useAuthenticatedFileUrl } from "@/hooks/useAuthenticatedFileUrl";
+import { ItemAttributesDisplay } from "@/components/ui/ItemAttributesDisplay";
 
 export interface DrawerCatalogItem {
   id: string;
@@ -279,71 +280,14 @@ export function CatalogItemDetailDrawer({
 
         {/* 4. Specifications & Dynamic Attributes */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-erp-navy text-[11px] uppercase tracking-wider block">
-              {t("catalogDetail.specsAndAttrs")}
-            </span>
-            {itemData.allSpecsText && (
-              <CopyButton
-                text={itemData.allSpecsText}
-                variant="inline"
-                label={t("catalogDetail.copySpecs")}
-                copiedLabel={t("catalogDetail.copied")}
-                className="text-[11px] py-0.5 px-2 bg-transparent border-0 text-erp-navy hover:underline"
-              />
-            )}
-          </div>
-          <div className="border border-erp-border divide-y divide-erp-border/60 bg-erp-surface">
-            {/* Standard Specs */}
-            {item.specs &&
-              Object.entries(item.specs).map(([k, v]) => (
-                <div
-                  key={`spec-${k}`}
-                  className="flex justify-between items-center px-3 py-1.5 group"
-                >
-                  <span className="text-erp-text-muted capitalize">{k}</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-medium text-erp-text-main">{v}</span>
-                    <CopyButton
-                      text={v}
-                      variant="icon"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5 border-0 bg-transparent p-0 text-erp-text-muted hover:text-erp-navy"
-                      label={t("catalogDetail.copy")}
-                      copiedLabel={t("catalogDetail.copied")}
-                    />
-                  </div>
-                </div>
-              ))}
-
-            {/* Dynamic Attributes */}
-            {item.attributes &&
-              Object.entries(item.attributes).map(([k, v]) => (
-                <div
-                  key={`attr-${k}`}
-                  className="flex justify-between items-center px-3 py-1.5 bg-erp-surface-subtle/30 group"
-                >
-                  <span className="text-erp-text-secondary font-medium uppercase text-[10px]">
-                    {k}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-bold text-erp-navy">{v}</span>
-                    <CopyButton
-                      text={v}
-                      variant="icon"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5 border-0 bg-transparent p-0 text-erp-text-muted hover:text-erp-navy"
-                      label={t("catalogDetail.copy")}
-                      copiedLabel={t("catalogDetail.copied")}
-                    />
-                  </div>
-                </div>
-              ))}
-
-            {!item.specs && !item.attributes && (
-              <div className="p-3 text-center text-erp-text-muted italic">-</div>
-            )}
-          </div>
+          <span className="font-bold text-erp-navy text-[11px] uppercase tracking-wider block">
+            {t("catalogDetail.specsAndAttrs")}
+          </span>
+          <ItemAttributesDisplay
+            attributes={item.attributes ?? item.specs}
+            variant="table"
+            copyable={true}
+          />
         </div>
 
         {/* 5. Procurement & Pricing */}

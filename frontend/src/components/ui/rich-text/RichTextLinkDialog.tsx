@@ -5,6 +5,8 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
+import { useTranslations } from "next-intl";
+
 export interface RichTextLinkDialogProps {
   isOpen: boolean;
   initialUrl?: string;
@@ -22,6 +24,7 @@ export function RichTextLinkDialog({
   onApply,
   onRemove,
 }: RichTextLinkDialogProps) {
+  const t = useTranslations("richText");
   const [url, setUrl] = useState(initialUrl);
   const [text, setText] = useState(initialText);
 
@@ -33,19 +36,19 @@ export function RichTextLinkDialog({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="แทรกลิงก์ (Insert Link)" size="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("linkDialogTitle")} size="sm">
       <form onSubmit={handleApply} className="space-y-3.5 text-left">
         <Input
-          label="ข้อความแสดง (Display Text)"
+          label={t("displayText")}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="ข้อความลิงก์ (ไม่ระบุได้)"
+          placeholder={t("displayTextPlaceholder")}
         />
         <Input
-          label="URL ปลายทาง"
+          label={t("targetUrl")}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://example.com"
+          placeholder={t("targetUrlPlaceholder")}
           required
         />
         <div className="flex items-center justify-between border-t border-erp-border pt-3 mt-4">
@@ -58,15 +61,15 @@ export function RichTextLinkDialog({
               }}
               className="text-xs text-red-600 hover:underline font-medium"
             >
-              ลบลิงก์
+              {t("removeLink")}
             </button>
           ) : <div />}
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={onClose}>
-              ยกเลิก
+              {t("cancel")}
             </Button>
             <Button variant="primary" size="sm" type="submit" disabled={!url.trim()}>
-              แทรก
+              {t("applyLink")}
             </Button>
           </div>
         </div>

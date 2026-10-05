@@ -12,7 +12,7 @@ const validItem = {
   availabilityMode: "all_branches",
   selectedBranchIds: [],
   capabilities: { canSell: true, canCost: true, canPurchase: false, canStock: true, canProduce: true },
-  attributesJson: '{"color":"natural"}',
+  attributes: [{ key: "color", value: "natural" }],
   imageFile: null,
   imageAltText: "",
   aliases: [],
@@ -36,8 +36,22 @@ describe("itemFormSchema", () => {
     expect(itemFormSchema.safeParse({ ...validItem, availabilityMode: "selected_branches" }).success).toBe(false);
   });
 
-  it("rejects non-string attribute values and arrays", () => {
-    expect(itemFormSchema.safeParse({ ...validItem, attributesJson: '{"weight":12}' }).success).toBe(false);
-    expect(itemFormSchema.safeParse({ ...validItem, attributesJson: '["natural"]' }).success).toBe(false);
+  it("rejects duplicate attribute keys and reserved keys", () => {
+    expect(
+      itemFormSchema.safeParse({
+        ...validItem,
+        attributes: [
+          { key: "color", value: "natural" },
+          { key: "Color", value: "black" },
+        ],
+      }).success
+    ).toBe(false);
+
+    expect(
+      itemFormSchema.safeParse({
+        ...validItem,
+        attributes: [{ key: "price", value: "100" }],
+      }).success
+    ).toBe(false);
   });
 });

@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/useToast";
 import type { SecurityPreferences } from "@/types/security";
 import { cn } from "@/lib/utils/cn";
 
+import { useTranslations } from "next-intl";
+
 export interface SecurityPreferencesCardProps {
   preferences?: SecurityPreferences;
   className?: string;
@@ -16,6 +18,7 @@ export function SecurityPreferencesCard({
   preferences: initialPrefs,
   className,
 }: SecurityPreferencesCardProps) {
+  const t = useTranslations("security");
   const [prefs, setPrefs] = useState<SecurityPreferences>(() => {
     return (
       initialPrefs || {
@@ -28,17 +31,17 @@ export function SecurityPreferencesCard({
   const { toast } = useToast();
 
   const handleSave = () => {
-    toast.success("บันทึกการตั้งค่าการแจ้งเตือนความปลอดภัยเรียบร้อยแล้ว");
+    toast.success(t("toastPreferencesSaved"));
   };
 
   return (
     <div className={cn("border border-erp-border bg-erp-surface p-5 rounded-none shadow-2xs text-left", className)}>
       <div className="border-b border-erp-border pb-3">
         <h3 className="text-sm font-bold text-erp-text-main">
-          การแจ้งเตือนความปลอดภัย (Security Notifications)
+          {t("notificationsTitle")}
         </h3>
         <p className="text-xs text-erp-text-muted mt-0.5">
-          กำหนดเงื่อนไขที่ต้องการให้ระบบส่งอีเมลแจ้งเตือนด้านความปลอดภัย
+          {t("notificationsDescription")}
         </p>
       </div>
 
@@ -46,10 +49,10 @@ export function SecurityPreferencesCard({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs font-semibold text-erp-text-main">
-              เมื่อมีการเข้าสู่ระบบจากอุปกรณ์ใหม่
+              {t("onNewDeviceTitle")}
             </div>
             <p className="text-[11px] text-erp-text-muted">
-              แจ้งเตือนทันทีเมื่อตรวจพบ IP หรือ Browser ที่ไม่คุ้นเคย
+              {t("onNewDeviceDesc")}
             </p>
           </div>
           <Switch
@@ -63,10 +66,10 @@ export function SecurityPreferencesCard({
         <div className="flex items-center justify-between border-t border-erp-border pt-3">
           <div>
             <div className="text-xs font-semibold text-erp-text-main">
-              เมื่อการเข้าสู่ระบบล้มเหลวหลายครั้ง
+              {t("onFailedLoginTitle")}
             </div>
             <p className="text-[11px] text-erp-text-muted">
-              แจ้งเตือนเมื่อมีการพยายามเข้าสู่ระบบด้วยรหัสผ่านผิด
+              {t("onFailedLoginDesc")}
             </p>
           </div>
           <Switch
@@ -80,10 +83,10 @@ export function SecurityPreferencesCard({
         <div className="flex items-center justify-between border-t border-erp-border pt-3">
           <div>
             <div className="text-xs font-semibold text-erp-text-main">
-              เมื่อมีการเปลี่ยนแปลงการตั้งค่าความปลอดภัย
+              {t("onSecurityChangeTitle")}
             </div>
             <p className="text-[11px] text-erp-text-muted">
-              แจ้งเตือนเมื่อรหัสผ่านหรือ 2FA มีการเปิด/ปิด
+              {t("onSecurityChangeDesc")}
             </p>
           </div>
           <Switch
@@ -96,7 +99,7 @@ export function SecurityPreferencesCard({
 
         <div className="pt-3 border-t border-erp-border flex justify-end">
           <Button variant="primary" size="sm" onClick={handleSave}>
-            บันทึกการตั้งค่า
+            {t("savePreferences")}
           </Button>
         </div>
       </div>

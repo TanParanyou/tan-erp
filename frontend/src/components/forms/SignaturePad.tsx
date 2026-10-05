@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { IconRefresh, IconSave, IconCheck } from "@/components/common/Icons";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 export interface SignaturePadProps {
   value?: string | null;
@@ -19,13 +20,16 @@ export interface SignaturePadProps {
 export function SignaturePad({
   value,
   onChange,
-  label = "ลงลายมือชื่อดิจิทัล (Digital Signature)",
-  clearButtonText = "ล้างลายเซ็น",
+  label,
+  clearButtonText,
   helperText,
   height = 160,
   onSaveToPresets,
   className,
 }: SignaturePadProps) {
+  const t = useTranslations("common.signaturePad");
+  const effectiveLabel = label ?? t("defaultLabel");
+  const effectiveClearText = clearButtonText ?? t("clear");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDrawingRef = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(Boolean(value));
@@ -155,7 +159,7 @@ export function SignaturePad({
     <div className={cn("space-y-2 text-left", className)}>
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-erp-text-main">
-          {label}
+          {effectiveLabel}
         </span>
         {hasDrawn && (
           <button
@@ -164,7 +168,7 @@ export function SignaturePad({
             className="flex items-center gap-1 text-xs text-red-600 hover:underline"
           >
             <IconRefresh size={12} />
-            <span>{clearButtonText}</span>
+            <span>{effectiveClearText}</span>
           </button>
         )}
       </div>
@@ -188,7 +192,7 @@ export function SignaturePad({
           <div className="pointer-events-none absolute inset-0 flex flex-col justify-end p-3 text-erp-text-muted/40">
             <div className="mb-1 w-full border-b border-dashed border-erp-border" />
             <span className="text-[10px] font-mono">
-              ✕ ลงลายมือชื่อที่นี่ (Sign here)
+              {t("signHere")}
             </span>
           </div>
         )}
@@ -201,7 +205,7 @@ export function SignaturePad({
             onClick={() => setShowPresetInput(!showPresetInput)}
             className="text-xs text-erp-navy hover:underline font-medium"
           >
-            + บันทึกลงคลังลายเซ็นส่วนบุคคล
+            {t("saveToPresets")}
           </button>
           {showPresetInput && (
             <div className="flex items-center gap-1.5 border border-erp-border bg-erp-surface-subtle p-2">
@@ -209,7 +213,7 @@ export function SignaturePad({
                 type="text"
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
-                placeholder="ระบุชื่อลายเซ็น เช่น ลายเซ็นผู้ตรวจการ"
+                placeholder={t("presetNamePlaceholder")}
                 className="flex-1 border border-erp-border bg-erp-surface p-1 text-xs text-erp-text-main outline-none focus:border-erp-navy rounded-none"
               />
               <Button
@@ -227,7 +231,7 @@ export function SignaturePad({
                 }}
               >
                 <IconCheck size={12} className="mr-1" />
-                บันทึก
+                {t("save")}
               </Button>
             </div>
           )}

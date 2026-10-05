@@ -627,7 +627,7 @@ public static class TestOnlyDataSeeder
 
         if (!await db.ItemCategories.AnyAsync(row => row.Id == TestItemCatalogCategoryId))
         {
-            db.ItemCategories.Add(new ItemCategory(
+            var matCat = new ItemCategory(
                 TestItemCatalogCategoryId,
                 TestOrgId,
                 "TEST-MAT-BOARD",
@@ -637,7 +637,71 @@ public static class TestOnlyDataSeeder
                 [ItemType.Material],
                 1,
                 TestUserId,
-                now));
+                now);
+
+            matCat.SetAttributeTemplates(new List<CategoryAttributeTemplate>
+            {
+                new CategoryAttributeTemplate
+                {
+                    Key = "thickness_mm",
+                    Name = LocalizedText.Create("ความหนา", "Thickness"),
+                    DataType = "number",
+                    Unit = "mm",
+                    IsRequired = true,
+                    Options = new List<CategoryAttributeOption>
+                    {
+                        new CategoryAttributeOption { Value = "6", Label = LocalizedText.Create("6 มม.", "6 mm") },
+                        new CategoryAttributeOption { Value = "9", Label = LocalizedText.Create("9 มม.", "9 mm") },
+                        new CategoryAttributeOption { Value = "12", Label = LocalizedText.Create("12 มม.", "12 mm") },
+                        new CategoryAttributeOption { Value = "15", Label = LocalizedText.Create("15 มม.", "15 mm") },
+                        new CategoryAttributeOption { Value = "18", Label = LocalizedText.Create("18 มม.", "18 mm") },
+                        new CategoryAttributeOption { Value = "20", Label = LocalizedText.Create("20 มม.", "20 mm") },
+                    }
+                },
+                new CategoryAttributeTemplate
+                {
+                    Key = "material",
+                    Name = LocalizedText.Create("วัสดุหลัก", "Primary Material"),
+                    DataType = "select",
+                    IsRequired = true,
+                    Options = new List<CategoryAttributeOption>
+                    {
+                        new CategoryAttributeOption { Value = "plywood", Label = LocalizedText.Create("ไม้อัดยาง (Plywood)", "Plywood") },
+                        new CategoryAttributeOption { Value = "mdf", Label = LocalizedText.Create("ไม้ MDF", "MDF") },
+                        new CategoryAttributeOption { Value = "hmr", Label = LocalizedText.Create("ไม้ HMR ทนชื้นเขียว", "HMR") },
+                        new CategoryAttributeOption { Value = "particle_board", Label = LocalizedText.Create("ปาติเกิลบอร์ด", "Particle Board") },
+                    }
+                },
+                new CategoryAttributeTemplate
+                {
+                    Key = "finish",
+                    Name = LocalizedText.Create("ผิวเคลือบ / ผิวสัมผัส", "Finish / Surface"),
+                    DataType = "select",
+                    IsRequired = false,
+                    Options = new List<CategoryAttributeOption>
+                    {
+                        new CategoryAttributeOption { Value = "raw", Label = LocalizedText.Create("เปลือย / ไม่เคลือบ", "Raw / Uncoated") },
+                        new CategoryAttributeOption { Value = "melamine", Label = LocalizedText.Create("เคลือบเมลามีน", "Melamine") },
+                        new CategoryAttributeOption { Value = "laminate", Label = LocalizedText.Create("ปิดผิวลามิเนต (HPL)", "HPL Laminate") },
+                        new CategoryAttributeOption { Value = "veneer", Label = LocalizedText.Create("ปิดผิววีเนียร์ไม้จริง", "Wood Veneer") },
+                    }
+                },
+                new CategoryAttributeTemplate
+                {
+                    Key = "grade",
+                    Name = LocalizedText.Create("เกรด / มาตรฐาน", "Grade / Environmental"),
+                    DataType = "select",
+                    IsRequired = false,
+                    Options = new List<CategoryAttributeOption>
+                    {
+                        new CategoryAttributeOption { Value = "e0", Label = LocalizedText.Create("E0 (มาตรฐานสูงสุด)", "E0") },
+                        new CategoryAttributeOption { Value = "e1", Label = LocalizedText.Create("E1 (มาตรฐานปลอดภัย)", "E1") },
+                        new CategoryAttributeOption { Value = "grade_a", Label = LocalizedText.Create("เกรด A ไสเรียบ", "Grade A") },
+                    }
+                }
+            }, TestUserId, now);
+
+            db.ItemCategories.Add(matCat);
         }
 
         if (!await db.ItemBrands.AnyAsync(row => row.Id == TestItemCatalogBrandId))

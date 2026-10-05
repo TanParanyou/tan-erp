@@ -56,3 +56,4 @@ export * from "./media/MediaImagePicker";
 export * from "./PageContainer";
 export * from "./JsonLd";
 export * from "./preview";
+export * from "./ItemAttributesDisplay";

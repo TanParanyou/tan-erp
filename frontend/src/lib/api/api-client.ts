@@ -391,6 +391,10 @@ export type CostRecordResponse = components["schemas"]["CostRecordResponse"];
 export type CreateCostRecordRequest = components["schemas"]["CreateCostRecordRequest"];
 export type UpdateCostRecordRequest = components["schemas"]["UpdateCostRecordRequest"];
 export type ItemCategoryResponse = components["schemas"]["ItemCategoryDetailResponse"];
+export type CategoryAttributeTemplateResponse = components["schemas"]["CategoryAttributeTemplateResponse"];
+export type CategoryAttributeTemplateDto = components["schemas"]["CategoryAttributeTemplateDto"];
+export type CategoryAttributeOptionDto = components["schemas"]["CategoryAttributeOptionDto"];
+export type SetCategoryAttributeTemplatesRequest = components["schemas"]["SetCategoryAttributeTemplatesRequest"];
 export type UnitOfMeasureResponse = components["schemas"]["UnitOfMeasureDetailResponse"];
 export type ItemBrandResponse = components["schemas"]["ItemBrandDetailResponse"];
 export type ItemTaxCategoryResponse = components["schemas"]["ItemTaxCategoryDetailResponse"];
@@ -1826,6 +1830,14 @@ export class ApiClient {
 
   async updateItemCategory(id: string, payload: UpdateItemCategoryRequest, options: RequestOptions): Promise<ItemCategoryResponse> {
     return this.request<ItemCategoryResponse>(`/api/v1/item-categories/${encodeURIComponent(id)}`, "PUT", options, payload);
+  }
+
+  async getCategoryAttributeTemplates(id: string, options: RequestOptions): Promise<CategoryAttributeTemplateResponse> {
+    return this.request<CategoryAttributeTemplateResponse>(`/api/v1/item-categories/${encodeURIComponent(id)}/attribute-template`, "GET", options);
+  }
+
+  async setCategoryAttributeTemplates(id: string, payload: SetCategoryAttributeTemplatesRequest, options: RequestOptions): Promise<CategoryAttributeTemplateResponse> {
+    return this.request<CategoryAttributeTemplateResponse>(`/api/v1/item-categories/${encodeURIComponent(id)}/attribute-template`, "PUT", options, payload);
   }
 
   async createItemBrand(payload: CreateItemBrandRequest, options: RequestOptions): Promise<ItemBrandResponse> {

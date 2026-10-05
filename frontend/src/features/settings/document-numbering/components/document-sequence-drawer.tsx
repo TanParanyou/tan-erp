@@ -5,6 +5,9 @@ import { useTranslations } from "next-intl";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { useUpdateDocumentSequence } from "../api/document-sequence-queries";
 import { ApiError } from "@/lib/api/api-error";
 import type { DocumentSequenceItem, ResetPeriod } from "../types";
@@ -449,7 +452,7 @@ export function DocumentSequenceDrawer({
                       {preset.title}
                     </span>
                     {isSelected && (
-                      <span className="w-2 h-2 rounded-full bg-erp-navy dark:bg-sky-400" />
+                      <span className="w-2 h-2 rounded-none bg-erp-navy dark:bg-sky-400" />
                     )}
                   </div>
                   <div className="font-mono text-xs font-semibold text-erp-navy dark:text-sky-300">
@@ -462,19 +465,15 @@ export function DocumentSequenceDrawer({
         </div>
 
         {/* Prefix Input */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            {t("prefix")}
-          </label>
-          <input
-            type="text"
-            className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 font-mono text-sm uppercase"
-            value={prefix}
-            onChange={(e) => setPrefix(e.target.value.toUpperCase())}
-            placeholder="EST"
-            maxLength={10}
-          />
-        </div>
+        <Input
+          label={t("prefix")}
+          type="text"
+          className="font-mono uppercase"
+          value={prefix}
+          onChange={(e) => setPrefix(e.target.value.toUpperCase())}
+          placeholder={t("prefixPlaceholder")}
+          maxLength={10}
+        />
 
         {/* Section 2: Visual Segment Builder (When not in advanced mode) */}
         {!isAdvancedMode ? (
@@ -491,73 +490,61 @@ export function DocumentSequenceDrawer({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Year Format */}
               {!isMasterData && <>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t("yearFormat")}
-                </label>
-                <select
-                  className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 text-sm"
-                  value={yearFormat}
-                  onChange={(e) => handleBuilderChange({ yearFormat: e.target.value as YearFormat })}
-                >
-                  <option value="bb">{t("yearOptions.bb")}</option>
-                  <option value="bbbb">{t("yearOptions.bbbb")}</option>
-                  <option value="yyyy">{t("yearOptions.yyyy")}</option>
-                  <option value="yy">{t("yearOptions.yy")}</option>
-                  <option value="none">{t("yearOptions.none")}</option>
-                </select>
-              </div>
+              <Select
+                label={t("yearFormat")}
+                placeholder={t("yearFormatPlaceholder")}
+                value={yearFormat}
+                onChange={(e) => handleBuilderChange({ yearFormat: e.target.value as YearFormat })}
+                options={[
+                  { value: "bb", label: t("yearOptions.bb") },
+                  { value: "bbbb", label: t("yearOptions.bbbb") },
+                  { value: "yyyy", label: t("yearOptions.yyyy") },
+                  { value: "yy", label: t("yearOptions.yy") },
+                  { value: "none", label: t("yearOptions.none") },
+                ]}
+              />
 
               {/* Month/Day Format */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t("monthFormat")}
-                </label>
-                <select
-                  className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 text-sm"
-                  value={monthFormat}
-                  onChange={(e) => handleBuilderChange({ monthFormat: e.target.value as MonthFormat })}
-                >
-                  <option value="mm">{t("monthOptions.mm")}</option>
-                  <option value="mmdd">{t("monthOptions.mmdd")}</option>
-                  <option value="none">{t("monthOptions.none")}</option>
-                </select>
-              </div>
+              <Select
+                label={t("monthFormat")}
+                placeholder={t("monthFormatPlaceholder")}
+                value={monthFormat}
+                onChange={(e) => handleBuilderChange({ monthFormat: e.target.value as MonthFormat })}
+                options={[
+                  { value: "mm", label: t("monthOptions.mm") },
+                  { value: "mmdd", label: t("monthOptions.mmdd") },
+                  { value: "none", label: t("monthOptions.none") },
+                ]}
+              />
               </>}
 
               {/* Prefix Separator */}
               {!isMasterData && <>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t("separatorPrefix")}
-                </label>
-                <select
-                  className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 text-sm"
-                  value={prefixSeparator}
-                  onChange={(e) => handleBuilderChange({ prefixSeparator: e.target.value as Separator })}
-                >
-                  <option value="">{t("separatorOptions.none")}</option>
-                  <option value="-">{t("separatorOptions.dash")}</option>
-                  <option value="/">{t("separatorOptions.slash")}</option>
-                </select>
-              </div>
+              <Select
+                label={t("separatorPrefix")}
+                placeholder={t("separatorPlaceholder")}
+                value={prefixSeparator}
+                onChange={(e) => handleBuilderChange({ prefixSeparator: e.target.value as Separator })}
+                options={[
+                  { value: "", label: t("separatorOptions.none") },
+                  { value: "-", label: t("separatorOptions.dash") },
+                  { value: "/", label: t("separatorOptions.slash") },
+                ]}
+              />
               </>}
 
               {/* Sequence Separator */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t("separatorSeq")}
-                </label>
-                <select
-                  className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 text-sm"
-                  value={seqSeparator}
-                  onChange={(e) => handleBuilderChange({ seqSeparator: e.target.value as Separator })}
-                >
-                  <option value="-">{t("separatorOptions.dash")}</option>
-                  <option value="/">{t("separatorOptions.slash")}</option>
-                  <option value="">{t("separatorOptions.none")}</option>
-                </select>
-              </div>
+              <Select
+                label={t("separatorSeq")}
+                placeholder={t("separatorPlaceholder")}
+                value={seqSeparator}
+                onChange={(e) => handleBuilderChange({ seqSeparator: e.target.value as Separator })}
+                options={[
+                  { value: "-", label: t("separatorOptions.dash") },
+                  { value: "/", label: t("separatorOptions.slash") },
+                  { value: "", label: t("separatorOptions.none") },
+                ]}
+              />
 
               {/* Digits / Padding */}
               <div className="flex flex-col gap-1.5">
@@ -583,54 +570,45 @@ export function DocumentSequenceDrawer({
               </div>
 
               {/* Reset Cycle */}
-              {!isMasterData ? <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t("resetPeriod")}
-                </label>
-                <select
-                  className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 text-sm"
+              {!isMasterData ? (
+                <Select
+                  label={t("resetPeriod")}
+                  placeholder={t("resetPeriodPlaceholder")}
                   value={resetPeriod}
                   onChange={(e) => handleBuilderChange({ resetPeriod: e.target.value as ResetPeriod })}
-                >
-                  <option value="Monthly">{t("resetOptions.monthly")}</option>
-                  <option value="Yearly">{t("resetOptions.yearly")}</option>
-                  <option value="Daily">{t("resetOptions.daily")}</option>
-                  <option value="Never">{t("resetOptions.never")}</option>
-                </select>
-              </div> : <p className="flex items-center text-sm text-slate-600 dark:text-slate-300">{t("masterDataNeverReset")}</p>}
+                  options={[
+                    { value: "Monthly", label: t("resetOptions.monthly") },
+                    { value: "Yearly", label: t("resetOptions.yearly") },
+                    { value: "Daily", label: t("resetOptions.daily") },
+                    { value: "Never", label: t("resetOptions.never") },
+                  ]}
+                />
+              ) : <p className="flex items-center text-sm text-slate-600 dark:text-slate-300">{t("masterDataNeverReset")}</p>}
             </div>
 
             {/* Branch Specific Toggle */}
-            {!isMasterData && <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-erp-border">
-              <input
-                type="checkbox"
-                className="w-4 h-4 border border-erp-border text-erp-navy focus:ring-0"
-                checked={isBranchSpecific}
-                onChange={(e) => handleBuilderChange({ isBranchSpecific: e.target.checked })}
-              />
-              <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                {t("isBranchSpecific")}
-              </span>
-            </label>}
+            {!isMasterData && (
+              <div className="pt-2 border-t border-erp-border">
+                <Checkbox
+                  checked={isBranchSpecific}
+                  label={t("isBranchSpecific")}
+                  onChange={(e) => handleBuilderChange({ isBranchSpecific: e.target.checked })}
+                  wrapperClassName="mb-0"
+                />
+              </div>
+            )}
           </div>
         ) : (
           /* Section 3: Advanced Mode (Raw Pattern + Token Pills) */
           <div className="flex flex-col gap-4 border border-amber-300 dark:border-amber-700 p-4 bg-amber-50/40 dark:bg-amber-950/20">
             <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t("formatPattern")}
-                </label>
-                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                  {t("advancedModeToggle")}
-                </span>
-              </div>
-              <input
+              <Input
+                label={t("formatPattern")}
                 type="text"
-                className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 font-mono text-sm"
+                className="font-mono text-sm"
                 value={formatPattern}
                 onChange={(e) => setFormatPattern(e.target.value)}
-                placeholder="{PREFIX}-{BRANCH}-{BB}{MM}-{SEQ:4}"
+                placeholder={t("formatPatternPlaceholder")}
               />
 
               {/* Token Insertion Pills */}
@@ -654,47 +632,39 @@ export function DocumentSequenceDrawer({
 
             {/* Reset Period & Padding in Advanced Mode */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t("resetPeriod")}
-                </label>
-                <select
-                  className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 text-sm"
-                  value={resetPeriod}
-                  onChange={(e) => setResetPeriod(e.target.value as ResetPeriod)}
-                >
-                  <option value="Never">{t("resetOptions.never")}</option>
-                  <option value="Yearly">{t("resetOptions.yearly")}</option>
-                  <option value="Monthly">{t("resetOptions.monthly")}</option>
-                  <option value="Daily">{t("resetOptions.daily")}</option>
-                </select>
-              </div>
+              <Select
+                label={t("resetPeriod")}
+                placeholder={t("resetPeriodPlaceholder")}
+                value={resetPeriod}
+                onChange={(e) => setResetPeriod(e.target.value as ResetPeriod)}
+                options={[
+                  { value: "Never", label: t("resetOptions.never") },
+                  { value: "Yearly", label: t("resetOptions.yearly") },
+                  { value: "Monthly", label: t("resetOptions.monthly") },
+                  { value: "Daily", label: t("resetOptions.daily") },
+                ]}
+              />
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  {t("padding")}
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  className="erp-input px-3 py-2 border border-erp-border bg-white dark:bg-slate-950 text-sm"
-                  value={padding}
-                  onChange={(e) => setPadding(parseInt(e.target.value, 10) || 4)}
-                />
-              </div>
+              <Input
+                label={t("padding")}
+                type="number"
+                min={1}
+                max={10}
+                value={padding}
+                onChange={(e) => setPadding(parseInt(e.target.value, 10) || 4)}
+                placeholder={t("paddingPlaceholder")}
+              />
             </div>
 
             {/* Branch Specific Checkbox */}
-            <label className="flex items-center gap-2 cursor-pointer pt-2">
-              <input
-                type="checkbox"
-                className="w-4 h-4 border border-erp-border text-erp-navy focus:ring-0"
+            <div className="pt-2">
+              <Checkbox
                 checked={isBranchSpecific}
+                label={t("isBranchSpecific")}
                 onChange={(e) => setIsBranchSpecific(e.target.checked)}
+                wrapperClassName="mb-0"
               />
-              <span className="text-sm text-slate-800 dark:text-slate-200">{t("isBranchSpecific")}</span>
-            </label>
+            </div>
           </div>
         )}
 

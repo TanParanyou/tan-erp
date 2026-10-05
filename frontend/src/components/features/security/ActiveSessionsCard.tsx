@@ -7,6 +7,8 @@ import { IconGlobe } from "@/components/common/Icons";
 import type { AdminSessionItem } from "@/types/security";
 import { cn } from "@/lib/utils/cn";
 
+import { useTranslations } from "next-intl";
+
 export interface ActiveSessionsCardProps {
   sessions?: AdminSessionItem[];
   className?: string;
@@ -16,6 +18,7 @@ export function ActiveSessionsCard({
   sessions: initialSessions,
   className,
 }: ActiveSessionsCardProps) {
+  const t = useTranslations("security");
   const [sessions, setSessions] = useState<AdminSessionItem[]>(() => {
     if (initialSessions) return initialSessions;
     return [
@@ -34,17 +37,17 @@ export function ActiveSessionsCard({
 
   const handleRevoke = (id: string) => {
     setSessions((prev) => prev.filter((s) => s.id !== id));
-    toast.success("ออกจากระบบอุปกรณ์ดังกล่าวเรียบร้อยแล้ว");
+    toast.success(t("toastSessionRevoked"));
   };
 
   return (
     <div className={cn("border border-erp-border bg-erp-surface p-5 rounded-none shadow-2xs text-left", className)}>
       <div className="border-b border-erp-border pb-3">
         <h3 className="text-sm font-bold text-erp-text-main">
-          อุปกรณ์ที่เข้าสู่ระบบค้างไว้ (Active Sessions)
+          {t("activeSessionsTitle")}
         </h3>
         <p className="text-xs text-erp-text-muted mt-0.5">
-          จัดการการเชื่อมต่อจากอุปกรณ์หรือเบราว์เซอร์อื่นๆ ที่เข้าสู่ระบบบัญชีนี้
+          {t("activeSessionsDescription")}
         </p>
       </div>
 
@@ -62,7 +65,7 @@ export function ActiveSessionsCard({
                   </span>
                   {sess.is_current && (
                     <span className="bg-erp-navy px-1.5 py-0.2 text-[10px] font-bold text-white rounded-none">
-                      อุปกรณ์นี้
+                      {t("thisDevice")}
                     </span>
                   )}
                 </div>
@@ -79,7 +82,7 @@ export function ActiveSessionsCard({
                 onClick={() => handleRevoke(sess.id)}
                 className="text-xs text-red-600 hover:text-red-700"
               >
-                ออกจากระบบ
+                {t("revokeSession")}
               </Button>
             )}
           </div>

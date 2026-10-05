@@ -261,9 +261,17 @@
   background-color: var(--erp-surface);
   color: var(--erp-text-main);
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: 1rem; /* 16px default to prevent iOS Safari auto-zoom/scroll on focus */
   box-sizing: border-box;
   transition: border-color 150ms ease, outline-color 150ms ease;
+}
+
+@media (min-width: 769px) {
+  .erp-input,
+  .erp-select,
+  .erp-textarea {
+    font-size: 0.875rem; /* 14px on desktop/tablets where zoom is not triggered */
+  }
 }
 
 .erp-input {
@@ -1316,9 +1324,14 @@
   }
 
   .erp-login-page {
-    padding: 1rem 0.75rem;
+    padding: calc(1rem + env(safe-area-inset-top, 0px)) 0.75rem calc(1rem + env(safe-area-inset-bottom, 0px));
     justify-content: flex-start;
-    padding-top: 3.5rem;
+    padding-top: calc(4.75rem + env(safe-area-inset-top, 0px));
+  }
+
+  .erp-login-topbar {
+    top: calc(1rem + env(safe-area-inset-top, 0px));
+    right: 0.75rem;
   }
 
   .login-card {

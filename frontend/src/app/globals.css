@@ -53,6 +53,17 @@ textarea {
   font-size: 1rem;
 }
 
+/* Prevent inputs from being hidden behind sticky headers/appbars when focused on mobile */
+input,
+select,
+textarea,
+.erp-input,
+.erp-select,
+.erp-textarea {
+  scroll-margin-top: 72px;
+  scroll-margin-bottom: 72px;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;

@@ -26,6 +26,7 @@ import {
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { getOpportunityStageLabelKey, CANONICAL_OPPORTUNITY_STAGES } from "../opportunity-labels";
+import { getCustomerDisplayNames } from "@/features/customers/customer-labels";
 import { useListState, type ListFilterRecord } from "@/hooks/useListState";
 import { useDataExport } from "@/hooks/useDataExport";
 import type { ExportColumn } from "@/lib/export/export-types";
@@ -189,15 +190,19 @@ export function OpportunityList() {
       {
         id: "customer",
         header: t("customer"),
-        cell: (_value, opp) => (
-          <span className="text-xs text-erp-text font-medium">
-            {opp.customer ? (
-              opp.customer.displayNameTh || opp.customer.displayNameEn || opp.customer.code || "-"
-            ) : (
-              "-"
-            )}
-          </span>
-        ),
+        cell: (_value, opp) => {
+          if (!opp.customer) return "-";
+          const { primary } = getCustomerDisplayNames(
+            opp.customer.displayNameTh,
+            opp.customer.displayNameEn,
+            locale as "th" | "en",
+          );
+          return (
+            <span className="text-xs text-erp-text font-medium">
+              {primary}
+            </span>
+          );
+        },
       },
       {
         id: "stage",

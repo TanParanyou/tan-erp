@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { IconSpinner, IconRefresh } from "@/components/common/Icons";
 import { getCroppedImg, PixelCrop } from "./cropUtils";
 
+import { useTranslations } from "next-intl";
+
 export interface ImageCropDialogProps {
   isOpen: boolean;
   imageSrc: string;
@@ -22,6 +24,7 @@ export function ImageCropDialog({
   onCropComplete,
   aspectRatio = 16 / 9,
 }: ImageCropDialogProps) {
+  const t = useTranslations("common.imageCrop");
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -55,7 +58,7 @@ export function ImageCropDialog({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="ตัดแต่งรูปภาพ (Crop Image)"
+      title={t("title")}
       size="lg"
     >
       <div className="space-y-4">
@@ -74,7 +77,7 @@ export function ImageCropDialog({
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-erp-border pt-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-erp-text-muted">ซูม:</span>
+            <span className="text-xs font-medium text-erp-text-muted">{t("zoom")}</span>
             <input
               type="range"
               min={1}
@@ -95,18 +98,18 @@ export function ImageCropDialog({
               className="gap-1 rounded-none"
             >
               <IconRefresh size={14} />
-              <span>หมุน 90°</span>
+              <span>{t("rotate90")}</span>
             </Button>
           </div>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-erp-border pt-3">
           <Button variant="secondary" onClick={onClose} disabled={isProcessing}>
-            ยกเลิก
+            {t("cancel")}
           </Button>
           <Button variant="primary" onClick={handleApplyCrop} disabled={isProcessing}>
             {isProcessing ? <IconSpinner size={14} className="animate-spin mr-1.5" /> : null}
-            <span>บันทึกการตัดรูป</span>
+            <span>{t("applyCrop")}</span>
           </Button>
         </div>
       </div>

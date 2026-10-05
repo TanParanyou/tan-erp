@@ -14,15 +14,42 @@ export const itemFormSchema = z.object({
   availabilityMode: z.enum(["all_branches", "selected_branches"]),
   selectedBranchIds: z.array(z.string().uuid()),
   capabilities: z.object({ canSell: z.boolean(), canCost: z.boolean(), canPurchase: z.boolean(), canStock: z.boolean(), canProduce: z.boolean() }),
-  attributesJson: z.string().refine((value) => {
-    if (!value.trim()) return true;
-    try {
-      const parsed: unknown = JSON.parse(value);
-      return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-        && Object.values(parsed).every((item) => typeof item === "string");
-    } catch {
-      return false;
-    }
+  attributes: z.array(
+    z.object({
+      key: z.string().trim(),
+      value: z.string().trim(),
+    })
+  ).superRefine((pairs, ctx) => {
+    const seen = new Set<string>();
+    const reserved = ["price", "status", "permission", "currency", "unitcost", "cost"];
+    pairs.forEach((pair, idx) => {
+      if (!pair.key && pair.value) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [idx, "key"],
+          message: "KEY_REQUIRED",
+        });
+      }
+      if (pair.key) {
+        const lower = pair.key.toLowerCase();
+        if (seen.has(lower)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [idx, "key"],
+            message: "DUPLICATE_KEY",
+          });
+        } else {
+          seen.add(lower);
+        }
+        if (reserved.includes(lower)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [idx, "key"],
+            message: "RESERVED_KEY",
+          });
+        }
+      }
+    });
   }),
   imageFile: z.custom<File | null>((value) => value === null || (typeof File !== "undefined" && value instanceof File))
     .refine((file) => file === null || (file.size > 0 && file.size <= ITEM_IMAGE_MAX_BYTES), { message: "IMAGE_SIZE_INVALID" }),

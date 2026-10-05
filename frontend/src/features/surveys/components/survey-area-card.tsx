@@ -39,7 +39,7 @@ export function SurveyAreaCard({ areaIndex, isReady, onRemoveArea }: SurveyAreaC
     if (!presetCode) return;
     const found = presets.find((p) => p.code === presetCode);
     if (found) {
-      const roomName = locale === "en" ? found.defaultNameEn : found.defaultNameTh;
+      const roomName = t(found.labelKey as Parameters<typeof t>[0]);
       setValue(`areas.${areaIndex}.name`, roomName, {
         shouldDirty: true,
         shouldValidate: true,

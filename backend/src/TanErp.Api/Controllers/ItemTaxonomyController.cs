@@ -200,7 +200,128 @@ public class ItemTaxonomyController : ControllerBase
         return Ok(ItemResponseMapper.ToResponse(category));
     }
 
+    [HttpGet("api/v1/item-categories/{id:guid}/attribute-template")]
+    [ProducesResponseType<CategoryAttributeTemplateResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCategoryAttributeTemplates(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (authResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
+        }
+
+        var auth = authResult.Value!;
+        var accessResult = await _accessResolver.ResolveAsync(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            "items.read",
+            cancellationToken);
+
+        if (accessResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(accessResult.Error.Code, HttpContext);
+        }
+
+        var access = accessResult.Value!;
+        var category = await _store.GetCategoryAsync(access.OrganizationId, id, cancellationToken);
+        if (category == null)
+        {
+            return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
+        }
+
+        var templates = await _store.GetCategoryAttributeTemplatesAsync(access.OrganizationId, id, cancellationToken);
+
+        var response = new CategoryAttributeTemplateResponse
+        {
+            CategoryId = category.Id,
+            CategoryCode = category.Code,
+            CategoryName = new LocalizedTextResponse { Thai = category.Name.Thai, English = category.Name.English },
+            Templates = templates.Select(t => new CategoryAttributeTemplateDto
+            {
+                Key = t.Key,
+                Name = new LocalizedTextInput { Thai = t.Name.Thai, English = t.Name.English },
+                DataType = t.DataType,
+                Unit = t.Unit,
+                IsRequired = t.IsRequired,
+                DefaultValue = t.DefaultValue,
+                Options = t.Options?.Select(o => new CategoryAttributeOptionDto
+                {
+                    Value = o.Value,
+                    Label = new LocalizedTextInput { Thai = o.Label.Thai, English = o.Label.English },
+                }).ToList(),
+            }).ToList(),
+        };
+
+        return Ok(response);
+    }
+
+    [HttpPut("api/v1/item-categories/{id:guid}/attribute-template")]
+    [ProducesResponseType<CategoryAttributeTemplateResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetCategoryAttributeTemplates(
+        [FromRoute] Guid id,
+        [FromBody] SetCategoryAttributeTemplatesRequest request,
+        CancellationToken cancellationToken)
+    {
+        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (authResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
+        }
+
+        var auth = authResult.Value!;
+        var accessResult = await _accessResolver.ResolveAsync(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            "items.manage-taxonomy",
+            cancellationToken);
+
+        if (accessResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(accessResult.Error.Code, HttpContext);
+        }
+
+        var access = accessResult.Value!;
+        var category = await _store.GetCategoryAsync(access.OrganizationId, id, cancellationToken);
+        if (category == null)
+        {
+            return ProblemDetailsMapper.CreateProblemResult("RESOURCE_NOT_FOUND", HttpContext);
+        }
+
+        var domainTemplates = (request.Templates ?? new List<CategoryAttributeTemplateDto>())
+            .Select(t => new TanErp.Domain.Items.CategoryAttributeTemplate
+            {
+                Key = t.Key,
+                Name = TanErp.Domain.Items.LocalizedText.Create(t.Name.Thai, t.Name.English),
+                DataType = t.DataType,
+                Unit = t.Unit,
+                IsRequired = t.IsRequired,
+                DefaultValue = t.DefaultValue,
+                Options = t.Options?.Select(o => new TanErp.Domain.Items.CategoryAttributeOption
+                {
+                    Value = o.Value,
+                    Label = TanErp.Domain.Items.LocalizedText.Create(o.Label.Thai, o.Label.English),
+                }).ToList(),
+            }).ToList();
+
+        var result = await _store.SetCategoryAttributeTemplatesAsync(access.OrganizationId, id, domainTemplates, access, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        return await GetCategoryAttributeTemplates(id, cancellationToken);
+    }
+
     // ================= Brands =================
+
 
     [HttpGet("api/v1/item-brands")]
     [ProducesResponseType<IReadOnlyList<ItemBrandDetailResponse>>(StatusCodes.Status200OK)]

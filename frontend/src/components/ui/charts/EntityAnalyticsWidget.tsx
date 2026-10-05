@@ -6,6 +6,7 @@ import { TrendLineChart } from "./TrendLineChart";
 import { DonutChart } from "./DonutChart";
 import { useAnalyticsData, type AnalyticsTimeRange } from "@/hooks/useAnalyticsData";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 export interface EntityAnalyticsWidgetProps {
   resourceType?: string;
@@ -20,6 +21,7 @@ export function EntityAnalyticsWidget({
   title = "Operational Financial HUD",
   className,
 }: EntityAnalyticsWidgetProps) {
+  const t = useTranslations("common.analyticsWidget");
   const [timeRange, setTimeRange] = useState<AnalyticsTimeRange>("30d");
   const { overview, trends, topResources, isLoading } = useAnalyticsData({
     timeRange,
@@ -59,17 +61,17 @@ export function EntityAnalyticsWidget({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
-          title="ต้นทุนภายใน (BOQ Cost)"
+          title={t("boqCost")}
           value={overview?.boqCost ? `฿${overview.boqCost.toLocaleString()}` : "฿0"}
           isLoading={isLoading}
         />
         <StatCard
-          title="กำไรขั้นต้น (Gross Profit)"
+          title={t("grossProfit")}
           value={overview?.grossProfit ? `฿${overview.grossProfit.toLocaleString()}` : "฿0"}
           isLoading={isLoading}
         />
         <StatCard
-          title="ยอดเสนอราคารวม (Quotation)"
+          title={t("quotationTotal")}
           value={overview?.quotationTotal ? `฿${overview.quotationTotal.toLocaleString()}` : "฿0"}
           isLoading={isLoading}
         />
@@ -77,12 +79,12 @@ export function EntityAnalyticsWidget({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
         <TrendLineChart
-          title="แนวโน้มรายรับ / ยอดขาย (Trends)"
+          title={t("trendsTitle")}
           data={chartData}
           isLoading={isLoading}
         />
         <DonutChart
-          title="สัดส่วนทรัพยากร / ค่าใช้จ่าย (Distribution)"
+          title={t("distributionTitle")}
           data={topResources}
           isLoading={isLoading}
         />

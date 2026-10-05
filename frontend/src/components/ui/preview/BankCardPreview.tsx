@@ -4,6 +4,8 @@ import React from "react";
 import { CopyButton } from "@/components/common/CopyButton";
 import { cn } from "@/lib/utils/cn";
 
+import { useTranslations } from "next-intl";
+
 export interface BankCardPreviewProps {
   bankName: string;
   accountName: string;
@@ -21,6 +23,8 @@ export function BankCardPreview({
   swiftCode,
   className,
 }: BankCardPreviewProps) {
+  const t = useTranslations("common.bankCardPreview");
+
   return (
     <div
       className={cn(
@@ -30,14 +34,14 @@ export function BankCardPreview({
     >
       <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
         <span className="text-xs font-semibold tracking-wider uppercase text-white/80">
-          บัญชีธนาคารสำหรับชำระเงิน
+          {t("paymentAccount")}
         </span>
         <span className="font-bold text-sm tracking-wide text-white">{bankName}</span>
       </div>
 
       <div className="space-y-3">
         <div>
-          <span className="text-[10px] text-white/60 uppercase block">เลขที่บัญชี</span>
+          <span className="text-[10px] text-white/60 uppercase block">{t("accountNumber")}</span>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="font-mono text-lg font-bold tracking-wider">
               {accountNumber}
@@ -47,14 +51,14 @@ export function BankCardPreview({
         </div>
 
         <div>
-          <span className="text-[10px] text-white/60 uppercase block">ชื่อบัญชี</span>
+          <span className="text-[10px] text-white/60 uppercase block">{t("accountName")}</span>
           <span className="text-xs font-medium text-white/90">{accountName}</span>
         </div>
 
         {(branch || swiftCode) && (
           <div className="flex gap-4 pt-1 text-[11px] text-white/70 border-t border-white/10">
-            {branch && <span>สาขา: {branch}</span>}
-            {swiftCode && <span>SWIFT: {swiftCode}</span>}
+            {branch && <span>{t("branch")}: {branch}</span>}
+            {swiftCode && <span>{t("swift")}: {swiftCode}</span>}
           </div>
         )}
       </div>

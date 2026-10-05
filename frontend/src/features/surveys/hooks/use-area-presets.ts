@@ -1,8 +1,6 @@
 export interface RoomPresetOption {
   code: string;
   labelKey: string;
-  defaultNameTh: string;
-  defaultNameEn: string;
 }
 
 export interface PresetPackage {
@@ -12,18 +10,18 @@ export interface PresetPackage {
 }
 
 export const STANDARD_ROOM_PRESETS: RoomPresetOption[] = [
-  { code: "living_room", labelKey: "roomPresets.living_room", defaultNameTh: "ห้องนั่งเล่น (Living Room)", defaultNameEn: "Living Room" },
-  { code: "master_bedroom", labelKey: "roomPresets.master_bedroom", defaultNameTh: "ห้องนอนใหญ่ (Master Bedroom)", defaultNameEn: "Master Bedroom" },
-  { code: "bedroom_2", labelKey: "roomPresets.bedroom_2", defaultNameTh: "ห้องนอน 2 (Bedroom 2)", defaultNameEn: "Bedroom 2" },
-  { code: "bedroom_3", labelKey: "roomPresets.bedroom_3", defaultNameTh: "ห้องนอน 3 (Bedroom 3)", defaultNameEn: "Bedroom 3" },
-  { code: "walk_in_closet", labelKey: "roomPresets.walk_in_closet", defaultNameTh: "ห้องแต่งตัว (Walk-in Closet)", defaultNameEn: "Walk-in Closet" },
-  { code: "kitchen", labelKey: "roomPresets.kitchen", defaultNameTh: "ห้องครัว (Kitchen)", defaultNameEn: "Kitchen" },
-  { code: "pantry", labelKey: "roomPresets.pantry", defaultNameTh: "แพนทรี / เตรียมอาหาร (Pantry)", defaultNameEn: "Pantry" },
-  { code: "dining_room", labelKey: "roomPresets.dining_room", defaultNameTh: "ห้องรับประทานอาหาร (Dining Room)", defaultNameEn: "Dining Room" },
-  { code: "foyer", labelKey: "roomPresets.foyer", defaultNameTh: "โถงทางเข้า (Foyer)", defaultNameEn: "Foyer" },
-  { code: "working_room", labelKey: "roomPresets.working_room", defaultNameTh: "ห้องทำงาน (Home Office)", defaultNameEn: "Home Office" },
-  { code: "bathroom", labelKey: "roomPresets.bathroom", defaultNameTh: "ห้องน้ำ (Bathroom)", defaultNameEn: "Bathroom" },
-  { code: "balcony", labelKey: "roomPresets.balcony", defaultNameTh: "ระเบียง (Balcony)", defaultNameEn: "Balcony" },
+  { code: "living_room", labelKey: "roomPresets.living_room" },
+  { code: "master_bedroom", labelKey: "roomPresets.master_bedroom" },
+  { code: "bedroom_2", labelKey: "roomPresets.bedroom_2" },
+  { code: "bedroom_3", labelKey: "roomPresets.bedroom_3" },
+  { code: "walk_in_closet", labelKey: "roomPresets.walk_in_closet" },
+  { code: "kitchen", labelKey: "roomPresets.kitchen" },
+  { code: "pantry", labelKey: "roomPresets.pantry" },
+  { code: "dining_room", labelKey: "roomPresets.dining_room" },
+  { code: "foyer", labelKey: "roomPresets.foyer" },
+  { code: "working_room", labelKey: "roomPresets.working_room" },
+  { code: "bathroom", labelKey: "roomPresets.bathroom" },
+  { code: "balcony", labelKey: "roomPresets.balcony" },
 ];
 
 export const PRESET_PACKAGES: PresetPackage[] = [

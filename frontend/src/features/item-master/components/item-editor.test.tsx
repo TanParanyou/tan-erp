@@ -5,12 +5,13 @@ import { NextIntlClientProvider } from "next-intl";
 import messagesTh from "@/messages/th.json";
 import type { ItemResponse } from "@/lib/api/api-client";
 import { ItemEditor } from "./item-editor";
-import { useItemDetail, useItemMasterLookups, useItemMasterMutations, useOrganizationBranches } from "@/features/item-master/api/item-master-queries";
+import { useCategoryAttributeTemplate, useItemDetail, useItemMasterLookups, useItemMasterMutations, useOrganizationBranches } from "@/features/item-master/api/item-master-queries";
 
 const state = vi.hoisted(() => ({
   permissions: ["items.create", "items.update"],
   router: { push: vi.fn(), replace: vi.fn() },
   itemQuery: { data: undefined as ItemResponse | undefined, isLoading: false, isError: false, error: new Error("load failed"), refetch: vi.fn() },
+  categoryTemplateQuery: { data: undefined, isLoading: false, isError: false },
   mutations: {
     createItem: { mutateAsync: vi.fn(), isPending: false, isError: false },
     attachItemImage: { mutateAsync: vi.fn(), isPending: false, isError: false },
@@ -24,6 +25,7 @@ const state = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({ useRouter: () => state.router }));
 vi.mock("@/features/item-master/api/item-master-queries", () => ({
   useItemDetail: vi.fn(), useItemMasterLookups: vi.fn(), useItemMasterMutations: vi.fn(), useOrganizationBranches: vi.fn(),
+  useCategoryAttributeTemplate: vi.fn(),
 }));
 vi.mock("@/lib/membership/selected-membership-context", () => ({ useSelectedMembership: () => ({ selectedMembership: { id: "membership-1", permissions: state.permissions } }) }));
 vi.mock("@/lib/permissions/can", () => ({ can: (_membership: unknown, permission: string) => state.permissions.includes(permission) }));
@@ -65,6 +67,7 @@ describe("ItemEditor", () => {
     } as unknown as ReturnType<typeof useItemMasterLookups>);
     vi.mocked(useOrganizationBranches).mockReturnValue({ data: [], isLoading: false, isError: false } as unknown as ReturnType<typeof useOrganizationBranches>);
     vi.mocked(useItemMasterMutations).mockReturnValue(state.mutations as unknown as ReturnType<typeof useItemMasterMutations>);
+    vi.mocked(useCategoryAttributeTemplate).mockReturnValue(state.categoryTemplateQuery as unknown as ReturnType<typeof useCategoryAttributeTemplate>);
   });
 
   it("round-trips existing capabilities and tax category while updating name with the current ETag", async () => {
@@ -183,4 +186,31 @@ describe("ItemEditor", () => {
     await waitFor(() => expect(screen.getByPlaceholderText("ชื่อสินค้า (TH)")).toHaveValue("ไม้อัด"));
   });
 
+  it("adds and updates specifications via quick presets and custom input", async () => {
+    state.itemQuery.data = {
+      id: "item-1", code: "MAT-1", rowVersion: "etag-v4", itemType: "material", status: "draft",
+      category: { id: categoryId }, baseUnit: { id: unitId }, name: { thai: "ไม้อัด" },
+      capabilities: { canSell: true, canCost: true, canPurchase: false, canStock: true, canProduce: false },
+      availabilityMode: "all_branches", branchAvailabilities: [],
+    } as unknown as ItemResponse;
+    renderEditor("item-1");
+    await screen.findByDisplayValue("ไม้อัด");
+    fireEvent.click(screen.getByRole("tab", { name: "การใช้งานและคุณสมบัติ" }));
+
+    // Click quick preset +สี (color)
+    const colorPreset = screen.getByRole("button", { name: /\+สี/ });
+    fireEvent.click(colorPreset);
+
+    // Find select input for color and choose "white_matte"
+    const colorSelects = screen.getAllByRole("combobox");
+    const lastSelect = colorSelects[colorSelects.length - 1] as HTMLSelectElement;
+    fireEvent.change(lastSelect, { target: { value: "white_matte" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกสินค้า" }));
+
+    await waitFor(() => expect(state.mutations.updateItem.mutateAsync).toHaveBeenCalledOnce());
+    expect(state.mutations.updateItem.mutateAsync.mock.calls[0]?.[0].payload).toMatchObject({
+      attributes: { color: "white_matte" },
+    });
+  });
 });

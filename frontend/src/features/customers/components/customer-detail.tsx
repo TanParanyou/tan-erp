@@ -238,7 +238,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
         avatar={
           <Avatar
             fileId={customer.imageFileId}
-            initial={customer.displayNameTh || customer.displayNameEn || undefined}
+            initial={displayName}
             variant={customer.customerType === "organization" ? "navy" : "muted"}
             size="lg"
             title={resolveCustomerTypeLabel(customer.customerType)}

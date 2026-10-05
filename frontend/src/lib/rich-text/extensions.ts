@@ -21,7 +21,7 @@ export const richTextExtensions = [
     },
     code: {
       HTMLAttributes: {
-        class: "rounded bg-erp-surface-subtle px-1.5 py-0.5 font-mono text-xs text-erp-navy-800 dark:text-erp-navy-200",
+        class: "rounded-none bg-erp-surface-subtle px-1.5 py-0.5 font-mono text-xs text-erp-navy-800 dark:text-erp-navy-200",
       },
     },
     link: {

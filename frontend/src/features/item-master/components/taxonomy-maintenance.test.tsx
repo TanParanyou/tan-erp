@@ -4,7 +4,14 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { NextIntlClientProvider } from "next-intl";
 import messages from "@/messages/th.json";
 import { TaxonomyMaintenance } from "./taxonomy-maintenance";
-import { useItemMasterReferenceData, useItemMasterReferenceMutations, useSharedUnitConversionMutations, useSharedUnitConversions } from "@/features/item-master/api/item-master-queries";
+import {
+  useItemMasterReferenceData,
+  useItemMasterReferenceMutations,
+  useSharedUnitConversionMutations,
+  useSharedUnitConversions,
+  useCategoryAttributeTemplate,
+  useCategoryAttributeTemplateMutations,
+} from "@/features/item-master/api/item-master-queries";
 import { uploadVerifiedItemImage } from "@/features/item-master/api/upload-item-image";
 
 vi.mock("@/features/item-master/api/item-master-queries", () => ({
@@ -12,6 +19,8 @@ vi.mock("@/features/item-master/api/item-master-queries", () => ({
   useItemMasterReferenceMutations: vi.fn(),
   useSharedUnitConversionMutations: vi.fn(),
   useSharedUnitConversions: vi.fn(),
+  useCategoryAttributeTemplate: vi.fn(),
+  useCategoryAttributeTemplateMutations: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({
   usePathname: () => "/th/item-master/reference-data",
@@ -74,6 +83,15 @@ describe("TaxonomyMaintenance", () => {
     } as unknown as ReturnType<typeof useItemMasterReferenceMutations>);
     vi.mocked(useSharedUnitConversions).mockReturnValue({ data: [], isLoading: false, isError: false } as unknown as ReturnType<typeof useSharedUnitConversions>);
     vi.mocked(useSharedUnitConversionMutations).mockReturnValue({ create: { mutateAsync: createConversion, isPending: false, isError: false } } as unknown as ReturnType<typeof useSharedUnitConversionMutations>);
+    vi.mocked(useCategoryAttributeTemplate).mockReturnValue({
+      data: { categoryId: "category-1", templates: [] },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useCategoryAttributeTemplate>);
+    vi.mocked(useCategoryAttributeTemplateMutations).mockReturnValue({
+      setTemplates: { mutateAsync: vi.fn(), isPending: false, isError: false },
+    } as unknown as ReturnType<typeof useCategoryAttributeTemplateMutations>);
   });
 
   it("shows the localized reference list and its empty state after switching sections", () => {
@@ -323,4 +341,51 @@ describe("TaxonomyMaintenance", () => {
     expect(createCategory).not.toHaveBeenCalled();
   });
 
+  it("opens Category Specification Templates drawer and saves configured templates", async () => {
+    const setTemplates = vi.fn().mockResolvedValue({
+      categoryId: "category-1",
+      templates: [],
+    });
+    vi.mocked(useCategoryAttributeTemplateMutations).mockReturnValue({
+      setTemplates: { mutateAsync: setTemplates, isPending: false, isError: false },
+    } as unknown as ReturnType<typeof useCategoryAttributeTemplateMutations>);
+
+    renderPage();
+    const categoryRow = screen.getByRole("row", { name: /MAT.*ชิ้นส่วน/ });
+    const templateBtn = within(categoryRow).getByRole("button", { name: "จัดการเทมเพลตสเปก" });
+    fireEvent.click(templateBtn);
+
+    // Verify Drawer is open
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/เทมเพลตสเปก \(MAT\)/)).toBeInTheDocument();
+
+    // Click Add Specification Template
+    const addBtns = screen.getAllByRole("button", { name: /\+ เพิ่มสเปกในเทมเพลต/ });
+    fireEvent.click(addBtns[0]);
+
+    // Fill in Key and Name TH
+    fireEvent.change(screen.getByPlaceholderText("e.g. thickness_mm"), {
+      target: { value: "core_material" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("เช่น ความหนา"), {
+      target: { value: "วัสดุแกน" },
+    });
+
+    // Click Save
+    const saveBtn = screen.getByRole("button", { name: "บันทึกเทมเพลตสเปก" });
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => expect(setTemplates).toHaveBeenCalledOnce());
+    expect(setTemplates).toHaveBeenCalledWith({
+      templates: [
+        expect.objectContaining({
+          key: "core_material",
+          name: expect.objectContaining({
+            thai: "วัสดุแกน",
+          }),
+          dataType: "text",
+        }),
+      ],
+    });
+  });
 });

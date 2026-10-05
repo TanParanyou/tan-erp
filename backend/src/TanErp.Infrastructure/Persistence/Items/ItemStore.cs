@@ -874,6 +874,69 @@ public class ItemStore : IItemStore
         return Result<ItemCategoryDetailProjection>.Success(await GetCategoryAsync(orgId, category.Id, ct) ?? null!);
     }
 
+    public async Task<IReadOnlyList<CategoryAttributeTemplate>> GetCategoryAttributeTemplatesAsync(
+        Guid organizationId,
+        Guid categoryId,
+        CancellationToken ct)
+    {
+        var category = await _db.ItemCategories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == categoryId && c.OrganizationId == organizationId, ct);
+
+        if (category == null) return Array.Empty<CategoryAttributeTemplate>();
+
+        // Collect hierarchy chain from root to current category
+        var hierarchy = new List<ItemCategory> { category };
+        var currentParentId = category.ParentCategoryId;
+        var visited = new HashSet<Guid> { category.Id };
+
+        while (currentParentId.HasValue && !visited.Contains(currentParentId.Value))
+        {
+            visited.Add(currentParentId.Value);
+            var parent = await _db.ItemCategories
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == currentParentId.Value && c.OrganizationId == organizationId, ct);
+
+            if (parent == null) break;
+            hierarchy.Insert(0, parent); // insert at top so root templates come first
+            currentParentId = parent.ParentCategoryId;
+        }
+
+        // Merge templates: root templates first, child can override or append by Key
+        var merged = new Dictionary<string, CategoryAttributeTemplate>(StringComparer.OrdinalIgnoreCase);
+        foreach (var cat in hierarchy)
+        {
+            foreach (var template in cat.AttributeTemplates)
+            {
+                merged[template.Key] = template;
+            }
+        }
+
+        return merged.Values.ToList();
+    }
+
+    public async Task<Result<IReadOnlyList<CategoryAttributeTemplate>>> SetCategoryAttributeTemplatesAsync(
+        Guid organizationId,
+        Guid categoryId,
+        List<CategoryAttributeTemplate> templates,
+        RequestAccessContext access,
+        CancellationToken ct)
+    {
+        var category = await _db.ItemCategories
+            .FirstOrDefaultAsync(c => c.Id == categoryId && c.OrganizationId == organizationId, ct);
+
+        if (category == null)
+        {
+            return Result<IReadOnlyList<CategoryAttributeTemplate>>.Failure(new Error("RESOURCE_NOT_FOUND", "Category not found."));
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        category.SetAttributeTemplates(templates, access.ActorUserId, now);
+
+        await _db.SaveChangesAsync(ct);
+        return Result<IReadOnlyList<CategoryAttributeTemplate>>.Success(category.AttributeTemplates);
+    }
+
     // Taxonomy Brand Implementation
     public async Task<IReadOnlyList<ItemBrandDetailProjection>> ListBrandsAsync(Guid organizationId, CancellationToken ct)
     {

@@ -1355,4 +1355,75 @@ public class ItemEndpointsTests : IAsyncLifetime
         var add2Res = await _client.SendAsync(add2Req);
         Assert.Equal(HttpStatusCode.Conflict, add2Res.StatusCode);
     }
+
+    [Fact]
+    public async Task CategoryAttributeTemplates_GetAndSet_SupportsInheritanceAndOptions()
+    {
+        var (parentCatId, _, _) = await SeedTaxonomyAsync();
+
+        // 1. Set template on parent category
+        var setParentReq = CreateRequest(HttpMethod.Put, $"/api/v1/item-categories/{parentCatId}/attribute-template");
+        setParentReq.Content = JsonContent.Create(new SetCategoryAttributeTemplatesRequest
+        {
+            Templates = new List<CategoryAttributeTemplateDto>
+            {
+                new CategoryAttributeTemplateDto
+                {
+                    Key = "material",
+                    Name = new LocalizedTextInput { Thai = "วัสดุหลัก", English = "Primary Material" },
+                    DataType = "select",
+                    IsRequired = true,
+                    Options = new List<CategoryAttributeOptionDto>
+                    {
+                        new CategoryAttributeOptionDto { Value = "plywood", Label = new LocalizedTextInput { Thai = "ไม้อัดยาง", English = "Plywood" } }
+                    }
+                }
+            }
+        });
+        var setParentRes = await _client.SendAsync(setParentReq);
+        Assert.Equal(HttpStatusCode.OK, setParentRes.StatusCode);
+
+        // 2. Create child category
+        var childCatReq = CreateRequest(HttpMethod.Post, "/api/v1/item-categories");
+        childCatReq.Content = JsonContent.Create(new CreateItemCategoryRequest
+        {
+            Code = "CAT-CHILD-" + Guid.NewGuid().ToString("N")[..6],
+            Name = new LocalizedTextInput { Thai = "หมวดย่อย", English = "Child Category" },
+            AllowedItemTypes = new List<string> { "Standard", "Service" },
+            ParentCategoryId = parentCatId
+        });
+        var childCatRes = await _client.SendAsync(childCatReq);
+        Assert.Equal(HttpStatusCode.Created, childCatRes.StatusCode);
+        var childCat = await childCatRes.Content.ReadFromJsonAsync<ItemCategoryDetailResponse>();
+
+        // 3. Set template on child category
+        var setChildReq = CreateRequest(HttpMethod.Put, $"/api/v1/item-categories/{childCat!.Id}/attribute-template");
+        setChildReq.Content = JsonContent.Create(new SetCategoryAttributeTemplatesRequest
+        {
+            Templates = new List<CategoryAttributeTemplateDto>
+            {
+                new CategoryAttributeTemplateDto
+                {
+                    Key = "thickness_mm",
+                    Name = new LocalizedTextInput { Thai = "ความหนา", English = "Thickness" },
+                    DataType = "number",
+                    Unit = "mm",
+                    IsRequired = true
+                }
+            }
+        });
+        var setChildRes = await _client.SendAsync(setChildReq);
+        Assert.Equal(HttpStatusCode.OK, setChildRes.StatusCode);
+
+        // 4. Get child templates -> must contain inherited "material" from parent AND "thickness_mm" from child
+        var getTemplatesReq = CreateRequest(HttpMethod.Get, $"/api/v1/item-categories/{childCat.Id}/attribute-template");
+        var getTemplatesRes = await _client.SendAsync(getTemplatesReq);
+        Assert.Equal(HttpStatusCode.OK, getTemplatesRes.StatusCode);
+        var templateResp = await getTemplatesRes.Content.ReadFromJsonAsync<CategoryAttributeTemplateResponse>();
+
+        Assert.NotNull(templateResp);
+        Assert.Equal(2, templateResp.Templates.Count);
+        Assert.Contains(templateResp.Templates, t => t.Key == "material" && t.DataType == "select");
+        Assert.Contains(templateResp.Templates, t => t.Key == "thickness_mm" && t.DataType == "number" && t.Unit == "mm");
+    }
 }

@@ -54,9 +54,7 @@ export function SurveyBatchTemplateModal({
     const selectedRooms = selectedCodes.map((code) => {
       const preset = presets.find((p) => p.code === code);
       const name = preset
-        ? locale === "en"
-          ? preset.defaultNameEn
-          : preset.defaultNameTh
+        ? t(preset.labelKey as Parameters<typeof t>[0])
         : code;
       return { code, name };
     });

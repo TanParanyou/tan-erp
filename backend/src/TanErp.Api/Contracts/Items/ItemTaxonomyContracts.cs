@@ -195,3 +195,34 @@ public sealed class UnitOfMeasureDetailResponse
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
 }
+
+public sealed class CategoryAttributeOptionDto
+{
+    public string Value { get; set; } = string.Empty;
+    public LocalizedTextInput Label { get; set; } = new();
+}
+
+public sealed class CategoryAttributeTemplateDto
+{
+    public string Key { get; set; } = string.Empty;
+    public LocalizedTextInput Name { get; set; } = new();
+    public string DataType { get; set; } = "text";
+    public string? Unit { get; set; }
+    public bool IsRequired { get; set; }
+    public string? DefaultValue { get; set; }
+    public List<CategoryAttributeOptionDto>? Options { get; set; }
+}
+
+public sealed class CategoryAttributeTemplateResponse
+{
+    public Guid CategoryId { get; set; }
+    public string CategoryCode { get; set; } = string.Empty;
+    public LocalizedTextResponse CategoryName { get; set; } = new();
+    public IReadOnlyList<CategoryAttributeTemplateDto> Templates { get; set; } = Array.Empty<CategoryAttributeTemplateDto>();
+}
+
+public sealed class SetCategoryAttributeTemplatesRequest
+{
+    public List<CategoryAttributeTemplateDto> Templates { get; set; } = new();
+}
+

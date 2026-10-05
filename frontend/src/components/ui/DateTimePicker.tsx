@@ -23,6 +23,8 @@ export interface DateTimePickerProps {
  * Eliminates browser icon collision, uses a responsive non-overflowing grid layout,
  * and outputs ISO-compatible string YYYY-MM-DDTHH:mm.
  */
+import { useTranslations } from "next-intl";
+
 export function DateTimePicker({
   value,
   onChange,
@@ -34,6 +36,7 @@ export function DateTimePicker({
   className,
   id: customId,
 }: DateTimePickerProps) {
+  const t = useTranslations("common.dateTimePicker");
   const generatedId = useId();
   const inputId = customId || generatedId;
   const errorId = `${inputId}-error`;
@@ -114,8 +117,8 @@ export function DateTimePicker({
           value={datePart}
           onChange={handleDateChange}
           disabled={disabled}
-          placeholder="เลือกวันที่ (วว/ดด/ปปปป)"
-          aria-label="เลือกวันที่"
+          placeholder={t("selectDatePlaceholder")}
+          aria-label={t("selectDateAria")}
         />
 
         <TimePicker
@@ -123,8 +126,8 @@ export function DateTimePicker({
           value={timePart}
           onChange={handleTimeChange}
           disabled={disabled}
-          placeholder="เลือกเวลา (ชม.:นาที)"
-          aria-label="เลือกเวลา"
+          placeholder={t("selectTimePlaceholder")}
+          aria-label={t("selectTimeAria")}
         />
       </div>
 

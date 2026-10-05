@@ -204,9 +204,14 @@ export function CustomerList() {
         className: "w-[52px]",
         cell: (_value: unknown, customer: CustomerListItemResponse) => {
           const isOrg = customer.customerType === "organization";
+          const { primary } = getCustomerDisplayNames(
+            customer.displayNameTh,
+            customer.displayNameEn,
+            locale === "en" ? "en" : "th",
+          );
           return (
             <Avatar
-              initial={customer.displayNameTh || customer.displayNameEn || undefined}
+              initial={primary !== "-" ? primary : undefined}
               variant={isOrg ? "navy" : "muted"}
               size="md"
               title={resolveCustomerTypeLabel(customer.customerType)}

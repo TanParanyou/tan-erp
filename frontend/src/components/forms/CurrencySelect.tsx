@@ -1,16 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Select, type SelectOption, type SelectProps } from "@/components/ui/Select";
+import { useTranslations } from "next-intl";
 
-export const DEFAULT_CURRENCY_OPTIONS: SelectOption[] = [
-  { value: "THB", label: "THB - บาทไทย (Thai Baht)" },
-  { value: "USD", label: "USD - ดอลลาร์สหรัฐ (US Dollar)" },
-  { value: "EUR", label: "EUR - ยูโร (Euro)" },
-  { value: "JPY", label: "JPY - เยนญี่ปุ่น (Japanese Yen)" },
-  { value: "SGD", label: "SGD - ดอลลาร์สิงคโปร์ (Singapore Dollar)" },
-  { value: "CNY", label: "CNY - หยวนจีน (Chinese Yuan)" },
-];
+export const CURRENCY_CODES = ["THB", "USD", "EUR", "JPY", "SGD", "CNY"] as const;
+
+export const DEFAULT_CURRENCY_OPTIONS: SelectOption[] = CURRENCY_CODES.map((code) => ({
+  value: code,
+  label: code,
+}));
 
 export interface CurrencySelectProps
   extends Omit<SelectProps, "options"> {
@@ -22,13 +21,22 @@ export interface CurrencySelectProps
  * Uses system Select component with strict 0px border-radius Atelier styling.
  */
 export const CurrencySelect = React.forwardRef<HTMLSelectElement, CurrencySelectProps>(
-  ({ options = DEFAULT_CURRENCY_OPTIONS, value = "THB", label = "สกุลเงิน", ...props }, ref) => {
+  ({ options, value = "THB", label, ...props }, ref) => {
+    const t = useTranslations("common.currencies");
+
+    const defaultOptions = useMemo<SelectOption[]>(() => {
+      return CURRENCY_CODES.map((code) => ({
+        value: code,
+        label: t(code),
+      }));
+    }, [t]);
+
     return (
       <Select
         ref={ref}
-        label={label}
+        label={label ?? t("label")}
         value={value}
-        options={options}
+        options={options ?? defaultOptions}
         {...props}
       />
     );

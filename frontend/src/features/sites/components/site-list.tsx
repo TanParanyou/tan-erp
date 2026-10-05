@@ -211,7 +211,7 @@ export function SiteList({ customerId, isCustomerActive, mode = "manage" }: Site
             >
               {tCommon("actions.filter")}
               {isFiltered && !isFilterVisible && (
-                <span className="inline-block w-2 h-2 rounded-full bg-erp-gold ml-1" />
+                <span className="inline-block w-2 h-2 rounded-none bg-erp-gold ml-1" />
               )}
             </Button>
           )}

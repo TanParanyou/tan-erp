@@ -21,6 +21,7 @@ import {
   IconRedo,
 } from "./RichTextIcons";
 import { RichTextLinkDialog } from "./RichTextLinkDialog";
+import { useTranslations } from "next-intl";
 
 export interface RichTextToolbarProps {
   editor: Editor | null;
@@ -28,6 +29,7 @@ export interface RichTextToolbarProps {
 }
 
 export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
+  const t = useTranslations("richText");
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
 
   if (!editor) return null;
@@ -41,7 +43,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
   };
 
   const handleImageInsert = () => {
-    const url = window.prompt("ระบุ URL รูปภาพ:");
+    const url = window.prompt(t("promptImageUrl"));
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
@@ -54,7 +56,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
         disabled={disabled}
         onClick={() => editor.chain().focus().undo().run()}
         className={cn("p-1.5 text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main rounded-none", disabled && "opacity-40")}
-        title="เลิกทำ (Undo)"
+        title={t("undo")}
       >
         <IconUndo size={14} />
       </button>
@@ -63,7 +65,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
         disabled={disabled}
         onClick={() => editor.chain().focus().redo().run()}
         className={cn("p-1.5 text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main rounded-none", disabled && "opacity-40")}
-        title="ทำซ้ำ (Redo)"
+        title={t("redo")}
       >
         <IconRedo size={14} />
       </button>
@@ -90,10 +92,10 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
         }
         className="border border-erp-border bg-erp-surface px-1.5 py-1 text-xs text-erp-text-main outline-none rounded-none cursor-pointer"
       >
-        <option value="p">ย่อหน้า (Paragraph)</option>
-        <option value="h1">หัวเรื่อง 1 (H1)</option>
-        <option value="h2">หัวเรื่อง 2 (H2)</option>
-        <option value="h3">หัวเรื่อง 3 (H3)</option>
+        <option value="p">{t("paragraph")}</option>
+        <option value="h1">{t("heading1")}</option>
+        <option value="h2">{t("heading2")}</option>
+        <option value="h3">{t("heading3")}</option>
       </select>
 
       <div className="mx-1 h-4 w-px bg-erp-border" />
@@ -106,7 +108,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive("bold") ? "bg-erp-navy text-white font-bold" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="ตัวหนา (Bold)"
+        title={t("bold")}
       >
         <IconBold size={14} />
       </button>
@@ -118,7 +120,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive("italic") ? "bg-erp-navy text-white font-bold" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="ตัวเอียง (Italic)"
+        title={t("italic")}
       >
         <IconItalic size={14} />
       </button>
@@ -130,7 +132,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive("underline") ? "bg-erp-navy text-white font-bold" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="ขีดเส้นใต้ (Underline)"
+        title={t("underline")}
       >
         <IconUnderline size={14} />
       </button>
@@ -142,7 +144,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive("strike") ? "bg-erp-navy text-white font-bold" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="ขีดฆ่า (Strike)"
+        title={t("strike")}
       >
         <IconStrikethrough size={14} />
       </button>
@@ -157,7 +159,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive({ textAlign: "left" }) ? "bg-erp-navy text-white" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="ชิดซ้าย"
+        title={t("alignLeft")}
       >
         <IconAlignLeft size={14} />
       </button>
@@ -169,7 +171,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive({ textAlign: "center" }) ? "bg-erp-navy text-white" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="กึ่งกลาง"
+        title={t("alignCenter")}
       >
         <IconAlignCenter size={14} />
       </button>
@@ -181,7 +183,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive({ textAlign: "right" }) ? "bg-erp-navy text-white" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="ชิดขวา"
+        title={t("alignRight")}
       >
         <IconAlignRight size={14} />
       </button>
@@ -196,7 +198,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive("bulletList") ? "bg-erp-navy text-white" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="รายการหัวข้อย่อย"
+        title={t("bulletList")}
       >
         <IconListBullet size={14} />
       </button>
@@ -208,7 +210,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive("orderedList") ? "bg-erp-navy text-white" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="รายการลำดับตัวเลข"
+        title={t("orderedList")}
       >
         <IconListNumbered size={14} />
       </button>
@@ -220,7 +222,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive("blockquote") ? "bg-erp-navy text-white" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="ข้อความอ้างอิง"
+        title={t("blockquote")}
       >
         <IconQuote size={14} />
       </button>
@@ -235,7 +237,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
           "p-1.5 transition-colors rounded-none",
           editor.isActive("link") ? "bg-erp-navy text-white" : "text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main"
         )}
-        title="แทรกลิงก์"
+        title={t("insertLink")}
       >
         <IconLink size={14} />
       </button>
@@ -244,7 +246,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
         disabled={disabled}
         onClick={handleImageInsert}
         className="p-1.5 text-erp-text-muted hover:bg-erp-surface hover:text-erp-text-main rounded-none"
-        title="แทรกรูปภาพ"
+        title={t("insertImage")}
       >
         <IconImage size={14} />
       </button>

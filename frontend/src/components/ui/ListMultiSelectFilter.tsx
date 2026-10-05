@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Checkbox } from "./Checkbox";
 import { IconSearch, IconChevronDown } from "@/components/common/Icons";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 export interface FilterOption {
   value: string;
@@ -25,9 +26,10 @@ export function ListMultiSelectFilter({
   options,
   selectedValues,
   onChange,
-  placeholder = "ค้นหา...",
+  placeholder,
   className,
 }: ListMultiSelectFilterProps) {
+  const t = useTranslations("common.multiSelectFilter");
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -87,7 +89,7 @@ export function ListMultiSelectFilter({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={placeholder}
+              placeholder={placeholder ?? t("searchPlaceholder")}
               className="w-full border border-erp-border bg-erp-surface pl-7 pr-2 py-1 text-xs text-erp-text-main outline-none focus:border-erp-navy rounded-none"
             />
             <IconSearch size={12} className="absolute left-2 top-2 text-erp-text-muted" />
@@ -99,20 +101,20 @@ export function ListMultiSelectFilter({
               onClick={selectAll}
               className="text-erp-navy hover:underline font-medium"
             >
-              เลือกทั้งหมด
+              {t("selectAll")}
             </button>
             <button
               type="button"
               onClick={clearAll}
               className="text-erp-text-muted hover:text-erp-text-main"
             >
-              ล้างค่า
+              {t("clearAll")}
             </button>
           </div>
 
           <div className="max-h-48 overflow-y-auto space-y-1">
             {filteredOptions.length === 0 ? (
-              <p className="p-2 text-center text-xs text-erp-text-muted">ไม่พบตัวเลือก</p>
+              <p className="p-2 text-center text-xs text-erp-text-muted">{t("noOptions")}</p>
             ) : (
               filteredOptions.map((opt) => (
                 <label

@@ -28,6 +28,7 @@ import {
   type CatalogItemModel,
 } from "../api/estimate-catalog-client";
 import { formatFinancialNumber } from "../utils/estimate-formatters";
+import { getAttributeKeyLabel } from "@/lib/utils/item-attributes";
 
 export interface EstimateItemCatalogModalProps {
   isOpen: boolean;
@@ -232,7 +233,7 @@ export function EstimateItemCatalogModal({
       grade: t("catalogFacets.attributeKeys.grade"),
     };
 
-    return labels[key] ?? key.replaceAll("_", " ");
+    return labels[key] ?? getAttributeKeyLabel(key, locale === "en" ? "en" : "th");
   };
 
   const isAllCurrentPageSelected = useMemo(() => {

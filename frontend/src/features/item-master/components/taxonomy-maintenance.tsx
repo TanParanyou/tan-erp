@@ -17,6 +17,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Drawer } from "@/components/ui/Drawer";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { MultiLangInput } from "@/components/forms/MultiLangInput";
@@ -35,6 +36,7 @@ import type { ExportColumn } from "@/lib/export/export-types";
 import { uploadVerifiedItemImage } from "@/features/item-master/api/upload-item-image";
 import { ITEM_IMAGE_MAX_BYTES } from "@/features/item-master/item-image-constants";
 import { useItemMasterReferenceData, useItemMasterReferenceMutations, useSharedUnitConversionMutations, useSharedUnitConversions } from "@/features/item-master/api/item-master-queries";
+import { CategoryAttributeTemplateDrawer } from "@/features/item-master/components/category-attribute-template-drawer";
 import type { ItemBrandResponse, ItemCategoryResponse, UnitOfMeasureResponse } from "@/lib/api/api-client";
 
 type Kind = "categories" | "brands" | "units" | "taxCategories";
@@ -174,6 +176,7 @@ export function TaxonomyMaintenance() {
   });
   const [kind, setKind] = useState<Kind>("categories");
   const [editing, setEditing] = useState<ReferenceRow | null>(null);
+  const [templateCategory, setTemplateCategory] = useState<ReferenceRow | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [isSavingReference, setIsSavingReference] = useState(false);
@@ -244,7 +247,37 @@ export function TaxonomyMaintenance() {
     { id: "name", header: nameLabel, sortable: true, cell: (_value, row) => locale === "en" ? row.name?.english ?? "-" : row.name?.thai ?? "-" },
     ...(kind === "units" ? [{ id: "symbol", header: t("unitSymbol"), accessorKey: "symbol" as const }, { id: "dimension", header: t("dimension"), accessorKey: "dimension" as const }] : []),
     { id: "status", header: t("status"), sortable: true, cell: (_value, row) => row.status === "active" ? t("statusActive") : t("statusInactive") },
-    { id: "actions", header: t("rowActions"), isAction: true, sticky: "right", cell: (_value, row) => canManage ? <Button type="button" size="sm" variant="outline" className="min-h-[44px]" onClick={() => startEdit(row)}>{t("edit")}</Button> : null },
+    {
+      id: "actions",
+      header: t("rowActions"),
+      isAction: true,
+      sticky: "right",
+      cell: (_value, row) =>
+        canManage ? (
+          <div className="flex items-center gap-2">
+            {kind === "categories" && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="min-h-[44px]"
+                onClick={() => setTemplateCategory(row)}
+              >
+                {t("manageCategoryTemplates")}
+              </Button>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="min-h-[44px]"
+              onClick={() => startEdit(row)}
+            >
+              {t("edit")}
+            </Button>
+          </div>
+        ) : null,
+    },
   ], [canManage, codeLabel, kind, locale, nameLabel, t]);
   const createLabel = kind === "categories"
     ? t("createCategory")
@@ -524,16 +557,95 @@ export function TaxonomyMaintenance() {
                 if (mode === "generated") form.setValue("code", "", { shouldDirty: true, shouldValidate: true });
               }}
             />}
-            {kind !== "units" && <Input label={t("sortOrder")} type="number" min="0" step="1" required {...form.register("sortOrder", { valueAsNumber: true })} error={form.formState.errors.sortOrder ? t("validationRequired") : undefined} disabled={savingReference} />}
+            {kind !== "units" && (
+              <Input
+                label={t("sortOrder")}
+                type="number"
+                min="0"
+                step="1"
+                required
+                placeholder={t("sortOrderPlaceholder")}
+                {...form.register("sortOrder", { valueAsNumber: true })}
+                error={form.formState.errors.sortOrder ? t("validationRequired") : undefined}
+                disabled={savingReference}
+              />
+            )}
           </div>
           <div className="space-y-1"><Controller name="name" control={form.control} render={({ field }) => <MultiLangInput id="reference-name" label={nameLabel} required disabled={savingReference} value={field.value} onChange={field.onChange} error={form.formState.errors.name ? t("validationRequired") : undefined} />} /></div>
           {(kind === "categories" || kind === "brands") && <Controller name="description" control={form.control} render={({ field }) => <MultiLangInput id="reference-description" label={t("description")} type="textarea" disabled={savingReference} value={field.value} onChange={field.onChange} />} />}
           </FormSection>
           {kind === "categories" && <FormSection title={t("categorySettings")} className="p-4" contentClassName="gap-4">
-            <div className="erp-form-group"><label className="erp-label" htmlFor="category-parent">{t("parentCategory")}</label><select id="category-parent" className="erp-input" {...form.register("parentCategoryId")} disabled={savingReference}><option value="">{t("noParentCategory")}</option>{parentCategoryOptions.map((category) => <option key={category.id} value={category.id}>{category.code} · {locale === "en" ? category.name?.english ?? "-" : category.name?.thai ?? "-"}</option>)}</select></div>
-            <fieldset className="space-y-2"><legend className="erp-label">{t("allowedItemTypes")}<span className="erp-label-required">*</span></legend><div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{itemTypeOptions.map(([value, label]) => <label key={value} className="flex min-h-11 items-center gap-3 border border-erp-border px-3 text-sm text-erp-text-main"><input type="checkbox" value={value} disabled={savingReference} {...form.register("allowedItemTypes")} />{t(label)}</label>)}</div>{form.formState.errors.allowedItemTypes && <p role="alert" className="text-sm text-erp-danger">{t("allowedItemTypeRequired")}</p>}</fieldset>
+            <Select
+              id="category-parent"
+              label={t("parentCategory")}
+              placeholder={t("noParentCategory")}
+              disabled={savingReference}
+              options={parentCategoryOptions.filter((cat): cat is typeof cat & { id: string } => Boolean(cat.id)).map((category) => ({
+                value: category.id,
+                label: `${category.code ?? "-"} · ${locale === "en" ? category.name?.english ?? "-" : category.name?.thai ?? "-"}`,
+              }))}
+              {...form.register("parentCategoryId")}
+            />
+            <fieldset className="space-y-2">
+              <legend className="erp-label">{t("allowedItemTypes")}<span className="erp-label-required">*</span></legend>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {itemTypeOptions.map(([value, label]) => (
+                  <div key={value} className="flex min-h-11 items-center border border-erp-border px-3 text-sm text-erp-text-main">
+                    <Checkbox
+                      value={value}
+                      label={t(label)}
+                      disabled={savingReference}
+                      wrapperClassName="mb-0"
+                      {...form.register("allowedItemTypes")}
+                    />
+                  </div>
+                ))}
+              </div>
+              {form.formState.errors.allowedItemTypes && <p role="alert" className="text-sm text-erp-danger">{t("allowedItemTypeRequired")}</p>}
+            </fieldset>
           </FormSection>}
-          {kind === "units" && <FormSection title={t("unitSettings")} className="p-4" contentClassName="grid gap-4 sm:grid-cols-2"><Input label={t("unitSymbol")} required {...form.register("symbol")} error={form.formState.errors.symbol ? t("validationRequired") : undefined} disabled={savingReference} /><Select label={t("dimension")} required placeholder={t("selectDimension")} options={dimensionOptions} {...form.register("dimension")} error={form.formState.errors.dimension ? t("validationRequired") : undefined} disabled={savingReference} /><Input label={t("decimalScale")} type="number" min="0" max="6" step="1" required {...form.register("decimalScale", { valueAsNumber: true })} error={form.formState.errors.decimalScale ? t("validationRequired") : undefined} disabled={savingReference} /><Select label={t("roundingMode")} required options={[...unitRoundingModes.map(([value, messageKey]) => ({ value, label: t(messageKey) })), ...(unitRoundingModes.some(([value]) => value === form.getValues("roundingMode")) ? [] : [{ value: form.getValues("roundingMode"), label: t("roundingModeUnsupported", { mode: form.getValues("roundingMode") }) }])]} helperText={t("roundingModeHelp")} {...form.register("roundingMode")} error={form.formState.errors.roundingMode ? t("roundingModeRequired") : undefined} disabled={savingReference} /></FormSection>}
+          {kind === "units" && (
+            <FormSection title={t("unitSettings")} className="p-4" contentClassName="grid gap-4 sm:grid-cols-2">
+              <Input
+                label={t("unitSymbol")}
+                required
+                placeholder={t("unitSymbolPlaceholder")}
+                {...form.register("symbol")}
+                error={form.formState.errors.symbol ? t("validationRequired") : undefined}
+                disabled={savingReference}
+              />
+              <Select
+                label={t("dimension")}
+                required
+                placeholder={t("selectDimension")}
+                options={dimensionOptions}
+                {...form.register("dimension")}
+                error={form.formState.errors.dimension ? t("validationRequired") : undefined}
+                disabled={savingReference}
+              />
+              <Input
+                label={t("decimalScale")}
+                type="number"
+                min="0"
+                max="6"
+                step="1"
+                required
+                placeholder={t("decimalScalePlaceholder")}
+                {...form.register("decimalScale", { valueAsNumber: true })}
+                error={form.formState.errors.decimalScale ? t("validationRequired") : undefined}
+                disabled={savingReference}
+              />
+              <Select
+                label={t("roundingMode")}
+                required
+                options={[...unitRoundingModes.map(([value, messageKey]) => ({ value, label: t(messageKey) })), ...(unitRoundingModes.some(([value]) => value === form.getValues("roundingMode")) ? [] : [{ value: form.getValues("roundingMode"), label: t("roundingModeUnsupported", { mode: form.getValues("roundingMode") }) }])]}
+                helperText={t("roundingModeHelp")}
+                {...form.register("roundingMode")}
+                error={form.formState.errors.roundingMode ? t("roundingModeRequired") : undefined}
+                disabled={savingReference}
+              />
+            </FormSection>
+          )}
           {(kind === "categories" || kind === "brands") && <FormSection title={t("images")} description={t("imageDeferredHelp")} className="p-4">
             <Controller name="imageFile" control={form.control} render={({ field, fieldState }) => <ImageUpload
               label={t("imageFile")}
@@ -553,6 +665,13 @@ export function TaxonomyMaintenance() {
           </FormSection>}
         </form>
       </Drawer>
+      <CategoryAttributeTemplateDrawer
+        isOpen={Boolean(templateCategory)}
+        onClose={() => setTemplateCategory(null)}
+        categoryId={templateCategory?.id ?? null}
+        categoryCode={templateCategory?.code}
+        categoryName={locale === "en" ? templateCategory?.name?.english : templateCategory?.name?.thai}
+      />
       <ConfirmationModal isOpen={discardOpen} onClose={() => setDiscardOpen(false)} onConfirm={() => { setDiscardOpen(false); setOpen(false); }} title={common("dialog.confirmCancelTitle")} message={common("dialog.confirmCancelDesc")} confirmText={common("actions.discard")} cancelText={common("actions.cancel")} variant="warning" isLoading={savingReference} />
     </section>
   );

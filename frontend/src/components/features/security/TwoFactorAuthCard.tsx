@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/useToast";
 import { CopyButton } from "@/components/common/CopyButton";
 import { IconLock, IconCheckCircle } from "@/components/common/Icons";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 export interface TwoFactorAuthCardProps {
   isEnabled?: boolean;
@@ -19,6 +20,7 @@ export function TwoFactorAuthCard({
   isEnabled = false,
   className,
 }: TwoFactorAuthCardProps) {
+  const t = useTranslations("security");
   const [enabled, setEnabled] = useState(isEnabled);
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -32,12 +34,12 @@ export function TwoFactorAuthCard({
     setEnabled(true);
     setIsSettingUp(false);
     setOtpCode("");
-    toast.success("เปิดใช้งานการยืนยันตัวตนสองขั้นตอน (2FA) สำเร็จ");
+    toast.success(t("toast2FaEnabled"));
   };
 
   const handleDisable = () => {
     setEnabled(false);
-    toast.success("ปิดการใช้งาน 2FA เรียบร้อยแล้ว");
+    toast.success(t("toast2FaDisabled"));
   };
 
   return (
@@ -47,10 +49,10 @@ export function TwoFactorAuthCard({
           <IconLock size={18} className="text-erp-navy" />
           <div>
             <h3 className="text-sm font-bold text-erp-text-main">
-              การยืนยันตัวตนสองขั้นตอน (Two-Factor Authentication)
+              {t("twoFactorTitle")}
             </h3>
             <p className="text-xs text-erp-text-muted mt-0.5">
-              เพิ่มความปลอดภัยให้กับบัญชีผู้ใช้ด้วยแอปพลิเคชัน Authenticator
+              {t("twoFactorDescription")}
             </p>
           </div>
         </div>
@@ -58,11 +60,11 @@ export function TwoFactorAuthCard({
           {enabled ? (
             <span className="inline-flex items-center gap-1 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 rounded-none border border-emerald-300">
               <IconCheckCircle size={12} />
-              เปิดใช้งานแล้ว
+              {t("statusEnabled")}
             </span>
           ) : (
             <span className="bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 rounded-none border border-amber-300">
-              ยังไม่เปิดใช้งาน
+              {t("statusDisabled")}
             </span>
           )}
         </div>
@@ -72,10 +74,10 @@ export function TwoFactorAuthCard({
         {!enabled && !isSettingUp && (
           <div>
             <p className="text-xs text-erp-text-muted mb-4">
-              เมื่อเปิดใช้งาน คุณจะต้องป้อนรหัส 6 หลักจากแอป Authenticator (Google Authenticator, Microsoft Authenticator หรือ 1Password) ทุกครั้งที่เข้าสู่ระบบ
+              {t("twoFactorInfoDisabled")}
             </p>
             <Button variant="primary" size="sm" onClick={() => setIsSettingUp(true)}>
-              เริ่มตั้งค่า 2FA
+              {t("setupButton")}
             </Button>
           </div>
         )}
@@ -85,30 +87,30 @@ export function TwoFactorAuthCard({
             <div className="flex flex-col sm:flex-row items-center gap-5 border border-erp-border bg-erp-surface-subtle p-4 rounded-none">
               <QRCodeDisplay value={dummyOtpAuth} size={140} />
               <div className="space-y-2 text-xs text-erp-text-main">
-                <p className="font-semibold">1. สแกน QR Code ด้วยแอป Authenticator ของคุณ</p>
-                <p className="text-erp-text-muted">หรือป้อน Secret Key ด้วยตนเอง:</p>
+                <p className="font-semibold">{t("stepScanQr")}</p>
+                <p className="text-erp-text-muted">{t("orEnterSecretKey")}</p>
                 <div className="flex items-center gap-2">
                   <code className="bg-erp-surface border border-erp-border px-2 py-1 font-mono text-xs font-bold">
                     {dummySecret}
                   </code>
-                  <CopyButton text={dummySecret} label="คัดลอก" />
+                  <CopyButton text={dummySecret} label={t("copy")} />
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-erp-text-main block">
-                2. กรอกรหัส 6 หลักที่ปรากฏในแอป:
+                {t("stepEnterOtp")}
               </label>
               <OtpInput value={otpCode} onChange={setOtpCode} />
             </div>
 
             <div className="flex gap-2 pt-2 border-t border-erp-border">
               <Button variant="secondary" size="sm" onClick={() => setIsSettingUp(false)}>
-                ยกเลิก
+                {t("cancel")}
               </Button>
               <Button variant="primary" size="sm" onClick={handleVerify} disabled={otpCode.length < 6}>
-                ยืนยันและเปิดใช้งาน
+                {t("verifyAndEnable")}
               </Button>
             </div>
           </div>
@@ -117,10 +119,10 @@ export function TwoFactorAuthCard({
         {enabled && (
           <div className="flex items-center justify-between">
             <p className="text-xs text-erp-text-muted">
-              บัญชีของคุณได้รับการปกป้องด้วย 2FA เรียบร้อยแล้ว
+              {t("twoFactorProtected")}
             </p>
             <Button variant="danger" size="sm" onClick={handleDisable}>
-              ปิดใช้งาน 2FA
+              {t("disableButton")}
             </Button>
           </div>
         )}

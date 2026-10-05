@@ -19,6 +19,7 @@ public class ItemCategory : Entity
     public Guid CreatedByUserId { get; private set; }
     public DateTimeOffset UpdatedAtUtc { get; private set; }
     public Guid UpdatedByUserId { get; private set; }
+    public List<CategoryAttributeTemplate> AttributeTemplates { get; private set; } = [];
 
     public ItemCategory? ParentCategory { get; private set; }
     public List<ItemCategory> SubCategories { get; private set; } = [];
@@ -108,5 +109,16 @@ public class ItemCategory : Entity
 
         ParentCategoryId = parentId;
         RowVersion = Guid.NewGuid();
+    }
+
+    public void SetAttributeTemplates(
+        List<CategoryAttributeTemplate> templates,
+        Guid updatedByUserId,
+        DateTimeOffset updatedAtUtc)
+    {
+        AttributeTemplates = templates ?? [];
+        RowVersion = Guid.NewGuid();
+        UpdatedByUserId = updatedByUserId;
+        UpdatedAtUtc = updatedAtUtc;
     }
 }

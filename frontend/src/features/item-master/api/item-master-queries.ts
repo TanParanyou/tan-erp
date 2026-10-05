@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
-import { apiClient, type AttachItemImageRequest, type CostRecordResponse, type CostReviewQueueParams, type CostReviewQueueResponse, type CostSourceRequest, type CostSourceResponse, type CreateCostRecordRequest, type CreateItemBarcodeRequest, type CreateItemBrandRequest, type CreateItemCategoryRequest, type CreateItemRequest, type CreateItemUnitConversionRequest, type CreateItemTaxCategoryRequest, type CreateUnitOfMeasureRequest, type ItemBarcodeResponse, type ItemBrandResponse, type ItemCategoryResponse, type ItemImageDetailResponse, type ItemResponse, type ItemTaxCategoryResponse, type ItemUnitConversionResponse, type ListItemsParams, type OrganizationBranchResponse, type PagedItemsResponse, type RequestOptions, type UnitConversionResponse, type UnitOfMeasureResponse, type UpdateCostRecordRequest, type UpdateCostSourceRequest, type UpdateItemBrandRequest, type UpdateItemCategoryRequest, type UpdateItemRequest, type UpdateItemTaxCategoryRequest, type UpdateUnitOfMeasureRequest } from "@/lib/api/api-client";
+import { apiClient, type AttachItemImageRequest, type CategoryAttributeTemplateResponse, type CostRecordResponse, type CostReviewQueueParams, type CostReviewQueueResponse, type CostSourceRequest, type CostSourceResponse, type CreateCostRecordRequest, type CreateItemBarcodeRequest, type CreateItemBrandRequest, type CreateItemCategoryRequest, type CreateItemRequest, type CreateItemUnitConversionRequest, type CreateItemTaxCategoryRequest, type CreateUnitOfMeasureRequest, type ItemBarcodeResponse, type ItemBrandResponse, type ItemCategoryResponse, type ItemImageDetailResponse, type ItemResponse, type ItemTaxCategoryResponse, type ItemUnitConversionResponse, type ListItemsParams, type OrganizationBranchResponse, type PagedItemsResponse, type RequestOptions, type SetCategoryAttributeTemplatesRequest, type UnitConversionResponse, type UnitOfMeasureResponse, type UpdateCostRecordRequest, type UpdateCostSourceRequest, type UpdateItemBrandRequest, type UpdateItemCategoryRequest, type UpdateItemRequest, type UpdateItemTaxCategoryRequest, type UpdateUnitOfMeasureRequest } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
@@ -10,6 +10,7 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 const itemMasterKey = (membershipId: string | undefined, locale: "th" | "en") => ["business", membershipId, locale, "item-master"] as const;
 export const itemListQueryKey = (membershipId: string | undefined, locale: "th" | "en", params: ListItemsParams) => [...itemMasterKey(membershipId, locale), "items", params] as const;
 export const itemDetailQueryKey = (membershipId: string | undefined, locale: "th" | "en", id: string | undefined) => [...itemMasterKey(membershipId, locale), "item", id] as const;
+export const categoryAttributeTemplateQueryKey = (membershipId: string | undefined, locale: "th" | "en", categoryId: string | undefined) => [...itemMasterKey(membershipId, locale), "category-attribute-template", categoryId] as const;
 export const costSourcesQueryKey = (membershipId: string | undefined, locale: "th" | "en") => [...itemMasterKey(membershipId, locale), "cost-sources"] as const;
 export const costReviewQueueQueryKey = (membershipId: string | undefined, locale: "th" | "en", params: CostReviewQueueParams) => [...itemMasterKey(membershipId, locale), "cost-review-queue", params] as const;
 export const itemCostsQueryKey = (membershipId: string | undefined, locale: "th" | "en", itemId: string | undefined) => [...itemMasterKey(membershipId, locale), "item-costs", itemId] as const;
@@ -330,6 +331,47 @@ export function useItemMasterReferenceMutations() {
   const createUnit = useMutation({ mutationFn: async (payload: CreateUnitOfMeasureRequest) => apiClient.createUnitOfMeasure(payload, await options(undefined, crypto.randomUUID())), onSuccess: refresh });
   const updateUnit = useMutation({ mutationFn: async ({ id, rowVersion, payload }: { id: string; rowVersion: string; payload: UpdateUnitOfMeasureRequest }) => apiClient.updateUnitOfMeasure(id, payload, await options(rowVersion)), onSuccess: refresh });
   return { createCategory, updateCategory, createBrand, updateBrand, createTaxCategory, updateTaxCategory, createUnit, updateUnit };
+}
+
+export function useCategoryAttributeTemplate(categoryId: string | undefined): UseQueryResult<CategoryAttributeTemplateResponse, Error> {
+  const locale: "th" | "en" = useSafeLocale() === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  return useQuery({
+    queryKey: categoryAttributeTemplateQueryKey(membershipId, locale, categoryId),
+    enabled: Boolean(membershipId && categoryId),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId || !categoryId) throw new MembershipRequiredError();
+      return apiClient.getCategoryAttributeTemplates(categoryId, { token, membershipId, locale, signal });
+    },
+  });
+}
+
+export function useCategoryAttributeTemplateMutations(categoryId: string | undefined) {
+  const queryClient = useQueryClient();
+  const locale: "th" | "en" = useSafeLocale() === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const options = async (): Promise<RequestOptions> => {
+    const token = await getAuthToken();
+    if (!token) throw new AuthenticationRequiredError();
+    if (!membershipId) throw new MembershipRequiredError();
+    return { token, membershipId, locale };
+  };
+  const setTemplates = useMutation({
+    mutationFn: async (payload: SetCategoryAttributeTemplatesRequest) => {
+      if (!categoryId) throw new Error("CategoryId is required");
+      return apiClient.setCategoryAttributeTemplates(categoryId, payload, await options());
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: categoryAttributeTemplateQueryKey(membershipId, locale, categoryId),
+      });
+    },
+  });
+  return { setTemplates };
 }
 
 export function useCostReviewQueue(params: CostReviewQueueParams): UseQueryResult<CostReviewQueueResponse, Error> {

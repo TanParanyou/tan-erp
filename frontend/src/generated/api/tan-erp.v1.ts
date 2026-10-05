@@ -10052,6 +10052,140 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/item-categories/{id}/attribute-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CategoryAttributeTemplateResponse"];
+                        "application/json": components["schemas"]["CategoryAttributeTemplateResponse"];
+                        "text/json": components["schemas"]["CategoryAttributeTemplateResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetCategoryAttributeTemplatesRequest"];
+                    "text/json": components["schemas"]["SetCategoryAttributeTemplatesRequest"];
+                    "application/*+json": components["schemas"]["SetCategoryAttributeTemplatesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CategoryAttributeTemplateResponse"];
+                        "application/json": components["schemas"]["CategoryAttributeTemplateResponse"];
+                        "text/json": components["schemas"]["CategoryAttributeTemplateResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/item-brands": {
         parameters: {
             query?: never;
@@ -18913,6 +19047,26 @@ export interface components {
             /** Format: uuid */
             evidenceFileId?: string | null;
         };
+        CategoryAttributeOptionDto: {
+            value?: string | null;
+            label?: components["schemas"]["LocalizedTextInput"];
+        };
+        CategoryAttributeTemplateDto: {
+            key?: string | null;
+            name?: components["schemas"]["LocalizedTextInput"];
+            dataType?: string | null;
+            unit?: string | null;
+            isRequired?: boolean;
+            defaultValue?: string | null;
+            options?: components["schemas"]["CategoryAttributeOptionDto"][] | null;
+        };
+        CategoryAttributeTemplateResponse: {
+            /** Format: uuid */
+            categoryId?: string;
+            categoryCode?: string | null;
+            categoryName?: components["schemas"]["LocalizedTextResponse"];
+            templates?: components["schemas"]["CategoryAttributeTemplateDto"][] | null;
+        };
         CategorySummaryResponse: {
             /** Format: uuid */
             id?: string;
@@ -21770,6 +21924,9 @@ export interface components {
         SetBranchAvailabilityRequest: {
             mode: string;
             branchIds?: string[] | null;
+        };
+        SetCategoryAttributeTemplatesRequest: {
+            templates?: components["schemas"]["CategoryAttributeTemplateDto"][] | null;
         };
         SetProjectPlanRequest: {
             /** Format: date */

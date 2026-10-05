@@ -50,6 +50,10 @@ public class ItemCategoryConfiguration : IEntityTypeConfiguration<ItemCategory>
             v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
             v => JsonSerializer.Deserialize<string[]>(v, (JsonSerializerOptions?)null) ?? Array.Empty<string>());
 
+        var templatesConverter = new ValueConverter<List<CategoryAttributeTemplate>, string>(
+            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+            v => JsonSerializer.Deserialize<List<CategoryAttributeTemplate>>(v, (JsonSerializerOptions?)null) ?? new List<CategoryAttributeTemplate>());
+
         builder.Property(x => x.Name)
             .HasColumnName("name")
             .HasColumnType("jsonb")
@@ -65,6 +69,12 @@ public class ItemCategoryConfiguration : IEntityTypeConfiguration<ItemCategory>
             .HasColumnName("allowed_item_types")
             .HasColumnType("jsonb")
             .HasConversion(stringArrayConverter)
+            .IsRequired();
+
+        builder.Property(x => x.AttributeTemplates)
+            .HasColumnName("attribute_templates")
+            .HasColumnType("jsonb")
+            .HasConversion(templatesConverter)
             .IsRequired();
 
         // Indexes

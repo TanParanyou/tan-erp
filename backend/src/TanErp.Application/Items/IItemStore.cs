@@ -196,6 +196,8 @@ public interface IItemStore
     Task<ItemCategoryDetailProjection?> GetCategoryAsync(Guid organizationId, Guid categoryId, CancellationToken ct);
     Task<Result<ItemCategoryDetailProjection>> CreateCategoryAsync(CreateCategoryData data, RequestAccessContext access, string idempotencyKey, CancellationToken ct);
     Task<Result<ItemCategoryDetailProjection>> UpdateCategoryAsync(UpdateCategoryData data, RequestAccessContext access, CancellationToken ct);
+    Task<IReadOnlyList<TanErp.Domain.Items.CategoryAttributeTemplate>> GetCategoryAttributeTemplatesAsync(Guid organizationId, Guid categoryId, CancellationToken ct);
+    Task<Result<IReadOnlyList<TanErp.Domain.Items.CategoryAttributeTemplate>>> SetCategoryAttributeTemplatesAsync(Guid organizationId, Guid categoryId, List<TanErp.Domain.Items.CategoryAttributeTemplate> templates, RequestAccessContext access, CancellationToken ct);
 
     Task<IReadOnlyList<ItemBrandDetailProjection>> ListBrandsAsync(Guid organizationId, CancellationToken ct);
     Task<ItemBrandDetailProjection?> GetBrandAsync(Guid organizationId, Guid brandId, CancellationToken ct);

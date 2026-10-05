@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { useToast } from "@/hooks/useToast";
@@ -153,10 +154,73 @@ export function CostRecordMaintenance({ itemId }: CostRecordMaintenanceProps) {
       <DataTable<CostRecordResponse> columns={columns} data={rows} isLoading={costs.isLoading} isError={costs.isError} error={costs.error} onRetry={() => { void costs.refetch(); }} emptyTitle={t("noCostRecords")} hidePagination />
       <Modal isOpen={open} onClose={() => { if (!saving) setOpen(false); }} closeDisabled={saving} title={t("createCostDraft")}>
         <form className="space-y-4" noValidate onSubmit={(event) => { void submit(event); }}>
-          <div className="erp-form-group"><label className="erp-label" htmlFor="cost-source">{t("costSources")}</label><select id="cost-source" className="erp-input" {...form.register("costSourceId")} disabled={saving}><option value="">{common("actions.select")}</option>{activeSources.map((source) => <option key={source.id} value={source.id}>{source.code} · {locale === "en" ? source.name?.english ?? "-" : source.name?.thai ?? "-"}</option>)}</select>{form.formState.errors.costSourceId && <p className="text-sm text-erp-danger">{t("validationRequired")}</p>}</div>
-          <div className="erp-form-group"><label className="erp-label" htmlFor="cost-unit">{t("unit")}</label><select id="cost-unit" className="erp-input" {...form.register("unitId")} disabled={saving}><option value="">{common("actions.select")}</option>{activeUnits.map((unit) => <option key={unit.id} value={unit.id}>{unit.code} · {locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}</option>)}</select></div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Input label={t("amount")} required inputMode="decimal" {...form.register("amount")} error={form.formState.errors.amount?.message} disabled={saving} /><Input label={t("currency")} required maxLength={3} {...form.register("currency")} disabled={saving} /><Input label={t("effectiveFrom")} required type="datetime-local" {...form.register("effectiveFrom")} disabled={saving} /><Input label={t("sourceReference")} required {...form.register("sourceReference")} error={form.formState.errors.sourceReference?.message} disabled={saving} /></div>
-          <Input label={t("reason")} required {...form.register("reason")} error={form.formState.errors.reason?.message} disabled={saving} />
+          <Select
+            id="cost-source"
+            label={t("costSources")}
+            required
+            placeholder={common("actions.select")}
+            disabled={saving}
+            error={form.formState.errors.costSourceId ? t("validationRequired") : undefined}
+            options={activeSources.filter((source): source is typeof source & { id: string } => Boolean(source.id)).map((source) => ({
+              value: source.id,
+              label: `${source.code ?? "-"} · ${locale === "en" ? source.name?.english ?? "-" : source.name?.thai ?? "-"}`,
+            }))}
+            {...form.register("costSourceId")}
+          />
+          <Select
+            id="cost-unit"
+            label={t("unit")}
+            required
+            placeholder={common("actions.select")}
+            disabled={saving}
+            options={activeUnits.filter((unit): unit is typeof unit & { id: string } => Boolean(unit.id)).map((unit) => ({
+              value: unit.id,
+              label: `${unit.code ?? "-"} · ${locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}`,
+            }))}
+            {...form.register("unitId")}
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input
+              label={t("amount")}
+              required
+              inputMode="decimal"
+              placeholder={t("amountPlaceholder")}
+              {...form.register("amount")}
+              error={form.formState.errors.amount?.message}
+              disabled={saving}
+            />
+            <Input
+              label={t("currency")}
+              required
+              maxLength={3}
+              placeholder={t("currencyPlaceholder")}
+              {...form.register("currency")}
+              disabled={saving}
+            />
+            <Input
+              label={t("effectiveFrom")}
+              required
+              type="datetime-local"
+              {...form.register("effectiveFrom")}
+              disabled={saving}
+            />
+            <Input
+              label={t("sourceReference")}
+              required
+              placeholder={t("sourceReferencePlaceholder")}
+              {...form.register("sourceReference")}
+              error={form.formState.errors.sourceReference?.message}
+              disabled={saving}
+            />
+          </div>
+          <Input
+            label={t("reason")}
+            required
+            placeholder={t("reasonPlaceholder")}
+            {...form.register("reason")}
+            error={form.formState.errors.reason?.message}
+            disabled={saving}
+          />
           <div className="erp-form-group"><label className="erp-label" htmlFor="cost-evidence">{t("evidence")}</label><input id="cost-evidence" type="file" className="erp-input" disabled={saving} onChange={(event) => { setEvidenceFile(event.target.files?.item(0) ?? null); setVerifiedEvidenceFileId(null); uploadKeyRef.current = null; }} /><p className="text-xs text-erp-text-muted">{t("evidenceDeferredHelp")}</p></div>
           <div className="flex justify-end gap-2 border-t border-erp-border pt-4"><Button type="button" variant="outline" disabled={saving} onClick={() => setOpen(false)}>{common("actions.cancel")}</Button><Button type="submit" isLoading={saving} disabled={saving || !mayCreate}>{t("saveCostDraft")}</Button></div>
         </form>
