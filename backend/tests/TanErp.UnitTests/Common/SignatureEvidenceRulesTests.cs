@@ -60,6 +60,19 @@ public class SignatureEvidenceRulesTests
     }
 
     [Fact]
+    public void IsPngBase64_RejectsADataUrlWithAnEmptyPayload()
+    {
+        Assert.False(SignatureEvidenceRules.IsPngBase64("data:image/png;base64,"));
+    }
+
+    [Fact]
+    public void IsPngBase64_RejectsADataUrlCarryingNonPngBytes()
+    {
+        var jpeg = Convert.ToBase64String(new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0, 0, 0, 0, 0 });
+        Assert.False(SignatureEvidenceRules.IsPngBase64("data:image/png;base64," + jpeg));
+    }
+
+    [Fact]
     public void IsPngSignature_ChecksTheLeadingMagicBytes()
     {
         Assert.True(SignatureEvidenceRules.IsPngSignature(PngBytes));
