@@ -23,3 +23,4 @@ export * from "./EntityAutocomplete";
 export * from "./MultiImagePicker";
 export * from "./CameraCaptureModal";
 export * from "./ItemAttributesField";
+export * from "./AttachmentList";
