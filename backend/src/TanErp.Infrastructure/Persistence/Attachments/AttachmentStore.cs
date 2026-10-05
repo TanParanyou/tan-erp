@@ -57,7 +57,15 @@ public class AttachmentStore : IAttachmentStore
         await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", ct);
     }
 
-    private static bool IsUniqueViolation(DbUpdateException ex) => ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
+    public const string ActiveLinkIndex = "ux_attachment_links_active_owner_file_purpose";
+    public const string SignatureImageIndex = "ux_signature_captures_image_file";
+
+    /// <summary>
+    /// Matches one specific unique index. Any other unique violation (for example the idempotency record) is not a duplicate attachment
+    /// and propagates; same-key races cannot reach it because FindReplayAsync holds an advisory lock on the key.
+    /// </summary>
+    internal static bool IsUniqueViolation(DbUpdateException ex, string constraintName) =>
+        ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } pg && pg.ConstraintName == constraintName;
 
     // ===== attachments =============================================================================
 
@@ -137,7 +145,7 @@ public class AttachmentStore : IAttachmentStore
                 await _db.SaveChangesAsync(ct);
                 await tx.CommitAsync(ct);
             }
-            catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+            catch (DbUpdateException ex) when (IsUniqueViolation(ex, ActiveLinkIndex))
             {
                 await tx.RollbackAsync(ct);
                 _db.ChangeTracker.Clear();
@@ -150,15 +158,24 @@ public class AttachmentStore : IAttachmentStore
 
     public async Task<Result<bool>> UnlinkAsync(RequestAccessContext access, string ownerType, Guid ownerId, Guid linkId, string traceId, CancellationToken ct = default)
     {
-        var link = await _db.AttachmentLinks.FirstOrDefaultAsync(l =>
-            l.Id == linkId && l.OrganizationId == access.OrganizationId && l.OwnerType == ownerType && l.OwnerId == ownerId && l.RemovedAtUtc == null, ct);
-        if (link is null) return Fail<bool>("RESOURCE_NOT_FOUND", "Attachment not found.");
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            // Owner lock serializes concurrent unlinks (and attaches) of the same owner; the second unlink then sees the link as removed.
+            await LockOwnerAsync(access.OrganizationId, ownerType, ownerId, ct);
 
-        var now = _clock.UtcNow;
-        link.Remove(access.ActorUserId, now);
-        Audit(access, "attachment.unlinked", ownerId, traceId, new { ownerType, purpose = link.Purpose, fileId = link.FileId }, now);
-        await _db.SaveChangesAsync(ct);
-        return Result<bool>.Success(true);
+            var link = await _db.AttachmentLinks.FirstOrDefaultAsync(l =>
+                l.Id == linkId && l.OrganizationId == access.OrganizationId && l.OwnerType == ownerType && l.OwnerId == ownerId && l.RemovedAtUtc == null, ct);
+            if (link is null) return Fail<bool>("RESOURCE_NOT_FOUND", "Attachment not found.");
+
+            var now = _clock.UtcNow;
+            link.Remove(access.ActorUserId, now);
+            Audit(access, "attachment.unlinked", ownerId, traceId, new { ownerType, purpose = link.Purpose, fileId = link.FileId }, now);
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            return Result<bool>.Success(true);
+        });
     }
 
     // ===== signatures ==============================================================================
@@ -235,7 +252,7 @@ public class AttachmentStore : IAttachmentStore
                 await _db.SaveChangesAsync(ct);
                 await tx.CommitAsync(ct);
             }
-            catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+            catch (DbUpdateException ex) when (IsUniqueViolation(ex, SignatureImageIndex))
             {
                 await tx.RollbackAsync(ct);
                 _db.ChangeTracker.Clear();
