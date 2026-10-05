@@ -116,8 +116,8 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `ATTACHMENT_OWNER_TYPE_INVALID` | 422 | owner type ไม่อยู่ใน registry ที่ลงทะเบียนในโค้ด |
 | `ATTACHMENT_PURPOSE_INVALID` | 422 | purpose ไม่อยู่ในรายการที่รองรับหรือใช้กับลายเซ็นไม่ได้ |
 | `ATTACHMENT_FIELD_INVALID` | 422 | Field ของคำขอไฟล์แนบไม่ผ่าน Validation |
-| `ATTACHMENT_FILE_NOT_READY` | 422 | ไฟล์ยังไม่ Verified, ไม่พบ, ต่าง Organization หรือไม่ได้อัปโหลดสำหรับ owner นี้ (ไม่เปิดเผยว่าไฟล์มีอยู่หรือไม่) |
-| `ATTACHMENT_FILE_SCOPE_MISMATCH` | 422 | ไฟล์ไม่ตรง Parent/Scope ของ owner ที่ระบุ |
+| `ATTACHMENT_FILE_NOT_READY` | 422 | ไฟล์ไม่พบ, ยังไม่ completed/verified, ต่าง Organization หรืออัปโหลดสำหรับ owner อื่น (ไม่เปิดเผยว่าไฟล์มีอยู่หรือไม่ และแยกข้าม Organization จากไม่พบไม่ได้) |
+| `ATTACHMENT_FILE_SCOPE_MISMATCH` | 422 | Domain invariant ชั้นสอง: Organization ของไฟล์ไม่ตรงกับ owner; ปกติ API ตอบ `ATTACHMENT_FILE_NOT_READY` ก่อนถึงจุดนี้ |
 | `SIGNATURE_SUBMISSION_INVALID` | 422 | ชื่อหรือตำแหน่งผู้ลงนามไม่ผ่านเงื่อนไข หรือภาพถูกใช้เป็นลายเซ็นแล้ว |
 | `SIGNATURE_CONSENT_REQUIRED` | 422 | ไม่ได้ยินยอม หรือ consentTextVersion ไม่ตรงเวอร์ชันปัจจุบัน |
 | `SIGNATURE_IMAGE_INVALID` | 422 | ไฟล์ภาพลายเซ็นไม่ใช่ PNG ที่ผ่านการตรวจหรือไม่มี content hash |

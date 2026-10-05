@@ -8,7 +8,7 @@
 | --- | --- |
 | Owner | `(ownerType, ownerId)` โดย `ownerType` ต้องอยู่ใน registry ในโค้ด (รอบแรก: `installation-job`); ไม่ลงทะเบียน → `422 ATTACHMENT_OWNER_TYPE_INVALID` |
 | ลำดับตรวจ | owner type → permission ของ owner (403) → ค้น owner ใน Organization/Branch ของผู้เรียก (ไม่พบ/ข้าม org/ข้ามสาขา = **404** เหมือนกัน) → validation (422) → สถานะ owner (409 `ATTACHMENT_OWNER_LOCKED`) |
-| ไฟล์ | ต้องผ่าน upload session ของ Files module โดย `parentType = ownerType`, `parentId = ownerId`; verified, org เดียวกัน, อัปโหลดสำหรับ owner นี้; ผิดเงื่อนไขทั้งหมด → `422 ATTACHMENT_FILE_NOT_READY` (ไม่บอกว่าไฟล์มีอยู่หรือไม่) |
+| ไฟล์ | ต้องผ่าน upload session ของ Files module โดย `parentType = ownerType`, `parentId = ownerId`; verified, org เดียวกัน, อัปโหลดสำหรับ owner นี้; ไม่พบ/ยังไม่ completed/ไม่ verified/ต่าง Organization/อัปโหลดสำหรับ parent อื่น ล้วนถูก `ValidateVerifiedFilesForParentAsync` (กรองด้วย Organization ของผู้เรียก) ปฏิเสธเป็น `422 ATTACHMENT_FILE_NOT_READY` เหมือนกันหมด (ไม่บอกว่าไฟล์มีอยู่หรือไม่ และแยกไฟล์ข้าม Organization จากไฟล์ที่ไม่มีอยู่ไม่ได้ที่ชั้น store). `ATTACHMENT_FILE_SCOPE_MISMATCH` เป็น domain invariant ชั้นสอง (`fileOrganizationId != organizationId` ใน `AttachmentLink`/`SignatureCapture`) ที่ใช้ป้องกันการเรียก domain ผิดวิธี และปกติ**ไม่ถูกส่งออกทาง API** |
 | Purpose | `general`, `evidence`, `handover`, `defect` (ลายเซ็นใช้ได้เฉพาะ `handover`) |
 | ความซ้ำ | ไฟล์เดียวกัน + owner เดียวกัน + purpose เดียวกัน (ที่ยัง active) → `409 ATTACHMENT_DUPLICATE`; unique index บางส่วน (`removed_at_utc IS NULL`) ป้องกัน race |
 | จำนวน | ≤ 20 ไฟล์ต่อคำขอ, ≤ 50 active ต่อ owner (`409 ATTACHMENT_LIMIT_EXCEEDED`) |
