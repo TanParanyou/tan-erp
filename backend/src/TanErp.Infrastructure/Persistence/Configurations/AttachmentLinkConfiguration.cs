@@ -39,7 +39,6 @@ public class AttachmentLinkConfiguration : IEntityTypeConfiguration<AttachmentLi
             .HasFilter("removed_at_utc IS NULL")
             .HasDatabaseName("ux_attachment_links_active_owner_file_purpose");
         builder.HasIndex(x => new { x.OrganizationId, x.OwnerType, x.OwnerId }).HasDatabaseName("ix_attachment_links_owner");
-        builder.HasIndex(x => x.FileId).HasDatabaseName("ix_attachment_links_file");
 
         builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);

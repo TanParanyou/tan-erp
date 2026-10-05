@@ -74,9 +74,6 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.HasIndex("FileId")
-                        .HasDatabaseName("ix_attachment_links_file");
-
                     b.HasIndex("RemovedByUserId");
 
                     b.HasIndex("FileId", "OrganizationId");
@@ -182,7 +179,7 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_signature_captures_purpose_format", "purpose ~ '^[a-z][a-z-]{1,31}$'");
 
-                            t.HasCheckConstraint("ck_signature_captures_signer_name", "char_length(btrim(signer_name)) BETWEEN 2 AND 200");
+                            t.HasCheckConstraint("ck_signature_captures_signer_name", "char_length(signer_name) BETWEEN 1 AND 200");
                         });
                 });
 

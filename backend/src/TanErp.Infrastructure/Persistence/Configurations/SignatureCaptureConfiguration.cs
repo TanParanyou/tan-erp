@@ -16,7 +16,7 @@ public class SignatureCaptureConfiguration : IEntityTypeConfiguration<SignatureC
             t.HasCheckConstraint("ck_signature_captures_owner_type_format", "owner_type ~ '^[a-z][a-z0-9-]{1,39}$'");
             t.HasCheckConstraint("ck_signature_captures_purpose_format", "purpose ~ '^[a-z][a-z-]{1,31}$'");
             t.HasCheckConstraint("ck_signature_captures_content_hash", "content_hash ~ '^[0-9a-f]{64}$'");
-            t.HasCheckConstraint("ck_signature_captures_signer_name", "char_length(btrim(signer_name)) BETWEEN 2 AND 200");
+            t.HasCheckConstraint("ck_signature_captures_signer_name", "char_length(signer_name) BETWEEN 1 AND 200");
         });
 
         builder.HasKey(x => x.Id);

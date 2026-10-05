@@ -13,7 +13,7 @@ using TanErp.Infrastructure.Persistence;
 namespace TanErp.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261005154909_AddSharedAttachmentsAndSignatures")]
+    [Migration("20261005155039_AddSharedAttachmentsAndSignatures")]
     partial class AddSharedAttachmentsAndSignatures
     {
         /// <inheritdoc />
@@ -76,9 +76,6 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("FileId")
-                        .HasDatabaseName("ix_attachment_links_file");
 
                     b.HasIndex("RemovedByUserId");
 
@@ -185,7 +182,7 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_signature_captures_purpose_format", "purpose ~ '^[a-z][a-z-]{1,31}$'");
 
-                            t.HasCheckConstraint("ck_signature_captures_signer_name", "char_length(btrim(signer_name)) BETWEEN 2 AND 200");
+                            t.HasCheckConstraint("ck_signature_captures_signer_name", "char_length(signer_name) BETWEEN 1 AND 200");
                         });
                 });
 
