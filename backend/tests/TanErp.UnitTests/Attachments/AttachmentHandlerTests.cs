@@ -29,6 +29,8 @@ public class AttachmentHandlerTests
         _scopes.Add(AttachmentOwnerTypes.InstallationJob, OwnerId, new AttachmentOwnerScope(Org, Branch, InstallationStatus.InProgress));
     }
 
+    private static string Key(string suffix) => "idempotency-key-0000-" + suffix;
+
     private static AttachFilesInput Attach(params Guid[] ids) => new("evidence", ids);
 
     private static SignatureCaptureInput Sign(string? name = "คุณสมชาย", bool consent = true, string? version = "handover-2026-10-v1", string? purpose = "handover") =>
@@ -104,14 +106,14 @@ public class AttachmentHandlerTests
     [Fact]
     public async Task Attach_RejectsInvalidInput()
     {
-        Assert.Equal("ATTACHMENT_FIELD_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1", null)).Error.Code);
-        Assert.Equal("ATTACHMENT_FIELD_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1", Attach())).Error.Code);
-        Assert.Equal("ATTACHMENT_FIELD_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1", Attach(Guid.Empty))).Error.Code);
-        Assert.Equal("ATTACHMENT_FIELD_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1",
+        Assert.Equal("ATTACHMENT_FIELD_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"), null)).Error.Code);
+        Assert.Equal("ATTACHMENT_FIELD_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"), Attach())).Error.Code);
+        Assert.Equal("ATTACHMENT_FIELD_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"), Attach(Guid.Empty))).Error.Code);
+        Assert.Equal("ATTACHMENT_FIELD_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"),
             Attach(Enumerable.Range(0, AttachmentHandler.MaxFilesPerRequest + 1).Select(_ => Guid.NewGuid()).ToArray()))).Error.Code);
-        Assert.Equal("ATTACHMENT_DUPLICATE", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1",
+        Assert.Equal("ATTACHMENT_DUPLICATE", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"),
             Attach(Guid.Parse("11111111-1111-1111-1111-111111111111"), Guid.Parse("11111111-1111-1111-1111-111111111111")))).Error.Code);
-        Assert.Equal("ATTACHMENT_PURPOSE_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1", new AttachFilesInput("misc", [Guid.NewGuid()]))).Error.Code);
+        Assert.Equal("ATTACHMENT_PURPOSE_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"), new AttachFilesInput("misc", [Guid.NewGuid()]))).Error.Code);
         Assert.Equal(0, _store.Calls);
     }
 
@@ -119,7 +121,7 @@ public class AttachmentHandlerTests
     public async Task Attach_RequiresTheManagePermission_NotJustRead()
     {
         _access.Granted.Remove("installations.operate");
-        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1", Attach(Guid.NewGuid()));
+        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"), Attach(Guid.NewGuid()));
         Assert.Equal("PERMISSION_DENIED", result.Error.Code);
         Assert.Equal(0, _store.Calls);
     }
@@ -131,7 +133,7 @@ public class AttachmentHandlerTests
     {
         _scopes.Add(AttachmentOwnerTypes.InstallationJob, OwnerId, new AttachmentOwnerScope(Org, Branch, status));
 
-        Assert.Equal("ATTACHMENT_OWNER_LOCKED", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1", Attach(Guid.NewGuid()))).Error.Code);
+        Assert.Equal("ATTACHMENT_OWNER_LOCKED", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"), Attach(Guid.NewGuid()))).Error.Code);
         Assert.Equal("ATTACHMENT_OWNER_LOCKED", (await _handler.UnlinkAsync(Caller, "installation-job", OwnerId, Guid.NewGuid())).Error.Code);
         Assert.Equal(0, _store.Calls);
     }
@@ -140,7 +142,7 @@ public class AttachmentHandlerTests
     public async Task Attach_PassesNormalizedInputAndHashedKeyToTheStore()
     {
         var file = Guid.NewGuid();
-        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, "key-1", new AttachFilesInput(" EVIDENCE ", [file]));
+        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("key-1"), new AttachFilesInput(" EVIDENCE ", [file]));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("evidence", _store.LastAttach!.Purpose);
@@ -159,7 +161,7 @@ public class AttachmentHandlerTests
         _store.Seed("installation-job", other, AttachmentLink.MaxActiveLinksPerOwner);
         _store.Seed("installation-job", OwnerId, 1);
 
-        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1", Attach(Guid.NewGuid()));
+        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"), Attach(Guid.NewGuid()));
 
         Assert.True(result.IsSuccess);
         Assert.Equal((Org, "installation-job", OwnerId), _store.LastListScope);
@@ -170,19 +172,47 @@ public class AttachmentHandlerTests
     {
         _store.Seed("installation-job", OwnerId, AttachmentLink.MaxActiveLinksPerOwner - 1);
 
-        Assert.True((await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k1", Attach(Guid.NewGuid()))).IsSuccess);
-        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, "k2", Attach(Guid.NewGuid(), Guid.NewGuid()));
+        Assert.True((await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k1"), Attach(Guid.NewGuid()))).IsSuccess);
+        var attachCallsBefore = _store.AttachCalls;
+        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("k2"), Attach(Guid.NewGuid(), Guid.NewGuid()));
 
         Assert.Equal("ATTACHMENT_LIMIT_EXCEEDED", result.Error.Code);
-        Assert.NotEqual(2, _store.LastAttach!.FileIds!.Count);
+        Assert.Equal(attachCallsBefore, _store.AttachCalls);
+    }
+
+    [Fact]
+    public async Task Attach_AlreadyLinkedFileAtTheLimit_StillReachesTheStore_BecauseDuplicatesAreNotNewLinks()
+    {
+        _store.Seed("installation-job", OwnerId, AttachmentLink.MaxActiveLinksPerOwner);
+        var existing = _store.ExistingLinks[0];
+
+        var result = await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("dup"), new AttachFilesInput(existing.Purpose, [existing.FileId]));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _store.AttachCalls);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("short")]
+    public async Task Attach_AndSignature_RejectAMissingOrMalformedIdempotencyKey(string? key)
+    {
+        _scopes.Add(AttachmentOwnerTypes.InstallationJob, OwnerId, new AttachmentOwnerScope(Org, Branch, InstallationStatus.ReadyForHandover));
+
+        Assert.Equal("IDEMPOTENCY_KEY_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, key!, Attach(Guid.NewGuid()))).Error.Code);
+        Assert.Equal("IDEMPOTENCY_KEY_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, key!, Sign())).Error.Code);
+        Assert.Equal("IDEMPOTENCY_KEY_INVALID", (await _handler.AttachAsync(Caller, "installation-job", OwnerId, new string('x', 129), Attach(Guid.NewGuid()))).Error.Code);
+        Assert.Equal(0, _store.Calls);
     }
 
     [Fact]
     public async Task Attach_DifferentFileListsProduceDifferentPayloadHashes()
     {
-        await _handler.AttachAsync(Caller, "installation-job", OwnerId, "key-1", Attach(Guid.NewGuid()));
+        await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("key-1"), Attach(Guid.NewGuid()));
         var first = _store.LastPayloadHash;
-        await _handler.AttachAsync(Caller, "installation-job", OwnerId, "key-1", Attach(Guid.NewGuid()));
+        await _handler.AttachAsync(Caller, "installation-job", OwnerId, Key("key-1"), Attach(Guid.NewGuid()));
         Assert.NotEqual(first, _store.LastPayloadHash);
     }
 
@@ -191,13 +221,13 @@ public class AttachmentHandlerTests
     {
         _access.Granted.Remove("installations.handover");
         _scopes.Add(AttachmentOwnerTypes.InstallationJob, OwnerId, new AttachmentOwnerScope(Org, Branch, InstallationStatus.ReadyForHandover));
-        Assert.Equal("PERMISSION_DENIED", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "k", Sign())).Error.Code);
+        Assert.Equal("PERMISSION_DENIED", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("k"), Sign())).Error.Code);
     }
 
     [Fact]
     public async Task Signature_IsLockedUnlessTheOwnerIsReadyForHandover()
     {
-        Assert.Equal("ATTACHMENT_OWNER_LOCKED", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "k", Sign())).Error.Code);
+        Assert.Equal("ATTACHMENT_OWNER_LOCKED", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("k"), Sign())).Error.Code);
         Assert.Equal(0, _store.Calls);
     }
 
@@ -206,12 +236,12 @@ public class AttachmentHandlerTests
     {
         _scopes.Add(AttachmentOwnerTypes.InstallationJob, OwnerId, new AttachmentOwnerScope(Org, Branch, InstallationStatus.ReadyForHandover));
 
-        Assert.Equal("SIGNATURE_SUBMISSION_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "k", Sign(name: "ก"))).Error.Code);
-        Assert.Equal("SIGNATURE_SUBMISSION_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "k", null)).Error.Code);
-        Assert.Equal("SIGNATURE_CONSENT_REQUIRED", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "k", Sign(consent: false))).Error.Code);
-        Assert.Equal("SIGNATURE_CONSENT_REQUIRED", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "k", Sign(version: "old-v0"))).Error.Code);
-        Assert.Equal("ATTACHMENT_PURPOSE_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "k", Sign(purpose: "evidence"))).Error.Code);
-        Assert.Equal("SIGNATURE_SUBMISSION_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "k",
+        Assert.Equal("SIGNATURE_SUBMISSION_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("k"), Sign(name: "ก"))).Error.Code);
+        Assert.Equal("SIGNATURE_SUBMISSION_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("k"), null)).Error.Code);
+        Assert.Equal("SIGNATURE_CONSENT_REQUIRED", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("k"), Sign(consent: false))).Error.Code);
+        Assert.Equal("SIGNATURE_CONSENT_REQUIRED", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("k"), Sign(version: "old-v0"))).Error.Code);
+        Assert.Equal("ATTACHMENT_PURPOSE_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("k"), Sign(purpose: "evidence"))).Error.Code);
+        Assert.Equal("SIGNATURE_SUBMISSION_INVALID", (await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("k"),
             new SignatureCaptureInput("handover", "คุณสมชาย", null, Guid.Empty, true, "handover-2026-10-v1"))).Error.Code);
         Assert.Equal(0, _store.Calls);
     }
@@ -221,7 +251,7 @@ public class AttachmentHandlerTests
     {
         _scopes.Add(AttachmentOwnerTypes.InstallationJob, OwnerId, new AttachmentOwnerScope(Org, Branch, InstallationStatus.ReadyForHandover));
 
-        var result = await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, "key-9",
+        var result = await _handler.CaptureSignatureAsync(Caller, "installation-job", OwnerId, Key("key-9"),
             new SignatureCaptureInput(" Handover ", "  คุณสมชาย  ", "  เจ้าของบ้าน ", Guid.NewGuid(), true, "handover-2026-10-v1"));
 
         Assert.True(result.IsSuccess);
@@ -265,6 +295,7 @@ public class AttachmentHandlerTests
     private sealed class FakeStore : IAttachmentStore
     {
         public int Calls { get; private set; }
+        public int AttachCalls { get; private set; }
         public string? LastOwnerType { get; private set; }
         public AttachFilesInput? LastAttach { get; private set; }
         public SignatureCaptureCommand? LastSignature { get; private set; }
@@ -298,6 +329,7 @@ public class AttachmentHandlerTests
         {
             Calls++;
             LastOwnerType = ownerType;
+            AttachCalls++;
             LastAttach = input;
             LastKeyHash = keyHash;
             LastPayloadHash = payloadHash;

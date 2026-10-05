@@ -25,6 +25,13 @@ public class AttachmentHandler
         _store = store;
     }
 
+    // Same bounds as the API layer's Idempotency-Key header validation (RequestContextReader).
+    private static bool TryNormalizeKey(string? key, out string normalized)
+    {
+        normalized = key?.Trim() ?? string.Empty;
+        return normalized.Length is >= 16 and <= 128;
+    }
+
     private enum OwnerOperation { Read, Manage, Sign }
 
     private sealed record ResolvedOwner(RequestAccessContext Access, AttachmentOwnerDescriptor Descriptor, AttachmentOwnerScope Scope);
@@ -69,6 +76,11 @@ public class AttachmentHandler
     public async Task<Result<IReadOnlyList<AttachmentLinkProjection>>> AttachAsync(
         AttachmentCaller caller, string? ownerType, Guid ownerId, string idempotencyKey, AttachFilesInput? input, CancellationToken ct = default)
     {
+        if (!TryNormalizeKey(idempotencyKey, out idempotencyKey))
+        {
+            return Fail<IReadOnlyList<AttachmentLinkProjection>>("IDEMPOTENCY_KEY_INVALID", "Idempotency key must be between 16 and 128 characters.");
+        }
+
         var owner = await ResolveOwnerAsync(caller, ownerType, ownerId, OwnerOperation.Manage, ct);
         if (owner.IsFailure) return Result<IReadOnlyList<AttachmentLinkProjection>>.Failure(owner.Error);
 
@@ -88,6 +100,8 @@ public class AttachmentHandler
             return Fail<IReadOnlyList<AttachmentLinkProjection>>("ATTACHMENT_OWNER_LOCKED", "The record's status does not allow attachment changes.");
         }
 
+        // Known edge: a replay of an already-completed request after later unlinks may be rejected here with ATTACHMENT_LIMIT_EXCEEDED,
+        // because the idempotent replay lookup lives in the store and runs after this pre-check.
         // Fast pre-check against the active links of exactly this owner; the store re-checks authoritatively inside its transaction.
         var existing = await _store.ListLinksAsync(resolved.Access.OrganizationId, resolved.Descriptor.OwnerType, ownerId, ct);
         var newLinks = fileIds.Count(id => !existing.Any(l => l.FileId == id && l.Purpose == purpose));
@@ -127,6 +141,11 @@ public class AttachmentHandler
     public async Task<Result<SignatureCaptureProjection>> CaptureSignatureAsync(
         AttachmentCaller caller, string? ownerType, Guid ownerId, string idempotencyKey, SignatureCaptureInput? input, CancellationToken ct = default)
     {
+        if (!TryNormalizeKey(idempotencyKey, out idempotencyKey))
+        {
+            return Fail<SignatureCaptureProjection>("IDEMPOTENCY_KEY_INVALID", "Idempotency key must be between 16 and 128 characters.");
+        }
+
         var owner = await ResolveOwnerAsync(caller, ownerType, ownerId, OwnerOperation.Sign, ct);
         if (owner.IsFailure) return Result<SignatureCaptureProjection>.Failure(owner.Error);
 
