@@ -8,6 +8,7 @@
 ## 1. แหล่งหลักและขอบเขตแผน
 
 - สถานะ implementation และหลักฐาน: [Implementation Roadmap](../../00-overview/implementation-roadmap.md)
+- ปิดข้อจำกัดหลัง CP-01–16 (Draft): [ERP Gap Closure Plan](2026-10-05-erp-gap-closure-plan.md)
 - ขอบเขตผลิตภัณฑ์: [Scope](../../00-overview/scope-and-non-goals.md)
 - Requirement IDs: [Requirements Catalog](../../00-overview/requirements-catalog.md)
 - Ownership: [Module Boundaries](../../02-architecture/module-boundaries.md)
