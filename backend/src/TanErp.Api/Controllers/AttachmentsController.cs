@@ -78,7 +78,7 @@ public class AttachmentsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Attach([FromRoute] string ownerType, [FromRoute] Guid ownerId, [FromBody] AttachFilesRequest request, CancellationToken ct)
+    public async Task<IActionResult> Attach([FromRoute] string ownerType, [FromRoute] Guid ownerId, [FromBody] AttachFilesRequest request, [FromHeader(Name = "Idempotency-Key")] string idempotencyKey, CancellationToken ct)
     {
         var caller = ReadCaller(out var key, true, out var failure);
         if (caller is null) return failure!;
@@ -120,7 +120,7 @@ public class AttachmentsController : ControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> CaptureSignature([FromRoute] string ownerType, [FromRoute] Guid ownerId, [FromBody] CaptureSignatureRequest request, CancellationToken ct)
+    public async Task<IActionResult> CaptureSignature([FromRoute] string ownerType, [FromRoute] Guid ownerId, [FromBody] CaptureSignatureRequest request, [FromHeader(Name = "Idempotency-Key")] string idempotencyKey, CancellationToken ct)
     {
         var caller = ReadCaller(out var key, true, out var failure);
         if (caller is null) return failure!;

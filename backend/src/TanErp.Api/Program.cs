@@ -187,8 +187,6 @@ builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infr
 builder.Services.AddScoped<TanErp.Application.Finance.FinanceHandler>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.IQuickEstimateStore, TanErp.Infrastructure.Persistence.QuickEstimates.QuickEstimateStore>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.QuickEstimateHandler>();
-builder.Services.AddScoped<TanErp.Application.Attachments.IAttachmentOwnerScopeReader, TanErp.Infrastructure.Persistence.Attachments.AttachmentOwnerScopeReader>();
-builder.Services.AddScoped<TanErp.Application.Attachments.IAttachmentStore, TanErp.Infrastructure.Persistence.Attachments.AttachmentStore>();
 builder.Services.AddScoped<TanErp.Application.Attachments.AttachmentHandler>();
 // No accounting system is wired yet; this placeholder never reports success. Replace it with a real connector when one is chosen.
 builder.Services.AddScoped<TanErp.Application.Finance.IAccountingConnector, TanErp.Infrastructure.Persistence.Finance.UnconfiguredAccountingConnector>();
