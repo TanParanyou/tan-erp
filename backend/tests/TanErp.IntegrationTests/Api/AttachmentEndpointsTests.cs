@@ -13,7 +13,9 @@ using TanErp.Api.Contracts.Files;
 using TanErp.Api.Contracts.Projects;
 using TanErp.Api.Contracts.Service;
 using TanErp.Api.ErrorHandling;
+using TanErp.Domain.Attachments;
 using TanErp.Domain.Commercial;
+using TanErp.Domain.Files;
 using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
@@ -487,6 +489,39 @@ public class AttachmentEndpointsTests : IAsyncLifetime
         Assert.Equal("ATTACHMENT_DUPLICATE", await ErrorCodeAsync(responses.Single(r => r.StatusCode == HttpStatusCode.Conflict)));
         Assert.Single((await ListAsync(job.Id)).Items);
     }
+
+    [Fact]
+    public async Task Attach_ParallelRequestsAtFortyNineLinks_YieldOneCreatedAndOneLimitConflict()
+    {
+        var job = await CreateInstallationAsync(await CreateActiveProjectAsync());
+        var fileA = await UploadJpegAsync(job.Id, "race-a.jpg");
+        var fileB = await UploadJpegAsync(job.Id, "race-b.jpg");
+
+        // Seed 49 active links directly (uploading 49 files through the API is too slow). The limit check only counts active links.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            for (var i = 0; i < AttachmentLinkLimit - 1; i++)
+            {
+                var file = new UploadedFile(Guid.NewGuid(), OrgId, $"seed/{Guid.NewGuid():N}.jpg", $"seed-{i}.jpg", "image/jpeg", 10, Guid.NewGuid().ToString(), UserId, now, new string('a', 64));
+                db.UploadedFiles.Add(file);
+                db.AttachmentLinks.Add(new AttachmentLink(Guid.NewGuid(), OrgId, Owner, job.Id, OrgId, file.Id, "evidence", UserId, now));
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        var responses = await Task.WhenAll(
+            SendAsync(HttpMethod.Post, AttachmentsUrl(job.Id), new AttachFilesRequest("evidence", new[] { fileA }), key: Key()),
+            SendAsync(HttpMethod.Post, AttachmentsUrl(job.Id), new AttachFilesRequest("evidence", new[] { fileB }), key: Key()));
+
+        Assert.Equal(new[] { HttpStatusCode.Created, HttpStatusCode.Conflict }, responses.Select(r => r.StatusCode).OrderBy(s => (int)s).ToArray());
+        Assert.Equal("ATTACHMENT_LIMIT_EXCEEDED", await ErrorCodeAsync(responses.Single(r => r.StatusCode == HttpStatusCode.Conflict)));
+        Assert.Equal(AttachmentLinkLimit, (await ListAsync(job.Id)).Items.Count);
+    }
+
+    private const int AttachmentLinkLimit = AttachmentLink.MaxActiveLinksPerOwner;
 
     [Fact]
     public async Task MissingIdempotencyKey_IsRejectedAsClientError_NotServerError()
