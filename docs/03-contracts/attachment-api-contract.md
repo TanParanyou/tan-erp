@@ -1,6 +1,6 @@
 # Shared Attachment & Signature API Contract (ข้อตกลง API ไฟล์แนบและลายเซ็นกลาง)
 
-**สถานะ:** Draft → Implemented เมื่อ G-01 เสร็จ (ดู [Verification](../05-engineering/shared-attachment-signature-verification.md)). กฎเป็นค่าเริ่มต้น TEST_ONLY รอ Security/Legal ยืนยัน. ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0017](../adr/0017-shared-attachment-owner-registry.md).
+**สถานะ:** Implemented 2026-10-06 (G-01; focused tests, ยังไม่ผ่านการตรวจเบราว์เซอร์/full gate) (ดู [Verification](../05-engineering/shared-attachment-signature-verification.md)). กฎเป็นค่าเริ่มต้น TEST_ONLY รอ Security/Legal ยืนยัน. ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0017](../adr/0017-shared-attachment-owner-registry.md).
 
 ## Decisions
 

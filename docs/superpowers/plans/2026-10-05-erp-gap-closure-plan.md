@@ -43,7 +43,7 @@
 
 | ID | งาน | Wave | Dependency | ผู้ยืนยันกฎ | แผนละเอียด |
 | --- | --- | --- | --- | --- | --- |
-| G-01 | Shared Attachment & Signature | A | Files module เดิม | Security | — |
+| G-01 | Shared Attachment & Signature | A | Files module เดิม | Security | [แผน G-01](2026-10-05-g01-shared-attachment-signature.md) — Implemented 2026-10-06 (focused tests; browser check + full gate pending) |
 | G-02 | Notification Foundation (in-app + email outbox) | A | Identity | Security + Operations | — |
 | G-03 | Organization/Branch CRUD, Role management, Approval Authority matrix | A | CP-02 | System Admin + Security + Finance | — |
 | G-04 | Server-side Quotation PDF + artifact hash | B | CP-04, G-01 | Sales + Finance | — |

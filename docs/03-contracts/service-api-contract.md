@@ -7,7 +7,7 @@
 | หัวข้อ | ค่าที่ใช้ |
 | --- | --- |
 | งานติดตั้ง | ต่อ Project (ไม่ใช่ completed/cancelled): `planned → in_progress → ready_for_handover → handed_over` หรือ `cancelled`; เลข `INS-{YYYY}-{SEQ:4}`; ทีมเป็นข้อความ (ไม่ผูกพนักงาน/ปฏิทินกำลังคน) |
-| Checklist | ระบุตอนวางแผน (≤100 รายการ, ติดธง "บังคับ" ได้); ติ๊กได้เฉพาะตอน `in_progress` พร้อมผู้ทำ/เวลา; ไม่มี evidence/ไฟล์แนบในรอบนี้ |
+| Checklist | ระบุตอนวางแผน (≤100 รายการ, ติดธง "บังคับ" ได้); ติ๊กได้เฉพาะตอน `in_progress` พร้อมผู้ทำ/เวลา; ไฟล์แนบและลายเซ็นผู้รับมอบใช้ [Attachment API](attachment-api-contract.md) (owner `installation-job`, G-01); ยังไม่บังคับให้ส่งมอบต้องมีลายเซ็น |
 | Punch list | ข้อบกพร่อง (เล็กน้อย/ปานกลาง/วิกฤต): `open → resolved → verified`, เปิดซ้ำได้ (`reopened`); **ผู้แก้ตรวจยืนยันเองไม่ได้** (`INSTALLATION_SELF_VERIFICATION` + DB check); แจ้งข้อบกพร่องตอน `ready_for_handover` หรือเปิดซ้ำข้อที่ verified แล้วจะดึงงานกลับเป็น `in_progress` |
 | พร้อมส่งมอบ | ต้องทำ checklist ที่บังคับครบ (`INSTALLATION_CHECKLIST_INCOMPLETE`) และทุกข้อบกพร่อง `verified` (`INSTALLATION_DEFECTS_OPEN`) |
 | ส่งมอบ | ผู้รับมอบแทนลูกค้า (ชื่อ) เลือก `accepted` หรือ `disputed`: **disputed** ต้องมีเหตุผล → งานกลับ `in_progress` (นับจำนวนครั้งและเก็บเหตุผลล่าสุด) ต้องทำให้พร้อมส่งมอบใหม่; **accepted** ต้องระบุ `warrantyMonths` 0–120 ชัดเจน, วันส่งมอบไม่ใช่อนาคต (ว่าง = วันนี้) → `handed_over` |
@@ -29,6 +29,7 @@
 | ประกัน | `GET /api/v1/warranties[/{id}]?search=&state=active|expired&projectId=` | `warranties.read` |
 | งานบริการ | `POST /api/v1/service-requests` · `POST /{id}/schedule {date}|start|resolve {note}|close|reopen {reason}` | `service-requests.manage` |
 | อ่านงานบริการ | `GET /api/v1/service-requests[/{id}]?search=&status=&projectId=&inWarranty=` | `service-requests.read` |
+| ไฟล์แนบ/ลายเซ็น | ดู [Attachment API](attachment-api-contract.md) | installations.read / operate / handover |
 
 ## Errors
 
