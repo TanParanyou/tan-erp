@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { AttachmentList } from "@/components/forms/AttachmentList";
+import { SignatureCapturePanel } from "@/components/forms/SignatureCapturePanel";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -66,6 +68,8 @@ function DetailView({ job }: { job: InstallationResponse }) {
   const status = job.status ?? "";
   const checklist = job.checklist ?? [];
   const defects = job.defects ?? [];
+  const attachmentsEditable = canOperate && ["planned", "in_progress", "ready_for_handover"].includes(status);
+  const signatureEditable = canHandover && status === "ready_for_handover";
   const busy = mutations.step.isPending;
   const [message, setMessage] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -238,6 +242,13 @@ function DetailView({ job }: { job: InstallationResponse }) {
           </ul>
         )}
       </div>
+
+      {job.id && (
+        <>
+          <AttachmentList ownerType="installation-job" ownerId={job.id} canManage={attachmentsEditable} purposes={["evidence", "defect", "general"]} />
+          <SignatureCapturePanel ownerType="installation-job" ownerId={job.id} purpose="handover" canCapture={signatureEditable} />
+        </>
+      )}
 
       <Modal
         isOpen={dialog !== null}
