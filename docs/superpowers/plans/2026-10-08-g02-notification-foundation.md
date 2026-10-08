@@ -1311,3 +1311,1395 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 ```
 
+
+---
+
+## Task 4: Infrastructure — EF configuration และ migration `AddNotifications`
+
+**Files:**
+- Create: `backend/src/TanErp.Infrastructure/Persistence/Configurations/NotificationConfiguration.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/AppDbContext.cs`
+- Generate: `backend/src/TanErp.Infrastructure/Persistence/Migrations/<timestamp>_AddNotifications.cs` (+ `.Designer.cs`, + `AppDbContextModelSnapshot.cs`)
+- Test: `backend/tests/TanErp.IntegrationTests/Persistence/NotificationSchemaTests.cs`
+
+`ApplyConfigurationsFromAssembly` (AppDbContext.cs:127) หยิบ configuration อัตโนมัติ จึงไม่ต้องลงทะเบียนเพิ่ม. check constraint ต้อง **เท่ากับหรือหลวมกว่า** invariant ของ `Notification` (Task 2) — ไม่เข้มกว่า: type = รูปแบบเท่านั้น (รายการจริงอยู่ในโค้ด `NotificationTypes`), dedupe key ยาว 1–160 หลัง trim, payload เป็น JSON object. ไม่เพิ่ม check เรื่องความยาว payload (jsonb normalize ข้อความแล้วนับต่างจาก string ต้นฉบับ) และไม่บังคับ `read_at_utc >= created_at_utc` (clock คนละเครื่องทำให้เข้มกว่า domain).
+
+**บทเรียนที่ต้องทำตาม:** ถ้า migration ผิด ให้ลบแล้ว **generate ใหม่** (`dotnet ef migrations remove`) ห้ามซ้อน migration แก้ไขทับ; diff ของ `AppDbContextModelSnapshot.cs` ต้องเป็นการ *เพิ่ม* เท่านั้น (ไม่มีบรรทัดลบ/แก้ entity อื่น).
+
+- [ ] **Step 1: เขียน test ที่ล้มก่อน**
+
+`backend/tests/TanErp.IntegrationTests/Persistence/NotificationSchemaTests.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using TanErp.Domain.Notifications;
+using TanErp.Infrastructure.Persistence;
+using Testcontainers.PostgreSql;
+using Xunit;
+
+namespace TanErp.IntegrationTests.Persistence;
+
+/// <summary>Proves the migrated schema: table, indexes, FKs and check constraints that mirror (never exceed) the domain invariants.</summary>
+public class NotificationSchemaTests : IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private AppDbContext _db = null!;
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        _db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(_postgres.GetConnectionString()).Options);
+        await _db.Database.MigrateAsync();
+        await TestOnlyDataSeeder.SeedAsync(_db, "Test", true);
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _db.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    private static Notification Make(string key = "estimate.approval-requested:1", string payload = "{\"resourceId\":\"x\"}") =>
+        new(Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, TestOnlyDataSeeder.TestUserId,
+            NotificationTypes.EstimateApprovalRequested, payload, key, DateTimeOffset.UtcNow);
+
+    [Fact]
+    public async Task Table_LivesInTheNotificationsSchema_WithTheExpectedIndexes()
+    {
+        var indexes = await _db.Database
+            .SqlQuery<string>($"SELECT indexname AS \"Value\" FROM pg_indexes WHERE schemaname = 'notifications' AND tablename = 'notifications'")
+            .ToListAsync();
+
+        Assert.Contains("ux_notifications_recipient_dedupe", indexes);
+        Assert.Contains("ix_notifications_recipient_created", indexes);
+        Assert.Contains("ix_notifications_unread", indexes);
+
+        var unreadDef = await _db.Database
+            .SqlQuery<string>($"SELECT indexdef AS \"Value\" FROM pg_indexes WHERE indexname = 'ix_notifications_unread'")
+            .SingleAsync();
+        Assert.Contains("read_at_utc IS NULL", unreadDef);
+    }
+
+    [Fact]
+    public async Task SameRecipientAndDedupeKey_IsRejectedByTheDatabase()
+    {
+        _db.Set<Notification>().Add(Make());
+        await _db.SaveChangesAsync();
+
+        _db.Set<Notification>().Add(Make());
+        var ex = await Assert.ThrowsAsync<DbUpdateException>(() => _db.SaveChangesAsync());
+        Assert.Equal("ux_notifications_recipient_dedupe", ((PostgresException)ex.InnerException!).ConstraintName);
+    }
+
+    [Fact]
+    public async Task ARecipientOutsideUsers_IsRejectedByTheForeignKey()
+    {
+        _db.Set<Notification>().Add(new Notification(
+            Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, Guid.NewGuid(),
+            NotificationTypes.EstimateApprovalRequested, "{}", "k:1", DateTimeOffset.UtcNow));
+
+        var ex = await Assert.ThrowsAsync<DbUpdateException>(() => _db.SaveChangesAsync());
+        Assert.Equal(PostgresErrorCodes.ForeignKeyViolation, ((PostgresException)ex.InnerException!).SqlState);
+    }
+
+    [Theory]
+    [InlineData("ck_notifications_type_format", "Bad Type", "k:2", "{}")]
+    [InlineData("ck_notifications_dedupe_key_length", "estimate.approval-requested", "   ", "{}")]
+    [InlineData("ck_notifications_payload_object", "estimate.approval-requested", "k:3", "[]")]
+    public async Task ShapeChecks_RejectRowsTheDomainCouldNeverCreate(string constraint, string type, string key, string payload)
+    {
+        var sql = "INSERT INTO notifications.notifications (id, organization_id, recipient_user_id, type, payload, dedupe_key, created_at_utc) " +
+                  "VALUES ({0}, {1}, {2}, {3}, {4}::jsonb, {5}, now())";
+        var ex = await Assert.ThrowsAsync<PostgresException>(() => _db.Database.ExecuteSqlRawAsync(
+            sql, Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, TestOnlyDataSeeder.TestUserId, type, payload, key));
+        Assert.Equal(constraint, ex.ConstraintName);
+    }
+}
+```
+
+- [ ] **Step 2: รัน test เพื่อดูว่าล้ม**
+
+Run: `cd /Users/syaco/Documents/development/tan-erp && dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~NotificationSchemaTests"`
+Expected: FAIL (compile error: `Set<Notification>()` ไม่ถูก map / ไม่มีตาราง `notifications.notifications`). ต้องมี Docker.
+
+- [ ] **Step 3: เขียน configuration + DbSet**
+
+`backend/src/TanErp.Infrastructure/Persistence/Configurations/NotificationConfiguration.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Notifications;
+using TanErp.Domain.Organization;
+
+namespace TanErp.Infrastructure.Persistence.Configurations;
+
+public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
+{
+    public void Configure(EntityTypeBuilder<Notification> builder)
+    {
+        builder.ToTable("notifications", "notifications", t =>
+        {
+            // The real type list lives in code (NotificationTypes); the database only guards the shape, never more than the domain does.
+            t.HasCheckConstraint("ck_notifications_type_format", "type ~ '^[a-z][a-z0-9.-]{1,59}$'");
+            t.HasCheckConstraint("ck_notifications_dedupe_key_length", "char_length(btrim(dedupe_key)) BETWEEN 1 AND 160");
+            t.HasCheckConstraint("ck_notifications_payload_object", "jsonb_typeof(payload) = 'object'");
+        });
+
+        builder.HasKey(x => x.Id);
+        builder.Ignore(x => x.IsRead);
+
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.RecipientUserId).HasColumnName("recipient_user_id").IsRequired();
+        builder.Property(x => x.Type).HasColumnName("type").HasMaxLength(60).IsRequired();
+        builder.Property(x => x.PayloadJson).HasColumnName("payload").HasColumnType("jsonb").IsRequired();
+        builder.Property(x => x.DedupeKey).HasColumnName("dedupe_key").HasMaxLength(Notification.MaxDedupeKeyLength).IsRequired();
+        builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.ReadAtUtc).HasColumnName("read_at_utc").HasColumnType("timestamptz");
+
+        // One message per (recipient, transition); also closes the race two concurrent submits could open.
+        builder.HasIndex(x => new { x.OrganizationId, x.RecipientUserId, x.DedupeKey })
+            .IsUnique()
+            .HasDatabaseName("ux_notifications_recipient_dedupe");
+        // Newest-first listing for one recipient.
+        builder.HasIndex(x => new { x.OrganizationId, x.RecipientUserId, x.CreatedAtUtc, x.Id })
+            .IsDescending(false, false, true, true)
+            .HasDatabaseName("ix_notifications_recipient_created");
+        // The bell badge only ever counts unread rows.
+        builder.HasIndex(x => new { x.OrganizationId, x.RecipientUserId })
+            .HasFilter("read_at_utc IS NULL")
+            .HasDatabaseName("ix_notifications_unread");
+
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.RecipientUserId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+```
+
+ใน `AppDbContext.cs` ใต้บรรทัด `SignatureCaptures` (:99) เพิ่ม:
+
+```csharp
+    public DbSet<TanErp.Domain.Notifications.Notification> Notifications => Set<TanErp.Domain.Notifications.Notification>();
+```
+
+(test ข้างบนใช้ `_db.Set<Notification>()` ได้เช่นกัน; เมื่อมี DbSet แล้วไม่ต้องแก้ test.)
+
+- [ ] **Step 4: build, generate migration**
+
+Run: `cd /Users/syaco/Documents/development/tan-erp && dotnet build backend/TanErp.slnx --nologo -v q` → Expected: Build succeeded.
+Run (ConnectionStrings ปลอมพอให้ design-time สร้าง context ได้; ไม่เชื่อมต่อ DB จริง):
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp
+ConnectionStrings__Database="Host=localhost;Database=design;Username=x;Password=x" \
+dotnet ef migrations add AddNotifications --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api --output-dir Persistence/Migrations
+```
+
+Expected: `Done.` + ไฟล์ `*_AddNotifications.cs`, `.Designer.cs` และ snapshot ถูกแก้. ถ้า `dotnet ef` ไม่พบ: `dotnet tool install --global dotnet-ef`.
+
+- [ ] **Step 5: ตรวจ migration และ snapshot diff**
+
+Run: `grep -n "EnsureSchema\|CreateTable\|schema: \"notifications\"\|filter:\|CheckConstraint\|IsDescending\|descending" backend/src/TanErp.Infrastructure/Persistence/Migrations/*_AddNotifications.cs`
+Expected: `EnsureSchema` ของ `notifications`, `CreateTable` ตารางเดียว, `filter: "read_at_utc IS NULL"`, check constraint 3 ตัว, index `ix_notifications_recipient_created` มี `descending`.
+Run: `grep -n "Down(" -A6 backend/src/TanErp.Infrastructure/Persistence/Migrations/*_AddNotifications.cs` → Expected: `DropTable` แล้ว `DropSchema`.
+Run: `git diff --numstat backend/src/TanErp.Infrastructure/Persistence/Migrations/AppDbContextModelSnapshot.cs` → Expected: คอลัมน์ที่สอง (บรรทัดที่ลบ) = `0`. ถ้ามีบรรทัดลบหรือมีตารางอื่นปนมา → `dotnet ef migrations remove ...` (คำสั่งเดียวกัน, ไม่มี `--output-dir`) แล้ว generate ใหม่ ห้ามแก้ไฟล์ที่ generate ด้วยมือ.
+
+- [ ] **Step 6: รัน test ให้ผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~NotificationSchemaTests"`
+Expected: PASS ทั้งหมด (6 cases).
+
+- [ ] **Step 7: commit**
+
+```bash
+git add backend/src/TanErp.Infrastructure/Persistence/Configurations/NotificationConfiguration.cs backend/src/TanErp.Infrastructure/Persistence/AppDbContext.cs backend/src/TanErp.Infrastructure/Persistence/Migrations backend/tests/TanErp.IntegrationTests/Persistence/NotificationSchemaTests.cs
+git commit -F - <<'EOF'
+feat(notifications): add notifications table and migration
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
+
+---
+
+## Task 5: Infrastructure — publisher, recipient resolver, store, `ResolveMembershipAsync` และ DI
+
+**Files:**
+- Modify: `backend/src/TanErp.Application/Common/Abstractions/IRequestAccessResolver.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/RequestAccessResolver.cs`
+- Create: `backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationRecipientResolver.cs`
+- Create: `backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationPublisher.cs`
+- Create: `backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationStore.cs`
+- Modify: `backend/src/TanErp.Api/Program.cs`
+- Test: `backend/tests/TanErp.IntegrationTests/Persistence/NotificationInfrastructureTests.cs`, `backend/tests/TanErp.IntegrationTests/Persistence/RequestAccessResolverTests.cs` (เพิ่ม case)
+
+กติกา (ADR 0018): publisher **ไม่เรียก `SaveChangesAsync`** — แค่ `Add` เข้า `AppDbContext` ตัวเดียวกับ store ของโมดูลต้นเหตุ (scoped) แล้ว `SaveChangesAsync`/transaction ของโมดูลนั้น commit พร้อมกัน. publisher/resolver/store ทุกตัวฉีด `AppDbContext` ที่ DI ให้ (ห้ามสร้าง context ใหม่).
+
+- [ ] **Step 1: เขียน test ที่ล้มก่อน**
+
+เพิ่มใน `backend/tests/TanErp.IntegrationTests/Persistence/RequestAccessResolverTests.cs` (class เดิม ใช้ `_resolver`/`_db` ที่มีอยู่):
+
+```csharp
+    [Fact]
+    public async Task ResolveMembershipAsync_ActiveMembership_ReturnsContextWithoutPermission()
+    {
+        var result = await _resolver.ResolveMembershipAsync(TestOnlyDataSeeder.TestFirebaseUid, TestOnlyDataSeeder.TestMembershipId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(TestOnlyDataSeeder.TestUserId, result.Value!.ActorUserId);
+        Assert.Equal(TestOnlyDataSeeder.TestOrgId, result.Value.OrganizationId);
+    }
+
+    [Fact]
+    public async Task ResolveMembershipAsync_AnotherUsersMembership_IsActiveMembershipRequired()
+    {
+        var result = await _resolver.ResolveMembershipAsync("someone-else", TestOnlyDataSeeder.TestMembershipId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task ResolveMembershipAsync_BlankUid_IsAuthenticationRequired()
+    {
+        var result = await _resolver.ResolveMembershipAsync(" ", TestOnlyDataSeeder.TestMembershipId);
+
+        Assert.Equal("AUTHENTICATION_REQUIRED", result.Error.Code);
+    }
+```
+
+`backend/tests/TanErp.IntegrationTests/Persistence/NotificationInfrastructureTests.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Notifications;
+using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Notifications;
+using TanErp.Domain.Organization;
+using TanErp.Infrastructure.Persistence;
+using TanErp.Infrastructure.Persistence.Notifications;
+using Testcontainers.PostgreSql;
+using Xunit;
+
+namespace TanErp.IntegrationTests.Persistence;
+
+public class NotificationInfrastructureTests : IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private AppDbContext _db = null!;
+    private NotificationRecipientResolver _resolver = null!;
+    private NotificationPublisher _publisher = null!;
+    private NotificationStore _store = null!;
+
+    private static readonly Guid Org = TestOnlyDataSeeder.TestOrgId;
+    private static readonly Guid Maker = TestOnlyDataSeeder.TestUserId;       // Test Admin: holds every *.approve at organization scope
+
+    private sealed class FixedClock : IClock
+    {
+        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        _db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(_postgres.GetConnectionString()).Options);
+        await _db.Database.MigrateAsync();
+        await TestOnlyDataSeeder.SeedAsync(_db, "Test", true);
+        var clock = new FixedClock();
+        _resolver = new NotificationRecipientResolver(_db);
+        _publisher = new NotificationPublisher(_db, _resolver, clock);
+        _store = new NotificationStore(_db, clock);
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _db.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    /// <summary>A second user whose only grant is <paramref name="permissionKey"/> at organization scope.</summary>
+    private async Task<Guid> AddCheckerAsync(string permissionKey, Guid? membershipBranchId = null, bool active = true, DateTimeOffset? expiresAtUtc = null)
+    {
+        var userId = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
+        var membershipId = Guid.NewGuid();
+        var permission = await _db.Permissions.SingleAsync(p => p.Key == permissionKey);
+        _db.Users.Add(new User(userId, $"uid-{userId:N}", "Checker " + userId.ToString("N")[..6], $"{userId:N}@example.test"));
+        _db.Roles.Add(new Role(roleId, Org, "Checker " + userId.ToString("N")[..6]));
+        _db.Add(new RolePermission(Guid.NewGuid(), roleId, Org, permission.Id, PermissionScope.Organization, Org));
+        _db.Memberships.Add(new Membership(membershipId, Org, membershipBranchId, userId, active, null, expiresAtUtc));
+        _db.Add(new MembershipRole(membershipId, roleId, Org));
+        await _db.SaveChangesAsync();
+        return userId;
+    }
+
+    private static NotificationEvent MrpEvent(Guid? transition = null) =>
+        NotificationEvents.MrpRunCreated(Org, TestOnlyDataSeeder.TestBranchId, transition ?? Guid.NewGuid(), Maker, "MRP-0001");
+
+    [Fact]
+    public async Task Resolver_ReturnsHoldersOfThePermission_AndDropsExcludedInactiveExpiredAndOtherBranchUsers()
+    {
+        var holder = await AddCheckerAsync("mrp.approve");
+        await AddCheckerAsync("mrp.approve", active: false);
+        await AddCheckerAsync("mrp.approve", expiresAtUtc: DateTimeOffset.UtcNow.AddDays(-1));
+        var otherBranch = new Branch(Guid.NewGuid(), Org, "NOTIF-B2", "Other branch");
+        _db.Branches.Add(otherBranch);
+        await _db.SaveChangesAsync();
+        await AddCheckerAsync("mrp.approve", membershipBranchId: otherBranch.Id);                     // another branch of the same organization: never matches
+        await AddCheckerAsync("estimates.read");                                                       // wrong permission
+
+        var ids = await _resolver.ResolveAsync(Org, TestOnlyDataSeeder.TestBranchId, "mrp.approve", [Maker], DateTimeOffset.UtcNow);
+
+        Assert.Equal([holder], ids);
+    }
+
+    [Fact]
+    public async Task Resolver_WithoutABranch_ReturnsBranchScopedMembersToo()
+    {
+        var branchHolder = await AddCheckerAsync("roles.assign-approval", membershipBranchId: TestOnlyDataSeeder.TestBranchId);
+
+        var ids = await _resolver.ResolveAsync(Org, null, "roles.assign-approval", [Maker], DateTimeOffset.UtcNow);
+
+        Assert.Contains(branchHolder, ids);
+        Assert.DoesNotContain(Maker, ids);
+    }
+
+    [Fact]
+    public async Task Publish_StagesRowsWithoutSaving_AndTheCallersSaveCommitsThem_ExcludingTheMaker()
+    {
+        var checker = await AddCheckerAsync("mrp.approve");
+
+        await _publisher.PublishAsync(MrpEvent());
+
+        Assert.Equal(0, await CountRowsAsync());            // nothing is stored until the module saves
+        await _db.SaveChangesAsync();
+        var rows = await _db.Notifications.AsNoTracking().ToListAsync();
+        Assert.Contains(rows, r => r.RecipientUserId == checker && r.Type == NotificationTypes.MrpRunApprovalRequested);
+        Assert.DoesNotContain(rows, r => r.RecipientUserId == Maker);
+        Assert.Contains("MRP-0001", rows[0].PayloadJson);
+    }
+
+    [Fact]
+    public async Task Publish_ThenDiscardingTheUnitOfWork_LeavesNoNotification()
+    {
+        await AddCheckerAsync("mrp.approve");
+        await _publisher.PublishAsync(MrpEvent());
+
+        _db.ChangeTracker.Clear();                           // what a failed/rolled-back business change does to the staged rows
+        await _db.SaveChangesAsync();
+
+        Assert.Equal(0, await CountRowsAsync());
+    }
+
+    [Fact]
+    public async Task Publish_TheSameTransitionTwice_NotifiesOnce_ButANewTransitionNotifiesAgain()
+    {
+        var checker = await AddCheckerAsync("mrp.approve");
+        var transition = Guid.NewGuid();
+
+        await _publisher.PublishAsync(MrpEvent(transition));
+        await _publisher.PublishAsync(MrpEvent(transition));   // staged but unsaved: still deduped
+        await _db.SaveChangesAsync();
+        await _publisher.PublishAsync(MrpEvent(transition));   // already stored: deduped
+        await _db.SaveChangesAsync();
+        Assert.Equal(1, await _db.Notifications.CountAsync(n => n.RecipientUserId == checker));
+
+        await _publisher.PublishAsync(MrpEvent());
+        await _db.SaveChangesAsync();
+        Assert.Equal(2, await _db.Notifications.CountAsync(n => n.RecipientUserId == checker));
+    }
+
+    [Fact]
+    public async Task Publish_WithExplicitRecipients_NotifiesOnlyThem()
+    {
+        var reviewer = TestOnlyDataSeeder.TestEstimateReviewerUserId;
+        await AddCheckerAsync("estimates.approve");            // holds the permission but is not on the route
+
+        await _publisher.PublishAsync(NotificationEvents.EstimateSubmitted(
+            Org, TestOnlyDataSeeder.TestBranchId, Guid.NewGuid(), Maker, Guid.NewGuid(), "EST-0001", reviewer));
+        await _db.SaveChangesAsync();
+
+        Assert.Equal([reviewer], await _db.Notifications.Select(n => n.RecipientUserId).ToListAsync());
+    }
+
+    [Fact]
+    public async Task Publish_WithNoEligibleRecipient_StagesNothing_AndAnUnknownActorFailsLoudly()
+    {
+        await _publisher.PublishAsync(MrpEvent());             // seed has only the maker holding mrp.approve
+        await _db.SaveChangesAsync();
+        Assert.Equal(0, await CountRowsAsync());
+
+        var ex = await Assert.ThrowsAsync<NotificationDomainException>(() => _publisher.PublishAsync(
+            NotificationEvents.MrpRunCreated(Org, TestOnlyDataSeeder.TestBranchId, Guid.NewGuid(), Guid.NewGuid(), "MRP-0002")));
+        Assert.Equal("NOTIFICATION_FIELD_INVALID", ex.Code);
+    }
+
+    [Fact]
+    public async Task Store_OnlyEverSeesTheCallersOwnRows_AndMarkReadIsIdempotent()
+    {
+        var mine = await AddCheckerAsync("mrp.approve");
+        var theirs = await AddCheckerAsync("mrp.approve");
+        await _publisher.PublishAsync(MrpEvent());
+        await _publisher.PublishAsync(MrpEvent());
+        await _db.SaveChangesAsync();
+
+        var page = await _store.ListAsync(Org, mine, new NotificationListQuery(false, 1, 20));
+        Assert.Equal(2, page.TotalCount);
+        Assert.True(page.Items[0].CreatedAtUtc >= page.Items[1].CreatedAtUtc);
+        Assert.Equal(2, await _store.CountUnreadAsync(Org, mine));
+
+        var otherId = await _db.Notifications.Where(n => n.RecipientUserId == theirs).Select(n => n.Id).FirstAsync();
+        Assert.Null(await _store.MarkReadAsync(Org, mine, otherId));                       // someone else's row
+        Assert.Null(await _store.MarkReadAsync(Guid.NewGuid(), mine, page.Items[0].Id));    // another organization
+        Assert.Null(await _store.MarkReadAsync(Org, mine, Guid.NewGuid()));                // does not exist
+
+        var first = await _store.MarkReadAsync(Org, mine, page.Items[0].Id);
+        var again = await _store.MarkReadAsync(Org, mine, page.Items[0].Id);
+        Assert.NotNull(first!.ReadAtUtc);
+        Assert.Equal(first.ReadAtUtc, again!.ReadAtUtc);                                   // first read time is kept
+        Assert.Equal(1, await _store.CountUnreadAsync(Org, mine));
+        Assert.Equal(2, await _store.CountUnreadAsync(Org, theirs));                       // untouched
+
+        var unreadOnly = await _store.ListAsync(Org, mine, new NotificationListQuery(true, 1, 20));
+        Assert.Single(unreadOnly.Items);
+
+        Assert.Equal(1, await _store.MarkAllReadAsync(Org, mine));
+        Assert.Equal(0, await _store.MarkAllReadAsync(Org, mine));
+        Assert.Equal(2, await _store.CountUnreadAsync(Org, theirs));
+    }
+
+    private Task<int> CountRowsAsync() => _db.Notifications.AsNoTracking().CountAsync();
+}
+```
+
+- [ ] **Step 2: รัน test เพื่อดูว่าล้ม**
+
+Run: `cd /Users/syaco/Documents/development/tan-erp && dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~NotificationInfrastructureTests|FullyQualifiedName~RequestAccessResolverTests"`
+Expected: FAIL (compile error: `ResolveMembershipAsync`, `NotificationPublisher`, `NotificationRecipientResolver`, `NotificationStore` ไม่มี).
+
+- [ ] **Step 3: `ResolveMembershipAsync`**
+
+`IRequestAccessResolver.cs` — เพิ่มเป็น default interface method (มี fake ใน unit test 9 ไฟล์ที่ implement interface นี้ จึงต้องไม่บังคับ; default ปิดประตู — fail closed):
+
+```csharp
+    /// <summary>
+    /// Authenticates the membership only (active user/organization/branch/time window). No permission key: used by features whose
+    /// access rule is "this row belongs to me" (notifications). The default fails closed; RequestAccessResolver overrides it.
+    /// </summary>
+    Task<Result<RequestAccessContext>> ResolveMembershipAsync(
+        string firebaseUid,
+        Guid membershipId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(Result<RequestAccessContext>.Failure(
+            new Error("ACTIVE_MEMBERSHIP_REQUIRED", "Active organization membership is required.")));
+```
+
+`RequestAccessResolver.cs` — เพิ่ม method (ใช้เงื่อนไข active membership เดียวกับ `ResolveAsync`; `PermissionKey` ว่างเพราะไม่มี permission):
+
+```csharp
+    public async Task<Result<RequestAccessContext>> ResolveMembershipAsync(
+        string firebaseUid,
+        Guid membershipId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(firebaseUid))
+        {
+            return Result<RequestAccessContext>.Failure(new Error("AUTHENTICATION_REQUIRED", "Authentication is required."));
+        }
+
+        var now = _clock.UtcNow;
+        var context = await _db.Memberships
+            .AsNoTracking()
+            .Where(m => m.Id == membershipId && m.User!.FirebaseUid == firebaseUid)
+            .Where(m => m.IsActive && m.User!.IsActive && m.Organization!.IsActive)
+            .Where(m => m.BranchId == null || m.Branch!.IsActive)
+            .Where(m => m.StartsAtUtc == null || m.StartsAtUtc <= now)
+            .Where(m => m.ExpiresAtUtc == null || m.ExpiresAtUtc > now)
+            .Select(m => new RequestAccessContext(m.UserId, m.Id, m.OrganizationId, m.BranchId, string.Empty, PermissionScope.Organization))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return context is null
+            ? Result<RequestAccessContext>.Failure(new Error("ACTIVE_MEMBERSHIP_REQUIRED", "Active organization membership is required."))
+            : Result<RequestAccessContext>.Success(context);
+    }
+```
+
+- [ ] **Step 4: recipient resolver**
+
+`backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationRecipientResolver.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Notifications;
+using TanErp.Domain.IdentityAccess;
+
+namespace TanErp.Infrastructure.Persistence.Notifications;
+
+/// <summary>
+/// Same grant rule as RequestAccessResolver.ResolveAsync (organization-scope grant on an active role/permission, active membership in the
+/// time window), asked for every membership at once. A branch-limited membership only matches a document of its own branch.
+/// Estimate's branch-scoped grants are not consulted: Estimate notifies its route reviewers explicitly.
+/// </summary>
+public class NotificationRecipientResolver : INotificationRecipientResolver
+{
+    private readonly AppDbContext _db;
+
+    public NotificationRecipientResolver(AppDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task<IReadOnlyList<Guid>> ResolveAsync(
+        Guid organizationId, Guid? branchId, string permissionKey, IReadOnlyCollection<Guid> excludedUserIds, DateTimeOffset atUtc, CancellationToken ct = default)
+    {
+        var excluded = excludedUserIds.ToArray();
+        return await _db.Memberships
+            .AsNoTracking()
+            .Where(m => m.OrganizationId == organizationId)
+            .Where(m => m.IsActive && m.User!.IsActive && m.Organization!.IsActive)
+            .Where(m => m.BranchId == null || m.Branch!.IsActive)
+            .Where(m => branchId == null || m.BranchId == null || m.BranchId == branchId)
+            .Where(m => m.StartsAtUtc == null || m.StartsAtUtc <= atUtc)
+            .Where(m => m.ExpiresAtUtc == null || m.ExpiresAtUtc > atUtc)
+            .Where(m => !excluded.Contains(m.UserId))
+            .Where(m => m.MembershipRoles.Any(mr => mr.Role!.IsActive
+                && mr.Role.RolePermissions.Any(rp => rp.Permission!.IsActive
+                    && rp.Permission.Key == permissionKey
+                    && rp.Scope == PermissionScope.Organization
+                    && rp.ScopeId == m.OrganizationId)))
+            .Select(m => m.UserId)
+            .Distinct()
+            .OrderBy(id => id)
+            // The planner caps at MaxRecipientsPerEvent after also dropping the actor, hence one spare row.
+            .Take(NotificationLimits.MaxRecipientsPerEvent + 1)
+            .ToListAsync(ct);
+    }
+}
+```
+
+- [ ] **Step 5: publisher**
+
+`backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationPublisher.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Notifications;
+using TanErp.Domain.Notifications;
+
+namespace TanErp.Infrastructure.Persistence.Notifications;
+
+/// <summary>
+/// Stages notification rows in the shared AppDbContext. It never saves: the calling store's SaveChanges/transaction commits them with
+/// the business change, and a failed change leaves nothing behind. Programming errors (unknown type, payload outside the allowlist,
+/// unknown actor) throw NotificationDomainException so the business transaction fails loudly instead of silently losing a notification.
+/// </summary>
+public class NotificationPublisher : INotificationPublisher
+{
+    private readonly AppDbContext _db;
+    private readonly INotificationRecipientResolver _recipients;
+    private readonly IClock _clock;
+
+    public NotificationPublisher(AppDbContext db, INotificationRecipientResolver recipients, IClock clock)
+    {
+        _db = db;
+        _recipients = recipients;
+        _clock = clock;
+    }
+
+    public async Task PublishAsync(NotificationEvent evt, CancellationToken ct = default)
+    {
+        var descriptor = NotificationTypeRegistry.Find(evt.Type)
+            ?? throw new NotificationDomainException("NOTIFICATION_TYPE_INVALID", $"Notification type '{evt.Type}' is not registered.");
+
+        var actorName = await _db.Users.AsNoTracking()
+            .Where(u => u.Id == evt.ActorUserId)
+            .Select(u => u.DisplayName)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotificationDomainException("NOTIFICATION_FIELD_INVALID", "The actor user was not found.");
+
+        var now = _clock.UtcNow;
+        IReadOnlyCollection<Guid> candidates = evt.ExplicitRecipientUserIds
+            ?? await _recipients.ResolveAsync(evt.OrganizationId, evt.BranchId, descriptor.TargetPermission, evt.ExcludedUserIds, now, ct);
+
+        var plan = NotificationPublishPlanner.Plan(evt, actorName, candidates);
+        if (plan.IsFailure) throw new NotificationDomainException(plan.Error.Code, plan.Error.Message);
+        if (plan.Value!.Count == 0) return;
+
+        // Idempotent per (recipient, transition): skip rows already stored or already staged in this unit of work.
+        var dedupeKey = plan.Value[0].DedupeKey;
+        var recipientIds = plan.Value.Select(p => p.RecipientUserId).ToArray();
+        var stored = await _db.Notifications.AsNoTracking()
+            .Where(n => n.OrganizationId == evt.OrganizationId && n.DedupeKey == dedupeKey && recipientIds.Contains(n.RecipientUserId))
+            .Select(n => n.RecipientUserId)
+            .ToListAsync(ct);
+        var staged = _db.ChangeTracker.Entries<Notification>()
+            .Where(e => e.State == EntityState.Added && e.Entity.OrganizationId == evt.OrganizationId && e.Entity.DedupeKey == dedupeKey)
+            .Select(e => e.Entity.RecipientUserId);
+        var skip = new HashSet<Guid>(stored.Concat(staged));
+
+        foreach (var item in plan.Value.Where(p => !skip.Contains(p.RecipientUserId)))
+        {
+            _db.Notifications.Add(new Notification(Guid.NewGuid(), evt.OrganizationId, item.RecipientUserId, item.Type, item.PayloadJson, item.DedupeKey, now));
+        }
+    }
+}
+```
+
+- [ ] **Step 6: store**
+
+`backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationStore.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Notifications;
+
+namespace TanErp.Infrastructure.Persistence.Notifications;
+
+/// <summary>Every query is keyed by (organization, recipient): another user's or organization's row is simply not found.</summary>
+public class NotificationStore : INotificationStore
+{
+    private readonly AppDbContext _db;
+    private readonly IClock _clock;
+
+    public NotificationStore(AppDbContext db, IClock clock)
+    {
+        _db = db;
+        _clock = clock;
+    }
+
+    private IQueryable<TanErp.Domain.Notifications.Notification> Own(Guid organizationId, Guid userId) =>
+        _db.Notifications.Where(n => n.OrganizationId == organizationId && n.RecipientUserId == userId);
+
+    public async Task<NotificationRowPage> ListAsync(Guid organizationId, Guid userId, NotificationListQuery query, CancellationToken ct = default)
+    {
+        var rows = Own(organizationId, userId).AsNoTracking();
+        if (query.UnreadOnly) rows = rows.Where(n => n.ReadAtUtc == null);
+
+        var total = await rows.CountAsync(ct);
+        var items = await rows
+            .OrderByDescending(n => n.CreatedAtUtc).ThenByDescending(n => n.Id)
+            .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
+            .Select(n => new NotificationRow(n.Id, n.Type, n.PayloadJson, n.CreatedAtUtc, n.ReadAtUtc))
+            .ToListAsync(ct);
+        return new NotificationRowPage(items, total);
+    }
+
+    public Task<int> CountUnreadAsync(Guid organizationId, Guid userId, CancellationToken ct = default) =>
+        Own(organizationId, userId).AsNoTracking().CountAsync(n => n.ReadAtUtc == null, ct);
+
+    public async Task<NotificationRow?> MarkReadAsync(Guid organizationId, Guid userId, Guid notificationId, CancellationToken ct = default)
+    {
+        var now = _clock.UtcNow;
+        // Only unread rows are touched, so the first read time survives repeated calls.
+        await Own(organizationId, userId)
+            .Where(n => n.Id == notificationId && n.ReadAtUtc == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.ReadAtUtc, now), ct);
+
+        return await Own(organizationId, userId).AsNoTracking()
+            .Where(n => n.Id == notificationId)
+            .Select(n => new NotificationRow(n.Id, n.Type, n.PayloadJson, n.CreatedAtUtc, n.ReadAtUtc))
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public Task<int> MarkAllReadAsync(Guid organizationId, Guid userId, CancellationToken ct = default)
+    {
+        var now = _clock.UtcNow;
+        return Own(organizationId, userId)
+            .Where(n => n.ReadAtUtc == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.ReadAtUtc, now), ct);
+    }
+}
+```
+
+- [ ] **Step 7: DI**
+
+Run: `grep -n "Notification" backend/src/TanErp.Api/Program.cs` → Expected: ไม่มีผลลัพธ์ (ถ้ามี ให้ใช้บรรทัดเดิม ห้ามลงทะเบียนซ้ำ).
+ใน `Program.cs` ต่อท้ายกลุ่ม attachment (หลังบรรทัด `AddScoped<TanErp.Application.Attachments.IAttachmentStore, ...>` ที่ :183) เพิ่ม:
+
+```csharp
+builder.Services.AddScoped<TanErp.Application.Notifications.INotificationRecipientResolver, TanErp.Infrastructure.Persistence.Notifications.NotificationRecipientResolver>();
+builder.Services.AddScoped<TanErp.Application.Notifications.INotificationPublisher, TanErp.Infrastructure.Persistence.Notifications.NotificationPublisher>();
+builder.Services.AddScoped<TanErp.Application.Notifications.INotificationStore, TanErp.Infrastructure.Persistence.Notifications.NotificationStore>();
+```
+
+(`NotificationHandler` ลงทะเบียนใน Task 6.) ทุกตัว scoped เพื่อใช้ `AppDbContext` ตัวเดียวกับ module store ในหนึ่ง request.
+
+- [ ] **Step 8: รัน test ให้ผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~NotificationInfrastructureTests|FullyQualifiedName~RequestAccessResolverTests"` → Expected: PASS.
+Run: `dotnet build backend/TanErp.slnx --nologo -v q` → Expected: Build succeeded (unit test fakes ยังคอมไพล์ได้เพราะเป็น default interface method).
+Run: `dotnet test backend/tests/TanErp.ArchitectureTests/TanErp.ArchitectureTests.csproj` → Expected: PASS.
+
+- [ ] **Step 9: commit**
+
+```bash
+git add backend/src/TanErp.Application/Common/Abstractions/IRequestAccessResolver.cs backend/src/TanErp.Infrastructure/Persistence/RequestAccessResolver.cs backend/src/TanErp.Infrastructure/Persistence/Notifications backend/src/TanErp.Api/Program.cs backend/tests/TanErp.IntegrationTests/Persistence/NotificationInfrastructureTests.cs backend/tests/TanErp.IntegrationTests/Persistence/RequestAccessResolverTests.cs
+git commit -F - <<'EOF'
+feat(notifications): add publisher, recipient resolver and own-only store
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
+
+---
+
+## Task 6: Application handler + API — `NOTIFICATION_NOT_FOUND`, contracts, `NotificationsController`, OpenAPI
+
+**Files:**
+- Create: `backend/src/TanErp.Application/Notifications/NotificationHandler.cs`
+- Create: `backend/src/TanErp.Api/Contracts/Notifications/NotificationContracts.cs`
+- Create: `backend/src/TanErp.Api/Controllers/NotificationsController.cs`
+- Modify: `backend/src/TanErp.Api/ErrorHandling/ProblemDetailsMapper.cs`, `backend/src/TanErp.Api/Resources/Errors.resx`, `backend/src/TanErp.Api/Resources/Errors.en.resx`, `backend/src/TanErp.Api/Program.cs`
+- Regenerate: `contracts/openapi/tan-erp.v1.json`
+- Test: `backend/tests/TanErp.UnitTests/Notifications/NotificationHandlerTests.cs`, `backend/tests/TanErp.IntegrationTests/Api/NotificationEndpointsTests.cs` (สร้างในขั้นนี้; Task 10 เพิ่ม case ของ publish ต่อโมดูลลงไฟล์เดียวกัน), `backend/tests/TanErp.ArchitectureTests/LayerDependencyTests.cs`
+
+**Idempotency-Key:** repo กำหนด `Idempotency-Key` ให้ POST ที่สร้าง/เปลี่ยนสถานะเอกสาร (73 จุดใน controllers; `RequestContextReader.ReadIdempotentRequest`). Mark read ไม่ใช่ทั้งสองอย่าง — idempotent โดยธรรมชาติ (อ่านซ้ำคืนแถวเดิม, `readAtUtc` ไม่เปลี่ยน) และตรงกับสัญญาใน Task 1 จึงใช้ `ReadAuthenticatedRequest` แบบเดียวกับ GET ของ `AttachmentsController` และมี test ยืนยันว่าเรียกโดยไม่ส่ง header ได้. ไม่ใช้ `If-Match` (ไม่มี concurrency token ที่ผู้ใช้ต้องรู้).
+
+**ลำดับตรวจใน handler (permission ก่อน existence):** authentication/membership (`ResolveMembershipAsync`) → store ที่ค้นด้วย `(org, user, id)` พร้อมกัน → ไม่พบ/ของคนอื่น/ข้าม org = `NOTIFICATION_NOT_FOUND` (404 เดียวกัน). Deep link คำนวณตอนอ่านด้วย `ResolveAsync(target permission)` ของ type นั้น — ไม่มีสิทธิ์แล้ว → `null`.
+
+- [ ] **Step 1: เขียน unit test ที่ล้มก่อน**
+
+`backend/tests/TanErp.UnitTests/Notifications/NotificationHandlerTests.cs`:
+
+```csharp
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Models;
+using TanErp.Application.Common.Results;
+using TanErp.Application.Notifications;
+using TanErp.Domain.Notifications;
+using Xunit;
+
+namespace TanErp.UnitTests.Notifications;
+
+public class NotificationHandlerTests
+{
+    private static readonly Guid Org = Guid.NewGuid();
+    private static readonly Guid User = Guid.NewGuid();
+    private static readonly Guid ResourceId = Guid.NewGuid();
+    private static readonly NotificationCaller Caller = new("uid-1", Guid.NewGuid(), "trace");
+
+    private sealed class FakeAccess : IRequestAccessResolver
+    {
+        public bool MembershipActive { get; set; } = true;
+        public HashSet<string> Granted { get; } = new(StringComparer.Ordinal);
+        public List<string> Requested { get; } = new();
+
+        public Task<Result<RequestAccessContext>> ResolveMembershipAsync(string firebaseUid, Guid membershipId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(MembershipActive
+                ? Result<RequestAccessContext>.Success(new RequestAccessContext(User, membershipId, Org, null, string.Empty, "organization"))
+                : Result<RequestAccessContext>.Failure(new Error("ACTIVE_MEMBERSHIP_REQUIRED", "inactive")));
+
+        public Task<Result<RequestAccessContext>> ResolveAsync(string firebaseUid, Guid membershipId, string permissionKey, CancellationToken cancellationToken = default)
+        {
+            Requested.Add(permissionKey);
+            return Task.FromResult(Granted.Contains(permissionKey)
+                ? Result<RequestAccessContext>.Success(new RequestAccessContext(User, membershipId, Org, null, permissionKey, "organization"))
+                : Result<RequestAccessContext>.Failure(new Error("PERMISSION_DENIED", "denied")));
+        }
+    }
+
+    private sealed class FakeStore : INotificationStore
+    {
+        public List<NotificationRow> Rows { get; } = new();
+        public int Calls { get; private set; }
+        public (Guid Org, Guid User)? LastOwner { get; private set; }
+        public NotificationListQuery? LastQuery { get; private set; }
+
+        public Task<NotificationRowPage> ListAsync(Guid organizationId, Guid userId, NotificationListQuery query, CancellationToken ct = default)
+        {
+            Calls++; LastOwner = (organizationId, userId); LastQuery = query;
+            return Task.FromResult(new NotificationRowPage(Rows, Rows.Count + 40));
+        }
+
+        public Task<int> CountUnreadAsync(Guid organizationId, Guid userId, CancellationToken ct = default)
+        {
+            Calls++; LastOwner = (organizationId, userId);
+            return Task.FromResult(3);
+        }
+
+        public Task<NotificationRow?> MarkReadAsync(Guid organizationId, Guid userId, Guid notificationId, CancellationToken ct = default)
+        {
+            Calls++; LastOwner = (organizationId, userId);
+            return Task.FromResult(Rows.FirstOrDefault(r => r.Id == notificationId));
+        }
+
+        public Task<int> MarkAllReadAsync(Guid organizationId, Guid userId, CancellationToken ct = default)
+        {
+            Calls++; LastOwner = (organizationId, userId);
+            return Task.FromResult(7);
+        }
+    }
+
+    private static NotificationRow Row(string type, string payload) => new(Guid.NewGuid(), type, payload, DateTimeOffset.UtcNow, null);
+
+    private static string PoPayload => $"{{\"resourceId\":\"{ResourceId}\",\"documentNumber\":\"PO-1\",\"actorDisplayName\":\"A\"}}";
+
+    private static (NotificationHandler Handler, FakeAccess Access, FakeStore Store) Build() =>
+        BuildWith(new FakeAccess(), new FakeStore());
+
+    private static (NotificationHandler, FakeAccess, FakeStore) BuildWith(FakeAccess access, FakeStore store) => (new NotificationHandler(access, store), access, store);
+
+    [Fact]
+    public async Task EveryOperation_RequiresAnActiveMembership_BeforeTouchingTheStore()
+    {
+        var (handler, access, store) = Build();
+        access.MembershipActive = false;
+
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", (await handler.ListAsync(Caller, false, 1, 20)).Error.Code);
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", (await handler.CountUnreadAsync(Caller)).Error.Code);
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", (await handler.MarkReadAsync(Caller, Guid.NewGuid())).Error.Code);
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", (await handler.MarkAllReadAsync(Caller)).Error.Code);
+        Assert.Equal(0, store.Calls);
+    }
+
+    [Fact]
+    public async Task List_UsesTheCallersOwnOrganizationAndUser_AndClampsPaging()
+    {
+        var (handler, _, store) = Build();
+
+        var result = await handler.ListAsync(Caller, true, 0, 500);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal((Org, User), store.LastOwner);
+        Assert.Equal(new NotificationListQuery(true, 1, NotificationLimits.MaxPageSize), store.LastQuery);
+        Assert.Equal(1, result.Value!.Page);
+        Assert.Equal(NotificationLimits.MaxPageSize, result.Value.PageSize);
+        Assert.Equal(40, result.Value.TotalCount);
+        Assert.Equal(1, result.Value.TotalPages);
+
+        await handler.ListAsync(Caller, false, 3, 0);
+        Assert.Equal(new NotificationListQuery(false, 3, NotificationLimits.DefaultPageSize), store.LastQuery);
+    }
+
+    [Fact]
+    public async Task DeepLink_FollowsTheReadersCurrentPermission()
+    {
+        var (handler, access, store) = Build();
+        store.Rows.Add(Row(NotificationTypes.PurchaseOrderApprovalRequested, PoPayload));
+        store.Rows.Add(Row(NotificationTypes.PurchaseOrderApprovalRequested, PoPayload));
+
+        var withoutPermission = await handler.ListAsync(Caller, false, 1, 20);
+        Assert.All(withoutPermission.Value!.Items, i => Assert.Null(i.DeepLink));
+
+        access.Granted.Add("purchase-orders.approve");
+        access.Requested.Clear();
+        var withPermission = await handler.ListAsync(Caller, false, 1, 20);
+
+        Assert.All(withPermission.Value!.Items, i => Assert.Equal($"/procurement/purchase-orders/{ResourceId}", i.DeepLink));
+        Assert.Single(access.Requested);                       // one permission lookup per distinct type, not per row
+        Assert.Equal("PO-1", withPermission.Value.Items[0].Payload["documentNumber"]);
+    }
+
+    [Fact]
+    public async Task ARowWhoseTypeIsNoLongerRegistered_IsStillListed_WithoutALink()
+    {
+        var (handler, _, store) = Build();
+        store.Rows.Add(Row("retired.type", "{\"resourceId\":\"x\"}"));
+
+        var result = await handler.ListAsync(Caller, false, 1, 20);
+
+        Assert.Null(Assert.Single(result.Value!.Items).DeepLink);
+    }
+
+    [Fact]
+    public async Task MarkRead_OfARowThatIsNotTheCallers_IsNotFound()
+    {
+        var (handler, _, store) = Build();
+
+        var result = await handler.MarkReadAsync(Caller, Guid.NewGuid());
+
+        Assert.Equal("NOTIFICATION_NOT_FOUND", result.Error.Code);
+        Assert.Equal((Org, User), store.LastOwner);
+    }
+
+    [Fact]
+    public async Task MarkRead_ReturnsTheProjection_AndCountsAreScopedToTheCaller()
+    {
+        var (handler, _, store) = Build();
+        var row = Row(NotificationTypes.MrpRunApprovalRequested, $"{{\"resourceId\":\"{ResourceId}\",\"documentNumber\":\"M-1\",\"actorDisplayName\":\"A\"}}");
+        store.Rows.Add(row);
+
+        var read = await handler.MarkReadAsync(Caller, row.Id);
+        Assert.Equal(row.Id, read.Value!.Id);
+        Assert.Equal(3, (await handler.CountUnreadAsync(Caller)).Value);
+        Assert.Equal(7, (await handler.MarkAllReadAsync(Caller)).Value);
+        Assert.Equal((Org, User), store.LastOwner);
+    }
+}
+```
+
+`backend/tests/TanErp.ArchitectureTests/LayerDependencyTests.cs` — เพิ่ม rule (controller ต้องบาง: ไม่แตะ store/entity/Infrastructure):
+
+```csharp
+    [Fact]
+    public void NotificationsController_ShouldStayThin()
+    {
+        var rule = Classes().That().HaveFullName("TanErp.Api.Controllers.NotificationsController")
+            .Should().NotDependOnAny(Types().That().ResideInAssembly(InfrastructureAssembly))
+            .AndShould().NotDependOnAny(Types().That().HaveFullName("TanErp.Application.Notifications.INotificationStore"))
+            .AndShould().NotDependOnAny(Types().That().HaveFullName("TanErp.Domain.Notifications.Notification"));
+
+        rule.Check(Architecture);
+    }
+```
+
+`backend/tests/TanErp.IntegrationTests/Api/NotificationEndpointsTests.cs` (ใช้โครง factory เดียวกับ `AttachmentEndpointsTests`; ผู้ใช้ A = Test Admin ถือ `*.approve`, ผู้ใช้ B อยู่ Org B):
+
+```csharp
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using TanErp.Api;
+using TanErp.Api.Contracts.Notifications;
+using TanErp.Api.ErrorHandling;
+using TanErp.Domain.Notifications;
+using TanErp.Infrastructure.Identity;
+using TanErp.Infrastructure.Persistence;
+using Testcontainers.PostgreSql;
+using Xunit;
+
+namespace TanErp.IntegrationTests.Api;
+
+public class NotificationEndpointsTests : IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private WebApplicationFactory<Program> _factory = null!;
+    private HttpClient _client = null!;
+
+    private static readonly Guid OrgId = TestOnlyDataSeeder.TestOrgId;
+    private static readonly Guid UserA = TestOnlyDataSeeder.TestUserId;
+    private static readonly Guid UserB = TestOnlyDataSeeder.TestUserIdB;
+    private static readonly Guid PoId = Guid.NewGuid();
+    private Guid[] _mineIds = [];
+    private Guid _orgBRowId;
+
+    private class TestFirebaseTokenVerifier : IFirebaseTokenVerifier
+    {
+        public Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult<string?>(idToken switch
+            {
+                "token-org-a" => TestOnlyDataSeeder.TestFirebaseUid,
+                "token-org-b" => TestOnlyDataSeeder.TestFirebaseUidB,
+                _ => null
+            });
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Test");
+            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:Database"] = _postgres.GetConnectionString(),
+                ["Storage:BasePath"] = Path.Combine(Path.GetTempPath(), $"tan-erp-notif-{Guid.NewGuid():N}"),
+                ["SeedTestData"] = "true"
+            }));
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IFirebaseTokenVerifier));
+                if (descriptor != null) services.Remove(descriptor);
+                services.AddSingleton<IFirebaseTokenVerifier, TestFirebaseTokenVerifier>();
+            });
+        });
+        _client = _factory.CreateClient();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+        await TestOnlyDataSeeder.SeedAsync(db, "Test", true, seedItemCatalogDemoData: true);
+
+        var t = DateTimeOffset.UtcNow;
+        string Payload() => $"{{\"resourceId\":\"{PoId}\",\"documentNumber\":\"PO-1\",\"actorDisplayName\":\"Maker\"}}";
+        var mine = Enumerable.Range(0, 3).Select(i => new Notification(
+            Guid.NewGuid(), OrgId, UserA, NotificationTypes.PurchaseOrderApprovalRequested, Payload(), $"po:{i}", t.AddMinutes(i))).ToArray();
+        var theirs = new Notification(Guid.NewGuid(), OrgId, UserB, NotificationTypes.PurchaseOrderApprovalRequested, Payload(), "po:other", t);
+        var orgB = new Notification(Guid.NewGuid(), TestOnlyDataSeeder.TestOrgBId, UserB, NotificationTypes.PurchaseOrderApprovalRequested, Payload(), "po:orgb", t);
+        db.Notifications.AddRange(mine);
+        db.Notifications.AddRange(theirs, orgB);
+        await db.SaveChangesAsync();
+        _mineIds = mine.OrderByDescending(n => n.CreatedAtUtc).Select(n => n.Id).ToArray();
+        _orgBRowId = orgB.Id;
+    }
+
+    public async Task DisposeAsync()
+    {
+        _client.Dispose();
+        await _factory.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, string? token = "token-org-a", Guid? membership = null)
+    {
+        var request = new HttpRequestMessage(method, url);
+        if (token is not null) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var membershipId = membership ?? (token == "token-org-b" ? TestOnlyDataSeeder.TestMembershipBId : TestOnlyDataSeeder.TestMembershipId);
+        request.Headers.Add("X-Membership-Id", membershipId.ToString());
+        return await _client.SendAsync(request);
+    }
+
+    private static async Task<string> CodeAsync(HttpResponseMessage response) =>
+        (await response.Content.ReadFromJsonAsync<ApiProblemDetails>())!.Code;
+
+    [Fact]
+    public async Task Requests_WithoutAuthentication_OrWithAnotherUsersMembership_AreRejected()
+    {
+        Assert.Equal(HttpStatusCode.Unauthorized, (await SendAsync(HttpMethod.Get, "/api/v1/notifications", token: null)).StatusCode);
+
+        var foreign = await SendAsync(HttpMethod.Get, "/api/v1/notifications", membership: TestOnlyDataSeeder.TestMembershipBId);
+        Assert.Equal(HttpStatusCode.Forbidden, foreign.StatusCode);
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", await CodeAsync(foreign));
+    }
+
+    [Fact]
+    public async Task List_ReturnsOnlyTheCallersRows_NewestFirst_WithDeepLinkAndNoRawIds()
+    {
+        var response = await SendAsync(HttpMethod.Get, "/api/v1/notifications?pageSize=500");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = (await response.Content.ReadFromJsonAsync<NotificationListResponse>())!;
+
+        Assert.Equal(_mineIds, body.Items.Select(i => i.Id).ToArray());
+        Assert.Equal(3, body.Pagination.TotalCount);
+        Assert.Equal(50, body.Pagination.PageSize);
+        Assert.All(body.Items, i => Assert.Equal($"/procurement/purchase-orders/{PoId}", i.DeepLink));
+        Assert.DoesNotContain("recipient", await (await SendAsync(HttpMethod.Get, "/api/v1/notifications")).Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Paging_AndUnreadFilter_Work()
+    {
+        var page2 = (await (await SendAsync(HttpMethod.Get, "/api/v1/notifications?page=2&pageSize=2")).Content.ReadFromJsonAsync<NotificationListResponse>())!;
+        Assert.Single(page2.Items);
+        Assert.Equal(2, page2.Pagination.TotalPages);
+
+        await SendAsync(HttpMethod.Post, $"/api/v1/notifications/{_mineIds[0]}/read");
+        var unread = (await (await SendAsync(HttpMethod.Get, "/api/v1/notifications?unreadOnly=true")).Content.ReadFromJsonAsync<NotificationListResponse>())!;
+        Assert.Equal(2, unread.Items.Count);
+    }
+
+    [Fact]
+    public async Task MarkRead_WithoutIdempotencyKey_Works_AndIsIdempotent()
+    {
+        var first = await SendAsync(HttpMethod.Post, $"/api/v1/notifications/{_mineIds[0]}/read");
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var a = (await first.Content.ReadFromJsonAsync<NotificationResponse>())!;
+        var b = (await (await SendAsync(HttpMethod.Post, $"/api/v1/notifications/{_mineIds[0]}/read")).Content.ReadFromJsonAsync<NotificationResponse>())!;
+
+        Assert.NotNull(a.ReadAtUtc);
+        Assert.Equal(a.ReadAtUtc, b.ReadAtUtc);
+        Assert.Equal(2, (await (await SendAsync(HttpMethod.Get, "/api/v1/notifications/unread-count")).Content.ReadFromJsonAsync<UnreadCountResponse>())!.UnreadCount);
+    }
+
+    [Fact]
+    public async Task MarkRead_OfAnotherUsersOrOrganizationsOrUnknownRow_IsTheSame404()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var otherUsersRow = await db.Notifications.Where(n => n.DedupeKey == "po:other").Select(n => n.Id).SingleAsync();
+
+        foreach (var id in new[] { otherUsersRow, _orgBRowId, Guid.NewGuid() })
+        {
+            var response = await SendAsync(HttpMethod.Post, $"/api/v1/notifications/{id}/read");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal("NOTIFICATION_NOT_FOUND", await CodeAsync(response));
+        }
+
+        Assert.Null((await db.Notifications.AsNoTracking().SingleAsync(n => n.Id == otherUsersRow)).ReadAtUtc);
+    }
+
+    [Fact]
+    public async Task ReadAll_OnlyTouchesTheCallersRowsInTheCurrentOrganization()
+    {
+        var response = await SendAsync(HttpMethod.Post, "/api/v1/notifications/read-all");
+        Assert.Equal(3, (await response.Content.ReadFromJsonAsync<MarkAllReadResponse>())!.UpdatedCount);
+
+        var b = await SendAsync(HttpMethod.Get, "/api/v1/notifications/unread-count", "token-org-b");
+        Assert.Equal(1, (await b.Content.ReadFromJsonAsync<UnreadCountResponse>())!.UnreadCount);   // user B's Org B row only
+        Assert.Equal(0, (await (await SendAsync(HttpMethod.Get, "/api/v1/notifications/unread-count")).Content.ReadFromJsonAsync<UnreadCountResponse>())!.UnreadCount);
+    }
+}
+```
+
+หมายเหตุ: `TestMembershipBId` เป็น membership ของ `TestUserIdB` ใน Org B (ตรวจ `TestOnlyDataSeeder` ก่อนเขียน; ถ้า user B ไม่มี membership ใน Org A การที่แถว `po:other` ของ B ใน Org A ไม่ขัด FK เพราะ FK ผูกกับ users/organizations แยกกัน).
+
+- [ ] **Step 2: รัน test เพื่อดูว่าล้ม**
+
+Run: `cd /Users/syaco/Documents/development/tan-erp && dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter "FullyQualifiedName~NotificationHandlerTests"`
+Expected: FAIL (compile error: `NotificationHandler` ไม่มี). Integration/Architecture ล้มด้วยเหตุผลเดียวกัน (ยังไม่มี controller/contracts).
+
+- [ ] **Step 3: implement handler**
+
+`backend/src/TanErp.Application/Notifications/NotificationHandler.cs`:
+
+```csharp
+using System.Text.Json;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Models;
+using TanErp.Application.Common.Results;
+
+namespace TanErp.Application.Notifications;
+
+/// <summary>
+/// A user's own notifications. Order of checks: active membership (401/403) → store keyed by (organization, user) → 404 for anything
+/// that is not the caller's. There is no permission key: access is "the row is mine". Deep links follow the reader's current permission.
+/// </summary>
+public class NotificationHandler
+{
+    private readonly IRequestAccessResolver _access;
+    private readonly INotificationStore _store;
+
+    public NotificationHandler(IRequestAccessResolver access, INotificationStore store)
+    {
+        _access = access;
+        _store = store;
+    }
+
+    private Task<Result<RequestAccessContext>> OwnerAsync(NotificationCaller caller, CancellationToken ct) =>
+        _access.ResolveMembershipAsync(caller.FirebaseUid, caller.MembershipId, ct);
+
+    public async Task<Result<NotificationPage>> ListAsync(NotificationCaller caller, bool unreadOnly, int page, int pageSize, CancellationToken ct = default)
+    {
+        var owner = await OwnerAsync(caller, ct);
+        if (owner.IsFailure) return Result<NotificationPage>.Failure(owner.Error);
+
+        var normalizedPage = Math.Max(page, 1);
+        var size = pageSize < 1 ? NotificationLimits.DefaultPageSize : Math.Min(pageSize, NotificationLimits.MaxPageSize);
+        var rows = await _store.ListAsync(owner.Value!.OrganizationId, owner.Value.ActorUserId, new NotificationListQuery(unreadOnly, normalizedPage, size), ct);
+
+        var granted = new Dictionary<string, bool>(StringComparer.Ordinal);
+        var items = new List<NotificationProjection>(rows.Items.Count);
+        foreach (var row in rows.Items) items.Add(await ProjectAsync(caller, row, granted, ct));
+
+        var totalPages = (int)Math.Ceiling(rows.TotalCount / (double)size);
+        return Result<NotificationPage>.Success(new NotificationPage(items, normalizedPage, size, rows.TotalCount, totalPages));
+    }
+
+    public async Task<Result<int>> CountUnreadAsync(NotificationCaller caller, CancellationToken ct = default)
+    {
+        var owner = await OwnerAsync(caller, ct);
+        if (owner.IsFailure) return Result<int>.Failure(owner.Error);
+        return Result<int>.Success(await _store.CountUnreadAsync(owner.Value!.OrganizationId, owner.Value.ActorUserId, ct));
+    }
+
+    public async Task<Result<NotificationProjection>> MarkReadAsync(NotificationCaller caller, Guid notificationId, CancellationToken ct = default)
+    {
+        var owner = await OwnerAsync(caller, ct);
+        if (owner.IsFailure) return Result<NotificationProjection>.Failure(owner.Error);
+
+        var row = await _store.MarkReadAsync(owner.Value!.OrganizationId, owner.Value.ActorUserId, notificationId, ct);
+        if (row is null) return Result<NotificationProjection>.Failure(new Error("NOTIFICATION_NOT_FOUND", "Notification not found."));
+        return Result<NotificationProjection>.Success(await ProjectAsync(caller, row, new Dictionary<string, bool>(StringComparer.Ordinal), ct));
+    }
+
+    public async Task<Result<int>> MarkAllReadAsync(NotificationCaller caller, CancellationToken ct = default)
+    {
+        var owner = await OwnerAsync(caller, ct);
+        if (owner.IsFailure) return Result<int>.Failure(owner.Error);
+        return Result<int>.Success(await _store.MarkAllReadAsync(owner.Value!.OrganizationId, owner.Value.ActorUserId, ct));
+    }
+
+    private async Task<NotificationProjection> ProjectAsync(NotificationCaller caller, NotificationRow row, Dictionary<string, bool> granted, CancellationToken ct)
+    {
+        // Stored payloads passed the allowlist when written and the column is a jsonb object, so a flat string map is the contract.
+        var payload = JsonSerializer.Deserialize<Dictionary<string, string>>(row.PayloadJson)
+            ?? throw new InvalidOperationException($"Notification {row.Id} has a null payload.");
+
+        string? deepLink = null;
+        var descriptor = NotificationTypeRegistry.Find(row.Type);
+        if (descriptor is not null)
+        {
+            if (!granted.TryGetValue(descriptor.TargetPermission, out var allowed))
+            {
+                allowed = (await _access.ResolveAsync(caller.FirebaseUid, caller.MembershipId, descriptor.TargetPermission, ct)).IsSuccess;
+                granted[descriptor.TargetPermission] = allowed;
+            }
+
+            if (allowed) deepLink = NotificationTypeRegistry.RenderDeepLink(descriptor, payload);
+        }
+
+        return new NotificationProjection(row.Id, row.Type, payload, deepLink, row.CreatedAtUtc, row.ReadAtUtc);
+    }
+}
+```
+
+- [ ] **Step 4: error code, resx, contracts, controller, DI**
+
+`ProblemDetailsMapper.cs` — ใต้บรรทัด `"ATTACHMENT_OWNER_LOCKED" => StatusCodes.Status409Conflict,` (:288) เพิ่ม:
+
+```csharp
+        "NOTIFICATION_NOT_FOUND" => StatusCodes.Status404NotFound,
+```
+
+`Errors.en.resx` และ `Errors.resx` — แทรกก่อน `</root>` (ใช้รูปแบบบรรทัดเดียวเหมือน `ATTACHMENT_*`):
+
+```xml
+  <data name="NOTIFICATION_NOT_FOUND_TITLE" xml:space="preserve"><value>Notification Not Found</value></data>
+  <data name="NOTIFICATION_NOT_FOUND_DETAIL" xml:space="preserve"><value>The notification was not found.</value></data>
+```
+
+```xml
+  <data name="NOTIFICATION_NOT_FOUND_TITLE" xml:space="preserve"><value>ไม่พบการแจ้งเตือน</value></data>
+  <data name="NOTIFICATION_NOT_FOUND_DETAIL" xml:space="preserve"><value>ไม่พบการแจ้งเตือนที่ต้องการ</value></data>
+```
+
+(ตัวแรกลง `Errors.en.resx` ตัวหลังลง `Errors.resx`.)
+
+`backend/src/TanErp.Api/Contracts/Notifications/NotificationContracts.cs`:
+
+```csharp
+using TanErp.Api.Contracts.Common;
+
+namespace TanErp.Api.Contracts.Notifications;
+
+/// <summary>One notification of the caller. <c>Payload</c> is display-safe strings only (document number, display names); <c>DeepLink</c> is null when the reader no longer holds the target permission.</summary>
+public sealed record NotificationResponse(
+    Guid Id,
+    string Type,
+    IReadOnlyDictionary<string, string> Payload,
+    string? DeepLink,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? ReadAtUtc);
+
+public sealed record NotificationListResponse(IReadOnlyList<NotificationResponse> Items, PaginationMetadataResponse Pagination);
+
+public sealed record UnreadCountResponse(int UnreadCount);
+
+public sealed record MarkAllReadResponse(int UpdatedCount);
+```
+
+`backend/src/TanErp.Api/Controllers/NotificationsController.cs`:
+
+```csharp
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TanErp.Api.Contracts.Common;
+using TanErp.Api.Contracts.Notifications;
+using TanErp.Api.ErrorHandling;
+using TanErp.Api.RequestContext;
+using TanErp.Application.Notifications;
+
+namespace TanErp.Api.Controllers;
+
+/// <summary>The caller's own in-app notifications. No business logic lives here.</summary>
+[ApiController]
+[Route("api/v1/notifications")]
+[Authorize]
+public class NotificationsController : ControllerBase
+{
+    private readonly NotificationHandler _handler;
+
+    public NotificationsController(NotificationHandler handler)
+    {
+        _handler = handler;
+    }
+
+    private NotificationCaller? ReadCaller(out IActionResult? failure)
+    {
+        var authenticated = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (authenticated.IsFailure)
+        {
+            failure = ProblemDetailsMapper.CreateProblemResult(authenticated.Error.Code, HttpContext);
+            return null;
+        }
+
+        failure = null;
+        return new NotificationCaller(authenticated.Value!.FirebaseUid, authenticated.Value.MembershipId, HttpContext.TraceIdentifier);
+    }
+
+    private IActionResult Problem(string code) => ProblemDetailsMapper.CreateProblemResult(code, HttpContext);
+
+    private static NotificationResponse To(NotificationProjection p) => new(p.Id, p.Type, p.Payload, p.DeepLink, p.CreatedAtUtc, p.ReadAtUtc);
+
+    [HttpGet]
+    [ProducesResponseType<NotificationListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> List([FromQuery] bool unreadOnly = false, [FromQuery] int page = 1, [FromQuery] int pageSize = NotificationLimits.DefaultPageSize, CancellationToken ct = default)
+    {
+        var caller = ReadCaller(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListAsync(caller, unreadOnly, page, pageSize, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+
+        var paged = result.Value!;
+        return Ok(new NotificationListResponse(
+            paged.Items.Select(To).ToList(),
+            new PaginationMetadataResponse(paged.Page, paged.PageSize, paged.TotalCount, paged.TotalPages)));
+    }
+
+    [HttpGet("unread-count")]
+    [ProducesResponseType<UnreadCountResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UnreadCount(CancellationToken ct)
+    {
+        var caller = ReadCaller(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.CountUnreadAsync(caller, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(new UnreadCountResponse(result.Value));
+    }
+
+    [HttpPost("{id:guid}/read")]
+    [ProducesResponseType<NotificationResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MarkRead([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadCaller(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.MarkReadAsync(caller, id, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(To(result.Value!));
+    }
+
+    [HttpPost("read-all")]
+    [ProducesResponseType<MarkAllReadResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> MarkAllRead(CancellationToken ct)
+    {
+        var caller = ReadCaller(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.MarkAllReadAsync(caller, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(new MarkAllReadResponse(result.Value));
+    }
+}
+```
+
+`Program.cs` — ใต้สามบรรทัดที่เพิ่มใน Task 5 เพิ่ม (grep `NotificationHandler` ก่อน, คาดว่าไม่มี):
+
+```csharp
+builder.Services.AddScoped<TanErp.Application.Notifications.NotificationHandler>();
+```
+
+- [ ] **Step 5: รัน test ให้ผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter "FullyQualifiedName~NotificationHandlerTests"` → Expected: PASS.
+Run: `dotnet test backend/tests/TanErp.ArchitectureTests/TanErp.ArchitectureTests.csproj` → Expected: PASS (4 tests).
+Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~NotificationEndpointsTests"` → Expected: PASS ทั้ง 6 (ต้องมี Docker). ถ้า `NotificationEndpointsTests` ล้มตรง seed Org B ให้ตรวจ `TestOnlyDataSeeder` ว่า user B ผูกกับ Org B จริง.
+
+- [ ] **Step 6: regenerate OpenAPI snapshot**
+
+Run: `UPDATE_OPENAPI=1 dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~OpenApiContractTests"`
+Run: `git diff --stat contracts/openapi/tan-erp.v1.json` → Expected: เพิ่มเท่านั้น (paths `/api/v1/notifications`, `/unread-count`, `/{id}/read`, `/read-all` + schemas `Notification*`, `UnreadCountResponse`, `MarkAllReadResponse`); `git diff contracts/openapi/tan-erp.v1.json | grep '^-[^-]' | wc -l` → Expected: `0` (ถ้ามีบรรทัดลบ แปลว่าแก้ contract เดิมโดยไม่ตั้งใจ — ตรวจก่อน).
+Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~OpenApiContractTests"` (ไม่มี `UPDATE_OPENAPI`) → Expected: PASS.
+Run: `dotnet build backend/TanErp.slnx --nologo -v q` → Expected: Build succeeded.
+
+- [ ] **Step 7: commit**
+
+```bash
+git add backend/src/TanErp.Application/Notifications/NotificationHandler.cs backend/src/TanErp.Api/Contracts/Notifications backend/src/TanErp.Api/Controllers/NotificationsController.cs backend/src/TanErp.Api/ErrorHandling/ProblemDetailsMapper.cs backend/src/TanErp.Api/Resources backend/src/TanErp.Api/Program.cs contracts/openapi/tan-erp.v1.json backend/tests/TanErp.UnitTests/Notifications/NotificationHandlerTests.cs backend/tests/TanErp.IntegrationTests/Api/NotificationEndpointsTests.cs backend/tests/TanErp.ArchitectureTests/LayerDependencyTests.cs
+git commit -F - <<'EOF'
+feat(notifications): add notifications API with own-only read and mark-read
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
