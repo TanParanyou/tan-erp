@@ -2703,3 +2703,1096 @@ feat(notifications): add notifications API with own-only read and mark-read
 Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 ```
+
+---
+
+## Task 7: Event-source hooks — เรียก `INotificationPublisher` ใน transaction เดิมของ 6 แหล่ง
+
+**Files:**
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/Estimates/EstimateStore.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/Items/CostRecordStore.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/Procurement/ProcurementStore.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/Projects/ProjectControlStore.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/Mrp/MrpStore.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/IdentityAdministrationStore.cs`
+- Test: ไม่มีไฟล์ test ใหม่ในขั้นนี้ — พิสูจน์พฤติกรรมใน Task 8; ขั้นนี้พิสูจน์ว่าของเดิมไม่พังด้วย regression ต่อ store
+
+**กติการ่วมทุกจุด (ตรวจแล้ว):**
+1. เรียก `await _notifications.PublishAsync(NotificationEvents.X(...), ct)` **หลัง** เปลี่ยน state ของ entity และ `Audit`/`AddAudit`, **ก่อน** `SaveChangesAsync` ตัวที่ commit การเปลี่ยนแปลงนั้น — publisher แค่ `Add` เข้า `AppDbContext` เดียวกัน (scoped) จึงถูกบันทึกหรือ rollback พร้อมกัน.
+2. ไม่เรียกในสาขาที่ return `Failure` ไปแล้ว และไม่ใส่ใน `catch`.
+3. ฉีด `INotificationPublisher notifications` เป็น **พารามิเตอร์สุดท้าย** ของ constructor. ตรวจแล้ว: `grep -rnE 'new (EstimateStore|CostRecordStore|ProcurementStore|ProjectControlStore|MrpStore|IdentityAdministrationStore)\(' backend/src backend/tests` **ไม่พบเลย** — ทุก store สร้างผ่าน DI และ fake ใน unit test (เช่น `FakeEstimateStore` ใน `GetQuotationDocumentHandlerTests.cs`) implement interface ซึ่งไม่เปลี่ยน → **ไม่มี test ที่ต้องแก้ constructor**. `INotificationPublisher` ลงทะเบียน scoped แล้วใน Task 5 (`Program.cs`).
+4. Payload ไม่มีตัวเลข/ราคา/ต้นทุน — factory ใน `NotificationEvents` (Task 3) ไม่มี parameter ที่รับตัวเลขได้.
+
+- [ ] **Step 1: ยืนยัน baseline**
+
+Run: `cd /Users/syaco/Documents/development/tan-erp && dotnet build backend/TanErp.slnx --nologo -v q` → Expected: Build succeeded (ถ้าแดงอยู่แล้ว ห้ามเริ่มแก้).
+
+### 7.1 Estimate submit — `EstimateStore.SubmitAsync`
+
+Hook point (ตรวจแล้ว): `EstimateStore.cs:648` เริ่ม `SubmitAsync`; transaction เปิดที่ `:655`; `estimate.SubmitCurrentRevision(...)` `~:758`; `_db.EstimateApprovalRequests.Add(request)` / `AddRange(steps)` `~:766–767`; `AddEstimateAudit(... "estimates.submitted" ...)` `~:768`; `_db.IdempotencyRecords.Add(...)` `~:772`; **`SaveChangesAsync` + `CommitAsync` `~:776–777` (SaveChanges ครั้งเดียวในเมธอด)** → วางหลัง `IdempotencyRecords.Add` ทันที.
+
+Same-transaction: จริง. ถ้าชน unique 23505 (idempotency race) บล็อก `catch` เรียก `tx.RollbackAsync()` + `_db.ChangeTracker.Clear()` → notification ที่ stage ไว้หายพร้อมกัน แล้ว replay ผู้ชนะ (ผู้ชนะเป็นผู้ส่ง notification) จึงไม่ซ้ำ.
+
+ผู้รับ = ผู้ตรวจลำดับแรก `steps[0]` (`Sequence = 1`; ตัดผู้ส่ง/ผู้แก้ล่าสุดแล้วโดย `FindIndependentReviewerAsync`). `TransitionId` = `request.Id` (สร้างใหม่ทุกครั้งที่ส่ง → ส่งใหม่หลัง return แจ้งอีกครั้ง).
+
+`EstimateStore.cs`:
+
+```csharp
+using TanErp.Application.Notifications;
+```
+
+```csharp
+    private readonly INotificationPublisher _notifications;
+
+    public EstimateStore(
+        AppDbContext db,
+        IClock clock,
+        IDocumentNumberGenerator documentNumberGenerator,
+        ICostResolver costResolver,
+        IConfiguration configuration,
+        ILogger<EstimateStore> logger,
+        INotificationPublisher notifications)
+    {
+        _notifications = notifications;
+        _logger = logger;
+```
+
+(ที่เหลือของ ctor คงเดิม) ใน `SubmitAsync` ต่อจาก `_db.IdempotencyRecords.Add(new IdempotencyRecord(... estimate.Id.ToString(), now));` ก่อน `try { await _db.SaveChangesAsync(...)`:
+
+```csharp
+            await _notifications.PublishAsync(
+                NotificationEvents.EstimateSubmitted(
+                    organizationId, estimate.BranchId, request.Id, actorUserId, estimate.Id, estimate.Number, steps[0].ReviewerUserId),
+                cancellationToken);
+```
+
+Regression: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~EstimateEndpointsTests" -m:1` → Expected: PASS เท่าเดิม (ต้องมี Docker).
+
+### 7.2 Cost record submit — `CostRecordStore.SubmitAsync`
+
+Hook point (ตรวจแล้ว): `CostRecordStore.cs:287` เริ่ม `SubmitAsync`; tx เปิด `:295`; `record.Submit(access.ActorUserId, now)` `~:331` (เปลี่ยน `RowVersion = Guid.NewGuid()`); `_db.AuditEvents.Add(audit)` `~:353`; **`SaveChangesAsync` `:355` + `CommitAsync`** → วางระหว่างสองบรรทัดนั้น. ทุก `return Failure` ก่อนหน้าเรียก `tx.RollbackAsync` แล้ว.
+
+ผู้รับ = ผู้ถือ `cost-records.approve` ยกเว้น maker: `record.CreatedByUserId`, `record.LastFinancialEditorId` (domain `Approve` ห้ามสองคนนี้ที่ `CostRecord.cs:170`); planner ตัด actor ให้. `TransitionId` = `record.RowVersion` หลัง `Submit`. `documentNumber` = รหัสสินค้า (`Item.Code`).
+
+`CostRecordStore.cs`:
+
+```csharp
+using TanErp.Application.Notifications;
+```
+
+```csharp
+    private readonly AppDbContext _db;
+    private readonly INotificationPublisher _notifications;
+
+    public CostRecordStore(AppDbContext db, INotificationPublisher notifications)
+    {
+        _db = db;
+        _notifications = notifications;
+    }
+```
+
+ใน `SubmitAsync` หลัง `_db.AuditEvents.Add(audit);` ก่อน `await _db.SaveChangesAsync(ct);`:
+
+```csharp
+        var itemCode = await _db.Items.AsNoTracking()
+            .Where(i => i.Id == itemId && i.OrganizationId == orgId)
+            .Select(i => i.Code)
+            .FirstAsync(ct);
+        await _notifications.PublishAsync(
+            NotificationEvents.CostRecordSubmitted(
+                orgId, record.BranchId, record.RowVersion, access.ActorUserId, record.Id, itemCode,
+                new[] { record.CreatedByUserId, record.LastFinancialEditorId }.Distinct().ToArray()),
+            ct);
+```
+
+Regression: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~CostRecordEndpointsTests|FullyQualifiedName~ItemCatalogEstimateFlowTests" -m:1` → Expected: PASS.
+
+### 7.3 Purchase Order submit — `ProcurementStore.PurchaseOrderActionAsync`
+
+Hook point (ตรวจแล้ว): เมธอดเดียวรองรับ Submit/Cancel/Approve/Reject (`ProcurementStore.cs:329`); `case PurchaseOrderAction.Submit: order.Submit(now);` `~:347`; `Audit(...)` `~:372`; `SaveChangesAsync` `:373` + `CommitAsync` ใน `try` ที่จับ `DbUpdateConcurrencyException`. **publish เฉพาะ `action == PurchaseOrderAction.Submit`** — วางหลัง `Audit(...)` ก่อน `try`.
+
+Same-transaction: จริง (SaveChanges ครั้งเดียว). `DbUpdateConcurrencyException` → `return Fail(...)` โดยไม่ commit → `await using tx` dispose = rollback.
+
+ผู้รับ = ผู้ถือ `purchase-orders.approve` ยกเว้น `order.CreatedByUserId`. `TransitionId` = `order.RowVersion` หลัง `Submit`.
+
+```csharp
+using TanErp.Application.Notifications;
+```
+
+```csharp
+    private readonly INotificationPublisher _notifications;
+
+    public ProcurementStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications)
+    {
+        _db = db;
+        _clock = clock;
+        _numbers = numbers;
+        _notifications = notifications;
+    }
+```
+
+```csharp
+            if (action == PurchaseOrderAction.Submit)
+            {
+                await _notifications.PublishAsync(
+                    NotificationEvents.PurchaseOrderSubmitted(
+                        orgId, order.BranchId, order.RowVersion, access.ActorUserId, order.Id, order.Number, order.CreatedByUserId),
+                    ct);
+            }
+```
+
+Regression: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~ProcurementEndpointsTests" -m:1` → Expected: PASS.
+
+### 7.4 Change Order submit — `ProjectControlStore.ChangeOrderActionAsync`
+
+Hook point (ตรวจแล้ว): `ProjectControlStore.cs:401`; `case ChangeOrderAction.Submit: order.Submit(now);` `:423`; `Audit(...)` `~:453`; `SaveChangesAsync` + `CommitAsync` ใน `try` `~:456–457`. วางหลัง `Audit(...)` เฉพาะ `action == ChangeOrderAction.Submit`. `project` ถูกโหลดแล้ว (`AsNoTracking`) → ใช้ `project.BranchId`.
+
+Same-transaction: จริง (SaveChanges ครั้งเดียว; concurrency → return Fail โดยไม่ commit = rollback). ผู้รับ = ผู้ถือ `projects.change-orders.approve` ยกเว้น `order.CreatedByUserId` (domain `ProjectChangeOrder.cs:75`).
+
+```csharp
+using TanErp.Application.Notifications;
+```
+
+```csharp
+    private readonly INotificationPublisher _notifications;
+
+    public ProjectControlStore(AppDbContext db, IClock clock, IDocumentNumberGenerator documentNumberGenerator, INotificationPublisher notifications)
+    {
+        _db = db;
+        _clock = clock;
+        _documentNumberGenerator = documentNumberGenerator;
+        _notifications = notifications;
+    }
+```
+
+```csharp
+            if (action == ChangeOrderAction.Submit)
+            {
+                await _notifications.PublishAsync(
+                    NotificationEvents.ChangeOrderSubmitted(
+                        orgId, project.BranchId, order.RowVersion, access.ActorUserId, order.Id, projectId, order.Number, order.CreatedByUserId),
+                    ct);
+            }
+```
+
+Regression: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~ProjectControlEndpointsTests" -m:1` → Expected: PASS.
+
+### 7.5 MRP run — `MrpStore.CreateRunAsync`
+
+Hook point (ตรวจแล้ว): tx `RepeatableRead` เปิด `MrpStore.cs:135`; สร้าง `run` + `AddRecommendation` วน `plan.Orders` `~:169–175`; `_db.MrpRuns.Add(run)` `:177`; `Audit(... "mrp.run.created" ...)` `:178`; `IdempotencyRecords.Add` `:179`; **`SaveChangesAsync` `:180` + `CommitAsync` `:181`** → วางหลัง `IdempotencyRecords.Add` เฉพาะ `plan.Orders.Count > 0` (run ว่างไม่มีอะไรให้อนุมัติ). ผู้รับ = ผู้ถือ `mrp.approve` ยกเว้นผู้สร้าง run (planner ตัด actor). `TransitionId` = `run.Id`.
+
+Same-transaction: จริง. query ของ publisher (`Users`, `Notifications`, `Memberships`) เป็นการอ่านใน snapshot `RepeatableRead` เดียวกัน ไม่เพิ่มความเสี่ยง serialization failure จากการเขียน.
+
+```csharp
+using TanErp.Application.Notifications;
+```
+
+```csharp
+    private readonly INotificationPublisher _notifications;
+
+    public MrpStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications)
+    {
+        _db = db;
+        _clock = clock;
+        _numbers = numbers;
+        _notifications = notifications;
+    }
+```
+
+```csharp
+            if (plan.Orders.Count > 0)
+            {
+                await _notifications.PublishAsync(
+                    NotificationEvents.MrpRunCreated(orgId, access.BranchId.Value, run.Id, access.ActorUserId, number),
+                    ct);
+            }
+```
+
+Regression: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~MrpEndpointsTests" -m:1` → Expected: PASS.
+
+### 7.6 Role assignment request — `IdentityAdministrationStore` (2 จุด)
+
+**ข้อควรระวัง (transaction boundary ไม่ตรงไปตรงมา):** store นี้ไม่เรียก `BeginTransactionAsync` ในเมธอดเอง แต่ทุกเมธอดห่อด้วย `RunAsync` (`IdentityAdministrationStore.cs:463`) ซึ่งเปิด transaction `Serializable`, เรียก `_db.ChangeTracker.Clear()` ก่อนทุก attempt (retry ล้าง notification ที่ stage ค้าง), commit เมื่อ result สำเร็จ และ rollback เมื่อ failure/exception. ดังนั้น "ใน transaction เดียวกัน" เป็นจริง **เฉพาะเมื่อ publish อยู่ภายในแลมบ์ดาที่ส่งให้ `RunAsync`** และก่อน `SaveChangesAsync` ของสาขานั้น — ห้ามย้ายไปไว้หลัง `ReloadUserAsync`/นอกแลมบ์ดา. `CreateUserAsync` มี `SaveChangesAsync` เดียว (`:177`) ใน `try` ที่จับ unique violation → return Fail → `RunAsync` rollback. `AssignRoleAsync` สาขา `RequiresApproval` save ที่ `:337` (สาขา assign ตรง `:352` ไม่แจ้ง).
+
+ผู้รับ = ผู้ถือ `roles.assign-approval` ยกเว้นผู้ขอ (actor) และ user เป้าหมาย. `TransitionId` = `request.Id` (หนึ่ง request = หนึ่ง event; สร้าง user หลาย role ที่ต้องอนุมัติ → หลาย event, dedupe key ต่างกัน).
+
+```csharp
+using TanErp.Application.Notifications;
+```
+
+```csharp
+    private readonly INotificationPublisher _notifications;
+
+    public IdentityAdministrationStore(AppDbContext db, IClock clock, INotificationPublisher notifications)
+    {
+        _db = db;
+        _clock = clock;
+        _notifications = notifications;
+    }
+```
+
+(a) `CreateUserAsync` ในลูป `foreach (var role in roles)` สาขา `role.RequiresApproval` หลัง `_db.RoleAssignmentRequests.Add(request);` (`~:154`):
+
+```csharp
+                    await _notifications.PublishAsync(
+                        NotificationEvents.RoleAssignmentRequested(
+                            organizationId, request.Id, actor.UserId, user.Id, input.DisplayName, role.Name),
+                        cancellationToken);
+```
+
+(b) `AssignRoleAsync` สาขา `if (role.RequiresApproval)` หลัง `_db.IdempotencyRecords.Add(...)` ก่อน `await _db.SaveChangesAsync(cancellationToken);` (`:337`):
+
+```csharp
+                var subjectName = await _db.Users.AsNoTracking()
+                    .Where(u => u.Id == membership.UserId)
+                    .Select(u => u.DisplayName)
+                    .FirstAsync(cancellationToken);
+                await _notifications.PublishAsync(
+                    NotificationEvents.RoleAssignmentRequested(
+                        organizationId, request.Id, actor.UserId, membership.UserId, subjectName, role.Name),
+                    cancellationToken);
+```
+
+Regression: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~IdentityAdministrationEndpointsTests|FullyQualifiedName~UsersEndpointsTests" -m:1` → Expected: PASS.
+
+- [ ] **Step 2: build + กฎสถาปัตยกรรม**
+
+Run: `dotnet build backend/TanErp.slnx --nologo -v q` → Expected: Build succeeded (ถ้ามี `new Store(` ที่ grep พลาด จะแดงตรงนี้ → เพิ่ม argument).
+Run: `dotnet test backend/tests/TanErp.ArchitectureTests/TanErp.ArchitectureTests.csproj` → Expected: PASS.
+
+- [ ] **Step 3: regression ทั้ง 6 กลุ่มพร้อมกัน**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~EstimateEndpointsTests|FullyQualifiedName~CostRecordEndpointsTests|FullyQualifiedName~ProcurementEndpointsTests|FullyQualifiedName~ProjectControlEndpointsTests|FullyQualifiedName~MrpEndpointsTests|FullyQualifiedName~IdentityAdministrationEndpointsTests" -m:1` → Expected: PASS ทั้งหมด.
+
+- [ ] **Step 4: commit**
+
+```bash
+git add backend/src/TanErp.Infrastructure/Persistence/Estimates/EstimateStore.cs backend/src/TanErp.Infrastructure/Persistence/Items/CostRecordStore.cs backend/src/TanErp.Infrastructure/Persistence/Procurement/ProcurementStore.cs backend/src/TanErp.Infrastructure/Persistence/Projects/ProjectControlStore.cs backend/src/TanErp.Infrastructure/Persistence/Mrp/MrpStore.cs backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/IdentityAdministrationStore.cs
+git commit -F - <<'EOF'
+feat(notifications): publish approval-requested notifications in the source transaction
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
+
+---
+
+## Task 8: Integration tests — publish ใน transaction เดียวกัน, rollback, scope ผู้รับ, own-only end-to-end
+
+**Files:**
+- Modify: `backend/tests/TanErp.IntegrationTests/Api/NotificationEndpointsTests.cs` (**สร้างแล้วใน Task 6 — แก้ด้วย Edit/แทรก ห้ามสร้างใหม่**)
+- Modify: `backend/tests/TanErp.IntegrationTests/Api/EstimateEndpointsTests.cs` (เพิ่ม 1 test: Estimate ต้องใช้ helper `SetupCalculatedEstimateAsync` ที่เป็น `private` ของคลาสนั้น จึงเขียนในไฟล์นั้นเพื่อไม่ต้องคัดลอก ~300 บรรทัด setup — ความต่างจากข้อกำหนดเดิมที่ให้ทุก test อยู่ใน `NotificationEndpointsTests`)
+
+**แหล่ง event ที่ใช้ใน `NotificationEndpointsTests`: Purchase Order submit** (flow สั้นที่สุดที่ขับผ่าน HTTP ได้: supplier → PO → `POST /purchase-orders/{id}/submit`; ผู้สร้างอนุมัติเองไม่ได้ จึงมี maker–checker จริง). ส่วน Estimate (ผู้รับแบบ explicit reviewer) อยู่ใน Step 4.
+
+**ข้อเท็จจริงจาก seed (ตรวจแล้ว):** `Test Admin` role ถือ `*.approve` ครบ (`TestOnlyDataSeeder.cs:150–225`) → ผู้ใช้ A (`TestUserId`) เป็นทั้ง maker และเป็น "ผู้ถือ permission" ที่ต้องถูกตัดออก; `TestUserIdB` มี membership ใน Org A คือ `TestCostReviewerMembershipId` (ใช้เป็นผู้ตรวจ Estimate ใน `EstimateEndpointsTests`); ผู้อนุมัติ PO ที่ไม่ใช่ maker ต้องสร้างเอง (รูปแบบเดียวกับ `ProcurementEndpointsTests.cs:94–97`).
+
+- [ ] **Step 1: เตรียม fixture ใน `NotificationEndpointsTests`** (แก้ของเดิมจาก Task 6)
+
+1a. เพิ่ม using และ interceptor ท้ายไฟล์ (นอกคลาส, namespace เดียวกัน) — ใช้พิสูจน์ rollback โดยทำให้ `SaveChangesAsync` ล้ม *หลัง* publisher stage แถวแล้ว:
+
+```csharp
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using TanErp.Api.Contracts.Procurement;
+using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Organization;
+using TanErp.Domain.Procurement;
+```
+
+```csharp
+/// <summary>Fails the next save that contains a staged notification, so the business change must roll back with it.</summary>
+public sealed class FailNextNotificationSaveInterceptor : SaveChangesInterceptor
+{
+    private static int _armed;
+
+    public static void Arm() => Interlocked.Exchange(ref _armed, 1);
+
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+    {
+        var staged = eventData.Context!.ChangeTracker.Entries<Notification>().Any(e => e.State == EntityState.Added);
+        if (staged && Interlocked.Exchange(ref _armed, 0) == 1)
+            throw new DbUpdateConcurrencyException("Forced failure after notifications were staged.");
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+}
+```
+
+1b. ในคลาส: เพิ่ม field และ token ใหม่ (`token-approver`, `token-noperm`, `token-inactive`):
+
+```csharp
+    private const string UidApprover = "uid-notif-approver";
+    private const string UidNoPerm = "uid-notif-noperm";
+    private const string UidInactive = "uid-notif-inactive";
+    private static readonly Guid ApproverUserId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f5b01");
+    private static readonly Guid ApproverMembershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f5b02");
+    private static readonly Guid NoPermUserId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f5b03");
+    private static readonly Guid NoPermMembershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f5b04");
+    private static readonly Guid InactiveUserId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f5b05");
+    private static readonly Guid InactiveMembershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f5b06");
+```
+
+แก้ `TestFirebaseTokenVerifier` ให้ switch มี 3 case เพิ่ม:
+
+```csharp
+                "token-approver" => UidApprover,
+                "token-noperm" => UidNoPerm,
+                "token-inactive" => UidInactive,
+```
+
+ใน `builder.ConfigureServices(...)` เพิ่มบรรทัด (EF Core หยิบ `IInterceptor` ที่ลงทะเบียนใน application service provider):
+
+```csharp
+                services.AddSingleton<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, FailNextNotificationSaveInterceptor>();
+```
+
+ใน `InitializeAsync` ก่อน `var t = DateTimeOffset.UtcNow;` เพิ่ม:
+
+```csharp
+        var adminRole = await db.Roles.SingleAsync(r => r.OrganizationId == OrgId && r.Name == "Test Admin");
+        db.Users.Add(new User(ApproverUserId, UidApprover, "notif-approver@example.test", "Notif Approver", true));
+        db.Memberships.Add(new Membership(ApproverMembershipId, OrgId, TestOnlyDataSeeder.TestBranchId, ApproverUserId, isActive: true));
+        db.MembershipRoles.Add(new MembershipRole(ApproverMembershipId, adminRole.Id, OrgId));
+        // Member with no role at all: reachable by the API, holds no approve permission.
+        db.Users.Add(new User(NoPermUserId, UidNoPerm, "notif-noperm@example.test", "Notif NoPerm", true));
+        db.Memberships.Add(new Membership(NoPermMembershipId, OrgId, TestOnlyDataSeeder.TestBranchId, NoPermUserId, isActive: true));
+        // Holds the admin role but the membership is inactive: must never be a recipient.
+        db.Users.Add(new User(InactiveUserId, UidInactive, "notif-inactive@example.test", "Notif Inactive", true));
+        db.Memberships.Add(new Membership(InactiveMembershipId, OrgId, TestOnlyDataSeeder.TestBranchId, InactiveUserId, isActive: false));
+        db.MembershipRoles.Add(new MembershipRole(InactiveMembershipId, adminRole.Id, OrgId));
+        await db.SaveChangesAsync();
+```
+
+> หมายเหตุ: ผู้ใช้ B/Org B ที่ seed ใน Task 6 ไม่ถูกแตะ. การเพิ่ม `Approver` ไม่กระทบ test เดิมของ Task 6 (แถวที่ seed ไว้ผูก `UserA`/`UserB` โดยตรง ไม่ผ่าน publisher).
+
+- [ ] **Step 2: เขียน test ที่ล้มก่อน** (แทรกต่อจากเมธอด `CodeAsync` ของคลาสเดิม)
+
+```csharp
+    private async Task<HttpResponseMessage> SendJsonAsync(
+        HttpMethod method, string url, object? body, string token, Guid membership, string? key = null, Guid? ifMatch = null)
+    {
+        var request = new HttpRequestMessage(method, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Add("X-Membership-Id", membership.ToString());
+        if (key is not null) request.Headers.Add("Idempotency-Key", key);
+        if (ifMatch.HasValue) request.Headers.Add("If-Match", $"\"{ifMatch.Value}\"");
+        if (body is not null) request.Content = JsonContent.Create(body);
+        return await _client.SendAsync(request);
+    }
+
+    private static readonly Guid MembershipA = TestOnlyDataSeeder.TestMembershipId;
+
+    private async Task<PurchaseOrderResponse> CreateDraftPurchaseOrderAsync()
+    {
+        var supplier = await SendJsonAsync(HttpMethod.Post, "/api/v1/suppliers",
+            new SupplierRequest("บริษัท ไม้ดี จำกัด", "Good Wood", "0105500000001", "คุณขาย", "021234567", "sales@example.test", 30),
+            "token-org-a", MembershipA, key: Guid.NewGuid().ToString("N"));
+        var supplierId = (await supplier.Content.ReadFromJsonAsync<SupplierResponse>())!.Id;
+        var created = await SendJsonAsync(HttpMethod.Post, "/api/v1/purchase-orders",
+            new PurchaseOrderRequest(supplierId, null, new DateOnly(2026, 11, 15), "ส่งหน้างาน",
+                new List<PurchaseOrderLineRequest> { new(TestOnlyDataSeeder.TestItemCatalogPlywoodId, 10m, 1250m) }),
+            "token-org-a", MembershipA, key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        return (await created.Content.ReadFromJsonAsync<PurchaseOrderResponse>())!;
+    }
+
+    private Task<HttpResponseMessage> SubmitAsync(PurchaseOrderResponse order) =>
+        SendJsonAsync(HttpMethod.Post, $"/api/v1/purchase-orders/{order.Id}/submit", new PurchaseOrderActionRequest(null),
+            "token-org-a", MembershipA, ifMatch: order.RowVersion);
+
+    private async Task<NotificationListResponse> ListAsync(string token, Guid membership, string query = "")
+    {
+        var response = await SendJsonAsync(HttpMethod.Get, $"/api/v1/notifications{query}", null, token, membership);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<NotificationListResponse>())!;
+    }
+
+    [Fact]
+    public async Task SubmitPurchaseOrder_NotifiesTheOtherApproverOnce_WithPayloadFreeOfFiguresAndPii_AndNotTheMaker()
+    {
+        var order = await CreateDraftPurchaseOrderAsync();
+        Assert.Equal(HttpStatusCode.OK, (await SubmitAsync(order)).StatusCode);
+
+        var approver = await ListAsync("token-approver", ApproverMembershipId);
+        var item = Assert.Single(approver.Items);
+        Assert.Equal(NotificationTypes.PurchaseOrderApprovalRequested, item.Type);
+        Assert.Equal($"/procurement/purchase-orders/{order.Id}", item.DeepLink);
+        Assert.Equal(
+            new[] { "actorDisplayName", "documentNumber", "resourceId" },
+            item.Payload.Keys.OrderBy(k => k, StringComparer.Ordinal).ToArray());
+        Assert.Equal(order.Number, item.Payload["documentNumber"]);
+        Assert.Equal(TestOnlyDataSeeder.TestUserDisplayName, item.Payload["actorDisplayName"]);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var stored = await db.Notifications.AsNoTracking()
+            .Where(n => n.Type == NotificationTypes.PurchaseOrderApprovalRequested && n.DedupeKey.StartsWith("purchase-order.approval-requested:"))
+            .ToListAsync();
+        var row = Assert.Single(stored);
+        Assert.Equal(ApproverUserId, row.RecipientUserId);
+        foreach (var forbidden in new[] { "1250", "12500", "sales@example.test", "0105500000001", "021234567", TestOnlyDataSeeder.TestUserEmail })
+        {
+            Assert.DoesNotContain(forbidden, row.PayloadJson.Replace(order.Id.ToString(), string.Empty), StringComparison.Ordinal);
+        }
+
+        // Maker, a member without the permission and an inactive holder of the permission get nothing.
+        Assert.Empty((await ListAsync("token-org-a", MembershipA, "?unreadOnly=true")).Items.Where(i => i.Type == NotificationTypes.PurchaseOrderApprovalRequested && i.Payload["resourceId"] == order.Id.ToString()));
+        Assert.Empty((await ListAsync("token-noperm", NoPermMembershipId)).Items);
+        Assert.False(await db.Notifications.AnyAsync(n => n.RecipientUserId == InactiveUserId));
+    }
+
+    [Fact]
+    public async Task SubmitPurchaseOrder_WhenTheSaveFails_LeavesNoNotificationAndNoStatusChange_AndRetryNotifiesOnce()
+    {
+        var order = await CreateDraftPurchaseOrderAsync();
+
+        FailNextNotificationSaveInterceptor.Arm();
+        var failed = await SubmitAsync(order);
+        Assert.Equal(HttpStatusCode.Conflict, failed.StatusCode);
+        Assert.Equal("PURCHASE_ORDER_VERSION_CONFLICT", await CodeAsync(failed));
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Assert.Equal(PurchaseOrderStatus.Draft, (await db.PurchaseOrders.AsNoTracking().SingleAsync(o => o.Id == order.Id)).Status);
+            Assert.False(await db.Notifications.AnyAsync(n => n.RecipientUserId == ApproverUserId));
+        }
+
+        Assert.Equal(HttpStatusCode.OK, (await SubmitAsync(order)).StatusCode);
+        Assert.Single((await ListAsync("token-approver", ApproverMembershipId)).Items);
+    }
+
+    [Fact]
+    public async Task OwnOnly_TheMakerNeverSeesTheApproversRow_AndAnotherOrganizationGets404()
+    {
+        var order = await CreateDraftPurchaseOrderAsync();
+        await SubmitAsync(order);
+        var approverRowId = Assert.Single((await ListAsync("token-approver", ApproverMembershipId)).Items).Id;
+
+        Assert.DoesNotContain(approverRowId, (await ListAsync("token-org-a", MembershipA, "?pageSize=50")).Items.Select(i => i.Id));
+
+        foreach (var (token, membership) in new[] { ("token-org-a", MembershipA), ("token-org-b", TestOnlyDataSeeder.TestMembershipBId) })
+        {
+            var response = await SendJsonAsync(HttpMethod.Post, $"/api/v1/notifications/{approverRowId}/read", null, token, membership);
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal("NOTIFICATION_NOT_FOUND", await CodeAsync(response));
+        }
+
+        Assert.Null(Assert.Single((await ListAsync("token-approver", ApproverMembershipId)).Items).ReadAtUtc);
+    }
+
+    [Fact]
+    public async Task UnreadCount_DecrementsOnMarkRead_AndReadAllClearsOnlyTheCallersRows()
+    {
+        foreach (var _ in Enumerable.Range(0, 2))
+        {
+            await SubmitAsync(await CreateDraftPurchaseOrderAsync());
+        }
+
+        async Task<int> UnreadAsync(string token, Guid membership) =>
+            (await (await SendJsonAsync(HttpMethod.Get, "/api/v1/notifications/unread-count", null, token, membership))
+                .Content.ReadFromJsonAsync<UnreadCountResponse>())!.UnreadCount;
+
+        Assert.Equal(2, await UnreadAsync("token-approver", ApproverMembershipId));
+        var first = (await ListAsync("token-approver", ApproverMembershipId)).Items[0].Id;
+
+        Assert.Equal(HttpStatusCode.OK, (await SendJsonAsync(HttpMethod.Post, $"/api/v1/notifications/{first}/read", null, "token-approver", ApproverMembershipId)).StatusCode);
+        Assert.Equal(1, await UnreadAsync("token-approver", ApproverMembershipId));
+
+        var readAll = await SendJsonAsync(HttpMethod.Post, "/api/v1/notifications/read-all", null, "token-approver", ApproverMembershipId);
+        Assert.Equal(1, (await readAll.Content.ReadFromJsonAsync<MarkAllReadResponse>())!.UpdatedCount);
+        Assert.Equal(0, await UnreadAsync("token-approver", ApproverMembershipId));
+        // UserA's three seeded rows (Task 6 fixture) are untouched by the approver's read-all.
+        Assert.Equal(3, await UnreadAsync("token-org-a", MembershipA));
+    }
+```
+
+- [ ] **Step 3: รันให้ล้มก่อน (ยังไม่มีการ publish ถ้ายังไม่ได้ทำ Task 7)**
+
+ลำดับงานจริง: Task 7 เสร็จก่อนแล้ว จึง **คาดว่า test ผ่านทันที**; เพื่อยืนยันว่า test จับของจริง ให้ทำ mutation ใน Step 6 แทนการ revert Task 7. ถ้ารันที่นี่แล้วล้ม ให้ตรวจ:
+- `FailNextNotificationSaveInterceptor` ไม่ทำงาน (rollback test ได้ 200 แทน 409) → EF ไม่หยิบ `IInterceptor` จาก DI; แก้โดยลงทะเบียนใน `ConfigureServices` ด้วย `services.AddDbContext<AppDbContext>` ซ้ำเฉพาะ test ไม่ได้ (จะทับ options) — ให้ใช้ `services.ConfigureDbContext<AppDbContext>(o => o.AddInterceptors(new FailNextNotificationSaveInterceptor()))` แทน.
+- `Assert.Equal(3, await UnreadAsync("token-org-a", ...))` ล้ม → ตรวจว่า Task 6 seed UserA ไว้ 3 แถวและไม่มี test ใดใน class เดียวกัน mark read ไว้ (xUnit สร้าง instance ใหม่ + container ใหม่ต่อ test จึงแยกกัน).
+
+Run: `cd /Users/syaco/Documents/development/tan-erp && dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~NotificationEndpointsTests" -m:1`
+Expected: PASS ทั้ง 10 (6 จาก Task 6 + 4 ใหม่) — ต้องมี Docker.
+
+- [ ] **Step 4: test Estimate (ผู้รับแบบ explicit reviewer) ใน `EstimateEndpointsTests`**
+
+เพิ่ม `using TanErp.Domain.Notifications;` และ test (ท้ายกลุ่ม `Submit_*`). ผู้ตรวจ default policy คือ `TestUserIdB` (membership `TestCostReviewerMembershipId`) ตามที่ `EstimateEndpointsTests.cs:972–980` ใช้อ่าน review queue:
+
+```csharp
+    [Fact]
+    public async Task Submit_NotifiesOnlyTheFirstReviewer_WithPayloadFreeOfFigures()
+    {
+        var (estimate, _, calculatedRevision) = await SetupCalculatedEstimateAsync($"notify-{Guid.NewGuid():N}");
+        var current = await GetEstimateAsync(estimate.Id);
+
+        var submitRequest = CreateAuthenticatedRequest(
+            HttpMethod.Post, $"/api/v1/estimates/{estimate.Id}/submit", "token-org-a", MembershipAId);
+        submitRequest.Headers.Add("If-Match", $"\"{current.RowVersion}\"");
+        submitRequest.Headers.Add("Idempotency-Key", $"idemp-notify-{Guid.NewGuid():N}");
+        submitRequest.Content = JsonContent.Create(new SubmitEstimateRequest(1, calculatedRevision.CalculationVersion, null));
+        var submitted = await _client.SendAsync(submitRequest);
+        Assert.Equal(HttpStatusCode.OK, submitted.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var rows = await db.Notifications.AsNoTracking()
+            .Where(n => n.Type == NotificationTypes.EstimateApprovalRequested)
+            .ToListAsync();
+        var row = Assert.Single(rows);
+        Assert.Equal(TestOnlyDataSeeder.TestUserIdB, row.RecipientUserId);
+        Assert.NotEqual(UserAId, row.RecipientUserId);
+        Assert.Contains(current.Number, row.PayloadJson, StringComparison.Ordinal);
+        using var payload = System.Text.Json.JsonDocument.Parse(row.PayloadJson);
+        Assert.Equal(
+            new[] { "actorDisplayName", "documentNumber", "resourceId" },
+            payload.RootElement.EnumerateObject().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal).ToArray());
+        foreach (var forbidden in new[] { "grandTotal", "netCost", "margin", "price", "cost", "amount", "total" })
+        {
+            Assert.DoesNotContain(forbidden, row.PayloadJson, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var reviewerList = await _client.SendAsync(CreateAuthenticatedRequest(
+            HttpMethod.Get, "/api/v1/notifications", "token-org-b", TestOnlyDataSeeder.TestCostReviewerMembershipId));
+        Assert.Equal(HttpStatusCode.OK, reviewerList.StatusCode);
+        Assert.Contains(estimate.Id.ToString(), await reviewerList.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+    }
+```
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~Submit_NotifiesOnlyTheFirstReviewer" -m:1` → Expected: PASS. (ถ้า `GetEstimateAsync` คืน `RowVersion` คนละชนิดกับ `Guid` ให้ใช้รูปแบบเดียวกับ `EstimateEndpointsTests.cs:963`.)
+
+- [ ] **Step 5: รัน test ทั้งกลุ่ม**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~Notification" -m:1` → Expected: PASS ทั้งหมด (รวม `NotificationInfrastructureTests` จาก Task 5).
+
+- [ ] **Step 6: mutation check — พิสูจน์ว่า test จับ regression จริง** (ตามแบบ G-01 Task 8 step 3; BSD `sed -i ''`; เงื่อนไขต้องเป็น runtime-false/true ไม่ใช่ `if (false)` เพราะ CS0162)
+
+6a. **ตัด maker ออก** — maker ถูกตัดสองชั้น (resolver: `ExcludedUserIds`; planner: `excluded` ที่รวม actor) จึงต้องทำ mutation ทั้งสองชั้นพร้อมกัน:
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp
+sed -i '' 's/\.Where(m => !excluded\.Contains(m\.UserId))/.Where(m => m.UserId != Guid.Empty)/' backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationRecipientResolver.cs
+sed -i '' 's/&& !excluded\.Contains(id))/\&\& excluded.Count < 99)/' backend/src/TanErp.Application/Notifications/NotificationPublishPlanner.cs
+git diff --stat   # Expected: 2 files changed
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~SubmitPurchaseOrder_NotifiesTheOtherApproverOnce" -m:1
+```
+
+Expected: **FAIL** (maker ได้ notification: `Assert.Empty(...)` ของ UserA ล้ม / `Assert.Single(stored)` ได้ 2 แถว).
+Revert: `git checkout -- backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationRecipientResolver.cs backend/src/TanErp.Application/Notifications/NotificationPublishPlanner.cs` แล้วรันซ้ำ → PASS.
+
+(ทำเพียงชั้นเดียวแล้ว test ยัง PASS เป็นพฤติกรรมที่ตั้งใจ = defense in depth ไม่ใช่ test อ่อน.)
+
+6b. **own-only filter**:
+
+```bash
+sed -i '' 's/&& n\.RecipientUserId == userId)/\&\& (n.RecipientUserId == userId || userId != Guid.Empty))/' backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationStore.cs
+git diff --stat   # Expected: 1 file changed
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~OwnOnly_|FullyQualifiedName~List_ReturnsOnlyTheCallersRows|FullyQualifiedName~MarkRead_OfAnotherUsers" -m:1
+```
+
+Expected: **FAIL** (maker เห็นแถวของผู้อนุมัติ; mark-read ของคนอื่นได้ 200 แทน 404). Revert: `git checkout -- backend/src/TanErp.Infrastructure/Persistence/Notifications/NotificationStore.cs` แล้วรันซ้ำ → PASS.
+
+6c. ยืนยันว่าไม่มี mutation ค้าง: `git status --short backend/src` → Expected: ว่าง (ก่อน commit Step 7 จะมีแค่ไฟล์ test).
+
+- [ ] **Step 7: commit**
+
+```bash
+git add backend/tests/TanErp.IntegrationTests/Api/NotificationEndpointsTests.cs backend/tests/TanErp.IntegrationTests/Api/EstimateEndpointsTests.cs
+git commit -F - <<'EOF'
+test(notifications): cover publish, rollback, recipient scope and own-only end to end
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
+
+---
+
+## Task 9: Frontend plumbing — generated API, api-client, type whitelist, `useNotifications`, messages
+
+**Files:**
+- Regenerate: `frontend/src/generated/api/tan-erp.v1.ts`
+- Modify: `frontend/src/lib/api/api-client.ts`, `frontend/src/lib/api/api-client.test.ts`
+- Create: `frontend/src/lib/notifications/notification-types.ts`, `frontend/src/lib/notifications/notification-types.test.ts`
+- Create: `frontend/src/hooks/useNotifications.ts`, `frontend/src/hooks/useNotifications.test.tsx`
+- Modify: `frontend/src/messages/th.json`, `frontend/src/messages/en.json`
+
+**Reuse check (ตรวจแล้ว):** ใช้ `useApiRequestContext` (`lib/api/use-api-request-context.ts`) และรูปแบบ query key `["business", membershipId, locale, ...]` เหมือน `useAttachments.ts`. **ไม่มี helper polling ในรีโป** (`grep -rln 'refetchInterval\|visibilityState\|visibilitychange' frontend/src` ไม่พบไฟล์) จึงใช้ `refetchInterval` + `refetchIntervalInBackground: false` ของ TanStack Query ในตัว hook (TanStack หยุด interval เมื่อแท็บถูกซ่อน/ไม่โฟกัส และ refetch เมื่อกลับมา) — ไม่เขียน helper กลางใหม่; ถ้ามี feature อื่นต้อง polling เช่นกันภายหลัง ค่อยยก `NOTIFICATION_POLL_INTERVAL_MS` + options เป็น shared helper (ข้อเสนอ Global Reuse).
+
+**Mapping API (จาก Task 6):** `GET /api/v1/notifications?unreadOnly&page&pageSize`, `GET /api/v1/notifications/unread-count`, `POST /api/v1/notifications/{id}/read`, `POST /api/v1/notifications/read-all`. Schema: `NotificationResponse`, `NotificationListResponse`, `UnreadCountResponse`, `MarkAllReadResponse`.
+
+- [ ] **Step 1: regenerate types และตรวจชื่อ schema**
+
+Run: `cd /Users/syaco/Documents/development/tan-erp/frontend && npm run generate:api`
+Expected: `src/generated/api/tan-erp.v1.ts` เปลี่ยนเฉพาะส่วน notifications (Task 6 ได้ regenerate `contracts/openapi/tan-erp.v1.json` แล้ว).
+
+Run: `grep -n 'NotificationResponse\|NotificationListResponse\|UnreadCountResponse\|MarkAllReadResponse' src/generated/api/tan-erp.v1.ts | head`
+Expected: พบทั้ง 4 schema ใน `components["schemas"]`. ถ้าชื่อต่างจากนี้ ให้ใช้ชื่อที่ generate ได้ในทุกขั้นถัดไป.
+
+Run: `npm run check:api` → Expected: exit 0 (หลัง `git add` ไฟล์ที่ generate แล้ว `git diff --exit-code` ต้องสะอาด; ถ้ารันก่อน add ให้รัน `git add src/generated/api/tan-erp.v1.ts` ก่อน).
+
+- [ ] **Step 2: test api-client ที่ล้มก่อน**
+
+เพิ่มใน `frontend/src/lib/api/api-client.test.ts` (ในบล็อก `describe("ApiClient", ...)`, รูปแบบเดียวกับเคส `/api/v1/me`):
+
+```ts
+  it("calls the notification endpoints with membership headers and a bounded query", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ items: [], pagination: { page: 1, pageSize: 20, totalCount: 0, totalPages: 0 } }),
+    });
+    global.fetch = fetchMock;
+    const client = new ApiClient("http://localhost:5000");
+    const options = { token: "tok", membershipId: "m-1", locale: "th" as const };
+
+    await client.listNotifications(options, { unreadOnly: true, page: 2, pageSize: 20 });
+    await client.getUnreadNotificationCount(options);
+    await client.markNotificationRead("n 1", options);
+    await client.markAllNotificationsRead(options);
+
+    const calls = fetchMock.mock.calls.map(([url, init]) => [url, init.method]);
+    expect(calls).toEqual([
+      ["http://localhost:5000/api/v1/notifications?unreadOnly=true&page=2&pageSize=20", "GET"],
+      ["http://localhost:5000/api/v1/notifications/unread-count", "GET"],
+      ["http://localhost:5000/api/v1/notifications/n%201/read", "POST"],
+      ["http://localhost:5000/api/v1/notifications/read-all", "POST"],
+    ]);
+    expect(fetchMock.mock.calls[0][1].headers["X-Membership-Id"]).toBe("m-1");
+    // Mark-read is naturally idempotent on the server; no Idempotency-Key is required or sent.
+    expect(fetchMock.mock.calls[2][1].headers["Idempotency-Key"]).toBeUndefined();
+  });
+```
+
+Run: `npx vitest run src/lib/api/api-client.test.ts -t "notification endpoints"` → Expected: FAIL (`client.listNotifications is not a function`).
+
+- [ ] **Step 3: เพิ่ม methods ใน `api-client.ts`**
+
+ต่อจาก `export type CaptureSignatureRequest = ...` (กลุ่ม type alias, ~บรรทัด 234):
+
+```ts
+export type NotificationResponse = components["schemas"]["NotificationResponse"];
+export type NotificationListResponse = components["schemas"]["NotificationListResponse"];
+export type UnreadCountResponse = components["schemas"]["UnreadCountResponse"];
+export type MarkAllReadResponse = components["schemas"]["MarkAllReadResponse"];
+export interface ListNotificationsParams {
+  unreadOnly: boolean;
+  page: number;
+  pageSize: number;
+}
+```
+
+ต่อจากเมธอด `captureSignature` (~บรรทัด 1590):
+
+```ts
+  async listNotifications(options: RequestOptions, query: ListNotificationsParams): Promise<NotificationListResponse> {
+    const params = new URLSearchParams();
+    params.set("unreadOnly", String(query.unreadOnly));
+    params.set("page", String(query.page));
+    params.set("pageSize", String(query.pageSize));
+    return this.request<NotificationListResponse>(`/api/v1/notifications?${params.toString()}`, "GET", options);
+  }
+
+  async getUnreadNotificationCount(options: RequestOptions): Promise<UnreadCountResponse> {
+    return this.request<UnreadCountResponse>("/api/v1/notifications/unread-count", "GET", options);
+  }
+
+  async markNotificationRead(notificationId: string, options: RequestOptions): Promise<NotificationResponse> {
+    return this.request<NotificationResponse>(`/api/v1/notifications/${encodeURIComponent(notificationId)}/read`, "POST", options);
+  }
+
+  async markAllNotificationsRead(options: RequestOptions): Promise<MarkAllReadResponse> {
+    return this.request<MarkAllReadResponse>("/api/v1/notifications/read-all", "POST", options);
+  }
+```
+
+Run: `npx vitest run src/lib/api/api-client.test.ts` → Expected: PASS ทั้งไฟล์. (ถ้า `request` บังคับ `payload` สำหรับ POST ให้ตรวจ signature ที่ `api-client.ts:430` — `attachFiles`/`unlinkAttachment` เรียกโดยไม่มี/มี payload ได้ทั้งคู่.)
+
+- [ ] **Step 4: test whitelist ที่ล้มก่อน**
+
+`frontend/src/lib/notifications/notification-types.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import thMessages from "@/messages/th.json";
+import enMessages from "@/messages/en.json";
+import {
+  NOTIFICATION_TYPES,
+  isNotificationType,
+  notificationMessageKey,
+  notificationMessageValues,
+} from "./notification-types";
+
+describe("notification types", () => {
+  it("mirrors the backend NotificationTypes whitelist", () => {
+    expect(Object.keys(NOTIFICATION_TYPES).sort()).toEqual([
+      "change-order.approval-requested",
+      "cost-record.approval-requested",
+      "estimate.approval-requested",
+      "mrp-run.approval-requested",
+      "purchase-order.approval-requested",
+      "role-assignment.approval-requested",
+    ]);
+  });
+
+  it("narrows only registered types, exactly", () => {
+    expect(isNotificationType("estimate.approval-requested")).toBe(true);
+    expect(isNotificationType("Estimate.Approval-Requested")).toBe(false);
+    expect(isNotificationType("customer.created")).toBe(false);
+    expect(notificationMessageKey("customer.created")).toBeNull();
+    expect(notificationMessageKey("mrp-run.approval-requested")).toBe("mrpRunApprovalRequested");
+  });
+
+  it("passes only the declared fields to the message and shows a dash for a missing one", () => {
+    expect(
+      notificationMessageValues("estimate.approval-requested", {
+        documentNumber: "EST-1",
+        actorDisplayName: "สมชาย",
+        unexpected: "x",
+      }),
+    ).toEqual({ documentNumber: "EST-1", actorDisplayName: "สมชาย" });
+    expect(notificationMessageValues("estimate.approval-requested", { documentNumber: "EST-1" })).toEqual({
+      documentNumber: "EST-1",
+      actorDisplayName: "-",
+    });
+  });
+
+  it.each([
+    ["th", thMessages],
+    ["en", enMessages],
+  ])("has a %s message for every type, using every declared field", (_locale, messages) => {
+    for (const descriptor of Object.values(NOTIFICATION_TYPES)) {
+      const template: string = messages.notifications.types[descriptor.messageKey];
+      expect(template).toBeTruthy();
+      for (const field of descriptor.fields) expect(template).toContain(`{${field}}`);
+    }
+  });
+
+  it("has the same notifications keys in th and en", () => {
+    const flat = (value: unknown, prefix = ""): string[] =>
+      typeof value === "object" && value !== null
+        ? Object.entries(value).flatMap(([key, child]) => flat(child, `${prefix}${key}.`))
+        : [prefix];
+    expect(flat(enMessages.notifications).sort()).toEqual(flat(thMessages.notifications).sort());
+  });
+});
+```
+
+Run: `npx vitest run src/lib/notifications/notification-types.test.ts` → Expected: FAIL (module ไม่พบ).
+
+- [ ] **Step 5: implement whitelist**
+
+`frontend/src/lib/notifications/notification-types.ts`:
+
+```ts
+/**
+ * Notification types the UI can render. Mirrors the backend registry (NotificationTypes / NotificationTypeRegistry);
+ * register a new type in the backend first, then here and in messages (th + en). A type that is not listed is never
+ * rendered from guesses: callers fall back to the generic "unknown" message.
+ */
+export interface NotificationTypeDescriptor {
+  /** Key under `notifications.types` in the messages (JSON keys cannot contain dots). */
+  messageKey: NotificationMessageKey;
+  /** Payload fields the message uses; all other payload fields are ignored. */
+  fields: readonly NotificationPayloadField[];
+}
+
+export type NotificationPayloadField = "documentNumber" | "actorDisplayName" | "subjectDisplayName" | "roleName";
+
+export type NotificationMessageKey =
+  | "estimateApprovalRequested"
+  | "costRecordApprovalRequested"
+  | "purchaseOrderApprovalRequested"
+  | "changeOrderApprovalRequested"
+  | "mrpRunApprovalRequested"
+  | "roleAssignmentApprovalRequested";
+
+export const NOTIFICATION_TYPES = {
+  "estimate.approval-requested": { messageKey: "estimateApprovalRequested", fields: ["documentNumber", "actorDisplayName"] },
+  "cost-record.approval-requested": { messageKey: "costRecordApprovalRequested", fields: ["documentNumber", "actorDisplayName"] },
+  "purchase-order.approval-requested": { messageKey: "purchaseOrderApprovalRequested", fields: ["documentNumber", "actorDisplayName"] },
+  "change-order.approval-requested": { messageKey: "changeOrderApprovalRequested", fields: ["documentNumber", "actorDisplayName"] },
+  "mrp-run.approval-requested": { messageKey: "mrpRunApprovalRequested", fields: ["documentNumber", "actorDisplayName"] },
+  "role-assignment.approval-requested": {
+    messageKey: "roleAssignmentApprovalRequested",
+    fields: ["subjectDisplayName", "roleName", "actorDisplayName"],
+  },
+} as const satisfies Record<string, NotificationTypeDescriptor>;
+
+export type NotificationType = keyof typeof NOTIFICATION_TYPES;
+
+export function isNotificationType(value: string): value is NotificationType {
+  return Object.prototype.hasOwnProperty.call(NOTIFICATION_TYPES, value);
+}
+
+export function notificationMessageKey(type: string): NotificationMessageKey | null {
+  return isNotificationType(type) ? NOTIFICATION_TYPES[type].messageKey : null;
+}
+
+/** Values for the type's message: only declared fields, and "-" for a field the payload does not carry. */
+export function notificationMessageValues(type: NotificationType, payload: Readonly<Record<string, string>>): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const field of NOTIFICATION_TYPES[type].fields) {
+    values[field] = payload[field] ?? "-";
+  }
+  return values;
+}
+```
+
+(`payload[field] ?? "-"` เป็นค่าว่างมาตรฐานเดียว ไม่ใช่ chain ของ fallback.)
+
+- [ ] **Step 6: messages `notifications` (th + en) ด้วย script**
+
+เพิ่ม namespace ระดับบนสุด `notifications` (ต่อท้าย `attachments`). Task 10/11 (UI) จะขยายคีย์เฉพาะ UI เพิ่มเอง; ที่นี่ใส่เฉพาะที่ plumbing/ข้อความของ type ต้องใช้.
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp/frontend
+python3 - <<'PY'
+import json
+
+TH = {
+    "title": "การแจ้งเตือน",
+    "unknownType": "มีการแจ้งเตือนใหม่",
+    "loadFailed": "โหลดการแจ้งเตือนไม่สำเร็จ",
+    "types": {
+        "estimateApprovalRequested": "{actorDisplayName} ส่งใบประมาณราคา {documentNumber} เพื่อรออนุมัติ",
+        "costRecordApprovalRequested": "{actorDisplayName} ส่งต้นทุนสินค้า {documentNumber} เพื่อรออนุมัติ",
+        "purchaseOrderApprovalRequested": "{actorDisplayName} ส่งใบสั่งซื้อ {documentNumber} เพื่อรออนุมัติ",
+        "changeOrderApprovalRequested": "{actorDisplayName} ส่งใบเปลี่ยนแปลงงาน {documentNumber} เพื่อรออนุมัติ",
+        "mrpRunApprovalRequested": "{actorDisplayName} สร้างรอบวางแผนวัสดุ {documentNumber} ที่รออนุมัติ",
+        "roleAssignmentApprovalRequested": "{actorDisplayName} ขอมอบบทบาท {roleName} ให้ {subjectDisplayName}",
+    },
+}
+EN = {
+    "title": "Notifications",
+    "unknownType": "You have a new notification",
+    "loadFailed": "Could not load notifications",
+    "types": {
+        "estimateApprovalRequested": "{actorDisplayName} submitted estimate {documentNumber} for approval",
+        "costRecordApprovalRequested": "{actorDisplayName} submitted the cost of item {documentNumber} for approval",
+        "purchaseOrderApprovalRequested": "{actorDisplayName} submitted purchase order {documentNumber} for approval",
+        "changeOrderApprovalRequested": "{actorDisplayName} submitted change order {documentNumber} for approval",
+        "mrpRunApprovalRequested": "{actorDisplayName} created planning run {documentNumber} awaiting approval",
+        "roleAssignmentApprovalRequested": "{actorDisplayName} requested role {roleName} for {subjectDisplayName}",
+    },
+}
+
+for path, ns in (("src/messages/th.json", TH), ("src/messages/en.json", EN)):
+    raw = open(path, encoding="utf-8").read()
+    data = json.loads(raw)
+    # Guard: the file must round-trip with this serializer, otherwise the script would reformat unrelated lines.
+    assert json.dumps(data, indent=2, ensure_ascii=False) + "\n" == raw, f"{path} does not round-trip; edit by hand"
+    assert "notifications" not in data, f"{path} already has notifications"
+    data["notifications"] = ns
+    open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+PY
+git diff --stat -- src/messages
+```
+
+Expected: ทั้งสองไฟล์มีเฉพาะบรรทัดที่เพิ่ม (insertions เท่านั้น, ไม่มี deletions นอกจากเครื่องหมาย `,` ท้าย `attachments`). ถ้า assert round-trip ล้ม ให้แก้ด้วย Edit ตรง ๆ ท้ายไฟล์แทน.
+
+Run: `npx vitest run src/lib/notifications/notification-types.test.ts` → Expected: PASS ทั้ง 6 (รวมคู่ th/en).
+
+- [ ] **Step 7: test hook ที่ล้มก่อน**
+
+`frontend/src/hooks/useNotifications.test.tsx`:
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/api-client";
+import {
+  NOTIFICATION_POLL_INTERVAL_MS,
+  notificationUnreadKey,
+  notificationsKey,
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotificationList,
+  useUnreadNotificationCount,
+} from "./useNotifications";
+
+const context = vi.hoisted(() => ({ membershipId: "m-1" as string | undefined }));
+
+vi.mock("@/lib/api/use-api-request-context", () => ({
+  useApiRequestContext: () => ({
+    membershipId: context.membershipId,
+    locale: "th",
+    buildOptions: async () => ({ token: "tok", membershipId: context.membershipId ?? "", locale: "th" }),
+  }),
+}));
+vi.mock("@/lib/api/api-client", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/api/api-client")>();
+  return {
+    ...original,
+    apiClient: {
+      listNotifications: vi.fn(),
+      getUnreadNotificationCount: vi.fn(),
+      markNotificationRead: vi.fn(),
+      markAllNotificationsRead: vi.fn(),
+    },
+  };
+});
+
+function setup() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  return { queryClient, wrapper };
+}
+
+describe("useNotifications", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    context.membershipId = "m-1";
+  });
+
+  it("namespaces keys by membership and locale", () => {
+    expect(notificationsKey("m-1", "th")).not.toEqual(notificationsKey("m-2", "th"));
+    expect(notificationsKey("m-1", "th")).not.toEqual(notificationsKey("m-1", "en"));
+    expect(notificationUnreadKey("m-1", "th").slice(0, 4)).toEqual(notificationsKey("m-1", "th"));
+  });
+
+  it("polls the unread count only while the tab is visible", async () => {
+    vi.mocked(apiClient.getUnreadNotificationCount).mockResolvedValue({ unreadCount: 3 });
+    const { queryClient, wrapper } = setup();
+    const { result } = renderHook(() => useUnreadNotificationCount(), { wrapper });
+
+    await waitFor(() => expect(result.current.data?.unreadCount).toBe(3));
+    const options = queryClient.getQueryCache().find({ queryKey: notificationUnreadKey("m-1", "th") })?.observers[0]?.options;
+    expect(options?.refetchInterval).toBe(NOTIFICATION_POLL_INTERVAL_MS);
+    expect(options?.refetchIntervalInBackground).toBe(false);
+  });
+
+  it("does not call the API without a selected membership", async () => {
+    context.membershipId = undefined;
+    const { wrapper } = setup();
+    renderHook(() => useUnreadNotificationCount(), { wrapper });
+    renderHook(() => useNotificationList({ unreadOnly: false, page: 1, pageSize: 20 }), { wrapper });
+
+    await act(async () => {});
+    expect(apiClient.getUnreadNotificationCount).not.toHaveBeenCalled();
+    expect(apiClient.listNotifications).not.toHaveBeenCalled();
+  });
+
+  it("refreshes the list and the count after mark-read and read-all", async () => {
+    vi.mocked(apiClient.markNotificationRead).mockResolvedValue({
+      id: "n-1", type: "estimate.approval-requested", payload: {}, deepLink: null, createdAtUtc: "2026-10-08T00:00:00Z", readAtUtc: "2026-10-08T00:01:00Z",
+    });
+    vi.mocked(apiClient.markAllNotificationsRead).mockResolvedValue({ updatedCount: 2 });
+    const { queryClient, wrapper } = setup();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+
+    const markRead = renderHook(() => useMarkNotificationRead(), { wrapper });
+    await act(async () => {
+      await markRead.result.current.mutateAsync("n-1");
+    });
+    expect(apiClient.markNotificationRead).toHaveBeenCalledWith("n-1", expect.objectContaining({ membershipId: "m-1" }));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: notificationsKey("m-1", "th") });
+
+    invalidate.mockClear();
+    const markAll = renderHook(() => useMarkAllNotificationsRead(), { wrapper });
+    await act(async () => {
+      await markAll.result.current.mutateAsync();
+    });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: notificationsKey("m-1", "th") });
+  });
+});
+```
+
+Run: `npx vitest run src/hooks/useNotifications.test.tsx` → Expected: FAIL (module `./useNotifications` ไม่พบ).
+
+- [ ] **Step 8: implement hook**
+
+`frontend/src/hooks/useNotifications.ts`:
+
+```ts
+import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
+import {
+  apiClient,
+  type ListNotificationsParams,
+  type MarkAllReadResponse,
+  type NotificationListResponse,
+  type NotificationResponse,
+  type UnreadCountResponse,
+} from "@/lib/api/api-client";
+import { useApiRequestContext, type ApiLocale } from "@/lib/api/use-api-request-context";
+
+/** The bell's unread count refreshes this often while the tab is visible; nothing is fetched in a hidden tab. */
+export const NOTIFICATION_POLL_INTERVAL_MS = 30_000;
+export const NOTIFICATION_PAGE_SIZE = 20;
+
+export function notificationsKey(membershipId: string | undefined, locale: ApiLocale) {
+  return ["business", membershipId, locale, "notifications"] as const;
+}
+
+export function notificationListKey(membershipId: string | undefined, locale: ApiLocale, params: ListNotificationsParams) {
+  return [...notificationsKey(membershipId, locale), "list", params.unreadOnly, params.page, params.pageSize] as const;
+}
+
+export function notificationUnreadKey(membershipId: string | undefined, locale: ApiLocale) {
+  return [...notificationsKey(membershipId, locale), "unread-count"] as const;
+}
+
+export function useUnreadNotificationCount(): UseQueryResult<UnreadCountResponse, Error> {
+  const { membershipId, locale, buildOptions } = useApiRequestContext();
+  return useQuery({
+    queryKey: notificationUnreadKey(membershipId, locale),
+    enabled: Boolean(membershipId),
+    queryFn: async ({ signal }) => apiClient.getUnreadNotificationCount(await buildOptions({ signal })),
+    refetchInterval: NOTIFICATION_POLL_INTERVAL_MS,
+    refetchIntervalInBackground: false,
+  });
+}
+
+/** The list is fetched on demand (dropdown open / full page); it is refreshed by invalidation, not by its own timer. */
+export function useNotificationList(params: ListNotificationsParams, enabled = true): UseQueryResult<NotificationListResponse, Error> {
+  const { membershipId, locale, buildOptions } = useApiRequestContext();
+  return useQuery({
+    queryKey: notificationListKey(membershipId, locale, params),
+    enabled: enabled && Boolean(membershipId),
+    queryFn: async ({ signal }) => apiClient.listNotifications(await buildOptions({ signal }), params),
+  });
+}
+
+export function useMarkNotificationRead(): UseMutationResult<NotificationResponse, Error, string> {
+  const { membershipId, locale, buildOptions } = useApiRequestContext();
+  const queryClient = useQueryClient();
+  return useMutation<NotificationResponse, Error, string>({
+    mutationFn: async (notificationId) => apiClient.markNotificationRead(notificationId, await buildOptions()),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: notificationsKey(membershipId, locale) });
+    },
+  });
+}
+
+export function useMarkAllNotificationsRead(): UseMutationResult<MarkAllReadResponse, Error, void> {
+  const { membershipId, locale, buildOptions } = useApiRequestContext();
+  const queryClient = useQueryClient();
+  return useMutation<MarkAllReadResponse, Error, void>({
+    mutationFn: async () => apiClient.markAllNotificationsRead(await buildOptions()),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: notificationsKey(membershipId, locale) });
+    },
+  });
+}
+```
+
+Run: `npx vitest run src/hooks/useNotifications.test.tsx src/lib/notifications src/lib/api/api-client.test.ts` → Expected: PASS ทั้งหมด. หมายเหตุ: `useApiRequestContext.ts` export `ApiLocale` อยู่แล้ว (บรรทัด 7).
+
+- [ ] **Step 9: verification gates ฝั่ง frontend**
+
+Run: `npm run check:api && npm run lint && npm run typecheck && npx vitest run` → Expected: ผ่านทั้งหมด (ไม่มี `any`/`as any`/`@ts-ignore`; `messages.notifications.types[descriptor.messageKey]` พิมพ์ถูกเพราะ `messageKey` เป็น union ของคีย์ที่มีใน JSON — ถ้า TypeScript บ่นว่า index ไม่ได้ แปลว่าคีย์ใน `NotificationMessageKey` กับ JSON ไม่ตรงกัน ซึ่งคือสิ่งที่ parity test ตั้งใจจับ).
+
+- [ ] **Step 10: commit**
+
+```bash
+git add frontend/src/generated/api/tan-erp.v1.ts frontend/src/lib/api/api-client.ts frontend/src/lib/api/api-client.test.ts frontend/src/lib/notifications frontend/src/hooks/useNotifications.ts frontend/src/hooks/useNotifications.test.tsx frontend/src/messages/th.json frontend/src/messages/en.json
+git commit -F - <<'EOF'
+feat(notifications): add notification api client, type whitelist and polling hooks
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
