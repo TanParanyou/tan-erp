@@ -53,7 +53,7 @@
 | `docs/03-contracts/permission-catalog.md` (แก้) | หมายเหตุ: ไม่มี permission key ใหม่ |
 | `docs/03-contracts/error-contract.md` (แก้) | `NOTIFICATION_NOT_FOUND` |
 | `docs/README.md`, `CONTEXT.md` (แก้) | แผนที่เอกสาร + ศัพท์ |
-| `docs/05-engineering/notification-foundation-verification.md` (ใหม่) | หลักฐานการทดสอบ + ข้อจำกัด |
+| `docs/05-engineering/notification-foundation-verification.md` (ใหม่) | หลักฐานการทดสอบ + ข้อจำกัด (Task 12) |
 | `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md`, `docs/00-overview/implementation-roadmap.md` (แก้) | สถานะ G-02 |
 
 ### Backend
@@ -79,6 +79,7 @@
 | --- | --- |
 | `frontend/src/generated/api/tan-erp.v1.ts` (regenerate), `lib/api/api-client.ts` (แก้) | types + methods |
 | `frontend/src/lib/notifications/notification-types.ts` (+ `.test.ts`) (ใหม่) | whitelist ฝั่ง UI + map type → message key + guard |
+| `frontend/src/lib/notifications/notification-view.ts` (+ `.test.tsx`) (ใหม่) | `useNotificationText` (type → ข้อความ, type ไม่รู้จัก → บรรทัดกลาง) + `localizedNotificationHref` ใช้ร่วม dropdown และหน้ารายการ |
 | `frontend/src/hooks/useNotifications.ts` (+ `.test.tsx`) (ใหม่) | list/unread-count (polling) + mark read/all |
 | `frontend/src/components/common/Icons.tsx` (แก้) | `IconBell` |
 | `frontend/src/components/layout/NotificationCenter.tsx` (+ `.test.tsx`), `NotificationBell.tsx` (+ `.test.tsx`), `erp-shell.tsx` (+ `.test.tsx`) | dropdown (controlled), container, วางใน header |
@@ -3792,6 +3793,1278 @@ Run: `npm run check:api && npm run lint && npm run typecheck && npx vitest run` 
 git add frontend/src/generated/api/tan-erp.v1.ts frontend/src/lib/api/api-client.ts frontend/src/lib/api/api-client.test.ts frontend/src/lib/notifications frontend/src/hooks/useNotifications.ts frontend/src/hooks/useNotifications.test.tsx frontend/src/messages/th.json frontend/src/messages/en.json
 git commit -F - <<'EOF'
 feat(notifications): add notification api client, type whitelist and polling hooks
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
+
+---
+
+## Task 10: `IconBell`, `NotificationCenter` แบบ controlled, `NotificationBell` และวางใน header
+
+**Files:**
+- Modify: `frontend/src/components/common/Icons.tsx`
+- Create: `frontend/src/lib/notifications/notification-view.ts`, `frontend/src/lib/notifications/notification-view.test.tsx`
+- Modify: `frontend/src/components/layout/NotificationCenter.tsx`
+- Create: `frontend/src/components/layout/NotificationCenter.test.tsx`
+- Create: `frontend/src/components/layout/NotificationBell.tsx`, `frontend/src/components/layout/NotificationBell.test.tsx`
+- Modify: `frontend/src/components/layout/erp-shell.tsx`, `frontend/src/components/layout/erp-shell.test.tsx`
+- Modify: `frontend/src/messages/th.json`, `frontend/src/messages/en.json` (เฉพาะ `common.notificationCenter`)
+
+**Reuse decision (ตรวจแล้ว):** `NotificationCenter.tsx` มี markup/สไตล์ที่ถูกต้องตาม design (rounded-none, semantic tokens, dropdown) แต่ถือ state รายการเองและไม่มีผู้ใช้/test → **เก็บ markup เดิม เปลี่ยนเป็น controlled** (รับ `notifications`, `unreadCount`, callbacks) ไม่สร้างกระดิ่งตัวที่สอง. เพราะไม่มีผู้เรียกเดิม การตัด local state ออกไม่กระทบใคร; default ของ prop เดิมคงไว้ (`notifications = []`, `unreadCount` คำนวณจากรายการเมื่อไม่ส่งมา). Container `NotificationBell` แยกจาก presentational เพื่อให้ `NotificationCenter` ทดสอบได้โดยไม่ต้อง mock API. ตัวแปลง notification → ข้อความ/ลิงก์ใช้ร่วมกับหน้ารายการ (Task 11) จึงอยู่ใน `lib/notifications/notification-view.ts` (Global Reuse ตั้งแต่ต้น ไม่ให้สองที่เขียนซ้ำ). Navigation ใช้ `useRouter` ของ `next/navigation` + `/${locale}${path}` เหมือน `erp-shell.tsx` (`router.push(`/${locale}/login`)`) เพราะ deep link จาก API ไม่มี locale prefix. Loading ใช้ `MonoSpinner` (Minimal Mono Loading). Keyboard: Esc ปิดและคืน focus ที่ปุ่ม, คลิกนอกกล่องปิด, รายการเป็น `<button>` จริงจึงใช้ Tab/Enter/Space ได้; **ไม่ทำ arrow-key roving** (dropdown นี้เป็น popover รายการ ไม่ใช่ `role="menu"`; ตัดสินใจเรียบง่ายและบันทึกไว้เป็นข้อจำกัดเรื่อง a11y ใน Task 12).
+
+- [ ] **Step 1: เพิ่ม `IconBell`**
+
+ใน `frontend/src/components/common/Icons.tsx` ต่อจาก `IconInfo`:
+
+```tsx
+export function IconBell({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+```
+
+- [ ] **Step 2: messages `common.notificationCenter` (เพิ่ม 4 คีย์)**
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp/frontend
+python3 - <<'PY'
+import json
+
+ADD = {
+    "src/messages/th.json": {
+        "unreadCount": "{count} รายการที่ยังไม่อ่าน",
+        "viewAll": "ดูทั้งหมด",
+        "loading": "กำลังโหลดการแจ้งเตือน",
+        "loadFailed": "โหลดการแจ้งเตือนไม่สำเร็จ",
+    },
+    "src/messages/en.json": {
+        "unreadCount": "{count} unread",
+        "viewAll": "View all",
+        "loading": "Loading notifications",
+        "loadFailed": "Could not load notifications",
+    },
+}
+for path, keys in ADD.items():
+    raw = open(path, encoding="utf-8").read()
+    data = json.loads(raw)
+    assert json.dumps(data, indent=2, ensure_ascii=False) + "\n" == raw, f"{path} does not round-trip; edit by hand"
+    center = data["common"]["notificationCenter"]
+    assert not set(keys) & set(center), f"{path} already has some of these keys"
+    center.update(keys)
+    open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+PY
+git diff --stat -- src/messages
+```
+
+Expected: เพิ่มเฉพาะบรรทัดใน `common.notificationCenter` ของทั้งสองไฟล์ (ถ้า assert round-trip ล้ม ให้แก้ด้วย Edit ตรง ๆ).
+
+- [ ] **Step 3: test ตัวแปลงข้อความ/ลิงก์ที่ล้มก่อน**
+
+`frontend/src/lib/notifications/notification-view.test.tsx`:
+
+```tsx
+import React from "react";
+import { describe, expect, it } from "vitest";
+import { renderHook } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import thMessages from "@/messages/th.json";
+import type { NotificationResponse } from "@/lib/api/api-client";
+import { localizedNotificationHref, useNotificationText } from "./notification-view";
+
+const base: NotificationResponse = {
+  id: "n-1",
+  type: "estimate.approval-requested",
+  payload: { documentNumber: "EST-1", actorDisplayName: "สมชาย", costTotal: "999" },
+  deepLink: "/estimates/e-1",
+  createdAtUtc: "2026-10-08T00:00:00Z",
+  readAtUtc: null,
+};
+
+function textFor(notification: NotificationResponse): string {
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <NextIntlClientProvider locale="th" messages={thMessages}>{children}</NextIntlClientProvider>
+  );
+  return renderHook(() => useNotificationText(), { wrapper }).result.current(notification);
+}
+
+describe("notification view helpers", () => {
+  it("renders the registered message with only the declared payload fields", () => {
+    expect(textFor(base)).toBe("สมชาย ส่งใบประมาณราคา EST-1 เพื่อรออนุมัติ");
+  });
+
+  it("renders a neutral line for an unknown type and never throws", () => {
+    expect(textFor({ ...base, type: "customer.created" })).toBe(thMessages.notifications.unknownType);
+  });
+
+  it("builds a locale-prefixed path only from a same-origin absolute path", () => {
+    expect(localizedNotificationHref("th", "/estimates/e-1")).toBe("/th/estimates/e-1");
+    expect(localizedNotificationHref("en", null)).toBeNull();
+    expect(localizedNotificationHref("th", "//evil.test/x")).toBeNull();
+    expect(localizedNotificationHref("th", "https://evil.test/x")).toBeNull();
+  });
+});
+```
+
+Run: `cd /Users/syaco/Documents/development/tan-erp/frontend && npx vitest run src/lib/notifications/notification-view.test.tsx` → Expected: FAIL (module `./notification-view` ไม่พบ).
+
+- [ ] **Step 4: implement `notification-view.ts`**
+
+```ts
+import { useCallback } from "react";
+import { useTranslations } from "next-intl";
+import type { NotificationResponse } from "@/lib/api/api-client";
+import { isNotificationType, notificationMessageKey, notificationMessageValues } from "./notification-types";
+
+/** Returns a function that renders a notification as one display line; an unregistered type gets a neutral line. */
+export function useNotificationText(): (notification: NotificationResponse) => string {
+  const t = useTranslations("notifications");
+  return useCallback(
+    (notification) => {
+      const messageKey = notificationMessageKey(notification.type);
+      if (messageKey === null || !isNotificationType(notification.type)) {
+        return t("unknownType");
+      }
+      return t(`types.${messageKey}`, notificationMessageValues(notification.type, notification.payload));
+    },
+    [t],
+  );
+}
+
+/** The API returns locale-less paths; accept only an absolute in-app path so a link can never leave the app. */
+export function localizedNotificationHref(locale: string, deepLink: string | null): string | null {
+  if (deepLink === null || !deepLink.startsWith("/") || deepLink.startsWith("//")) {
+    return null;
+  }
+  return `/${locale}${deepLink}`;
+}
+```
+
+Run: `npx vitest run src/lib/notifications/notification-view.test.tsx` → Expected: PASS (3 tests). ถ้า TypeScript บ่นว่า `t(`types.${messageKey}`)` ไม่ใช่ key ที่รู้จัก ให้ใช้ `t.rich`-free ทางเดียวกับที่ repo ใช้กับ key แบบ template (ดู `customer-list.tsx`: `tCommon(`status.${key}`)`) — พิมพ์ผ่านเพราะ `messageKey` เป็น union ของคีย์จริง.
+
+- [ ] **Step 5: test `NotificationCenter` (controlled) ที่ล้มก่อน**
+
+`frontend/src/components/layout/NotificationCenter.test.tsx`:
+
+```tsx
+import React from "react";
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import thMessages from "@/messages/th.json";
+import { NotificationCenter, type NotificationItem } from "./NotificationCenter";
+
+const items: NotificationItem[] = [
+  { id: "n-1", title: "ใบประมาณราคา EST-1 รออนุมัติ", timeText: "8 ต.ค. 69 10:00", isRead: false, href: "/th/estimates/e-1" },
+  { id: "n-2", title: "ใบสั่งซื้อ PO-1 รออนุมัติ", timeText: "7 ต.ค. 69 09:00", isRead: true, href: null },
+];
+
+function renderCenter(props: Partial<React.ComponentProps<typeof NotificationCenter>> = {}) {
+  return render(
+    <NextIntlClientProvider locale="th" messages={thMessages}>
+      <NotificationCenter notifications={items} unreadCount={1} {...props} />
+    </NextIntlClientProvider>,
+  );
+}
+
+const bellButton = () => screen.getByRole("button", { name: thMessages.common.notificationCenter.title });
+
+describe("NotificationCenter (controlled)", () => {
+  it("shows the unread count from props, capped at 99+, and announces it politely", () => {
+    renderCenter({ unreadCount: 150 });
+    expect(screen.getByText("99+")).toBeDefined();
+    const live = screen.getByRole("status");
+    expect(live.getAttribute("aria-live")).toBe("polite");
+    expect(live.textContent).toBe("150 รายการที่ยังไม่อ่าน");
+  });
+
+  it("falls back to counting unread items only when unreadCount is not provided", () => {
+    renderCenter({ unreadCount: undefined });
+    expect(screen.getByText("1")).toBeDefined();
+  });
+
+  it("renders no badge when nothing is unread", () => {
+    renderCenter({ unreadCount: 0 });
+    expect(screen.queryByText("0")).toBeNull();
+  });
+
+  it("opens, reports it, and calls onItemClick with the clicked item (parent decides what happens next)", () => {
+    const onOpenChange = vi.fn();
+    const onItemClick = vi.fn();
+    renderCenter({ onOpenChange, onItemClick });
+
+    fireEvent.click(bellButton());
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    expect(bellButton().getAttribute("aria-expanded")).toBe("true");
+
+    fireEvent.click(screen.getByRole("button", { name: /EST-1/ }));
+    expect(onItemClick).toHaveBeenCalledWith(items[0]);
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it("closes on Escape and returns focus to the bell button", () => {
+    renderCenter();
+    fireEvent.click(bellButton());
+    const item = screen.getByRole("button", { name: /EST-1/ });
+    item.focus();
+
+    fireEvent.keyDown(item, { key: "Escape" });
+    expect(screen.queryByRole("button", { name: /EST-1/ })).toBeNull();
+    expect(document.activeElement).toBe(bellButton());
+    expect(bellButton().getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("closes when clicking outside", () => {
+    renderCenter();
+    fireEvent.click(bellButton());
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole("button", { name: /EST-1/ })).toBeNull();
+  });
+
+  it("offers mark-all only while something is unread, and view-all", () => {
+    const onMarkAllRead = vi.fn();
+    const onViewAll = vi.fn();
+    const { unmount } = renderCenter({ onMarkAllRead, onViewAll });
+    fireEvent.click(bellButton());
+    fireEvent.click(screen.getByRole("button", { name: thMessages.common.notificationCenter.markAllRead }));
+    expect(onMarkAllRead).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: thMessages.common.notificationCenter.viewAll }));
+    expect(onViewAll).toHaveBeenCalledTimes(1);
+    unmount();
+
+    renderCenter({ unreadCount: 0, onMarkAllRead });
+    fireEvent.click(bellButton());
+    expect(screen.queryByRole("button", { name: thMessages.common.notificationCenter.markAllRead })).toBeNull();
+  });
+
+  it("shows loading, error and empty states inside the open panel", () => {
+    const { unmount } = renderCenter({ isLoading: true, notifications: [] });
+    fireEvent.click(bellButton());
+    expect(screen.getByText(thMessages.common.notificationCenter.loading)).toBeDefined();
+    unmount();
+
+    const errored = renderCenter({ isError: true, notifications: [] });
+    fireEvent.click(bellButton());
+    expect(screen.getByText(thMessages.common.notificationCenter.loadFailed)).toBeDefined();
+    errored.unmount();
+
+    renderCenter({ notifications: [], unreadCount: 0 });
+    fireEvent.click(bellButton());
+    expect(screen.getByText(thMessages.common.notificationCenter.empty)).toBeDefined();
+  });
+});
+```
+
+Run: `npx vitest run src/components/layout/NotificationCenter.test.tsx` → Expected: FAIL (ไม่มี `isError`/`onItemClick`/ปุ่มที่ชื่อ title ฯลฯ).
+
+- [ ] **Step 6: เขียน `NotificationCenter.tsx` ใหม่เป็น controlled**
+
+แทนที่ทั้งไฟล์ (markup/ class เดิมคงไว้; ส่วนที่เปลี่ยน: ไม่มี local list state, ปุ่มรายการ, Esc/focus return, badge cap, live region, loading/error, view all):
+
+```tsx
+"use client";
+
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
+import { IconBell, IconInfo, IconCheckCircle, IconAlertTriangle } from "@/components/common/Icons";
+import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  description?: string;
+  timeText: string;
+  type?: "info" | "success" | "warning";
+  isRead?: boolean;
+  /** Locale-prefixed in-app path, or null when the reader has no access to the target. */
+  href?: string | null;
+}
+
+export interface NotificationCenterProps {
+  notifications?: NotificationItem[];
+  /** Server-side unread total for the badge; counted from `notifications` only when omitted. */
+  unreadCount?: number;
+  onItemClick?: (item: NotificationItem) => void;
+  onMarkAllRead?: () => void;
+  onViewAll?: () => void;
+  onOpenChange?: (open: boolean) => void;
+  isLoading?: boolean;
+  isError?: boolean;
+  className?: string;
+}
+
+const BADGE_CAP = 99;
+
+export function NotificationCenter({
+  notifications = [],
+  unreadCount,
+  onItemClick,
+  onMarkAllRead,
+  onViewAll,
+  onOpenChange,
+  isLoading = false,
+  isError = false,
+  className,
+}: NotificationCenterProps) {
+  const t = useTranslations("common.notificationCenter");
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
+
+  const setOpen = useCallback(
+    (next: boolean) => {
+      setIsOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange],
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (event.target instanceof Node && menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, setOpen]);
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape" && isOpen) {
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+  };
+
+  const unread = unreadCount ?? notifications.filter((n) => !n.isRead).length;
+  const badgeText = unread > BADGE_CAP ? `${BADGE_CAP}+` : String(unread);
+
+  return (
+    <div ref={menuRef} onKeyDown={handleKeyDown} className={cn("relative inline-block text-left", className)}>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? panelId : undefined}
+        aria-label={t("title")}
+        title={t("title")}
+        className="relative flex h-11 w-11 items-center justify-center border border-erp-border bg-erp-surface text-erp-text-main hover:bg-erp-surface-subtle rounded-none"
+      >
+        <IconBell size={18} />
+        {unread > 0 && (
+          <span
+            aria-hidden="true"
+            className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center bg-erp-navy px-0.5 text-[9px] font-bold text-white rounded-none"
+          >
+            {badgeText}
+          </span>
+        )}
+      </button>
+      {/* Polite live region: screen readers hear the count change when polling brings new items. */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {unread > 0 ? t("unreadCount", { count: unread }) : ""}
+      </span>
+
+      {isOpen && (
+        <div
+          id={panelId}
+          role="region"
+          aria-label={t("title")}
+          className="absolute right-0 top-full z-50 mt-1 w-80 max-w-[calc(100vw-2rem)] border border-erp-border bg-erp-surface shadow-lg rounded-none text-left"
+        >
+          <div className="flex items-center justify-between border-b border-erp-border p-3">
+            <span className="text-xs font-bold text-erp-text-main uppercase tracking-wider">{t("title")}</span>
+            {unread > 0 && onMarkAllRead && (
+              <button
+                type="button"
+                onClick={onMarkAllRead}
+                className="min-h-11 px-2 text-[11px] text-erp-navy hover:underline font-medium"
+              >
+                {t("markAllRead")}
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-72 overflow-y-auto divide-y divide-erp-border">
+            {isLoading ? (
+              <MonoSpinner size="sm" label={t("loading")} />
+            ) : isError ? (
+              <p role="alert" className="p-4 text-center text-xs text-erp-text-muted">{t("loadFailed")}</p>
+            ) : notifications.length === 0 ? (
+              <p className="p-4 text-center text-xs text-erp-text-muted">{t("empty")}</p>
+            ) : (
+              notifications.map((n) => (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onItemClick?.(n);
+                  }}
+                  className={cn(
+                    "block min-h-11 w-full p-3 text-left transition-colors rounded-none",
+                    n.isRead ? "hover:bg-erp-surface-subtle/30" : "bg-erp-surface-subtle/50 hover:bg-erp-surface-subtle",
+                  )}
+                >
+                  <span className="flex items-start gap-2">
+                    {n.type === "success" ? (
+                      <IconCheckCircle size={14} className="mt-0.5 text-emerald-600 shrink-0" />
+                    ) : n.type === "warning" ? (
+                      <IconAlertTriangle size={14} className="mt-0.5 text-amber-600 shrink-0" />
+                    ) : (
+                      <IconInfo size={14} className="mt-0.5 text-erp-navy shrink-0" />
+                    )}
+                    <span className="flex-1">
+                      <span className={cn("block text-xs text-erp-text-main", n.isRead ? "font-normal" : "font-semibold")}>
+                        {n.title}
+                      </span>
+                      {n.description && (
+                        <span className="mt-0.5 block text-[11px] leading-relaxed text-erp-text-muted">{n.description}</span>
+                      )}
+                      <span className="mt-1 block font-mono text-[10px] text-erp-text-muted">{n.timeText}</span>
+                    </span>
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+
+          {onViewAll && (
+            <div className="border-t border-erp-border">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onViewAll();
+                }}
+                className="min-h-11 w-full px-3 text-center text-[11px] font-medium text-erp-navy hover:underline"
+              >
+                {t("viewAll")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+NotificationCenter.displayName = "NotificationCenter";
+```
+
+Run: `npx vitest run src/components/layout/NotificationCenter.test.tsx` → Expected: PASS ทั้ง 8. (jsdom: `focus()`/`document.activeElement` และ `fireEvent.keyDown` ทำงานได้; จุดที่ jsdom พิสูจน์ไม่ได้คือ focus ring/ตำแหน่ง dropdown จริง — บันทึกไว้เป็นรายการที่ยังไม่ตรวจในเบราว์เซอร์ใน Task 12.)
+
+- [ ] **Step 7: test container `NotificationBell` ที่ล้มก่อน**
+
+`frontend/src/components/layout/NotificationBell.test.tsx`:
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import thMessages from "@/messages/th.json";
+import type { NotificationResponse } from "@/lib/api/api-client";
+import { NotificationBell } from "./NotificationBell";
+
+const state = vi.hoisted(() => ({
+  membership: { id: "m-1" } as { id: string } | null,
+  unread: 2,
+  items: [] as NotificationResponse[],
+  push: vi.fn(),
+  markRead: vi.fn(),
+  markAll: vi.fn(),
+  listCalls: [] as boolean[],
+}));
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: state.push }) }));
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({ selectedMembership: state.membership }),
+}));
+vi.mock("@/hooks/useNotifications", () => ({
+  useUnreadNotificationCount: () => ({ data: { unreadCount: state.unread } }),
+  useNotificationList: (_params: unknown, enabled: boolean) => {
+    state.listCalls.push(enabled);
+    return { data: enabled ? { items: state.items } : undefined, isLoading: false, isError: false };
+  },
+  useMarkNotificationRead: () => ({ mutateAsync: state.markRead }),
+  useMarkAllNotificationsRead: () => ({ mutate: state.markAll }),
+}));
+
+const notification = (over: Partial<NotificationResponse>): NotificationResponse => ({
+  id: "n-1",
+  type: "purchase-order.approval-requested",
+  payload: { documentNumber: "PO-1", actorDisplayName: "สมชาย" },
+  deepLink: "/procurement/purchase-orders/po-1",
+  createdAtUtc: "2026-10-08T00:00:00Z",
+  readAtUtc: null,
+  ...over,
+});
+
+const renderBell = () =>
+  render(
+    <NextIntlClientProvider locale="th" messages={thMessages}>
+      <NotificationBell />
+    </NextIntlClientProvider>,
+  );
+const open = () => fireEvent.click(screen.getByRole("button", { name: thMessages.common.notificationCenter.title }));
+
+describe("NotificationBell", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    state.membership = { id: "m-1" };
+    state.unread = 2;
+    state.items = [notification({})];
+    state.listCalls = [];
+    state.markRead.mockResolvedValue(undefined);
+  });
+
+  it("renders nothing without a selected membership", () => {
+    state.membership = null;
+    const { container } = renderBell();
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("does not fetch the list until the dropdown is opened", () => {
+    renderBell();
+    expect(state.listCalls.every((enabled) => enabled === false)).toBe(true);
+    open();
+    expect(state.listCalls.at(-1)).toBe(true);
+  });
+
+  it("marks an unread item read and then navigates to its locale-prefixed deep link", async () => {
+    renderBell();
+    open();
+    fireEvent.click(screen.getByRole("button", { name: /PO-1/ }));
+
+    await waitFor(() => expect(state.push).toHaveBeenCalledWith("/th/procurement/purchase-orders/po-1"));
+    expect(state.markRead).toHaveBeenCalledWith("n-1");
+    expect(state.markRead.mock.invocationCallOrder[0]).toBeLessThan(state.push.mock.invocationCallOrder[0]);
+  });
+
+  it("does not mark an already-read item again, and does not navigate when the link is null", async () => {
+    state.items = [notification({ readAtUtc: "2026-10-08T01:00:00Z", deepLink: null })];
+    renderBell();
+    open();
+    fireEvent.click(screen.getByRole("button", { name: /PO-1/ }));
+
+    await waitFor(() => expect(screen.getByRole("button", { name: /PO-1/ })).toBeDefined());
+    expect(state.markRead).not.toHaveBeenCalled();
+    expect(state.push).not.toHaveBeenCalled();
+  });
+
+  it("still navigates when marking read fails (the item just stays unread)", async () => {
+    state.markRead.mockRejectedValue(new Error("network"));
+    renderBell();
+    open();
+    fireEvent.click(screen.getByRole("button", { name: /PO-1/ }));
+    await waitFor(() => expect(state.push).toHaveBeenCalledTimes(1));
+  });
+
+  it("renders a neutral line for an unknown type instead of throwing", () => {
+    state.items = [notification({ type: "customer.created", payload: {}, deepLink: null })];
+    renderBell();
+    open();
+    expect(screen.getByText(thMessages.notifications.unknownType)).toBeDefined();
+  });
+
+  it("marks everything read and opens the full page from the footer", () => {
+    renderBell();
+    open();
+    fireEvent.click(screen.getByRole("button", { name: thMessages.common.notificationCenter.markAllRead }));
+    expect(state.markAll).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: thMessages.common.notificationCenter.viewAll }));
+    expect(state.push).toHaveBeenCalledWith("/th/notifications");
+  });
+});
+```
+
+Run: `npx vitest run src/components/layout/NotificationBell.test.tsx` → Expected: FAIL (module `./NotificationBell` ไม่พบ).
+
+- [ ] **Step 8: implement `NotificationBell.tsx`**
+
+```tsx
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotificationList,
+  useUnreadNotificationCount,
+} from "@/hooks/useNotifications";
+import { formatDateTime } from "@/lib/formatters/formatters";
+import { localizedNotificationHref, useNotificationText } from "@/lib/notifications/notification-view";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { NotificationCenter, type NotificationItem } from "./NotificationCenter";
+
+const DROPDOWN_PAGE_SIZE = 10;
+
+/** Header bell: only mounted (and only polling) while a membership is selected. */
+export function NotificationBell() {
+  const { selectedMembership } = useSelectedMembership();
+  if (!selectedMembership) return null;
+  return <NotificationBellContent />;
+}
+
+function NotificationBellContent() {
+  const router = useRouter();
+  const locale = useLocale();
+  const textOf = useNotificationText();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const unread = useUnreadNotificationCount();
+  const list = useNotificationList({ unreadOnly: false, page: 1, pageSize: DROPDOWN_PAGE_SIZE }, isOpen);
+  const markRead = useMarkNotificationRead();
+  const markAll = useMarkAllNotificationsRead();
+
+  const items: NotificationItem[] = (list.data?.items ?? []).map((n) => ({
+    id: n.id,
+    title: textOf(n),
+    timeText: formatDateTime(n.createdAtUtc, locale),
+    isRead: n.readAtUtc !== null,
+    href: localizedNotificationHref(locale, n.deepLink),
+  }));
+
+  const handleItemClick = async (item: NotificationItem) => {
+    try {
+      if (item.isRead !== true) {
+        await markRead.mutateAsync(item.id);
+      }
+    } catch {
+      // Marking read is best-effort: the item stays unread and the next poll shows it; opening the document must not depend on it.
+    }
+    if (item.href) {
+      router.push(item.href);
+    }
+  };
+
+  return (
+    <NotificationCenter
+      notifications={items}
+      unreadCount={unread.data?.unreadCount ?? 0}
+      isLoading={isOpen && list.isLoading}
+      isError={isOpen && list.isError}
+      onOpenChange={setIsOpen}
+      onItemClick={handleItemClick}
+      onMarkAllRead={() => markAll.mutate()}
+      onViewAll={() => router.push(`/${locale}/notifications`)}
+    />
+  );
+}
+```
+
+หมายเหตุ: `NotificationCenter` เป็นเจ้าของ state เปิด/ปิดเอง และปิดตัวเองเมื่อคลิกรายการหรือ "ดูทั้งหมด"; `isOpen` ใน container เป็นสำเนาจาก `onOpenChange` เพื่อ gate query ของรายการเท่านั้น (ไม่ดึงรายการก่อนเปิด).
+
+Run: `npx vitest run src/components/layout/NotificationCenter.test.tsx src/components/layout/NotificationBell.test.tsx` → Expected: PASS ทั้งสองไฟล์ (8 + 7).
+
+- [ ] **Step 9: test shell ที่ล้มก่อน**
+
+ใน `frontend/src/components/layout/erp-shell.test.tsx` เพิ่มหลัง `vi.mock("@/lib/auth/auth-session", ...)`:
+
+```tsx
+vi.mock("./NotificationBell", () => ({
+  NotificationBell: () => <div data-testid="notification-bell" />,
+}));
+```
+
+และเพิ่มเคสท้าย `describe`:
+
+```tsx
+  it("places the notification bell in the header, before the theme and language controls", () => {
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
+
+    const bell = screen.getByTestId("notification-bell");
+    expect(screen.getByRole("banner").contains(bell)).toBe(true);
+  });
+```
+
+Run: `npx vitest run src/components/layout/erp-shell.test.tsx -t "notification bell"` → Expected: FAIL (ไม่พบ `notification-bell`).
+
+- [ ] **Step 10: วางใน `erp-shell.tsx`**
+
+เพิ่ม import `import { NotificationBell } from "./NotificationBell";` ต่อจาก `import { SidebarNav } from "./SidebarNav";` และใน `erp-header-right` ก่อน `{/* Theme switcher toggle */}`:
+
+```tsx
+          {/* In-app notifications (renders nothing without a selected membership) */}
+          <NotificationBell />
+
+```
+
+Run: `npx vitest run src/components/layout` → Expected: PASS ทั้งโฟลเดอร์ (รวม `erp-shell.test.tsx` เดิมทุกเคส).
+
+- [ ] **Step 11: gates และ commit**
+
+Run: `npm run lint && npm run typecheck` → Expected: ผ่าน (ไม่มี `any`; `import` ที่ไม่ใช้ถูกลบแล้ว).
+Run: `npx vitest run src/lib/notifications src/components/layout src/hooks/useNotifications.test.tsx` → Expected: PASS.
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp
+git add frontend/src/components/common/Icons.tsx frontend/src/lib/notifications/notification-view.ts frontend/src/lib/notifications/notification-view.test.tsx frontend/src/components/layout/NotificationCenter.tsx frontend/src/components/layout/NotificationCenter.test.tsx frontend/src/components/layout/NotificationBell.tsx frontend/src/components/layout/NotificationBell.test.tsx frontend/src/components/layout/erp-shell.tsx frontend/src/components/layout/erp-shell.test.tsx frontend/src/messages/th.json frontend/src/messages/en.json
+git commit -F - <<'EOF'
+feat(notifications): add header notification bell with unread badge and dropdown
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
+
+---
+
+## Task 11: หน้ารายการแจ้งเตือนเต็ม `/notifications`
+
+**Files:**
+- Create: `frontend/src/features/notifications/components/notification-list-page.tsx`, `frontend/src/features/notifications/components/notification-list-page.test.tsx`
+- Create: `frontend/src/app/[locale]/(erp)/notifications/page.tsx`
+- Modify: `frontend/src/messages/th.json`, `frontend/src/messages/en.json` (เพิ่ม `notifications.list`)
+
+**Reuse check (ตรวจแล้ว):** โครงรายการมาตรฐานคือ `useListState` (URL-synced) + `PageHeader` + `ListToolbar`/`ListFilterSelect` + `DataTable` (pagination, error/retry, empty ในตัว) + `TableAction` + `StatusBadge` ตามตัวอย่าง `features/customers/components/customer-list.tsx` และ `.agents/skills/building-erp-lists/SKILL.md` → **ใช้ของกลางทั้งหมด ไม่สร้างตารางใหม่**. ข้อความ/ลิงก์ของแต่ละแถวใช้ `useNotificationText` + `localizedNotificationHref` จาก Task 10; data hooks จาก Task 9. Route อยู่ใน `app/[locale]/(erp)/` (ตรวจแล้วว่ามี `layout.tsx` ของ ERP shell ที่ห่อ `ErpShell`). **ไม่ใช้ `PermissionGuard`** — การแจ้งเตือนของตนเองไม่มี permission key (Task 5 `ResolveMembershipAsync`); backend ตรวจ membership และ own-only เอง. เส้นแบ่ง API: `pageSize` ≤ 50 แต่ `useListState` มีตัวเลือก 100 → หน้านี้ส่ง `Math.min(limit, 50)` ไปที่ API และให้ DataTable แสดงค่าเดียวกัน (ไม่เดาค่าอื่น).
+
+**Mark-all ไม่ใช้ ConfirmationModal (ตัดสินใจ):** AGENTS.md บังคับ modal กับ Delete/Void/Cancel และการกระทำเสี่ยงสูง. "อ่านทั้งหมด" เปลี่ยนเฉพาะ flag อ่านของผู้ใช้เอง ไม่ลบ ไม่แตะข้อมูลธุรกิจ และไม่กระทบผู้อื่น → ความเสี่ยงต่ำ จึงไม่มี modal; แต่ปุ่มต้อง disable ระหว่างยิง (Double Submit Protection) และ disable เมื่อไม่มี unread. ถ้าต่อมามี "ลบการแจ้งเตือน" ต้องมี modal ตามกฎ.
+
+- [ ] **Step 1: messages `notifications.list` (th + en)**
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp/frontend
+python3 - <<'PY'
+import json
+
+LIST = {
+    "src/messages/th.json": {
+        "title": "การแจ้งเตือน",
+        "subtitle": "เอกสารที่รอคุณอนุมัติและการแจ้งเตือนอื่นของระบบ",
+        "filterLabel": "สถานะการอ่าน",
+        "filterUnread": "ยังไม่อ่าน",
+        "columnMessage": "ข้อความ",
+        "columnReceivedAt": "เวลาที่ได้รับ",
+        "columnStatus": "สถานะ",
+        "statusUnread": "ยังไม่อ่าน",
+        "statusRead": "อ่านแล้ว",
+        "markRead": "ทำเครื่องหมายว่าอ่านแล้ว",
+        "open": "เปิดเอกสาร",
+        "markAllRead": "อ่านทั้งหมด",
+        "empty": "ไม่มีการแจ้งเตือน",
+    },
+    "src/messages/en.json": {
+        "title": "Notifications",
+        "subtitle": "Documents awaiting your approval and other system notices",
+        "filterLabel": "Read status",
+        "filterUnread": "Unread",
+        "columnMessage": "Message",
+        "columnReceivedAt": "Received",
+        "columnStatus": "Status",
+        "statusUnread": "Unread",
+        "statusRead": "Read",
+        "markRead": "Mark as read",
+        "open": "Open document",
+        "markAllRead": "Mark all as read",
+        "empty": "No notifications",
+    },
+}
+for path, keys in LIST.items():
+    raw = open(path, encoding="utf-8").read()
+    data = json.loads(raw)
+    assert json.dumps(data, indent=2, ensure_ascii=False) + "\n" == raw, f"{path} does not round-trip; edit by hand"
+    assert "list" not in data["notifications"], f"{path} already has notifications.list"
+    data["notifications"]["list"] = keys
+    open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+PY
+git diff --stat -- src/messages
+```
+
+Expected: เพิ่มเฉพาะบล็อก `notifications.list` (ตัวกรองมีค่าเดียว `unread` เพราะ API รองรับเฉพาะ `unreadOnly`).
+
+- [ ] **Step 2: test หน้ารายการที่ล้มก่อน**
+
+`frontend/src/features/notifications/components/notification-list-page.test.tsx`:
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import thMessages from "@/messages/th.json";
+import type { NotificationResponse } from "@/lib/api/api-client";
+import { NotificationListPage } from "./notification-list-page";
+
+const state = vi.hoisted(() => ({
+  search: "",
+  items: [] as NotificationResponse[],
+  totalCount: 0,
+  isError: false,
+  listArgs: [] as unknown[],
+  push: vi.fn(),
+  replace: vi.fn(),
+  markRead: vi.fn(),
+  markAll: vi.fn(),
+  markAllPending: false,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: state.push, replace: state.replace }),
+  usePathname: () => "/th/notifications",
+  useSearchParams: () => new URLSearchParams(state.search),
+}));
+vi.mock("@/hooks/useNotifications", () => ({
+  useNotificationList: (params: unknown) => {
+    state.listArgs.push(params);
+    return {
+      data: { items: state.items, pagination: { page: 1, pageSize: 25, totalCount: state.totalCount, totalPages: 1 } },
+      isLoading: false,
+      isError: state.isError,
+      error: null,
+      refetch: vi.fn(),
+    };
+  },
+  useMarkNotificationRead: () => ({ mutate: state.markRead, isPending: false }),
+  useMarkAllNotificationsRead: () => ({ mutate: state.markAll, isPending: state.markAllPending }),
+}));
+
+const row = (over: Partial<NotificationResponse>): NotificationResponse => ({
+  id: "n-1",
+  type: "estimate.approval-requested",
+  payload: { documentNumber: "EST-1", actorDisplayName: "สมชาย" },
+  deepLink: "/estimates/e-1",
+  createdAtUtc: "2026-10-08T00:00:00Z",
+  readAtUtc: null,
+  ...over,
+});
+
+const renderPage = () =>
+  render(
+    <NextIntlClientProvider locale="th" messages={thMessages}>
+      <NotificationListPage />
+    </NextIntlClientProvider>,
+  );
+
+describe("NotificationListPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    state.search = "";
+    state.items = [row({}), row({ id: "n-2", type: "customer.created", payload: {}, deepLink: null, readAtUtc: "2026-10-08T01:00:00Z" })];
+    state.totalCount = 2;
+    state.isError = false;
+    state.listArgs = [];
+    state.markAllPending = false;
+  });
+
+  it("lists registered and unknown types without throwing, with read status text", () => {
+    renderPage();
+    expect(screen.getByText("สมชาย ส่งใบประมาณราคา EST-1 เพื่อรออนุมัติ")).toBeDefined();
+    expect(screen.getByText(thMessages.notifications.unknownType)).toBeDefined();
+    expect(screen.getAllByText(thMessages.notifications.list.statusUnread).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("queries all rows by default and unread only when the filter is set in the URL, never above 50 per page", () => {
+    renderPage();
+    expect(state.listArgs.at(-1)).toEqual({ unreadOnly: false, page: 1, pageSize: 25 });
+
+    state.search = "status=unread&limit=100";
+    state.listArgs = [];
+    renderPage();
+    expect(state.listArgs.at(-1)).toEqual({ unreadOnly: true, page: 1, pageSize: 50 });
+  });
+
+  it("marks a single row read from its action, only for unread rows", () => {
+    renderPage();
+    const markButtons = screen.getAllByRole("button", { name: thMessages.notifications.list.markRead });
+    expect(markButtons).toHaveLength(1);
+    fireEvent.click(markButtons[0]);
+    expect(state.markRead).toHaveBeenCalledWith("n-1");
+  });
+
+  it("links a row to its locale-prefixed document, and offers no link when the reader lost access", () => {
+    renderPage();
+    const links = screen.getAllByRole("link", { name: thMessages.notifications.list.open });
+    expect(links).toHaveLength(1);
+    expect(links[0].getAttribute("href")).toBe("/th/estimates/e-1");
+  });
+
+  it("marks all read without a confirmation modal, and locks the button while the request runs", () => {
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: thMessages.notifications.list.markAllRead }));
+    expect(state.markAll).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("disables mark-all while pending or when nothing is unread", () => {
+    state.markAllPending = true;
+    const first = renderPage();
+    expect((screen.getByRole("button", { name: thMessages.notifications.list.markAllRead }) as HTMLButtonElement).disabled).toBe(true);
+    first.unmount();
+
+    state.markAllPending = false;
+    state.items = [row({ readAtUtc: "2026-10-08T01:00:00Z" })];
+    renderPage();
+    expect((screen.getByRole("button", { name: thMessages.notifications.list.markAllRead }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("shows the table error state when loading fails", () => {
+    state.isError = true;
+    renderPage();
+    expect(screen.getByText(thMessages.notifications.loadFailed)).toBeDefined();
+  });
+
+  it("shows the empty state when there are no rows", () => {
+    state.items = [];
+    state.totalCount = 0;
+    renderPage();
+    expect(within(document.body).getByText(thMessages.notifications.list.empty)).toBeDefined();
+  });
+});
+```
+
+Run: `npx vitest run src/features/notifications` → Expected: FAIL (module `./notification-list-page` ไม่พบ).
+
+- [ ] **Step 3: implement หน้ารายการ**
+
+`frontend/src/features/notifications/components/notification-list-page.tsx`:
+
+```tsx
+"use client";
+
+import React from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { Button } from "@/components/ui/Button";
+import { ListToolbar } from "@/components/ui/ListToolbar";
+import { ListFilterSelect } from "@/components/ui/ListFilterSelect";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
+import { IconCheckCircle, IconEye } from "@/components/common/Icons";
+import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotificationList,
+} from "@/hooks/useNotifications";
+import type { NotificationResponse } from "@/lib/api/api-client";
+import { formatDateTime } from "@/lib/formatters/formatters";
+import { localizedNotificationHref, useNotificationText } from "@/lib/notifications/notification-view";
+
+/** The API rejects pageSize above this; useListState also offers 100, so the request is clamped (never guessed). */
+const MAX_API_PAGE_SIZE = 50;
+
+interface NotificationFilters extends ListFilterRecord {
+  status?: string;
+}
+
+export function NotificationListPage() {
+  const t = useTranslations("notifications");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const textOf = useNotificationText();
+
+  const listState = useListState<NotificationFilters>({
+    schema: { single: ["status"] },
+  });
+  const pageSize = Math.min(listState.params.limit, MAX_API_PAGE_SIZE);
+
+  const { data, isLoading, isError, error, refetch } = useNotificationList({
+    unreadOnly: listState.params.filters.status === "unread",
+    page: listState.params.page,
+    pageSize,
+  });
+  const markRead = useMarkNotificationRead();
+  const markAll = useMarkAllNotificationsRead();
+
+  const items = data?.items ?? [];
+  const totalItems = data?.pagination.totalCount ?? 0;
+  const totalPages = data?.pagination.totalPages ?? 0;
+  const hasUnread = items.some((n) => n.readAtUtc === null);
+
+  const columns: Column<NotificationResponse>[] = [
+    {
+      id: "message",
+      header: t("list.columnMessage"),
+      className: "min-w-[280px]",
+      cell: (_value, n) => (
+        <span className={n.readAtUtc === null ? "text-xs font-semibold text-erp-text-main" : "text-xs text-erp-text-main"}>
+          {textOf(n)}
+        </span>
+      ),
+    },
+    {
+      id: "receivedAt",
+      header: t("list.columnReceivedAt"),
+      className: "min-w-[160px]",
+      cell: (_value, n) => <span className="font-mono text-[11px] text-erp-text-muted">{formatDateTime(n.createdAtUtc, locale)}</span>,
+    },
+    {
+      id: "status",
+      header: t("list.columnStatus"),
+      className: "min-w-[110px]",
+      cell: (_value, n) => (
+        <StatusBadge
+          label={n.readAtUtc === null ? t("list.statusUnread") : t("list.statusRead")}
+          variant={n.readAtUtc === null ? "info" : "neutral"}
+        />
+      ),
+    },
+    {
+      id: "actions",
+      header: tCommon("fields.actions"),
+      className: "w-[100px]",
+      sticky: "right",
+      isAction: true,
+      cell: (_value, n) => {
+        const href = localizedNotificationHref(locale, n.deepLink);
+        return (
+          <TableActionGroup>
+            {n.readAtUtc === null && (
+              <TableAction
+                icon={<IconCheckCircle size={14} />}
+                label={t("list.markRead")}
+                onClick={() => markRead.mutate(n.id)}
+              />
+            )}
+            {href !== null && <TableAction icon={<IconEye size={14} />} label={t("list.open")} href={href} variant="primary" />}
+          </TableActionGroup>
+        );
+      },
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title={t("list.title")}
+        subtitle={t("list.subtitle")}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            disabled={markAll.isPending || !hasUnread}
+            isLoading={markAll.isPending}
+            onClick={() => markAll.mutate()}
+          >
+            {t("list.markAllRead")}
+          </Button>
+        }
+      />
+
+      <ListToolbar>
+        <ListFilterSelect
+          id="filter-notification-status"
+          label={t("list.filterLabel")}
+          value={listState.params.filters.status ?? ""}
+          onChange={(value) => listState.actions.setFilter("status", value === "" ? undefined : value)}
+          options={[{ value: "unread", label: t("list.filterUnread") }]}
+          widthClassName="w-full sm:w-44"
+        />
+      </ListToolbar>
+
+      <DataTable<NotificationResponse>
+        columns={columns}
+        data={items}
+        isLoading={isLoading}
+        isError={isError}
+        error={isError ? t("loadFailed") : null}
+        onRetry={() => refetch()}
+        emptyTitle={t("list.empty")}
+        pagination={{ page: listState.params.page, limit: pageSize, totalPages, totalItems }}
+        onPageChange={(p) => listState.actions.setPage(p)}
+        onLimitChange={(limit) => listState.actions.setLimit(limit as ListPageSize)}
+      />
+    </div>
+  );
+}
+```
+
+ตรวจแล้ว: `Button` มี `isLoading`, `ListToolbar` รับ `children`, `IconEye`/`IconCheckCircle`/`TableActionGroup` มีอยู่. `setLimit(limit as ListPageSize)` เป็น cast แบบเดียวกับ `customer-list.tsx` (ไม่ใช่ `any`). Mark read ใช้ `mutate` (ไม่ใช่ `mutateAsync`) เพื่อไม่ให้เกิด unhandled rejection.
+
+Run: `npx vitest run src/features/notifications` → Expected: PASS ทั้ง 8.
+
+- [ ] **Step 4: route**
+
+`frontend/src/app/[locale]/(erp)/notifications/page.tsx`:
+
+```tsx
+"use client";
+
+import React, { use } from "react";
+import { notFound } from "next/navigation";
+import { isSupportedLocale } from "@/lib/i18n/locales";
+import { NotificationListPage } from "@/features/notifications/components/notification-list-page";
+
+interface NotificationsPageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export default function NotificationsPage({ params }: NotificationsPageProps) {
+  const { locale } = use(params);
+
+  if (!isSupportedLocale(locale)) {
+    notFound();
+  }
+
+  return <NotificationListPage />;
+}
+```
+
+Run: `ls "frontend/src/app/[locale]/(erp)/notifications/page.tsx"` → Expected: พบไฟล์. ไม่ใส่ `PermissionGuard` โดยตั้งใจ (ดู Reuse check).
+
+- [ ] **Step 5: gates และ commit**
+
+Run (ใน `frontend/`): `npm run lint && npm run typecheck && npx vitest run src/features/notifications src/components/layout src/lib/notifications src/hooks/useNotifications.test.tsx` → Expected: ผ่านทั้งหมด.
+Run: `npm run build` → Expected: สำเร็จ และ route `/[locale]/notifications` ปรากฏในรายการ route.
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp
+git add frontend/src/features/notifications "frontend/src/app/[locale]/(erp)/notifications" frontend/src/messages/th.json frontend/src/messages/en.json
+git commit -F - <<'EOF'
+feat(notifications): add full notification list page with unread filter and mark read
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+EOF
+```
+
+---
+
+## Task 12: Verification record และ sync เอกสารสถานะ
+
+**Files:**
+- Create: `docs/05-engineering/notification-foundation-verification.md` (ชื่อตามที่ลิงก์ไว้แล้วใน `notification-api-contract.md` Task 1)
+- Modify: `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md` (แถว G-02), `docs/00-overview/implementation-roadmap.md` (แถว Foundation), `docs/README.md`, `docs/03-contracts/notification-api-contract.md` (บรรทัดสถานะ)
+
+ขั้นนี้ไม่เขียนผลที่ไม่ได้รัน: ตัวเลขทุกตัวในเอกสารต้องมาจาก output จริงของ Step 1 (รูปแบบเดียวกับ `docs/05-engineering/shared-attachment-signature-verification.md`).
+
+- [ ] **Step 1: รัน focused gate และเก็บ output**
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp
+dotnet build backend/TanErp.slnx
+dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter "FullyQualifiedName~Notification"
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~Notification" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~EstimateEndpointsTests" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~CostRecordEndpointsTests|FullyQualifiedName~ItemCatalogEstimateFlowTests" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~ProcurementEndpointsTests" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~ProjectControlEndpointsTests" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~MrpEndpointsTests" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~IdentityAdministrationEndpointsTests|FullyQualifiedName~UsersEndpointsTests" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~OpenApiContractTests"
+dotnet test backend/tests/TanErp.ArchitectureTests/TanErp.ArchitectureTests.csproj
+cd frontend
+npm run check:api
+npx vitest run src/features/notifications src/components/layout src/lib/notifications src/lib/api/api-client.test.ts src/hooks
+npm run lint
+npm run typecheck
+npm run build
+```
+
+Expected: ทุกคำสั่งออกด้วย exit 0 (integration ต้องมี Docker). จดจำนวน passed/failed ของแต่ละบรรทัดไว้ใช้ใน Step 2. ถ้าคำสั่งใดล้ม **หยุดและแก้ที่ task เจ้าของก่อน** ห้ามเขียนเอกสารว่าผ่าน. ตรวจว่าไม่มี Email/outbox หลงเหลือในโค้ด: `grep -rn "IEmailSender\|NotificationOutbox\|EmailOutbox" backend/src frontend/src` → Expected: ไม่พบ.
+
+- [ ] **Step 2: เขียน `docs/05-engineering/notification-foundation-verification.md`**
+
+โครงเอกสาร (ภาษาไทย; แทนตัวเลขในตารางด้วยค่าจาก Step 1 — ห้ามคงข้อความในวงเล็บไว้):
+
+```markdown
+# Notification Foundation Verification (G-02)
+
+## 1. สถานะ
+
+Implemented <วันที่ของวันรัน Step 1> ด้วยผล **focused tests เท่านั้น** (in-app เท่านั้น) — ยังไม่ผ่านการตรวจ bell dropdown ในเบราว์เซอร์จริง, full suite, Playwright หรือ UAT ของ Role จริง. สัญญา: [Notification API Contract](../03-contracts/notification-api-contract.md); การตัดสินใจ: [ADR 0018](../adr/0018-in-app-notification-foundation.md); แผน: [แผน G-02](../superpowers/plans/2026-10-08-g02-notification-foundation.md).
+
+## 2. ผลที่รันจริง (<วันที่>)
+
+| คำสั่ง | ผล |
+| --- | --- |
+| `dotnet build backend/TanErp.slnx` | (Warning/Error จาก output) |
+| Unit `FullyQualifiedName~Notification` | (passed/failed จาก output) |
+| Integration `FullyQualifiedName~Notification` (`-m:1`) | (passed/failed) |
+| Regression Integration: `EstimateEndpointsTests`; `CostRecordEndpointsTests\|ItemCatalogEstimateFlowTests`; `ProcurementEndpointsTests`; `ProjectControlEndpointsTests`; `MrpEndpointsTests`; `IdentityAdministrationEndpointsTests\|UsersEndpointsTests` (`-m:1`, แยกคำสั่ง) | (passed/failed ต่อคำสั่ง) |
+| `OpenApiContractTests` / ArchitectureTests | (passed/failed) |
+| `npm run check:api` / `lint` / `typecheck` / `build` | (ผล) |
+| `npx vitest run src/features/notifications src/components/layout src/lib/notifications src/lib/api/api-client.test.ts src/hooks` | (จำนวนไฟล์/tests) |
+
+สิ่งที่ชุดเหล่านี้พิสูจน์: Notification สร้างใน transaction เดียวกับ business change (rollback = ไม่มี notification; commit = มี); ผู้รับ = ผู้ถือ permission อนุมัติใน Organization/Branch ของเอกสาร โดยตัดผู้ทำ (maker) ทั้งที่ resolver และ planner; อ่าน/mark read ได้เฉพาะของตน, ข้าม Organization = 404 `NOTIFICATION_NOT_FOUND`; payload ผ่าน allowlist (ไม่มีต้นทุน/ราคา/margin); deep link ตามสิทธิ์ปัจจุบัน; registry ครบคู่กับ `NotificationTypes` และ whitelist ฝั่ง UI + ข้อความ th/en; Frontend: badge cap 99+, ไม่ดึงรายการก่อนเปิด, mark read ก่อนนำทาง, type ที่ไม่รู้จักแสดงบรรทัดกลาง, หน้ารายการใช้ DataTable กลาง และ regression ของทั้งหกแหล่ง event ผ่านโดยไม่เปลี่ยนพฤติกรรมเดิม.
+
+### สิ่งที่ไม่ได้รัน
+
+Full backend suite, full vitest suite, Playwright journey, UAT ด้วย Role จริง, **การตรวจ bell dropdown ในเบราว์เซอร์จริง**.
+
+## 3. การตรวจในเบราว์เซอร์
+
+**ยังไม่ได้ตรวจ** ต้องยืนยันด้วยมือ: (1) Esc ปิด dropdown แล้ว focus กลับที่ปุ่มกระดิ่ง, (2) คลิกนอกกล่องปิด, (3) dropdown ไม่ล้นจอที่ความกว้าง 375px, (4) ปุ่มกระดิ่งบนพื้น header สีกรมท่าเห็นชัดทั้งธีมสว่าง/มืด และ focus ring มองเห็น, (5) badge อัปเดตภายใน ~30 วินาทีหลังมี notification ใหม่ และหยุด poll เมื่อสลับแท็บ (ดู Network), (6) สกรีนรีดเดอร์ประกาศจำนวนที่ยังไม่อ่าน.
+
+## 4. ข้อจำกัดและการตัดสินใจ
+
+- **in-app เท่านั้น** — ไม่มี email, LINE, SMS (เลื่อนตามคำสั่งผู้ใช้; ไม่มี `IEmailSender`/outbox; ADR 0018 ระบุเงื่อนไขประเมินใหม่เมื่อมีช่องทางส่งออก).
+- Polling ทุก 30 วินาที (หยุดเมื่อแท็บซ่อน) — ไม่มี push/websocket; ผู้ใช้อาจเห็นช้าได้สูงสุดราว 30 วินาที.
+- Event source มี 6 แหล่ง "ส่งเข้าสถานะรออนุมัติ" เท่านั้น. Event ประเภท Future ต้องมี scheduler/background job ซึ่งยังไม่มี: ใบประกันใกล้หมด, งานบริการเกิน SLA (G-18), Membership ใกล้หมดอายุ (G-21) — แต่ละเรื่องเพิ่ม type ตามขั้นตอนในสัญญาได้โดยไม่แก้โค้ดกลาง.
+- ผู้ทำ (maker) ถูกตัดสองชั้น (resolver และ planner) — ผู้ทำที่ถือสิทธิ์อนุมัติเองจะไม่ได้รับแจ้งเอกสารของตน.
+- Estimate แจ้งเฉพาะผู้ตรวจขั้นแรกของ route; ผู้ตรวจขั้นถัดไปยังไม่ได้รับแจ้งเมื่อขั้นก่อนอนุมัติ (Validation Question ข้อ 2 ค้างที่ Sales/Security).
+- **ไม่ได้กำหนด retention/purge** ของแถวที่อ่านแล้ว (Validation Question ข้อ 1 ค้างที่ Security + Operations) — ตารางจะโตต่อเนื่อง; มี index `(organization, recipient, createdAt)` รองรับระยะแรก.
+- a11y: dropdown ไม่มี arrow-key roving (ใช้ Tab/Enter/Space ของปุ่มจริง); ยังไม่ผ่านการตรวจด้วยสกรีนรีดเดอร์.
+- กฎผู้รับเป็นค่าเริ่มต้น TEST_ONLY รอ Security/Operations ยืนยัน.
+```
+
+เมื่อเขียนจริง ให้ลบคำอธิบายในวงเล็บของตารางและแทนด้วยตัวเลขจาก Step 1.
+
+- [ ] **Step 3: sync เอกสารสถานะ**
+
+(`DATE=$(date +%F)` ใช้วันที่เดียวกับที่ใส่ในเอกสาร Step 2)
+
+1. `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md` แถว G-02 (บรรทัด `| G-02 | ...`): แทนด้วย
+   `| G-02 | Notification Foundation (in-app เท่านั้น; อีเมลเลื่อน) | A | Identity | Security + Operations | [แผน G-02](2026-10-08-g02-notification-foundation.md) — Implemented $DATE (in-app only; focused tests; browser check + full gate pending) |`
+   และในส่วน `### G-02 — Notification Foundation` เปลี่ยนรายการ "Email channel ผ่าน `IEmailSender`" เป็น `- [ ] (Future) Email channel — เลื่อนตามคำสั่งผู้ใช้; ไม่อยู่ใน slice G-02 รอบแรก (ดู [ADR 0018](../../adr/0018-in-app-notification-foundation.md))` และ "ADR: เลือก outbox ร่วม..." เป็น `- [x] ADR 0018: ไม่ใช้ outbox, ไม่แตะ Finance` (ขีด `[x]` เฉพาะรายการที่ทำจริง: ADR, Domain, event sources 6 แหล่ง, Frontend, Tests; ใบประกันใกล้หมด/SLA คงเป็น `[ ]` Future).
+2. `docs/00-overview/implementation-roadmap.md` แถว Foundation: ต่อท้ายคอลัมน์ "สิ่งที่มี/ข้อจำกัด" ด้วย `; การแจ้งเตือนในระบบ (G-02, $DATE, in-app only, focused tests; ยังไม่ตรวจ bell ในเบราว์เซอร์/full gate; ไม่มี email/push): bell + หน้า /notifications สำหรับเอกสารรออนุมัติ 6 แหล่ง` และเพิ่มลิงก์ [Notification Verification](../05-engineering/notification-foundation-verification.md) ในคอลัมน์หลักฐานของแถวเดียวกัน.
+3. `docs/README.md`: เพิ่มแถวถัดจาก Quick Estimate Verification: `| ผลตรวจ Notification Foundation (G-02) | [Notification Verification](05-engineering/notification-foundation-verification.md) |` (แถว API contract ลงทะเบียนแล้วใน Task 1).
+4. `docs/03-contracts/notification-api-contract.md`: บรรทัด `**สถานะ:**` เปลี่ยนจาก "Draft → Implemented เมื่อ G-02 เสร็จ" เป็น `Implemented $DATE (in-app only; focused tests)` คงลิงก์ Verification/ADR และประโยค "รอบนี้ไม่มีช่องทางอีเมล (Future)".
+
+- [ ] **Step 4: ตรวจลิงก์สัมพัทธ์ของเอกสารที่แก้**
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp
+python3 - <<'PY'
+import os, re, sys
+files = [
+    "docs/05-engineering/notification-foundation-verification.md",
+    "docs/03-contracts/notification-api-contract.md",
+    "docs/adr/0018-in-app-notification-foundation.md",
+    "docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md",
+    "docs/00-overview/implementation-roadmap.md",
+    "docs/README.md",
+]
+missing = []
+for f in files:
+    text = open(f, encoding="utf-8").read()
+    for target in re.findall(r"\]\(([^)#\s]+)(?:#[^)]*)?\)", text):
+        if re.match(r"^[a-z]+:", target):
+            continue
+        if not os.path.exists(os.path.normpath(os.path.join(os.path.dirname(f), target))):
+            missing.append((f, target))
+for f, t in missing:
+    print(f"BROKEN {f} -> {t}")
+sys.exit(1 if missing else 0)
+PY
+```
+
+Expected: exit 0 และไม่มีบรรทัด `BROKEN`. ถ้ามีลิงก์เสียที่มีอยู่ก่อนงานนี้ในไฟล์ที่ไม่ได้แก้ในส่วนของเรา ให้บันทึกในรายงานแต่ไม่แก้ (Minimal Blast Radius).
+
+- [ ] **Step 5: final focused gate (ย้ำก่อน commit)**
+
+Run: `git status --short` → Expected: เฉพาะไฟล์เอกสารของ Task นี้ (ไม่มี `.env`, `bin/`, `obj/`, `.next/`).
+Run: `cd frontend && npx vitest run src/features/notifications src/components/layout src/lib/notifications src/hooks && npm run lint && npm run typecheck` → Expected: ผ่าน.
+
+- [ ] **Step 6: commit**
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp
+git add docs/05-engineering/notification-foundation-verification.md docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md docs/00-overview/implementation-roadmap.md docs/README.md docs/03-contracts/notification-api-contract.md
+git commit -F - <<'EOF'
+docs(notifications): add verification record and update roadmap
 
 Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
