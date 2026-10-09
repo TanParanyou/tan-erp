@@ -2553,7 +2553,10 @@
       "contactNamePlaceholder": "e.g. John Carpenter",
       "phonePlaceholder": "e.g. 02-123-4567",
       "emailPlaceholder": "sales@supplier.com",
-      "paymentTermDaysPlaceholder": "30"
+      "paymentTermDaysPlaceholder": "30",
+      "invalidPhone": "Invalid phone number format",
+      "invalidEmail": "Invalid email format",
+      "invalidTaxId": "Tax identification number must be 13 digits"
     },
     "orders": {
       "title": "Purchase orders",

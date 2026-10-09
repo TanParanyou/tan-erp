@@ -2553,7 +2553,10 @@
       "contactNamePlaceholder": "เช่น สมชาย ช่างไม้",
       "phonePlaceholder": "เช่น 02-123-4567",
       "emailPlaceholder": "sales@supplier.com",
-      "paymentTermDaysPlaceholder": "30"
+      "paymentTermDaysPlaceholder": "30",
+      "invalidPhone": "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง",
+      "invalidEmail": "รูปแบบอีเมลไม่ถูกต้อง",
+      "invalidTaxId": "เลขประจำตัวผู้เสียภาษีต้องเป็นตัวเลข 13 หลัก"
     },
     "orders": {
       "title": "ใบสั่งซื้อ (Purchase Order)",

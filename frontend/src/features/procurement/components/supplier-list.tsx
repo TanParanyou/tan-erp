@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
+import { PhoneInput } from "@/components/forms/PhoneInput";
 import { Drawer } from "@/components/ui/Drawer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -18,6 +19,7 @@ import { IconPlus } from "@/components/common/Icons";
 import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
+import { isValidPhoneNumber } from "@/lib/validation/phone";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -110,13 +112,31 @@ export function SupplierList() {
       return;
     }
 
+    const trimmedTaxId = form.taxId.trim();
+    if (trimmedTaxId && !/^\d{13}$/.test(trimmedTaxId)) {
+      setError(t("invalidTaxId"));
+      return;
+    }
+
+    const trimmedPhone = form.phone.trim();
+    if (trimmedPhone && !isValidPhoneNumber(trimmedPhone)) {
+      setError(t("invalidPhone"));
+      return;
+    }
+
+    const trimmedEmail = form.email.trim();
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError(t("invalidEmail"));
+      return;
+    }
+
     const payload: SupplierRequest = {
       nameTh: form.nameTh.trim(),
       nameEn: form.nameEn.trim() || null,
-      taxId: form.taxId.trim() || null,
+      taxId: trimmedTaxId || null,
       contactName: form.contactName.trim() || null,
-      phone: form.phone.trim() || null,
-      email: form.email.trim() || null,
+      phone: trimmedPhone || null,
+      email: trimmedEmail || null,
       paymentTermDays: term,
     };
 
@@ -262,7 +282,14 @@ export function SupplierList() {
             <Input label={t("taxId")} maxLength={20} placeholder={t("taxIdPlaceholder")} {...field("taxId")} />
             <Input type="number" min={0} max={365} label={t("paymentTerm")} placeholder={t("paymentTermDaysPlaceholder")} {...field("paymentTermDays")} />
             <Input label={t("contactName")} maxLength={200} placeholder={t("contactNamePlaceholder")} {...field("contactName")} />
-            <Input label={t("phone")} maxLength={50} placeholder={t("phonePlaceholder")} {...field("phone")} />
+            <PhoneInput
+              id="supplier-phone"
+              label={t("phone")}
+              placeholder={t("phonePlaceholder")}
+              value={form.phone}
+              onValueChange={(val) => setForm((curr) => ({ ...curr, phone: val }))}
+              disabled={isBusy}
+            />
           </div>
           <Input type="email" label={t("email")} maxLength={200} placeholder={t("emailPlaceholder")} {...field("email")} />
         </div>
