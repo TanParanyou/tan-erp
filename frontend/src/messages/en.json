@@ -3967,6 +3967,21 @@
       "changeOrderApprovalRequested": "{actorDisplayName} submitted change order {documentNumber} for approval",
       "mrpRunApprovalRequested": "{actorDisplayName} created planning run {documentNumber} awaiting approval",
       "roleAssignmentApprovalRequested": "{actorDisplayName} requested role {roleName} for {subjectDisplayName}"
+    },
+    "list": {
+      "title": "Notifications",
+      "subtitle": "Documents awaiting your approval and other system notices",
+      "filterLabel": "Read status",
+      "filterUnread": "Unread",
+      "columnMessage": "Message",
+      "columnReceivedAt": "Received",
+      "columnStatus": "Status",
+      "statusUnread": "Unread",
+      "statusRead": "Read",
+      "markRead": "Mark as read",
+      "open": "Open document",
+      "markAllRead": "Mark all as read",
+      "empty": "No notifications"
     }
   }
 }

@@ -3967,6 +3967,21 @@
       "changeOrderApprovalRequested": "{actorDisplayName} ส่งใบเปลี่ยนแปลงงาน {documentNumber} เพื่อรออนุมัติ",
       "mrpRunApprovalRequested": "{actorDisplayName} สร้างรอบวางแผนวัสดุ {documentNumber} ที่รออนุมัติ",
       "roleAssignmentApprovalRequested": "{actorDisplayName} ขอมอบบทบาท {roleName} ให้ {subjectDisplayName}"
+    },
+    "list": {
+      "title": "การแจ้งเตือน",
+      "subtitle": "เอกสารที่รอคุณอนุมัติและการแจ้งเตือนอื่นของระบบ",
+      "filterLabel": "สถานะการอ่าน",
+      "filterUnread": "ยังไม่อ่าน",
+      "columnMessage": "ข้อความ",
+      "columnReceivedAt": "เวลาที่ได้รับ",
+      "columnStatus": "สถานะ",
+      "statusUnread": "ยังไม่อ่าน",
+      "statusRead": "อ่านแล้ว",
+      "markRead": "ทำเครื่องหมายว่าอ่านแล้ว",
+      "open": "เปิดเอกสาร",
+      "markAllRead": "อ่านทั้งหมด",
+      "empty": "ไม่มีการแจ้งเตือน"
     }
   }
 }
