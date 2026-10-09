@@ -286,6 +286,7 @@ public static class ProblemDetailsMapper
         "ATTACHMENT_DUPLICATE" => StatusCodes.Status409Conflict,
         "ATTACHMENT_LIMIT_EXCEEDED" => StatusCodes.Status409Conflict,
         "ATTACHMENT_OWNER_LOCKED" => StatusCodes.Status409Conflict,
+        "NOTIFICATION_NOT_FOUND" => StatusCodes.Status404NotFound,
         "SIGNATURE_SUBMISSION_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "SIGNATURE_CONSENT_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "SIGNATURE_IMAGE_INVALID" => StatusCodes.Status422UnprocessableEntity,

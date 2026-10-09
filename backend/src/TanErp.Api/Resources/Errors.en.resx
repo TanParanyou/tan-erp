@@ -1017,4 +1017,6 @@
   <data name="SIGNATURE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>The current consent statement must be accepted.</value></data>
   <data name="SIGNATURE_IMAGE_INVALID_TITLE" xml:space="preserve"><value>Invalid Signature Image</value></data>
   <data name="SIGNATURE_IMAGE_INVALID_DETAIL" xml:space="preserve"><value>The signature image must be a verified PNG file.</value></data>
+  <data name="NOTIFICATION_NOT_FOUND_TITLE" xml:space="preserve"><value>Notification Not Found</value></data>
+  <data name="NOTIFICATION_NOT_FOUND_DETAIL" xml:space="preserve"><value>The notification was not found.</value></data>
 </root>

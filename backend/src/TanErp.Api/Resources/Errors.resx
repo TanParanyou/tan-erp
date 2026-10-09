@@ -1179,4 +1179,6 @@
   <data name="SIGNATURE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องยอมรับข้อความยินยอมฉบับปัจจุบัน</value></data>
   <data name="SIGNATURE_IMAGE_INVALID_TITLE" xml:space="preserve"><value>ภาพลายเซ็นไม่ถูกต้อง</value></data>
   <data name="SIGNATURE_IMAGE_INVALID_DETAIL" xml:space="preserve"><value>ภาพลายเซ็นต้องเป็นไฟล์ PNG ที่ผ่านการตรวจสอบแล้ว</value></data>
+  <data name="NOTIFICATION_NOT_FOUND_TITLE" xml:space="preserve"><value>ไม่พบการแจ้งเตือน</value></data>
+  <data name="NOTIFICATION_NOT_FOUND_DETAIL" xml:space="preserve"><value>ไม่พบการแจ้งเตือนที่ต้องการ</value></data>
 </root>

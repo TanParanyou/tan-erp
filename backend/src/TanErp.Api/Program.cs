@@ -184,6 +184,7 @@ builder.Services.AddScoped<TanErp.Application.Attachments.IAttachmentStore, TanE
 builder.Services.AddScoped<TanErp.Application.Notifications.INotificationRecipientResolver, TanErp.Infrastructure.Persistence.Notifications.NotificationRecipientResolver>();
 builder.Services.AddScoped<TanErp.Application.Notifications.INotificationPublisher, TanErp.Infrastructure.Persistence.Notifications.NotificationPublisher>();
 builder.Services.AddScoped<TanErp.Application.Notifications.INotificationStore, TanErp.Infrastructure.Persistence.Notifications.NotificationStore>();
+builder.Services.AddScoped<TanErp.Application.Notifications.NotificationHandler>();
 builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infrastructure.Persistence.Service.ServiceStore>();
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
 builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();
