@@ -4,6 +4,7 @@ using Npgsql;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Notifications;
 using TanErp.Application.Procurement;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
@@ -11,6 +12,7 @@ using TanErp.Domain.Items;
 using TanErp.Domain.Procurement;
 using TanErp.Domain.Projects;
 using TanErp.Infrastructure.Persistence.DocumentNumbering;
+using TanErp.Infrastructure.Persistence.Notifications;
 
 namespace TanErp.Infrastructure.Persistence.Procurement;
 
@@ -19,12 +21,14 @@ public class ProcurementStore : IProcurementStore
     private readonly AppDbContext _db;
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _numbers;
+    private readonly INotificationPublisher _notifications;
 
-    public ProcurementStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers)
+    public ProcurementStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications)
     {
         _db = db;
         _clock = clock;
         _numbers = numbers;
+        _notifications = notifications;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -368,6 +372,14 @@ public class ProcurementStore : IProcurementStore
 
             Audit(access, $"purchase-order.{action.ToString().ToLowerInvariant()}", "PurchaseOrder", order.Id, traceId,
                 new { number = order.Number, status = order.Status, total = order.TotalAmount }, order.RowVersion, now);
+            if (action == PurchaseOrderAction.Submit)
+            {
+                await _notifications.PublishAsync(
+                    NotificationEvents.PurchaseOrderSubmitted(
+                        orgId, order.BranchId, order.RowVersion, access.ActorUserId, order.Id, order.Number, order.CreatedByUserId),
+                    ct);
+            }
+
             try
             {
                 await _db.SaveChangesAsync(ct);
@@ -375,6 +387,11 @@ public class ProcurementStore : IProcurementStore
             }
             catch (DbUpdateConcurrencyException)
             {
+                return Fail<PurchaseOrderProjection>("PURCHASE_ORDER_VERSION_CONFLICT", "Purchase order version conflict.");
+            }
+            catch (DbUpdateException ex) when (NotificationDedupeConflict.Is(ex))
+            {
+                // A concurrent duplicate already committed this transition's notification: report the same outcome as a stale version.
                 return Fail<PurchaseOrderProjection>("PURCHASE_ORDER_VERSION_CONFLICT", "Purchase order version conflict.");
             }
 
