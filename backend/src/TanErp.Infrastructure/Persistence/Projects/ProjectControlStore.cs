@@ -5,12 +5,14 @@ using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
+using TanErp.Application.Notifications;
 using TanErp.Application.Projects;
 using TanErp.Application.Projects.Control;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Procurement;
 using TanErp.Domain.Projects;
+using TanErp.Infrastructure.Persistence.Notifications;
 
 namespace TanErp.Infrastructure.Persistence.Projects;
 
@@ -21,12 +23,14 @@ public class ProjectControlStore : IProjectControlStore
     private readonly AppDbContext _db;
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _documentNumberGenerator;
+    private readonly INotificationPublisher _notifications;
 
-    public ProjectControlStore(AppDbContext db, IClock clock, IDocumentNumberGenerator documentNumberGenerator)
+    public ProjectControlStore(AppDbContext db, IClock clock, IDocumentNumberGenerator documentNumberGenerator, INotificationPublisher notifications)
     {
         _db = db;
         _clock = clock;
         _documentNumberGenerator = documentNumberGenerator;
+        _notifications = notifications;
     }
 
     private static Result<ProjectControlProjection> Fail(string code, string message) =>
@@ -455,6 +459,14 @@ public class ProjectControlStore : IProjectControlStore
             Audit(access, $"project.change-order-{action.ToString().ToLowerInvariant()}", projectId, traceId,
                 new { number = order.Number, status = order.Status, budgetDelta = order.BudgetDelta, contractDelta = order.ContractDelta }, null, now);
 
+            if (action == ChangeOrderAction.Submit)
+            {
+                await _notifications.PublishAsync(
+                    NotificationEvents.ChangeOrderSubmitted(
+                        orgId, project.BranchId, order.RowVersion, access.ActorUserId, order.Id, projectId, order.Number, order.CreatedByUserId),
+                    ct);
+            }
+
             try
             {
                 await _db.SaveChangesAsync(ct);
@@ -462,6 +474,11 @@ public class ProjectControlStore : IProjectControlStore
             }
             catch (DbUpdateConcurrencyException)
             {
+                return Fail("PROJECT_CHANGE_ORDER_VERSION_CONFLICT", "Change order version conflict.");
+            }
+            catch (DbUpdateException ex) when (NotificationDedupeConflict.Is(ex))
+            {
+                // A concurrent duplicate already committed this transition's notification: report the same outcome as a stale version.
                 return Fail("PROJECT_CHANGE_ORDER_VERSION_CONFLICT", "Change order version conflict.");
             }
 
