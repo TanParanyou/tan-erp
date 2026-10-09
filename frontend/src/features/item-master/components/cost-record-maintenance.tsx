@@ -9,7 +9,7 @@ import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { useToast } from "@/hooks/useToast";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -152,8 +152,42 @@ export function CostRecordMaintenance({ itemId }: CostRecordMaintenanceProps) {
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="item-costs-heading" className="text-lg font-semibold text-erp-text-main">{t("costHistory")}</h2>{mayCreate && <Button type="button" onClick={() => setOpen(true)}>{createdDraft ? t("finishCostDraft") : t("createCostDraft")}</Button>}</div>
       {(costs.isError || lookups.isError || sources.isError) && <p role="alert" className="border border-erp-danger p-3 text-erp-danger">{t("createFailed")}</p>}
       <DataTable<CostRecordResponse> columns={columns} data={rows} isLoading={costs.isLoading} isError={costs.isError} error={costs.error} onRetry={() => { void costs.refetch(); }} emptyTitle={t("noCostRecords")} hidePagination />
-      <Modal isOpen={open} onClose={() => { if (!saving) setOpen(false); }} closeDisabled={saving} title={t("createCostDraft")}>
-        <form className="space-y-4" noValidate onSubmit={(event) => { void submit(event); }}>
+      <Drawer
+        isOpen={open}
+        onClose={() => { if (!saving) setOpen(false); }}
+        closeDisabled={saving}
+        title={t("createCostDraft")}
+        size="lg"
+        footer={(
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              className="w-full sm:w-auto min-h-11"
+              disabled={saving}
+              onClick={() => setOpen(false)}
+            >
+              {common("actions.cancel")}
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              className="w-full sm:w-auto min-h-11"
+              isLoading={saving}
+              disabled={saving || !mayCreate}
+              onClick={() => {
+                const formEl = document.getElementById("create-cost-draft-form") as HTMLFormElement | null;
+                formEl?.requestSubmit();
+              }}
+            >
+              {t("saveCostDraft")}
+            </Button>
+          </div>
+        )}
+      >
+        <form id="create-cost-draft-form" className="space-y-4 py-2" noValidate onSubmit={(event) => { void submit(event); }}>
           <Select
             id="cost-source"
             label={t("costSources")}
@@ -221,10 +255,20 @@ export function CostRecordMaintenance({ itemId }: CostRecordMaintenanceProps) {
             error={form.formState.errors.reason?.message}
             disabled={saving}
           />
-          <div className="erp-form-group"><label className="erp-label" htmlFor="cost-evidence">{t("evidence")}</label><input id="cost-evidence" type="file" className="erp-input" disabled={saving} onChange={(event) => { setEvidenceFile(event.target.files?.item(0) ?? null); setVerifiedEvidenceFileId(null); uploadKeyRef.current = null; }} /><p className="text-xs text-erp-text-muted">{t("evidenceDeferredHelp")}</p></div>
-          <div className="flex justify-end gap-2 border-t border-erp-border pt-4"><Button type="button" variant="outline" disabled={saving} onClick={() => setOpen(false)}>{common("actions.cancel")}</Button><Button type="submit" isLoading={saving} disabled={saving || !mayCreate}>{t("saveCostDraft")}</Button></div>
+          <Input
+            id="cost-evidence"
+            type="file"
+            label={t("evidence")}
+            helperText={t("evidenceDeferredHelp")}
+            disabled={saving}
+            onChange={(event) => {
+              setEvidenceFile(event.target.files?.item(0) ?? null);
+              setVerifiedEvidenceFileId(null);
+              uploadKeyRef.current = null;
+            }}
+          />
         </form>
-      </Modal>
+      </Drawer>
     </section>
   );
 }

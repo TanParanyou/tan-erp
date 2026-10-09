@@ -161,7 +161,7 @@ function DetailView({ request }: { request: ServiceRequestResponse }) {
           {dialog === "schedule" ? (
             <Input type="date" label={t("visitDate")} required value={date} disabled={busy} onChange={(event) => setDate(event.target.value)} />
           ) : (
-            <Input label={t(dialog === "reopen" ? "reopenReason" : "resolutionNote")} required value={text} maxLength={500} disabled={busy} onChange={(event) => setText(event.target.value)} />
+            <Input label={t(dialog === "reopen" ? "reopenReason" : "resolutionNote")} required value={text} maxLength={500} disabled={busy} placeholder={t(dialog === "reopen" ? "reopenReasonPlaceholder" : "resolutionNotePlaceholder")} onChange={(event) => setText(event.target.value)} />
           )}
         </div>
       </Modal>

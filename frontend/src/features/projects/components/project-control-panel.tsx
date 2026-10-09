@@ -154,6 +154,7 @@ export function ProjectControlPanel({ projectId }: ProjectControlPanelProps) {
             value={reason}
             maxLength={500}
             disabled={isTransitioning}
+            placeholder={t("control.reasonPlaceholder")}
             error={reasonError ? t("control.reasonRequired") : undefined}
             onChange={(event) => {
               setReason(event.target.value);

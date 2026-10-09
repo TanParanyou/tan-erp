@@ -7,6 +7,7 @@ import { AttachmentList } from "@/components/forms/AttachmentList";
 import { SignatureCapturePanel } from "@/components/forms/SignatureCapturePanel";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
@@ -195,13 +196,11 @@ function DetailView({ job }: { job: InstallationResponse }) {
           <ul className="space-y-2">
             {checklist.map((item) => (
               <li key={item.id} className="flex flex-wrap items-center gap-3 border border-erp-border bg-erp-surface-subtle p-3 text-sm">
-                <input
-                  type="checkbox"
-                  className="h-5 w-5"
+                <Checkbox
                   aria-label={item.title ?? ""}
                   checked={Boolean(item.done)}
                   disabled={busy || status !== "in_progress" || !canOperate}
-                  onChange={(event) => void run({ kind: "checklist", itemId: item.id ?? "", done: event.target.checked })}
+                  onCheckedChange={(checked) => void run({ kind: "checklist", itemId: item.id ?? "", done: checked === true })}
                 />
                 <span className="flex-1">{item.title}</span>
                 {item.required && <span className="text-xs font-semibold text-erp-navy">{t("required")}</span>}
@@ -271,10 +270,10 @@ function DetailView({ job }: { job: InstallationResponse }) {
           {dialog?.kind === "handover" && (
             <>
               <Select label={t("outcome")} value={outcome} disabled={busy} options={[{ value: "accepted", label: t("outcomes.accepted") }, { value: "disputed", label: t("outcomes.disputed") }]} onChange={(event) => setOutcome(event.target.value)} />
-              <Input label={t("signerName")} required value={signer} maxLength={200} disabled={busy} onChange={(event) => setSigner(event.target.value)} />
+              <Input label={t("signerName")} required value={signer} maxLength={200} disabled={busy} placeholder={t("signerNamePlaceholder")} onChange={(event) => setSigner(event.target.value)} />
               {outcome === "accepted" && (
                 <>
-                  <Input type="number" min={0} max={120} step={1} label={t("warrantyMonths")} required value={months} disabled={busy} onChange={(event) => setMonths(event.target.value)} />
+                  <Input type="number" min={0} max={120} step={1} label={t("warrantyMonths")} required value={months} disabled={busy} placeholder={t("warrantyMonthsPlaceholder")} onChange={(event) => setMonths(event.target.value)} />
                   <Input type="date" label={t("handoverDate")} value={handoverDate} disabled={busy} onChange={(event) => setHandoverDate(event.target.value)} />
                 </>
               )}
@@ -283,7 +282,7 @@ function DetailView({ job }: { job: InstallationResponse }) {
           {dialog?.kind === "report-defect" && (
             <Select label={t("severity")} value={severity} disabled={busy} options={DEFECT_SEVERITIES.map((value) => ({ value, label: t(`severities.${value}`) }))} onChange={(event) => setSeverity(event.target.value)} />
           )}
-          <Input label={t(dialog?.kind === "handover" ? (outcome === "disputed" ? "disputeReason" : "handoverNote") : "text")} required={dialog?.kind !== "handover" || outcome === "disputed"} value={text} maxLength={500} disabled={busy} onChange={(event) => setText(event.target.value)} />
+          <Input label={t(dialog?.kind === "handover" ? (outcome === "disputed" ? "disputeReason" : "handoverNote") : "text")} required={dialog?.kind !== "handover" || outcome === "disputed"} value={text} maxLength={500} disabled={busy} placeholder={t(dialog?.kind === "handover" ? (outcome === "disputed" ? "disputeReasonPlaceholder" : "handoverNotePlaceholder") : "textPlaceholder")} onChange={(event) => setText(event.target.value)} />
         </div>
       </Modal>
     </section>

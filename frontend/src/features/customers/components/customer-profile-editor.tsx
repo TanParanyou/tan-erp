@@ -202,16 +202,16 @@ function CustomerProfileForm({
       <div id="tabpanel-commercial" role="tabpanel" aria-labelledby="tab-commercial" hidden={activeTab !== "commercial"}>
       <FormSection title={t("commercialTab")}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Input label={t("legalName")} {...form.register("legalName")} />
-          {canManagePii && <Input label={t("taxIdentifier")} helperText={t("taxIdentifierHint")} {...form.register("taxIdentifier")} />}
-          <Input label={t("branchCode")} maxLength={5} {...form.register("branchCode")} />
+          <Input label={t("legalName")} placeholder={t("legalNamePlaceholder")} {...form.register("legalName")} />
+          {canManagePii && <Input label={t("taxIdentifier")} placeholder={t("taxIdentifierPlaceholder")} helperText={t("taxIdentifierHint")} {...form.register("taxIdentifier")} />}
+          <Input label={t("branchCode")} maxLength={5} placeholder={t("branchCodePlaceholder")} {...form.register("branchCode")} />
           {canReadCredit && <>
-            <Input label={t("creditTermDays")} type="number" min={0} disabled={!canManageCredit} {...form.register("creditTermDays")} />
-            <Input label={t("creditLimit")} type="number" min={0} step="0.01" disabled={!canManageCredit} {...form.register("creditLimit")} />
-            <Input label={t("currencyCode")} maxLength={3} disabled={!canManageCredit} {...form.register("currencyCode")} />
-            <Input label={t("billingCycle")} disabled={!canManageCredit} {...form.register("billingCycle")} />
-            <Input label={t("billingDay")} type="number" min={1} max={31} disabled={!canManageCredit} {...form.register("billingDay")} />
-            <Input label={t("paymentConditionNote")} disabled={!canManageCredit} {...form.register("paymentConditionNote")} />
+            <Input label={t("creditTermDays")} type="number" min={0} placeholder={t("creditTermDaysPlaceholder")} disabled={!canManageCredit} {...form.register("creditTermDays")} />
+            <Input label={t("creditLimit")} type="number" min={0} step="0.01" placeholder={t("creditLimitPlaceholder")} disabled={!canManageCredit} {...form.register("creditLimit")} />
+            <Input label={t("currencyCode")} maxLength={3} placeholder={t("currencyCodePlaceholder")} disabled={!canManageCredit} {...form.register("currencyCode")} />
+            <Input label={t("billingCycle")} placeholder={t("billingCyclePlaceholder")} disabled={!canManageCredit} {...form.register("billingCycle")} />
+            <Input label={t("billingDay")} type="number" min={1} max={31} placeholder={t("billingDayPlaceholder")} disabled={!canManageCredit} {...form.register("billingDay")} />
+            <Input label={t("paymentConditionNote")} placeholder={t("paymentConditionNotePlaceholder")} disabled={!canManageCredit} {...form.register("paymentConditionNote")} />
           </>}
         </div>
       </FormSection>

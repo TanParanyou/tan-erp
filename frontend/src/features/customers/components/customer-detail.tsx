@@ -305,7 +305,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
 
       <Modal isOpen={showDeactivateModal} onClose={() => setShowDeactivateModal(false)} title={t("deactivateModalTitle")} description={t("deactivateModalDesc")} closeDisabled={isChangingStatus}>
         <div className="flex flex-col gap-5 p-5">
-          <Input label={t("deactivateReason")} required maxLength={500} value={deactivateReason} onChange={(event) => setDeactivateReason(event.target.value)} />
+          <Input label={t("deactivateReason")} required maxLength={500} placeholder={t("deactivateReasonPlaceholder")} value={deactivateReason} onChange={(event) => setDeactivateReason(event.target.value)} />
           <div className="flex justify-end gap-2">
             <Button variant="outline" disabled={isChangingStatus} onClick={() => setShowDeactivateModal(false)}>{tCommon("actions.cancel")}</Button>
             <Button variant="danger" isLoading={isChangingStatus} disabled={isChangingStatus || !deactivateReason.trim()} onClick={() => void handleDeactivate()}>{tCommon("actions.confirm")}</Button>

@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Alert } from "@/components/ui/Alert";
 import { IconAlertCircle } from "@/components/common/Icons";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { getReopenReasonOptions } from "../opportunity-labels";
 
 interface OpportunityReopenModalProps {
@@ -83,14 +83,44 @@ export function OpportunityReopenModal({
     }
   };
 
+  const footerActions = (
+    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        size="md"
+        className="w-full sm:w-auto min-h-11"
+        onClick={onClose}
+        disabled={transitionMutation.isPending}
+      >
+        {tCommon("actions.cancel")}
+      </Button>
+      <Button
+        type="submit"
+        variant="primary"
+        size="md"
+        className="w-full sm:w-auto min-h-11"
+        isLoading={transitionMutation.isPending}
+        disabled={transitionMutation.isPending || !reasonCode}
+        onClick={() => {
+          const form = document.getElementById("reopen-opportunity-form") as HTMLFormElement | null;
+          form?.requestSubmit();
+        }}
+      >
+        {tCommon("actions.confirm")}
+      </Button>
+    </div>
+  );
+
   return (
-    <Modal
+    <Drawer
       isOpen={isOpen}
       onClose={onClose}
       closeDisabled={transitionMutation.isPending}
       title={t("reopenModalTitle")}
       description={t("reopenModalDesc")}
-      size="lg"
+      size="md"
+      footer={footerActions}
     >
       <div className="flex flex-col gap-4">
         {errorMsg && (
@@ -102,7 +132,7 @@ export function OpportunityReopenModal({
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form id="reopen-opportunity-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Select
             label={t("reasonCodeLabel")}
             value={reasonCode}
@@ -126,29 +156,10 @@ export function OpportunityReopenModal({
             disabled={transitionMutation.isPending}
             rows={3}
           />
-
-          <div className="flex justify-end gap-3 pt-2 border-t border-erp-border">
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={onClose}
-              disabled={transitionMutation.isPending}
-            >
-              {tCommon("actions.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={transitionMutation.isPending}
-              disabled={transitionMutation.isPending || !reasonCode}
-            >
-              {tCommon("actions.confirm")}
-            </Button>
-          </div>
         </form>
       </div>
-    </Modal>
+    </Drawer>
   );
 }
+
+export { OpportunityReopenModal as OpportunityReopenDrawer };

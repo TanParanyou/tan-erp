@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
@@ -171,7 +172,7 @@ export function PricingTemplateEditor({ template, onDone }: PricingTemplateEdito
   }
 
   const numberField = (key: (typeof REQUIRED_NUMBERS)[number], step = "0.01") => (
-    <Input type="number" step={step} label={t(`fields.${key}`)} value={form[key]} disabled={isBusy} onChange={(event) => set(key, event.target.value)} />
+    <Input type="number" step={step} label={t(`fields.${key}`)} value={form[key]} disabled={isBusy} placeholder={t(`fields.${key}Placeholder`)} onChange={(event) => set(key, event.target.value)} />
   );
 
   return (
@@ -188,11 +189,11 @@ export function PricingTemplateEditor({ template, onDone }: PricingTemplateEdito
       <div className="erp-card space-y-4 p-5">
         <h3 className="text-sm font-bold text-erp-navy">{t("sectionBasics")}</h3>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <Input label={t("code")} required value={form.code} maxLength={40} disabled={isBusy || Boolean(template)} onChange={(event) => set("code", event.target.value)} />
-          <Input label={t("name")} required value={form.name} maxLength={200} disabled={isBusy} onChange={(event) => set("name", event.target.value)} />
+          <Input label={t("code")} required value={form.code} maxLength={40} disabled={isBusy || Boolean(template)} placeholder={t("codePlaceholder")} onChange={(event) => set("code", event.target.value)} />
+          <Input label={t("name")} required value={form.name} maxLength={200} disabled={isBusy} placeholder={t("namePlaceholder")} onChange={(event) => set("name", event.target.value)} />
           <Select label={t("workType")} value={form.workType} disabled={isBusy} options={WORK_TYPES.map((value) => ({ value, label: t(`workTypes.${value}`) }))} onChange={(event) => set("workType", event.target.value)} />
           <Select label={t("measurementRule")} value={form.measurementRule} disabled={isBusy} options={MEASUREMENT_RULES.map((value) => ({ value, label: t(`measurementRules.${value}`) }))} onChange={(event) => set("measurementRule", event.target.value)} />
-          <Input label={t("unitCode")} required value={form.unitCode} maxLength={20} disabled={isBusy} onChange={(event) => set("unitCode", event.target.value)} />
+          <Input label={t("unitCode")} required value={form.unitCode} maxLength={20} disabled={isBusy} placeholder={t("unitCodePlaceholder")} onChange={(event) => set("unitCode", event.target.value)} />
           <Select label={t("taxDisplay")} value={form.taxDisplay} disabled={isBusy} options={TAX_DISPLAYS.map((value) => ({ value, label: t(`taxDisplays.${value}`) }))} onChange={(event) => set("taxDisplay", event.target.value)} />
           <Input type="date" label={t("effectiveFrom")} value={form.effectiveFrom} disabled={isBusy} onChange={(event) => set("effectiveFrom", event.target.value)} />
           <Input type="date" label={t("effectiveTo")} value={form.effectiveTo} disabled={isBusy} onChange={(event) => set("effectiveTo", event.target.value)} />
@@ -224,9 +225,9 @@ export function PricingTemplateEditor({ template, onDone }: PricingTemplateEdito
         </div>
         {form.grades.map((row, index) => (
           <div key={index} className="grid grid-cols-1 items-end gap-3 md:grid-cols-4">
-            <Input label={t("rowCode")} value={row.code} disabled={isBusy} onChange={(event) => patchRow("grades", index, { code: event.target.value })} />
-            <Input label={t("rowName")} value={row.name} disabled={isBusy} onChange={(event) => patchRow("grades", index, { name: event.target.value })} />
-            <Input type="number" step="0.0001" label={t("factor")} value={row.factor} disabled={isBusy} onChange={(event) => patchRow("grades", index, { factor: event.target.value })} />
+            <Input label={t("rowCode")} value={row.code} disabled={isBusy} placeholder={t("rowCodePlaceholder")} onChange={(event) => patchRow("grades", index, { code: event.target.value })} />
+            <Input label={t("rowName")} value={row.name} disabled={isBusy} placeholder={t("rowNamePlaceholder")} onChange={(event) => patchRow("grades", index, { name: event.target.value })} />
+            <Input type="number" step="0.0001" label={t("factor")} value={row.factor} disabled={isBusy} placeholder={t("factorPlaceholder")} onChange={(event) => patchRow("grades", index, { factor: event.target.value })} />
             <Button type="button" size="sm" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => set("grades", form.grades.filter((_row, i) => i !== index))}>{t("removeRow")}</Button>
           </div>
         ))}
@@ -239,10 +240,10 @@ export function PricingTemplateEditor({ template, onDone }: PricingTemplateEdito
         </div>
         {form.complexities.map((row, index) => (
           <div key={index} className="grid grid-cols-1 items-end gap-3 md:grid-cols-5">
-            <Input label={t("rowCode")} value={row.code} disabled={isBusy} onChange={(event) => patchRow("complexities", index, { code: event.target.value })} />
-            <Input label={t("rowName")} value={row.name} disabled={isBusy} onChange={(event) => patchRow("complexities", index, { name: event.target.value })} />
-            <Input type="number" step="0.0001" label={t("factor")} value={row.factor} disabled={isBusy} onChange={(event) => patchRow("complexities", index, { factor: event.target.value })} />
-            <Input type="number" step="0.0001" label={t("riskModifier")} value={row.riskModifier} disabled={isBusy} onChange={(event) => patchRow("complexities", index, { riskModifier: event.target.value })} />
+            <Input label={t("rowCode")} value={row.code} disabled={isBusy} placeholder={t("rowCodePlaceholder")} onChange={(event) => patchRow("complexities", index, { code: event.target.value })} />
+            <Input label={t("rowName")} value={row.name} disabled={isBusy} placeholder={t("rowNamePlaceholder")} onChange={(event) => patchRow("complexities", index, { name: event.target.value })} />
+            <Input type="number" step="0.0001" label={t("factor")} value={row.factor} disabled={isBusy} placeholder={t("factorPlaceholder")} onChange={(event) => patchRow("complexities", index, { factor: event.target.value })} />
+            <Input type="number" step="0.0001" label={t("riskModifier")} value={row.riskModifier} disabled={isBusy} placeholder={t("riskModifierPlaceholder")} onChange={(event) => patchRow("complexities", index, { riskModifier: event.target.value })} />
             <Button type="button" size="sm" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => set("complexities", form.complexities.filter((_row, i) => i !== index))}>{t("removeRow")}</Button>
           </div>
         ))}
@@ -255,18 +256,20 @@ export function PricingTemplateEditor({ template, onDone }: PricingTemplateEdito
         </div>
         {form.addOns.map((row, index) => (
           <div key={index} className="grid grid-cols-1 items-end gap-3 md:grid-cols-5">
-            <Input label={t("rowCode")} value={row.code} disabled={isBusy} onChange={(event) => patchAddOn(index, { code: event.target.value })} />
-            <Input label={t("rowName")} value={row.name} disabled={isBusy} onChange={(event) => patchAddOn(index, { name: event.target.value })} />
-            <Input type="number" step="0.01" label={t("amount")} value={row.amount} disabled={isBusy} onChange={(event) => patchAddOn(index, { amount: event.target.value })} />
-            <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={row.perLine} disabled={isBusy} onChange={(event) => patchAddOn(index, { perLine: event.target.checked })} />{t("perLine")}</label>
+            <Input label={t("rowCode")} value={row.code} disabled={isBusy} placeholder={t("rowCodePlaceholder")} onChange={(event) => patchAddOn(index, { code: event.target.value })} />
+            <Input label={t("rowName")} value={row.name} disabled={isBusy} placeholder={t("rowNamePlaceholder")} onChange={(event) => patchAddOn(index, { name: event.target.value })} />
+            <Input type="number" step="0.01" label={t("amount")} value={row.amount} disabled={isBusy} placeholder={t("amountPlaceholder")} onChange={(event) => patchAddOn(index, { amount: event.target.value })} />
+            <div className="flex min-h-11 items-center">
+              <Checkbox checked={row.perLine} disabled={isBusy} onCheckedChange={(checked) => patchAddOn(index, { perLine: checked === true })} label={t("perLine")} />
+            </div>
             <Button type="button" size="sm" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => set("addOns", form.addOns.filter((_row, i) => i !== index))}>{t("removeRow")}</Button>
           </div>
         ))}
       </div>
 
       <div className="erp-card grid grid-cols-1 gap-3 p-5 md:grid-cols-2">
-        <Textarea label={t("assumptions")} helperText={t("onePerLine")} value={form.assumptions} disabled={isBusy} onChange={(event) => set("assumptions", event.target.value)} />
-        <Textarea label={t("exclusions")} helperText={t("onePerLine")} value={form.exclusions} disabled={isBusy} onChange={(event) => set("exclusions", event.target.value)} />
+        <Textarea label={t("assumptions")} helperText={t("onePerLine")} value={form.assumptions} disabled={isBusy} placeholder={t("assumptionsPlaceholder")} onChange={(event) => set("assumptions", event.target.value)} />
+        <Textarea label={t("exclusions")} helperText={t("onePerLine")} value={form.exclusions} disabled={isBusy} placeholder={t("exclusionsPlaceholder")} onChange={(event) => set("exclusions", event.target.value)} />
       </div>
 
       <div className="flex gap-3">

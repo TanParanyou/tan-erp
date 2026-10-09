@@ -125,6 +125,7 @@ export function QuotationLifecyclePanel({ estimateId }: QuotationLifecyclePanelP
         <Input
           label={t("reason")}
           required
+          placeholder={t("reasonPlaceholder")}
           value={reason}
           maxLength={500}
           disabled={busy}

@@ -131,8 +131,8 @@ function EditorForm({ bomId, bomCode, fixedItemLabel, revision }: EditorFormProp
         ) : (
           <ItemAutocomplete label={t("item")} required producibleOnly stockableOnly disabled={isBusy} value={itemId} onChange={(id) => setItemId(id)} />
         )}
-        <Input type="number" min={0} step="0.0001" label={t("outputQuantity")} value={outputQuantity} disabled={isBusy} onChange={(event) => setOutputQuantity(event.target.value)} />
-        <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} onChange={(event) => setNote(event.target.value)} />
+        <Input type="number" min={0} step="0.0001" label={t("outputQuantity")} value={outputQuantity} disabled={isBusy} placeholder={t("outputQuantityPlaceholder")} onChange={(event) => setOutputQuantity(event.target.value)} />
+        <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
       </div>
 
       <div className="erp-card p-5 space-y-4">

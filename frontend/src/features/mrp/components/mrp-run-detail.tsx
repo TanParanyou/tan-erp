@@ -232,7 +232,7 @@ function DetailView({ run }: { run: MrpRunResponse }) {
                 options={(suppliers.data?.items ?? []).map((s) => ({ value: s.id ?? "", label: `${s.code ?? "-"} · ${s.nameTh ?? "-"}` }))}
                 onChange={(event) => setSupplierId(event.target.value)}
               />
-              <Input type="number" min={0} step="0.01" label={t("unitPrice")} required value={unitPrice} disabled={busy} onChange={(event) => setUnitPrice(event.target.value)} />
+              <Input type="number" min={0} step="0.01" label={t("unitPrice")} required value={unitPrice} disabled={busy} placeholder={t("unitPricePlaceholder")} onChange={(event) => setUnitPrice(event.target.value)} />
             </>
           ) : (
             <Select

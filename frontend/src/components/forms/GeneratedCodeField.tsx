@@ -13,6 +13,7 @@ interface GeneratedCodeFieldProps {
   maxLength: number;
   disabled?: boolean;
   error?: string;
+  placeholder?: string;
   onChange: (value: string) => void;
   onModeChange: (mode: GeneratedCodeMode) => void;
 }
@@ -25,6 +26,7 @@ export function GeneratedCodeField({
   maxLength,
   disabled = false,
   error,
+  placeholder,
   onChange,
   onModeChange,
 }: GeneratedCodeFieldProps) {
@@ -64,6 +66,7 @@ export function GeneratedCodeField({
           id={id}
           label={label}
           value={value}
+          placeholder={placeholder ?? t("codePlaceholder")}
           onChange={(event) => onChange(event.target.value)}
           maxLength={maxLength}
           required

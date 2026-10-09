@@ -237,6 +237,7 @@ export function EstimateCostComponentTable({
                           min="0"
                           id={`cost-quantity-${sectionIndex}-${itemIndex}-${cIdx}`}
                           label={t("quantity")}
+                          placeholder={t("quantityPlaceholder")}
                           error={errors.sections?.[sectionIndex]?.workItems?.[itemIndex]?.costComponents?.[cIdx]?.quantity ? t("workspace.costInvalid") : undefined}
                           value={qtyField.value ?? ""}
                           onChange={(e) => qtyField.onChange(Number(e.target.value))}
@@ -259,6 +260,7 @@ export function EstimateCostComponentTable({
                           step="any"
                           min="0"
                           label={t("unitCost")}
+                          placeholder={t("unitCostPlaceholder")}
                           error={errors.sections?.[sectionIndex]?.workItems?.[itemIndex]?.costComponents?.[cIdx]?.unitCost ? t("workspace.costInvalid") : undefined}
                           value={costField.value ?? ""}
                           onChange={(e) => costField.onChange(Number(e.target.value))}

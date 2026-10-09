@@ -85,14 +85,14 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
         tabs={[{ id: `${scope}-info`, label: t("workspace.infoTab"), hasError: tabErrorMap.info }, { id: `${scope}-cost`, label: t("workspace.costTab"), count: currentItem.costComponents.length, hasError: tabErrorMap.cost }, { id: `${scope}-pricing`, label: t("workspace.pricingTab"), hasError: tabErrorMap.pricing }]} />
       <div {...panelProps("info")}>
         <div className="space-y-3">
-          <Controller control={control} name={`${path}.code`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-code`} label={t("itemCode")} error={fieldState.error ? t("workspace.codeRequired") : undefined} wrapperClassName="mb-0" />} />
+          <Controller control={control} name={`${path}.code`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-code`} label={t("itemCode")} placeholder={t("itemCodePlaceholder")} error={fieldState.error ? t("workspace.codeRequired") : undefined} wrapperClassName="mb-0" />} />
           <MultiLangInput id={`work-description-${sectionIndex}-${itemIndex}`} label={t("itemDesc")} value={{ th: currentItem.descriptionTh, en: currentItem.descriptionEn }} onChange={(value) => {
             setValue(`${path}.descriptionTh`, value.th ?? "", { shouldDirty: true, shouldValidate: true });
             setValue(`${path}.descriptionEn`, value.en ?? "", { shouldDirty: true, shouldValidate: true });
           }} placeholder={{ th: t("itemDescPlaceholder"), en: t("workspace.descriptionPlaceholderEn") }} />
           <div className="grid grid-cols-2 gap-3">
-            <Controller control={control} name={`${path}.quantity`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-quantity`} type="number" min="0.001" step="any" label={t("quantity")} onChange={(e) => field.onChange(Number(e.target.value))} error={fieldState.error ? t("workspace.quantityInvalid") : undefined} wrapperClassName="mb-0" />} />
-            <Controller control={control} name={`${path}.unitCode`} render={({ field }) => <Input {...field} id={`${scope}-unitCode`} label={t("unitCode")} list={`units-${scope}`} wrapperClassName="mb-0" />} />
+            <Controller control={control} name={`${path}.quantity`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-quantity`} type="number" min="0.001" step="any" label={t("quantity")} placeholder={t("quantityPlaceholder")} onChange={(e) => field.onChange(Number(e.target.value))} error={fieldState.error ? t("workspace.quantityInvalid") : undefined} wrapperClassName="mb-0" />} />
+            <Controller control={control} name={`${path}.unitCode`} render={({ field }) => <Input {...field} id={`${scope}-unitCode`} label={t("unitCode")} placeholder={t("unitCodePlaceholder")} list={`units-${scope}`} wrapperClassName="mb-0" />} />
             <datalist id={`units-${scope}`}>{options.units.map((unit) => <option key={unit.value} value={unit.value}>{unit.label}</option>)}</datalist>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-erp-border pt-3">
@@ -115,8 +115,8 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
             </div>
           </div>
           {!currentItem.itemId && <div className="grid gap-3 border-t border-erp-border pt-3 sm:grid-cols-2">
-            <Controller control={control} name={`${path}.overrideReasonCode`} render={({ field, fieldState }) => <Input {...field} value={field.value ?? ""} id={`${scope}-overrideReasonCode`} label={t("customWorkItemReasonCode")} error={fieldState.error ? t("customWorkItemReasonCodeRequired") : undefined} wrapperClassName="mb-0" />} />
-            <Controller control={control} name={`${path}.overrideReason`} render={({ field, fieldState }) => <Textarea {...field} value={field.value ?? ""} id={`${scope}-overrideReason`} label={t("customWorkItemReason")} error={fieldState.error ? t("customWorkItemReasonRequired") : undefined} rows={2} />} />
+            <Controller control={control} name={`${path}.overrideReasonCode`} render={({ field, fieldState }) => <Input {...field} value={field.value ?? ""} id={`${scope}-overrideReasonCode`} label={t("customWorkItemReasonCode")} placeholder={t("customWorkItemReasonCodePlaceholder")} error={fieldState.error ? t("customWorkItemReasonCodeRequired") : undefined} wrapperClassName="mb-0" />} />
+            <Controller control={control} name={`${path}.overrideReason`} render={({ field, fieldState }) => <Textarea {...field} value={field.value ?? ""} id={`${scope}-overrideReason`} label={t("customWorkItemReason")} placeholder={t("customWorkItemReasonPlaceholder")} error={fieldState.error ? t("customWorkItemReasonRequired") : undefined} rows={2} />} />
           </div>}
         </div>
       </div>
@@ -124,8 +124,8 @@ export function EstimateWorkItemCard({ sectionIndex, itemIndex, currency, branch
       <div {...panelProps("pricing")}>
         <div className="space-y-3">
           <Controller control={control} name={`${path}.sellingRuleType`} render={({ field }) => <Select {...field} id={`${scope}-sellingRuleType`} label={t("sellingRule")} options={options.sellingRuleTypes} wrapperClassName="mb-0" />} />
-          <Controller control={control} name={`${path}.sellingRuleValue`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-sellingRuleValue`} type="number" step="any" label={t("sellingRuleValue")} onChange={(e) => field.onChange(Number(e.target.value))} error={fieldState.error ? t("workspace.priceInvalid") : undefined} wrapperClassName="mb-0" />} />
-          {currentItem.sellingRuleType === "fixed_price" && <Controller control={control} name={`${path}.sellingRuleReasonCode`} render={({ field, fieldState }) => <Input {...field} value={field.value ?? ""} id={`selling-rule-reason-${sectionIndex}-${itemIndex}`} label={t("sellingRuleReasonCode")} required maxLength={64} error={fieldState.error ? t("fixedPriceReasonRequired") : undefined} wrapperClassName="mb-0" />} />}
+          <Controller control={control} name={`${path}.sellingRuleValue`} render={({ field, fieldState }) => <Input {...field} id={`${scope}-sellingRuleValue`} type="number" step="any" label={t("sellingRuleValue")} placeholder={t("sellingRuleValuePlaceholder")} onChange={(e) => field.onChange(Number(e.target.value))} error={fieldState.error ? t("workspace.priceInvalid") : undefined} wrapperClassName="mb-0" />} />
+          {currentItem.sellingRuleType === "fixed_price" && <Controller control={control} name={`${path}.sellingRuleReasonCode`} render={({ field, fieldState }) => <Input {...field} value={field.value ?? ""} id={`selling-rule-reason-${sectionIndex}-${itemIndex}`} label={t("sellingRuleReasonCode")} placeholder={t("sellingRuleReasonCodePlaceholder")} required maxLength={64} error={fieldState.error ? t("fixedPriceReasonRequired") : undefined} wrapperClassName="mb-0" />} />}
           <dl className="grid grid-cols-2 gap-2 border-t border-erp-border pt-3 text-xs">
             <dt className="text-erp-text-muted">{t("unitSellingPrice")}</dt><dd className="text-right font-mono font-bold">{formatFinancialNumber(itemCalc.unitSellingPrice)} {currency}</dd>
             <dt className="text-erp-text-muted">{t("totalSellingPrice")}</dt><dd className="text-right font-mono font-bold text-erp-navy">{formatFinancialNumber(itemCalc.totalSellingPrice)} {currency}</dd>

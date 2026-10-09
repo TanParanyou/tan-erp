@@ -112,9 +112,9 @@ export function ProjectMilestonesCard({ control, canEdit, mutations, describeErr
 
       {editable && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_160px_100px_auto] sm:items-end">
-          <Input label={t("milestoneName")} value={name} maxLength={200} disabled={busy} onChange={(e) => setName(e.target.value)} />
+          <Input label={t("milestoneName")} value={name} maxLength={200} disabled={busy} placeholder={t("namePlaceholder")} onChange={(e) => setName(e.target.value)} />
           <Input type="date" label={t("milestoneDate")} value={plannedDate} disabled={busy} onChange={(e) => setPlannedDate(e.target.value)} />
-          <Input type="number" label={t("milestoneWeight")} min={1} max={1000} value={weight} disabled={busy} onChange={(e) => setWeight(e.target.value)} />
+          <Input type="number" label={t("milestoneWeight")} min={1} max={1000} value={weight} disabled={busy} placeholder={t("weightPlaceholder")} onChange={(e) => setWeight(e.target.value)} />
           <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.addMilestone.isPending} disabled={busy} onClick={() => void add()}>
             {t("addMilestone")}
           </Button>

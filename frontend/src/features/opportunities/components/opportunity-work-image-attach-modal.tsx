@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { IconUpload } from "@/components/common/Icons";
 import { MultiImagePicker, type PendingImageItem } from "@/components/forms/MultiImagePicker";
@@ -21,7 +21,7 @@ export interface OpportunityWorkImageAttachModalProps {
 }
 
 /**
- * Modal for attaching work images to an Opportunity.
+ * Drawer for attaching work images to an Opportunity.
  * Follows the 3-step deferred upload protocol:
  * 1. User picks/captures/compresses images (MultiImagePicker - local only)
  * 2. On submit: Create file session -> Complete upload session -> Attach work images to Opportunity (all-or-nothing)
@@ -192,17 +192,47 @@ export function OpportunityWorkImageAttachModal({
     }
   };
 
+  const footerActions = (
+    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+      <Button
+        type="button"
+        variant="secondary"
+        size="md"
+        className="w-full sm:w-auto min-h-11"
+        onClick={handleClose}
+        disabled={isSubmitting}
+      >
+        {tCommon("cancel")}
+      </Button>
+      <Button
+        type="button"
+        variant="primary"
+        size="md"
+        className="w-full sm:w-auto min-h-11"
+        disabled={pendingItems.length === 0 || isSubmitting}
+        isLoading={isSubmitting}
+        icon={<IconUpload size={16} />}
+        onClick={(e) => {
+          const form = document.getElementById("attach-work-images-form") as HTMLFormElement | null;
+          form?.requestSubmit();
+        }}
+      >
+        {isSubmitting ? t("attachingImages") : `${t("attachImagesAction")} (${pendingItems.length})`}
+      </Button>
+    </div>
+  );
+
   return (
-    <Modal
+    <Drawer
       isOpen={isOpen}
       onClose={handleClose}
       closeDisabled={isSubmitting}
       title={t("attachImagesModalTitle")}
+      description={t("attachImagesModalDesc")}
       size="xl"
+      footer={footerActions}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <p className="text-xs text-muted-foreground">{t("attachImagesModalDesc")}</p>
-
+      <form id="attach-work-images-form" onSubmit={handleSubmit} className="space-y-6">
         <MultiImagePicker
           items={pendingItems}
           onChange={setPendingItems}
@@ -220,30 +250,9 @@ export function OpportunityWorkImageAttachModal({
             {errorMessage}
           </div>
         )}
-
-        {/* Action Buttons (Atelier 44px md buttons) */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-erp-border">
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            onClick={handleClose}
-            disabled={isSubmitting}
-          >
-            {tCommon("cancel")}
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            disabled={pendingItems.length === 0 || isSubmitting}
-            isLoading={isSubmitting}
-            icon={<IconUpload size={16} />}
-          >
-            {isSubmitting ? t("attachingImages") : `${t("attachImagesAction")} (${pendingItems.length})`}
-          </Button>
-        </div>
       </form>
-    </Modal>
+    </Drawer>
   );
 }
+
+export { OpportunityWorkImageAttachModal as OpportunityWorkImageAttachDrawer };

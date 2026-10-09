@@ -63,6 +63,7 @@ export function SurveyChecklistSection({ requiredItems, isReady }: SurveyCheckli
                     label={t("checklistNoteLabel")}
                     required
                     value={entry?.note ?? ""}
+                    placeholder={t("checklistNotePlaceholder")}
                     maxLength={MAX_NOTE_LENGTH}
                     disabled={isReady}
                     onChange={(e) => update(itemCode, { note: e.target.value })}

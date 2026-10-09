@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { useCaptureSignature, useSignatureCaptures } from "@/hooks/useAttachments";
@@ -154,23 +155,32 @@ export function SignatureCapturePanel({ ownerType, ownerId, purpose, canCapture 
       {canCapture && (
         <div className="flex flex-col gap-4 border-t border-erp-border pt-4">
           {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
-          <Input label={t("signerName")} required value={signerName} maxLength={200} disabled={isSaving} onChange={(event) => { setSignerName(event.target.value); keyRef.current = null; }} />
-          <Input label={t("signerRole")} value={signerRole} maxLength={100} disabled={isSaving} onChange={(event) => { setSignerRole(event.target.value); keyRef.current = null; }} />
+          <Input
+            label={t("signerName")}
+            required
+            value={signerName}
+            maxLength={200}
+            placeholder={t("signerNamePlaceholder")}
+            disabled={isSaving}
+            onChange={(event) => { setSignerName(event.target.value); keyRef.current = null; }}
+          />
+          <Input
+            label={t("signerRole")}
+            value={signerRole}
+            maxLength={100}
+            placeholder={t("signerRolePlaceholder")}
+            disabled={isSaving}
+            onChange={(event) => { setSignerRole(event.target.value); keyRef.current = null; }}
+          />
           <SignaturePad value={signature} onChange={handleSignatureChange} label={t("signaturePadLabel")} />
-          <label className="flex items-start gap-3 text-sm">
-            <input
-              type="checkbox"
-              className="mt-1 h-5 w-5 border border-erp-border"
-              checked={consent}
-              disabled={isSaving}
-              aria-label={t("consentLabel")}
-              onChange={(event) => { setConsent(event.target.checked); keyRef.current = null; }}
-            />
-            <span>
-              <span className="block font-semibold text-erp-navy">{t("consentLabel")}</span>
-              <span className="block text-erp-text-muted">{t(`consentVersions.${consentVersion}`)}</span>
-            </span>
-          </label>
+          <Checkbox
+            checked={consent}
+            disabled={isSaving}
+            aria-label={t("consentLabel")}
+            onChange={(event) => { setConsent(event.target.checked); keyRef.current = null; }}
+            label={t("consentLabel")}
+            description={t(`consentVersions.${consentVersion}`)}
+          />
           <div>
             <Button type="button" variant="primary" className="min-h-11" isLoading={isSaving} disabled={!canSave} onClick={() => void handleSave()}>
               {t("capture")}

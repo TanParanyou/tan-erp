@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToast } from "@/hooks/useToast";
 import { formatCurrency, formatDateTime } from "@/lib/formatters/formatters";
@@ -163,7 +164,7 @@ export function ProjectChangeOrdersCard({ control, canManage, canApprove, mutati
       )}
       {error && !isCreating && !pending && <p className="text-xs text-erp-danger" role="alert">{error}</p>}
 
-      <Modal
+      <Drawer
         isOpen={isCreating}
         onClose={() => { if (!busy) setIsCreating(false); }}
         title={t("newChangeOrder")}
@@ -171,24 +172,40 @@ export function ProjectChangeOrdersCard({ control, canManage, canApprove, mutati
         size="md"
         closeDisabled={busy}
         closeOnOverlayClick={!busy}
-        closeOnEscape={!busy}
         footer={(
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => setIsCreating(false)}>{tCommon("actions.cancel")}</Button>
-            <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.createChangeOrder.isPending} disabled={busy} onClick={() => void create()}>{t("createChangeOrder")}</Button>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto min-h-11"
+              disabled={busy}
+              onClick={() => setIsCreating(false)}
+            >
+              {tCommon("actions.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              className="w-full sm:w-auto min-h-11"
+              isLoading={mutations.createChangeOrder.isPending}
+              disabled={busy}
+              onClick={() => void create()}
+            >
+              {t("createChangeOrder")}
+            </Button>
           </div>
         )}
       >
-        <div className="space-y-3">
+        <div className="space-y-3 py-2">
           {error && <p className="text-xs text-erp-danger" role="alert">{error}</p>}
-          <Input label={t("changeOrderTitle")} required value={title} maxLength={200} disabled={busy} onChange={(e) => setTitle(e.target.value)} />
-          <Input label={t("changeOrderReason")} required value={reason} maxLength={1000} disabled={busy} onChange={(e) => setReason(e.target.value)} />
-          <div className="grid grid-cols-2 gap-3">
-            <Input type="number" step="0.01" label={t("budgetDelta")} value={budgetDelta} disabled={busy} onChange={(e) => setBudgetDelta(e.target.value)} />
-            <Input type="number" step="0.01" label={t("contractDelta")} value={contractDelta} disabled={busy} onChange={(e) => setContractDelta(e.target.value)} />
+          <Input label={t("changeOrderTitle")} required value={title} maxLength={200} disabled={busy} placeholder={t("titlePlaceholder")} onChange={(e) => setTitle(e.target.value)} />
+          <Input label={t("changeOrderReason")} required value={reason} maxLength={1000} disabled={busy} placeholder={t("reasonPlaceholder")} onChange={(e) => setReason(e.target.value)} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input type="number" step="0.01" label={t("budgetDelta")} value={budgetDelta} disabled={busy} placeholder={t("budgetDeltaPlaceholder")} onChange={(e) => setBudgetDelta(e.target.value)} />
+            <Input type="number" step="0.01" label={t("contractDelta")} value={contractDelta} disabled={busy} placeholder={t("contractDeltaPlaceholder")} onChange={(e) => setContractDelta(e.target.value)} />
           </div>
         </div>
-      </Modal>
+      </Drawer>
 
       <Modal
         isOpen={pending !== null}
@@ -208,7 +225,7 @@ export function ProjectChangeOrdersCard({ control, canManage, canApprove, mutati
       >
         <div className="space-y-3">
           {error && <p className="text-xs text-erp-danger" role="alert">{error}</p>}
-          <Input label={t("decisionNoteLabel")} required={pending?.action === "reject"} value={note} maxLength={500} disabled={busy} onChange={(e) => setNote(e.target.value)} />
+          <Input label={t("decisionNoteLabel")} required={pending?.action === "reject"} value={note} maxLength={500} disabled={busy} placeholder={t("notePlaceholder")} onChange={(e) => setNote(e.target.value)} />
         </div>
       </Modal>
     </div>

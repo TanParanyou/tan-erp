@@ -94,8 +94,8 @@ export function WorkOrderEditor() {
             onChange={(event) => setProjectId(event.target.value)}
           />
         )}
-        <Input type="number" min={0} step="0.0001" label={t("plannedQuantity")} value={quantity} disabled={isBusy} onChange={(event) => setQuantity(event.target.value)} />
-        <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} onChange={(event) => setNote(event.target.value)} />
+        <Input type="number" min={0} step="0.0001" label={t("plannedQuantity")} value={quantity} disabled={isBusy} placeholder={t("plannedQuantityPlaceholder")} onChange={(event) => setQuantity(event.target.value)} />
+        <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
       </div>
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => router.back()}>{tCommon("actions.cancel")}</Button>

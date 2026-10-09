@@ -158,7 +158,8 @@
       "completed": "เสร็จสมบูรณ์",
       "cancelled": "ยกเลิกแล้ว",
       "disabled": "ระงับการใช้งาน",
-      "all": "ทั้งหมด"
+      "all": "ทั้งหมด",
+      "loading": "กำลังโหลด..."
     },
     "lightbox": {
       "preview": "ดูรูปภาพ",
@@ -240,7 +241,12 @@
       "showPassword": "แสดงรหัสผ่าน",
       "hidePassword": "ซ่อนรหัสผ่าน",
       "unspecified": "-- ไม่ระบุ --",
-      "imagePreview": "ดูตัวอย่างรูปภาพ"
+      "imagePreview": "ดูตัวอย่างรูปภาพ",
+      "jsonPlaceholder": "{\n  \"key\": \"value\"\n}",
+      "localizedTextThPlaceholder": "ระบุข้อมูลภาษาไทย",
+      "localizedTextEnPlaceholder": "Enter information in English",
+      "localizedTextareaThPlaceholder": "ระบุรายละเอียดภาษาไทย",
+      "localizedTextareaEnPlaceholder": "Enter details in English"
     },
     "addressAutocomplete": {
       "label": "ค้นหาที่อยู่ด่วน",
@@ -601,7 +607,19 @@
     "exportExcel": "ส่งออกเป็น Excel (.xlsx)",
     "exportSelected": "ส่งออกที่เลือก ({count})",
     "exportSelectedCsv": "ส่งออกที่เลือกเป็น CSV ({count})",
-    "exportSelectedExcel": "ส่งออกที่เลือกเป็น Excel ({count})"
+    "exportSelectedExcel": "ส่งออกที่เลือกเป็น Excel ({count})",
+    "addressLabelPlaceholder": "เช่น สำนักงานใหญ่, คลังสินค้าสาขา",
+    "addressLine1Placeholder": "บ้านเลขที่ อาคาร ชั้น ถนน ซอย",
+    "deactivateReasonPlaceholder": "ระบุเหตุผลในการระงับการใช้งานลูกค้า...",
+    "legalNamePlaceholder": "เช่น บริษัท สยาม สตูดิโอ ดีไซน์ จำกัด (มหาชน)",
+    "taxIdentifierPlaceholder": "เลขประจำตัวผู้เสียภาษี 13 หลัก",
+    "branchCodePlaceholder": "00000",
+    "creditTermDaysPlaceholder": "30",
+    "creditLimitPlaceholder": "500000.00",
+    "currencyCodePlaceholder": "THB",
+    "billingCyclePlaceholder": "เช่น ทุกวันที่ 25 ของเดือน",
+    "billingDayPlaceholder": "25",
+    "paymentConditionNotePlaceholder": "เช่น วางบิลทุกวันพฤหัสบดี ชำระเงินภายใน 30 วัน"
   },
   "sites": {
     "title": "สถานที่ตั้ง (Sites)",
@@ -1110,7 +1128,10 @@
     },
     "evidenceEmptyHint": "ยังไม่มีภาพงานในโอกาสทางการขายนี้ กรุณาแนบภาพที่ส่วนภาพงาน (Work Images) แล้วกลับมาเลือก",
     "evidenceLoadError": "โหลดภาพงานไม่สำเร็จ",
-    "evidenceLoadMore": "โหลดภาพเพิ่ม"
+    "evidenceLoadMore": "โหลดภาพเพิ่ม",
+    "checklistNotePlaceholder": "ระบุหมายเหตุการตรวจเช็กหน้างาน...",
+    "voidReasonPlaceholder": "ระบุเหตุผลในการยกเลิกการสำรวจ...",
+    "cloneReasonPlaceholder": "ระบุเหตุผลในการสร้างฉบับแก้ไขใหม่..."
   },
   "estimates": {
     "reviewQueueTitle": "คิวตรวจสอบการประเมินราคา",
@@ -1210,7 +1231,8 @@
       "selectWorkCode": "แก้ไขรายการ {code}",
       "copyDescription": "{description} (สำเนา)",
       "copyDescriptionEn": "{description} (Copy)",
-      "descriptionPlaceholderEn": "เช่น Sliding Wardrobe H2400"
+      "descriptionPlaceholderEn": "เช่น Sliding Wardrobe H2400",
+      "discountValuePlaceholder": "0.00"
     },
     "workspaceTitle": "บันทึกและคำนวณราคาต้นทุน-ขาย (Estimate Workspace)",
     "workspaceDesc": "จัดหมวดหมู่ BOQ รายการงาน ส่วนประกอบต้นทุน และกำหนดราคาขายพร้อมคำนวณกำไรสุทธิ",
@@ -1355,7 +1377,11 @@
       "returnNote": "รายละเอียดที่ต้องแก้ไข",
       "returnReasonRequired": "กรุณาระบุรหัสเหตุผล",
       "returnNoteRequired": "กรุณาระบุรายละเอียดที่ต้องแก้ไข",
-      "reviewUnavailable": "ไม่พบรายการตรวจที่มอบหมายให้สมาชิกนี้"
+      "reviewUnavailable": "ไม่พบรายการตรวจที่มอบหมายให้สมาชิกนี้",
+      "revisionReasonPlaceholder": "ระบุเหตุผลในการสร้างฉบับแก้ไข...",
+      "cancelReasonPlaceholder": "ระบุเหตุผลในการยกเลิกใบประเมินราคา...",
+      "returnReasonCodePlaceholder": "เช่น GP_BELOW_TARGET",
+      "returnNotePlaceholder": "ระบุรายละเอียดการส่งกลับแก้ไข..."
     },
     "issueQuotation": "ออกใบเสนอราคา (Issue Quotation)",
     "issuingQuotation": "กำลังออกใบเสนอราคา...",
@@ -1556,7 +1582,14 @@
     "customWorkItem": "รายการงานกำหนดเอง",
     "selectItemMaster": "เลือกจาก Item Master",
     "changeItemMaster": "เปลี่ยนรายการอ้างอิง",
-    "unlinkItemMaster": "ยกเลิกการอ้างอิง"
+    "unlinkItemMaster": "ยกเลิกการอ้างอิง",
+    "customWorkItemReasonCodePlaceholder": "เช่น CUSTOM_MATERIAL",
+    "customWorkItemReasonPlaceholder": "ระบุเหตุผลการใช้วัสดุ/รายการเฉพาะกิจ...",
+    "sellingRuleValuePlaceholder": "0.00",
+    "sellingRuleReasonCodePlaceholder": "เช่น COMPETITIVE_PRICING",
+    "discountReasonCodePlaceholder": "เช่น VOLUME_DISCOUNT",
+    "itemCodePlaceholder": "เช่น ITEM-001",
+    "unitCodePlaceholder": "เช่น PCS, SET"
   },
   "documentNumbering": {
     "title": "ตั้งค่ารูปแบบเลขที่เอกสาร (Document Numbering)",
@@ -2083,7 +2116,18 @@
       }
     },
     "itemAutocompleteLabel": "สินค้า",
-    "itemAutocompletePlaceholder": "ค้นหารหัสหรือชื่อสินค้า..."
+    "itemAutocompletePlaceholder": "ค้นหารหัสหรือชื่อสินค้า...",
+    "returnReasonPlaceholder": "ระบุเหตุผลในการส่งกลับแก้ไข...",
+    "sourceCodePlaceholder": "เช่น VENDOR_LIST_2026",
+    "conversionFactorPlaceholder": "1.000000",
+    "barcodeValuePlaceholder": "เช่น 8851234567890",
+    "quantityInBaseUnitPlaceholder": "1.0000",
+    "taxonomyCodePlaceholder": "เช่น WOOD-HMR",
+    "codePlaceholder": "เช่น SKU-1001 หรือปล่อยว่างเพื่อสร้างอัตโนมัติ",
+    "codeRequired": "กรุณาระบุรหัส",
+    "imageAltTextPlaceholder": "อธิบายรูปภาพสินค้า เช่น ไม้อัดยาง 15 มม.",
+    "branchSaveFailed": "บันทึกข้อมูลสาขาไม่สำเร็จ",
+    "approve": "อนุมัติ"
   },
   "userAdmin": {
     "title": "ผู้ใช้และสิทธิ์การเข้าถึง",
@@ -2124,7 +2168,9 @@
       "branch": "สาขา",
       "roles": "บทบาท",
       "startsAt": "เริ่มมีผล",
-      "expiresAt": "หมดอายุ"
+      "expiresAt": "หมดอายุ",
+      "displayNamePlaceholder": "เช่น สมชาย ใจดี",
+      "emailPlaceholder": "user@example.com"
     },
     "validation": {
       "displayNameRequired": "กรุณากรอกชื่อที่แสดง",
@@ -2428,7 +2474,19 @@
         "PROJECT_OPEN_INSTALLATION": "ยังมีงานติดตั้งที่ไม่ปิด ต้องส่งมอบหรือยกเลิกให้ครบก่อนปิดโครงการ"
       },
       "committedAmount": "ภาระผูกพัน (ใบสั่งซื้อที่อนุมัติ)",
-      "availableBudget": "งบคงเหลือ"
+      "availableBudget": "งบคงเหลือ",
+      "changeOrderTitlePlaceholder": "เช่น ปรับเปลี่ยนสเปกลามิเนตหน้าบาน",
+      "changeOrderReasonPlaceholder": "ระบุเหตุผลของใบขอเปลี่ยนแปลงงาน...",
+      "budgetDeltaPlaceholder": "0.00",
+      "contractDeltaPlaceholder": "0.00",
+      "decisionNotePlaceholder": "ระบุหมายเหตุการอนุมัติ/ปฏิเสธ...",
+      "reasonPlaceholder": "ระบุเหตุผลการเปลี่ยนสถานะโครงการ...",
+      "milestoneNamePlaceholder": "เช่น ส่งมอบงานงวดที่ 1 (ติดตั้งโครงสร้าง)",
+      "milestoneWeightPlaceholder": "100",
+      "titlePlaceholder": "เช่น ปรับเปลี่ยนสเปกลามิเนตหน้าบาน",
+      "notePlaceholder": "ระบุหมายเหตุการอนุมัติ/ปฏิเสธ...",
+      "namePlaceholder": "เช่น ส่งมอบงานงวดที่ 1 (ติดตั้งโครงสร้าง)",
+      "weightPlaceholder": "100"
     }
   },
   "procurement": {
@@ -2487,7 +2545,15 @@
       "created": "เพิ่มผู้ขายเรียบร้อยแล้ว",
       "updated": "บันทึกผู้ขายเรียบร้อยแล้ว",
       "activated": "เปิดใช้งานผู้ขายแล้ว",
-      "deactivated": "ปิดใช้งานผู้ขายแล้ว"
+      "deactivated": "ปิดใช้งานผู้ขายแล้ว",
+      "nameThPlaceholder": "เช่น บริษัท สยามวู้ดแลนด์ จำกัด",
+      "nameEnPlaceholder": "เช่น Siam Woodland Co., Ltd.",
+      "taxIdPlaceholder": "01055XXXXXXXX",
+      "paymentTermPlaceholder": "30",
+      "contactNamePlaceholder": "เช่น สมชาย ช่างไม้",
+      "phonePlaceholder": "เช่น 02-123-4567",
+      "emailPlaceholder": "sales@supplier.com",
+      "paymentTermDaysPlaceholder": "30"
     },
     "orders": {
       "title": "ใบสั่งซื้อ (Purchase Order)",
@@ -2568,7 +2634,11 @@
       "receiptsEmpty": "ยังไม่มีการรับสินค้า",
       "receiptSummary": "{lines} รายการ จำนวนรวม {quantity}",
       "putIntoStockDone": "รับเข้าคลังแล้ว (เอกสาร {number})",
-      "notInStock": "ยังไม่ได้รับเข้าคลัง"
+      "notInStock": "ยังไม่ได้รับเข้าคลัง",
+      "receiveQuantityPlaceholder": "0.0000",
+      "receiptNotePlaceholder": "ระบุหมายเหตุการรับสินค้า...",
+      "reasonPlaceholder": "ระบุเหตุผล...",
+      "notePlaceholder": "ระบุหมายเหตุใบสั่งซื้อ..."
     }
   },
   "inventory": {
@@ -2624,7 +2694,9 @@
       "created": "เพิ่มคลังเรียบร้อยแล้ว",
       "updated": "บันทึกคลังเรียบร้อยแล้ว",
       "activated": "เปิดใช้งานคลังแล้ว",
-      "deactivated": "ปิดใช้งานคลังแล้ว"
+      "deactivated": "ปิดใช้งานคลังแล้ว",
+      "namePlaceholder": "เช่น คลังสินค้าหลัก (บางนา)",
+      "addressPlaceholder": "ระบุที่อยู่คลังสินค้า..."
     },
     "stock": {
       "title": "สต็อกคงเหลือ",
@@ -2710,7 +2782,8 @@
         "issue": "บันทึกการเบิกสินค้าเรียบร้อยแล้ว",
         "transfer": "บันทึกการโอนสินค้าเรียบร้อยแล้ว",
         "adjustment": "บันทึกการปรับยอดเรียบร้อยแล้ว"
-      }
+      },
+      "reasonPlaceholder": "ระบุเหตุผลในการปรับปรุงสต็อก..."
     },
     "reserve": {
       "title": "จองสต็อกให้โครงการ",
@@ -2721,7 +2794,9 @@
       "note": "หมายเหตุ",
       "confirm": "จอง",
       "invalid": "ต้องเลือกโครงการและระบุจำนวนมากกว่า 0",
-      "success": "จองสต็อกเรียบร้อยแล้ว"
+      "success": "จองสต็อกเรียบร้อยแล้ว",
+      "quantityPlaceholder": "0.0000",
+      "notePlaceholder": "ระบุหมายเหตุการสำรองสินค้า..."
     },
     "receive": {
       "action": "รับเข้าคลัง",
@@ -2813,7 +2888,9 @@
       "actionDone": {
         "approve": "อนุมัติ BOM แล้ว",
         "obsolete": "เลิกใช้ BOM ฉบับนี้แล้ว"
-      }
+      },
+      "outputQuantityPlaceholder": "1.0000",
+      "notePlaceholder": "ระบุหมายเหตุสูตรการผลิต..."
     },
     "workOrders": {
       "title": "ใบสั่งผลิต",
@@ -2888,7 +2965,14 @@
         "completion": "รับสินค้าสำเร็จรูป"
       },
       "issuedToast": "เบิกวัตถุดิบแล้ว",
-      "returnedToast": "คืนวัตถุดิบแล้ว"
+      "returnedToast": "คืนวัตถุดิบแล้ว",
+      "quantityPlaceholder": "0.0000",
+      "completeQuantityPlaceholder": "0.0000",
+      "plannedQuantityPlaceholder": "1.0000",
+      "reasonPlaceholder": "ระบุเหตุผล...",
+      "notePlaceholder": "ระบุหมายเหตุใบสั่งผลิต...",
+      "issueQuantityPlaceholder": "0.0000",
+      "returnQuantityPlaceholder": "0.0000"
     }
   },
   "mrp": {
@@ -2990,7 +3074,10 @@
       "selectWarehouse": "เลือกคลัง",
       "convertBuyRequired": "เลือกผู้ขายและระบุราคาต่อหน่วย",
       "convertMakeRequired": "เลือกคลัง",
-      "confirmConvert": "สร้างเอกสาร"
+      "confirmConvert": "สร้างเอกสาร",
+      "unitPricePlaceholder": "0.00",
+      "purchaseLeadTimePlaceholder": "7",
+      "productionLeadTimePlaceholder": "14"
     }
   },
   "quotationLifecycle": {
@@ -3026,7 +3113,8 @@
       "ESTIMATE_INVALID_STATE": "ไม่มีประมาณการฉบับที่อนุมัติและตรึงข้อมูลแล้วสำหรับออกใบเสนอราคา",
       "CUSTOMER_QUOTATION_BILLING_NOT_READY": "ข้อมูลภาษีและที่อยู่เรียกเก็บเงินของลูกค้ายังไม่ครบ",
       "IDEMPOTENCY_KEY_REUSED": "คำขอนี้ถูกใช้แล้วด้วยข้อมูลอื่น โปรดลองใหม่"
-    }
+    },
+    "reasonPlaceholder": "ระบุเหตุผล..."
   },
   "externalAcceptance": {
     "links": {
@@ -3053,7 +3141,9 @@
         "revoked": "เพิกถอนแล้ว",
         "accepted": "ยอมรับแล้ว",
         "unavailable": "ใช้งานไม่ได้"
-      }
+      },
+      "lifetimeDaysPlaceholder": "7",
+      "signerHintPlaceholder": "เช่น คุณสมศักดิ์ (กรรมการผู้จัดการ)"
     },
     "public": {
       "unavailableTitle": "ลิงก์นี้ใช้งานไม่ได้",
@@ -3072,7 +3162,8 @@
       "nameRequired": "กรอกชื่อ-นามสกุลอย่างน้อย 2 ตัวอักษร",
       "consentRequired": "ต้องติ๊กยอมรับข้อความยินยอม",
       "acceptedTitle": "ยอมรับใบเสนอราคาเรียบร้อยแล้ว",
-      "acceptedDetail": "บันทึกเมื่อ {date} ขอบคุณที่ใช้บริการ"
+      "acceptedDetail": "บันทึกเมื่อ {date} ขอบคุณที่ใช้บริการ",
+      "signerRolePlaceholder": "เช่น ผู้มีอำนาจลงนาม / เจ้าของโครงการ"
     },
     "errors": {
       "failed": "ดำเนินการไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -3219,7 +3310,15 @@
           "title": "บันทึกการส่งมอบ",
           "description": "ระบุผลการตรวจรับของลูกค้า การรับมอบต้องระบุระยะประกันชัดเจน"
         }
-      }
+      },
+      "signerNamePlaceholder": "เช่น นายสมชาย ใจดี",
+      "warrantyMonthsPlaceholder": "12",
+      "disputeReasonPlaceholder": "ระบุข้อโต้แย้งหรือจุดที่ยังไม่เรียบร้อย...",
+      "handoverNotePlaceholder": "ระบุข้อคิดเห็นในการส่งมอบงาน...",
+      "textPlaceholder": "ระบุรายละเอียด...",
+      "crewPlaceholder": "เช่น ทีมช่างไม้ A (หัวหน้าสมศักดิ์)",
+      "notePlaceholder": "ระบุหมายเหตุการติดตั้ง...",
+      "newChecklistItemPlaceholder": "เช่น ตรวจสอบความเรียบร้อยของหน้าบานตู้"
     },
     "warranties": {
       "title": "การรับประกัน",
@@ -3306,7 +3405,11 @@
           "title": "เปิดงานซ้ำ",
           "description": "ระบุเหตุผลที่ต้องเปิดซ้ำ"
         }
-      }
+      },
+      "reopenReasonPlaceholder": "ระบุเหตุผลที่ต้องเปิดงานซ่อมซ้ำ...",
+      "resolutionNotePlaceholder": "ระบุแนวทางและผลการแก้ไขปัญหา...",
+      "titleFieldPlaceholder": "เช่น หน้าบานตู้เสื้อผ้าปิดไม่สนิท",
+      "descriptionPlaceholder": "อธิบายอาการหรือปัญหาที่พบอย่างละเอียด..."
     }
   },
   "finance": {
@@ -3403,7 +3506,12 @@
       "reversalReasonLine": "เหตุผลที่กลับรายการ: {reason}",
       "reason": "เหตุผล",
       "reasonRequired": "กรอกเหตุผล",
-      "confirm": "ยืนยัน"
+      "confirm": "ยืนยัน",
+      "paymentAmountPlaceholder": "0.00",
+      "paymentReferencePlaceholder": "เช่น เลขที่สลิป หรือ รหัสรายการโอน",
+      "reasonPlaceholder": "ระบุเหตุผล...",
+      "descriptionPlaceholder": "เช่น งวดที่ 1 มัดจำ 30% เมื่องานเริ่ม",
+      "amountPlaceholder": "0.00"
     },
     "sync": {
       "title": "ส่งข้อมูลให้ระบบบัญชี",
@@ -3589,7 +3697,19 @@
       "approveTitle": "อนุมัติแม่แบบนี้หรือไม่",
       "returnTitle": "ส่งแม่แบบนี้กลับหรือไม่",
       "decisionDescription": "เพิ่มหมายเหตุได้ถ้าจำเป็น",
-      "decisionNote": "หมายเหตุ"
+      "decisionNote": "หมายเหตุ",
+      "decisionNotePlaceholder": "ระบุหมายเหตุการตัดสินใจ...",
+      "numberFieldPlaceholder": "0.00",
+      "codePlaceholder": "เช่น TPL-WARDROBE-01",
+      "namePlaceholder": "เช่น ตู้เสื้อผ้าบานเปิดมาตรฐาน",
+      "unitCodePlaceholder": "เช่น SET",
+      "rowCodePlaceholder": "เช่น STD",
+      "rowNamePlaceholder": "เช่น ไม้ HMR ลามิเนต",
+      "factorPlaceholder": "1.0000",
+      "riskModifierPlaceholder": "0.0000",
+      "amountPlaceholder": "0.00",
+      "assumptionsPlaceholder": "เช่น รวมค่าแรงติดตั้งแล้ว",
+      "exclusionsPlaceholder": "เช่น ไม่รวมงานระบบไฟ"
     },
     "estimates": {
       "title": "ประเมินราคาเบื้องต้น",
@@ -3685,7 +3805,17 @@
       "surveyRevisionId": "รหัสรุ่นผลสำรวจหน้างาน",
       "surveyRevisionRequired": "กรอกรหัสรุ่นผลสำรวจหน้างาน",
       "reasonCode": "รหัสเหตุผล",
-      "reasonCodeRequired": "กรอกรหัสเหตุผล"
+      "reasonCodeRequired": "กรอกรหัสเหตุผล",
+      "propertyTypePlaceholder": "เช่น คอนโดมิเนียม, บ้านเดี่ยว",
+      "roomOrAreaPlaceholder": "เช่น ห้องนอนใหญ่ (Master Bedroom)",
+      "workSubtypePlaceholder": "เช่น ตู้เสื้อผ้า Built-in",
+      "dimensionPlaceholder": "0.00",
+      "quantityPlaceholder": "1",
+      "surveyRevisionIdPlaceholder": "เช่น SRV-2026-0001",
+      "reasonCodePlaceholder": "เช่น SITE_SURVEY_BASE",
+      "widthMPlaceholder": "0.00",
+      "heightMPlaceholder": "0.00",
+      "depthMPlaceholder": "0.00"
     }
   },
   "richText": {
@@ -3714,7 +3844,8 @@
     "targetUrl": "URL ปลายทาง",
     "targetUrlPlaceholder": "https://example.com",
     "removeLink": "ลบลิงก์ (Remove Link)",
-    "applyLink": "ตกลง"
+    "applyLink": "ตกลง",
+    "cancel": "ยกเลิก"
   },
   "security": {
     "twoFactorTitle": "การยืนยันตัวตนสองขั้นตอน (Two-Factor Authentication)",
@@ -3812,7 +3943,9 @@
       "hashLabel": "SHA-256: {hash}",
       "consentVersions": {
         "handover-2026-10-v1": "ข้าพเจ้าได้ตรวจรับงานตามรายการและยืนยันว่าลายเซ็นนี้เป็นของข้าพเจ้าหรือของผู้ที่ข้าพเจ้าได้รับมอบอำนาจ โดยยอมรับว่าระบบเก็บภาพลายเซ็นและเวลาที่ลงนามเป็นหลักฐาน"
-      }
+      },
+      "signerNamePlaceholder": "เช่น นายสมชาย ใจดี",
+      "signerRolePlaceholder": "เช่น สถาปนิกโครงการ / ผู้ว่าจ้าง"
     }
   }
 }

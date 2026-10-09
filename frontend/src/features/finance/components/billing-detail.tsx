@@ -152,9 +152,9 @@ function DetailView({ billing }: { billing: BillingResponse }) {
         <div className="erp-card space-y-3 p-5" role="region" aria-label={t("recordPayment")}>
           <h3 className="text-sm font-bold text-erp-navy">{t("recordPayment")}</h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-            <Input type="number" min={0} step="0.01" label={t("paymentAmount")} value={amount} disabled={busy} onChange={(event) => setAmount(event.target.value)} />
+            <Input type="number" min={0} step="0.01" label={t("paymentAmount")} placeholder={t("paymentAmountPlaceholder")} value={amount} disabled={busy} onChange={(event) => setAmount(event.target.value)} />
             <Select label={t("method")} value={method} disabled={busy} options={PAYMENT_METHODS.map((value) => ({ value, label: t(`methods.${value}`) }))} onChange={(event) => setMethod(event.target.value)} />
-            <Input label={t("paymentReference")} value={reference} maxLength={100} disabled={busy} onChange={(event) => setReference(event.target.value)} />
+            <Input label={t("paymentReference")} placeholder={t("paymentReferencePlaceholder")} value={reference} maxLength={100} disabled={busy} onChange={(event) => setReference(event.target.value)} />
             <Input type="date" label={t("receivedDate")} value={received} disabled={busy} onChange={(event) => setReceived(event.target.value)} />
           </div>
           <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.pay.isPending} disabled={busy} onClick={() => void pay()}>{t("savePayment")}</Button>
@@ -203,6 +203,7 @@ function DetailView({ billing }: { billing: BillingResponse }) {
       >
         <Input
           label={t("reason")}
+          placeholder={t("reasonPlaceholder")}
           required
           value={reason}
           maxLength={500}

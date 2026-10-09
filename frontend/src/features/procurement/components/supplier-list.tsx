@@ -11,7 +11,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { IconPlus } from "@/components/common/Icons";
@@ -223,34 +223,50 @@ export function SupplierList() {
         />
       )}
 
-      <Modal
+      <Drawer
         isOpen={editing !== null}
         onClose={() => { if (!isBusy) setEditing(null); }}
         title={editing === "new" ? t("create") : t("edit")}
-        size="md"
+        size="lg"
         closeDisabled={isBusy}
         closeOnOverlayClick={!isBusy}
-        closeOnEscape={!isBusy}
         footer={(
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => setEditing(null)}>{tCommon("actions.cancel")}</Button>
-            <Button type="button" variant="primary" className="min-h-11" isLoading={isBusy} disabled={isBusy} onClick={() => void save()}>{tCommon("actions.save")}</Button>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto min-h-11"
+              disabled={isBusy}
+              onClick={() => setEditing(null)}
+            >
+              {tCommon("actions.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              className="w-full sm:w-auto min-h-11"
+              isLoading={isBusy}
+              disabled={isBusy}
+              onClick={() => void save()}
+            >
+              {tCommon("actions.save")}
+            </Button>
           </div>
         )}
       >
-        <div className="space-y-3">
+        <div className="space-y-3 py-2">
           {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
-          <Input label={t("nameTh")} required maxLength={200} {...field("nameTh")} />
-          <Input label={t("nameEn")} maxLength={200} {...field("nameEn")} />
+          <Input label={t("nameTh")} required maxLength={200} placeholder={t("nameThPlaceholder")} {...field("nameTh")} />
+          <Input label={t("nameEn")} maxLength={200} placeholder={t("nameEnPlaceholder")} {...field("nameEn")} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input label={t("taxId")} maxLength={20} {...field("taxId")} />
-            <Input type="number" min={0} max={365} label={t("paymentTerm")} {...field("paymentTermDays")} />
-            <Input label={t("contactName")} maxLength={200} {...field("contactName")} />
-            <Input label={t("phone")} maxLength={50} {...field("phone")} />
+            <Input label={t("taxId")} maxLength={20} placeholder={t("taxIdPlaceholder")} {...field("taxId")} />
+            <Input type="number" min={0} max={365} label={t("paymentTerm")} placeholder={t("paymentTermDaysPlaceholder")} {...field("paymentTermDays")} />
+            <Input label={t("contactName")} maxLength={200} placeholder={t("contactNamePlaceholder")} {...field("contactName")} />
+            <Input label={t("phone")} maxLength={50} placeholder={t("phonePlaceholder")} {...field("phone")} />
           </div>
-          <Input type="email" label={t("email")} maxLength={200} {...field("email")} />
+          <Input type="email" label={t("email")} maxLength={200} placeholder={t("emailPlaceholder")} {...field("email")} />
         </div>
-      </Modal>
+      </Drawer>
     </section>
   );
 }

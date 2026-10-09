@@ -138,6 +138,7 @@ export function SurveyRevisionActions({ survey, opportunityId, canClone, canVoid
       >
         <Input
           label={isVoid ? t("voidReasonLabel") : t("cloneReasonLabel")}
+          placeholder={isVoid ? t("voidReasonPlaceholder") : t("cloneReasonPlaceholder")}
           required
           value={reason}
           onChange={(event) => {

@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
@@ -138,27 +138,43 @@ function PanelBody({ quotationId, quotationStatus, quotationNumber }: PanelBodyP
         {(links.data?.items ?? []).length === 0 && <li className="text-xs text-erp-text-muted">{t("empty")}</li>}
       </ul>
 
-      <Modal
+      <Drawer
         isOpen={open}
         onClose={() => { if (!busy) setOpen(false); }}
         title={t("createTitle")}
         description={t("createDescription")}
-        size="sm"
+        size="md"
         closeDisabled={busy}
         closeOnOverlayClick={!busy}
-        closeOnEscape={!busy}
         footer={(
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => setOpen(false)}>{tCommon("actions.cancel")}</Button>
-            <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.create.isPending} disabled={busy} onClick={() => void create()}>{t("confirmCreate")}</Button>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto min-h-11"
+              disabled={busy}
+              onClick={() => setOpen(false)}
+            >
+              {tCommon("actions.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              className="w-full sm:w-auto min-h-11"
+              isLoading={mutations.create.isPending}
+              disabled={busy}
+              onClick={() => void create()}
+            >
+              {t("confirmCreate")}
+            </Button>
           </div>
         )}
       >
-        <div className="space-y-4">
-          <Input type="number" min={1} max={30} step={1} label={t("lifetimeDays")} value={days} disabled={busy} onChange={(event) => setDays(event.target.value)} />
-          <Input label={t("signerHint")} value={hint} maxLength={200} disabled={busy} onChange={(event) => setHint(event.target.value)} />
+        <div className="space-y-4 py-2">
+          <Input type="number" min={1} max={30} step={1} label={t("lifetimeDays")} placeholder={t("lifetimeDaysPlaceholder")} value={days} disabled={busy} onChange={(event) => setDays(event.target.value)} />
+          <Input label={t("signerHint")} placeholder={t("signerHintPlaceholder")} value={hint} maxLength={200} disabled={busy} onChange={(event) => setHint(event.target.value)} />
         </div>
-      </Modal>
+      </Drawer>
     </section>
   );
 }

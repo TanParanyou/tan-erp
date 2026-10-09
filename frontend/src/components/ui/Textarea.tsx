@@ -9,12 +9,14 @@ export interface TextareaProps
   error?: string;
   helperText?: string;
   required?: boolean;
+  wrapperClassName?: string;
 }
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   (
     {
       className,
+      wrapperClassName,
       label,
       error,
       helperText,
@@ -33,7 +35,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const helperId = generatedId ? `${generatedId}-helper` : undefined;
 
     return (
-      <div className="erp-form-group">
+      <div className={cn("erp-form-group", wrapperClassName)}>
         {label && (
           <label htmlFor={generatedId} className="erp-label">
             {label}

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { IconRefresh, IconSave, IconCheck } from "@/components/common/Icons";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils/cn";
 import { useTranslations } from "next-intl";
 
@@ -231,12 +232,13 @@ export function SignaturePad({
           </button>
           {showPresetInput && (
             <div className="flex items-center gap-1.5 border border-erp-border bg-erp-surface-subtle p-2">
-              <input
+              <Input
                 type="text"
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
                 placeholder={t("presetNamePlaceholder")}
-                className="flex-1 border border-erp-border bg-erp-surface p-1 text-xs text-erp-text-main outline-none focus:border-erp-navy rounded-none"
+                className="flex-1 p-1 text-xs"
+                wrapperClassName="flex-1 mb-0"
               />
               <Button
                 type="button"

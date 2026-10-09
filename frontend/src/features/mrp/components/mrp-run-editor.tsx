@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/hooks/useToast";
@@ -89,12 +90,11 @@ export function MrpRunEditor() {
 
       <div className="erp-card p-5 grid grid-cols-1 gap-4 md:grid-cols-3">
         <Input type="date" label={t("asOfDate")} value={asOfDate} disabled={isBusy} onChange={(event) => setAsOfDate(event.target.value)} />
-        <Input type="number" min={0} step="1" label={t("purchaseLeadTime")} value={purchaseLead} disabled={isBusy} onChange={(event) => setPurchaseLead(event.target.value)} />
-        <Input type="number" min={0} step="1" label={t("productionLeadTime")} value={productionLead} disabled={isBusy} onChange={(event) => setProductionLead(event.target.value)} />
-        <label className="flex items-center gap-2 text-sm md:col-span-3">
-          <input type="checkbox" className="h-4 w-4" checked={includeOpen} disabled={isBusy} onChange={(event) => setIncludeOpen(event.target.checked)} />
-          {t("includeOpenWorkOrders")}
-        </label>
+        <Input type="number" min={0} step="1" label={t("purchaseLeadTime")} value={purchaseLead} disabled={isBusy} placeholder={t("purchaseLeadTimePlaceholder")} onChange={(event) => setPurchaseLead(event.target.value)} />
+        <Input type="number" min={0} step="1" label={t("productionLeadTime")} value={productionLead} disabled={isBusy} placeholder={t("productionLeadTimePlaceholder")} onChange={(event) => setProductionLead(event.target.value)} />
+        <div className="flex items-center md:col-span-3">
+          <Checkbox checked={includeOpen} disabled={isBusy} onCheckedChange={(checked) => setIncludeOpen(checked === true)} label={t("includeOpenWorkOrders")} />
+        </div>
       </div>
 
       <div className="erp-card p-5 space-y-4">

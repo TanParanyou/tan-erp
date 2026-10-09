@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { IconUpload, IconClose, IconAlertCircle, IconCamera } from "@/components/common/Icons";
 import { optimizeImageToWebP, type OptimizationResult } from "@/lib/media/image-optimization";
+import { Input } from "@/components/ui/Input";
 import { CameraCaptureModal } from "./CameraCaptureModal";
 import { useTranslations } from "next-intl";
 
@@ -110,15 +111,15 @@ function ImagePickerItem({
       </div>
 
       {/* Caption Input */}
-      <input
+      <Input
         type="text"
         value={localCaption}
         onChange={handleCaptionChange}
         placeholder={placeholderText}
         disabled={disabled}
         maxLength={500}
-        className="w-full px-2 py-1.5 text-xs bg-white dark:bg-erp-slate-950 border border-erp-border text-erp-text-main focus:outline-none focus:border-erp-navy"
-        style={{ borderRadius: "0px" }}
+        className="w-full px-2 py-1.5 text-xs"
+        wrapperClassName="mb-0"
       />
     </div>
   );

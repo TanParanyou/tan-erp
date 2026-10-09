@@ -116,11 +116,12 @@ export function UserAdminEditor() {
     >
       <FormSection title={t("sections.identity")} description={t("sections.identityHint")}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Input label={t("fields.displayName")} required error={errors.displayName?.message} {...register("displayName")} />
+          <Input label={t("fields.displayName")} required error={errors.displayName?.message} placeholder={t("fields.displayNamePlaceholder")} {...register("displayName")} />
           <Input
             label={t("fields.email")}
             type="email"
             required
+            placeholder={t("fields.emailPlaceholder")}
             helperText={t("fields.emailHint")}
             error={errors.email?.message}
             {...register("email")}
