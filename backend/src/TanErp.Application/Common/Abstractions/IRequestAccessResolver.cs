@@ -11,6 +11,17 @@ public interface IRequestAccessResolver
         string permissionKey,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Authenticates the membership only (active user/organization/branch/time window). No permission key: used by features whose
+    /// access rule is "this row belongs to me" (notifications). The default fails closed; RequestAccessResolver overrides it.
+    /// </summary>
+    Task<Result<RequestAccessContext>> ResolveMembershipAsync(
+        string firebaseUid,
+        Guid membershipId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(Result<RequestAccessContext>.Failure(
+            new Error("ACTIVE_MEMBERSHIP_REQUIRED", "Active organization membership is required.")));
+
     Task<Result<RequestAccessContext>> ResolveBranchAccessAsync(
         string firebaseUid,
         Guid membershipId,

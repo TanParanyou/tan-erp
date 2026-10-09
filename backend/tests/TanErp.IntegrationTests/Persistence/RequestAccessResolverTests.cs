@@ -229,4 +229,31 @@ public class RequestAccessResolverTests : IAsyncLifetime
         Assert.True(result.IsFailure);
         Assert.Equal("PERMISSION_DENIED", result.Error.Code);
     }
+
+    [Fact]
+    public async Task ResolveMembershipAsync_ActiveMembership_ReturnsContextWithoutPermission()
+    {
+        var result = await _resolver.ResolveMembershipAsync(TestOnlyDataSeeder.TestFirebaseUid, TestOnlyDataSeeder.TestMembershipId);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(TestOnlyDataSeeder.TestUserId, result.Value!.ActorUserId);
+        Assert.Equal(TestOnlyDataSeeder.TestOrgId, result.Value.OrganizationId);
+    }
+
+    [Fact]
+    public async Task ResolveMembershipAsync_AnotherUsersMembership_IsActiveMembershipRequired()
+    {
+        var result = await _resolver.ResolveMembershipAsync("someone-else", TestOnlyDataSeeder.TestMembershipId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("ACTIVE_MEMBERSHIP_REQUIRED", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task ResolveMembershipAsync_BlankUid_IsAuthenticationRequired()
+    {
+        var result = await _resolver.ResolveMembershipAsync(" ", TestOnlyDataSeeder.TestMembershipId);
+
+        Assert.Equal("AUTHENTICATION_REQUIRED", result.Error.Code);
+    }
 }
