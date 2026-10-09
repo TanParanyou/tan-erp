@@ -413,7 +413,11 @@
     "notificationCenter": {
       "title": "การแจ้งเตือน",
       "markAllRead": "อ่านทั้งหมด",
-      "empty": "ไม่มีการแจ้งเตือนใหม่"
+      "empty": "ไม่มีการแจ้งเตือนใหม่",
+      "unreadCount": "{count} รายการที่ยังไม่อ่าน",
+      "viewAll": "ดูทั้งหมด",
+      "loading": "กำลังโหลดการแจ้งเตือน",
+      "loadFailed": "โหลดการแจ้งเตือนไม่สำเร็จ"
     },
     "signatureManager": {
       "modeTitle": "โหมดการลงลายมือชื่อ (Signature Mode)",

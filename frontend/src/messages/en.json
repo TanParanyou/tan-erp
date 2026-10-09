@@ -413,7 +413,11 @@
     "notificationCenter": {
       "title": "Notifications",
       "markAllRead": "Mark all as read",
-      "empty": "No new notifications"
+      "empty": "No new notifications",
+      "unreadCount": "{count} unread",
+      "viewAll": "View all",
+      "loading": "Loading notifications",
+      "loadFailed": "Could not load notifications"
     },
     "signatureManager": {
       "modeTitle": "Signature Mode",
