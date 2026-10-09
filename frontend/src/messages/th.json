@@ -3951,5 +3951,18 @@
       "signerNamePlaceholder": "เช่น นายสมชาย ใจดี",
       "signerRolePlaceholder": "เช่น สถาปนิกโครงการ / ผู้ว่าจ้าง"
     }
+  },
+  "notifications": {
+    "title": "การแจ้งเตือน",
+    "unknownType": "มีการแจ้งเตือนใหม่",
+    "loadFailed": "โหลดการแจ้งเตือนไม่สำเร็จ",
+    "types": {
+      "estimateApprovalRequested": "{actorDisplayName} ส่งใบประมาณราคา {documentNumber} เพื่อรออนุมัติ",
+      "costRecordApprovalRequested": "{actorDisplayName} ส่งต้นทุนสินค้า {documentNumber} เพื่อรออนุมัติ",
+      "purchaseOrderApprovalRequested": "{actorDisplayName} ส่งใบสั่งซื้อ {documentNumber} เพื่อรออนุมัติ",
+      "changeOrderApprovalRequested": "{actorDisplayName} ส่งใบเปลี่ยนแปลงงาน {documentNumber} เพื่อรออนุมัติ",
+      "mrpRunApprovalRequested": "{actorDisplayName} สร้างรอบวางแผนวัสดุ {documentNumber} ที่รออนุมัติ",
+      "roleAssignmentApprovalRequested": "{actorDisplayName} ขอมอบบทบาท {roleName} ให้ {subjectDisplayName}"
+    }
   }
 }

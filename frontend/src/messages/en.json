@@ -3951,5 +3951,18 @@
       "signerNamePlaceholder": "e.g. John Doe",
       "signerRolePlaceholder": "e.g. Project Architect / Client"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unknownType": "You have a new notification",
+    "loadFailed": "Could not load notifications",
+    "types": {
+      "estimateApprovalRequested": "{actorDisplayName} submitted estimate {documentNumber} for approval",
+      "costRecordApprovalRequested": "{actorDisplayName} submitted the cost of item {documentNumber} for approval",
+      "purchaseOrderApprovalRequested": "{actorDisplayName} submitted purchase order {documentNumber} for approval",
+      "changeOrderApprovalRequested": "{actorDisplayName} submitted change order {documentNumber} for approval",
+      "mrpRunApprovalRequested": "{actorDisplayName} created planning run {documentNumber} awaiting approval",
+      "roleAssignmentApprovalRequested": "{actorDisplayName} requested role {roleName} for {subjectDisplayName}"
+    }
   }
 }
