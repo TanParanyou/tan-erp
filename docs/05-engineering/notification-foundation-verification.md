@@ -27,11 +27,19 @@ Implemented 2026-10-10 ด้วยผล **focused tests เท่านั้�
 
 สิ่งที่ชุดเหล่านี้พิสูจน์ (ตาม test ที่รัน): การ publish ของ Notification อยู่ใน transaction เดียวกับการเปลี่ยนสถานะเอกสาร (rollback ไม่ทิ้ง notification, commit มี notification); ผู้รับเป็นผู้ถือ permission อนุมัติใน Organization/Branch ของเอกสาร โดยตัดผู้ทำ (maker) ออก; อ่านและ mark read ได้เฉพาะของตน และข้าม Organization ตอบ 404; payload ผ่าน allowlist; registry ของ type ตรงกับ whitelist; regression ของ 6 แหล่ง event และโมดูลเดิม (Estimate, Cost, Procurement, Project Control, MRP, Identity/Users) ยังผ่าน.
 
-### Mutation check (Task 8, ตรวจจาก `git show 704dcf6`)
+### Mutation check (Task 8, commit `704dcf6`)
 
-- Commit `704dcf6` มีเฉพาะ test ใหม่ (`NotificationEndpointsTests.cs`, `EstimateEndpointsTests.cs`) และ commit message ไม่มีบันทึกผล mutation.
-- **ไม่ได้รัน mutation check ในรอบนี้** และไม่มีผลที่บันทึกไว้ให้อ้างอิง.
-- การออกแบบคาดไว้ว่า: ถ้าเอาการตัด maker ออกเพียงชั้นเดียว (resolver หรือ planner) test ยังต้องเขียว เพราะอีกชั้นยังตัดผู้ทำอยู่ — นี่คือพฤติกรรมที่ตั้งใจ ไม่ใช่ช่องว่าง. การตรวจว่า test จับ regression จริงต้องเอาการตัดออกทั้งสองชั้นพร้อมกัน ซึ่งยังไม่ได้ทำ.
+ผู้ทำ Task 8 รัน mutation เองแล้ว revert ทุกครั้ง (`git status` สะอาดหลังแต่ละรอบ) ผลที่รายงานไว้ในรอบทำงาน (ไม่ได้ถูกบันทึกใน commit message; ผู้ประสานงานตรวจเพียง `git status` สะอาดและรัน `FullyQualifiedName~Notification` ซ้ำได้ 32/32):
+
+| Mutation | ผล |
+| --- | --- |
+| (a) เอาการตัดผู้ทำ (maker) ออกทั้ง resolver และ planner | 6 test ล้ม (รวม `SubmitPurchaseOrder_NotifiesTheOtherApproverOnce...`, `UnreadCount_DecrementsOnMarkRead...` และ 4 test ใน `NotificationInfrastructureTests`) |
+| (a1) เอาออกเฉพาะ planner | 2 test ล้ม (`NotificationInfrastructureTests` เท่านั้น); test ระดับ API ยังเขียว |
+| (a2) เอาออกเฉพาะ resolver | 2 test ล้ม (`NotificationInfrastructureTests` เท่านั้น); test ระดับ API ยังเขียว |
+| (b) เอา own-only filter (`NotificationStore.Own`) ออก | 10 test ล้ม (store, API own-only, publish flow) |
+
+- การตัดผู้ทำมี 2 ชั้นโดยออกแบบ จึงต้องเอาออกทั้งสองชั้นถึงจะให้ test ระดับ API ล้ม; ชั้นเดียวถูกจับโดย test ระดับ infrastructure.
+- ผลนี้เป็นรายงานของผู้ทำ ไม่ใช่การรัน mutation ซ้ำโดยผู้ตรวจ.
 
 ### สิ่งที่ไม่ได้รัน
 
@@ -39,7 +47,7 @@ Implemented 2026-10-10 ด้วยผล **focused tests เท่านั้�
 - Playwright journey.
 - UAT ด้วย Role จริง (authorized-role UAT).
 - การตรวจ bell dropdown ในเบราว์เซอร์จริง (ดู section 3).
-- Mutation check ของ maker exclusion (ดู section 2).
+- การรัน mutation check ซ้ำโดยผู้ตรวจอิสระ (ผลใน section 2 เป็นรายงานของผู้ทำ).
 
 ## 3. การตรวจในเบราว์เซอร์
 
