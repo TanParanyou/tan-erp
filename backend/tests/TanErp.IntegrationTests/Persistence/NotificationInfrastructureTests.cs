@@ -22,7 +22,7 @@ public class NotificationInfrastructureTests : IAsyncLifetime
     private static readonly Guid Org = TestOnlyDataSeeder.TestOrgId;
     private static readonly Guid Maker = TestOnlyDataSeeder.TestUserId;       // Test Admin: holds every *.approve at organization scope
 
-    private sealed class FixedClock : IClock
+    private sealed class SystemClock : IClock
     {
         public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
     }
@@ -33,7 +33,7 @@ public class NotificationInfrastructureTests : IAsyncLifetime
         _db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(_postgres.GetConnectionString()).Options);
         await _db.Database.MigrateAsync();
         await TestOnlyDataSeeder.SeedAsync(_db, "Test", true);
-        var clock = new FixedClock();
+        var clock = new SystemClock();
         _resolver = new NotificationRecipientResolver(_db);
         _publisher = new NotificationPublisher(_db, _resolver, clock);
         _store = new NotificationStore(_db, clock);
@@ -195,6 +195,27 @@ public class NotificationInfrastructureTests : IAsyncLifetime
         Assert.Equal(1, await _store.MarkAllReadAsync(Org, mine));
         Assert.Equal(0, await _store.MarkAllReadAsync(Org, mine));
         Assert.Equal(2, await _store.CountUnreadAsync(Org, theirs));
+    }
+
+    [Fact]
+    public async Task Publish_ExplicitRecipientsWithoutActiveMembershipInTheOrganization_AreDropped()
+    {
+        // A user whose only membership is in another organization (TestOrgBId).
+        var otherOrgUserId = Guid.NewGuid();
+        _db.Users.Add(new User(otherOrgUserId, $"uid-{otherOrgUserId:N}", "Other org " + otherOrgUserId.ToString("N")[..6], $"{otherOrgUserId:N}@example.test"));
+        _db.Memberships.Add(new Membership(Guid.NewGuid(), TestOnlyDataSeeder.TestOrgBId, TestOnlyDataSeeder.TestBranchBId, otherOrgUserId, isActive: true));
+        var inactiveUserId = await AddCheckerAsync("estimates.approve", active: false);
+        var expiredUserId = await AddCheckerAsync("estimates.approve", expiresAtUtc: DateTimeOffset.UtcNow.AddDays(-1));
+        await _db.SaveChangesAsync();
+
+        foreach (var explicitRecipient in new[] { otherOrgUserId, inactiveUserId, expiredUserId })
+        {
+            await _publisher.PublishAsync(NotificationEvents.EstimateSubmitted(
+                Org, TestOnlyDataSeeder.TestBranchId, Guid.NewGuid(), Maker, Guid.NewGuid(), "EST-0003", explicitRecipient));
+        }
+        await _db.SaveChangesAsync();
+
+        Assert.Equal(0, await CountRowsAsync());
     }
 
     private Task<int> CountRowsAsync() => _db.Notifications.AsNoTracking().CountAsync();

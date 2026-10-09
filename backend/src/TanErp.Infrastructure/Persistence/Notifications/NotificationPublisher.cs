@@ -35,8 +35,9 @@ public class NotificationPublisher : INotificationPublisher
             ?? throw new NotificationDomainException("NOTIFICATION_FIELD_INVALID", "The actor user was not found.");
 
         var now = _clock.UtcNow;
-        IReadOnlyCollection<Guid> candidates = evt.ExplicitRecipientUserIds
-            ?? await _recipients.ResolveAsync(evt.OrganizationId, evt.BranchId, descriptor.TargetPermission, evt.ExcludedUserIds, now, ct);
+        IReadOnlyCollection<Guid> candidates = evt.ExplicitRecipientUserIds is { } explicitIds
+            ? await ActiveExplicitRecipientsAsync(evt, explicitIds, now, ct)
+            : await _recipients.ResolveAsync(evt.OrganizationId, evt.BranchId, descriptor.TargetPermission, evt.ExcludedUserIds, now, ct);
 
         var plan = NotificationPublishPlanner.Plan(evt, actorName, candidates);
         if (plan.IsFailure) throw new NotificationDomainException(plan.Error.Code, plan.Error.Message);
@@ -58,5 +59,20 @@ public class NotificationPublisher : INotificationPublisher
         {
             _db.Notifications.Add(new Notification(Guid.NewGuid(), evt.OrganizationId, item.RecipientUserId, item.Type, item.PayloadJson, item.DedupeKey, now));
         }
+    }
+
+    /// <summary>
+    /// Explicit recipients are trusted only for the choice of reviewer, not for membership: anyone without an active membership in
+    /// the event's organization/branch (another organization, inactive or expired) is silently dropped.
+    /// </summary>
+    private async Task<IReadOnlyCollection<Guid>> ActiveExplicitRecipientsAsync(
+        NotificationEvent evt, IReadOnlyCollection<Guid> explicitRecipientIds, DateTimeOffset now, CancellationToken ct)
+    {
+        var requested = explicitRecipientIds.Distinct().ToArray();
+        return await NotificationMembershipFilter.ActiveIn(_db, evt.OrganizationId, evt.BranchId, now)
+            .Where(m => requested.Contains(m.UserId))
+            .Select(m => m.UserId)
+            .Distinct()
+            .ToListAsync(ct);
     }
 }
