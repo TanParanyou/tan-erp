@@ -290,6 +290,7 @@
       "positiveNumber": "Must be greater than 0",
       "phoneOrEmailRequired": "Provide at least a phone number or an email address",
       "invalidPhone": "Invalid phone number format (supports domestic 0x or international +country code)",
+      "invalidTaxId": "Tax identification number must be 13 digits",
       "leadSourceNoteRequired": "Please specify details for other lead source",
       "actionDateNotePairRequired": "Next action note is required when next action date is set (and vice versa)",
       "coordinatePairRequired": "Both latitude and longitude must be provided together"

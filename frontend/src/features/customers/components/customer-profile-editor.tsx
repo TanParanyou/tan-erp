@@ -11,6 +11,7 @@ import { FormActionBar } from "@/components/forms/FormActionBar";
 import { FormContainer } from "@/components/forms/FormContainer";
 import { FormSection } from "@/components/forms/FormSection";
 import { FormTabs, useFormTabErrors } from "@/components/forms/FormTabs";
+import { TaxIdInput } from "@/components/forms/TaxIdInput";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { customerQueryRootKey, useCustomerDetail } from "../api/customer-queries";
@@ -21,6 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { can } from "@/lib/permissions/can";
+import { createTaxIdSchema } from "@/lib/validation/tax-id";
 import { CustomerIdentityFields, type CustomerLeadSource, type CustomerType, type CustomerLocale } from "./customer-identity-fields";
 
 interface CustomerProfileEditorProps {
@@ -37,7 +39,7 @@ const profileSchema = z.object({
   leadSource: z.enum(["", "walk_in", "facebook_ads", "referral", "project_developer", "website", "other"]),
   leadSourceNote: z.string().trim().max(200),
   legalName: z.string().trim().max(250),
-  taxIdentifier: z.string().trim().max(20),
+  taxIdentifier: createTaxIdSchema((key) => key === "invalidTaxId" ? "common.validation.invalidTaxId" : "common.validation.required"),
   branchCode: z.string().trim().max(5),
   creditTermDays: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(0).max(365)),
   creditLimit: z.string().trim().refine((value) => value === "" || (Number.isFinite(Number(value)) && Number(value) >= 0), "Invalid credit limit"),
@@ -203,7 +205,17 @@ function CustomerProfileForm({
       <FormSection title={t("commercialTab")}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input label={t("legalName")} placeholder={t("legalNamePlaceholder")} {...form.register("legalName")} />
-          {canManagePii && <Input label={t("taxIdentifier")} placeholder={t("taxIdentifierPlaceholder")} helperText={t("taxIdentifierHint")} {...form.register("taxIdentifier")} />}
+          {canManagePii && (
+            <TaxIdInput
+              id="customer-tax-identifier"
+              label={t("taxIdentifier")}
+              placeholder={t("taxIdentifierPlaceholder")}
+              helperText={t("taxIdentifierHint")}
+              error={form.formState.errors.taxIdentifier?.message ? tCommon("validation.invalidTaxId") : undefined}
+              value={form.watch("taxIdentifier")}
+              onValueChange={(val) => form.setValue("taxIdentifier", val, { shouldDirty: true, shouldValidate: true })}
+            />
+          )}
           <Input label={t("branchCode")} maxLength={5} placeholder={t("branchCodePlaceholder")} {...form.register("branchCode")} />
           {canReadCredit && <>
             <Input label={t("creditTermDays")} type="number" min={0} placeholder={t("creditTermDaysPlaceholder")} disabled={!canManageCredit} {...form.register("creditTermDays")} />

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
 import { PhoneInput } from "@/components/forms/PhoneInput";
+import { TaxIdInput } from "@/components/forms/TaxIdInput";
 import { Drawer } from "@/components/ui/Drawer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -20,6 +21,7 @@ import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { isValidPhoneNumber } from "@/lib/validation/phone";
+import { isValidTaxId } from "@/lib/validation/tax-id";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -113,7 +115,7 @@ export function SupplierList() {
     }
 
     const trimmedTaxId = form.taxId.trim();
-    if (trimmedTaxId && !/^\d{13}$/.test(trimmedTaxId)) {
+    if (trimmedTaxId && !isValidTaxId(trimmedTaxId)) {
       setError(t("invalidTaxId"));
       return;
     }
@@ -279,7 +281,14 @@ export function SupplierList() {
           <Input label={t("nameTh")} required maxLength={200} placeholder={t("nameThPlaceholder")} {...field("nameTh")} />
           <Input label={t("nameEn")} maxLength={200} placeholder={t("nameEnPlaceholder")} {...field("nameEn")} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input label={t("taxId")} maxLength={20} placeholder={t("taxIdPlaceholder")} {...field("taxId")} />
+            <TaxIdInput
+              id="supplier-tax-id"
+              label={t("taxId")}
+              placeholder={t("taxIdPlaceholder")}
+              value={form.taxId}
+              onValueChange={(val) => setForm((curr) => ({ ...curr, taxId: val }))}
+              disabled={isBusy}
+            />
             <Input type="number" min={0} max={365} label={t("paymentTerm")} placeholder={t("paymentTermDaysPlaceholder")} {...field("paymentTermDays")} />
             <Input label={t("contactName")} maxLength={200} placeholder={t("contactNamePlaceholder")} {...field("contactName")} />
             <PhoneInput
