@@ -139,6 +139,8 @@
 
 **Shared Attachment (G-01):** ไม่มี permission key ใหม่ — การอ่าน/แนบ/เซ็นไฟล์แนบของ owner ใช้ permission ของ owner ตาม [Attachment API Contract](attachment-api-contract.md) (`installation-job` → read=installations.read, manage=installations.operate, sign=installations.handover).
 
+**Notification (G-02):** ไม่มี permission key ใหม่ — ผู้ใช้ที่มี Membership active อ่าน/mark-read การแจ้งเตือนของตนเองได้เท่านั้น. ผู้รับถูกเลือกด้วย permission อนุมัติเดิมของเอกสาร (ตารางใน [Notification API Contract](notification-api-contract.md)) และลิงก์ในรายการจะแสดงเฉพาะเมื่อผู้อ่านยังถือ permission นั้นอยู่.
+
 การตรวจวงเงิน กำไรขั้นต่ำ Discount, Exception และ Maker–Checker เป็น Approval Policy เพิ่มจาก Permission; การมี `estimates.approve` ไม่ได้แปลว่าอนุมัติได้ทุกยอดหรืออนุมัติงานตนเองได้ หากยังไม่มี Published Policy/Independent Checker ระบบต้อง Fail-closed ตาม [Approval Matrix](../01-business/approval-matrix.md)
 
 เช่นเดียวกัน การมี `quick-estimates.share` ไม่ได้ข้าม Share Policy และการมี `quick-estimates.review` ไม่ได้อนุญาตให้ตรวจงานของตนเองเมื่อ Maker–Checker มีผล Backend ต้องตรวจ Permission พร้อม Organization, Branch, Opportunity และ Own Scope ทุกครั้ง

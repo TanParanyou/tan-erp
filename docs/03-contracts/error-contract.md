@@ -122,6 +122,12 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `SIGNATURE_CONSENT_REQUIRED` | 422 | ไม่ได้ยินยอม หรือ consentTextVersion ไม่ตรงเวอร์ชันปัจจุบัน |
 | `SIGNATURE_IMAGE_INVALID` | 422 | ไฟล์ภาพลายเซ็นไม่ใช่ PNG ที่ผ่านการตรวจหรือไม่มี content hash |
 
+## Notification Error Codes
+
+| Code | HTTP | ความหมาย/การกู้คืน |
+| --- | ---: | --- |
+| `NOTIFICATION_NOT_FOUND` | 404 | ไม่พบการแจ้งเตือน หรือไม่ใช่ของผู้เรียก/ต่าง Organization (ไม่แยกสาเหตุเพื่อไม่เปิดเผยการมีอยู่) |
+
 ## Item Master Error Codes
 
 | Code | HTTP | ความหมาย/การกู้คืน |

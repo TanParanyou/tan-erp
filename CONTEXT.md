@@ -245,3 +245,11 @@ _Avoid_: Upload, File record
 **Signature Capture (หลักฐานลายเซ็น)**:
 ภาพลายเซ็น PNG พร้อมชื่อผู้ลงนาม เวลา เวอร์ชันถ้อยคำยินยอม และ SHA-256 ที่ผูกกับ Attachment Owner; ไม่ใช่ลายเซ็นอิเล็กทรอนิกส์ตามกฎหมาย
 _Avoid_: Digital signature, e-Signature
+
+**Notification (การแจ้งเตือน)**:
+ข้อความในระบบถึงผู้ใช้หนึ่งคนใน Organization หนึ่ง สร้างพร้อมการเปลี่ยนสถานะเอกสารต้นเหตุ มีประเภทที่กำหนดในโค้ด ผู้รับอ่านได้เฉพาะของตน
+_Avoid_: Alert, Message, Push
+
+**Notification Type (ประเภทการแจ้งเตือน)**:
+รหัสประเภทที่ลงทะเบียนในโค้ด ระบุ permission ปลายทาง ลิงก์ และ field ที่อนุญาตใน payload (เช่น "ใบสั่งซื้อรออนุมัติ")
+_Avoid_: Event name, Topic
