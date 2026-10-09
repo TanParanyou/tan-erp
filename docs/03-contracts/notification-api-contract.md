@@ -1,6 +1,6 @@
 # Notification API Contract (ข้อตกลง API การแจ้งเตือนในระบบ)
 
-**สถานะ:** Draft → Implemented เมื่อ G-02 เสร็จ (ดู [Verification](../05-engineering/notification-foundation-verification.md)). กฎเป็นค่าเริ่มต้น TEST_ONLY รอ Security/Operations ยืนยัน. ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0018](../adr/0018-in-app-notification-foundation.md). **รอบนี้ไม่มีช่องทางอีเมล** (Future).
+**สถานะ:** Implemented 2026-10-10 (in-app only; focused tests) (ดู [Verification](../05-engineering/notification-foundation-verification.md)). กฎเป็นค่าเริ่มต้น TEST_ONLY รอ Security/Operations ยืนยัน. ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0018](../adr/0018-in-app-notification-foundation.md). **รอบนี้ไม่มีช่องทางอีเมล** (Future).
 
 ## Decisions
 

@@ -44,7 +44,7 @@
 | ID | งาน | Wave | Dependency | ผู้ยืนยันกฎ | แผนละเอียด |
 | --- | --- | --- | --- | --- | --- |
 | G-01 | Shared Attachment & Signature | A | Files module เดิม | Security | [แผน G-01](2026-10-05-g01-shared-attachment-signature.md) — Implemented 2026-10-06 (focused tests; browser check + full gate pending) |
-| G-02 | Notification Foundation (in-app + email outbox) | A | Identity | Security + Operations | — |
+| G-02 | Notification Foundation (in-app เท่านั้น; อีเมลเลื่อน) | A | Identity | Security + Operations | [แผน G-02](2026-10-08-g02-notification-foundation.md) — Implemented 2026-10-10 (in-app only; focused tests; browser check + full gate pending); [Verification](../../05-engineering/notification-foundation-verification.md) |
 | G-03 | Organization/Branch CRUD, Role management, Approval Authority matrix | A | CP-02 | System Admin + Security + Finance | — |
 | G-04 | Server-side Quotation PDF + artifact hash | B | CP-04, G-01 | Sales + Finance | — |
 | G-05 | External Acceptance OTP | B | CP-07, G-02 | Sales + Security + Legal | — |
@@ -93,12 +93,13 @@
 
 **แตะ:** ใหม่ `backend/src/TanErp.Domain/Notifications/`, `backend/src/TanErp.Application/Notifications/`, outbox pattern เดียวกับ Finance accounting outbox (`backend/src/TanErp.Infrastructure/Persistence/Finance/`) — ย้าย retry/backoff/dead/requeue ขึ้นเป็นของกลางก่อน; frontend bell ใน `frontend/src/components/layout/`
 
-- [ ] ADR: เลือก outbox ร่วม vs แยก (เสนอ: ดึง retry policy ของ CP-15 เป็น `Common/Outbox`)
-- [ ] Domain: `Notification { recipientUserId, type, payload(JSON), readAtUtc }` + `NotificationType` enum ที่ระบุในโค้ด
-- [ ] Event sources รอบแรก: รออนุมัติ (Estimate, Cost, PO, Change Order, MRP, Role maker–checker), ใบประกันใกล้หมด, งานบริการเกิน SLA (หลัง G-18)
-- [ ] Email channel ผ่าน `IEmailSender` (Infrastructure) — default implementation เขียน log เท่านั้นจนกว่าเลือก provider
-- [ ] Frontend: รายการแจ้งเตือน + mark read ผ่าน TanStack Query (polling interval; ไม่ทำ websocket รอบแรก)
-- [ ] Tests: ผู้รับเห็นเฉพาะของตน, ไม่ส่งข้อมูลต้นทุนใน payload, outbox retry
+- [x] ADR 0018: ไม่ใช้ outbox ร่วม และไม่แตะ Finance outbox ([ADR 0018](../../adr/0018-in-app-notification-foundation.md))
+- [x] Domain: `Notification` แถวต่อผู้รับ + `NotificationTypes` whitelist ในโค้ด (ดู [สัญญา](../../03-contracts/notification-api-contract.md))
+- [x] Event sources รอบแรก: รออนุมัติ 6 แหล่ง (Estimate, Cost, PO, Change Order, MRP, Role maker–checker)
+- [ ] (Future) Event ที่ต้องมี scheduler: ใบประกันใกล้หมดอายุ, งานบริการเกิน SLA (หลัง G-18), Membership ใกล้หมดอายุ (G-21) — ยังไม่มี job ตามเวลาใน repo
+- [ ] (Future) Email channel — เลื่อนตามคำสั่งผู้ใช้; ไม่อยู่ใน slice G-02 รอบแรก (ดู [ADR 0018](../../adr/0018-in-app-notification-foundation.md))
+- [x] Frontend: bell + หน้า `/notifications` + mark read ผ่าน TanStack Query (polling 30 วินาที; ไม่ทำ websocket)
+- [x] Tests: ผู้รับเห็นเฉพาะของตน, payload ผ่าน allowlist ไม่มีต้นทุน, registry parity (ผล: [Verification](../../05-engineering/notification-foundation-verification.md))
 
 **Validation Question:** email provider, ภาษาอีเมลตามผู้ใช้หรือองค์กร, ช่องทาง LINE ต้องมีไหม
 
