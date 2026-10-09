@@ -5,6 +5,7 @@ using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Mrp;
+using TanErp.Application.Notifications;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Items;
@@ -21,12 +22,14 @@ public class MrpStore : IMrpStore
     private readonly AppDbContext _db;
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _numbers;
+    private readonly INotificationPublisher _notifications;
 
-    public MrpStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers)
+    public MrpStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications)
     {
         _db = db;
         _clock = clock;
         _numbers = numbers;
+        _notifications = notifications;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -177,6 +180,13 @@ public class MrpStore : IMrpStore
             _db.MrpRuns.Add(run);
             Audit(access, "mrp.run.created", run.Id, traceId, new { number, inputHash = plan.InputHash, recommendations = plan.Orders.Count }, now);
             _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, run.Id.ToString(), now));
+            if (plan.Orders.Count > 0)
+            {
+                await _notifications.PublishAsync(
+                    NotificationEvents.MrpRunCreated(orgId, access.BranchId.Value, run.Id, access.ActorUserId, number),
+                    ct);
+            }
+
             await _db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
             return Result<MrpRunProjection>.Success((await GetRunAsync(orgId, run.Id, ct))!);
