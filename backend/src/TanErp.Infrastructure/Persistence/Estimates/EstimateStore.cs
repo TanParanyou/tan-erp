@@ -7,6 +7,7 @@ using TanErp.Application.Common.Results;
 using TanErp.Application.Estimates;
 using TanErp.Application.Estimates.GetQuotationDocument;
 using TanErp.Application.Items;
+using TanErp.Application.Notifications;
 using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Opportunities;
@@ -27,6 +28,7 @@ public class EstimateStore : IEstimateStore
     private readonly ICostResolver _costResolver;
     private readonly bool _useTestOnlyApprovalPolicy;
     private readonly ILogger<EstimateStore> _logger;
+    private readonly INotificationPublisher _notifications;
 
     public EstimateStore(
         AppDbContext db,
@@ -34,9 +36,11 @@ public class EstimateStore : IEstimateStore
         IDocumentNumberGenerator documentNumberGenerator,
         ICostResolver costResolver,
         IConfiguration configuration,
-        ILogger<EstimateStore> logger)
+        ILogger<EstimateStore> logger,
+        INotificationPublisher notifications)
     {
         _logger = logger;
+        _notifications = notifications;
         _db = db;
         _clock = clock;
         _documentNumberGenerator = documentNumberGenerator;
@@ -771,6 +775,10 @@ public class EstimateStore : IEstimateStore
                     triggerCodes = testOnlyRoute?.Triggers.Select(trigger => trigger.Code).ToArray() ?? [] });
             _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), organizationId, operation,
                 keyHash, payloadHash, estimate.Id.ToString(), now));
+            await _notifications.PublishAsync(
+                NotificationEvents.EstimateSubmitted(
+                    organizationId, estimate.BranchId, request.Id, actorUserId, estimate.Id, estimate.Number, steps[0].ReviewerUserId),
+                cancellationToken);
 
             try
             {
