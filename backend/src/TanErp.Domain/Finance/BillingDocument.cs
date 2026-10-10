@@ -269,7 +269,7 @@ public class AccountingOutboxMessage : Entity
 
         ExternalRef = reference;
         ExternalAmount = externalAmount;
-        ConfirmedAtUtc = now.ToUniversalTime();
+        ConfirmedAtUtc = TruncateToMicroseconds(now.ToUniversalTime());
         if (Status != OutboxStatus.Sent)
         {
             Status = OutboxStatus.Sent;
@@ -279,4 +279,8 @@ public class AccountingOutboxMessage : Entity
 
         RowVersion = Guid.NewGuid();
     }
+
+    // PostgreSQL timestamptz keeps microseconds while Linux clocks give 100ns ticks; truncate so the first response equals what a later read returns.
+    private static DateTimeOffset TruncateToMicroseconds(DateTimeOffset value) =>
+        value.AddTicks(-(value.Ticks % (TimeSpan.TicksPerMillisecond / 1000)));
 }
