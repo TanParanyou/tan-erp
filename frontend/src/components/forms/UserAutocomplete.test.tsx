@@ -132,4 +132,27 @@ describe("UserAutocomplete", () => {
 
     expect(handleChange).toHaveBeenCalledWith("");
   });
+
+  it("renders compact box and clears selection in filter variant", async () => {
+    const handleChange = vi.fn();
+    renderWithProviders(
+      <UserAutocomplete
+        variant="filter"
+        value="user-1"
+        onChange={handleChange}
+        branchId="branch-1"
+        label="ผู้รับผิดชอบ"
+      />,
+      client
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("สมชาย ใจดี")).toBeInTheDocument();
+    });
+
+    const clearBtn = screen.getByRole("button", { name: "เปลี่ยนพนักงาน" });
+    expect(clearBtn).toBeInTheDocument();
+    fireEvent.click(clearBtn);
+    expect(handleChange).toHaveBeenCalledWith("");
+  });
 });

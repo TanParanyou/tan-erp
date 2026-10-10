@@ -30,6 +30,7 @@ export function opportunityListQueryKey(
   string | null,
   string | null,
   string | null,
+  string | null,
   number
 ] {
   return [
@@ -40,6 +41,7 @@ export function opportunityListQueryKey(
     "list",
     params?.search ?? null,
     params?.customerId ?? null,
+    params?.ownerId ?? null,
     params?.stage ?? null,
     params?.sortBy ?? null,
     params?.sortOrder ?? null,

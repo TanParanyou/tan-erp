@@ -11852,6 +11852,7 @@ export interface paths {
                 query?: {
                     search?: string;
                     customerId?: string;
+                    ownerId?: string;
                     stage?: string;
                     sortBy?: string;
                     sortOrder?: string;

@@ -15,7 +15,8 @@ public sealed record OpportunityListFilter(
     string? SortOrder = null,
     int? Page = null,
     int Limit = 25,
-    string? Cursor = null);
+    string? Cursor = null,
+    Guid? OwnerId = null);
 
 public sealed record OpportunityPage(
     IReadOnlyList<OpportunityProjection> Items,
