@@ -81,4 +81,77 @@ public sealed class OrganizationAdministrationStore : IOrganizationAdministratio
         if (o.Phone != N(i.Phone)) changed.Add("phone");
         return changed.ToArray();
     }
+
+    private const string CreateOperation = "admin.branches.create";
+    private const string CodeIndex = "ix_branches_organization_id_branch_code";
+    private const string TaxCodeIndex = "ix_branches_organization_id_tax_branch_code";
+
+    private static BranchDetail ToDetail(Branch b) => new(
+        b.Id, b.Code, b.Name, b.NameEn, b.TaxBranchCode, b.AddressTh, b.AddressEn, b.Phone, b.IsActive, b.RowVersion, b.CreatedAtUtc);
+
+    public async Task<IReadOnlyList<BranchDetail>> ListBranchesAsync(Guid organizationId, BranchStatusFilter filter, CancellationToken ct)
+    {
+        var query = _db.Branches.AsNoTracking().Where(b => b.OrganizationId == organizationId);
+        if (filter == BranchStatusFilter.Active) query = query.Where(b => b.IsActive);
+        if (filter == BranchStatusFilter.Inactive) query = query.Where(b => !b.IsActive);
+
+        var rows = await query.OrderBy(b => b.Code).ToListAsync(ct);
+        return rows.Select(ToDetail).ToList();
+    }
+
+    public async Task<Result<BranchDetail>> GetBranchAsync(Guid organizationId, Guid branchId, CancellationToken ct)
+    {
+        // Always filtered by organization: an id from another organization is indistinguishable from a missing one.
+        var branch = await _db.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.Id == branchId && b.OrganizationId == organizationId, ct);
+        return branch is null ? Fail<BranchDetail>("RESOURCE_NOT_FOUND", "Branch was not found.") : Result<BranchDetail>.Success(ToDetail(branch));
+    }
+
+    public Task<Result<BranchDetail>> CreateBranchAsync(
+        Guid organizationId, CreateBranchInput input, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct) =>
+        SerializableTransactionRunner.RunAsync(_db, async () =>
+        {
+            // The advisory lock is taken INSIDE the transaction so concurrent requests with the same key serialize and the loser replays.
+            await _db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({organizationId.ToString("N") + ":" + CreateOperation + ":" + keyHash}, 0))", ct);
+
+            var replay = await _db.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(
+                r => r.OrganizationId == organizationId && r.Operation == CreateOperation && r.KeyHash == keyHash, ct);
+            if (replay is not null)
+            {
+                if (replay.PayloadHash != payloadHash)
+                    return Fail<BranchDetail>("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload.");
+                return await GetBranchAsync(organizationId, Guid.Parse(replay.ResourceId), ct);
+            }
+
+            Branch branch;
+            try
+            {
+                var d = input.Details;
+                branch = Branch.Create(Guid.NewGuid(), organizationId, input.Code, d.Name, d.NameEn, d.TaxBranchCode, d.AddressTh, d.AddressEn, d.Phone, _clock.UtcNow);
+            }
+            catch (OrganizationDomainException ex)
+            {
+                return Fail<BranchDetail>(ex.Code, ex.Message);
+            }
+
+            _db.Branches.Add(branch);
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), organizationId, CreateOperation, keyHash, payloadHash, branch.Id.ToString(), _clock.UtcNow));
+            AddAudit(organizationId, actor, "branches.created", "Branch", branch.Id.ToString(), traceId,
+                new { code = branch.Code, hasTaxBranchCode = branch.TaxBranchCode is not null }, null, branch.RowVersion, branch.Id);
+
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, CodeIndex))
+            {
+                return Fail<BranchDetail>("BRANCH_CODE_ALREADY_EXISTS", "A branch with this code already exists.");
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, TaxCodeIndex))
+            {
+                return Fail<BranchDetail>("BRANCH_TAX_CODE_ALREADY_EXISTS", "A branch with this tax branch code already exists.");
+            }
+
+            return Result<BranchDetail>.Success(ToDetail(branch));
+        }, VersionConflict, ct);
 }

@@ -118,6 +118,10 @@ public static class ProblemDetailsMapper
         "COST_RECORD_NOT_FOUND" => StatusCodes.Status404NotFound,
         "COST_SOURCE_NOT_FOUND" => StatusCodes.Status404NotFound,
         "BRANCH_NOT_FOUND" => StatusCodes.Status404NotFound,
+        "BRANCH_CODE_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "BRANCH_TAX_CODE_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "BRANCH_CODE_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+        "BRANCH_TAX_CODE_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
         "BRANCH_INACTIVE" => StatusCodes.Status422UnprocessableEntity,
 
         "ITEM_CODE_EXISTS" => StatusCodes.Status409Conflict,

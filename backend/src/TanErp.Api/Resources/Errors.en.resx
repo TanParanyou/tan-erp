@@ -1025,4 +1025,28 @@
   <data name="SIGNATURE_IMAGE_INVALID_DETAIL" xml:space="preserve"><value>The signature image must be a verified PNG file.</value></data>
   <data name="NOTIFICATION_NOT_FOUND_TITLE" xml:space="preserve"><value>Notification Not Found</value></data>
   <data name="NOTIFICATION_NOT_FOUND_DETAIL" xml:space="preserve"><value>The notification was not found.</value></data>
+  <data name="BRANCH_CODE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid branch code</value>
+  </data>
+  <data name="BRANCH_CODE_INVALID_DETAIL" xml:space="preserve">
+    <value>Use letters, digits, underscore or hyphen, up to 50 characters.</value>
+  </data>
+  <data name="BRANCH_TAX_CODE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid tax branch code</value>
+  </data>
+  <data name="BRANCH_TAX_CODE_INVALID_DETAIL" xml:space="preserve">
+    <value>The tax branch code must be exactly 5 digits.</value>
+  </data>
+  <data name="BRANCH_CODE_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>Duplicate branch code</value>
+  </data>
+  <data name="BRANCH_CODE_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>A branch with this code already exists in the organization.</value>
+  </data>
+  <data name="BRANCH_TAX_CODE_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>Duplicate tax branch code</value>
+  </data>
+  <data name="BRANCH_TAX_CODE_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>A branch with this tax branch code already exists in the organization.</value>
+  </data>
 </root>

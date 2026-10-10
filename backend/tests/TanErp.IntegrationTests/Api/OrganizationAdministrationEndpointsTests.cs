@@ -209,4 +209,124 @@ public class OrganizationAdministrationEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, write.StatusCode);
         Assert.Equal("PERMISSION_DENIED", await ReadCode(write));
     }
+
+    private static CreateBranchRequest NewBranch(string code, string? taxCode = null) =>
+        new(code, "สาขา " + code, "Branch " + code, taxCode, "ที่อยู่", null, "02-111-1111");
+
+    private Task<HttpResponseMessage> CreateBranch(CreateBranchRequest body, string? key = null, string token = AdminToken, Guid? membershipId = null) =>
+        Send(HttpMethod.Post, "/api/v1/admin/branches", token, body, idempotencyKey: key ?? Guid.NewGuid().ToString(), membershipId: membershipId);
+
+    [Fact]
+    public async Task CreateBranch_PersistsDetailsWritesAuditAndReturnsEtag()
+    {
+        var response = await CreateBranch(NewBranch("B10", "00010"));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var branch = (await response.Content.ReadFromJsonAsync<BranchResponse>())!;
+        Assert.Equal("B10", branch.Code);
+        Assert.Equal("00010", branch.TaxBranchCode);
+        Assert.True(branch.IsActive);
+        Assert.Equal($"\"{branch.RowVersion}\"", response.Headers.ETag?.Tag);
+
+        await using var db = NewDb();
+        var audit = await db.AuditEvents.AsNoTracking().SingleAsync(a => a.Action == "branches.created" && a.ResourceId == branch.Id.ToString());
+        Assert.Equal(branch.Id, audit.BranchId);
+        Assert.DoesNotContain("ที่อยู่", audit.ChangesJson);
+    }
+
+    [Fact]
+    public async Task CreateBranch_DuplicateCodeAndDuplicateTaxCode_ReturnDifferentConflictCodes()
+    {
+        Assert.Equal(HttpStatusCode.Created, (await CreateBranch(NewBranch("B11", "00011"))).StatusCode);
+
+        var dupCode = await CreateBranch(NewBranch("B11", "00099"));
+        var dupTax = await CreateBranch(NewBranch("B12", "00011"));
+
+        Assert.Equal(HttpStatusCode.Conflict, dupCode.StatusCode);
+        Assert.Equal("BRANCH_CODE_ALREADY_EXISTS", await ReadCode(dupCode));
+        Assert.Equal(HttpStatusCode.Conflict, dupTax.StatusCode);
+        Assert.Equal("BRANCH_TAX_CODE_ALREADY_EXISTS", await ReadCode(dupTax));
+    }
+
+    [Fact]
+    public async Task CreateBranch_SameCodeInAnotherOrganization_IsAllowed()
+    {
+        // Seeded organization A already owns "B01"; organization B may create its own "B01".
+        var response = await CreateBranch(NewBranch("B01"), token: OrgBToken, membershipId: TestOnlyDataSeeder.TestMembershipBId);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateBranch_InvalidCodeOrTaxCode_Returns422()
+    {
+        var badCode = await CreateBranch(NewBranch("bad code"));
+        var badTax = await CreateBranch(NewBranch("B13", "12"));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, badCode.StatusCode);
+        Assert.Equal("BRANCH_CODE_INVALID", await ReadCode(badCode));
+        Assert.Equal("BRANCH_TAX_CODE_INVALID", await ReadCode(badTax));
+    }
+
+    [Fact]
+    public async Task CreateBranch_ReplayAndKeyReuseAndMissingKey()
+    {
+        var key = "branch-create-" + Guid.NewGuid();
+        var first = await CreateBranch(NewBranch("B14"), key);
+        var second = await CreateBranch(NewBranch("B14"), key);
+        var reused = await CreateBranch(NewBranch("B15"), key);
+        var noKey = await Send(HttpMethod.Post, "/api/v1/admin/branches", AdminToken, NewBranch("B16"));
+
+        Assert.Equal(HttpStatusCode.Created, second.StatusCode);
+        Assert.Equal((await first.Content.ReadFromJsonAsync<BranchResponse>())!.Id, (await second.Content.ReadFromJsonAsync<BranchResponse>())!.Id);
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", await ReadCode(reused));
+        Assert.Equal("IDEMPOTENCY_KEY_REQUIRED", await ReadCode(noKey));
+        await using var db = NewDb();
+        Assert.Equal(1, await db.Branches.CountAsync(b => b.Code == "B14"));
+    }
+
+    [Fact]
+    public async Task ListBranches_IncludesInactiveFiltersByStatusAndStaysInsideOrganization()
+    {
+        var created = (await (await CreateBranch(NewBranch("B17"))).Content.ReadFromJsonAsync<BranchResponse>())!;
+        await using (var db = NewDb())
+        {
+            var branch = await db.Branches.SingleAsync(b => b.Id == created.Id);
+            branch.Deactivate();
+            await db.SaveChangesAsync();
+        }
+
+        var all = await ListAsync("", AdminToken, TestOnlyDataSeeder.TestMembershipId);
+        var inactive = await ListAsync("?status=inactive", AdminToken, TestOnlyDataSeeder.TestMembershipId);
+        var orgB = await ListAsync("", OrgBToken, TestOnlyDataSeeder.TestMembershipBId);
+        var invalid = await Send(HttpMethod.Get, "/api/v1/admin/branches?status=bogus", AdminToken);
+
+        Assert.Contains(all, b => b.Id == created.Id && !b.IsActive);
+        Assert.Equal(new[] { created.Id }, inactive.Select(b => b.Id).ToArray());
+        Assert.DoesNotContain(orgB, b => b.Id == created.Id);
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+    }
+
+    private async Task<IReadOnlyList<BranchResponse>> ListAsync(string query, string token, Guid membershipId)
+    {
+        var response = await Send(HttpMethod.Get, "/api/v1/admin/branches" + query, token, membershipId: membershipId);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<IReadOnlyList<BranchResponse>>())!;
+    }
+
+    [Fact]
+    public async Task GetBranch_OtherOrganizationId_Returns404ButWithoutPermissionReturns403ForAnyId()
+    {
+        var orgBBranch = TestOnlyDataSeeder.TestBranchBId;
+        var ownBranch = TestOnlyDataSeeder.TestBranchId;
+
+        var otherOrg = await Send(HttpMethod.Get, $"/api/v1/admin/branches/{orgBBranch}", AdminToken);
+        var viewerExisting = await Send(HttpMethod.Get, $"/api/v1/admin/branches/{ownBranch}", ViewerToken, membershipId: ViewerMembershipId);
+        var viewerMissing = await Send(HttpMethod.Get, $"/api/v1/admin/branches/{Guid.NewGuid()}", ViewerToken, membershipId: ViewerMembershipId);
+
+        Assert.Equal(HttpStatusCode.NotFound, otherOrg.StatusCode);
+        Assert.Equal("RESOURCE_NOT_FOUND", await ReadCode(otherOrg));
+        Assert.Equal(HttpStatusCode.Forbidden, viewerExisting.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, viewerMissing.StatusCode); // identical: existence is never revealed
+    }
 }

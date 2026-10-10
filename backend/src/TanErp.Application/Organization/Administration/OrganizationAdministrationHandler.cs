@@ -1,5 +1,6 @@
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
+using TanErp.Application.Common.Security;
 using TanErp.Application.Common.Results;
 using TanErp.Application.IdentityAccess.Administration;
 
@@ -37,5 +38,30 @@ public sealed class OrganizationAdministrationHandler
         return access.IsFailure
             ? Denied<OrganizationProfile>(access)
             : await _store.UpdateProfileAsync(access.Value!.OrganizationId, input, ifMatch, Actor(access.Value), traceId, ct);
+    }
+
+    public async Task<Result<IReadOnlyList<BranchDetail>>> ListBranchesAsync(AdminCaller caller, BranchStatusFilter filter, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.BranchesManage, ct);
+        if (access.IsFailure) return Result<IReadOnlyList<BranchDetail>>.Failure(access.Error);
+        return Result<IReadOnlyList<BranchDetail>>.Success(await _store.ListBranchesAsync(access.Value!.OrganizationId, filter, ct));
+    }
+
+    public async Task<Result<BranchDetail>> GetBranchAsync(AdminCaller caller, Guid branchId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.BranchesManage, ct);
+        return access.IsFailure ? Denied<BranchDetail>(access) : await _store.GetBranchAsync(access.Value!.OrganizationId, branchId, ct);
+    }
+
+    public async Task<Result<BranchDetail>> CreateBranchAsync(
+        AdminCaller caller, string idempotencyKey, CreateBranchInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.BranchesManage, ct);
+        if (access.IsFailure) return Denied<BranchDetail>(access);
+
+        var d = input.Details;
+        var payloadHash = Sha256Hex.Compute($"{input.Code}|{d.Name}|{d.NameEn}|{d.TaxBranchCode}|{d.AddressTh}|{d.AddressEn}|{d.Phone}");
+        return await _store.CreateBranchAsync(
+            access.Value!.OrganizationId, input, Actor(access.Value), Sha256Hex.Compute(idempotencyKey), payloadHash, traceId, ct);
     }
 }

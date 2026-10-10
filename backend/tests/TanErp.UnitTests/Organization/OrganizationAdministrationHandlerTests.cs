@@ -39,6 +39,60 @@ public class OrganizationAdministrationHandlerTests
 
         public Task<Result<OrganizationProfile>> UpdateProfileAsync(Guid organizationId, OrganizationProfileInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
             GetProfileAsync(organizationId, ct);
+
+        public string? LastKeyHash { get; private set; }
+
+        private static BranchDetail Branch() => new(Guid.NewGuid(), "B1", "n", null, null, null, null, null, true, Guid.NewGuid(), DateTimeOffset.UtcNow);
+
+        public Task<IReadOnlyList<BranchDetail>> ListBranchesAsync(Guid organizationId, BranchStatusFilter filter, CancellationToken ct)
+        {
+            Calls++;
+            return Task.FromResult<IReadOnlyList<BranchDetail>>(Array.Empty<BranchDetail>());
+        }
+
+        public Task<Result<BranchDetail>> GetBranchAsync(Guid organizationId, Guid branchId, CancellationToken ct)
+        {
+            Calls++;
+            return Task.FromResult(Result<BranchDetail>.Success(Branch()));
+        }
+
+        public Task<Result<BranchDetail>> CreateBranchAsync(
+            Guid organizationId, CreateBranchInput input, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct)
+        {
+            Calls++;
+            LastKeyHash = keyHash;
+            return Task.FromResult(Result<BranchDetail>.Success(Branch()));
+        }
+    }
+
+    private static readonly BranchInput BranchInputValue = new("n", null, null, null, null, null);
+
+    [Fact]
+    public async Task BranchOperations_WithoutPermission_NeverTouchTheStore()
+    {
+        var store = new RecordingStore();
+        var handler = new OrganizationAdministrationHandler(new FakeAccess { Allow = false }, store);
+
+        var list = await handler.ListBranchesAsync(Caller, BranchStatusFilter.All, default);
+        var get = await handler.GetBranchAsync(Caller, Guid.NewGuid(), default);
+        var create = await handler.CreateBranchAsync(Caller, "key-0123456789abcdef", new CreateBranchInput("B2", BranchInputValue), "t", default);
+
+        Assert.True(list.IsFailure && get.IsFailure && create.IsFailure);
+        Assert.Equal(0, store.Calls);
+    }
+
+    [Fact]
+    public async Task CreateBranch_AsksForBranchesManageAndHashesTheKey()
+    {
+        var access = new FakeAccess();
+        var store = new RecordingStore();
+        var handler = new OrganizationAdministrationHandler(access, store);
+
+        await handler.CreateBranchAsync(Caller, "plain-key-0123456789", new CreateBranchInput("B2", BranchInputValue), "t", default);
+
+        Assert.Equal("branches.manage", access.RequestedKey);
+        Assert.NotNull(store.LastKeyHash);
+        Assert.DoesNotContain("plain-key", store.LastKeyHash);
     }
 
     [Fact]

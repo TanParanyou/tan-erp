@@ -12,3 +12,14 @@ public sealed record OrganizationProfile(
 
 public sealed record OrganizationProfileInput(
     string Name, string? NameEn, string? TaxIdentifier, string? AddressTh, string? AddressEn, string? Phone);
+
+public sealed record BranchDetail(
+    Guid Id, string Code, string Name, string? NameEn, string? TaxBranchCode, string? AddressTh, string? AddressEn,
+    string? Phone, bool IsActive, Guid RowVersion, DateTimeOffset CreatedAtUtc);
+
+public sealed record BranchInput(
+    string Name, string? NameEn, string? TaxBranchCode, string? AddressTh, string? AddressEn, string? Phone);
+
+public sealed record CreateBranchInput(string Code, BranchInput Details);
+
+public enum BranchStatusFilter { All, Active, Inactive }
