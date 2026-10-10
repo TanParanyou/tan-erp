@@ -895,6 +895,12 @@
   <data name="ADMIN_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>ข้อมูลผู้ใช้หรือสิทธิ์ถูกเปลี่ยนไปแล้ว กรุณาโหลดใหม่และลองอีกครั้ง</value>
   </data>
+  <data name="ORGANIZATION_TAX_ID_INVALID_TITLE" xml:space="preserve">
+    <value>เลขประจำตัวผู้เสียภาษีไม่ถูกต้อง</value>
+  </data>
+  <data name="ORGANIZATION_TAX_ID_INVALID_DETAIL" xml:space="preserve">
+    <value>เลขประจำตัวผู้เสียภาษีต้องมี 13 หลักและผ่านการตรวจเลขตรวจสอบ</value>
+  </data>
   <data name="LAST_ADMINISTRATOR_REQUIRED_TITLE" xml:space="preserve">
     <value>ต้องมีผู้ดูแลอย่างน้อยหนึ่งคน</value>
   </data>

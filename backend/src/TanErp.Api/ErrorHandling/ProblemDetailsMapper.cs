@@ -15,6 +15,7 @@ public static class ProblemDetailsMapper
         "USER_SORT_ORDER_INVALID" => StatusCodes.Status400BadRequest,
         "USER_EMAIL_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
         "ADMIN_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
+        "ORGANIZATION_TAX_ID_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "LAST_ADMINISTRATOR_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "ROLE_ESCALATION_DENIED" => StatusCodes.Status403Forbidden,
         "SELF_ROLE_CHANGE_FORBIDDEN" => StatusCodes.Status403Forbidden,

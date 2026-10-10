@@ -733,6 +733,12 @@
   <data name="ADMIN_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>The user or access record changed; reload and try again.</value>
   </data>
+  <data name="ORGANIZATION_TAX_ID_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid tax identifier</value>
+  </data>
+  <data name="ORGANIZATION_TAX_ID_INVALID_DETAIL" xml:space="preserve">
+    <value>The tax identifier must be 13 digits with a valid check digit.</value>
+  </data>
   <data name="LAST_ADMINISTRATOR_REQUIRED_TITLE" xml:space="preserve">
     <value>At least one administrator is required</value>
   </data>
