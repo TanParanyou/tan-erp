@@ -46,7 +46,7 @@ public class PermissionScopeTests
     [Fact]
     public void Membership_IsActiveAt_ReturnsTrue_WhenAllConditionsMet()
     {
-        var org = new Organization(Guid.NewGuid(), "Org", isActive: true);
+        var org = new TanErp.Domain.Organization.Organization(Guid.NewGuid(), "Org", isActive: true);
         var branch = new Branch(Guid.NewGuid(), org.Id, "B01", "Main Branch", isActive: true);
         var user = new User(Guid.NewGuid(), "uid-123", "User", "user@test.com", isActive: true);
 
@@ -71,7 +71,7 @@ public class PermissionScopeTests
     [Fact]
     public void Membership_IsActiveAt_ReturnsFalse_WhenUserDisabled()
     {
-        var org = new Organization(Guid.NewGuid(), "Org", isActive: true);
+        var org = new TanErp.Domain.Organization.Organization(Guid.NewGuid(), "Org", isActive: true);
         var branch = new Branch(Guid.NewGuid(), org.Id, "B01", "Main Branch", isActive: true);
         var user = new User(Guid.NewGuid(), "uid-123", "User", "user@test.com", isActive: false);
 
@@ -96,7 +96,7 @@ public class PermissionScopeTests
     [Fact]
     public void Membership_IsActiveAt_ReturnsFalse_WhenOrganizationInactive()
     {
-        var org = new Organization(Guid.NewGuid(), "Org", isActive: false);
+        var org = new TanErp.Domain.Organization.Organization(Guid.NewGuid(), "Org", isActive: false);
         var branch = new Branch(Guid.NewGuid(), org.Id, "B01", "Main Branch", isActive: true);
         var user = new User(Guid.NewGuid(), "uid-123", "User", "user@test.com", isActive: true);
 
@@ -121,7 +121,7 @@ public class PermissionScopeTests
     [Fact]
     public void Membership_IsActiveAt_ReturnsFalse_WhenBranchInactive()
     {
-        var org = new Organization(Guid.NewGuid(), "Org", isActive: true);
+        var org = new TanErp.Domain.Organization.Organization(Guid.NewGuid(), "Org", isActive: true);
         var branch = new Branch(Guid.NewGuid(), org.Id, "B01", "Main Branch", isActive: false);
         var user = new User(Guid.NewGuid(), "uid-123", "User", "user@test.com", isActive: true);
 
@@ -146,7 +146,7 @@ public class PermissionScopeTests
     [Fact]
     public void Membership_IsActiveAt_ReturnsFalse_WhenExpired()
     {
-        var org = new Organization(Guid.NewGuid(), "Org", isActive: true);
+        var org = new TanErp.Domain.Organization.Organization(Guid.NewGuid(), "Org", isActive: true);
         var branch = new Branch(Guid.NewGuid(), org.Id, "B01", "Main Branch", isActive: true);
         var user = new User(Guid.NewGuid(), "uid-123", "User", "user@test.com", isActive: true);
 

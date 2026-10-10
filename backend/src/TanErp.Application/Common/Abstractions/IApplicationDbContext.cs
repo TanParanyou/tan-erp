@@ -7,7 +7,7 @@ namespace TanErp.Application.Common.Abstractions;
 
 public interface IApplicationDbContext
 {
-    DbSet<Organization> Organizations { get; }
+    DbSet<TanErp.Domain.Organization.Organization> Organizations { get; }
     DbSet<Branch> Branches { get; }
     DbSet<Membership> Memberships { get; }
     DbSet<User> Users { get; }
