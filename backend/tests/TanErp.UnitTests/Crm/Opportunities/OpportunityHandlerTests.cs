@@ -69,12 +69,15 @@ public class OpportunityHandlerTests
             return Task.FromResult(CreateResult);
         }
 
+        public OpportunityListFilter? LastListFilter { get; private set; }
+
         public Task<OpportunityPage> ListAsync(
             Guid organizationId,
             OpportunityListFilter filter,
             CancellationToken cancellationToken = default)
         {
             ListCallCount++;
+            LastListFilter = filter;
             return Task.FromResult(ListResult);
         }
 
@@ -426,6 +429,30 @@ public class OpportunityHandlerTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(1, _store.ListCallCount);
+    }
+
+    [Fact]
+    public async Task List_PassesCustomerIdAndOwnerIdToStore()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.read");
+        var customerId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var query = new ListOpportunitiesQuery(
+            "uid",
+            Guid.NewGuid(),
+            Search: "Acme",
+            CustomerId: customerId,
+            OwnerId: ownerId);
+        var handler = ListHandler();
+
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _store.ListCallCount);
+        Assert.NotNull(_store.LastListFilter);
+        Assert.Equal("Acme", _store.LastListFilter.Search);
+        Assert.Equal(customerId, _store.LastListFilter.CustomerId);
+        Assert.Equal(ownerId, _store.LastListFilter.OwnerId);
     }
 
     [Fact]

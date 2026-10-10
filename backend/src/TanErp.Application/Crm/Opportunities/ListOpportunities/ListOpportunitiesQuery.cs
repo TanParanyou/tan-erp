@@ -11,4 +11,5 @@ public sealed record ListOpportunitiesQuery(
     int? Page = null,
     int Limit = 25,
     string? Cursor = null,
-    string? TraceId = null);
+    string? TraceId = null,
+    Guid? OwnerId = null);

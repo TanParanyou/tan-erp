@@ -118,6 +118,7 @@ public class OpportunitiesController : ControllerBase
     public async Task<IActionResult> List(
         [FromQuery] string? search,
         [FromQuery] Guid? customerId,
+        [FromQuery] Guid? ownerId,
         [FromQuery] string? stage,
         [FromQuery] string? sortBy = null,
         [FromQuery] string? sortOrder = null,
@@ -146,7 +147,8 @@ public class OpportunitiesController : ControllerBase
             page,
             limit,
             cursor,
-            traceId);
+            traceId,
+            ownerId);
 
         var result = await _listHandler.Handle(query, cancellationToken);
         if (result.IsFailure)

@@ -17,6 +17,7 @@ import { TableEntityCell } from "@/components/ui/TableEntityCell";
 import { Badge } from "@/components/ui/Badge";
 import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { Avatar } from "@/components/ui/Avatar";
 import {
   IconPlus,
   IconBriefcase,
@@ -33,9 +34,14 @@ import type { ExportColumn } from "@/lib/export/export-types";
 import { ExportDropdown } from "@/components/ui/ExportDropdown";
 import { apiClient, type OpportunityResponse } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
+import { CustomerAutocomplete } from "@/components/forms/CustomerAutocomplete";
+import { UserAutocomplete } from "@/components/forms/UserAutocomplete";
+import { ActiveFilterChips, type ActiveFilterChipItem } from "@/components/ui/ActiveFilterChips";
 
 interface OpportunityFilters extends ListFilterRecord {
   stage?: string;
+  customerId?: string;
+  ownerId?: string;
 }
 
 export function OpportunityList() {
@@ -49,7 +55,7 @@ export function OpportunityList() {
     schema: {
       defaultSort: "code",
       defaultOrder: "desc",
-      single: ["stage"],
+      single: ["stage", "customerId", "ownerId"],
       allowedSorts: ["code", "title", "expectedBudget", "stage"],
     },
     debounceMs: 350,
@@ -124,6 +130,8 @@ export function OpportunityList() {
     isFetchingNextPage,
   } = useOpportunityList({
     search: listState.params.search || undefined,
+    customerId: listState.params.filters.customerId || undefined,
+    ownerId: listState.params.filters.ownerId || undefined,
     stage: listState.params.filters.stage || undefined,
     sortBy: listState.params.sort || undefined,
     sortOrder: listState.params.order || undefined,
@@ -139,6 +147,7 @@ export function OpportunityList() {
       { header: t("code"), accessor: (o) => o.code ?? o.id },
       { header: t("titleField"), accessor: (o) => o.title || "" },
       { header: t("customer"), accessor: (o) => o.customer?.displayNameTh || o.customer?.displayNameEn || o.customer?.code || "" },
+      { header: t("owner"), accessor: (o) => o.owner?.displayName || "" },
       { header: t("stage"), accessor: (o) => resolveStageLabel(o.stage) },
       { header: t("expectedBudget"), accessor: (o) => o.expectedBudget ?? "" },
       { header: t("currencyCode"), accessor: (o) => o.currencyCode ?? "THB" },
@@ -163,6 +172,8 @@ export function OpportunityList() {
         },
         {
           search: listState.params.search || undefined,
+          customerId: listState.params.filters.customerId || undefined,
+          ownerId: listState.params.filters.ownerId || undefined,
           stage: listState.params.filters.stage || undefined,
           limit: 1000,
         }
@@ -201,6 +212,26 @@ export function OpportunityList() {
             <span className="text-xs text-erp-text font-medium">
               {primary}
             </span>
+          );
+        },
+      },
+      {
+        id: "owner",
+        header: t("owner"),
+        cell: (_value, opp) => {
+          if (!opp.owner) return <span className="text-erp-text-muted">-</span>;
+          return (
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Avatar
+                initial={opp.owner.displayName || undefined}
+                size="sm"
+                variant="navy"
+                className="shrink-0"
+              />
+              <span className="text-xs text-erp-text font-medium truncate max-w-[130px]" title={opp.owner.displayName || undefined}>
+                {opp.owner.displayName}
+              </span>
+            </div>
           );
         },
       },
@@ -267,12 +298,59 @@ export function OpportunityList() {
     [locale, t, tCommon]
   );
 
+  const [selectedCustomerLabel, setSelectedCustomerLabel] = React.useState<string | null>(null);
+  const [selectedOwnerLabel, setSelectedOwnerLabel] = React.useState<string | null>(null);
+
+  const activeChips = useMemo<ActiveFilterChipItem[]>(() => {
+    const chips: ActiveFilterChipItem[] = [];
+    if (listState.params.filters.stage) {
+      chips.push({
+        key: "stage",
+        value: listState.params.filters.stage,
+        label: `${t("stage")}: ${resolveStageLabel(listState.params.filters.stage)}`,
+      });
+    }
+    if (listState.params.filters.customerId) {
+      let custName: string | null = selectedCustomerLabel;
+      if (!custName) {
+        const match = allItems.find((o) => o.customer?.id === listState.params.filters.customerId);
+        if (match?.customer) {
+          custName = (locale === "en" && match.customer.displayNameEn
+            ? match.customer.displayNameEn
+            : match.customer.displayNameTh) ?? null;
+        }
+      }
+      chips.push({
+        key: "customerId",
+        value: listState.params.filters.customerId,
+        label: `${t("customer")}: ${custName || listState.params.filters.customerId}`,
+      });
+    }
+    if (listState.params.filters.ownerId) {
+      let ownerName: string | null = selectedOwnerLabel;
+      if (!ownerName) {
+        const match = allItems.find((o) => o.owner?.id === listState.params.filters.ownerId);
+        if (match?.owner?.displayName) {
+          ownerName = match.owner.displayName;
+        }
+      }
+      chips.push({
+        key: "ownerId",
+        value: listState.params.filters.ownerId,
+        label: `${t("owner")}: ${ownerName || listState.params.filters.ownerId}`,
+      });
+    }
+    return chips;
+  }, [listState.params.filters, allItems, selectedCustomerLabel, selectedOwnerLabel, locale, t]);
+
   const isZeroOpportunities =
     !isLoading &&
     !isError &&
     allItems.length === 0 &&
     !listState.params.search &&
-    !listState.params.filters.stage;
+    !listState.params.filters.stage &&
+    !listState.params.filters.customerId &&
+    !listState.params.filters.ownerId;
 
   return (
     <div className="flex flex-col gap-5">
@@ -294,8 +372,26 @@ export function OpportunityList() {
         }
       />
 
-      {/* List Toolbar with Search and Stage Filter */}
-      <ListToolbar>
+      {/* List Toolbar with Search, Customer, Owner, and Stage Filters */}
+      <ListToolbar
+        activeFilters={
+          activeChips.length > 0 ? (
+            <ActiveFilterChips
+              filters={activeChips}
+              onRemove={(key) => {
+                if (key === "customerId") setSelectedCustomerLabel(null);
+                if (key === "ownerId") setSelectedOwnerLabel(null);
+                listState.actions.setFilter(key as keyof OpportunityFilters, undefined);
+              }}
+              onClear={() => {
+                setSelectedCustomerLabel(null);
+                setSelectedOwnerLabel(null);
+                listState.actions.clearFilters();
+              }}
+            />
+          ) : undefined
+        }
+      >
         <ListSearchInput
           id="opportunity-search-input"
           value={listState.draftSearch}
@@ -305,10 +401,10 @@ export function OpportunityList() {
           placeholder={t("searchPlaceholder")}
           isDebouncing={listState.isDebouncing}
           label={tCommon("actions.search")}
-          widthClassName="w-full md:w-72"
+          widthClassName="w-full md:w-64 shrink-0"
         />
 
-        <div className="flex flex-wrap items-end gap-3 flex-1">
+        <div className="flex flex-wrap items-end gap-3 flex-1 min-w-0">
           <ListFilterSelect
             id="filter-stage-select"
             label={t("stage")}
@@ -318,7 +414,46 @@ export function OpportunityList() {
               value: s,
               label: resolveStageLabel(s),
             }))}
-            widthClassName="w-48"
+            widthClassName="w-full sm:w-40 shrink-0"
+          />
+
+          <CustomerAutocomplete
+            variant="filter"
+            value={listState.params.filters.customerId || ""}
+            onChange={(val) => {
+              listState.actions.setFilter("customerId", val || undefined);
+              if (!val) setSelectedCustomerLabel(null);
+            }}
+            onSelectedCustomerChange={(c) => {
+              if (c) {
+                const name = (locale === "en" && c.displayNameEn ? c.displayNameEn : (c.displayNameTh || c.code || c.id)) ?? null;
+                setSelectedCustomerLabel(name);
+              } else {
+                setSelectedCustomerLabel(null);
+              }
+            }}
+            label={t("customer")}
+            placeholder={t("customerFilterPlaceholder")}
+            className="w-full sm:w-56 shrink-0"
+          />
+
+          <UserAutocomplete
+            variant="filter"
+            value={listState.params.filters.ownerId || ""}
+            onChange={(val) => {
+              listState.actions.setFilter("ownerId", val || undefined);
+              if (!val) setSelectedOwnerLabel(null);
+            }}
+            onSelectedUserChange={(u) => {
+              if (u) {
+                setSelectedOwnerLabel(u.displayName || u.email || u.id || null);
+              } else {
+                setSelectedOwnerLabel(null);
+              }
+            }}
+            label={t("owner")}
+            placeholder={t("ownerFilterPlaceholder")}
+            className="w-full sm:w-48 shrink-0"
           />
         </div>
 

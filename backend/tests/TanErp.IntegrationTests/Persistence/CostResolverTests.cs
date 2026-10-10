@@ -1,3 +1,4 @@
+using TanErp.IntegrationTests.Support;
 using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Items;
 using TanErp.Domain.Items;
@@ -368,7 +369,7 @@ public class CostResolverTests : IAsyncLifetime
         Assert.Equal(cost.Id, res.Value.CostRecordId);
         Assert.Equal(1, res.Value.Version);
         Assert.Equal(CostScopeType.Organization, res.Value.Scope);
-        Assert.Equal(cost.EffectiveFromUtc, res.Value.EffectiveFromUtc);
+        Assert.Equal(cost.EffectiveFromUtc.ToMicroseconds(), res.Value.EffectiveFromUtc);
     }
 
     [Fact]
