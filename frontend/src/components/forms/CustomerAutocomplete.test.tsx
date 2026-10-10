@@ -132,4 +132,27 @@ describe("CustomerAutocomplete", () => {
 
     expect(handleChange).toHaveBeenCalledWith("");
   });
+
+  it("renders compact box and clears selection in filter variant", async () => {
+    const handleChange = vi.fn();
+    renderWithProviders(
+      <CustomerAutocomplete
+        variant="filter"
+        value="cus-1"
+        onChange={handleChange}
+        label="ลูกค้า"
+      />,
+      client
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("บริษัท ทดสอบ 1 จำกัด")).toBeInTheDocument();
+      expect(screen.getByText("[CUS-001]")).toBeInTheDocument();
+    });
+
+    const clearBtn = screen.getByRole("button", { name: "เปลี่ยนลูกค้า" });
+    expect(clearBtn).toBeInTheDocument();
+    fireEvent.click(clearBtn);
+    expect(handleChange).toHaveBeenCalledWith("");
+  });
 });

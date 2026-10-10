@@ -29,6 +29,7 @@ export interface EntityAutocompleteProps<T> {
   getItemKey: (item: T) => string;
   selectedItem?: T | null;
   onSelectedItemChange?: (item: T | null) => void;
+  variant?: "default" | "filter";
 
   // Custom Renderers
   renderSelectedCard: (onClear: () => void, selectedItem?: T | null) => React.ReactNode;
@@ -53,6 +54,7 @@ export function EntityAutocomplete<T>({
   required,
   disabled = false,
   className,
+  variant = "default",
   items,
   isLoading = false,
   emptyText = "No results found",
@@ -182,9 +184,22 @@ export function EntityAutocomplete<T>({
   }, [activeIndex]);
 
   return (
-    <div ref={containerRef} className={cn("erp-form-group relative flex flex-col gap-1.5 w-full", className)}>
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative flex flex-col gap-1.5",
+        variant === "filter" ? "!mb-0" : "erp-form-group w-full",
+        className
+      )}
+    >
       {label && (
-        <label htmlFor={inputId} className="erp-label">
+        <label
+          htmlFor={inputId}
+          className={cn(
+            "erp-label",
+            variant === "filter" && "text-sm font-semibold text-erp-navy !mb-0"
+          )}
+        >
           {label}
           {required && <span className="erp-label-required">*</span>}
         </label>

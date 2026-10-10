@@ -294,4 +294,70 @@ describe("OpportunityList Component", () => {
     fireEvent.click(loadMoreButton);
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
+
+  it("renders owner column and customer/owner filters in toolbar", () => {
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
+      selectedMembership: mockMembership,
+      memberships: [mockMembership],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    const oppWithOwner = {
+      ...sampleOpportunity,
+      owner: {
+        id: "user-1",
+        displayName: "สมชาย ใจดี",
+        email: "somchai@example.com",
+      },
+      customer: {
+        id: "10000000-0000-0000-0000-000000000001",
+        code: "CUS-0001",
+        displayNameTh: "บริษัท ทดสอบ จำกัด",
+        displayNameEn: "Test Corp",
+        status: "active",
+      },
+    };
+
+    vi.spyOn(oppQueries, "useOpportunityList").mockReturnValue({
+      data: {
+        pages: [
+          {
+            items: [oppWithOwner],
+            pagination: {
+              page: 1,
+              pageSize: 25,
+              totalCount: 1,
+              totalPages: 1,
+              nextCursor: null,
+            },
+          },
+        ],
+        pageParams: [undefined],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityList>);
+
+    render(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <OpportunityList />
+        </NextIntlClientProvider>
+      </QueryClientProvider>
+    );
+
+    // Verify owner column is rendered
+    expect(screen.getByText("สมชาย ใจดี")).toBeInTheDocument();
+    // Verify customer is rendered
+    expect(screen.getByText("บริษัท ทดสอบ จำกัด")).toBeInTheDocument();
+    // Verify Customer and Owner filter inputs exist in toolbar
+    expect(screen.getByPlaceholderText("ค้นหา/เลือกลูกค้า...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("ค้นหา/เลือกพนักงาน...")).toBeInTheDocument();
+  });
 });

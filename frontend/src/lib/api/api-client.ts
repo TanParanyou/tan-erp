@@ -678,6 +678,7 @@ export class ApiClient {
     const query = new URLSearchParams();
     if (params?.search) query.set("search", params.search);
     if (params?.customerId) query.set("customerId", params.customerId);
+    if (params?.ownerId) query.set("ownerId", params.ownerId);
     if (params?.stage) query.set("stage", params.stage);
     if (params?.sortBy) query.set("sortBy", params.sortBy);
     if (params?.sortOrder) query.set("sortOrder", params.sortOrder);

@@ -889,6 +889,11 @@ public class OpportunityStore : IOpportunityStore
             query = query.Where(o => o.CustomerId == filter.CustomerId.Value);
         }
 
+        if (filter.OwnerId.HasValue)
+        {
+            query = query.Where(o => o.OwnerUserId == filter.OwnerId.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(filter.Stage))
         {
             var stage = filter.Stage.Trim().ToLowerInvariant();
@@ -897,8 +902,23 @@ public class OpportunityStore : IOpportunityStore
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
-            var normSearch = OpportunityNormalizer.NormalizeTitle(filter.Search);
-            query = query.Where(o => o.NormalizedTitle.Contains(normSearch) || o.Code.ToLower().Contains(normSearch));
+            var search = filter.Search.Trim();
+            var normSearch = OpportunityNormalizer.NormalizeTitle(search);
+            var lowerSearch = search.ToLowerInvariant();
+            var upperCode = search.ToUpperInvariant();
+
+            var matchingCustomerIds = _db.Customers
+                .Where(c => c.OrganizationId == organizationId &&
+                            (c.NormalizedDisplayName.Contains(normSearch) ||
+                             c.Code.Contains(upperCode) ||
+                             (c.DisplayNameTh != null && c.DisplayNameTh.ToLower().Contains(lowerSearch)) ||
+                             (c.DisplayNameEn != null && c.DisplayNameEn.ToLower().Contains(lowerSearch))))
+                .Select(c => c.Id);
+
+            query = query.Where(o =>
+                o.NormalizedTitle.Contains(normSearch) ||
+                o.Code.ToLower().Contains(lowerSearch) ||
+                matchingCustomerIds.Contains(o.CustomerId));
         }
 
         // Total count before cursor/page slice

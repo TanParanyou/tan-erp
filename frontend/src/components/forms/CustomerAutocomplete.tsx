@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useCustomerList } from "@/features/customers/api/customer-queries";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import { IconClose } from "@/components/common/Icons";
 import { cn } from "@/lib/utils/cn";
 import { EntityAutocomplete } from "./EntityAutocomplete";
 import type { CustomerListItemResponse } from "@/lib/api/api-client";
@@ -13,12 +14,14 @@ export interface CustomerAutocompleteProps {
   value?: string | null;
   onChange: (customerId: string) => void;
   onViewDrawer?: (customerId: string) => void;
+  onSelectedCustomerChange?: (customer: CustomerListItemResponse | null) => void;
   label?: string;
   error?: string;
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  variant?: "default" | "filter";
 }
 
 /**
@@ -29,12 +32,14 @@ export function CustomerAutocomplete({
   value,
   onChange,
   onViewDrawer,
+  onSelectedCustomerChange,
   label,
   error,
   placeholder,
   required,
   disabled = false,
   className,
+  variant = "default",
 }: CustomerAutocompleteProps) {
   const t = useTranslations("opportunities");
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +62,14 @@ export function CustomerAutocomplete({
     return customerList.find((c) => c.id === value) ?? null;
   }, [value, customerList]);
 
+  useEffect(() => {
+    if (value && selectedCustomer) {
+      onSelectedCustomerChange?.(selectedCustomer);
+    } else if (!value) {
+      onSelectedCustomerChange?.(null);
+    }
+  }, [value, selectedCustomer, onSelectedCustomerChange]);
+
   const resolvedLabel = label || t("customer");
   const resolvedPlaceholder = placeholder || t("customerSearchPlaceholder");
 
@@ -70,18 +83,49 @@ export function CustomerAutocomplete({
       required={required}
       disabled={disabled}
       className={className}
+      variant={variant}
       items={customerList}
       isLoading={isLoading}
       emptyText={t("noCustomerFound")}
       loadingText={t("loadingMore")}
       onSearchChange={setSearchQuery}
       getItemKey={(c) => c.id ?? ""}
-      renderSelectedCard={(onClear) => (
-        <div
-          role="region"
-          aria-label={resolvedLabel}
-          className="flex flex-col gap-3 border border-erp-navy/40 bg-erp-surface p-3.5 shadow-sm"
-        >
+      renderSelectedCard={(onClear) => {
+        if (variant === "filter") {
+          return (
+            <div className="flex items-center justify-between gap-2 h-10 px-3 bg-erp-surface border border-erp-navy/60 shadow-sm text-xs min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                {selectedCustomer?.code && (
+                  <span className="font-mono font-bold text-erp-navy bg-erp-surface-subtle px-1 py-0.5 border border-erp-border shrink-0">
+                    [{selectedCustomer.code}]
+                  </span>
+                )}
+                <span className="font-semibold text-erp-navy truncate">
+                  {selectedCustomer
+                    ? selectedCustomer.displayNameTh || selectedCustomer.displayNameEn || "-"
+                    : `ID: ${value}`}
+                </span>
+              </div>
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={onClear}
+                  aria-label={t("changeCustomer")}
+                  className="p-1 hover:bg-erp-surface-subtle text-erp-text-muted hover:text-erp-navy transition-colors shrink-0"
+                >
+                  <IconClose size={14} />
+                </button>
+              )}
+            </div>
+          );
+        }
+
+        return (
+          <div
+            role="region"
+            aria-label={resolvedLabel}
+            className="flex flex-col gap-3 border border-erp-navy/40 bg-erp-surface p-3.5 shadow-sm"
+          >
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div
               onClick={() => {
@@ -178,7 +222,8 @@ export function CustomerAutocomplete({
             </div>
           </div>
         </div>
-      )}
+      );
+    }}
       renderListItem={(c, isHighlighted, isMobile) => {
         const displayName = c.displayNameTh || c.displayNameEn || "-";
         return (

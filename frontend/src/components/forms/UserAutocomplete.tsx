@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useUserList } from "@/features/users/api/user-queries";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import { IconClose } from "@/components/common/Icons";
 import { cn } from "@/lib/utils/cn";
 import { EntityAutocomplete } from "./EntityAutocomplete";
 import type { UserListItemResponse } from "@/lib/api/api-client";
@@ -13,12 +14,14 @@ export interface UserAutocompleteProps {
   value?: string | null;
   onChange: (userId: string) => void;
   branchId?: string;
+  onSelectedUserChange?: (user: UserListItemResponse | null) => void;
   label?: string;
   error?: string;
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  variant?: "default" | "filter";
 }
 
 /**
@@ -29,12 +32,14 @@ export function UserAutocomplete({
   value,
   onChange,
   branchId,
+  onSelectedUserChange,
   label,
   error,
   placeholder,
   required,
   disabled = false,
   className,
+  variant = "default",
 }: UserAutocompleteProps) {
   const t = useTranslations("opportunities");
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +62,14 @@ export function UserAutocomplete({
     return userList.find((u) => u.id === value) ?? null;
   }, [value, userList]);
 
+  useEffect(() => {
+    if (value && selectedUser) {
+      onSelectedUserChange?.(selectedUser);
+    } else if (!value) {
+      onSelectedUserChange?.(null);
+    }
+  }, [value, selectedUser, onSelectedUserChange]);
+
   const resolvedLabel = label || t("newOwnerLabel");
   const resolvedPlaceholder = placeholder || t("searchUserPlaceholder");
 
@@ -70,18 +83,42 @@ export function UserAutocomplete({
       required={required}
       disabled={disabled}
       className={className}
+      variant={variant}
       items={userList}
       isLoading={isLoading}
       emptyText={t("noUsersFound")}
       loadingText={t("saving")}
       onSearchChange={setSearchQuery}
       getItemKey={(u) => u.id ?? ""}
-      renderSelectedCard={(onClear) => (
-        <div
-          role="region"
-          aria-label={resolvedLabel}
-          className="flex flex-col gap-3 border border-erp-navy/40 bg-erp-surface p-3.5 shadow-sm"
-        >
+      renderSelectedCard={(onClear) => {
+        if (variant === "filter") {
+          return (
+            <div className="flex items-center justify-between gap-2 h-10 px-3 bg-erp-surface border border-erp-navy/60 shadow-sm text-xs min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="font-semibold text-erp-navy truncate">
+                  {selectedUser ? selectedUser.displayName || "-" : `ID: ${value}`}
+                </span>
+              </div>
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={onClear}
+                  aria-label={t("changeUser")}
+                  className="p-1 hover:bg-erp-surface-subtle text-erp-text-muted hover:text-erp-navy transition-colors shrink-0"
+                >
+                  <IconClose size={14} />
+                </button>
+              )}
+            </div>
+          );
+        }
+
+        return (
+          <div
+            role="region"
+            aria-label={resolvedLabel}
+            className="flex flex-col gap-3 border border-erp-navy/40 bg-erp-surface p-3.5 shadow-sm"
+          >
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div className="flex items-start gap-3 min-w-0 flex-1">
               <Avatar
@@ -119,7 +156,8 @@ export function UserAutocomplete({
             </div>
           </div>
         </div>
-      )}
+      );
+    }}
       renderListItem={(user, isHighlighted, isMobile) => (
         <div className="flex flex-col min-w-0">
           <span
