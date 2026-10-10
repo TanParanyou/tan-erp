@@ -1,3 +1,4 @@
+using TanErp.IntegrationTests.Support;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -612,6 +613,6 @@ public class CostRecordEndpointsTests : IAsyncLifetime
         var verificationDb = verificationScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var oldPublishedCost = await verificationDb.CostRecords.AsNoTracking().SingleAsync(c => c.Id == oldId);
         Assert.Equal(CostRecordStatus.Superseded, oldPublishedCost.Status);
-        Assert.Equal(replacementStart.AddTicks(-10), oldPublishedCost.EffectiveToUtc);
+        Assert.Equal(replacementStart.AddTicks(-10).ToMicroseconds(), oldPublishedCost.EffectiveToUtc);
     }
 }
