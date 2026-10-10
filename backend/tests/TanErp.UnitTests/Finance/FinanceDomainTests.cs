@@ -99,6 +99,16 @@ public class FinanceDomainTests
     }
 
     [Fact]
+    public void Outbox_Confirmation_TruncatesTimestampToDatabaseMicrosecondPrecision()
+    {
+        var message = Message();
+        message.MarkSent("ACC-1", Now);
+        message.Confirm("ACC-1", 1000m, Now.AddTicks(7));
+        Assert.Equal(0, message.ConfirmedAtUtc!.Value.Ticks % (TimeSpan.TicksPerMillisecond / 1000));
+        Assert.Equal(Now, message.ConfirmedAtUtc);
+    }
+
+    [Fact]
     public void Outbox_LongErrors_AreTruncated()
     {
         var message = Message();
