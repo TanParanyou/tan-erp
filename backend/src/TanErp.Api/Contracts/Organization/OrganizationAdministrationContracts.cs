@@ -15,6 +15,10 @@ public sealed record OrganizationProfileResponse(
 public sealed record CreateBranchRequest(
     string Code, string Name, string? NameEn, string? TaxBranchCode, string? AddressTh, string? AddressEn, string? Phone);
 
+/// <summary>No Code property by design: the branch code is immutable after creation.</summary>
+public sealed record UpdateBranchRequest(
+    string Name, string? NameEn, string? TaxBranchCode, string? AddressTh, string? AddressEn, string? Phone);
+
 public sealed record BranchResponse(
     Guid Id, string Code, string Name, string? NameEn, string? TaxBranchCode, string? AddressTh, string? AddressEn,
     string? Phone, bool IsActive, Guid RowVersion, DateTimeOffset CreatedAtUtc)

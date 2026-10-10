@@ -63,6 +63,10 @@ public class OrganizationAdministrationHandlerTests
             LastKeyHash = keyHash;
             return Task.FromResult(Result<BranchDetail>.Success(Branch()));
         }
+
+        public Task<Result<BranchDetail>> UpdateBranchAsync(
+            Guid organizationId, Guid branchId, BranchInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
+            GetBranchAsync(organizationId, branchId, ct);
     }
 
     private static readonly BranchInput BranchInputValue = new("n", null, null, null, null, null);
@@ -76,8 +80,9 @@ public class OrganizationAdministrationHandlerTests
         var list = await handler.ListBranchesAsync(Caller, BranchStatusFilter.All, default);
         var get = await handler.GetBranchAsync(Caller, Guid.NewGuid(), default);
         var create = await handler.CreateBranchAsync(Caller, "key-0123456789abcdef", new CreateBranchInput("B2", BranchInputValue), "t", default);
+        var update = await handler.UpdateBranchAsync(Caller, Guid.NewGuid(), Guid.NewGuid(), BranchInputValue, "t", default);
 
-        Assert.True(list.IsFailure && get.IsFailure && create.IsFailure);
+        Assert.True(list.IsFailure && get.IsFailure && create.IsFailure && update.IsFailure);
         Assert.Equal(0, store.Calls);
     }
 
@@ -93,6 +98,17 @@ public class OrganizationAdministrationHandlerTests
         Assert.Equal("branches.manage", access.RequestedKey);
         Assert.NotNull(store.LastKeyHash);
         Assert.DoesNotContain("plain-key", store.LastKeyHash);
+    }
+
+    [Fact]
+    public async Task UpdateBranch_AsksForBranchesManage()
+    {
+        var access = new FakeAccess();
+        var handler = new OrganizationAdministrationHandler(access, new RecordingStore());
+
+        await handler.UpdateBranchAsync(Caller, Guid.NewGuid(), Guid.NewGuid(), BranchInputValue, "t", default);
+
+        Assert.Equal("branches.manage", access.RequestedKey);
     }
 
     [Fact]

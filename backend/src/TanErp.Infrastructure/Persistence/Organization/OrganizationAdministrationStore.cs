@@ -154,4 +154,52 @@ public sealed class OrganizationAdministrationStore : IOrganizationAdministratio
 
             return Result<BranchDetail>.Success(ToDetail(branch));
         }, VersionConflict, ct);
+
+    public Task<Result<BranchDetail>> UpdateBranchAsync(
+        Guid organizationId, Guid branchId, BranchInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
+        SerializableTransactionRunner.RunAsync(_db, async () =>
+        {
+            // The branch code is immutable: BranchInput carries no code, so only the detail fields can change here.
+            var branch = await _db.Branches.FirstOrDefaultAsync(b => b.Id == branchId && b.OrganizationId == organizationId, ct);
+            if (branch is null) return Fail<BranchDetail>("RESOURCE_NOT_FOUND", "Branch was not found.");
+            if (branch.RowVersion != ifMatch) return Fail<BranchDetail>(VersionConflict, "The branch was modified by another user.");
+
+            var before = branch.RowVersion;
+            var changed = ChangedFields(branch, input);
+            try
+            {
+                branch.UpdateDetails(input.Name, input.NameEn, input.TaxBranchCode, input.AddressTh, input.AddressEn, input.Phone);
+            }
+            catch (OrganizationDomainException ex)
+            {
+                return Fail<BranchDetail>(ex.Code, ex.Message);
+            }
+
+            AddAudit(organizationId, actor, "branches.updated", "Branch", branch.Id.ToString(), traceId,
+                new { changedFields = changed }, before, branch.RowVersion, branch.Id);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, TaxCodeIndex))
+            {
+                return Fail<BranchDetail>("BRANCH_TAX_CODE_ALREADY_EXISTS", "A branch with this tax branch code already exists.");
+            }
+
+            return Result<BranchDetail>.Success(ToDetail(branch));
+        }, VersionConflict, ct);
+
+    /// <summary>Field names only: addresses and tax codes must never be copied into the audit log.</summary>
+    private static string[] ChangedFields(Branch b, BranchInput i)
+    {
+        static string? N(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
+        var changed = new List<string>();
+        if (b.Name != N(i.Name)) changed.Add("name");
+        if (b.NameEn != N(i.NameEn)) changed.Add("nameEn");
+        if (b.TaxBranchCode != N(i.TaxBranchCode)) changed.Add("taxBranchCode");
+        if (b.AddressTh != N(i.AddressTh)) changed.Add("addressTh");
+        if (b.AddressEn != N(i.AddressEn)) changed.Add("addressEn");
+        if (b.Phone != N(i.Phone)) changed.Add("phone");
+        return changed.ToArray();
+    }
 }

@@ -64,4 +64,13 @@ public sealed class OrganizationAdministrationHandler
         return await _store.CreateBranchAsync(
             access.Value!.OrganizationId, input, Actor(access.Value), Sha256Hex.Compute(idempotencyKey), payloadHash, traceId, ct);
     }
+
+    public async Task<Result<BranchDetail>> UpdateBranchAsync(
+        AdminCaller caller, Guid branchId, Guid ifMatch, BranchInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.BranchesManage, ct);
+        return access.IsFailure
+            ? Denied<BranchDetail>(access)
+            : await _store.UpdateBranchAsync(access.Value!.OrganizationId, branchId, input, ifMatch, Actor(access.Value), traceId, ct);
+    }
 }

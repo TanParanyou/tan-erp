@@ -109,6 +109,22 @@ public sealed class AdminOrganizationController : ControllerBase
         return Created($"/api/v1/admin/branches/{result.Value.Id}", BranchResponse.From(result.Value));
     }
 
+    [HttpPut("branches/{branchId:guid}")]
+    [ProducesResponseType<BranchResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateBranch([FromRoute] Guid branchId, [FromBody] UpdateBranchRequest request, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        var result = await _handler.UpdateBranchAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), branchId, conditional.Value.IfMatchRowVersion,
+            new BranchInput(request.Name, request.NameEn, request.TaxBranchCode, request.AddressTh, request.AddressEn, request.Phone),
+            HttpContext.TraceIdentifier, cancellationToken);
+        return BranchResult(result);
+    }
+
     private IActionResult BranchResult(Result<BranchDetail> result)
     {
         if (result.IsFailure) return Problem(result.Error);

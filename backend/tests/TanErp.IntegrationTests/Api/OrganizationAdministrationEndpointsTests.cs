@@ -329,4 +329,75 @@ public class OrganizationAdministrationEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, viewerExisting.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, viewerMissing.StatusCode); // identical: existence is never revealed
     }
+
+    private async Task<BranchResponse> CreateAndReadAsync(string code, string? taxCode = null)
+    {
+        var response = await CreateBranch(NewBranch(code, taxCode));
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<BranchResponse>())!;
+    }
+
+    [Fact]
+    public async Task UpdateBranch_ChangesDetailsKeepsCodeIgnoresCodeInBodyAndAudits()
+    {
+        var created = await CreateAndReadAsync("B20");
+
+        var response = await Send(HttpMethod.Put, $"/api/v1/admin/branches/{created.Id}", AdminToken,
+            new { code = "HACKED", name = "ชื่อใหม่", nameEn = "New", taxBranchCode = "00020", addressTh = "x", addressEn = (string?)null, phone = "1" },
+            ifMatch: created.RowVersion);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = (await response.Content.ReadFromJsonAsync<BranchResponse>())!;
+        Assert.Equal("B20", updated.Code);
+        Assert.Equal("ชื่อใหม่", updated.Name);
+        Assert.Equal("00020", updated.TaxBranchCode);
+        Assert.NotEqual(created.RowVersion, updated.RowVersion);
+        Assert.Equal($"\"{updated.RowVersion}\"", response.Headers.ETag?.Tag);
+
+        await using var db = NewDb();
+        var audit = await db.AuditEvents.AsNoTracking().SingleAsync(a => a.Action == "branches.updated" && a.ResourceId == created.Id.ToString());
+        Assert.Contains("taxBranchCode", audit.ChangesJson);
+        Assert.DoesNotContain("00020", audit.ChangesJson);
+        Assert.Equal(created.RowVersion, audit.RowVersionBefore);
+    }
+
+    [Fact]
+    public async Task UpdateBranch_StaleVersion_Returns409AndMissingIfMatch_Returns428()
+    {
+        var created = await CreateAndReadAsync("B21");
+        var body = new UpdateBranchRequest("n", null, null, null, null, null);
+
+        var stale = await Send(HttpMethod.Put, $"/api/v1/admin/branches/{created.Id}", AdminToken, body, ifMatch: Guid.NewGuid());
+        var missing = await Send(HttpMethod.Put, $"/api/v1/admin/branches/{created.Id}", AdminToken, body);
+
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(stale));
+        Assert.Equal(HttpStatusCode.PreconditionRequired, missing.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateBranch_TaxCodeOwnedByAnotherBranch_Returns409WithTaxCodeError()
+    {
+        await CreateAndReadAsync("B22", "00022");
+        var other = await CreateAndReadAsync("B23", "00023");
+
+        var response = await Send(HttpMethod.Put, $"/api/v1/admin/branches/{other.Id}", AdminToken,
+            new UpdateBranchRequest("n", null, "00022", null, null, null), ifMatch: other.RowVersion);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("BRANCH_TAX_CODE_ALREADY_EXISTS", await ReadCode(response));
+    }
+
+    [Fact]
+    public async Task UpdateBranch_OtherOrganizationBranch_Returns404AndLeavesItUntouched()
+    {
+        await using var before = NewDb();
+        var orgBBranch = await before.Branches.AsNoTracking().SingleAsync(b => b.Id == TestOnlyDataSeeder.TestBranchBId);
+
+        var response = await Send(HttpMethod.Put, $"/api/v1/admin/branches/{orgBBranch.Id}", AdminToken,
+            new UpdateBranchRequest("hijacked", null, null, null, null, null), ifMatch: orgBBranch.RowVersion);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await using var after = NewDb();
+        Assert.Equal(orgBBranch.Name, (await after.Branches.AsNoTracking().SingleAsync(b => b.Id == orgBBranch.Id)).Name);
+    }
 }
