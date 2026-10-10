@@ -140,3 +140,19 @@ This repository is in **Application Implementation**. ก่อนประเ�
   npm run lint
   ```
 - **ห้ามกล่าวอ้างว่างาน "เสร็จแล้ว" หรือ "ผ่านแล้ว" หากยังไม่ได้รันคำสั่ง Verify และยืนยันผลลัพธ์จริง**
+
+---
+
+## 9. Efficient Workflow (ลดเวลาทำงาน โดยไม่ลดมาตรฐานโค้ด)
+
+> หมวดนี้ปรับ **วิธีทำงาน** เท่านั้น ไม่เปลี่ยนกฎการเขียนโค้ดในหมวด 1–8 (strict types, i18n th/en, Reuse First, No FE Find, No Arbitrary Fallback, Clean Architecture, Definition of Done) ซึ่งยังบังคับเหมือนเดิมทุกข้อ
+
+- **Targeted reading:** `AGENTS.md` และ `design.md` อ่านทุกงานเสมอ ส่วนเอกสารอื่น (`CONTEXT.md`, roadmap, plan, `.agents/skills/*`) อ่านเฉพาะที่เกี่ยวกับงานนั้น (เช่น งานฟอร์มอ่าน `building-erp-forms` ไม่ต้องอ่าน `building-erp-apis`) ใช้ `graphify-out/` หรือ grep หาไฟล์ แทนการอ่านกว้าง
+- **Tiered verification (ระหว่างทำ vs ก่อนส่งมอบ):**
+  - ระหว่างพัฒนา: รันเฉพาะส่วนที่แตะ เช่น `dotnet test --filter <ชื่อ test>`, `npx tsc --noEmit`, `npx eslint <ไฟล์ที่แก้>`
+  - ก่อนส่งมอบ: รัน Gate เต็มตามหมวด 8 **ครั้งเดียว** ห้ามข้าม และห้ามอ้างว่าเสร็จจากผล Gate ย่อยเท่านั้น
+- **Fast path สำหรับงานเล็ก:** typo, แก้ข้อความ i18n, rename ภายในไฟล์เดียว ไม่ต้องทำ brainstorming/plan เต็มรูปแบบ ลงมือแก้แล้วรัน Gate ที่เกี่ยวข้อง (i18n ต้องเติมครบ th/en เสมอ)
+- **Full process สำหรับงานใหญ่:** Feature ใหม่, เปลี่ยน Business Rule, เปลี่ยน Schema/Contract ให้ทำ plan ตามแผนของ slice ก่อนเริ่ม
+- **แยกงานขนาน:** slice ที่ไม่แตะไฟล์ร่วมกัน (เช่น Backend endpoint กับ FE list คนละ feature) แยก agent/worktree ได้ แต่ต้องรวมแล้วรัน Gate เต็มหนึ่งรอบก่อนส่งมอบ
+- **Batch การแก้:** แก้ DTO → query → FE type → i18n ให้ครบในรอบเดียว แล้วค่อย build เพื่อลดรอบ fail ซ้ำ
+- **Subagent:** ใช้เมื่อค้นหา/ตรวจแบบขนานคุ้มกว่า ไม่ spawn สำหรับงานที่ทำ inline ได้เร็วกว่า
