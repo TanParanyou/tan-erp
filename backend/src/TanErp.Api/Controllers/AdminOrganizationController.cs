@@ -125,6 +125,46 @@ public sealed class AdminOrganizationController : ControllerBase
         return BranchResult(result);
     }
 
+    [HttpGet("branches/{branchId:guid}/deactivation-check")]
+    [ProducesResponseType<BranchDeactivationCheckResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CheckDeactivation([FromRoute] Guid branchId, CancellationToken cancellationToken)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        var result = await _handler.CheckDeactivationAsync(Caller(auth.Value!), branchId, cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(BranchDeactivationCheckResponse.From(result.Value!));
+    }
+
+    [HttpPost("branches/{branchId:guid}/deactivate")]
+    [ProducesResponseType<BranchResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeactivateBranch([FromRoute] Guid branchId, [FromBody] DeactivateBranchRequest request, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        var result = await _handler.DeactivateBranchAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), branchId, conditional.Value.IfMatchRowVersion,
+            request.Reason, HttpContext.TraceIdentifier, cancellationToken);
+        return BranchResult(result);
+    }
+
+    [HttpPost("branches/{branchId:guid}/activate")]
+    [ProducesResponseType<BranchResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ActivateBranch([FromRoute] Guid branchId, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        var result = await _handler.ActivateBranchAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), branchId, conditional.Value.IfMatchRowVersion,
+            HttpContext.TraceIdentifier, cancellationToken);
+        return BranchResult(result);
+    }
+
     private IActionResult BranchResult(Result<BranchDetail> result)
     {
         if (result.IsFailure) return Problem(result.Error);

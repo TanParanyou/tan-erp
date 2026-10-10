@@ -15,11 +15,13 @@ public sealed class OrganizationAdministrationStore : IOrganizationAdministratio
 
     private readonly AppDbContext _db;
     private readonly IClock _clock;
+    private readonly BranchDependencyInspector _inspector;
 
-    public OrganizationAdministrationStore(AppDbContext db, IClock clock)
+    public OrganizationAdministrationStore(AppDbContext db, IClock clock, BranchDependencyInspector inspector)
     {
         _db = db;
         _clock = clock;
+        _inspector = inspector;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -186,6 +188,65 @@ public sealed class OrganizationAdministrationStore : IOrganizationAdministratio
                 return Fail<BranchDetail>("BRANCH_TAX_CODE_ALREADY_EXISTS", "A branch with this tax branch code already exists.");
             }
 
+            return Result<BranchDetail>.Success(ToDetail(branch));
+        }, VersionConflict, ct);
+
+    /// <summary>Open work and memberships block deactivation; the last-active rule applies only to an active branch.</summary>
+    private async Task<List<BranchBlocker>> BlockersAsync(Branch branch, CancellationToken ct)
+    {
+        var blockers = (await _inspector.InspectAsync(branch.OrganizationId, branch.Id, ct)).ToList();
+        var otherActive = await _db.Branches.CountAsync(b => b.OrganizationId == branch.OrganizationId && b.IsActive && b.Id != branch.Id, ct);
+        if (branch.IsActive && otherActive == 0) blockers.Add(new BranchBlocker(BranchBlockerTypes.LastActiveBranch, 1));
+        return blockers;
+    }
+
+    /// <summary>Priority: open work first, then memberships, then the last-active-branch rule.</summary>
+    private static string BlockerErrorCode(IReadOnlyList<BranchBlocker> blockers)
+    {
+        if (blockers.Any(b => b.Type is not (BranchBlockerTypes.Memberships or BranchBlockerTypes.LastActiveBranch))) return "BRANCH_HAS_OPEN_DOCUMENTS";
+        return blockers.Any(b => b.Type == BranchBlockerTypes.Memberships) ? "BRANCH_HAS_ACTIVE_MEMBERSHIPS" : "BRANCH_LAST_ACTIVE";
+    }
+
+    public async Task<Result<BranchDeactivationCheck>> CheckDeactivationAsync(Guid organizationId, Guid branchId, CancellationToken ct)
+    {
+        var branch = await _db.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.Id == branchId && b.OrganizationId == organizationId, ct);
+        if (branch is null) return Fail<BranchDeactivationCheck>("RESOURCE_NOT_FOUND", "Branch was not found.");
+
+        var blockers = await BlockersAsync(branch, ct);
+        return Result<BranchDeactivationCheck>.Success(new BranchDeactivationCheck(blockers.Count == 0, blockers));
+    }
+
+    public Task<Result<BranchDetail>> SetBranchActiveAsync(
+        Guid organizationId, Guid branchId, bool active, string? reason, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
+        SerializableTransactionRunner.RunAsync(_db, async () =>
+        {
+            // One lock per organization, taken inside the transaction: two concurrent deactivations must not both see
+            // "another active branch exists" and leave the organization with none.
+            await _db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({"branch-active:" + organizationId.ToString("N")}, 0))", ct);
+
+            var branch = await _db.Branches.FirstOrDefaultAsync(b => b.Id == branchId && b.OrganizationId == organizationId, ct);
+            if (branch is null) return Fail<BranchDetail>("RESOURCE_NOT_FOUND", "Branch was not found.");
+            if (branch.RowVersion != ifMatch) return Fail<BranchDetail>(VersionConflict, "The branch was modified by another user.");
+            if (branch.IsActive == active) return Result<BranchDetail>.Success(ToDetail(branch));
+
+            var before = branch.RowVersion;
+            if (active)
+            {
+                branch.Activate();
+                AddAudit(organizationId, actor, "branches.activated", "Branch", branch.Id.ToString(), traceId, new { }, before, branch.RowVersion, branch.Id);
+            }
+            else
+            {
+                // Guard runs in the same Serializable transaction as the write, so it cannot race with a concurrent document insert.
+                var blockers = await BlockersAsync(branch, ct);
+                if (blockers.Count > 0) return Fail<BranchDetail>(BlockerErrorCode(blockers), "The branch cannot be deactivated while it is in use.");
+
+                branch.Deactivate();
+                AddAudit(organizationId, actor, "branches.deactivated", "Branch", branch.Id.ToString(), traceId, new { reason }, before, branch.RowVersion, branch.Id);
+            }
+
+            await _db.SaveChangesAsync(ct);
             return Result<BranchDetail>.Success(ToDetail(branch));
         }, VersionConflict, ct);
 

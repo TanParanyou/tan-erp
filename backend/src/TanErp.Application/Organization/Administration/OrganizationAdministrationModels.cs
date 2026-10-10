@@ -23,3 +23,27 @@ public sealed record BranchInput(
 public sealed record CreateBranchInput(string Code, BranchInput Details);
 
 public enum BranchStatusFilter { All, Active, Inactive }
+
+public sealed record BranchBlocker(string Type, int Count);
+
+public sealed record BranchDeactivationCheck(bool CanDeactivate, IReadOnlyList<BranchBlocker> Blockers);
+
+/// <summary>Blocker type names are part of the API contract and of the FE i18n keys.</summary>
+public static class BranchBlockerTypes
+{
+    public const string Estimates = "estimates";
+    public const string Quotations = "quotations";
+    public const string PurchaseOrders = "purchase_orders";
+    public const string Billings = "billings";
+    public const string WorkOrders = "work_orders";
+    public const string Projects = "projects";
+    public const string Installations = "installations";
+    public const string ServiceRequests = "service_requests";
+    public const string SiteSurveys = "site_surveys";
+    public const string Opportunities = "opportunities";
+    public const string QuickEstimates = "quick_estimates";
+    public const string MrpRuns = "mrp_runs";
+    public const string Warehouses = "warehouses";
+    public const string Memberships = "memberships";
+    public const string LastActiveBranch = "last_active_branch";
+}

@@ -14,4 +14,7 @@ public interface IOrganizationAdministrationStore
         Guid organizationId, CreateBranchInput input, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct);
     Task<Result<BranchDetail>> UpdateBranchAsync(
         Guid organizationId, Guid branchId, BranchInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct);
+    Task<Result<BranchDeactivationCheck>> CheckDeactivationAsync(Guid organizationId, Guid branchId, CancellationToken ct);
+    Task<Result<BranchDetail>> SetBranchActiveAsync(
+        Guid organizationId, Guid branchId, bool active, string? reason, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct);
 }

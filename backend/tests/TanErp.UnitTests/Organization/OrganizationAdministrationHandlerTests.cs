@@ -67,6 +67,16 @@ public class OrganizationAdministrationHandlerTests
         public Task<Result<BranchDetail>> UpdateBranchAsync(
             Guid organizationId, Guid branchId, BranchInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
             GetBranchAsync(organizationId, branchId, ct);
+
+        public Task<Result<BranchDeactivationCheck>> CheckDeactivationAsync(Guid organizationId, Guid branchId, CancellationToken ct)
+        {
+            Calls++;
+            return Task.FromResult(Result<BranchDeactivationCheck>.Success(new BranchDeactivationCheck(true, Array.Empty<BranchBlocker>())));
+        }
+
+        public Task<Result<BranchDetail>> SetBranchActiveAsync(
+            Guid organizationId, Guid branchId, bool active, string? reason, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
+            GetBranchAsync(organizationId, branchId, ct);
     }
 
     private static readonly BranchInput BranchInputValue = new("n", null, null, null, null, null);
@@ -136,5 +146,39 @@ public class OrganizationAdministrationHandlerTests
 
         await handler.UpdateProfileAsync(Caller, Guid.NewGuid(), ProfileInput, "t", default);
         Assert.Equal("organizations.manage", access.RequestedKey);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("   ")]
+    public async Task Deactivate_RequiresReason_BeforeTouchingTheStore(string? reason)
+    {
+        var store = new RecordingStore();
+        var handler = new OrganizationAdministrationHandler(new FakeAccess(), store);
+
+        var result = await handler.DeactivateBranchAsync(Caller, Guid.NewGuid(), Guid.NewGuid(), reason, "t", default);
+
+        Assert.Equal("REQUEST_VALIDATION_FAILED", result.Error.Code);
+        Assert.Equal(0, store.Calls);
+    }
+
+    [Fact]
+    public async Task Deactivate_ReasonOver500Characters_IsRejected()
+    {
+        var handler = new OrganizationAdministrationHandler(new FakeAccess(), new RecordingStore());
+
+        var result = await handler.DeactivateBranchAsync(Caller, Guid.NewGuid(), Guid.NewGuid(), new string('x', 501), "t", default);
+
+        Assert.Equal("REQUEST_VALIDATION_FAILED", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Deactivate_WithoutPermission_ReturnsPermissionDeniedEvenWithInvalidReason()
+    {
+        var handler = new OrganizationAdministrationHandler(new FakeAccess { Allow = false }, new RecordingStore());
+
+        var result = await handler.DeactivateBranchAsync(Caller, Guid.NewGuid(), Guid.NewGuid(), null, "t", default);
+
+        Assert.Equal("PERMISSION_DENIED", result.Error.Code);
     }
 }

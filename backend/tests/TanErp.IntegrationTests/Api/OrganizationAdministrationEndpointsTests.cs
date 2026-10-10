@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
 using TanErp.Api.Contracts.Organization;
 using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Inventory;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
@@ -73,7 +74,7 @@ public class OrganizationAdministrationEndpointsTests : IAsyncLifetime
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync();
-        await TestOnlyDataSeeder.SeedAsync(db, "Test", true);
+        await TestOnlyDataSeeder.SeedAsync(db, "Test", true, seedEstimateDemoData: true);
         await SeedViewerAsync(db);
     }
 
@@ -399,5 +400,123 @@ public class OrganizationAdministrationEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         await using var after = NewDb();
         Assert.Equal(orgBBranch.Name, (await after.Branches.AsNoTracking().SingleAsync(b => b.Id == orgBBranch.Id)).Name);
+    }
+
+    private async Task<HttpResponseMessage> Deactivate(Guid id, Guid ifMatch, string reason = "ปิดสาขาทดสอบ", string token = AdminToken, Guid? membershipId = null) =>
+        await Send(HttpMethod.Post, $"/api/v1/admin/branches/{id}/deactivate", token, new DeactivateBranchRequest(reason), ifMatch: ifMatch, membershipId: membershipId);
+
+    private async Task<BranchResponse> CurrentAsync(Guid id, string token = AdminToken, Guid? membershipId = null)
+    {
+        var response = await Send(HttpMethod.Get, $"/api/v1/admin/branches/{id}", token, membershipId: membershipId);
+        return (await response.Content.ReadFromJsonAsync<BranchResponse>())!;
+    }
+
+    [Fact]
+    public async Task Deactivate_BranchWithNothingOpen_SucceedsAuditsReasonAndCanBeReactivated()
+    {
+        var branch = await CreateAndReadAsync("B30");
+
+        var off = await Deactivate(branch.Id, branch.RowVersion);
+
+        Assert.Equal(HttpStatusCode.OK, off.StatusCode);
+        var inactive = (await off.Content.ReadFromJsonAsync<BranchResponse>())!;
+        Assert.False(inactive.IsActive);
+        await using (var db = NewDb())
+        {
+            var audit = await db.AuditEvents.AsNoTracking().SingleAsync(a => a.Action == "branches.deactivated" && a.ResourceId == branch.Id.ToString());
+            // Thai text is JSON-escaped in ChangesJson, so the reason is asserted on the parsed value.
+            using var changes = JsonDocument.Parse(audit.ChangesJson);
+            Assert.Equal("ปิดสาขาทดสอบ", changes.RootElement.GetProperty("reason").GetString());
+        }
+
+        var on = await Send(HttpMethod.Post, $"/api/v1/admin/branches/{branch.Id}/activate", AdminToken, ifMatch: inactive.RowVersion);
+        Assert.True((await on.Content.ReadFromJsonAsync<BranchResponse>())!.IsActive);
+        await using var db2 = NewDb();
+        Assert.True(await db2.AuditEvents.AnyAsync(a => a.Action == "branches.activated" && a.ResourceId == branch.Id.ToString()));
+    }
+
+    [Fact]
+    public async Task Deactivate_BranchWithOpenEstimate_IsRejectedAndLeavesBranchActive()
+    {
+        var seeded = await CurrentAsync(TestOnlyDataSeeder.TestBranchId);
+
+        var response = await Deactivate(seeded.Id, seeded.RowVersion);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("BRANCH_HAS_OPEN_DOCUMENTS", await ReadCode(response));
+        Assert.True((await CurrentAsync(seeded.Id)).IsActive);
+
+        var check = (await (await Send(HttpMethod.Get, $"/api/v1/admin/branches/{seeded.Id}/deactivation-check", AdminToken))
+            .Content.ReadFromJsonAsync<BranchDeactivationCheckResponse>())!;
+        Assert.False(check.CanDeactivate);
+        Assert.Contains(check.Blockers, x => x.Type == "estimates" && x.Count >= 1);
+        Assert.Contains(check.Blockers, x => x.Type == "memberships");
+    }
+
+    [Fact]
+    public async Task Deactivate_ActiveWarehouse_BlocksAsOpenDocumentsUntilItIsInactive()
+    {
+        var branch = await CreateAndReadAsync("B31");
+        await using (var db = NewDb())
+        {
+            db.Warehouses.Add(new Warehouse(
+                Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, branch.Id, "WH-B31", "คลัง", null, TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        var blocked = await Deactivate(branch.Id, branch.RowVersion);
+
+        Assert.Equal("BRANCH_HAS_OPEN_DOCUMENTS", await ReadCode(blocked));
+    }
+
+    [Fact]
+    public async Task Deactivate_ActiveMembershipOnly_ReturnsMembershipError()
+    {
+        var branch = await CreateAndReadAsync("B32");
+        await using (var db = NewDb())
+        {
+            var userId = Guid.NewGuid();
+            db.Users.Add(new User(userId, "uid-b32", "Member B32", "b32@example.test", isActive: true));
+            db.Memberships.Add(new Membership(Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, branch.Id, userId, isActive: true));
+            await db.SaveChangesAsync();
+        }
+
+        var blocked = await Deactivate(branch.Id, branch.RowVersion);
+
+        Assert.Equal("BRANCH_HAS_ACTIVE_MEMBERSHIPS", await ReadCode(blocked));
+    }
+
+    [Fact]
+    public async Task Deactivate_LastActiveBranch_IsRejected()
+    {
+        await using (var db = NewDb())
+        {
+            // Organization B has exactly one branch; clear its only membership so the last-active guard is the sole blocker.
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE organization.memberships SET branch_id = NULL WHERE organization_id = {TestOnlyDataSeeder.TestOrgBId}");
+        }
+
+        var only = await CurrentAsync(TestOnlyDataSeeder.TestBranchBId, OrgBToken, TestOnlyDataSeeder.TestMembershipBId);
+        var response = await Deactivate(only.Id, only.RowVersion, token: OrgBToken, membershipId: TestOnlyDataSeeder.TestMembershipBId);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("BRANCH_LAST_ACTIVE", await ReadCode(response));
+    }
+
+    [Fact]
+    public async Task Deactivate_ValidationAndConcurrency()
+    {
+        var branch = await CreateAndReadAsync("B33");
+
+        var noReason = await Deactivate(branch.Id, branch.RowVersion, reason: " ");
+        var stale = await Deactivate(branch.Id, Guid.NewGuid());
+        var otherOrg = await Deactivate(TestOnlyDataSeeder.TestBranchBId, Guid.NewGuid());
+        var viewer = await Deactivate(branch.Id, branch.RowVersion, token: ViewerToken, membershipId: ViewerMembershipId);
+
+        Assert.Equal("REQUEST_VALIDATION_FAILED", await ReadCode(noReason));
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(stale));
+        Assert.Equal("RESOURCE_NOT_FOUND", await ReadCode(otherOrg));
+        Assert.Equal(HttpStatusCode.Forbidden, viewer.StatusCode);
+        Assert.True((await CurrentAsync(branch.Id)).IsActive);
     }
 }

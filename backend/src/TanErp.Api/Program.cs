@@ -92,6 +92,7 @@ builder.Services.AddScoped<IFirebaseIdentityLinker, TanErp.Infrastructure.Persis
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.IIdentityAdministrationStore, TanErp.Infrastructure.Persistence.IdentityAccess.IdentityAdministrationStore>();
 builder.Services.AddScoped<TanErp.Application.Organization.Administration.IOrganizationAdministrationStore, TanErp.Infrastructure.Persistence.OrganizationAdministration.OrganizationAdministrationStore>();
 builder.Services.AddScoped<TanErp.Application.Organization.Administration.OrganizationAdministrationHandler>();
+builder.Services.AddScoped<TanErp.Infrastructure.Persistence.OrganizationAdministration.BranchDependencyInspector>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.ListUsers.ListAdminUsersHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.GetUser.GetAdminUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.CreateUser.CreateAdminUserHandler>();

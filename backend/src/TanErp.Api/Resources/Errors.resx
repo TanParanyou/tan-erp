@@ -1211,4 +1211,22 @@
   <data name="BRANCH_TAX_CODE_ALREADY_EXISTS_DETAIL" xml:space="preserve">
     <value>มีสาขาที่ใช้เลขสาขาภาษีนี้อยู่แล้วในองค์กร</value>
   </data>
+  <data name="BRANCH_HAS_OPEN_DOCUMENTS_TITLE" xml:space="preserve">
+    <value>ปิดสาขาไม่ได้</value>
+  </data>
+  <data name="BRANCH_HAS_OPEN_DOCUMENTS_DETAIL" xml:space="preserve">
+    <value>สาขานี้ยังมีเอกสาร คลัง หรือรายการที่ยังเปิดใช้งานอยู่ ต้องดำเนินการให้เสร็จก่อน</value>
+  </data>
+  <data name="BRANCH_HAS_ACTIVE_MEMBERSHIPS_TITLE" xml:space="preserve">
+    <value>ปิดสาขาไม่ได้</value>
+  </data>
+  <data name="BRANCH_HAS_ACTIVE_MEMBERSHIPS_DETAIL" xml:space="preserve">
+    <value>ยังมีผู้ใช้ที่สังกัดสาขานี้ ให้ย้ายสาขาของผู้ใช้ก่อน</value>
+  </data>
+  <data name="BRANCH_LAST_ACTIVE_TITLE" xml:space="preserve">
+    <value>ปิดสาขาไม่ได้</value>
+  </data>
+  <data name="BRANCH_LAST_ACTIVE_DETAIL" xml:space="preserve">
+    <value>องค์กรต้องมีสาขาที่เปิดใช้งานอย่างน้อยหนึ่งสาขา</value>
+  </data>
 </root>

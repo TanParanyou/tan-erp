@@ -1049,4 +1049,22 @@
   <data name="BRANCH_TAX_CODE_ALREADY_EXISTS_DETAIL" xml:space="preserve">
     <value>A branch with this tax branch code already exists in the organization.</value>
   </data>
+  <data name="BRANCH_HAS_OPEN_DOCUMENTS_TITLE" xml:space="preserve">
+    <value>Cannot deactivate branch</value>
+  </data>
+  <data name="BRANCH_HAS_OPEN_DOCUMENTS_DETAIL" xml:space="preserve">
+    <value>This branch still has open documents, warehouses or work items. Complete or close them first.</value>
+  </data>
+  <data name="BRANCH_HAS_ACTIVE_MEMBERSHIPS_TITLE" xml:space="preserve">
+    <value>Cannot deactivate branch</value>
+  </data>
+  <data name="BRANCH_HAS_ACTIVE_MEMBERSHIPS_DETAIL" xml:space="preserve">
+    <value>Users are still assigned to this branch. Move them to another branch first.</value>
+  </data>
+  <data name="BRANCH_LAST_ACTIVE_TITLE" xml:space="preserve">
+    <value>Cannot deactivate branch</value>
+  </data>
+  <data name="BRANCH_LAST_ACTIVE_DETAIL" xml:space="preserve">
+    <value>The organization must keep at least one active branch.</value>
+  </data>
 </root>

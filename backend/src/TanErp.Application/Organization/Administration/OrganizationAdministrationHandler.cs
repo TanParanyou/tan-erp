@@ -65,6 +65,38 @@ public sealed class OrganizationAdministrationHandler
             access.Value!.OrganizationId, input, Actor(access.Value), Sha256Hex.Compute(idempotencyKey), payloadHash, traceId, ct);
     }
 
+    public const int MaxReasonLength = 500;
+
+    public async Task<Result<BranchDeactivationCheck>> CheckDeactivationAsync(AdminCaller caller, Guid branchId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.BranchesManage, ct);
+        return access.IsFailure
+            ? Denied<BranchDeactivationCheck>(access)
+            : await _store.CheckDeactivationAsync(access.Value!.OrganizationId, branchId, ct);
+    }
+
+    public async Task<Result<BranchDetail>> DeactivateBranchAsync(
+        AdminCaller caller, Guid branchId, Guid ifMatch, string? reason, string traceId, CancellationToken ct)
+    {
+        // Permission is resolved before the reason is validated, so an unauthorized caller never learns about request shape.
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.BranchesManage, ct);
+        if (access.IsFailure) return Denied<BranchDetail>(access);
+
+        var trimmed = reason?.Trim();
+        if (string.IsNullOrEmpty(trimmed) || trimmed.Length > MaxReasonLength)
+            return Result<BranchDetail>.Failure(new Error("REQUEST_VALIDATION_FAILED", $"Reason is required and cannot exceed {MaxReasonLength} characters."));
+
+        return await _store.SetBranchActiveAsync(access.Value!.OrganizationId, branchId, false, trimmed, ifMatch, Actor(access.Value), traceId, ct);
+    }
+
+    public async Task<Result<BranchDetail>> ActivateBranchAsync(AdminCaller caller, Guid branchId, Guid ifMatch, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.BranchesManage, ct);
+        return access.IsFailure
+            ? Denied<BranchDetail>(access)
+            : await _store.SetBranchActiveAsync(access.Value!.OrganizationId, branchId, true, null, ifMatch, Actor(access.Value), traceId, ct);
+    }
+
     public async Task<Result<BranchDetail>> UpdateBranchAsync(
         AdminCaller caller, Guid branchId, Guid ifMatch, BranchInput input, string traceId, CancellationToken ct)
     {

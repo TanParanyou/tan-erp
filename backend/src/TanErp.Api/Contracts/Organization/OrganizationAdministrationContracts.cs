@@ -26,3 +26,13 @@ public sealed record BranchResponse(
     public static BranchResponse From(BranchDetail b) => new(
         b.Id, b.Code, b.Name, b.NameEn, b.TaxBranchCode, b.AddressTh, b.AddressEn, b.Phone, b.IsActive, b.RowVersion, b.CreatedAtUtc);
 }
+
+public sealed record DeactivateBranchRequest(string? Reason);
+
+public sealed record BranchBlockerResponse(string Type, int Count);
+
+public sealed record BranchDeactivationCheckResponse(bool CanDeactivate, IReadOnlyList<BranchBlockerResponse> Blockers)
+{
+    public static BranchDeactivationCheckResponse From(BranchDeactivationCheck c) =>
+        new(c.CanDeactivate, c.Blockers.Select(b => new BranchBlockerResponse(b.Type, b.Count)).ToArray());
+}
