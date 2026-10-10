@@ -39,6 +39,17 @@ vi.mock("@/lib/permissions/can", () => ({
   can: (_membership: unknown, permission: string) => permissions.granted.includes(permission),
 }));
 
+vi.mock("@/components/forms/AttachmentList", () => ({
+  AttachmentList: (props: { ownerType: string; ownerId: string; canManage: boolean }) => (
+    <div data-testid="attachment-list" data-owner-type={props.ownerType} data-owner-id={props.ownerId} data-can-manage={String(props.canManage)} />
+  ),
+}));
+vi.mock("@/components/forms/SignatureCapturePanel", () => ({
+  SignatureCapturePanel: (props: { ownerType: string; ownerId: string; purpose: string; canCapture: boolean }) => (
+    <div data-testid="signature-panel" data-owner-type={props.ownerType} data-purpose={props.purpose} data-can-capture={String(props.canCapture)} />
+  ),
+}));
+
 const i = thMessages.service.installations;
 const r = thMessages.service.requests;
 const ALL = ["installations.manage", "installations.operate", "installations.handover", "service-requests.manage"];
@@ -137,6 +148,32 @@ describe("service status helpers and translations", () => {
 
 describe("InstallationDetail", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("renders the shared attachment list and signature panel for the installation owner", () => {
+    renderJob(job("ready_for_handover"), ["installations.operate", "installations.handover"]);
+
+    const list = screen.getByTestId("attachment-list");
+    expect(list.dataset.ownerType).toBe("installation-job");
+    expect(list.dataset.ownerId).toBe("job-1");
+    expect(list.dataset.canManage).toBe("true");
+
+    const signature = screen.getByTestId("signature-panel");
+    expect(signature.dataset.ownerType).toBe("installation-job");
+    expect(signature.dataset.purpose).toBe("handover");
+    expect(signature.dataset.canCapture).toBe("true");
+  });
+
+  it("limits attachment and signature controls by status and permission", () => {
+    renderJob(job("handed_over"), ["installations.operate"]);
+    expect(screen.getByTestId("attachment-list").dataset.canManage).toBe("false");
+    expect(screen.getByTestId("signature-panel").dataset.canCapture).toBe("false");
+  });
+
+  it("does not allow signing without the handover permission", () => {
+    renderJob(job("ready_for_handover"), ["installations.operate"]);
+    expect(screen.getByTestId("attachment-list").dataset.canManage).toBe("true");
+    expect(screen.getByTestId("signature-panel").dataset.canCapture).toBe("false");
+  });
 
   it("offers start only on a planned job and mark-ready only while in progress", () => {
     renderJob(job("planned"));

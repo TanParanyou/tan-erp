@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import type { Control, FieldValues, Path } from "react-hook-form";
 import { useController } from "react-hook-form";
+import { Textarea } from "@/components/ui/Textarea";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 
 type Props<T extends FieldValues> = {
@@ -12,6 +14,7 @@ type Props<T extends FieldValues> = {
   rows?: number;
   disabled?: boolean;
   className?: string;
+  placeholder?: string;
 };
 
 export function JsonTextareaField<T extends FieldValues>({
@@ -21,7 +24,9 @@ export function JsonTextareaField<T extends FieldValues>({
   rows = 6,
   disabled,
   className,
+  placeholder,
 }: Props<T>) {
+  const t = useTranslations("common.form");
   const { field, fieldState } = useController({ control, name });
   const [text, setText] = useState(() => stringifyJson(field.value));
   const [parseError, setParseError] = useState<string | null>(null);
@@ -51,25 +56,18 @@ export function JsonTextareaField<T extends FieldValues>({
   const error = parseError || fieldState.error?.message;
 
   return (
-    <div className={cn("flex flex-col gap-1.5 text-left", className)}>
-      <div className="text-xs font-semibold uppercase tracking-wider text-erp-text-main">
-        {label}
-      </div>
-      <textarea
-        rows={rows}
-        disabled={disabled}
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        onBlur={handleBlur}
-        className={cn(
-          "w-full border border-erp-border bg-erp-surface px-3 py-2 font-mono text-xs text-erp-text-main rounded-none outline-none transition-colors",
-          "focus:border-erp-navy focus:ring-1 focus:ring-erp-navy",
-          "disabled:cursor-not-allowed disabled:bg-erp-surface-subtle disabled:opacity-60",
-          error ? "border-red-600 focus:border-red-600 focus:ring-red-600" : ""
-        )}
-      />
-      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-    </div>
+    <Textarea
+      label={label}
+      rows={rows}
+      disabled={disabled}
+      value={text}
+      onChange={(event) => setText(event.target.value)}
+      onBlur={handleBlur}
+      placeholder={placeholder ?? t("jsonPlaceholder")}
+      error={error}
+      className={cn("font-mono text-xs", className)}
+      wrapperClassName="text-left"
+    />
   );
 }
 

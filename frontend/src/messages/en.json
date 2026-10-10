@@ -158,7 +158,8 @@
       "completed": "Completed",
       "cancelled": "Cancelled",
       "disabled": "Disabled",
-      "all": "All"
+      "all": "All",
+      "loading": "Loading..."
     },
     "lightbox": {
       "preview": "Image Preview",
@@ -240,7 +241,12 @@
       "showPassword": "Show password",
       "hidePassword": "Hide password",
       "unspecified": "-- Not specified --",
-      "imagePreview": "Image Preview"
+      "imagePreview": "Image Preview",
+      "jsonPlaceholder": "{\n  \"key\": \"value\"\n}",
+      "localizedTextThPlaceholder": "Enter information in Thai",
+      "localizedTextEnPlaceholder": "Enter information in English",
+      "localizedTextareaThPlaceholder": "Enter details in Thai",
+      "localizedTextareaEnPlaceholder": "Enter details in English"
     },
     "addressAutocomplete": {
       "label": "Quick Address Search",
@@ -284,6 +290,7 @@
       "positiveNumber": "Must be greater than 0",
       "phoneOrEmailRequired": "Provide at least a phone number or an email address",
       "invalidPhone": "Invalid phone number format (supports domestic 0x or international +country code)",
+      "invalidTaxId": "Tax identification number must be 13 digits",
       "leadSourceNoteRequired": "Please specify details for other lead source",
       "actionDateNotePairRequired": "Next action note is required when next action date is set (and vice versa)",
       "coordinatePairRequired": "Both latitude and longitude must be provided together"
@@ -406,7 +413,11 @@
     "notificationCenter": {
       "title": "Notifications",
       "markAllRead": "Mark all as read",
-      "empty": "No new notifications"
+      "empty": "No new notifications",
+      "unreadCount": "{count} unread",
+      "viewAll": "View all",
+      "loading": "Loading notifications",
+      "loadFailed": "Could not load notifications"
     },
     "signatureManager": {
       "modeTitle": "Signature Mode",
@@ -601,7 +612,19 @@
     "exportExcel": "Export as Excel (.xlsx)",
     "exportSelected": "Export Selected ({count})",
     "exportSelectedCsv": "Export selected as CSV ({count})",
-    "exportSelectedExcel": "Export selected as Excel ({count})"
+    "exportSelectedExcel": "Export selected as Excel ({count})",
+    "addressLabelPlaceholder": "e.g. Head Office, Branch Warehouse",
+    "addressLine1Placeholder": "Building, Street, Unit/Suite",
+    "deactivateReasonPlaceholder": "Enter reason for customer deactivation...",
+    "legalNamePlaceholder": "e.g. Siam Studio Design Public Co., Ltd.",
+    "taxIdentifierPlaceholder": "13-digit Tax Identification Number",
+    "branchCodePlaceholder": "00000",
+    "creditTermDaysPlaceholder": "30",
+    "creditLimitPlaceholder": "500000.00",
+    "currencyCodePlaceholder": "THB",
+    "billingCyclePlaceholder": "e.g. 25th of every month",
+    "billingDayPlaceholder": "25",
+    "paymentConditionNotePlaceholder": "e.g. Weekly billing on Thursday, 30 days credit"
   },
   "sites": {
     "title": "Sites",
@@ -1110,7 +1133,10 @@
     },
     "evidenceEmptyHint": "This opportunity has no work images yet. Attach photos in the Work Images section, then come back to select them.",
     "evidenceLoadError": "Could not load work images.",
-    "evidenceLoadMore": "Load more photos"
+    "evidenceLoadMore": "Load more photos",
+    "checklistNotePlaceholder": "Enter site checklist note...",
+    "voidReasonPlaceholder": "Enter reason for survey cancellation...",
+    "cloneReasonPlaceholder": "Enter reason for creating new revision..."
   },
   "estimates": {
     "reviewQueueTitle": "Estimate Review Queue",
@@ -1210,7 +1236,8 @@
       "selectWorkCode": "Edit work item {code}",
       "copyDescription": "{description} (Copy)",
       "copyDescriptionEn": "{description} (Copy)",
-      "descriptionPlaceholderEn": "e.g. Sliding Wardrobe H2400"
+      "descriptionPlaceholderEn": "e.g. Sliding Wardrobe H2400",
+      "discountValuePlaceholder": "0.00"
     },
     "workspaceTitle": "Estimate & BOQ Workspace",
     "workspaceDesc": "Organize BOQ sections, work items, cost breakdown components, and configure selling rules.",
@@ -1355,7 +1382,11 @@
       "returnNote": "Required changes",
       "returnReasonRequired": "Enter a reason code.",
       "returnNoteRequired": "Describe the required changes.",
-      "reviewUnavailable": "No review task is assigned to this membership."
+      "reviewUnavailable": "No review task is assigned to this membership.",
+      "revisionReasonPlaceholder": "Enter revision reason...",
+      "cancelReasonPlaceholder": "Enter estimate cancellation reason...",
+      "returnReasonCodePlaceholder": "e.g. GP_BELOW_TARGET",
+      "returnNotePlaceholder": "Enter return notes..."
     },
     "issueQuotation": "Issue Quotation",
     "issuingQuotation": "Issuing Quotation...",
@@ -1556,7 +1587,14 @@
     "customWorkItem": "Custom work item",
     "selectItemMaster": "Select from Item Master",
     "changeItemMaster": "Change reference",
-    "unlinkItemMaster": "Remove reference"
+    "unlinkItemMaster": "Remove reference",
+    "customWorkItemReasonCodePlaceholder": "e.g. CUSTOM_MATERIAL",
+    "customWorkItemReasonPlaceholder": "Enter custom work item reason...",
+    "sellingRuleValuePlaceholder": "0.00",
+    "sellingRuleReasonCodePlaceholder": "e.g. COMPETITIVE_PRICING",
+    "discountReasonCodePlaceholder": "e.g. VOLUME_DISCOUNT",
+    "itemCodePlaceholder": "e.g. ITEM-001",
+    "unitCodePlaceholder": "e.g. PCS, SET"
   },
   "documentNumbering": {
     "title": "Document Numbering Settings",
@@ -2083,7 +2121,18 @@
       }
     },
     "itemAutocompleteLabel": "Item",
-    "itemAutocompletePlaceholder": "Search by item code or name..."
+    "itemAutocompletePlaceholder": "Search by item code or name...",
+    "returnReasonPlaceholder": "Enter return revision reason...",
+    "sourceCodePlaceholder": "e.g. VENDOR_LIST_2026",
+    "conversionFactorPlaceholder": "1.000000",
+    "barcodeValuePlaceholder": "e.g. 8851234567890",
+    "quantityInBaseUnitPlaceholder": "1.0000",
+    "taxonomyCodePlaceholder": "e.g. WOOD-HMR",
+    "codePlaceholder": "e.g. SKU-1001 or leave blank for auto-generation",
+    "codeRequired": "Code is required",
+    "imageAltTextPlaceholder": "Image description e.g. 15mm Plywood",
+    "branchSaveFailed": "Failed to save branch availability",
+    "approve": "Approve"
   },
   "userAdmin": {
     "title": "Users and Access",
@@ -2124,7 +2173,9 @@
       "branch": "Branch",
       "roles": "Roles",
       "startsAt": "Starts at",
-      "expiresAt": "Expires at"
+      "expiresAt": "Expires at",
+      "displayNamePlaceholder": "e.g. John Doe",
+      "emailPlaceholder": "user@example.com"
     },
     "validation": {
       "displayNameRequired": "Enter a display name",
@@ -2428,7 +2479,19 @@
         "PROJECT_OPEN_INSTALLATION": "An installation is still open. Hand over or cancel every installation before completing the project."
       },
       "committedAmount": "Commitments (approved orders)",
-      "availableBudget": "Available budget"
+      "availableBudget": "Available budget",
+      "changeOrderTitlePlaceholder": "e.g. Front laminate finish revision",
+      "changeOrderReasonPlaceholder": "Enter change order reason...",
+      "budgetDeltaPlaceholder": "0.00",
+      "contractDeltaPlaceholder": "0.00",
+      "decisionNotePlaceholder": "Enter approval or rejection note...",
+      "reasonPlaceholder": "Enter status transition reason...",
+      "milestoneNamePlaceholder": "e.g. Milestone 1 - Structure Installation",
+      "milestoneWeightPlaceholder": "100",
+      "titlePlaceholder": "e.g. Change laminate finish spec",
+      "notePlaceholder": "Enter decision notes...",
+      "namePlaceholder": "e.g. Milestone 1 - Structure Handover",
+      "weightPlaceholder": "100"
     }
   },
   "procurement": {
@@ -2487,7 +2550,18 @@
       "created": "Supplier added.",
       "updated": "Supplier saved.",
       "activated": "Supplier activated.",
-      "deactivated": "Supplier deactivated."
+      "deactivated": "Supplier deactivated.",
+      "nameThPlaceholder": "e.g. Siam Woodland Co., Ltd.",
+      "nameEnPlaceholder": "e.g. Siam Woodland Co., Ltd.",
+      "taxIdPlaceholder": "01055XXXXXXXX",
+      "paymentTermPlaceholder": "30",
+      "contactNamePlaceholder": "e.g. John Carpenter",
+      "phonePlaceholder": "e.g. 02-123-4567",
+      "emailPlaceholder": "sales@supplier.com",
+      "paymentTermDaysPlaceholder": "30",
+      "invalidPhone": "Invalid phone number format",
+      "invalidEmail": "Invalid email format",
+      "invalidTaxId": "Tax identification number must be 13 digits"
     },
     "orders": {
       "title": "Purchase orders",
@@ -2568,7 +2642,11 @@
       "receiptsEmpty": "No goods received yet.",
       "receiptSummary": "{lines} lines, total quantity {quantity}",
       "putIntoStockDone": "In stock (document {number})",
-      "notInStock": "Not put into stock yet"
+      "notInStock": "Not put into stock yet",
+      "receiveQuantityPlaceholder": "0.0000",
+      "receiptNotePlaceholder": "Enter receiving note...",
+      "reasonPlaceholder": "Enter reason...",
+      "notePlaceholder": "Enter purchase order note..."
     }
   },
   "inventory": {
@@ -2624,7 +2702,9 @@
       "created": "Warehouse added.",
       "updated": "Warehouse saved.",
       "activated": "Warehouse activated.",
-      "deactivated": "Warehouse deactivated."
+      "deactivated": "Warehouse deactivated.",
+      "namePlaceholder": "e.g. Main Bangna Warehouse",
+      "addressPlaceholder": "Enter warehouse address..."
     },
     "stock": {
       "title": "Stock balances",
@@ -2710,7 +2790,8 @@
         "issue": "Stock issued.",
         "transfer": "Stock transferred.",
         "adjustment": "Stock adjusted."
-      }
+      },
+      "reasonPlaceholder": "Enter inventory adjustment reason..."
     },
     "reserve": {
       "title": "Reserve stock for a project",
@@ -2721,7 +2802,9 @@
       "note": "Note",
       "confirm": "Reserve",
       "invalid": "Select a project and a quantity above zero.",
-      "success": "Stock reserved."
+      "success": "Stock reserved.",
+      "quantityPlaceholder": "0.0000",
+      "notePlaceholder": "Enter stock reservation note..."
     },
     "receive": {
       "action": "Put into stock",
@@ -2813,7 +2896,9 @@
       "actionDone": {
         "approve": "BOM revision approved.",
         "obsolete": "BOM revision marked obsolete."
-      }
+      },
+      "outputQuantityPlaceholder": "1.0000",
+      "notePlaceholder": "Enter BOM production note..."
     },
     "workOrders": {
       "title": "Work orders",
@@ -2888,7 +2973,14 @@
         "completion": "Finished goods received"
       },
       "issuedToast": "Materials issued.",
-      "returnedToast": "Materials returned."
+      "returnedToast": "Materials returned.",
+      "quantityPlaceholder": "0.0000",
+      "completeQuantityPlaceholder": "0.0000",
+      "plannedQuantityPlaceholder": "1.0000",
+      "reasonPlaceholder": "Enter reason...",
+      "notePlaceholder": "Enter work order note...",
+      "issueQuantityPlaceholder": "0.0000",
+      "returnQuantityPlaceholder": "0.0000"
     }
   },
   "mrp": {
@@ -2990,7 +3082,10 @@
       "selectWarehouse": "Select a warehouse",
       "convertBuyRequired": "Select a supplier and enter a unit price.",
       "convertMakeRequired": "Select a warehouse.",
-      "confirmConvert": "Create document"
+      "confirmConvert": "Create document",
+      "unitPricePlaceholder": "0.00",
+      "purchaseLeadTimePlaceholder": "7",
+      "productionLeadTimePlaceholder": "14"
     }
   },
   "quotationLifecycle": {
@@ -3026,7 +3121,8 @@
       "ESTIMATE_INVALID_STATE": "There is no approved estimate revision with frozen data to quote.",
       "CUSTOMER_QUOTATION_BILLING_NOT_READY": "The customer's tax and billing details are incomplete.",
       "IDEMPOTENCY_KEY_REUSED": "This request was already used with different data. Please retry."
-    }
+    },
+    "reasonPlaceholder": "Enter reason..."
   },
   "externalAcceptance": {
     "links": {
@@ -3053,7 +3149,9 @@
         "revoked": "Revoked",
         "accepted": "Accepted",
         "unavailable": "Unavailable"
-      }
+      },
+      "lifetimeDaysPlaceholder": "7",
+      "signerHintPlaceholder": "e.g. Managing Director"
     },
     "public": {
       "unavailableTitle": "This link is not available",
@@ -3072,7 +3170,8 @@
       "nameRequired": "Enter a full name of at least 2 characters.",
       "consentRequired": "You must tick the consent statement.",
       "acceptedTitle": "The quotation has been accepted",
-      "acceptedDetail": "Recorded on {date}. Thank you."
+      "acceptedDetail": "Recorded on {date}. Thank you.",
+      "signerRolePlaceholder": "e.g. Authorized Signatory / Project Owner"
     },
     "errors": {
       "failed": "The action failed. Please try again.",
@@ -3219,7 +3318,15 @@
           "title": "Record handover",
           "description": "Record the customer's decision. Acceptance needs an explicit warranty term."
         }
-      }
+      },
+      "signerNamePlaceholder": "e.g. John Doe",
+      "warrantyMonthsPlaceholder": "12",
+      "disputeReasonPlaceholder": "Enter disputed punch-list items...",
+      "handoverNotePlaceholder": "Enter handover remarks...",
+      "textPlaceholder": "Enter details...",
+      "crewPlaceholder": "e.g. Woodwork Team A (Foreman Somsak)",
+      "notePlaceholder": "Enter installation remarks...",
+      "newChecklistItemPlaceholder": "e.g. Verify cabinet door alignment"
     },
     "warranties": {
       "title": "Warranties",
@@ -3306,7 +3413,11 @@
           "title": "Reopen the request",
           "description": "Enter why it must be reopened."
         }
-      }
+      },
+      "reopenReasonPlaceholder": "Enter rework / reopening reason...",
+      "resolutionNotePlaceholder": "Enter troubleshooting and resolution details...",
+      "titleFieldPlaceholder": "e.g. Wardrobe door does not close properly",
+      "descriptionPlaceholder": "Describe issue symptoms in detail..."
     }
   },
   "finance": {
@@ -3403,7 +3514,12 @@
       "reversalReasonLine": "Reversal reason: {reason}",
       "reason": "Reason",
       "reasonRequired": "Enter a reason.",
-      "confirm": "Confirm"
+      "confirm": "Confirm",
+      "paymentAmountPlaceholder": "0.00",
+      "paymentReferencePlaceholder": "e.g. Bank slip or transaction ID",
+      "reasonPlaceholder": "Enter reason...",
+      "descriptionPlaceholder": "e.g. Milestone 1 - 30% Advance Deposit",
+      "amountPlaceholder": "0.00"
     },
     "sync": {
       "title": "Accounting sync",
@@ -3589,7 +3705,19 @@
       "approveTitle": "Approve this template?",
       "returnTitle": "Return this template?",
       "decisionDescription": "Add a note if useful.",
-      "decisionNote": "Note"
+      "decisionNote": "Note",
+      "decisionNotePlaceholder": "Enter decision notes...",
+      "numberFieldPlaceholder": "0.00",
+      "codePlaceholder": "e.g. TPL-WARDROBE-01",
+      "namePlaceholder": "e.g. Standard Hinged Wardrobe",
+      "unitCodePlaceholder": "e.g. SET",
+      "rowCodePlaceholder": "e.g. STD",
+      "rowNamePlaceholder": "e.g. HMR Wood Laminate",
+      "factorPlaceholder": "1.0000",
+      "riskModifierPlaceholder": "0.0000",
+      "amountPlaceholder": "0.00",
+      "assumptionsPlaceholder": "e.g. Installation labor included",
+      "exclusionsPlaceholder": "e.g. Electrical wiring excluded"
     },
     "estimates": {
       "title": "Quick estimates",
@@ -3685,7 +3813,17 @@
       "surveyRevisionId": "Site survey revision ID",
       "surveyRevisionRequired": "Enter the site survey revision ID.",
       "reasonCode": "Reason code",
-      "reasonCodeRequired": "Enter a reason code."
+      "reasonCodeRequired": "Enter a reason code.",
+      "propertyTypePlaceholder": "e.g. Condominium, Single House",
+      "roomOrAreaPlaceholder": "e.g. Master Bedroom",
+      "workSubtypePlaceholder": "e.g. Built-in Wardrobe",
+      "dimensionPlaceholder": "0.00",
+      "quantityPlaceholder": "1",
+      "surveyRevisionIdPlaceholder": "e.g. SRV-2026-0001",
+      "reasonCodePlaceholder": "e.g. SITE_SURVEY_BASE",
+      "widthMPlaceholder": "0.00",
+      "heightMPlaceholder": "0.00",
+      "depthMPlaceholder": "0.00"
     }
   },
   "richText": {
@@ -3714,7 +3852,8 @@
     "targetUrl": "Target URL",
     "targetUrlPlaceholder": "https://example.com",
     "removeLink": "Remove Link",
-    "applyLink": "Apply"
+    "applyLink": "Apply",
+    "cancel": "Cancel"
   },
   "security": {
     "twoFactorTitle": "Two-Factor Authentication (2FA)",
@@ -3751,5 +3890,98 @@
     "twoFactorProtected": "Your account is currently protected with 2FA",
     "copy": "Copy",
     "thisDevice": "This device"
+  },
+  "attachments": {
+    "title": "Attachments",
+    "subtitle": "Evidence photos for this record (JPEG, PNG, WebP up to 10 MB each)",
+    "loading": "Loading attachments",
+    "loadError": "Could not load attachments",
+    "empty": "No attachments yet",
+    "emptyHint": "Choose images, then save the attachments",
+    "selectFiles": "Choose images",
+    "purposeLabel": "Attachment type",
+    "pendingTitle": "Waiting to save ({count} files)",
+    "uploadedWaiting": "Uploaded, waiting to be linked ({count} files)",
+    "removePending": "Remove",
+    "save": "Save attachments",
+    "saved": "Attachments saved",
+    "unlinked": "Attachment removed",
+    "fileRejected": "File {name} is not JPEG/PNG/WebP or is larger than 10 MB",
+    "createdBy": "By {name}",
+    "purposes": {
+      "general": "General",
+      "evidence": "Evidence",
+      "handover": "Handover",
+      "defect": "Defect"
+    },
+    "unlink": {
+      "action": "Remove attachment",
+      "title": "Remove attachment",
+      "message": "Remove this file from the record? It will no longer be listed here."
+    },
+    "errors": {
+      "failed": "The action failed. Please try again.",
+      "ATTACHMENT_OWNER_TYPE_INVALID": "This record type cannot have attachments",
+      "ATTACHMENT_PURPOSE_INVALID": "The attachment type is invalid",
+      "ATTACHMENT_FIELD_INVALID": "Choose between 1 and 20 distinct files per request",
+      "ATTACHMENT_FILE_NOT_READY": "A file is not verified or was not uploaded for this record",
+      "ATTACHMENT_FILE_SCOPE_MISMATCH": "The file does not belong to this record's organization",
+      "ATTACHMENT_DUPLICATE": "This file is already attached to this record for the same type",
+      "ATTACHMENT_LIMIT_EXCEEDED": "A record can have at most 50 attachments",
+      "ATTACHMENT_OWNER_LOCKED": "The record's status does not allow attachment or signature changes",
+      "SIGNATURE_SUBMISSION_INVALID": "The signer name needs 2-200 characters and a signature is required",
+      "SIGNATURE_CONSENT_REQUIRED": "The current consent statement must be accepted",
+      "SIGNATURE_IMAGE_INVALID": "The signature image must be a verified PNG file",
+      "IDEMPOTENCY_KEY_REUSED": "This request was already used with different data. Please save again.",
+      "PERMISSION_DENIED": "You do not have permission to do this",
+      "RESOURCE_NOT_FOUND": "Record not found"
+    },
+    "signature": {
+      "title": "Handover signature",
+      "subtitle": "Record the signature of the person accepting the work (a PNG image with a hash, not a legal electronic signature)",
+      "loadError": "Could not load signatures",
+      "empty": "No signature yet",
+      "signerName": "Signer name",
+      "signerRole": "Role or relationship to the customer",
+      "consentLabel": "I accept the following statement",
+      "signaturePadLabel": "Signature",
+      "capture": "Save signature",
+      "saved": "Signature saved",
+      "signedBy": "{name} on {date}",
+      "hashLabel": "SHA-256: {hash}",
+      "consentVersions": {
+        "handover-2026-10-v1": "I have inspected the work against the list and confirm that this signature is mine or that of a person who authorised me, and I accept that the system keeps the signature image and signing time as evidence."
+      },
+      "signerNamePlaceholder": "e.g. John Doe",
+      "signerRolePlaceholder": "e.g. Project Architect / Client"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unknownType": "You have a new notification",
+    "loadFailed": "Could not load notifications",
+    "types": {
+      "estimateApprovalRequested": "{actorDisplayName} submitted estimate {documentNumber} for approval",
+      "costRecordApprovalRequested": "{actorDisplayName} submitted the cost of item {documentNumber} for approval",
+      "purchaseOrderApprovalRequested": "{actorDisplayName} submitted purchase order {documentNumber} for approval",
+      "changeOrderApprovalRequested": "{actorDisplayName} submitted change order {documentNumber} for approval",
+      "mrpRunApprovalRequested": "{actorDisplayName} created planning run {documentNumber} awaiting approval",
+      "roleAssignmentApprovalRequested": "{actorDisplayName} requested role {roleName} for {subjectDisplayName}"
+    },
+    "list": {
+      "title": "Notifications",
+      "subtitle": "Documents awaiting your approval and other system notices",
+      "filterLabel": "Read status",
+      "filterUnread": "Unread",
+      "columnMessage": "Message",
+      "columnReceivedAt": "Received",
+      "columnStatus": "Status",
+      "statusUnread": "Unread",
+      "statusRead": "Read",
+      "markRead": "Mark as read",
+      "open": "Open document",
+      "markAllRead": "Mark all as read",
+      "empty": "No notifications"
+    }
   }
 }

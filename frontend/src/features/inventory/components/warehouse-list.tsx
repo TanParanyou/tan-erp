@@ -11,7 +11,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { IconPlus } from "@/components/common/Icons";
@@ -184,27 +184,42 @@ export function WarehouseList() {
         />
       )}
 
-      <Modal
+      <Drawer
         isOpen={editing !== null}
         onClose={() => { if (!isBusy) setEditing(null); }}
         title={editing === "new" ? t("create") : t("edit")}
-        size="sm"
+        size="md"
         closeDisabled={isBusy}
         closeOnOverlayClick={!isBusy}
-        closeOnEscape={!isBusy}
         footer={(
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => setEditing(null)}>{tCommon("actions.cancel")}</Button>
-            <Button type="button" variant="primary" className="min-h-11" isLoading={isBusy} disabled={isBusy} onClick={() => void save()}>{tCommon("actions.save")}</Button>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto min-h-11"
+              disabled={isBusy}
+              onClick={() => setEditing(null)}
+            >
+              {tCommon("actions.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              className="w-full sm:w-auto min-h-11"
+              isLoading={isBusy}
+              disabled={isBusy}
+              onClick={() => void save()}
+            >
+              {tCommon("actions.save")}
+            </Button>
           </div>
         )}
       >
-        <div className="space-y-3">
-          {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
-          <Input label={t("name")} required maxLength={200} value={name} disabled={isBusy} onChange={(event) => setName(event.target.value)} />
-          <Input label={t("address")} maxLength={500} value={address} disabled={isBusy} onChange={(event) => setAddress(event.target.value)} />
+        <div className="space-y-3 py-2">
+          <Input label={t("name")} placeholder={t("namePlaceholder")} required maxLength={200} value={name} disabled={isBusy} onChange={(event) => setName(event.target.value)} />
+          <Input label={t("address")} placeholder={t("addressPlaceholder")} maxLength={500} value={address} disabled={isBusy} onChange={(event) => setAddress(event.target.value)} />
         </div>
-      </Modal>
+      </Drawer>
     </section>
   );
 }

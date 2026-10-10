@@ -199,12 +199,12 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
                     <td className="py-2 pr-2 text-right font-mono">{formatNumber(material.remainingQuantity)}</td>
                     {stockOpen && canOperate && (
                       <td className="py-2 pr-2 text-right">
-                        <Input type="number" min={0} step="0.0001" aria-label={t("issueQuantityFor", { item: material.item?.code ?? "-" })} disabled={busy} value={issueQty[itemId] ?? ""} onChange={(event) => setIssueQty((current) => ({ ...current, [itemId]: event.target.value }))} />
+                        <Input type="number" min={0} step="0.0001" aria-label={t("issueQuantityFor", { item: material.item?.code ?? "-" })} placeholder={t("issueQuantityPlaceholder")} disabled={busy} value={issueQty[itemId] ?? ""} onChange={(event) => setIssueQty((current) => ({ ...current, [itemId]: event.target.value }))} />
                       </td>
                     )}
                     {stockOpen && canOperate && (
                       <td className="py-2 text-right">
-                        <Input type="number" min={0} step="0.0001" aria-label={t("returnQuantityFor", { item: material.item?.code ?? "-" })} disabled={busy} value={returnQty[itemId] ?? ""} onChange={(event) => setReturnQty((current) => ({ ...current, [itemId]: event.target.value }))} />
+                        <Input type="number" min={0} step="0.0001" aria-label={t("returnQuantityFor", { item: material.item?.code ?? "-" })} placeholder={t("returnQuantityPlaceholder")} disabled={busy} value={returnQty[itemId] ?? ""} onChange={(event) => setReturnQty((current) => ({ ...current, [itemId]: event.target.value }))} />
                       </td>
                     )}
                   </tr>
@@ -226,7 +226,7 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
           <h3 className="text-sm font-bold text-erp-navy">{t("completeTitle")}</h3>
           <p className="text-xs text-erp-text-muted">{t("completeHint", { remaining: formatNumber(remainingToComplete) })}</p>
           <div className="flex flex-wrap items-end gap-3">
-            <Input type="number" min={0} step="0.0001" label={t("completeQuantity")} value={completeQty} disabled={busy} onChange={(event) => setCompleteQty(event.target.value)} />
+            <Input type="number" min={0} step="0.0001" label={t("completeQuantity")} value={completeQty} disabled={busy} placeholder={t("completeQuantityPlaceholder")} onChange={(event) => setCompleteQty(event.target.value)} />
             <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.complete.isPending} disabled={busy} onClick={() => void complete()}>{t("postCompletion")}</Button>
           </div>
         </div>
@@ -274,6 +274,7 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
           value={reason}
           maxLength={500}
           disabled={busy}
+          placeholder={t("reasonPlaceholder")}
           error={reasonError ? t("reasonRequired") : undefined}
           onChange={(event) => { setReason(event.target.value); if (event.target.value.trim()) setReasonError(false); }}
         />

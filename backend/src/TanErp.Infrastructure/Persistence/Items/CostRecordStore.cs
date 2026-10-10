@@ -4,19 +4,23 @@ using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
 using TanErp.Application.Items;
+using TanErp.Application.Notifications;
 using TanErp.Domain.Common;
 using TanErp.Domain.Files;
 using TanErp.Domain.Items;
+using TanErp.Infrastructure.Persistence.Notifications;
 
 namespace TanErp.Infrastructure.Persistence.Items;
 
 public class CostRecordStore : ICostRecordStore
 {
     private readonly AppDbContext _db;
+    private readonly INotificationPublisher _notifications;
 
-    public CostRecordStore(AppDbContext db)
+    public CostRecordStore(AppDbContext db, INotificationPublisher notifications)
     {
         _db = db;
+        _notifications = notifications;
     }
 
     public async Task<Result<CostRecordDetailProjection>> CreateDraftAsync(
@@ -352,7 +356,27 @@ public class CostRecordStore : ICostRecordStore
 
         _db.AuditEvents.Add(audit);
 
-        await _db.SaveChangesAsync(ct);
+        var itemCode = await _db.Items.AsNoTracking()
+            .Where(i => i.Id == itemId && i.OrganizationId == orgId)
+            .Select(i => i.Code)
+            .FirstAsync(ct);
+        await _notifications.PublishAsync(
+            NotificationEvents.CostRecordSubmitted(
+                orgId, record.BranchId, record.RowVersion, access.ActorUserId, record.Id, itemCode,
+                new[] { record.CreatedByUserId, record.LastFinancialEditorId }.Distinct().ToArray()),
+            ct);
+
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (NotificationDedupeConflict.Is(ex))
+        {
+            // A concurrent duplicate already committed this transition's notification: report the same outcome as a stale version.
+            await tx.RollbackAsync(ct);
+            return Result<CostRecordDetailProjection>.Failure(new Error("ITEM_COST_VERSION_CONFLICT", "Cost record has been modified concurrently."));
+        }
+
         await tx.CommitAsync(ct);
 
         return Result<CostRecordDetailProjection>.Success(MapToProjection(record, record.Unit, record.CostSource));

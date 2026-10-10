@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { createTranslator, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { ApiError } from "@/lib/api/api-error";
@@ -109,13 +110,15 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
             {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input label={t("signerName")} required maxLength={200} value={signerName} placeholder={view.signerHint ?? undefined} disabled={mutation.isPending} onChange={(event) => setSignerName(event.target.value)} />
-              <Input label={t("signerRole")} maxLength={100} value={signerRole} disabled={mutation.isPending} onChange={(event) => setSignerRole(event.target.value)} />
+              <Input label={t("signerRole")} maxLength={100} value={signerRole} placeholder={t("signerRolePlaceholder")} disabled={mutation.isPending} onChange={(event) => setSignerRole(event.target.value)} />
             </div>
             <SignaturePad label={t("signature")} clearLabel={t("clearSignature")} disabled={mutation.isPending} onChange={setSignature} />
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" className="mt-1 h-4 w-4" checked={consent} disabled={mutation.isPending} onChange={(event) => setConsent(event.target.checked)} />
-              <span>{t("consentText")}</span>
-            </label>
+            <Checkbox
+              checked={consent}
+              disabled={mutation.isPending}
+              onChange={(event) => setConsent(event.target.checked)}
+              label={t("consentText")}
+            />
             <Button type="button" variant="primary" className="min-h-11" isLoading={mutation.isPending} disabled={mutation.isPending} onClick={() => void submit()}>{t("accept")}</Button>
           </>
         )}

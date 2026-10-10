@@ -5,9 +5,11 @@ using Npgsql;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Application.Notifications;
 using TanErp.Domain.Common;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
+using TanErp.Infrastructure.Persistence.Notifications;
 
 namespace TanErp.Infrastructure.Persistence.IdentityAccess;
 
@@ -15,11 +17,13 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
 {
     private readonly AppDbContext _db;
     private readonly IClock _clock;
+    private readonly INotificationPublisher _notifications;
 
-    public IdentityAdministrationStore(AppDbContext db, IClock clock)
+    public IdentityAdministrationStore(AppDbContext db, IClock clock, INotificationPublisher notifications)
     {
         _db = db;
         _clock = clock;
+        _notifications = notifications;
     }
 
     // ---------------------------------------------------------------- reads
@@ -152,6 +156,10 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 {
                     var request = new RoleAssignmentRequest(Guid.NewGuid(), organizationId, membership.Id, role.Id, actor.UserId, now);
                     _db.RoleAssignmentRequests.Add(request);
+                    await _notifications.PublishAsync(
+                        NotificationEvents.RoleAssignmentRequested(
+                            organizationId, request.Id, actor.UserId, user.Id, input.DisplayName, role.Name),
+                        cancellationToken);
                     requestedRoleIds.Add(role.Id);
                 }
                 else
@@ -334,7 +342,23 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                     new { membershipId, roleId });
                 _db.IdempotencyRecords.Add(new IdempotencyRecord(
                     Guid.NewGuid(), organizationId, operation, keyHash, payloadHash, $"request:{request.Id}", now));
-                await _db.SaveChangesAsync(cancellationToken);
+                var subjectName = await _db.Users.AsNoTracking()
+                    .Where(u => u.Id == membership.UserId)
+                    .Select(u => u.DisplayName)
+                    .FirstAsync(cancellationToken);
+                await _notifications.PublishAsync(
+                    NotificationEvents.RoleAssignmentRequested(
+                        organizationId, request.Id, actor.UserId, membership.UserId, subjectName, role.Name),
+                    cancellationToken);
+                try
+                {
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException ex) when (NotificationDedupeConflict.Is(ex))
+                {
+                    // A concurrent duplicate already committed this transition's notification: report the same outcome as a lost race.
+                    return Fail<AssignRoleOutcome>("ADMIN_VERSION_CONFLICT", "The change conflicted with a concurrent update; reload and retry.");
+                }
 
                 var user = await ReloadUserAsync(organizationId, membership.UserId, cancellationToken);
                 var requestId = request.Id;

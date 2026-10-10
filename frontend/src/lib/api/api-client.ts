@@ -226,6 +226,21 @@ export type DefectResponse = components["schemas"]["DefectResponse"];
 export type ChecklistItemResponse = components["schemas"]["ChecklistItemResponse"];
 export type HandoverRequest = components["schemas"]["HandoverRequest"];
 export type WarrantyResponse = components["schemas"]["WarrantyResponse"];
+export type AttachmentLinkResponse = components["schemas"]["AttachmentLinkResponse"];
+export type AttachmentListResponse = components["schemas"]["AttachmentListResponse"];
+export type AttachFilesRequest = components["schemas"]["AttachFilesRequest"];
+export type SignatureCaptureResponse = components["schemas"]["SignatureCaptureResponse"];
+export type SignatureCaptureListResponse = components["schemas"]["SignatureCaptureListResponse"];
+export type CaptureSignatureRequest = components["schemas"]["CaptureSignatureRequest"];
+export type NotificationResponse = components["schemas"]["NotificationResponse"];
+export type NotificationListResponse = components["schemas"]["NotificationListResponse"];
+export type UnreadCountResponse = components["schemas"]["UnreadCountResponse"];
+export type MarkAllReadResponse = components["schemas"]["MarkAllReadResponse"];
+export interface ListNotificationsParams {
+  unreadOnly: boolean;
+  page: number;
+  pageSize: number;
+}
 export type WarrantiesListResponse = components["schemas"]["WarrantiesListResponse"];
 export type ServiceRequestRequest = components["schemas"]["ServiceRequestRequest"];
 export type ServiceRequestResponse = components["schemas"]["ServiceRequestResponse"];
@@ -1557,6 +1572,50 @@ export class ApiClient {
       case "reopen-defect":
         return this.request<InstallationResponse>(`${base}/defects/${encodeURIComponent(step.defectId)}/reopen`, "POST", conditional, { reason: step.reason });
     }
+  }
+
+  private attachmentOwnerPath(ownerType: string, ownerId: string): string {
+    return `/api/v1/attachment-owners/${encodeURIComponent(ownerType)}/${encodeURIComponent(ownerId)}`;
+  }
+
+  async listAttachments(ownerType: string, ownerId: string, options: RequestOptions): Promise<AttachmentListResponse> {
+    return this.request<AttachmentListResponse>(`${this.attachmentOwnerPath(ownerType, ownerId)}/attachments`, "GET", options);
+  }
+
+  async attachFiles(ownerType: string, ownerId: string, payload: AttachFilesRequest, options: RequestOptions): Promise<AttachmentListResponse> {
+    return this.request<AttachmentListResponse>(`${this.attachmentOwnerPath(ownerType, ownerId)}/attachments`, "POST", options, payload);
+  }
+
+  async unlinkAttachment(ownerType: string, ownerId: string, linkId: string, options: RequestOptions): Promise<void> {
+    return this.request<void>(`${this.attachmentOwnerPath(ownerType, ownerId)}/attachments/${encodeURIComponent(linkId)}`, "DELETE", options);
+  }
+
+  async listSignatures(ownerType: string, ownerId: string, options: RequestOptions): Promise<SignatureCaptureListResponse> {
+    return this.request<SignatureCaptureListResponse>(`${this.attachmentOwnerPath(ownerType, ownerId)}/signatures`, "GET", options);
+  }
+
+  async captureSignature(ownerType: string, ownerId: string, payload: CaptureSignatureRequest, options: RequestOptions): Promise<SignatureCaptureResponse> {
+    return this.request<SignatureCaptureResponse>(`${this.attachmentOwnerPath(ownerType, ownerId)}/signatures`, "POST", options, payload);
+  }
+
+  async listNotifications(options: RequestOptions, query: ListNotificationsParams): Promise<NotificationListResponse> {
+    const params = new URLSearchParams();
+    params.set("unreadOnly", String(query.unreadOnly));
+    params.set("page", String(query.page));
+    params.set("pageSize", String(query.pageSize));
+    return this.request<NotificationListResponse>(`/api/v1/notifications?${params.toString()}`, "GET", options);
+  }
+
+  async getUnreadNotificationCount(options: RequestOptions): Promise<UnreadCountResponse> {
+    return this.request<UnreadCountResponse>("/api/v1/notifications/unread-count", "GET", options);
+  }
+
+  async markNotificationRead(notificationId: string, options: RequestOptions): Promise<NotificationResponse> {
+    return this.request<NotificationResponse>(`/api/v1/notifications/${encodeURIComponent(notificationId)}/read`, "POST", options);
+  }
+
+  async markAllNotificationsRead(options: RequestOptions): Promise<MarkAllReadResponse> {
+    return this.request<MarkAllReadResponse>("/api/v1/notifications/read-all", "POST", options);
   }
 
   async listWarranties(options: RequestOptions, query: ListWarrantiesParams): Promise<WarrantiesListResponse> {

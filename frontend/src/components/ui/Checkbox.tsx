@@ -10,6 +10,7 @@ export interface CheckboxProps
   description?: string;
   labelClassName?: string;
   wrapperClassName?: string;
+  onCheckedChange?: (checked: boolean) => void;
 }
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
@@ -23,6 +24,8 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       labelClassName,
       wrapperClassName,
       id,
+      onChange,
+      onCheckedChange,
       ...props
     },
     ref
@@ -49,6 +52,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             aria-describedby={error ? errorId : undefined}
             className={cn("erp-checkbox", className)}
             ref={ref}
+            onChange={(event) => {
+              onChange?.(event);
+              onCheckedChange?.(event.target.checked);
+            }}
             {...props}
           />
           {(label || description) && (

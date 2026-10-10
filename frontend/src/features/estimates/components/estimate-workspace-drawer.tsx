@@ -347,6 +347,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
                     {...field}
                     id="estimate-discount-value"
                     label={t("discountValue")}
+                    placeholder={t("workspace.discountValuePlaceholder")}
                     error={fieldState.error ? t("workspace.discountInvalid") : undefined}
                     type="number"
                     step={watchedDiscountType === "percent" ? "0.01" : "100"}
@@ -372,6 +373,7 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
                       {...field}
                       id="estimate-discount-reason"
                       label={t("discountReasonCode")}
+                      placeholder={t("discountReasonCodePlaceholder")}
                       error={fieldState.error ? t("discountReasonRequired") : undefined}
                       required
                       maxLength={64}

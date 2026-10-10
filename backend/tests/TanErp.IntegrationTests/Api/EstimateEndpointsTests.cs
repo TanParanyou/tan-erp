@@ -17,6 +17,7 @@ using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Estimates;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Items;
+using TanErp.Domain.Notifications;
 using TanErp.Domain.Organization;
 using TanErp.Domain.Surveys;
 using TanErp.Infrastructure.Identity;
@@ -1642,6 +1643,44 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.UnprocessableEntity, submitResponse.StatusCode);
         using var problem = System.Text.Json.JsonDocument.Parse(await submitResponse.Content.ReadAsStringAsync());
         Assert.Equal("ESTIMATE_FIELD_REQUIRED", problem.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task Submit_NotifiesOnlyTheFirstReviewer_WithPayloadFreeOfFigures()
+    {
+        var (estimate, _, calculatedRevision) = await SetupCalculatedEstimateAsync($"notify-{Guid.NewGuid():N}");
+        var current = await GetEstimateAsync(estimate.Id);
+
+        var submitRequest = CreateAuthenticatedRequest(
+            HttpMethod.Post, $"/api/v1/estimates/{estimate.Id}/submit", "token-org-a", MembershipAId);
+        submitRequest.Headers.Add("If-Match", $"\"{current.RowVersion}\"");
+        submitRequest.Headers.Add("Idempotency-Key", $"idemp-notify-{Guid.NewGuid():N}");
+        submitRequest.Content = JsonContent.Create(new SubmitEstimateRequest(1, calculatedRevision.CalculationVersion, null));
+        var submitted = await _client.SendAsync(submitRequest);
+        Assert.Equal(HttpStatusCode.OK, submitted.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var rows = await db.Notifications.AsNoTracking()
+            .Where(n => n.Type == NotificationTypes.EstimateApprovalRequested)
+            .ToListAsync();
+        var row = Assert.Single(rows);
+        Assert.Equal(TestOnlyDataSeeder.TestUserIdB, row.RecipientUserId);
+        Assert.NotEqual(UserAId, row.RecipientUserId);
+        Assert.Contains(current.Number, row.PayloadJson, StringComparison.Ordinal);
+        using var payload = System.Text.Json.JsonDocument.Parse(row.PayloadJson);
+        Assert.Equal(
+            new[] { "actorDisplayName", "documentNumber", "resourceId" },
+            payload.RootElement.EnumerateObject().Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal).ToArray());
+        foreach (var forbidden in new[] { "grandTotal", "netCost", "margin", "price", "cost", "amount", "total" })
+        {
+            Assert.DoesNotContain(forbidden, row.PayloadJson, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var reviewerList = await _client.SendAsync(CreateAuthenticatedRequest(
+            HttpMethod.Get, "/api/v1/notifications", "token-org-b", TestOnlyDataSeeder.TestCostReviewerMembershipId));
+        Assert.Equal(HttpStatusCode.OK, reviewerList.StatusCode);
+        Assert.Contains(estimate.Id.ToString(), await reviewerList.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 
     [Fact]

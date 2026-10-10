@@ -158,7 +158,7 @@ function EditorForm({ order }: { order?: PurchaseOrderResponse }) {
           />
         )}
         <Input type="date" label={t("expectedDelivery")} value={expectedDelivery} disabled={isBusy} onChange={(event) => setExpectedDelivery(event.target.value)} />
-        <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} onChange={(event) => setNote(event.target.value)} />
+        <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
       </div>
 
       <div className="erp-card p-5 space-y-4">

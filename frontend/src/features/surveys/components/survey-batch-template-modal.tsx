@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { useAreaPresets, type RoomPresetOption } from "../hooks/use-area-presets";
@@ -63,13 +63,38 @@ export function SurveyBatchTemplateModal({
     onClose();
   };
 
+  const footerActions = (
+    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+      <Button
+        variant="outline"
+        size="md"
+        className="w-full sm:w-auto min-h-11"
+        onClick={onClose}
+        type="button"
+      >
+        {tc("actions.cancel")}
+      </Button>
+      <Button
+        variant="primary"
+        size="md"
+        className="w-full sm:w-auto min-h-11"
+        onClick={handleConfirm}
+        disabled={selectedCodes.length === 0}
+        type="button"
+      >
+        {t("batchTemplateModal.confirmAdd", { count: selectedCodes.length })}
+      </Button>
+    </div>
+  );
+
   return (
-    <Modal
+    <Drawer
       isOpen={isOpen}
       onClose={onClose}
       title={t("batchTemplateModal.title")}
       description={t("batchTemplateModal.description")}
       size="lg"
+      footer={footerActions}
     >
       <div className="space-y-6">
         {/* Section 1: Quick Preset Packages */}
@@ -119,7 +144,7 @@ export function SurveyBatchTemplateModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto p-2 border border-erp-border bg-erp-surface-subtle/30">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-80 overflow-y-auto p-2 border border-erp-border bg-erp-surface-subtle/30">
             {presets.map((preset: RoomPresetOption) => {
               const isChecked = selectedCodes.includes(preset.code);
               return (
@@ -137,22 +162,9 @@ export function SurveyBatchTemplateModal({
             })}
           </div>
         </div>
-
-        {/* Modal Footer Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-erp-border">
-          <Button variant="outline" onClick={onClose} type="button">
-            {tc("actions.cancel")}
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleConfirm}
-            disabled={selectedCodes.length === 0}
-            type="button"
-          >
-            {t("batchTemplateModal.confirmAdd", { count: selectedCodes.length })}
-          </Button>
-        </div>
       </div>
-    </Modal>
+    </Drawer>
   );
 }
+
+export { SurveyBatchTemplateModal as SurveyBatchTemplateDrawer };

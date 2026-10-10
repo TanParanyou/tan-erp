@@ -1,4 +1,5 @@
 using TanErp.Application.Estimates.GetQuotationDocument;
+using TanErp.Domain.Common;
 
 namespace TanErp.Application.Commercial;
 
@@ -6,7 +7,7 @@ namespace TanErp.Application.Commercial;
 public static class AcceptanceConsent
 {
     public const string CurrentVersion = "2026-10-v1";
-    public const int MaxSignatureImageChars = 150_000;
+    public const int MaxSignatureImageChars = SignatureEvidenceLimits.MaxImageChars;
 }
 
 public sealed record AcceptanceEvidenceSummary(string SignerName, string? SignerRole, string ConsentVersion, bool HasSignatureImage, string? SignatureHash, DateTimeOffset AcceptedAtUtc);

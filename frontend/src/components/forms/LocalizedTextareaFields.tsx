@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import type { FieldErrors, FieldValues, Path, UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import { Textarea } from "@/components/ui/Textarea";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 type Props<T extends FieldValues> = {
   label: string;
@@ -17,6 +18,8 @@ type Props<T extends FieldValues> = {
   onActiveLocaleChange?: (locale: "th" | "en") => void;
   rows?: number;
   className?: string;
+  placeholderTh?: string;
+  placeholderEn?: string;
 };
 
 export function LocalizedTextareaFields<T extends FieldValues>({
@@ -29,7 +32,10 @@ export function LocalizedTextareaFields<T extends FieldValues>({
   onActiveLocaleChange,
   rows = 4,
   className,
+  placeholderTh,
+  placeholderEn,
 }: Props<T>) {
+  const t = useTranslations("common.form");
   const [internalLocale, setInternalLocale] = useState<"th" | "en">("th");
   const active = propActiveLocale || internalLocale;
 
@@ -82,7 +88,7 @@ export function LocalizedTextareaFields<T extends FieldValues>({
           {...register(`${name}.th` as Path<T>)}
           disabled={disabled}
           rows={rows}
-          placeholder="ระบุรายละเอียดภาษาไทย"
+          placeholder={placeholderTh ?? t("localizedTextareaThPlaceholder")}
           error={fieldErrors?.th?.message}
         />
       </div>
@@ -92,7 +98,7 @@ export function LocalizedTextareaFields<T extends FieldValues>({
           {...register(`${name}.en` as Path<T>)}
           disabled={disabled}
           rows={rows}
-          placeholder="Enter details in English"
+          placeholder={placeholderEn ?? t("localizedTextareaEnPlaceholder")}
           error={fieldErrors?.en?.message}
         />
       </div>

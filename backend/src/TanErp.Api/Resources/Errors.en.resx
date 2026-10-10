@@ -995,4 +995,28 @@
   <data name="QUICK_ESTIMATE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>A required field is missing.</value></data>
   <data name="QUICK_ESTIMATE_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
   <data name="QUICK_ESTIMATE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
+  <data name="ATTACHMENT_OWNER_TYPE_INVALID_TITLE" xml:space="preserve"><value>Invalid Attachment Owner</value></data>
+  <data name="ATTACHMENT_OWNER_TYPE_INVALID_DETAIL" xml:space="preserve"><value>The attachment owner type is not supported.</value></data>
+  <data name="ATTACHMENT_PURPOSE_INVALID_TITLE" xml:space="preserve"><value>Invalid Attachment Purpose</value></data>
+  <data name="ATTACHMENT_PURPOSE_INVALID_DETAIL" xml:space="preserve"><value>The attachment purpose is not supported.</value></data>
+  <data name="ATTACHMENT_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Attachment Data</value></data>
+  <data name="ATTACHMENT_FIELD_INVALID_DETAIL" xml:space="preserve"><value>Choose between 1 and 20 distinct files per request.</value></data>
+  <data name="ATTACHMENT_FILE_NOT_READY_TITLE" xml:space="preserve"><value>File Not Ready</value></data>
+  <data name="ATTACHMENT_FILE_NOT_READY_DETAIL" xml:space="preserve"><value>A file is not verified or was not uploaded for this record.</value></data>
+  <data name="ATTACHMENT_FILE_SCOPE_MISMATCH_TITLE" xml:space="preserve"><value>File Scope Mismatch</value></data>
+  <data name="ATTACHMENT_FILE_SCOPE_MISMATCH_DETAIL" xml:space="preserve"><value>The file does not belong to this record's organization.</value></data>
+  <data name="ATTACHMENT_DUPLICATE_TITLE" xml:space="preserve"><value>Attachment Already Exists</value></data>
+  <data name="ATTACHMENT_DUPLICATE_DETAIL" xml:space="preserve"><value>This file is already attached to this record for the same purpose.</value></data>
+  <data name="ATTACHMENT_LIMIT_EXCEEDED_TITLE" xml:space="preserve"><value>Attachment Limit Exceeded</value></data>
+  <data name="ATTACHMENT_LIMIT_EXCEEDED_DETAIL" xml:space="preserve"><value>A record can have at most 50 attachments.</value></data>
+  <data name="ATTACHMENT_OWNER_LOCKED_TITLE" xml:space="preserve"><value>Record Locked</value></data>
+  <data name="ATTACHMENT_OWNER_LOCKED_DETAIL" xml:space="preserve"><value>The record's status does not allow attachment or signature changes.</value></data>
+  <data name="SIGNATURE_SUBMISSION_INVALID_TITLE" xml:space="preserve"><value>Invalid Signature Data</value></data>
+  <data name="SIGNATURE_SUBMISSION_INVALID_DETAIL" xml:space="preserve"><value>A signer name of 2-200 characters and a signature image are required.</value></data>
+  <data name="SIGNATURE_CONSENT_REQUIRED_TITLE" xml:space="preserve"><value>Consent Required</value></data>
+  <data name="SIGNATURE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>The current consent statement must be accepted.</value></data>
+  <data name="SIGNATURE_IMAGE_INVALID_TITLE" xml:space="preserve"><value>Invalid Signature Image</value></data>
+  <data name="SIGNATURE_IMAGE_INVALID_DETAIL" xml:space="preserve"><value>The signature image must be a verified PNG file.</value></data>
+  <data name="NOTIFICATION_NOT_FOUND_TITLE" xml:space="preserve"><value>Notification Not Found</value></data>
+  <data name="NOTIFICATION_NOT_FOUND_DETAIL" xml:space="preserve"><value>The notification was not found.</value></data>
 </root>

@@ -179,12 +179,19 @@ builder.Services.AddScoped<TanErp.Application.Production.IProductionStore, TanEr
 builder.Services.AddScoped<TanErp.Application.Production.ProductionHandler>();
 builder.Services.AddScoped<TanErp.Application.Mrp.IMrpStore, TanErp.Infrastructure.Persistence.Mrp.MrpStore>();
 builder.Services.AddScoped<TanErp.Application.Mrp.MrpHandler>();
+builder.Services.AddScoped<TanErp.Application.Attachments.IAttachmentOwnerScopeReader, TanErp.Infrastructure.Persistence.Attachments.AttachmentOwnerScopeReader>();
+builder.Services.AddScoped<TanErp.Application.Attachments.IAttachmentStore, TanErp.Infrastructure.Persistence.Attachments.AttachmentStore>();
+builder.Services.AddScoped<TanErp.Application.Notifications.INotificationRecipientResolver, TanErp.Infrastructure.Persistence.Notifications.NotificationRecipientResolver>();
+builder.Services.AddScoped<TanErp.Application.Notifications.INotificationPublisher, TanErp.Infrastructure.Persistence.Notifications.NotificationPublisher>();
+builder.Services.AddScoped<TanErp.Application.Notifications.INotificationStore, TanErp.Infrastructure.Persistence.Notifications.NotificationStore>();
+builder.Services.AddScoped<TanErp.Application.Notifications.NotificationHandler>();
 builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infrastructure.Persistence.Service.ServiceStore>();
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
 builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();
 builder.Services.AddScoped<TanErp.Application.Finance.FinanceHandler>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.IQuickEstimateStore, TanErp.Infrastructure.Persistence.QuickEstimates.QuickEstimateStore>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.QuickEstimateHandler>();
+builder.Services.AddScoped<TanErp.Application.Attachments.AttachmentHandler>();
 // No accounting system is wired yet; this placeholder never reports success. Replace it with a real connector when one is chosen.
 builder.Services.AddScoped<TanErp.Application.Finance.IAccountingConnector, TanErp.Infrastructure.Persistence.Finance.UnconfiguredAccountingConnector>();
 builder.Services.AddScoped<TanErp.Infrastructure.Persistence.Inventory.InventoryStore>();

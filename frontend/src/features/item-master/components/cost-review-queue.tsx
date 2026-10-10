@@ -109,7 +109,7 @@ export function CostReviewQueue() {
       />
       <Modal isOpen={Boolean(returningRow)} onClose={() => { if (!mutations.returnForChanges.isPending) setReturningRow(null); }} closeDisabled={mutations.returnForChanges.isPending} title={t("returnForChanges")}>
         <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (!returningRow?.itemId || !returningRow.id || !returningRow.rowVersion || !returnReason.trim()) return; void mutations.returnForChanges.mutateAsync({ itemId: returningRow.itemId, costId: returningRow.id, rowVersion: returningRow.rowVersion, reason: returnReason.trim() }).then(() => { setReturningRow(null); toast.success(t("costReturned")); }).catch(() => toast.error(t("versionConflict"))); }}>
-          <Input label={t("reason")} required value={returnReason} onChange={(event) => setReturnReason(event.target.value)} maxLength={500} disabled={mutations.returnForChanges.isPending} />
+          <Input label={t("reason")} required placeholder={t("returnReasonPlaceholder")} value={returnReason} onChange={(event) => setReturnReason(event.target.value)} maxLength={500} disabled={mutations.returnForChanges.isPending} />
           <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={mutations.returnForChanges.isPending} onClick={() => setReturningRow(null)}>{common("actions.cancel")}</Button><Button type="submit" variant="danger" isLoading={mutations.returnForChanges.isPending} disabled={mutations.returnForChanges.isPending || !returnReason.trim()}>{t("returnForChanges")}</Button></div>
         </form>
       </Modal>

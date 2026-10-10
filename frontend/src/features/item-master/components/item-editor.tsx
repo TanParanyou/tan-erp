@@ -288,13 +288,14 @@ export function ItemEditor({ id }: ItemEditorProps) {
             mode={form.watch("codeMode")}
             maxLength={50}
             disabled={!canSave || fieldsLocked}
+            placeholder={t("codePlaceholder")}
             error={fieldState.error ? fieldState.error.message === "CODE_REQUIRED" ? t("codeRequired") : t("codeLengthError") : undefined}
             onChange={field.onChange}
             onModeChange={(mode) => {
               form.setValue("codeMode", mode, { shouldDirty: true, shouldValidate: true });
               if (mode === "generated") field.onChange("");
             }}
-          /> : <Input {...field} label={t("code")} required disabled={!canSave || fieldsLocked || item.data?.activatedOnce === true} helperText={item.data?.activatedOnce === true ? t("codeImmutable") : undefined} error={fieldState.error ? t("validationRequired") : undefined} />} />
+          /> : <Input {...field} label={t("code")} required disabled={!canSave || fieldsLocked || item.data?.activatedOnce === true} placeholder={t("codePlaceholder")} helperText={item.data?.activatedOnce === true ? t("codeImmutable") : undefined} error={fieldState.error ? t("validationRequired") : undefined} />} />
 
         </FormSection>
         </div>
@@ -328,6 +329,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
             label={t("imageAltText")}
             required={Boolean(selectedImageFile)}
             disabled={!canSave || fieldsLocked || !selectedImageFile}
+            placeholder={t("imageAltTextPlaceholder")}
             error={fieldState.error?.message === "IMAGE_ALT_REQUIRED" ? t("imageAltRequired") : fieldState.error ? t("imageAltTooLong") : undefined}
           />} />
           {imagePreparing && <p role="status" className="text-sm text-erp-text-muted">{t("imagePreparing")}</p>}

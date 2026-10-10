@@ -47,4 +47,15 @@ public class LayerDependencyTests
 
         rule.Check(Architecture);
     }
+
+    [Fact]
+    public void NotificationsController_ShouldStayThin()
+    {
+        var rule = Classes().That().HaveFullName("TanErp.Api.Controllers.NotificationsController")
+            .Should().NotDependOnAny(Types().That().ResideInAssembly(InfrastructureAssembly))
+            .AndShould().NotDependOnAny(Types().That().HaveFullName("TanErp.Application.Notifications.INotificationStore"))
+            .AndShould().NotDependOnAny(Types().That().HaveFullName("TanErp.Domain.Notifications.Notification"));
+
+        rule.Check(Architecture);
+    }
 }

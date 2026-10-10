@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { IconDownload, IconUpload } from "@/components/common/Icons";
@@ -158,33 +158,40 @@ export function ItemImportModal({ isOpen, onClose }: ItemImportModalProps) {
   const visibleRows = [...rows].sort((a, b) => Number(a.isValid) - Number(b.isValid)).slice(0, MAX_VISIBLE_ROWS);
   const canCommit = Boolean(result && result.invalidRows === 0 && result.validRows > 0);
 
+  const footerActions = (
+    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={close}
+        disabled={isBusy}
+        className="w-full sm:w-auto min-h-11"
+      >
+        {tCommon("actions.cancel")}
+      </Button>
+      <Button
+        type="button"
+        variant="primary"
+        onClick={() => void handleCommit()}
+        isLoading={commit.isPending}
+        disabled={!canCommit || isBusy}
+        className="w-full sm:w-auto min-h-11"
+      >
+        {t("commitAction", { count: result?.validRows ?? 0 })}
+      </Button>
+    </div>
+  );
+
   return (
-    <Modal
+    <Drawer
       isOpen={isOpen}
       onClose={close}
       title={t("title")}
       description={t("description")}
-      size="lg"
+      size="xl"
       closeDisabled={isBusy}
       closeOnOverlayClick={!isBusy}
-      closeOnEscape={!isBusy}
-      footer={(
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={close} disabled={isBusy} className="min-h-11">
-            {tCommon("actions.cancel")}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() => void handleCommit()}
-            isLoading={commit.isPending}
-            disabled={!canCommit || isBusy}
-            className="min-h-11"
-          >
-            {t("commitAction", { count: result?.validRows ?? 0 })}
-          </Button>
-        </div>
-      )}
+      footer={footerActions}
     >
       <div className="space-y-4">
         <p className="text-xs text-erp-text-muted">{t("rules")}</p>
@@ -255,6 +262,8 @@ export function ItemImportModal({ isOpen, onClose }: ItemImportModalProps) {
           </div>
         )}
       </div>
-    </Modal>
+    </Drawer>
   );
 }
+
+export { ItemImportModal as ItemImportDrawer };

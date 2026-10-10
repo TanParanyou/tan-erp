@@ -271,6 +271,7 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
               wrapperClassName="min-w-[16rem] flex-1"
               label={t("fields.displayName")}
               value={displayedName}
+              placeholder={t("fields.displayNamePlaceholder")}
               onChange={(event) => setNameDraft(event.target.value)}
             />
             <Button

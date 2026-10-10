@@ -23,6 +23,166 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("TanErp.Domain.Attachments.AttachmentLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<Guid>("FileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("file_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("owner_type");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("purpose");
+
+                    b.Property<DateTimeOffset?>("RemovedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("removed_at_utc");
+
+                    b.Property<Guid?>("RemovedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("removed_by_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("RemovedByUserId");
+
+                    b.HasIndex("FileId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "OwnerType", "OwnerId")
+                        .HasDatabaseName("ix_attachment_links_owner");
+
+                    b.HasIndex("OrganizationId", "OwnerType", "OwnerId", "FileId", "Purpose")
+                        .IsUnique()
+                        .HasDatabaseName("ux_attachment_links_active_owner_file_purpose")
+                        .HasFilter("removed_at_utc IS NULL");
+
+                    b.ToTable("attachment_links", "files", t =>
+                        {
+                            t.HasCheckConstraint("ck_attachment_links_owner_type_format", "owner_type ~ '^[a-z][a-z0-9-]{1,39}$'");
+
+                            t.HasCheckConstraint("ck_attachment_links_purpose_format", "purpose ~ '^[a-z][a-z-]{1,31}$'");
+
+                            t.HasCheckConstraint("ck_attachment_links_removed_pair", "(removed_at_utc IS NULL) = (removed_by_user_id IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Attachments.SignatureCapture", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CapturedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("captured_by_user_id");
+
+                    b.Property<string>("ConsentTextVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("consent_text_version");
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("content_hash");
+
+                    b.Property<Guid>("ImageFileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("image_file_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("owner_type");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("purpose");
+
+                    b.Property<DateTimeOffset>("SignedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("signed_at_utc");
+
+                    b.Property<string>("SignerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("signer_name");
+
+                    b.Property<string>("SignerRole")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("signer_role");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CapturedByUserId");
+
+                    b.HasIndex("ImageFileId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_signature_captures_image_file");
+
+                    b.HasIndex("ImageFileId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "OwnerType", "OwnerId", "SignedAtUtc")
+                        .HasDatabaseName("ix_signature_captures_owner");
+
+                    b.ToTable("signature_captures", "files", t =>
+                        {
+                            t.HasCheckConstraint("ck_signature_captures_content_hash", "content_hash ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_signature_captures_owner_type_format", "owner_type ~ '^[a-z][a-z0-9-]{1,39}$'");
+
+                            t.HasCheckConstraint("ck_signature_captures_purpose_format", "purpose ~ '^[a-z][a-z-]{1,31}$'");
+
+                            t.HasCheckConstraint("ck_signature_captures_signer_name", "char_length(signer_name) BETWEEN 1 AND 200");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Commercial.Quotation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -5475,6 +5635,72 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Notifications.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("DedupeKey")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("dedupe_key");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload");
+
+                    b.Property<DateTimeOffset?>("ReadAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("read_at_utc");
+
+                    b.Property<Guid>("RecipientUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recipient_user_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientUserId");
+
+                    b.HasIndex("OrganizationId", "RecipientUserId")
+                        .HasDatabaseName("ix_notifications_unread")
+                        .HasFilter("read_at_utc IS NULL");
+
+                    b.HasIndex("OrganizationId", "RecipientUserId", "DedupeKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_notifications_recipient_dedupe");
+
+                    b.HasIndex("OrganizationId", "RecipientUserId", "CreatedAtUtc", "Id")
+                        .IsDescending(false, false, true, true)
+                        .HasDatabaseName("ix_notifications_recipient_created");
+
+                    b.ToTable("notifications", "notifications", t =>
+                        {
+                            t.HasCheckConstraint("ck_notifications_dedupe_key_length", "char_length(btrim(dedupe_key)) BETWEEN 1 AND 160");
+
+                            t.HasCheckConstraint("ck_notifications_payload_object", "jsonb_typeof(payload) = 'object'");
+
+                            t.HasCheckConstraint("ck_notifications_type_format", "type ~ '^[a-z][a-z0-9.-]{1,59}$'");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Organization.Branch", b =>
                 {
                     b.Property<Guid>("Id")
@@ -8387,6 +8613,55 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Attachments.AttachmentLink", b =>
+                {
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("RemovedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Files.UploadedFile", null)
+                        .WithMany()
+                        .HasForeignKey("FileId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Attachments.SignatureCapture", b =>
+                {
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CapturedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Files.UploadedFile", null)
+                        .WithMany()
+                        .HasForeignKey("ImageFileId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Commercial.Quotation", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Branch", null)
@@ -9551,6 +9826,21 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasOne("TanErp.Domain.Organization.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Notifications.Notification", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("RecipientUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

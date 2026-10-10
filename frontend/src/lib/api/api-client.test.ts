@@ -344,4 +344,31 @@ describe("ApiClient", () => {
     expect(init.method).toBe("GET");
     expect(result).toEqual(mockOppList);
   });
+
+  it("calls the notification endpoints with membership headers and a bounded query", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ items: [], pagination: { page: 1, pageSize: 20, totalCount: 0, totalPages: 0 } }),
+    });
+    global.fetch = fetchMock;
+    const client = new ApiClient("http://localhost:5000");
+    const options = { token: "tok", membershipId: "m-1", locale: "th" as const };
+
+    await client.listNotifications(options, { unreadOnly: true, page: 2, pageSize: 20 });
+    await client.getUnreadNotificationCount(options);
+    await client.markNotificationRead("n 1", options);
+    await client.markAllNotificationsRead(options);
+
+    const calls = fetchMock.mock.calls.map(([url, init]) => [url, init.method]);
+    expect(calls).toEqual([
+      ["http://localhost:5000/api/v1/notifications?unreadOnly=true&page=2&pageSize=20", "GET"],
+      ["http://localhost:5000/api/v1/notifications/unread-count", "GET"],
+      ["http://localhost:5000/api/v1/notifications/n%201/read", "POST"],
+      ["http://localhost:5000/api/v1/notifications/read-all", "POST"],
+    ]);
+    expect(fetchMock.mock.calls[0][1].headers["X-Membership-Id"]).toBe("m-1");
+    // Mark-read is naturally idempotent on the server; no Idempotency-Key is required or sent.
+    expect(fetchMock.mock.calls[2][1].headers["Idempotency-Key"]).toBeUndefined();
+  });
 });

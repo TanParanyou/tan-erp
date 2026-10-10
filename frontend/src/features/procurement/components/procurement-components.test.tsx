@@ -221,6 +221,52 @@ describe("SupplierList", () => {
     expect(create.mock.calls[0][0].payload).toMatchObject({ nameTh: "บริษัท ใหม่", paymentTermDays: 30, nameEn: null });
   });
 
+  it("validates phone, email, and taxId format when provided", async () => {
+    create.mockResolvedValue(supplier);
+    renderList();
+
+    fireEvent.click(screen.getAllByRole("button", { name: s.create })[0]);
+    const dialog = await screen.findByRole("dialog");
+    const nameInput = within(dialog).getByLabelText(new RegExp(s.nameTh.replace(/[()]/g, "\\$&")));
+    const saveBtn = within(dialog).getByRole("button", { name: thMessages.common.actions.save });
+
+    fireEvent.change(nameInput, { target: { value: "บริษัท ทดสอบ" } });
+
+    // Invalid Tax ID (not 13 digits)
+    const taxInput = within(dialog).getByLabelText(new RegExp(s.taxId.replace(/[()]/g, "\\$&")));
+    fireEvent.change(taxInput, { target: { value: "12345" } });
+    fireEvent.click(saveBtn);
+    expect(await within(dialog).findByText(s.invalidTaxId)).toBeDefined();
+    expect(create).not.toHaveBeenCalled();
+
+    // Valid Tax ID, invalid Phone
+    fireEvent.change(taxInput, { target: { value: "0105550000000" } });
+    const phoneInput = within(dialog).getByPlaceholderText(s.phonePlaceholder);
+    fireEvent.change(phoneInput, { target: { value: "12345" } });
+    fireEvent.click(saveBtn);
+    expect(await within(dialog).findByText(s.invalidPhone)).toBeDefined();
+    expect(create).not.toHaveBeenCalled();
+
+    // Valid Phone, invalid Email
+    fireEvent.change(phoneInput, { target: { value: "081-234-5678" } });
+    const emailInput = within(dialog).getByLabelText(new RegExp(s.email.replace(/[()]/g, "\\$&")));
+    fireEvent.change(emailInput, { target: { value: "not-an-email" } });
+    fireEvent.click(saveBtn);
+    expect(await within(dialog).findByText(s.invalidEmail)).toBeDefined();
+    expect(create).not.toHaveBeenCalled();
+
+    // Valid Email -> succeeds
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.click(saveBtn);
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+    expect(create.mock.calls[0][0].payload).toMatchObject({
+      nameTh: "บริษัท ทดสอบ",
+      taxId: "0105550000000",
+      phone: "081-234-5678",
+      email: "test@example.com",
+    });
+  });
+
   it("hides management actions without the manage permission", () => {
     permissions.granted = ["suppliers.read"];
     renderList();

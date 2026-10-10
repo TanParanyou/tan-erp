@@ -77,6 +77,33 @@ public class RequestAccessResolver : IRequestAccessResolver
         return Result<RequestAccessContext>.Failure(new Error("PERMISSION_DENIED", "Access is denied for the requested operation."));
     }
 
+    public async Task<Result<RequestAccessContext>> ResolveMembershipAsync(
+        string firebaseUid,
+        Guid membershipId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(firebaseUid))
+        {
+            return Result<RequestAccessContext>.Failure(new Error("AUTHENTICATION_REQUIRED", "Authentication is required."));
+        }
+
+        var now = _clock.UtcNow;
+        // No permission is involved, so PermissionKey stays empty.
+        var context = await _db.Memberships
+            .AsNoTracking()
+            .Where(m => m.Id == membershipId && m.User!.FirebaseUid == firebaseUid)
+            .Where(m => m.IsActive && m.User!.IsActive && m.Organization!.IsActive)
+            .Where(m => m.BranchId == null || m.Branch!.IsActive)
+            .Where(m => m.StartsAtUtc == null || m.StartsAtUtc <= now)
+            .Where(m => m.ExpiresAtUtc == null || m.ExpiresAtUtc > now)
+            .Select(m => new RequestAccessContext(m.UserId, m.Id, m.OrganizationId, m.BranchId, string.Empty, PermissionScope.Organization))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return context is null
+            ? Result<RequestAccessContext>.Failure(new Error("ACTIVE_MEMBERSHIP_REQUIRED", "Active organization membership is required."))
+            : Result<RequestAccessContext>.Success(context);
+    }
+
     public async Task<Result<RequestAccessContext>> ResolveBranchAccessAsync(
         string firebaseUid,
         Guid membershipId,

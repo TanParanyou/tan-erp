@@ -18,3 +18,5 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0014 — Reusable Cost Source และ Cost Record Evidence](0014-reusable-cost-source-with-record-evidence.md)
 - [0015 — Item Code เป็น SKU ภายใน และ Barcode หลายค่าต่อ Item](0015-item-code-sku-and-multiple-barcodes.md)
 - [0016 — ใช้ Browser Print สร้าง PDF ของ Quotation ในรอบแรก](0016-browser-print-for-quotation-pdf.md)
+- [0017 — ไฟล์แนบและลายเซ็นกลางด้วย Owner Registry](0017-shared-attachment-owner-registry.md)
+- [0018 — Notification Foundation (in-app) โดยไม่ใช้ Outbox](0018-in-app-notification-foundation.md)

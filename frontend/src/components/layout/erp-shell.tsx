@@ -29,6 +29,7 @@ import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { SidebarNav } from "./SidebarNav";
+import { NotificationBell } from "./NotificationBell";
 
 interface ErpShellProps {
   currentUser: CurrentUserResponse;
@@ -136,6 +137,9 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
               </span>
             )}
           </div>
+
+          {/* In-app notifications (renders nothing without a selected membership) */}
+          <NotificationBell />
 
           {/* Theme switcher toggle */}
           <ThemeToggle />

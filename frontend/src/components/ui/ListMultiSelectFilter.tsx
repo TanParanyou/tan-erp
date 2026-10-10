@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Checkbox } from "./Checkbox";
+import { Input } from "./Input";
 import { IconSearch, IconChevronDown } from "@/components/common/Icons";
 import { cn } from "@/lib/utils/cn";
 import { useTranslations } from "next-intl";
@@ -84,15 +85,16 @@ export function ListMultiSelectFilter({
 
       {isOpen && (
         <div className="absolute left-0 top-full z-50 mt-1 w-64 border border-erp-border bg-erp-surface p-2 shadow-lg rounded-none animate-in fade-in zoom-in-95">
-          <div className="relative mb-2">
-            <input
+          <div className="mb-2">
+            <Input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={placeholder ?? t("searchPlaceholder")}
-              className="w-full border border-erp-border bg-erp-surface pl-7 pr-2 py-1 text-xs text-erp-text-main outline-none focus:border-erp-navy rounded-none"
+              leftIcon={<IconSearch size={12} />}
+              className="py-1 text-xs"
+              wrapperClassName="mb-0"
             />
-            <IconSearch size={12} className="absolute left-2 top-2 text-erp-text-muted" />
           </div>
 
           <div className="mb-2 flex items-center justify-between border-b border-erp-border pb-1.5 px-1 text-[11px]">

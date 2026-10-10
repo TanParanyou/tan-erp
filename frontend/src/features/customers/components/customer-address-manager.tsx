@@ -121,8 +121,8 @@ export function CustomerAddressManager({ customerId, canManage, readOnly = false
       <form onSubmit={submit} className="flex flex-col gap-4">
         <div className="grid gap-4 md:grid-cols-2">
           <Select label={t("addressType")} disabled={Boolean(editing)} options={[{ value: "billing", label: t("billingAddress") }, { value: "contact", label: t("contactAddress") }]} {...form.register("addressType")} />
-          <Input label={t("addressLabel")} error={form.formState.errors.label?.message} {...form.register("label")} />
-          <Input label={t("addressLine1")} error={form.formState.errors.addressLine1?.message} {...form.register("addressLine1")} />
+          <Input label={t("addressLabel")} placeholder={t("addressLabelPlaceholder")} error={form.formState.errors.label?.message} {...form.register("label")} />
+          <Input label={t("addressLine1")} placeholder={t("addressLine1Placeholder")} error={form.formState.errors.addressLine1?.message} {...form.register("addressLine1")} />
           <div className="md:col-span-2">
             <Controller
               control={form.control}

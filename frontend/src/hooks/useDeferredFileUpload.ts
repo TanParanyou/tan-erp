@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { fileClient } from "@/lib/api/file-client";
 import { ApiError } from "@/lib/api/api-error";
 import type { RequestOptions } from "@/lib/api/api-client";
+import type { AttachmentOwnerType } from "@/lib/attachments/attachment-owner-types";
 
 export type FileParentType =
   | "customer"
@@ -10,7 +11,8 @@ export type FileParentType =
   | "item"
   | "item-category"
   | "item-brand"
-  | "costRecord";
+  | "costRecord"
+  | AttachmentOwnerType;
 
 export interface FileItemToUpload {
   file: File;

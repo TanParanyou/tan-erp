@@ -182,7 +182,7 @@ export function StockDocumentModal({ kind, onClose, defaultWarehouseId }: StockD
               onChange={(event) => setProjectId(event.target.value)}
             />
           )}
-          <Input label={t("reason")} required={isAdjustment} maxLength={500} value={reason} disabled={isBusy} onChange={(event) => setReason(event.target.value)} />
+          <Input label={t("reason")} placeholder={t("reasonPlaceholder")} required={isAdjustment} maxLength={500} value={reason} disabled={isBusy} onChange={(event) => setReason(event.target.value)} />
         </div>
 
         <ul className="space-y-2">

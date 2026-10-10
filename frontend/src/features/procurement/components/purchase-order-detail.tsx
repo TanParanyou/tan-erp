@@ -199,6 +199,7 @@ function DetailView({ order }: { order: PurchaseOrderResponse }) {
                         max={line.remainingQuantity ?? 0}
                         step="0.0001"
                         aria-label={t("receiveQuantityFor", { item: line.itemCode ?? "-" })}
+                        placeholder={t("receiveQuantityPlaceholder")}
                         disabled={busy || (line.remainingQuantity ?? 0) <= 0}
                         value={quantities[line.id ?? ""] ?? ""}
                         onChange={(event) => setQuantities((current) => ({ ...current, [line.id ?? ""]: event.target.value }))}
@@ -213,7 +214,7 @@ function DetailView({ order }: { order: PurchaseOrderResponse }) {
 
         {canReceive && RECEIVING_STATUSES.includes(status) && (
           <div className="flex flex-wrap items-end gap-3">
-            <Input label={t("receiptNote")} value={receiptNote} maxLength={500} disabled={busy} onChange={(event) => setReceiptNote(event.target.value)} />
+            <Input label={t("receiptNote")} value={receiptNote} maxLength={500} disabled={busy} placeholder={t("receiptNotePlaceholder")} onChange={(event) => setReceiptNote(event.target.value)} />
             <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.receive.isPending} disabled={busy} onClick={() => void postReceipt()}>{t("postReceipt")}</Button>
           </div>
         )}
@@ -267,6 +268,7 @@ function DetailView({ order }: { order: PurchaseOrderResponse }) {
           value={note}
           maxLength={500}
           disabled={busy}
+          placeholder={t("reasonPlaceholder")}
           error={noteError ? t("reasonRequired") : undefined}
           onChange={(event) => { setNote(event.target.value); if (event.target.value.trim()) setNoteError(false); }}
         />

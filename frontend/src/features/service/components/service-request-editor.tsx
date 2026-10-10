@@ -70,8 +70,8 @@ export function ServiceRequestEditor() {
           onChange={(event) => setProjectId(event.target.value)}
         />
         <Select label={t("priority")} value={priority} disabled={isBusy} options={SERVICE_PRIORITIES.map((value) => ({ value, label: t(`priorities.${value}`) }))} onChange={(event) => setPriority(event.target.value)} />
-        <Input label={t("titleField")} required value={title} maxLength={200} disabled={isBusy} onChange={(event) => setTitle(event.target.value)} />
-        <Input label={t("description")} required value={description} maxLength={1000} disabled={isBusy} onChange={(event) => setDescription(event.target.value)} />
+        <Input label={t("titleField")} required value={title} maxLength={200} disabled={isBusy} placeholder={t("titleFieldPlaceholder")} onChange={(event) => setTitle(event.target.value)} />
+        <Input label={t("description")} required value={description} maxLength={1000} disabled={isBusy} placeholder={t("descriptionPlaceholder")} onChange={(event) => setDescription(event.target.value)} />
       </div>
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" className="min-h-11" disabled={isBusy} onClick={() => router.back()}>{tCommon("actions.cancel")}</Button>

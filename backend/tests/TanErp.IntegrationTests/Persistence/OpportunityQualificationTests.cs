@@ -31,7 +31,7 @@ public class OpportunityQualificationTests : IAsyncLifetime
     {
         var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
         var storage = new TanErp.Infrastructure.Files.LocalFileStorageProvider(config);
-        var resolver = new TanErp.Infrastructure.Files.FileParentAccessResolver(db, clock);
+        var resolver = new TanErp.Infrastructure.Files.FileParentAccessResolver(db, clock, new TanErp.Infrastructure.Persistence.Attachments.AttachmentOwnerScopeReader(db));
         return new TanErp.Infrastructure.Files.FileStore(db, storage, resolver);
     }
 

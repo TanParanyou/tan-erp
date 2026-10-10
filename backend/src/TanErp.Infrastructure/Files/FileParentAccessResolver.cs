@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Attachments;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
@@ -13,11 +14,13 @@ public class FileParentAccessResolver : IFileParentAccessResolver
 {
     private readonly AppDbContext _db;
     private readonly IClock _clock;
+    private readonly IAttachmentOwnerScopeReader _ownerScopes;
 
-    public FileParentAccessResolver(AppDbContext db, IClock clock)
+    public FileParentAccessResolver(AppDbContext db, IClock clock, IAttachmentOwnerScopeReader ownerScopes)
     {
         _db = db;
         _clock = clock;
+        _ownerScopes = ownerScopes;
     }
 
     public async Task<Result<FileParentAccess>> ResolveAsync(
@@ -298,9 +301,53 @@ public class FileParentAccessResolver : IFileParentAccessResolver
             }
 
             default:
-                return Result<FileParentAccess>.Failure(
-                    new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{parentType}' is invalid. Supported: opportunity, customer, site, item, costRecord."));
+                return await ResolveRegisteredOwnerAsync(access, normalizedParentType, parentId, operation, cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Parents registered for shared attachments: permission comes from the owner's descriptor and the owner must be visible
+    /// in the caller's organization/branch. Read needs the read, manage or sign permission; every other operation needs manage or sign.
+    /// </summary>
+    private async Task<Result<FileParentAccess>> ResolveRegisteredOwnerAsync(
+        RequestAccessContext access,
+        string normalizedParentType,
+        Guid? parentId,
+        FileAccessOperation operation,
+        CancellationToken cancellationToken)
+    {
+        var descriptor = AttachmentOwnerRegistry.Find(normalizedParentType);
+        if (descriptor is null)
+        {
+            return Result<FileParentAccess>.Failure(
+                new Error("FILE_PARENT_TYPE_INVALID", $"Parent type '{normalizedParentType}' is invalid."));
+        }
+
+        if (!parentId.HasValue)
+        {
+            return Result<FileParentAccess>.Failure(
+                new Error("FILE_PARENT_TYPE_INVALID", $"{normalizedParentType} upload requires an existing parentId."));
+        }
+
+        var allowed = operation == FileAccessOperation.Read
+            && await HasPermissionAsync(access.MembershipId, descriptor.ReadPermission, cancellationToken);
+        allowed = allowed
+            || await HasPermissionAsync(access.MembershipId, descriptor.ManagePermission, cancellationToken)
+            || await HasPermissionAsync(access.MembershipId, descriptor.SignPermission, cancellationToken);
+
+        if (!allowed)
+        {
+            return Result<FileParentAccess>.Failure(
+                new Error("PERMISSION_DENIED", "Access is denied for the requested operation."));
+        }
+
+        var scope = await _ownerScopes.FindAsync(descriptor.OwnerType, parentId.Value, access.OrganizationId, cancellationToken);
+        if (scope is null || (scope.BranchId is { } branchId && !access.HasBranchAccess(branchId)))
+        {
+            return Result<FileParentAccess>.Failure(new Error("RESOURCE_NOT_FOUND", "Owner not found."));
+        }
+
+        return Result<FileParentAccess>.Success(new FileParentAccess(normalizedParentType, parentId, null, access.OrganizationId));
     }
 
     private async Task<bool> HasPermissionAsync(

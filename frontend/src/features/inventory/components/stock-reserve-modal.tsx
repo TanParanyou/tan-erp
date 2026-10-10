@@ -87,8 +87,8 @@ export function StockReserveModal({ balance, onClose }: StockReserveModalProps) 
           options={(projects.data?.items ?? []).map((p) => ({ value: p.id ?? "", label: `${p.code ?? "-"} · ${p.name ?? "-"}` }))}
           onChange={(event) => setProjectId(event.target.value)}
         />
-        <Input type="number" min={0} step="0.0001" label={t("quantity")} required value={quantity} disabled={busy} onChange={(event) => setQuantity(event.target.value)} />
-        <Input label={t("note")} maxLength={500} value={note} disabled={busy} onChange={(event) => setNote(event.target.value)} />
+        <Input type="number" min={0} step="0.0001" label={t("quantity")} placeholder={t("quantityPlaceholder")} required value={quantity} disabled={busy} onChange={(event) => setQuantity(event.target.value)} />
+        <Input label={t("note")} placeholder={t("notePlaceholder")} maxLength={500} value={note} disabled={busy} onChange={(event) => setNote(event.target.value)} />
       </div>
     </Modal>
   );

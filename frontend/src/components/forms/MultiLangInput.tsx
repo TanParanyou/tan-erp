@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { IconCopy } from "@/components/common/Icons";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 
@@ -126,42 +128,30 @@ export function MultiLangInput({
         </div>
       </div>
 
-      <div className="erp-input-wrapper">
-        {type === "textarea" ? (
-          <textarea
-            id={generatedId}
-            value={safeValue[activeLang] || ""}
-            onChange={(e) => handleChange(e.target.value)}
-            placeholder={currentPlaceholder}
-            required={required && activeLang === "th"}
-            disabled={disabled}
-            rows={3}
-            className={cn(
-              "erp-textarea",
-              error && "erp-textarea-error"
-            )}
-          />
-        ) : (
-          <input
-            id={generatedId}
-            type="text"
-            value={safeValue[activeLang] || ""}
-            onChange={(e) => handleChange(e.target.value)}
-            placeholder={currentPlaceholder}
-            required={required && activeLang === "th"}
-            disabled={disabled}
-            className={cn(
-              "erp-input",
-              error && "erp-input-error"
-            )}
-          />
-        )}
-      </div>
-
-      {error && (
-        <p className="erp-error-text" role="alert">
-          {error}
-        </p>
+      {type === "textarea" ? (
+        <Textarea
+          id={generatedId}
+          value={safeValue[activeLang] || ""}
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder={currentPlaceholder}
+          required={required && activeLang === "th"}
+          disabled={disabled}
+          rows={3}
+          error={error}
+          wrapperClassName="mb-0"
+        />
+      ) : (
+        <Input
+          id={generatedId}
+          type="text"
+          value={safeValue[activeLang] || ""}
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder={currentPlaceholder}
+          required={required && activeLang === "th"}
+          disabled={disabled}
+          error={error}
+          wrapperClassName="mb-0"
+        />
       )}
     </div>
   );

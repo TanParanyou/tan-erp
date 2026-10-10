@@ -245,6 +245,7 @@ export function EstimateLifecycleActions({ estimate, opportunityId, canEdit = fa
         {(activeAction === "revision" || activeAction === "cancel") && (
           <Input
             label={activeAction === "revision" ? t("revisionReason") : t("cancelReason")}
+            placeholder={activeAction === "revision" ? t("revisionReasonPlaceholder") : t("cancelReasonPlaceholder")}
             required
             value={reason}
             onChange={(event) => {
@@ -260,6 +261,7 @@ export function EstimateLifecycleActions({ estimate, opportunityId, canEdit = fa
           <div className="space-y-4">
             <Input
               label={t("returnReasonCode")}
+              placeholder={t("returnReasonCodePlaceholder")}
               required
               value={reasonCode}
               onChange={(event) => {
@@ -272,6 +274,7 @@ export function EstimateLifecycleActions({ estimate, opportunityId, canEdit = fa
             />
             <Textarea
               label={t("returnNote")}
+              placeholder={t("returnNotePlaceholder")}
               required
               value={reason}
               onChange={(event) => {

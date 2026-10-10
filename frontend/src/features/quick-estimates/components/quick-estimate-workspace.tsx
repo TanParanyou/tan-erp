@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
@@ -185,23 +186,29 @@ function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateRespons
         <h3 className="text-sm font-bold text-erp-navy">{t("sectionInput")}</h3>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <Select label={t("template")} value={templateId} disabled={!editable || busy} options={[{ value: "", label: t("selectTemplate") }, ...templates.map((item) => ({ value: item.id ?? "", label: `${item.code ?? ""} v${item.version ?? ""} · ${item.name ?? ""}` }))]} onChange={(event) => { setTemplateId(event.target.value); setGradeCode(""); setComplexityCodes([]); setAddOnCodes([]); }} />
-          <Input label={t("propertyType")} value={propertyType} maxLength={100} disabled={!editable || busy} onChange={(event) => setPropertyType(event.target.value)} />
-          <Input label={t("roomOrArea")} value={roomOrArea} maxLength={200} disabled={!editable || busy} onChange={(event) => setRoomOrArea(event.target.value)} />
+          <Input label={t("propertyType")} value={propertyType} maxLength={100} disabled={!editable || busy} placeholder={t("propertyTypePlaceholder")} onChange={(event) => setPropertyType(event.target.value)} />
+          <Input label={t("roomOrArea")} value={roomOrArea} maxLength={200} disabled={!editable || busy} placeholder={t("roomOrAreaPlaceholder")} onChange={(event) => setRoomOrArea(event.target.value)} />
           <Select label={t("grade")} value={gradeCode} disabled={!editable || busy || !template} options={[{ value: "", label: t("selectGrade") }, ...(template?.grades ?? []).map((grade) => ({ value: grade.code ?? "", label: grade.name ?? "" }))]} onChange={(event) => setGradeCode(event.target.value)} />
           <Select label={t("confidence")} value={confidence} disabled={!editable || busy} options={CONFIDENCES.map((value) => ({ value, label: t(`confidences.${value}`) }))} onChange={(event) => setConfidence(event.target.value)} />
-          <label className="flex min-h-11 items-center gap-2 self-end text-sm"><input type="checkbox" checked={customMaterial} disabled={!editable || busy} onChange={(event) => setCustomMaterial(event.target.checked)} />{t("customMaterial")}</label>
+          <div className="flex min-h-11 items-center self-end">
+            <Checkbox checked={customMaterial} disabled={!editable || busy} onCheckedChange={(checked) => setCustomMaterial(checked === true)} label={t("customMaterial")} />
+          </div>
         </div>
         {template && (template.complexities ?? []).length > 0 && (
           <fieldset className="space-y-1"><legend className="text-xs font-semibold text-erp-text-muted">{t("complexities")}</legend>
             <div className="flex flex-wrap gap-4">{(template.complexities ?? []).map((item) => (
-              <label key={item.code} className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={complexityCodes.includes(item.code ?? "")} disabled={!editable || busy} onChange={() => toggle(complexityCodes, item.code ?? "", setComplexityCodes)} />{item.name}</label>
+              <div key={item.code} className="flex min-h-11 items-center">
+                <Checkbox checked={complexityCodes.includes(item.code ?? "")} disabled={!editable || busy} onCheckedChange={() => toggle(complexityCodes, item.code ?? "", setComplexityCodes)} label={item.name} />
+              </div>
             ))}</div>
           </fieldset>
         )}
         {template && (template.addOns ?? []).length > 0 && (
           <fieldset className="space-y-1"><legend className="text-xs font-semibold text-erp-text-muted">{t("addOns")}</legend>
             <div className="flex flex-wrap gap-4">{(template.addOns ?? []).map((item) => (
-              <label key={item.code} className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={addOnCodes.includes(item.code ?? "")} disabled={!editable || busy} onChange={() => toggle(addOnCodes, item.code ?? "", setAddOnCodes)} />{item.name}{item.perLine ? ` (${t("perLine")})` : ""}</label>
+              <div key={item.code} className="flex min-h-11 items-center">
+                <Checkbox checked={addOnCodes.includes(item.code ?? "")} disabled={!editable || busy} onCheckedChange={() => toggle(addOnCodes, item.code ?? "", setAddOnCodes)} label={`${item.name}${item.perLine ? ` (${t("perLine")})` : ""}`} />
+              </div>
             ))}</div>
           </fieldset>
         )}
@@ -212,11 +219,11 @@ function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateRespons
         </div>
         {rows.map((row, index) => (
           <div key={row.lineId} className="grid grid-cols-2 items-end gap-3 md:grid-cols-6">
-            <Input label={t("workSubtype")} value={row.workSubtype} disabled={!editable || busy} onChange={(event) => patchRow(index, { workSubtype: event.target.value })} />
-            <Input type="number" step="0.01" label={t("widthM")} value={row.widthM} disabled={!editable || busy} onChange={(event) => patchRow(index, { widthM: event.target.value })} />
-            <Input type="number" step="0.01" label={t("heightM")} value={row.heightM} disabled={!editable || busy} onChange={(event) => patchRow(index, { heightM: event.target.value })} />
-            <Input type="number" step="0.01" label={t("depthM")} value={row.depthM} disabled={!editable || busy} onChange={(event) => patchRow(index, { depthM: event.target.value })} />
-            <Input type="number" step="1" label={t("quantity")} value={row.quantity} disabled={!editable || busy} onChange={(event) => patchRow(index, { quantity: event.target.value })} />
+            <Input label={t("workSubtype")} value={row.workSubtype} disabled={!editable || busy} placeholder={t("workSubtypePlaceholder")} onChange={(event) => patchRow(index, { workSubtype: event.target.value })} />
+            <Input type="number" step="0.01" label={t("widthM")} value={row.widthM} disabled={!editable || busy} placeholder={t("widthMPlaceholder")} onChange={(event) => patchRow(index, { widthM: event.target.value })} />
+            <Input type="number" step="0.01" label={t("heightM")} value={row.heightM} disabled={!editable || busy} placeholder={t("heightMPlaceholder")} onChange={(event) => patchRow(index, { heightM: event.target.value })} />
+            <Input type="number" step="0.01" label={t("depthM")} value={row.depthM} disabled={!editable || busy} placeholder={t("depthMPlaceholder")} onChange={(event) => patchRow(index, { depthM: event.target.value })} />
+            <Input type="number" step="1" label={t("quantity")} value={row.quantity} disabled={!editable || busy} placeholder={t("quantityPlaceholder")} onChange={(event) => patchRow(index, { quantity: event.target.value })} />
             {editable && <Button type="button" size="sm" variant="outline" className="min-h-11" disabled={busy} onClick={() => setRows(rows.filter((_row, i) => i !== index))}>{t("removeRow")}</Button>}
           </div>
         ))}
@@ -287,9 +294,9 @@ function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateRespons
         )}
       >
         {dialog === "convert" ? (
-          <Input label={t("surveyRevisionId")} required value={surveyRevisionId} disabled={busy} error={dialogError ? t("surveyRevisionRequired") : undefined} onChange={(event) => { setSurveyRevisionId(event.target.value); setDialogError(false); }} />
+          <Input label={t("surveyRevisionId")} required value={surveyRevisionId} disabled={busy} placeholder={t("surveyRevisionIdPlaceholder")} error={dialogError ? t("surveyRevisionRequired") : undefined} onChange={(event) => { setSurveyRevisionId(event.target.value); setDialogError(false); }} />
         ) : (
-          <Input label={t("reasonCode")} required value={reasonCode} maxLength={64} disabled={busy} error={dialogError ? t("reasonCodeRequired") : undefined} onChange={(event) => { setReasonCode(event.target.value); setDialogError(false); }} />
+          <Input label={t("reasonCode")} required value={reasonCode} maxLength={64} disabled={busy} placeholder={t("reasonCodePlaceholder")} error={dialogError ? t("reasonCodeRequired") : undefined} onChange={(event) => { setReasonCode(event.target.value); setDialogError(false); }} />
         )}
       </Modal>
     </section>

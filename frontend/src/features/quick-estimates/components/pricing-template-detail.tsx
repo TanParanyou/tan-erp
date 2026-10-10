@@ -173,7 +173,7 @@ function DetailView({ template }: { template: PricingTemplateResponse }) {
           </div>
         )}
       >
-        <Input label={t("decisionNote")} value={note} maxLength={500} disabled={busy} onChange={(event) => setNote(event.target.value)} />
+        <Input label={t("decisionNote")} value={note} maxLength={500} disabled={busy} placeholder={t("decisionNotePlaceholder")} onChange={(event) => setNote(event.target.value)} />
       </Modal>
     </section>
   );

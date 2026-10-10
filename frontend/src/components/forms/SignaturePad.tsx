@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { IconRefresh, IconSave, IconCheck } from "@/components/common/Icons";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils/cn";
 import { useTranslations } from "next-intl";
 
@@ -36,6 +37,25 @@ export function SignaturePad({
   const [presetName, setPresetName] = useState("");
   const [showPresetInput, setShowPresetInput] = useState(false);
 
+  const valueRef = useRef<string | null | undefined>(value);
+  valueRef.current = value;
+
+  const paintValue = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const current = valueRef.current;
+    ctx.clearRect(0, 0, width, height);
+    if (!current) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      if (valueRef.current !== current) return; // value changed while the image was loading
+      ctx.drawImage(img, 0, 0, width, height);
+      setHasDrawn(true);
+    };
+    img.src = current;
+  }, []);
+
+  // Sizing resets the canvas, so it only runs on mount and resize; it must not depend on `value`,
+  // otherwise every stroke (which emits a new value) would reinitialise and flicker the canvas.
   const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -55,17 +75,8 @@ export function SignaturePad({
     ctx.lineCap = "square";
     ctx.lineJoin = "miter";
 
-    if (value) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        ctx.clearRect(0, 0, rect.width, rect.height);
-        ctx.drawImage(img, 0, 0, rect.width, rect.height);
-        setHasDrawn(true);
-      };
-      img.src = value;
-    }
-  }, [value]);
+    paintValue(ctx, rect.width, rect.height);
+  }, [paintValue]);
 
   useEffect(() => {
     setupCanvas();
@@ -73,6 +84,18 @@ export function SignaturePad({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [setupCanvas]);
+
+  // A parent-driven reset (value becomes empty) must clear the canvas and the "drawn" state.
+  useEffect(() => {
+    if (value) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (canvas && ctx) {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+    }
+    setHasDrawn(false);
+  }, [value]);
 
   const getCoordinates = (
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
@@ -209,12 +232,13 @@ export function SignaturePad({
           </button>
           {showPresetInput && (
             <div className="flex items-center gap-1.5 border border-erp-border bg-erp-surface-subtle p-2">
-              <input
+              <Input
                 type="text"
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
                 placeholder={t("presetNamePlaceholder")}
-                className="flex-1 border border-erp-border bg-erp-surface p-1 text-xs text-erp-text-main outline-none focus:border-erp-navy rounded-none"
+                className="flex-1 p-1 text-xs"
+                wrapperClassName="flex-1 mb-0"
               />
               <Button
                 type="button"

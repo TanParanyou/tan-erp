@@ -11,7 +11,7 @@ import { UserAutocomplete } from "@/components/forms/UserAutocomplete";
 import { Alert } from "@/components/ui/Alert";
 import { IconAlertCircle } from "@/components/common/Icons";
 
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 
 interface OpportunityOwnerReassignModalProps {
   isOpen: boolean;
@@ -74,14 +74,44 @@ export function OpportunityOwnerReassignModal({
     }
   };
 
+  const footerActions = (
+    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        size="md"
+        className="w-full sm:w-auto min-h-11"
+        onClick={onClose}
+        disabled={reassignMutation.isPending}
+      >
+        {tCommon("actions.cancel")}
+      </Button>
+      <Button
+        type="submit"
+        variant="primary"
+        size="md"
+        className="w-full sm:w-auto min-h-11"
+        isLoading={reassignMutation.isPending}
+        disabled={reassignMutation.isPending || !targetOwnerUserId.trim()}
+        onClick={() => {
+          const form = document.getElementById("reassign-owner-form") as HTMLFormElement | null;
+          form?.requestSubmit();
+        }}
+      >
+        {tCommon("actions.confirm")}
+      </Button>
+    </div>
+  );
+
   return (
-    <Modal
+    <Drawer
       isOpen={isOpen}
       onClose={onClose}
       closeDisabled={reassignMutation.isPending}
       title={t("reassignOwnerModalTitle")}
       description={t("reassignOwnerModalDesc")}
-      size="lg"
+      size="md"
+      footer={footerActions}
     >
       <div className="flex flex-col gap-4">
         {errorMsg && (
@@ -93,7 +123,7 @@ export function OpportunityOwnerReassignModal({
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form id="reassign-owner-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           <UserAutocomplete
             value={targetOwnerUserId}
             onChange={(userId) => {
@@ -106,29 +136,10 @@ export function OpportunityOwnerReassignModal({
             label={t("newOwnerLabel")}
             placeholder={t("newOwnerPlaceholder")}
           />
-
-          <div className="flex justify-end gap-3 pt-2 border-t border-erp-border">
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={onClose}
-              disabled={reassignMutation.isPending}
-            >
-              {tCommon("actions.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={reassignMutation.isPending}
-              disabled={reassignMutation.isPending || !targetOwnerUserId.trim()}
-            >
-              {tCommon("actions.confirm")}
-            </Button>
-          </div>
         </form>
       </div>
-    </Modal>
+    </Drawer>
   );
 }
+
+export { OpportunityOwnerReassignModal as OpportunityOwnerReassignDrawer };

@@ -7,6 +7,7 @@ using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
 using TanErp.Domain.Surveys;
+using TanErp.Domain.QuickEstimates;
 
 namespace TanErp.Infrastructure.Persistence;
 
@@ -453,7 +454,63 @@ public static class TestOnlyDataSeeder
             await SeedItemCatalogDemoDataAsync(db);
         }
 
+        if (seedEstimateDemoData)
+        {
+            await SeedQuickEstimateSampleTemplatesAsync(db);
+        }
+
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Sample pricing templates for the demo environment, one per release-1 template in the template catalog.
+    /// Every value is a developer-chosen sample (THB, market-order-of-magnitude) that the business must replace and sign off.
+    /// They are seeded in "calibration", so any estimate built from them always needs review before it can be shared.
+    /// </summary>
+    private static async Task SeedQuickEstimateSampleTemplatesAsync(AppDbContext db)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var assumptions = new[] { "ราคาเป็นช่วงเบื้องต้นจากขนาดที่วัดได้ ไม่ใช่ใบเสนอราคา", "พื้นผิวหน้างานเรียบและเข้าถึงได้สะดวก" };
+        var exclusions = new[] { "งานรื้อถอนของเดิม", "งานระบบไฟฟ้าและประปาที่ต้องเดินใหม่", "ภาษีมูลค่าเพิ่ม (แสดงแยกตามนโยบายแม่แบบ)" };
+        var builtInGrades = new TemplateGrade[] { new("STANDARD", "มาตรฐาน (เมลามีน)", 1.0m), new("PREMIUM", "พรีเมียม (ลามิเนต/HPL)", 1.25m), new("LUXURY", "หรูหรา (วีเนียร์/สีพ่น)", 1.6m) };
+        var builtInComplexities = new TemplateComplexity[] { new("MEDIUM", "ซับซ้อนปานกลาง (มุม/ราง/ผนังไม่ฉาก)", 1.1m, 0.03m), new("HIGH", "ซับซ้อนสูง (โค้ง/ไฟซ่อน/ผนังไม่เรียบมาก)", 1.25m, 0.08m) };
+        var delivery = new TemplateAddOn("DELIVERY", "ค่าขนส่งและติดตั้ง", 5000m, false);
+
+        TemplateConfig Config(IReadOnlyList<TemplateGrade> grades, IReadOnlyList<TemplateComplexity> complexities, IReadOnlyList<TemplateAddOn> addOns) =>
+            new(grades, complexities, addOns, 0.08m, 0.04m, 0.10m, assumptions, exclusions);
+
+        var samples = new (string Code, string WorkType, string Name, string Rule, string Unit, decimal Rate, decimal Minimum, decimal Limit, TemplateConfig Config)[]
+        {
+            ("SAMPLE-BI-WARDROBE-LM", WorkType.BuiltIn, "[ตัวอย่าง] ตู้เสื้อผ้า Built-in (ต่อเมตรตู้)", MeasurementRule.Length, "m", 8500m, 25000m, 300000m,
+                Config(builtInGrades, builtInComplexities, new[] { delivery })),
+            ("SAMPLE-BI-CABINET-LM", WorkType.BuiltIn, "[ตัวอย่าง] ตู้ล่าง/ตู้แขวน/ตู้เก็บของ (ต่อเมตรตู้)", MeasurementRule.Length, "m", 7000m, 20000m, 300000m,
+                Config(new TemplateGrade[] { new("STANDARD", "มาตรฐาน (เมลามีน)", 1.0m), new("PREMIUM", "พรีเมียม (ลามิเนต/HPL)", 1.3m), new("LUXURY", "หรูหรา (วีเนียร์/สีพ่น)", 1.7m) }, builtInComplexities, new[] { delivery })),
+            ("SAMPLE-CT-FABRIC-LM", WorkType.Curtain, "[ตัวอย่าง] ผ้าม่านพร้อมรางและติดตั้ง (ต่อเมตรหน้ากว้าง)", MeasurementRule.Length, "m", 1800m, 8000m, 150000m,
+                Config(new TemplateGrade[] { new("STANDARD", "ผ้ามาตรฐาน", 1.0m), new("BLACKOUT", "ผ้าทึบแสง", 1.3m), new("PREMIUM", "ผ้าพรีเมียม", 1.7m) },
+                    new TemplateComplexity[] { new("HIGH_CEILING", "เพดานสูง/ติดตั้งยาก", 1.15m, 0.05m) },
+                    new[] { new TemplateAddOn("MOTOR", "มอเตอร์ไฟฟ้าต่อชุด", 12000m, true) })),
+            ("SAMPLE-CT-BLIND-AREA", WorkType.Curtain, "[ตัวอย่าง] ม่านม้วน/มู่ลี่ (ต่อตารางเมตร)", MeasurementRule.Area, "sqm", 1200m, 3000m, 100000m,
+                Config(new TemplateGrade[] { new("STANDARD", "มาตรฐาน", 1.0m), new("PREMIUM", "พรีเมียม", 1.4m) }, Array.Empty<TemplateComplexity>(), Array.Empty<TemplateAddOn>())),
+            ("SAMPLE-WP-ROLL-AREA", WorkType.Wallpaper, "[ตัวอย่าง] วอลเปเปอร์แบบม้วนรวมค่าแรง (ต่อตารางเมตรผนัง)", MeasurementRule.Area, "sqm", 650m, 4500m, 100000m,
+                Config(new TemplateGrade[] { new("STANDARD", "มาตรฐาน", 1.0m), new("PREMIUM", "พรีเมียม/นำเข้า", 1.8m) },
+                    new TemplateComplexity[] { new("PATTERN_MATCH", "ลายต้องต่อ", 1.15m, 0.04m) }, Array.Empty<TemplateAddOn>())),
+        };
+
+        foreach (var sample in samples)
+        {
+            if (await db.PricingTemplates.AnyAsync(t => t.OrganizationId == TestOrgId && t.Code == sample.Code))
+            {
+                continue;
+            }
+
+            var template = new PricingTemplate(
+                Guid.CreateVersion7(), TestOrgId, sample.Code, 1, sample.WorkType, sample.Name, sample.Rule, sample.Unit,
+                sample.Rate, sample.Minimum, 0.10m, 0.30m, 1000m, 30, 0.07m, TaxDisplay.Exclusive, sample.Limit, null, null, sample.Config, TestUserId, now);
+            template.Submit(TestUserId, now);
+            template.Decide(true, "Sample defaults for the demo environment; pending business sign-off.", TestUserIdB, now);
+            template.StartCalibration(now);
+            db.PricingTemplates.Add(template);
+        }
     }
 
     private static async Task SeedEstimateDemoDataAsync(AppDbContext db)

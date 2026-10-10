@@ -19,6 +19,10 @@ vi.mock("@/lib/auth/auth-session", () => ({
 
 import { signOutSession } from "@/lib/auth/auth-session";
 
+vi.mock("./NotificationBell", () => ({
+  NotificationBell: () => <div data-testid="notification-bell" />,
+}));
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const mockCurrentUser: CurrentUserResponse = {
@@ -189,5 +193,11 @@ describe("ErpShell Component", () => {
 
     fireEvent.click(menuButton);
     expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+  });
+  it("places the notification bell in the header, before the theme and language controls", () => {
+    renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
+
+    const bell = screen.getByTestId("notification-bell");
+    expect(screen.getByRole("banner").contains(bell)).toBe(true);
   });
 });
