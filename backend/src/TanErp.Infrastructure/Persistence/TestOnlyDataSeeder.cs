@@ -115,6 +115,8 @@ public static class TestOnlyDataSeeder
         var permKeys = new[]
         {
             ("organizations.read", "Read Organization"),
+            ("organizations.manage", "Manage Organization Profile"),
+            ("branches.manage", "Manage Branches"),
             ("customers.read", "Read Customers"),
             ("customers.create", "Create Customers"),
             ("customers.update", "Update Customers"),

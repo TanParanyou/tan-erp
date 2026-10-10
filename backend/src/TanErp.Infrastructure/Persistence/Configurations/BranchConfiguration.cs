@@ -18,6 +18,17 @@ public class BranchConfiguration : IEntityTypeConfiguration<Branch>
         builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.NameEn).HasColumnName("name_en").HasMaxLength(255);
+        builder.Property(x => x.TaxBranchCode).HasColumnName("tax_branch_code").HasMaxLength(5).IsFixedLength();
+        builder.Property(x => x.AddressTh).HasColumnName("address_th").HasMaxLength(500);
+        builder.Property(x => x.AddressEn).HasColumnName("address_en").HasMaxLength(500);
+        builder.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(30);
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+
+        builder.HasIndex(x => new { x.OrganizationId, x.TaxBranchCode })
+            .IsUnique()
+            .HasFilter("tax_branch_code IS NOT NULL")
+            .HasDatabaseName("ix_branches_organization_id_tax_branch_code");
 
         builder.HasIndex(x => new { x.OrganizationId, x.Code })
             .IsUnique()
