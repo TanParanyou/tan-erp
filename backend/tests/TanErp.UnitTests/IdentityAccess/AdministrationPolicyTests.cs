@@ -59,6 +59,11 @@ public class AdministrationPolicyTests
     [InlineData("estimates.approve", true)]
     [InlineData("cost-records.approve", true)]
     [InlineData("cost-records.publish", true)]
+    [InlineData("purchase-orders.approve", true)]
+    [InlineData("projects.change-orders.approve", true)]
+    [InlineData("mrp.approve", true)]
+    [InlineData("boms.approve", false)]
+    [InlineData("roles.assign-approval", false)]
     [InlineData("estimates.read", false)]
     public void RequiresApproval_FlagsOnlyApprovalPermissions(string key, bool expected)
     {
@@ -107,5 +112,18 @@ public class AdministrationPolicyTests
     public void WouldRemoveLastAdministrator_WhenThereAreNoAdministrators_ReturnsFalse()
     {
         Assert.False(AdministrationPolicy.WouldRemoveLastAdministrator(Array.Empty<AdministratorRow>(), _ => true));
+    }
+
+    [Fact]
+    public void ApprovalPermissionKeys_AreExactlyTheReviewedSet()
+    {
+        // Changing this set changes who needs a checker (ADR 0020). Update the ADR and this list together.
+        var expected = new[]
+        {
+            "cost-records.approve", "cost-records.publish", "estimates.approve",
+            "mrp.approve", "projects.change-orders.approve", "purchase-orders.approve"
+        };
+
+        Assert.Equal(expected, AdministrationPolicy.ApprovalPermissionKeys.OrderBy(k => k, StringComparer.Ordinal).ToArray());
     }
 }
