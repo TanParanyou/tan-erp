@@ -61,6 +61,23 @@ public sealed class AdminRolesController : ControllerBase
         return RoleResult(await _handler.GetRoleAsync(Caller(auth.Value!), roleId, cancellationToken));
     }
 
+    [HttpPost("role-definitions")]
+    [ProducesResponseType<RoleDefinitionResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateRoleDefinition([FromBody] SaveRoleDefinitionRequest request, CancellationToken cancellationToken)
+    {
+        var idempotent = RequestContextReader.ReadIdempotentRequest(HttpContext);
+        if (idempotent.IsFailure) return Problem(idempotent.Error);
+
+        var result = await _handler.CreateRoleAsync(
+            new AdminCaller(idempotent.Value!.FirebaseUid, idempotent.Value.MembershipId), idempotent.Value.IdempotencyKey,
+            request.ToInput(), HttpContext.TraceIdentifier, cancellationToken);
+        if (result.IsFailure) return Problem(result.Error);
+
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Created($"/api/v1/admin/role-definitions/{result.Value.Id}", RoleDefinitionResponse.From(result.Value));
+    }
+
     private IActionResult RoleResult(Result<RoleDefinition> result)
     {
         if (result.IsFailure) return Problem(result.Error);

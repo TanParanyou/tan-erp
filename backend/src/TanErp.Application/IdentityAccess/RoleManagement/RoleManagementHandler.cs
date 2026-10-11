@@ -1,6 +1,7 @@
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Common.Security;
 using TanErp.Application.IdentityAccess.Administration;
 
 namespace TanErp.Application.IdentityAccess.RoleManagement;
@@ -56,4 +57,21 @@ public sealed class RoleManagementHandler
         var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
         return access.IsFailure ? Denied<RoleDefinition>(access) : await _store.GetRoleAsync(access.Value!.OrganizationId, roleId, ct);
     }
+
+    public async Task<Result<RoleDefinition>> CreateRoleAsync(
+        AdminCaller caller, string idempotencyKey, RoleInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        if (access.IsFailure) return Denied<RoleDefinition>(access);
+
+        var invalid = RoleManagementPolicy.ValidateShape(input);
+        if (invalid is not null) return Result<RoleDefinition>.Failure(invalid);
+
+        var canonical = RoleManagementPolicy.Canonicalize(input);
+        return await _store.CreateRoleAsync(
+            access.Value!.OrganizationId, canonical, Actor(access.Value), Sha256Hex.Compute(idempotencyKey), PayloadHash(canonical), traceId, ct);
+    }
+
+    private static string PayloadHash(RoleInput input) => Sha256Hex.Compute(
+        $"{input.Name.Trim()}|{input.Description?.Trim()}|{string.Join(",", input.Permissions.Select(g => $"{g.PermissionKey}:{g.Scope}:{g.BranchId}"))}");
 }

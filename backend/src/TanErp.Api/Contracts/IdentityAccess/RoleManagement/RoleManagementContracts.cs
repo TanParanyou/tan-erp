@@ -23,6 +23,17 @@ public record RoleDefinitionListResponse(IReadOnlyList<RoleDefinitionSummaryResp
         new AdminPaginationResponse(page.Page, page.PageSize, page.TotalCount, (int)Math.Ceiling(page.TotalCount / (double)page.PageSize)));
 }
 
+public record RoleGrantRequest(string? PermissionKey, string? Scope, Guid? BranchId);
+
+public record SaveRoleDefinitionRequest(string? Name, string? Description, IReadOnlyList<RoleGrantRequest>? Permissions)
+{
+    public RoleInput ToInput() => new(
+        Name ?? string.Empty,
+        Description,
+        (Permissions ?? Array.Empty<RoleGrantRequest>())
+            .Select(g => new RoleGrantInput(g.PermissionKey ?? string.Empty, g.Scope ?? string.Empty, g.BranchId)).ToList());
+}
+
 public record RoleGrantResponse(string PermissionKey, string Scope, AdminRefResponse? Branch);
 
 public record RoleChangeRequestResponse(

@@ -1,4 +1,5 @@
 using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.Administration;
 
 namespace TanErp.Application.IdentityAccess.RoleManagement;
 
@@ -13,4 +14,7 @@ public interface IRoleManagementStore
     Task<RoleDefinitionPage> ListRolesAsync(Guid organizationId, RoleListQuery query, CancellationToken ct);
 
     Task<Result<RoleDefinition>> GetRoleAsync(Guid organizationId, Guid roleId, CancellationToken ct);
+
+    Task<Result<RoleDefinition>> CreateRoleAsync(
+        Guid organizationId, RoleInput input, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct);
 }

@@ -276,4 +276,114 @@ public class RoleManagementEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, other.StatusCode);
         Assert.Equal("RESOURCE_NOT_FOUND", await ReadCode(other));
     }
+
+    // ------------------------------------------------------------------ create
+
+    private static SaveRoleDefinitionRequest Body(string name, params string[] keys) =>
+        new(name, "desc " + name, keys.Select(k => new RoleGrantRequest(k, "organization", null)).ToList());
+
+    private Task<HttpResponseMessage> CreateRole(SaveRoleDefinitionRequest body, string? key = null, string token = AdminToken) =>
+        Send(HttpMethod.Post, "/api/v1/admin/role-definitions", token, body, idempotencyKey: key ?? Guid.NewGuid().ToString());
+
+    private async Task<RoleDefinitionResponse> GetRole(Guid roleId, string token = AdminToken) =>
+        await ReadAs<RoleDefinitionResponse>(await Send(HttpMethod.Get, $"/api/v1/admin/role-definitions/{roleId}", token));
+
+    [Fact]
+    public async Task Create_PersistsRoleAndGrantsAndAuditsKeysWithoutNames()
+    {
+        var response = await CreateRole(Body("Quote Reviewer", "customers.read", "estimates.read"));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var role = await ReadAs<RoleDefinitionResponse>(response);
+        Assert.False(role.IsSystem);
+        Assert.True(role.IsActive);
+        Assert.Equal(new[] { "customers.read", "estimates.read" }, role.Permissions.Select(p => p.PermissionKey).ToArray());
+        Assert.Equal($"\"{role.RowVersion}\"", response.Headers.ETag?.Tag);
+
+        await using var db = NewDb();
+        var audit = await db.AuditEvents.AsNoTracking().SingleAsync(a => a.Action == "roles.created" && a.ResourceId == role.Id.ToString());
+        Assert.Contains("customers.read", audit.ChangesJson);
+        Assert.DoesNotContain("Quote Reviewer", audit.ChangesJson);
+    }
+
+    [Fact]
+    public async Task Create_ApprovalRole_IsCreatedImmediatelyBecauseNobodyHoldsItYet()
+    {
+        var role = await ReadAs<RoleDefinitionResponse>(await CreateRole(Body("Estimate Approver", "estimates.approve")));
+
+        Assert.True(role.RequiresApproval);
+        Assert.Equal(0, role.MemberCount);
+    }
+
+    [Fact]
+    public async Task Create_DuplicateNameIgnoringCase_Returns409_AndOtherOrganizationsMayReuseTheName()
+    {
+        Assert.Equal(HttpStatusCode.Created, (await CreateRole(Body("Shared Name"))).StatusCode);
+
+        var duplicate = await CreateRole(Body("  SHARED name "));
+        var otherOrg = await CreateRole(Body("Shared Name"), token: OrgBToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+        Assert.Equal("ROLE_NAME_ALREADY_EXISTS", await ReadCode(duplicate));
+        Assert.Equal(HttpStatusCode.Created, otherOrg.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_ReservedPrefixTooShortNameAndUnknownPermission_AreRejected()
+    {
+        var reserved = await CreateRole(Body("System.Root"));
+        var tooShort = await CreateRole(Body("ab"));
+        var unknown = await CreateRole(Body("Ghost Role", "no.such-permission"));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, reserved.StatusCode);
+        Assert.Equal("ROLE_NAME_RESERVED", await ReadCode(reserved));
+        Assert.Equal(HttpStatusCode.BadRequest, tooShort.StatusCode);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", await ReadCode(tooShort));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, unknown.StatusCode);
+        Assert.Equal("ROLE_PERMISSION_UNKNOWN", await ReadCode(unknown));
+    }
+
+    [Fact]
+    public async Task Create_WithAPermissionTheCallerDoesNotHold_Returns403AndCreatesNothing()
+    {
+        // The checker holds roles.manage but not users.manage.
+        var response = await CreateRole(Body("Escalation Role", "customers.read", "users.manage"), token: CheckerToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("ROLE_ESCALATION_DENIED", await ReadCode(response));
+        await using var db = NewDb();
+        Assert.False(await db.Roles.AnyAsync(r => r.Name == "Escalation Role"));
+    }
+
+    [Fact]
+    public async Task Create_BranchScopedGrant_NeedsABranchOfTheCallersOrganization()
+    {
+        SaveRoleDefinitionRequest BranchGrant(Guid branchId) =>
+            new("Branch Reader", null, new[] { new RoleGrantRequest("estimates.read", "branch", branchId) });
+
+        var foreign = await CreateRole(BranchGrant(TestOnlyDataSeeder.TestBranchBId));
+        var own = await CreateRole(BranchGrant(TestOnlyDataSeeder.TestBranchId));
+
+        Assert.Equal(HttpStatusCode.NotFound, foreign.StatusCode);
+        Assert.Equal("BRANCH_NOT_FOUND", await ReadCode(foreign));
+        var grant = Assert.Single((await ReadAs<RoleDefinitionResponse>(own)).Permissions);
+        Assert.Equal("branch", grant.Scope);
+        Assert.Equal(TestOnlyDataSeeder.TestBranchId, grant.Branch!.Id);
+    }
+
+    [Fact]
+    public async Task Create_ReplayKeyReuseAndMissingKey()
+    {
+        var key = "role-create-" + Guid.NewGuid();
+        var first = await CreateRole(Body("Replay Role"), key);
+        var second = await CreateRole(Body("Replay Role"), key);
+        var reused = await CreateRole(Body("Other Role"), key);
+        var noKey = await Send(HttpMethod.Post, "/api/v1/admin/role-definitions", AdminToken, Body("No Key"));
+
+        Assert.Equal((await ReadAs<RoleDefinitionResponse>(first)).Id, (await ReadAs<RoleDefinitionResponse>(second)).Id);
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", await ReadCode(reused));
+        Assert.Equal("IDEMPOTENCY_KEY_REQUIRED", await ReadCode(noKey));
+        await using var db = NewDb();
+        Assert.Equal(1, await db.Roles.CountAsync(r => r.Name == "Replay Role"));
+    }
 }
