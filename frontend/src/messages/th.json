@@ -4025,6 +4025,10 @@
       "saveSuccess": "บันทึกสาขาแล้ว",
       "backToList": "กลับไปรายการสาขา",
       "statusFilter": "สถานะ",
+      "statusFilterOptions": {
+        "active": "สาขาที่ใช้งาน",
+        "inactive": "สาขาที่ปิดใช้งาน"
+      },
       "status": {
         "active": "ใช้งาน",
         "inactive": "ปิดใช้งาน"

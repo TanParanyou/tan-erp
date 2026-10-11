@@ -4025,6 +4025,10 @@
       "saveSuccess": "Branch saved",
       "backToList": "Back to branches",
       "statusFilter": "Status",
+      "statusFilterOptions": {
+        "active": "Active branches",
+        "inactive": "Inactive branches"
+      },
       "status": {
         "active": "Active",
         "inactive": "Inactive"
