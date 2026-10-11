@@ -165,4 +165,27 @@ describe("SidebarNav Component", () => {
     rerender(<SidebarNav currentUser={authorizedUser} isCollapsed={false} />);
     expect(screen.getByRole("link", { name: "ตรวจสอบการประเมินราคา" })).toBeDefined();
   });
+
+  it("shows organization and branch settings only to members who can manage them", () => {
+    const manager: CurrentUserResponse = {
+      ...mockUser,
+      memberships: mockUser.memberships?.map((membership) => ({
+        ...membership,
+        permissions: [
+          ...(membership.permissions ?? []),
+          { key: "organizations.manage", scope: "organization", scopeId: "20000000-0000-0000-0000-000000000001" },
+          { key: "branches.manage", scope: "organization", scopeId: "20000000-0000-0000-0000-000000000001" },
+        ],
+      })),
+    };
+
+    const { unmount } = render(<SidebarNav currentUser={mockUser} isCollapsed={false} />);
+    expect(screen.queryByRole("link", { name: "ข้อมูลองค์กร" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "สาขา" })).toBeNull();
+    unmount();
+
+    render(<SidebarNav currentUser={manager} isCollapsed={false} />);
+    expect(screen.getByRole("link", { name: "ข้อมูลองค์กร" })).toHaveAttribute("href", "/th/settings/organization");
+    expect(screen.getByRole("link", { name: "สาขา" })).toHaveAttribute("href", "/th/settings/branches");
+  });
 });
