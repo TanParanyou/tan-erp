@@ -411,4 +411,37 @@ describe("ApiClient", () => {
     await client.listAdminBranches(undefined, options);
     expect(fetchMock.mock.calls[9][0]).toBe("http://localhost:5000/api/v1/admin/branches");
   });
+
+  it("calls the role management endpoints with If-Match and Idempotency-Key where required", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
+    global.fetch = fetchMock;
+    const client = new ApiClient("http://localhost:5000");
+    const options = { token: "tok", membershipId: "m-1", locale: "th" as const };
+    const role = { name: "Sales Lead", description: null, permissions: [{ permissionKey: "customers.read", scope: "organization", branchId: null }] };
+
+    await client.listAdminPermissions(options);
+    await client.listRoleDefinitions({ search: "lead", status: "active", sortBy: "name", sortOrder: "asc", page: 2, limit: 10 }, options);
+    await client.getRoleDefinition("r 1", options);
+    await client.createRoleDefinition(role, { ...options, idempotencyKey: "key-0123456789abcdef" });
+    await client.updateRoleDefinition("r1", role, { ...options, ifMatch: "v1" });
+    await client.setRoleDefinitionActive("r1", false, { ...options, ifMatch: "v2" });
+    await client.setRoleDefinitionActive("r1", true, { ...options, ifMatch: "v3" });
+    await client.listRoleChangeRequests("pending", options);
+    await client.decideRoleChangeRequest("q1", "approve", { ...options, ifMatch: "v4" });
+
+    expect(fetchMock.mock.calls.map(([url, init]) => [url, init.method])).toEqual([
+      ["http://localhost:5000/api/v1/admin/permissions", "GET"],
+      ["http://localhost:5000/api/v1/admin/role-definitions?search=lead&status=active&sortBy=name&sortOrder=asc&page=2&limit=10", "GET"],
+      ["http://localhost:5000/api/v1/admin/role-definitions/r%201", "GET"],
+      ["http://localhost:5000/api/v1/admin/role-definitions", "POST"],
+      ["http://localhost:5000/api/v1/admin/role-definitions/r1", "PUT"],
+      ["http://localhost:5000/api/v1/admin/role-definitions/r1/deactivate", "POST"],
+      ["http://localhost:5000/api/v1/admin/role-definitions/r1/activate", "POST"],
+      ["http://localhost:5000/api/v1/admin/role-change-requests?status=pending", "GET"],
+      ["http://localhost:5000/api/v1/admin/role-change-requests/q1/approve", "POST"],
+    ]);
+    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).toBe("key-0123456789abcdef");
+    expect(fetchMock.mock.calls[4][1].headers["If-Match"]).toBe('"v1"');
+    expect(fetchMock.mock.calls[8][1].headers["If-Match"]).toBe('"v4"');
+  });
 });

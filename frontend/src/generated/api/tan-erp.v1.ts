@@ -497,6 +497,570 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PermissionCatalogResponse"];
+                        "application/json": components["schemas"]["PermissionCatalogResponse"];
+                        "text/json": components["schemas"]["PermissionCatalogResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    status?: string;
+                    sortBy?: string;
+                    sortOrder?: string;
+                    page?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleDefinitionListResponse"];
+                        "application/json": components["schemas"]["RoleDefinitionListResponse"];
+                        "text/json": components["schemas"]["RoleDefinitionListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SaveRoleDefinitionRequest"];
+                    "text/json": components["schemas"]["SaveRoleDefinitionRequest"];
+                    "application/*+json": components["schemas"]["SaveRoleDefinitionRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleDefinitionResponse"];
+                        "application/json": components["schemas"]["RoleDefinitionResponse"];
+                        "text/json": components["schemas"]["RoleDefinitionResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-definitions/{roleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    roleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleDefinitionResponse"];
+                        "application/json": components["schemas"]["RoleDefinitionResponse"];
+                        "text/json": components["schemas"]["RoleDefinitionResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    roleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SaveRoleDefinitionRequest"];
+                    "text/json": components["schemas"]["SaveRoleDefinitionRequest"];
+                    "application/*+json": components["schemas"]["SaveRoleDefinitionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UpdateRoleDefinitionResponse"];
+                        "application/json": components["schemas"]["UpdateRoleDefinitionResponse"];
+                        "text/json": components["schemas"]["UpdateRoleDefinitionResponse"];
+                    };
+                };
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UpdateRoleDefinitionResponse"];
+                        "application/json": components["schemas"]["UpdateRoleDefinitionResponse"];
+                        "text/json": components["schemas"]["UpdateRoleDefinitionResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleChangeRequestListResponse"];
+                        "application/json": components["schemas"]["RoleChangeRequestListResponse"];
+                        "text/json": components["schemas"]["RoleChangeRequestListResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-change-requests/{requestId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleChangeRequestResponse"];
+                        "application/json": components["schemas"]["RoleChangeRequestResponse"];
+                        "text/json": components["schemas"]["RoleChangeRequestResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-change-requests/{requestId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleChangeRequestResponse"];
+                        "application/json": components["schemas"]["RoleChangeRequestResponse"];
+                        "text/json": components["schemas"]["RoleChangeRequestResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-change-requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleChangeRequestResponse"];
+                        "application/json": components["schemas"]["RoleChangeRequestResponse"];
+                        "text/json": components["schemas"]["RoleChangeRequestResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-definitions/{roleId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    roleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleDefinitionResponse"];
+                        "application/json": components["schemas"]["RoleDefinitionResponse"];
+                        "text/json": components["schemas"]["RoleDefinitionResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/role-definitions/{roleId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    roleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RoleDefinitionResponse"];
+                        "application/json": components["schemas"]["RoleDefinitionResponse"];
+                        "text/json": components["schemas"]["RoleDefinitionResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -22079,6 +22643,14 @@ export interface components {
             /** Format: date-time */
             recordedAtUtc?: string;
         };
+        PermissionCatalogEntryResponse: {
+            key?: string | null;
+            description?: string | null;
+            isApprovalPermission?: boolean;
+        };
+        PermissionCatalogResponse: {
+            items?: components["schemas"]["PermissionCatalogEntryResponse"][] | null;
+        };
         PermissionDto: {
             key?: string | null;
             scope?: string | null;
@@ -22958,6 +23530,79 @@ export interface components {
             reasonCode?: string | null;
             decisionNote?: string | null;
         };
+        RoleChangeRequestListResponse: {
+            items?: components["schemas"]["RoleChangeRequestResponse"][] | null;
+        };
+        RoleChangeRequestResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+            status?: string | null;
+            role?: components["schemas"]["AdminRefResponse"];
+            requestedBy?: components["schemas"]["AdminRefResponse"];
+            /** Format: date-time */
+            requestedAtUtc?: string;
+            proposedName?: string | null;
+            proposedDescription?: string | null;
+            addedPermissionKeys?: string[] | null;
+            removedPermissionKeys?: string[] | null;
+        };
+        RoleDefinitionListResponse: {
+            items?: components["schemas"]["RoleDefinitionSummaryResponse"][] | null;
+            pagination?: components["schemas"]["AdminPaginationResponse"];
+        };
+        RoleDefinitionResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+            description?: string | null;
+            isSystem?: boolean;
+            isActive?: boolean;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: int32 */
+            memberCount?: number;
+            /** Format: int32 */
+            pendingAssignmentRequestCount?: number;
+            requiresApproval?: boolean;
+            permissions?: components["schemas"]["RoleGrantResponse"][] | null;
+            pendingChange?: components["schemas"]["RoleChangeRequestResponse"];
+        };
+        RoleDefinitionSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+            description?: string | null;
+            isSystem?: boolean;
+            isActive?: boolean;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: int32 */
+            memberCount?: number;
+            /** Format: int32 */
+            permissionCount?: number;
+            requiresApproval?: boolean;
+            hasPendingChange?: boolean;
+        };
+        RoleGrantRequest: {
+            permissionKey?: string | null;
+            scope?: string | null;
+            /** Format: uuid */
+            branchId?: string | null;
+        };
+        RoleGrantResponse: {
+            permissionKey?: string | null;
+            scope?: string | null;
+            branch?: components["schemas"]["AdminRefResponse"];
+        };
+        SaveRoleDefinitionRequest: {
+            name?: string | null;
+            description?: string | null;
+            permissions?: components["schemas"]["RoleGrantRequest"][] | null;
+        };
         ScheduleRequest: {
             /** Format: date */
             date?: string;
@@ -23689,6 +24334,10 @@ export interface components {
             weight?: number;
             /** Format: uuid */
             expectedVersion?: string;
+        };
+        UpdateRoleDefinitionResponse: {
+            role?: components["schemas"]["RoleDefinitionResponse"];
+            pendingRequest?: components["schemas"]["RoleChangeRequestResponse"];
         };
         UpdateSiteRequest: {
             label?: string | null;
