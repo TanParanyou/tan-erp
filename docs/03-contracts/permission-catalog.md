@@ -5,7 +5,8 @@
 | Module | Permission | ความหมาย | Scope ที่คาดว่าใช้ |
 | --- | --- | --- | --- |
 | Organization | `organizations.read` | ดูข้อมูลองค์กรที่ตนสังกัด | Organization |
-| Organization | `branches.manage` | จัดการสาขา | Organization |
+| Organization | `organizations.manage` | แก้ Organization profile (ชื่อ th/en, เลขผู้เสียภาษี, ที่อยู่ออกเอกสาร); ผู้ถือระดับ Organization ได้สิทธิ์ข้ามสาขาใน `RequestAccessResolver` | Organization |
+| Organization | `branches.manage` | สร้าง/แก้/ปิดใช้/เปิดใช้สาขา และดูสาขาที่ปิดใช้ | Organization |
 | Access | `users.read` | ดูรายการ/รายละเอียดผู้ใช้และ Membership ใน Organization (หน้าจัดการผู้ใช้) | Organization |
 | Access | `users.manage` | เชิญผู้ใช้ (pending), แก้ชื่อ, เปิด/ปิดใช้ผู้ใช้; ผู้ถือสิทธิ์นี้ระดับ Organization นับเป็น "ผู้ดูแล" ตามกฎ last administrator | Organization |
 | Access | `memberships.manage` | แก้สาขา/ช่วงเวลา และเปิด/ปิด Membership | Organization |

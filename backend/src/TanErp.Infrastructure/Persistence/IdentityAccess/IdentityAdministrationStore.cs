@@ -1,4 +1,3 @@
-using System.Data;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -484,51 +483,8 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
         string MembershipUserName,
         string RequestedByName);
 
-    private async Task<Result<T>> RunAsync<T>(Func<Task<Result<T>>> work, CancellationToken cancellationToken)
-    {
-        var strategy = _db.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(async () =>
-        {
-            _db.ChangeTracker.Clear();
-            await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
-            try
-            {
-                var result = await work();
-                if (result.IsSuccess)
-                {
-                    await transaction.CommitAsync(cancellationToken);
-                }
-                else
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                }
-
-                return result;
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                return Fail<T>("ADMIN_VERSION_CONFLICT", "The record was modified by another user.");
-            }
-            catch (Exception ex) when (IsSerializationFailure(ex))
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                return Fail<T>("ADMIN_VERSION_CONFLICT", "The change conflicted with a concurrent update; reload and retry.");
-            }
-        });
-    }
-
-    private static bool IsSerializationFailure(Exception ex)
-    {
-        for (var current = ex; current is not null; current = current.InnerException!)
-        {
-            if (current is PostgresException { SqlState: PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected })
-                return true;
-            if (current.InnerException is null) break;
-        }
-
-        return false;
-    }
+    private Task<Result<T>> RunAsync<T>(Func<Task<Result<T>>> work, CancellationToken cancellationToken) =>
+        SerializableTransactionRunner.RunAsync(_db, work, "ADMIN_VERSION_CONFLICT", cancellationToken);
 
     private static bool IsUniqueViolation(DbUpdateException ex) =>
         ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };

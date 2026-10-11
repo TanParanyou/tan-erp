@@ -733,6 +733,12 @@
   <data name="ADMIN_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>The user or access record changed; reload and try again.</value>
   </data>
+  <data name="ORGANIZATION_TAX_ID_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid tax identifier</value>
+  </data>
+  <data name="ORGANIZATION_TAX_ID_INVALID_DETAIL" xml:space="preserve">
+    <value>The tax identifier must be 13 digits with a valid check digit.</value>
+  </data>
   <data name="LAST_ADMINISTRATOR_REQUIRED_TITLE" xml:space="preserve">
     <value>At least one administrator is required</value>
   </data>
@@ -1019,4 +1025,46 @@
   <data name="SIGNATURE_IMAGE_INVALID_DETAIL" xml:space="preserve"><value>The signature image must be a verified PNG file.</value></data>
   <data name="NOTIFICATION_NOT_FOUND_TITLE" xml:space="preserve"><value>Notification Not Found</value></data>
   <data name="NOTIFICATION_NOT_FOUND_DETAIL" xml:space="preserve"><value>The notification was not found.</value></data>
+  <data name="BRANCH_CODE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid branch code</value>
+  </data>
+  <data name="BRANCH_CODE_INVALID_DETAIL" xml:space="preserve">
+    <value>Use letters, digits, underscore or hyphen, up to 50 characters.</value>
+  </data>
+  <data name="BRANCH_TAX_CODE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid tax branch code</value>
+  </data>
+  <data name="BRANCH_TAX_CODE_INVALID_DETAIL" xml:space="preserve">
+    <value>The tax branch code must be exactly 5 digits.</value>
+  </data>
+  <data name="BRANCH_CODE_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>Duplicate branch code</value>
+  </data>
+  <data name="BRANCH_CODE_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>A branch with this code already exists in the organization.</value>
+  </data>
+  <data name="BRANCH_TAX_CODE_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>Duplicate tax branch code</value>
+  </data>
+  <data name="BRANCH_TAX_CODE_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>A branch with this tax branch code already exists in the organization.</value>
+  </data>
+  <data name="BRANCH_HAS_OPEN_DOCUMENTS_TITLE" xml:space="preserve">
+    <value>Cannot deactivate branch</value>
+  </data>
+  <data name="BRANCH_HAS_OPEN_DOCUMENTS_DETAIL" xml:space="preserve">
+    <value>This branch still has open documents, warehouses or work items. Complete or close them first.</value>
+  </data>
+  <data name="BRANCH_HAS_ACTIVE_MEMBERSHIPS_TITLE" xml:space="preserve">
+    <value>Cannot deactivate branch</value>
+  </data>
+  <data name="BRANCH_HAS_ACTIVE_MEMBERSHIPS_DETAIL" xml:space="preserve">
+    <value>Users are still assigned to this branch. Move them to another branch first.</value>
+  </data>
+  <data name="BRANCH_LAST_ACTIVE_TITLE" xml:space="preserve">
+    <value>Cannot deactivate branch</value>
+  </data>
+  <data name="BRANCH_LAST_ACTIVE_DETAIL" xml:space="preserve">
+    <value>The organization must keep at least one active branch.</value>
+  </data>
 </root>

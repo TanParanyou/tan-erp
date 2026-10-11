@@ -97,6 +97,13 @@ export type CreateAdminUserRequest = components["schemas"]["CreateAdminUserReque
 export type RenameAdminUserRequest = components["schemas"]["RenameAdminUserRequest"];
 export type UpdateAdminMembershipRequest = components["schemas"]["UpdateAdminMembershipRequest"];
 export type AssignAdminRoleRequest = components["schemas"]["AssignAdminRoleRequest"];
+export type OrganizationProfileResponse = components["schemas"]["OrganizationProfileResponse"];
+export type UpdateOrganizationProfileRequest = components["schemas"]["UpdateOrganizationProfileRequest"];
+export type AdminBranchResponse = components["schemas"]["BranchResponse"];
+export type CreateAdminBranchRequest = components["schemas"]["CreateBranchRequest"];
+export type UpdateAdminBranchRequest = components["schemas"]["UpdateBranchRequest"];
+export type DeactivateAdminBranchRequest = components["schemas"]["DeactivateBranchRequest"];
+export type BranchDeactivationCheckResponse = components["schemas"]["BranchDeactivationCheckResponse"];
 
 export type AdminUserListParams = NonNullable<paths["/api/v1/admin/users"]["get"]["parameters"]["query"]>;
 
@@ -1192,6 +1199,72 @@ export class ApiClient {
 
   async listAdminRoles(options: RequestOptions): Promise<AdminRoleListResponse> {
     return this.request<AdminRoleListResponse>("/api/v1/admin/roles", "GET", options);
+  }
+
+  async getOrganizationProfile(options: RequestOptions): Promise<OrganizationProfileResponse> {
+    return this.request<OrganizationProfileResponse>("/api/v1/admin/organization", "GET", options);
+  }
+
+  async updateOrganizationProfile(
+    payload: UpdateOrganizationProfileRequest,
+    options: RequestOptions
+  ): Promise<OrganizationProfileResponse> {
+    return this.request<OrganizationProfileResponse>("/api/v1/admin/organization", "PUT", options, payload);
+  }
+
+  async listAdminBranches(status: "active" | "inactive" | undefined, options: RequestOptions): Promise<AdminBranchResponse[]> {
+    const query = status ? `?status=${status}` : "";
+    return this.request<AdminBranchResponse[]>(`/api/v1/admin/branches${query}`, "GET", options);
+  }
+
+  async getAdminBranch(branchId: string, options: RequestOptions): Promise<AdminBranchResponse> {
+    return this.request<AdminBranchResponse>(`/api/v1/admin/branches/${encodeURIComponent(branchId)}`, "GET", options);
+  }
+
+  async createAdminBranch(payload: CreateAdminBranchRequest, options: RequestOptions): Promise<AdminBranchResponse> {
+    return this.request<AdminBranchResponse>("/api/v1/admin/branches", "POST", options, payload);
+  }
+
+  async updateAdminBranch(
+    branchId: string,
+    payload: UpdateAdminBranchRequest,
+    options: RequestOptions
+  ): Promise<AdminBranchResponse> {
+    return this.request<AdminBranchResponse>(
+      `/api/v1/admin/branches/${encodeURIComponent(branchId)}`,
+      "PUT",
+      options,
+      payload
+    );
+  }
+
+  async getBranchDeactivationCheck(branchId: string, options: RequestOptions): Promise<BranchDeactivationCheckResponse> {
+    return this.request<BranchDeactivationCheckResponse>(
+      `/api/v1/admin/branches/${encodeURIComponent(branchId)}/deactivation-check`,
+      "GET",
+      options
+    );
+  }
+
+  async deactivateAdminBranch(
+    branchId: string,
+    payload: DeactivateAdminBranchRequest,
+    options: RequestOptions
+  ): Promise<AdminBranchResponse> {
+    return this.request<AdminBranchResponse>(
+      `/api/v1/admin/branches/${encodeURIComponent(branchId)}/deactivate`,
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async activateAdminBranch(branchId: string, options: RequestOptions): Promise<AdminBranchResponse> {
+    return this.request<AdminBranchResponse>(
+      `/api/v1/admin/branches/${encodeURIComponent(branchId)}/activate`,
+      "POST",
+      options
+    );
   }
 
   async assignAdminRole(

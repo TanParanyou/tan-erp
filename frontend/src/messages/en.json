@@ -94,7 +94,9 @@
     "financeSubgroup": "Finance",
     "quickEstimates": "Quick estimates",
     "pricingTemplates": "Pricing templates",
-    "quickEstimateSubgroup": "Quick estimate"
+    "quickEstimateSubgroup": "Quick estimate",
+    "organizationSettings": "Organization",
+    "branchSettings": "Branches"
   },
   "common": {
     "actions": {
@@ -3985,6 +3987,125 @@
       "open": "Open document",
       "markAllRead": "Mark all as read",
       "empty": "No notifications"
+    }
+  },
+  "organizationAdmin": {
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedDetail": "You do not have permission to manage organization and branch data.",
+    "profile": {
+      "title": "Organization",
+      "subtitle": "Name, tax identifier and the address printed on documents",
+      "fields": {
+        "name": "Organization name (Thai)",
+        "nameEn": "Organization name (English)",
+        "taxIdentifier": "Tax identifier",
+        "taxIdentifierHint": "13 digits, no dashes",
+        "addressTh": "Document address (Thai)",
+        "addressEn": "Document address (English)",
+        "phone": "Phone"
+      },
+      "validation": {
+        "nameRequired": "Enter the organization name",
+        "taxIdentifierFormat": "The tax identifier must be 13 digits"
+      },
+      "save": "Save organization",
+      "saveSuccess": "Organization saved",
+      "readOnlyNotice": "You can view this data but not edit it."
+    },
+    "branches": {
+      "title": "Branches",
+      "subtitle": "Manage branches, tax branch codes and activation",
+      "createBranch": "Add branch",
+      "createTitle": "Add branch",
+      "createSubtitle": "The branch code cannot be changed after creation",
+      "createSubmit": "Add branch",
+      "createSuccess": "Branch added",
+      "editTitle": "Edit branch",
+      "saveSubmit": "Save changes",
+      "saveSuccess": "Branch saved",
+      "backToList": "Back to branches",
+      "statusFilter": "Status",
+      "statusFilterOptions": {
+        "active": "Active branches",
+        "inactive": "Inactive branches"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "table": {
+        "code": "Branch code",
+        "name": "Branch name",
+        "taxBranchCode": "Tax branch code",
+        "status": "Status"
+      },
+      "emptyTitle": "No branches yet",
+      "emptyDescription": "Add the first branch to get started",
+      "fields": {
+        "code": "Branch code",
+        "name": "Branch name (Thai)",
+        "nameEn": "Branch name (English)",
+        "taxBranchCode": "Tax branch code",
+        "taxBranchCodeHint": "5 digits (00000 = head office)",
+        "addressTh": "Address (Thai)",
+        "addressEn": "Address (English)",
+        "phone": "Phone"
+      },
+      "validation": {
+        "codeRequired": "Enter the branch code",
+        "codeFormat": "Use letters, digits, underscore or hyphen only",
+        "nameRequired": "Enter the branch name",
+        "taxBranchCodeFormat": "The tax branch code must be 5 digits"
+      },
+      "deactivate": {
+        "action": "Deactivate branch",
+        "title": "Deactivate branch",
+        "message": "This branch will no longer be offered in branch pickers. Deactivate it?",
+        "reasonLabel": "Reason",
+        "reasonRequired": "Enter a reason",
+        "confirm": "Deactivate",
+        "success": "Branch deactivated",
+        "blockedTitle": "This branch cannot be deactivated yet",
+        "blockedIntro": "Resolve the following first"
+      },
+      "activate": {
+        "action": "Activate branch",
+        "title": "Activate branch",
+        "message": "This branch becomes available for new documents again. Activate it?",
+        "confirm": "Activate",
+        "success": "Branch activated"
+      },
+      "blockers": {
+        "estimates": "Estimates that are not finished",
+        "quotations": "Issued quotations that are not closed",
+        "purchase_orders": "Open purchase orders",
+        "billings": "Billing documents not fully paid",
+        "work_orders": "Open work orders",
+        "projects": "Projects that are not finished",
+        "installations": "Installation jobs that are not finished",
+        "site_surveys": "Site surveys that are not completed",
+        "opportunities": "Open opportunities",
+        "quick_estimates": "Quick estimates not yet converted",
+        "mrp_runs": "Planning runs with recommendations awaiting approval",
+        "warehouses": "Active warehouses",
+        "memberships": "Users assigned to this branch",
+        "last_active_branch": "The organization must keep at least one active branch"
+      }
+    },
+    "errors": {
+      "GENERIC": "The action failed. Please try again.",
+      "ADMIN_VERSION_CONFLICT": "This record was changed by someone else. Reload and try again.",
+      "ORGANIZATION_TAX_ID_INVALID": "The tax identifier is not valid.",
+      "BRANCH_CODE_INVALID": "The branch code is not valid.",
+      "BRANCH_TAX_CODE_INVALID": "The tax branch code is not valid.",
+      "BRANCH_CODE_ALREADY_EXISTS": "A branch with this code already exists.",
+      "BRANCH_TAX_CODE_ALREADY_EXISTS": "A branch with this tax branch code already exists.",
+      "BRANCH_HAS_OPEN_DOCUMENTS": "This branch still has open documents or active warehouses.",
+      "BRANCH_HAS_ACTIVE_MEMBERSHIPS": "Users are still assigned to this branch.",
+      "BRANCH_LAST_ACTIVE": "The organization must keep at least one active branch.",
+      "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
+      "PERMISSION_DENIED": "You do not have permission to do this.",
+      "RESOURCE_NOT_FOUND": "The requested record was not found."
     }
   }
 }

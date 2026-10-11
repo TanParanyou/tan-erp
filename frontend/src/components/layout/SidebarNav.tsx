@@ -16,6 +16,7 @@ import {
   IconClose,
   IconChevronDown,
   IconChevronsUpDown,
+  IconMapPin,
 } from "@/components/common/Icons";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
@@ -73,6 +74,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     can(activeMembership, "document-sequences.read") || can(activeMembership, "organizations.read");
   const hasUsersRead = can(activeMembership, "users.read");
   const hasRoleRequestApproval = can(activeMembership, "roles.assign-approval");
+  const hasOrganizationsManage = can(activeMembership, "organizations.manage");
+  const hasBranchesManage = can(activeMembership, "branches.manage");
   const hasItemMasterRead = can(activeMembership, "items.read");
   const hasCostSourcesRead = can(activeMembership, "cost-sources.read");
   const hasCostReviewRead = can(activeMembership, "cost-records.read");
@@ -93,6 +96,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
   const isRoleRequestsActive = pathname.startsWith(`/${locale}/settings/role-requests`);
+  const isOrganizationSettingsActive = pathname.startsWith(`/${locale}/settings/organization`);
+  const isBranchSettingsActive = pathname.startsWith(`/${locale}/settings/branches`);
   const isItemMasterActive = pathname.startsWith(`/${locale}/item-master`);
 
   const crmItems: NavItemDef[] = useMemo(() => {
@@ -485,6 +490,10 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     hasUsersRead && (!trimmedSearch || tShell("userAdmin").toLowerCase().includes(trimmedSearch));
   const isRoleRequestsVisible =
     hasRoleRequestApproval && (!trimmedSearch || tShell("roleRequests").toLowerCase().includes(trimmedSearch));
+  const isOrganizationSettingsVisible =
+    hasOrganizationsManage && (!trimmedSearch || tShell("organizationSettings").toLowerCase().includes(trimmedSearch));
+  const isBranchSettingsVisible =
+    hasBranchesManage && (!trimmedSearch || tShell("branchSettings").toLowerCase().includes(trimmedSearch));
 
   const filteredSubgroups = useMemo(() => {
     if (!trimmedSearch) return subgroups;
@@ -506,6 +515,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     isDocNumberingVisible ||
     isUserAdminVisible ||
     isRoleRequestsVisible ||
+    isOrganizationSettingsVisible ||
+    isBranchSettingsVisible ||
     filteredSubgroups.some((g) => g.items.length > 0);
 
   const renderLink = (item: NavItemDef) => {
@@ -669,6 +680,28 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
                 label: tShell("roleRequests"),
                 icon: <IconFileText size={20} />,
                 isActive: isRoleRequestsActive,
+              })}
+            </li>
+          )}
+          {isOrganizationSettingsVisible && (
+            <li>
+              {renderLink({
+                id: "organization-settings",
+                href: `/${locale}/settings/organization`,
+                label: tShell("organizationSettings"),
+                icon: <IconBuilding size={20} />,
+                isActive: isOrganizationSettingsActive,
+              })}
+            </li>
+          )}
+          {isBranchSettingsVisible && (
+            <li>
+              {renderLink({
+                id: "branch-settings",
+                href: `/${locale}/settings/branches`,
+                label: tShell("branchSettings"),
+                icon: <IconMapPin size={20} />,
+                isActive: isBranchSettingsActive,
               })}
             </li>
           )}

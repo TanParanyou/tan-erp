@@ -20,3 +20,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0016 — ใช้ Browser Print สร้าง PDF ของ Quotation ในรอบแรก](0016-browser-print-for-quotation-pdf.md)
 - [0017 — ไฟล์แนบและลายเซ็นกลางด้วย Owner Registry](0017-shared-attachment-owner-registry.md)
 - [0018 — Notification Foundation (in-app) โดยไม่ใช้ Outbox](0018-in-app-notification-foundation.md)
+- [0019 — Organization/Branch Administration](0019-organization-branch-administration.md)

@@ -11,6 +11,12 @@ public class Branch : Entity
     public string Name { get; private set; } = string.Empty;
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
+    public string? NameEn { get; private set; }
+    public string? TaxBranchCode { get; private set; }
+    public string? AddressTh { get; private set; }
+    public string? AddressEn { get; private set; }
+    public string? Phone { get; private set; }
+    public Guid RowVersion { get; private set; } = Guid.NewGuid();
 
     private readonly List<Membership> _memberships = new();
     public IReadOnlyCollection<Membership> Memberships => _memberships.AsReadOnly();
@@ -34,6 +40,36 @@ public class Branch : Entity
         CreatedAtUtc = createdAtUtc ?? DateTimeOffset.UtcNow;
     }
 
-    public void Deactivate() => IsActive = false;
-    public void Activate() => IsActive = true;
+    public static Branch Create(
+        Guid id, Guid organizationId, string code, string name, string? nameEn, string? taxBranchCode,
+        string? addressTh, string? addressEn, string? phone, DateTimeOffset createdAtUtc)
+    {
+        var trimmedCode = code?.Trim();
+        if (!BranchCode.IsValid(trimmedCode))
+            throw new OrganizationDomainException("BRANCH_CODE_INVALID", "Branch code must be 1-50 characters of letters, digits, underscore or hyphen.");
+
+        var branch = new Branch(id, organizationId, trimmedCode!, name, isActive: true, createdAtUtc);
+        branch.UpdateDetails(name, nameEn, taxBranchCode, addressTh, addressEn, phone);
+        return branch;
+    }
+
+    public void UpdateDetails(string name, string? nameEn, string? taxBranchCode, string? addressTh, string? addressEn, string? phone)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new OrganizationDomainException("REQUEST_VALIDATION_FAILED", "Branch name cannot be empty.");
+        var taxCode = ProfileText.Optional(taxBranchCode, 5, "Tax branch code");
+        if (taxCode is not null && !TaxBranchCodeRule.IsValid(taxCode))
+            throw new OrganizationDomainException("BRANCH_TAX_CODE_INVALID", "Tax branch code must be exactly 5 digits.");
+
+        Name = ProfileText.Optional(name, OrganizationLimits.Name, "Name")!;
+        NameEn = ProfileText.Optional(nameEn, OrganizationLimits.Name, "English name");
+        TaxBranchCode = taxCode;
+        AddressTh = ProfileText.Optional(addressTh, OrganizationLimits.Address, "Thai address");
+        AddressEn = ProfileText.Optional(addressEn, OrganizationLimits.Address, "English address");
+        Phone = ProfileText.Optional(phone, OrganizationLimits.Phone, "Phone");
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void Deactivate() { IsActive = false; RowVersion = Guid.NewGuid(); }
+    public void Activate() { IsActive = true; RowVersion = Guid.NewGuid(); }
 }

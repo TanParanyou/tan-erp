@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { ApiClient, type ListCustomersParams } from "./api-client";
+import { ApiClient, type ListCustomersParams, type RequestOptions } from "./api-client";
 import { ApiError } from "./api-error";
 
 describe("ApiClient", () => {
@@ -370,5 +370,45 @@ describe("ApiClient", () => {
     expect(fetchMock.mock.calls[0][1].headers["X-Membership-Id"]).toBe("m-1");
     // Mark-read is naturally idempotent on the server; no Idempotency-Key is required or sent.
     expect(fetchMock.mock.calls[2][1].headers["Idempotency-Key"]).toBeUndefined();
+  });
+
+  it("calls the organization and branch administration endpoints with If-Match and Idempotency-Key where required", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    const options: RequestOptions = { token: "tok", membershipId: "m-1", locale: "th" };
+    const branch = { name: "n", nameEn: null, taxBranchCode: null, addressTh: null, addressEn: null, phone: null };
+    const profile = { name: "บริษัท", nameEn: null, taxIdentifier: null, addressTh: null, addressEn: null, phone: null };
+
+    await client.getOrganizationProfile(options);
+    await client.updateOrganizationProfile(profile, { ...options, ifMatch: "v1" });
+    await client.listAdminBranches("inactive", options);
+    await client.getAdminBranch("b 1", options);
+    await client.createAdminBranch({ code: "B2", ...branch }, { ...options, idempotencyKey: "key-0123456789abcdef" });
+    await client.updateAdminBranch("b1", branch, { ...options, ifMatch: "v2" });
+    await client.getBranchDeactivationCheck("b1", options);
+    await client.deactivateAdminBranch("b1", { reason: "ปิด" }, { ...options, ifMatch: "v3" });
+    await client.activateAdminBranch("b1", { ...options, ifMatch: "v4" });
+
+    const calls = fetchMock.mock.calls.map(([url, init]) => [url, init.method]);
+    expect(calls).toEqual([
+      ["http://localhost:5000/api/v1/admin/organization", "GET"],
+      ["http://localhost:5000/api/v1/admin/organization", "PUT"],
+      ["http://localhost:5000/api/v1/admin/branches?status=inactive", "GET"],
+      ["http://localhost:5000/api/v1/admin/branches/b%201", "GET"],
+      ["http://localhost:5000/api/v1/admin/branches", "POST"],
+      ["http://localhost:5000/api/v1/admin/branches/b1", "PUT"],
+      ["http://localhost:5000/api/v1/admin/branches/b1/deactivation-check", "GET"],
+      ["http://localhost:5000/api/v1/admin/branches/b1/deactivate", "POST"],
+      ["http://localhost:5000/api/v1/admin/branches/b1/activate", "POST"],
+    ]);
+    expect(fetchMock.mock.calls[1][1].headers["If-Match"]).toBe('"v1"');
+    expect(fetchMock.mock.calls[4][1].headers["Idempotency-Key"]).toBe("key-0123456789abcdef");
+    expect(fetchMock.mock.calls[8][1].headers["If-Match"]).toBe('"v4"');
+
+    // An undefined status must not add a query filter.
+    await client.listAdminBranches(undefined, options);
+    expect(fetchMock.mock.calls[9][0]).toBe("http://localhost:5000/api/v1/admin/branches");
   });
 });

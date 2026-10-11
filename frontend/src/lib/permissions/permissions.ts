@@ -5,6 +5,7 @@
 export const PERMISSIONS = {
   // Organization & Access
   ORGANIZATIONS_READ: "organizations.read",
+  ORGANIZATIONS_MANAGE: "organizations.manage",
   BRANCHES_MANAGE: "branches.manage",
   USERS_READ: "users.read",
   USERS_MANAGE: "users.manage",

@@ -188,6 +188,20 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 
 การ Retry Convert ด้วย **Idempotency Key เดิม** ต้องคืนผล Conversion เดิม ไม่คืน `QUICK_ESTIMATE_ALREADY_CONVERTED` รหัสนี้ใช้เมื่อเป็นคำขอใหม่ที่พยายาม Convert Source Version เดิมอีกครั้งโดยไม่ได้ระบุเจตนาสร้าง Revision ใหม่
 
+## Organization Administration Error Codes
+
+| Code | HTTP | ความหมาย/การกู้คืน |
+| --- | ---: | --- |
+| `ADMIN_VERSION_CONFLICT` | 409 | ETag/RowVersion ของ Organization หรือ Branch เก่ากว่าข้อมูลปัจจุบัน; ให้ Reload/Compare |
+| `ORGANIZATION_TAX_ID_INVALID` | 422 | เลขผู้เสียภาษีไม่ใช่ 13 หลักหรือ Checksum ไม่ถูกต้อง |
+| `BRANCH_CODE_INVALID` | 422 | Branch Code ไม่ใช่ `[A-Za-z0-9_-]` หรือยาวเกิน 50 ตัวอักษร |
+| `BRANCH_TAX_CODE_INVALID` | 422 | เลขสาขาภาษีไม่ใช่ 5 หลัก (`00000` = สำนักงานใหญ่) |
+| `BRANCH_CODE_ALREADY_EXISTS` | 409 | Branch Code ซ้ำในองค์กรเดียวกัน |
+| `BRANCH_TAX_CODE_ALREADY_EXISTS` | 409 | เลขสาขาภาษีซ้ำในองค์กรเดียวกัน |
+| `BRANCH_HAS_OPEN_DOCUMENTS` | 409 | ปิดใช้สาขาไม่ได้เพราะยังมีเอกสารเปิด; ดู `blockers` จาก `deactivation-check` |
+| `BRANCH_HAS_ACTIVE_MEMBERSHIPS` | 409 | ปิดใช้สาขาไม่ได้เพราะยังมี Membership ที่ใช้งานอยู่หรือ Warehouse ที่ active ผูกกับสาขา |
+| `BRANCH_LAST_ACTIVE` | 409 | ปิดใช้สาขาไม่ได้เพราะเป็นสาขา active สุดท้ายขององค์กร |
+
 ## Validation Errors
 
 `errors` เป็น Object ที่ Key ตรงกับ API field และ Value เป็น Array ของข้อความ เช่น `{"customerId":["กรุณาเลือกลูกค้า"]}`
