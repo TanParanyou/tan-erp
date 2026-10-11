@@ -101,6 +101,50 @@ public sealed class AdminRolesController : ControllerBase
         return Ok(body);
     }
 
+    [HttpGet("role-change-requests")]
+    [ProducesResponseType<RoleChangeRequestListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListChangeRequests([FromQuery] string? status = null, CancellationToken cancellationToken = default)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        var result = await _handler.ListChangeRequestsAsync(Caller(auth.Value!), status, cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(RoleChangeRequestListResponse.From(result.Value!));
+    }
+
+    [HttpPost("role-change-requests/{requestId:guid}/approve")]
+    [ProducesResponseType<RoleChangeRequestResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> ApproveChangeRequest([FromRoute] Guid requestId, CancellationToken cancellationToken) =>
+        DecideChangeRequest(requestId, RoleRequestDecision.Approve, cancellationToken);
+
+    [HttpPost("role-change-requests/{requestId:guid}/reject")]
+    [ProducesResponseType<RoleChangeRequestResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> RejectChangeRequest([FromRoute] Guid requestId, CancellationToken cancellationToken) =>
+        DecideChangeRequest(requestId, RoleRequestDecision.Reject, cancellationToken);
+
+    [HttpPost("role-change-requests/{requestId:guid}/cancel")]
+    [ProducesResponseType<RoleChangeRequestResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> CancelChangeRequest([FromRoute] Guid requestId, CancellationToken cancellationToken) =>
+        DecideChangeRequest(requestId, RoleRequestDecision.Cancel, cancellationToken);
+
+    private async Task<IActionResult> DecideChangeRequest(Guid requestId, RoleRequestDecision decision, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        var result = await _handler.DecideChangeRequestAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), requestId, conditional.Value.IfMatchRowVersion,
+            decision, HttpContext.TraceIdentifier, cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(RoleChangeRequestResponse.From(result.Value!));
+    }
+
     private IActionResult RoleResult(Result<RoleDefinition> result)
     {
         if (result.IsFailure) return Problem(result.Error);

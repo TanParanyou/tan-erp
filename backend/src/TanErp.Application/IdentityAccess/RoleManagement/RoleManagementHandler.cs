@@ -3,6 +3,7 @@ using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
 using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Domain.IdentityAccess;
 
 namespace TanErp.Application.IdentityAccess.RoleManagement;
 
@@ -83,6 +84,39 @@ public sealed class RoleManagementHandler
 
         return await _store.UpdateRoleAsync(
             access.Value!.OrganizationId, roleId, ifMatch, RoleManagementPolicy.Canonicalize(input), Actor(access.Value), traceId, ct);
+    }
+
+    private static readonly IReadOnlySet<string> RequestStatuses = new HashSet<string>(StringComparer.Ordinal)
+    {
+        RoleAssignmentRequestStatus.Pending,
+        RoleAssignmentRequestStatus.Approved,
+        RoleAssignmentRequestStatus.Rejected,
+        RoleAssignmentRequestStatus.Cancelled
+    };
+
+    public async Task<Result<IReadOnlyList<RoleChangeRequestView>>> ListChangeRequestsAsync(AdminCaller caller, string? status, CancellationToken ct)
+    {
+        // The checker queue is visible only to holders of roles.assign-approval (the same gate as the decisions).
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesAssignApproval, ct);
+        if (access.IsFailure) return Result<IReadOnlyList<RoleChangeRequestView>>.Failure(access.Error);
+
+        var wanted = string.IsNullOrWhiteSpace(status) ? RoleAssignmentRequestStatus.Pending : status.Trim();
+        if (!RequestStatuses.Contains(wanted))
+            return AdminHandlerSupport.Validation<IReadOnlyList<RoleChangeRequestView>>("Unknown request status filter.");
+
+        return Result<IReadOnlyList<RoleChangeRequestView>>.Success(
+            await _store.ListChangeRequestsAsync(access.Value!.OrganizationId, wanted, ct));
+    }
+
+    /// <summary>Cancelling is the requester's own action (roles.manage); approving or rejecting is the checker's (roles.assign-approval).</summary>
+    public async Task<Result<RoleChangeRequestView>> DecideChangeRequestAsync(
+        AdminCaller caller, Guid requestId, Guid ifMatch, RoleRequestDecision decision, string traceId, CancellationToken ct)
+    {
+        var permission = decision == RoleRequestDecision.Cancel ? RoleManagementPermissions.RolesManage : RoleManagementPermissions.RolesAssignApproval;
+        var access = await AccessAsync(caller, permission, ct);
+        return access.IsFailure
+            ? Denied<RoleChangeRequestView>(access)
+            : await _store.DecideChangeRequestAsync(access.Value!.OrganizationId, requestId, ifMatch, decision, Actor(access.Value), traceId, ct);
     }
 
     private static string PayloadHash(RoleInput input) => Sha256Hex.Compute(

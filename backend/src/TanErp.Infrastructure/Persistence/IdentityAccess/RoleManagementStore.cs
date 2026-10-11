@@ -384,4 +384,93 @@ public sealed class RoleManagementStore : IRoleManagementStore
             var updated = await LoadDefinitionAsync(organizationId, roleId, ct);
             return Result<RoleUpdateOutcome>.Success(new RoleUpdateOutcome(false, updated.Value!, null));
         }, ct);
+
+    // ---------------------------------------------------------------- change request decisions (maker-checker)
+
+    public async Task<IReadOnlyList<RoleChangeRequestView>> ListChangeRequestsAsync(Guid organizationId, string status, CancellationToken ct)
+    {
+        var rows = await ChangeRequestQuery(organizationId, c => c.Status == status).Take(200).ToListAsync(ct);
+        var views = new List<RoleChangeRequestView>(rows.Count);
+        foreach (var row in rows)
+            views.Add(ToChangeView(organizationId, row, await LoadGrantViewsAsync(row.Request.RoleId, ct)));
+        return views;
+    }
+
+    public Task<Result<RoleChangeRequestView>> DecideChangeRequestAsync(
+        Guid organizationId, Guid requestId, Guid ifMatch, RoleRequestDecision decision, AdminActor actor, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            var request = await _db.RoleChangeRequests.FirstOrDefaultAsync(c => c.Id == requestId && c.OrganizationId == organizationId, ct);
+            if (request is null) return NotFound<RoleChangeRequestView>("Role change request");
+            if (request.RowVersion != ifMatch) return Fail<RoleChangeRequestView>(VersionConflict, "The request was modified by another user.");
+            if (!request.IsPending)
+                return Fail<RoleChangeRequestView>("ROLE_CHANGE_REQUEST_NOT_PENDING", "The request has already been decided.");
+
+            var now = _clock.UtcNow;
+            var before = request.RowVersion;
+            var roleId = request.RoleId;
+            // Grants before the change is applied; a decided approval reports the diff that was actually applied.
+            IReadOnlyList<RoleGrantView>? baseline = null;
+            string action;
+            object changes = new { roleId };
+
+            if (decision == RoleRequestDecision.Cancel)
+            {
+                if (!request.TryCancel(actor.UserId, now))
+                    return Fail<RoleChangeRequestView>("PERMISSION_DENIED", "Only the requester can cancel a request.");
+                action = "roles.change-cancelled";
+            }
+            else
+            {
+                if (actor.UserId == request.RequestedByUserId)
+                    return Fail<RoleChangeRequestView>("ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED", "The decision must be made by someone other than the requester.");
+
+                if (decision == RoleRequestDecision.Reject)
+                {
+                    request.TryReject(actor.UserId, now);
+                    action = "roles.change-rejected";
+                }
+                else
+                {
+                    var role = await _db.Roles.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
+                        .FirstOrDefaultAsync(r => r.Id == roleId && r.OrganizationId == organizationId, ct);
+                    if (role is null) return NotFound<RoleChangeRequestView>("Role");
+                    if (role.RowVersion != request.BaseRoleRowVersion)
+                        return Fail<RoleChangeRequestView>("ROLE_CHANGE_REQUEST_STALE", "The role changed after the request was made.");
+
+                    // The checker hands out the added grants, so anti-escalation and the last-administrator guard run against the CHECKER.
+                    var plan = await PlanChangeAsync(role, organizationId, ParseGrants(request.ProposedGrantsJson), actor, ct);
+                    if (plan.IsFailure) return Result<RoleChangeRequestView>.Failure(plan.Error);
+
+                    baseline = await LoadGrantViewsAsync(roleId, ct);
+                    try
+                    {
+                        ApplyDefinition(role, organizationId, request.ProposedName, request.ProposedDescription, plan.Value!, now);
+                    }
+                    catch (RoleDomainException ex)
+                    {
+                        return Fail<RoleChangeRequestView>(ex.Code, ex.Message);
+                    }
+
+                    request.TryApprove(actor.UserId, now);
+                    action = "roles.change-approved";
+                    changes = new { roleId, addedPermissionKeys = KeysOf(plan.Value!.Added), removedPermissionKeys = KeysOf(plan.Value.Removed) };
+                }
+            }
+
+            Audit(organizationId, actor, action, "RoleChangeRequest", request.Id, traceId, changes, before, request.RowVersion);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, NameIndex))
+            {
+                return Fail<RoleChangeRequestView>("ROLE_NAME_ALREADY_EXISTS", "A role with this name already exists.");
+            }
+
+            _db.ChangeTracker.Clear();
+            var row = await ChangeRequestQuery(organizationId, c => c.Id == requestId).FirstAsync(ct);
+            var grants = baseline ?? await LoadGrantViewsAsync(roleId, ct);
+            return Result<RoleChangeRequestView>.Success(ToChangeView(organizationId, row, grants));
+        }, ct);
 }

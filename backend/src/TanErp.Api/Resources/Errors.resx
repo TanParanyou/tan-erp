@@ -1259,4 +1259,22 @@
   <data name="ROLE_CHANGE_REQUEST_PENDING_DETAIL" xml:space="preserve">
     <value>บทบาทนี้มีคำขอแก้ไขที่รอผู้ตรวจอนุมัติ ต้องตัดสินคำขอก่อน</value>
   </data>
+  <data name="ROLE_CHANGE_REQUEST_NOT_PENDING_TITLE" xml:space="preserve">
+    <value>คำขอนี้ถูกตัดสินแล้ว</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_NOT_PENDING_DETAIL" xml:space="preserve">
+    <value>คำขอแก้ไขบทบาทนี้ถูกอนุมัติ ปฏิเสธ หรือยกเลิกไปแล้ว</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_STALE_TITLE" xml:space="preserve">
+    <value>บทบาทเปลี่ยนไปหลังจากส่งคำขอ</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_STALE_DETAIL" xml:space="preserve">
+    <value>บทบาทถูกแก้ไขหลังจากส่งคำขอนี้ ให้ปฏิเสธคำขอนี้แล้วส่งคำขอใหม่</value>
+  </data>
+  <data name="ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED_TITLE" xml:space="preserve">
+    <value>ต้องให้ผู้ตรวจอีกคนตัดสิน</value>
+  </data>
+  <data name="ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED_DETAIL" xml:space="preserve">
+    <value>การอนุมัติหรือปฏิเสธต้องทำโดยผู้ใช้ที่ไม่ใช่ผู้ขอ</value>
+  </data>
 </root>

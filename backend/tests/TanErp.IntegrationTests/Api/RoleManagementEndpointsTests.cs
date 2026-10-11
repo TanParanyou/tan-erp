@@ -550,4 +550,117 @@ public class RoleManagementEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, notFound.StatusCode);
         Assert.Equal("ROLE_NAME_ALREADY_EXISTS", await ReadCode(duplicate));
     }
+
+    // ------------------------------------------------------------------ change requests
+
+    private async Task<(Guid RoleId, RoleChangeRequestResponse Request)> PendingChangeAsync(string name, params string[] addKeys)
+    {
+        var roleId = await SeedRoleAsync(name, new[] { "customers.read" });
+        await SeedHolderAsync(roleId);
+        var response = await PutRole(roleId, name, new[] { "customers.read" }.Concat(addKeys).ToArray());
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        return (roleId, (await ReadAs<UpdateRoleDefinitionResponse>(response)).PendingRequest!);
+    }
+
+    private Task<HttpResponseMessage> Decide(Guid requestId, string action, Guid ifMatch, string token) =>
+        Send(HttpMethod.Post, $"/api/v1/admin/role-change-requests/{requestId}/{action}", token, ifMatch: ifMatch);
+
+    [Fact]
+    public async Task Approve_ByAnIndependentChecker_AppliesTheProposedDefinition()
+    {
+        var (roleId, request) = await PendingChangeAsync("Approve Me", "estimates.approve");
+
+        var response = await Decide(request.Id, "approve", request.RowVersion, CheckerToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(RoleAssignmentRequestStatus.Approved, (await ReadAs<RoleChangeRequestResponse>(response)).Status);
+        var role = await GetRole(roleId);
+        Assert.Contains(role.Permissions, p => p.PermissionKey == "estimates.approve");
+        Assert.Null(role.PendingChange);
+        await using var db = NewDb();
+        Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "roles.change-approved" && a.ResourceId == request.Id.ToString()));
+    }
+
+    [Fact]
+    public async Task Approve_ByTheRequester_Returns403AndTheRoleStaysUnchanged()
+    {
+        var (roleId, request) = await PendingChangeAsync("Self Approve", "estimates.approve");
+
+        var response = await Decide(request.Id, "approve", request.RowVersion, AdminToken); // the maker also holds roles.assign-approval
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED", await ReadCode(response));
+        Assert.DoesNotContain((await GetRole(roleId)).Permissions, p => p.PermissionKey == "estimates.approve");
+    }
+
+    [Fact]
+    public async Task Decisions_RequireTheApprovalPermission_AndTheQueueNeverCrossesOrganizations()
+    {
+        var (_, request) = await PendingChangeAsync("Queue Role", "estimates.approve");
+
+        var approve = await Decide(request.Id, "approve", request.RowVersion, ViewerToken);
+        var list = await Send(HttpMethod.Get, "/api/v1/admin/role-change-requests", ViewerToken);
+        var mine = await ReadAs<RoleChangeRequestListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-change-requests", CheckerToken));
+        var foreign = await ReadAs<RoleChangeRequestListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-change-requests", OrgBToken));
+        var foreignDecide = await Decide(request.Id, "approve", request.RowVersion, OrgBToken);
+
+        Assert.Equal("PERMISSION_DENIED", await ReadCode(approve));
+        Assert.Equal(HttpStatusCode.Forbidden, list.StatusCode);
+        Assert.Equal(new[] { "estimates.approve" }, mine.Items.Single(i => i.Id == request.Id).AddedPermissionKeys.ToArray());
+        Assert.Empty(foreign.Items);
+        Assert.Equal(HttpStatusCode.NotFound, foreignDecide.StatusCode);
+    }
+
+    [Fact]
+    public async Task Approve_ByACheckerWhoLacksTheAddedPermission_Returns403AndStaysPending()
+    {
+        var (roleId, request) = await PendingChangeAsync("Beyond Checker", "mrp.approve"); // the checker holds no mrp.approve
+
+        var response = await Decide(request.Id, "approve", request.RowVersion, CheckerToken);
+
+        Assert.Equal("ROLE_ESCALATION_DENIED", await ReadCode(response));
+        Assert.NotNull((await GetRole(roleId)).PendingChange);
+    }
+
+    [Fact]
+    public async Task Approve_WhenTheRoleMovedSinceTheRequest_Returns409Stale()
+    {
+        var (roleId, request) = await PendingChangeAsync("Moved Role", "estimates.approve");
+        await using (var db = NewDb())
+            await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE identity_access.roles SET row_version = {Guid.NewGuid()} WHERE id = {roleId}");
+
+        var response = await Decide(request.Id, "approve", request.RowVersion, CheckerToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("ROLE_CHANGE_REQUEST_STALE", await ReadCode(response));
+    }
+
+    [Fact]
+    public async Task Reject_KeepsTheRoleAndUnblocksNewUpdates_AndAnAlreadyDecidedRequestIs409()
+    {
+        var (roleId, request) = await PendingChangeAsync("Reject Me", "estimates.approve");
+
+        var reject = await Decide(request.Id, "reject", request.RowVersion, CheckerToken);
+        var decidedAgain = await Decide(request.Id, "approve", (await ReadAs<RoleChangeRequestResponse>(reject)).RowVersion, CheckerToken);
+        var stale = await Decide(request.Id, "reject", Guid.NewGuid(), CheckerToken);
+        var update = await PutRole(roleId, "Reject Me", new[] { "customers.read", "quotations.read" });
+
+        Assert.Equal(HttpStatusCode.OK, reject.StatusCode);
+        Assert.Equal("ROLE_CHANGE_REQUEST_NOT_PENDING", await ReadCode(decidedAgain));
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(stale));
+        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+    }
+
+    [Fact]
+    public async Task Cancel_IsOnlyForTheRequester()
+    {
+        var (_, request) = await PendingChangeAsync("Cancel Me", "estimates.approve");
+
+        var byOther = await Decide(request.Id, "cancel", request.RowVersion, CheckerToken); // holds roles.manage but is not the requester
+        var byRequester = await Decide(request.Id, "cancel", request.RowVersion, AdminToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, byOther.StatusCode);
+        Assert.Equal("PERMISSION_DENIED", await ReadCode(byOther));
+        Assert.Equal(RoleAssignmentRequestStatus.Cancelled, (await ReadAs<RoleChangeRequestResponse>(byRequester)).Status);
+    }
 }

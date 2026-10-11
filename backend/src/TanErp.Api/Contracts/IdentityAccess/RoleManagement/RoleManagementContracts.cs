@@ -46,6 +46,12 @@ public record RoleChangeRequestResponse(
         v.RequestedAtUtc, v.ProposedName, v.ProposedDescription, v.AddedPermissionKeys, v.RemovedPermissionKeys);
 }
 
+public record RoleChangeRequestListResponse(IReadOnlyList<RoleChangeRequestResponse> Items)
+{
+    public static RoleChangeRequestListResponse From(IReadOnlyList<RoleChangeRequestView> items) =>
+        new(items.Select(i => RoleChangeRequestResponse.From(i)).ToList());
+}
+
 public record UpdateRoleDefinitionResponse(RoleDefinitionResponse Role, RoleChangeRequestResponse? PendingRequest);
 
 public record RoleDefinitionResponse(
