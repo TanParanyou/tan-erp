@@ -1,6 +1,6 @@
 # Organization Administration API Contract (G-03a)
 
-**สถานะ:** Draft → Implemented เมื่อ G-03a เสร็จ ([Verification](../05-engineering/organization-administration-verification.md)). ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0019](../adr/0019-organization-branch-administration.md). ค่าที่ระบุ TEST_ONLY รอ Business Owner ยืนยัน.
+**สถานะ:** Implemented (G-03a, 2026-10-11) ([Verification](../05-engineering/organization-administration-verification.md)). ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0019](../adr/0019-organization-branch-administration.md). ค่าที่ระบุ TEST_ONLY รอ Business Owner ยืนยัน.
 
 ## Endpoints
 
@@ -38,7 +38,7 @@
 ## Deactivation check response
 
 `{ canDeactivate: boolean, blockers: [{ type: string, count: number }] }` โดย `type` เป็นหนึ่งใน
-`estimates, quotations, purchase_orders, billings, work_orders, projects, installations, site_surveys, opportunities, quick_estimates, mrp_runs, warehouses, memberships, last_active_branch` (`count` ของ `last_active_branch` = 1).
+`estimates, quotations, purchase_orders, billings, work_orders, projects, installations, site_surveys, service_requests, opportunities, quick_estimates, mrp_runs, warehouses, memberships, last_active_branch` (`count` ของ `last_active_branch` = 1).
 
 ## Errors
 

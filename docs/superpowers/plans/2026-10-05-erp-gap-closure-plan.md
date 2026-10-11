@@ -45,7 +45,7 @@
 | --- | --- | --- | --- | --- | --- |
 | G-01 | Shared Attachment & Signature | A | Files module เดิม | Security | [แผน G-01](2026-10-05-g01-shared-attachment-signature.md) — Implemented 2026-10-06 (focused tests; browser check + full gate pending) |
 | G-02 | Notification Foundation (in-app เท่านั้น; อีเมลเลื่อน) | A | Identity | Security + Operations | [แผน G-02](2026-10-08-g02-notification-foundation.md) — Implemented 2026-10-10 (in-app only; focused tests; browser check + full gate pending); [Verification](../../05-engineering/notification-foundation-verification.md) |
-| G-03 | Organization/Branch CRUD, Role management, Approval Authority matrix | A | CP-02 | System Admin + Security + Finance | — |
+| G-03 | Organization/Branch CRUD, Role management, Approval Authority matrix | A | CP-02 | System Admin + Security + Finance | G-03a Implemented 2026-10-11 (focused tests; G-03b/G-03c pending; browser check not done in this round); [แผน G-03](2026-10-10-g03-org-role-authority.md); [Verification](../../05-engineering/organization-administration-verification.md) |
 | G-04 | Server-side Quotation PDF + artifact hash | B | CP-04, G-01 | Sales + Finance | — |
 | G-05 | External Acceptance OTP | B | CP-07, G-02 | Sales + Security + Legal | — |
 | G-06 | Item Import Phase 2 (upsert / Cost / Batch) | B | CP-03 Import Phase 1 | Data Steward + Cost Owner | — |
@@ -107,8 +107,8 @@
 
 **แตะ:** `backend/src/TanErp.Domain/Organization/` (`Organization.cs`, `Branch.cs`), `backend/src/TanErp.Domain/IdentityAccess/` (`Role.cs`, `RolePermission.cs`), `BranchesController.cs`, `AdminUsersController.cs`; frontend `frontend/src/features/settings/`
 
-- [ ] Branch CRUD: สร้าง/แก้/ปิดใช้ (ห้ามลบเมื่อมีเอกสารอ้างอิง) + เลขสาขาภาษี (ใช้กับ G-15)
-- [ ] Organization profile: ชื่อ th/en, เลขผู้เสียภาษี, ที่อยู่ออกเอกสาร, โลโก้ (G-01) — ใช้กับ G-04
+- [x] Branch CRUD: สร้าง/แก้/ปิดใช้ (ห้ามลบเมื่อมีเอกสารอ้างอิง) + เลขสาขาภาษี (ใช้กับ G-15)
+- [x] Organization profile: ชื่อ th/en, เลขผู้เสียภาษี, ที่อยู่ออกเอกสาร, โลโก้ (G-01) — ใช้กับ G-04 (โลโก้เลื่อนไป G-04)
 - [ ] Role management: สร้าง/แก้ Role จาก Permission catalog ที่มีอยู่; Role ระบบแก้ไม่ได้; anti-escalation เดิมของ CP-02 ใช้ซ้ำ; เปลี่ยน Role ที่มี approval permission ต้อง maker–checker
 - [ ] Approval Authority matrix: `ApprovalLimit { documentType, roleId, branchId?, maxAmount, currency }` + service `IApprovalAuthority.CanApprove(user, documentType, amount, branch)` แล้วต่อเข้า Estimate approve, PO approve, Change Order approve, Credit Note (G-15)
 - [ ] Tests: เกินวงเงิน → 403 code ใหม่, maker = checker ถูกปฏิเสธ, ปิด Branch ที่มีเอกสารเปิดอยู่ถูกปฏิเสธ
