@@ -206,6 +206,17 @@ public class OpportunityHandlerTests
         {
             return Task.FromResult(Result<Guid>.Success(Guid.NewGuid()));
         }
+
+        public TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.OpportunityMetricsProjection MetricsResult { get; set; } =
+            new(0m, 0, 0, 0m, 0, 0m);
+
+        public Task<TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.OpportunityMetricsProjection> GetMetricsAsync(
+            Guid organizationId,
+            Guid? branchId = null,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(MetricsResult);
+        }
     }
 
     private readonly FakeRequestAccessResolver _accessResolver = new();
@@ -660,6 +671,74 @@ public class OpportunityHandlerTests
         Assert.Equal(targetOwnerId, _store.LastReassignOwnerCommand!.TargetOwnerUserId);
         Assert.False(string.IsNullOrWhiteSpace(_store.LastKeyHash));
         Assert.False(string.IsNullOrWhiteSpace(_store.LastPayloadHash));
+    }
+
+    [Fact]
+    public async Task ListOpportunitiesHandler_WithDateFilters_PassesFiltersToStore()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.read");
+
+        var from = new DateOnly(2026, 10, 1);
+        var to = new DateOnly(2026, 10, 31);
+        var query = new ListOpportunitiesQuery(
+            "test-uid",
+            Guid.NewGuid(),
+            NextActionPreset: "today",
+            TargetDecisionDateFrom: from,
+            TargetDecisionDateTo: to);
+
+        var handler = ListHandler();
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _store.ListCallCount);
+        Assert.NotNull(_store.LastListFilter);
+        Assert.Equal("today", _store.LastListFilter!.NextActionPreset);
+        Assert.Equal(from, _store.LastListFilter.TargetDecisionDateFrom);
+        Assert.Equal(to, _store.LastListFilter.TargetDecisionDateTo);
+    }
+
+    [Fact]
+    public async Task GetOpportunityMetricsHandler_WhenAuthorized_ReturnsMetrics()
+    {
+        _accessResolver.GrantedPermissions.Add("opportunities.read");
+        _store.MetricsResult = new TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.OpportunityMetricsProjection(
+            500000m, 5, 2, 200000m, 2, 66.7m);
+
+        var handler = new TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.GetOpportunityMetricsHandler(
+            _accessResolver,
+            _store);
+
+        var query = new TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.GetOpportunityMetricsQuery(
+            "test-uid",
+            Guid.NewGuid());
+
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(500000m, result.Value.TotalPipelineValue);
+        Assert.Equal(5, result.Value.ActiveDealsCount);
+        Assert.Equal(2, result.Value.ClosingThisMonthCount);
+        Assert.Equal(200000m, result.Value.WonValue);
+        Assert.Equal(66.7m, result.Value.WinRatePercentage);
+    }
+
+    [Fact]
+    public async Task GetOpportunityMetricsHandler_WhenUnauthorized_ReturnsPermissionDenied()
+    {
+        var handler = new TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.GetOpportunityMetricsHandler(
+            _accessResolver,
+            _store);
+
+        var query = new TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.GetOpportunityMetricsQuery(
+            "test-uid",
+            Guid.NewGuid());
+
+        var result = await handler.Handle(query);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("PERMISSION_DENIED", result.Error.Code);
     }
 }
 

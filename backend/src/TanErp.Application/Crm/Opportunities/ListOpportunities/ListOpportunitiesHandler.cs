@@ -88,7 +88,10 @@ public class ListOpportunitiesHandler
             pageNumber,
             clampedLimit,
             query.Cursor,
-            query.OwnerId);
+            query.OwnerId,
+            string.IsNullOrWhiteSpace(query.NextActionPreset) ? null : query.NextActionPreset.Trim().ToLowerInvariant(),
+            query.TargetDecisionDateFrom,
+            query.TargetDecisionDateTo);
 
         var page = await _store.ListAsync(access.OrganizationId, filter, cancellationToken);
         return Result<OpportunityPage>.Success(page);

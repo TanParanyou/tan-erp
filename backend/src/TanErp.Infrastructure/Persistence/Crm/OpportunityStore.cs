@@ -16,6 +16,7 @@ using TanErp.Domain.Organization;
 using TanErp.Application.Crm.Opportunities.WorkImages;
 using TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages;
 using TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage;
+using TanErp.Application.Crm.Opportunities.GetOpportunityMetrics;
 
 namespace TanErp.Infrastructure.Persistence.Crm;
 
@@ -921,6 +922,41 @@ public class OpportunityStore : IOpportunityStore
                 matchingCustomerIds.Contains(o.CustomerId));
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.NextActionPreset))
+        {
+            var now = _clock.UtcNow;
+            var todayStart = new DateTimeOffset(now.Year, now.Month, now.Day, 0, 0, 0, TimeSpan.Zero);
+            var tomorrowStart = todayStart.AddDays(1);
+
+            switch (filter.NextActionPreset.ToLowerInvariant())
+            {
+                case "today":
+                    query = query.Where(o => o.NextActionAtUtc.HasValue && o.NextActionAtUtc.Value >= todayStart && o.NextActionAtUtc.Value < tomorrowStart);
+                    break;
+                case "this_week":
+                    // Monday as start of week
+                    var diff = (7 + (todayStart.DayOfWeek - DayOfWeek.Monday)) % 7;
+                    var weekStart = todayStart.AddDays(-1 * diff);
+                    var weekEnd = weekStart.AddDays(7);
+                    query = query.Where(o => o.NextActionAtUtc.HasValue && o.NextActionAtUtc.Value >= weekStart && o.NextActionAtUtc.Value < weekEnd);
+                    break;
+                case "overdue":
+                    var closedStages = new[] { OpportunityStage.Won, OpportunityStage.Lost, OpportunityStage.Cancelled };
+                    query = query.Where(o => o.NextActionAtUtc.HasValue && o.NextActionAtUtc.Value < now && !closedStages.Contains(o.Stage));
+                    break;
+            }
+        }
+
+        if (filter.TargetDecisionDateFrom.HasValue)
+        {
+            query = query.Where(o => o.TargetDecisionDate.HasValue && o.TargetDecisionDate.Value >= filter.TargetDecisionDateFrom.Value);
+        }
+
+        if (filter.TargetDecisionDateTo.HasValue)
+        {
+            query = query.Where(o => o.TargetDecisionDate.HasValue && o.TargetDecisionDate.Value <= filter.TargetDecisionDateTo.Value);
+        }
+
         // Total count before cursor/page slice
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -1491,4 +1527,94 @@ public class OpportunityStore : IOpportunityStore
         branch,
         customer,
         primarySite);
+
+    public async Task<OpportunityMetricsProjection> GetMetricsAsync(
+        Guid organizationId,
+        Guid? branchId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _db.Opportunities
+            .AsNoTracking()
+            .Where(o => o.OrganizationId == organizationId);
+
+        if (branchId.HasValue)
+        {
+            query = query.Where(o => o.BranchId == branchId.Value);
+        }
+
+        var opps = await query
+            .Select(o => new
+            {
+                o.Stage,
+                o.ExpectedBudget,
+                o.TargetDecisionDate
+            })
+            .ToListAsync(cancellationToken);
+
+        var now = _clock.UtcNow;
+        var activeStages = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            OpportunityStage.Draft,
+            OpportunityStage.Qualified,
+            OpportunityStage.Surveying,
+            OpportunityStage.Estimating,
+            OpportunityStage.Proposed
+        };
+
+        decimal totalPipelineValue = 0m;
+        int activeDealsCount = 0;
+        int closingThisMonthCount = 0;
+        decimal wonValue = 0m;
+        int wonDealsCount = 0;
+        int closedDealsCount = 0;
+
+        foreach (var opp in opps)
+        {
+            var isWon = string.Equals(opp.Stage, OpportunityStage.Won, StringComparison.OrdinalIgnoreCase);
+            var isLost = string.Equals(opp.Stage, OpportunityStage.Lost, StringComparison.OrdinalIgnoreCase);
+            var isCancelled = string.Equals(opp.Stage, OpportunityStage.Cancelled, StringComparison.OrdinalIgnoreCase);
+
+            if (isWon)
+            {
+                wonDealsCount++;
+                closedDealsCount++;
+                if (opp.ExpectedBudget.HasValue)
+                {
+                    wonValue += opp.ExpectedBudget.Value;
+                }
+            }
+            else if (isLost || isCancelled)
+            {
+                closedDealsCount++;
+            }
+
+            if (activeStages.Contains(opp.Stage))
+            {
+                activeDealsCount++;
+                if (opp.ExpectedBudget.HasValue)
+                {
+                    totalPipelineValue += opp.ExpectedBudget.Value;
+                }
+
+                if (opp.TargetDecisionDate.HasValue &&
+                    opp.TargetDecisionDate.Value.Year == now.Year &&
+                    opp.TargetDecisionDate.Value.Month == now.Month)
+                {
+                    closingThisMonthCount++;
+                }
+            }
+        }
+
+        decimal winRatePercentage = closedDealsCount > 0
+            ? Math.Round((decimal)wonDealsCount / closedDealsCount * 100m, 1)
+            : 0m;
+
+        return new OpportunityMetricsProjection(
+            totalPipelineValue,
+            activeDealsCount,
+            closingThisMonthCount,
+            wonValue,
+            wonDealsCount,
+            winRatePercentage);
+    }
 }

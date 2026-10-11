@@ -20054,6 +20054,29 @@
             }
           },
           {
+            "name": "nextActionPreset",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetDecisionDateFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "targetDecisionDateTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
             "name": "sortBy",
             "in": "query",
             "schema": {
@@ -20129,6 +20152,75 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/opportunities/metrics": {
+      "get": {
+        "tags": [
+          "Opportunities"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityMetricsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityMetricsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityMetricsResponse"
                 }
               }
             }
@@ -38212,6 +38304,36 @@
           },
           "pagination": {
             "$ref": "#/components/schemas/PaginationMetadataResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpportunityMetricsResponse": {
+        "type": "object",
+        "properties": {
+          "totalPipelineValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "activeDealsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "closingThisMonthCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wonValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "wonDealsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winRatePercentage": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false

@@ -16,7 +16,10 @@ public sealed record OpportunityListFilter(
     int? Page = null,
     int Limit = 25,
     string? Cursor = null,
-    Guid? OwnerId = null);
+    Guid? OwnerId = null,
+    string? NextActionPreset = null,
+    DateOnly? TargetDecisionDateFrom = null,
+    DateOnly? TargetDecisionDateTo = null);
 
 public sealed record OpportunityPage(
     IReadOnlyList<OpportunityProjection> Items,
@@ -97,5 +100,10 @@ public interface IOpportunityStore
         WorkImages.DetachWorkImage.DetachWorkImageCommand command,
         string keyHash,
         string payloadHash,
+        CancellationToken cancellationToken = default);
+
+    Task<GetOpportunityMetrics.OpportunityMetricsProjection> GetMetricsAsync(
+        Guid organizationId,
+        Guid? branchId = null,
         CancellationToken cancellationToken = default);
 }

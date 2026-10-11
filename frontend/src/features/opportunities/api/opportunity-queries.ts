@@ -9,6 +9,7 @@ import {
   type ReassignOpportunityOwnerRequest,
   type OpportunityWorkImageListResponse,
   type AttachWorkImagesResponse,
+  type OpportunityMetricsResponse,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -31,6 +32,9 @@ export function opportunityListQueryKey(
   string | null,
   string | null,
   string | null,
+  string | null,
+  string | null,
+  string | null,
   number
 ] {
   return [
@@ -43,10 +47,20 @@ export function opportunityListQueryKey(
     params?.customerId ?? null,
     params?.ownerId ?? null,
     params?.stage ?? null,
+    params?.nextActionPreset ?? null,
+    params?.targetDecisionDateFrom ?? null,
+    params?.targetDecisionDateTo ?? null,
     params?.sortBy ?? null,
     params?.sortOrder ?? null,
     params?.limit ?? 25,
   ] as const;
+}
+
+export function opportunityMetricsQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en"
+): readonly ["business", string | null | undefined, "th" | "en", "opportunities", "metrics"] {
+  return ["business", membershipId, locale, "opportunities", "metrics"] as const;
 }
 
 export function opportunityDetailQueryKey(
@@ -116,6 +130,34 @@ export function useOpportunityList(
       );
     },
     getNextPageParam: (lastPage) => lastPage.pagination?.nextCursor || undefined,
+    enabled: Boolean(membershipId),
+  });
+}
+
+export function useOpportunityMetrics(): UseQueryResult<OpportunityMetricsResponse, Error> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+
+  return useQuery({
+    queryKey: opportunityMetricsQueryKey(membershipId, normalizedLocale),
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new AuthenticationRequiredError();
+      }
+      if (!membershipId) {
+        throw new MembershipRequiredError();
+      }
+
+      return apiClient.getOpportunityMetrics({
+        token,
+        membershipId,
+        locale: normalizedLocale,
+        signal,
+      });
+    },
     enabled: Boolean(membershipId),
   });
 }

@@ -37,11 +37,16 @@ import { getAuthToken } from "@/lib/auth/auth-session";
 import { CustomerAutocomplete } from "@/components/forms/CustomerAutocomplete";
 import { UserAutocomplete } from "@/components/forms/UserAutocomplete";
 import { ActiveFilterChips, type ActiveFilterChipItem } from "@/components/ui/ActiveFilterChips";
+import { PipelineMetricCards } from "./pipeline-metric-cards";
+import { useOpportunityMetrics } from "../api/opportunity-queries";
 
 interface OpportunityFilters extends ListFilterRecord {
   stage?: string;
   customerId?: string;
   ownerId?: string;
+  nextActionPreset?: string;
+  targetDecisionDateFrom?: string;
+  targetDecisionDateTo?: string;
 }
 
 export function OpportunityList() {
@@ -55,7 +60,7 @@ export function OpportunityList() {
     schema: {
       defaultSort: "code",
       defaultOrder: "desc",
-      single: ["stage", "customerId", "ownerId"],
+      single: ["stage", "customerId", "ownerId", "nextActionPreset", "targetDecisionDateFrom", "targetDecisionDateTo"],
       allowedSorts: ["code", "title", "expectedBudget", "stage"],
     },
     debounceMs: 350,
@@ -119,6 +124,8 @@ export function OpportunityList() {
     return t("errors.loadList");
   };
 
+  const { data: metricsData, isLoading: isMetricsLoading } = useOpportunityMetrics();
+
   const {
     data,
     isLoading,
@@ -133,6 +140,9 @@ export function OpportunityList() {
     customerId: listState.params.filters.customerId || undefined,
     ownerId: listState.params.filters.ownerId || undefined,
     stage: listState.params.filters.stage || undefined,
+    nextActionPreset: listState.params.filters.nextActionPreset || undefined,
+    targetDecisionDateFrom: listState.params.filters.targetDecisionDateFrom || undefined,
+    targetDecisionDateTo: listState.params.filters.targetDecisionDateTo || undefined,
     sortBy: listState.params.sort || undefined,
     sortOrder: listState.params.order || undefined,
   });
@@ -340,6 +350,33 @@ export function OpportunityList() {
         label: `${t("owner")}: ${ownerName || listState.params.filters.ownerId}`,
       });
     }
+    if (listState.params.filters.nextActionPreset) {
+      const presetLabels: Record<string, string> = {
+        today: t("nextActionToday"),
+        this_week: t("nextActionThisWeek"),
+        overdue: t("nextActionOverdue"),
+      };
+      const label = presetLabels[listState.params.filters.nextActionPreset] || listState.params.filters.nextActionPreset;
+      chips.push({
+        key: "nextActionPreset",
+        value: listState.params.filters.nextActionPreset,
+        label: `${t("nextActionFilter")}: ${label}`,
+      });
+    }
+    if (listState.params.filters.targetDecisionDateFrom) {
+      chips.push({
+        key: "targetDecisionDateFrom",
+        value: listState.params.filters.targetDecisionDateFrom,
+        label: `${t("targetDecisionDateFrom")}: ${listState.params.filters.targetDecisionDateFrom}`,
+      });
+    }
+    if (listState.params.filters.targetDecisionDateTo) {
+      chips.push({
+        key: "targetDecisionDateTo",
+        value: listState.params.filters.targetDecisionDateTo,
+        label: `${t("targetDecisionDateTo")}: ${listState.params.filters.targetDecisionDateTo}`,
+      });
+    }
     return chips;
   }, [listState.params.filters, allItems, selectedCustomerLabel, selectedOwnerLabel, locale, t]);
 
@@ -350,7 +387,10 @@ export function OpportunityList() {
     !listState.params.search &&
     !listState.params.filters.stage &&
     !listState.params.filters.customerId &&
-    !listState.params.filters.ownerId;
+    !listState.params.filters.ownerId &&
+    !listState.params.filters.nextActionPreset &&
+    !listState.params.filters.targetDecisionDateFrom &&
+    !listState.params.filters.targetDecisionDateTo;
 
   return (
     <div className="flex flex-col gap-5">
@@ -372,7 +412,10 @@ export function OpportunityList() {
         }
       />
 
-      {/* List Toolbar with Search, Customer, Owner, and Stage Filters */}
+      {/* Key Pipeline Metric Cards */}
+      <PipelineMetricCards metrics={metricsData} isLoading={isMetricsLoading} />
+
+      {/* List Toolbar with Search, Customer, Owner, Stage, and Date Filters */}
       <ListToolbar
         activeFilters={
           activeChips.length > 0 ? (
@@ -454,6 +497,20 @@ export function OpportunityList() {
             label={t("owner")}
             placeholder={t("ownerFilterPlaceholder")}
             className="w-full sm:w-48 shrink-0"
+          />
+
+          <ListFilterSelect
+            id="filter-next-action-select"
+            label={t("nextActionFilter")}
+            value={listState.params.filters.nextActionPreset || ""}
+            onChange={(val) => listState.actions.setFilter("nextActionPreset", val || undefined)}
+            options={[
+              { value: "", label: t("nextActionAll") },
+              { value: "today", label: t("nextActionToday") },
+              { value: "this_week", label: t("nextActionThisWeek") },
+              { value: "overdue", label: t("nextActionOverdue") },
+            ]}
+            widthClassName="w-full sm:w-44 shrink-0"
           />
         </div>
 
