@@ -1247,4 +1247,16 @@
   <data name="ROLE_PERMISSION_UNKNOWN_DETAIL" xml:space="preserve">
     <value>มีสิทธิ์ที่ไม่อยู่ในรายการสิทธิ์ของระบบหรือถูกปิดใช้งาน</value>
   </data>
+  <data name="ROLE_SYSTEM_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>แก้ไขบทบาทของระบบไม่ได้</value>
+  </data>
+  <data name="ROLE_SYSTEM_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>บทบาทของระบบแก้ไข ปิดใช้งาน หรือเปิดใช้งานไม่ได้</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_PENDING_TITLE" xml:space="preserve">
+    <value>มีคำขอแก้ไขรออนุมัติ</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_PENDING_DETAIL" xml:space="preserve">
+    <value>บทบาทนี้มีคำขอแก้ไขที่รอผู้ตรวจอนุมัติ ต้องตัดสินคำขอก่อน</value>
+  </data>
 </root>

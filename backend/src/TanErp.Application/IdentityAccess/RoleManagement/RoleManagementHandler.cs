@@ -72,6 +72,19 @@ public sealed class RoleManagementHandler
             access.Value!.OrganizationId, canonical, Actor(access.Value), Sha256Hex.Compute(idempotencyKey), PayloadHash(canonical), traceId, ct);
     }
 
+    public async Task<Result<RoleUpdateOutcome>> UpdateRoleAsync(
+        AdminCaller caller, Guid roleId, Guid ifMatch, RoleInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        if (access.IsFailure) return Denied<RoleUpdateOutcome>(access);
+
+        var invalid = RoleManagementPolicy.ValidateShape(input);
+        if (invalid is not null) return Result<RoleUpdateOutcome>.Failure(invalid);
+
+        return await _store.UpdateRoleAsync(
+            access.Value!.OrganizationId, roleId, ifMatch, RoleManagementPolicy.Canonicalize(input), Actor(access.Value), traceId, ct);
+    }
+
     private static string PayloadHash(RoleInput input) => Sha256Hex.Compute(
         $"{input.Name.Trim()}|{input.Description?.Trim()}|{string.Join(",", input.Permissions.Select(g => $"{g.PermissionKey}:{g.Scope}:{g.BranchId}"))}");
 }

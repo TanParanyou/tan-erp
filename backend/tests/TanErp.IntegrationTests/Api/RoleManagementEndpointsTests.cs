@@ -386,4 +386,168 @@ public class RoleManagementEndpointsTests : IAsyncLifetime
         await using var db = NewDb();
         Assert.Equal(1, await db.Roles.CountAsync(r => r.Name == "Replay Role"));
     }
+
+    // ------------------------------------------------------------------ update
+
+    private async Task SeedHolderAsync(Guid roleId)
+    {
+        await using var db = NewDb();
+        var userId = Guid.NewGuid();
+        var membershipId = Guid.NewGuid();
+        db.Users.Add(new User(userId, "holder-" + userId, "Holder", $"{userId}@example.test", isActive: true));
+        db.Memberships.Add(new Membership(membershipId, TestOnlyDataSeeder.TestOrgId, TestOnlyDataSeeder.TestBranchId, userId, isActive: true));
+        db.MembershipRoles.Add(new MembershipRole(membershipId, roleId, TestOnlyDataSeeder.TestOrgId));
+        await db.SaveChangesAsync();
+    }
+
+    private async Task<HttpResponseMessage> PutRole(Guid roleId, string name, string[] keys, string token = AdminToken, Guid? ifMatch = null)
+    {
+        var current = await GetRole(roleId);
+        return await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{roleId}", token, Body(name, keys), ifMatch: ifMatch ?? current.RowVersion);
+    }
+
+    [Fact]
+    public async Task Update_RenamesAndChangesGrantsOfAnUnheldRole_AndAuditsKeysNotNames()
+    {
+        var roleId = await SeedRoleAsync("Editable Role", new[] { "customers.read", "estimates.read" });
+
+        var response = await PutRole(roleId, "Edited Role", new[] { "customers.read", "quotations.read" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadAs<UpdateRoleDefinitionResponse>(response);
+        Assert.Null(body.PendingRequest);
+        Assert.Equal("Edited Role", body.Role.Name);
+        Assert.Equal(new[] { "customers.read", "quotations.read" }, body.Role.Permissions.Select(p => p.PermissionKey).ToArray());
+        Assert.Equal($"\"{body.Role.RowVersion}\"", response.Headers.ETag?.Tag);
+
+        await using var db = NewDb();
+        var audit = await db.AuditEvents.AsNoTracking().SingleAsync(a => a.Action == "roles.updated" && a.ResourceId == roleId.ToString());
+        Assert.Contains("quotations.read", audit.ChangesJson);
+        Assert.Contains("estimates.read", audit.ChangesJson);
+        Assert.DoesNotContain("Edited Role", audit.ChangesJson);
+    }
+
+    [Fact]
+    public async Task Update_SystemRole_Returns409AndChangesNothing()
+    {
+        Guid systemRoleId;
+        await using (var db = NewDb()) systemRoleId = (await db.Roles.SingleAsync(r => r.Name == "Test Admin" && r.OrganizationId == TestOnlyDataSeeder.TestOrgId)).Id;
+
+        var response = await PutRole(systemRoleId, "Renamed Admin", Array.Empty<string>());
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("ROLE_SYSTEM_IMMUTABLE", await ReadCode(response));
+        var role = await GetRole(systemRoleId);
+        Assert.Equal("Test Admin", role.Name);
+        Assert.True(role.Permissions.Count > 10);
+    }
+
+    [Fact]
+    public async Task Update_StaleOrMissingIfMatch_Returns409Or428()
+    {
+        var roleId = await SeedRoleAsync("Versioned Role");
+
+        var stale = await PutRole(roleId, "Versioned Role", Array.Empty<string>(), ifMatch: Guid.NewGuid());
+        var missing = await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{roleId}", AdminToken, Body("Versioned Role"));
+
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(stale));
+        Assert.Equal(HttpStatusCode.PreconditionRequired, missing.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_AddingAPermissionTheCallerDoesNotHold_Returns403_ButRemovingIsAllowed()
+    {
+        var roleId = await SeedRoleAsync("Anti Escalation", new[] { "users.manage", "customers.read" });
+
+        var add = await PutRole(roleId, "Anti Escalation", new[] { "users.manage", "customers.read", "users.read" }, CheckerToken);
+        var remove = await PutRole(roleId, "Anti Escalation", new[] { "customers.read" }, CheckerToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, add.StatusCode);
+        Assert.Equal("ROLE_ESCALATION_DENIED", await ReadCode(add));
+        Assert.Equal(HttpStatusCode.OK, remove.StatusCode); // the checker never held users.manage, yet may take it away
+    }
+
+    [Fact]
+    public async Task Update_AddingApprovalPermissionToAHeldRole_CreatesAPendingRequestAndLeavesTheRoleUnchanged()
+    {
+        var roleId = await SeedRoleAsync("Held Role", new[] { "customers.read" });
+        await SeedHolderAsync(roleId);
+
+        var response = await PutRole(roleId, "Held Role", new[] { "customers.read", "estimates.approve" });
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var body = await ReadAs<UpdateRoleDefinitionResponse>(response);
+        Assert.Equal(new[] { "estimates.approve" }, body.PendingRequest!.AddedPermissionKeys.ToArray());
+        Assert.Equal(RoleAssignmentRequestStatus.Pending, body.PendingRequest.Status);
+        var role = await GetRole(roleId);
+        Assert.Equal(new[] { "customers.read" }, role.Permissions.Select(p => p.PermissionKey).ToArray());
+        Assert.Equal(body.PendingRequest.Id, role.PendingChange!.Id);
+        await using var db = NewDb();
+        Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "roles.change-requested" && a.ResourceId == body.PendingRequest.Id.ToString()));
+    }
+
+    [Fact]
+    public async Task Update_AddingApprovalPermissionToAnUnheldRole_AppliesDirectly()
+    {
+        var roleId = await SeedRoleAsync("Unheld Role", new[] { "customers.read" });
+
+        var response = await PutRole(roleId, "Unheld Role", new[] { "customers.read", "estimates.approve" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode); // the assignment gate (CP-02) protects who may receive it
+    }
+
+    [Fact]
+    public async Task Update_NonApprovalChangeOnAHeldRole_AndRemovingApprovalFromAHeldRole_ApplyDirectly()
+    {
+        var plain = await SeedRoleAsync("Held Plain", new[] { "customers.read" });
+        await SeedHolderAsync(plain);
+        var approver = await SeedRoleAsync("Held Approver", new[] { "customers.read", "estimates.approve" });
+        await SeedHolderAsync(approver);
+
+        var addPlain = await PutRole(plain, "Held Plain", new[] { "customers.read", "quotations.read" });
+        var dropApproval = await PutRole(approver, "Held Approver", new[] { "customers.read" });
+
+        Assert.Equal(HttpStatusCode.OK, addPlain.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, dropApproval.StatusCode); // reducing authority never needs a checker
+    }
+
+    [Fact]
+    public async Task Update_WhileAChangeRequestIsPending_Returns409()
+    {
+        var roleId = await SeedRoleAsync("Pending Role", new[] { "customers.read" });
+        await SeedHolderAsync(roleId);
+        Assert.Equal(HttpStatusCode.Accepted, (await PutRole(roleId, "Pending Role", new[] { "customers.read", "estimates.approve" })).StatusCode);
+
+        var second = await PutRole(roleId, "Pending Role", new[] { "customers.read" });
+
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+        Assert.Equal("ROLE_CHANGE_REQUEST_PENDING", await ReadCode(second));
+    }
+
+    [Fact]
+    public async Task Update_RemovingUsersManageFromTheLastAdministratorRole_Returns422_ButOtherEditsAreAllowed()
+    {
+        var blocked = await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{OrgCRoleId}", OrgCToken,
+            Body("Org C Admin", "roles.manage", "customers.read"), ifMatch: (await GetRole(OrgCRoleId, OrgCToken)).RowVersion);
+        var harmless = await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{OrgCRoleId}", OrgCToken,
+            Body("Org C Admin", "users.manage", "roles.manage"), ifMatch: (await GetRole(OrgCRoleId, OrgCToken)).RowVersion);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, blocked.StatusCode);
+        Assert.Equal("LAST_ADMINISTRATOR_REQUIRED", await ReadCode(blocked));
+        Assert.Equal(HttpStatusCode.OK, harmless.StatusCode); // dropping customers.read touches no administrator
+    }
+
+    [Fact]
+    public async Task Update_OtherOrganizationRoleIs404_AndDuplicateNameIs409()
+    {
+        var foreign = await SeedRoleAsync("Foreign Role", orgId: TestOnlyDataSeeder.TestOrgBId);
+        await SeedRoleAsync("Name Owner");
+        var taker = await SeedRoleAsync("Name Taker");
+
+        var notFound = await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{foreign}", AdminToken, Body("Hijacked"), ifMatch: Guid.NewGuid());
+        var duplicate = await PutRole(taker, "name owner", Array.Empty<string>());
+
+        Assert.Equal(HttpStatusCode.NotFound, notFound.StatusCode);
+        Assert.Equal("ROLE_NAME_ALREADY_EXISTS", await ReadCode(duplicate));
+    }
 }

@@ -46,6 +46,8 @@ public record RoleChangeRequestResponse(
         v.RequestedAtUtc, v.ProposedName, v.ProposedDescription, v.AddedPermissionKeys, v.RemovedPermissionKeys);
 }
 
+public record UpdateRoleDefinitionResponse(RoleDefinitionResponse Role, RoleChangeRequestResponse? PendingRequest);
+
 public record RoleDefinitionResponse(
     Guid Id, string Name, string? Description, bool IsSystem, bool IsActive, Guid RowVersion, DateTimeOffset CreatedAtUtc,
     int MemberCount, int PendingAssignmentRequestCount, bool RequiresApproval,

@@ -30,6 +30,8 @@ public static class ProblemDetailsMapper
         "ROLE_NAME_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
         "ROLE_NAME_RESERVED" => StatusCodes.Status422UnprocessableEntity,
         "ROLE_PERMISSION_UNKNOWN" => StatusCodes.Status422UnprocessableEntity,
+        "ROLE_SYSTEM_IMMUTABLE" => StatusCodes.Status409Conflict,
+        "ROLE_CHANGE_REQUEST_PENDING" => StatusCodes.Status409Conflict,
         "USER_SHARED_ACROSS_ORGANIZATIONS" => StatusCodes.Status422UnprocessableEntity,
         "AUTHENTICATION_INVALID" => StatusCodes.Status401Unauthorized,
         "MEMBERSHIP_CONTEXT_REQUIRED" => StatusCodes.Status400BadRequest,

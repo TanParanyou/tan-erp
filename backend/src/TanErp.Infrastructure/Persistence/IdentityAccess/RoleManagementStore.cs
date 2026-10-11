@@ -16,6 +16,7 @@ public sealed class RoleManagementStore : IRoleManagementStore
 
     private const string CreateOperation = "admin.roles.define";
     private const string NameIndex = "ix_roles_organization_id_normalized_role_name";
+    private const string PendingChangeIndex = "ux_role_change_requests_pending";
 
     private readonly AppDbContext _db;
     private readonly IClock _clock;
@@ -241,5 +242,146 @@ public sealed class RoleManagementStore : IRoleManagementStore
             }
 
             return await LoadDefinitionAsync(organizationId, role.Id, ct);
+        }, ct);
+
+    // ---------------------------------------------------------------- update
+
+    private sealed record ChangePlan(List<ResolvedGrant> Wanted, IReadOnlyList<PermissionGrant> Added, IReadOnlyList<PermissionGrant> Removed);
+
+    private static PermissionGrant ToGrant(Guid organizationId, ResolvedGrant grant) =>
+        RoleManagementPolicy.ToGrant(organizationId, grant.Key, grant.Scope, grant.BranchId);
+
+    private Task<bool> HasPendingChangeAsync(Guid roleId, CancellationToken ct) =>
+        _db.RoleChangeRequests.AsNoTracking().AnyAsync(c => c.RoleId == roleId && c.Status == RoleAssignmentRequestStatus.Pending, ct);
+
+    private Task<bool> NameTakenAsync(Guid organizationId, Guid roleId, string name, CancellationToken ct)
+    {
+        var normalized = name.ToUpperInvariant();
+        return _db.Roles.AsNoTracking().AnyAsync(r => r.OrganizationId == organizationId && r.NormalizedName == normalized && r.Id != roleId, ct);
+    }
+
+    /// <summary>
+    /// Diffs the wanted grants against the role and runs the invariants for whoever applies the change
+    /// (the editor now, or the checker at approval): anti-escalation on ADDED grants and the last-administrator guard.
+    /// <paramref name="role"/> must be loaded with its RolePermissions and Permission.
+    /// </summary>
+    private async Task<Result<ChangePlan>> PlanChangeAsync(
+        Role role, Guid organizationId, IReadOnlyList<RoleGrantInput> inputs, AdminActor actor, CancellationToken ct)
+    {
+        var resolved = await ResolveGrantsAsync(organizationId, inputs, ct);
+        if (resolved.IsFailure) return Result<ChangePlan>.Failure(resolved.Error);
+
+        var current = role.RolePermissions.Where(rp => rp.Permission!.IsActive)
+            .Select(rp => new PermissionGrant(rp.Permission!.Key, rp.Scope, rp.ScopeId)).ToList();
+        var (added, removed) = RoleManagementPolicy.Diff(current, resolved.Value!.Select(g => ToGrant(organizationId, g)).ToList());
+
+        var held = await IdentityAdministrationSupport.LoadHeldPermissionsAsync(_db, actor.MembershipId, ct);
+        if (!AdministrationPolicy.Covers(held, organizationId, added))
+            return Fail<ChangePlan>("ROLE_ESCALATION_DENIED", "The change adds permissions the caller does not hold.");
+
+        if (removed.Any(g => g.Key == AdministrationPermissions.UsersManage && g.Scope == PermissionScope.Organization))
+        {
+            var rows = await IdentityAdministrationSupport.LoadAdministratorRowsAsync(_db, organizationId, _clock.UtcNow, ct);
+            if (AdministrationPolicy.WouldRemoveLastAdministrator(rows, row => row.RoleId == role.Id))
+                return Fail<ChangePlan>("LAST_ADMINISTRATOR_REQUIRED", "The organization must keep at least one active administrator.");
+        }
+
+        return Result<ChangePlan>.Success(new ChangePlan(resolved.Value!, added, removed));
+    }
+
+    /// <summary>Applies name/description and the grant diff; throws <see cref="RoleDomainException"/> for a system role or bad name.</summary>
+    private void ApplyDefinition(Role role, Guid organizationId, string name, string? description, ChangePlan plan, DateTimeOffset now)
+    {
+        role.UpdateDetails(name, description);
+        var removable = role.RolePermissions
+            .Where(rp => rp.Permission!.IsActive && plan.Removed.Contains(new PermissionGrant(rp.Permission!.Key, rp.Scope, rp.ScopeId)))
+            .ToList();
+        foreach (var grant in removable) _db.RolePermissions.Remove(grant);
+        foreach (var grant in plan.Wanted.Where(g => plan.Added.Contains(ToGrant(organizationId, g))))
+            _db.RolePermissions.Add(NewGrant(role.Id, organizationId, grant, now));
+    }
+
+    public Task<Result<RoleUpdateOutcome>> UpdateRoleAsync(
+        Guid organizationId, Guid roleId, Guid ifMatch, RoleInput input, AdminActor actor, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            var role = await _db.Roles.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(r => r.Id == roleId && r.OrganizationId == organizationId, ct);
+            if (role is null) return NotFound<RoleUpdateOutcome>("Role");
+            if (role.RowVersion != ifMatch) return Fail<RoleUpdateOutcome>(VersionConflict, "The role was modified by another user.");
+            if (role.IsSystem) return Fail<RoleUpdateOutcome>("ROLE_SYSTEM_IMMUTABLE", "A system role cannot be changed.");
+            if (await HasPendingChangeAsync(roleId, ct))
+                return Fail<RoleUpdateOutcome>("ROLE_CHANGE_REQUEST_PENDING", "A change request is already pending for this role.");
+
+            string name;
+            string? description;
+            try
+            {
+                (name, description) = RoleRules.Normalize(input.Name, input.Description);
+            }
+            catch (RoleDomainException ex)
+            {
+                return Fail<RoleUpdateOutcome>(ex.Code, ex.Message);
+            }
+
+            var plan = await PlanChangeAsync(role, organizationId, input.Permissions, actor, ct);
+            if (plan.IsFailure) return Result<RoleUpdateOutcome>.Failure(plan.Error);
+
+            var now = _clock.UtcNow;
+            var addedKeys = KeysOf(plan.Value!.Added);
+            var removedKeys = KeysOf(plan.Value.Removed);
+            var hasHolders = await _db.MembershipRoles.AnyAsync(mr => mr.RoleId == roleId, ct);
+
+            if (RoleManagementPolicy.NeedsChecker(hasHolders, plan.Value.Wanted.Select(g => g.Key), plan.Value.Added))
+            {
+                if (await NameTakenAsync(organizationId, roleId, name, ct))
+                    return Fail<RoleUpdateOutcome>("ROLE_NAME_ALREADY_EXISTS", "A role with this name already exists.");
+
+                var request = new RoleChangeRequest(
+                    Guid.NewGuid(), organizationId, roleId, actor.UserId, now, role.RowVersion, name, description,
+                    JsonSerializer.Serialize(plan.Value.Wanted.Select(g => new RoleGrantInput(g.Key, g.Scope, g.BranchId)).ToList()));
+                _db.RoleChangeRequests.Add(request);
+                Audit(organizationId, actor, "roles.change-requested", "RoleChangeRequest", request.Id, traceId,
+                    new { roleId, addedPermissionKeys = addedKeys, removedPermissionKeys = removedKeys }, null, request.RowVersion);
+                try
+                {
+                    await _db.SaveChangesAsync(ct);
+                }
+                catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, PendingChangeIndex))
+                {
+                    // A concurrent editor created the pending request between our check and insert.
+                    return Fail<RoleUpdateOutcome>("ROLE_CHANGE_REQUEST_PENDING", "A change request is already pending for this role.");
+                }
+
+                var pending = await LoadDefinitionAsync(organizationId, roleId, ct);
+                return Result<RoleUpdateOutcome>.Success(new RoleUpdateOutcome(true, pending.Value!, pending.Value!.PendingChange));
+            }
+
+            var before = role.RowVersion;
+            var changedFields = new List<string>();
+            if (role.Name != name) changedFields.Add("name");
+            if (role.Description != description) changedFields.Add("description");
+            try
+            {
+                ApplyDefinition(role, organizationId, name, description, plan.Value, now);
+            }
+            catch (RoleDomainException ex)
+            {
+                return Fail<RoleUpdateOutcome>(ex.Code, ex.Message);
+            }
+
+            Audit(organizationId, actor, "roles.updated", "Role", roleId, traceId,
+                new { changedFields, addedPermissionKeys = addedKeys, removedPermissionKeys = removedKeys }, before, role.RowVersion);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, NameIndex))
+            {
+                return Fail<RoleUpdateOutcome>("ROLE_NAME_ALREADY_EXISTS", "A role with this name already exists.");
+            }
+
+            var updated = await LoadDefinitionAsync(organizationId, roleId, ct);
+            return Result<RoleUpdateOutcome>.Success(new RoleUpdateOutcome(false, updated.Value!, null));
         }, ct);
 }

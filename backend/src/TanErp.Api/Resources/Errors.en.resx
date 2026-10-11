@@ -1085,4 +1085,16 @@
   <data name="ROLE_PERMISSION_UNKNOWN_DETAIL" xml:space="preserve">
     <value>A permission is not in the active catalog.</value>
   </data>
+  <data name="ROLE_SYSTEM_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>System role is read-only</value>
+  </data>
+  <data name="ROLE_SYSTEM_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>A system role cannot be edited, deactivated or activated.</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_PENDING_TITLE" xml:space="preserve">
+    <value>A change request is pending</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_PENDING_DETAIL" xml:space="preserve">
+    <value>This role has a change request awaiting a checker. Decide it first.</value>
+  </data>
 </root>

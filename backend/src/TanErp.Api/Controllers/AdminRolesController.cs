@@ -78,6 +78,29 @@ public sealed class AdminRolesController : ControllerBase
         return Created($"/api/v1/admin/role-definitions/{result.Value.Id}", RoleDefinitionResponse.From(result.Value));
     }
 
+    [HttpPut("role-definitions/{roleId:guid}")]
+    [ProducesResponseType<UpdateRoleDefinitionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<UpdateRoleDefinitionResponse>(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateRoleDefinition([FromRoute] Guid roleId, [FromBody] SaveRoleDefinitionRequest request, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        var result = await _handler.UpdateRoleAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), roleId, conditional.Value.IfMatchRowVersion,
+            request.ToInput(), HttpContext.TraceIdentifier, cancellationToken);
+        if (result.IsFailure) return Problem(result.Error);
+
+        var outcome = result.Value!;
+        var body = new UpdateRoleDefinitionResponse(
+            RoleDefinitionResponse.From(outcome.Role), outcome.Request is null ? null : RoleChangeRequestResponse.From(outcome.Request));
+        if (outcome.Pending) return StatusCode(StatusCodes.Status202Accepted, body);
+
+        Response.Headers.ETag = $"\"{outcome.Role.RowVersion}\"";
+        return Ok(body);
+    }
+
     private IActionResult RoleResult(Result<RoleDefinition> result)
     {
         if (result.IsFailure) return Problem(result.Error);

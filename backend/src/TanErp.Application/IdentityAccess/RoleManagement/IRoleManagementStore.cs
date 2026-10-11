@@ -17,4 +17,7 @@ public interface IRoleManagementStore
 
     Task<Result<RoleDefinition>> CreateRoleAsync(
         Guid organizationId, RoleInput input, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct);
+
+    Task<Result<RoleUpdateOutcome>> UpdateRoleAsync(
+        Guid organizationId, Guid roleId, Guid ifMatch, RoleInput input, AdminActor actor, string traceId, CancellationToken ct);
 }
