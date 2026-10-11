@@ -71,7 +71,8 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
   // One key per submit intent: a retry after a network failure replays the same request instead of creating twice.
   const intentRef = useRef<{ fingerprint: string; key: string } | null>(null);
 
-  const role = roleQuery.data;
+  // Create mode never reads an existing role, even if the query layer still holds data for the route param.
+  const role = isCreate ? undefined : roleQuery.data;
   const existing = role?.id && role.rowVersion ? { id: role.id, rowVersion: role.rowVersion } : null;
   const catalog = useMemo<CatalogItem[]>(
     () =>
