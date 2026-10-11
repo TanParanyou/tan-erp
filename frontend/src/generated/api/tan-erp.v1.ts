@@ -66,6 +66,437 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/organization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OrganizationProfileResponse"];
+                        "application/json": components["schemas"]["OrganizationProfileResponse"];
+                        "text/json": components["schemas"]["OrganizationProfileResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateOrganizationProfileRequest"];
+                    "text/json": components["schemas"]["UpdateOrganizationProfileRequest"];
+                    "application/*+json": components["schemas"]["UpdateOrganizationProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OrganizationProfileResponse"];
+                        "application/json": components["schemas"]["OrganizationProfileResponse"];
+                        "text/json": components["schemas"]["OrganizationProfileResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchResponse"][];
+                        "application/json": components["schemas"]["BranchResponse"][];
+                        "text/json": components["schemas"]["BranchResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateBranchRequest"];
+                    "text/json": components["schemas"]["CreateBranchRequest"];
+                    "application/*+json": components["schemas"]["CreateBranchRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchResponse"];
+                        "application/json": components["schemas"]["BranchResponse"];
+                        "text/json": components["schemas"]["BranchResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/branches/{branchId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    branchId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchResponse"];
+                        "application/json": components["schemas"]["BranchResponse"];
+                        "text/json": components["schemas"]["BranchResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    branchId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateBranchRequest"];
+                    "text/json": components["schemas"]["UpdateBranchRequest"];
+                    "application/*+json": components["schemas"]["UpdateBranchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchResponse"];
+                        "application/json": components["schemas"]["BranchResponse"];
+                        "text/json": components["schemas"]["BranchResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/branches/{branchId}/deactivation-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    branchId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchDeactivationCheckResponse"];
+                        "application/json": components["schemas"]["BranchDeactivationCheckResponse"];
+                        "text/json": components["schemas"]["BranchDeactivationCheckResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/branches/{branchId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    branchId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DeactivateBranchRequest"];
+                    "text/json": components["schemas"]["DeactivateBranchRequest"];
+                    "application/*+json": components["schemas"]["DeactivateBranchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchResponse"];
+                        "application/json": components["schemas"]["BranchResponse"];
+                        "text/json": components["schemas"]["BranchResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/branches/{branchId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    branchId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchResponse"];
+                        "application/json": components["schemas"]["BranchResponse"];
+                        "text/json": components["schemas"]["BranchResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -19520,10 +19951,35 @@ export interface components {
             rowVersion?: string;
             lines?: components["schemas"]["BomLineResponse"][] | null;
         };
+        BranchBlockerResponse: {
+            type?: string | null;
+            /** Format: int32 */
+            count?: number;
+        };
+        BranchDeactivationCheckResponse: {
+            canDeactivate?: boolean;
+            blockers?: components["schemas"]["BranchBlockerResponse"][] | null;
+        };
         BranchDto: {
             /** Format: uuid */
             id?: string;
             name?: string | null;
+        };
+        BranchResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+            nameEn?: string | null;
+            taxBranchCode?: string | null;
+            addressTh?: string | null;
+            addressEn?: string | null;
+            phone?: string | null;
+            isActive?: boolean;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
         };
         BranchSummaryResponse: {
             /** Format: uuid */
@@ -19907,6 +20363,15 @@ export interface components {
             branchId?: string | null;
             roleIds?: string[] | null;
         };
+        CreateBranchRequest: {
+            code?: string | null;
+            name?: string | null;
+            nameEn?: string | null;
+            taxBranchCode?: string | null;
+            addressTh?: string | null;
+            addressEn?: string | null;
+            phone?: string | null;
+        };
         CreateCostRecordRequest: {
             scope: string;
             /** Format: uuid */
@@ -20254,6 +20719,9 @@ export interface components {
             displayNameTh?: string | null;
             displayNameEn?: string | null;
             status?: string | null;
+        };
+        DeactivateBranchRequest: {
+            reason?: string | null;
         };
         DeactivateCustomerRequest: {
             reason?: string | null;
@@ -21517,6 +21985,18 @@ export interface components {
             /** Format: uuid */
             id?: string;
             name?: string | null;
+        };
+        OrganizationProfileResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+            nameEn?: string | null;
+            taxIdentifier?: string | null;
+            addressTh?: string | null;
+            addressEn?: string | null;
+            phone?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
         };
         OutboxListResponse: {
             items?: components["schemas"]["OutboxMessageResponse"][] | null;
@@ -22992,6 +23472,14 @@ export interface components {
             /** Format: date-time */
             expiresAtUtc?: string | null;
         };
+        UpdateBranchRequest: {
+            name?: string | null;
+            nameEn?: string | null;
+            taxBranchCode?: string | null;
+            addressTh?: string | null;
+            addressEn?: string | null;
+            phone?: string | null;
+        };
         UpdateCostRecordRequest: {
             /** Format: double */
             amount: number;
@@ -23184,6 +23672,14 @@ export interface components {
             /** Format: date-time */
             nextActionAtUtc?: string | null;
             nextActionNote?: string | null;
+        };
+        UpdateOrganizationProfileRequest: {
+            name?: string | null;
+            nameEn?: string | null;
+            taxIdentifier?: string | null;
+            addressTh?: string | null;
+            addressEn?: string | null;
+            phone?: string | null;
         };
         UpdateProjectMilestoneRequest: {
             name?: string | null;
