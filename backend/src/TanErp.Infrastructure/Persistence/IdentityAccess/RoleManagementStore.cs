@@ -29,9 +29,10 @@ public sealed class RoleManagementStore : IRoleManagementStore
 
     public async Task<IReadOnlyList<PermissionCatalogEntry>> ListPermissionsAsync(CancellationToken ct)
     {
-        var rows = await _db.Permissions.AsNoTracking().Where(p => p.IsActive).OrderBy(p => p.Key)
+        var rows = await _db.Permissions.AsNoTracking().Where(p => p.IsActive)
             .Select(p => new { p.Key, p.Description }).ToListAsync(ct);
-        return rows.Select(p => new PermissionCatalogEntry(p.Key, p.Description, AdministrationPolicy.ApprovalPermissionKeys.Contains(p.Key))).ToList();
+        // Ordinal order in memory: Postgres collation would order '-' and '.' differently from the documented key order.
+        return rows.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => new PermissionCatalogEntry(p.Key, p.Description, AdministrationPolicy.ApprovalPermissionKeys.Contains(p.Key))).ToList();
     }
 
     public async Task<RoleDefinitionPage> ListRolesAsync(Guid organizationId, RoleListQuery q, CancellationToken ct)
