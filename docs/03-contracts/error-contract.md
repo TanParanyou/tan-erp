@@ -210,6 +210,9 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `ROLE_CHANGE_REQUEST_NOT_PENDING` | 409 | คำขอแก้ไข Role ไม่ได้อยู่ในสถานะรอตัดสิน |
 | `ROLE_CHANGE_REQUEST_STALE` | 409 | Role เปลี่ยนไปหลังจากมีการขอแก้ไข ต้องขอใหม่ |
 | `ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED` | 403 | ผู้ตัดสินต้องเป็นคนละคนกับผู้ขอแก้ไข |
+| `ROLE_ESCALATION_DENIED` | 403 | Role หรือ grant ที่เพิ่มมี permission/Scope ที่ผู้เรียกไม่ได้ถืออยู่ (การถอน grant ไม่ถูกปฏิเสธด้วยรหัสนี้) |
+| `LAST_ADMINISTRATOR_REQUIRED` | 422 | การเปลี่ยนแปลงจะทำให้องค์กรไม่เหลือผู้ดูแลที่ใช้งานอยู่อย่างน้อยหนึ่งคน (เช่น ถอน `users.manage` จากแหล่งผู้ดูแลคนสุดท้าย) |
+| `BRANCH_NOT_FOUND` | 404 | ไม่พบสาขาที่ระบุในองค์กรนี้ (สาขาขององค์กรอื่นตอบแบบเดียวกัน) |
 
 ## Validation Errors
 

@@ -1,6 +1,6 @@
 # Role Management API Contract (G-03b)
 
-**สถานะ:** Draft → Implemented เมื่อ G-03b เสร็จ ([Verification](../05-engineering/role-management-verification.md)). ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0020](../adr/0020-role-management-and-approval-permission-set.md).
+**สถานะ:** Implemented (tests written, not yet run) — G-03b, 2026-10-11 ([Verification](../05-engineering/role-management-verification.md)). ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0020](../adr/0020-role-management-and-approval-permission-set.md).
 
 ## Endpoints
 
