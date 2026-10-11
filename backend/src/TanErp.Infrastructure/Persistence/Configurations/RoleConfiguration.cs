@@ -19,6 +19,8 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.Property(x => x.Description).HasColumnName("description").HasMaxLength(500);
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.IsSystem).HasColumnName("is_system").IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
 
         builder.HasIndex(x => new { x.OrganizationId, x.NormalizedName })
             .IsUnique()

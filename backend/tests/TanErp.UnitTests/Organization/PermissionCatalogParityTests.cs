@@ -15,6 +15,7 @@ public class PermissionCatalogParityTests
     [InlineData("organizations.read")]
     [InlineData("organizations.manage")]
     [InlineData("branches.manage")]
+    [InlineData("roles.manage")]
     public void GovernanceKey_IsInDocsSeederAndFrontend(string key)
     {
         Assert.Contains($"`{key}`", File.ReadAllText(RepoFile("docs", "03-contracts", "permission-catalog.md")));

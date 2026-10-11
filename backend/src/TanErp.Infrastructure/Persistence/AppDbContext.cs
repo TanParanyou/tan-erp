@@ -21,6 +21,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<MembershipRole> MembershipRoles => Set<MembershipRole>();
     public DbSet<RoleAssignmentRequest> RoleAssignmentRequests => Set<RoleAssignmentRequest>();
+    public DbSet<RoleChangeRequest> RoleChangeRequests => Set<RoleChangeRequest>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
     public DbSet<TanErp.Domain.Crm.Customers.Customer> Customers => Set<TanErp.Domain.Crm.Customers.Customer>();
