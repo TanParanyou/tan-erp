@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using TanErp.Application.Common.Abstractions;
@@ -618,13 +617,8 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
         new AdminRef(row.Request.RequestedByUserId, row.RequestedByName),
         row.Request.RequestedAtUtc);
 
-    private async Task<List<PermissionGrant>> LoadPermissionsAsync(Guid membershipId, CancellationToken cancellationToken) =>
-        await _db.MembershipRoles.AsNoTracking()
-            .Where(mr => mr.MembershipId == membershipId && mr.Role!.IsActive)
-            .SelectMany(mr => mr.Role!.RolePermissions)
-            .Where(rp => rp.Permission!.IsActive)
-            .Select(rp => new PermissionGrant(rp.Permission!.Key, rp.Scope, rp.ScopeId))
-            .ToListAsync(cancellationToken);
+    private Task<List<PermissionGrant>> LoadPermissionsAsync(Guid membershipId, CancellationToken cancellationToken) =>
+        IdentityAdministrationSupport.LoadHeldPermissionsAsync(_db, membershipId, cancellationToken);
 
     private async Task<List<RoleWithPermissions>> LoadRolesWithPermissionsAsync(
         Guid organizationId, IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken)
@@ -647,47 +641,17 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
     private async Task<bool> WouldRemoveLastAdministratorAsync(
         Guid organizationId, Func<AdministratorRow, bool> removed, CancellationToken cancellationToken)
     {
-        var now = _clock.UtcNow;
-        var rows = await _db.Memberships.AsNoTracking()
-            .Where(m => m.OrganizationId == organizationId && m.IsActive)
-            .Where(m => m.User!.IsActive && m.User.FirebaseUid != null && m.Organization!.IsActive)
-            .Where(m => m.BranchId == null || m.Branch!.IsActive)
-            .Where(m => m.StartsAtUtc == null || m.StartsAtUtc <= now)
-            .Where(m => m.ExpiresAtUtc == null || m.ExpiresAtUtc > now)
-            .SelectMany(m => m.MembershipRoles
-                .Where(mr => mr.Role!.IsActive)
-                .Where(mr => mr.Role!.RolePermissions.Any(rp =>
-                    rp.Permission!.IsActive &&
-                    rp.Permission.Key == AdministrationPermissions.UsersManage &&
-                    rp.Scope == PermissionScope.Organization &&
-                    rp.ScopeId == organizationId))
-                .Select(mr => new AdministratorRow(m.UserId, m.Id, mr.RoleId)))
-            .ToListAsync(cancellationToken);
-
+        var rows = await IdentityAdministrationSupport.LoadAdministratorRowsAsync(_db, organizationId, _clock.UtcNow, cancellationToken);
         return AdministrationPolicy.WouldRemoveLastAdministrator(rows, removed);
     }
 
     private void AddAudit(
         Guid organizationId, AdminActor actor, string action, string resourceType, string resourceId, string traceId,
-        DateTimeOffset now, object changes, Guid? rowVersionBefore = null, Guid? rowVersionAfter = null)
-    {
-        _db.AuditEvents.Add(new AuditEvent(
-            Guid.NewGuid(),
-            organizationId,
-            actor.UserId,
-            action,
-            resourceType,
-            resourceId,
-            now,
-            traceId,
-            JsonSerializer.Serialize(changes),
-            actorMembershipId: actor.MembershipId,
-            rowVersionBefore: rowVersionBefore,
-            rowVersionAfter: rowVersionAfter));
-    }
+        DateTimeOffset now, object changes, Guid? rowVersionBefore = null, Guid? rowVersionAfter = null) =>
+        IdentityAdministrationSupport.AddAudit(
+            _db, organizationId, actor, action, resourceType, resourceId, traceId, now, changes, rowVersionBefore, rowVersionAfter);
 
-    private static string EscapeLike(string value) =>
-        value.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+    private static string EscapeLike(string value) => IdentityAdministrationSupport.EscapeLike(value);
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
 
