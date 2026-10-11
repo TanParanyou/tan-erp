@@ -31,6 +31,7 @@ public static class ProblemDetailsMapper
         "ROLE_NAME_RESERVED" => StatusCodes.Status422UnprocessableEntity,
         "ROLE_PERMISSION_UNKNOWN" => StatusCodes.Status422UnprocessableEntity,
         "ROLE_SYSTEM_IMMUTABLE" => StatusCodes.Status409Conflict,
+        "ROLE_IN_USE" => StatusCodes.Status409Conflict,
         "ROLE_CHANGE_REQUEST_PENDING" => StatusCodes.Status409Conflict,
         "ROLE_CHANGE_REQUEST_NOT_PENDING" => StatusCodes.Status409Conflict,
         "ROLE_CHANGE_REQUEST_STALE" => StatusCodes.Status409Conflict,

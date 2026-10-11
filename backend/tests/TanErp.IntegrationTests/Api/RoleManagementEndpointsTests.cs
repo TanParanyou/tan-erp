@@ -663,4 +663,85 @@ public class RoleManagementEndpointsTests : IAsyncLifetime
         Assert.Equal("PERMISSION_DENIED", await ReadCode(byOther));
         Assert.Equal(RoleAssignmentRequestStatus.Cancelled, (await ReadAs<RoleChangeRequestResponse>(byRequester)).Status);
     }
+
+    // ------------------------------------------------------------------ activation
+
+    private Task<HttpResponseMessage> SetActive(Guid roleId, string action, Guid ifMatch, string token = AdminToken) =>
+        Send(HttpMethod.Post, $"/api/v1/admin/role-definitions/{roleId}/{action}", token, ifMatch: ifMatch);
+
+    [Fact]
+    public async Task Deactivate_AnUnheldRole_Succeeds_DropsOutOfTheAssignPicker_AndCanBeActivatedAgain()
+    {
+        var roleId = await SeedRoleAsync("Retire Me", new[] { "customers.read" });
+        var role = await GetRole(roleId);
+
+        var deactivate = await SetActive(roleId, "deactivate", role.RowVersion);
+        var picker = await Send(HttpMethod.Get, "/api/v1/admin/roles", AdminToken);
+
+        Assert.Equal(HttpStatusCode.OK, deactivate.StatusCode);
+        var deactivated = await ReadAs<RoleDefinitionResponse>(deactivate);
+        Assert.False(deactivated.IsActive);
+        Assert.DoesNotContain("Retire Me", await picker.Content.ReadAsStringAsync());
+
+        var activate = await SetActive(roleId, "activate", deactivated.RowVersion);
+        Assert.True((await ReadAs<RoleDefinitionResponse>(activate)).IsActive);
+        await using var db = NewDb();
+        Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "roles.deactivated" && a.ResourceId == roleId.ToString()));
+        Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "roles.activated" && a.ResourceId == roleId.ToString()));
+    }
+
+    [Fact]
+    public async Task Deactivate_AHeldRole_Returns409RoleInUse_AndKeepsItActive()
+    {
+        var roleId = await SeedRoleAsync("In Use", new[] { "customers.read" });
+        await SeedHolderAsync(roleId);
+
+        var response = await SetActive(roleId, "deactivate", (await GetRole(roleId)).RowVersion);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("ROLE_IN_USE", await ReadCode(response));
+        Assert.True((await GetRole(roleId)).IsActive);
+    }
+
+    [Fact]
+    public async Task Deactivate_WithAPendingAssignmentRequest_OrPendingChange_OrSystemRole_IsRefused()
+    {
+        var withRequest = await SeedRoleAsync("Has Assignment Request", new[] { "estimates.approve" });
+        await using (var db = NewDb())
+        {
+            db.RoleAssignmentRequests.Add(new RoleAssignmentRequest(
+                Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, ViewerMembershipId, withRequest, TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        var (withChange, _) = await PendingChangeAsync("Has Change Request", "estimates.approve");
+        Guid systemRoleId;
+        await using (var db = NewDb()) systemRoleId = (await db.Roles.SingleAsync(r => r.Name == "Test Admin" && r.OrganizationId == TestOnlyDataSeeder.TestOrgId)).Id;
+
+        var assignment = await SetActive(withRequest, "deactivate", (await GetRole(withRequest)).RowVersion);
+        var change = await SetActive(withChange, "deactivate", (await GetRole(withChange)).RowVersion);
+        var system = await SetActive(systemRoleId, "deactivate", (await GetRole(systemRoleId)).RowVersion);
+
+        Assert.Equal("ROLE_IN_USE", await ReadCode(assignment));
+        Assert.Equal("ROLE_CHANGE_REQUEST_PENDING", await ReadCode(change));
+        Assert.Equal("ROLE_SYSTEM_IMMUTABLE", await ReadCode(system));
+    }
+
+    [Fact]
+    public async Task SetActive_RequiresRolesManageAndIfMatch_AndStaysInsideTheOrganization()
+    {
+        var roleId = await SeedRoleAsync("Guarded Toggle");
+        var foreign = await SeedRoleAsync("Foreign Toggle", orgId: TestOnlyDataSeeder.TestOrgBId);
+        var version = (await GetRole(roleId)).RowVersion;
+
+        var denied = await SetActive(roleId, "deactivate", version, ViewerToken);
+        var stale = await SetActive(roleId, "deactivate", Guid.NewGuid());
+        var missing = await Send(HttpMethod.Post, $"/api/v1/admin/role-definitions/{roleId}/deactivate", AdminToken);
+        var otherOrg = await SetActive(foreign, "deactivate", Guid.NewGuid());
+
+        Assert.Equal("PERMISSION_DENIED", await ReadCode(denied));
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(stale));
+        Assert.Equal(HttpStatusCode.PreconditionRequired, missing.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, otherOrg.StatusCode);
+    }
 }

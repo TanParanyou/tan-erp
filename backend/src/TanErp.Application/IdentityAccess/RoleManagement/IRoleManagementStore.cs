@@ -25,4 +25,7 @@ public interface IRoleManagementStore
 
     Task<Result<RoleChangeRequestView>> DecideChangeRequestAsync(
         Guid organizationId, Guid requestId, Guid ifMatch, RoleRequestDecision decision, AdminActor actor, string traceId, CancellationToken ct);
+
+    Task<Result<RoleDefinition>> SetRoleActiveAsync(
+        Guid organizationId, Guid roleId, bool active, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct);
 }

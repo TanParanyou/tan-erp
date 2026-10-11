@@ -119,6 +119,15 @@ public sealed class RoleManagementHandler
             : await _store.DecideChangeRequestAsync(access.Value!.OrganizationId, requestId, ifMatch, decision, Actor(access.Value), traceId, ct);
     }
 
+    /// <summary>Deactivation is refused while the role is in use; activation is always allowed (no holders are added by it).</summary>
+    public async Task<Result<RoleDefinition>> SetRoleActiveAsync(AdminCaller caller, Guid roleId, bool active, Guid ifMatch, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        return access.IsFailure
+            ? Denied<RoleDefinition>(access)
+            : await _store.SetRoleActiveAsync(access.Value!.OrganizationId, roleId, active, ifMatch, Actor(access.Value), traceId, ct);
+    }
+
     private static string PayloadHash(RoleInput input) => Sha256Hex.Compute(
         $"{input.Name.Trim()}|{input.Description?.Trim()}|{string.Join(",", input.Permissions.Select(g => $"{g.PermissionKey}:{g.Scope}:{g.BranchId}"))}");
 }

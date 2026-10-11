@@ -145,6 +145,25 @@ public sealed class AdminRolesController : ControllerBase
         return result.IsFailure ? Problem(result.Error) : Ok(RoleChangeRequestResponse.From(result.Value!));
     }
 
+    [HttpPost("role-definitions/{roleId:guid}/deactivate")]
+    [ProducesResponseType<RoleDefinitionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> DeactivateRole([FromRoute] Guid roleId, CancellationToken cancellationToken) => SetRoleActive(roleId, false, cancellationToken);
+
+    [HttpPost("role-definitions/{roleId:guid}/activate")]
+    [ProducesResponseType<RoleDefinitionResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> ActivateRole([FromRoute] Guid roleId, CancellationToken cancellationToken) => SetRoleActive(roleId, true, cancellationToken);
+
+    private async Task<IActionResult> SetRoleActive(Guid roleId, bool active, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        return RoleResult(await _handler.SetRoleActiveAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), roleId, active,
+            conditional.Value.IfMatchRowVersion, HttpContext.TraceIdentifier, cancellationToken));
+    }
+
     private IActionResult RoleResult(Result<RoleDefinition> result)
     {
         if (result.IsFailure) return Problem(result.Error);

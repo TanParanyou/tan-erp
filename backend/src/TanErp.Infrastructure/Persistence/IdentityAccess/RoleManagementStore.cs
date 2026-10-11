@@ -473,4 +473,33 @@ public sealed class RoleManagementStore : IRoleManagementStore
             var grants = baseline ?? await LoadGrantViewsAsync(roleId, ct);
             return Result<RoleChangeRequestView>.Success(ToChangeView(organizationId, row, grants));
         }, ct);
+
+    // ---------------------------------------------------------------- activation
+
+    public Task<Result<RoleDefinition>> SetRoleActiveAsync(
+        Guid organizationId, Guid roleId, bool active, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            var role = await _db.Roles.FirstOrDefaultAsync(r => r.Id == roleId && r.OrganizationId == organizationId, ct);
+            if (role is null) return NotFound<RoleDefinition>("Role");
+            if (role.RowVersion != ifMatch) return Fail<RoleDefinition>(VersionConflict, "The role was modified by another user.");
+            if (role.IsSystem) return Fail<RoleDefinition>("ROLE_SYSTEM_IMMUTABLE", "A system role cannot be changed.");
+            if (role.IsActive == active) return await LoadDefinitionAsync(organizationId, roleId, ct);
+
+            if (!active)
+            {
+                // Deactivation silently revokes the role from every holder (an inactive role grants nothing), so it is refused while in use.
+                if (await HasPendingChangeAsync(roleId, ct))
+                    return Fail<RoleDefinition>("ROLE_CHANGE_REQUEST_PENDING", "A change request is pending for this role.");
+                var inUse = await _db.MembershipRoles.AnyAsync(mr => mr.RoleId == roleId, ct)
+                    || await _db.RoleAssignmentRequests.AnyAsync(r => r.RoleId == roleId && r.Status == RoleAssignmentRequestStatus.Pending, ct);
+                if (inUse) return Fail<RoleDefinition>("ROLE_IN_USE", "The role is held by users or has pending assignment requests.");
+            }
+
+            var before = role.RowVersion;
+            if (active) role.Activate(); else role.Deactivate();
+            Audit(organizationId, actor, active ? "roles.activated" : "roles.deactivated", "Role", roleId, traceId, new { roleId }, before, role.RowVersion);
+            await _db.SaveChangesAsync(ct);
+            return await LoadDefinitionAsync(organizationId, roleId, ct);
+        }, ct);
 }

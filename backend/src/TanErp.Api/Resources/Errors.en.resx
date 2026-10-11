@@ -1115,4 +1115,10 @@
   <data name="ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED_DETAIL" xml:space="preserve">
     <value>Approval or rejection must be made by a user other than the requester.</value>
   </data>
+  <data name="ROLE_IN_USE_TITLE" xml:space="preserve">
+    <value>Cannot deactivate role</value>
+  </data>
+  <data name="ROLE_IN_USE_DETAIL" xml:space="preserve">
+    <value>The role is still held by users or has pending assignment requests. Revoke them first.</value>
+  </data>
 </root>

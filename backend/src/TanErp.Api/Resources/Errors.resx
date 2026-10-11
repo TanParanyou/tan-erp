@@ -1277,4 +1277,10 @@
   <data name="ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED_DETAIL" xml:space="preserve">
     <value>การอนุมัติหรือปฏิเสธต้องทำโดยผู้ใช้ที่ไม่ใช่ผู้ขอ</value>
   </data>
+  <data name="ROLE_IN_USE_TITLE" xml:space="preserve">
+    <value>ปิดใช้งานบทบาทไม่ได้</value>
+  </data>
+  <data name="ROLE_IN_USE_DETAIL" xml:space="preserve">
+    <value>บทบาทนี้ยังมีผู้ถืออยู่หรือมีคำขอมอบบทบาทที่รออยู่ ให้ถอนบทบาทและจัดการคำขอก่อน</value>
+  </data>
 </root>
