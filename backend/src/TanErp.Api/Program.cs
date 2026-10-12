@@ -193,6 +193,12 @@ builder.Services.AddScoped<TanErp.Application.Notifications.INotificationRecipie
 builder.Services.AddScoped<TanErp.Application.Notifications.INotificationPublisher, TanErp.Infrastructure.Persistence.Notifications.NotificationPublisher>();
 builder.Services.AddScoped<TanErp.Application.Notifications.INotificationStore, TanErp.Infrastructure.Persistence.Notifications.NotificationStore>();
 builder.Services.AddScoped<TanErp.Application.Notifications.NotificationHandler>();
+var membershipExpiryOptions = builder.Configuration
+    .GetSection(TanErp.Application.Notifications.MembershipExpiryReminderOptions.SectionName)
+    .Get<TanErp.Application.Notifications.MembershipExpiryReminderOptions>()
+    ?? new TanErp.Application.Notifications.MembershipExpiryReminderOptions();
+builder.Services.AddSingleton(membershipExpiryOptions);
+builder.Services.AddScoped<TanErp.Application.Notifications.IMembershipExpiryReminderService, TanErp.Infrastructure.Persistence.Notifications.MembershipExpiryReminderService>();
 builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infrastructure.Persistence.Service.ServiceStore>();
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
 builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();
