@@ -25,6 +25,7 @@
 5. **Maker–checker:** Role ที่มี `estimates.approve`, `cost-records.approve`, `cost-records.publish`, `purchase-orders.approve`, `projects.change-orders.approve`, `mrp.approve` หรือ `approval-limits.manage` ไม่มีผลทันที: การมอบสร้างคำขอ `pending` (`202`). ผู้ตัดสินต้องมี `roles.assign-approval`, เป็นคนละคนกับผู้ขอ และผ่านกฎ anti-escalation. คำขอที่ pending ซ้ำ Membership+Role เดียวกันคืน `409`. ชุดนี้ล็อกด้วย test และอธิบายใน [ADR 0020](../adr/0020-role-management-and-approval-permission-set.md) และ [ADR 0021](../adr/0021-approval-authority-matrix.md) (G-03c เพิ่ม `approval-limits.manage` เป็นตัวที่ 7)
 6. **มีผลทันที:** ผลการถอนสิทธิ์/ปิดใช้ถูกตรวจจาก PostgreSQL ทุก request (ไม่มี cache ของสิทธิ์)
 7. **Audit:** ทุกการเปลี่ยนแปลงบันทึก AuditEvent (ผู้กระทำ, resource, ก่อน/หลัง row version, trace id). ไม่เก็บอีเมล/ชื่อใน `changes`
+8. **Membership ใกล้หมดอายุ (G-21):** ผู้ถือ `memberships.manage` ได้รับการแจ้งเตือนในระบบเมื่อ Membership ที่ active ใกล้ `expiresAtUtc` (30/7/1 วัน TEST_ONLY; ดู [Notification Contract](notification-api-contract.md)). การแจ้งเป็นข้อมูลเสริม ไม่เปลี่ยนการบังคับหมดอายุ (Backend ตรวจ `expiresAtUtc` ทุก request ตามข้อ 6) และ **ไม่ใช่ guard** — ผู้ดูแลคนสุดท้ายยังหมดอายุตามเวลาได้; ต่ออายุด้วย `PATCH /api/v1/admin/memberships/{membershipId}`.
 
 ## Endpoints
 

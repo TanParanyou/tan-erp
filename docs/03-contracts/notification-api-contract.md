@@ -49,6 +49,14 @@ Future (ไม่อยู่ใน G-02): `warranty.expiring`, `service-request
 
 schema `notifications`, ตาราง `notifications` (id, organization_id, recipient_user_id, type, payload jsonb, dedupe_key, created_at_utc, read_at_utc; unique `ux_notifications_recipient_dedupe (organization_id, recipient_user_id, dedupe_key)`; index `ix_notifications_recipient_created`; partial index `ix_notifications_unread WHERE read_at_utc IS NULL`).
 
+## Type ที่ระบบสร้างเอง (system-generated) — G-21
+
+| Type | เมื่อไร | ผู้รับ (`TargetPermission`) | Payload (allowlist) | ลิงก์ |
+| --- | --- | --- | --- | --- |
+| `membership.expiring` | Membership ที่ active จะหมดอายุภายใน threshold (ค่าเริ่มต้น 30/7/1 วัน — TEST_ONLY, ตั้งที่ `MembershipExpiryReminder:ThresholdDays`) | `memberships.manage` (Organization scope; Membership ผูกสาขาแจ้งเฉพาะผู้ถือสิทธิ์องค์กร + สาขาเดียวกัน) | `resourceId` (membership id), `parentId` (user id), `subjectDisplayName`, `daysRemaining` | `/settings/users/{parentId}` |
+
+กฎ: event ประเภทนี้ **ไม่มี actor** (`ActorUserId = null`) และ payload **ไม่มี** `actorDisplayName`; type ที่ไม่ใช่ system-generated ต้องมี actor เสมอ. Dedupe = `(type, transition id)` โดย transition id เป็น hash ของ `(membership id, threshold, expiresAtUtc)` จึงส่งครั้งเดียวต่อผู้รับ และแจ้งใหม่เมื่อ `expiresAtUtc` เปลี่ยน. ไม่ส่ง "หมดอายุแล้ว". สร้างโดย `MembershipExpiryReminderWorker` (ไม่ทำงานใน environment `Test`) — ดู [ADR 0022](../adr/0022-membership-expiry-reminder-and-hosted-worker.md).
+
 ## ขั้นตอนเพิ่ม notification type ใหม่ (สำหรับ G-05/G-18/G-21)
 
 1. เพิ่ม constant และใส่ใน `Registered` ของ `NotificationTypes` (`backend/src/TanErp.Domain/Notifications/NotificationValues.cs`).
@@ -56,6 +64,7 @@ schema `notifications`, ตาราง `notifications` (id, organization_id, re
 3. เพิ่ม factory ใน `NotificationEvents`.
 4. เพิ่มค่าใน `NOTIFICATION_TYPES` และข้อความ th/en ใน `frontend/src/lib/notifications/notification-types.ts` + `messages/*.json`.
 5. เรียก `INotificationPublisher.PublishAsync` ใน store ที่เปลี่ยนสถานะ ก่อน `SaveChangesAsync`.
+6. Type ที่เกิดจาก scheduler (ไม่มีผู้กระทำ): ตั้ง `SystemGenerated: true` ใน descriptor, ส่ง `ActorUserId = null`, อย่าใส่ `actorDisplayName` ใน `RequiredFields`, และสร้าง transition id แบบ deterministic เพื่อ idempotency.
 
 test `NotificationRegistryTests`/`NotificationEventsTests` ล้มถ้าลืมข้อ 1–3; `notification-types.test.ts` ล้มถ้าลืมข้อ 4.
 
