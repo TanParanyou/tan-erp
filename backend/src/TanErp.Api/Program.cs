@@ -107,6 +107,9 @@ builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.List
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.DecideRoleRequest.DecideAdminRoleRequestHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.RoleManagement.IRoleManagementStore, TanErp.Infrastructure.Persistence.IdentityAccess.RoleManagementStore>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.RoleManagement.RoleManagementHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.IApprovalAuthority, TanErp.Infrastructure.Persistence.IdentityAccess.ApprovalAuthority>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.IApprovalLimitStore, TanErp.Infrastructure.Persistence.IdentityAccess.ApprovalLimitStore>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.ApprovalLimitHandler>();
 builder.Services.AddScoped<IRequestAccessResolver, RequestAccessResolver>();
 builder.Services.AddScoped<GetCurrentUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Users.IUserReadStore, TanErp.Infrastructure.Persistence.IdentityAccess.UserReadStore>();

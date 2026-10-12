@@ -101,6 +101,7 @@
 | ข้อตกลง API จัดการผู้ใช้และสิทธิ์ (CP-02) | [Identity Administration API Contract](03-contracts/identity-administration-api-contract.md) |
 | API จัดการ Organization/Branch | [Organization Administration API Contract](03-contracts/organization-administration-api-contract.md) |
 | API จัดการ Role และ Permission | [Role Management API Contract](03-contracts/role-management-api-contract.md) |
+| API จัดการวงเงินอนุมัติ | [Approval Limit API Contract](03-contracts/approval-limit-api-contract.md) |
 | แผนและขอบเขต CP-02 | [Identity/Organization Administration Plan](superpowers/plans/2026-10-03-identity-organization-administration.md) |
 | ผลตรวจ CP-02 | [Identity Administration Verification](05-engineering/identity-administration-verification.md) |
 | กู้สิทธิ์ผู้ดูแลที่หายไป | [Administrator Recovery Runbook](06-operations/administrator-recovery.md) |

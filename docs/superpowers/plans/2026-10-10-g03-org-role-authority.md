@@ -152,9 +152,43 @@ G-03 ใหญ่เกินกว่าจะ merge ครั้งเดี�
 | `frontend/src/app/[locale]/(erp)/settings/roles/{page.tsx,[id]/page.tsx}`, `settings/role-requests/page.tsx` (แก้) | routes |
 | `frontend/src/components/layout/SidebarNav.tsx` (+ test), `frontend/src/messages/{th,en}.json` (แก้) | เมนู "บทบาทและสิทธิ์", namespace `roleAdmin` |
 
-### G-03c
+### G-03c — Approval Authority matrix
 
-ตาราง File Structure ของ G-03c จะถูกเพิ่มใน Part 3 ด้านล่าง.
+#### Docs
+
+| ไฟล์ | หน้าที่ |
+| --- | --- |
+| `docs/adr/0021-approval-authority-matrix.md` (ใหม่), `docs/adr/README.md` (แก้) | ADR: รูปแบบแถววงเงิน, กฎตัดสิน, จุดบังคับ, ไม่มี maker–checker ต่อการแก้วงเงิน (R1), fail-closed |
+| `docs/03-contracts/approval-limit-api-contract.md` (ใหม่) | สัญญา API/ฟิลด์/validation/error/audit และผลต่อ flow อนุมัติ |
+| `docs/03-contracts/{permission-catalog,error-contract,identity-administration-api-contract}.md`, `docs/01-business/approval-matrix.md`, `docs/README.md`, `CONTEXT.md` (แก้) | `approval-limits.manage`, 4 error code, approval set 7 ตัว, ลิงก์, ศัพท์ Approval Limit/Authority |
+| `docs/05-engineering/approval-authority-verification.md` (ใหม่), `docs/00-overview/implementation-roadmap.md`, `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md` (แก้) | หลักฐาน ("tests written, not run") + สถานะ G-03c |
+
+#### Backend
+
+| ไฟล์ | หน้าที่ |
+| --- | --- |
+| `backend/src/TanErp.Domain/IdentityAccess/ApprovalLimit.cs` (ใหม่) | `ApprovalLimit`, `ApprovalDocumentType`, `ApprovalLimitRules`, `ApprovalLimitDomainException` |
+| `backend/src/TanErp.Application/IdentityAccess/ApprovalLimits/{ApprovalAuthorityPolicy,IApprovalAuthority,ApprovalLimitModels,IApprovalLimitStore,ApprovalLimitHandler}.cs` (ใหม่) | นโยบายตัดสิน (pure), port ที่ flow อนุมัติเรียก, models/port/handler ของ CRUD |
+| `backend/src/TanErp.Application/IdentityAccess/Administration/AdministrationModels.cs` (แก้) | `ApprovalPermissionKeys` + `approval-limits.manage` |
+| `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/{ApprovalAuthority,ApprovalLimitStore}.cs` (ใหม่) | service ตรวจวงเงินใน transaction ของผู้เรียก, store (Serializable, Idempotency, ETag, audit) |
+| `backend/src/TanErp.Infrastructure/Persistence/{AppDbContext,TestOnlyDataSeeder}.cs`, `Configurations/ApprovalLimitConfiguration.cs`, `Migrations/*_AddApprovalLimits*.cs` | ตาราง `identity_access.approval_limits`, seed permission + แถว unlimited ของ Test |
+| `backend/src/TanErp.Infrastructure/Persistence/{Estimates/EstimateStore,Procurement/ProcurementStore,Projects/ProjectControlStore}.cs` (แก้) | เรียก `IApprovalAuthority.EnsureAsync` ใน 3 เส้นทางอนุมัติ |
+| `backend/src/TanErp.Api/Contracts/IdentityAccess/ApprovalLimits/ApprovalLimitContracts.cs`, `Controllers/AdminApprovalLimitsController.cs`, `ErrorHandling/ProblemDetailsMapper.cs`, `Resources/Errors{,.en}.resx`, `Program.cs` | endpoints `api/v1/admin/approval-limits`, error th/en, DI |
+| `contracts/openapi/tan-erp.v1.json` (regenerate จาก live swagger) | snapshot |
+| `backend/tests/TanErp.UnitTests/IdentityAccess/{ApprovalLimitDomainTests,ApprovalAuthorityPolicyTests,AdministrationPolicyTests}.cs`, `Organization/PermissionCatalogParityTests.cs` | domain + policy + ล็อก approval set + parity |
+| `backend/tests/TanErp.IntegrationTests/{Support/ApprovalLimitTestSupport.cs, Api/ApprovalLimitEndpointsTests.cs}` และ test ใหม่ใน `Api/{Estimate,Procurement,ProjectControl}EndpointsTests.cs` | CRUD + การบังคับ 3 เส้นทาง + fixture ของ Estimate (เขียนแล้ว ยังไม่ได้รัน) |
+
+#### Frontend
+
+| ไฟล์ | หน้าที่ |
+| --- | --- |
+| `frontend/src/generated/api/tan-erp.v1.ts` (regenerate), `frontend/src/lib/api/api-client.ts` (+ test) | types + methods |
+| `frontend/src/lib/permissions/permissions.ts` (แก้) | `APPROVAL_LIMITS_MANAGE` |
+| `frontend/src/features/settings/approval-limits/{approval-limit-errors.ts (+test), api/approval-limit-queries.ts}` | whitelist error → key, hooks + query keys |
+| `frontend/src/features/settings/approval-limits/components/{approval-limit-list,approval-limit-editor}.tsx` (+ `.test.tsx`) | รายการและ editor (route `[id]` create/edit) |
+| `frontend/src/app/[locale]/(erp)/settings/approval-limits/{page.tsx,[id]/page.tsx}` | routes |
+| `frontend/src/components/layout/SidebarNav.tsx` (+ test), `frontend/src/messages/{th,en}.json` | เมนู "วงเงินอนุมัติ", namespace `approvalLimitAdmin`, ข้อความ error ในหน้า Estimate/PO/Change Order เดิม |
+| `frontend/src/features/{estimates/components/estimate-lifecycle-actions.tsx,procurement/procurement-status.ts,projects/components/project-control-errors.ts}` (แก้) | แสดง `APPROVAL_*` ในหน้าอนุมัติเดิม |
 
 ---
 
@@ -9348,4 +9382,3290 @@ git commit -m "docs(roles): record G-03b verification and update status
 Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
-## Part 3: G-03c Approval Authority matrix (tasks to be appended)
+# Part 3: G-03c Approval Authority matrix
+
+> G-03a (PR #19) และ G-03b merge/อยู่บน branch ฐานแล้ว. Part 3 ทำงานบน `feat/g03c-approval-authority` (แตกจาก `feat/g03b-role-management`) — **ห้ามสลับ branch**. ตรวจก่อนเริ่ม Task 1: `git branch --show-current` ต้องได้ `feat/g03c-approval-authority`.
+
+> **กฎผู้ใช้ (บังคับทุก Task ของ Part 3): ผู้ลงมือห้ามรันชุดทดสอบใด ๆ** — ห้าม `dotnet test`, `vitest`/`npm run test`, mutation check, `npm run test:e2e`, และห้ามตรวจในเบราว์เซอร์. **ยังต้องเขียน test ทุกไฟล์ตามที่แผนระบุ** (เขียนให้คอมไพล์ได้ถูกต้อง). ขั้น verify ของทุก Task เป็น **compile-only**:
+> - Backend: `dotnet build backend/TanErp.slnx --nologo -v q` → ต้อง `0 Warning(s)` `0 Error(s)` (solution นี้รวมโปรเจกต์ test จึงตรวจว่า test คอมไพล์ด้วย)
+> - Frontend: `cd frontend && npx tsc --noEmit` และ `npm run lint`; ตรวจ th/en key parity; `npm run build` **ครั้งเดียว** ใน Task 11
+> - ไม่มีขั้น "RED/GREEN run". Task สุดท้ายต้องระบุตรง ๆ ว่า "tests written, not run" และให้คำสั่งที่ผู้ใช้รันเอง.
+> `dotnet ef migrations add/has-pending-model-changes`, `python3` สคริปต์ regenerate OpenAPI และ `npm run generate:api` เป็นเครื่องมือ build ไม่ใช่การรัน test จึงทำได้.
+
+## Part 3 — Findings จากการอ่านโค้ดจริง (ตรวจแล้ว)
+
+| หัวข้อ | สิ่งที่พบ | ผลต่อแผน |
+| --- | --- | --- |
+| Estimate approve | Handler ตรวจ `estimates.approve` + `HasBranchAccess` (`ReviewEstimateHandler.cs:24,30`) แล้วเรียก `EstimateStore.ReviewAsync` (`EstimateStore.cs:859`). Store เปิด transaction + advisory lock, โหลด `estimate`, ตรวจ step ที่มอบให้ `reviewerMembershipId`, `HasCurrentApprovalPermissionAsync` (:915) และ self-review (:919-920) แล้วค่อยเขียน decision. ยอดคือ `revision.GrandTotal`, สกุล `revision.Currency` (`EstimateRevision.cs:14`), สาขา `estimate.BranchId`. Route ใน Test policy `TEST_ONLY-TH-EST-V1` มีหลาย step (Manager → Financial → Director, `EstimateStore.cs:703-735`); Production bootstrap มี step เดียว `INDEPENDENT_CHECKER` | ตรวจ authority **เฉพาะ decision `approved` ของ step สุดท้าย** (ที่ทำให้ estimate เป็น Approved) หลัง self-review check ก่อนเขียน decision; `returned` ไม่ตรวจ |
+| PO approve | `ProcurementHandler.ActionAsync` ตรวจ `purchase-orders.approve` (`ProcurementHandler.cs:137`) → `ProcurementStore.PurchaseOrderActionAsync` (:333): โหลด `order` ใน transaction, `CheckApprovalAsync` (:360) แล้ว `order.Decide` (:364). ยอด `PurchaseOrder.TotalAmount`, สกุล `Currency`, สาขา `BranchId` (`PurchaseOrder.cs:10,15,16`). ผู้อนุมัติ = `access.MembershipId` | ตรวจต่อจาก `CheckApprovalAsync` เฉพาะ `Approve` (Reject ไม่ตรวจ) |
+| Change Order approve | `ProjectControlStore.ChangeOrderActionAsync` (:405): โหลด `project` + `order` ใน transaction; บล็อก `Approve` ตรวจงบติดลบ (:437-448) แล้ว `order.Decide` (:450). ยอดอยู่ที่ `BudgetDelta`/`ContractDelta` (`ProjectChangeOrder.cs:13-14`) ซึ่ง **ติดลบได้**; `Project`/`ProjectChangeOrder` **ไม่มีคอลัมน์สกุลเงิน** (ทั้งโครงการเป็น THB); สาขา `project.BranchId` (`Project.cs:12`) | ยอดตรวจ = `max(abs(ContractDelta), abs(BudgetDelta))`, สกุล = `ApprovalLimitRules.Currency` (THB) |
+| การแปลง permission เป็นบริบท | `RequestAccessResolver.ResolveAsync` (`RequestAccessResolver.cs:25-60`) คืน `RequestAccessContext(ActorUserId, MembershipId, OrganizationId, BranchId, …)`; ตรวจเฉพาะ Permission + Scope — **ไม่มีการตรวจยอด/วงเงินที่ใดเลย** (Permission ≠ Authority, `docs/01-business/approval-matrix.md:167`). Role ที่ปิดใช้ถูกกรองออกด้วย `mr.Role!.IsActive` | `IApprovalAuthority` ใช้ `MembershipRole` ของ membership ผู้อนุมัติ กรอง `Role.IsActive` แบบเดียวกัน |
+| จุด reuse จาก G-03b | `SerializableTransactionRunner` (`Persistence/SerializableTransactionRunner.cs`), `IdentityAdministrationSupport.AddAudit` (internal, `Persistence/IdentityAccess/`), รูปแบบ create+idempotency ใน `RoleManagementStore.CreateRoleAsync` (:192-245), ETag/If-Match ใน `SetRoleActiveAsync` (:479), handler "permission ก่อน existence" (`RoleManagementHandler.cs`), `AdminRolesController` (`[Route("api/v1/admin")]`), `AdminCaller/AdminActor/AdminRef` (`AdministrationModels.cs:70-74`), `AdminPaginationResponse` | G-03c ใช้ซ้ำทั้งหมด ไม่สร้างกลไกใหม่ |
+| Permission set | `AdministrationPolicy.ApprovalPermissionKeys` มี 6 ตัว (`AdministrationModels.cs:25-33`) ล็อกด้วย `AdministrationPolicyTests.ApprovalPermissionKeys_AreExactlyTheReviewedSet` | เพิ่ม `approval-limits.manage` เป็นตัวที่ 7 (D4) |
+| Error mapping | รหัสที่ไม่อยู่ใน `ProblemDetailsMapper.GetStatus` จะกลายเป็น **500 `INTERNAL_SERVER_ERROR`** (`ProblemDetailsMapper.cs:395,408`) | ทุกรหัสใหม่ต้องใส่ `GetStatus` + `Errors.resx`/`Errors.en.resx` ใน Task เดียวกับที่เริ่มส่งรหัสนั้น |
+| Fixture ที่อนุมัติเอกสารจริง | PO/Change Order: อนุมัติด้วย membership "Approver" ที่ผูก role `Test Admin` (`ProcurementEndpointsTests.cs:93-98`, `ProjectControlEndpointsTests.cs:92-98`). Estimate: `Test Cost Reviewer` (`EstimateEndpointsTests.cs:976,1004,1048,1745`), `Test Estimate Reviewer` (:1412, e2e `official-estimate.spec.ts:322`), 4 role ของ TestOnly policy จาก `SeedTestOnlyApprovalReviewersAsync` (:2729). `QuickEstimateEndpointsTests` ใช้ `quick-estimates.review` (คนละเส้นทาง ไม่เกี่ยว) | seed วงเงิน unlimited ให้ role เหล่านี้ (D6) |
+| Migration / ADR ล่าสุด | migration ล่าสุด `20261011051828_AddRoleManagement`; ADR ล่าสุด `0020-…` → ใหม่คือ **0021** | |
+| OpenAPI | สร้างจาก live `/swagger/v1/swagger.json` แล้ว format ด้วย writer ที่เข้ากับ System.Text.Json (commit `8a8be98`, `95723da`; ดู `organization-administration-verification.md:57`) | Task 9 ทำซ้ำวิธีนี้ **ไม่ใช้** `UPDATE_OPENAPI=1` |
+
+### ข้อที่ Findings / Part 1 / Part 2 เดิมคลาดเคลื่อน (แก้ในแผนนี้ ไม่แก้ส่วนเดิม)
+
+1. Findings ระบุ "Test seed ให้ Test Admin unlimited" อย่างเดียว — จริง ๆ ต้อง seed ให้อีก 7 role (Test Admin B, Test Cost Reviewer, Test Estimate Reviewer และ 4 role ใน `SeedTestOnlyApprovalReviewersAsync`) มิฉะนั้น test ที่มีอยู่ของ Estimate จะล้มด้วย `APPROVAL_AUTHORITY_NOT_CONFIGURED`.
+2. Findings เขียน Estimate เป็นจุดตัดสินเดียว — จริง ๆ route แบบ TestOnly มีหลาย step; ต้องกำหนดชัดว่าตรวจที่ step ไหน (D3).
+3. Part 2 Findings แถว "OpenAPI snapshot" บอกใช้ `UPDATE_OPENAPI=1` — commit จริงใช้ live swagger (ตามผู้ใช้สั่งและเอกสาร verification G-03a).
+4. Findings ไม่ได้บอกว่า Change Order ไม่มีสกุลเงินและยอดติดลบได้.
+
+## Part 3 — การตัดสินใจ (Decisions) ที่ผู้ใช้อาจ veto
+
+| # | ตัดสินใจ | เหตุผล |
+| --- | --- | --- |
+| D1 | **รูปแบบ `ApprovalLimit` ขั้นต่ำ:** `(organization_id, role_id, document_type, branch_id?, currency, is_unlimited, max_amount?, is_active, row_version)`. **ไม่มีวันที่มีผล (effective dates)** — ปิดแถวด้วย `is_active=false` และประวัติอยู่ใน audit. `max_amount` เป็น `numeric(18,2)`; ไม่จำกัดต้องเป็น **flag ชัดเจน `is_unlimited`** (ไม่ใช้ `NULL = ไม่จำกัด` เพราะแถวที่กรอกไม่ครบจะกลายเป็น fail-open) พร้อม check constraint. Unique ต่อ `(org, role, document_type, branch\|org-wide, currency)` นับทั้งแถว active/inactive (แก้แถวเดิมแทนการสร้างซ้ำ). `credit_note` อยู่ใน check constraint ของ DB แต่ API **ปฏิเสธ** (reserved สำหรับ G-15 — ไม่มีแถวที่ดูเหมือนคุมแต่ไม่ถูกบังคับ). สกุลเงินรองรับ THB อย่างเดียว | วันที่มีผลทำให้เกิดช่วงซ้อน/ช่องว่างที่ต้องมีกฎเพิ่ม โดยไม่มีผู้ใช้จริงต้องการ (YAGNI); Estimate/PO มี `Currency` จึงเก็บคอลัมน์ไว้แต่ไม่มี FX → สกุลไม่ตรง = ไม่มีวงเงิน = ปฏิเสธ |
+| D2 | **ตัดสินอย่างไร (`ApprovalAuthorityPolicy`):** รวบรวมแถว active ของทุก **Role active ของ membership ผู้อนุมัติ** ที่ตรง `document_type` + `currency` และ (`branch_id` เป็น null หรือ = สาขาของเอกสาร). **ต่อ Role:** แถวเฉพาะสาขา **ชนะ** แถวทั้งองค์กร (แม้ต่ำกว่า — ใช้จำกัด Role ในสาขาเสี่ยงได้). **ข้าม Role:** ใช้ค่า **สูงสุด** (unlimited ชนะ). ไม่มีแถวเลย → `APPROVAL_AUTHORITY_NOT_CONFIGURED`; ยอด > เพดาน → `APPROVAL_LIMIT_EXCEEDED`; ยอด ≤ เพดาน (เท่ากันผ่าน) → อนุญาต. ยอดใช้ค่าสัมบูรณ์ | หลาย Role ของคนเดียวไม่ควรทำให้อำนาจ "ลดลง"; การแยกเฉพาะสาขาต่อ Role ให้ทางจำกัดโดยไม่ต้องมีแถว deny |
+| D3 | **Estimate: ตรวจที่ step สุดท้ายของ route เท่านั้น** (decision `approved` ที่ไม่มี step pending เหลือ). step กลาง (Manager/Financial ใน route หลาย step) ทำหน้าที่ตรวจ ไม่ใช่ผู้ถืออำนาจวงเงิน; Production bootstrap มี step เดียว จึงตรวจทุกครั้ง. `returned` ไม่ตรวจ (การส่งกลับไม่เพิ่มความเสี่ยง) | ถ้าตรวจทุก step, Manager ที่มีวงเงิน 500k จะอนุมัติ step แรกของใบ 1.5M ไม่ได้ ทั้งที่ route ออกแบบให้ escalate |
+| D4 | **ไม่ทำ maker–checker ให้การแก้วงเงิน** แต่ล็อกด้วย 3 ชั้น: (ก) permission ใหม่ `approval-limits.manage` เป็น Organization scope; (ข) เพิ่มเข้า `ApprovalPermissionKeys` → การ **มอบ/เพิ่ม** permission นี้ให้ Role ต้องผ่าน maker–checker เดิมของ CP-02/G-03b; (ค) audit ทุกการสร้าง/แก้ (ค่าก่อน–หลัง). **ความเสี่ยงคงเหลือ R1:** ผู้ถือ permission นี้ยกวงเงินของ Role ตนเองเองได้ทันที (ไม่มีเพดานเทียบอำนาจผู้แก้) — ถ้าธุรกิจต้องการผู้ตรวจอิสระต่อการแก้วงเงิน ให้เพิ่มใน slice ถัดไป (เหมือน `RoleChangeRequest`) | `approval-matrix.md` บังคับ maker–checker ให้ *Policy ที่ Publish*; ตารางวงเงินนี้เป็น Authority row ที่เปลี่ยนบ่อยกว่า และ G-03b มี gate ที่ตัวสิทธิ์แล้ว |
+| D5 | **Fail-closed ใน non-Test:** ไม่มี backfill/ไม่เดาวงเงิน. หลัง deploy G-03c ใน environment ที่มีเอกสารรออนุมัติ การอนุมัติ Estimate/PO/Change Order จะ **ถูกปฏิเสธ (403)** จนกว่าผู้ถือ `approval-limits.manage` จะตั้งวงเงินที่ `/settings/approval-limits`. Production ต้องมอบ `approval-limits.manage` ให้ Role จริงก่อน (ผ่าน maker–checker) | ตรงกับ `approval-matrix.md` (Production Bootstrap แบบ Fail-closed จนกว่าวงเงินจริงผ่าน Sign-off) และ Validation Question #1 ของแผนหลัก |
+| D6 | **Test seed:** `TestOnlyDataSeeder` สร้างแถว org-wide `unlimited` THB — Test Admin & Test Admin B (estimate, purchase_order, change_order), Test Cost Reviewer + Test Estimate Reviewer (estimate), และ 4 role ใน `SeedTestOnlyApprovalReviewersAsync` (estimate; seed ในไฟล์ test) — และ permission `approval-limits.manage` (Test Admin ได้อัตโนมัติจากลูป seed) | ให้ flow/test/e2e เดิมทำงานต่อใน Test environment |
+| D7 | **Endpoint:** `GET\|POST /api/v1/admin/approval-limits`, `GET\|PUT /api/v1/admin/approval-limits/{id}`, `GET /api/v1/admin/approval-limits/options` (role/สาขา active สำหรับ dropdown — แยกเพื่อไม่ผูก `approval-limits.manage` กับ `roles.manage`/`organizations.read`). PUT แก้ได้เฉพาะ `isUnlimited`, `maxAmount`, `isActive` (role/type/branch/currency เปลี่ยนไม่ได้ — สร้างแถวใหม่แทน). ไม่มี endpoint ลบ | identity ของแถวคือ unique key; การปิดใช้แทนลบรักษา audit |
+| D8 | **บังคับใน transaction เดิมของแต่ละ store** ผ่าน `IApprovalAuthority.EnsureAsync` (scoped `AppDbContext` เดียวกัน) หลังโหลดเอกสาร ก่อนเขียน decision. ระดับ isolation ของ 3 flow เดิมเป็น default (ไม่ Serializable) จึงการแก้วงเงินพร้อมกันมีผลกับการอนุมัติครั้งถัดไป — ยอมรับได้ | ไม่เปลี่ยน transaction semantics ของ flow ที่มีอยู่ |
+| D9 | ไม่บันทึกหลักฐานวงเงินลง approval snapshot/audit ของเอกสาร (ไม่เปลี่ยน hash ของ Estimate snapshot). หลักฐาน "ใครอนุมัติ ยอดเท่าไร" อยู่ใน audit เดิม และประวัติการแก้วงเงินอยู่ใน audit ของ `ApprovalLimit` | minimal blast radius |
+
+## Part 3 — สรุป API contract
+
+| Method | Path | Permission | หมายเหตุ |
+| --- | --- | --- | --- |
+| GET | `/api/v1/admin/approval-limits` | `approval-limits.manage` | `roleId,documentType,status=active\|inactive,page,limit` → `{ items, pagination }` |
+| GET | `/api/v1/admin/approval-limits/options` | `approval-limits.manage` | `{ roles[], branches[], documentTypes[], currencies[] }` |
+| GET | `/api/v1/admin/approval-limits/{id}` | `approval-limits.manage` | + `ETag`; other-org id → 404 |
+| POST | `/api/v1/admin/approval-limits` | `approval-limits.manage` | `Idempotency-Key`; 201 + `ETag` |
+| PUT | `/api/v1/admin/approval-limits/{id}` | `approval-limits.manage` | `If-Match`; 200 + `ETag` |
+
+Error ใหม่ 4 รหัส: `APPROVAL_LIMIT_EXCEEDED` 403, `APPROVAL_AUTHORITY_NOT_CONFIGURED` 403 (สองรหัสนี้ส่งจาก flow อนุมัติ), `APPROVAL_LIMIT_ALREADY_EXISTS` 409, `APPROVAL_LIMIT_ROLE_NOT_FOUND` 404. ใช้ซ้ำ: `BRANCH_NOT_FOUND`, `ADMIN_VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`, `REQUEST_VALIDATION_FAILED`, `RESOURCE_NOT_FOUND`, `PERMISSION_DENIED`. Audit action: `approval-limits.created`, `approval-limits.updated`.
+
+## Part 3 — Task Map
+
+| Task | เรื่อง | commit |
+| --- | --- | --- |
+| 1 | ADR 0021, API contract, catalog/error/CONTEXT (docs) | `docs(approval): add approval authority ADR and contract` |
+| 2 | Domain: `ApprovalLimit`, `ApprovalDocumentType`, rules | `feat(approval): add approval limit domain model` |
+| 3 | Application: `ApprovalAuthorityPolicy`, `IApprovalAuthority`, ขยาย approval set | `feat(approval): add approval authority policy and extend approval permission set` |
+| 4 | EF config, migration, seed (permission + Test limits) | `feat(approval): persist approval limits and seed test authority` |
+| 5 | `ApprovalAuthority` service + error codes + DI | `feat(approval): add approval authority service and error codes` |
+| 6 | บังคับใน Estimate / PO / Change Order + fixture + test | `feat(approval): enforce approval authority on estimate, purchase order and change order` |
+| 7 | Limit admin: models, port, handler, store | `feat(approval): add approval limit handler and store` |
+| 8 | Limit admin API: controller, contracts, DI, endpoint tests | `feat(approval): add approval limit endpoints` |
+| 9 | OpenAPI snapshot (live swagger), generated types, API client | `feat(approval): add approval limit api client` |
+| 10 | FE foundation: messages, error map, hooks, error surfacing ในหน้าอนุมัติ | `feat(approval): add approval limit translations, error map and query hooks` |
+| 11 | FE: list, editor, routes, เมนู | `feat(approval): add approval limit settings pages` |
+| 12 | Verification, เอกสารสถานะ (G-03c) | `docs(approval): record G-03c verification and update status` |
+
+---
+
+## Task 1: ADR 0021, สัญญา API, permission catalog, error codes, ศัพท์ (docs)
+
+**Files:**
+- Create: `docs/adr/0021-approval-authority-matrix.md`, `docs/03-contracts/approval-limit-api-contract.md`
+- Modify: `docs/adr/README.md`, `docs/03-contracts/permission-catalog.md`, `docs/03-contracts/error-contract.md`, `docs/03-contracts/identity-administration-api-contract.md`, `docs/01-business/approval-matrix.md`, `docs/README.md`, `CONTEXT.md`
+
+ขั้นนี้เป็นเอกสาร — ตรวจด้วย link check ใน Step 6 (ไม่มีโค้ด).
+
+- [ ] **Step 1: สร้าง ADR 0021**
+
+เขียน `docs/adr/0021-approval-authority-matrix.md` (ภาษาไทย รูปแบบเดียวกับ ADR 0020):
+
+```markdown
+---
+status: accepted
+---
+
+# Approval Authority matrix: วงเงินต่อ Role/เอกสาร/สาขา แบบ fail-closed บังคับใน transaction ของการอนุมัติ
+
+Permission บอกว่าเรียก action ใดได้ แต่ไม่จำกัดยอด (`approval-matrix.md`: Permission ≠ Authority). G-03c เพิ่มตาราง `approval_limits` และ `IApprovalAuthority` ที่ Estimate, Purchase Order และ Change Order เรียกตอนอนุมัติ.
+
+**การตัดสินใจ 1 — รูปแบบแถว:** `(role, document_type, branch?, currency, is_unlimited, max_amount?, is_active)` ไม่มีวันที่มีผล (ปิดด้วย `is_active`, ประวัติใน audit). ไม่จำกัดเป็น flag `is_unlimited` ไม่ใช่ `NULL`. `credit_note` สงวนไว้ให้ G-15: DB ยอมรับ แต่ API ปฏิเสธจนกว่า G-15 จะบังคับจริง. THB เท่านั้น.
+
+**การตัดสินใจ 2 — กฎการตัดสิน:** หลาย Role ของ membership เดียว → ใช้เพดานสูงสุด; ต่อ Role แถวเฉพาะสาขาชนะแถวทั้งองค์กร; ไม่มีแถว = `APPROVAL_AUTHORITY_NOT_CONFIGURED`; เกิน = `APPROVAL_LIMIT_EXCEEDED`; เท่ากับเพดานผ่าน.
+
+**การตัดสินใจ 3 — จุดบังคับ:** ใน store ของแต่ละเอกสาร ภายใน transaction เดิม หลังโหลดเอกสาร (ต้องใช้ยอด+สาขา ณ เวลาตัดสิน). Estimate ตรวจที่ step สุดท้ายของ route เมื่อ decision = approved เท่านั้น; PO ตรวจตอน Approve; Change Order ตรวจตอน Approve ด้วย `max(abs(ContractDelta), abs(BudgetDelta))` เป็น THB. Reject/Return ไม่ตรวจ.
+
+**การตัดสินใจ 4 — ไม่มี maker–checker ต่อการแก้วงเงิน:** คุมที่ตัวสิทธิ์ `approval-limits.manage` (เป็น approval permission ตัวที่ 7 → การมอบต้องมี maker–checker) และ audit ก่อน–หลัง. ความเสี่ยงคงเหลือ R1: ผู้ถือสิทธิ์ยกวงเงินของ Role ตนเองได้ทันที.
+
+**การตัดสินใจ 5 — Fail-closed ใน production:** ไม่มี backfill; หลัง deploy การอนุมัติถูกปฏิเสธจนกว่าจะตั้งวงเงินจริง (ต้องผ่าน Business Owner + Finance sign-off ตาม `approval-matrix.md`). Test environment ได้ unlimited จาก `TestOnlyDataSeeder` เท่านั้น.
+
+ข้อเสียที่ยอมรับ: ไม่เก็บหลักฐานวงเงินที่ใช้ลงใน approval snapshot (ไม่แตะ hash เดิม); isolation ของ flow เดิมคงเป็น default จึงการแก้วงเงินพร้อมกันมีผลกับการอนุมัติครั้งถัดไป.
+```
+
+- [ ] **Step 2: ลิงก์ใน ADR README**
+
+ต่อท้ายรายการใน `docs/adr/README.md`:
+
+```markdown
+- [0021 — Approval Authority Matrix](0021-approval-authority-matrix.md)
+```
+
+- [ ] **Step 3: สัญญา API**
+
+เขียน `docs/03-contracts/approval-limit-api-contract.md` (ภาษาไทย รูปแบบเดียวกับ `role-management-api-contract.md`): (1) สถานะ "Draft → Implemented เมื่อ G-03c เสร็จ" + ลิงก์ ADR 0021 และ `../05-engineering/approval-authority-verification.md`; (2) ตาราง Endpoint — คัดลอกตาราง "Part 3 — สรุป API contract" ทั้งตาราง; (3) ตาราง Fields ด้านล่าง; (4) รูป response ตาม Task 8; (5) กฎธุรกิจ = ADR 0021 การตัดสินใจ 1-5 + "ทุก endpoint จำกัดที่ Organization ของผู้เรียก (id ต่างองค์กร = 404; ไม่มีสิทธิ์ = 403 เหมือนกันทุก id)"; (6) Error และ Audit ตามที่ระบุใน "Part 3 — สรุป API contract"; (7) หัวข้อ "ผลต่อ flow อนุมัติ": ตาราง document type → ยอดที่ตรวจ/สาขา/สกุล ตาม Findings (Estimate = `GrandTotal`/`estimate.BranchId`/`revision.Currency` ที่ step สุดท้าย; PO = `TotalAmount`/`order.BranchId`/`order.Currency`; Change Order = `max(abs(ContractDelta), abs(BudgetDelta))`/`project.BranchId`/THB).
+
+```markdown
+| Field | กฎ |
+| --- | --- |
+| `roleId` | บังคับตอนสร้าง; ต้องเป็น Role active ในองค์กร (ไม่เช่นนั้น `404 APPROVAL_LIMIT_ROLE_NOT_FOUND`); เปลี่ยนไม่ได้หลังสร้าง |
+| `documentType` | `estimate`, `purchase_order`, `change_order` (`credit_note` สงวน — `400 REQUEST_VALIDATION_FAILED`); เปลี่ยนไม่ได้ |
+| `branchId` | optional; null = ทั้งองค์กร; ต้องเป็นสาขา active ในองค์กร (`404 BRANCH_NOT_FOUND`); เปลี่ยนไม่ได้ |
+| `currency` | `THB` เท่านั้น |
+| `isUnlimited` / `maxAmount` | `isUnlimited=true` ต้องไม่ส่ง `maxAmount`; มิฉะนั้นต้องส่ง `0 ≤ maxAmount ≤ 9,999,999,999,999.99` ทศนิยมไม่เกิน 2 ตำแหน่ง |
+| `isActive` | แก้ได้เฉพาะ PUT; แถวที่ไม่ active ถือเสมือนไม่มีแถว |
+| `rowVersion` | response; ค่าเดียวกับ `ETag` / `If-Match` |
+```
+
+- [ ] **Step 4: catalog, error, identity contract, approval-matrix**
+
+- `docs/03-contracts/permission-catalog.md`: ต่อจากแถว `roles.manage` เพิ่ม `| Access | \`approval-limits.manage\` | ตั้ง/แก้/ปิดใช้วงเงินอนุมัติต่อ Role × ประเภทเอกสาร × สาขา (Approval Limit); เป็น Approval Permission (การมอบต้อง maker–checker) | Organization |`.
+- `docs/03-contracts/identity-administration-api-contract.md` กฎข้อ 5 (Maker–checker): ต่อรายการ 6 ตัวให้เป็น 7 ตัว โดยเพิ่ม `approval-limits.manage` และอ้าง [ADR 0021](../adr/0021-approval-authority-matrix.md) ข้าง ADR 0020.
+- `docs/03-contracts/error-contract.md` ต่อท้ายตาราง (ถัดจาก `BRANCH_NOT_FOUND`) 4 รหัส: `APPROVAL_LIMIT_EXCEEDED` 403 (ยอดเอกสารเกินวงเงินสูงสุดของ Role ที่ผู้อนุมัติถือ), `APPROVAL_AUTHORITY_NOT_CONFIGURED` 403 (ไม่มีวงเงิน active สำหรับ Role/ประเภท/สาขา/สกุลนี้ — fail-closed), `APPROVAL_LIMIT_ALREADY_EXISTS` 409, `APPROVAL_LIMIT_ROLE_NOT_FOUND` 404 ในรูปแบบ `| \`CODE\` | status | คำอธิบายภาษาไทย |`.
+- `docs/01-business/approval-matrix.md`: ต่อท้ายหัวข้อ "Permission ไม่เท่ากับ Authority" เพิ่มย่อหน้า: "Approval Authority (วงเงินต่อ Role/เอกสาร/สาขา) บังคับจริงใน Backend ตั้งแต่ G-03c สำหรับ Estimate, Purchase Order และ Change Order — ดู [ADR 0021](../adr/0021-approval-authority-matrix.md) และ [Approval Limit API Contract](../03-contracts/approval-limit-api-contract.md). ตารางนี้ไม่แทน Policy `TEST_ONLY-TH-EST-V1` (route/margin/discount) ซึ่งยังเป็นเรื่องแยก."
+
+- [ ] **Step 5: README, CONTEXT**
+
+- `docs/README.md` ต่อจากแถว `API จัดการ Role และ Permission`: `| API จัดการวงเงินอนุมัติ | [Approval Limit API Contract](03-contracts/approval-limit-api-contract.md) |`.
+- `CONTEXT.md` ต่อจาก **Role Change Request** เพิ่ม **Approval Limit (วงเงินอนุมัติ)**: เพดานยอดเอกสารที่ Role หนึ่งอนุมัติได้ต่อประเภทเอกสาร สาขา (หรือทั้งองค์กร) และสกุลเงิน; ไม่มีวงเงิน = อนุมัติไม่ได้ (_Avoid_: Permission, Budget) และ **Approval Authority (อำนาจอนุมัติ)**: ผลของการประเมิน Approval Limit ของทุก Role ที่ผู้อนุมัติถือเทียบกับยอดเอกสาร ณ เวลาตัดสิน (_Avoid_: Role, Scope).
+
+- [ ] **Step 6: ตรวจลิงก์**
+
+Run: `for f in docs/03-contracts/approval-limit-api-contract.md docs/adr/0021-approval-authority-matrix.md docs/01-business/approval-matrix.md; do grep -o '](\([^)#]*\)' $f | sed 's/.*](//' | sort -u | while read p; do d=$(dirname $f); [ -e "$d/$p" ] || echo "MISSING $f -> $p"; done; done`
+Expected: มีเฉพาะ `MISSING ... ../05-engineering/approval-authority-verification.md` (สร้างใน Task 12 — ยอมรับชั่วคราว).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add docs/adr/0021-approval-authority-matrix.md docs/adr/README.md docs/03-contracts/approval-limit-api-contract.md docs/03-contracts/permission-catalog.md docs/03-contracts/error-contract.md docs/03-contracts/identity-administration-api-contract.md docs/01-business/approval-matrix.md docs/README.md CONTEXT.md
+git commit -m "docs(approval): add approval authority ADR and contract
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 2: Domain — `ApprovalLimit`, `ApprovalDocumentType`, rules
+
+**Files:**
+- Create: `backend/src/TanErp.Domain/IdentityAccess/ApprovalLimit.cs`, `backend/tests/TanErp.UnitTests/IdentityAccess/ApprovalLimitDomainTests.cs`
+
+- [ ] **Step 1: เขียน domain**
+
+สร้าง `backend/src/TanErp.Domain/IdentityAccess/ApprovalLimit.cs`:
+
+```csharp
+using TanErp.Domain.Common;
+
+namespace TanErp.Domain.IdentityAccess;
+
+public sealed class ApprovalLimitDomainException : Exception
+{
+    public ApprovalLimitDomainException(string code, string message) : base(message) => Code = code;
+    public string Code { get; }
+}
+
+/// <summary>Document types an approval limit can be defined for. <c>credit_note</c> is reserved for G-15 and is not enforced yet.</summary>
+public static class ApprovalDocumentType
+{
+    public const string Estimate = "estimate";
+    public const string PurchaseOrder = "purchase_order";
+    public const string ChangeOrder = "change_order";
+    public const string CreditNote = "credit_note";
+
+    public static readonly IReadOnlyList<string> Enforced = new[] { Estimate, PurchaseOrder, ChangeOrder };
+
+    public static bool IsEnforced(string? value) => value is not null && Enforced.Contains(value);
+}
+
+public static class ApprovalLimitRules
+{
+    public const string Currency = "THB";
+    public const decimal MaxAmountCeiling = 9_999_999_999_999.99m;
+
+    public static void ValidateCreate(string? documentType, string? currency, bool isUnlimited, decimal? maxAmount)
+    {
+        if (!ApprovalDocumentType.IsEnforced(documentType))
+            throw Invalid("Document type must be estimate, purchase_order or change_order (credit_note is reserved).");
+        if (!string.Equals(currency, Currency, StringComparison.Ordinal))
+            throw Invalid($"Currency must be {Currency}.");
+        ValidateAmount(isUnlimited, maxAmount);
+    }
+
+    public static void ValidateAmount(bool isUnlimited, decimal? maxAmount)
+    {
+        if (isUnlimited)
+        {
+            if (maxAmount is not null) throw Invalid("An unlimited approval limit cannot carry a maximum amount.");
+            return;
+        }
+
+        if (maxAmount is null) throw Invalid("A maximum amount is required unless the limit is unlimited.");
+        if (maxAmount < 0 || maxAmount > MaxAmountCeiling) throw Invalid($"The maximum amount must be between 0 and {MaxAmountCeiling}.");
+        if (decimal.Round(maxAmount.Value, 2) != maxAmount.Value) throw Invalid("The maximum amount allows at most 2 decimal places.");
+    }
+
+    private static ApprovalLimitDomainException Invalid(string message) => new("REQUEST_VALIDATION_FAILED", message);
+}
+
+/// <summary>
+/// The most a role may approve for one document type, branch (or organization-wide) and currency.
+/// An inactive row is treated as if it did not exist (fail-closed).
+/// </summary>
+public class ApprovalLimit : Entity
+{
+    public Guid OrganizationId { get; private set; }
+    public Guid RoleId { get; private set; }
+    public string DocumentType { get; private set; } = string.Empty;
+    public Guid? BranchId { get; private set; }
+    public string Currency { get; private set; } = ApprovalLimitRules.Currency;
+    public bool IsUnlimited { get; private set; }
+    public decimal? MaxAmount { get; private set; }
+    public bool IsActive { get; private set; }
+    public DateTimeOffset CreatedAtUtc { get; private set; }
+    public DateTimeOffset UpdatedAtUtc { get; private set; }
+    public Guid RowVersion { get; private set; } = Guid.NewGuid();
+
+    protected ApprovalLimit() { }
+
+    private ApprovalLimit(Guid id) : base(id) { }
+
+    public static ApprovalLimit Create(
+        Guid id, Guid organizationId, Guid roleId, string documentType, Guid? branchId, string currency,
+        bool isUnlimited, decimal? maxAmount, DateTimeOffset now)
+    {
+        if (organizationId == Guid.Empty) throw new ArgumentException("Organization ID cannot be empty.", nameof(organizationId));
+        if (roleId == Guid.Empty) throw new ArgumentException("Role ID cannot be empty.", nameof(roleId));
+        if (branchId == Guid.Empty) throw new ArgumentException("Branch ID cannot be empty.", nameof(branchId));
+        ApprovalLimitRules.ValidateCreate(documentType, currency, isUnlimited, maxAmount);
+
+        return new ApprovalLimit(id)
+        {
+            OrganizationId = organizationId,
+            RoleId = roleId,
+            DocumentType = documentType,
+            BranchId = branchId,
+            Currency = currency,
+            IsUnlimited = isUnlimited,
+            MaxAmount = maxAmount,
+            IsActive = true,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        };
+    }
+
+    /// <summary>Role, document type, branch and currency form the row's identity and never change.</summary>
+    public void Update(bool isUnlimited, decimal? maxAmount, bool isActive, DateTimeOffset now)
+    {
+        ApprovalLimitRules.ValidateAmount(isUnlimited, maxAmount);
+        IsUnlimited = isUnlimited;
+        MaxAmount = maxAmount;
+        IsActive = isActive;
+        UpdatedAtUtc = now;
+        RowVersion = Guid.NewGuid();
+    }
+}
+```
+
+- [ ] **Step 2: เขียน unit test (เขียนอย่างเดียว ห้ามรัน)**
+
+สร้าง `backend/tests/TanErp.UnitTests/IdentityAccess/ApprovalLimitDomainTests.cs`:
+
+```csharp
+using TanErp.Domain.IdentityAccess;
+using Xunit;
+
+namespace TanErp.UnitTests.IdentityAccess;
+
+public class ApprovalLimitDomainTests
+{
+    private static readonly DateTimeOffset Now = new(2026, 10, 11, 0, 0, 0, TimeSpan.Zero);
+
+    private static ApprovalLimit Make(string type = ApprovalDocumentType.Estimate, bool unlimited = false, decimal? max = 100m, Guid? branch = null) =>
+        ApprovalLimit.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), type, branch, "THB", unlimited, max, Now);
+
+    [Theory]
+    [InlineData(ApprovalDocumentType.Estimate)]
+    [InlineData(ApprovalDocumentType.PurchaseOrder)]
+    [InlineData(ApprovalDocumentType.ChangeOrder)]
+    public void Create_AcceptsEnforcedTypesAndStartsActive(string type)
+    {
+        var limit = Make(type, max: 250_000.50m);
+
+        Assert.True(limit.IsActive);
+        Assert.Equal(250_000.50m, limit.MaxAmount);
+    }
+
+    [Theory]
+    [InlineData(ApprovalDocumentType.CreditNote, false, 1.0)]   // reserved for G-15
+    [InlineData("invoice", false, 1.0)]
+    [InlineData(ApprovalDocumentType.Estimate, true, 10.0)]     // unlimited must not carry an amount
+    [InlineData(ApprovalDocumentType.Estimate, false, null)]
+    [InlineData(ApprovalDocumentType.Estimate, false, -0.01)]
+    [InlineData(ApprovalDocumentType.Estimate, false, 1.005)]   // three decimal places
+    public void Create_RejectsInvalidInput(string type, bool unlimited, double? max) =>
+        Assert.Equal("REQUEST_VALIDATION_FAILED",
+            Assert.Throws<ApprovalLimitDomainException>(() => Make(type, unlimited, max is null ? null : (decimal)max.Value)).Code);
+
+    [Fact]
+    public void Create_RejectsOtherCurrenciesAndEmptyIdentifiers()
+    {
+        Assert.Throws<ApprovalLimitDomainException>(() =>
+            ApprovalLimit.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), ApprovalDocumentType.Estimate, null, "USD", false, 1m, Now));
+        Assert.Throws<ArgumentException>(() => Make(branch: Guid.Empty));
+    }
+
+    [Fact]
+    public void Update_RejectsBadAmountsWithoutChangingTheRow_ThenAdvancesTheVersion()
+    {
+        var limit = Make(max: 50m);
+        var before = limit.RowVersion;
+
+        Assert.Throws<ApprovalLimitDomainException>(() => limit.Update(false, null, true, Now));
+        Assert.Equal(before, limit.RowVersion);
+
+        limit.Update(true, null, false, Now.AddHours(1));
+        Assert.True(limit.IsUnlimited);
+        Assert.False(limit.IsActive);
+        Assert.NotEqual(before, limit.RowVersion);
+    }
+}
+```
+
+- [ ] **Step 3: Verify (compile-only)**
+
+Run: `dotnet build backend/TanErp.slnx --nologo -v q`
+Expected: `0 Warning(s)` `0 Error(s)`. **ห้ามรัน `dotnet test`.**
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add backend/src/TanErp.Domain/IdentityAccess/ApprovalLimit.cs backend/tests/TanErp.UnitTests/IdentityAccess/ApprovalLimitDomainTests.cs
+git commit -m "feat(approval): add approval limit domain model
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 3: Application — `ApprovalAuthorityPolicy`, `IApprovalAuthority`, ขยาย approval permission set
+
+**Files:**
+- Create: `backend/src/TanErp.Application/IdentityAccess/ApprovalLimits/ApprovalAuthorityPolicy.cs`, `backend/src/TanErp.Application/IdentityAccess/ApprovalLimits/IApprovalAuthority.cs`, `backend/tests/TanErp.UnitTests/IdentityAccess/ApprovalAuthorityPolicyTests.cs`
+- Modify: `backend/src/TanErp.Application/IdentityAccess/Administration/AdministrationModels.cs`, `backend/tests/TanErp.UnitTests/IdentityAccess/AdministrationPolicyTests.cs`
+
+- [ ] **Step 1: นโยบายตัดสิน (pure) และ port**
+
+สร้าง `backend/src/TanErp.Application/IdentityAccess/ApprovalLimits/ApprovalAuthorityPolicy.cs`:
+
+```csharp
+namespace TanErp.Application.IdentityAccess.ApprovalLimits;
+
+/// <summary>One active limit row that applies to the approver (already filtered by document type, currency and role).</summary>
+public sealed record ApprovalLimitCandidate(Guid RoleId, Guid? BranchId, bool IsUnlimited, decimal? MaxAmount);
+
+public enum ApprovalAuthorityOutcome { Allowed, NotConfigured, LimitExceeded }
+
+public sealed record ApprovalAuthorityDecision(ApprovalAuthorityOutcome Outcome, bool IsUnlimited, decimal? Ceiling);
+
+/// <summary>
+/// Per role a branch-specific row beats the organization-wide row; across roles the highest ceiling wins
+/// (unlimited beats any number). No applicable row is never "allowed" (fail-closed).
+/// </summary>
+public static class ApprovalAuthorityPolicy
+{
+    public static ApprovalAuthorityDecision Evaluate(IEnumerable<ApprovalLimitCandidate> candidates, Guid documentBranchId, decimal amount)
+    {
+        var effective = candidates
+            .Where(c => c.BranchId is null || c.BranchId == documentBranchId)
+            .GroupBy(c => c.RoleId)
+            .Select(g => g.FirstOrDefault(c => c.BranchId == documentBranchId) ?? g.First(c => c.BranchId is null))
+            .ToList();
+
+        if (effective.Count == 0) return new ApprovalAuthorityDecision(ApprovalAuthorityOutcome.NotConfigured, false, null);
+        if (effective.Any(c => c.IsUnlimited)) return new ApprovalAuthorityDecision(ApprovalAuthorityOutcome.Allowed, true, null);
+
+        var ceiling = effective.Max(c => c.MaxAmount ?? 0m);
+        return Math.Abs(amount) <= ceiling
+            ? new ApprovalAuthorityDecision(ApprovalAuthorityOutcome.Allowed, false, ceiling)
+            : new ApprovalAuthorityDecision(ApprovalAuthorityOutcome.LimitExceeded, false, ceiling);
+    }
+}
+```
+
+สร้าง `backend/src/TanErp.Application/IdentityAccess/ApprovalLimits/IApprovalAuthority.cs`:
+
+```csharp
+using TanErp.Application.Common.Results;
+
+namespace TanErp.Application.IdentityAccess.ApprovalLimits;
+
+/// <param name="MembershipId">The approver's membership (its active roles are the source of authority).</param>
+/// <param name="DocumentType">One of <c>ApprovalDocumentType</c>.</param>
+/// <param name="BranchId">Branch of the document being decided.</param>
+/// <param name="Amount">Document amount at decision time; the sign is ignored.</param>
+public sealed record ApprovalAuthorityCheck(
+    Guid OrganizationId, Guid MembershipId, string DocumentType, Guid BranchId, decimal Amount, string Currency);
+
+/// <summary>
+/// Checks the approver's Approval Limits. Implementations share the caller's <c>DbContext</c> so the check runs inside the
+/// approval transaction. Returns <c>null</c> when allowed, otherwise <c>APPROVAL_AUTHORITY_NOT_CONFIGURED</c> or <c>APPROVAL_LIMIT_EXCEEDED</c>.
+/// </summary>
+public interface IApprovalAuthority
+{
+    Task<Error?> EnsureAsync(ApprovalAuthorityCheck check, CancellationToken cancellationToken);
+}
+```
+
+- [ ] **Step 2: ขยาย approval set**
+
+ใน `AdministrationModels.cs` ภายใน `ApprovalPermissionKeys` เปลี่ยนท้ายรายการเป็น:
+
+```csharp
+        "mrp.approve",
+        "approval-limits.manage"
+```
+
+(เพิ่ม `,` หลัง `"mrp.approve"`). ใน `AdministrationPolicyTests.cs`:
+- ใน `[Theory]` ที่มี `[InlineData("projects.change-orders.approve", true)]` ต่อท้ายบรรทัดนั้นเพิ่ม `[InlineData("approval-limits.manage", true)]`
+- แก้ `ApprovalPermissionKeys_AreExactlyTheReviewedSet` ให้ `expected` เป็น (เรียง ordinal):
+
+```csharp
+        var expected = new[]
+        {
+            "approval-limits.manage", "cost-records.approve", "cost-records.publish", "estimates.approve",
+            "mrp.approve", "projects.change-orders.approve", "purchase-orders.approve"
+        };
+```
+
+- [ ] **Step 3: เขียน unit test นโยบาย (เขียนอย่างเดียว ห้ามรัน)**
+
+สร้าง `backend/tests/TanErp.UnitTests/IdentityAccess/ApprovalAuthorityPolicyTests.cs`:
+
+```csharp
+using TanErp.Application.IdentityAccess.ApprovalLimits;
+using Xunit;
+
+namespace TanErp.UnitTests.IdentityAccess;
+
+public class ApprovalAuthorityPolicyTests
+{
+    private static readonly Guid Branch = Guid.NewGuid(), OtherBranch = Guid.NewGuid(), RoleA = Guid.NewGuid(), RoleB = Guid.NewGuid();
+
+    private static ApprovalLimitCandidate Limit(Guid role, decimal max, Guid? branch = null) => new(role, branch, false, max);
+
+    private static ApprovalAuthorityOutcome Outcome(decimal amount, params ApprovalLimitCandidate[] rows) =>
+        ApprovalAuthorityPolicy.Evaluate(rows, Branch, amount).Outcome;
+
+    [Fact]
+    public void NoApplicableRow_IsNotConfigured()
+    {
+        Assert.Equal(ApprovalAuthorityOutcome.NotConfigured, Outcome(1m));
+        Assert.Equal(ApprovalAuthorityOutcome.NotConfigured, Outcome(1m, Limit(RoleA, 1_000m, OtherBranch)));
+    }
+
+    [Theory]
+    [InlineData(1000.0, ApprovalAuthorityOutcome.Allowed)]          // equal to the ceiling passes
+    [InlineData(1000.01, ApprovalAuthorityOutcome.LimitExceeded)]
+    [InlineData(-1000.01, ApprovalAuthorityOutcome.LimitExceeded)]  // the sign is ignored
+    public void SingleRow_ComparesTheAbsoluteAmountToTheCeiling(double amount, ApprovalAuthorityOutcome expected) =>
+        Assert.Equal(expected, Outcome((decimal)amount, Limit(RoleA, 1_000m)));
+
+    [Fact]
+    public void AcrossRoles_TheHighestCeilingWins_AndUnlimitedBeatsANumber()
+    {
+        Assert.Equal(ApprovalAuthorityOutcome.Allowed, Outcome(40_000m, Limit(RoleA, 1_000m), Limit(RoleB, 50_000m)));
+        Assert.Equal(ApprovalAuthorityOutcome.LimitExceeded, Outcome(50_000.01m, Limit(RoleA, 1_000m), Limit(RoleB, 50_000m)));
+        Assert.Equal(ApprovalAuthorityOutcome.Allowed, Outcome(9_999_999m, Limit(RoleA, 1m), new ApprovalLimitCandidate(RoleB, null, true, null)));
+    }
+
+    [Fact]
+    public void PerRole_ABranchRowOverridesTheOrganizationRowEvenWhenLower_AndOtherRolesAreUnaffected()
+    {
+        var restricted = new[] { Limit(RoleA, 100_000m), Limit(RoleA, 5_000m, Branch) };
+
+        Assert.Equal(ApprovalAuthorityOutcome.LimitExceeded, Outcome(6_000m, restricted));
+        Assert.Equal(ApprovalAuthorityOutcome.Allowed, Outcome(20_000m, restricted.Append(Limit(RoleB, 20_000m)).ToArray()));
+        Assert.Equal(ApprovalAuthorityOutcome.Allowed, Outcome(99_000m, Limit(RoleA, 100_000m), Limit(RoleA, 5_000m, OtherBranch)));
+    }
+}
+```
+
+- [ ] **Step 4: Verify (compile-only)**
+
+Run: `dotnet build backend/TanErp.slnx --nologo -v q`
+Expected: `0 Warning(s)` `0 Error(s)`. **ห้ามรัน `dotnet test`.**
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add backend/src/TanErp.Application backend/tests/TanErp.UnitTests/IdentityAccess
+git commit -m "feat(approval): add approval authority policy and extend approval permission set
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 4: EF configuration, migration และ seed (permission + Test limits)
+
+**Files:**
+- Create: `backend/src/TanErp.Infrastructure/Persistence/Configurations/ApprovalLimitConfiguration.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/AppDbContext.cs`, `backend/src/TanErp.Infrastructure/Persistence/TestOnlyDataSeeder.cs`, `backend/tests/TanErp.UnitTests/Organization/PermissionCatalogParityTests.cs`, `frontend/src/lib/permissions/permissions.ts`
+- Generate: `backend/src/TanErp.Infrastructure/Persistence/Migrations/*_AddApprovalLimits*.cs`
+
+- [ ] **Step 1: DbSet + configuration**
+
+ใน `AppDbContext.cs` ต่อจากบรรทัด `public DbSet<RoleChangeRequest> RoleChangeRequests => Set<RoleChangeRequest>();` เพิ่ม:
+
+```csharp
+    public DbSet<ApprovalLimit> ApprovalLimits => Set<ApprovalLimit>();
+```
+
+สร้าง `ApprovalLimitConfiguration.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TanErp.Domain.IdentityAccess;
+
+namespace TanErp.Infrastructure.Persistence.Configurations;
+
+public class ApprovalLimitConfiguration : IEntityTypeConfiguration<ApprovalLimit>
+{
+    public void Configure(EntityTypeBuilder<ApprovalLimit> builder)
+    {
+        builder.ToTable("approval_limits", "identity_access", t =>
+        {
+            // credit_note is reserved for G-15: the DB accepts it, the API rejects it until it is enforced.
+            t.HasCheckConstraint("ck_approval_limits_document_type", "document_type IN ('estimate', 'purchase_order', 'change_order', 'credit_note')");
+            t.HasCheckConstraint("ck_approval_limits_amount", "(is_unlimited AND max_amount IS NULL) OR (NOT is_unlimited AND max_amount IS NOT NULL AND max_amount >= 0)");
+            t.HasCheckConstraint("ck_approval_limits_currency", "char_length(currency) = 3");
+        });
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.RoleId).HasColumnName("role_id").IsRequired();
+        builder.Property(x => x.DocumentType).HasColumnName("document_type").HasMaxLength(32).IsRequired();
+        builder.Property(x => x.BranchId).HasColumnName("branch_id");
+        builder.Property(x => x.Currency).HasColumnName("currency").HasMaxLength(3).IsRequired();
+        builder.Property(x => x.IsUnlimited).HasColumnName("is_unlimited").IsRequired();
+        builder.Property(x => x.MaxAmount).HasColumnName("max_amount").HasColumnType("numeric(18,2)");
+        builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
+        builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+
+        // One row per scope, active or not (edit the existing row instead of adding a duplicate).
+        builder.HasIndex(x => new { x.OrganizationId, x.RoleId, x.DocumentType, x.Currency })
+            .IsUnique()
+            .HasFilter("branch_id IS NULL")
+            .HasDatabaseName("ux_approval_limits_org_wide");
+        builder.HasIndex(x => new { x.OrganizationId, x.RoleId, x.DocumentType, x.BranchId, x.Currency })
+            .IsUnique()
+            .HasFilter("branch_id IS NOT NULL")
+            .HasDatabaseName("ux_approval_limits_branch");
+        builder.HasIndex(x => new { x.OrganizationId, x.DocumentType, x.IsActive });
+
+        builder.HasOne<TanErp.Domain.Organization.Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Role>().WithMany().HasForeignKey(x => x.RoleId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<TanErp.Domain.Organization.Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+```
+
+- [ ] **Step 2: seed (`TestOnlyDataSeeder.cs`)**
+
+1. ใน `permKeys` ต่อจากบรรทัด `("roles.manage", "Manage Roles"),` เพิ่ม `("approval-limits.manage", "Manage Approval Limits"),`
+2. ต่อจากบรรทัด `if (!role.IsSystem) role.MarkAsSystemRole();` เพิ่ม:
+
+```csharp
+        await EnsureUnlimitedApprovalLimitsAsync(db, TestOrgId, role.Id,
+            ApprovalDocumentType.Estimate, ApprovalDocumentType.PurchaseOrder, ApprovalDocumentType.ChangeOrder);
+```
+
+3. ต่อจากบรรทัด `if (!roleB.IsSystem) roleB.MarkAsSystemRole();` เพิ่ม:
+
+```csharp
+        await EnsureUnlimitedApprovalLimitsAsync(db, TestOrgBId, roleB.Id,
+            ApprovalDocumentType.Estimate, ApprovalDocumentType.PurchaseOrder, ApprovalDocumentType.ChangeOrder);
+```
+
+4. ก่อนบรรทัด `if (seedDedicatedEstimateReviewer)` (บล็อก `if` ที่ตามด้วย `var estimateReviewerUser`) เพิ่ม:
+
+```csharp
+        await EnsureUnlimitedApprovalLimitsAsync(db, TestOrgId, costReviewerRole.Id, ApprovalDocumentType.Estimate);
+
+```
+
+5. ในบล็อก `if (seedDedicatedEstimateReviewer)` ต่อจาก `db.Roles.Add(estimateReviewerRole);\n            }` (ปิดบล็อก `if (estimateReviewerRole is null)`) เพิ่ม:
+
+```csharp
+            await EnsureUnlimitedApprovalLimitsAsync(db, TestOrgId, estimateReviewerRole.Id, ApprovalDocumentType.Estimate);
+```
+
+6. เพิ่ม helper (วางเหนือ `/// <summary>` ที่นำหน้า `SeedEstimateDemoDataAsync`):
+
+```csharp
+    /// <summary>TEST_ONLY: real limits are never guessed (fail-closed); only the Test environment gets unlimited rows.</summary>
+    private static async Task EnsureUnlimitedApprovalLimitsAsync(AppDbContext db, Guid organizationId, Guid roleId, params string[] documentTypes)
+    {
+        foreach (var documentType in documentTypes)
+        {
+            var exists = await db.ApprovalLimits.AnyAsync(l =>
+                l.OrganizationId == organizationId && l.RoleId == roleId && l.DocumentType == documentType &&
+                l.BranchId == null && l.Currency == ApprovalLimitRules.Currency);
+            if (!exists)
+            {
+                db.ApprovalLimits.Add(ApprovalLimit.Create(
+                    Guid.NewGuid(), organizationId, roleId, documentType, null, ApprovalLimitRules.Currency, true, null, DateTimeOffset.UtcNow));
+            }
+        }
+    }
+```
+
+- [ ] **Step 3: parity test + FE permission constant**
+
+- `PermissionCatalogParityTests.cs`: ต่อจาก `[InlineData("roles.manage")]` เพิ่ม `[InlineData("approval-limits.manage")]` (docs มีแล้วจาก Task 1; seeder จาก Step 2; FE จากข้างล่าง).
+- `frontend/src/lib/permissions/permissions.ts`: ต่อจาก `ROLES_MANAGE: "roles.manage",` เพิ่ม `APPROVAL_LIMITS_MANAGE: "approval-limits.manage",`
+
+- [ ] **Step 4: Generate migration (ครั้งเดียว — ถ้าต้องแก้ ให้ลบแล้ว generate ใหม่)**
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp && ConnectionStrings__Database="Host=localhost;Database=design;Username=x;Password=x" \
+dotnet ef migrations add AddApprovalLimits \
+  --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api --output-dir Persistence/Migrations
+```
+Expected: `*_AddApprovalLimits.cs` + `.Designer.cs`, snapshot เปลี่ยน; `Up` สร้างตาราง `identity_access.approval_limits` พร้อม 2 unique partial index, 3 check constraint, 3 FK (Restrict). ไม่มีข้อมูลเดิมต้อง backfill (ตารางใหม่ — แถววงเงินไม่ถูกสร้างใน migration: fail-closed).
+
+- [ ] **Step 5: ตรวจ model drift และ compile**
+
+```bash
+ConnectionStrings__Database="Host=localhost;Database=design;Username=x;Password=x" dotnet ef migrations has-pending-model-changes \
+  --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api
+dotnet build backend/TanErp.slnx --nologo -v q
+```
+Expected: `No changes have been made to the model since the last migration.`; build `0 Warning(s)` `0 Error(s)`. **ห้ามรัน `dotnet test`.**
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add backend/src/TanErp.Infrastructure/Persistence backend/tests/TanErp.UnitTests/Organization/PermissionCatalogParityTests.cs frontend/src/lib/permissions/permissions.ts
+git commit -m "feat(approval): persist approval limits and seed test authority
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 5: `ApprovalAuthority` service, error codes และ DI
+
+**Files:**
+- Create: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/ApprovalAuthority.cs`
+- Modify: `backend/src/TanErp.Api/Program.cs`, `backend/src/TanErp.Api/ErrorHandling/ProblemDetailsMapper.cs`, `backend/src/TanErp.Api/Resources/Errors.resx`, `backend/src/TanErp.Api/Resources/Errors.en.resx`
+
+- [ ] **Step 1: service**
+
+สร้าง `ApprovalAuthority.cs` (namespace ไม่มีคำว่า `Organization`; ใช้ `AppDbContext` ที่ scoped เดียวกับ store ที่เรียก จึงอยู่ใน transaction ของการอนุมัติ):
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
+
+namespace TanErp.Infrastructure.Persistence.IdentityAccess;
+
+public sealed class ApprovalAuthority : IApprovalAuthority
+{
+    private readonly AppDbContext _db;
+
+    public ApprovalAuthority(AppDbContext db) => _db = db;
+
+    public async Task<Error?> EnsureAsync(ApprovalAuthorityCheck check, CancellationToken cancellationToken)
+    {
+        // Only the approver's ACTIVE roles count (same filter as RequestAccessResolver); inactive limit rows are ignored.
+        var rows = await (
+            from membershipRole in _db.MembershipRoles.AsNoTracking()
+            join limit in _db.ApprovalLimits.AsNoTracking() on membershipRole.RoleId equals limit.RoleId
+            where membershipRole.OrganizationId == check.OrganizationId
+                  && membershipRole.MembershipId == check.MembershipId
+                  && membershipRole.Role!.IsActive
+                  && limit.OrganizationId == check.OrganizationId
+                  && limit.IsActive
+                  && limit.DocumentType == check.DocumentType
+                  && limit.Currency == check.Currency
+                  && (limit.BranchId == null || limit.BranchId == check.BranchId)
+            select new { limit.RoleId, limit.BranchId, limit.IsUnlimited, limit.MaxAmount })
+            .ToListAsync(cancellationToken);
+
+        var decision = ApprovalAuthorityPolicy.Evaluate(
+            rows.Select(r => new ApprovalLimitCandidate(r.RoleId, r.BranchId, r.IsUnlimited, r.MaxAmount)),
+            check.BranchId,
+            check.Amount);
+
+        return decision.Outcome switch
+        {
+            ApprovalAuthorityOutcome.Allowed => null,
+            ApprovalAuthorityOutcome.LimitExceeded => new Error("APPROVAL_LIMIT_EXCEEDED", "The document amount exceeds the approver's approval limit."),
+            _ => new Error("APPROVAL_AUTHORITY_NOT_CONFIGURED", "No active approval limit is configured for this approver, document type and branch.")
+        };
+    }
+}
+```
+
+- [ ] **Step 2: DI**
+
+ใน `Program.cs` ต่อจากบรรทัด `builder.Services.AddScoped<TanErp.Application.IdentityAccess.RoleManagement.RoleManagementHandler>();` เพิ่ม:
+
+```csharp
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.IApprovalAuthority, TanErp.Infrastructure.Persistence.IdentityAccess.ApprovalAuthority>();
+```
+
+- [ ] **Step 3: error mapping (ต้องทำก่อน Task 6 — รหัสที่ไม่ map จะกลายเป็น 500)**
+
+`ProblemDetailsMapper.cs` ต่อจากบรรทัด `"ROLE_IN_USE" => StatusCodes.Status409Conflict,` เพิ่ม:
+
+```csharp
+        "APPROVAL_LIMIT_EXCEEDED" => StatusCodes.Status403Forbidden,
+        "APPROVAL_AUTHORITY_NOT_CONFIGURED" => StatusCodes.Status403Forbidden,
+```
+
+`Errors.resx` (ไทย) แทนท้ายไฟล์ `</data>\n</root>` ของรายการสุดท้าย (`ROLE_IN_USE_DETAIL`) โดยเพิ่มก่อน `</root>`:
+
+```xml
+  <data name="APPROVAL_LIMIT_EXCEEDED_TITLE" xml:space="preserve">
+    <value>เกินวงเงินอนุมัติ</value>
+  </data>
+  <data name="APPROVAL_LIMIT_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>ยอดเอกสารเกินวงเงินอนุมัติสูงสุดของบทบาทที่คุณถืออยู่ กรุณาให้ผู้มีอำนาจสูงกว่าเป็นผู้อนุมัติ</value>
+  </data>
+  <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_TITLE" xml:space="preserve">
+    <value>ยังไม่ได้กำหนดวงเงินอนุมัติ</value>
+  </data>
+  <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_DETAIL" xml:space="preserve">
+    <value>บทบาทของคุณยังไม่มีวงเงินอนุมัติสำหรับเอกสารประเภทนี้ในสาขานี้ กรุณาติดต่อผู้ดูแลระบบ</value>
+  </data>
+```
+
+`Errors.en.resx` เพิ่มก่อน `</root>`:
+
+```xml
+  <data name="APPROVAL_LIMIT_EXCEEDED_TITLE" xml:space="preserve">
+    <value>Approval limit exceeded</value>
+  </data>
+  <data name="APPROVAL_LIMIT_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>The document amount is above the highest approval limit of the roles you hold. Ask someone with higher authority to approve it.</value>
+  </data>
+  <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_TITLE" xml:space="preserve">
+    <value>Approval limit not configured</value>
+  </data>
+  <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_DETAIL" xml:space="preserve">
+    <value>Your roles have no approval limit for this document type and branch. Contact an administrator.</value>
+  </data>
+```
+
+- [ ] **Step 4: Verify (compile-only)**
+
+Run: `dotnet build backend/TanErp.slnx --nologo -v q`
+Expected: `0 Warning(s)` `0 Error(s)`. **ห้ามรัน `dotnet test`.**
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/ApprovalAuthority.cs backend/src/TanErp.Api
+git commit -m "feat(approval): add approval authority service and error codes
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 6: บังคับ Approval Authority ใน Estimate, Purchase Order และ Change Order
+
+**Files:**
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/Estimates/EstimateStore.cs`, `backend/src/TanErp.Infrastructure/Persistence/Procurement/ProcurementStore.cs`, `backend/src/TanErp.Infrastructure/Persistence/Projects/ProjectControlStore.cs`
+- Create: `backend/tests/TanErp.IntegrationTests/Support/ApprovalLimitTestSupport.cs`
+- Modify (tests): `backend/tests/TanErp.IntegrationTests/Api/EstimateEndpointsTests.cs`, `ProcurementEndpointsTests.cs`, `ProjectControlEndpointsTests.cs`
+
+ทั้งสาม store ถูกสร้างผ่าน DI เท่านั้น (ไม่มี `new XStore(` ในโค้ดหรือ test) จึงเพิ่ม constructor parameter ได้ในรอบเดียว. **ห้ามรันชุดทดสอบ** — fixture เดิมได้วงเงินจาก Task 4 (Test Admin, Test Admin B, Test Cost Reviewer, Test Estimate Reviewer) และ role ของ TestOnly policy ใน Step 4.
+
+- [ ] **Step 1: `EstimateStore.cs`**
+
+1. ต่อจาก `using TanErp.Application.Common.Results;` เพิ่ม `using TanErp.Application.IdentityAccess.ApprovalLimits;`
+2. เพิ่ม field: ต่อจาก `private readonly INotificationPublisher _notifications;` (ก่อน constructor) เพิ่ม `private readonly IApprovalAuthority _approvalAuthority;`
+3. constructor: เปลี่ยน
+
+```csharp
+        ILogger<EstimateStore> logger,
+        INotificationPublisher notifications)
+    {
+        _logger = logger;
+```
+เป็น
+```csharp
+        ILogger<EstimateStore> logger,
+        INotificationPublisher notifications,
+        IApprovalAuthority approvalAuthority)
+    {
+        _approvalAuthority = approvalAuthority;
+        _logger = logger;
+```
+4. ใน `ReviewAsync` แทรกบล็อกต่อไปนี้ **ก่อน** `var now = _clock.UtcNow;` ที่ตามด้วย `var approvalDecision = new EstimateApprovalDecision(` (ต่อจาก check `ESTIMATE_APPROVAL_SELF_REVIEW`):
+
+```csharp
+            // Approval Authority (G-03c): only the approval that completes the route needs a limit; returning never does.
+            var hasPendingStep = false;
+            if (decision == EstimateApprovalStepStatus.Approved)
+            {
+                hasPendingStep = await _db.EstimateApprovalSteps.AnyAsync(row =>
+                    row.OrganizationId == organizationId && row.EstimateApprovalRequestId == request.Id &&
+                    row.Id != step.Id && row.Status == EstimateApprovalStepStatus.Pending, cancellationToken);
+                if (!hasPendingStep)
+                {
+                    var authorityError = await _approvalAuthority.EnsureAsync(new ApprovalAuthorityCheck(
+                        organizationId, reviewerMembershipId, TanErp.Domain.IdentityAccess.ApprovalDocumentType.Estimate,
+                        estimate.BranchId, revision.GrandTotal, revision.Currency), cancellationToken);
+                    if (authorityError is not null)
+                        return Result<EstimateDetailProjection>.Failure(authorityError);
+                }
+            }
+
+```
+5. ลบ query ซ้ำเดิม: แทน
+
+```csharp
+                var hasPendingStep = await _db.EstimateApprovalSteps.AnyAsync(row =>
+                    row.OrganizationId == organizationId && row.EstimateApprovalRequestId == request.Id &&
+                    row.Id != step.Id && row.Status == EstimateApprovalStepStatus.Pending, cancellationToken);
+                if (hasPendingStep)
+```
+ด้วย
+```csharp
+                if (hasPendingStep)
+```
+
+- [ ] **Step 2: `ProcurementStore.cs`**
+
+1. ต่อจาก `using TanErp.Application.Common.Results;` เพิ่ม `using TanErp.Application.IdentityAccess.ApprovalLimits;`
+2. constructor แทนที่ด้วย:
+
+```csharp
+    private readonly INotificationPublisher _notifications;
+    private readonly IApprovalAuthority _approvalAuthority;
+
+    public ProcurementStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications, IApprovalAuthority approvalAuthority)
+    {
+        _db = db;
+        _clock = clock;
+        _numbers = numbers;
+        _notifications = notifications;
+        _approvalAuthority = approvalAuthority;
+    }
+```
+(แทนบรรทัด field `_notifications` เดิมและ constructor เดิม)
+3. ใน `PurchaseOrderActionAsync` แทนบล็อก
+
+```csharp
+                            var budgetFailure = await CheckApprovalAsync(orgId, order, ct);
+                            if (budgetFailure is not null) return Result<PurchaseOrderProjection>.Failure(budgetFailure);
+```
+ด้วย
+```csharp
+                            var budgetFailure = await CheckApprovalAsync(orgId, order, ct);
+                            if (budgetFailure is not null) return Result<PurchaseOrderProjection>.Failure(budgetFailure);
+
+                            // Approval Authority (G-03c): rejecting never needs a limit.
+                            var authorityError = await _approvalAuthority.EnsureAsync(new ApprovalAuthorityCheck(
+                                orgId, access.MembershipId, TanErp.Domain.IdentityAccess.ApprovalDocumentType.PurchaseOrder,
+                                order.BranchId, order.TotalAmount, order.Currency), ct);
+                            if (authorityError is not null) return Result<PurchaseOrderProjection>.Failure(authorityError);
+```
+
+- [ ] **Step 3: `ProjectControlStore.cs`**
+
+1. ต่อจาก `using TanErp.Application.Common.Security;` เพิ่ม `using TanErp.Application.IdentityAccess.ApprovalLimits;`
+2. constructor:
+
+```csharp
+    private readonly INotificationPublisher _notifications;
+    private readonly IApprovalAuthority _approvalAuthority;
+
+    public ProjectControlStore(AppDbContext db, IClock clock, IDocumentNumberGenerator documentNumberGenerator, INotificationPublisher notifications, IApprovalAuthority approvalAuthority)
+    {
+        _db = db;
+        _clock = clock;
+        _documentNumberGenerator = documentNumberGenerator;
+        _notifications = notifications;
+        _approvalAuthority = approvalAuthority;
+    }
+```
+3. ใน `ChangeOrderActionAsync` บล็อก `if (action == ChangeOrderAction.Approve)` ต่อจาก `if (... < 0m) { return Fail("PROJECT_BUDGET_NEGATIVE", ...); }` (ก่อนปีกกาปิดของบล็อก `Approve`) เพิ่ม:
+
+```csharp
+
+                            // Approval Authority (G-03c): deltas can be negative; the larger magnitude is what the approver is trusted with.
+                            // Projects carry no currency column, so project money is THB.
+                            var authorityError = await _approvalAuthority.EnsureAsync(new ApprovalAuthorityCheck(
+                                orgId, access.MembershipId, TanErp.Domain.IdentityAccess.ApprovalDocumentType.ChangeOrder,
+                                project.BranchId, Math.Max(Math.Abs(order.ContractDelta), Math.Abs(order.BudgetDelta)),
+                                TanErp.Domain.IdentityAccess.ApprovalLimitRules.Currency), ct);
+                            if (authorityError is not null) return Result<ProjectControlProjection>.Failure(authorityError);
+```
+
+- [ ] **Step 4: test support + fixture ของ Estimate**
+
+สร้าง `backend/tests/TanErp.IntegrationTests/Support/ApprovalLimitTestSupport.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using TanErp.Infrastructure.Persistence;
+
+namespace TanErp.IntegrationTests.Support;
+
+/// <summary>Adjusts the org-wide limit row that <c>TestOnlyDataSeeder</c> gave a role, so tests can exercise the approval authority.</summary>
+public static class ApprovalLimitTestSupport
+{
+    public static async Task SetLimitAsync(
+        IServiceProvider services, Guid organizationId, string roleName, string documentType,
+        bool isUnlimited, decimal? maxAmount, bool isActive = true)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var roleId = await db.Roles
+            .Where(r => r.OrganizationId == organizationId && r.Name == roleName)
+            .Select(r => r.Id)
+            .SingleAsync();
+        var limit = await db.ApprovalLimits.SingleAsync(l =>
+            l.OrganizationId == organizationId && l.RoleId == roleId && l.DocumentType == documentType && l.BranchId == null);
+        limit.Update(isUnlimited, maxAmount, isActive, DateTimeOffset.UtcNow);
+        await db.SaveChangesAsync();
+    }
+}
+```
+
+ใน `EstimateEndpointsTests.cs`, ฟังก์ชัน `SeedTestOnlyApprovalReviewersAsync`: ในลูป `for`, ต่อจาก `db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), roleId, OrgAId, permission.Id,\n                PermissionScope.Organization, OrgAId));` (ก่อนปีกกาปิดของลูป) เพิ่ม:
+
+```csharp
+            db.ApprovalLimits.Add(ApprovalLimit.Create(Guid.NewGuid(), OrgAId, roleId, ApprovalDocumentType.Estimate,
+                null, ApprovalLimitRules.Currency, true, null, DateTimeOffset.UtcNow));
+```
+(ทุก role ของ route หลาย step อาจเป็น step สุดท้าย จึงต้องมีวงเงินทุกตัว). เพิ่ม `using TanErp.IntegrationTests.Support;` ถ้ายังไม่มี.
+
+- [ ] **Step 5: เขียน test (เขียนอย่างเดียว ห้ามรัน)**
+
+**5a. `EstimateEndpointsTests.cs`** — เพิ่ม method (ต่อจาก test ที่ลบ permission ของ reviewer):
+
+```csharp
+    [Fact]
+    public async Task ReviewEstimate_EnforcesApprovalAuthority_AndReturnNeedsNoLimit()
+    {
+        var (estimate, _, _) = await SetupCalculatedEstimateAsync($"authority-{Guid.NewGuid():N}");
+        var submit = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/estimates/{estimate.Id}/submit", "token-org-a", MembershipAId);
+        submit.Headers.Add("If-Match", $"\"{estimate.RowVersion}\"");
+        submit.Headers.Add("Idempotency-Key", $"authority-submit-{Guid.NewGuid():N}");
+        submit.Content = JsonContent.Create(new SubmitEstimateRequest(1, 1, "TEST_ONLY approval authority"));
+        var submitted = (await (await _client.SendAsync(submit)).Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+
+        async Task<HttpResponseMessage> Review(ReviewEstimateRequest body)
+        {
+            var request = CreateAuthenticatedRequest(HttpMethod.Post,
+                $"/api/v1/estimates/{estimate.Id}/review-decisions", "token-org-b", TestOnlyDataSeeder.TestCostReviewerMembershipId);
+            request.Headers.Add("If-Match", $"\"{submitted.RowVersion}\"");
+            request.Headers.Add("Idempotency-Key", $"authority-review-{Guid.NewGuid():N}");
+            request.Content = JsonContent.Create(body);
+            return await _client.SendAsync(request);
+        }
+
+        async Task<string?> CodeOf(HttpResponseMessage response) =>
+            System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement.GetProperty("code").GetString();
+
+        // No active limit row for the reviewer's role: fail-closed.
+        await ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgAId, "Test Cost Reviewer", ApprovalDocumentType.Estimate, true, null, isActive: false);
+        var notConfigured = await Review(new ReviewEstimateRequest(1, "approved"));
+        Assert.Equal(HttpStatusCode.Forbidden, notConfigured.StatusCode);
+        Assert.Equal("APPROVAL_AUTHORITY_NOT_CONFIGURED", await CodeOf(notConfigured));
+
+        // A ceiling far below the grand total.
+        await ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgAId, "Test Cost Reviewer", ApprovalDocumentType.Estimate, false, 0.01m);
+        Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await CodeOf(await Review(new ReviewEstimateRequest(1, "approved"))));
+
+        // Returning for rework never needs a limit (and proves the failed approvals left the estimate Submitted).
+        var returned = await Review(new ReviewEstimateRequest(1, "returned", "TEST_ONLY_RETURN", "TEST_ONLY authority return"));
+        Assert.Equal(HttpStatusCode.OK, returned.StatusCode);
+    }
+```
+
+**5b. `ProcurementEndpointsTests.cs`** — เพิ่ม `using TanErp.Application.IdentityAccess.ApprovalLimits;` และ `using TanErp.IntegrationTests.Support;` (ถ้ายังไม่มี) แล้วเพิ่ม 2 test:
+
+```csharp
+    [Fact]
+    public async Task ApproveOrder_EnforcesApprovalAuthority_AndRejectNeedsNoLimit()
+    {
+        var supplier = await CreateSupplierAsync();
+        var order = await ActAsync(await CreateOrderAsync(Order(supplier.Id)), "submit");   // total 14,820
+        var toReject = await ActAsync(await CreateOrderAsync(Order(supplier.Id)), "submit");
+        Task<HttpResponseMessage> Approve() => SendAsync(HttpMethod.Post, $"/api/v1/purchase-orders/{order.Id}/approve",
+            new PurchaseOrderActionRequest(null), token: "token-approver", ifMatch: order.RowVersion);
+        Task SetLimit(decimal max, bool active = true) =>
+            ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgId, "Test Admin", ApprovalDocumentType.PurchaseOrder, false, max, active);
+
+        await SetLimit(14_819.99m);
+        var exceeded = await Approve();
+        Assert.Equal(HttpStatusCode.Forbidden, exceeded.StatusCode);
+        Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await ErrorCodeAsync(exceeded));
+
+        await SetLimit(14_819.99m, active: false);
+        Assert.Equal("APPROVAL_AUTHORITY_NOT_CONFIGURED", await ErrorCodeAsync(await Approve()));
+        Assert.Equal("rejected", (await ActAsync(toReject, "reject", "ราคาสูง", "token-approver")).Status);   // rejecting needs no limit
+
+        await SetLimit(14_820m);                                                                              // equal to the ceiling passes
+        Assert.Equal("approved", (await ActAsync(order, "approve", token: "token-approver")).Status);
+    }
+
+    [Fact]
+    public async Task ApprovalAuthority_UsesTheHighestCeilingAcrossActiveRoles_AndIgnoresOtherCurrencies()
+    {
+        Guid secondRoleId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var second = new Role(Guid.NewGuid(), OrgId, "Second Approver Role", "second", isActive: true);
+            db.Roles.Add(second);
+            db.MembershipRoles.Add(new MembershipRole(ApproverMembershipId, second.Id, OrgId));
+            db.ApprovalLimits.Add(ApprovalLimit.Create(Guid.NewGuid(), OrgId, second.Id, ApprovalDocumentType.PurchaseOrder,
+                null, ApprovalLimitRules.Currency, false, 50_000m, DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+            secondRoleId = second.Id;
+        }
+        await ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgId, "Test Admin", ApprovalDocumentType.PurchaseOrder, false, 1_000m);
+
+        async Task<string?> Check(decimal amount, string currency = "THB")
+        {
+            using var scope = _factory.Services.CreateScope();
+            var error = await scope.ServiceProvider.GetRequiredService<IApprovalAuthority>().EnsureAsync(new ApprovalAuthorityCheck(
+                OrgId, ApproverMembershipId, ApprovalDocumentType.PurchaseOrder, BranchId, amount, currency), CancellationToken.None);
+            return error?.Code;
+        }
+
+        Assert.Null(await Check(20_000m));                                          // the second role's higher ceiling wins
+        Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await Check(50_000.01m));
+        Assert.Equal("APPROVAL_AUTHORITY_NOT_CONFIGURED", await Check(1m, "USD"));  // no limit in another currency
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.Roles.SingleAsync(r => r.Id == secondRoleId)).Deactivate();
+            await db.SaveChangesAsync();
+        }
+
+        Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await Check(20_000m));              // an inactive role grants nothing
+    }
+```
+
+**5c. `ProjectControlEndpointsTests.cs`** — เพิ่ม `using TanErp.IntegrationTests.Support;` (ถ้ายังไม่มี) แล้วเพิ่ม test:
+
+```csharp
+    [Fact]
+    public async Task ApproveChangeOrder_EnforcesApprovalAuthority_UsingTheLargerDelta()
+    {
+        var projectId = await CreateProjectAsync();
+        await ActivateAsync(projectId, 1000m);
+        var created = await ControlAsync(await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/change-orders",
+            new CreateProjectChangeOrderRequest("เพิ่มตู้", "ลูกค้าขอเพิ่ม", 300m, 450m), key: "co-authority-key-0001"));
+        var order = Assert.Single(created.ChangeOrders);
+        var submitted = await ControlAsync(await SendAsync(HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/change-orders/{order.Id}/submit", new ProjectChangeOrderActionRequest(order.RowVersion, null)));
+        var version = submitted.ChangeOrders.Single().RowVersion;
+        Task<HttpResponseMessage> Approve() => SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/change-orders/{order.Id}/approve",
+            new ProjectChangeOrderActionRequest(version, "ตกลง"), token: "token-approver");
+        Task SetLimit(decimal max, bool active = true) =>
+            ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgId, "Test Admin", ApprovalDocumentType.ChangeOrder, false, max, active);
+
+        await SetLimit(449.99m);                                   // the contract delta (450) is the larger magnitude
+        var exceeded = await Approve();
+        Assert.Equal(HttpStatusCode.Forbidden, exceeded.StatusCode);
+        Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await ErrorCodeAsync(exceeded));
+
+        await SetLimit(449.99m, active: false);
+        Assert.Equal("APPROVAL_AUTHORITY_NOT_CONFIGURED", await ErrorCodeAsync(await Approve()));
+
+        await SetLimit(450m);
+        Assert.Equal("approved", (await ControlAsync(await Approve())).ChangeOrders.Single().Status);
+    }
+```
+
+- [ ] **Step 6: Verify (compile-only)**
+
+Run: `dotnet build backend/TanErp.slnx --nologo -v q`
+Expected: `0 Warning(s)` `0 Error(s)`. **ห้ามรัน `dotnet test`** (ผู้ใช้จะรัน — ดู Task 12).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add backend/src/TanErp.Infrastructure/Persistence backend/tests/TanErp.IntegrationTests
+git commit -m "feat(approval): enforce approval authority on estimate, purchase order and change order
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 7: Limit admin — models, port, handler และ store
+
+**Files:**
+- Create: `backend/src/TanErp.Application/IdentityAccess/ApprovalLimits/{ApprovalLimitModels,IApprovalLimitStore,ApprovalLimitHandler}.cs`, `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/ApprovalLimitStore.cs`
+
+Handler ตรวจ permission **ก่อน** แตะ store ทุก operation (ไม่รั่วว่า id มีอยู่); store คือเจ้าของ transaction `Serializable`, idempotency, ETag และ audit. ยังไม่ลง DI (Task 8) — Task นี้คอมไพล์ได้ด้วยตัวเอง; พฤติกรรม permission-ก่อน-store และ validation ของ handler ถูกพิสูจน์โดย `ApprovalLimitEndpointsTests` (Task 8) จึงไม่มี unit test แยก.
+
+- [ ] **Step 1: models และ port**
+
+`ApprovalLimitModels.cs`:
+
+```csharp
+using TanErp.Application.IdentityAccess.Administration;
+
+namespace TanErp.Application.IdentityAccess.ApprovalLimits;
+
+public static class ApprovalLimitPermissions
+{
+    public const string Manage = "approval-limits.manage";
+}
+
+/// <summary>Nullable flags let the handler reject a missing field instead of silently defaulting it.</summary>
+public sealed record ApprovalLimitInput(
+    Guid RoleId, string? DocumentType, Guid? BranchId, string? Currency, bool? IsUnlimited, decimal? MaxAmount);
+
+public sealed record ApprovalLimitUpdateInput(bool? IsUnlimited, decimal? MaxAmount, bool? IsActive);
+
+public sealed record ApprovalLimitListQuery(Guid? RoleId, string? DocumentType, string? Status, int Page, int Limit);
+
+public sealed record ApprovalLimitView(
+    Guid Id, Guid RowVersion, AdminRef Role, string DocumentType, AdminRef? Branch, string Currency,
+    bool IsUnlimited, decimal? MaxAmount, bool IsActive, DateTimeOffset CreatedAtUtc, DateTimeOffset UpdatedAtUtc);
+
+public sealed record ApprovalLimitPage(IReadOnlyList<ApprovalLimitView> Items, int TotalCount, int Page, int PageSize);
+
+public sealed record ApprovalLimitOptions(
+    IReadOnlyList<AdminRef> Roles, IReadOnlyList<AdminRef> Branches, IReadOnlyList<string> DocumentTypes, IReadOnlyList<string> Currencies);
+```
+
+`IApprovalLimitStore.cs`:
+
+```csharp
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.Administration;
+
+namespace TanErp.Application.IdentityAccess.ApprovalLimits;
+
+/// <summary>Persistence for approval limits, always scoped to <c>organizationId</c>. Writes audit in the same transaction.</summary>
+public interface IApprovalLimitStore
+{
+    Task<ApprovalLimitPage> ListAsync(Guid organizationId, ApprovalLimitListQuery query, CancellationToken ct);
+
+    Task<ApprovalLimitOptions> GetOptionsAsync(Guid organizationId, CancellationToken ct);
+
+    Task<Result<ApprovalLimitView>> GetAsync(Guid organizationId, Guid limitId, CancellationToken ct);
+
+    Task<Result<ApprovalLimitView>> CreateAsync(
+        Guid organizationId, Guid roleId, string documentType, Guid? branchId, string currency, bool isUnlimited, decimal? maxAmount,
+        AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct);
+
+    Task<Result<ApprovalLimitView>> UpdateAsync(
+        Guid organizationId, Guid limitId, Guid ifMatch, bool isUnlimited, decimal? maxAmount, bool isActive,
+        AdminActor actor, string traceId, CancellationToken ct);
+}
+```
+
+- [ ] **Step 2: handler**
+
+`ApprovalLimitHandler.cs`:
+
+```csharp
+using System.Globalization;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Models;
+using TanErp.Application.Common.Results;
+using TanErp.Application.Common.Security;
+using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Domain.IdentityAccess;
+
+namespace TanErp.Application.IdentityAccess.ApprovalLimits;
+
+/// <summary>Every operation resolves approval-limits.manage first; the store is never reached without it.</summary>
+public sealed class ApprovalLimitHandler
+{
+    private readonly IRequestAccessResolver _access;
+    private readonly IApprovalLimitStore _store;
+
+    public ApprovalLimitHandler(IRequestAccessResolver access, IApprovalLimitStore store)
+    {
+        _access = access;
+        _store = store;
+    }
+
+    private Task<Result<RequestAccessContext>> AccessAsync(AdminCaller caller, CancellationToken ct) =>
+        _access.ResolveAsync(caller.FirebaseUid, caller.MembershipId, ApprovalLimitPermissions.Manage, ct);
+
+    private static AdminActor Actor(RequestAccessContext access) => new(access.ActorUserId, access.MembershipId);
+
+    public async Task<Result<ApprovalLimitPage>> ListAsync(
+        AdminCaller caller, Guid? roleId, string? documentType, string? status, int page, int limit, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, ct);
+        if (access.IsFailure) return Result<ApprovalLimitPage>.Failure(access.Error);
+
+        if (documentType is not null && !ApprovalDocumentType.IsEnforced(documentType))
+            return AdminHandlerSupport.Validation<ApprovalLimitPage>("Unknown document type.");
+        if (status is not (null or "active" or "inactive"))
+            return AdminHandlerSupport.Validation<ApprovalLimitPage>("Status must be 'active' or 'inactive'.");
+
+        var query = new ApprovalLimitListQuery(
+            roleId, documentType, status, Math.Max(page, 1),
+            limit < 1 ? AdministrationPolicy.DefaultPageSize : Math.Min(limit, AdministrationPolicy.MaxPageSize));
+        return Result<ApprovalLimitPage>.Success(await _store.ListAsync(access.Value!.OrganizationId, query, ct));
+    }
+
+    public async Task<Result<ApprovalLimitOptions>> GetOptionsAsync(AdminCaller caller, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, ct);
+        return access.IsFailure
+            ? Result<ApprovalLimitOptions>.Failure(access.Error)
+            : Result<ApprovalLimitOptions>.Success(await _store.GetOptionsAsync(access.Value!.OrganizationId, ct));
+    }
+
+    public async Task<Result<ApprovalLimitView>> GetAsync(AdminCaller caller, Guid limitId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, ct);
+        return access.IsFailure
+            ? Result<ApprovalLimitView>.Failure(access.Error)
+            : await _store.GetAsync(access.Value!.OrganizationId, limitId, ct);
+    }
+
+    public async Task<Result<ApprovalLimitView>> CreateAsync(
+        AdminCaller caller, string idempotencyKey, ApprovalLimitInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, ct);
+        if (access.IsFailure) return Result<ApprovalLimitView>.Failure(access.Error);
+
+        if (input.RoleId == Guid.Empty || input.BranchId == Guid.Empty || input.IsUnlimited is null)
+            return AdminHandlerSupport.Validation<ApprovalLimitView>("roleId and isUnlimited are required.");
+        var documentType = input.DocumentType?.Trim().ToLowerInvariant() ?? string.Empty;
+        var currency = input.Currency?.Trim().ToUpperInvariant() ?? string.Empty;
+        try
+        {
+            ApprovalLimitRules.ValidateCreate(documentType, currency, input.IsUnlimited.Value, input.MaxAmount);
+        }
+        catch (ApprovalLimitDomainException ex)
+        {
+            return Result<ApprovalLimitView>.Failure(new Error(ex.Code, ex.Message));
+        }
+
+        var payloadHash = Sha256Hex.Compute(string.Join("|",
+            input.RoleId.ToString("N"), documentType, input.BranchId?.ToString("N"), currency, input.IsUnlimited.Value,
+            input.MaxAmount?.ToString(CultureInfo.InvariantCulture)));
+        return await _store.CreateAsync(
+            access.Value!.OrganizationId, input.RoleId, documentType, input.BranchId, currency, input.IsUnlimited.Value, input.MaxAmount,
+            Actor(access.Value), Sha256Hex.Compute(idempotencyKey), payloadHash, traceId, ct);
+    }
+
+    public async Task<Result<ApprovalLimitView>> UpdateAsync(
+        AdminCaller caller, Guid limitId, Guid ifMatch, ApprovalLimitUpdateInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, ct);
+        if (access.IsFailure) return Result<ApprovalLimitView>.Failure(access.Error);
+
+        if (input.IsUnlimited is null || input.IsActive is null)
+            return AdminHandlerSupport.Validation<ApprovalLimitView>("isUnlimited and isActive are required.");
+        try
+        {
+            ApprovalLimitRules.ValidateAmount(input.IsUnlimited.Value, input.MaxAmount);
+        }
+        catch (ApprovalLimitDomainException ex)
+        {
+            return Result<ApprovalLimitView>.Failure(new Error(ex.Code, ex.Message));
+        }
+
+        return await _store.UpdateAsync(
+            access.Value!.OrganizationId, limitId, ifMatch, input.IsUnlimited.Value, input.MaxAmount, input.IsActive.Value,
+            Actor(access.Value), traceId, ct);
+    }
+}
+```
+
+- [ ] **Step 3: store**
+
+`ApprovalLimitStore.cs` (namespace `TanErp.Infrastructure.Persistence.IdentityAccess` — ใช้ชื่อเต็ม `TanErp.Domain...` ถ้าต้องอ้าง Organization/Branch; ห้ามใช้ชื่อเปล่า `Organization`):
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
+using TanErp.Domain.Common;
+using TanErp.Domain.IdentityAccess;
+
+namespace TanErp.Infrastructure.Persistence.IdentityAccess;
+
+public sealed class ApprovalLimitStore : IApprovalLimitStore
+{
+    private const string VersionConflict = "ADMIN_VERSION_CONFLICT";
+    private const string CreateOperation = "admin.approval-limits.define";
+    private const string OrgWideIndex = "ux_approval_limits_org_wide";
+    private const string BranchIndex = "ux_approval_limits_branch";
+
+    private readonly AppDbContext _db;
+    private readonly IClock _clock;
+
+    public ApprovalLimitStore(AppDbContext db, IClock clock)
+    {
+        _db = db;
+        _clock = clock;
+    }
+
+    private sealed record LimitRow(ApprovalLimit Limit, string RoleName, string? BranchName);
+
+    private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
+
+    private Task<Result<T>> RunAsync<T>(Func<Task<Result<T>>> work, CancellationToken ct) =>
+        SerializableTransactionRunner.RunAsync(_db, work, VersionConflict, ct);
+
+    private IQueryable<LimitRow> Rows(IQueryable<ApprovalLimit> source) =>
+        from limit in source
+        join role in _db.Roles.AsNoTracking() on limit.RoleId equals role.Id
+        join branch in _db.Branches.AsNoTracking() on limit.BranchId equals (Guid?)branch.Id into branches
+        from branch in branches.DefaultIfEmpty()
+        select new LimitRow(limit, role.Name, branch == null ? null : branch.Name);
+
+    private static ApprovalLimitView ToView(LimitRow r) => new(
+        r.Limit.Id, r.Limit.RowVersion, new AdminRef(r.Limit.RoleId, r.RoleName), r.Limit.DocumentType,
+        r.Limit.BranchId is null ? null : new AdminRef(r.Limit.BranchId.Value, r.BranchName!), r.Limit.Currency,
+        r.Limit.IsUnlimited, r.Limit.MaxAmount, r.Limit.IsActive, r.Limit.CreatedAtUtc, r.Limit.UpdatedAtUtc);
+
+    private async Task<Result<ApprovalLimitView>> LoadAsync(Guid organizationId, Guid limitId, CancellationToken ct)
+    {
+        _db.ChangeTracker.Clear();
+        var row = await Rows(_db.ApprovalLimits.AsNoTracking().Where(l => l.OrganizationId == organizationId && l.Id == limitId))
+            .FirstOrDefaultAsync(ct);
+        return row is null ? Fail<ApprovalLimitView>("RESOURCE_NOT_FOUND", "Approval limit was not found.") : Result<ApprovalLimitView>.Success(ToView(row));
+    }
+
+    private void Audit(Guid organizationId, AdminActor actor, string action, Guid limitId, string traceId, object changes, Guid? before, Guid? after) =>
+        IdentityAdministrationSupport.AddAudit(_db, organizationId, actor, action, "ApprovalLimit", limitId.ToString(), traceId, _clock.UtcNow, changes, before, after);
+
+    // ---------------------------------------------------------------- reads
+
+    public async Task<ApprovalLimitPage> ListAsync(Guid organizationId, ApprovalLimitListQuery q, CancellationToken ct)
+    {
+        var query = _db.ApprovalLimits.AsNoTracking().Where(l => l.OrganizationId == organizationId);
+        if (q.RoleId is not null) query = query.Where(l => l.RoleId == q.RoleId);
+        if (q.DocumentType is not null) query = query.Where(l => l.DocumentType == q.DocumentType);
+        query = q.Status switch
+        {
+            "active" => query.Where(l => l.IsActive),
+            "inactive" => query.Where(l => !l.IsActive),
+            _ => query
+        };
+
+        var total = await query.CountAsync(ct);
+        // The id is a stable tie-breaker so paging never skips or repeats rows.
+        var rows = await Rows(query)
+            .OrderBy(r => r.RoleName).ThenBy(r => r.Limit.DocumentType).ThenBy(r => r.BranchName).ThenBy(r => r.Limit.Id)
+            .Skip((q.Page - 1) * q.Limit).Take(q.Limit).ToListAsync(ct);
+        return new ApprovalLimitPage(rows.Select(ToView).ToList(), total, q.Page, q.Limit);
+    }
+
+    public async Task<ApprovalLimitOptions> GetOptionsAsync(Guid organizationId, CancellationToken ct)
+    {
+        var roles = await _db.Roles.AsNoTracking().Where(r => r.OrganizationId == organizationId && r.IsActive)
+            .OrderBy(r => r.NormalizedName).Select(r => new AdminRef(r.Id, r.Name)).ToListAsync(ct);
+        var branches = await _db.Branches.AsNoTracking().Where(b => b.OrganizationId == organizationId && b.IsActive)
+            .OrderBy(b => b.Code).Select(b => new AdminRef(b.Id, b.Name)).ToListAsync(ct);
+        return new ApprovalLimitOptions(roles, branches, ApprovalDocumentType.Enforced, new[] { ApprovalLimitRules.Currency });
+    }
+
+    public Task<Result<ApprovalLimitView>> GetAsync(Guid organizationId, Guid limitId, CancellationToken ct) =>
+        LoadAsync(organizationId, limitId, ct);
+
+    // ---------------------------------------------------------------- writes
+
+    public Task<Result<ApprovalLimitView>> CreateAsync(
+        Guid organizationId, Guid roleId, string documentType, Guid? branchId, string currency, bool isUnlimited, decimal? maxAmount,
+        AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            // Taken INSIDE the transaction so concurrent requests with the same key serialize and the loser replays.
+            await _db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({organizationId.ToString("N") + ":" + CreateOperation + ":" + keyHash}, 0))", ct);
+
+            var replay = await _db.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(
+                r => r.OrganizationId == organizationId && r.Operation == CreateOperation && r.KeyHash == keyHash, ct);
+            if (replay is not null)
+            {
+                return replay.PayloadHash != payloadHash
+                    ? Fail<ApprovalLimitView>("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload.")
+                    : await LoadAsync(organizationId, Guid.Parse(replay.ResourceId), ct);
+            }
+
+            if (!await _db.Roles.AsNoTracking().AnyAsync(r => r.Id == roleId && r.OrganizationId == organizationId && r.IsActive, ct))
+                return Fail<ApprovalLimitView>("APPROVAL_LIMIT_ROLE_NOT_FOUND", "An active role with this id was not found in the organization.");
+            if (branchId is not null &&
+                !await _db.Branches.AsNoTracking().AnyAsync(b => b.Id == branchId && b.OrganizationId == organizationId && b.IsActive, ct))
+                return Fail<ApprovalLimitView>("BRANCH_NOT_FOUND", "An active branch with this id was not found in the organization.");
+
+            var now = _clock.UtcNow;
+            ApprovalLimit limit;
+            try
+            {
+                limit = ApprovalLimit.Create(Guid.NewGuid(), organizationId, roleId, documentType, branchId, currency, isUnlimited, maxAmount, now);
+            }
+            catch (ApprovalLimitDomainException ex)
+            {
+                return Fail<ApprovalLimitView>(ex.Code, ex.Message);
+            }
+
+            _db.ApprovalLimits.Add(limit);
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), organizationId, CreateOperation, keyHash, payloadHash, limit.Id.ToString(), now));
+            Audit(organizationId, actor, "approval-limits.created", limit.Id, traceId,
+                new { roleId, documentType, branchId, currency, isUnlimited, maxAmount }, null, limit.RowVersion);
+
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, OrgWideIndex)
+                                               || SerializableTransactionRunner.IsUniqueViolation(ex, BranchIndex))
+            {
+                return Fail<ApprovalLimitView>("APPROVAL_LIMIT_ALREADY_EXISTS", "A limit already exists for this role, document type and branch.");
+            }
+
+            return await LoadAsync(organizationId, limit.Id, ct);
+        }, ct);
+
+    public Task<Result<ApprovalLimitView>> UpdateAsync(
+        Guid organizationId, Guid limitId, Guid ifMatch, bool isUnlimited, decimal? maxAmount, bool isActive,
+        AdminActor actor, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            var limit = await _db.ApprovalLimits.FirstOrDefaultAsync(l => l.Id == limitId && l.OrganizationId == organizationId, ct);
+            if (limit is null) return Fail<ApprovalLimitView>("RESOURCE_NOT_FOUND", "Approval limit was not found.");
+            if (limit.RowVersion != ifMatch) return Fail<ApprovalLimitView>(VersionConflict, "The approval limit was modified by another user.");
+
+            var before = new { limit.IsUnlimited, limit.MaxAmount, limit.IsActive };
+            var versionBefore = limit.RowVersion;
+            try
+            {
+                limit.Update(isUnlimited, maxAmount, isActive, _clock.UtcNow);
+            }
+            catch (ApprovalLimitDomainException ex)
+            {
+                return Fail<ApprovalLimitView>(ex.Code, ex.Message);
+            }
+
+            Audit(organizationId, actor, "approval-limits.updated", limitId, traceId,
+                new { limit.RoleId, limit.DocumentType, limit.BranchId, limit.Currency, before, after = new { isUnlimited, maxAmount, isActive } },
+                versionBefore, limit.RowVersion);
+            await _db.SaveChangesAsync(ct);
+            return await LoadAsync(organizationId, limitId, ct);
+        }, ct);
+}
+```
+
+- [ ] **Step 4: Verify (compile-only)**
+
+Run: `dotnet build backend/TanErp.slnx --nologo -v q`
+Expected: `0 Warning(s)` `0 Error(s)`. **ห้ามรัน `dotnet test`.**
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add backend/src/TanErp.Application/IdentityAccess/ApprovalLimits backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/ApprovalLimitStore.cs
+git commit -m "feat(approval): add approval limit handler and store
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 8: Limit admin API — controller, contracts, DI, error codes และ endpoint tests
+
+**Files:**
+- Create: `backend/src/TanErp.Api/Contracts/IdentityAccess/ApprovalLimits/ApprovalLimitContracts.cs`, `backend/src/TanErp.Api/Controllers/AdminApprovalLimitsController.cs`, `backend/tests/TanErp.IntegrationTests/Api/ApprovalLimitEndpointsTests.cs`
+- Modify: `backend/src/TanErp.Api/Program.cs`, `backend/src/TanErp.Api/ErrorHandling/ProblemDetailsMapper.cs`, `backend/src/TanErp.Api/Resources/Errors.resx`, `backend/src/TanErp.Api/Resources/Errors.en.resx`
+
+- [ ] **Step 1: contracts**
+
+`ApprovalLimitContracts.cs`:
+
+```csharp
+using TanErp.Api.Contracts.IdentityAccess.Administration;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
+
+namespace TanErp.Api.Contracts.IdentityAccess.ApprovalLimits;
+
+public record ApprovalLimitResponse(
+    Guid Id, Guid RowVersion, AdminRefResponse Role, string DocumentType, AdminRefResponse? Branch, string Currency,
+    bool IsUnlimited, decimal? MaxAmount, bool IsActive, DateTimeOffset CreatedAtUtc, DateTimeOffset UpdatedAtUtc)
+{
+    public static ApprovalLimitResponse From(ApprovalLimitView v) => new(
+        v.Id, v.RowVersion, new AdminRefResponse(v.Role.Id, v.Role.Name), v.DocumentType,
+        v.Branch is null ? null : new AdminRefResponse(v.Branch.Id, v.Branch.Name), v.Currency,
+        v.IsUnlimited, v.MaxAmount, v.IsActive, v.CreatedAtUtc, v.UpdatedAtUtc);
+}
+
+public record ApprovalLimitListResponse(IReadOnlyList<ApprovalLimitResponse> Items, AdminPaginationResponse Pagination)
+{
+    public static ApprovalLimitListResponse From(ApprovalLimitPage page) => new(
+        page.Items.Select(ApprovalLimitResponse.From).ToList(),
+        new AdminPaginationResponse(page.Page, page.PageSize, page.TotalCount, (int)Math.Ceiling(page.TotalCount / (double)page.PageSize)));
+}
+
+public record ApprovalLimitOptionsResponse(
+    IReadOnlyList<AdminRefResponse> Roles, IReadOnlyList<AdminRefResponse> Branches, IReadOnlyList<string> DocumentTypes, IReadOnlyList<string> Currencies)
+{
+    public static ApprovalLimitOptionsResponse From(ApprovalLimitOptions o) => new(
+        o.Roles.Select(r => new AdminRefResponse(r.Id, r.Name)).ToList(),
+        o.Branches.Select(b => new AdminRefResponse(b.Id, b.Name)).ToList(),
+        o.DocumentTypes, o.Currencies);
+}
+
+public record CreateApprovalLimitRequest(Guid? RoleId, string? DocumentType, Guid? BranchId, string? Currency, bool? IsUnlimited, decimal? MaxAmount)
+{
+    public ApprovalLimitInput ToInput() => new(RoleId ?? Guid.Empty, DocumentType, BranchId, Currency, IsUnlimited, MaxAmount);
+}
+
+public record UpdateApprovalLimitRequest(bool? IsUnlimited, decimal? MaxAmount, bool? IsActive)
+{
+    public ApprovalLimitUpdateInput ToInput() => new(IsUnlimited, MaxAmount, IsActive);
+}
+```
+
+- [ ] **Step 2: controller**
+
+`AdminApprovalLimitsController.cs`:
+
+```csharp
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TanErp.Api.Contracts.IdentityAccess.ApprovalLimits;
+using TanErp.Api.ErrorHandling;
+using TanErp.Api.RequestContext;
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
+
+namespace TanErp.Api.Controllers;
+
+/// <summary>Approval limit administration (G-03c). Business rules live in Application/Infrastructure.</summary>
+[ApiController]
+[Authorize]
+[Route("api/v1/admin/approval-limits")]
+public sealed class AdminApprovalLimitsController : ControllerBase
+{
+    private readonly ApprovalLimitHandler _handler;
+
+    public AdminApprovalLimitsController(ApprovalLimitHandler handler) => _handler = handler;
+
+    private IActionResult Problem(Error error) => ProblemDetailsMapper.CreateProblemResult(error.Code, HttpContext);
+
+    private IActionResult LimitResult(Result<ApprovalLimitView> result)
+    {
+        if (result.IsFailure) return Problem(result.Error);
+
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Ok(ApprovalLimitResponse.From(result.Value!));
+    }
+
+    [HttpGet]
+    [ProducesResponseType<ApprovalLimitListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> List(
+        [FromQuery] Guid? roleId = null, [FromQuery] string? documentType = null, [FromQuery] string? status = null,
+        [FromQuery] int page = 1, [FromQuery] int limit = 25, CancellationToken cancellationToken = default)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        var result = await _handler.ListAsync(
+            new AdminCaller(auth.Value!.FirebaseUid, auth.Value.MembershipId), roleId, documentType, status, page, limit, cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(ApprovalLimitListResponse.From(result.Value!));
+    }
+
+    [HttpGet("options")]
+    [ProducesResponseType<ApprovalLimitOptionsResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetOptions(CancellationToken cancellationToken)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        var result = await _handler.GetOptionsAsync(new AdminCaller(auth.Value!.FirebaseUid, auth.Value.MembershipId), cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(ApprovalLimitOptionsResponse.From(result.Value!));
+    }
+
+    [HttpGet("{limitId:guid}")]
+    [ProducesResponseType<ApprovalLimitResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get([FromRoute] Guid limitId, CancellationToken cancellationToken)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        return LimitResult(await _handler.GetAsync(new AdminCaller(auth.Value!.FirebaseUid, auth.Value.MembershipId), limitId, cancellationToken));
+    }
+
+    [HttpPost]
+    [ProducesResponseType<ApprovalLimitResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Create([FromBody] CreateApprovalLimitRequest request, CancellationToken cancellationToken)
+    {
+        var idempotent = RequestContextReader.ReadIdempotentRequest(HttpContext);
+        if (idempotent.IsFailure) return Problem(idempotent.Error);
+
+        var result = await _handler.CreateAsync(
+            new AdminCaller(idempotent.Value!.FirebaseUid, idempotent.Value.MembershipId), idempotent.Value.IdempotencyKey,
+            request.ToInput(), HttpContext.TraceIdentifier, cancellationToken);
+        if (result.IsFailure) return Problem(result.Error);
+
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Created($"/api/v1/admin/approval-limits/{result.Value.Id}", ApprovalLimitResponse.From(result.Value));
+    }
+
+    [HttpPut("{limitId:guid}")]
+    [ProducesResponseType<ApprovalLimitResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update([FromRoute] Guid limitId, [FromBody] UpdateApprovalLimitRequest request, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        return LimitResult(await _handler.UpdateAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), limitId, conditional.Value.IfMatchRowVersion,
+            request.ToInput(), HttpContext.TraceIdentifier, cancellationToken));
+    }
+}
+```
+
+- [ ] **Step 3: DI และ error codes**
+
+`Program.cs` ต่อจากบรรทัด `...IApprovalAuthority, ...ApprovalAuthority>();` (Task 5) เพิ่ม:
+
+```csharp
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.IApprovalLimitStore, TanErp.Infrastructure.Persistence.IdentityAccess.ApprovalLimitStore>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.ApprovalLimitHandler>();
+```
+
+`ProblemDetailsMapper.cs` ต่อจาก `"APPROVAL_AUTHORITY_NOT_CONFIGURED" => ...` เพิ่ม:
+
+```csharp
+        "APPROVAL_LIMIT_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+        "APPROVAL_LIMIT_ROLE_NOT_FOUND" => StatusCodes.Status404NotFound,
+```
+
+`Errors.resx` เพิ่มก่อน `</root>`:
+
+```xml
+  <data name="APPROVAL_LIMIT_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>มีวงเงินนี้อยู่แล้ว</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>บทบาทนี้มีวงเงินสำหรับประเภทเอกสารและสาขานี้อยู่แล้ว ให้แก้ไขรายการเดิม</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบบทบาท</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบบทบาทที่เปิดใช้งานในองค์กรนี้</value>
+  </data>
+```
+
+`Errors.en.resx` เพิ่มก่อน `</root>`:
+
+```xml
+  <data name="APPROVAL_LIMIT_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>Approval limit already exists</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>This role already has a limit for the document type and branch. Edit the existing one.</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Role not found</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>No active role with this id exists in the organization.</value>
+  </data>
+```
+
+- [ ] **Step 4: endpoint tests (เขียนอย่างเดียว ห้ามรัน)**
+
+`ApprovalLimitEndpointsTests.cs`:
+
+```csharp
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using TanErp.Api;
+using TanErp.Api.Contracts.IdentityAccess.ApprovalLimits;
+using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Organization;
+using TanErp.Infrastructure.Identity;
+using TanErp.Infrastructure.Persistence;
+using Testcontainers.PostgreSql;
+using Xunit;
+
+namespace TanErp.IntegrationTests.Api;
+
+public class ApprovalLimitEndpointsTests : IAsyncLifetime
+{
+    private const string AdminToken = "al-admin-token";     // Test Admin (system role): holds approval-limits.manage
+    private const string ViewerToken = "al-viewer-token";   // holds roles.manage only (NOT approval-limits.manage)
+    private const string OrgBToken = "al-org-b-token";
+    private const string Url = "/api/v1/admin/approval-limits";
+
+    private static readonly Guid ViewerMembershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f7b02");
+
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private WebApplicationFactory<Program> _factory = null!;
+    private HttpClient _client = null!;
+
+    private sealed class TestFirebaseTokenVerifier : IFirebaseTokenVerifier
+    {
+        public Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult<string?>(idToken switch
+            {
+                AdminToken => TestOnlyDataSeeder.TestFirebaseUid,
+                ViewerToken => "al-viewer-uid",
+                OrgBToken => TestOnlyDataSeeder.TestFirebaseUidB,
+                _ => null
+            });
+
+        public async Task<FirebaseIdentity?> VerifyIdentityAsync(string idToken, CancellationToken cancellationToken = default)
+        {
+            var uid = await VerifyTokenAsync(idToken, cancellationToken);
+            return uid is null ? null : new FirebaseIdentity(uid, null, false);
+        }
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Test");
+            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:Database"] = _postgres.GetConnectionString(),
+                ["SeedTestData"] = "true"
+            }));
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IFirebaseTokenVerifier));
+                if (descriptor != null) services.Remove(descriptor);
+                services.AddSingleton<IFirebaseTokenVerifier, TestFirebaseTokenVerifier>();
+            });
+        });
+        _client = _factory.CreateClient();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+        await TestOnlyDataSeeder.SeedAsync(db, "Test", true);
+
+        var org = TestOnlyDataSeeder.TestOrgId;
+        var permission = await db.Permissions.SingleAsync(p => p.Key == "roles.manage");
+        var viewerRole = new Role(Guid.NewGuid(), org, "AL Viewer", "AL Viewer", isActive: true);
+        var userId = Guid.NewGuid();
+        db.Roles.Add(viewerRole);
+        db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), viewerRole.Id, org, permission.Id, PermissionScope.Organization, org));
+        db.Users.Add(new User(userId, "al-viewer-uid", "al-viewer", "al-viewer@example.test", isActive: true));
+        db.Memberships.Add(new Membership(ViewerMembershipId, org, TestOnlyDataSeeder.TestBranchId, userId, isActive: true));
+        db.MembershipRoles.Add(new MembershipRole(ViewerMembershipId, viewerRole.Id, org));
+        await db.SaveChangesAsync();
+    }
+
+    public async Task DisposeAsync()
+    {
+        _client.Dispose();
+        await _factory.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    private AppDbContext NewDb() => _factory.Services.CreateScope().ServiceProvider.GetRequiredService<AppDbContext>();
+
+    private Task<HttpResponseMessage> Send(
+        HttpMethod method, string url, string token, object? body = null, Guid? ifMatch = null, string? idempotencyKey = null)
+    {
+        var request = new HttpRequestMessage(method, url);
+        if (idempotencyKey is not null) request.Headers.Add("Idempotency-Key", idempotencyKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Add("X-Membership-Id", token switch
+        {
+            ViewerToken => ViewerMembershipId,
+            OrgBToken => TestOnlyDataSeeder.TestMembershipBId,
+            _ => TestOnlyDataSeeder.TestMembershipId
+        }.ToString());
+        if (ifMatch.HasValue) request.Headers.Add("If-Match", $"\"{ifMatch.Value}\"");
+        if (body is not null) request.Content = JsonContent.Create(body);
+        return _client.SendAsync(request);
+    }
+
+    private static async Task<string?> ReadCode(HttpResponseMessage response)
+    {
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return json.RootElement.GetProperty("code").GetString();
+    }
+
+    private static async Task<T> ReadAs<T>(HttpResponseMessage response) => (await response.Content.ReadFromJsonAsync<T>())!;
+
+    private static string NewKey() => Guid.NewGuid().ToString("N");
+
+    private async Task<Guid> SeedRoleAsync(string name, bool active = true, Guid? orgId = null)
+    {
+        await using var db = NewDb();
+        var role = new Role(Guid.NewGuid(), orgId ?? TestOnlyDataSeeder.TestOrgId, name, name, active);
+        db.Roles.Add(role);
+        await db.SaveChangesAsync();
+        return role.Id;
+    }
+
+    private static object Body(Guid roleId, string type = "estimate", Guid? branchId = null, bool unlimited = false, decimal? max = 100_000m, string currency = "THB") =>
+        new { roleId, documentType = type, branchId, currency, isUnlimited = unlimited, maxAmount = max };
+
+    private async Task<ApprovalLimitResponse> CreateAsync(object body) =>
+        await ReadAs<ApprovalLimitResponse>(await Send(HttpMethod.Post, Url, AdminToken, body, idempotencyKey: NewKey()));
+
+    private async Task ExpectPostAsync(HttpStatusCode status, string code, object body)
+    {
+        var response = await Send(HttpMethod.Post, Url, AdminToken, body, idempotencyKey: NewKey());
+        Assert.Equal(status, response.StatusCode);
+        Assert.Equal(code, await ReadCode(response));
+    }
+
+    [Fact]
+    public async Task EveryEndpoint_WithoutApprovalLimitsManage_Returns403WithTheSameCode()
+    {
+        var anyId = Guid.NewGuid();
+        var responses = new[]
+        {
+            await Send(HttpMethod.Get, Url, ViewerToken),
+            await Send(HttpMethod.Get, $"{Url}/options", ViewerToken),
+            await Send(HttpMethod.Get, $"{Url}/{anyId}", ViewerToken),
+            await Send(HttpMethod.Post, Url, ViewerToken, Body(anyId), idempotencyKey: NewKey()),
+            await Send(HttpMethod.Put, $"{Url}/{anyId}", ViewerToken, new { isUnlimited = true, isActive = true }, ifMatch: Guid.NewGuid())
+        };
+
+        foreach (var response in responses)
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+            Assert.Equal("PERMISSION_DENIED", await ReadCode(response));
+        }
+    }
+
+    [Fact]
+    public async Task Options_ListActiveRolesAndBranchesOfTheOrganizationOnly()
+    {
+        var inactive = await SeedRoleAsync("AL Retired", active: false);
+        await SeedRoleAsync("AL Other Org", orgId: TestOnlyDataSeeder.TestOrgBId);
+
+        var options = await ReadAs<ApprovalLimitOptionsResponse>(await Send(HttpMethod.Get, $"{Url}/options", AdminToken));
+
+        Assert.Contains(options.Roles, r => r.Name == "Test Admin");
+        Assert.DoesNotContain(options.Roles, r => r.Id == inactive || r.Name == "AL Other Org");
+        Assert.Contains(options.Branches, b => b.Id == TestOnlyDataSeeder.TestBranchId);
+        Assert.Equal(new[] { "estimate", "purchase_order", "change_order" }, options.DocumentTypes);
+        Assert.Equal(new[] { "THB" }, options.Currencies);
+    }
+
+    [Fact]
+    public async Task Create_ReturnsEtag_Audits_Replays_AndRejectsKeyReuseMissingKeyAndDuplicates()
+    {
+        var roleId = await SeedRoleAsync("AL Estimator");
+        var key = NewKey();
+
+        var response = await Send(HttpMethod.Post, Url, AdminToken, Body(roleId), idempotencyKey: key);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await ReadAs<ApprovalLimitResponse>(response);
+        Assert.Equal($"\"{created.RowVersion}\"", response.Headers.ETag!.Tag);
+        Assert.Null(created.Branch);
+
+        var replay = await ReadAs<ApprovalLimitResponse>(await Send(HttpMethod.Post, Url, AdminToken, Body(roleId), idempotencyKey: key));
+        Assert.Equal(created.Id, replay.Id);
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", await ReadCode(await Send(HttpMethod.Post, Url, AdminToken, Body(roleId, max: 1m), idempotencyKey: key)));
+        Assert.Equal("IDEMPOTENCY_KEY_REQUIRED", await ReadCode(await Send(HttpMethod.Post, Url, AdminToken, Body(roleId, "change_order"))));
+
+        var branchRow = await CreateAsync(Body(roleId, branchId: TestOnlyDataSeeder.TestBranchId, max: 5_000m));
+        Assert.Equal(TestOnlyDataSeeder.TestBranchId, branchRow.Branch!.Id);
+        var unlimited = await CreateAsync(Body(roleId, "purchase_order", unlimited: true, max: null));
+        Assert.True(unlimited.IsUnlimited);
+        Assert.Null(unlimited.MaxAmount);
+
+        await ExpectPostAsync(HttpStatusCode.Conflict, "APPROVAL_LIMIT_ALREADY_EXISTS", Body(roleId, max: 1m));
+        await ExpectPostAsync(HttpStatusCode.Conflict, "APPROVAL_LIMIT_ALREADY_EXISTS", Body(roleId, branchId: TestOnlyDataSeeder.TestBranchId, max: 1m));
+
+        await using var db = NewDb();
+        Assert.Equal(3, await db.ApprovalLimits.CountAsync(l => l.RoleId == roleId));
+        Assert.Equal(new[] { "approval-limits.created" },
+            await db.AuditEvents.Where(a => a.ResourceType == "ApprovalLimit" && a.ResourceId == created.Id.ToString()).Select(a => a.Action).ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task Create_ValidatesFieldsAndReferences()
+    {
+        var roleId = await SeedRoleAsync("AL Validation");
+        var inactiveRole = await SeedRoleAsync("AL Inactive Ref", active: false);
+        var orgBRole = await SeedRoleAsync("AL Org B Ref", orgId: TestOnlyDataSeeder.TestOrgBId);
+        const string Invalid = "REQUEST_VALIDATION_FAILED";
+
+        await ExpectPostAsync(HttpStatusCode.BadRequest, Invalid, Body(roleId, "credit_note"));
+        await ExpectPostAsync(HttpStatusCode.BadRequest, Invalid, Body(roleId, "invoice"));
+        await ExpectPostAsync(HttpStatusCode.BadRequest, Invalid, Body(roleId, currency: "USD"));
+        await ExpectPostAsync(HttpStatusCode.BadRequest, Invalid, Body(roleId, unlimited: true, max: 5m));
+        await ExpectPostAsync(HttpStatusCode.BadRequest, Invalid, Body(roleId, max: null));
+        await ExpectPostAsync(HttpStatusCode.BadRequest, Invalid, Body(roleId, max: -1m));
+        await ExpectPostAsync(HttpStatusCode.BadRequest, Invalid, Body(roleId, max: 1.005m));
+        await ExpectPostAsync(HttpStatusCode.BadRequest, Invalid, Body(Guid.Empty));
+        await ExpectPostAsync(HttpStatusCode.NotFound, "APPROVAL_LIMIT_ROLE_NOT_FOUND", Body(Guid.NewGuid()));
+        await ExpectPostAsync(HttpStatusCode.NotFound, "APPROVAL_LIMIT_ROLE_NOT_FOUND", Body(inactiveRole));
+        await ExpectPostAsync(HttpStatusCode.NotFound, "APPROVAL_LIMIT_ROLE_NOT_FOUND", Body(orgBRole));
+        await ExpectPostAsync(HttpStatusCode.NotFound, "BRANCH_NOT_FOUND", Body(roleId, branchId: Guid.NewGuid()));
+        await ExpectPostAsync(HttpStatusCode.NotFound, "BRANCH_NOT_FOUND", Body(roleId, branchId: TestOnlyDataSeeder.TestBranchBId));
+    }
+
+    [Fact]
+    public async Task Update_ChangesTheRowWithIfMatch_AndRejectsStaleMissingOrInvalidInput()
+    {
+        var created = await CreateAsync(Body(await SeedRoleAsync("AL Update")));
+
+        var updated = await Send(HttpMethod.Put, $"{Url}/{created.Id}", AdminToken, new { isUnlimited = false, maxAmount = 250_000.5m, isActive = true }, ifMatch: created.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+        var row = await ReadAs<ApprovalLimitResponse>(updated);
+        Assert.Equal(250_000.5m, row.MaxAmount);
+        Assert.Equal($"\"{row.RowVersion}\"", updated.Headers.ETag!.Tag);
+
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(await Send(HttpMethod.Put, $"{Url}/{created.Id}", AdminToken, new { isUnlimited = true, isActive = true }, ifMatch: created.RowVersion)));
+        Assert.Equal("IF_MATCH_REQUIRED", await ReadCode(await Send(HttpMethod.Put, $"{Url}/{created.Id}", AdminToken, new { isUnlimited = true, isActive = true })));
+        Assert.Equal("REQUEST_VALIDATION_FAILED", await ReadCode(await Send(HttpMethod.Put, $"{Url}/{created.Id}", AdminToken, new { isUnlimited = true, maxAmount = 5m, isActive = true }, ifMatch: row.RowVersion)));
+
+        var off = await ReadAs<ApprovalLimitResponse>(await Send(HttpMethod.Put, $"{Url}/{created.Id}", AdminToken, new { isUnlimited = false, maxAmount = 250_000.5m, isActive = false }, ifMatch: row.RowVersion));
+        Assert.False(off.IsActive);
+        await using var db = NewDb();
+        Assert.Equal(2, await db.AuditEvents.CountAsync(a => a.Action == "approval-limits.updated" && a.ResourceId == created.Id.ToString()));
+    }
+
+    [Fact]
+    public async Task List_FiltersPaginatesIncludesSeededRows_AndOtherOrganizationsRowsAreNotFound()
+    {
+        var roleId = await SeedRoleAsync("AL Zeta");
+        await CreateAsync(Body(roleId));
+        await CreateAsync(Body(roleId, "purchase_order", max: 10m));
+        var inactive = await CreateAsync(Body(roleId, "change_order", max: 20m));
+        await Send(HttpMethod.Put, $"{Url}/{inactive.Id}", AdminToken, new { isUnlimited = false, maxAmount = 20m, isActive = false }, ifMatch: inactive.RowVersion);
+
+        var forRole = await ReadAs<ApprovalLimitListResponse>(await Send(HttpMethod.Get, $"{Url}?roleId={roleId}", AdminToken));
+        var estimates = await ReadAs<ApprovalLimitListResponse>(await Send(HttpMethod.Get, $"{Url}?documentType=estimate", AdminToken));
+        var inactiveOnly = await ReadAs<ApprovalLimitListResponse>(await Send(HttpMethod.Get, $"{Url}?roleId={roleId}&status=inactive", AdminToken));
+        var paged = await ReadAs<ApprovalLimitListResponse>(await Send(HttpMethod.Get, $"{Url}?roleId={roleId}&limit=2&page=2", AdminToken));
+
+        Assert.Equal(3, forRole.Pagination.TotalCount);
+        Assert.Contains(estimates.Items, i => i.Role.Name == "Test Admin" && i.IsUnlimited);   // seeded by TestOnlyDataSeeder
+        Assert.DoesNotContain(estimates.Items, i => i.Role.Name == "Test Admin B");            // other organization
+        Assert.Equal(new[] { inactive.Id }, inactiveOnly.Items.Select(i => i.Id).ToArray());
+        Assert.Equal(2, paged.Pagination.TotalPages);
+        Assert.Single(paged.Items);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", await ReadCode(await Send(HttpMethod.Get, $"{Url}?documentType=credit_note", AdminToken)));
+
+        var foreign = (await ReadAs<ApprovalLimitListResponse>(await Send(HttpMethod.Get, Url, OrgBToken))).Items.First();
+        Assert.Equal(HttpStatusCode.NotFound, (await Send(HttpMethod.Get, $"{Url}/{foreign.Id}", AdminToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await Send(HttpMethod.Put, $"{Url}/{foreign.Id}", AdminToken, new { isUnlimited = true, isActive = true }, ifMatch: foreign.RowVersion)).StatusCode);
+    }
+}
+```
+
+- [ ] **Step 5: Verify (compile-only)**
+
+Run: `dotnet build backend/TanErp.slnx --nologo -v q`
+Expected: `0 Warning(s)` `0 Error(s)`. **ห้ามรัน `dotnet test`.**
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add backend/src/TanErp.Api backend/tests/TanErp.IntegrationTests/Api/ApprovalLimitEndpointsTests.cs
+git commit -m "feat(approval): add approval limit endpoints
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 9: OpenAPI snapshot (live swagger), generated types และ API client
+
+**Files:**
+- Modify: `contracts/openapi/tan-erp.v1.json`, `frontend/src/generated/api/tan-erp.v1.ts`, `frontend/src/lib/api/api-client.ts`, `frontend/src/lib/api/api-client.test.ts`
+
+วิธีเดียวกับ commit `8a8be98`/`95723da`: ดึง swagger จาก API ที่รันจริงแล้ว format ให้ตรง System.Text.Json (ไม่ใช้ `UPDATE_OPENAPI=1`). ขั้นเหล่านี้เป็นเครื่องมือ ไม่ใช่การรัน test.
+
+- [ ] **Step 1: เตรียม formatter ชั่วคราว (ไม่ commit)**
+
+```bash
+cd /Users/syaco/Documents/development/tan-erp && S=${TMPDIR:-/tmp}/openapi-g03c && mkdir -p "$S" && cat > "$S/fmt.py" <<'PY'
+import json, sys
+
+def esc(s):
+    out = []
+    for ch in s:
+        c = ord(ch)
+        if ch == "\\": out.append("\\\\")
+        elif ch == "\n": out.append("\\n")
+        elif ch == "\r": out.append("\\r")
+        elif ch == "\t": out.append("\\t")
+        elif ch == "\b": out.append("\\b")
+        elif ch == "\f": out.append("\\f")
+        elif c < 0x20 or c >= 0x7F or ch in "\"&'+<>`":
+            if c > 0xFFFF:
+                c -= 0x10000
+                out.append("\\u%04X\\u%04X" % (0xD800 + (c >> 10), 0xDC00 + (c & 0x3FF)))
+            else:
+                out.append("\\u%04X" % c)
+        else: out.append(ch)
+    return '"' + "".join(out) + '"'
+
+def w(v, ind, out):
+    pad = "  " * (ind + 1)
+    if isinstance(v, dict):
+        if not v: out.append("{}"); return
+        out.append("{\n")
+        items = list(v.items())
+        for i, (k, x) in enumerate(items):
+            out.append(pad + esc(k) + ": "); w(x, ind + 1, out)
+            out.append(",\n" if i < len(items) - 1 else "\n")
+        out.append("  " * ind + "}")
+    elif isinstance(v, list):
+        if not v: out.append("[]"); return
+        out.append("[\n")
+        for i, x in enumerate(v):
+            out.append(pad); w(x, ind + 1, out)
+            out.append(",\n" if i < len(v) - 1 else "\n")
+        out.append("  " * ind + "]")
+    elif isinstance(v, bool): out.append("true" if v else "false")
+    elif v is None: out.append("null")
+    elif isinstance(v, str): out.append(esc(v))
+    else: out.append(json.dumps(v))
+
+out = []
+w(json.load(open(sys.argv[1], encoding="utf-8")), 0, out)
+open(sys.argv[2], "w", encoding="utf-8", newline="").write("".join(out))   # no trailing newline, like the committed file
+PY
+python3 "$S/fmt.py" contracts/openapi/tan-erp.v1.json "$S/roundtrip.json" && cmp contracts/openapi/tan-erp.v1.json "$S/roundtrip.json" && echo FORMATTER_OK
+```
+Expected: `FORMATTER_OK` (formatter ทำซ้ำไฟล์ที่ commit ไว้ byte-ต่อ-byte). ถ้า `cmp` รายงานความต่าง **หยุด** และรายงานผู้ใช้ — ห้ามส่ง snapshot ที่ format ไม่ตรง.
+
+- [ ] **Step 2: ดึง swagger จาก API ที่รันจริง**
+
+```bash
+dotnet build backend/TanErp.slnx --nologo -v q
+S=${TMPDIR:-/tmp}/openapi-g03c
+ASPNETCORE_ENVIRONMENT=Test ASPNETCORE_URLS=http://127.0.0.1:5099 \
+ConnectionStrings__Database="Host=127.0.0.1;Port=1;Database=openapi;Username=u;Password=p" \
+  dotnet run --project backend/src/TanErp.Api --no-build --no-launch-profile > "$S/api.log" 2>&1 &
+API_PID=$!
+for i in $(seq 1 60); do curl -sf http://127.0.0.1:5099/swagger/v1/swagger.json -o "$S/swagger.json" && break; sleep 1; done
+kill $API_PID 2>/dev/null; wait $API_PID 2>/dev/null; lsof -ti :5099 | xargs kill 2>/dev/null
+test -s "$S/swagger.json" && python3 "$S/fmt.py" "$S/swagger.json" contracts/openapi/tan-erp.v1.json
+git diff --numstat contracts/openapi/tan-erp.v1.json
+```
+Expected: `swagger.json` ไม่ว่าง (API ไม่ต้องใช้ฐานข้อมูลในการสร้าง swagger — เหมือน `OpenApiContractTests`); `numstat` แสดง **เฉพาะบรรทัดเพิ่ม** (deletions = 0) ครอบคลุม path `/api/v1/admin/approval-limits*` และ schema `ApprovalLimit*`, `CreateApprovalLimitRequest`, `UpdateApprovalLimitRequest`. ถ้ามี deletions > 0 ให้ตรวจ `git diff` ว่าเป็นผลของ drift อื่นหรือ formatter ผิด ก่อนไปต่อ.
+
+- [ ] **Step 3: generate TypeScript types**
+
+```bash
+cd frontend && npm run generate:api
+```
+Expected: `src/generated/api/tan-erp.v1.ts` เปลี่ยนเฉพาะส่วนเพิ่ม approval limit.
+
+- [ ] **Step 4: API client**
+
+ใน `frontend/src/lib/api/api-client.ts` ต่อจากบรรทัด `export type RoleDefinitionListParams = ...;` เพิ่ม:
+
+```ts
+export type ApprovalLimitResponse = components["schemas"]["ApprovalLimitResponse"];
+export type ApprovalLimitListResponse = components["schemas"]["ApprovalLimitListResponse"];
+export type ApprovalLimitOptionsResponse = components["schemas"]["ApprovalLimitOptionsResponse"];
+export type CreateApprovalLimitRequest = components["schemas"]["CreateApprovalLimitRequest"];
+export type UpdateApprovalLimitRequest = components["schemas"]["UpdateApprovalLimitRequest"];
+export type ApprovalLimitListParams = NonNullable<paths["/api/v1/admin/approval-limits"]["get"]["parameters"]["query"]>;
+```
+
+เพิ่ม method ก่อน `async listDocumentSequences(`:
+
+```ts
+  async listApprovalLimits(params: ApprovalLimitListParams, options: RequestOptions): Promise<ApprovalLimitListResponse> {
+    const query = new URLSearchParams();
+    if (params.roleId) query.set("roleId", params.roleId);
+    if (params.documentType) query.set("documentType", params.documentType);
+    if (params.status) query.set("status", params.status);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString();
+    return this.request<ApprovalLimitListResponse>(`/api/v1/admin/approval-limits${suffix ? `?${suffix}` : ""}`, "GET", options);
+  }
+
+  async getApprovalLimitOptions(options: RequestOptions): Promise<ApprovalLimitOptionsResponse> {
+    return this.request<ApprovalLimitOptionsResponse>("/api/v1/admin/approval-limits/options", "GET", options);
+  }
+
+  async getApprovalLimit(limitId: string, options: RequestOptions): Promise<ApprovalLimitResponse> {
+    return this.request<ApprovalLimitResponse>(`/api/v1/admin/approval-limits/${encodeURIComponent(limitId)}`, "GET", options);
+  }
+
+  async createApprovalLimit(payload: CreateApprovalLimitRequest, options: RequestOptions): Promise<ApprovalLimitResponse> {
+    return this.request<ApprovalLimitResponse>("/api/v1/admin/approval-limits", "POST", options, payload);
+  }
+
+  async updateApprovalLimit(limitId: string, payload: UpdateApprovalLimitRequest, options: RequestOptions): Promise<ApprovalLimitResponse> {
+    return this.request<ApprovalLimitResponse>(
+      `/api/v1/admin/approval-limits/${encodeURIComponent(limitId)}`, "PUT", options, payload);
+  }
+
+```
+
+ใน `api-client.test.ts` ก่อนท้ายไฟล์ (แทน `expect(fetchMock.mock.calls[8][1].headers["If-Match"]).toBe('"v4"');\n  });\n});` ตัวสุดท้ายของไฟล์ด้วยตัวเดิม + test ใหม่):
+
+```ts
+    expect(fetchMock.mock.calls[8][1].headers["If-Match"]).toBe('"v4"');
+  });
+
+  it("calls the approval limit endpoints with If-Match and Idempotency-Key where required", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
+    global.fetch = fetchMock;
+    const client = new ApiClient("http://localhost:5000");
+    const options = { token: "tok", membershipId: "m-1", locale: "th" as const };
+    const create = { roleId: "r1", documentType: "estimate", branchId: null, currency: "THB", isUnlimited: false, maxAmount: 1000 };
+
+    await client.listApprovalLimits({ roleId: "r1", documentType: "estimate", status: "active", page: 2, limit: 10 }, options);
+    await client.getApprovalLimitOptions(options);
+    await client.getApprovalLimit("l 1", options);
+    await client.createApprovalLimit(create, { ...options, idempotencyKey: "key-0123456789abcdef" });
+    await client.updateApprovalLimit("l1", { isUnlimited: true, maxAmount: null, isActive: true }, { ...options, ifMatch: "v1" });
+
+    expect(fetchMock.mock.calls.map(([url, init]) => [url, init.method])).toEqual([
+      ["http://localhost:5000/api/v1/admin/approval-limits?roleId=r1&documentType=estimate&status=active&page=2&limit=10", "GET"],
+      ["http://localhost:5000/api/v1/admin/approval-limits/options", "GET"],
+      ["http://localhost:5000/api/v1/admin/approval-limits/l%201", "GET"],
+      ["http://localhost:5000/api/v1/admin/approval-limits", "POST"],
+      ["http://localhost:5000/api/v1/admin/approval-limits/l1", "PUT"],
+    ]);
+    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).toBe("key-0123456789abcdef");
+    expect(fetchMock.mock.calls[4][1].headers["If-Match"]).toBe('"v1"');
+  });
+});
+```
+(anchor ที่แก้ต้องรวม `\n  });\n});` ท้ายไฟล์เพื่อให้ไม่ซ้ำกับ test ของ organization)
+
+- [ ] **Step 5: Verify (compile-only)**
+
+Run (จาก `frontend/`): `npx tsc --noEmit && npm run lint`
+Expected: exit 0 ทั้งคู่. **ห้ามรัน `npm run test`/vitest.**
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add contracts/openapi/tan-erp.v1.json frontend/src/generated/api/tan-erp.v1.ts frontend/src/lib/api/api-client.ts frontend/src/lib/api/api-client.test.ts
+git commit -m "feat(approval): add approval limit api client
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 10: Frontend foundation — i18n, error whitelist, query hooks และแสดง error ในหน้าอนุมัติเดิม
+
+**Files:**
+- Create: `frontend/src/features/settings/approval-limits/approval-limit-errors.ts` (+ `.test.ts`), `frontend/src/features/settings/approval-limits/api/approval-limit-queries.ts`
+- Modify: `frontend/src/messages/th.json`, `frontend/src/messages/en.json`, `frontend/src/features/estimates/components/estimate-lifecycle-actions.tsx`, `frontend/src/features/procurement/procurement-status.ts`, `frontend/src/features/projects/components/project-control-errors.ts`
+
+- [ ] **Step 1: error whitelist + test**
+
+`approval-limit-errors.ts`:
+
+```ts
+import { ApiError } from "@/lib/api/api-error";
+
+/** Backend codes that have a dedicated message in `approvalLimitAdmin.errors`. Anything else shows the generic message. */
+export const KNOWN_APPROVAL_LIMIT_ERROR_CODES = [
+  "ADMIN_VERSION_CONFLICT",
+  "APPROVAL_LIMIT_ALREADY_EXISTS",
+  "APPROVAL_LIMIT_ROLE_NOT_FOUND",
+  "BRANCH_NOT_FOUND",
+  "REQUEST_VALIDATION_FAILED",
+  "IDEMPOTENCY_KEY_REUSED",
+  "PERMISSION_DENIED",
+  "RESOURCE_NOT_FOUND",
+] as const;
+
+const KNOWN = new Set<string>(KNOWN_APPROVAL_LIMIT_ERROR_CODES);
+
+/** Returns the key under `approvalLimitAdmin.errors` for a failed approval limit call. */
+export function approvalLimitErrorKey(error: unknown): string {
+  return error instanceof ApiError && KNOWN.has(error.code) ? error.code : "GENERIC";
+}
+```
+
+`approval-limit-errors.test.ts` (เขียนอย่างเดียว ห้ามรัน):
+
+```ts
+import { describe, expect, it } from "vitest";
+import { ApiError } from "@/lib/api/api-error";
+import thMessages from "@/messages/th.json";
+import enMessages from "@/messages/en.json";
+import { KNOWN_APPROVAL_LIMIT_ERROR_CODES, approvalLimitErrorKey } from "./approval-limit-errors";
+
+function leafKeys(value: unknown, prefix = ""): string[] {
+  if (typeof value !== "object" || value === null) return [prefix];
+  return Object.entries(value).flatMap(([key, child]) => leafKeys(child, prefix ? `${prefix}.${key}` : key));
+}
+
+describe("approvalLimitErrorKey", () => {
+  it("maps known backend codes and falls back to GENERIC", () => {
+    expect(approvalLimitErrorKey(new ApiError({ status: 409, code: "APPROVAL_LIMIT_ALREADY_EXISTS", message: "x" }))).toBe("APPROVAL_LIMIT_ALREADY_EXISTS");
+    expect(approvalLimitErrorKey(new ApiError({ status: 500, code: "SOMETHING_NEW", message: "x" }))).toBe("GENERIC");
+    expect(approvalLimitErrorKey(new Error("APPROVAL_LIMIT_ALREADY_EXISTS"))).toBe("GENERIC");
+  });
+
+  it("has a Thai and English message for every mapped code plus GENERIC, and identical key sets", () => {
+    for (const messages of [thMessages, enMessages]) {
+      for (const code of [...KNOWN_APPROVAL_LIMIT_ERROR_CODES, "GENERIC"]) {
+        expect(messages.approvalLimitAdmin.errors).toHaveProperty(code);
+      }
+    }
+    expect(leafKeys(thMessages.approvalLimitAdmin).sort()).toEqual(leafKeys(enMessages.approvalLimitAdmin).sort());
+  });
+});
+```
+
+- [ ] **Step 2: query hooks**
+
+`api/approval-limit-queries.ts`:
+
+```ts
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+  type UseQueryResult,
+} from "@tanstack/react-query";
+import {
+  apiClient,
+  type ApprovalLimitListParams,
+  type ApprovalLimitListResponse,
+  type ApprovalLimitOptionsResponse,
+  type ApprovalLimitResponse,
+  type CreateApprovalLimitRequest,
+  type UpdateApprovalLimitRequest,
+} from "@/lib/api/api-client";
+import { useApiRequestContext, type ApiLocale } from "@/lib/api/use-api-request-context";
+
+export const approvalLimitKeys = {
+  all: (membershipId: string | null | undefined) => ["business", membershipId] as const,
+  options: (membershipId: string | null | undefined, locale: ApiLocale) =>
+    ["business", membershipId, locale, "approval-limits", "options"] as const,
+  list: (membershipId: string | null | undefined, locale: ApiLocale, params: ApprovalLimitListParams) =>
+    ["business", membershipId, locale, "approval-limits", "list", params] as const,
+  detail: (membershipId: string | null | undefined, locale: ApiLocale, limitId: string) =>
+    ["business", membershipId, locale, "approval-limits", "detail", limitId] as const,
+};
+
+export function useApprovalLimits(params: ApprovalLimitListParams): UseQueryResult<ApprovalLimitListResponse, Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: approvalLimitKeys.list(context.membershipId, context.locale, params),
+    enabled: Boolean(context.membershipId),
+    queryFn: async ({ signal }) => apiClient.listApprovalLimits(params, await context.buildOptions({ signal })),
+  });
+}
+
+export function useApprovalLimitOptions(): UseQueryResult<ApprovalLimitOptionsResponse, Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: approvalLimitKeys.options(context.membershipId, context.locale),
+    enabled: Boolean(context.membershipId),
+    queryFn: async ({ signal }) => apiClient.getApprovalLimitOptions(await context.buildOptions({ signal })),
+  });
+}
+
+export function useApprovalLimit(limitId: string, enabled: boolean): UseQueryResult<ApprovalLimitResponse, Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: approvalLimitKeys.detail(context.membershipId, context.locale, limitId),
+    enabled: Boolean(context.membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.getApprovalLimit(limitId, await context.buildOptions({ signal })),
+  });
+}
+
+export function useCreateApprovalLimit(): UseMutationResult<
+  ApprovalLimitResponse, Error, { payload: CreateApprovalLimitRequest; idempotencyKey: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ payload, idempotencyKey }) =>
+      apiClient.createApprovalLimit(payload, await context.buildOptions({ idempotencyKey })),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: approvalLimitKeys.all(context.membershipId) }),
+  });
+}
+
+export function useUpdateApprovalLimit(): UseMutationResult<
+  ApprovalLimitResponse, Error, { limitId: string; payload: UpdateApprovalLimitRequest; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ limitId, payload, ifMatch }) =>
+      apiClient.updateApprovalLimit(limitId, payload, await context.buildOptions({ ifMatch })),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: approvalLimitKeys.all(context.membershipId) }),
+  });
+}
+```
+
+- [ ] **Step 3: messages (th และ en ต้องครบคู่)**
+
+**3a. namespace ใหม่ `approvalLimitAdmin`** — เพิ่มเป็น top-level key สุดท้ายของไฟล์ต่อจาก `roleAdmin`. ใน `en.json` แทน
+
+```
+      "RESOURCE_NOT_FOUND": "The requested record was not found."
+    }
+  }
+}
+```
+(ท้ายไฟล์; บล็อก `roleAdmin.errors`) ด้วยข้อความเดิมแต่ปิด `roleAdmin` ด้วย `},` แล้วต่อ namespace ใหม่:
+
+```json
+      "RESOURCE_NOT_FOUND": "The requested record was not found."
+    }
+  },
+  "approvalLimitAdmin": {
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedDetail": "You do not have permission to manage approval limits.",
+    "documentType": { "estimate": "Estimate", "purchase_order": "Purchase order", "change_order": "Change order" },
+    "list": {
+      "title": "Approval limits",
+      "subtitle": "The most each role may approve, per document type and branch",
+      "createLimit": "Add limit",
+      "failClosedNotice": "A role with no active limit cannot approve estimates, purchase orders or change orders. Set the limits before relying on approvals.",
+      "documentTypeFilter": "Document type",
+      "statusFilter": "Status",
+      "status": { "active": "Active", "inactive": "Inactive" },
+      "table": { "role": "Role", "documentType": "Document type", "branch": "Branch", "limit": "Limit", "status": "Status" },
+      "organizationWide": "Whole organization",
+      "unlimited": "Unlimited",
+      "emptyTitle": "No approval limits yet",
+      "emptyDescription": "Add the first limit so approvers can approve documents"
+    },
+    "editor": {
+      "createTitle": "Add approval limit",
+      "createSubtitle": "Choose a role, a document type and the highest amount it may approve",
+      "editTitle": "Edit approval limit",
+      "createSubmit": "Add limit",
+      "saveSubmit": "Save changes",
+      "createSuccess": "Limit added",
+      "saveSuccess": "Limit saved",
+      "backToList": "Back to limits",
+      "identityLocked": "Role, document type, branch and currency cannot be changed. Add a new limit instead.",
+      "fields": { "role": "Role", "documentType": "Document type", "branch": "Branch", "currency": "Currency", "isUnlimited": "Unlimited", "maxAmount": "Maximum amount", "isActive": "Active" },
+      "hints": { "branch": "Leave empty for the whole organization. A branch limit replaces the organization limit of that role in that branch.", "unlimited": "The role can approve any amount of this document type.", "inactive": "An inactive limit counts as no limit." },
+      "placeholders": { "role": "Select a role", "documentType": "Select a document type", "organizationWide": "Whole organization" },
+      "validation": { "roleRequired": "Select a role", "documentTypeRequired": "Select a document type", "amountRequired": "Enter the maximum amount", "amountInvalid": "Enter 0 or more with at most 2 decimal places" }
+    },
+    "errors": {
+      "GENERIC": "The action failed. Please try again.",
+      "ADMIN_VERSION_CONFLICT": "This limit was changed by someone else. Reload and try again.",
+      "APPROVAL_LIMIT_ALREADY_EXISTS": "This role already has a limit for this document type and branch. Edit the existing one.",
+      "APPROVAL_LIMIT_ROLE_NOT_FOUND": "No active role with this id was found.",
+      "BRANCH_NOT_FOUND": "The branch was not found.",
+      "REQUEST_VALIDATION_FAILED": "The data is invalid. Check it and try again.",
+      "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
+      "PERMISSION_DENIED": "You do not have permission to do this.",
+      "RESOURCE_NOT_FOUND": "The requested record was not found."
+    }
+  }
+}
+```
+
+ใน `th.json` แทน `      "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"\n    }\n  }\n}` (ท้ายไฟล์) ด้วย:
+
+```json
+      "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"
+    }
+  },
+  "approvalLimitAdmin": {
+    "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
+    "accessDeniedDetail": "คุณไม่มีสิทธิ์จัดการวงเงินอนุมัติ",
+    "documentType": { "estimate": "ใบประเมินราคา", "purchase_order": "ใบสั่งซื้อ", "change_order": "ใบเปลี่ยนแปลงงาน" },
+    "list": {
+      "title": "วงเงินอนุมัติ",
+      "subtitle": "เพดานยอดที่แต่ละบทบาทอนุมัติได้ แยกตามประเภทเอกสารและสาขา",
+      "createLimit": "เพิ่มวงเงิน",
+      "failClosedNotice": "บทบาทที่ไม่มีวงเงินที่ใช้งานอยู่จะอนุมัติใบประเมินราคา ใบสั่งซื้อ หรือใบเปลี่ยนแปลงงานไม่ได้ ควรตั้งวงเงินก่อนใช้งานจริง",
+      "documentTypeFilter": "ประเภทเอกสาร",
+      "statusFilter": "สถานะ",
+      "status": { "active": "ใช้งาน", "inactive": "ปิดใช้งาน" },
+      "table": { "role": "บทบาท", "documentType": "ประเภทเอกสาร", "branch": "สาขา", "limit": "วงเงิน", "status": "สถานะ" },
+      "organizationWide": "ทั้งองค์กร",
+      "unlimited": "ไม่จำกัด",
+      "emptyTitle": "ยังไม่มีวงเงินอนุมัติ",
+      "emptyDescription": "เพิ่มวงเงินแรกเพื่อให้ผู้อนุมัติอนุมัติเอกสารได้"
+    },
+    "editor": {
+      "createTitle": "เพิ่มวงเงินอนุมัติ",
+      "createSubtitle": "เลือกบทบาท ประเภทเอกสาร และยอดสูงสุดที่อนุมัติได้",
+      "editTitle": "แก้ไขวงเงินอนุมัติ",
+      "createSubmit": "เพิ่มวงเงิน",
+      "saveSubmit": "บันทึกการเปลี่ยนแปลง",
+      "createSuccess": "เพิ่มวงเงินแล้ว",
+      "saveSuccess": "บันทึกวงเงินแล้ว",
+      "backToList": "กลับไปรายการวงเงิน",
+      "identityLocked": "บทบาท ประเภทเอกสาร สาขา และสกุลเงินแก้ไขไม่ได้ หากต้องการเปลี่ยนให้เพิ่มวงเงินใหม่",
+      "fields": { "role": "บทบาท", "documentType": "ประเภทเอกสาร", "branch": "สาขา", "currency": "สกุลเงิน", "isUnlimited": "ไม่จำกัดวงเงิน", "maxAmount": "วงเงินสูงสุด", "isActive": "ใช้งาน" },
+      "hints": { "branch": "เว้นว่างไว้เพื่อใช้ทั้งองค์กร วงเงินเฉพาะสาขาจะแทนวงเงินทั้งองค์กรของบทบาทนั้นในสาขานั้น", "unlimited": "บทบาทนี้อนุมัติเอกสารประเภทนี้ได้ไม่จำกัดยอด", "inactive": "วงเงินที่ปิดใช้งานถือเสมือนไม่มีวงเงิน" },
+      "placeholders": { "role": "เลือกบทบาท", "documentType": "เลือกประเภทเอกสาร", "organizationWide": "ทั้งองค์กร" },
+      "validation": { "roleRequired": "เลือกบทบาท", "documentTypeRequired": "เลือกประเภทเอกสาร", "amountRequired": "กรอกวงเงินสูงสุด", "amountInvalid": "กรอกจำนวนตั้งแต่ 0 ขึ้นไป ทศนิยมไม่เกิน 2 ตำแหน่ง" }
+    },
+    "errors": {
+      "GENERIC": "ดำเนินการไม่สำเร็จ กรุณาลองใหม่",
+      "ADMIN_VERSION_CONFLICT": "วงเงินนี้ถูกแก้ไขโดยผู้อื่นแล้ว กรุณาโหลดใหม่แล้วลองอีกครั้ง",
+      "APPROVAL_LIMIT_ALREADY_EXISTS": "บทบาทนี้มีวงเงินสำหรับประเภทเอกสารและสาขานี้อยู่แล้ว ให้แก้ไขรายการเดิม",
+      "APPROVAL_LIMIT_ROLE_NOT_FOUND": "ไม่พบบทบาทที่เปิดใช้งาน",
+      "BRANCH_NOT_FOUND": "ไม่พบสาขา",
+      "REQUEST_VALIDATION_FAILED": "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
+      "IDEMPOTENCY_KEY_REUSED": "คำขอซ้ำไม่ตรงกับคำขอเดิม กรุณาลองใหม่",
+      "PERMISSION_DENIED": "คุณไม่มีสิทธิ์ดำเนินการนี้",
+      "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"
+    }
+  }
+}
+```
+
+**3b. เมนู:** ใน object `shell` ต่อจาก `"roleSettings": "Roles"` (en) / `"roleSettings": "บทบาทและสิทธิ์"` (th) เพิ่ม `,` และ `"approvalLimitSettings": "Approval limits"` / `"approvalLimitSettings": "วงเงินอนุมัติ"`.
+
+**3c. error ในหน้าอนุมัติเดิม (เพิ่มคู่ th/en ทุกข้อ):**
+- `estimates.lifecycle`: ต่อจากบรรทัด `"reviewUnavailable": ...` เพิ่ม en: `"approvalLimitExceeded": "This estimate is above your approval limit.",` และ `"approvalAuthorityNotConfigured": "Your roles have no approval limit for this document. Contact an administrator.",` / th: `"approvalLimitExceeded": "ยอดใบประเมินราคานี้เกินวงเงินอนุมัติของบทบาทคุณ",` และ `"approvalAuthorityNotConfigured": "บทบาทของคุณยังไม่มีวงเงินอนุมัติสำหรับเอกสารนี้ กรุณาติดต่อผู้ดูแลระบบ",`
+- `procurement.errors`: ต่อจากบรรทัด `"PURCHASE_ORDER_OVER_BUDGET": ...` เพิ่ม en: `"APPROVAL_LIMIT_EXCEEDED": "This order is above your approval limit.",` `"APPROVAL_AUTHORITY_NOT_CONFIGURED": "Your roles have no approval limit for purchase orders. Contact an administrator.",` / th: `"APPROVAL_LIMIT_EXCEEDED": "ยอดใบสั่งซื้อเกินวงเงินอนุมัติของบทบาทคุณ",` `"APPROVAL_AUTHORITY_NOT_CONFIGURED": "บทบาทของคุณยังไม่มีวงเงินอนุมัติสำหรับใบสั่งซื้อ กรุณาติดต่อผู้ดูแลระบบ",`
+- `projects.control.errors`: ต่อจากบรรทัด `"PROJECT_BUDGET_NEGATIVE": ...` เพิ่ม en: `"APPROVAL_LIMIT_EXCEEDED": "This change is above your approval limit.",` `"APPROVAL_AUTHORITY_NOT_CONFIGURED": "Your roles have no approval limit for change orders. Contact an administrator.",` / th: `"APPROVAL_LIMIT_EXCEEDED": "ยอดการเปลี่ยนแปลงเกินวงเงินอนุมัติของบทบาทคุณ",` `"APPROVAL_AUTHORITY_NOT_CONFIGURED": "บทบาทของคุณยังไม่มีวงเงินอนุมัติสำหรับใบเปลี่ยนแปลงงาน กรุณาติดต่อผู้ดูแลระบบ",`
+
+- [ ] **Step 4: แสดง error ในหน้าอนุมัติเดิม**
+
+- `procurement-status.ts`: ใน `KNOWN_ERROR_CODES` ต่อจาก `"PURCHASE_ORDER_SELF_APPROVAL",` เพิ่ม `"APPROVAL_LIMIT_EXCEEDED",` และ `"APPROVAL_AUTHORITY_NOT_CONFIGURED",`
+- `project-control-errors.ts`: ใน `KNOWN_CODES` ต่อจาก `"PROJECT_CHANGE_ORDER_SELF_APPROVAL",` เพิ่มสองรหัสเดียวกัน
+- `estimate-lifecycle-actions.tsx`: แทน
+
+```tsx
+        toast.error(t("reviewUnavailable"));
+      } else {
+        toast.error(t("actionFailed"));
+```
+ด้วย
+```tsx
+        toast.error(t("reviewUnavailable"));
+      } else if (error instanceof ApiError && error.code === "APPROVAL_LIMIT_EXCEEDED") {
+        toast.error(t("approvalLimitExceeded"));
+      } else if (error instanceof ApiError && error.code === "APPROVAL_AUTHORITY_NOT_CONFIGURED") {
+        toast.error(t("approvalAuthorityNotConfigured"));
+      } else {
+        toast.error(t("actionFailed"));
+```
+
+- [ ] **Step 5: Verify (compile-only) — key parity**
+
+Run (จาก `frontend/`): `npx tsc --noEmit && npm run lint`, แล้ว:
+
+```bash
+python3 - <<'PY'
+import json
+def keys(v, p=""):
+    return [p] if not isinstance(v, dict) else [k for c, x in v.items() for k in keys(x, f"{p}.{c}" if p else c)]
+th = set(keys(json.load(open("src/messages/th.json", encoding="utf-8"))))
+en = set(keys(json.load(open("src/messages/en.json", encoding="utf-8"))))
+print("only th:", sorted(th - en)[:20]); print("only en:", sorted(en - th)[:20])
+raise SystemExit(0 if th == en else 1)
+PY
+```
+Expected: exit 0 ทุกคำสั่ง; `only th: []`, `only en: []`. **ห้ามรัน vitest.**
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/features/settings/approval-limits frontend/src/messages frontend/src/features/estimates/components/estimate-lifecycle-actions.tsx frontend/src/features/procurement/procurement-status.ts frontend/src/features/projects/components/project-control-errors.ts
+git commit -m "feat(approval): add approval limit translations, error map and query hooks
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 11: Frontend — รายการวงเงิน, editor (route `[id]`) และเมนู
+
+**Files:**
+- Create: `frontend/src/features/settings/approval-limits/components/{approval-limit-list,approval-limit-editor}.tsx` (+ `.test.tsx` ทั้งคู่), `frontend/src/app/[locale]/(erp)/settings/approval-limits/page.tsx`, `frontend/src/app/[locale]/(erp)/settings/approval-limits/[id]/page.tsx`
+- Modify: `frontend/src/components/layout/SidebarNav.tsx`, `frontend/src/components/layout/SidebarNav.test.tsx`
+
+ใช้ของกลางเดิม: `useListState`, `DataTable`, `ListFilterSelect`, `FormContainer/FormSection/FormActionBar`, `Select`, `Input`, `Checkbox`, `formatCurrency` (`@/lib/formatters/formatters`), `PermissionGuard`. การปิดใช้ทำผ่านช่อง "ใช้งาน" ของฟอร์มแก้ไข (PUT) จึงไม่มี modal ลบ/ยกเลิก.
+
+- [ ] **Step 1: รายการ**
+
+`approval-limit-list.tsx`:
+
+```tsx
+"use client";
+
+import React, { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListFilterSelect } from "@/components/ui/ListFilterSelect";
+import { ListToolbar } from "@/components/ui/ListToolbar";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { TableEntityCell } from "@/components/ui/TableEntityCell";
+import { IconPlus } from "@/components/common/Icons";
+import { LIST_PAGE_SIZES, useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
+import type { ApprovalLimitResponse } from "@/lib/api/api-client";
+import { formatCurrency } from "@/lib/formatters/formatters";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { can, PERMISSIONS } from "@/lib/permissions/can";
+import { useApprovalLimits } from "../api/approval-limit-queries";
+
+interface LimitFilters extends ListFilterRecord {
+  status?: string;
+  documentType?: string;
+}
+
+const STATUS_VALUES = ["active", "inactive"] as const;
+const DOCUMENT_TYPES = ["estimate", "purchase_order", "change_order"] as const;
+
+const toListPageSize = (value: number): ListPageSize | undefined => LIST_PAGE_SIZES.find((size) => size === value);
+
+export function ApprovalLimitList() {
+  const t = useTranslations("approvalLimitAdmin");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const router = useRouter();
+  const { selectedMembership } = useSelectedMembership();
+  const canManage = can(selectedMembership, PERMISSIONS.APPROVAL_LIMITS_MANAGE);
+
+  const listState = useListState<LimitFilters>({ schema: { single: ["status", "documentType"] }, debounceMs: 350 });
+  const { page, limit, filters } = listState.params;
+  const { data, isLoading, isError, refetch } = useApprovalLimits({
+    status: filters.status || undefined,
+    documentType: filters.documentType || undefined,
+    page,
+    limit,
+  });
+
+  const rows = data?.items ?? [];
+  const totalItems = data?.pagination?.totalCount ?? 0;
+  const totalPages = data?.pagination?.totalPages ?? 1;
+  const isZero = !isLoading && !isError && totalItems === 0 && !filters.status && !filters.documentType;
+  const goCreate = () => router.push(`/${locale}/settings/approval-limits/create`);
+
+  const columns = useMemo<Column<ApprovalLimitResponse>[]>(
+    () => [
+      {
+        id: "role",
+        header: t("list.table.role"),
+        className: "min-w-[220px]",
+        cell: (_v, row) => (
+          <TableEntityCell
+            title={row.role?.name ?? "-"}
+            href={row.id ? `/${locale}/settings/approval-limits/${row.id}` : undefined}
+          />
+        ),
+      },
+      {
+        id: "documentType",
+        header: t("list.table.documentType"),
+        cell: (_v, row) => (row.documentType ? t(`documentType.${row.documentType}`) : "-"),
+      },
+      { id: "branch", header: t("list.table.branch"), cell: (_v, row) => row.branch?.name ?? t("list.organizationWide") },
+      {
+        id: "limit",
+        header: t("list.table.limit"),
+        cell: (_v, row) => (row.isUnlimited ? t("list.unlimited") : formatCurrency(row.maxAmount, row.currency, locale)),
+      },
+      {
+        id: "status",
+        header: t("list.table.status"),
+        cell: (_v, row) => (
+          <StatusBadge
+            label={row.isActive ? t("list.status.active") : t("list.status.inactive")}
+            variant={row.isActive ? "success" : "neutral"}
+          />
+        ),
+      },
+    ],
+    [locale, t]
+  );
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title={t("list.title")}
+        subtitle={t("list.subtitle")}
+        actions={
+          canManage ? (
+            <Button variant="primary" size="md" icon={<IconPlus size={16} />} onClick={goCreate}>
+              {t("list.createLimit")}
+            </Button>
+          ) : undefined
+        }
+      />
+      <Alert variant="warning">{t("list.failClosedNotice")}</Alert>
+      <ListToolbar>
+        <div className="flex flex-wrap items-end gap-3">
+          <ListFilterSelect
+            id="approval-limit-document-type"
+            label={t("list.documentTypeFilter")}
+            value={filters.documentType ?? ""}
+            onChange={(value) => listState.actions.setFilter("documentType", value || undefined)}
+            options={DOCUMENT_TYPES.map((value) => ({ value, label: t(`documentType.${value}`) }))}
+          />
+          <ListFilterSelect
+            id="approval-limit-status"
+            label={t("list.statusFilter")}
+            value={filters.status ?? ""}
+            onChange={(value) => listState.actions.setFilter("status", value || undefined)}
+            options={STATUS_VALUES.map((value) => ({ value, label: t(`list.status.${value}`) }))}
+          />
+        </div>
+      </ListToolbar>
+      {isZero ? (
+        <EmptyState
+          icon="empty"
+          title={t("list.emptyTitle")}
+          description={t("list.emptyDescription")}
+          actionLabel={canManage ? t("list.createLimit") : undefined}
+          onAction={canManage ? goCreate : undefined}
+        />
+      ) : (
+        <DataTable<ApprovalLimitResponse>
+          columns={columns}
+          data={rows}
+          isLoading={isLoading}
+          isError={isError}
+          error={isError ? t("errors.GENERIC") : null}
+          onRetry={() => refetch()}
+          emptyTitle={tCommon("table.noData")}
+          pagination={{ page, limit, totalPages, totalItems }}
+          onPageChange={(next) => listState.actions.setPage(next)}
+          onLimitChange={(next) => {
+            const pageSize = toListPageSize(next);
+            if (pageSize) listState.actions.setLimit(pageSize);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+`approval-limit-list.test.tsx` (เขียนอย่างเดียว ห้ามรัน):
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { ApprovalLimitList } from "./approval-limit-list";
+
+const mocks = vi.hoisted(() => ({
+  permissions: [] as string[],
+  push: vi.fn(),
+  params: undefined as Record<string, unknown> | undefined,
+  result: {} as Record<string, unknown>,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mocks.push, replace: vi.fn() }),
+  usePathname: () => "/th/settings/approval-limits",
+  useSearchParams: () => new URLSearchParams(),
+}));
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({
+    selectedMembership: { id: "m1", permissions: mocks.permissions.map((key) => ({ key, scope: "organization" })) },
+  }),
+}));
+vi.mock("../api/approval-limit-queries", () => ({
+  useApprovalLimits: (params: Record<string, unknown>) => {
+    mocks.params = params;
+    return mocks.result;
+  },
+}));
+
+const items = [
+  { id: "l1", rowVersion: "v1", role: { id: "r1", name: "ผู้จัดการ" }, documentType: "estimate", branch: null, currency: "THB", isUnlimited: false, maxAmount: 500000, isActive: true },
+  { id: "l2", rowVersion: "v2", role: { id: "r2", name: "ผู้อำนวยการ" }, documentType: "purchase_order", branch: { id: "b1", name: "สาขา 1" }, currency: "THB", isUnlimited: true, maxAmount: null, isActive: false },
+];
+
+describe("ApprovalLimitList", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.permissions = ["approval-limits.manage"];
+    mocks.result = {
+      data: { items, pagination: { page: 1, pageSize: 25, totalCount: 2, totalPages: 1 } },
+      isLoading: false, isError: false, refetch: vi.fn(),
+    };
+  });
+
+  it("lists limits, routes the add button to the create form and hides it without approval-limits.manage", () => {
+    const { unmount } = render(<ApprovalLimitList />);
+
+    expect(screen.getByRole("link", { name: /ผู้จัดการ/ })).toHaveAttribute("href", "/th/settings/approval-limits/l1");
+    expect(screen.getAllByText("ใบสั่งซื้อ").length).toBeGreaterThan(0); // the filter also lists each type
+    expect(screen.getByText("ทั้งองค์กร")).toBeInTheDocument();
+    expect(screen.getByText("สาขา 1")).toBeInTheDocument();
+    expect(screen.getByText("ไม่จำกัด")).toBeInTheDocument();
+    expect(screen.getByText(/500,000/)).toBeInTheDocument();
+    expect(mocks.params).toMatchObject({ page: 1 });
+    fireEvent.click(screen.getByRole("button", { name: "เพิ่มวงเงิน" }));
+    expect(mocks.push).toHaveBeenCalledWith("/th/settings/approval-limits/create");
+    unmount();
+
+    mocks.permissions = [];
+    render(<ApprovalLimitList />);
+    expect(screen.queryByRole("button", { name: "เพิ่มวงเงิน" })).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 2: editor**
+
+`approval-limit-editor.tsx`:
+
+```tsx
+"use client";
+
+import React, { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { FormContainer } from "@/components/forms/FormContainer";
+import { FormSection } from "@/components/forms/FormSection";
+import { FormActionBar } from "@/components/forms/FormActionBar";
+import { Alert } from "@/components/ui/Alert";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Input } from "@/components/ui/Input";
+import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { Select } from "@/components/ui/Select";
+import { useToast } from "@/hooks/useToast";
+import type { CreateApprovalLimitRequest } from "@/lib/api/api-client";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { can, PERMISSIONS } from "@/lib/permissions/can";
+import { useApprovalLimit, useApprovalLimitOptions, useCreateApprovalLimit, useUpdateApprovalLimit } from "../api/approval-limit-queries";
+import { approvalLimitErrorKey } from "../approval-limit-errors";
+
+const CURRENCY = "THB";
+const AMOUNT_PATTERN = /^\d{1,13}(\.\d{1,2})?$/;
+const DOCUMENT_TYPES = ["estimate", "purchase_order", "change_order"] as const;
+type DocumentTypeValue = (typeof DOCUMENT_TYPES)[number];
+const isDocumentType = (value: string): value is DocumentTypeValue => DOCUMENT_TYPES.some((type) => type === value);
+
+interface LimitFormValues {
+  roleId: string;
+  documentType: string;
+  branchId: string;
+  isUnlimited: boolean;
+  maxAmount: string;
+  isActive: boolean;
+}
+
+export function ApprovalLimitEditor({ limitId }: { limitId: string }) {
+  const isCreate = limitId === "create" || limitId === "add";
+  const t = useTranslations("approvalLimitAdmin");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const router = useRouter();
+  const { toast } = useToast();
+  const { selectedMembership } = useSelectedMembership();
+  const canManage = can(selectedMembership, PERMISSIONS.APPROVAL_LIMITS_MANAGE);
+  const limitQuery = useApprovalLimit(limitId, !isCreate);
+  const optionsQuery = useApprovalLimitOptions();
+  const createMutation = useCreateApprovalLimit();
+  const updateMutation = useUpdateApprovalLimit();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // One key per submit intent: a retry after a network failure replays the same request instead of creating twice.
+  const intentRef = useRef<{ fingerprint: string; key: string } | null>(null);
+
+  const limit = limitQuery.data;
+  const existing = limit?.id && limit.rowVersion ? { id: limit.id, rowVersion: limit.rowVersion } : null;
+
+  const schema = useMemo(
+    () =>
+      z
+        .object({
+          roleId: z.string(),
+          documentType: z.string(),
+          branchId: z.string(),
+          isUnlimited: z.boolean(),
+          maxAmount: z.string().trim(),
+          isActive: z.boolean(),
+        })
+        .superRefine((value, ctx) => {
+          if (isCreate && value.roleId === "") ctx.addIssue({ code: "custom", path: ["roleId"], message: t("editor.validation.roleRequired") });
+          if (isCreate && value.documentType === "") ctx.addIssue({ code: "custom", path: ["documentType"], message: t("editor.validation.documentTypeRequired") });
+          if (!value.isUnlimited && value.maxAmount === "") ctx.addIssue({ code: "custom", path: ["maxAmount"], message: t("editor.validation.amountRequired") });
+          if (!value.isUnlimited && value.maxAmount !== "" && !AMOUNT_PATTERN.test(value.maxAmount))
+            ctx.addIssue({ code: "custom", path: ["maxAmount"], message: t("editor.validation.amountInvalid") });
+        }),
+    [isCreate, t]
+  );
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isDirty },
+  } = useForm<LimitFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { roleId: "", documentType: "", branchId: "", isUnlimited: false, maxAmount: "", isActive: true },
+    values:
+      !isCreate && limit
+        ? {
+            roleId: limit.role?.id ?? "",
+            documentType: limit.documentType ?? "",
+            branchId: limit.branch?.id ?? "",
+            isUnlimited: limit.isUnlimited === true,
+            maxAmount: limit.maxAmount === null || limit.maxAmount === undefined ? "" : String(limit.maxAmount),
+            isActive: limit.isActive === true,
+          }
+        : undefined,
+  });
+  const isUnlimited = watch("isUnlimited");
+
+  if (!isCreate && limitQuery.isPending) return <MonoSpinner size="lg" label={tCommon("states.loading")} />;
+  if (!isCreate && (limitQuery.isError || !existing)) return <Alert variant="danger">{t("errors.RESOURCE_NOT_FOUND")}</Alert>;
+
+  const backHref = `/${locale}/settings/approval-limits`;
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+  const options = optionsQuery.data;
+
+  const onSubmit = handleSubmit(async (values) => {
+    setSubmitError(null);
+    const maxAmount = values.isUnlimited ? null : Number(values.maxAmount);
+    try {
+      if (isCreate) {
+        const payload: CreateApprovalLimitRequest = {
+          roleId: values.roleId,
+          documentType: values.documentType,
+          branchId: values.branchId === "" ? null : values.branchId,
+          currency: CURRENCY,
+          isUnlimited: values.isUnlimited,
+          maxAmount,
+        };
+        const fingerprint = JSON.stringify(payload);
+        if (intentRef.current?.fingerprint !== fingerprint) intentRef.current = { fingerprint, key: crypto.randomUUID() };
+        const created = await createMutation.mutateAsync({ payload, idempotencyKey: intentRef.current.key });
+        intentRef.current = null;
+        toast.success(t("editor.createSuccess"));
+        if (created.id) router.push(`${backHref}/${created.id}`);
+      } else if (existing) {
+        await updateMutation.mutateAsync({
+          limitId: existing.id,
+          payload: { isUnlimited: values.isUnlimited, maxAmount, isActive: values.isActive },
+          ifMatch: existing.rowVersion,
+        });
+        toast.success(t("editor.saveSuccess"));
+      }
+    } catch (error: unknown) {
+      setSubmitError(t(`errors.${approvalLimitErrorKey(error)}`));
+    }
+  });
+
+  return (
+    <FormContainer
+      asForm
+      noValidate
+      onSubmit={onSubmit}
+      maxWidth="lg"
+      header={
+        <PageHeader
+          title={isCreate ? t("editor.createTitle") : t("editor.editTitle")}
+          subtitle={isCreate ? t("editor.createSubtitle") : (limit?.role?.name ?? undefined)}
+          backHref={backHref}
+          backLabel={t("editor.backToList")}
+        />
+      }
+      errorBanner={submitError ? <Alert variant="danger">{submitError}</Alert> : undefined}
+      actionBar={
+        canManage ? (
+          <FormActionBar
+            isDirty={isDirty}
+            isLoading={isSaving}
+            isSaveDisabled={isSaving}
+            saveText={isCreate ? t("editor.createSubmit") : t("editor.saveSubmit")}
+            saveButtonType="submit"
+            cancelHref={backHref}
+            showCancel
+            cancelText={tCommon("actions.cancel")}
+          />
+        ) : undefined
+      }
+    >
+      <FormSection title={isCreate ? t("editor.createTitle") : t("editor.editTitle")}>
+        {!isCreate ? <Alert variant="info">{t("editor.identityLocked")}</Alert> : null}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {isCreate ? (
+            <>
+              {optionsQuery.isError ? <Alert variant="danger">{t("errors.GENERIC")}</Alert> : null}
+              <Select
+                label={t("editor.fields.role")}
+                required
+                placeholder={t("editor.placeholders.role")}
+                options={(options?.roles ?? []).flatMap((r) => (r.id ? [{ value: r.id, label: r.name ?? r.id }] : []))}
+                error={errors.roleId?.message}
+                {...register("roleId")}
+              />
+              <Select
+                label={t("editor.fields.documentType")}
+                required
+                placeholder={t("editor.placeholders.documentType")}
+                options={(options?.documentTypes ?? []).filter(isDocumentType).map((type) => ({ value: type, label: t(`documentType.${type}`) }))}
+                error={errors.documentType?.message}
+                {...register("documentType")}
+              />
+              <Select
+                label={t("editor.fields.branch")}
+                placeholder={t("editor.placeholders.organizationWide")}
+                helperText={t("editor.hints.branch")}
+                options={(options?.branches ?? []).flatMap((b) => (b.id ? [{ value: b.id, label: b.name ?? b.id }] : []))}
+                {...register("branchId")}
+              />
+            </>
+          ) : (
+            <>
+              <Input label={t("editor.fields.role")} readOnly disabled value={limit?.role?.name ?? "-"} />
+              <Input
+                label={t("editor.fields.documentType")}
+                readOnly
+                disabled
+                value={limit?.documentType && isDocumentType(limit.documentType) ? t(`documentType.${limit.documentType}`) : "-"}
+              />
+              <Input label={t("editor.fields.branch")} readOnly disabled value={limit?.branch?.name ?? t("editor.placeholders.organizationWide")} />
+            </>
+          )}
+          <Input label={t("editor.fields.currency")} readOnly disabled value={limit?.currency ?? CURRENCY} />
+        </div>
+        <Checkbox label={t("editor.fields.isUnlimited")} description={t("editor.hints.unlimited")} disabled={!canManage} {...register("isUnlimited")} />
+        <Input
+          label={t("editor.fields.maxAmount")}
+          inputMode="decimal"
+          disabled={!canManage || isUnlimited}
+          error={errors.maxAmount?.message}
+          {...register("maxAmount")}
+        />
+        {!isCreate ? (
+          <Checkbox label={t("editor.fields.isActive")} description={t("editor.hints.inactive")} disabled={!canManage} {...register("isActive")} />
+        ) : null}
+      </FormSection>
+    </FormContainer>
+  );
+}
+```
+
+`approval-limit-editor.test.tsx` (เขียนอย่างเดียว ห้ามรัน):
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ApprovalLimitEditor } from "./approval-limit-editor";
+
+const mocks = vi.hoisted(() => ({
+  permissions: [] as string[],
+  create: vi.fn(),
+  update: vi.fn(),
+  push: vi.fn(),
+  limit: { data: undefined, isPending: false, isError: false } as Record<string, unknown>,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mocks.push, replace: vi.fn() }),
+  usePathname: () => "/th/settings/approval-limits/create",
+  useSearchParams: () => new URLSearchParams(),
+}));
+vi.mock("@/hooks/useToast", () => ({ useToast: () => ({ toast: { success: vi.fn(), error: vi.fn() } }) }));
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({
+    selectedMembership: { id: "m1", permissions: mocks.permissions.map((key) => ({ key, scope: "organization" })) },
+  }),
+}));
+vi.mock("../api/approval-limit-queries", () => ({
+  useApprovalLimit: () => mocks.limit,
+  useApprovalLimitOptions: () => ({
+    isPending: false,
+    isError: false,
+    data: {
+      roles: [{ id: "r1", name: "ผู้จัดการ" }],
+      branches: [{ id: "b1", name: "สาขา 1" }],
+      documentTypes: ["estimate", "purchase_order", "change_order"],
+      currencies: ["THB"],
+    },
+  }),
+  useCreateApprovalLimit: () => ({ mutateAsync: mocks.create, isPending: false }),
+  useUpdateApprovalLimit: () => ({ mutateAsync: mocks.update, isPending: false }),
+}));
+
+const existing = {
+  id: "l1", rowVersion: "v1", role: { id: "r1", name: "ผู้จัดการ" }, documentType: "estimate", branch: null,
+  currency: "THB", isUnlimited: false, maxAmount: 500000, isActive: true,
+};
+
+describe("ApprovalLimitEditor", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.permissions = ["approval-limits.manage"];
+    mocks.limit = { data: existing, isPending: false, isError: false };
+    mocks.create.mockResolvedValue({ id: "new-limit" });
+    mocks.update.mockResolvedValue(existing);
+  });
+
+  it("requires a role, a document type and an amount before creating", async () => {
+    render(<ApprovalLimitEditor limitId="create" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "เพิ่มวงเงิน" }));
+
+    expect(await screen.findByText("เลือกบทบาท")).toBeInTheDocument();
+    expect(screen.getByText("เลือกประเภทเอกสาร")).toBeInTheDocument();
+    expect(screen.getByText("กรอกวงเงินสูงสุด")).toBeInTheDocument();
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it("creates an unlimited organization-wide limit with an idempotency key and opens it", async () => {
+    render(<ApprovalLimitEditor limitId="create" />);
+
+    fireEvent.change(screen.getByLabelText(/^บทบาท/), { target: { value: "r1" } });
+    fireEvent.change(screen.getByLabelText(/^ประเภทเอกสาร/), { target: { value: "purchase_order" } });
+    fireEvent.click(screen.getByLabelText(/^ไม่จำกัดวงเงิน/));
+    expect(screen.getByLabelText("วงเงินสูงสุด")).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "เพิ่มวงเงิน" }));
+
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
+    const call = mocks.create.mock.calls[0][0] as { payload: unknown; idempotencyKey: string };
+    expect(call.payload).toEqual({
+      roleId: "r1", documentType: "purchase_order", branchId: null, currency: "THB", isUnlimited: true, maxAmount: null,
+    });
+    expect(call.idempotencyKey).toMatch(/.{16,}/);
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/th/settings/approval-limits/new-limit"));
+  });
+
+  it("locks the identity fields on edit and saves the amount with the row version", async () => {
+    render(<ApprovalLimitEditor limitId="l1" />);
+
+    expect(screen.getByText("บทบาท ประเภทเอกสาร สาขา และสกุลเงินแก้ไขไม่ได้ หากต้องการเปลี่ยนให้เพิ่มวงเงินใหม่")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("ผู้จัดการ")).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("วงเงินสูงสุด"), { target: { value: "750000.50" } });
+    fireEvent.click(screen.getByLabelText(/^ใช้งาน/));
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกการเปลี่ยนแปลง" }));
+
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+    expect(mocks.update).toHaveBeenCalledWith({
+      limitId: "l1",
+      payload: { isUnlimited: false, maxAmount: 750000.5, isActive: false },
+      ifMatch: "v1",
+    });
+  });
+});
+```
+
+- [ ] **Step 3: routes (route `[id]` เดียวรองรับ create/edit)**
+
+`frontend/src/app/[locale]/(erp)/settings/approval-limits/page.tsx`:
+
+```tsx
+"use client";
+
+import React from "react";
+import { useTranslations } from "next-intl";
+import { PermissionGuard } from "@/components/auth";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { ApprovalLimitList } from "@/features/settings/approval-limits/components/approval-limit-list";
+
+export default function ApprovalLimitSettingsPage() {
+  const t = useTranslations("approvalLimitAdmin");
+
+  return (
+    <PermissionGuard permission={PERMISSIONS.APPROVAL_LIMITS_MANAGE} title={t("accessDeniedTitle")} detail={t("accessDeniedDetail")}>
+      <ApprovalLimitList />
+    </PermissionGuard>
+  );
+}
+```
+
+`frontend/src/app/[locale]/(erp)/settings/approval-limits/[id]/page.tsx`:
+
+```tsx
+"use client";
+
+import React, { use } from "react";
+import { notFound } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { PermissionGuard } from "@/components/auth";
+import { isSupportedLocale } from "@/lib/i18n/locales";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { ApprovalLimitEditor } from "@/features/settings/approval-limits/components/approval-limit-editor";
+
+interface ApprovalLimitDynamicPageProps {
+  params: Promise<{ locale: string; id: string }>;
+}
+
+export default function ApprovalLimitDynamicPage({ params }: ApprovalLimitDynamicPageProps) {
+  const { locale, id } = use(params);
+  const t = useTranslations("approvalLimitAdmin");
+
+  if (!isSupportedLocale(locale)) {
+    notFound();
+  }
+
+  return (
+    <PermissionGuard permission={PERMISSIONS.APPROVAL_LIMITS_MANAGE} title={t("accessDeniedTitle")} detail={t("accessDeniedDetail")}>
+      <ApprovalLimitEditor limitId={id} />
+    </PermissionGuard>
+  );
+}
+```
+
+- [ ] **Step 4: เมนู (`SidebarNav.tsx`)**
+
+1. ใน import จาก `@/components/common/Icons` ต่อจาก `IconLock,` เพิ่ม `IconCheckCircle,`
+2. ต่อจาก `const hasRolesManage = can(activeMembership, "roles.manage");` เพิ่ม `const hasApprovalLimitsManage = can(activeMembership, "approval-limits.manage");`
+3. ต่อจาก `const isRoleSettingsActive = pathname.startsWith(\`/${locale}/settings/roles\`);` เพิ่ม `const isApprovalLimitSettingsActive = pathname.startsWith(\`/${locale}/settings/approval-limits\`);`
+4. ต่อจากนิยาม `isRoleSettingsVisible` (2 บรรทัด) เพิ่ม:
+
+```tsx
+  const isApprovalLimitSettingsVisible =
+    hasApprovalLimitsManage && (!trimmedSearch || tShell("approvalLimitSettings").toLowerCase().includes(trimmedSearch));
+```
+5. ใน `hasAnyResults` ต่อจาก `isRoleSettingsVisible ||` เพิ่ม `isApprovalLimitSettingsVisible ||`
+6. ต่อจากบล็อก `{isRoleSettingsVisible && (<li>…</li>)}` เพิ่ม:
+
+```tsx
+          {isApprovalLimitSettingsVisible && (
+            <li>
+              {renderLink({
+                id: "approval-limit-settings",
+                href: `/${locale}/settings/approval-limits`,
+                label: tShell("approvalLimitSettings"),
+                icon: <IconCheckCircle size={20} />,
+                isActive: isApprovalLimitSettingsActive,
+              })}
+            </li>
+          )}
+```
+
+ใน `SidebarNav.test.tsx` ก่อนปีกกาปิดสุดท้ายของ `describe` เพิ่ม:
+
+```tsx
+  it("shows the approval limits menu only to members who can manage approval limits", () => {
+    const manager: CurrentUserResponse = {
+      ...mockUser,
+      memberships: mockUser.memberships?.map((membership) => ({
+        ...membership,
+        permissions: [...(membership.permissions ?? []), { key: "approval-limits.manage", scope: "organization", scopeId: "20000000-0000-0000-0000-000000000001" }],
+      })),
+    };
+
+    const { unmount } = render(<SidebarNav currentUser={mockUser} isCollapsed={false} />);
+    expect(screen.queryByRole("link", { name: "วงเงินอนุมัติ" })).toBeNull();
+    unmount();
+
+    render(<SidebarNav currentUser={manager} isCollapsed={false} />);
+    expect(screen.getByRole("link", { name: "วงเงินอนุมัติ" })).toHaveAttribute("href", "/th/settings/approval-limits");
+  });
+```
+
+- [ ] **Step 5: Verify (compile-only)**
+
+Run (จาก `frontend/`), แยกทีละคำสั่ง:
+
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
+Expected: exit 0 ทั้งสาม (`npm run build` **ครั้งเดียว** ในรอบนี้). ตรวจ th/en key parity ซ้ำด้วยสคริปต์ใน Task 10 Step 5. **ห้ามรัน vitest และห้ามเปิดเบราว์เซอร์.**
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add frontend/src/features/settings/approval-limits "frontend/src/app/[locale]/(erp)/settings/approval-limits" frontend/src/components/layout/SidebarNav.tsx frontend/src/components/layout/SidebarNav.test.tsx
+git commit -m "feat(approval): add approval limit settings pages
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 12: Verification, เอกสารสถานะ และ gate ปิด G-03c
+
+**Files:**
+- Create: `docs/05-engineering/approval-authority-verification.md`
+- Modify: `docs/00-overview/implementation-roadmap.md`, `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md`, `docs/03-contracts/approval-limit-api-contract.md` (สถานะ → Implemented)
+
+**กฎ:** ไม่รันชุดทดสอบใด ๆ ในรอบนี้ — เอกสารต้องบอกตรง ๆ ว่า **tests written, not run**.
+
+- [ ] **Step 1: compile/lint gate สุดท้าย (เท่านั้นที่รันได้)**
+
+```bash
+dotnet build backend/TanErp.slnx --nologo -v q
+cd frontend && npx tsc --noEmit && npm run lint
+```
+Expected: `0 Warning(s)` `0 Error(s)`; tsc/lint exit 0. จดผลจริงลงเอกสาร (`npm run build` และ key parity ผ่านแล้วใน Task 11 — บันทึกเป็น "ผลจาก Task 11").
+
+- [ ] **Step 2: เอกสาร verification**
+
+สร้าง `docs/05-engineering/approval-authority-verification.md` (ภาษาไทย รูปแบบเดียวกับ `role-management-verification.md`) ประกอบด้วย:
+1. **สถานะ:** `Implemented <วันที่จริง> (G-03c: Approval Authority matrix) — tests written, not run.` ชุดทดสอบ backend/integration/frontend ถูกเขียนแล้วแต่ **ยังไม่ได้รัน** (ผู้ใช้รันเอง); ยังไม่ตรวจในเบราว์เซอร์; ยังไม่รัน full gate; ยังไม่ผ่าน UAT/Production. ลิงก์สัญญา, ADR 0021, แผน.
+2. **ผลที่รันจริง (compile/lint เท่านั้น)** ตารางคำสั่ง→ผลจาก Step 1 และผลจาก Task ก่อนหน้า (migration has-pending-model-changes, `FORMATTER_OK`, `generate:api`, key parity, `npm run build`) ตามที่รายงานจริง.
+3. **คำสั่งที่ผู้ใช้ควรรันเอง** (ให้คัดลอกตรง ๆ; ห้ามเขียนว่าผ่าน):
+
+```bash
+dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter "FullyQualifiedName~ApprovalLimit|FullyQualifiedName~ApprovalAuthority|FullyQualifiedName~AdministrationPolicyTests|FullyQualifiedName~PermissionCatalogParityTests|FullyQualifiedName~ApprovalPermissionCoverageTests"
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~ApprovalLimitEndpointsTests|FullyQualifiedName~OpenApiContractTests" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~ReviewEstimate_EnforcesApprovalAuthority|FullyQualifiedName~ApproveOrder_EnforcesApprovalAuthority|FullyQualifiedName~ApprovalAuthority_UsesTheHighestCeiling|FullyQualifiedName~ApproveChangeOrder_EnforcesApprovalAuthority" -m:1
+# regression: ทุก flow ที่อนุมัติ Estimate/PO/Change Order ต้องยังผ่านด้วยวงเงินที่ seed
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~EstimateEndpointsTests|FullyQualifiedName~ProcurementEndpointsTests|FullyQualifiedName~ProjectControlEndpointsTests|FullyQualifiedName~RoleManagementEndpointsTests|FullyQualifiedName~IdentityAdministrationEndpointsTests|FullyQualifiedName~ItemCatalogEstimateFlowTests" -m:1
+cd frontend && npx vitest run src/features/settings src/features/procurement src/features/projects src/features/estimates src/components/layout src/lib
+cd frontend && npm run test:e2e -- e2e/official-estimate.spec.ts   # ต้องเริ่ม backend Test env + SeedTestData ตาม foundation-login-runbook.md
+```
+
+4. **สิ่งที่ชุดทดสอบที่เขียนไว้ตั้งใจพิสูจน์:** policy (ไม่มีแถว=ปฏิเสธ, เท่ากับเพดานผ่าน, สัมบูรณ์, สูงสุดข้าม Role, แถวสาขาชนะแถวองค์กรต่อ Role), domain (reserved/สกุล/ยอด), endpoint (รวมพฤติกรรม handler: permission ก่อน store, canonicalize, validation) (403 เหมือนกันทุก id, other-org 404, Idempotency replay/reuse, ETag/If-Match, unique ทั้งสองรูป, validation/reference, audit, filter/pagination), enforcement 3 เส้นทาง (fail-closed, เกินเพดาน, return/reject ไม่ต้องมีวงเงิน, ใช้ delta ที่มากกว่าของ Change Order, หลาย Role, Role ที่ปิดใช้ไม่ให้อำนาจ, สกุลอื่นไม่มีวงเงิน).
+5. **Fixture ที่เดิมอนุมัติเอกสารและยังใช้ได้ (ผ่าน seed/ fixture):** Test Admin/Test Admin B (3 ประเภท), Test Cost Reviewer, Test Estimate Reviewer (e2e `official-estimate.spec.ts`), role ของ TestOnly policy 4 ตัวใน `SeedTestOnlyApprovalReviewersAsync`, approver ของ `ProcurementEndpointsTests`/`ProjectControlEndpointsTests` (ใช้ role `Test Admin`). Role ใหม่ที่ test อื่นสร้างเองและ *อนุมัติ* เอกสารจริงต้องเพิ่มแถววงเงินเอง (ไม่พบในรอบนี้).
+6. **การตัดสินใจที่ต้องให้ Business Owner/Finance/Security ยืนยัน:** D3 (Estimate ตรวจที่ step สุดท้าย), D4/R1 (ไม่มี maker–checker ต่อการแก้วงเงิน; ผู้ถือสิทธิ์ยกวงเงิน Role ตนเองได้), กฎหลาย Role = สูงสุด และแถวสาขาชนะแถวองค์กร (D2), ยอดของ Change Order = ค่าสัมบูรณ์ที่มากกว่าของ delta (THB), **วงเงินจริงทั้งหมดยังไม่ถูกกำหนด**.
+7. **ข้อจำกัดที่ยอมรับ / ความเสี่ยง rollout:** (ก) **Fail-closed**: หลัง deploy การอนุมัติ Estimate/PO/Change Order ใน environment ที่ไม่ใช่ Test จะถูกปฏิเสธ (`APPROVAL_AUTHORITY_NOT_CONFIGURED`) จนกว่าจะตั้งวงเงิน — **Production ต้องมอบ `approval-limits.manage` ให้ Role จริง (ผ่าน maker–checker) และตั้งวงเงินก่อนเปิดใช้การอนุมัติ; ไม่มี backfill/ปุ่มข้าม**; (ข) `credit_note` สงวนไว้ G-15 (ยังไม่บังคับ, API ปฏิเสธการสร้างแถว); (ค) THB เท่านั้น ไม่มี FX; (ง) ไม่เก็บหลักฐานวงเงินในอนุมัติ snapshot/audit ของเอกสาร; (จ) isolation ของ 3 flow เดิมเป็น default (การแก้วงเงินพร้อมกันมีผลกับการอนุมัติครั้งถัดไป); (ฉ) ไม่มี effective dates; (ช) UI ไม่มีหน้ารายงาน "ใครอนุมัติได้เท่าไร" ต่อผู้ใช้; (ซ) ไม่ได้ตรวจในเบราว์เซอร์.
+
+- [ ] **Step 3: อัปเดตสถานะ (G-03c เท่านั้น)**
+
+- `docs/03-contracts/approval-limit-api-contract.md`: เปลี่ยน "สถานะ" เป็น Implemented (G-03c).
+- `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md` แถว G-03 (:48): แทน `G-03c pending` ในข้อความสถานะด้วย `G-03c Implemented <วันที่จริง> (tests written, not run; browser not checked; ยังไม่ผ่าน UAT; fail-closed จนกว่าจะตั้งวงเงินจริง)` และเพิ่มลิงก์ `[Verification G-03c](../../05-engineering/approval-authority-verification.md)`; ติ๊ก checkbox "Approval Authority matrix: …" (:113) พร้อมต่อท้าย `— G-03c Implemented <วันที่จริง> (Estimate/PO/Change Order; Credit Note ยังเป็น hook ของ G-15)`; ติ๊ก checkbox "Tests: เกินวงเงิน → 403 code ใหม่, maker = checker ถูกปฏิเสธ, ปิด Branch…" (:114) **เฉพาะเมื่อ** เขียนไว้ครบแล้ว โดยต่อท้าย `(tests written, not run)`.
+- `docs/00-overview/implementation-roadmap.md` แถว Foundation (:29): แทนวลี "แต่ยังไม่มี Approval Authority matrix (G-03c)" ด้วย "และมี Approval Authority matrix (วงเงินต่อ Role/เอกสาร/สาขา) ที่ Backend บังคับตอนอนุมัติ Estimate, Purchase Order และ Change Order แบบ fail-closed (G-03c, <วันที่จริง>, tests written but not run; ยังไม่ตรวจในเบราว์เซอร์และยังไม่ผ่าน UAT; Credit Note เป็น hook ของ G-15)"; ต่อท้ายประโยคเรื่อง Production: "และต้องมอบ `approval-limits.manage` ให้ Role จริงพร้อมตั้งวงเงินจริงก่อนใช้การอนุมัติ"; เพิ่มลิงก์ [Approval Authority Verification](../05-engineering/approval-authority-verification.md) ในคอลัมน์หลักฐาน.
+- ตรวจลิงก์ภายในด้วยคำสั่งใน Task 1 Step 6 กับไฟล์ที่แก้ → ต้องไม่มี `MISSING`.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add docs/05-engineering/approval-authority-verification.md docs/00-overview/implementation-roadmap.md docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md docs/03-contracts/approval-limit-api-contract.md
+git commit -m "docs(approval): record G-03c verification and update status
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```

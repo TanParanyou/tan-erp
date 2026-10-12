@@ -213,6 +213,10 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `ROLE_ESCALATION_DENIED` | 403 | Role หรือ grant ที่เพิ่มมี permission/Scope ที่ผู้เรียกไม่ได้ถืออยู่ (การถอน grant ไม่ถูกปฏิเสธด้วยรหัสนี้) |
 | `LAST_ADMINISTRATOR_REQUIRED` | 422 | การเปลี่ยนแปลงจะทำให้องค์กรไม่เหลือผู้ดูแลที่ใช้งานอยู่อย่างน้อยหนึ่งคน (เช่น ถอน `users.manage` จากแหล่งผู้ดูแลคนสุดท้าย) |
 | `BRANCH_NOT_FOUND` | 404 | ไม่พบสาขาที่ระบุในองค์กรนี้ (สาขาขององค์กรอื่นตอบแบบเดียวกัน) |
+| `APPROVAL_LIMIT_EXCEEDED` | 403 | ยอดเอกสารเกินวงเงินสูงสุดของ Role ที่ผู้อนุมัติถืออยู่ |
+| `APPROVAL_AUTHORITY_NOT_CONFIGURED` | 403 | ไม่มีวงเงินอนุมัติ active สำหรับ Role/ประเภทเอกสาร/สาขา/สกุลนี้ (fail-closed) |
+| `APPROVAL_LIMIT_ALREADY_EXISTS` | 409 | มีแถววงเงินอนุมัติสำหรับ Role/ประเภทเอกสาร/สาขา/สกุลนี้แล้ว |
+| `APPROVAL_LIMIT_ROLE_NOT_FOUND` | 404 | ไม่พบ Role ที่ใช้งานอยู่สำหรับตั้งวงเงินอนุมัติในองค์กรนี้ |
 
 ## Validation Errors
 

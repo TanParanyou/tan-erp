@@ -18,6 +18,7 @@ import {
   IconChevronsUpDown,
   IconMapPin,
   IconLock,
+  IconCheckCircle,
 } from "@/components/common/Icons";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
@@ -78,6 +79,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasOrganizationsManage = can(activeMembership, "organizations.manage");
   const hasBranchesManage = can(activeMembership, "branches.manage");
   const hasRolesManage = can(activeMembership, "roles.manage");
+  const hasApprovalLimitsManage = can(activeMembership, "approval-limits.manage");
   const hasItemMasterRead = can(activeMembership, "items.read");
   const hasCostSourcesRead = can(activeMembership, "cost-sources.read");
   const hasCostReviewRead = can(activeMembership, "cost-records.read");
@@ -101,6 +103,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isOrganizationSettingsActive = pathname.startsWith(`/${locale}/settings/organization`);
   const isBranchSettingsActive = pathname.startsWith(`/${locale}/settings/branches`);
   const isRoleSettingsActive = pathname.startsWith(`/${locale}/settings/roles`);
+  const isApprovalLimitSettingsActive = pathname.startsWith(`/${locale}/settings/approval-limits`);
   const isItemMasterActive = pathname.startsWith(`/${locale}/item-master`);
 
   const crmItems: NavItemDef[] = useMemo(() => {
@@ -499,6 +502,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     hasBranchesManage && (!trimmedSearch || tShell("branchSettings").toLowerCase().includes(trimmedSearch));
   const isRoleSettingsVisible =
     hasRolesManage && (!trimmedSearch || tShell("roleSettings").toLowerCase().includes(trimmedSearch));
+  const isApprovalLimitSettingsVisible =
+    hasApprovalLimitsManage && (!trimmedSearch || tShell("approvalLimitSettings").toLowerCase().includes(trimmedSearch));
 
   const filteredSubgroups = useMemo(() => {
     if (!trimmedSearch) return subgroups;
@@ -523,6 +528,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     isOrganizationSettingsVisible ||
     isBranchSettingsVisible ||
     isRoleSettingsVisible ||
+    isApprovalLimitSettingsVisible ||
     filteredSubgroups.some((g) => g.items.length > 0);
 
   const renderLink = (item: NavItemDef) => {
@@ -719,6 +725,17 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
                 label: tShell("roleSettings"),
                 icon: <IconLock size={20} />,
                 isActive: isRoleSettingsActive,
+              })}
+            </li>
+          )}
+          {isApprovalLimitSettingsVisible && (
+            <li>
+              {renderLink({
+                id: "approval-limit-settings",
+                href: `/${locale}/settings/approval-limits`,
+                label: tShell("approvalLimitSettings"),
+                icon: <IconCheckCircle size={20} />,
+                isActive: isApprovalLimitSettingsActive,
               })}
             </li>
           )}

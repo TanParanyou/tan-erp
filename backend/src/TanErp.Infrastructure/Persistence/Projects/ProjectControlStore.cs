@@ -5,6 +5,7 @@ using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
 using TanErp.Application.Notifications;
 using TanErp.Application.Projects;
 using TanErp.Application.Projects.Control;
@@ -24,13 +25,15 @@ public class ProjectControlStore : IProjectControlStore
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _documentNumberGenerator;
     private readonly INotificationPublisher _notifications;
+    private readonly IApprovalAuthority _approvalAuthority;
 
-    public ProjectControlStore(AppDbContext db, IClock clock, IDocumentNumberGenerator documentNumberGenerator, INotificationPublisher notifications)
+    public ProjectControlStore(AppDbContext db, IClock clock, IDocumentNumberGenerator documentNumberGenerator, INotificationPublisher notifications, IApprovalAuthority approvalAuthority)
     {
         _db = db;
         _clock = clock;
         _documentNumberGenerator = documentNumberGenerator;
         _notifications = notifications;
+        _approvalAuthority = approvalAuthority;
     }
 
     private static Result<ProjectControlProjection> Fail(string code, string message) =>
@@ -445,6 +448,14 @@ public class ProjectControlStore : IProjectControlStore
                             {
                                 return Fail("PROJECT_BUDGET_NEGATIVE", "Approving this change order would make the project budget negative.");
                             }
+
+                            // Approval Authority (G-03c): deltas can be negative; the larger magnitude is what the approver is trusted with.
+                            // Projects carry no currency column, so project money is THB.
+                            var authorityError = await _approvalAuthority.EnsureAsync(new ApprovalAuthorityCheck(
+                                orgId, access.MembershipId, TanErp.Domain.IdentityAccess.ApprovalDocumentType.ChangeOrder,
+                                project.BranchId, Math.Max(Math.Abs(order.ContractDelta), Math.Abs(order.BudgetDelta)),
+                                TanErp.Domain.IdentityAccess.ApprovalLimitRules.Currency), ct);
+                            if (authorityError is not null) return Result<ProjectControlProjection>.Failure(authorityError);
                         }
 
                         order.Decide(action == ChangeOrderAction.Approve, access.ActorUserId, note, now);

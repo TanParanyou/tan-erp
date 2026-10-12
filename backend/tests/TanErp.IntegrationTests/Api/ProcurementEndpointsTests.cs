@@ -10,6 +10,7 @@ using TanErp.Api;
 using TanErp.Api.Contracts.Procurement;
 using TanErp.Api.Contracts.Projects;
 using TanErp.Api.ErrorHandling;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
 using TanErp.Domain.Commercial;
 using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
@@ -20,6 +21,7 @@ using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
+using TanErp.IntegrationTests.Support;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -465,6 +467,88 @@ public class ProcurementEndpointsTests : IAsyncLifetime
         var listed = (await (await SendAsync(HttpMethod.Get, $"/api/v1/purchase-orders?projectId={projectId}&status=approved")).Content.ReadFromJsonAsync<PurchaseOrderListResponse>())!;
         Assert.Single(listed.Items);
         Assert.Equal(approved.Project.Code, listed.Items[0].ProjectCode);
+    }
+
+    [Fact]
+    public async Task ApproveOrder_EnforcesApprovalAuthority_AndRejectNeedsNoLimit()
+    {
+        var supplier = await CreateSupplierAsync();
+        var order = await ActAsync(await CreateOrderAsync(Order(supplier.Id)), "submit");
+        var toReject = await ActAsync(await CreateOrderAsync(Order(supplier.Id)), "submit");
+        Task<HttpResponseMessage> Approve() => SendAsync(HttpMethod.Post, $"/api/v1/purchase-orders/{order.Id}/approve",
+            new PurchaseOrderActionRequest(null), token: "token-approver", ifMatch: order.RowVersion);
+        Task SetLimitAsync(bool isUnlimited, decimal? maxAmount, bool isActive = true) =>
+            ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgId, "Test Admin",
+                ApprovalDocumentType.PurchaseOrder, isUnlimited, maxAmount, isActive);
+
+        try
+        {
+            await SetLimitAsync(false, order.TotalAmount - 0.01m);
+            var exceeded = await Approve();
+            Assert.Equal(HttpStatusCode.Forbidden, exceeded.StatusCode);
+            Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await ErrorCodeAsync(exceeded));
+
+            await SetLimitAsync(false, order.TotalAmount, isActive: false);
+            Assert.Equal("APPROVAL_AUTHORITY_NOT_CONFIGURED", await ErrorCodeAsync(await Approve()));
+            Assert.Equal("rejected", (await ActAsync(toReject, "reject", "ราคาสูง", "token-approver")).Status);
+
+            await SetLimitAsync(false, order.TotalAmount);
+            Assert.Equal("approved", (await ActAsync(order, "approve", token: "token-approver")).Status);
+        }
+        finally
+        {
+            // Other tests in this class approve as Test Admin, so restore its seeded unlimited limit.
+            await SetLimitAsync(true, null);
+        }
+    }
+
+    [Fact]
+    public async Task ApprovalAuthority_UsesTheHighestCeilingAcrossActiveRoles_AndIgnoresOtherCurrencies()
+    {
+        Guid secondRoleId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var second = new Role(Guid.NewGuid(), OrgId, "Second Approver Role", "TEST_ONLY second approver role", isActive: true);
+            db.Roles.Add(second);
+            db.MembershipRoles.Add(new MembershipRole(ApproverMembershipId, second.Id, OrgId));
+            db.ApprovalLimits.Add(ApprovalLimit.Create(Guid.NewGuid(), OrgId, second.Id, ApprovalDocumentType.PurchaseOrder,
+                null, ApprovalLimitRules.Currency, false, 50_000m, DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+            secondRoleId = second.Id;
+        }
+
+        async Task<string?> CheckAsync(decimal amount, string currency = "THB")
+        {
+            using var scope = _factory.Services.CreateScope();
+            var error = await scope.ServiceProvider.GetRequiredService<IApprovalAuthority>().EnsureAsync(new ApprovalAuthorityCheck(
+                OrgId, ApproverMembershipId, ApprovalDocumentType.PurchaseOrder, BranchId, amount, currency), CancellationToken.None);
+            return error?.Code;
+        }
+
+        try
+        {
+            await ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgId, "Test Admin",
+                ApprovalDocumentType.PurchaseOrder, false, 1_000m);
+
+            Assert.Null(await CheckAsync(20_000m));                                      // the second role's higher ceiling wins
+            Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await CheckAsync(50_000.01m));
+            Assert.Equal("APPROVAL_AUTHORITY_NOT_CONFIGURED", await CheckAsync(1m, "USD")); // no limit in another currency
+
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                (await db.Roles.SingleAsync(r => r.Id == secondRoleId)).Deactivate();
+                await db.SaveChangesAsync();
+            }
+
+            Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await CheckAsync(20_000m));          // an inactive role grants nothing
+        }
+        finally
+        {
+            await ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgId, "Test Admin",
+                ApprovalDocumentType.PurchaseOrder, true, null);
+        }
     }
 
     [Fact]

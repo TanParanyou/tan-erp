@@ -137,6 +137,10 @@ export function EstimateLifecycleActions({ estimate, opportunityId, canEdit = fa
         toast.error(tEstimate("versionConflict"));
       } else if (error instanceof ApiError && (error.code === "ESTIMATE_CANCEL_AUTHORITY_REQUIRED" || ((activeAction === "approve" || activeAction === "return") && error.code === "PERMISSION_DENIED"))) {
         toast.error(t("reviewUnavailable"));
+      } else if (error instanceof ApiError && error.code === "APPROVAL_LIMIT_EXCEEDED") {
+        toast.error(t("approvalLimitExceeded"));
+      } else if (error instanceof ApiError && error.code === "APPROVAL_AUTHORITY_NOT_CONFIGURED") {
+        toast.error(t("approvalAuthorityNotConfigured"));
       } else {
         toast.error(t("actionFailed"));
       }

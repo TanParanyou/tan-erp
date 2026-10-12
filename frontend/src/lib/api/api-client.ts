@@ -115,6 +115,12 @@ export type UpdateRoleDefinitionResponse = components["schemas"]["UpdateRoleDefi
 export type RoleChangeRequestResponse = components["schemas"]["RoleChangeRequestResponse"];
 export type RoleChangeRequestListResponse = components["schemas"]["RoleChangeRequestListResponse"];
 export type RoleDefinitionListParams = NonNullable<paths["/api/v1/admin/role-definitions"]["get"]["parameters"]["query"]>;
+export type ApprovalLimitResponse = components["schemas"]["ApprovalLimitResponse"];
+export type ApprovalLimitListResponse = components["schemas"]["ApprovalLimitListResponse"];
+export type ApprovalLimitOptionsResponse = components["schemas"]["ApprovalLimitOptionsResponse"];
+export type CreateApprovalLimitRequest = components["schemas"]["CreateApprovalLimitRequest"];
+export type UpdateApprovalLimitRequest = components["schemas"]["UpdateApprovalLimitRequest"];
+export type ApprovalLimitListParams = NonNullable<paths["/api/v1/admin/approval-limits"]["get"]["parameters"]["query"]>;
 
 export type AdminUserListParams = NonNullable<paths["/api/v1/admin/users"]["get"]["parameters"]["query"]>;
 
@@ -1369,6 +1375,34 @@ export class ApiClient {
   ): Promise<RoleChangeRequestResponse> {
     return this.request<RoleChangeRequestResponse>(
       `/api/v1/admin/role-change-requests/${encodeURIComponent(requestId)}/${decision}`, "POST", options);
+  }
+
+  async listApprovalLimits(params: ApprovalLimitListParams, options: RequestOptions): Promise<ApprovalLimitListResponse> {
+    const query = new URLSearchParams();
+    if (params.roleId) query.set("roleId", params.roleId);
+    if (params.documentType) query.set("documentType", params.documentType);
+    if (params.status) query.set("status", params.status);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString();
+    return this.request<ApprovalLimitListResponse>(`/api/v1/admin/approval-limits${suffix ? `?${suffix}` : ""}`, "GET", options);
+  }
+
+  async getApprovalLimitOptions(options: RequestOptions): Promise<ApprovalLimitOptionsResponse> {
+    return this.request<ApprovalLimitOptionsResponse>("/api/v1/admin/approval-limits/options", "GET", options);
+  }
+
+  async getApprovalLimit(limitId: string, options: RequestOptions): Promise<ApprovalLimitResponse> {
+    return this.request<ApprovalLimitResponse>(`/api/v1/admin/approval-limits/${encodeURIComponent(limitId)}`, "GET", options);
+  }
+
+  async createApprovalLimit(payload: CreateApprovalLimitRequest, options: RequestOptions): Promise<ApprovalLimitResponse> {
+    return this.request<ApprovalLimitResponse>("/api/v1/admin/approval-limits", "POST", options, payload);
+  }
+
+  async updateApprovalLimit(limitId: string, payload: UpdateApprovalLimitRequest, options: RequestOptions): Promise<ApprovalLimitResponse> {
+    return this.request<ApprovalLimitResponse>(
+      `/api/v1/admin/approval-limits/${encodeURIComponent(limitId)}`, "PUT", options, payload);
   }
 
   async listDocumentSequences(

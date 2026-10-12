@@ -61,6 +61,7 @@ public class AdministrationPolicyTests
     [InlineData("cost-records.publish", true)]
     [InlineData("purchase-orders.approve", true)]
     [InlineData("projects.change-orders.approve", true)]
+    [InlineData("approval-limits.manage", true)]
     [InlineData("mrp.approve", true)]
     [InlineData("boms.approve", false)]
     [InlineData("roles.assign-approval", false)]
@@ -120,7 +121,7 @@ public class AdministrationPolicyTests
         // Changing this set changes who needs a checker (ADR 0020). Update the ADR and this list together.
         var expected = new[]
         {
-            "cost-records.approve", "cost-records.publish", "estimates.approve",
+            "approval-limits.manage", "cost-records.approve", "cost-records.publish", "estimates.approve",
             "mrp.approve", "projects.change-orders.approve", "purchase-orders.approve"
         };
 

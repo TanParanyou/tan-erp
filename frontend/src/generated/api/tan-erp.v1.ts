@@ -66,6 +66,236 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/approval-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    roleId?: string;
+                    documentType?: string;
+                    status?: string;
+                    page?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApprovalLimitListResponse"];
+                        "application/json": components["schemas"]["ApprovalLimitListResponse"];
+                        "text/json": components["schemas"]["ApprovalLimitListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateApprovalLimitRequest"];
+                    "text/json": components["schemas"]["CreateApprovalLimitRequest"];
+                    "application/*+json": components["schemas"]["CreateApprovalLimitRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApprovalLimitResponse"];
+                        "application/json": components["schemas"]["ApprovalLimitResponse"];
+                        "text/json": components["schemas"]["ApprovalLimitResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/approval-limits/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApprovalLimitOptionsResponse"];
+                        "application/json": components["schemas"]["ApprovalLimitOptionsResponse"];
+                        "text/json": components["schemas"]["ApprovalLimitOptionsResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/approval-limits/{limitId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    limitId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApprovalLimitResponse"];
+                        "application/json": components["schemas"]["ApprovalLimitResponse"];
+                        "text/json": components["schemas"]["ApprovalLimitResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    limitId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateApprovalLimitRequest"];
+                    "text/json": components["schemas"]["UpdateApprovalLimitRequest"];
+                    "application/*+json": components["schemas"]["UpdateApprovalLimitRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApprovalLimitResponse"];
+                        "application/json": components["schemas"]["ApprovalLimitResponse"];
+                        "text/json": components["schemas"]["ApprovalLimitResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/organization": {
         parameters: {
             query?: never;
@@ -20322,6 +20552,34 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        ApprovalLimitListResponse: {
+            items?: components["schemas"]["ApprovalLimitResponse"][] | null;
+            pagination?: components["schemas"]["AdminPaginationResponse"];
+        };
+        ApprovalLimitOptionsResponse: {
+            roles?: components["schemas"]["AdminRefResponse"][] | null;
+            branches?: components["schemas"]["AdminRefResponse"][] | null;
+            documentTypes?: string[] | null;
+            currencies?: string[] | null;
+        };
+        ApprovalLimitResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+            role?: components["schemas"]["AdminRefResponse"];
+            documentType?: string | null;
+            branch?: components["schemas"]["AdminRefResponse"];
+            currency?: string | null;
+            isUnlimited?: boolean;
+            /** Format: double */
+            maxAmount?: number | null;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+        };
         AssignAdminRoleRequest: {
             /** Format: uuid */
             roleId?: string;
@@ -20926,6 +21184,17 @@ export interface components {
             /** Format: uuid */
             branchId?: string | null;
             roleIds?: string[] | null;
+        };
+        CreateApprovalLimitRequest: {
+            /** Format: uuid */
+            roleId?: string | null;
+            documentType?: string | null;
+            /** Format: uuid */
+            branchId?: string | null;
+            currency?: string | null;
+            isUnlimited?: boolean | null;
+            /** Format: double */
+            maxAmount?: number | null;
         };
         CreateBranchRequest: {
             code?: string | null;
@@ -24116,6 +24385,12 @@ export interface components {
             startsAtUtc?: string | null;
             /** Format: date-time */
             expiresAtUtc?: string | null;
+        };
+        UpdateApprovalLimitRequest: {
+            isUnlimited?: boolean | null;
+            /** Format: double */
+            maxAmount?: number | null;
+            isActive?: boolean | null;
         };
         UpdateBranchRequest: {
             name?: string | null;

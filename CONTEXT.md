@@ -190,6 +190,14 @@ _Avoid_: Built-in Role by name
 คำขอที่รอผู้ตรวจอิสระอนุมัติเมื่อการแก้ Role เพิ่มสิทธิ์ให้ Role ที่ approval permission และมีผู้ถือออยู่
 _Avoid_: Role Assignment Request
 
+**Approval Limit (วงเงินอนุมัติ)**:
+เพดานยอดเอกสารที่ Role หนึ่งอนุมัติได้ต่อประเภทเอกสาร สาขา (หรือทั้งองค์กร) และสกุลเงิน; ไม่มีวงเงินที่ใช้งานอยู่ = อนุมัติไม่ได้
+_Avoid_: Permission, Budget
+
+**Approval Authority (อำนาจอนุมัติ)**:
+ผลการประเมิน Approval Limit ของทุก Role ที่ผู้อนุมัติถืออยู่ เทียบกับยอดเอกสาร ณ เวลาตัดสิน
+_Avoid_: Role, Scope
+
 **Permission (สิทธิ์)**:
 ความสามารถเฉพาะในการทำสิ่งหนึ่งกับทรัพยากรหนึ่ง เช่น `estimates.approve`
 _Avoid_: Role, Scope

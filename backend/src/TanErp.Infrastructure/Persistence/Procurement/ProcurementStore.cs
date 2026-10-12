@@ -4,6 +4,7 @@ using Npgsql;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
 using TanErp.Application.Notifications;
 using TanErp.Application.Procurement;
 using TanErp.Domain.Common;
@@ -22,13 +23,15 @@ public class ProcurementStore : IProcurementStore
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _numbers;
     private readonly INotificationPublisher _notifications;
+    private readonly IApprovalAuthority _approvalAuthority;
 
-    public ProcurementStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications)
+    public ProcurementStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications, IApprovalAuthority approvalAuthority)
     {
         _db = db;
         _clock = clock;
         _numbers = numbers;
         _notifications = notifications;
+        _approvalAuthority = approvalAuthority;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -359,6 +362,12 @@ public class ProcurementStore : IProcurementStore
                         {
                             var budgetFailure = await CheckApprovalAsync(orgId, order, ct);
                             if (budgetFailure is not null) return Result<PurchaseOrderProjection>.Failure(budgetFailure);
+
+                            // Approval Authority (G-03c): rejecting never needs a limit.
+                            var authorityError = await _approvalAuthority.EnsureAsync(new ApprovalAuthorityCheck(
+                                orgId, access.MembershipId, TanErp.Domain.IdentityAccess.ApprovalDocumentType.PurchaseOrder,
+                                order.BranchId, order.TotalAmount, order.Currency), ct);
+                            if (authorityError is not null) return Result<PurchaseOrderProjection>.Failure(authorityError);
                         }
 
                         order.Decide(action == PurchaseOrderAction.Approve, access.ActorUserId, note, now);

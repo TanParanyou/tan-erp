@@ -12,6 +12,8 @@
 
 Backend ต้องตรวจครบทั้งสามส่วน การมี Permission อย่างเดียวไม่อนุญาตให้อนุมัติทุก Estimate
 
+Approval Authority (วงเงินต่อ Role/เอกสาร/สาขา) บังคับจริงใน Backend ตั้งแต่ G-03c สำหรับ Estimate, Purchase Order และ Change Order — ดู [ADR 0021](../adr/0021-approval-authority-matrix.md) และ [Approval Limit API Contract](../03-contracts/approval-limit-api-contract.md). ตารางนี้ไม่แทน Policy `TEST_ONLY-TH-EST-V1` (route/margin/discount) ซึ่งยังเป็นเรื่องแยก.
+
 ## Policy Lifecycle
 
 ```text

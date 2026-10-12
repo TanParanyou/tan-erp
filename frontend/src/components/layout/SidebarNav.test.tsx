@@ -205,4 +205,21 @@ describe("SidebarNav Component", () => {
     render(<SidebarNav currentUser={manager} isCollapsed={false} />);
     expect(screen.getByRole("link", { name: "บทบาทและสิทธิ์" })).toHaveAttribute("href", "/th/settings/roles");
   });
+
+  it("shows the approval limits menu only to members who can manage approval limits", () => {
+    const manager: CurrentUserResponse = {
+      ...mockUser,
+      memberships: mockUser.memberships?.map((membership) => ({
+        ...membership,
+        permissions: [...(membership.permissions ?? []), { key: "approval-limits.manage", scope: "organization", scopeId: "20000000-0000-0000-0000-000000000001" }],
+      })),
+    };
+
+    const { unmount } = render(<SidebarNav currentUser={mockUser} isCollapsed={false} />);
+    expect(screen.queryByRole("link", { name: "วงเงินอนุมัติ" })).toBeNull();
+    unmount();
+
+    render(<SidebarNav currentUser={manager} isCollapsed={false} />);
+    expect(screen.getByRole("link", { name: "วงเงินอนุมัติ" })).toHaveAttribute("href", "/th/settings/approval-limits");
+  });
 });
