@@ -30,7 +30,8 @@ public static class AdministrationPolicy
         "cost-records.publish",
         "purchase-orders.approve",
         "projects.change-orders.approve",
-        "mrp.approve"
+        "mrp.approve",
+        "approval-limits.manage"
     };
 
     public static bool RequiresApproval(IEnumerable<string> rolePermissionKeys) =>
