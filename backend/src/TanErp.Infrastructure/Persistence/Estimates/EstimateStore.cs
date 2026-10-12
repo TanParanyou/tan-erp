@@ -6,6 +6,7 @@ using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Estimates;
 using TanErp.Application.Estimates.GetQuotationDocument;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
 using TanErp.Application.Items;
 using TanErp.Application.Notifications;
 using TanErp.Domain.Commercial;
@@ -29,6 +30,7 @@ public class EstimateStore : IEstimateStore
     private readonly bool _useTestOnlyApprovalPolicy;
     private readonly ILogger<EstimateStore> _logger;
     private readonly INotificationPublisher _notifications;
+    private readonly IApprovalAuthority _approvalAuthority;
 
     public EstimateStore(
         AppDbContext db,
@@ -37,8 +39,10 @@ public class EstimateStore : IEstimateStore
         ICostResolver costResolver,
         IConfiguration configuration,
         ILogger<EstimateStore> logger,
-        INotificationPublisher notifications)
+        INotificationPublisher notifications,
+        IApprovalAuthority approvalAuthority)
     {
+        _approvalAuthority = approvalAuthority;
         _logger = logger;
         _notifications = notifications;
         _db = db;
@@ -919,6 +923,23 @@ public class EstimateStore : IEstimateStore
             if (actorUserId == revision.SubmittedByUserId || actorUserId == revision.LastFinancialEditorUserId)
                 return Result<EstimateDetailProjection>.Failure(new Error("ESTIMATE_APPROVAL_SELF_REVIEW", "The submitter and last financial editor cannot approve or return this estimate."));
 
+            // Approval Authority (G-03c): only the approval that completes the route needs a limit; returning never does.
+            var hasPendingStep = false;
+            if (decision == EstimateApprovalStepStatus.Approved)
+            {
+                hasPendingStep = await _db.EstimateApprovalSteps.AnyAsync(row =>
+                    row.OrganizationId == organizationId && row.EstimateApprovalRequestId == request.Id &&
+                    row.Id != step.Id && row.Status == EstimateApprovalStepStatus.Pending, cancellationToken);
+                if (!hasPendingStep)
+                {
+                    var authorityError = await _approvalAuthority.EnsureAsync(new ApprovalAuthorityCheck(
+                        organizationId, reviewerMembershipId, TanErp.Domain.IdentityAccess.ApprovalDocumentType.Estimate,
+                        estimate.BranchId, revision.GrandTotal, revision.Currency), cancellationToken);
+                    if (authorityError is not null)
+                        return Result<EstimateDetailProjection>.Failure(authorityError);
+                }
+            }
+
             var now = _clock.UtcNow;
             var approvalDecision = new EstimateApprovalDecision(
                 Guid.NewGuid(), organizationId, request.Id, step.Id, actorUserId,
@@ -930,9 +951,6 @@ public class EstimateStore : IEstimateStore
             var auditAction = "estimates.returned";
             if (decision == EstimateApprovalStepStatus.Approved)
             {
-                var hasPendingStep = await _db.EstimateApprovalSteps.AnyAsync(row =>
-                    row.OrganizationId == organizationId && row.EstimateApprovalRequestId == request.Id &&
-                    row.Id != step.Id && row.Status == EstimateApprovalStepStatus.Pending, cancellationToken);
                 if (hasPendingStep)
                 {
                     auditAction = "estimates.approval_step_approved";

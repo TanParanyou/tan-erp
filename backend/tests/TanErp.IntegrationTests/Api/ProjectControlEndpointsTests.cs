@@ -19,6 +19,7 @@ using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
+using TanErp.IntegrationTests.Support;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -382,6 +383,44 @@ public class ProjectControlEndpointsTests : IAsyncLifetime
         var rejected = await ControlAsync(await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/change-orders/{shrinkOrder.Id}/reject", new ProjectChangeOrderActionRequest(shrinkSubmitted.RowVersion, "เกินงบ"), token: "token-approver"));
         Assert.Equal("rejected", rejected.ChangeOrders.Single(c => c.Id == shrinkOrder.Id).Status);
         Assert.Equal(1300m, rejected.Budget.CurrentTotal);
+    }
+
+    [Fact]
+    public async Task ApproveChangeOrder_EnforcesApprovalAuthority_UsingTheLargerDelta()
+    {
+        var projectId = await CreateProjectAsync();
+        await ActivateAsync(projectId, 1000m);
+        var created = await ControlAsync(await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/change-orders",
+            new CreateProjectChangeOrderRequest("เพิ่มตู้", "ลูกค้าขอเพิ่ม", 300m, 450m), key: "co-authority-create-0001"));
+        var order = Assert.Single(created.ChangeOrders);
+        var submitted = await ControlAsync(await SendAsync(HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/change-orders/{order.Id}/submit", new ProjectChangeOrderActionRequest(order.RowVersion, null)));
+        var version = submitted.ChangeOrders.Single().RowVersion;
+        Task<HttpResponseMessage> Approve() => SendAsync(HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/change-orders/{order.Id}/approve", new ProjectChangeOrderActionRequest(version, "ตกลง"), token: "token-approver");
+        Task SetLimitAsync(bool isUnlimited, decimal? maxAmount, bool isActive = true) =>
+            ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgId, "Test Admin",
+                ApprovalDocumentType.ChangeOrder, isUnlimited, maxAmount, isActive);
+
+        try
+        {
+            // The contract delta (450) is the larger magnitude, so a 449.99 ceiling is exceeded.
+            await SetLimitAsync(false, 449.99m);
+            var exceeded = await Approve();
+            Assert.Equal(HttpStatusCode.Forbidden, exceeded.StatusCode);
+            Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await ErrorCodeAsync(exceeded));
+
+            await SetLimitAsync(false, 449.99m, isActive: false);
+            Assert.Equal("APPROVAL_AUTHORITY_NOT_CONFIGURED", await ErrorCodeAsync(await Approve()));
+
+            await SetLimitAsync(false, 450m);
+            Assert.Equal("approved", (await ControlAsync(await Approve())).ChangeOrders.Single().Status);
+        }
+        finally
+        {
+            // Other tests in this class approve change orders as Test Admin, so restore its seeded unlimited limit.
+            await SetLimitAsync(true, null);
+        }
     }
 
     [Fact]

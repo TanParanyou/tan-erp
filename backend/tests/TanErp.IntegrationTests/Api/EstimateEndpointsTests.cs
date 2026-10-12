@@ -22,6 +22,7 @@ using TanErp.Domain.Organization;
 using TanErp.Domain.Surveys;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
+using TanErp.IntegrationTests.Support;
 using Testcontainers.PostgreSql;
 using TanErp.Domain.Commercial;
 using Xunit;
@@ -2517,6 +2518,64 @@ public class EstimateEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ReviewEstimate_EnforcesApprovalAuthority_AndReturnNeedsNoLimit()
+    {
+        var (estimate, _, _) = await SetupCalculatedEstimateAsync($"authority-{Guid.NewGuid():N}");
+        var submitRequest = CreateAuthenticatedRequest(HttpMethod.Post,
+            $"/api/v1/estimates/{estimate.Id}/submit", "token-org-a", MembershipAId);
+        submitRequest.Headers.Add("If-Match", $"\"{estimate.RowVersion}\"");
+        submitRequest.Headers.Add("Idempotency-Key", $"authority-submit-{Guid.NewGuid():N}");
+        submitRequest.Content = JsonContent.Create(new SubmitEstimateRequest(1, 1, "TEST_ONLY approval authority"));
+        var submitResponse = await _client.SendAsync(submitRequest);
+        Assert.Equal(HttpStatusCode.OK, submitResponse.StatusCode);
+        var submitted = (await submitResponse.Content.ReadFromJsonAsync<EstimateDetailResponse>())!;
+
+        async Task<HttpResponseMessage> ReviewAsync(ReviewEstimateRequest body)
+        {
+            var request = CreateAuthenticatedRequest(HttpMethod.Post,
+                $"/api/v1/estimates/{estimate.Id}/review-decisions", "token-org-b", TestOnlyDataSeeder.TestCostReviewerMembershipId);
+            request.Headers.Add("If-Match", $"\"{submitted.RowVersion}\"");
+            request.Headers.Add("Idempotency-Key", $"authority-review-{Guid.NewGuid():N}");
+            request.Content = JsonContent.Create(body);
+            return await _client.SendAsync(request);
+        }
+
+        static async Task<string?> CodeOfAsync(HttpResponseMessage response)
+        {
+            using var problem = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            return problem.RootElement.GetProperty("code").GetString();
+        }
+
+        Task SetLimitAsync(bool isUnlimited, decimal? maxAmount, bool isActive = true) =>
+            ApprovalLimitTestSupport.SetLimitAsync(_factory.Services, OrgAId, "Test Cost Reviewer",
+                ApprovalDocumentType.Estimate, isUnlimited, maxAmount, isActive);
+
+        try
+        {
+            // The reviewer's role has no active estimate limit: fail-closed.
+            await SetLimitAsync(true, null, isActive: false);
+            var notConfigured = await ReviewAsync(new ReviewEstimateRequest(1, "approved"));
+            Assert.Equal(HttpStatusCode.Forbidden, notConfigured.StatusCode);
+            Assert.Equal("APPROVAL_AUTHORITY_NOT_CONFIGURED", await CodeOfAsync(notConfigured));
+
+            // A ceiling far below the grand total.
+            await SetLimitAsync(false, 0.01m);
+            var exceeded = await ReviewAsync(new ReviewEstimateRequest(1, "approved"));
+            Assert.Equal(HttpStatusCode.Forbidden, exceeded.StatusCode);
+            Assert.Equal("APPROVAL_LIMIT_EXCEEDED", await CodeOfAsync(exceeded));
+
+            // Returning for rework never needs a limit, and the failed approvals left the estimate Submitted.
+            var returned = await ReviewAsync(new ReviewEstimateRequest(1, "returned", "TEST_ONLY_RETURN", "TEST_ONLY authority return"));
+            Assert.Equal(HttpStatusCode.OK, returned.StatusCode);
+        }
+        finally
+        {
+            // Other tests in this class reuse the Test Cost Reviewer role, so restore its seeded unlimited limit.
+            await SetLimitAsync(true, null);
+        }
+    }
+
+    [Fact]
     public async Task Submit_TestOnlyApprovalProfileFreezesCombinedTriggersAndProjectsThemToQueue()
     {
         var (estimate, _, calculatedRevision) = await SetupCalculatedEstimateAsync(
@@ -2751,6 +2810,9 @@ public class EstimateEndpointsTests : IAsyncLifetime
             db.MembershipRoles.Add(new MembershipRole(membershipId, roleId, OrgAId));
             db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), roleId, OrgAId, permission.Id,
                 PermissionScope.Organization, OrgAId));
+            // Every route step's role may be the final approver, so each needs an unlimited estimate limit.
+            db.ApprovalLimits.Add(ApprovalLimit.Create(Guid.NewGuid(), OrgAId, roleId, ApprovalDocumentType.Estimate,
+                null, ApprovalLimitRules.Currency, true, null, DateTimeOffset.UtcNow));
         }
         await db.SaveChangesAsync();
     }
