@@ -22,3 +22,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0018 — Notification Foundation (in-app) โดยไม่ใช้ Outbox](0018-in-app-notification-foundation.md)
 - [0019 — Organization/Branch Administration](0019-organization-branch-administration.md)
 - [0020 — Role Management และ Approval Permission Set](0020-role-management-and-approval-permission-set.md)
+- [0021 — Approval Authority Matrix](0021-approval-authority-matrix.md)

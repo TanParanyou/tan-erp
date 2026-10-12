@@ -13,6 +13,7 @@
 | Access | `roles.assign` | ดู Role ที่มอบได้, มอบ/ถอน Role (ภายในขอบเขตสิทธิ์ที่ตนถือ), ยกเลิกคำขอของตนเอง | Organization |
 | Access | `roles.assign-approval` | ตัดสินคำขอมอบ Role ที่มี Approval Permission (ผู้ตรวจต้องเป็นคนละคนกับผู้ขอ) | Organization |
 | Access | `roles.manage` | สร้าง/แก้/ปิดใช้ Role จาก Permission catalog, ดู catalog และรายการ Role ทั้งหมด (รวมที่ปิดใช้); ไม่รวมการมอบ Role (`roles.assign`) | Organization |
+| Access | `approval-limits.manage` | ตั้ง/แก้/ปิดใช้วงเงินอนุมัติต่อ Role × ประเภทเอกสาร × สาขา (Approval Limit); เป็น Approval Permission (การมอบต้อง maker–checker) | Organization |
 | CRM | `customers.read` | ดู Customer และข้อมูลที่ Allowlist อนุญาต | Organization/Branch/Own |
 | CRM | `customers.create` | สร้าง Customer Draft | Organization/Branch |
 | CRM | `customers.update` | แก้ Customer ตาม Scope/State | Organization/Branch/Own |
