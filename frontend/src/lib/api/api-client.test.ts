@@ -444,4 +444,29 @@ describe("ApiClient", () => {
     expect(fetchMock.mock.calls[4][1].headers["If-Match"]).toBe('"v1"');
     expect(fetchMock.mock.calls[8][1].headers["If-Match"]).toBe('"v4"');
   });
+
+  it("calls the approval limit endpoints with If-Match and Idempotency-Key where required", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    const options = { token: "tok", membershipId: "m-1", locale: "th" as const };
+    const limit = { roleId: "r1", documentType: "estimate", branchId: null, currency: "THB", isUnlimited: false, maxAmount: 1000 };
+
+    await client.listApprovalLimits({ roleId: "r1", documentType: "estimate", status: "active", page: 2, limit: 10 }, options);
+    await client.getApprovalLimitOptions(options);
+    await client.getApprovalLimit("l 1", options);
+    await client.createApprovalLimit(limit, { ...options, idempotencyKey: "key-0123456789abcdef" });
+    await client.updateApprovalLimit("l1", { isUnlimited: true, maxAmount: null, isActive: true }, { ...options, ifMatch: "v1" });
+
+    expect(fetchMock.mock.calls.map(([url, init]) => [url, init.method])).toEqual([
+      ["http://localhost:5000/api/v1/admin/approval-limits?roleId=r1&documentType=estimate&status=active&page=2&limit=10", "GET"],
+      ["http://localhost:5000/api/v1/admin/approval-limits/options", "GET"],
+      ["http://localhost:5000/api/v1/admin/approval-limits/l%201", "GET"],
+      ["http://localhost:5000/api/v1/admin/approval-limits", "POST"],
+      ["http://localhost:5000/api/v1/admin/approval-limits/l1", "PUT"],
+    ]);
+    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).toBe("key-0123456789abcdef");
+    expect(fetchMock.mock.calls[4][1].headers["If-Match"]).toBe('"v1"');
+  });
 });
