@@ -14,6 +14,7 @@ describe("notification types", () => {
       "change-order.approval-requested",
       "cost-record.approval-requested",
       "estimate.approval-requested",
+      "membership.expiring",
       "mrp-run.approval-requested",
       "purchase-order.approval-requested",
       "role-assignment.approval-requested",
@@ -59,5 +60,17 @@ describe("notification types", () => {
         ? Object.entries(value).flatMap(([key, child]) => flat(child, `${prefix}${key}.`))
         : [prefix];
     expect(flat(enMessages.notifications).sort()).toEqual(flat(thMessages.notifications).sort());
+  });
+
+  it("declares exactly the payload fields the membership expiring message uses", () => {
+    expect(NOTIFICATION_TYPES["membership.expiring"].fields).toEqual(["subjectDisplayName", "daysRemaining"]);
+    expect(
+      notificationMessageValues("membership.expiring", {
+        subjectDisplayName: "สมหญิง",
+        daysRemaining: "7",
+        resourceId: "ignored",
+        parentId: "ignored",
+      }),
+    ).toEqual({ subjectDisplayName: "สมหญิง", daysRemaining: "7" });
   });
 });

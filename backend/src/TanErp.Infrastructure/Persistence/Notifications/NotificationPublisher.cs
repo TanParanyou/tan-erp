@@ -28,11 +28,17 @@ public class NotificationPublisher : INotificationPublisher
         var descriptor = NotificationTypeRegistry.Find(evt.Type)
             ?? throw new NotificationDomainException("NOTIFICATION_TYPE_INVALID", $"Notification type '{evt.Type}' is not registered.");
 
-        var actorName = await _db.Users.AsNoTracking()
-            .Where(u => u.Id == evt.ActorUserId)
-            .Select(u => u.DisplayName)
-            .FirstOrDefaultAsync(ct)
-            ?? throw new NotificationDomainException("NOTIFICATION_FIELD_INVALID", "The actor user was not found.");
+        string? actorName = null;
+        if (!descriptor.SystemGenerated)
+        {
+            var actorId = evt.ActorUserId
+                ?? throw new NotificationDomainException("NOTIFICATION_FIELD_INVALID", "The actor user is required.");
+            actorName = await _db.Users.AsNoTracking()
+                .Where(u => u.Id == actorId)
+                .Select(u => u.DisplayName)
+                .FirstOrDefaultAsync(ct)
+                ?? throw new NotificationDomainException("NOTIFICATION_FIELD_INVALID", "The actor user was not found.");
+        }
 
         var now = _clock.UtcNow;
         IReadOnlyCollection<Guid> candidates = evt.ExplicitRecipientUserIds is { } explicitIds

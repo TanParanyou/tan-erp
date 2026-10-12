@@ -274,6 +274,10 @@ _Avoid_: Digital signature, e-Signature
 ข้อความในระบบถึงผู้ใช้หนึ่งคนใน Organization หนึ่ง สร้างพร้อมการเปลี่ยนสถานะเอกสารต้นเหตุ มีประเภทที่กำหนดในโค้ด ผู้รับอ่านได้เฉพาะของตน
 _Avoid_: Alert, Message, Push
 
+**Membership Expiry Reminder (การเตือน Membership ใกล้หมดอายุ)**:
+Notification แบบ system-generated ถึงผู้ถือ `memberships.manage` เมื่อ Membership ที่ active จะหมดอายุภายใน threshold (30/7/1 วัน TEST_ONLY) ส่งครั้งเดียวต่อ (Membership, threshold, วันหมดอายุ, ผู้รับ) และไม่ส่งหลังหมดอายุแล้ว
+_Avoid_: Expiry alert, Membership warning
+
 **Notification Type (ประเภทการแจ้งเตือน)**:
 รหัสประเภทที่ลงทะเบียนในโค้ด ระบุ permission ปลายทาง ลิงก์ และ field ที่อนุญาตใน payload (เช่น "ใบสั่งซื้อรออนุมัติ")
 _Avoid_: Event name, Topic

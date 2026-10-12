@@ -63,7 +63,7 @@ Implemented 2026-10-10 ด้วยผล **focused tests เท่านั้�
 
 - **In-app เท่านั้น** — ไม่มี email, LINE, SMS (เลื่อนตามคำสั่งผู้ใช้; ไม่มี `IEmailSender` และไม่มี outbox; ADR 0018 ระบุเงื่อนไขประเมินใหม่เมื่อมีช่องทางส่งออก).
 - Polling ทุก 30 วินาที (หยุดเมื่อแท็บซ่อน) — ไม่มี push/WebSocket; ผู้ใช้อาจเห็นการแจ้งเตือนช้าได้สูงสุดราว 30 วินาที.
-- Event source มี 6 แหล่ง เฉพาะ "ส่งเข้าสถานะรออนุมัติ". Event ที่ต้องมี scheduler/background job ซึ่งยังไม่มีใน repo ยังเป็น Future: ใบประกันใกล้หมดอายุ, งานบริการเกิน SLA (G-18), Membership ใกล้หมดอายุ (G-21). แต่ละเรื่องเพิ่ม type ตามขั้นตอนในสัญญาได้โดยไม่แก้โค้ดกลาง.
+- Event source มี 6 แหล่ง เฉพาะ "ส่งเข้าสถานะรออนุมัติ". Event ที่ต้องมี scheduler/background job ซึ่งยังไม่มีใน repo ยังเป็น Future: ใบประกันใกล้หมดอายุ, งานบริการเกิน SLA (G-18), Membership ใกล้หมดอายุ (G-21). แต่ละเรื่องเพิ่ม type ตามขั้นตอนในสัญญาได้โดยไม่แก้โค้ดกลาง. ต่อมา G-21 เพิ่ม type system-generated `membership.expiring` (scheduler ตัวแรก; ดู [Membership Expiry Verification](membership-expiry-verification.md)) — ที่เหลือยังเป็น Future.
 - ผู้ทำ (maker) ถูกตัดออกสองที่ (resolver และ planner) — ผู้ทำที่ถือสิทธิ์อนุมัติจะไม่ได้รับแจ้งเอกสารของตนเอง.
 - Estimate แจ้งเฉพาะผู้ตรวจขั้นแรกของ route; ผู้ตรวจขั้นถัดไปยังไม่ได้รับแจ้งเมื่อขั้นก่อนหน้าอนุมัติ (Validation Question ข้อ 2 ยังค้าง).
 - การแจ้งเตือนเกินจำนวนผู้รับสูงสุดต่อ event (`MaxRecipientsPerEvent` = 50) ถูกตัดทอนแบบเงียบ — ยังไม่มี logger บันทึก.

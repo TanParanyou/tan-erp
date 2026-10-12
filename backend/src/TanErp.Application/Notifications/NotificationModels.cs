@@ -18,6 +18,7 @@ public static class NotificationFields
     public const string ActorDisplayName = "actorDisplayName";
     public const string SubjectDisplayName = "subjectDisplayName";
     public const string RoleName = "roleName";
+    public const string DaysRemaining = "daysRemaining";
 }
 
 /// <summary>
@@ -25,13 +26,14 @@ public static class NotificationFields
 /// (the publisher adds it from the actor's user record). <c>ExplicitRecipientUserIds</c> is used when the module already chose the
 /// reviewers (Estimate approval route); otherwise recipients are the holders of the type's target permission in the organization/branch.
 /// <c>TransitionId</c> changes every time the document enters the pending-approval state, so resubmission notifies again.
+/// <c>ActorUserId</c> is null only for a system-generated type (descriptor <c>SystemGenerated</c>), which has no actor and no <c>actorDisplayName</c>.
 /// </summary>
 public sealed record NotificationEvent(
     string Type,
     Guid OrganizationId,
     Guid? BranchId,
     Guid TransitionId,
-    Guid ActorUserId,
+    Guid? ActorUserId,
     IReadOnlyDictionary<string, string> Fields,
     IReadOnlyCollection<Guid>? ExplicitRecipientUserIds,
     IReadOnlyCollection<Guid> ExcludedUserIds);

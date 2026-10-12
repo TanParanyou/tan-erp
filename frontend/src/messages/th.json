@@ -3979,7 +3979,8 @@
       "purchaseOrderApprovalRequested": "{actorDisplayName} ส่งใบสั่งซื้อ {documentNumber} เพื่อรออนุมัติ",
       "changeOrderApprovalRequested": "{actorDisplayName} ส่งใบเปลี่ยนแปลงงาน {documentNumber} เพื่อรออนุมัติ",
       "mrpRunApprovalRequested": "{actorDisplayName} สร้างรอบวางแผนวัสดุ {documentNumber} ที่รออนุมัติ",
-      "roleAssignmentApprovalRequested": "{actorDisplayName} ขอมอบบทบาท {roleName} ให้ {subjectDisplayName}"
+      "roleAssignmentApprovalRequested": "{actorDisplayName} ขอมอบบทบาท {roleName} ให้ {subjectDisplayName}",
+      "membershipExpiring": "สิทธิ์เข้าใช้งานของ {subjectDisplayName} จะหมดอายุภายใน {daysRemaining} วัน"
     },
     "list": {
       "title": "การแจ้งเตือน",

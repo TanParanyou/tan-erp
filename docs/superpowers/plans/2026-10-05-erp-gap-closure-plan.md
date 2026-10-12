@@ -63,7 +63,7 @@
 | G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | — |
 | G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | — |
 | G-20 | Labor Timesheet | C | Identity, CP-09 | PM + Production + Finance | — |
-| G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | — |
+| G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | G-21 ข้อ 1 Implemented 2026-10-12 (tests written, not run; browser not checked); ข้อ 2–3 รอการตัดสินใจ — [แผน G-21](2026-10-12-g21-membership-expiry.md); [Open Decisions](2026-10-12-g21-open-decisions.md); [Verification](../../05-engineering/membership-expiry-verification.md) |
 
 **ลำดับแนะนำ:** Wave A (ของกลาง) → B (Commercial/Estimate) ↔ C (Project/Supply) ทำคู่ขนานได้ → D (Finance/Service) → E (Reporting). ภายใน Wave C: G-20 → G-10 → G-11 → G-12 → G-13 → G-14.
 
@@ -96,7 +96,7 @@
 - [x] ADR 0018: ไม่ใช้ outbox ร่วม และไม่แตะ Finance outbox ([ADR 0018](../../adr/0018-in-app-notification-foundation.md))
 - [x] Domain: `Notification` แถวต่อผู้รับ + `NotificationTypes` whitelist ในโค้ด (ดู [สัญญา](../../03-contracts/notification-api-contract.md))
 - [x] Event sources รอบแรก: รออนุมัติ 6 แหล่ง (Estimate, Cost, PO, Change Order, MRP, Role maker–checker)
-- [ ] (Future) Event ที่ต้องมี scheduler: ใบประกันใกล้หมดอายุ, งานบริการเกิน SLA (หลัง G-18), Membership ใกล้หมดอายุ (G-21) — ยังไม่มี job ตามเวลาใน repo
+- [ ] (Future) Event ที่ต้องมี scheduler: ใบประกันใกล้หมดอายุ, งานบริการเกิน SLA (หลัง G-18), Membership ใกล้หมดอายุ (G-21: ทำแล้ว 2026-10-12 ด้วย MembershipExpiryReminderWorker — scheduler ตัวแรกของ repo, ADR 0022); ที่เหลือ (ใบประกัน, SLA G-18) ยังไม่มี job
 - [ ] (Future) Email channel — เลื่อนตามคำสั่งผู้ใช้; ไม่อยู่ใน slice G-02 รอบแรก (ดู [ADR 0018](../../adr/0018-in-app-notification-foundation.md))
 - [x] Frontend: bell + หน้า `/notifications` + mark read ผ่าน TanStack Query (polling 30 วินาที; ไม่ทำ websocket)
 - [x] Tests: ผู้รับเห็นเฉพาะของตน, payload ผ่าน allowlist ไม่มีต้นทุน, registry parity (ผล: [Verification](../../05-engineering/notification-foundation-verification.md))
@@ -279,9 +279,9 @@
 
 ### G-21 — CP-02 ค้าง
 
-- [ ] Membership ใกล้หมดอายุ → แจ้งเตือนผู้ดูแล (G-02)
-- [ ] ตัดสินใจ User หลาย Organization (ตาม Validation Question CP-02) แล้วปรับ contract
-- [ ] PII visibility/retention ใน Audit ตามที่ Security ตอบ
+- [ ] Membership ใกล้หมดอายุ → แจ้งเตือนผู้ดูแล (G-02) — Implemented 2026-10-12 (hosted worker + system-generated notification; tests written, not run; browser not checked) — [Verification](../../05-engineering/membership-expiry-verification.md)
+- [ ] ตัดสินใจ User หลาย Organization (ตาม Validation Question CP-02) แล้วปรับ contract — รอคำตอบ: [Open Decisions](2026-10-12-g21-open-decisions.md) (options + ข้อเสนอแนะ; ยังไม่ implement)
+- [ ] PII visibility/retention ใน Audit ตามที่ Security ตอบ — รอคำตอบ: [Open Decisions](2026-10-12-g21-open-decisions.md) (options + ข้อเสนอแนะ; ยังไม่ implement)
 
 ---
 

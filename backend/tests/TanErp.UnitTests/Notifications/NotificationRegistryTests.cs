@@ -29,7 +29,8 @@ public class NotificationRegistryTests
             var d = NotificationTypeRegistry.Find(type)!;
             Assert.False(string.IsNullOrWhiteSpace(d.TargetPermission), type);
             Assert.StartsWith("/", d.DeepLinkTemplate);
-            Assert.Contains(NotificationFields.ActorDisplayName, d.RequiredFields);
+            if (d.SystemGenerated) Assert.DoesNotContain(NotificationFields.ActorDisplayName, d.RequiredFields);
+            else Assert.Contains(NotificationFields.ActorDisplayName, d.RequiredFields);
             Assert.Contains(d.ReferenceField, d.RequiredFields);
             Assert.Contains(NotificationFields.ResourceId, d.RequiredFields);
         }
@@ -69,6 +70,23 @@ public class NotificationRegistryTests
         Assert.Equal("projects.change-orders.approve", NotificationTypeRegistry.Find(NotificationTypes.ChangeOrderApprovalRequested)!.TargetPermission);
         Assert.Equal("mrp.approve", NotificationTypeRegistry.Find(NotificationTypes.MrpRunApprovalRequested)!.TargetPermission);
         Assert.Equal("roles.assign-approval", NotificationTypeRegistry.Find(NotificationTypes.RoleAssignmentApprovalRequested)!.TargetPermission);
+        Assert.Equal("memberships.manage", NotificationTypeRegistry.Find(NotificationTypes.MembershipExpiring)!.TargetPermission);
+    }
+
+    [Fact]
+    public void OnlyMembershipExpiring_IsSystemGenerated()
+    {
+        var system = NotificationTypeRegistry.Types.Where(t => NotificationTypeRegistry.Find(t)!.SystemGenerated).ToArray();
+        Assert.Equal([NotificationTypes.MembershipExpiring], system);
+    }
+
+    [Fact]
+    public void MembershipExpiring_LinksToTheUserPage_ByUserId()
+    {
+        var d = NotificationTypeRegistry.Find(NotificationTypes.MembershipExpiring)!;
+        var userId = Guid.NewGuid();
+        var payload = new Dictionary<string, string> { [NotificationFields.ParentId] = userId.ToString("D") };
+        Assert.Equal($"/settings/users/{userId:D}", NotificationTypeRegistry.RenderDeepLink(d, payload));
     }
 
     [Fact]

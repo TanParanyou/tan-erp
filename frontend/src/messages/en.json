@@ -3979,7 +3979,8 @@
       "purchaseOrderApprovalRequested": "{actorDisplayName} submitted purchase order {documentNumber} for approval",
       "changeOrderApprovalRequested": "{actorDisplayName} submitted change order {documentNumber} for approval",
       "mrpRunApprovalRequested": "{actorDisplayName} created planning run {documentNumber} awaiting approval",
-      "roleAssignmentApprovalRequested": "{actorDisplayName} requested role {roleName} for {subjectDisplayName}"
+      "roleAssignmentApprovalRequested": "{actorDisplayName} requested role {roleName} for {subjectDisplayName}",
+      "membershipExpiring": "Access for {subjectDisplayName} expires within {daysRemaining} day(s)"
     },
     "list": {
       "title": "Notifications",

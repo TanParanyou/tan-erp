@@ -23,6 +23,7 @@ public class NotificationEventsTests
         NotificationEvents.ChangeOrderSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), Guid.NewGuid(), "CO-2026-0001", Creator),
         NotificationEvents.MrpRunCreated(Org, Branch, Guid.NewGuid(), Actor, "MRP-2026-0001"),
         NotificationEvents.RoleAssignmentRequested(Org, Guid.NewGuid(), Actor, Subject, "สมหญิง ทดสอบ", "Approver"),
+        NotificationEvents.MembershipExpiring(Org, Branch, Guid.NewGuid(), Guid.NewGuid(), Subject, "สมหญิง ทดสอบ", 7),
     };
 
     [Theory]
@@ -89,6 +90,28 @@ public class NotificationEventsTests
         var projectId = Guid.NewGuid();
         var evt = NotificationEvents.ChangeOrderSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), projectId, "CO-1", Creator);
         Assert.Equal(projectId.ToString("D"), evt.Fields[NotificationFields.ParentId]);
+    }
+
+    [Fact]
+    public void MembershipExpiring_HasNoActor_NoExplicitRecipients_AndCarriesTheThreshold()
+    {
+        var membershipId = Guid.NewGuid();
+        var evt = NotificationEvents.MembershipExpiring(Org, null, Guid.NewGuid(), membershipId, Subject, "สมหญิง", 30);
+        Assert.Null(evt.ActorUserId);
+        Assert.Null(evt.ExplicitRecipientUserIds);
+        Assert.Empty(evt.ExcludedUserIds);
+        Assert.Null(evt.BranchId);
+        Assert.Equal("30", evt.Fields[NotificationFields.DaysRemaining]);
+        Assert.Equal(membershipId.ToString("D"), evt.Fields[NotificationFields.ResourceId]);
+        Assert.Equal(Subject.ToString("D"), evt.Fields[NotificationFields.ParentId]);
+    }
+
+    [Fact]
+    public void MembershipExpiring_ClipsALongDisplayNameToThePayloadLimit()
+    {
+        var evt = NotificationEvents.MembershipExpiring(Org, null, Guid.NewGuid(), Guid.NewGuid(), Subject, new string('ก', 255), 7);
+        Assert.Equal(NotificationPayloadRules.MaxValueLength, evt.Fields[NotificationFields.SubjectDisplayName].Length);
+        Assert.True(NotificationPublishPlanner.Plan(evt, null, [Reviewer]).IsSuccess);
     }
 
     [Fact]
