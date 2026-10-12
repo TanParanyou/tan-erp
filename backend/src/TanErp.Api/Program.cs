@@ -199,6 +199,11 @@ var membershipExpiryOptions = builder.Configuration
     ?? new TanErp.Application.Notifications.MembershipExpiryReminderOptions();
 builder.Services.AddSingleton(membershipExpiryOptions);
 builder.Services.AddScoped<TanErp.Application.Notifications.IMembershipExpiryReminderService, TanErp.Infrastructure.Persistence.Notifications.MembershipExpiryReminderService>();
+// The only scheduler in the app (ADR 0022). Never runs in the Test environment, so tests stay deterministic and need no clock waiting.
+if (!builder.Environment.IsEnvironment("Test") && membershipExpiryOptions.Enabled)
+{
+    builder.Services.AddHostedService<TanErp.Api.Background.MembershipExpiryReminderWorker>();
+}
 builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infrastructure.Persistence.Service.ServiceStore>();
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
 builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();
