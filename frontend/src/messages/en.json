@@ -97,7 +97,8 @@
     "quickEstimateSubgroup": "Quick estimate",
     "organizationSettings": "Organization",
     "branchSettings": "Branches",
-    "roleSettings": "Roles"
+    "roleSettings": "Roles",
+    "approvalLimitSettings": "Approval limits"
   },
   "common": {
     "actions": {
@@ -1389,6 +1390,8 @@
       "returnReasonRequired": "Enter a reason code.",
       "returnNoteRequired": "Describe the required changes.",
       "reviewUnavailable": "No review task is assigned to this membership.",
+      "approvalLimitExceeded": "This estimate is above your approval limit.",
+      "approvalAuthorityNotConfigured": "Your roles have no approval limit for this document. Contact an administrator.",
       "revisionReasonPlaceholder": "Enter revision reason...",
       "cancelReasonPlaceholder": "Enter estimate cancellation reason...",
       "returnReasonCodePlaceholder": "e.g. GP_BELOW_TARGET",
@@ -2478,6 +2481,8 @@
         "PROJECT_PLAN_INVALID": "The end date cannot be before the start date.",
         "PROJECT_BUDGET_INVALID": "The budget data is invalid.",
         "PROJECT_BUDGET_NEGATIVE": "Approving would make the current budget negative.",
+        "APPROVAL_LIMIT_EXCEEDED": "This change is above your approval limit.",
+        "APPROVAL_AUTHORITY_NOT_CONFIGURED": "Your roles have no approval limit for change orders. Contact an administrator.",
         "PROJECT_REASON_REQUIRED": "A reason or note is required.",
         "PROJECT_MILESTONE_INVALID": "The milestone data is invalid.",
         "PROJECT_CHANGE_ORDER_INVALID": "The change order data is invalid.",
@@ -2515,6 +2520,8 @@
       "PURCHASE_ORDER_SUPPLIER_INACTIVE": "The supplier is not active.",
       "PURCHASE_ORDER_PROJECT_NOT_ACTIVE": "The project is not ready for ordering (it must be active or on hold to approve).",
       "PURCHASE_ORDER_OVER_BUDGET": "This would exceed the project's current budget.",
+      "APPROVAL_LIMIT_EXCEEDED": "This order is above your approval limit.",
+      "APPROVAL_AUTHORITY_NOT_CONFIGURED": "Your roles have no approval limit for purchase orders. Contact an administrator.",
       "PURCHASE_ORDER_ITEM_NOT_PURCHASABLE": "The item must be active and purchasable.",
       "PURCHASE_ORDER_LINE_INVALID": "The order lines are invalid (1-200 lines, unique items, quantity above zero).",
       "PURCHASE_ORDER_SELF_APPROVAL": "The creator cannot approve or reject their own order.",
@@ -4224,6 +4231,51 @@
       "ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED": "The checker must be a different person from the requester.",
       "LAST_ADMINISTRATOR_REQUIRED": "The organization must keep at least one active administrator.",
       "BRANCH_NOT_FOUND": "The branch was not found.",
+      "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
+      "PERMISSION_DENIED": "You do not have permission to do this.",
+      "RESOURCE_NOT_FOUND": "The requested record was not found."
+    }
+  },
+  "approvalLimitAdmin": {
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedDetail": "You do not have permission to manage approval limits.",
+    "documentType": { "estimate": "Estimate", "purchase_order": "Purchase order", "change_order": "Change order" },
+    "list": {
+      "title": "Approval limits",
+      "subtitle": "The most each role may approve, per document type and branch",
+      "createLimit": "Add limit",
+      "failClosedNotice": "A role with no active limit cannot approve estimates, purchase orders or change orders. Set the limits before relying on approvals.",
+      "documentTypeFilter": "Document type",
+      "statusFilter": "Status",
+      "status": { "active": "Active", "inactive": "Inactive" },
+      "table": { "role": "Role", "documentType": "Document type", "branch": "Branch", "limit": "Limit", "status": "Status" },
+      "organizationWide": "Whole organization",
+      "unlimited": "Unlimited",
+      "emptyTitle": "No approval limits yet",
+      "emptyDescription": "Add the first limit so approvers can approve documents"
+    },
+    "editor": {
+      "createTitle": "Add approval limit",
+      "createSubtitle": "Choose a role, a document type and the highest amount it may approve",
+      "editTitle": "Edit approval limit",
+      "createSubmit": "Add limit",
+      "saveSubmit": "Save changes",
+      "createSuccess": "Limit added",
+      "saveSuccess": "Limit saved",
+      "backToList": "Back to limits",
+      "identityLocked": "Role, document type, branch and currency cannot be changed. Add a new limit instead.",
+      "fields": { "role": "Role", "documentType": "Document type", "branch": "Branch", "currency": "Currency", "isUnlimited": "Unlimited", "maxAmount": "Maximum amount", "isActive": "Active" },
+      "hints": { "branch": "Leave empty for the whole organization. A branch limit replaces the organization limit of that role in that branch.", "unlimited": "The role can approve any amount of this document type.", "inactive": "An inactive limit counts as no limit." },
+      "placeholders": { "role": "Select a role", "documentType": "Select a document type", "organizationWide": "Whole organization" },
+      "validation": { "roleRequired": "Select a role", "documentTypeRequired": "Select a document type", "amountRequired": "Enter the maximum amount", "amountInvalid": "Enter 0 or more with at most 2 decimal places" }
+    },
+    "errors": {
+      "GENERIC": "The action failed. Please try again.",
+      "ADMIN_VERSION_CONFLICT": "This limit was changed by someone else. Reload and try again.",
+      "APPROVAL_LIMIT_ALREADY_EXISTS": "This role already has a limit for this document type and branch. Edit the existing one.",
+      "APPROVAL_LIMIT_ROLE_NOT_FOUND": "No active role with this id was found.",
+      "BRANCH_NOT_FOUND": "The branch was not found.",
+      "REQUEST_VALIDATION_FAILED": "The data is invalid. Check it and try again.",
       "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
       "PERMISSION_DENIED": "You do not have permission to do this.",
       "RESOURCE_NOT_FOUND": "The requested record was not found."
