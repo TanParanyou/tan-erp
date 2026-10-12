@@ -4266,7 +4266,7 @@
       "identityLocked": "Role, document type, branch and currency cannot be changed. Add a new limit instead.",
       "fields": { "role": "Role", "documentType": "Document type", "branch": "Branch", "currency": "Currency", "isUnlimited": "Unlimited", "maxAmount": "Maximum amount", "isActive": "Active" },
       "hints": { "branch": "Leave empty for the whole organization. A branch limit replaces the organization limit of that role in that branch.", "unlimited": "The role can approve any amount of this document type.", "inactive": "An inactive limit counts as no limit." },
-      "placeholders": { "role": "Select a role", "documentType": "Select a document type", "organizationWide": "Whole organization" },
+      "placeholders": { "role": "— Select a role —", "documentType": "— Select a document type —", "organizationWide": "Whole organization" },
       "validation": { "roleRequired": "Select a role", "documentTypeRequired": "Select a document type", "amountRequired": "Enter the maximum amount", "amountInvalid": "Enter 0 or more with at most 2 decimal places" }
     },
     "errors": {
