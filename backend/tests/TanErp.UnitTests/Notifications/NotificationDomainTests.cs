@@ -14,7 +14,7 @@ public class NotificationDomainTests
         new(Guid.NewGuid(), Org, Recipient, type, payload, key, Now);
 
     [Fact]
-    public void RegisteredTypes_AreExactlyTheSixApprovalRequests_AndMatchTheFrontendList()
+    public void RegisteredTypes_AreTheApprovalRequestsAndMembershipExpiring_AndMatchTheFrontendList()
     {
         // Keep in step with NOTIFICATION_TYPES in frontend/src/lib/notifications/notification-types.ts (checked there too).
         var expected = new[]
@@ -22,6 +22,7 @@ public class NotificationDomainTests
             "change-order.approval-requested",
             "cost-record.approval-requested",
             "estimate.approval-requested",
+            "membership.expiring",
             "mrp-run.approval-requested",
             "purchase-order.approval-requested",
             "role-assignment.approval-requested"

@@ -1,3 +1,4 @@
+using System.Globalization;
 using TanErp.Domain.Notifications;
 
 namespace TanErp.Application.Notifications;
@@ -51,4 +52,24 @@ public static class NotificationEvents
         new(NotificationTypes.RoleAssignmentApprovalRequested, organizationId, null, requestId, actorUserId,
             Fields((NotificationFields.ResourceId, Id(requestId)), (NotificationFields.SubjectDisplayName, subjectDisplayName), (NotificationFields.RoleName, roleName)),
             null, [subjectUserId]);
+
+    /// <summary>
+    /// System-generated (no actor): a membership's remaining validity fell under a reminder threshold. Recipients are the holders of the
+    /// type's target permission (memberships.manage). The transition id must be the deterministic hash of (membership, threshold, expiry)
+    /// so the same reminder is never stored twice and a changed expiry re-arms it.
+    /// </summary>
+    public static NotificationEvent MembershipExpiring(
+        Guid organizationId, Guid? branchId, Guid transitionId, Guid membershipId, Guid subjectUserId, string subjectDisplayName, int daysRemaining) =>
+        new(NotificationTypes.MembershipExpiring, organizationId, branchId, transitionId, null,
+            Fields((NotificationFields.ResourceId, Id(membershipId)), (NotificationFields.ParentId, Id(subjectUserId)),
+                (NotificationFields.SubjectDisplayName, Clip(subjectDisplayName)),
+                (NotificationFields.DaysRemaining, daysRemaining.ToString(CultureInfo.InvariantCulture))),
+            null, []);
+
+    /// <summary>A display name can be up to 255 characters; a payload value is limited to 200.</summary>
+    private static string Clip(string value)
+    {
+        var trimmed = value.Trim();
+        return trimmed.Length > NotificationPayloadRules.MaxValueLength ? trimmed[..NotificationPayloadRules.MaxValueLength] : trimmed;
+    }
 }

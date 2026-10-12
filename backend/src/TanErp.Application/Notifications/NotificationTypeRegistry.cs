@@ -7,13 +7,15 @@ namespace TanErp.Application.Notifications;
 /// What a registered notification type requires. <c>TargetPermission</c> is the approval permission of the source document: it selects
 /// the recipients and decides whether a reader still gets a link. <c>RequiredFields</c> is the exact payload allowlist (no optional fields).
 /// <c>ReferenceField</c> is the field shown as the subject line in the UI.
+/// <c>SystemGenerated</c> types come from a scheduler: no actor, and <c>actorDisplayName</c> is not a payload field.
 /// </summary>
 public sealed record NotificationTypeDescriptor(
     string Type,
     string TargetPermission,
     string DeepLinkTemplate,
     string ReferenceField,
-    IReadOnlySet<string> RequiredFields);
+    IReadOnlySet<string> RequiredFields,
+    bool SystemGenerated = false);
 
 /// <summary>Code-defined registry. Must stay in step with NotificationTypes (enforced by tests).</summary>
 public static partial class NotificationTypeRegistry
@@ -39,7 +41,11 @@ public static partial class NotificationTypeRegistry
             Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName)),
         new NotificationTypeDescriptor(
             NotificationTypes.RoleAssignmentApprovalRequested, "roles.assign-approval", "/settings/role-requests", NotificationFields.SubjectDisplayName,
-            Fields(NotificationFields.ResourceId, NotificationFields.SubjectDisplayName, NotificationFields.RoleName, NotificationFields.ActorDisplayName))
+            Fields(NotificationFields.ResourceId, NotificationFields.SubjectDisplayName, NotificationFields.RoleName, NotificationFields.ActorDisplayName)),
+        new NotificationTypeDescriptor(
+            NotificationTypes.MembershipExpiring, "memberships.manage", "/settings/users/{parentId}", NotificationFields.SubjectDisplayName,
+            Fields(NotificationFields.ResourceId, NotificationFields.ParentId, NotificationFields.SubjectDisplayName, NotificationFields.DaysRemaining),
+            SystemGenerated: true)
     }.ToDictionary(d => d.Type, StringComparer.Ordinal);
 
     public static IReadOnlyCollection<string> Types { get; } = Descriptors.Keys.ToArray();
