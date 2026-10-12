@@ -34,6 +34,8 @@ public static class ProblemDetailsMapper
         "ROLE_IN_USE" => StatusCodes.Status409Conflict,
         "APPROVAL_LIMIT_EXCEEDED" => StatusCodes.Status403Forbidden,
         "APPROVAL_AUTHORITY_NOT_CONFIGURED" => StatusCodes.Status403Forbidden,
+        "APPROVAL_LIMIT_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+        "APPROVAL_LIMIT_ROLE_NOT_FOUND" => StatusCodes.Status404NotFound,
         "ROLE_CHANGE_REQUEST_PENDING" => StatusCodes.Status409Conflict,
         "ROLE_CHANGE_REQUEST_NOT_PENDING" => StatusCodes.Status409Conflict,
         "ROLE_CHANGE_REQUEST_STALE" => StatusCodes.Status409Conflict,

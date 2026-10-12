@@ -1133,4 +1133,16 @@
   <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_DETAIL" xml:space="preserve">
     <value>Your roles have no approval limit for this document type and branch. Contact an administrator.</value>
   </data>
+  <data name="APPROVAL_LIMIT_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>Approval limit already exists</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>This role already has a limit for the document type and branch. Edit the existing one.</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Role not found</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>No active role with this id exists in the organization.</value>
+  </data>
 </root>

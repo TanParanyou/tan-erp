@@ -30,25 +30,49 @@
 
 ความซ้ำ: หนึ่งแถวต่อ `(organization, role, document_type, branch หรือทั้งองค์กร, currency)` นับทั้ง active และ inactive. สร้างซ้ำคืน `409 APPROVAL_LIMIT_ALREADY_EXISTS` (ให้แก้แถวเดิมแทน).
 
+## Request
+
+`POST /api/v1/admin/approval-limits` (ต้องส่ง `Idempotency-Key`):
+
+```json
+{
+  "roleId": "uuid",
+  "documentType": "estimate",
+  "branchId": "uuid | null",
+  "currency": "THB",
+  "isUnlimited": false,
+  "maxAmount": 1500000.00
+}
+```
+
+`PUT /api/v1/admin/approval-limits/{id}` (ต้องส่ง `If-Match: "<rowVersion>"`): แก้ได้เฉพาะ `isUnlimited`, `maxAmount`, `isActive` (ทั้งสามฟิลด์บังคับ; `maxAmount` ส่งเมื่อ `isUnlimited=false`).
+
+`documentType` และ `currency` ถูก trim และไม่แยกตัวพิมพ์ใหญ่-เล็ก (ระบบ normalize เป็น lowercase / uppercase ก่อนตรวจ).
+
 ## Response
+
+แถววงเงินที่ `GET`, `POST` (201) และ `PUT` (200) คืน (`role` และ `branch` เป็น object ที่มีชื่อแล้ว ไม่คืนเฉพาะ UUID):
 
 ```json
 {
   "id": "uuid",
-  "roleId": "uuid",
-  "roleName": "string",
+  "rowVersion": "uuid",
+  "role": { "id": "uuid", "name": "string" },
   "documentType": "estimate",
-  "branchId": "uuid | null",
-  "branchName": "string | null",
+  "branch": { "id": "uuid", "name": "string" },
   "currency": "THB",
   "isUnlimited": false,
-  "maxAmount": "1500000.00 | null",
+  "maxAmount": 1500000.00,
   "isActive": true,
-  "rowVersion": 1
+  "createdAtUtc": "2026-10-12T00:00:00Z",
+  "updatedAtUtc": "2026-10-12T00:00:00Z"
 }
 ```
 
-Response ของ list: `{ items: [...], pagination }` ตามรูปแบบ `AdminPaginationResponse`.
+- `branch` เป็น `null` เมื่อเป็นวงเงินทั้งองค์กร; `maxAmount` เป็น `null` เมื่อ `isUnlimited=true`.
+- `rowVersion` เป็น GUID ค่าเดียวกับ `ETag` (`"<rowVersion>"`) และใช้เป็น `If-Match` ของ PUT.
+- `GET /options` คืน `{ roles: [{id,name}], branches: [{id,name}], documentTypes: [...], currencies: [...] }`.
+- `GET` list คืน `{ items: [...], pagination: { page, pageSize, totalCount, totalPages } }` ตามรูปแบบ `AdminPaginationResponse` (query `page`, `limit` ค่าเริ่มต้น 25 สูงสุด 100).
 
 ## กฎธุรกิจ
 
@@ -58,12 +82,25 @@ Response ของ list: `{ items: [...], pagination }` ตามรูปแบ
 
 | รหัส | HTTP | ที่มา |
 | --- | --- | --- |
-| `APPROVAL_LIMIT_ALREADY_EXISTS` | 409 | สร้างแถวซ้ำกับ key เดิม |
+| `APPROVAL_LIMIT_ALREADY_EXISTS` | 409 | สร้างแถวที่ชน unique index เดิม `(role, document type, branch หรือทั้งองค์กร, currency)` |
 | `APPROVAL_LIMIT_ROLE_NOT_FOUND` | 404 | ไม่พบ Role active ที่ระบุในองค์กร |
 | `APPROVAL_LIMIT_EXCEEDED` | 403 | flow อนุมัติ: ยอดเอกสารเกินเพดานสูงสุดของ Role ที่ผู้อนุมัติถือ |
 | `APPROVAL_AUTHORITY_NOT_CONFIGURED` | 403 | flow อนุมัติ: ไม่มีวงเงิน active สำหรับ Role/ประเภท/สาขา/สกุลนี้ (fail-closed) |
 
-รหัสที่ใช้ซ้ำ: `BRANCH_NOT_FOUND`, `ADMIN_VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`, `REQUEST_VALIDATION_FAILED`, `RESOURCE_NOT_FOUND`, `PERMISSION_DENIED`.
+รหัสที่ใช้ซ้ำ:
+
+| รหัส | HTTP | ที่มา |
+| --- | --- | --- |
+| `PERMISSION_DENIED` | 403 | ไม่มี `approval-limits.manage` (ตรวจก่อนค้นหาข้อมูลทุกครั้ง) |
+| `REQUEST_VALIDATION_FAILED` | 400 | ฟิลด์/ค่าไม่ถูกต้อง, `credit_note`, สกุลไม่ใช่ THB, ยอดติดลบหรือทศนิยมเกิน 2 ตำแหน่ง |
+| `IDEMPOTENCY_KEY_REQUIRED` | 400 | POST ไม่มี `Idempotency-Key` |
+| `IDEMPOTENCY_KEY_INVALID` | 400 | `Idempotency-Key` ยาวไม่อยู่ในช่วง 16–128 ตัวอักษร |
+| `IDEMPOTENCY_KEY_REUSED` | 409 | key เดิมถูกใช้กับ payload ต่างกัน |
+| `IF_MATCH_REQUIRED` | 428 | PUT ไม่มี `If-Match` หรือรูปแบบผิด |
+| `ADMIN_VERSION_CONFLICT` | 409 | `If-Match` ไม่ตรงกับ `rowVersion` ปัจจุบัน (มีการแก้ไขไปแล้ว) |
+| `BRANCH_NOT_FOUND` | 404 | ไม่พบสาขา active ในองค์กร |
+| `RESOURCE_NOT_FOUND` | 404 | ไม่พบวงเงิน id นี้ในองค์กร (รวม id ขององค์กรอื่น) |
+| `AUTHENTICATION_REQUIRED` / `MEMBERSHIP_CONTEXT_REQUIRED` | 401 / 400 | ไม่ได้ยืนยันตัวตน / ไม่มี `X-Membership-Id` |
 
 ## Audit
 

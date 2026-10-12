@@ -1295,4 +1295,16 @@
   <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_DETAIL" xml:space="preserve">
     <value>บทบาทของคุณยังไม่มีวงเงินอนุมัติสำหรับเอกสารประเภทนี้ในสาขานี้ กรุณาติดต่อผู้ดูแลระบบ</value>
   </data>
+  <data name="APPROVAL_LIMIT_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>มีวงเงินนี้อยู่แล้ว</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>บทบาทนี้มีวงเงินสำหรับประเภทเอกสารและสาขานี้อยู่แล้ว ให้แก้ไขรายการเดิม</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบบทบาท</value>
+  </data>
+  <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบบทบาทที่เปิดใช้งานในองค์กรนี้</value>
+  </data>
 </root>
