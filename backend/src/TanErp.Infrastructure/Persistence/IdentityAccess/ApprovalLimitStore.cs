@@ -36,6 +36,9 @@ public sealed class ApprovalLimitStore : IApprovalLimitStore
         join role in _db.Roles.AsNoTracking() on limit.RoleId equals role.Id
         join branch in _db.Branches.AsNoTracking() on limit.BranchId equals (Guid?)branch.Id into branches
         from branch in branches.DefaultIfEmpty()
+        // Ordered before the constructor projection: EF cannot translate OrderBy over members of a constructor-built record.
+        // The id is a stable tie-breaker so paging never skips or repeats rows.
+        orderby role.Name, limit.DocumentType, branch.Name, limit.Id
         select new LimitRow(limit, role.Name, branch == null ? null : branch.Name);
 
     private static ApprovalLimitView ToView(LimitRow r) => new(
@@ -69,10 +72,7 @@ public sealed class ApprovalLimitStore : IApprovalLimitStore
         };
 
         var total = await query.CountAsync(ct);
-        // The id is a stable tie-breaker so paging never skips or repeats rows.
-        var rows = await Rows(query)
-            .OrderBy(r => r.RoleName).ThenBy(r => r.Limit.DocumentType).ThenBy(r => r.BranchName).ThenBy(r => r.Limit.Id)
-            .Skip((q.Page - 1) * q.Limit).Take(q.Limit).ToListAsync(ct);
+        var rows = await Rows(query).Skip((q.Page - 1) * q.Limit).Take(q.Limit).ToListAsync(ct);
         return new ApprovalLimitPage(rows.Select(ToView).ToList(), total, q.Page, q.Limit);
     }
 
