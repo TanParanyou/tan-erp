@@ -3,7 +3,12 @@
  * register a new type in the backend first, then here and in messages (th + en). A type that is not listed is never
  * rendered from guesses; callers fall back to the generic "unknown" message.
  */
-export type NotificationPayloadField = "documentNumber" | "actorDisplayName" | "subjectDisplayName" | "roleName";
+export type NotificationPayloadField =
+  | "documentNumber"
+  | "actorDisplayName"
+  | "subjectDisplayName"
+  | "roleName"
+  | "daysRemaining";
 
 /** Key under `notifications.types` in the messages (JSON keys cannot contain dots). */
 export type NotificationMessageKey =
@@ -12,7 +17,8 @@ export type NotificationMessageKey =
   | "purchaseOrderApprovalRequested"
   | "changeOrderApprovalRequested"
   | "mrpRunApprovalRequested"
-  | "roleAssignmentApprovalRequested";
+  | "roleAssignmentApprovalRequested"
+  | "membershipExpiring";
 
 export interface NotificationTypeDescriptor {
   messageKey: NotificationMessageKey;
@@ -44,6 +50,10 @@ export const NOTIFICATION_TYPES = {
   "role-assignment.approval-requested": {
     messageKey: "roleAssignmentApprovalRequested",
     fields: ["subjectDisplayName", "roleName", "actorDisplayName"],
+  },
+  "membership.expiring": {
+    messageKey: "membershipExpiring",
+    fields: ["subjectDisplayName", "daysRemaining"],
   },
 } as const satisfies Record<string, NotificationTypeDescriptor>;
 

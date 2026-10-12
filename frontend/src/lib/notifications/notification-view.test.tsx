@@ -37,4 +37,15 @@ describe("notification view helpers", () => {
     expect(localizedNotificationHref("th", "//evil.test/x")).toBeNull();
     expect(localizedNotificationHref("th", "https://evil.test/x")).toBeNull();
   });
+
+  it("renders the membership expiring message from the declared fields only", () => {
+    expect(
+      textFor({
+        ...base,
+        type: "membership.expiring",
+        payload: { subjectDisplayName: "สมหญิง", daysRemaining: "7", resourceId: "m-1", parentId: "u-1" },
+        deepLink: "/settings/users/u-1",
+      }),
+    ).toBe("สิทธิ์เข้าใช้งานของ สมหญิง จะหมดอายุภายใน 7 วัน");
+  });
 });
