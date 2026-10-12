@@ -1,6 +1,6 @@
 # Approval Limit API Contract (G-03c)
 
-**สถานะ:** Draft → Implemented เมื่อ G-03c เสร็จ ([Verification](../05-engineering/approval-authority-verification.md)). ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0021](../adr/0021-approval-authority-matrix.md).
+**สถานะ:** Implemented (tests written, not run; browser not checked) — G-03c ([Verification](../05-engineering/approval-authority-verification.md)). ตัดสินใจเชิงสถาปัตยกรรมใน [ADR 0021](../adr/0021-approval-authority-matrix.md).
 
 ## Endpoints
 
