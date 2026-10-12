@@ -3263,6 +3263,90 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.IdentityAccess.ApprovalLimit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("document_type");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsUnlimited")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_unlimited");
+
+                    b.Property<decimal?>("MaxAmount")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("max_amount");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("role_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("OrganizationId", "DocumentType", "IsActive");
+
+                    b.HasIndex("OrganizationId", "RoleId", "DocumentType", "Currency")
+                        .IsUnique()
+                        .HasDatabaseName("ux_approval_limits_org_wide")
+                        .HasFilter("branch_id IS NULL");
+
+                    b.HasIndex("OrganizationId", "RoleId", "DocumentType", "BranchId", "Currency")
+                        .IsUnique()
+                        .HasDatabaseName("ux_approval_limits_branch")
+                        .HasFilter("branch_id IS NOT NULL");
+
+                    b.ToTable("approval_limits", "identity_access", t =>
+                        {
+                            t.HasCheckConstraint("ck_approval_limits_amount", "(is_unlimited AND max_amount IS NULL) OR (NOT is_unlimited AND max_amount IS NOT NULL AND max_amount >= 0)");
+
+                            t.HasCheckConstraint("ck_approval_limits_currency", "char_length(currency) = 3");
+
+                            t.HasCheckConstraint("ck_approval_limits_document_type", "document_type IN ('estimate', 'purchase_order', 'change_order', 'credit_note')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.IdentityAccess.MembershipRole", b =>
                 {
                     b.Property<Guid>("MembershipId")
@@ -9396,6 +9480,26 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("ReversedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("TanErp.Domain.IdentityAccess.ApprovalLimit", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TanErp.Domain.IdentityAccess.MembershipRole", b =>

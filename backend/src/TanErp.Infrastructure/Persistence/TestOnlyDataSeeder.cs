@@ -151,6 +151,7 @@ public static class TestOnlyDataSeeder
             ("roles.assign", "Assign Roles"),
             ("roles.assign-approval", "Approve Role Assignments"),
             ("roles.manage", "Manage Roles"),
+            ("approval-limits.manage", "Manage Approval Limits"),
             ("quotations.read", "Read Quotation Documents"),
             ("quotations.issue", "Issue Quotations"),
             ("quotations.accept", "Accept Quotations"),
@@ -256,6 +257,8 @@ public static class TestOnlyDataSeeder
             db.MembershipRoles.Add(membershipRole);
         }
         if (!role.IsSystem) role.MarkAsSystemRole();
+        await EnsureUnlimitedApprovalLimitsAsync(db, TestOrgId, role.Id,
+            ApprovalDocumentType.Estimate, ApprovalDocumentType.PurchaseOrder, ApprovalDocumentType.ChangeOrder);
 
         foreach (var perm in seededPerms)
         {
@@ -327,6 +330,8 @@ public static class TestOnlyDataSeeder
             db.MembershipRoles.Add(membershipRoleB);
         }
         if (!roleB.IsSystem) roleB.MarkAsSystemRole();
+        await EnsureUnlimitedApprovalLimitsAsync(db, TestOrgBId, roleB.Id,
+            ApprovalDocumentType.Estimate, ApprovalDocumentType.PurchaseOrder, ApprovalDocumentType.ChangeOrder);
 
         foreach (var perm in seededPerms)
         {
@@ -353,6 +358,7 @@ public static class TestOnlyDataSeeder
             costReviewerRole = new Role(Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4b25"), TestOrgId, "Test Cost Reviewer", "TEST_ONLY independent cost reviewer", isActive: true);
             db.Roles.Add(costReviewerRole);
         }
+        await EnsureUnlimitedApprovalLimitsAsync(db, TestOrgId, costReviewerRole.Id, ApprovalDocumentType.Estimate);
 
         var reviewerAssignmentExists = await db.MembershipRoles.AnyAsync(mr =>
             mr.MembershipId == TestCostReviewerMembershipId && mr.RoleId == costReviewerRole.Id && mr.OrganizationId == TestOrgId);
@@ -405,6 +411,7 @@ public static class TestOnlyDataSeeder
                     "TEST_ONLY independent estimate reviewer", isActive: true);
                 db.Roles.Add(estimateReviewerRole);
             }
+            await EnsureUnlimitedApprovalLimitsAsync(db, TestOrgId, estimateReviewerRole.Id, ApprovalDocumentType.Estimate);
 
             var estimateReviewerAssignmentExists = await db.MembershipRoles.AnyAsync(membershipRole =>
                 membershipRole.MembershipId == TestEstimateReviewerMembershipId &&
@@ -465,6 +472,22 @@ public static class TestOnlyDataSeeder
         }
 
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>TEST_ONLY: real limits are never guessed (fail-closed); only the Test environment gets unlimited rows.</summary>
+    private static async Task EnsureUnlimitedApprovalLimitsAsync(AppDbContext db, Guid organizationId, Guid roleId, params string[] documentTypes)
+    {
+        foreach (var documentType in documentTypes)
+        {
+            var exists = await db.ApprovalLimits.AnyAsync(limit =>
+                limit.OrganizationId == organizationId && limit.RoleId == roleId && limit.DocumentType == documentType &&
+                limit.BranchId == null && limit.Currency == ApprovalLimitRules.Currency);
+            if (!exists)
+            {
+                db.ApprovalLimits.Add(ApprovalLimit.Create(
+                    Guid.NewGuid(), organizationId, roleId, documentType, null, ApprovalLimitRules.Currency, true, null, DateTimeOffset.UtcNow));
+            }
+        }
     }
 
     /// <summary>
