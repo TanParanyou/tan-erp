@@ -1121,4 +1121,16 @@
   <data name="ROLE_IN_USE_DETAIL" xml:space="preserve">
     <value>The role is still held by users or has pending assignment requests. Revoke them first.</value>
   </data>
+  <data name="APPROVAL_LIMIT_EXCEEDED_TITLE" xml:space="preserve">
+    <value>Approval limit exceeded</value>
+  </data>
+  <data name="APPROVAL_LIMIT_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>The document amount is above the highest approval limit of the roles you hold. Ask someone with higher authority to approve it.</value>
+  </data>
+  <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_TITLE" xml:space="preserve">
+    <value>Approval limit not configured</value>
+  </data>
+  <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_DETAIL" xml:space="preserve">
+    <value>Your roles have no approval limit for this document type and branch. Contact an administrator.</value>
+  </data>
 </root>

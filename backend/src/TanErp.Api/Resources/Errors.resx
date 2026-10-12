@@ -1283,4 +1283,16 @@
   <data name="ROLE_IN_USE_DETAIL" xml:space="preserve">
     <value>บทบาทนี้ยังมีผู้ถืออยู่หรือมีคำขอมอบบทบาทที่รออยู่ ให้ถอนบทบาทและจัดการคำขอก่อน</value>
   </data>
+  <data name="APPROVAL_LIMIT_EXCEEDED_TITLE" xml:space="preserve">
+    <value>เกินวงเงินอนุมัติ</value>
+  </data>
+  <data name="APPROVAL_LIMIT_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>ยอดเอกสารเกินวงเงินอนุมัติสูงสุดของบทบาทที่คุณถืออยู่ กรุณาให้ผู้มีอำนาจสูงกว่าเป็นผู้อนุมัติ</value>
+  </data>
+  <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_TITLE" xml:space="preserve">
+    <value>ยังไม่ได้กำหนดวงเงินอนุมัติ</value>
+  </data>
+  <data name="APPROVAL_AUTHORITY_NOT_CONFIGURED_DETAIL" xml:space="preserve">
+    <value>บทบาทของคุณยังไม่มีวงเงินอนุมัติสำหรับเอกสารประเภทนี้ในสาขานี้ กรุณาติดต่อผู้ดูแลระบบ</value>
+  </data>
 </root>
