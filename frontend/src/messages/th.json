@@ -96,7 +96,8 @@
     "pricingTemplates": "แม่แบบราคา",
     "quickEstimateSubgroup": "ประเมินราคาเบื้องต้น",
     "organizationSettings": "ข้อมูลองค์กร",
-    "branchSettings": "สาขา"
+    "branchSettings": "สาขา",
+    "roleSettings": "บทบาทและสิทธิ์"
   },
   "common": {
     "actions": {
@@ -4103,6 +4104,126 @@
       "BRANCH_HAS_OPEN_DOCUMENTS": "สาขานี้ยังมีเอกสารหรือคลังที่ใช้งานอยู่",
       "BRANCH_HAS_ACTIVE_MEMBERSHIPS": "ยังมีผู้ใช้ที่สังกัดสาขานี้",
       "BRANCH_LAST_ACTIVE": "องค์กรต้องมีสาขาที่เปิดใช้อย่างน้อยหนึ่งสาขา",
+      "IDEMPOTENCY_KEY_REUSED": "คำขอซ้ำไม่ตรงกับคำขอเดิม กรุณาลองใหม่",
+      "PERMISSION_DENIED": "คุณไม่มีสิทธิ์ดำเนินการนี้",
+      "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"
+    }
+  },
+  "roleAdmin": {
+    "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
+    "accessDeniedDetail": "คุณไม่มีสิทธิ์จัดการบทบาทและสิทธิ์",
+    "list": {
+      "title": "บทบาทและสิทธิ์",
+      "subtitle": "สร้างและแก้ไขบทบาทจากรายการสิทธิ์ที่ระบบกำหนด",
+      "createRole": "เพิ่มบทบาท",
+      "searchPlaceholder": "ค้นหาชื่อหรือคำอธิบายบทบาท",
+      "statusFilter": "สถานะ",
+      "status": {
+        "active": "ใช้งาน",
+        "inactive": "ปิดใช้งาน"
+      },
+      "table": {
+        "name": "บทบาท",
+        "members": "ผู้ถือบทบาท",
+        "permissions": "สิทธิ์",
+        "status": "สถานะ"
+      },
+      "badges": {
+        "system": "ระบบ",
+        "requiresApproval": "ต้องมีผู้ตรวจอนุมัติ",
+        "pendingChange": "รอการอนุมัติการแก้ไข"
+      },
+      "emptyTitle": "ยังไม่มีบทบาท",
+      "emptyDescription": "เพิ่มบทบาทแรกเพื่อกำหนดสิทธิ์การใช้งาน"
+    },
+    "editor": {
+      "createTitle": "เพิ่มบทบาท",
+      "createSubtitle": "เลือกสิทธิ์จากรายการที่ระบบกำหนด",
+      "editTitle": "แก้ไขบทบาท",
+      "createSubmit": "เพิ่มบทบาท",
+      "saveSubmit": "บันทึกการเปลี่ยนแปลง",
+      "createSuccess": "เพิ่มบทบาทแล้ว",
+      "saveSuccess": "บันทึกบทบาทแล้ว",
+      "pendingSubmitted": "ส่งคำขอแก้ไขให้ผู้ตรวจอนุมัติแล้ว",
+      "backToList": "กลับไปรายการบทบาท",
+      "systemReadOnly": "บทบาทของระบบแก้ไขไม่ได้",
+      "pendingBanner": "มีคำขอแก้ไขรออนุมัติ จึงแก้ไขหรือปิดใช้งานบทบาทนี้ไม่ได้จนกว่าจะตัดสินคำขอ",
+      "approvalNotice": "การเพิ่มสิทธิ์อนุมัติให้บทบาทที่มีผู้ถืออยู่ต้องให้ผู้ตรวจอีกคนอนุมัติก่อนมีผล",
+      "fields": {
+        "name": "ชื่อบทบาท",
+        "description": "คำอธิบาย"
+      },
+      "validation": {
+        "nameRequired": "กรุณากรอกชื่อบทบาท",
+        "nameLength": "ชื่อบทบาทต้องมี 3-100 ตัวอักษร"
+      },
+      "permissions": {
+        "title": "สิทธิ์ของบทบาท",
+        "searchPlaceholder": "ค้นหาสิทธิ์",
+        "approvalTag": "สิทธิ์อนุมัติ",
+        "noMatch": "ไม่พบสิทธิ์ที่ค้นหา",
+        "selectedCount": "เลือกแล้ว {count} สิทธิ์",
+        "scopedTitle": "สิทธิ์ที่จำกัดขอบเขต (คงไว้ตามเดิม)",
+        "scopedHint": "สิทธิ์ระดับสาขาหรือของตนเองเพิ่มผ่านหน้านี้ไม่ได้ แต่จะถูกคงไว้เมื่อบันทึก",
+        "scope": {
+          "branch": "สาขา",
+          "own": "ของตนเอง"
+        }
+      }
+    },
+    "activation": {
+      "title": "สถานะบทบาท",
+      "membersCount": "ผู้ถือบทบาท {count} คน",
+      "pendingAssignments": "คำขอมอบบทบาทที่รอ {count} รายการ",
+      "inUseHint": "ต้องถอนบทบาทจากผู้ใช้และจัดการคำขอที่รออยู่ให้หมดก่อนปิดใช้งาน",
+      "deactivate": {
+        "action": "ปิดใช้งานบทบาท",
+        "message": "บทบาทนี้จะไม่แสดงในรายการมอบบทบาทอีก ยืนยันการปิดใช้งาน?",
+        "confirm": "ปิดใช้งาน",
+        "success": "ปิดใช้งานบทบาทแล้ว"
+      },
+      "activate": {
+        "action": "เปิดใช้งานบทบาท",
+        "message": "บทบาทนี้จะกลับมาให้มอบได้อีกครั้ง ยืนยันการเปิดใช้งาน?",
+        "confirm": "เปิดใช้งาน",
+        "success": "เปิดใช้งานบทบาทแล้ว"
+      }
+    },
+    "queue": {
+      "title": "คำขอแก้ไขบทบาทที่รออนุมัติ",
+      "subtitle": "ผู้ตรวจต้องเป็นคนละคนกับผู้ขอ",
+      "emptyTitle": "ไม่มีคำขอแก้ไขบทบาทที่รออนุมัติ",
+      "emptyDescription": "คำขอใหม่จะแสดงที่นี่",
+      "role": "บทบาท",
+      "requestedBy": "ผู้ขอ",
+      "requestedAt": "วันที่ขอ",
+      "changes": "การเปลี่ยนแปลง",
+      "added": "เพิ่ม",
+      "removed": "ถอน",
+      "approve": "อนุมัติ",
+      "reject": "ปฏิเสธ",
+      "approved": "อนุมัติคำขอแล้ว",
+      "rejected": "ปฏิเสธคำขอแล้ว",
+      "confirmApproveTitle": "อนุมัติการแก้ไขบทบาท",
+      "confirmApproveMessage": "ยืนยันการอนุมัติการแก้ไขบทบาท {role}?",
+      "confirmRejectTitle": "ปฏิเสธการแก้ไขบทบาท",
+      "confirmRejectMessage": "ยืนยันการปฏิเสธการแก้ไขบทบาท {role}?"
+    },
+    "errors": {
+      "GENERIC": "ดำเนินการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+      "ADMIN_VERSION_CONFLICT": "ข้อมูลถูกแก้ไขโดยผู้อื่นแล้ว กรุณาโหลดใหม่แล้วลองอีกครั้ง",
+      "ROLE_NAME_ALREADY_EXISTS": "มีบทบาทที่ใช้ชื่อนี้อยู่แล้ว",
+      "ROLE_NAME_RESERVED": "ชื่อที่ขึ้นต้นด้วย system. สงวนไว้สำหรับบทบาทของระบบ",
+      "ROLE_PERMISSION_UNKNOWN": "มีสิทธิ์ที่ไม่อยู่ในรายการสิทธิ์ของระบบ",
+      "ROLE_ESCALATION_DENIED": "คุณเพิ่มสิทธิ์ที่ตนเองไม่ได้ถืออยู่ไม่ได้",
+      "ROLE_SYSTEM_IMMUTABLE": "บทบาทของระบบแก้ไขไม่ได้",
+      "ROLE_IN_USE": "บทบาทนี้ยังมีผู้ถืออยู่หรือมีคำขอมอบบทบาทที่รออยู่",
+      "ROLE_CHANGE_REQUEST_PENDING": "บทบาทนี้มีคำขอแก้ไขที่รออนุมัติอยู่",
+      "ROLE_CHANGE_REQUEST_NOT_PENDING": "คำขอนี้ถูกตัดสินไปแล้ว",
+      "ROLE_CHANGE_REQUEST_STALE": "บทบาทเปลี่ยนไปตั้งแต่ขอ ให้ปฏิเสธคำขอนี้แล้วขอใหม่",
+      "ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED": "ผู้ตรวจต้องเป็นคนละคนกับผู้ขอ",
+      "LAST_ADMINISTRATOR_REQUIRED": "องค์กรต้องมีผู้ดูแลระบบที่ใช้งานอยู่อย่างน้อยหนึ่งคน",
+      "BRANCH_NOT_FOUND": "ไม่พบสาขาที่ระบุ",
       "IDEMPOTENCY_KEY_REUSED": "คำขอซ้ำไม่ตรงกับคำขอเดิม กรุณาลองใหม่",
       "PERMISSION_DENIED": "คุณไม่มีสิทธิ์ดำเนินการนี้",
       "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"

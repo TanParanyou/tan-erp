@@ -182,6 +182,14 @@ _Avoid_: ERP
 ชุดสิทธิ์ที่มอบให้ผู้ใช้ตามหน้าที่ เช่น ผู้ประเมินราคา หรือผู้อนุมัติ
 _Avoid_: Permission, Job Title
 
+**System Role (บทบาทระบบ)**:
+Role ที่ถูกตั้งธงโดย seed/bootstrap และแก้หรือปิดไม่ได้จากระบบ
+_Avoid_: Built-in Role by name
+
+**Role Change Request (คำขอแก้ไขบทบาท)**:
+คำขอที่รอผู้ตรวจอิสระอนุมัติเมื่อการแก้ Role เพิ่มสิทธิ์ให้ Role ที่ approval permission และมีผู้ถือออยู่
+_Avoid_: Role Assignment Request
+
 **Permission (สิทธิ์)**:
 ความสามารถเฉพาะในการทำสิ่งหนึ่งกับทรัพยากรหนึ่ง เช่น `estimates.approve`
 _Avoid_: Role, Scope

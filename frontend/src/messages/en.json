@@ -96,7 +96,8 @@
     "pricingTemplates": "Pricing templates",
     "quickEstimateSubgroup": "Quick estimate",
     "organizationSettings": "Organization",
-    "branchSettings": "Branches"
+    "branchSettings": "Branches",
+    "roleSettings": "Roles"
   },
   "common": {
     "actions": {
@@ -4103,6 +4104,126 @@
       "BRANCH_HAS_OPEN_DOCUMENTS": "This branch still has open documents or active warehouses.",
       "BRANCH_HAS_ACTIVE_MEMBERSHIPS": "Users are still assigned to this branch.",
       "BRANCH_LAST_ACTIVE": "The organization must keep at least one active branch.",
+      "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
+      "PERMISSION_DENIED": "You do not have permission to do this.",
+      "RESOURCE_NOT_FOUND": "The requested record was not found."
+    }
+  },
+  "roleAdmin": {
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedDetail": "You do not have permission to manage roles and permissions.",
+    "list": {
+      "title": "Roles and permissions",
+      "subtitle": "Create and edit roles from the system permission catalog",
+      "createRole": "Add role",
+      "searchPlaceholder": "Search role name or description",
+      "statusFilter": "Status",
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "table": {
+        "name": "Role",
+        "members": "Holders",
+        "permissions": "Permissions",
+        "status": "Status"
+      },
+      "badges": {
+        "system": "System",
+        "requiresApproval": "Needs checker",
+        "pendingChange": "Change pending"
+      },
+      "emptyTitle": "No roles yet",
+      "emptyDescription": "Add the first role to define access"
+    },
+    "editor": {
+      "createTitle": "Add role",
+      "createSubtitle": "Pick permissions from the system catalog",
+      "editTitle": "Edit role",
+      "createSubmit": "Add role",
+      "saveSubmit": "Save changes",
+      "createSuccess": "Role added",
+      "saveSuccess": "Role saved",
+      "pendingSubmitted": "Change request sent to a checker",
+      "backToList": "Back to roles",
+      "systemReadOnly": "System roles cannot be edited",
+      "pendingBanner": "A change request is awaiting approval, so this role cannot be edited or deactivated until it is decided.",
+      "approvalNotice": "Adding approval permissions to a role that people already hold needs another checker to approve before it takes effect.",
+      "fields": {
+        "name": "Role name",
+        "description": "Description"
+      },
+      "validation": {
+        "nameRequired": "Enter the role name",
+        "nameLength": "The role name must be 3-100 characters"
+      },
+      "permissions": {
+        "title": "Role permissions",
+        "searchPlaceholder": "Search permissions",
+        "approvalTag": "Approval permission",
+        "noMatch": "No permissions match",
+        "selectedCount": "{count} selected",
+        "scopedTitle": "Scoped permissions (kept as they are)",
+        "scopedHint": "Branch or own-scope permissions cannot be added here but are preserved when you save.",
+        "scope": {
+          "branch": "Branch",
+          "own": "Own"
+        }
+      }
+    },
+    "activation": {
+      "title": "Role status",
+      "membersCount": "{count} holders",
+      "pendingAssignments": "{count} pending assignment requests",
+      "inUseHint": "Revoke the role from users and settle pending requests before deactivating.",
+      "deactivate": {
+        "action": "Deactivate role",
+        "message": "This role will no longer be offered for assignment. Deactivate it?",
+        "confirm": "Deactivate",
+        "success": "Role deactivated"
+      },
+      "activate": {
+        "action": "Activate role",
+        "message": "This role can be assigned again. Activate it?",
+        "confirm": "Activate",
+        "success": "Role activated"
+      }
+    },
+    "queue": {
+      "title": "Role change requests awaiting approval",
+      "subtitle": "The checker must be a different person from the requester",
+      "emptyTitle": "No role change requests awaiting approval",
+      "emptyDescription": "New requests will appear here",
+      "role": "Role",
+      "requestedBy": "Requested by",
+      "requestedAt": "Requested on",
+      "changes": "Changes",
+      "added": "Added",
+      "removed": "Removed",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Request approved",
+      "rejected": "Request rejected",
+      "confirmApproveTitle": "Approve role change",
+      "confirmApproveMessage": "Approve the change to role {role}?",
+      "confirmRejectTitle": "Reject role change",
+      "confirmRejectMessage": "Reject the change to role {role}?"
+    },
+    "errors": {
+      "GENERIC": "The action failed. Please try again.",
+      "ADMIN_VERSION_CONFLICT": "This record was changed by someone else. Reload and try again.",
+      "ROLE_NAME_ALREADY_EXISTS": "A role with this name already exists.",
+      "ROLE_NAME_RESERVED": "Names starting with system. are reserved for built-in roles.",
+      "ROLE_PERMISSION_UNKNOWN": "A permission is not in the system catalog.",
+      "ROLE_ESCALATION_DENIED": "You cannot add permissions you do not hold yourself.",
+      "ROLE_SYSTEM_IMMUTABLE": "System roles cannot be changed.",
+      "ROLE_IN_USE": "This role is still held by users or has pending assignment requests.",
+      "ROLE_CHANGE_REQUEST_PENDING": "This role already has a change request awaiting approval.",
+      "ROLE_CHANGE_REQUEST_NOT_PENDING": "This request has already been decided.",
+      "ROLE_CHANGE_REQUEST_STALE": "The role changed after the request was made. Reject it and request again.",
+      "ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED": "The checker must be a different person from the requester.",
+      "LAST_ADMINISTRATOR_REQUIRED": "The organization must keep at least one active administrator.",
+      "BRANCH_NOT_FOUND": "The branch was not found.",
       "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
       "PERMISSION_DENIED": "You do not have permission to do this.",
       "RESOURCE_NOT_FOUND": "The requested record was not found."

@@ -105,6 +105,8 @@ builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.Assi
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.RevokeRole.RevokeAdminRoleHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.ListRoleRequests.ListAdminRoleRequestsHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.DecideRoleRequest.DecideAdminRoleRequestHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.RoleManagement.IRoleManagementStore, TanErp.Infrastructure.Persistence.IdentityAccess.RoleManagementStore>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.RoleManagement.RoleManagementHandler>();
 builder.Services.AddScoped<IRequestAccessResolver, RequestAccessResolver>();
 builder.Services.AddScoped<GetCurrentUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Users.IUserReadStore, TanErp.Infrastructure.Persistence.IdentityAccess.UserReadStore>();

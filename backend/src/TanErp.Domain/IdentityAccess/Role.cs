@@ -13,6 +13,8 @@ public class Role : Entity
     public string? Description { get; private set; }
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
+    public bool IsSystem { get; private set; }
+    public Guid RowVersion { get; private set; } = Guid.NewGuid();
 
     private readonly List<MembershipRole> _membershipRoles = new();
     public IReadOnlyCollection<MembershipRole> MembershipRoles => _membershipRoles.AsReadOnly();
@@ -22,7 +24,7 @@ public class Role : Entity
 
     protected Role() { }
 
-    public Role(Guid id, Guid organizationId, string name, string? description = null, bool isActive = true, DateTimeOffset? createdAtUtc = null)
+    public Role(Guid id, Guid organizationId, string name, string? description = null, bool isActive = true, DateTimeOffset? createdAtUtc = null, bool isSystem = false)
         : base(id)
     {
         if (organizationId == Guid.Empty)
@@ -35,6 +37,52 @@ public class Role : Entity
         NormalizedName = name.Trim().ToUpperInvariant();
         Description = description;
         IsActive = isActive;
+        IsSystem = isSystem;
         CreatedAtUtc = createdAtUtc ?? DateTimeOffset.UtcNow;
     }
+
+    public static Role CreateCustom(Guid id, Guid organizationId, string? name, string? description, DateTimeOffset createdAtUtc)
+    {
+        var (normalizedName, normalizedDescription) = RoleRules.Normalize(name, description);
+        return new Role(id, organizationId, normalizedName, normalizedDescription, isActive: true, createdAtUtc);
+    }
+
+    /// <summary>Seed/bootstrap only: no API marks a role as a system role.</summary>
+    public void MarkAsSystemRole()
+    {
+        IsSystem = true;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void EnsureMutable()
+    {
+        if (IsSystem) throw new RoleDomainException("ROLE_SYSTEM_IMMUTABLE", "A system role cannot be changed.");
+    }
+
+    public void UpdateDetails(string? name, string? description)
+    {
+        EnsureMutable();
+        var (normalizedName, normalizedDescription) = RoleRules.Normalize(name, description);
+        Name = normalizedName;
+        NormalizedName = normalizedName.ToUpperInvariant();
+        Description = normalizedDescription;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void Deactivate()
+    {
+        EnsureMutable();
+        IsActive = false;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void Activate()
+    {
+        EnsureMutable();
+        IsActive = true;
+        RowVersion = Guid.NewGuid();
+    }
+
+    /// <summary>Call after the role's permission grants change so concurrent editors are detected.</summary>
+    public void AdvanceVersion() => RowVersion = Guid.NewGuid();
 }

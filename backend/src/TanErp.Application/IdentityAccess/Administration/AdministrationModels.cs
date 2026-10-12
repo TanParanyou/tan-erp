@@ -21,12 +21,16 @@ public static class AdministrationPolicy
 {
     /// <summary>
     /// A Role containing any of these permissions needs an independent checker (maker-checker) before it takes effect.
+    /// Locked by ApprovalPermissionCoverageTests and AdministrationPolicyTests; see ADR 0020 before changing.
     /// </summary>
     public static readonly IReadOnlySet<string> ApprovalPermissionKeys = new HashSet<string>(StringComparer.Ordinal)
     {
         "estimates.approve",
         "cost-records.approve",
-        "cost-records.publish"
+        "cost-records.publish",
+        "purchase-orders.approve",
+        "projects.change-orders.approve",
+        "mrp.approve"
     };
 
     public static bool RequiresApproval(IEnumerable<string> rolePermissionKeys) =>

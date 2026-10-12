@@ -1067,4 +1067,58 @@
   <data name="BRANCH_LAST_ACTIVE_DETAIL" xml:space="preserve">
     <value>The organization must keep at least one active branch.</value>
   </data>
+  <data name="ROLE_NAME_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>Duplicate role name</value>
+  </data>
+  <data name="ROLE_NAME_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>A role with this name already exists in the organization.</value>
+  </data>
+  <data name="ROLE_NAME_RESERVED_TITLE" xml:space="preserve">
+    <value>Reserved role name</value>
+  </data>
+  <data name="ROLE_NAME_RESERVED_DETAIL" xml:space="preserve">
+    <value>Names starting with &quot;system.&quot; are reserved for built-in roles.</value>
+  </data>
+  <data name="ROLE_PERMISSION_UNKNOWN_TITLE" xml:space="preserve">
+    <value>Unknown permission</value>
+  </data>
+  <data name="ROLE_PERMISSION_UNKNOWN_DETAIL" xml:space="preserve">
+    <value>A permission is not in the active catalog.</value>
+  </data>
+  <data name="ROLE_SYSTEM_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>System role is read-only</value>
+  </data>
+  <data name="ROLE_SYSTEM_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>A system role cannot be edited, deactivated or activated.</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_PENDING_TITLE" xml:space="preserve">
+    <value>A change request is pending</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_PENDING_DETAIL" xml:space="preserve">
+    <value>This role has a change request awaiting a checker. Decide it first.</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_NOT_PENDING_TITLE" xml:space="preserve">
+    <value>This request was already decided</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_NOT_PENDING_DETAIL" xml:space="preserve">
+    <value>This role change request was already approved, rejected or cancelled.</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_STALE_TITLE" xml:space="preserve">
+    <value>The role changed after the request</value>
+  </data>
+  <data name="ROLE_CHANGE_REQUEST_STALE_DETAIL" xml:space="preserve">
+    <value>The role was edited after this request was made. Reject it and submit a new request.</value>
+  </data>
+  <data name="ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED_TITLE" xml:space="preserve">
+    <value>An independent checker is required</value>
+  </data>
+  <data name="ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED_DETAIL" xml:space="preserve">
+    <value>Approval or rejection must be made by a user other than the requester.</value>
+  </data>
+  <data name="ROLE_IN_USE_TITLE" xml:space="preserve">
+    <value>Cannot deactivate role</value>
+  </data>
+  <data name="ROLE_IN_USE_DETAIL" xml:space="preserve">
+    <value>The role is still held by users or has pending assignment requests. Revoke them first.</value>
+  </data>
 </root>

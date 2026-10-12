@@ -104,6 +104,17 @@ export type CreateAdminBranchRequest = components["schemas"]["CreateBranchReques
 export type UpdateAdminBranchRequest = components["schemas"]["UpdateBranchRequest"];
 export type DeactivateAdminBranchRequest = components["schemas"]["DeactivateBranchRequest"];
 export type BranchDeactivationCheckResponse = components["schemas"]["BranchDeactivationCheckResponse"];
+export type PermissionCatalogResponse = components["schemas"]["PermissionCatalogResponse"];
+export type RoleDefinitionListResponse = components["schemas"]["RoleDefinitionListResponse"];
+export type RoleDefinitionSummaryResponse = components["schemas"]["RoleDefinitionSummaryResponse"];
+export type RoleDefinitionResponse = components["schemas"]["RoleDefinitionResponse"];
+export type RoleGrantResponse = components["schemas"]["RoleGrantResponse"];
+export type RoleGrantRequest = components["schemas"]["RoleGrantRequest"];
+export type SaveRoleDefinitionRequest = components["schemas"]["SaveRoleDefinitionRequest"];
+export type UpdateRoleDefinitionResponse = components["schemas"]["UpdateRoleDefinitionResponse"];
+export type RoleChangeRequestResponse = components["schemas"]["RoleChangeRequestResponse"];
+export type RoleChangeRequestListResponse = components["schemas"]["RoleChangeRequestListResponse"];
+export type RoleDefinitionListParams = NonNullable<paths["/api/v1/admin/role-definitions"]["get"]["parameters"]["query"]>;
 
 export type AdminUserListParams = NonNullable<paths["/api/v1/admin/users"]["get"]["parameters"]["query"]>;
 
@@ -1306,6 +1317,58 @@ export class ApiClient {
       "POST",
       options
     );
+  }
+
+  async listAdminPermissions(options: RequestOptions): Promise<PermissionCatalogResponse> {
+    return this.request<PermissionCatalogResponse>("/api/v1/admin/permissions", "GET", options);
+  }
+
+  async listRoleDefinitions(params: RoleDefinitionListParams, options: RequestOptions): Promise<RoleDefinitionListResponse> {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.status) query.set("status", params.status);
+    if (params.sortBy) query.set("sortBy", params.sortBy);
+    if (params.sortOrder) query.set("sortOrder", params.sortOrder);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString();
+    return this.request<RoleDefinitionListResponse>(`/api/v1/admin/role-definitions${suffix ? `?${suffix}` : ""}`, "GET", options);
+  }
+
+  async getRoleDefinition(roleId: string, options: RequestOptions): Promise<RoleDefinitionResponse> {
+    return this.request<RoleDefinitionResponse>(`/api/v1/admin/role-definitions/${encodeURIComponent(roleId)}`, "GET", options);
+  }
+
+  async createRoleDefinition(payload: SaveRoleDefinitionRequest, options: RequestOptions): Promise<RoleDefinitionResponse> {
+    return this.request<RoleDefinitionResponse>("/api/v1/admin/role-definitions", "POST", options, payload);
+  }
+
+  async updateRoleDefinition(
+    roleId: string,
+    payload: SaveRoleDefinitionRequest,
+    options: RequestOptions
+  ): Promise<UpdateRoleDefinitionResponse> {
+    return this.request<UpdateRoleDefinitionResponse>(
+      `/api/v1/admin/role-definitions/${encodeURIComponent(roleId)}`, "PUT", options, payload);
+  }
+
+  async setRoleDefinitionActive(roleId: string, active: boolean, options: RequestOptions): Promise<RoleDefinitionResponse> {
+    return this.request<RoleDefinitionResponse>(
+      `/api/v1/admin/role-definitions/${encodeURIComponent(roleId)}/${active ? "activate" : "deactivate"}`, "POST", options);
+  }
+
+  async listRoleChangeRequests(status: string, options: RequestOptions): Promise<RoleChangeRequestListResponse> {
+    return this.request<RoleChangeRequestListResponse>(
+      `/api/v1/admin/role-change-requests?status=${encodeURIComponent(status)}`, "GET", options);
+  }
+
+  async decideRoleChangeRequest(
+    requestId: string,
+    decision: "approve" | "reject" | "cancel",
+    options: RequestOptions
+  ): Promise<RoleChangeRequestResponse> {
+    return this.request<RoleChangeRequestResponse>(
+      `/api/v1/admin/role-change-requests/${encodeURIComponent(requestId)}/${decision}`, "POST", options);
   }
 
   async listDocumentSequences(

@@ -150,6 +150,7 @@ public static class TestOnlyDataSeeder
             ("memberships.manage", "Manage Memberships"),
             ("roles.assign", "Assign Roles"),
             ("roles.assign-approval", "Approve Role Assignments"),
+            ("roles.manage", "Manage Roles"),
             ("quotations.read", "Read Quotation Documents"),
             ("quotations.issue", "Issue Quotations"),
             ("quotations.accept", "Accept Quotations"),
@@ -254,6 +255,7 @@ public static class TestOnlyDataSeeder
             var membershipRole = new MembershipRole(TestMembershipId, role.Id, TestOrgId);
             db.MembershipRoles.Add(membershipRole);
         }
+        if (!role.IsSystem) role.MarkAsSystemRole();
 
         foreach (var perm in seededPerms)
         {
@@ -324,6 +326,7 @@ public static class TestOnlyDataSeeder
             var membershipRoleB = new MembershipRole(TestMembershipBId, roleB.Id, TestOrgBId);
             db.MembershipRoles.Add(membershipRoleB);
         }
+        if (!roleB.IsSystem) roleB.MarkAsSystemRole();
 
         foreach (var perm in seededPerms)
         {

@@ -22,7 +22,7 @@
 2. **ผูกตัวตน:** `GET /api/v1/me` ผูก UID ให้ pending user ที่ active เมื่อ token มี `email_verified = true` และอีเมลตรงเท่านั้น; ผู้ใช้ที่ผูกแล้วไม่ถูกผูกซ้ำ; ไม่มี email_verified ไม่ผูก; บันทึก Audit `users.identity-linked`
 3. **Last administrator:** "ผู้ดูแล" คือผู้ใช้ active ที่มี Membership active ซึ่งมี `users.manage` ระดับ organization. การถอน Role, ปิด Membership หรือปิดผู้ใช้ที่ทำให้ Organization ไม่เหลือผู้ดูแล active คืน `422 LAST_ADMINISTRATOR_REQUIRED` (ตรวจใน transaction แบบ serializable)
 4. **Anti-escalation:** มอบ Role ได้เมื่อ permission ทุกรายการของ Role อยู่ในชุดที่ผู้มอบถืออยู่ (key เดียวกัน, Scope เท่ากันหรือกว้างกว่า) มิฉะนั้น `403 ROLE_ESCALATION_DENIED`; มอบ/ถอน Role ของ Membership ตนเองไม่ได้ (`403 SELF_ROLE_CHANGE_FORBIDDEN`)
-5. **Maker–checker:** Role ที่มี `estimates.approve`, `cost-records.approve` หรือ `cost-records.publish` ไม่มีผลทันที: การมอบสร้างคำขอ `pending` (`202`). ผู้ตัดสินต้องมี `roles.assign-approval`, เป็นคนละคนกับผู้ขอ และผ่านกฎ anti-escalation. คำขอที่ pending ซ้ำ Membership+Role เดียวกันคืน `409`
+5. **Maker–checker:** Role ที่มี `estimates.approve`, `cost-records.approve`, `cost-records.publish`, `purchase-orders.approve`, `projects.change-orders.approve` หรือ `mrp.approve` ไม่มีผลทันที: การมอบสร้างคำขอ `pending` (`202`). ผู้ตัดสินต้องมี `roles.assign-approval`, เป็นคนละคนกับผู้ขอ และผ่านกฎ anti-escalation. คำขอที่ pending ซ้ำ Membership+Role เดียวกันคืน `409`. ชุดนี้ล็อกด้วย test และอธิบายใน [ADR 0020](../adr/0020-role-management-and-approval-permission-set.md)
 6. **มีผลทันที:** ผลการถอนสิทธิ์/ปิดใช้ถูกตรวจจาก PostgreSQL ทุก request (ไม่มี cache ของสิทธิ์)
 7. **Audit:** ทุกการเปลี่ยนแปลงบันทึก AuditEvent (ผู้กระทำ, resource, ก่อน/หลัง row version, trace id). ไม่เก็บอีเมล/ชื่อใน `changes`
 

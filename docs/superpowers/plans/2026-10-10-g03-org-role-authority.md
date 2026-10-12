@@ -117,9 +117,44 @@ G-03 ใหญ่เกินกว่าจะ merge ครั้งเดี�
 | `frontend/src/components/layout/SidebarNav.tsx` (แก้) | เมนู Organization/Branches |
 | `frontend/src/messages/th.json`, `en.json` (แก้) | namespace `organizationAdmin` + nav keys |
 
-### G-03b / G-03c
+### G-03b — Role management
 
-ตาราง File Structure ของ G-03b และ G-03c จะถูกเพิ่มใน Part 2 และ Part 3 ด้านล่าง.
+#### Docs
+
+| ไฟล์ | หน้าที่ |
+| --- | --- |
+| `docs/adr/0020-role-management-and-approval-permission-set.md` (ใหม่), `docs/adr/README.md` (แก้) | ADR: system role ด้วย flag, maker–checker เมื่อเพิ่ม grant ให้ Role ที่มีผู้ถือ, ปิด Role ต้องไม่มีผู้ถือ, ขยาย approval set, ความเสี่ยงคงเหลือ R1/R2 |
+| `docs/03-contracts/role-management-api-contract.md` (ใหม่) | สัญญา API/ฟิลด์/validation/error/audit ของ G-03b |
+| `docs/03-contracts/{permission-catalog,error-contract,identity-administration-api-contract}.md`, `docs/README.md`, `CONTEXT.md` (แก้) | คำอธิบาย `roles.manage`, 9 error code, approval set 6 ตัว, แผนที่เอกสาร, ศัพท์ System Role / Role Change Request |
+| `docs/05-engineering/role-management-verification.md` (ใหม่), `docs/00-overview/implementation-roadmap.md`, `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md` (แก้) | หลักฐานการทดสอบ + สถานะ G-03b (ไม่แตะ G-03c) |
+
+#### Backend
+
+| ไฟล์ | หน้าที่ |
+| --- | --- |
+| `backend/src/TanErp.Domain/IdentityAccess/{Role.cs (แก้), RoleValues.cs, RoleChangeRequest.cs}` | `IsSystem`, `RowVersion`, `UpdateDetails/Deactivate/Activate`, `RoleRules`, entity คำขอแก้ Role |
+| `backend/src/TanErp.Application/IdentityAccess/Administration/AdministrationModels.cs` (แก้) | ขยาย `ApprovalPermissionKeys` เป็น 6 ตัว |
+| `backend/src/TanErp.Application/IdentityAccess/RoleManagement/{RoleManagementModels,RoleManagementPolicy,IRoleManagementStore,RoleManagementHandler}.cs` | models, นโยบาย (shape/diff/needs-checker), port, handler (permission ก่อน existence) |
+| `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/{IdentityAdministrationSupport.cs (ใหม่, Global Reuse), IdentityAdministrationStore.cs (แก้), RoleManagementStore.cs}` | helper ร่วม, store (EF Core, Serializable, audit, Idempotency, ETag) |
+| `backend/src/TanErp.Infrastructure/Persistence/{AppDbContext.cs, TestOnlyDataSeeder.cs}`, `Configurations/{RoleConfiguration,RoleChangeRequestConfiguration}.cs`, `Migrations/*_AddRoleManagement*.cs` | `is_system`, `row_version`, ตาราง `role_change_requests`, seed `roles.manage` + system role |
+| `backend/src/TanErp.Api/Contracts/IdentityAccess/RoleManagement/RoleManagementContracts.cs`, `Controllers/AdminRolesController.cs`, `ErrorHandling/ProblemDetailsMapper.cs`, `Resources/Errors{,.en}.resx`, `Program.cs` | endpoints `api/v1/admin/{permissions,role-definitions,role-change-requests}`, error th/en, DI |
+| `contracts/openapi/tan-erp.v1.json` (regenerate) | snapshot |
+| `backend/tests/TanErp.UnitTests/IdentityAccess/{RoleDomainTests,RoleChangeRequestTests,RoleManagementPolicyTests,ApprovalPermissionCoverageTests,AdministrationPolicyTests}.cs`, `Organization/PermissionCatalogParityTests.cs` | domain + policy + test ล็อก approval set |
+| `backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs` | endpoint tests ทั้งหมดของ G-03b |
+
+#### Frontend
+
+| ไฟล์ | หน้าที่ |
+| --- | --- |
+| `frontend/src/generated/api/tan-erp.v1.ts` (regenerate), `frontend/src/lib/api/api-client.ts` (+ test) | types + methods |
+| `frontend/src/features/settings/role-management/{role-management-errors.ts (+test), api/role-management-queries.ts}` | whitelist error → key, hooks + query keys |
+| `frontend/src/features/settings/role-management/components/{role-definition-list,permission-grant-picker,role-definition-editor,role-activation-panel,role-change-request-queue}.tsx` (+ `.test.tsx`) | รายการ, picker สิทธิ์, editor, ปิด/เปิดใช้, คิวผู้ตรวจ |
+| `frontend/src/app/[locale]/(erp)/settings/roles/{page.tsx,[id]/page.tsx}`, `settings/role-requests/page.tsx` (แก้) | routes |
+| `frontend/src/components/layout/SidebarNav.tsx` (+ test), `frontend/src/messages/{th,en}.json` (แก้) | เมนู "บทบาทและสิทธิ์", namespace `roleAdmin` |
+
+### G-03c
+
+ตาราง File Structure ของ G-03c จะถูกเพิ่มใน Part 3 ด้านล่าง.
 
 ---
 
@@ -4449,6 +4484,4868 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 
 ---
 
-## Part 2: G-03b Role management (tasks to be appended)
+# Part 2: G-03b Role management
+
+> G-03a merge แล้ว (PR #19). Part 2 ใช้รูปแบบเดียวกับ Part 1 (handler เดียว + store แยก + `SerializableTransactionRunner`) บน branch `feat/g03b-role-management`. ทุก Task คอมไพล์และผ่าน test ของตัวเองก่อน commit; ใช้ `--filter` ตามที่ระบุเท่านั้น (ห้ามรัน IntegrationTests ทั้งโปรเจกต์ ~12+ นาที).
+
+> **เวลารัน:** `RoleManagementEndpointsTests` เริ่ม PostgreSQL container ใหม่ต่อ `[Fact]` (รูปแบบเดียวกับ test class อื่นของ repo) ประมาณ 10–20 วินาทีต่อเคส — ระหว่างพัฒนาให้ใช้ filter ระดับเมธอด เช่น `--filter "FullyQualifiedName~RoleManagementEndpointsTests.Create_"` แล้วรันทั้งคลาสครั้งเดียวก่อน commit (ตามคำสั่งที่ระบุในแต่ละ Task).
+
+## Part 2 — Findings จากการอ่านโค้ดจริง (ตรวจแล้ว)
+
+| หัวข้อ | สิ่งที่พบ | ผลต่อแผน |
+| --- | --- | --- |
+| `Role` ยังไม่รองรับการแก้ไข | `Domain/IdentityAccess/Role.cs:6-40` มีเฉพาะ constructor; ไม่มี `IsSystem`, ไม่มี `RowVersion`, ไม่มีเมธอดแก้ชื่อ/เปิด-ปิด. ตาราง `identity_access.roles` unique `ix_roles_organization_id_normalized_role_name` (`RoleConfiguration.cs:25`) | ต้อง migration เพิ่ม `is_system` + `row_version`; "Role ระบบ" ต้องเป็น **คอลัมน์ flag** ไม่ใช่การเช็คชื่อ (`backend/AGENTS.md` ข้อ 5 ห้ามตรวจชื่อ Role) |
+| endpoint Role เดิม | `GET /api/v1/admin/roles` (`AdminUsersController.cs:175-186`) คือรายการ Role สำหรับ **มอบ** (permission `roles.assign`, เฉพาะ `IsActive`, ไม่มี pagination — `IdentityAdministrationStore.cs:78-101`) | ไม่แตะ/ไม่ reuse URL นี้; endpoint จัดการใช้ `api/v1/admin/role-definitions` และ catalog `api/v1/admin/permissions` |
+| Role ที่ปิดใช้ = สิทธิ์หายทันที | `RequestAccessResolver.cs:42,127,180` กรอง `mr.Role!.IsActive`; `LoadPermissionsAsync` (`IdentityAdministrationStore.cs:621-627`), `WouldRemoveLastAdministratorAsync` (:647-668) กรองเหมือนกัน | ปิด Role ที่ยังมีผู้ถือ = ถอนสิทธิ์เงียบ ๆ จากทุกคน → ตัดสินใจ fail-closed (D4) |
+| anti-escalation / approval set | `AdministrationPolicy.ApprovalPermissionKeys` = `estimates.approve`, `cost-records.approve`, `cost-records.publish` (`AdministrationModels.cs:25-30`); `Covers` (:43); `WouldRemoveLastAdministrator` (:53). test เดิม `AdministrationPolicyTests.cs:56-66` | ขยาย set (D5) + test ล็อกชุดค่า |
+| maker–checker ต้นแบบ | `RoleAssignmentRequest` (`Domain/IdentityAccess/RoleAssignmentRequest.cs`), config + partial unique `ux_role_assignment_requests_pending` + check ผู้ตรวจ ≠ ผู้ขอ (`RoleAssignmentRequestConfiguration.cs:12-16,30-34`), การตัดสิน `IdentityAdministrationStore.cs:407-471`, การมอบ `:303-379` | สร้าง `RoleChangeRequest` รูปแบบเดียวกัน (D3); ใช้ enum เดิม `RoleRequestDecision` และค่าคงที่ `RoleAssignmentRequestStatus` |
+| helper ที่ private | `LoadPermissionsAsync` :621, `WouldRemoveLastAdministratorAsync` :647 (ดึงแถว administrator), `AddAudit` :670, `EscapeLike` :689 ใน `IdentityAdministrationStore.cs`; `RunAsync` :486 ถูก extract ไป `SerializableTransactionRunner` แล้ว (G-03a) | Task 5 (Global Reuse) extract 4 helper ที่เหลือเป็น `IdentityAdministrationSupport` |
+| รูปแบบ G-03a ที่ merge แล้ว | handler เดียว `OrganizationAdministrationHandler.cs:10-108` (permission ก่อน existence), store `Persistence/Organization/OrganizationAdministrationStore.cs` แต่ **namespace จริงคือ `TanErp.Infrastructure.Persistence.OrganizationAdministration`** (ต่างจากที่ Part 1 เขียน `...Persistence.Organization`), DI `Program.cs:92-107`, controller `AdminOrganizationController.cs` (`[Route("api/v1/admin")]`) | Part 2 วาง store ที่ `Persistence/IdentityAccess/RoleManagementStore.cs` (namespace `TanErp.Infrastructure.Persistence.IdentityAccess` — ไม่มีชื่อ `Organization` ชนกัน) |
+| Seeder | `roles.manage` **ไม่ถูก seed** (`TestOnlyDataSeeder.cs:117-119,151-152` มี `organizations.*`, `roles.assign`, `roles.assign-approval`); Test Admin ได้ทุก permission ที่ seed (`:251-266`); `Test Admin B` `:318-336`; มีคีย์ `*.approve` อื่นที่ไม่อยู่ใน set: `boms.approve` :175, `pricing-templates.approve` :197, และ `quick-estimates.review` :201 | seed `roles.manage` + mark Test Admin เป็น system role; test coverage กวาดคีย์ `*.approve/publish/review` ใน seeder (D5) |
+| FE/Docs มี `roles.manage` แล้ว | `frontend/src/lib/permissions/permissions.ts:15`, `docs/03-contracts/permission-catalog.md:15` ("จัด Role และ Permission") | ใช้คีย์เดิม; ปรับคำอธิบายในเอกสาร |
+| ADR/Migration | ADR ล่าสุด `0019-organization-branch-administration.md` → ใหม่คือ **0020**; migration ล่าสุดเป็นของ G-03a (`AddOrganizationProfileAndBranchDetails`) | |
+| OpenAPI snapshot | `OpenApiContractTests.cs:254` เขียน `contracts/openapi/tan-erp.v1.json` เมื่อตั้ง `UPDATE_OPENAPI=1`; FE type ด้วย `npm run generate:api` (`frontend/package.json:12-13`). Commit `8a8be98` เปลี่ยนไฟล์ snapshot + `tan-erp.v1.ts` ตรงกับกลไกนี้ | Task 11 ใช้ `UPDATE_OPENAPI=1` + `generate:api` (ไม่ใช้ live swagger) |
+
+### ข้อที่ Part 1 / Findings เดิมคลาดเคลื่อน (แก้ในแผนนี้ ไม่แก้ Part 1)
+
+1. namespace ของ G-03a store คือ `...Persistence.OrganizationAdministration` (Part 1 เขียน `...Persistence.Organization`).
+2. Findings เดิมกล่าวถึง "Role ระบบแก้ไม่ได้" แต่ไม่ได้ระบุว่า `Role` **ไม่มีทั้ง flag ระบบและ `RowVersion`** (ต้อง migration) และ validation question 6 เสนอ "ชื่อขึ้นต้น `system.`" ซึ่งใช้เป็นกฎ **สงวนชื่อตอนสร้าง** ได้เท่านั้น ห้ามใช้ตัดสินสิทธิ์.
+3. Findings เดิมนับ approval permission 6 ตัวแต่ไม่ได้ชี้ว่า `boms.approve`, `pricing-templates.approve`, `quick-estimates.review` ก็เป็นคีย์ลักษณะอนุมัติที่ยังนอก set.
+4. ADR เลขถัดไปตอนนี้คือ 0020 (Part 1 เขียน 0019 สำหรับ G-03a — merge แล้ว).
+
+## Part 2 — การตัดสินใจ (Decisions) ที่ผู้ใช้อาจ veto
+
+| # | ตัดสินใจ | เหตุผล |
+| --- | --- | --- |
+| D1 | **System Role = คอลัมน์ `is_system`** (แก้/ปิด/เปิดไม่ได้ทุกกรณี). Backfill = ไม่มี Role ไหนเป็น system จาก migration (production ยังไม่มี seed Role); seeder (Test) mark `Test Admin`/`Test Admin B` เป็น system. API ไม่มีทางสร้าง/ตั้ง flag นี้ | ไม่ใช้ชื่อเป็นตัวตัดสิน; ชื่อขึ้นต้น `system.` ถูกสงวนไม่ให้สร้างเองเพื่อกันสับสน |
+| D2 | **ขอบเขตการแก้:** ชื่อ, คำอธิบาย, ชุด grant (`organization`/`branch`/`own`). Anti-escalation (`Covers`) ตรวจ **เฉพาะ grant ที่เพิ่ม** (การถอนสิทธิ์ทำได้เสมอ); แก้ Role ที่ถืออยู่เองได้ (ไม่ใช่ `SELF_ROLE_CHANGE_FORBIDDEN` เพราะเพิ่มได้เฉพาะสิ่งที่ตนถืออยู่แล้ว). FE G-03b เลือก/ถอน grant ระดับ `organization` ได้; grant ระดับ `branch`/`own` ที่มีอยู่ถูก **คงไว้และส่งกลับตามเดิม** แต่เพิ่มใหม่ผ่าน UI ไม่ได้ (API เพิ่มได้) | ลดขนาด UI โดยไม่ทำให้ข้อมูลหาย |
+| D3 | **Maker–checker เมื่อไร:** การแก้ (PUT) ที่ **เพิ่ม grant** ให้ Role ที่ (ก) มีผู้ถืออยู่ ≥ 1 แถวใน `membership_roles` และ (ข) Role หลังแก้ `RequiresApproval` → ไม่มีผลทันที: สร้าง `RoleChangeRequest` (202). การสร้าง Role ใหม่ และการแก้ Role ที่ไม่มีผู้ถือ มีผลทันที เพราะการ **มอบ** Role ที่ RequiresApproval ถูกคุมด้วย `RoleAssignmentRequest` (CP-02) อยู่แล้ว. การถอน grant ไม่ต้องมีผู้ตรวจ (ลดอำนาจ = fail-safe). ผู้ตัดสิน: `roles.assign-approval`, ≠ ผู้ขอ, ต้อง `Covers` grant ที่เพิ่ม, Role ต้องไม่เปลี่ยนจากตอนขอ (`ROLE_CHANGE_REQUEST_STALE`). ระหว่างมีคำขอค้าง แก้/ปิด Role ไม่ได้ (`ROLE_CHANGE_REQUEST_PENDING`). **ไม่มี notification ใน G-03b** (ผู้ตรวจเห็นที่คิว `settings/role-requests`) | ปิดช่องโหว่ "เพิ่ม approval permission ให้ Role ที่คนถืออยู่โดยไม่มีผู้ตรวจ" โดยไม่ทำซ้ำกฎที่มีอยู่ |
+| D4 | **ปิด Role (deactivate):** ปิดไม่ได้ถ้ามีแถว `membership_roles` ใด ๆ (รวม Membership ที่ inactive) หรือมี `RoleAssignmentRequest` ที่ pending → `409 ROLE_IN_USE`; ปิดไม่ได้ถ้ามี `RoleChangeRequest` pending; Role ระบบปิดไม่ได้. ไม่มีการถอน Role ให้อัตโนมัติ. เปิดใช้ได้เสมอ (ไม่มีผู้ถือจึงไม่ขยายอำนาจ; การมอบยังต้องผ่าน CP-02) | fail-closed: ไม่ถอนสิทธิ์ผู้ใช้เงียบ ๆ และไม่ทำให้ระบบหลุด last-administrator; ผู้ดูแลต้องถอน Role ที่ `/settings/users` ก่อน (มี audit เดิม) |
+| D5 | **ขยาย `ApprovalPermissionKeys`** เป็น 6 ตัว: เดิม 3 + `purchase-orders.approve`, `projects.change-orders.approve`, `mrp.approve`. ผลต่อ CP-02: Role ที่มีคีย์เหล่านี้จะ **ต้อง maker–checker ตอนมอบ** (พฤติกรรมเดิมเปลี่ยน). `boms.approve`, `pricing-templates.approve`, `quick-estimates.review` **ไม่ใส่** (ไม่ใช่อำนาจอนุมัติเงิน/สัญญา — ต้องให้ Business Owner ยืนยัน) และถูกบันทึกในรายการ "reviewed-not-approval" ของ test. `roles.manage`/`roles.assign-approval` (meta-privilege) **ไม่ใส่** — เป็นความเสี่ยงคงเหลือ R1 ใน ADR 0020 (เพิ่มภายหลังได้ด้วยการแก้ set + test ล็อกบรรทัดเดียว) | ตามที่ผู้ใช้ขอ; test กวาด seeder ทำให้คีย์ `*.approve` ใหม่ต้องถูกตัดสินใจ ไม่หลุดเงียบ |
+| D6 | **URL:** `GET /admin/permissions` (catalog, `roles.manage`), `GET|POST /admin/role-definitions`, `GET|PUT /admin/role-definitions/{id}`, `POST .../deactivate|activate`, `GET /admin/role-change-requests` (`roles.assign-approval`), `POST /admin/role-change-requests/{id}/approve|reject|cancel` (cancel = `roles.manage`, ผู้ขอเท่านั้น) | แยกจาก `GET /admin/roles` (assign picker) ไม่ให้สองความหมาย/สองสิทธิ์อยู่บน URL เดียว |
+| D7 | **Pagination/search:** รายการ Role ใช้ `search` (ILIKE ชื่อ/คำอธิบาย, escape `%_\`), `status=active\|inactive`, `sortBy=name\|createdAt`, `sortOrder`, `page`, `limit` (≤100, tie-breaker `Id`), response `{ items, pagination }` ใช้ `AdminPaginationResponse` เดิม; sort/status ผิดคืน `400 REQUEST_VALIDATION_FAILED` (ตามที่ G-03a ทำกับ status) | ตามมาตรฐาน API skill ข้อ 3-4 |
+| D8 | **Audit:** เก็บ id, ชื่อฟิลด์ที่เปลี่ยน, จำนวน และ **permission key** ที่เพิ่ม/ถอน (key เป็น catalog identifier ไม่ใช่ข้อมูลส่วนบุคคล) ห้ามเก็บชื่อ/คำอธิบายของ Role | audit การเปลี่ยนอำนาจต้องบอกได้ว่าอำนาจไหนเปลี่ยน |
+| D9 | `RoleChangeRequest` เป็น entity แยก และ **ทำซ้ำ logic Try* ~20 บรรทัด** แทนการสร้าง base class ร่วมกับ `RoleAssignmentRequest` (เลี่ยงแตะ entity ของ CP-02); ทบทวนเมื่อมี maker–checker ตัวที่ 3 | minimal blast radius |
+
+## Part 2 — สรุป API contract
+
+| Method | Path | Permission | หมายเหตุ |
+| --- | --- | --- | --- |
+| GET | `/api/v1/admin/permissions` | `roles.manage` | catalog `{ items: [{ key, description, isApprovalPermission }] }` |
+| GET | `/api/v1/admin/role-definitions` | `roles.manage` | `search,status,sortBy,sortOrder,page,limit` → `{ items, pagination }` |
+| GET | `/api/v1/admin/role-definitions/{id}` | `roles.manage` | รายละเอียด + grants + `ETag`; other-org id → 404 |
+| POST | `/api/v1/admin/role-definitions` | `roles.manage` | `Idempotency-Key`; 201 + `ETag` |
+| PUT | `/api/v1/admin/role-definitions/{id}` | `roles.manage` | `If-Match`; 200 (มีผลแล้ว) หรือ 202 (สร้างคำขอ) |
+| POST | `/api/v1/admin/role-definitions/{id}/deactivate` / `activate` | `roles.manage` | `If-Match` |
+| GET | `/api/v1/admin/role-change-requests?status=pending` | `roles.assign-approval` | คิวผู้ตรวจ พร้อม `addedPermissionKeys/removedPermissionKeys` |
+| POST | `/api/v1/admin/role-change-requests/{id}/approve` / `reject` | `roles.assign-approval` | `If-Match` (rowVersion ของคำขอ) |
+| POST | `/api/v1/admin/role-change-requests/{id}/cancel` | `roles.manage` | `If-Match`; ผู้ขอเท่านั้น |
+
+Error ใหม่ 9 รหัส: `ROLE_NAME_ALREADY_EXISTS` 409, `ROLE_NAME_RESERVED` 422, `ROLE_PERMISSION_UNKNOWN` 422, `ROLE_SYSTEM_IMMUTABLE` 409, `ROLE_IN_USE` 409, `ROLE_CHANGE_REQUEST_PENDING` 409, `ROLE_CHANGE_REQUEST_NOT_PENDING` 409, `ROLE_CHANGE_REQUEST_STALE` 409, `ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED` 403. ใช้ซ้ำ: `ROLE_ESCALATION_DENIED`, `LAST_ADMINISTRATOR_REQUIRED`, `BRANCH_NOT_FOUND`, `ADMIN_VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`, `REQUEST_VALIDATION_FAILED`, `RESOURCE_NOT_FOUND`, `PERMISSION_DENIED`.
+
+Audit action: `roles.created`, `roles.updated`, `roles.change-requested`, `roles.change-approved`, `roles.change-rejected`, `roles.change-cancelled`, `roles.deactivated`, `roles.activated`.
+
+## Part 2 — Task Map
+
+| Task | เรื่อง | commit |
+| --- | --- | --- |
+| 1 | ADR 0020, API contract, catalog/error/CONTEXT (docs) | `docs(roles): add role management ADR and contract` |
+| 2 | Domain: `Role` แก้ได้ + `is_system`, `RoleChangeRequest` | `feat(roles): add role editing rules and change request entity` |
+| 3 | Application: models, `RoleManagementPolicy`, ขยาย `ApprovalPermissionKeys` + test ล็อก | `feat(roles): add role management policy and extend approval permission set` |
+| 4 | EF config, migration, seed `roles.manage`/system role | `feat(roles): persist system flag, row version and role change requests` |
+| 5 | **Global Reuse** extract `IdentityAdministrationSupport` | `refactor(identity): share administration query helpers` |
+| 6 | API อ่าน: catalog, รายการ (search/pagination), รายละเอียด + test harness | `feat(roles): add role catalog, list and detail endpoints` |
+| 7 | API สร้าง Role (Idempotency, anti-escalation) | `feat(roles): add role creation endpoint` |
+| 8 | API แก้ Role (system immutable, grant diff, maker–checker, last-admin) | `feat(roles): add role update with maker-checker` |
+| 9 | API ตัดสินคำขอแก้ Role | `feat(roles): add role change request decisions` |
+| 10 | API ปิด/เปิด Role (`ROLE_IN_USE`) | `feat(roles): add role deactivation and activation` |
+| 11 | OpenAPI snapshot, generated types, API client | `feat(roles): add role management api client` |
+| 12 | FE foundation: messages th/en, error whitelist, hooks | `feat(roles): add role management translations, error map and query hooks` |
+| 13 | FE: รายการ Role, route, เมนู | `feat(roles): add role list page and settings menu` |
+| 14 | FE: editor + permission picker + activation panel | `feat(roles): add role editor, permission picker and activation panel` |
+| 15 | FE: คิวคำขอแก้ Role | `feat(roles): add role change request queue` |
+| 16 | Verification, เอกสารสถานะ (G-03b เท่านั้น) | `docs(roles): record G-03b verification and update status` |
+
+---
+
+## Task 1: ADR 0020, สัญญา API, permission catalog, error codes, ศัพท์ (docs)
+
+**Files:**
+- Create: `docs/adr/0020-role-management-and-approval-permission-set.md`, `docs/03-contracts/role-management-api-contract.md`
+- Modify: `docs/adr/README.md`, `docs/03-contracts/permission-catalog.md`, `docs/03-contracts/error-contract.md`, `docs/03-contracts/identity-administration-api-contract.md`, `docs/README.md`, `CONTEXT.md`
+
+ขั้นนี้เป็นเอกสาร ไม่มี test ที่รันได้ — ตรวจด้วย link check ใน Step 6.
+
+- [ ] **Step 1: สร้าง ADR 0020**
+
+เขียน `docs/adr/0020-role-management-and-approval-permission-set.md` (ภาษาไทย รูปแบบเดียวกับ ADR 0019):
+
+```markdown
+---
+status: accepted
+---
+
+# Role Management: system role ด้วย flag, maker–checker เมื่อเพิ่มอำนาจอนุมัติให้ Role ที่มีผู้ถือ, ปิด Role ต้องไม่มีผู้ถือ, ขยาย Approval Permission Set
+
+ก่อน G-03b Role ถูกสร้างได้เฉพาะจาก seed/DB และแก้ไม่ได้จากระบบ. G-03b เพิ่มการสร้าง/แก้/ปิดใช้ Role จาก Permission catalog ที่มีอยู่ โดยรักษา invariant ของ CP-02 (anti-escalation, maker–checker, last administrator).
+
+**การตัดสินใจ 1 — System Role คือคอลัมน์ `is_system`:** Role ระบบแก้ชื่อ/คำอธิบาย/grant และปิด-เปิดไม่ได้ (`409 ROLE_SYSTEM_IMMUTABLE`) ไม่มี API ที่ตั้ง flag นี้ (seed/bootstrap เท่านั้น). ไม่ตรวจชื่อ Role เพื่อตัดสินสิทธิ์ (`backend/AGENTS.md` ข้อ 5); ชื่อขึ้นต้น `system.` ถูกสงวนตอนสร้างเพื่อไม่ให้สับสนเท่านั้น.
+
+**การตัดสินใจ 2 — anti-escalation ตรวจเฉพาะ grant ที่เพิ่ม:** ผู้แก้ต้องถือ permission ของ grant ที่เพิ่มด้วย `AdministrationPolicy.Covers` เดิม (Scope เท่ากันหรือกว้างกว่า). การถอน grant ทำได้เสมอ. การลบ `users.manage` ออกจาก Role ที่เป็นแหล่งผู้ดูแลคนสุดท้ายถูกปฏิเสธด้วย `LAST_ADMINISTRATOR_REQUIRED` (ใช้ query ผู้ดูแลชุดเดียวกับ CP-02).
+
+**การตัดสินใจ 3 — maker–checker ที่จุดที่ CP-02 ยังไม่คุม:** CP-02 คุมการ *มอบ* Role ที่มี approval permission. ช่องที่เหลือคือการ *เพิ่ม* approval permission ให้ Role ที่มีคนถืออยู่ ซึ่งจะข้ามประตูการมอบ. จึงกำหนดว่า การแก้ที่เพิ่ม grant ให้ Role ที่มีผู้ถือ ≥ 1 และ Role หลังแก้ `RequiresApproval` ต้องผ่าน `RoleChangeRequest` (ผู้ขอ ≠ ผู้ตัดสิน, ผู้ตัดสินถือ `roles.assign-approval` และ `Covers` grant ที่เพิ่ม, ตรวจ `row_version` ว่า Role ไม่เปลี่ยนตั้งแต่ขอ). การสร้าง Role ใหม่และการแก้ Role ที่ไม่มีผู้ถือมีผลทันทีเพราะการมอบยังผ่าน `RoleAssignmentRequest`. กฎ "เพิ่ม grant ใด ๆ" (ไม่เฉพาะ approval key) ให้ Role ที่ RequiresApproval และมีผู้ถือเป็นแบบเข้มงวดโดยตั้งใจ.
+
+**การตัดสินใจ 4 — ปิด Role ต้องไม่มีผู้ถือ:** Role ที่ปิดใช้ถูกกรองออกจากการคำนวณสิทธิ์ทุกจุด (`RequestAccessResolver`) ดังนั้นการปิด Role ที่มีผู้ถือ = ถอนสิทธิ์เงียบ ๆ. ปิดได้เมื่อไม่มีแถว `membership_roles` ใด (รวม Membership inactive) ไม่มี `RoleAssignmentRequest` pending และไม่มี `RoleChangeRequest` pending (`ROLE_IN_USE` / `ROLE_CHANGE_REQUEST_PENDING`). ไม่ถอน Role ให้อัตโนมัติ; ผู้ดูแลถอนที่หน้าผู้ใช้ (มี audit เดิม).
+
+**การตัดสินใจ 5 — ขยาย `ApprovalPermissionKeys` เป็น 6 ตัว:** `estimates.approve`, `cost-records.approve`, `cost-records.publish` (เดิม) + `purchase-orders.approve`, `projects.change-orders.approve`, `mrp.approve`. ผลกระทบ: การมอบ Role ที่มีคีย์ใหม่ต้อง maker–checker (พฤติกรรม CP-02 เปลี่ยน). ไม่ใส่ `boms.approve`, `pricing-templates.approve`, `quick-estimates.review` (ไม่ใช่อำนาจอนุมัติเงิน/สัญญา) — test `ApprovalPermissionCoverageTests` กวาดคีย์ `*.approve/publish/review` ใน seeder แล้วบังคับให้ทุกคีย์อยู่ใน set หรือใน "reviewed-not-approval" อย่างชัดเจน.
+
+**ความเสี่ยงคงเหลือ (R1):** `roles.manage` และ `roles.assign-approval` เป็น meta-privilege แต่ไม่อยู่ใน set จึงเพิ่มให้ Role ที่มีผู้ถือได้โดยไม่ต้องมีผู้ตรวจ (ผู้แก้ยังต้องถือสิทธิ์นั้นเองตาม anti-escalation). เพิ่มเข้า set ได้ภายหลังด้วยการแก้ set + test ล็อก.
+
+**ความเสี่ยงคงเหลือ (R2):** ไม่มี notification แจ้งผู้ตรวจ (ผู้ตรวจต้องเปิดคิว `settings/role-requests`).
+
+ข้อเสียที่ยอมรับ: `RoleChangeRequest` ทำซ้ำ logic `Try*` ของ `RoleAssignmentRequest` (~20 บรรทัด) เพื่อไม่แตะ entity ของ CP-02.
+```
+
+- [ ] **Step 2: ลิงก์ใน ADR README**
+
+ต่อท้ายรายการใน `docs/adr/README.md`:
+
+```markdown
+- [0020 — Role Management และ Approval Permission Set](0020-role-management-and-approval-permission-set.md)
+```
+
+- [ ] **Step 3: สร้างสัญญา API**
+
+เขียน `docs/03-contracts/role-management-api-contract.md` (ภาษาไทย รูปแบบเดียวกับ `organization-administration-api-contract.md`) ประกอบด้วย: (1) สถานะ "Draft → Implemented เมื่อ G-03b เสร็จ" + ลิงก์ ADR 0020 และ `../05-engineering/role-management-verification.md`; (2) ตาราง Endpoint — คัดลอกตาราง "Part 2 — สรุป API contract" ข้างบนทั้งตาราง; (3) ตาราง Fields และ validation ด้านล่าง; (4) รูป response (รายการ/รายละเอียด/`PUT` = `200` เมื่อมีผลแล้ว หรือ `202` เมื่อสร้างคำขอ) ตามชนิดใน Task 6-9; (5) กฎธุรกิจ 6 ข้อ = ADR 0020 การตัดสินใจ 1-5 + "ทุก endpoint จำกัดที่ Organization ของผู้เรียก (id ต่างองค์กร = 404, ไม่มีสิทธิ์ = 403 เหมือนกันทุก id)"; (6) รายการ Error และ Audit ตามที่ระบุใน "Part 2 — สรุป API contract".
+
+```markdown
+| Field | กฎ |
+| --- | --- |
+| `name` | trim, 3–100 ตัวอักษร, ไม่ซ้ำแบบ case-insensitive ในองค์กร (`NormalizedName`), ห้ามขึ้นต้น `system.` (case-insensitive) |
+| `description` | optional, trim, ≤ 500, ว่าง = null |
+| `permissions[]` | `{ permissionKey, scope, branchId? }`; ≤ 200; key ต้องอยู่ใน catalog และ active; `scope` ∈ `organization`, `branch`, `own`; `branchId` บังคับเมื่อ `branch` และห้ามส่งกับสองแบบที่เหลือ; รายการซ้ำถูกรวม |
+| `rowVersion` | response; ค่าเดียวกับ `ETag` / `If-Match` |
+```
+
+- [ ] **Step 4: permission catalog, identity contract, error contract**
+
+- `docs/03-contracts/permission-catalog.md` แถว `roles.manage` (บรรทัด 15) แทนคำอธิบายด้วย: `สร้าง/แก้/ปิดใช้ Role จาก Permission catalog, ดู catalog และรายการ Role ทั้งหมด (รวมที่ปิดใช้); ไม่รวมการมอบ Role (roles.assign)`.
+- `docs/03-contracts/identity-administration-api-contract.md` กฎข้อ 5 (Maker–checker): แทนรายการ `estimates.approve`, `cost-records.approve` หรือ `cost-records.publish` ด้วยรายการ 6 ตัว `estimates.approve`, `cost-records.approve`, `cost-records.publish`, `purchase-orders.approve`, `projects.change-orders.approve`, `mrp.approve` และต่อท้ายประโยคว่า "ชุดนี้ล็อกด้วย test และอธิบายใน [ADR 0020](../adr/0020-role-management-and-approval-permission-set.md)".
+- `docs/03-contracts/error-contract.md` ต่อท้ายตาราง (ถัดจาก `BRANCH_LAST_ACTIVE`) ครบ 9 รหัสใหม่ ในรูปแบบ `| \`CODE\` | status | คำอธิบายภาษาไทย |`.
+
+- [ ] **Step 5: README, CONTEXT**
+
+- `docs/README.md` ต่อจากแถว `API จัดการ Organization/Branch` (บรรทัด 102): `| API จัดการ Role และ Permission | [Role Management API Contract](03-contracts/role-management-api-contract.md) |`.
+- `CONTEXT.md` หมวด "การกำกับดูแล" ใต้ **Role** เพิ่ม **System Role (บทบาทระบบ)** = Role ที่ถูกตั้งธงโดย seed/bootstrap และแก้หรือปิดไม่ได้จากระบบ (_Avoid_: Built-in Role by name) และ **Role Change Request (คำขอแก้ไขบทบาท)** = คำขอที่รอผู้ตรวจอิสระอนุมัติเมื่อการแก้ Role เพิ่มสิทธิ์ให้ Role ที่ approval permission และมีผู้ถืออยู่ (_Avoid_: Role Assignment Request).
+
+- [ ] **Step 6: ตรวจลิงก์**
+
+Run: `for f in docs/03-contracts/role-management-api-contract.md docs/adr/0020-role-management-and-approval-permission-set.md; do grep -o '](\([^)#]*\)' $f | sed 's/.*](//' | sort -u | while read p; do d=$(dirname $f); [ -e "$d/$p" ] || echo "MISSING $f -> $p"; done; done`
+Expected: มีเฉพาะ `MISSING ... ../05-engineering/role-management-verification.md` (สร้างใน Task 16 — ยอมรับชั่วคราว).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add docs/adr/0020-role-management-and-approval-permission-set.md docs/adr/README.md docs/03-contracts/role-management-api-contract.md docs/03-contracts/permission-catalog.md docs/03-contracts/error-contract.md docs/03-contracts/identity-administration-api-contract.md docs/README.md CONTEXT.md
+git commit -m "docs(roles): add role management ADR and contract
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 2: Domain — `Role` แก้ได้, system flag, `RoleChangeRequest` (TDD)
+
+**Files:**
+- Create: `backend/src/TanErp.Domain/IdentityAccess/RoleValues.cs`, `backend/src/TanErp.Domain/IdentityAccess/RoleChangeRequest.cs`
+- Modify: `backend/src/TanErp.Domain/IdentityAccess/Role.cs`
+- Create: `backend/tests/TanErp.UnitTests/IdentityAccess/RoleDomainTests.cs`, `backend/tests/TanErp.UnitTests/IdentityAccess/RoleChangeRequestTests.cs`
+
+- [ ] **Step 1: เขียน failing test**
+
+สร้าง `backend/tests/TanErp.UnitTests/IdentityAccess/RoleDomainTests.cs`:
+
+```csharp
+using TanErp.Domain.IdentityAccess;
+using Xunit;
+
+namespace TanErp.UnitTests.IdentityAccess;
+
+public class RoleDomainTests
+{
+    private static readonly Guid OrgId = Guid.NewGuid();
+
+    [Fact]
+    public void Normalize_TrimsNameAndTurnsBlankDescriptionIntoNull()
+    {
+        var (name, description) = RoleRules.Normalize("  ผู้จัดการ  ", "   ");
+
+        Assert.Equal("ผู้จัดการ", name);
+        Assert.Null(description);
+    }
+
+    [Theory]
+    [InlineData("ab", "REQUEST_VALIDATION_FAILED")]
+    [InlineData(null, "REQUEST_VALIDATION_FAILED")]
+    [InlineData("SYSTEM.Auditor", "ROLE_NAME_RESERVED")]
+    public void Normalize_RejectsInvalidNames(string? name, string expectedCode) =>
+        Assert.Equal(expectedCode, Assert.Throws<RoleDomainException>(() => RoleRules.Normalize(name, null)).Code);
+
+    [Fact]
+    public void Normalize_EnforcesLengthLimits()
+    {
+        Assert.Equal(100, RoleRules.Normalize(new string('a', 100), null).Name.Length);
+        Assert.Throws<RoleDomainException>(() => RoleRules.Normalize(new string('a', 101), null));
+        Assert.Throws<RoleDomainException>(() => RoleRules.Normalize("abc", new string('d', 501)));
+    }
+
+    [Fact]
+    public void CreateCustom_UpdateDetails_Deactivate_Activate_BumpTheVersion()
+    {
+        var role = Role.CreateCustom(Guid.NewGuid(), OrgId, " Old Name ", null, DateTimeOffset.UtcNow);
+        Assert.True(role.IsActive);
+        Assert.False(role.IsSystem);
+        var versions = new List<Guid> { role.RowVersion };
+
+        role.UpdateDetails("New Name", "d");
+        versions.Add(role.RowVersion);
+        role.Deactivate();
+        versions.Add(role.RowVersion);
+        role.Activate();
+        versions.Add(role.RowVersion);
+
+        Assert.Equal("NEW NAME", role.NormalizedName);
+        Assert.Equal("d", role.Description);
+        Assert.True(role.IsActive);
+        Assert.Equal(4, versions.Distinct().Count());
+    }
+
+    [Fact]
+    public void SystemRole_RejectsEveryMutation()
+    {
+        var role = new Role(Guid.NewGuid(), OrgId, "Built In", "d", isActive: true);
+        Assert.False(role.IsSystem); // the existing constructor stays non-system
+        role.MarkAsSystemRole();
+
+        foreach (var action in new Action[] { () => role.UpdateDetails("Other Name", null), role.Deactivate, role.Activate, role.EnsureMutable })
+            Assert.Equal("ROLE_SYSTEM_IMMUTABLE", Assert.Throws<RoleDomainException>(action).Code);
+
+        Assert.Equal("Built In", role.Name);
+        Assert.True(role.IsActive);
+    }
+}
+```
+
+สร้าง `backend/tests/TanErp.UnitTests/IdentityAccess/RoleChangeRequestTests.cs`:
+
+```csharp
+using TanErp.Domain.IdentityAccess;
+using Xunit;
+
+namespace TanErp.UnitTests.IdentityAccess;
+
+public class RoleChangeRequestTests
+{
+    private static readonly Guid Maker = Guid.NewGuid();
+    private static readonly Guid Checker = Guid.NewGuid();
+    private static readonly DateTimeOffset Now = new(2026, 10, 11, 0, 0, 0, TimeSpan.Zero);
+
+    private static RoleChangeRequest NewRequest() =>
+        new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Maker, Now, Guid.NewGuid(), "Name", null, "[]");
+
+    [Fact]
+    public void DecidingRequiresAnIndependentUser_AndOnlyTheRequesterMayCancel()
+    {
+        var request = NewRequest();
+        var before = request.RowVersion;
+
+        Assert.False(request.TryApprove(Maker, Now));
+        Assert.False(request.TryCancel(Checker, Now));
+        Assert.True(request.IsPending);
+        Assert.True(request.TryApprove(Checker, Now));
+
+        Assert.Equal(RoleAssignmentRequestStatus.Approved, request.Status);
+        Assert.Equal(Checker, request.DecidedByUserId);
+        Assert.NotEqual(before, request.RowVersion);
+        Assert.False(request.TryReject(Guid.NewGuid(), Now)); // already decided
+    }
+
+    [Fact]
+    public void Reject_AndCancel_RecordTheirOwnStatus()
+    {
+        var rejected = NewRequest();
+        var cancelled = NewRequest();
+
+        Assert.True(rejected.TryReject(Checker, Now));
+        Assert.True(cancelled.TryCancel(Maker, Now));
+
+        Assert.Equal(RoleAssignmentRequestStatus.Rejected, rejected.Status);
+        Assert.Equal(RoleAssignmentRequestStatus.Cancelled, cancelled.Status);
+    }
+}
+```
+
+- [ ] **Step 2: Run — ต้องล้ม (compile error)**
+
+Run: `dotnet test backend/tests/TanErp.UnitTests --filter "FullyQualifiedName~RoleDomainTests|FullyQualifiedName~RoleChangeRequestTests"`
+Expected: build FAIL — `RoleRules`, `RoleDomainException`, `Role.CreateCustom`, `RoleChangeRequest` ไม่มี.
+
+- [ ] **Step 3: สร้าง value types**
+
+สร้าง `backend/src/TanErp.Domain/IdentityAccess/RoleValues.cs`:
+
+```csharp
+namespace TanErp.Domain.IdentityAccess;
+
+public sealed class RoleDomainException : Exception
+{
+    public RoleDomainException(string code, string message) : base(message) => Code = code;
+    public string Code { get; }
+}
+
+public static class RoleRules
+{
+    public const int NameMin = 3;
+    public const int NameMax = 100;
+    public const int DescriptionMax = 500;
+    public const string ReservedPrefix = "system.";
+
+    /// <summary>
+    /// Trims and validates a custom role name and description. The "system." prefix is reserved for built-in roles;
+    /// this is a naming rule only — authorization never inspects role names.
+    /// </summary>
+    public static (string Name, string? Description) Normalize(string? name, string? description)
+    {
+        var trimmedName = name?.Trim() ?? string.Empty;
+        if (trimmedName.Length is < NameMin or > NameMax)
+            throw new RoleDomainException("REQUEST_VALIDATION_FAILED", $"Role name must be {NameMin}-{NameMax} characters.");
+        if (trimmedName.StartsWith(ReservedPrefix, StringComparison.OrdinalIgnoreCase))
+            throw new RoleDomainException("ROLE_NAME_RESERVED", "The 'system.' prefix is reserved for built-in roles.");
+
+        var trimmedDescription = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        if (trimmedDescription is { Length: > DescriptionMax })
+            throw new RoleDomainException("REQUEST_VALIDATION_FAILED", $"Description cannot exceed {DescriptionMax} characters.");
+
+        return (trimmedName, trimmedDescription);
+    }
+}
+```
+
+- [ ] **Step 4: แก้ `Role.cs`**
+
+เพิ่ม property ใต้ `CreatedAtUtc`:
+
+```csharp
+    public bool IsSystem { get; private set; }
+    public Guid RowVersion { get; private set; } = Guid.NewGuid();
+```
+
+เพิ่มพารามิเตอร์ท้าย constructor เดิม (ลายเซ็นเดิมยังใช้ได้) และกำหนดค่า:
+
+```csharp
+    public Role(Guid id, Guid organizationId, string name, string? description = null, bool isActive = true, DateTimeOffset? createdAtUtc = null, bool isSystem = false)
+```
+ในตัว constructor เพิ่มบรรทัดหลัง `IsActive = isActive;`: `IsSystem = isSystem;`.
+
+เพิ่มเมธอดท้ายคลาส:
+
+```csharp
+    public static Role CreateCustom(Guid id, Guid organizationId, string? name, string? description, DateTimeOffset createdAtUtc)
+    {
+        var (normalizedName, normalizedDescription) = RoleRules.Normalize(name, description);
+        return new Role(id, organizationId, normalizedName, normalizedDescription, isActive: true, createdAtUtc);
+    }
+
+    /// <summary>Seed/bootstrap only: no API marks a role as a system role.</summary>
+    public void MarkAsSystemRole()
+    {
+        IsSystem = true;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void EnsureMutable()
+    {
+        if (IsSystem) throw new RoleDomainException("ROLE_SYSTEM_IMMUTABLE", "A system role cannot be changed.");
+    }
+
+    public void UpdateDetails(string? name, string? description)
+    {
+        EnsureMutable();
+        var (normalizedName, normalizedDescription) = RoleRules.Normalize(name, description);
+        Name = normalizedName;
+        NormalizedName = normalizedName.ToUpperInvariant();
+        Description = normalizedDescription;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void Deactivate()
+    {
+        EnsureMutable();
+        IsActive = false;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void Activate()
+    {
+        EnsureMutable();
+        IsActive = true;
+        RowVersion = Guid.NewGuid();
+    }
+
+    /// <summary>Call after the role's permission grants change so concurrent editors are detected.</summary>
+    public void AdvanceVersion() => RowVersion = Guid.NewGuid();
+```
+
+- [ ] **Step 5: สร้าง `RoleChangeRequest`**
+
+สร้าง `backend/src/TanErp.Domain/IdentityAccess/RoleChangeRequest.cs` (ใช้ค่าคงที่สถานะของ `RoleAssignmentRequestStatus` ซ้ำ — ค่าเดียวกัน):
+
+```csharp
+using TanErp.Domain.Common;
+
+namespace TanErp.Domain.IdentityAccess;
+
+/// <summary>
+/// A proposed definition of an existing Role that adds permissions to a Role people already hold and carries an
+/// approval permission. An independent checker must apply it (maker-checker). Mirrors <see cref="RoleAssignmentRequest"/>.
+/// </summary>
+public class RoleChangeRequest : Entity
+{
+    public Guid OrganizationId { get; private set; }
+    public Guid RoleId { get; private set; }
+    public Guid RequestedByUserId { get; private set; }
+    public DateTimeOffset RequestedAtUtc { get; private set; }
+    public string Status { get; private set; } = RoleAssignmentRequestStatus.Pending;
+    public Guid? DecidedByUserId { get; private set; }
+    public DateTimeOffset? DecidedAtUtc { get; private set; }
+
+    /// <summary>The Role's row version when the request was made; approval is refused if the Role moved since.</summary>
+    public Guid BaseRoleRowVersion { get; private set; }
+
+    public string ProposedName { get; private set; } = string.Empty;
+    public string? ProposedDescription { get; private set; }
+
+    /// <summary>JSON array of { permissionKey, scope, branchId } — the complete proposed grant set.</summary>
+    public string ProposedGrantsJson { get; private set; } = "[]";
+
+    public Guid RowVersion { get; private set; } = Guid.NewGuid();
+
+    protected RoleChangeRequest() { }
+
+    public RoleChangeRequest(
+        Guid id, Guid organizationId, Guid roleId, Guid requestedByUserId, DateTimeOffset requestedAtUtc,
+        Guid baseRoleRowVersion, string proposedName, string? proposedDescription, string proposedGrantsJson) : base(id)
+    {
+        if (organizationId == Guid.Empty) throw new ArgumentException("Organization ID cannot be empty.", nameof(organizationId));
+        if (roleId == Guid.Empty) throw new ArgumentException("Role ID cannot be empty.", nameof(roleId));
+        if (requestedByUserId == Guid.Empty) throw new ArgumentException("Requester cannot be empty.", nameof(requestedByUserId));
+        if (string.IsNullOrWhiteSpace(proposedName)) throw new ArgumentException("Proposed name cannot be empty.", nameof(proposedName));
+
+        OrganizationId = organizationId;
+        RoleId = roleId;
+        RequestedByUserId = requestedByUserId;
+        RequestedAtUtc = requestedAtUtc;
+        BaseRoleRowVersion = baseRoleRowVersion;
+        ProposedName = proposedName;
+        ProposedDescription = proposedDescription;
+        ProposedGrantsJson = proposedGrantsJson;
+    }
+
+    public bool IsPending => Status == RoleAssignmentRequestStatus.Pending;
+
+    public bool TryApprove(Guid deciderUserId, DateTimeOffset now) => TryDecide(RoleAssignmentRequestStatus.Approved, deciderUserId, now, requireIndependent: true);
+
+    public bool TryReject(Guid deciderUserId, DateTimeOffset now) => TryDecide(RoleAssignmentRequestStatus.Rejected, deciderUserId, now, requireIndependent: true);
+
+    /// <summary>Only the requester can withdraw a pending request.</summary>
+    public bool TryCancel(Guid actorUserId, DateTimeOffset now)
+    {
+        if (!IsPending || actorUserId != RequestedByUserId) return false;
+        return TryDecide(RoleAssignmentRequestStatus.Cancelled, actorUserId, now, requireIndependent: false);
+    }
+
+    private bool TryDecide(string status, Guid deciderUserId, DateTimeOffset now, bool requireIndependent)
+    {
+        if (!IsPending || deciderUserId == Guid.Empty) return false;
+        if (requireIndependent && deciderUserId == RequestedByUserId) return false;
+
+        Status = status;
+        DecidedByUserId = deciderUserId;
+        DecidedAtUtc = now;
+        RowVersion = Guid.NewGuid();
+        return true;
+    }
+}
+```
+
+- [ ] **Step 6: Run — ต้องผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.UnitTests --filter "FullyQualifiedName~RoleDomainTests|FullyQualifiedName~RoleChangeRequestTests|FullyQualifiedName~RolePermissionTests"` Expected: PASS ทุกเคส. แล้ว `dotnet build backend/TanErp.slnx --nologo -v q` ต้อง 0 error (seeder/test เดิมที่เรียก `new Role(...)` ยังคอมไพล์).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add backend/src/TanErp.Domain/IdentityAccess backend/tests/TanErp.UnitTests/IdentityAccess/RoleDomainTests.cs backend/tests/TanErp.UnitTests/IdentityAccess/RoleChangeRequestTests.cs
+git commit -m "feat(roles): add role editing rules and change request entity
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 3: Application — models, `RoleManagementPolicy`, ขยาย `ApprovalPermissionKeys` + test ล็อกชุดค่า (TDD)
+
+**Files:**
+- Create: `backend/src/TanErp.Application/IdentityAccess/RoleManagement/RoleManagementModels.cs`, `backend/src/TanErp.Application/IdentityAccess/RoleManagement/RoleManagementPolicy.cs`
+- Modify: `backend/src/TanErp.Application/IdentityAccess/Administration/AdministrationModels.cs`
+- Modify: `backend/tests/TanErp.UnitTests/IdentityAccess/AdministrationPolicyTests.cs`
+- Create: `backend/tests/TanErp.UnitTests/IdentityAccess/RoleManagementPolicyTests.cs`, `backend/tests/TanErp.UnitTests/IdentityAccess/ApprovalPermissionCoverageTests.cs`
+
+- [ ] **Step 1: เขียน failing test (ล็อก approval set)**
+
+ใน `AdministrationPolicyTests.cs` แก้ `[Theory] RequiresApproval_FlagsOnlyApprovalPermissions` โดยเพิ่ม InlineData ก่อน `[InlineData("estimates.read", false)]`:
+
+```csharp
+    [InlineData("purchase-orders.approve", true)]
+    [InlineData("projects.change-orders.approve", true)]
+    [InlineData("mrp.approve", true)]
+    [InlineData("boms.approve", false)]
+    [InlineData("roles.assign-approval", false)]
+```
+
+และเพิ่ม test (ท้ายคลาส):
+
+```csharp
+    [Fact]
+    public void ApprovalPermissionKeys_AreExactlyTheReviewedSet()
+    {
+        // Changing this set changes who needs a checker (ADR 0020). Update the ADR and this list together.
+        var expected = new[]
+        {
+            "cost-records.approve", "cost-records.publish", "estimates.approve",
+            "mrp.approve", "projects.change-orders.approve", "purchase-orders.approve"
+        };
+
+        Assert.Equal(expected, AdministrationPolicy.ApprovalPermissionKeys.OrderBy(k => k, StringComparer.Ordinal).ToArray());
+    }
+```
+
+สร้าง `backend/tests/TanErp.UnitTests/IdentityAccess/ApprovalPermissionCoverageTests.cs` (กวาดคีย์ใน seeder):
+
+```csharp
+using System.Text.RegularExpressions;
+using TanErp.Application.IdentityAccess.Administration;
+using Xunit;
+
+namespace TanErp.UnitTests.IdentityAccess;
+
+/// <summary>Every approve/publish/review style key in the seeded catalog must be a conscious decision (ADR 0020).</summary>
+public class ApprovalPermissionCoverageTests
+{
+    /// <summary>Reviewed and deliberately NOT treated as approval authority for maker–checker.</summary>
+    private static readonly HashSet<string> ReviewedNotApproval = new(StringComparer.Ordinal)
+    {
+        "boms.approve",
+        "pricing-templates.approve",
+        "quick-estimates.review"
+    };
+
+    private static string RepoFile(params string[] parts)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "AGENTS.md"))) dir = dir.Parent;
+        return Path.Combine(new[] { dir!.FullName }.Concat(parts).ToArray());
+    }
+
+    [Fact]
+    public void EverySeededApproveOrPublishKey_IsInTheApprovalSetOrExplicitlyReviewed()
+    {
+        var seeder = File.ReadAllText(RepoFile("backend", "src", "TanErp.Infrastructure", "Persistence", "TestOnlyDataSeeder.cs"));
+        var keys = Regex.Matches(seeder, "\\(\"([a-z\\-\\.]+\\.(?:approve|publish|review))\"")
+            .Select(m => m.Groups[1].Value)
+            .Distinct()
+            .ToList();
+
+        Assert.NotEmpty(keys);
+        var undecided = keys
+            .Where(k => !AdministrationPolicy.ApprovalPermissionKeys.Contains(k) && !ReviewedNotApproval.Contains(k))
+            .ToArray();
+        Assert.True(undecided.Length == 0,
+            "Add these keys to AdministrationPolicy.ApprovalPermissionKeys or to ReviewedNotApproval (and ADR 0020): " + string.Join(", ", undecided));
+
+        Assert.All(ReviewedNotApproval, k => Assert.Contains(k, keys));
+    }
+}
+```
+
+สร้าง `backend/tests/TanErp.UnitTests/IdentityAccess/RoleManagementPolicyTests.cs`:
+
+```csharp
+using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Application.IdentityAccess.RoleManagement;
+using TanErp.Domain.IdentityAccess;
+using Xunit;
+
+namespace TanErp.UnitTests.IdentityAccess;
+
+public class RoleManagementPolicyTests
+{
+    private static readonly Guid OrgId = Guid.NewGuid();
+    private static readonly Guid BranchId = Guid.NewGuid();
+
+    private static PermissionGrant Org(string key) => new(key, PermissionScope.Organization, OrgId);
+
+    private static RoleInput Input(string name = "Sales Lead", params RoleGrantInput[] grants) => new(name, null, grants);
+
+    private static RoleGrantInput G(string key, string scope = "organization", Guid? branchId = null) => new(key, scope, branchId);
+
+    [Fact]
+    public void ValidateShape_AcceptsAWellFormedRole()
+    {
+        Assert.Null(RoleManagementPolicy.ValidateShape(Input("Sales Lead", G("customers.read"), G("estimates.read", "branch", BranchId), G("quotations.read", "own"))));
+    }
+
+    [Fact]
+    public void ValidateShape_RejectsBadNamesScopeMismatchesBlankKeysAndTooManyGrants()
+    {
+        Assert.Equal("ROLE_NAME_RESERVED", RoleManagementPolicy.ValidateShape(Input("system.root"))!.Code);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", RoleManagementPolicy.ValidateShape(Input("ab"))!.Code);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", RoleManagementPolicy.ValidateShape(Input("Valid Name", G("a.read", "branch")))!.Code);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", RoleManagementPolicy.ValidateShape(Input("Valid Name", G("a.read", "organization", BranchId)))!.Code);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", RoleManagementPolicy.ValidateShape(Input("Valid Name", G("a.read", "project")))!.Code);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", RoleManagementPolicy.ValidateShape(Input("Valid Name", G(" ")))!.Code);
+        var tooMany = Enumerable.Range(0, RoleManagementPolicy.MaxGrants + 1).Select(i => G($"k{i}.read")).ToArray();
+        Assert.Equal("REQUEST_VALIDATION_FAILED", RoleManagementPolicy.ValidateShape(Input("Valid Name", tooMany))!.Code);
+    }
+
+    [Fact]
+    public void Canonicalize_TrimsKeysDropsDuplicatesAndSortsForAStablePayloadHash()
+    {
+        var canonical = RoleManagementPolicy.Canonicalize(Input("Valid Name", G(" b.read "), G("a.read"), G("b.read")));
+
+        Assert.Equal(new[] { "a.read", "b.read" }, canonical.Permissions.Select(p => p.PermissionKey).ToArray());
+    }
+
+    [Fact]
+    public void ToGrant_UsesOrganizationIdBranchIdOrNullByScope()
+    {
+        Assert.Equal(new PermissionGrant("a.read", "organization", OrgId), RoleManagementPolicy.ToGrant(OrgId, "a.read", "organization", null));
+        Assert.Equal(new PermissionGrant("a.read", "branch", BranchId), RoleManagementPolicy.ToGrant(OrgId, "a.read", "branch", BranchId));
+        Assert.Equal(new PermissionGrant("a.read", "own", null), RoleManagementPolicy.ToGrant(OrgId, "a.read", "own", null));
+    }
+
+    [Fact]
+    public void Diff_ReturnsAddedAndRemovedGrants()
+    {
+        var (added, removed) = RoleManagementPolicy.Diff(new[] { Org("a.read"), Org("b.read") }, new[] { Org("b.read"), Org("c.read") });
+
+        Assert.Equal(new[] { Org("c.read") }, added);
+        Assert.Equal(new[] { Org("a.read") }, removed);
+    }
+
+    [Theory]
+    [InlineData(true, "estimates.approve", true)]   // holders + approval role + something added
+    [InlineData(false, "estimates.approve", false)] // nobody holds it: the assignment gate (CP-02) applies later
+    [InlineData(true, "customers.read", false)]     // role carries no approval permission
+    public void NeedsChecker_OnlyWhenHeldRoleThatRequiresApprovalGainsGrants(bool hasHolders, string key, bool expected)
+    {
+        var added = new[] { Org(key) };
+
+        Assert.Equal(expected, RoleManagementPolicy.NeedsChecker(hasHolders, new[] { key, "customers.read" }, added));
+    }
+
+    [Fact]
+    public void NeedsChecker_WhenNothingIsAdded_IsFalseEvenForAHeldApprovalRole()
+    {
+        Assert.False(RoleManagementPolicy.NeedsChecker(true, new[] { "estimates.approve" }, Array.Empty<PermissionGrant>()));
+    }
+}
+```
+
+- [ ] **Step 2: Run — ต้องล้ม**
+
+Run: `dotnet test backend/tests/TanErp.UnitTests --filter "FullyQualifiedName~AdministrationPolicyTests|FullyQualifiedName~ApprovalPermissionCoverageTests|FullyQualifiedName~RoleManagementPolicyTests"`
+Expected: build FAIL (`RoleManagementPolicy` ไม่มี).
+
+- [ ] **Step 3: models**
+
+สร้าง `backend/src/TanErp.Application/IdentityAccess/RoleManagement/RoleManagementModels.cs`:
+
+```csharp
+using TanErp.Application.IdentityAccess.Administration;
+
+namespace TanErp.Application.IdentityAccess.RoleManagement;
+
+public static class RoleManagementPermissions
+{
+    public const string RolesManage = "roles.manage";
+    public const string RolesAssignApproval = AdministrationPermissions.RolesAssignApproval;
+}
+
+public static class RoleSortKey
+{
+    public const string Name = "name";
+    public const string CreatedAt = "createdAt";
+
+    public static bool IsValid(string value) => value is Name or CreatedAt;
+}
+
+public sealed record PermissionCatalogEntry(string Key, string? Description, bool IsApprovalPermission);
+
+public sealed record RoleGrantInput(string PermissionKey, string Scope, Guid? BranchId);
+
+public sealed record RoleGrantView(string PermissionKey, string Scope, AdminRef? Branch);
+
+public sealed record RoleInput(string Name, string? Description, IReadOnlyList<RoleGrantInput> Permissions);
+
+public sealed record RoleListQuery(string? Search, string? Status, string SortBy, bool Descending, int Page, int Limit);
+
+public sealed record RoleDefinitionSummary(
+    Guid Id, string Name, string? Description, bool IsSystem, bool IsActive, Guid RowVersion,
+    int MemberCount, int PermissionCount, bool RequiresApproval, bool HasPendingChange);
+
+public sealed record RoleDefinitionPage(IReadOnlyList<RoleDefinitionSummary> Items, int TotalCount, int Page, int PageSize);
+
+public sealed record RoleChangeRequestView(
+    Guid Id, Guid RowVersion, string Status, AdminRef Role, AdminRef RequestedBy, DateTimeOffset RequestedAtUtc,
+    string ProposedName, string? ProposedDescription,
+    IReadOnlyList<string> AddedPermissionKeys, IReadOnlyList<string> RemovedPermissionKeys);
+
+public sealed record RoleDefinition(
+    Guid Id, string Name, string? Description, bool IsSystem, bool IsActive, Guid RowVersion, DateTimeOffset CreatedAtUtc,
+    int MemberCount, int PendingAssignmentRequestCount, bool RequiresApproval,
+    IReadOnlyList<RoleGrantView> Permissions, RoleChangeRequestView? PendingChange);
+
+public sealed record RoleUpdateOutcome(bool Pending, RoleDefinition Role, RoleChangeRequestView? Request);
+```
+
+- [ ] **Step 4: policy + ขยาย approval set**
+
+สร้าง `backend/src/TanErp.Application/IdentityAccess/RoleManagement/RoleManagementPolicy.cs`:
+
+```csharp
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Domain.IdentityAccess;
+
+namespace TanErp.Application.IdentityAccess.RoleManagement;
+
+public static class RoleManagementPolicy
+{
+    public const int MaxGrants = 200;
+
+    private static Error Invalid(string detail) => new("REQUEST_VALIDATION_FAILED", detail);
+
+    /// <summary>Shape-only validation (name, scopes, limits). The store validates the catalog and branches.</summary>
+    public static Error? ValidateShape(RoleInput input)
+    {
+        try
+        {
+            RoleRules.Normalize(input.Name, input.Description);
+        }
+        catch (RoleDomainException ex)
+        {
+            return new Error(ex.Code, ex.Message);
+        }
+
+        if (input.Permissions.Count > MaxGrants) return Invalid($"A role cannot have more than {MaxGrants} permissions.");
+
+        foreach (var grant in input.Permissions)
+        {
+            if (string.IsNullOrWhiteSpace(grant.PermissionKey)) return Invalid("Permission key is required.");
+
+            if (grant.Scope == PermissionScope.Branch)
+            {
+                if (grant.BranchId is null || grant.BranchId == Guid.Empty) return Invalid("Branch scope requires a branch.");
+            }
+            else if (grant.Scope == PermissionScope.Organization || grant.Scope == PermissionScope.Own)
+            {
+                if (grant.BranchId is not null) return Invalid("Only branch scope accepts a branch.");
+            }
+            else
+            {
+                return Invalid("Unsupported permission scope.");
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Trims keys, drops duplicates and sorts so equal requests hash equally.</summary>
+    public static RoleInput Canonicalize(RoleInput input) => input with
+    {
+        Permissions = input.Permissions
+            .Select(g => g with { PermissionKey = g.PermissionKey.Trim() })
+            .Distinct()
+            .OrderBy(g => g.PermissionKey, StringComparer.Ordinal)
+            .ThenBy(g => g.Scope, StringComparer.Ordinal)
+            .ThenBy(g => g.BranchId)
+            .ToList()
+    };
+
+    public static PermissionGrant ToGrant(Guid organizationId, string key, string scope, Guid? branchId) =>
+        new(key, scope, scope == PermissionScope.Organization ? organizationId : scope == PermissionScope.Branch ? branchId : null);
+
+    public static (IReadOnlyList<PermissionGrant> Added, IReadOnlyList<PermissionGrant> Removed) Diff(
+        IReadOnlyCollection<PermissionGrant> before, IReadOnlyCollection<PermissionGrant> after) =>
+        (after.Except(before).ToList(), before.Except(after).ToList());
+
+    /// <summary>
+    /// ADR 0020 decision 3: a change that adds grants to a Role people already hold, where the resulting Role carries an
+    /// approval permission, needs an independent checker. Unheld Roles are covered later by the assignment gate (CP-02).
+    /// </summary>
+    public static bool NeedsChecker(bool hasHolders, IEnumerable<string> resultingKeys, IReadOnlyCollection<PermissionGrant> added) =>
+        hasHolders && added.Count > 0 && AdministrationPolicy.RequiresApproval(resultingKeys);
+}
+```
+
+ใน `AdministrationModels.cs` แทน initializer ของ `ApprovalPermissionKeys` (บรรทัด 25-30) เป็น:
+
+```csharp
+    public static readonly IReadOnlySet<string> ApprovalPermissionKeys = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "estimates.approve",
+        "cost-records.approve",
+        "cost-records.publish",
+        "purchase-orders.approve",
+        "projects.change-orders.approve",
+        "mrp.approve"
+    };
+```
+(คง doc-comment `<summary>` เดิมด้านบน และเพิ่มท้ายว่า `Locked by ApprovalPermissionCoverageTests; see ADR 0020.`)
+
+- [ ] **Step 5: Run — ต้องผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.UnitTests --filter "FullyQualifiedName~AdministrationPolicyTests|FullyQualifiedName~ApprovalPermissionCoverageTests|FullyQualifiedName~RoleManagementPolicyTests"` Expected: PASS ทั้งหมด. แล้ว `dotnet build backend/TanErp.slnx --nologo -v q` → 0 error.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add backend/src/TanErp.Application/IdentityAccess backend/tests/TanErp.UnitTests/IdentityAccess
+git commit -m "feat(roles): add role management policy and extend approval permission set
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 7: Mutation check ของ approval set (หลัง commit; ไม่ commit การทดลอง)**
+
+ลบบรรทัด `"mrp.approve"` ออกจาก `ApprovalPermissionKeys` → รัน `--filter "FullyQualifiedName~ApprovalPermissionKeys_AreExactlyTheReviewedSet|FullyQualifiedName~EverySeededApproveOrPublishKey"` Expected: **FAIL ทั้งสอง**. คืนค่า: `git checkout -- backend/src/TanErp.Application/IdentityAccess/Administration/AdministrationModels.cs` แล้วรันซ้ำ Expected: PASS; `git status --short` ต้องว่าง.
+
+---
+
+## Task 4: EF configuration, migration และ seed (`roles.manage`, system role)
+
+**Files:**
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/Configurations/RoleConfiguration.cs`, `backend/src/TanErp.Infrastructure/Persistence/AppDbContext.cs`, `backend/src/TanErp.Infrastructure/Persistence/TestOnlyDataSeeder.cs`
+- Create: `backend/src/TanErp.Infrastructure/Persistence/Configurations/RoleChangeRequestConfiguration.cs`
+- Generate: `backend/src/TanErp.Infrastructure/Persistence/Migrations/*_AddRoleManagement*.cs`
+- Modify: `backend/tests/TanErp.UnitTests/Organization/PermissionCatalogParityTests.cs`
+
+- [ ] **Step 1: เขียน failing test**
+
+ใน `PermissionCatalogParityTests.cs` เพิ่ม `[InlineData("roles.manage")]` ต่อจาก `[InlineData("branches.manage")]`.
+Run: `dotnet test backend/tests/TanErp.UnitTests --filter "FullyQualifiedName~PermissionCatalogParityTests"`
+Expected: FAIL 1 เคส (`roles.manage` ไม่อยู่ใน seeder; docs และ FE มีแล้ว).
+
+- [ ] **Step 2: seed**
+
+ใน `TestOnlyDataSeeder.cs`:
+1. ใน `permKeys` ต่อจากบรรทัด `("roles.assign-approval", "Approve Role Assignments"),` เพิ่ม `("roles.manage", "Manage Roles"),`.
+2. หลังบล็อก `if (role == null) { ... }` ของ "Test Admin" (ก่อน `foreach (var perm in seededPerms)` แรก) เพิ่ม `if (!role.IsSystem) role.MarkAsSystemRole();`.
+3. หลังบล็อก `if (roleB == null) { ... }` ของ "Test Admin B" เพิ่ม `if (!roleB.IsSystem) roleB.MarkAsSystemRole();`.
+
+- [ ] **Step 3: EF configuration**
+
+ใน `RoleConfiguration.cs` ต่อจาก `CreatedAtUtc` เพิ่ม:
+
+```csharp
+        builder.Property(x => x.IsSystem).HasColumnName("is_system").IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+```
+
+ใน `AppDbContext.cs` ใต้ `RoleAssignmentRequests` (บรรทัด 23) เพิ่ม: `public DbSet<RoleChangeRequest> RoleChangeRequests => Set<RoleChangeRequest>();`
+
+สร้าง `RoleChangeRequestConfiguration.cs`:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Organization;
+
+namespace TanErp.Infrastructure.Persistence.Configurations;
+
+public class RoleChangeRequestConfiguration : IEntityTypeConfiguration<RoleChangeRequest>
+{
+    public void Configure(EntityTypeBuilder<RoleChangeRequest> builder)
+    {
+        builder.ToTable("role_change_requests", "identity_access", t =>
+        {
+            t.HasCheckConstraint("ck_role_change_requests_status", "status IN ('pending', 'approved', 'rejected', 'cancelled')");
+            t.HasCheckConstraint("ck_role_change_requests_independent_checker", "decided_by_user_id IS NULL OR status = 'cancelled' OR decided_by_user_id <> requested_by_user_id");
+        });
+
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.RoleId).HasColumnName("role_id").IsRequired();
+        builder.Property(x => x.RequestedByUserId).HasColumnName("requested_by_user_id").IsRequired();
+        builder.Property(x => x.RequestedAtUtc).HasColumnName("requested_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(16).IsRequired();
+        builder.Property(x => x.DecidedByUserId).HasColumnName("decided_by_user_id");
+        builder.Property(x => x.DecidedAtUtc).HasColumnName("decided_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.BaseRoleRowVersion).HasColumnName("base_role_row_version").IsRequired();
+        builder.Property(x => x.ProposedName).HasColumnName("proposed_name").HasMaxLength(100).IsRequired();
+        builder.Property(x => x.ProposedDescription).HasColumnName("proposed_description").HasMaxLength(500);
+        builder.Property(x => x.ProposedGrantsJson).HasColumnName("proposed_grants").HasColumnType("jsonb").IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+
+        builder.HasIndex(x => new { x.OrganizationId, x.Status });
+        builder.HasIndex(x => x.RoleId)
+            .IsUnique()
+            .HasFilter("status = 'pending'")
+            .HasDatabaseName("ux_role_change_requests_pending");
+
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Role>().WithMany().HasForeignKey(x => x.RoleId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.RequestedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.DecidedByUserId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+```
+
+- [ ] **Step 4: Generate migration (ครั้งเดียว — ถ้าต้องแก้ ให้ลบแล้ว generate ใหม่)**
+
+Run:
+```bash
+cd /Users/syaco/Documents/development/tan-erp && ConnectionStrings__Database="Host=localhost;Database=design;Username=x;Password=x" \
+dotnet ef migrations add AddRoleManagement \
+  --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api --output-dir Persistence/Migrations
+```
+Expected: ไฟล์ `*_AddRoleManagement.cs` + `.Designer.cs`, snapshot เปลี่ยน. ตรวจว่า `AddColumn is_system` มี `defaultValue: false` และ `row_version` ของ `roles` มี `defaultValue: new Guid("00000000-0000-0000-0000-000000000000")` แล้วเพิ่มท้าย `Up`:
+
+```csharp
+            migrationBuilder.Sql("UPDATE identity_access.roles SET row_version = gen_random_uuid();");
+```
+
+- [ ] **Step 5: ตรวจ model drift และ test**
+
+Run:
+```bash
+ConnectionStrings__Database="Host=localhost;Database=design;Username=x;Password=x" dotnet ef migrations has-pending-model-changes \
+  --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api
+dotnet test backend/tests/TanErp.UnitTests --filter "FullyQualifiedName~PermissionCatalogParityTests|FullyQualifiedName~ApprovalPermissionCoverageTests"
+dotnet build backend/TanErp.slnx --nologo -v q
+```
+Expected: `No changes have been made to the model since the last migration.`; test PASS; build 0 error.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add backend/src/TanErp.Infrastructure/Persistence backend/tests/TanErp.UnitTests/Organization/PermissionCatalogParityTests.cs
+git commit -m "feat(roles): persist system flag, row version and role change requests
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 5: Extract `IdentityAdministrationSupport` (Global Reuse)
+
+> **Global Reuse proposal (ต้องยืนยันกับผู้ใช้ก่อนเริ่ม Task นี้ ตาม AGENTS.md ข้อ 2):** `RoleManagementStore` ต้องใช้ 4 helper ที่ตอนนี้ private ใน `IdentityAdministrationStore` (`LoadPermissionsAsync` :621, ดึงแถวผู้ดูแลใน `WouldRemoveLastAdministratorAsync` :647, `AddAudit` :670, `EscapeLike` :689). extract เป็น `internal static` ตัวเดียวแทนการคัดลอก ~60 บรรทัด. **ถ้าผู้ใช้ไม่เห็นด้วย:** ทำ Step 2 (สร้างไฟล์) แต่ข้าม Step 3 (ไม่แก้ `IdentityAdministrationStore`) — Task 6-10 ใช้ได้เหมือนเดิม ข้อเสียคือโค้ดซ้ำ.
+
+**Files:**
+- Create: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/IdentityAdministrationSupport.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/IdentityAdministrationStore.cs`
+- Test (regression, ไม่แก้): `backend/tests/TanErp.IntegrationTests/Api/IdentityAdministrationEndpointsTests.cs`
+
+- [ ] **Step 1: baseline เขียว**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~IdentityAdministrationEndpointsTests"`
+Expected: PASS ทั้งคลาส (ต้องมี Docker). ถ้าไม่ผ่านก่อนแก้ ให้หยุดและรายงาน.
+
+- [ ] **Step 2: สร้าง helper (ย้ายโค้ดตรงตัว)**
+
+สร้าง `IdentityAdministrationSupport.cs`:
+
+```csharp
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Domain.Common;
+using TanErp.Domain.IdentityAccess;
+
+namespace TanErp.Infrastructure.Persistence.IdentityAccess;
+
+/// <summary>Queries and audit helpers shared by the identity and role administration stores (G-03b).</summary>
+internal static class IdentityAdministrationSupport
+{
+    /// <summary>Permissions a membership holds through its active roles (the anti-escalation baseline).</summary>
+    public static async Task<List<PermissionGrant>> LoadHeldPermissionsAsync(AppDbContext db, Guid membershipId, CancellationToken ct) =>
+        await db.MembershipRoles.AsNoTracking()
+            .Where(mr => mr.MembershipId == membershipId && mr.Role!.IsActive)
+            .SelectMany(mr => mr.Role!.RolePermissions)
+            .Where(rp => rp.Permission!.IsActive)
+            .Select(rp => new PermissionGrant(rp.Permission!.Key, rp.Scope, rp.ScopeId))
+            .ToListAsync(ct);
+
+    /// <summary>Active administrators: users.manage at organization scope through an active role of an active membership.</summary>
+    public static async Task<List<AdministratorRow>> LoadAdministratorRowsAsync(
+        AppDbContext db, Guid organizationId, DateTimeOffset now, CancellationToken ct) =>
+        await db.Memberships.AsNoTracking()
+            .Where(m => m.OrganizationId == organizationId && m.IsActive)
+            .Where(m => m.User!.IsActive && m.User.FirebaseUid != null && m.Organization!.IsActive)
+            .Where(m => m.BranchId == null || m.Branch!.IsActive)
+            .Where(m => m.StartsAtUtc == null || m.StartsAtUtc <= now)
+            .Where(m => m.ExpiresAtUtc == null || m.ExpiresAtUtc > now)
+            .SelectMany(m => m.MembershipRoles
+                .Where(mr => mr.Role!.IsActive)
+                .Where(mr => mr.Role!.RolePermissions.Any(rp =>
+                    rp.Permission!.IsActive &&
+                    rp.Permission.Key == AdministrationPermissions.UsersManage &&
+                    rp.Scope == PermissionScope.Organization &&
+                    rp.ScopeId == organizationId))
+                .Select(mr => new AdministratorRow(m.UserId, m.Id, mr.RoleId)))
+            .ToListAsync(ct);
+
+    public static string EscapeLike(string value) =>
+        value.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+
+    public static void AddAudit(
+        AppDbContext db, Guid organizationId, AdminActor actor, string action, string resourceType, string resourceId,
+        string traceId, DateTimeOffset now, object changes, Guid? rowVersionBefore = null, Guid? rowVersionAfter = null)
+    {
+        db.AuditEvents.Add(new AuditEvent(
+            Guid.NewGuid(), organizationId, actor.UserId, action, resourceType, resourceId, now, traceId,
+            JsonSerializer.Serialize(changes), actorMembershipId: actor.MembershipId,
+            rowVersionBefore: rowVersionBefore, rowVersionAfter: rowVersionAfter));
+    }
+}
+```
+
+- [ ] **Step 3: ให้ store เดิมเรียก helper (พฤติกรรมเดิม)**
+
+ใน `IdentityAdministrationStore.cs` แทนเนื้อเมธอดทั้งสี่ด้วย delegate:
+
+```csharp
+    private Task<List<PermissionGrant>> LoadPermissionsAsync(Guid membershipId, CancellationToken cancellationToken) =>
+        IdentityAdministrationSupport.LoadHeldPermissionsAsync(_db, membershipId, cancellationToken);
+
+    private async Task<bool> WouldRemoveLastAdministratorAsync(
+        Guid organizationId, Func<AdministratorRow, bool> removed, CancellationToken cancellationToken) =>
+        AdministrationPolicy.WouldRemoveLastAdministrator(
+            await IdentityAdministrationSupport.LoadAdministratorRowsAsync(_db, organizationId, _clock.UtcNow, cancellationToken), removed);
+
+    private void AddAudit(
+        Guid organizationId, AdminActor actor, string action, string resourceType, string resourceId, string traceId,
+        DateTimeOffset now, object changes, Guid? rowVersionBefore = null, Guid? rowVersionAfter = null) =>
+        IdentityAdministrationSupport.AddAudit(_db, organizationId, actor, action, resourceType, resourceId, traceId, now, changes, rowVersionBefore, rowVersionAfter);
+
+    private static string EscapeLike(string value) => IdentityAdministrationSupport.EscapeLike(value);
+```
+(ลบ `using System.Text.Json;` ถ้าไม่มีที่อื่นใช้ — เป็น warning ไม่ใช่ error.)
+
+- [ ] **Step 4: Run regression**
+
+Run: `dotnet build backend/TanErp.slnx --nologo -v q && dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~IdentityAdministrationEndpointsTests"`
+Expected: build 0 error; PASS ทั้งคลาส (พฤติกรรมไม่เปลี่ยน).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add backend/src/TanErp.Infrastructure/Persistence/IdentityAccess
+git commit -m "refactor(identity): share administration query helpers
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 6: API อ่าน — catalog, รายการ (search/pagination) และรายละเอียด (+ harness integration test)
+
+Task นี้วางโครง handler/port/store/controller ของ G-03b; Task 7-10 เพิ่ม member ทีละชิ้นทั้งใน port, handler และ store ใน commit เดียวกันเพื่อให้ build ผ่านทุกขั้น. การพิสูจน์ "permission ก่อน existence" ทำด้วย integration test (403 เหมือนกันทุก id) และกฎ shape/นโยบายทดสอบเป็น unit test ใน Task 3 — จึงไม่มี fake store ใน unit test.
+
+**Files:**
+- Create: `backend/src/TanErp.Application/IdentityAccess/RoleManagement/IRoleManagementStore.cs`, `RoleManagementHandler.cs`
+- Create: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs`
+- Create: `backend/src/TanErp.Api/Contracts/IdentityAccess/RoleManagement/RoleManagementContracts.cs`, `backend/src/TanErp.Api/Controllers/AdminRolesController.cs`
+- Modify: `backend/src/TanErp.Api/Program.cs`
+- Create: `backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs`
+
+- [ ] **Step 1: เขียน failing integration test (harness + อ่าน)**
+
+สร้าง `backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs` (harness นี้ถูกใช้ต่อใน Task 7-10):
+
+```csharp
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using TanErp.Api;
+using TanErp.Api.Contracts.IdentityAccess.RoleManagement;
+using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Organization;
+using TanErp.Infrastructure.Identity;
+using TanErp.Infrastructure.Persistence;
+using Testcontainers.PostgreSql;
+using Xunit;
+
+namespace TanErp.IntegrationTests.Api;
+
+public class RoleManagementEndpointsTests : IAsyncLifetime
+{
+    private const string AdminToken = "admin-token";       // Test Admin (system role): holds every seeded permission
+    private const string ViewerToken = "viewer-token";     // holds roles.assign only (NOT roles.manage)
+    private const string CheckerToken = "checker-token";   // roles.manage + roles.assign-approval + a few permissions
+    private const string OrgBToken = "org-b-token";
+    private const string OrgCToken = "org-c-token";        // sole administrator comes from one non-system role
+
+    private static readonly Guid ViewerMembershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f7a02");
+    private static readonly Guid CheckerMembershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f7a12");
+    private static readonly Guid OrgCId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f7a20");
+    private static readonly Guid OrgCBranchId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f7a21");
+    private static readonly Guid OrgCMembershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f7a23");
+    private static readonly Guid OrgCRoleId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f7a24");
+
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private WebApplicationFactory<Program> _factory = null!;
+    private HttpClient _client = null!;
+
+    private sealed class TestFirebaseTokenVerifier : IFirebaseTokenVerifier
+    {
+        public Task<string?> VerifyTokenAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult<string?>(idToken switch
+            {
+                AdminToken => TestOnlyDataSeeder.TestFirebaseUid,
+                ViewerToken => "rm-viewer-uid",
+                CheckerToken => "rm-checker-uid",
+                OrgBToken => TestOnlyDataSeeder.TestFirebaseUidB,
+                OrgCToken => "rm-org-c-uid",
+                _ => null
+            });
+
+        public async Task<FirebaseIdentity?> VerifyIdentityAsync(string idToken, CancellationToken cancellationToken = default)
+        {
+            var uid = await VerifyTokenAsync(idToken, cancellationToken);
+            return uid is null ? null : new FirebaseIdentity(uid, null, false);
+        }
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Test");
+            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:Database"] = _postgres.GetConnectionString(),
+                ["SeedTestData"] = "true"
+            }));
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IFirebaseTokenVerifier));
+                if (descriptor != null) services.Remove(descriptor);
+                services.AddSingleton<IFirebaseTokenVerifier, TestFirebaseTokenVerifier>();
+            });
+        });
+        _client = _factory.CreateClient();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+        await TestOnlyDataSeeder.SeedAsync(db, "Test", true);
+        await SeedFixturesAsync(db);
+    }
+
+    public async Task DisposeAsync()
+    {
+        _client.Dispose();
+        await _factory.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    private static async Task SeedFixturesAsync(AppDbContext db)
+    {
+        var orgId = TestOnlyDataSeeder.TestOrgId;
+        var permissions = await db.Permissions.ToDictionaryAsync(p => p.Key);
+
+        Role MakeRole(Guid org, string name, params string[] keys)
+        {
+            var role = new Role(Guid.NewGuid(), org, name, name, isActive: true);
+            db.Roles.Add(role);
+            foreach (var key in keys)
+                db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), role.Id, org, permissions[key].Id, PermissionScope.Organization, org));
+            return role;
+        }
+
+        void MakeMember(Guid org, Guid? branch, Guid membershipId, string uid, Role role)
+        {
+            var userId = Guid.NewGuid();
+            db.Users.Add(new User(userId, uid, uid, $"{uid}@example.test", isActive: true));
+            db.Memberships.Add(new Membership(membershipId, org, branch, userId, isActive: true));
+            db.MembershipRoles.Add(new MembershipRole(membershipId, role.Id, org));
+        }
+
+        MakeMember(orgId, TestOnlyDataSeeder.TestBranchId, ViewerMembershipId, "rm-viewer-uid", MakeRole(orgId, "RM Viewer", "roles.assign"));
+        MakeMember(orgId, TestOnlyDataSeeder.TestBranchId, CheckerMembershipId, "rm-checker-uid", MakeRole(orgId, "RM Checker",
+            "roles.manage", "roles.assign-approval", "estimates.approve", "estimates.read", "purchase-orders.approve", "customers.read"));
+
+        // Organization C: its only administrator (users.manage) comes from one NON-system role.
+        db.Organizations.Add(new TanErp.Domain.Organization.Organization(OrgCId, "RM Org C"));
+        db.Branches.Add(new Branch(OrgCBranchId, OrgCId, "C01", "สาขา C"));
+        var orgCRole = new Role(OrgCRoleId, OrgCId, "Org C Admin", "Org C Admin", isActive: true);
+        db.Roles.Add(orgCRole);
+        foreach (var key in new[] { "users.manage", "roles.manage", "customers.read" })
+            db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), orgCRole.Id, OrgCId, permissions[key].Id, PermissionScope.Organization, OrgCId));
+        MakeMember(OrgCId, OrgCBranchId, OrgCMembershipId, "rm-org-c-uid", orgCRole);
+
+        await db.SaveChangesAsync();
+    }
+
+    private AppDbContext NewDb() => _factory.Services.CreateScope().ServiceProvider.GetRequiredService<AppDbContext>();
+
+    private Task<HttpResponseMessage> Send(
+        HttpMethod method, string url, string token, object? body = null, Guid? ifMatch = null, Guid? membershipId = null, string? idempotencyKey = null)
+    {
+        var request = new HttpRequestMessage(method, url);
+        if (idempotencyKey is not null) request.Headers.Add("Idempotency-Key", idempotencyKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Add("X-Membership-Id", (membershipId ?? MembershipFor(token)).ToString());
+        if (ifMatch.HasValue) request.Headers.Add("If-Match", $"\"{ifMatch.Value}\"");
+        if (body is not null) request.Content = JsonContent.Create(body);
+        return _client.SendAsync(request);
+    }
+
+    private static Guid MembershipFor(string token) => token switch
+    {
+        ViewerToken => ViewerMembershipId,
+        CheckerToken => CheckerMembershipId,
+        OrgBToken => TestOnlyDataSeeder.TestMembershipBId,
+        OrgCToken => OrgCMembershipId,
+        _ => TestOnlyDataSeeder.TestMembershipId
+    };
+
+    private static async Task<string?> ReadCode(HttpResponseMessage response)
+    {
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return json.RootElement.GetProperty("code").GetString();
+    }
+
+    private static async Task<T> ReadAs<T>(HttpResponseMessage response) => (await response.Content.ReadFromJsonAsync<T>())!;
+
+    /// <summary>Inserts a custom role straight into the database (the create endpoint is exercised separately).</summary>
+    private async Task<Guid> SeedRoleAsync(string name, string[]? keys = null, bool active = true, Guid? orgId = null)
+    {
+        await using var db = NewDb();
+        var org = orgId ?? TestOnlyDataSeeder.TestOrgId;
+        var role = new Role(Guid.NewGuid(), org, name, "seeded " + name, active);
+        db.Roles.Add(role);
+        foreach (var key in keys ?? Array.Empty<string>())
+        {
+            var permission = await db.Permissions.SingleAsync(p => p.Key == key);
+            db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), role.Id, org, permission.Id, PermissionScope.Organization, org));
+        }
+
+        await db.SaveChangesAsync();
+        return role.Id;
+    }
+
+    // ------------------------------------------------------------------ catalog
+
+    [Fact]
+    public async Task Catalog_ReturnsActivePermissionsSortedWithTheApprovalFlag()
+    {
+        var response = await Send(HttpMethod.Get, "/api/v1/admin/permissions", AdminToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var items = (await ReadAs<PermissionCatalogResponse>(response)).Items;
+        Assert.Equal(items.Select(i => i.Key).OrderBy(k => k, StringComparer.Ordinal), items.Select(i => i.Key));
+        Assert.True(items.Single(i => i.Key == "estimates.approve").IsApprovalPermission);
+        Assert.True(items.Single(i => i.Key == "purchase-orders.approve").IsApprovalPermission);
+        Assert.False(items.Single(i => i.Key == "customers.read").IsApprovalPermission);
+    }
+
+    [Fact]
+    public async Task EveryEndpoint_WithoutRolesManage_Returns403WithTheSameCodeForAnyId()
+    {
+        var anyId = Guid.NewGuid();
+        var urls = new[] { "/api/v1/admin/permissions", "/api/v1/admin/role-definitions", $"/api/v1/admin/role-definitions/{anyId}",
+            $"/api/v1/admin/role-definitions/{TestOnlyDataSeeder.TestOrgId}" };
+
+        foreach (var url in urls)
+        {
+            var response = await Send(HttpMethod.Get, url, ViewerToken);
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+            Assert.Equal("PERMISSION_DENIED", await ReadCode(response));
+        }
+    }
+
+    // ------------------------------------------------------------------ list
+
+    [Fact]
+    public async Task List_SearchesFiltersByStatusPaginatesAndStaysInsideTheOrganization()
+    {
+        await SeedRoleAsync("Zeta Planner", new[] { "customers.read" });
+        await SeedRoleAsync("Zeta Retired", active: false);
+        await SeedRoleAsync("Zeta Org B", orgId: TestOnlyDataSeeder.TestOrgBId);
+
+        var all = await ReadAs<RoleDefinitionListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-definitions?search=ZETA", AdminToken));
+        var inactive = await ReadAs<RoleDefinitionListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-definitions?search=zeta&status=inactive", AdminToken));
+        var paged = await ReadAs<RoleDefinitionListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-definitions?search=zeta&limit=1&page=2&sortOrder=desc", AdminToken));
+        var escaped = await ReadAs<RoleDefinitionListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-definitions?search=%25", AdminToken));
+
+        Assert.Equal(new[] { "Zeta Planner", "Zeta Retired" }, all.Items.Select(i => i.Name).ToArray());
+        Assert.Equal(new[] { "Zeta Retired" }, inactive.Items.Select(i => i.Name).ToArray());
+        Assert.Equal(2, paged.Pagination.TotalCount);
+        Assert.Equal(2, paged.Pagination.TotalPages);
+        Assert.Equal(new[] { "Zeta Planner" }, paged.Items.Select(i => i.Name).ToArray()); // desc: Retired, Planner
+        Assert.Empty(escaped.Items); // a literal % is escaped, not a wildcard
+        Assert.Contains(all.Items, i => i.Name == "Zeta Planner" && i.PermissionCount == 1 && !i.IsSystem);
+    }
+
+    [Fact]
+    public async Task List_ShowsTheSeededSystemRoleAsSystemWithMembers()
+    {
+        var page = await ReadAs<RoleDefinitionListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-definitions?search=Test%20Admin", AdminToken));
+
+        var admin = page.Items.Single(i => i.Name == "Test Admin");
+        Assert.True(admin.IsSystem);
+        Assert.True(admin.RequiresApproval);
+        Assert.True(admin.MemberCount >= 1);
+        Assert.DoesNotContain(page.Items, i => i.Name == "Test Admin B");
+    }
+
+    [Theory]
+    [InlineData("status=bogus")]
+    [InlineData("sortBy=bogus")]
+    [InlineData("sortOrder=sideways")]
+    public async Task List_InvalidQuery_Returns400(string query)
+    {
+        var response = await Send(HttpMethod.Get, "/api/v1/admin/role-definitions?" + query, AdminToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", await ReadCode(response));
+    }
+
+    // ------------------------------------------------------------------ detail
+
+    [Fact]
+    public async Task Get_ReturnsGrantsCountsAndEtag_AndOtherOrganizationIdIs404()
+    {
+        var roleId = await SeedRoleAsync("Detail Role", new[] { "customers.read", "estimates.approve" });
+        var otherOrgRole = await SeedRoleAsync("Other Org Role", orgId: TestOnlyDataSeeder.TestOrgBId);
+
+        var response = await Send(HttpMethod.Get, $"/api/v1/admin/role-definitions/{roleId}", AdminToken);
+        var other = await Send(HttpMethod.Get, $"/api/v1/admin/role-definitions/{otherOrgRole}", AdminToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var role = await ReadAs<RoleDefinitionResponse>(response);
+        Assert.Equal(new[] { "customers.read", "estimates.approve" }, role.Permissions.Select(p => p.PermissionKey).ToArray());
+        Assert.All(role.Permissions, p => Assert.Equal("organization", p.Scope));
+        Assert.True(role.RequiresApproval);
+        Assert.Equal(0, role.MemberCount);
+        Assert.Null(role.PendingChange);
+        Assert.Equal($"\"{role.RowVersion}\"", response.Headers.ETag?.Tag);
+        Assert.Equal(HttpStatusCode.NotFound, other.StatusCode);
+        Assert.Equal("RESOURCE_NOT_FOUND", await ReadCode(other));
+    }
+}
+```
+
+- [ ] **Step 2: Run — ต้องล้ม (compile error)**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~RoleManagementEndpointsTests"` Expected: build FAIL (`TanErp.Api.Contracts.IdentityAccess.RoleManagement` ไม่มี).
+
+- [ ] **Step 3: Application — port + handler**
+
+`IRoleManagementStore.cs`:
+
+```csharp
+using TanErp.Application.Common.Results;
+
+namespace TanErp.Application.IdentityAccess.RoleManagement;
+
+/// <summary>
+/// Persistence for role definitions. Mutating members enforce anti-escalation, maker–checker, last-administrator and
+/// concurrency in one transaction and write the audit event. Everything is scoped to <c>organizationId</c>.
+/// </summary>
+public interface IRoleManagementStore
+{
+    Task<IReadOnlyList<PermissionCatalogEntry>> ListPermissionsAsync(CancellationToken ct);
+
+    Task<RoleDefinitionPage> ListRolesAsync(Guid organizationId, RoleListQuery query, CancellationToken ct);
+
+    Task<Result<RoleDefinition>> GetRoleAsync(Guid organizationId, Guid roleId, CancellationToken ct);
+}
+```
+
+`RoleManagementHandler.cs`:
+
+```csharp
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Models;
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.Administration;
+
+namespace TanErp.Application.IdentityAccess.RoleManagement;
+
+/// <summary>Every operation resolves its permission first; the store is never reached (and never queried) without it.</summary>
+public sealed class RoleManagementHandler
+{
+    private readonly IRequestAccessResolver _access;
+    private readonly IRoleManagementStore _store;
+
+    public RoleManagementHandler(IRequestAccessResolver access, IRoleManagementStore store)
+    {
+        _access = access;
+        _store = store;
+    }
+
+    private Task<Result<RequestAccessContext>> AccessAsync(AdminCaller caller, string permission, CancellationToken ct) =>
+        _access.ResolveAsync(caller.FirebaseUid, caller.MembershipId, permission, ct);
+
+    private static AdminActor Actor(RequestAccessContext access) => new(access.ActorUserId, access.MembershipId);
+
+    private static Result<T> Denied<T>(Result<RequestAccessContext> access) => Result<T>.Failure(access.Error);
+
+    public async Task<Result<IReadOnlyList<PermissionCatalogEntry>>> ListPermissionsAsync(AdminCaller caller, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        if (access.IsFailure) return Result<IReadOnlyList<PermissionCatalogEntry>>.Failure(access.Error);
+        return Result<IReadOnlyList<PermissionCatalogEntry>>.Success(await _store.ListPermissionsAsync(ct));
+    }
+
+    public async Task<Result<RoleDefinitionPage>> ListRolesAsync(
+        AdminCaller caller, string? search, string? status, string? sortBy, string? sortOrder, int page, int limit, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        if (access.IsFailure) return Denied<RoleDefinitionPage>(access);
+
+        if (status is not (null or "active" or "inactive"))
+            return AdminHandlerSupport.Validation<RoleDefinitionPage>("Status must be 'active' or 'inactive'.");
+        var key = string.IsNullOrWhiteSpace(sortBy) ? RoleSortKey.Name : sortBy.Trim();
+        if (!RoleSortKey.IsValid(key)) return AdminHandlerSupport.Validation<RoleDefinitionPage>("Unknown role sort key.");
+        var order = string.IsNullOrWhiteSpace(sortOrder) ? "asc" : sortOrder.Trim().ToLowerInvariant();
+        if (order is not ("asc" or "desc")) return AdminHandlerSupport.Validation<RoleDefinitionPage>("Sort order must be 'asc' or 'desc'.");
+
+        var query = new RoleListQuery(
+            string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+            status, key, order == "desc", Math.Max(page, 1),
+            limit < 1 ? AdministrationPolicy.DefaultPageSize : Math.Min(limit, AdministrationPolicy.MaxPageSize));
+        return Result<RoleDefinitionPage>.Success(await _store.ListRolesAsync(access.Value!.OrganizationId, query, ct));
+    }
+
+    public async Task<Result<RoleDefinition>> GetRoleAsync(AdminCaller caller, Guid roleId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        return access.IsFailure ? Denied<RoleDefinition>(access) : await _store.GetRoleAsync(access.Value!.OrganizationId, roleId, ct);
+    }
+}
+```
+(`Actor(...)` ยังไม่ถูกใช้ใน Task นี้ — compiler เตือนได้ ไม่ใช่ error; Task 7 ใช้.)
+
+- [ ] **Step 4: Contracts**
+
+สร้าง `backend/src/TanErp.Api/Contracts/IdentityAccess/RoleManagement/RoleManagementContracts.cs` (ใช้ `AdminRefResponse`/`AdminPaginationResponse` เดิม):
+
+```csharp
+using TanErp.Api.Contracts.IdentityAccess.Administration;
+using TanErp.Application.IdentityAccess.RoleManagement;
+
+namespace TanErp.Api.Contracts.IdentityAccess.RoleManagement;
+
+public record PermissionCatalogEntryResponse(string Key, string? Description, bool IsApprovalPermission);
+
+public record PermissionCatalogResponse(IReadOnlyList<PermissionCatalogEntryResponse> Items)
+{
+    public static PermissionCatalogResponse From(IReadOnlyList<PermissionCatalogEntry> items) =>
+        new(items.Select(i => new PermissionCatalogEntryResponse(i.Key, i.Description, i.IsApprovalPermission)).ToList());
+}
+
+public record RoleDefinitionSummaryResponse(
+    Guid Id, string Name, string? Description, bool IsSystem, bool IsActive, Guid RowVersion,
+    int MemberCount, int PermissionCount, bool RequiresApproval, bool HasPendingChange);
+
+public record RoleDefinitionListResponse(IReadOnlyList<RoleDefinitionSummaryResponse> Items, AdminPaginationResponse Pagination)
+{
+    public static RoleDefinitionListResponse From(RoleDefinitionPage page) => new(
+        page.Items.Select(i => new RoleDefinitionSummaryResponse(
+            i.Id, i.Name, i.Description, i.IsSystem, i.IsActive, i.RowVersion, i.MemberCount, i.PermissionCount, i.RequiresApproval, i.HasPendingChange)).ToList(),
+        new AdminPaginationResponse(page.Page, page.PageSize, page.TotalCount, (int)Math.Ceiling(page.TotalCount / (double)page.PageSize)));
+}
+
+public record RoleGrantResponse(string PermissionKey, string Scope, AdminRefResponse? Branch);
+
+public record RoleChangeRequestResponse(
+    Guid Id, Guid RowVersion, string Status, AdminRefResponse Role, AdminRefResponse RequestedBy, DateTimeOffset RequestedAtUtc,
+    string ProposedName, string? ProposedDescription,
+    IReadOnlyList<string> AddedPermissionKeys, IReadOnlyList<string> RemovedPermissionKeys)
+{
+    public static RoleChangeRequestResponse From(RoleChangeRequestView v) => new(
+        v.Id, v.RowVersion, v.Status, new AdminRefResponse(v.Role.Id, v.Role.Name), new AdminRefResponse(v.RequestedBy.Id, v.RequestedBy.Name),
+        v.RequestedAtUtc, v.ProposedName, v.ProposedDescription, v.AddedPermissionKeys, v.RemovedPermissionKeys);
+}
+
+public record RoleDefinitionResponse(
+    Guid Id, string Name, string? Description, bool IsSystem, bool IsActive, Guid RowVersion, DateTimeOffset CreatedAtUtc,
+    int MemberCount, int PendingAssignmentRequestCount, bool RequiresApproval,
+    IReadOnlyList<RoleGrantResponse> Permissions, RoleChangeRequestResponse? PendingChange)
+{
+    public static RoleDefinitionResponse From(RoleDefinition r) => new(
+        r.Id, r.Name, r.Description, r.IsSystem, r.IsActive, r.RowVersion, r.CreatedAtUtc, r.MemberCount, r.PendingAssignmentRequestCount, r.RequiresApproval,
+        r.Permissions.Select(p => new RoleGrantResponse(p.PermissionKey, p.Scope, p.Branch is null ? null : new AdminRefResponse(p.Branch.Id, p.Branch.Name))).ToList(),
+        r.PendingChange is null ? null : RoleChangeRequestResponse.From(r.PendingChange));
+}
+```
+
+- [ ] **Step 5: Store (อ่าน + helper ที่ Task 7-10 ใช้ต่อ)**
+
+สร้าง `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs`:
+
+```csharp
+using System.Linq.Expressions;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Application.IdentityAccess.RoleManagement;
+using TanErp.Domain.IdentityAccess;
+
+namespace TanErp.Infrastructure.Persistence.IdentityAccess;
+
+public sealed class RoleManagementStore : IRoleManagementStore
+{
+    private const string VersionConflict = "ADMIN_VERSION_CONFLICT";
+
+    private readonly AppDbContext _db;
+
+    // Task 7 adds IClock (first needed by the write members).
+    public RoleManagementStore(AppDbContext db) => _db = db;
+
+    private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
+
+    private static Result<T> NotFound<T>(string resource) => Fail<T>("RESOURCE_NOT_FOUND", $"{resource} was not found.");
+
+    private Task<Result<T>> RunAsync<T>(Func<Task<Result<T>>> work, CancellationToken ct) =>
+        SerializableTransactionRunner.RunAsync(_db, work, VersionConflict, ct);
+
+    // ---------------------------------------------------------------- reads
+
+    public async Task<IReadOnlyList<PermissionCatalogEntry>> ListPermissionsAsync(CancellationToken ct)
+    {
+        var rows = await _db.Permissions.AsNoTracking().Where(p => p.IsActive).OrderBy(p => p.Key)
+            .Select(p => new { p.Key, p.Description }).ToListAsync(ct);
+        return rows.Select(p => new PermissionCatalogEntry(p.Key, p.Description, AdministrationPolicy.ApprovalPermissionKeys.Contains(p.Key))).ToList();
+    }
+
+    public async Task<RoleDefinitionPage> ListRolesAsync(Guid organizationId, RoleListQuery q, CancellationToken ct)
+    {
+        var query = _db.Roles.AsNoTracking().Where(r => r.OrganizationId == organizationId);
+        if (q.Search is not null)
+        {
+            var pattern = $"%{IdentityAdministrationSupport.EscapeLike(q.Search)}%";
+            query = query.Where(r => EF.Functions.ILike(r.Name, pattern, "\\") ||
+                                     (r.Description != null && EF.Functions.ILike(r.Description, pattern, "\\")));
+        }
+
+        query = q.Status switch
+        {
+            "active" => query.Where(r => r.IsActive),
+            "inactive" => query.Where(r => !r.IsActive),
+            _ => query
+        };
+
+        var ordered = (q.SortBy, q.Descending) switch
+        {
+            (RoleSortKey.CreatedAt, false) => query.OrderBy(r => r.CreatedAtUtc),
+            (RoleSortKey.CreatedAt, true) => query.OrderByDescending(r => r.CreatedAtUtc),
+            (_, true) => query.OrderByDescending(r => r.NormalizedName),
+            _ => query.OrderBy(r => r.NormalizedName)
+        };
+
+        var total = await query.CountAsync(ct);
+        // The id is a stable tie-breaker so paging never skips or repeats rows.
+        var rows = await ordered.ThenBy(r => r.Id).Skip((q.Page - 1) * q.Limit).Take(q.Limit)
+            .Select(r => new
+            {
+                r.Id, r.Name, r.Description, r.IsSystem, r.IsActive, r.RowVersion,
+                MemberCount = r.MembershipRoles.Count(),
+                Keys = r.RolePermissions.Where(rp => rp.Permission!.IsActive).Select(rp => rp.Permission!.Key).ToList(),
+                HasPending = _db.RoleChangeRequests.Any(c => c.RoleId == r.Id && c.Status == RoleAssignmentRequestStatus.Pending)
+            })
+            .ToListAsync(ct);
+
+        var items = rows.Select(r => new RoleDefinitionSummary(
+            r.Id, r.Name, r.Description, r.IsSystem, r.IsActive, r.RowVersion, r.MemberCount, r.Keys.Distinct().Count(),
+            AdministrationPolicy.RequiresApproval(r.Keys), r.HasPending)).ToList();
+        return new RoleDefinitionPage(items, total, q.Page, q.Limit);
+    }
+
+    public Task<Result<RoleDefinition>> GetRoleAsync(Guid organizationId, Guid roleId, CancellationToken ct) =>
+        LoadDefinitionAsync(organizationId, roleId, ct);
+
+    // ---------------------------------------------------------------- shared helpers (used by the write members in Tasks 7-10)
+
+    private async Task<Result<RoleDefinition>> LoadDefinitionAsync(Guid organizationId, Guid roleId, CancellationToken ct)
+    {
+        _db.ChangeTracker.Clear();
+        var role = await _db.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Id == roleId && r.OrganizationId == organizationId, ct);
+        if (role is null) return NotFound<RoleDefinition>("Role");
+
+        var grants = await LoadGrantViewsAsync(roleId, ct);
+        var members = await _db.MembershipRoles.AsNoTracking().CountAsync(mr => mr.RoleId == roleId, ct);
+        var pendingAssignments = await _db.RoleAssignmentRequests.AsNoTracking()
+            .CountAsync(r => r.RoleId == roleId && r.Status == RoleAssignmentRequestStatus.Pending, ct);
+        var pendingRow = await ChangeRequestQuery(organizationId, c => c.RoleId == roleId && c.Status == RoleAssignmentRequestStatus.Pending)
+            .FirstOrDefaultAsync(ct);
+
+        return Result<RoleDefinition>.Success(new RoleDefinition(
+            role.Id, role.Name, role.Description, role.IsSystem, role.IsActive, role.RowVersion, role.CreatedAtUtc, members, pendingAssignments,
+            AdministrationPolicy.RequiresApproval(grants.Select(g => g.PermissionKey)), grants,
+            pendingRow is null ? null : ToChangeView(organizationId, pendingRow, grants)));
+    }
+
+    private async Task<List<RoleGrantView>> LoadGrantViewsAsync(Guid roleId, CancellationToken ct)
+    {
+        var rows = await _db.RolePermissions.AsNoTracking()
+            .Where(rp => rp.RoleId == roleId && rp.Permission!.IsActive)
+            .OrderBy(rp => rp.Permission!.Key).ThenBy(rp => rp.Scope)
+            .Select(rp => new
+            {
+                Key = rp.Permission!.Key,
+                rp.Scope,
+                rp.BranchId,
+                BranchName = _db.Branches.Where(b => b.Id == rp.BranchId).Select(b => b.Name).FirstOrDefault()
+            })
+            .ToListAsync(ct);
+        return rows.Select(r => new RoleGrantView(r.Key, r.Scope, r.BranchId is null ? null : new AdminRef(r.BranchId.Value, r.BranchName!))).ToList();
+    }
+
+    private sealed record ChangeRow(RoleChangeRequest Request, string RoleName, string RequestedByName);
+
+    private IQueryable<ChangeRow> ChangeRequestQuery(Guid organizationId, Expression<Func<RoleChangeRequest, bool>> filter) =>
+        from request in _db.RoleChangeRequests.AsNoTracking().Where(c => c.OrganizationId == organizationId).Where(filter)
+        join role in _db.Roles.AsNoTracking() on request.RoleId equals role.Id
+        join requester in _db.Users.AsNoTracking() on request.RequestedByUserId equals requester.Id
+        orderby request.RequestedAtUtc, request.Id
+        select new ChangeRow(request, role.Name, requester.DisplayName);
+
+    private static List<RoleGrantInput> ParseGrants(string json) =>
+        JsonSerializer.Deserialize<List<RoleGrantInput>>(json) ?? new List<RoleGrantInput>();
+
+    /// <summary>Added/removed permission keys are computed against the role as it is now, so the checker sees the real effect.</summary>
+    private static RoleChangeRequestView ToChangeView(Guid organizationId, ChangeRow row, IReadOnlyList<RoleGrantView> currentGrants)
+    {
+        var current = currentGrants.Select(g => RoleManagementPolicy.ToGrant(organizationId, g.PermissionKey, g.Scope, g.Branch?.Id)).ToList();
+        var proposed = ParseGrants(row.Request.ProposedGrantsJson)
+            .Select(g => RoleManagementPolicy.ToGrant(organizationId, g.PermissionKey, g.Scope, g.BranchId)).ToList();
+        var (added, removed) = RoleManagementPolicy.Diff(current, proposed);
+
+        return new RoleChangeRequestView(
+            row.Request.Id, row.Request.RowVersion, row.Request.Status,
+            new AdminRef(row.Request.RoleId, row.RoleName), new AdminRef(row.Request.RequestedByUserId, row.RequestedByName),
+            row.Request.RequestedAtUtc, row.Request.ProposedName, row.Request.ProposedDescription,
+            added.Select(g => g.Key).Distinct().OrderBy(k => k, StringComparer.Ordinal).ToList(),
+            removed.Select(g => g.Key).Distinct().OrderBy(k => k, StringComparer.Ordinal).ToList());
+    }
+}
+```
+(`RunAsync`, `_clock`, `Fail`, `ParseGrants` ฯลฯ ยังไม่ถูกใช้ครบใน Task นี้ — เป็น warning ได้ Task 7-10 ใช้.)
+
+- [ ] **Step 6: Controller + DI**
+
+สร้าง `backend/src/TanErp.Api/Controllers/AdminRolesController.cs`:
+
+```csharp
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TanErp.Api.Contracts.IdentityAccess.RoleManagement;
+using TanErp.Api.ErrorHandling;
+using TanErp.Api.RequestContext;
+using TanErp.Application.Common.Results;
+using TanErp.Application.IdentityAccess.Administration;
+using TanErp.Application.IdentityAccess.RoleManagement;
+
+namespace TanErp.Api.Controllers;
+
+/// <summary>Role definition administration (G-03b). Business rules live in Application/Infrastructure.</summary>
+[ApiController]
+[Authorize]
+[Route("api/v1/admin")]
+public sealed class AdminRolesController : ControllerBase
+{
+    private readonly RoleManagementHandler _handler;
+
+    public AdminRolesController(RoleManagementHandler handler) => _handler = handler;
+
+    private IActionResult Problem(Error error) => ProblemDetailsMapper.CreateProblemResult(error.Code, HttpContext);
+
+    private static AdminCaller Caller(AuthenticatedRequest a) => new(a.FirebaseUid, a.MembershipId);
+
+    [HttpGet("permissions")]
+    [ProducesResponseType<PermissionCatalogResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListPermissions(CancellationToken cancellationToken)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        var result = await _handler.ListPermissionsAsync(Caller(auth.Value!), cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(PermissionCatalogResponse.From(result.Value!));
+    }
+
+    [HttpGet("role-definitions")]
+    [ProducesResponseType<RoleDefinitionListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ListRoleDefinitions(
+        [FromQuery] string? search = null, [FromQuery] string? status = null, [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = null, [FromQuery] int page = 1, [FromQuery] int limit = 25,
+        CancellationToken cancellationToken = default)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        var result = await _handler.ListRolesAsync(Caller(auth.Value!), search, status, sortBy, sortOrder, page, limit, cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(RoleDefinitionListResponse.From(result.Value!));
+    }
+
+    [HttpGet("role-definitions/{roleId:guid}")]
+    [ProducesResponseType<RoleDefinitionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRoleDefinition([FromRoute] Guid roleId, CancellationToken cancellationToken)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        return RoleResult(await _handler.GetRoleAsync(Caller(auth.Value!), roleId, cancellationToken));
+    }
+
+    private IActionResult RoleResult(Result<RoleDefinition> result)
+    {
+        if (result.IsFailure) return Problem(result.Error);
+
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Ok(RoleDefinitionResponse.From(result.Value));
+    }
+}
+```
+
+`Program.cs`: `grep -n "RoleManagement" backend/src/TanErp.Api/Program.cs` ต้องไม่พบ แล้วเพิ่มต่อจากบรรทัด `DecideAdminRoleRequestHandler` (:107):
+
+```csharp
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.RoleManagement.IRoleManagementStore, TanErp.Infrastructure.Persistence.IdentityAccess.RoleManagementStore>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.RoleManagement.RoleManagementHandler>();
+```
+
+- [ ] **Step 7: Run — ต้องผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~RoleManagementEndpointsTests"`
+Expected: PASS ทุกเคส. ถ้า `List_SearchesFilters...` ล้มเพราะ `Zeta Org B` ปรากฏ: store ต้องกรอง `OrganizationId`.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add backend/src/TanErp.Application/IdentityAccess/RoleManagement backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs backend/src/TanErp.Api backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs
+git commit -m "feat(roles): add role catalog, list and detail endpoints
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 7: API สร้าง Role (Idempotency-Key, catalog + branch validation, anti-escalation)
+
+**Files:**
+- Modify: `backend/src/TanErp.Application/IdentityAccess/RoleManagement/{IRoleManagementStore,RoleManagementHandler}.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs`
+- Modify: `backend/src/TanErp.Api/Contracts/IdentityAccess/RoleManagement/RoleManagementContracts.cs`, `backend/src/TanErp.Api/Controllers/AdminRolesController.cs`
+- Modify: `backend/src/TanErp.Api/ErrorHandling/ProblemDetailsMapper.cs`, `backend/src/TanErp.Api/Resources/Errors.resx`, `backend/src/TanErp.Api/Resources/Errors.en.resx`
+- Modify: `backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs`
+
+- [ ] **Step 1: เขียน failing integration test**
+
+เพิ่มในคลาส `RoleManagementEndpointsTests` (ใต้ส่วน detail):
+
+```csharp
+    // ------------------------------------------------------------------ create
+
+    private static SaveRoleDefinitionRequest Body(string name, params string[] keys) =>
+        new(name, "desc " + name, keys.Select(k => new RoleGrantRequest(k, "organization", null)).ToList());
+
+    private Task<HttpResponseMessage> CreateRole(SaveRoleDefinitionRequest body, string? key = null, string token = AdminToken) =>
+        Send(HttpMethod.Post, "/api/v1/admin/role-definitions", token, body, idempotencyKey: key ?? Guid.NewGuid().ToString());
+
+    private async Task<RoleDefinitionResponse> GetRole(Guid roleId, string token = AdminToken) =>
+        await ReadAs<RoleDefinitionResponse>(await Send(HttpMethod.Get, $"/api/v1/admin/role-definitions/{roleId}", token));
+
+    [Fact]
+    public async Task Create_PersistsRoleAndGrantsAndAuditsKeysWithoutNames()
+    {
+        var response = await CreateRole(Body("Quote Reviewer", "customers.read", "estimates.read"));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var role = await ReadAs<RoleDefinitionResponse>(response);
+        Assert.False(role.IsSystem);
+        Assert.True(role.IsActive);
+        Assert.Equal(new[] { "customers.read", "estimates.read" }, role.Permissions.Select(p => p.PermissionKey).ToArray());
+        Assert.Equal($"\"{role.RowVersion}\"", response.Headers.ETag?.Tag);
+
+        await using var db = NewDb();
+        var audit = await db.AuditEvents.AsNoTracking().SingleAsync(a => a.Action == "roles.created" && a.ResourceId == role.Id.ToString());
+        Assert.Contains("customers.read", audit.ChangesJson);
+        Assert.DoesNotContain("Quote Reviewer", audit.ChangesJson);
+    }
+
+    [Fact]
+    public async Task Create_ApprovalRole_IsCreatedImmediatelyBecauseNobodyHoldsItYet()
+    {
+        var role = await ReadAs<RoleDefinitionResponse>(await CreateRole(Body("Estimate Approver", "estimates.approve")));
+
+        Assert.True(role.RequiresApproval);
+        Assert.Equal(0, role.MemberCount);
+    }
+
+    [Fact]
+    public async Task Create_DuplicateNameIgnoringCase_Returns409_AndOtherOrganizationsMayReuseTheName()
+    {
+        Assert.Equal(HttpStatusCode.Created, (await CreateRole(Body("Shared Name"))).StatusCode);
+
+        var duplicate = await CreateRole(Body("  SHARED name "));
+        var otherOrg = await CreateRole(Body("Shared Name"), token: OrgBToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+        Assert.Equal("ROLE_NAME_ALREADY_EXISTS", await ReadCode(duplicate));
+        Assert.Equal(HttpStatusCode.Created, otherOrg.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_ReservedPrefixTooShortNameAndUnknownPermission_AreRejected()
+    {
+        var reserved = await CreateRole(Body("System.Root"));
+        var tooShort = await CreateRole(Body("ab"));
+        var unknown = await CreateRole(Body("Ghost Role", "no.such-permission"));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, reserved.StatusCode);
+        Assert.Equal("ROLE_NAME_RESERVED", await ReadCode(reserved));
+        Assert.Equal(HttpStatusCode.BadRequest, tooShort.StatusCode);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", await ReadCode(tooShort));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, unknown.StatusCode);
+        Assert.Equal("ROLE_PERMISSION_UNKNOWN", await ReadCode(unknown));
+    }
+
+    [Fact]
+    public async Task Create_WithAPermissionTheCallerDoesNotHold_Returns403AndCreatesNothing()
+    {
+        // The checker holds roles.manage but not users.manage.
+        var response = await CreateRole(Body("Escalation Role", "customers.read", "users.manage"), token: CheckerToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("ROLE_ESCALATION_DENIED", await ReadCode(response));
+        await using var db = NewDb();
+        Assert.False(await db.Roles.AnyAsync(r => r.Name == "Escalation Role"));
+    }
+
+    [Fact]
+    public async Task Create_BranchScopedGrant_NeedsABranchOfTheCallersOrganization()
+    {
+        SaveRoleDefinitionRequest BranchGrant(Guid branchId) =>
+            new("Branch Reader", null, new[] { new RoleGrantRequest("estimates.read", "branch", branchId) });
+
+        var foreign = await CreateRole(BranchGrant(TestOnlyDataSeeder.TestBranchBId));
+        var own = await CreateRole(BranchGrant(TestOnlyDataSeeder.TestBranchId));
+
+        Assert.Equal(HttpStatusCode.NotFound, foreign.StatusCode);
+        Assert.Equal("BRANCH_NOT_FOUND", await ReadCode(foreign));
+        var grant = Assert.Single((await ReadAs<RoleDefinitionResponse>(own)).Permissions);
+        Assert.Equal("branch", grant.Scope);
+        Assert.Equal(TestOnlyDataSeeder.TestBranchId, grant.Branch!.Id);
+    }
+
+    [Fact]
+    public async Task Create_ReplayKeyReuseAndMissingKey()
+    {
+        var key = "role-create-" + Guid.NewGuid();
+        var first = await CreateRole(Body("Replay Role"), key);
+        var second = await CreateRole(Body("Replay Role"), key);
+        var reused = await CreateRole(Body("Other Role"), key);
+        var noKey = await Send(HttpMethod.Post, "/api/v1/admin/role-definitions", AdminToken, Body("No Key"));
+
+        Assert.Equal((await ReadAs<RoleDefinitionResponse>(first)).Id, (await ReadAs<RoleDefinitionResponse>(second)).Id);
+        Assert.Equal("IDEMPOTENCY_KEY_REUSED", await ReadCode(reused));
+        Assert.Equal("IDEMPOTENCY_KEY_REQUIRED", await ReadCode(noKey));
+        await using var db = NewDb();
+        Assert.Equal(1, await db.Roles.CountAsync(r => r.Name == "Replay Role"));
+    }
+```
+Run: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~RoleManagementEndpointsTests"` Expected: build FAIL (`SaveRoleDefinitionRequest`, `RoleGrantRequest` ไม่มี).
+
+- [ ] **Step 2: Application — port + handler**
+
+เพิ่มใน `IRoleManagementStore`:
+
+```csharp
+    Task<Result<RoleDefinition>> CreateRoleAsync(
+        Guid organizationId, RoleInput input, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct);
+```
+(ต้องมี `using TanErp.Application.IdentityAccess.Administration;` ใน port สำหรับ `AdminActor`.)
+
+เพิ่มใน `RoleManagementHandler` (ต้อง `using TanErp.Application.Common.Security;`):
+
+```csharp
+    public async Task<Result<RoleDefinition>> CreateRoleAsync(AdminCaller caller, string idempotencyKey, RoleInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        if (access.IsFailure) return Denied<RoleDefinition>(access);
+
+        var invalid = RoleManagementPolicy.ValidateShape(input);
+        if (invalid is not null) return Result<RoleDefinition>.Failure(invalid);
+
+        var canonical = RoleManagementPolicy.Canonicalize(input);
+        return await _store.CreateRoleAsync(
+            access.Value!.OrganizationId, canonical, Actor(access.Value), Sha256Hex.Compute(idempotencyKey), PayloadHash(canonical), traceId, ct);
+    }
+
+    private static string PayloadHash(RoleInput input) => Sha256Hex.Compute(
+        $"{input.Name.Trim()}|{input.Description?.Trim()}|{string.Join(",", input.Permissions.Select(g => $"{g.PermissionKey}:{g.Scope}:{g.BranchId}"))}");
+```
+
+- [ ] **Step 3: Contracts**
+
+เพิ่มใน `RoleManagementContracts.cs`:
+
+```csharp
+public record RoleGrantRequest(string? PermissionKey, string? Scope, Guid? BranchId);
+
+public record SaveRoleDefinitionRequest(string? Name, string? Description, IReadOnlyList<RoleGrantRequest>? Permissions)
+{
+    public RoleInput ToInput() => new(
+        Name ?? string.Empty,
+        Description,
+        (Permissions ?? Array.Empty<RoleGrantRequest>())
+            .Select(g => new RoleGrantInput(g.PermissionKey ?? string.Empty, g.Scope ?? string.Empty, g.BranchId)).ToList());
+}
+```
+
+- [ ] **Step 4: Store**
+
+ที่หัว `RoleManagementStore.cs` เพิ่ม `using TanErp.Domain.Common;` (สำหรับ `IdempotencyRecord`) แล้วแก้ field/constructor เป็น:
+
+```csharp
+    private readonly AppDbContext _db;
+    private readonly IClock _clock;
+
+    public RoleManagementStore(AppDbContext db, IClock clock)
+    {
+        _db = db;
+        _clock = clock;
+    }
+```
+จากนั้นเพิ่มค่าคงที่ + helper + เมธอดในคลาส (ต่อจากส่วน "shared helpers"):
+
+```csharp
+    private const string CreateOperation = "admin.roles.define";
+    private const string NameIndex = "ix_roles_organization_id_normalized_role_name";
+
+    private sealed record ResolvedGrant(Guid PermissionId, string Key, string Scope, Guid? BranchId);
+
+    private static PermissionGrant ToGrant(Guid organizationId, ResolvedGrant g) =>
+        RoleManagementPolicy.ToGrant(organizationId, g.Key, g.Scope, g.BranchId);
+
+    private static RolePermission NewGrant(Guid roleId, Guid organizationId, ResolvedGrant g, DateTimeOffset now) =>
+        new(Guid.NewGuid(), roleId, organizationId, g.PermissionId, g.Scope, scopeId: null, branchId: g.BranchId, assignedAtUtc: now);
+
+    private static List<string> KeysOf(IEnumerable<PermissionGrant> grants) =>
+        grants.Select(g => g.Key).Distinct().OrderBy(k => k, StringComparer.Ordinal).ToList();
+
+    private void Audit(
+        Guid organizationId, AdminActor actor, string action, string resourceType, Guid resourceId, string traceId,
+        object changes, Guid? versionBefore = null, Guid? versionAfter = null) =>
+        IdentityAdministrationSupport.AddAudit(
+            _db, organizationId, actor, action, resourceType, resourceId.ToString(), traceId, _clock.UtcNow, changes, versionBefore, versionAfter);
+
+    /// <summary>Checks every key against the active catalog and every branch against the organization.</summary>
+    private async Task<Result<List<ResolvedGrant>>> ResolveGrantsAsync(Guid organizationId, IReadOnlyList<RoleGrantInput> inputs, CancellationToken ct)
+    {
+        var keys = inputs.Select(g => g.PermissionKey).Distinct().ToList();
+        var permissions = await _db.Permissions.AsNoTracking()
+            .Where(p => p.IsActive && keys.Contains(p.Key)).ToDictionaryAsync(p => p.Key, p => p.Id, ct);
+        if (permissions.Count != keys.Count)
+            return Fail<List<ResolvedGrant>>("ROLE_PERMISSION_UNKNOWN", "A permission key is not in the active catalog.");
+
+        var branchIds = inputs.Where(g => g.BranchId.HasValue).Select(g => g.BranchId!.Value).Distinct().ToList();
+        var branchCount = await _db.Branches.AsNoTracking()
+            .CountAsync(b => b.OrganizationId == organizationId && b.IsActive && branchIds.Contains(b.Id), ct);
+        if (branchCount != branchIds.Count) return Fail<List<ResolvedGrant>>("BRANCH_NOT_FOUND", "Branch not found.");
+
+        return Result<List<ResolvedGrant>>.Success(
+            inputs.Select(g => new ResolvedGrant(permissions[g.PermissionKey], g.PermissionKey, g.Scope, g.BranchId)).ToList());
+    }
+
+    public Task<Result<RoleDefinition>> CreateRoleAsync(
+        Guid organizationId, RoleInput input, AdminActor actor, string keyHash, string payloadHash, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            // Taken INSIDE the transaction so concurrent requests with the same key serialize and the loser replays.
+            await _db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({organizationId.ToString("N") + ":" + CreateOperation + ":" + keyHash}, 0))", ct);
+
+            var replay = await _db.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(
+                r => r.OrganizationId == organizationId && r.Operation == CreateOperation && r.KeyHash == keyHash, ct);
+            if (replay is not null)
+            {
+                return replay.PayloadHash != payloadHash
+                    ? Fail<RoleDefinition>("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload.")
+                    : await LoadDefinitionAsync(organizationId, Guid.Parse(replay.ResourceId), ct);
+            }
+
+            var resolved = await ResolveGrantsAsync(organizationId, input.Permissions, ct);
+            if (resolved.IsFailure) return Result<RoleDefinition>.Failure(resolved.Error);
+
+            // Anti-escalation: the caller may only hand out permissions it holds (CP-02 rule, same policy).
+            var held = await IdentityAdministrationSupport.LoadHeldPermissionsAsync(_db, actor.MembershipId, ct);
+            var wanted = resolved.Value!.Select(g => ToGrant(organizationId, g)).ToList();
+            if (!AdministrationPolicy.Covers(held, organizationId, wanted))
+                return Fail<RoleDefinition>("ROLE_ESCALATION_DENIED", "The role grants permissions the caller does not hold.");
+
+            var now = _clock.UtcNow;
+            Role role;
+            try
+            {
+                role = Role.CreateCustom(Guid.NewGuid(), organizationId, input.Name, input.Description, now);
+            }
+            catch (RoleDomainException ex)
+            {
+                return Fail<RoleDefinition>(ex.Code, ex.Message);
+            }
+
+            _db.Roles.Add(role);
+            foreach (var grant in resolved.Value!) _db.RolePermissions.Add(NewGrant(role.Id, organizationId, grant, now));
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), organizationId, CreateOperation, keyHash, payloadHash, role.Id.ToString(), now));
+            Audit(organizationId, actor, "roles.created", "Role", role.Id, traceId,
+                new { permissionKeys = KeysOf(wanted), requiresApproval = AdministrationPolicy.RequiresApproval(wanted.Select(g => g.Key)) }, null, role.RowVersion);
+
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, NameIndex))
+            {
+                return Fail<RoleDefinition>("ROLE_NAME_ALREADY_EXISTS", "A role with this name already exists.");
+            }
+
+            return await LoadDefinitionAsync(organizationId, role.Id, ct);
+        }, ct);
+```
+
+- [ ] **Step 5: Controller, error codes**
+
+เพิ่มใน `AdminRolesController`:
+
+```csharp
+    [HttpPost("role-definitions")]
+    [ProducesResponseType<RoleDefinitionResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateRoleDefinition([FromBody] SaveRoleDefinitionRequest request, CancellationToken cancellationToken)
+    {
+        var idempotent = RequestContextReader.ReadIdempotentRequest(HttpContext);
+        if (idempotent.IsFailure) return Problem(idempotent.Error);
+
+        var result = await _handler.CreateRoleAsync(
+            new AdminCaller(idempotent.Value!.FirebaseUid, idempotent.Value.MembershipId), idempotent.Value.IdempotencyKey,
+            request.ToInput(), HttpContext.TraceIdentifier, cancellationToken);
+        if (result.IsFailure) return Problem(result.Error);
+
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Created($"/api/v1/admin/role-definitions/{result.Value.Id}", RoleDefinitionResponse.From(result.Value));
+    }
+```
+
+`ProblemDetailsMapper.GetStatus` (ใกล้ `ORGANIZATION_TAX_ID_INVALID`):
+
+```csharp
+        "ROLE_NAME_ALREADY_EXISTS" => StatusCodes.Status409Conflict,
+        "ROLE_NAME_RESERVED" => StatusCodes.Status422UnprocessableEntity,
+        "ROLE_PERMISSION_UNKNOWN" => StatusCodes.Status422UnprocessableEntity,
+```
+
+`Errors.resx` / `Errors.en.resx` เพิ่ม `_TITLE`/`_DETAIL` (รูปแบบ `<data name="..." xml:space="preserve"><value>...</value></data>` เหมือน `ADMIN_VERSION_CONFLICT_*`):
+
+| key | th | en |
+| --- | --- | --- |
+| `ROLE_NAME_ALREADY_EXISTS` | ชื่อบทบาทซ้ำ / มีบทบาทที่ใช้ชื่อนี้อยู่แล้วในองค์กร | Duplicate role name / A role with this name already exists in the organization. |
+| `ROLE_NAME_RESERVED` | ชื่อบทบาทถูกสงวน / ชื่อที่ขึ้นต้นด้วย "system." สงวนไว้สำหรับบทบาทของระบบ | Reserved role name / Names starting with "system." are reserved for built-in roles. |
+| `ROLE_PERMISSION_UNKNOWN` | ไม่พบสิทธิ์ที่ระบุ / มีสิทธิ์ที่ไม่อยู่ในรายการสิทธิ์ของระบบหรือถูกปิดใช้งาน | Unknown permission / A permission is not in the active catalog. |
+
+- [ ] **Step 6: Run — ต้องผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~RoleManagementEndpointsTests"`
+Expected: PASS ทุกเคส.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add backend/src/TanErp.Application/IdentityAccess/RoleManagement backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs backend/src/TanErp.Api backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs
+git commit -m "feat(roles): add role creation endpoint
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 8: Mutation check — anti-escalation (หลัง commit; ไม่ commit การทดลอง)**
+
+ใน `RoleManagementStore.CreateRoleAsync` ลบทั้งบล็อก `if (!AdministrationPolicy.Covers(held, organizationId, wanted)) return Fail<RoleDefinition>("ROLE_ESCALATION_DENIED", ...);` → รัน `--filter "FullyQualifiedName~Create_WithAPermissionTheCallerDoesNotHold_Returns403AndCreatesNothing"` Expected: **FAIL** (ได้ 201). คืนค่า `git checkout -- backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs` แล้วรันซ้ำ Expected: PASS; `git status --short` ว่าง.
+
+---
+
+## Task 8: API แก้ Role (system immutable, grant diff, anti-escalation, last-admin, maker–checker)
+
+**Files:**
+- Modify: `backend/src/TanErp.Application/IdentityAccess/RoleManagement/{IRoleManagementStore,RoleManagementHandler}.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs`
+- Modify: `backend/src/TanErp.Api/Contracts/IdentityAccess/RoleManagement/RoleManagementContracts.cs`, `backend/src/TanErp.Api/Controllers/AdminRolesController.cs`
+- Modify: `backend/src/TanErp.Api/ErrorHandling/ProblemDetailsMapper.cs`, `Resources/Errors.resx`, `Resources/Errors.en.resx`
+- Modify: `backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs`
+
+- [ ] **Step 1: เขียน failing integration test**
+
+เพิ่มใน `RoleManagementEndpointsTests`:
+
+```csharp
+    // ------------------------------------------------------------------ update
+
+    private async Task SeedHolderAsync(Guid roleId)
+    {
+        await using var db = NewDb();
+        var userId = Guid.NewGuid();
+        var membershipId = Guid.NewGuid();
+        db.Users.Add(new User(userId, "holder-" + userId, "Holder", $"{userId}@example.test", isActive: true));
+        db.Memberships.Add(new Membership(membershipId, TestOnlyDataSeeder.TestOrgId, TestOnlyDataSeeder.TestBranchId, userId, isActive: true));
+        db.MembershipRoles.Add(new MembershipRole(membershipId, roleId, TestOnlyDataSeeder.TestOrgId));
+        await db.SaveChangesAsync();
+    }
+
+    private async Task<HttpResponseMessage> PutRole(Guid roleId, string name, string[] keys, string token = AdminToken, Guid? ifMatch = null)
+    {
+        var current = await GetRole(roleId);
+        return await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{roleId}", token, Body(name, keys), ifMatch: ifMatch ?? current.RowVersion);
+    }
+
+    [Fact]
+    public async Task Update_RenamesAndChangesGrantsOfAnUnheldRole_AndAuditsKeysNotNames()
+    {
+        var roleId = await SeedRoleAsync("Editable Role", new[] { "customers.read", "estimates.read" });
+
+        var response = await PutRole(roleId, "Edited Role", new[] { "customers.read", "quotations.read" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadAs<UpdateRoleDefinitionResponse>(response);
+        Assert.Null(body.PendingRequest);
+        Assert.Equal("Edited Role", body.Role.Name);
+        Assert.Equal(new[] { "customers.read", "quotations.read" }, body.Role.Permissions.Select(p => p.PermissionKey).ToArray());
+        Assert.Equal($"\"{body.Role.RowVersion}\"", response.Headers.ETag?.Tag);
+
+        await using var db = NewDb();
+        var audit = await db.AuditEvents.AsNoTracking().SingleAsync(a => a.Action == "roles.updated" && a.ResourceId == roleId.ToString());
+        Assert.Contains("quotations.read", audit.ChangesJson);
+        Assert.Contains("estimates.read", audit.ChangesJson);
+        Assert.DoesNotContain("Edited Role", audit.ChangesJson);
+    }
+
+    [Fact]
+    public async Task Update_SystemRole_Returns409AndChangesNothing()
+    {
+        Guid systemRoleId;
+        await using (var db = NewDb()) systemRoleId = (await db.Roles.SingleAsync(r => r.Name == "Test Admin" && r.OrganizationId == TestOnlyDataSeeder.TestOrgId)).Id;
+
+        var response = await PutRole(systemRoleId, "Renamed Admin", Array.Empty<string>());
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("ROLE_SYSTEM_IMMUTABLE", await ReadCode(response));
+        var role = await GetRole(systemRoleId);
+        Assert.Equal("Test Admin", role.Name);
+        Assert.True(role.Permissions.Count > 10);
+    }
+
+    [Fact]
+    public async Task Update_StaleOrMissingIfMatch_Returns409Or428()
+    {
+        var roleId = await SeedRoleAsync("Versioned Role");
+
+        var stale = await PutRole(roleId, "Versioned Role", Array.Empty<string>(), ifMatch: Guid.NewGuid());
+        var missing = await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{roleId}", AdminToken, Body("Versioned Role"));
+
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(stale));
+        Assert.Equal(HttpStatusCode.PreconditionRequired, missing.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_AddingAPermissionTheCallerDoesNotHold_Returns403_ButRemovingIsAllowed()
+    {
+        var roleId = await SeedRoleAsync("Anti Escalation", new[] { "users.manage", "customers.read" });
+
+        var add = await PutRole(roleId, "Anti Escalation", new[] { "users.manage", "customers.read", "users.read" }, CheckerToken);
+        var remove = await PutRole(roleId, "Anti Escalation", new[] { "customers.read" }, CheckerToken);
+
+        Assert.Equal("ROLE_ESCALATION_DENIED", await ReadCode(add));
+        Assert.Equal(HttpStatusCode.OK, remove.StatusCode); // the checker never held users.manage, yet may take it away
+    }
+
+    [Fact]
+    public async Task Update_AddingApprovalPermissionToAHeldRole_CreatesAPendingRequestAndLeavesTheRoleUnchanged()
+    {
+        var roleId = await SeedRoleAsync("Held Role", new[] { "customers.read" });
+        await SeedHolderAsync(roleId);
+
+        var response = await PutRole(roleId, "Held Role", new[] { "customers.read", "estimates.approve" });
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var body = await ReadAs<UpdateRoleDefinitionResponse>(response);
+        Assert.Equal(new[] { "estimates.approve" }, body.PendingRequest!.AddedPermissionKeys.ToArray());
+        Assert.Equal(RoleAssignmentRequestStatus.Pending, body.PendingRequest.Status);
+        var role = await GetRole(roleId);
+        Assert.Equal(new[] { "customers.read" }, role.Permissions.Select(p => p.PermissionKey).ToArray());
+        Assert.Equal(body.PendingRequest.Id, role.PendingChange!.Id);
+        await using var db = NewDb();
+        Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "roles.change-requested" && a.ResourceId == body.PendingRequest.Id.ToString()));
+    }
+
+    [Fact]
+    public async Task Update_AddingApprovalPermissionToAnUnheldRole_AppliesDirectly()
+    {
+        var roleId = await SeedRoleAsync("Unheld Role", new[] { "customers.read" });
+
+        var response = await PutRole(roleId, "Unheld Role", new[] { "customers.read", "estimates.approve" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode); // the assignment gate (CP-02) protects who may receive it
+    }
+
+    [Fact]
+    public async Task Update_NonApprovalChangeOnAHeldRole_AndRemovingApprovalFromAHeldRole_ApplyDirectly()
+    {
+        var plain = await SeedRoleAsync("Held Plain", new[] { "customers.read" });
+        await SeedHolderAsync(plain);
+        var approver = await SeedRoleAsync("Held Approver", new[] { "customers.read", "estimates.approve" });
+        await SeedHolderAsync(approver);
+
+        var addPlain = await PutRole(plain, "Held Plain", new[] { "customers.read", "quotations.read" });
+        var dropApproval = await PutRole(approver, "Held Approver", new[] { "customers.read" });
+
+        Assert.Equal(HttpStatusCode.OK, addPlain.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, dropApproval.StatusCode); // reducing authority never needs a checker
+    }
+
+    [Fact]
+    public async Task Update_WhileAChangeRequestIsPending_Returns409()
+    {
+        var roleId = await SeedRoleAsync("Pending Role", new[] { "customers.read" });
+        await SeedHolderAsync(roleId);
+        Assert.Equal(HttpStatusCode.Accepted, (await PutRole(roleId, "Pending Role", new[] { "customers.read", "estimates.approve" })).StatusCode);
+
+        var second = await PutRole(roleId, "Pending Role", new[] { "customers.read" });
+
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+        Assert.Equal("ROLE_CHANGE_REQUEST_PENDING", await ReadCode(second));
+    }
+
+    [Fact]
+    public async Task Update_RemovingUsersManageFromTheLastAdministratorRole_Returns422_ButOtherEditsAreAllowed()
+    {
+        var blocked = await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{OrgCRoleId}", OrgCToken,
+            Body("Org C Admin", "roles.manage", "customers.read"), ifMatch: (await GetRole(OrgCRoleId, OrgCToken)).RowVersion);
+        var harmless = await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{OrgCRoleId}", OrgCToken,
+            Body("Org C Admin", "users.manage", "roles.manage"), ifMatch: (await GetRole(OrgCRoleId, OrgCToken)).RowVersion);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, blocked.StatusCode);
+        Assert.Equal("LAST_ADMINISTRATOR_REQUIRED", await ReadCode(blocked));
+        Assert.Equal(HttpStatusCode.OK, harmless.StatusCode); // dropping customers.read touches no administrator
+    }
+
+    [Fact]
+    public async Task Update_OtherOrganizationRoleIs404_AndDuplicateNameIs409()
+    {
+        var foreign = await SeedRoleAsync("Foreign Role", orgId: TestOnlyDataSeeder.TestOrgBId);
+        await SeedRoleAsync("Name Owner");
+        var taker = await SeedRoleAsync("Name Taker");
+
+        var notFound = await Send(HttpMethod.Put, $"/api/v1/admin/role-definitions/{foreign}", AdminToken, Body("Hijacked"), ifMatch: Guid.NewGuid());
+        var duplicate = await PutRole(taker, "name owner", Array.Empty<string>());
+
+        Assert.Equal(HttpStatusCode.NotFound, notFound.StatusCode);
+        Assert.Equal("ROLE_NAME_ALREADY_EXISTS", await ReadCode(duplicate));
+    }
+```
+Run → build FAIL (`UpdateRoleDefinitionResponse` ไม่มี).
+
+- [ ] **Step 2: Application — port + handler**
+
+port:
+
+```csharp
+    Task<Result<RoleUpdateOutcome>> UpdateRoleAsync(
+        Guid organizationId, Guid roleId, Guid ifMatch, RoleInput input, AdminActor actor, string traceId, CancellationToken ct);
+```
+handler:
+
+```csharp
+    public async Task<Result<RoleUpdateOutcome>> UpdateRoleAsync(
+        AdminCaller caller, Guid roleId, Guid ifMatch, RoleInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        if (access.IsFailure) return Denied<RoleUpdateOutcome>(access);
+
+        var invalid = RoleManagementPolicy.ValidateShape(input);
+        if (invalid is not null) return Result<RoleUpdateOutcome>.Failure(invalid);
+
+        return await _store.UpdateRoleAsync(
+            access.Value!.OrganizationId, roleId, ifMatch, RoleManagementPolicy.Canonicalize(input), Actor(access.Value), traceId, ct);
+    }
+```
+
+- [ ] **Step 3: Contracts + controller**
+
+เพิ่มใน `RoleManagementContracts.cs`: `public record UpdateRoleDefinitionResponse(RoleDefinitionResponse Role, RoleChangeRequestResponse? PendingRequest);`
+
+เพิ่มใน controller:
+
+```csharp
+    [HttpPut("role-definitions/{roleId:guid}")]
+    [ProducesResponseType<UpdateRoleDefinitionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<UpdateRoleDefinitionResponse>(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateRoleDefinition([FromRoute] Guid roleId, [FromBody] SaveRoleDefinitionRequest request, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        var result = await _handler.UpdateRoleAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), roleId, conditional.Value.IfMatchRowVersion,
+            request.ToInput(), HttpContext.TraceIdentifier, cancellationToken);
+        if (result.IsFailure) return Problem(result.Error);
+
+        var outcome = result.Value!;
+        var body = new UpdateRoleDefinitionResponse(
+            RoleDefinitionResponse.From(outcome.Role), outcome.Request is null ? null : RoleChangeRequestResponse.From(outcome.Request));
+        if (outcome.Pending) return StatusCode(StatusCodes.Status202Accepted, body);
+
+        Response.Headers.ETag = $"\"{outcome.Role.RowVersion}\"";
+        return Ok(body);
+    }
+```
+
+`ProblemDetailsMapper.GetStatus`: `"ROLE_SYSTEM_IMMUTABLE" => StatusCodes.Status409Conflict,` และ `"ROLE_CHANGE_REQUEST_PENDING" => StatusCodes.Status409Conflict,`. resx:
+
+| key | th | en |
+| --- | --- | --- |
+| `ROLE_SYSTEM_IMMUTABLE` | แก้ไขบทบาทของระบบไม่ได้ / บทบาทของระบบแก้ไข ปิดใช้งาน หรือเปิดใช้งานไม่ได้ | System role is read-only / A system role cannot be edited, deactivated or activated. |
+| `ROLE_CHANGE_REQUEST_PENDING` | มีคำขอแก้ไขรออนุมัติ / บทบาทนี้มีคำขอแก้ไขที่รอผู้ตรวจอนุมัติ ต้องตัดสินคำขอก่อน | A change request is pending / This role has a change request awaiting a checker. Decide it first. |
+
+- [ ] **Step 4: Store**
+
+เพิ่มใน `RoleManagementStore` (ต้อง `using TanErp.Application.IdentityAccess.Administration;` มีแล้ว):
+
+```csharp
+    private sealed record ChangePlan(List<ResolvedGrant> Wanted, IReadOnlyList<PermissionGrant> Added, IReadOnlyList<PermissionGrant> Removed);
+
+    private Task<bool> HasPendingChangeAsync(Guid roleId, CancellationToken ct) =>
+        _db.RoleChangeRequests.AsNoTracking().AnyAsync(c => c.RoleId == roleId && c.Status == RoleAssignmentRequestStatus.Pending, ct);
+
+    private Task<bool> NameTakenAsync(Guid organizationId, Guid roleId, string name, CancellationToken ct)
+    {
+        var normalized = name.ToUpperInvariant();
+        return _db.Roles.AsNoTracking().AnyAsync(r => r.OrganizationId == organizationId && r.NormalizedName == normalized && r.Id != roleId, ct);
+    }
+
+    /// <summary>
+    /// Diffs the wanted grants against the role and runs the invariants for whoever applies the change
+    /// (the editor now, or the checker at approval): anti-escalation on ADDED grants and the last-administrator guard.
+    /// <paramref name="role"/> must be loaded with its RolePermissions and Permission.
+    /// </summary>
+    private async Task<Result<ChangePlan>> PlanChangeAsync(
+        Role role, Guid organizationId, IReadOnlyList<RoleGrantInput> inputs, AdminActor actor, CancellationToken ct)
+    {
+        var resolved = await ResolveGrantsAsync(organizationId, inputs, ct);
+        if (resolved.IsFailure) return Result<ChangePlan>.Failure(resolved.Error);
+
+        var current = role.RolePermissions.Where(rp => rp.Permission!.IsActive)
+            .Select(rp => new PermissionGrant(rp.Permission!.Key, rp.Scope, rp.ScopeId)).ToList();
+        var (added, removed) = RoleManagementPolicy.Diff(current, resolved.Value!.Select(g => ToGrant(organizationId, g)).ToList());
+
+        var held = await IdentityAdministrationSupport.LoadHeldPermissionsAsync(_db, actor.MembershipId, ct);
+        if (!AdministrationPolicy.Covers(held, organizationId, added))
+            return Fail<ChangePlan>("ROLE_ESCALATION_DENIED", "The change adds permissions the caller does not hold.");
+
+        if (removed.Any(g => g.Key == AdministrationPermissions.UsersManage && g.Scope == PermissionScope.Organization))
+        {
+            var rows = await IdentityAdministrationSupport.LoadAdministratorRowsAsync(_db, organizationId, _clock.UtcNow, ct);
+            if (AdministrationPolicy.WouldRemoveLastAdministrator(rows, row => row.RoleId == role.Id))
+                return Fail<ChangePlan>("LAST_ADMINISTRATOR_REQUIRED", "The organization must keep at least one active administrator.");
+        }
+
+        return Result<ChangePlan>.Success(new ChangePlan(resolved.Value!, added, removed));
+    }
+
+    /// <summary>Applies name/description and the grant diff; throws <see cref="RoleDomainException"/> for a system role or bad name.</summary>
+    private void ApplyDefinition(Role role, Guid organizationId, string name, string? description, ChangePlan plan, DateTimeOffset now)
+    {
+        role.UpdateDetails(name, description);
+        var removable = role.RolePermissions
+            .Where(rp => rp.Permission!.IsActive && plan.Removed.Contains(new PermissionGrant(rp.Permission!.Key, rp.Scope, rp.ScopeId)))
+            .ToList();
+        foreach (var grant in removable) _db.RolePermissions.Remove(grant);
+        foreach (var grant in plan.Wanted.Where(g => plan.Added.Contains(ToGrant(organizationId, g))))
+            _db.RolePermissions.Add(NewGrant(role.Id, organizationId, grant, now));
+    }
+
+    public Task<Result<RoleUpdateOutcome>> UpdateRoleAsync(
+        Guid organizationId, Guid roleId, Guid ifMatch, RoleInput input, AdminActor actor, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            var role = await _db.Roles.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(r => r.Id == roleId && r.OrganizationId == organizationId, ct);
+            if (role is null) return NotFound<RoleUpdateOutcome>("Role");
+            if (role.RowVersion != ifMatch) return Fail<RoleUpdateOutcome>(VersionConflict, "The role was modified by another user.");
+            if (role.IsSystem) return Fail<RoleUpdateOutcome>("ROLE_SYSTEM_IMMUTABLE", "A system role cannot be changed.");
+            if (await HasPendingChangeAsync(roleId, ct))
+                return Fail<RoleUpdateOutcome>("ROLE_CHANGE_REQUEST_PENDING", "A change request is already pending for this role.");
+
+            string name;
+            string? description;
+            try
+            {
+                (name, description) = RoleRules.Normalize(input.Name, input.Description);
+            }
+            catch (RoleDomainException ex)
+            {
+                return Fail<RoleUpdateOutcome>(ex.Code, ex.Message);
+            }
+
+            var plan = await PlanChangeAsync(role, organizationId, input.Permissions, actor, ct);
+            if (plan.IsFailure) return Result<RoleUpdateOutcome>.Failure(plan.Error);
+
+            var now = _clock.UtcNow;
+            var addedKeys = KeysOf(plan.Value!.Added);
+            var removedKeys = KeysOf(plan.Value.Removed);
+            var hasHolders = await _db.MembershipRoles.AnyAsync(mr => mr.RoleId == roleId, ct);
+
+            if (RoleManagementPolicy.NeedsChecker(hasHolders, plan.Value.Wanted.Select(g => g.Key), plan.Value.Added))
+            {
+                if (await NameTakenAsync(organizationId, roleId, name, ct))
+                    return Fail<RoleUpdateOutcome>("ROLE_NAME_ALREADY_EXISTS", "A role with this name already exists.");
+
+                var request = new RoleChangeRequest(
+                    Guid.NewGuid(), organizationId, roleId, actor.UserId, now, role.RowVersion, name, description,
+                    JsonSerializer.Serialize(plan.Value.Wanted.Select(g => new RoleGrantInput(g.Key, g.Scope, g.BranchId)).ToList()));
+                _db.RoleChangeRequests.Add(request);
+                Audit(organizationId, actor, "roles.change-requested", "RoleChangeRequest", request.Id, traceId,
+                    new { roleId, addedPermissionKeys = addedKeys, removedPermissionKeys = removedKeys }, null, request.RowVersion);
+                await _db.SaveChangesAsync(ct);
+
+                var pending = await LoadDefinitionAsync(organizationId, roleId, ct);
+                return Result<RoleUpdateOutcome>.Success(new RoleUpdateOutcome(true, pending.Value!, pending.Value!.PendingChange));
+            }
+
+            var before = role.RowVersion;
+            var changedFields = new List<string>();
+            if (role.Name != name) changedFields.Add("name");
+            if (role.Description != description) changedFields.Add("description");
+            try
+            {
+                ApplyDefinition(role, organizationId, name, description, plan.Value, now);
+            }
+            catch (RoleDomainException ex)
+            {
+                return Fail<RoleUpdateOutcome>(ex.Code, ex.Message);
+            }
+
+            Audit(organizationId, actor, "roles.updated", "Role", roleId, traceId,
+                new { changedFields, addedPermissionKeys = addedKeys, removedPermissionKeys = removedKeys }, before, role.RowVersion);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, NameIndex))
+            {
+                return Fail<RoleUpdateOutcome>("ROLE_NAME_ALREADY_EXISTS", "A role with this name already exists.");
+            }
+
+            var updated = await LoadDefinitionAsync(organizationId, roleId, ct);
+            return Result<RoleUpdateOutcome>.Success(new RoleUpdateOutcome(false, updated.Value!, null));
+        }, ct);
+```
+
+- [ ] **Step 5: Run — ต้องผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~RoleManagementEndpointsTests"`
+Expected: PASS ทุกเคส. ถ้า `Update_RemovingUsersManage...` ล้มด้วย 200 ตั้งแต่ `blocked`: ตรวจว่า Org C user มี `FirebaseUid` และ Organization/Branch active (`LoadAdministratorRowsAsync` กรอง).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add backend/src backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs
+git commit -m "feat(roles): add role update with maker-checker
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 7: Mutation check — system immutability, maker–checker, last administrator (หลัง commit; ไม่ commit การทดลอง)**
+
+ทีละการ mutation (แก้ → รัน → ต้องล้ม → `git checkout --` ไฟล์นั้น):
+1. **System immutability:** ลบบรรทัด `if (role.IsSystem) return Fail<RoleUpdateOutcome>("ROLE_SYSTEM_IMMUTABLE", ...)` ใน `UpdateRoleAsync` **และ** แก้ `Role.EnsureMutable()` ให้ไม่ทำอะไร (ลบ `if (IsSystem) throw ...`) → รัน `--filter "FullyQualifiedName~Update_SystemRole_Returns409AndChangesNothing"` และ `dotnet test backend/tests/TanErp.UnitTests --filter "FullyQualifiedName~SystemRole_RejectsEveryMutation"` Expected: **FAIL ทั้งสอง**. (ลบเฉพาะ store ไม่พอ — domain ป้องกันซ้ำ ซึ่งเป็นความตั้งใจ.) คืนค่า: `git checkout -- backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs backend/src/TanErp.Domain/IdentityAccess/Role.cs`.
+2. **Maker–checker:** ใน `RoleManagementPolicy.NeedsChecker` เปลี่ยนเป็น `=> false;` → รัน `--filter "FullyQualifiedName~Update_AddingApprovalPermissionToAHeldRole_CreatesAPendingRequest"` Expected: **FAIL** (ได้ 200). คืนค่า `git checkout -- backend/src/TanErp.Application/IdentityAccess/RoleManagement/RoleManagementPolicy.cs`.
+3. **Last administrator:** ลบบล็อก `if (removed.Any(g => g.Key == AdministrationPermissions.UsersManage ...)) { ... }` ใน `PlanChangeAsync` → รัน `--filter "FullyQualifiedName~Update_RemovingUsersManageFromTheLastAdministratorRole"` Expected: **FAIL**. คืนค่าด้วย `git checkout -- <RoleManagementStore.cs>`.
+
+หลังคืนทุกไฟล์: `git status --short` ว่าง และรัน filter ของ Task นี้ซ้ำ Expected: PASS.
+
+---
+
+## Task 9: API ตัดสินคำขอแก้ Role (approve / reject / cancel, คิวของผู้ตรวจ)
+
+**Files:**
+- Modify: `backend/src/TanErp.Application/IdentityAccess/RoleManagement/{IRoleManagementStore,RoleManagementHandler}.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs`
+- Modify: `backend/src/TanErp.Api/Contracts/IdentityAccess/RoleManagement/RoleManagementContracts.cs`, `backend/src/TanErp.Api/Controllers/AdminRolesController.cs`
+- Modify: `backend/src/TanErp.Api/ErrorHandling/ProblemDetailsMapper.cs`, `Resources/Errors.resx`, `Resources/Errors.en.resx`
+- Modify: `backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs`
+
+- [ ] **Step 1: เขียน failing integration test**
+
+```csharp
+    // ------------------------------------------------------------------ change requests
+
+    private async Task<(Guid RoleId, RoleChangeRequestResponse Request)> PendingChangeAsync(string name, params string[] addKeys)
+    {
+        var roleId = await SeedRoleAsync(name, new[] { "customers.read" });
+        await SeedHolderAsync(roleId);
+        var response = await PutRole(roleId, name, new[] { "customers.read" }.Concat(addKeys).ToArray());
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        return (roleId, (await ReadAs<UpdateRoleDefinitionResponse>(response)).PendingRequest!);
+    }
+
+    private Task<HttpResponseMessage> Decide(Guid requestId, string action, Guid ifMatch, string token) =>
+        Send(HttpMethod.Post, $"/api/v1/admin/role-change-requests/{requestId}/{action}", token, ifMatch: ifMatch);
+
+    [Fact]
+    public async Task Approve_ByAnIndependentChecker_AppliesTheProposedDefinition()
+    {
+        var (roleId, request) = await PendingChangeAsync("Approve Me", "estimates.approve");
+
+        var response = await Decide(request.Id, "approve", request.RowVersion, CheckerToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(RoleAssignmentRequestStatus.Approved, (await ReadAs<RoleChangeRequestResponse>(response)).Status);
+        var role = await GetRole(roleId);
+        Assert.Contains(role.Permissions, p => p.PermissionKey == "estimates.approve");
+        Assert.Null(role.PendingChange);
+        await using var db = NewDb();
+        Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "roles.change-approved" && a.ResourceId == request.Id.ToString()));
+    }
+
+    [Fact]
+    public async Task Approve_ByTheRequester_Returns403AndTheRoleStaysUnchanged()
+    {
+        var (roleId, request) = await PendingChangeAsync("Self Approve", "estimates.approve");
+
+        var response = await Decide(request.Id, "approve", request.RowVersion, AdminToken); // the maker also holds roles.assign-approval
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED", await ReadCode(response));
+        Assert.DoesNotContain((await GetRole(roleId)).Permissions, p => p.PermissionKey == "estimates.approve");
+    }
+
+    [Fact]
+    public async Task Decisions_RequireTheApprovalPermission_AndTheQueueNeverCrossesOrganizations()
+    {
+        var (_, request) = await PendingChangeAsync("Queue Role", "estimates.approve");
+
+        var approve = await Decide(request.Id, "approve", request.RowVersion, ViewerToken);
+        var list = await Send(HttpMethod.Get, "/api/v1/admin/role-change-requests", ViewerToken);
+        var mine = await ReadAs<RoleChangeRequestListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-change-requests", CheckerToken));
+        var foreign = await ReadAs<RoleChangeRequestListResponse>(await Send(HttpMethod.Get, "/api/v1/admin/role-change-requests", OrgBToken));
+        var foreignDecide = await Decide(request.Id, "approve", request.RowVersion, OrgBToken);
+
+        Assert.Equal("PERMISSION_DENIED", await ReadCode(approve));
+        Assert.Equal(HttpStatusCode.Forbidden, list.StatusCode);
+        Assert.Equal(new[] { "estimates.approve" }, mine.Items.Single(i => i.Id == request.Id).AddedPermissionKeys.ToArray());
+        Assert.Empty(foreign.Items);
+        Assert.Equal(HttpStatusCode.NotFound, foreignDecide.StatusCode);
+    }
+
+    [Fact]
+    public async Task Approve_ByACheckerWhoLacksTheAddedPermission_Returns403AndStaysPending()
+    {
+        var (roleId, request) = await PendingChangeAsync("Beyond Checker", "mrp.approve"); // the checker holds no mrp.approve
+
+        var response = await Decide(request.Id, "approve", request.RowVersion, CheckerToken);
+
+        Assert.Equal("ROLE_ESCALATION_DENIED", await ReadCode(response));
+        Assert.NotNull((await GetRole(roleId)).PendingChange);
+    }
+
+    [Fact]
+    public async Task Approve_WhenTheRoleMovedSinceTheRequest_Returns409Stale()
+    {
+        var (roleId, request) = await PendingChangeAsync("Moved Role", "estimates.approve");
+        await using (var db = NewDb())
+            await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE identity_access.roles SET row_version = {Guid.NewGuid()} WHERE id = {roleId}");
+
+        var response = await Decide(request.Id, "approve", request.RowVersion, CheckerToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("ROLE_CHANGE_REQUEST_STALE", await ReadCode(response));
+    }
+
+    [Fact]
+    public async Task Reject_KeepsTheRoleAndUnblocksNewUpdates_AndAnAlreadyDecidedRequestIs409()
+    {
+        var (roleId, request) = await PendingChangeAsync("Reject Me", "estimates.approve");
+
+        var reject = await Decide(request.Id, "reject", request.RowVersion, CheckerToken);
+        var decidedAgain = await Decide(request.Id, "approve", (await ReadAs<RoleChangeRequestResponse>(reject)).RowVersion, CheckerToken);
+        var stale = await Decide(request.Id, "reject", Guid.NewGuid(), CheckerToken);
+        var update = await PutRole(roleId, "Reject Me", new[] { "customers.read", "quotations.read" });
+
+        Assert.Equal(HttpStatusCode.OK, reject.StatusCode);
+        Assert.Equal("ROLE_CHANGE_REQUEST_NOT_PENDING", await ReadCode(decidedAgain));
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(stale));
+        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+    }
+
+    [Fact]
+    public async Task Cancel_IsOnlyForTheRequester()
+    {
+        var (_, request) = await PendingChangeAsync("Cancel Me", "estimates.approve");
+
+        var byOther = await Decide(request.Id, "cancel", request.RowVersion, CheckerToken); // holds roles.manage but is not the requester
+        var byRequester = await Decide(request.Id, "cancel", request.RowVersion, AdminToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, byOther.StatusCode);
+        Assert.Equal("PERMISSION_DENIED", await ReadCode(byOther));
+        Assert.Equal(RoleAssignmentRequestStatus.Cancelled, (await ReadAs<RoleChangeRequestResponse>(byRequester)).Status);
+    }
+```
+Run → build FAIL (`RoleChangeRequestListResponse` ไม่มี).
+
+- [ ] **Step 2: Application — port + handler**
+
+port:
+
+```csharp
+    Task<IReadOnlyList<RoleChangeRequestView>> ListChangeRequestsAsync(Guid organizationId, string status, CancellationToken ct);
+
+    Task<Result<RoleChangeRequestView>> DecideChangeRequestAsync(
+        Guid organizationId, Guid requestId, Guid ifMatch, RoleRequestDecision decision, AdminActor actor, string traceId, CancellationToken ct);
+```
+handler:
+
+```csharp
+    private static readonly HashSet<string> RequestStatuses = new(StringComparer.Ordinal) { "pending", "approved", "rejected", "cancelled" };
+
+    public async Task<Result<IReadOnlyList<RoleChangeRequestView>>> ListChangeRequestsAsync(AdminCaller caller, string? status, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesAssignApproval, ct);
+        if (access.IsFailure) return Result<IReadOnlyList<RoleChangeRequestView>>.Failure(access.Error);
+
+        var wanted = string.IsNullOrWhiteSpace(status) ? "pending" : status.Trim();
+        if (!RequestStatuses.Contains(wanted)) return AdminHandlerSupport.Validation<IReadOnlyList<RoleChangeRequestView>>("Unknown status filter.");
+        return Result<IReadOnlyList<RoleChangeRequestView>>.Success(await _store.ListChangeRequestsAsync(access.Value!.OrganizationId, wanted, ct));
+    }
+
+    /// <summary>Cancelling is the requester's own action (roles.manage); approving or rejecting is the checker's (roles.assign-approval).</summary>
+    public async Task<Result<RoleChangeRequestView>> DecideChangeRequestAsync(
+        AdminCaller caller, Guid requestId, Guid ifMatch, RoleRequestDecision decision, string traceId, CancellationToken ct)
+    {
+        var permission = decision == RoleRequestDecision.Cancel ? RoleManagementPermissions.RolesManage : RoleManagementPermissions.RolesAssignApproval;
+        var access = await AccessAsync(caller, permission, ct);
+        return access.IsFailure
+            ? Denied<RoleChangeRequestView>(access)
+            : await _store.DecideChangeRequestAsync(access.Value!.OrganizationId, requestId, ifMatch, decision, Actor(access.Value), traceId, ct);
+    }
+```
+
+- [ ] **Step 3: Contracts + controller + error codes**
+
+เพิ่ม `public record RoleChangeRequestListResponse(IReadOnlyList<RoleChangeRequestResponse> Items);` ใน contracts. controller (ต้อง `using TanErp.Application.IdentityAccess.Administration;` มีแล้วสำหรับ `RoleRequestDecision`):
+
+```csharp
+    [HttpGet("role-change-requests")]
+    [ProducesResponseType<RoleChangeRequestListResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListChangeRequests([FromQuery] string? status = null, CancellationToken cancellationToken = default)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        var result = await _handler.ListChangeRequestsAsync(Caller(auth.Value!), status, cancellationToken);
+        return result.IsFailure
+            ? Problem(result.Error)
+            : Ok(new RoleChangeRequestListResponse(result.Value!.Select(RoleChangeRequestResponse.From).ToList()));
+    }
+
+    [HttpPost("role-change-requests/{requestId:guid}/approve")]
+    [ProducesResponseType<RoleChangeRequestResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> ApproveChangeRequest([FromRoute] Guid requestId, CancellationToken cancellationToken) =>
+        DecideChangeRequest(requestId, RoleRequestDecision.Approve, cancellationToken);
+
+    [HttpPost("role-change-requests/{requestId:guid}/reject")]
+    [ProducesResponseType<RoleChangeRequestResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> RejectChangeRequest([FromRoute] Guid requestId, CancellationToken cancellationToken) =>
+        DecideChangeRequest(requestId, RoleRequestDecision.Reject, cancellationToken);
+
+    [HttpPost("role-change-requests/{requestId:guid}/cancel")]
+    [ProducesResponseType<RoleChangeRequestResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> CancelChangeRequest([FromRoute] Guid requestId, CancellationToken cancellationToken) =>
+        DecideChangeRequest(requestId, RoleRequestDecision.Cancel, cancellationToken);
+
+    private async Task<IActionResult> DecideChangeRequest(Guid requestId, RoleRequestDecision decision, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        var result = await _handler.DecideChangeRequestAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), requestId, conditional.Value.IfMatchRowVersion,
+            decision, HttpContext.TraceIdentifier, cancellationToken);
+        return result.IsFailure ? Problem(result.Error) : Ok(RoleChangeRequestResponse.From(result.Value!));
+    }
+```
+`GetStatus`: `ROLE_CHANGE_REQUEST_NOT_PENDING` 409, `ROLE_CHANGE_REQUEST_STALE` 409, `ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED` 403. resx:
+
+| key | th | en |
+| --- | --- | --- |
+| `ROLE_CHANGE_REQUEST_NOT_PENDING` | คำขอถูกตัดสินแล้ว / คำขอแก้ไขบทบาทนี้ถูกตัดสินไปแล้ว | Request already decided / This role change request has already been decided. |
+| `ROLE_CHANGE_REQUEST_STALE` | บทบาทเปลี่ยนไปตั้งแต่ขอ / บทบาทถูกเปลี่ยนหลังจากส่งคำขอ ให้ปฏิเสธคำขอนี้แล้วขอใหม่ | Role changed since the request / The role changed after the request was made. Reject it and request again. |
+| `ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED` | ต้องเป็นผู้ตรวจอีกคน / การตัดสินคำขอต้องทำโดยผู้ใช้คนอื่นที่ไม่ใช่ผู้ขอ | An independent checker is required / The decision must be made by someone other than the requester. |
+
+- [ ] **Step 4: Store**
+
+```csharp
+    public async Task<IReadOnlyList<RoleChangeRequestView>> ListChangeRequestsAsync(Guid organizationId, string status, CancellationToken ct)
+    {
+        var rows = await ChangeRequestQuery(organizationId, c => c.Status == status).Take(200).ToListAsync(ct);
+        var views = new List<RoleChangeRequestView>();
+        foreach (var row in rows)
+            views.Add(ToChangeView(organizationId, row, await LoadGrantViewsAsync(row.Request.RoleId, ct)));
+        return views;
+    }
+
+    public Task<Result<RoleChangeRequestView>> DecideChangeRequestAsync(
+        Guid organizationId, Guid requestId, Guid ifMatch, RoleRequestDecision decision, AdminActor actor, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            var request = await _db.RoleChangeRequests.FirstOrDefaultAsync(c => c.Id == requestId && c.OrganizationId == organizationId, ct);
+            if (request is null) return NotFound<RoleChangeRequestView>("Role change request");
+            if (request.RowVersion != ifMatch) return Fail<RoleChangeRequestView>(VersionConflict, "The request was modified by another user.");
+            if (!request.IsPending) return Fail<RoleChangeRequestView>("ROLE_CHANGE_REQUEST_NOT_PENDING", "The request has already been decided.");
+
+            var now = _clock.UtcNow;
+            var before = request.RowVersion;
+            string action;
+            object changes = new { roleId = request.RoleId };
+
+            if (decision == RoleRequestDecision.Cancel)
+            {
+                if (!request.TryCancel(actor.UserId, now)) return Fail<RoleChangeRequestView>("PERMISSION_DENIED", "Only the requester can cancel a request.");
+                action = "roles.change-cancelled";
+            }
+            else
+            {
+                if (actor.UserId == request.RequestedByUserId)
+                    return Fail<RoleChangeRequestView>("ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED", "The decision must be made by someone other than the requester.");
+
+                if (decision == RoleRequestDecision.Reject)
+                {
+                    request.TryReject(actor.UserId, now);
+                    action = "roles.change-rejected";
+                }
+                else
+                {
+                    var role = await _db.Roles.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission)
+                        .FirstOrDefaultAsync(r => r.Id == request.RoleId && r.OrganizationId == organizationId, ct);
+                    if (role is null) return NotFound<RoleChangeRequestView>("Role");
+                    if (role.RowVersion != request.BaseRoleRowVersion)
+                        return Fail<RoleChangeRequestView>("ROLE_CHANGE_REQUEST_STALE", "The role changed after the request was made.");
+
+                    // The checker is the one handing out the added permissions, so the checker must hold them (anti-escalation).
+                    var plan = await PlanChangeAsync(role, organizationId, ParseGrants(request.ProposedGrantsJson), actor, ct);
+                    if (plan.IsFailure) return Result<RoleChangeRequestView>.Failure(plan.Error);
+                    try
+                    {
+                        ApplyDefinition(role, organizationId, request.ProposedName, request.ProposedDescription, plan.Value!, now);
+                    }
+                    catch (RoleDomainException ex)
+                    {
+                        return Fail<RoleChangeRequestView>(ex.Code, ex.Message);
+                    }
+
+                    request.TryApprove(actor.UserId, now);
+                    action = "roles.change-approved";
+                    changes = new { roleId = request.RoleId, addedPermissionKeys = KeysOf(plan.Value!.Added), removedPermissionKeys = KeysOf(plan.Value.Removed) };
+                }
+            }
+
+            Audit(organizationId, actor, action, "RoleChangeRequest", request.Id, traceId, changes, before, request.RowVersion);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (SerializableTransactionRunner.IsUniqueViolation(ex, NameIndex))
+            {
+                return Fail<RoleChangeRequestView>("ROLE_NAME_ALREADY_EXISTS", "A role with this name already exists.");
+            }
+
+            _db.ChangeTracker.Clear();
+            var row = await ChangeRequestQuery(organizationId, c => c.Id == requestId).FirstAsync(ct);
+            return Result<RoleChangeRequestView>.Success(ToChangeView(organizationId, row, await LoadGrantViewsAsync(row.Request.RoleId, ct)));
+        }, ct);
+```
+
+- [ ] **Step 5: Run — ต้องผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~RoleManagementEndpointsTests"` Expected: PASS ทุกเคส.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add backend/src backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs
+git commit -m "feat(roles): add role change request decisions
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 7: Mutation check — ผู้ตรวจอิสระและการตรวจ Covers ตอนอนุมัติ (หลัง commit; ไม่ commit การทดลอง)**
+
+1. ลบบล็อก `if (actor.UserId == request.RequestedByUserId) return Fail<...>("ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED", ...)` ใน `DecideChangeRequestAsync` → รัน `--filter "FullyQualifiedName~Approve_ByTheRequester_Returns403"` Expected: **FAIL** (constraint `ck_role_change_requests_independent_checker` ของ DB ทำให้ได้ 500 แทน 403 — ชั้น DB เป็นแนวป้องกันที่สอง). คืนค่า `git checkout -- backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs`.
+2. ใน `PlanChangeAsync` เปลี่ยน `AdministrationPolicy.Covers(held, organizationId, added)` เป็น `true` → รัน `--filter "FullyQualifiedName~Approve_ByACheckerWhoLacksTheAddedPermission|FullyQualifiedName~Update_AddingAPermissionTheCallerDoesNotHold"` Expected: **FAIL ทั้งสอง**. คืนค่าด้วย `git checkout`.
+
+หลังคืน: `git status --short` ว่าง และ filter ของ Task นี้ผ่านอีกครั้ง.
+
+---
+
+## Task 10: API ปิด/เปิด Role (`ROLE_IN_USE`)
+
+**Files:**
+- Modify: `backend/src/TanErp.Application/IdentityAccess/RoleManagement/{IRoleManagementStore,RoleManagementHandler}.cs`
+- Modify: `backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs`
+- Modify: `backend/src/TanErp.Api/Controllers/AdminRolesController.cs`, `ErrorHandling/ProblemDetailsMapper.cs`, `Resources/Errors.resx`, `Resources/Errors.en.resx`
+- Modify: `backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs`
+
+- [ ] **Step 1: เขียน failing integration test**
+
+```csharp
+    // ------------------------------------------------------------------ activation
+
+    private Task<HttpResponseMessage> SetActive(Guid roleId, string action, Guid ifMatch, string token = AdminToken) =>
+        Send(HttpMethod.Post, $"/api/v1/admin/role-definitions/{roleId}/{action}", token, ifMatch: ifMatch);
+
+    [Fact]
+    public async Task Deactivate_AnUnheldRole_Succeeds_DropsOutOfTheAssignPicker_AndCanBeActivatedAgain()
+    {
+        var roleId = await SeedRoleAsync("Retire Me", new[] { "customers.read" });
+        var role = await GetRole(roleId);
+
+        var deactivate = await SetActive(roleId, "deactivate", role.RowVersion);
+        var picker = await Send(HttpMethod.Get, "/api/v1/admin/roles", AdminToken);
+
+        Assert.Equal(HttpStatusCode.OK, deactivate.StatusCode);
+        var deactivated = await ReadAs<RoleDefinitionResponse>(deactivate);
+        Assert.False(deactivated.IsActive);
+        Assert.DoesNotContain("Retire Me", await picker.Content.ReadAsStringAsync());
+
+        var activate = await SetActive(roleId, "activate", deactivated.RowVersion);
+        Assert.True((await ReadAs<RoleDefinitionResponse>(activate)).IsActive);
+        await using var db = NewDb();
+        Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "roles.deactivated" && a.ResourceId == roleId.ToString()));
+        Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "roles.activated" && a.ResourceId == roleId.ToString()));
+    }
+
+    [Fact]
+    public async Task Deactivate_AHeldRole_Returns409RoleInUse_AndKeepsItActive()
+    {
+        var roleId = await SeedRoleAsync("In Use", new[] { "customers.read" });
+        await SeedHolderAsync(roleId);
+
+        var response = await SetActive(roleId, "deactivate", (await GetRole(roleId)).RowVersion);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("ROLE_IN_USE", await ReadCode(response));
+        Assert.True((await GetRole(roleId)).IsActive);
+    }
+
+    [Fact]
+    public async Task Deactivate_WithAPendingAssignmentRequest_OrPendingChange_OrSystemRole_IsRefused()
+    {
+        var withRequest = await SeedRoleAsync("Has Assignment Request", new[] { "estimates.approve" });
+        await using (var db = NewDb())
+        {
+            db.RoleAssignmentRequests.Add(new RoleAssignmentRequest(
+                Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, ViewerMembershipId, withRequest, TestOnlyDataSeeder.TestUserId, DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        var (withChange, _) = await PendingChangeAsync("Has Change Request", "estimates.approve");
+        Guid systemRoleId;
+        await using (var db = NewDb()) systemRoleId = (await db.Roles.SingleAsync(r => r.Name == "Test Admin" && r.OrganizationId == TestOnlyDataSeeder.TestOrgId)).Id;
+
+        var assignment = await SetActive(withRequest, "deactivate", (await GetRole(withRequest)).RowVersion);
+        var change = await SetActive(withChange, "deactivate", (await GetRole(withChange)).RowVersion);
+        var system = await SetActive(systemRoleId, "deactivate", (await GetRole(systemRoleId)).RowVersion);
+
+        Assert.Equal("ROLE_IN_USE", await ReadCode(assignment));
+        Assert.Equal("ROLE_CHANGE_REQUEST_PENDING", await ReadCode(change));
+        Assert.Equal("ROLE_SYSTEM_IMMUTABLE", await ReadCode(system));
+    }
+
+    [Fact]
+    public async Task SetActive_RequiresRolesManageAndIfMatch_AndStaysInsideTheOrganization()
+    {
+        var roleId = await SeedRoleAsync("Guarded Toggle");
+        var foreign = await SeedRoleAsync("Foreign Toggle", orgId: TestOnlyDataSeeder.TestOrgBId);
+        var version = (await GetRole(roleId)).RowVersion;
+
+        var denied = await SetActive(roleId, "deactivate", version, ViewerToken);
+        var stale = await SetActive(roleId, "deactivate", Guid.NewGuid());
+        var missing = await Send(HttpMethod.Post, $"/api/v1/admin/role-definitions/{roleId}/deactivate", AdminToken);
+        var otherOrg = await SetActive(foreign, "deactivate", Guid.NewGuid());
+
+        Assert.Equal("PERMISSION_DENIED", await ReadCode(denied));
+        Assert.Equal("ADMIN_VERSION_CONFLICT", await ReadCode(stale));
+        Assert.Equal(HttpStatusCode.PreconditionRequired, missing.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, otherOrg.StatusCode);
+    }
+```
+Run → FAIL (404 route ไม่มี; ไม่ใช่ compile error เพราะใช้ HTTP).
+
+- [ ] **Step 2: Application — port + handler**
+
+port: `Task<Result<RoleDefinition>> SetRoleActiveAsync(Guid organizationId, Guid roleId, bool active, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct);`
+
+handler:
+
+```csharp
+    public async Task<Result<RoleDefinition>> SetRoleActiveAsync(AdminCaller caller, Guid roleId, bool active, Guid ifMatch, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, RoleManagementPermissions.RolesManage, ct);
+        return access.IsFailure
+            ? Denied<RoleDefinition>(access)
+            : await _store.SetRoleActiveAsync(access.Value!.OrganizationId, roleId, active, ifMatch, Actor(access.Value), traceId, ct);
+    }
+```
+
+- [ ] **Step 3: Store, controller, error code**
+
+store:
+
+```csharp
+    public Task<Result<RoleDefinition>> SetRoleActiveAsync(
+        Guid organizationId, Guid roleId, bool active, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
+        RunAsync(async () =>
+        {
+            var role = await _db.Roles.FirstOrDefaultAsync(r => r.Id == roleId && r.OrganizationId == organizationId, ct);
+            if (role is null) return NotFound<RoleDefinition>("Role");
+            if (role.RowVersion != ifMatch) return Fail<RoleDefinition>(VersionConflict, "The role was modified by another user.");
+            if (role.IsSystem) return Fail<RoleDefinition>("ROLE_SYSTEM_IMMUTABLE", "A system role cannot be changed.");
+            if (role.IsActive == active) return await LoadDefinitionAsync(organizationId, roleId, ct);
+
+            if (!active)
+            {
+                // Deactivation silently revokes the role from every holder (an inactive role grants nothing), so it is refused while in use.
+                if (await HasPendingChangeAsync(roleId, ct))
+                    return Fail<RoleDefinition>("ROLE_CHANGE_REQUEST_PENDING", "A change request is pending for this role.");
+                var inUse = await _db.MembershipRoles.AnyAsync(mr => mr.RoleId == roleId, ct)
+                    || await _db.RoleAssignmentRequests.AnyAsync(r => r.RoleId == roleId && r.Status == RoleAssignmentRequestStatus.Pending, ct);
+                if (inUse) return Fail<RoleDefinition>("ROLE_IN_USE", "The role is held by users or has pending assignment requests.");
+            }
+
+            var before = role.RowVersion;
+            if (active) role.Activate(); else role.Deactivate();
+            Audit(organizationId, actor, active ? "roles.activated" : "roles.deactivated", "Role", roleId, traceId, new { roleId }, before, role.RowVersion);
+            await _db.SaveChangesAsync(ct);
+            return await LoadDefinitionAsync(organizationId, roleId, ct);
+        }, ct);
+```
+controller:
+
+```csharp
+    [HttpPost("role-definitions/{roleId:guid}/deactivate")]
+    [ProducesResponseType<RoleDefinitionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> DeactivateRole([FromRoute] Guid roleId, CancellationToken cancellationToken) => SetRoleActive(roleId, false, cancellationToken);
+
+    [HttpPost("role-definitions/{roleId:guid}/activate")]
+    [ProducesResponseType<RoleDefinitionResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> ActivateRole([FromRoute] Guid roleId, CancellationToken cancellationToken) => SetRoleActive(roleId, true, cancellationToken);
+
+    private async Task<IActionResult> SetRoleActive(Guid roleId, bool active, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        return RoleResult(await _handler.SetRoleActiveAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), roleId, active,
+            conditional.Value.IfMatchRowVersion, HttpContext.TraceIdentifier, cancellationToken));
+    }
+```
+`GetStatus`: `"ROLE_IN_USE" => StatusCodes.Status409Conflict,`; resx: `ROLE_IN_USE` th: `ปิดใช้งานบทบาทไม่ได้ / บทบาทนี้ยังมีผู้ถืออยู่หรือมีคำขอมอบบทบาทที่รออยู่ ให้ถอนบทบาทและจัดการคำขอก่อน` en: `Cannot deactivate role / The role is still held by users or has pending assignment requests. Revoke them first.`
+
+- [ ] **Step 4: Run — ต้องผ่าน**
+
+Run: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~RoleManagementEndpointsTests"` Expected: PASS ทั้งหมด. แล้วรัน regression ของ CP-02: `dotnet test backend/tests/TanErp.IntegrationTests --filter "FullyQualifiedName~IdentityAdministrationEndpointsTests"` Expected: PASS (พฤติกรรมเดิมไม่เปลี่ยน แม้ขยาย approval set).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add backend/src backend/tests/TanErp.IntegrationTests/Api/RoleManagementEndpointsTests.cs
+git commit -m "feat(roles): add role deactivation and activation
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 6: Mutation check — ROLE_IN_USE (หลัง commit; ไม่ commit การทดลอง)**
+
+ลบบรรทัด `if (inUse) return Fail<RoleDefinition>("ROLE_IN_USE", ...)` → รัน `--filter "FullyQualifiedName~Deactivate_AHeldRole_Returns409RoleInUse"` Expected: **FAIL**. คืนค่า `git checkout -- backend/src/TanErp.Infrastructure/Persistence/IdentityAccess/RoleManagementStore.cs`; `git status --short` ว่าง.
+
+---
+
+## Task 11: OpenAPI snapshot, generated types และ API client
+
+**กลไกที่ใช้:** `OpenApiContractTests` เขียน `contracts/openapi/tan-erp.v1.json` เมื่อตั้ง `UPDATE_OPENAPI=1` (`OpenApiContractTests.cs:254`) แล้ว `npm run generate:api` สร้าง `frontend/src/generated/api/tan-erp.v1.ts` — เหมือนที่ commit `8a8be98` เปลี่ยนไฟล์ทั้งสองคู่กัน (ไม่ใช้ live swagger).
+
+**Files:**
+- Regenerate: `contracts/openapi/tan-erp.v1.json`, `frontend/src/generated/api/tan-erp.v1.ts`
+- Modify: `frontend/src/lib/api/api-client.ts`, `frontend/src/lib/api/api-client.test.ts`
+
+- [ ] **Step 1: regenerate snapshot (Backend)**
+
+Run: `UPDATE_OPENAPI=1 dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~OpenApiContractTests"`
+Run: `git diff --stat contracts/openapi/tan-erp.v1.json` → Expected: เพิ่มเท่านั้น (paths `/api/v1/admin/permissions`, `/role-definitions`, `/role-definitions/{roleId}`, `/deactivate`, `/activate`, `/role-change-requests`, `/{requestId}/approve|reject|cancel` และ schemas `PermissionCatalogResponse`, `RoleDefinitionListResponse`, `RoleDefinitionSummaryResponse`, `RoleDefinitionResponse`, `RoleGrantResponse`, `RoleGrantRequest`, `SaveRoleDefinitionRequest`, `UpdateRoleDefinitionResponse`, `RoleChangeRequestResponse`, `RoleChangeRequestListResponse`). ตรวจไม่มีบรรทัดถูกลบ: `git diff contracts/openapi/tan-erp.v1.json | grep '^-[^-]' | wc -l` → Expected: `0`.
+Run (ไม่มี `UPDATE_OPENAPI`): `dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~OpenApiContractTests"` → Expected: PASS.
+
+- [ ] **Step 2: generate FE types**
+
+Run: `cd frontend && npm run generate:api && npm run check:api`
+Expected: `check:api` exit 0; `grep -c "SaveRoleDefinitionRequest" src/generated/api/tan-erp.v1.ts` ≥ 1.
+
+- [ ] **Step 3: เขียน failing test ของ client**
+
+ต่อท้าย `describe("ApiClient")` ใน `api-client.test.ts`:
+
+```ts
+  it("calls the role management endpoints with If-Match and Idempotency-Key where required", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
+    global.fetch = fetchMock;
+    const client = new ApiClient("http://localhost:5000");
+    const options = { token: "tok", membershipId: "m-1", locale: "th" as const };
+    const role = { name: "Sales Lead", description: null, permissions: [{ permissionKey: "customers.read", scope: "organization", branchId: null }] };
+
+    await client.listAdminPermissions(options);
+    await client.listRoleDefinitions({ search: "lead", status: "active", sortBy: "name", sortOrder: "asc", page: 2, limit: 10 }, options);
+    await client.getRoleDefinition("r 1", options);
+    await client.createRoleDefinition(role, { ...options, idempotencyKey: "key-0123456789abcdef" });
+    await client.updateRoleDefinition("r1", role, { ...options, ifMatch: "v1" });
+    await client.setRoleDefinitionActive("r1", false, { ...options, ifMatch: "v2" });
+    await client.setRoleDefinitionActive("r1", true, { ...options, ifMatch: "v3" });
+    await client.listRoleChangeRequests("pending", options);
+    await client.decideRoleChangeRequest("q1", "approve", { ...options, ifMatch: "v4" });
+
+    expect(fetchMock.mock.calls.map(([url, init]) => [url, init.method])).toEqual([
+      ["http://localhost:5000/api/v1/admin/permissions", "GET"],
+      ["http://localhost:5000/api/v1/admin/role-definitions?search=lead&status=active&sortBy=name&sortOrder=asc&page=2&limit=10", "GET"],
+      ["http://localhost:5000/api/v1/admin/role-definitions/r%201", "GET"],
+      ["http://localhost:5000/api/v1/admin/role-definitions", "POST"],
+      ["http://localhost:5000/api/v1/admin/role-definitions/r1", "PUT"],
+      ["http://localhost:5000/api/v1/admin/role-definitions/r1/deactivate", "POST"],
+      ["http://localhost:5000/api/v1/admin/role-definitions/r1/activate", "POST"],
+      ["http://localhost:5000/api/v1/admin/role-change-requests?status=pending", "GET"],
+      ["http://localhost:5000/api/v1/admin/role-change-requests/q1/approve", "POST"],
+    ]);
+    expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).toBe("key-0123456789abcdef");
+    expect(fetchMock.mock.calls[4][1].headers["If-Match"]).toBe('"v1"');
+    expect(fetchMock.mock.calls[8][1].headers["If-Match"]).toBe('"v4"');
+  });
+```
+Run: `cd frontend && npx vitest run src/lib/api/api-client.test.ts` → Expected: FAIL (`client.listAdminPermissions is not a function`).
+
+- [ ] **Step 4: types + methods**
+
+ใน `api-client.ts` ใกล้ `BranchDeactivationCheckResponse` (:106) เพิ่ม:
+
+```ts
+export type PermissionCatalogResponse = components["schemas"]["PermissionCatalogResponse"];
+export type RoleDefinitionListResponse = components["schemas"]["RoleDefinitionListResponse"];
+export type RoleDefinitionSummaryResponse = components["schemas"]["RoleDefinitionSummaryResponse"];
+export type RoleDefinitionResponse = components["schemas"]["RoleDefinitionResponse"];
+export type RoleGrantResponse = components["schemas"]["RoleGrantResponse"];
+export type RoleGrantRequest = components["schemas"]["RoleGrantRequest"];
+export type SaveRoleDefinitionRequest = components["schemas"]["SaveRoleDefinitionRequest"];
+export type UpdateRoleDefinitionResponse = components["schemas"]["UpdateRoleDefinitionResponse"];
+export type RoleChangeRequestResponse = components["schemas"]["RoleChangeRequestResponse"];
+export type RoleChangeRequestListResponse = components["schemas"]["RoleChangeRequestListResponse"];
+export type RoleDefinitionListParams = NonNullable<paths["/api/v1/admin/role-definitions"]["get"]["parameters"]["query"]>;
+```
+
+ในคลาส `ApiClient` ถัดจาก `decideAdminRoleRequest`:
+
+```ts
+  async listAdminPermissions(options: RequestOptions): Promise<PermissionCatalogResponse> {
+    return this.request<PermissionCatalogResponse>("/api/v1/admin/permissions", "GET", options);
+  }
+
+  async listRoleDefinitions(params: RoleDefinitionListParams, options: RequestOptions): Promise<RoleDefinitionListResponse> {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.status) query.set("status", params.status);
+    if (params.sortBy) query.set("sortBy", params.sortBy);
+    if (params.sortOrder) query.set("sortOrder", params.sortOrder);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString();
+    return this.request<RoleDefinitionListResponse>(`/api/v1/admin/role-definitions${suffix ? `?${suffix}` : ""}`, "GET", options);
+  }
+
+  async getRoleDefinition(roleId: string, options: RequestOptions): Promise<RoleDefinitionResponse> {
+    return this.request<RoleDefinitionResponse>(`/api/v1/admin/role-definitions/${encodeURIComponent(roleId)}`, "GET", options);
+  }
+
+  async createRoleDefinition(payload: SaveRoleDefinitionRequest, options: RequestOptions): Promise<RoleDefinitionResponse> {
+    return this.request<RoleDefinitionResponse>("/api/v1/admin/role-definitions", "POST", options, payload);
+  }
+
+  async updateRoleDefinition(
+    roleId: string,
+    payload: SaveRoleDefinitionRequest,
+    options: RequestOptions
+  ): Promise<UpdateRoleDefinitionResponse> {
+    return this.request<UpdateRoleDefinitionResponse>(
+      `/api/v1/admin/role-definitions/${encodeURIComponent(roleId)}`, "PUT", options, payload);
+  }
+
+  async setRoleDefinitionActive(roleId: string, active: boolean, options: RequestOptions): Promise<RoleDefinitionResponse> {
+    return this.request<RoleDefinitionResponse>(
+      `/api/v1/admin/role-definitions/${encodeURIComponent(roleId)}/${active ? "activate" : "deactivate"}`, "POST", options);
+  }
+
+  async listRoleChangeRequests(status: string, options: RequestOptions): Promise<RoleChangeRequestListResponse> {
+    return this.request<RoleChangeRequestListResponse>(
+      `/api/v1/admin/role-change-requests?status=${encodeURIComponent(status)}`, "GET", options);
+  }
+
+  async decideRoleChangeRequest(
+    requestId: string,
+    decision: "approve" | "reject" | "cancel",
+    options: RequestOptions
+  ): Promise<RoleChangeRequestResponse> {
+    return this.request<RoleChangeRequestResponse>(
+      `/api/v1/admin/role-change-requests/${encodeURIComponent(requestId)}/${decision}`, "POST", options);
+  }
+```
+Run: `cd frontend && npx vitest run src/lib/api/api-client.test.ts && npm run typecheck` → Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add contracts/openapi/tan-erp.v1.json frontend/src/generated/api/tan-erp.v1.ts frontend/src/lib/api/api-client.ts frontend/src/lib/api/api-client.test.ts
+git commit -m "feat(roles): add role management api client
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 12: Frontend foundation — i18n, error whitelist และ query hooks
+
+**Files:**
+- Modify: `frontend/src/messages/th.json`, `frontend/src/messages/en.json`
+- Create: `frontend/src/features/settings/role-management/role-management-errors.ts` (+ `.test.ts`)
+- Create: `frontend/src/features/settings/role-management/api/role-management-queries.ts`
+
+- [ ] **Step 1: เขียน failing test (error whitelist + parity th/en)**
+
+สร้าง `role-management-errors.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { ApiError } from "@/lib/api/api-error";
+import thMessages from "@/messages/th.json";
+import enMessages from "@/messages/en.json";
+import { KNOWN_ROLE_ADMIN_ERROR_CODES, roleAdminErrorKey } from "./role-management-errors";
+
+function leafKeys(value: unknown, prefix = ""): string[] {
+  if (typeof value !== "object" || value === null) return [prefix];
+  return Object.entries(value).flatMap(([key, child]) => leafKeys(child, prefix ? `${prefix}.${key}` : key));
+}
+
+describe("roleAdminErrorKey", () => {
+  it("maps known backend codes and falls back to GENERIC", () => {
+    expect(roleAdminErrorKey(new ApiError({ status: 409, code: "ROLE_IN_USE", message: "x" }))).toBe("ROLE_IN_USE");
+    expect(roleAdminErrorKey(new ApiError({ status: 500, code: "SOMETHING_NEW", message: "x" }))).toBe("GENERIC");
+    expect(roleAdminErrorKey(new Error("ROLE_IN_USE"))).toBe("GENERIC");
+  });
+
+  it("has a Thai and English message for every mapped code plus GENERIC, and identical key sets", () => {
+    for (const messages of [thMessages, enMessages]) {
+      for (const code of [...KNOWN_ROLE_ADMIN_ERROR_CODES, "GENERIC"]) {
+        expect(messages.roleAdmin.errors).toHaveProperty(code);
+      }
+    }
+    expect(leafKeys(thMessages.roleAdmin).sort()).toEqual(leafKeys(enMessages.roleAdmin).sort());
+  });
+});
+```
+Run: `cd frontend && npx vitest run src/features/settings/role-management/role-management-errors.test.ts` → Expected: FAIL (module ไม่มี).
+
+- [ ] **Step 2: error whitelist**
+
+สร้าง `role-management-errors.ts`:
+
+```ts
+import { ApiError } from "@/lib/api/api-error";
+
+/** Backend codes that have a dedicated message in `roleAdmin.errors`. Anything else shows the generic message. */
+export const KNOWN_ROLE_ADMIN_ERROR_CODES = [
+  "ADMIN_VERSION_CONFLICT",
+  "ROLE_NAME_ALREADY_EXISTS",
+  "ROLE_NAME_RESERVED",
+  "ROLE_PERMISSION_UNKNOWN",
+  "ROLE_ESCALATION_DENIED",
+  "ROLE_SYSTEM_IMMUTABLE",
+  "ROLE_IN_USE",
+  "ROLE_CHANGE_REQUEST_PENDING",
+  "ROLE_CHANGE_REQUEST_NOT_PENDING",
+  "ROLE_CHANGE_REQUEST_STALE",
+  "ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED",
+  "LAST_ADMINISTRATOR_REQUIRED",
+  "BRANCH_NOT_FOUND",
+  "IDEMPOTENCY_KEY_REUSED",
+  "PERMISSION_DENIED",
+  "RESOURCE_NOT_FOUND",
+] as const;
+
+const KNOWN = new Set<string>(KNOWN_ROLE_ADMIN_ERROR_CODES);
+
+/** Returns the key under `roleAdmin.errors` for a failed role administration call. */
+export function roleAdminErrorKey(error: unknown): string {
+  return error instanceof ApiError && KNOWN.has(error.code) ? error.code : "GENERIC";
+}
+```
+
+- [ ] **Step 3: เพิ่ม messages th/en (สคริปต์ guard round-trip)**
+
+รันจาก `frontend/`:
+
+```bash
+python3 - <<'PY'
+import json
+
+TH = {
+  "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
+  "accessDeniedDetail": "คุณไม่มีสิทธิ์จัดการบทบาทและสิทธิ์",
+  "list": {
+    "title": "บทบาทและสิทธิ์", "subtitle": "สร้างและแก้ไขบทบาทจากรายการสิทธิ์ที่ระบบกำหนด", "createRole": "เพิ่มบทบาท",
+    "searchPlaceholder": "ค้นหาชื่อหรือคำอธิบายบทบาท", "statusFilter": "สถานะ", "status": {"active": "ใช้งาน", "inactive": "ปิดใช้งาน"},
+    "table": {"name": "บทบาท", "members": "ผู้ถือบทบาท", "permissions": "สิทธิ์", "status": "สถานะ"},
+    "badges": {"system": "ระบบ", "requiresApproval": "ต้องมีผู้ตรวจอนุมัติ", "pendingChange": "รอการอนุมัติการแก้ไข"},
+    "emptyTitle": "ยังไม่มีบทบาท", "emptyDescription": "เพิ่มบทบาทแรกเพื่อกำหนดสิทธิ์การใช้งาน"
+  },
+  "editor": {
+    "createTitle": "เพิ่มบทบาท", "createSubtitle": "เลือกสิทธิ์จากรายการที่ระบบกำหนด", "editTitle": "แก้ไขบทบาท",
+    "createSubmit": "เพิ่มบทบาท", "saveSubmit": "บันทึกการเปลี่ยนแปลง", "createSuccess": "เพิ่มบทบาทแล้ว", "saveSuccess": "บันทึกบทบาทแล้ว",
+    "pendingSubmitted": "ส่งคำขอแก้ไขให้ผู้ตรวจอนุมัติแล้ว", "backToList": "กลับไปรายการบทบาท",
+    "systemReadOnly": "บทบาทของระบบแก้ไขไม่ได้",
+    "pendingBanner": "มีคำขอแก้ไขรออนุมัติ จึงแก้ไขหรือปิดใช้งานบทบาทนี้ไม่ได้จนกว่าจะตัดสินคำขอ",
+    "approvalNotice": "การเพิ่มสิทธิ์อนุมัติให้บทบาทที่มีผู้ถืออยู่ต้องให้ผู้ตรวจอีกคนอนุมัติก่อนมีผล",
+    "fields": {"name": "ชื่อบทบาท", "description": "คำอธิบาย"},
+    "validation": {"nameRequired": "กรุณากรอกชื่อบทบาท", "nameLength": "ชื่อบทบาทต้องมี 3-100 ตัวอักษร"},
+    "permissions": {"title": "สิทธิ์ของบทบาท", "searchPlaceholder": "ค้นหาสิทธิ์", "approvalTag": "สิทธิ์อนุมัติ", "noMatch": "ไม่พบสิทธิ์ที่ค้นหา",
+                    "selectedCount": "เลือกแล้ว {count} สิทธิ์", "scopedTitle": "สิทธิ์ที่จำกัดขอบเขต (คงไว้ตามเดิม)",
+                    "scopedHint": "สิทธิ์ระดับสาขาหรือของตนเองเพิ่มผ่านหน้านี้ไม่ได้ แต่จะถูกคงไว้เมื่อบันทึก",
+                    "scope": {"branch": "สาขา", "own": "ของตนเอง"}}
+  },
+  "activation": {
+    "title": "สถานะบทบาท", "membersCount": "ผู้ถือบทบาท {count} คน", "pendingAssignments": "คำขอมอบบทบาทที่รอ {count} รายการ",
+    "inUseHint": "ต้องถอนบทบาทจากผู้ใช้และจัดการคำขอที่รออยู่ให้หมดก่อนปิดใช้งาน",
+    "deactivate": {"action": "ปิดใช้งานบทบาท", "message": "บทบาทนี้จะไม่แสดงในรายการมอบบทบาทอีก ยืนยันการปิดใช้งาน?", "confirm": "ปิดใช้งาน", "success": "ปิดใช้งานบทบาทแล้ว"},
+    "activate": {"action": "เปิดใช้งานบทบาท", "message": "บทบาทนี้จะกลับมาให้มอบได้อีกครั้ง ยืนยันการเปิดใช้งาน?", "confirm": "เปิดใช้งาน", "success": "เปิดใช้งานบทบาทแล้ว"}
+  },
+  "queue": {
+    "title": "คำขอแก้ไขบทบาทที่รออนุมัติ", "subtitle": "ผู้ตรวจต้องเป็นคนละคนกับผู้ขอ", "emptyTitle": "ไม่มีคำขอแก้ไขบทบาทที่รออนุมัติ", "emptyDescription": "คำขอใหม่จะแสดงที่นี่",
+    "role": "บทบาท", "requestedBy": "ผู้ขอ", "requestedAt": "วันที่ขอ", "changes": "การเปลี่ยนแปลง", "added": "เพิ่ม", "removed": "ถอน",
+    "approve": "อนุมัติ", "reject": "ปฏิเสธ", "approved": "อนุมัติคำขอแล้ว", "rejected": "ปฏิเสธคำขอแล้ว",
+    "confirmApproveTitle": "อนุมัติการแก้ไขบทบาท", "confirmApproveMessage": "ยืนยันการอนุมัติการแก้ไขบทบาท {role}?",
+    "confirmRejectTitle": "ปฏิเสธการแก้ไขบทบาท", "confirmRejectMessage": "ยืนยันการปฏิเสธการแก้ไขบทบาท {role}?"
+  },
+  "errors": {
+    "GENERIC": "ดำเนินการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "ADMIN_VERSION_CONFLICT": "ข้อมูลถูกแก้ไขโดยผู้อื่นแล้ว กรุณาโหลดใหม่แล้วลองอีกครั้ง",
+    "ROLE_NAME_ALREADY_EXISTS": "มีบทบาทที่ใช้ชื่อนี้อยู่แล้ว",
+    "ROLE_NAME_RESERVED": "ชื่อที่ขึ้นต้นด้วย system. สงวนไว้สำหรับบทบาทของระบบ",
+    "ROLE_PERMISSION_UNKNOWN": "มีสิทธิ์ที่ไม่อยู่ในรายการสิทธิ์ของระบบ",
+    "ROLE_ESCALATION_DENIED": "คุณเพิ่มสิทธิ์ที่ตนเองไม่ได้ถืออยู่ไม่ได้",
+    "ROLE_SYSTEM_IMMUTABLE": "บทบาทของระบบแก้ไขไม่ได้",
+    "ROLE_IN_USE": "บทบาทนี้ยังมีผู้ถืออยู่หรือมีคำขอมอบบทบาทที่รออยู่",
+    "ROLE_CHANGE_REQUEST_PENDING": "บทบาทนี้มีคำขอแก้ไขที่รออนุมัติอยู่",
+    "ROLE_CHANGE_REQUEST_NOT_PENDING": "คำขอนี้ถูกตัดสินไปแล้ว",
+    "ROLE_CHANGE_REQUEST_STALE": "บทบาทเปลี่ยนไปตั้งแต่ขอ ให้ปฏิเสธคำขอนี้แล้วขอใหม่",
+    "ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED": "ผู้ตรวจต้องเป็นคนละคนกับผู้ขอ",
+    "LAST_ADMINISTRATOR_REQUIRED": "องค์กรต้องมีผู้ดูแลระบบที่ใช้งานอยู่อย่างน้อยหนึ่งคน",
+    "BRANCH_NOT_FOUND": "ไม่พบสาขาที่ระบุ",
+    "IDEMPOTENCY_KEY_REUSED": "คำขอซ้ำไม่ตรงกับคำขอเดิม กรุณาลองใหม่",
+    "PERMISSION_DENIED": "คุณไม่มีสิทธิ์ดำเนินการนี้",
+    "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"
+  }
+}
+
+EN = {
+  "accessDeniedTitle": "Access denied",
+  "accessDeniedDetail": "You do not have permission to manage roles and permissions.",
+  "list": {
+    "title": "Roles and permissions", "subtitle": "Create and edit roles from the system permission catalog", "createRole": "Add role",
+    "searchPlaceholder": "Search role name or description", "statusFilter": "Status", "status": {"active": "Active", "inactive": "Inactive"},
+    "table": {"name": "Role", "members": "Holders", "permissions": "Permissions", "status": "Status"},
+    "badges": {"system": "System", "requiresApproval": "Needs checker", "pendingChange": "Change pending"},
+    "emptyTitle": "No roles yet", "emptyDescription": "Add the first role to define access"
+  },
+  "editor": {
+    "createTitle": "Add role", "createSubtitle": "Pick permissions from the system catalog", "editTitle": "Edit role",
+    "createSubmit": "Add role", "saveSubmit": "Save changes", "createSuccess": "Role added", "saveSuccess": "Role saved",
+    "pendingSubmitted": "Change request sent to a checker", "backToList": "Back to roles",
+    "systemReadOnly": "System roles cannot be edited",
+    "pendingBanner": "A change request is awaiting approval, so this role cannot be edited or deactivated until it is decided.",
+    "approvalNotice": "Adding approval permissions to a role that people already hold needs another checker to approve before it takes effect.",
+    "fields": {"name": "Role name", "description": "Description"},
+    "validation": {"nameRequired": "Enter the role name", "nameLength": "The role name must be 3-100 characters"},
+    "permissions": {"title": "Role permissions", "searchPlaceholder": "Search permissions", "approvalTag": "Approval permission", "noMatch": "No permissions match",
+                    "selectedCount": "{count} selected", "scopedTitle": "Scoped permissions (kept as they are)",
+                    "scopedHint": "Branch or own-scope permissions cannot be added here but are preserved when you save.",
+                    "scope": {"branch": "Branch", "own": "Own"}}
+  },
+  "activation": {
+    "title": "Role status", "membersCount": "{count} holders", "pendingAssignments": "{count} pending assignment requests",
+    "inUseHint": "Revoke the role from users and settle pending requests before deactivating.",
+    "deactivate": {"action": "Deactivate role", "message": "This role will no longer be offered for assignment. Deactivate it?", "confirm": "Deactivate", "success": "Role deactivated"},
+    "activate": {"action": "Activate role", "message": "This role can be assigned again. Activate it?", "confirm": "Activate", "success": "Role activated"}
+  },
+  "queue": {
+    "title": "Role change requests awaiting approval", "subtitle": "The checker must be a different person from the requester", "emptyTitle": "No role change requests awaiting approval", "emptyDescription": "New requests will appear here",
+    "role": "Role", "requestedBy": "Requested by", "requestedAt": "Requested on", "changes": "Changes", "added": "Added", "removed": "Removed",
+    "approve": "Approve", "reject": "Reject", "approved": "Request approved", "rejected": "Request rejected",
+    "confirmApproveTitle": "Approve role change", "confirmApproveMessage": "Approve the change to role {role}?",
+    "confirmRejectTitle": "Reject role change", "confirmRejectMessage": "Reject the change to role {role}?"
+  },
+  "errors": {
+    "GENERIC": "The action failed. Please try again.",
+    "ADMIN_VERSION_CONFLICT": "This record was changed by someone else. Reload and try again.",
+    "ROLE_NAME_ALREADY_EXISTS": "A role with this name already exists.",
+    "ROLE_NAME_RESERVED": "Names starting with system. are reserved for built-in roles.",
+    "ROLE_PERMISSION_UNKNOWN": "A permission is not in the system catalog.",
+    "ROLE_ESCALATION_DENIED": "You cannot add permissions you do not hold yourself.",
+    "ROLE_SYSTEM_IMMUTABLE": "System roles cannot be changed.",
+    "ROLE_IN_USE": "This role is still held by users or has pending assignment requests.",
+    "ROLE_CHANGE_REQUEST_PENDING": "This role already has a change request awaiting approval.",
+    "ROLE_CHANGE_REQUEST_NOT_PENDING": "This request has already been decided.",
+    "ROLE_CHANGE_REQUEST_STALE": "The role changed after the request was made. Reject it and request again.",
+    "ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED": "The checker must be a different person from the requester.",
+    "LAST_ADMINISTRATOR_REQUIRED": "The organization must keep at least one active administrator.",
+    "BRANCH_NOT_FOUND": "The branch was not found.",
+    "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
+    "PERMISSION_DENIED": "You do not have permission to do this.",
+    "RESOURCE_NOT_FOUND": "The requested record was not found."
+  }
+}
+
+SHELL = {"src/messages/th.json": "บทบาทและสิทธิ์", "src/messages/en.json": "Roles"}
+for path, ns in (("src/messages/th.json", TH), ("src/messages/en.json", EN)):
+    raw = open(path, encoding="utf-8").read()
+    data = json.loads(raw)
+    assert json.dumps(data, indent=2, ensure_ascii=False) + "\n" == raw, f"{path} does not round-trip; edit by hand"
+    assert "roleAdmin" not in data and "roleSettings" not in data["shell"], f"{path} already updated"
+    data["shell"]["roleSettings"] = SHELL[path]
+    data["roleAdmin"] = ns
+    open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+PY
+git diff --stat -- src/messages
+```
+Expected: เฉพาะบรรทัดที่เพิ่ม (deletions เฉพาะ `,` ท้ายคีย์เดิมที่ต่อท้าย). ถ้า assert round-trip ล้ม ให้เพิ่มด้วย Edit ท้ายไฟล์แทน.
+
+Run: `cd frontend && npx vitest run src/features/settings/role-management/role-management-errors.test.ts` → Expected: PASS.
+
+- [ ] **Step 4: query hooks (รูปแบบเดียวกับ user-admin / organization)**
+
+สร้าง `frontend/src/features/settings/role-management/api/role-management-queries.ts`:
+
+```ts
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+  type UseMutationResult,
+  type UseQueryResult,
+} from "@tanstack/react-query";
+import {
+  apiClient,
+  type PermissionCatalogResponse,
+  type RoleChangeRequestListResponse,
+  type RoleChangeRequestResponse,
+  type RoleDefinitionListParams,
+  type RoleDefinitionListResponse,
+  type RoleDefinitionResponse,
+  type SaveRoleDefinitionRequest,
+  type UpdateRoleDefinitionResponse,
+} from "@/lib/api/api-client";
+import { useApiRequestContext, type ApiLocale } from "@/lib/api/use-api-request-context";
+
+export const roleAdminKeys = {
+  all: (membershipId: string | null | undefined) => ["business", membershipId] as const,
+  catalog: (membershipId: string | null | undefined, locale: ApiLocale) =>
+    ["business", membershipId, locale, "role-admin", "catalog"] as const,
+  list: (membershipId: string | null | undefined, locale: ApiLocale, params: RoleDefinitionListParams) =>
+    ["business", membershipId, locale, "role-admin", "list", params] as const,
+  detail: (membershipId: string | null | undefined, locale: ApiLocale, roleId: string) =>
+    ["business", membershipId, locale, "role-admin", "detail", roleId] as const,
+  requests: (membershipId: string | null | undefined, locale: ApiLocale, status: string) =>
+    ["business", membershipId, locale, "role-admin", "change-requests", status] as const,
+};
+
+/** A role change alters what every permission-gated screen allows, so refresh all business queries (as user-admin does). */
+function invalidateRoles(queryClient: QueryClient, membershipId: string | undefined): void {
+  void queryClient.invalidateQueries({ queryKey: roleAdminKeys.all(membershipId) });
+}
+
+export function useAdminPermissionCatalog(): UseQueryResult<PermissionCatalogResponse, Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: roleAdminKeys.catalog(context.membershipId, context.locale),
+    enabled: Boolean(context.membershipId),
+    queryFn: async ({ signal }) => apiClient.listAdminPermissions(await context.buildOptions({ signal })),
+  });
+}
+
+export function useRoleDefinitions(params: RoleDefinitionListParams): UseQueryResult<RoleDefinitionListResponse, Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: roleAdminKeys.list(context.membershipId, context.locale, params),
+    enabled: Boolean(context.membershipId),
+    queryFn: async ({ signal }) => apiClient.listRoleDefinitions(params, await context.buildOptions({ signal })),
+  });
+}
+
+export function useRoleDefinition(roleId: string, enabled: boolean): UseQueryResult<RoleDefinitionResponse, Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: roleAdminKeys.detail(context.membershipId, context.locale, roleId),
+    enabled: Boolean(context.membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.getRoleDefinition(roleId, await context.buildOptions({ signal })),
+  });
+}
+
+export function useRoleChangeRequests(status: string, enabled = true): UseQueryResult<RoleChangeRequestListResponse, Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: roleAdminKeys.requests(context.membershipId, context.locale, status),
+    enabled: Boolean(context.membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.listRoleChangeRequests(status, await context.buildOptions({ signal })),
+  });
+}
+
+export function useCreateRoleDefinition(): UseMutationResult<
+  RoleDefinitionResponse, Error, { payload: SaveRoleDefinitionRequest; idempotencyKey: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ payload, idempotencyKey }) =>
+      apiClient.createRoleDefinition(payload, await context.buildOptions({ idempotencyKey })),
+    onSuccess: () => invalidateRoles(queryClient, context.membershipId),
+  });
+}
+
+export function useUpdateRoleDefinition(): UseMutationResult<
+  UpdateRoleDefinitionResponse, Error, { roleId: string; payload: SaveRoleDefinitionRequest; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ roleId, payload, ifMatch }) =>
+      apiClient.updateRoleDefinition(roleId, payload, await context.buildOptions({ ifMatch })),
+    onSuccess: () => invalidateRoles(queryClient, context.membershipId),
+  });
+}
+
+export function useSetRoleDefinitionActive(): UseMutationResult<
+  RoleDefinitionResponse, Error, { roleId: string; active: boolean; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ roleId, active, ifMatch }) =>
+      apiClient.setRoleDefinitionActive(roleId, active, await context.buildOptions({ ifMatch })),
+    onSuccess: () => invalidateRoles(queryClient, context.membershipId),
+  });
+}
+
+export function useDecideRoleChangeRequest(): UseMutationResult<
+  RoleChangeRequestResponse, Error, { requestId: string; decision: "approve" | "reject" | "cancel"; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ requestId, decision, ifMatch }) =>
+      apiClient.decideRoleChangeRequest(requestId, decision, await context.buildOptions({ ifMatch })),
+    onSuccess: () => invalidateRoles(queryClient, context.membershipId),
+  });
+}
+```
+Run: `cd frontend && npm run typecheck && npm run lint` → Expected: 0 errors (ไม่มี `any`).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add frontend/src/messages/th.json frontend/src/messages/en.json frontend/src/features/settings/role-management
+git commit -m "feat(roles): add role management translations, error map and query hooks
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 13: Frontend — รายการ Role, route และเมนู
+
+**Files:**
+- Create: `frontend/src/features/settings/role-management/components/role-definition-list.tsx` (+ `.test.tsx`)
+- Create: `frontend/src/app/[locale]/(erp)/settings/roles/page.tsx`
+- Modify: `frontend/src/components/layout/SidebarNav.tsx`, `frontend/src/components/layout/SidebarNav.test.tsx`
+
+- [ ] **Step 1: เขียน failing test**
+
+สร้าง `role-definition-list.test.tsx`:
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { RoleDefinitionList } from "./role-definition-list";
+
+const mocks = vi.hoisted(() => ({
+  permissions: [] as string[],
+  push: vi.fn(),
+  params: undefined as Record<string, unknown> | undefined,
+  result: {} as Record<string, unknown>,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mocks.push, replace: vi.fn() }),
+  usePathname: () => "/th/settings/roles",
+  useSearchParams: () => new URLSearchParams(),
+}));
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({
+    selectedMembership: { id: "m1", permissions: mocks.permissions.map((key) => ({ key, scope: "organization" })) },
+  }),
+}));
+vi.mock("../api/role-management-queries", () => ({
+  useRoleDefinitions: (params: Record<string, unknown>) => {
+    mocks.params = params;
+    return mocks.result;
+  },
+}));
+
+const items = [
+  { id: "r1", name: "Test Admin", description: "ผู้ดูแล", isSystem: true, isActive: true, rowVersion: "v1", memberCount: 2, permissionCount: 40, requiresApproval: true, hasPendingChange: false },
+  { id: "r2", name: "ผู้ประเมิน", description: null, isSystem: false, isActive: false, rowVersion: "v2", memberCount: 0, permissionCount: 3, requiresApproval: false, hasPendingChange: true },
+];
+
+describe("RoleDefinitionList", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.permissions = ["roles.manage"];
+    mocks.result = {
+      data: { items, pagination: { page: 1, pageSize: 25, totalCount: 2, totalPages: 1 } },
+      isLoading: false, isError: false, refetch: vi.fn(),
+    };
+  });
+
+  it("lists roles with system, approval and pending-change badges and links to the editor", () => {
+    render(<RoleDefinitionList />);
+
+    expect(screen.getByRole("link", { name: /Test Admin/ })).toHaveAttribute("href", "/th/settings/roles/r1");
+    expect(screen.getByText("ระบบ")).toBeInTheDocument();
+    expect(screen.getByText("ต้องมีผู้ตรวจอนุมัติ")).toBeInTheDocument();
+    expect(screen.getByText("รอการอนุมัติการแก้ไข")).toBeInTheDocument();
+    expect(screen.getAllByText("ปิดใช้งาน").length).toBeGreaterThan(0); // the inactive role's status badge (the filter also lists it)
+  });
+
+  it("asks the server for a sorted, paged list and routes the add button to the create form", () => {
+    render(<RoleDefinitionList />);
+
+    expect(mocks.params).toMatchObject({ sortBy: "name", sortOrder: "asc", page: 1 });
+    fireEvent.click(screen.getByRole("button", { name: "เพิ่มบทบาท" }));
+    expect(mocks.push).toHaveBeenCalledWith("/th/settings/roles/create");
+  });
+
+  it("hides the add button without roles.manage", () => {
+    mocks.permissions = [];
+    render(<RoleDefinitionList />);
+
+    expect(screen.queryByRole("button", { name: "เพิ่มบทบาท" })).not.toBeInTheDocument();
+  });
+});
+```
+Run: `cd frontend && npx vitest run src/features/settings/role-management/components/role-definition-list.test.tsx` → Expected: FAIL (module ไม่มี).
+
+- [ ] **Step 2: component + route**
+
+สร้าง `role-definition-list.tsx`:
+
+```tsx
+"use client";
+
+import React, { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListFilterSelect } from "@/components/ui/ListFilterSelect";
+import { ListSearchInput } from "@/components/ui/ListSearchInput";
+import { ListToolbar } from "@/components/ui/ListToolbar";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { TableEntityCell } from "@/components/ui/TableEntityCell";
+import { IconPlus } from "@/components/common/Icons";
+import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
+import type { RoleDefinitionSummaryResponse } from "@/lib/api/api-client";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { can, PERMISSIONS } from "@/lib/permissions/can";
+import { useRoleDefinitions } from "../api/role-management-queries";
+
+interface RoleFilters extends ListFilterRecord {
+  status?: string;
+}
+
+const STATUS_VALUES = ["active", "inactive"] as const;
+
+export function RoleDefinitionList() {
+  const t = useTranslations("roleAdmin");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const router = useRouter();
+  const { selectedMembership } = useSelectedMembership();
+  const canManage = can(selectedMembership, PERMISSIONS.ROLES_MANAGE);
+
+  const listState = useListState<RoleFilters>({
+    schema: { defaultSort: "name", defaultOrder: "asc", single: ["status"], allowedSorts: ["name", "createdAt"] },
+    debounceMs: 350,
+  });
+  const { search, page, limit, sort, order, filters } = listState.params;
+  const { data, isLoading, isError, refetch } = useRoleDefinitions({
+    search: search || undefined,
+    status: filters.status || undefined,
+    sortBy: sort,
+    sortOrder: order,
+    page,
+    limit,
+  });
+
+  const roles = data?.items ?? [];
+  const totalItems = data?.pagination?.totalCount ?? 0;
+  const totalPages = data?.pagination?.totalPages ?? 1;
+  const isZeroRoles = !isLoading && !isError && totalItems === 0 && !search && !filters.status;
+  const goCreate = () => router.push(`/${locale}/settings/roles/create`);
+
+  const columns = useMemo<Column<RoleDefinitionSummaryResponse>[]>(
+    () => [
+      {
+        id: "name",
+        header: t("list.table.name"),
+        sortable: true,
+        accessorKey: "name",
+        className: "min-w-[260px]",
+        cell: (_v, row) => (
+          <div className="flex flex-col gap-1">
+            <TableEntityCell title={row.name ?? "-"} subtitle={row.description ?? undefined} href={`/${locale}/settings/roles/${row.id}`} />
+            <div className="flex flex-wrap gap-1">
+              {row.isSystem ? <StatusBadge label={t("list.badges.system")} variant="info" /> : null}
+              {row.requiresApproval ? <StatusBadge label={t("list.badges.requiresApproval")} variant="warning" /> : null}
+              {row.hasPendingChange ? <StatusBadge label={t("list.badges.pendingChange")} variant="warning" /> : null}
+            </div>
+          </div>
+        ),
+      },
+      { id: "members", header: t("list.table.members"), cell: (_v, row) => String(row.memberCount ?? "-") },
+      { id: "permissions", header: t("list.table.permissions"), cell: (_v, row) => String(row.permissionCount ?? "-") },
+      {
+        id: "status",
+        header: t("list.table.status"),
+        cell: (_v, row) => (
+          <StatusBadge
+            label={row.isActive ? t("list.status.active") : t("list.status.inactive")}
+            variant={row.isActive ? "success" : "neutral"}
+          />
+        ),
+      },
+    ],
+    [locale, t]
+  );
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title={t("list.title")}
+        subtitle={t("list.subtitle")}
+        actions={
+          canManage ? (
+            <Button variant="primary" size="md" icon={<IconPlus size={16} />} onClick={goCreate}>
+              {t("list.createRole")}
+            </Button>
+          ) : undefined
+        }
+      />
+      <ListToolbar>
+        <div className="flex flex-wrap items-end gap-3">
+          <ListSearchInput
+            value={listState.draftSearch}
+            isDebouncing={listState.isDebouncing}
+            placeholder={t("list.searchPlaceholder")}
+            onChange={(value) => listState.actions.setSearch(value)}
+            onClear={() => listState.actions.setSearch("", true)}
+            onSubmit={(value) => listState.actions.setSearch(value, true)}
+          />
+          <ListFilterSelect
+            id="role-admin-status"
+            label={t("list.statusFilter")}
+            value={filters.status ?? ""}
+            onChange={(value) => listState.actions.setFilter("status", value || undefined)}
+            options={STATUS_VALUES.map((value) => ({ value, label: t(`list.status.${value}`) }))}
+          />
+        </div>
+      </ListToolbar>
+      {isZeroRoles ? (
+        <EmptyState
+          icon="empty"
+          title={t("list.emptyTitle")}
+          description={t("list.emptyDescription")}
+          actionLabel={canManage ? t("list.createRole") : undefined}
+          onAction={canManage ? goCreate : undefined}
+        />
+      ) : (
+        <DataTable<RoleDefinitionSummaryResponse>
+          columns={columns}
+          data={roles}
+          isLoading={isLoading}
+          isError={isError}
+          error={isError ? t("errors.GENERIC") : null}
+          onRetry={() => refetch()}
+          emptyTitle={tCommon("table.noData")}
+          sorting={{ key: sort ?? null, order }}
+          onSort={(key) => listState.actions.setSort(key)}
+          pagination={{ page, limit, totalPages, totalItems }}
+          onPageChange={(next) => listState.actions.setPage(next)}
+          onLimitChange={(next) => listState.actions.setLimit(next as ListPageSize)}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+สร้าง `frontend/src/app/[locale]/(erp)/settings/roles/page.tsx`:
+
+```tsx
+"use client";
+
+import React from "react";
+import { useTranslations } from "next-intl";
+import { PermissionGuard } from "@/components/auth";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { RoleDefinitionList } from "@/features/settings/role-management/components/role-definition-list";
+
+export default function RoleSettingsPage() {
+  const t = useTranslations("roleAdmin");
+
+  return (
+    <PermissionGuard permission={PERMISSIONS.ROLES_MANAGE} title={t("accessDeniedTitle")} detail={t("accessDeniedDetail")}>
+      <RoleDefinitionList />
+    </PermissionGuard>
+  );
+}
+```
+Run: `cd frontend && npx vitest run src/features/settings/role-management/components/role-definition-list.test.tsx` → Expected: PASS 3.
+
+- [ ] **Step 3: เมนู Sidebar (test ก่อน)**
+
+ต่อท้าย `describe` ใน `SidebarNav.test.tsx`:
+
+```tsx
+  it("shows the roles menu only to members who can manage roles", () => {
+    const manager: CurrentUserResponse = {
+      ...mockUser,
+      memberships: mockUser.memberships?.map((membership) => ({
+        ...membership,
+        permissions: [...(membership.permissions ?? []), { key: "roles.manage", scope: "organization", scopeId: "20000000-0000-0000-0000-000000000001" }],
+      })),
+    };
+
+    const { unmount } = render(<SidebarNav currentUser={mockUser} isCollapsed={false} />);
+    expect(screen.queryByRole("link", { name: "บทบาทและสิทธิ์" })).toBeNull();
+    unmount();
+
+    render(<SidebarNav currentUser={manager} isCollapsed={false} />);
+    expect(screen.getByRole("link", { name: "บทบาทและสิทธิ์" })).toHaveAttribute("href", "/th/settings/roles");
+  });
+```
+Run: `cd frontend && npx vitest run src/components/layout/SidebarNav.test.tsx` → Expected: FAIL (ไม่มีลิงก์).
+
+แก้ `SidebarNav.tsx` (ตามรูปแบบเมนู branch settings ที่มีอยู่):
+1. เพิ่ม `IconLock` ใน import จาก `@/components/common/Icons`.
+2. ใต้ `const hasBranchesManage = ...`: `const hasRolesManage = can(activeMembership, "roles.manage");`
+3. ใต้ `const isBranchSettingsActive = ...`: `const isRoleSettingsActive = pathname.startsWith(\`/${locale}/settings/roles\`);` (ไม่ชนกับ `/settings/role-requests` เพราะเป็น `role-` ไม่ใช่ `roles`)
+4. ใต้ `const isBranchSettingsVisible = ...`: `const isRoleSettingsVisible = hasRolesManage && (!trimmedSearch || tShell("roleSettings").toLowerCase().includes(trimmedSearch));`
+5. ใน `hasAnyResults` เพิ่ม `isRoleSettingsVisible ||` ต่อจาก `isBranchSettingsVisible ||`.
+6. ใน JSX ต่อจากบล็อก `isBranchSettingsVisible`:
+
+```tsx
+          {isRoleSettingsVisible && (
+            <li>
+              {renderLink({
+                id: "role-settings",
+                href: `/${locale}/settings/roles`,
+                label: tShell("roleSettings"),
+                icon: <IconLock size={20} />,
+                isActive: isRoleSettingsActive,
+              })}
+            </li>
+          )}
+```
+Run: `cd frontend && npx vitest run src/components/layout/SidebarNav.test.tsx src/features/settings/role-management && npm run typecheck && npm run lint` → Expected: PASS, 0 errors.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add frontend/src/features/settings/role-management/components "frontend/src/app/[locale]/(erp)/settings/roles" frontend/src/components/layout/SidebarNav.tsx frontend/src/components/layout/SidebarNav.test.tsx
+git commit -m "feat(roles): add role list page and settings menu
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 14: Frontend — editor, permission picker และ activation panel (route `[id]`)
+
+Single Dynamic Route `[id]` (`create`/`add` = สร้าง). ฟอร์มกลุ่มเดียว (ชื่อ/คำอธิบาย + รายการสิทธิ์) จึงไม่ใช้ `FormTabs`. Role ระบบหรือ Role ที่มีคำขอรออนุมัติแสดงแบบอ่านอย่างเดียว. รายการสิทธิ์และ flag `isApprovalPermission` มาจาก Backend (FE ไม่ hardcode ชุดอนุมัติ).
+
+**Files:**
+- Create: `frontend/src/features/settings/role-management/components/{permission-grant-picker,role-activation-panel,role-definition-editor}.tsx` (+ `.test.tsx` แต่ละไฟล์)
+- Create: `frontend/src/app/[locale]/(erp)/settings/roles/[id]/page.tsx`
+
+- [ ] **Step 1: เขียน failing test — picker และ activation panel**
+
+`permission-grant-picker.test.tsx`:
+
+```tsx
+import React from "react";
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { PermissionGrantPicker } from "./permission-grant-picker";
+
+const catalog = [
+  { key: "customers.read", description: "Read customers", isApprovalPermission: false },
+  { key: "estimates.approve", description: "Approve estimates", isApprovalPermission: true },
+  { key: "estimates.read", description: null, isApprovalPermission: false },
+];
+
+describe("PermissionGrantPicker", () => {
+  it("groups by module, toggles a key, flags approval permissions and filters by search", () => {
+    const onToggle = vi.fn();
+    render(<PermissionGrantPicker catalog={catalog} selected={new Set(["customers.read"])} disabled={false} onToggle={onToggle} />);
+
+    expect(screen.getByLabelText("customers.read")).toBeChecked();
+    expect(screen.getByLabelText("estimates.approve")).not.toBeChecked();
+    expect(screen.getByText("สิทธิ์อนุมัติ")).toBeInTheDocument();
+    expect(screen.getByText("เลือกแล้ว 1 สิทธิ์")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("estimates.approve"));
+    expect(onToggle).toHaveBeenCalledWith("estimates.approve");
+
+    fireEvent.change(screen.getByPlaceholderText("ค้นหาสิทธิ์"), { target: { value: "zzz" } });
+    expect(screen.getByText("ไม่พบสิทธิ์ที่ค้นหา")).toBeInTheDocument();
+  });
+
+  it("disables every checkbox when read-only", () => {
+    render(<PermissionGrantPicker catalog={catalog} selected={new Set()} disabled onToggle={vi.fn()} />);
+
+    expect(screen.getByLabelText("customers.read")).toBeDisabled();
+  });
+});
+```
+
+`role-activation-panel.test.tsx`:
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ApiError } from "@/lib/api/api-error";
+import type { RoleDefinitionResponse } from "@/lib/api/api-client";
+import { RoleActivationPanel } from "./role-activation-panel";
+
+const mocks = vi.hoisted(() => ({ setActive: vi.fn(), success: vi.fn() }));
+
+vi.mock("@/hooks/useToast", () => ({ useToast: () => ({ toast: { success: mocks.success, error: vi.fn() } }) }));
+vi.mock("../api/role-management-queries", () => ({
+  useSetRoleDefinitionActive: () => ({ mutateAsync: mocks.setActive, isPending: false }),
+}));
+
+const role = (over: Partial<RoleDefinitionResponse>): RoleDefinitionResponse => ({
+  id: "r1", name: "Sales", description: null, isSystem: false, isActive: true, rowVersion: "v1", createdAtUtc: "2026-10-11T00:00:00Z",
+  memberCount: 0, pendingAssignmentRequestCount: 0, requiresApproval: false, permissions: [], pendingChange: null, ...over,
+});
+
+describe("RoleActivationPanel", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.setActive.mockResolvedValue({});
+  });
+
+  it("deactivates an unused role only after confirmation, sending the row version", async () => {
+    render(<RoleActivationPanel role={role({})} canManage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "ปิดใช้งานบทบาท" }));
+    fireEvent.click(await screen.findByRole("button", { name: "ปิดใช้งาน" }));
+
+    await waitFor(() => expect(mocks.setActive).toHaveBeenCalledWith({ roleId: "r1", active: false, ifMatch: "v1" }));
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith("ปิดใช้งานบทบาทแล้ว"));
+  });
+
+  it("keeps deactivation disabled and explains why when users hold the role or a change is pending", () => {
+    const { rerender } = render(<RoleActivationPanel role={role({ memberCount: 3 })} canManage />);
+    expect(screen.getByRole("button", { name: "ปิดใช้งานบทบาท" })).toBeDisabled();
+    expect(screen.getByText("ผู้ถือบทบาท 3 คน")).toBeInTheDocument();
+
+    rerender(<RoleActivationPanel role={role({ pendingChange: { id: "q1", rowVersion: "q" } as RoleDefinitionResponse["pendingChange"] })} canManage />);
+    expect(screen.getByRole("button", { name: "ปิดใช้งานบทบาท" })).toBeDisabled();
+  });
+
+  it("offers activation for an inactive role, shows server errors, and renders nothing for system roles", async () => {
+    mocks.setActive.mockRejectedValueOnce(new ApiError({ status: 409, code: "ADMIN_VERSION_CONFLICT", message: "x" }));
+    const { rerender } = render(<RoleActivationPanel role={role({ isActive: false })} canManage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "เปิดใช้งานบทบาท" }));
+    fireEvent.click(await screen.findByRole("button", { name: "เปิดใช้งาน" }));
+    expect(await screen.findByText("ข้อมูลถูกแก้ไขโดยผู้อื่นแล้ว กรุณาโหลดใหม่แล้วลองอีกครั้ง")).toBeInTheDocument();
+
+    rerender(<RoleActivationPanel role={role({ isSystem: true })} canManage />);
+    expect(screen.queryByRole("button", { name: "ปิดใช้งานบทบาท" })).not.toBeInTheDocument();
+  });
+});
+```
+หมายเหตุ: ถ้า `npm run typecheck` ฟ้อง fixture ของ test เพราะ field ใน generated type เป็น required ให้เติม field ใน fixture ให้ครบ (ห้ามใช้ `any`).
+Run: `cd frontend && npx vitest run src/features/settings/role-management/components/permission-grant-picker.test.tsx src/features/settings/role-management/components/role-activation-panel.test.tsx` → Expected: FAIL (module ไม่มี).
+
+- [ ] **Step 2: picker และ activation panel**
+
+`permission-grant-picker.tsx`:
+
+```tsx
+"use client";
+
+import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Input } from "@/components/ui/Input";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+export interface CatalogItem {
+  key: string;
+  description: string | null;
+  isApprovalPermission: boolean;
+}
+
+interface PermissionGrantPickerProps {
+  catalog: ReadonlyArray<CatalogItem>;
+  selected: ReadonlySet<string>;
+  disabled: boolean;
+  onToggle: (key: string) => void;
+}
+
+/** Organization-scope permission picker, grouped by module (the part of the key before the first dot). */
+export function PermissionGrantPicker({ catalog, selected, disabled, onToggle }: PermissionGrantPickerProps) {
+  const t = useTranslations("roleAdmin.editor.permissions");
+  const [query, setQuery] = useState("");
+
+  const groups = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const matches = catalog.filter(
+      (item) => needle === "" || item.key.toLowerCase().includes(needle) || (item.description ?? "").toLowerCase().includes(needle)
+    );
+    const byModule = new Map<string, CatalogItem[]>();
+    for (const item of matches) {
+      const moduleName = item.key.split(".")[0];
+      byModule.set(moduleName, [...(byModule.get(moduleName) ?? []), item]);
+    }
+    return [...byModule.entries()];
+  }, [catalog, query]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <Input
+          label={t("searchPlaceholder")}
+          placeholder={t("searchPlaceholder")}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <span className="text-sm text-erp-text-muted">{t("selectedCount", { count: selected.size })}</span>
+      </div>
+      {groups.length === 0 ? <p className="text-sm text-erp-text-muted">{t("noMatch")}</p> : null}
+      {groups.map(([moduleName, items]) => (
+        <fieldset key={moduleName} className="space-y-1 border border-erp-border p-3">
+          <legend className="px-1 text-sm font-semibold text-erp-text-main">{moduleName}</legend>
+          {items.map((item) => (
+            <div key={item.key} className="flex flex-wrap items-center gap-x-3">
+              <Checkbox
+                label={item.key}
+                checked={selected.has(item.key)}
+                disabled={disabled}
+                onCheckedChange={() => onToggle(item.key)}
+                wrapperClassName="mb-0"
+              />
+              {item.isApprovalPermission ? <StatusBadge label={t("approvalTag")} variant="warning" /> : null}
+              {item.description ? <span className="text-xs text-erp-text-muted">{item.description}</span> : null}
+            </div>
+          ))}
+        </fieldset>
+      ))}
+    </div>
+  );
+}
+```
+(`Input` ที่ใช้ `label` และ `placeholder` เหมือนกัน เพื่อให้ `getByPlaceholderText` ทำงาน; ถ้า `Input` ไม่แสดง placeholder ให้ตรวจ props ใน `components/ui/Input.tsx`.)
+
+`role-activation-panel.tsx`:
+
+```tsx
+"use client";
+
+import React, { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { FormSection } from "@/components/forms/FormSection";
+import { useToast } from "@/hooks/useToast";
+import type { RoleDefinitionResponse } from "@/lib/api/api-client";
+import { useSetRoleDefinitionActive } from "../api/role-management-queries";
+import { roleAdminErrorKey } from "../role-management-errors";
+
+interface RoleActivationPanelProps {
+  role: RoleDefinitionResponse;
+  canManage: boolean;
+}
+
+export function RoleActivationPanel({ role, canManage }: RoleActivationPanelProps) {
+  const t = useTranslations("roleAdmin");
+  const tCommon = useTranslations("common");
+  const { toast } = useToast();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const setActive = useSetRoleDefinitionActive();
+
+  // System roles are immutable; there is nothing to show.
+  if (!canManage || role.isSystem === true) return null;
+  const { id: roleId, rowVersion } = role;
+  if (!roleId || !rowVersion) return <Alert variant="danger">{t("errors.GENERIC")}</Alert>;
+
+  const isActive = role.isActive === true;
+  const members = role.memberCount ?? 0;
+  const pendingAssignments = role.pendingAssignmentRequestCount ?? 0;
+  const inUse = members > 0 || pendingAssignments > 0;
+  // The server decides; this only mirrors its rules so the button is not offered when it would be refused.
+  const blocked = isActive && (inUse || role.pendingChange != null);
+  const key = isActive ? "deactivate" : "activate";
+
+  const confirm = async () => {
+    setErrorMessage(null);
+    try {
+      await setActive.mutateAsync({ roleId, active: !isActive, ifMatch: rowVersion });
+      toast.success(t(`activation.${key}.success`));
+    } catch (error: unknown) {
+      setErrorMessage(t(`errors.${roleAdminErrorKey(error)}`));
+    } finally {
+      setConfirmOpen(false);
+    }
+  };
+
+  return (
+    <FormSection title={t("activation.title")}>
+      {errorMessage ? <Alert variant="danger">{errorMessage}</Alert> : null}
+      {isActive && inUse ? (
+        <Alert variant="warning">
+          {members > 0 ? <p>{t("activation.membersCount", { count: members })}</p> : null}
+          {pendingAssignments > 0 ? <p>{t("activation.pendingAssignments", { count: pendingAssignments })}</p> : null}
+          <p>{t("activation.inUseHint")}</p>
+        </Alert>
+      ) : null}
+      <Button variant={isActive ? "danger" : "primary"} size="md" disabled={blocked} onClick={() => setConfirmOpen(true)}>
+        {t(`activation.${key}.action`)}
+      </Button>
+      <ConfirmationModal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirm}
+        title={t(`activation.${key}.action`)}
+        message={t(`activation.${key}.message`)}
+        confirmText={t(`activation.${key}.confirm`)}
+        cancelText={tCommon("actions.cancel")}
+        variant={isActive ? "danger" : "info"}
+        isLoading={setActive.isPending}
+      />
+    </FormSection>
+  );
+}
+```
+Run: `cd frontend && npx vitest run src/features/settings/role-management/components/permission-grant-picker.test.tsx src/features/settings/role-management/components/role-activation-panel.test.tsx` → Expected: PASS ทั้ง 5.
+
+- [ ] **Step 3: เขียน failing test — editor**
+
+สร้าง `role-definition-editor.test.tsx`:
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ApiError } from "@/lib/api/api-error";
+import { RoleDefinitionEditor } from "./role-definition-editor";
+
+const mocks = vi.hoisted(() => ({
+  permissions: [] as string[],
+  create: vi.fn(),
+  update: vi.fn(),
+  push: vi.fn(),
+  success: vi.fn(),
+  role: { data: undefined, isPending: false, isError: false } as Record<string, unknown>,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mocks.push, replace: vi.fn() }),
+  usePathname: () => "/th/settings/roles/create",
+  useSearchParams: () => new URLSearchParams(),
+}));
+vi.mock("@/hooks/useToast", () => ({ useToast: () => ({ toast: { success: mocks.success, error: vi.fn() } }) }));
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({
+    selectedMembership: { id: "m1", permissions: mocks.permissions.map((key) => ({ key, scope: "organization" })) },
+  }),
+}));
+vi.mock("./role-activation-panel", () => ({ RoleActivationPanel: () => <div>activation-panel</div> }));
+vi.mock("../api/role-management-queries", () => ({
+  useRoleDefinition: () => mocks.role,
+  useAdminPermissionCatalog: () => ({
+    isPending: false,
+    isError: false,
+    data: {
+      items: [
+        { key: "customers.read", description: "Read customers", isApprovalPermission: false },
+        { key: "estimates.approve", description: "Approve estimates", isApprovalPermission: true },
+      ],
+    },
+  }),
+  useCreateRoleDefinition: () => ({ mutateAsync: mocks.create, isPending: false }),
+  useUpdateRoleDefinition: () => ({ mutateAsync: mocks.update, isPending: false }),
+}));
+
+const existing = {
+  id: "r1", name: "Sales Lead", description: "เดิม", isSystem: false, isActive: true, rowVersion: "v1", createdAtUtc: "2026-10-11T00:00:00Z",
+  memberCount: 2, pendingAssignmentRequestCount: 0, requiresApproval: false, pendingChange: null,
+  permissions: [
+    { permissionKey: "customers.read", scope: "organization", branch: null },
+    { permissionKey: "estimates.read", scope: "branch", branch: { id: "b1", name: "สาขา 1" } },
+  ],
+};
+
+describe("RoleDefinitionEditor", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.permissions = ["roles.manage"];
+    mocks.role = { data: existing, isPending: false, isError: false };
+    mocks.create.mockResolvedValue({ id: "new-role" });
+    mocks.update.mockResolvedValue({ role: existing, pendingRequest: null });
+  });
+
+  it("validates the name before creating", async () => {
+    render(<RoleDefinitionEditor roleId="create" />);
+
+    fireEvent.change(screen.getByLabelText(/ชื่อบทบาท/), { target: { value: "ab" } });
+    fireEvent.click(screen.getByRole("button", { name: "เพิ่มบทบาท" }));
+
+    expect(await screen.findByText("ชื่อบทบาทต้องมี 3-100 ตัวอักษร")).toBeInTheDocument();
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it("creates with the selected organization-scope permissions, an idempotency key and opens the new role", async () => {
+    render(<RoleDefinitionEditor roleId="create" />);
+
+    fireEvent.change(screen.getByLabelText(/ชื่อบทบาท/), { target: { value: "  Quote Reviewer  " } });
+    fireEvent.click(screen.getByLabelText("customers.read"));
+    fireEvent.click(screen.getByRole("button", { name: "เพิ่มบทบาท" }));
+
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
+    const call = mocks.create.mock.calls[0][0] as { payload: unknown; idempotencyKey: string };
+    expect(call.payload).toEqual({
+      name: "Quote Reviewer",
+      description: null,
+      permissions: [{ permissionKey: "customers.read", scope: "organization", branchId: null }],
+    });
+    expect(call.idempotencyKey).toMatch(/.{16,}/);
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/th/settings/roles/new-role"));
+  });
+
+  it("saves with the row version and preserves scoped grants it cannot edit", async () => {
+    render(<RoleDefinitionEditor roleId="r1" />);
+
+    expect(screen.getByText(/estimates\.read/)).toBeInTheDocument(); // preserved branch-scope grant is listed
+    fireEvent.click(screen.getByLabelText("estimates.approve"));
+    expect(screen.getByText("การเพิ่มสิทธิ์อนุมัติให้บทบาทที่มีผู้ถืออยู่ต้องให้ผู้ตรวจอีกคนอนุมัติก่อนมีผล")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกการเปลี่ยนแปลง" }));
+
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+    expect(mocks.update).toHaveBeenCalledWith({
+      roleId: "r1",
+      ifMatch: "v1",
+      payload: {
+        name: "Sales Lead",
+        description: "เดิม",
+        permissions: [
+          { permissionKey: "customers.read", scope: "organization", branchId: null },
+          { permissionKey: "estimates.approve", scope: "organization", branchId: null },
+          { permissionKey: "estimates.read", scope: "branch", branchId: "b1" },
+        ],
+      },
+    });
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith("บันทึกบทบาทแล้ว"));
+  });
+
+  it("tells the user when the change became a request for a checker", async () => {
+    mocks.update.mockResolvedValueOnce({ role: existing, pendingRequest: { id: "q1", rowVersion: "q" } });
+    render(<RoleDefinitionEditor roleId="r1" />);
+
+    fireEvent.click(screen.getByLabelText("estimates.approve"));
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกการเปลี่ยนแปลง" }));
+
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith("ส่งคำขอแก้ไขให้ผู้ตรวจอนุมัติแล้ว"));
+  });
+
+  it("shows the mapped message for a server error", async () => {
+    mocks.update.mockRejectedValueOnce(new ApiError({ status: 409, code: "ROLE_NAME_ALREADY_EXISTS", message: "x" }));
+    render(<RoleDefinitionEditor roleId="r1" />);
+
+    fireEvent.click(screen.getByLabelText("customers.read"));
+    fireEvent.click(screen.getByRole("button", { name: "บันทึกการเปลี่ยนแปลง" }));
+
+    expect(await screen.findByText("มีบทบาทที่ใช้ชื่อนี้อยู่แล้ว")).toBeInTheDocument();
+  });
+
+  it("is read-only for system roles and for roles with a pending change", () => {
+    mocks.role = { data: { ...existing, isSystem: true }, isPending: false, isError: false };
+    const { rerender } = render(<RoleDefinitionEditor roleId="r1" />);
+    expect(screen.getByText("บทบาทของระบบแก้ไขไม่ได้")).toBeInTheDocument();
+    expect(screen.getByLabelText("customers.read")).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "บันทึกการเปลี่ยนแปลง" })).not.toBeInTheDocument();
+
+    mocks.role = { data: { ...existing, pendingChange: { id: "q1", rowVersion: "q" } }, isPending: false, isError: false };
+    rerender(<RoleDefinitionEditor roleId="r1" />);
+    expect(screen.getByText(/มีคำขอแก้ไขรออนุมัติ/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/ชื่อบทบาท/)).toBeDisabled();
+  });
+});
+```
+Run: `cd frontend && npx vitest run src/features/settings/role-management/components/role-definition-editor.test.tsx` → Expected: FAIL (module ไม่มี).
+
+- [ ] **Step 4: editor + route**
+
+สร้าง `role-definition-editor.tsx`:
+
+```tsx
+"use client";
+
+import React, { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { FormContainer } from "@/components/forms/FormContainer";
+import { FormSection } from "@/components/forms/FormSection";
+import { FormActionBar } from "@/components/forms/FormActionBar";
+import { Alert } from "@/components/ui/Alert";
+import { Input } from "@/components/ui/Input";
+import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/hooks/useToast";
+import type { RoleDefinitionResponse, RoleGrantRequest } from "@/lib/api/api-client";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { can, PERMISSIONS } from "@/lib/permissions/can";
+import {
+  useAdminPermissionCatalog,
+  useCreateRoleDefinition,
+  useRoleDefinition,
+  useUpdateRoleDefinition,
+} from "../api/role-management-queries";
+import { roleAdminErrorKey } from "../role-management-errors";
+import { RoleActivationPanel } from "./role-activation-panel";
+import { PermissionGrantPicker, type CatalogItem } from "./permission-grant-picker";
+
+const ORGANIZATION_SCOPE = "organization";
+
+interface RoleFormValues {
+  name: string;
+  description: string;
+}
+
+interface ScopedGrant {
+  permissionKey: string;
+  scope: string;
+  branchId: string | null;
+  branchName: string | null;
+}
+
+const orNull = (value: string): string | null => (value.trim() === "" ? null : value.trim());
+
+/** Branch/own-scope grants cannot be edited here; they are kept and sent back unchanged on save. */
+function toScopedGrants(role: RoleDefinitionResponse | undefined): ScopedGrant[] {
+  return (role?.permissions ?? []).flatMap((p) =>
+    p.permissionKey && p.scope && p.scope !== ORGANIZATION_SCOPE
+      ? [{ permissionKey: p.permissionKey, scope: p.scope, branchId: p.branch?.id ?? null, branchName: p.branch?.name ?? null }]
+      : []
+  );
+}
+
+export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
+  const isCreate = roleId === "create" || roleId === "add";
+  const t = useTranslations("roleAdmin");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const router = useRouter();
+  const { toast } = useToast();
+  const { selectedMembership } = useSelectedMembership();
+  const canManage = can(selectedMembership, PERMISSIONS.ROLES_MANAGE);
+  const roleQuery = useRoleDefinition(roleId, !isCreate);
+  const catalogQuery = useAdminPermissionCatalog();
+  const createMutation = useCreateRoleDefinition();
+  const updateMutation = useUpdateRoleDefinition();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [edited, setEdited] = useState<ReadonlySet<string> | null>(null);
+  // One key per submit intent: a retry after a network failure replays the same request instead of creating twice.
+  const intentRef = useRef<{ fingerprint: string; key: string } | null>(null);
+
+  const role = roleQuery.data;
+  const existing = role?.id && role.rowVersion ? { id: role.id, rowVersion: role.rowVersion } : null;
+  const catalog = useMemo<CatalogItem[]>(
+    () =>
+      (catalogQuery.data?.items ?? []).flatMap((item) =>
+        item.key ? [{ key: item.key, description: item.description ?? null, isApprovalPermission: item.isApprovalPermission === true }] : []
+      ),
+    [catalogQuery.data]
+  );
+  const baseline = useMemo<ReadonlySet<string>>(
+    () => new Set((role?.permissions ?? []).flatMap((p) => (p.permissionKey && p.scope === ORGANIZATION_SCOPE ? [p.permissionKey] : []))),
+    [role]
+  );
+  const scoped = useMemo(() => toScopedGrants(role), [role]);
+  const selected = edited ?? baseline;
+  const permissionsChanged = edited !== null && (edited.size !== baseline.size || [...edited].some((key) => !baseline.has(key)));
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        name: z.string().trim().min(1, t("editor.validation.nameRequired")).min(3, t("editor.validation.nameLength")).max(100, t("editor.validation.nameLength")),
+        description: z.string().trim().max(500),
+      }),
+    [t]
+  );
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty },
+  } = useForm<RoleFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", description: "" },
+    values: !isCreate && role ? { name: role.name ?? "", description: role.description ?? "" } : undefined,
+  });
+
+  if (!isCreate && roleQuery.isPending) return <MonoSpinner size="lg" label={tCommon("states.loading")} />;
+  if (!isCreate && (roleQuery.isError || !existing)) return <Alert variant="danger">{t("errors.RESOURCE_NOT_FOUND")}</Alert>;
+
+  const backHref = `/${locale}/settings/roles`;
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+  const locked = role?.isSystem === true || role?.pendingChange != null;
+  const canEdit = canManage && !locked;
+  const addsApproval =
+    !isCreate && (role?.memberCount ?? 0) > 0 && catalog.some((c) => c.isApprovalPermission && selected.has(c.key) && !baseline.has(c.key));
+
+  const toggle = (key: string) => {
+    const next = new Set(selected);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setEdited(next);
+  };
+
+  const onSubmit = handleSubmit(async (values) => {
+    setSubmitError(null);
+    const permissions: RoleGrantRequest[] = [
+      ...[...selected].sort().map((permissionKey) => ({ permissionKey, scope: ORGANIZATION_SCOPE, branchId: null })),
+      ...scoped.map((g) => ({ permissionKey: g.permissionKey, scope: g.scope, branchId: g.branchId })),
+    ];
+    const payload = { name: values.name.trim(), description: orNull(values.description), permissions };
+    try {
+      if (isCreate) {
+        const fingerprint = JSON.stringify(payload);
+        if (intentRef.current?.fingerprint !== fingerprint) intentRef.current = { fingerprint, key: crypto.randomUUID() };
+        const created = await createMutation.mutateAsync({ payload, idempotencyKey: intentRef.current.key });
+        intentRef.current = null;
+        toast.success(t("editor.createSuccess"));
+        if (created.id) router.push(`${backHref}/${created.id}`);
+      } else if (existing) {
+        const result = await updateMutation.mutateAsync({ roleId: existing.id, payload, ifMatch: existing.rowVersion });
+        toast.success(t(result.pendingRequest ? "editor.pendingSubmitted" : "editor.saveSuccess"));
+        setEdited(null);
+      }
+    } catch (error: unknown) {
+      setSubmitError(t(`errors.${roleAdminErrorKey(error)}`));
+    }
+  });
+
+  return (
+    <div className="space-y-6">
+      <FormContainer
+        asForm
+        noValidate
+        onSubmit={onSubmit}
+        maxWidth="lg"
+        header={
+          <PageHeader
+            title={isCreate ? t("editor.createTitle") : t("editor.editTitle")}
+            subtitle={isCreate ? t("editor.createSubtitle") : (role?.name ?? undefined)}
+            backHref={backHref}
+            backLabel={t("editor.backToList")}
+          />
+        }
+        errorBanner={submitError ? <Alert variant="danger">{submitError}</Alert> : undefined}
+        actionBar={
+          canEdit ? (
+            <FormActionBar
+              isDirty={isDirty || permissionsChanged}
+              isLoading={isSaving}
+              isSaveDisabled={isSaving}
+              saveText={isCreate ? t("editor.createSubmit") : t("editor.saveSubmit")}
+              saveButtonType="submit"
+              cancelHref={backHref}
+              showCancel
+              cancelText={tCommon("actions.cancel")}
+            />
+          ) : undefined
+        }
+      >
+        {role?.isSystem === true ? <Alert variant="info">{t("editor.systemReadOnly")}</Alert> : null}
+        {role?.pendingChange != null ? <Alert variant="warning">{t("editor.pendingBanner")}</Alert> : null}
+        <FormSection title={isCreate ? t("editor.createTitle") : t("editor.editTitle")}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Input label={t("editor.fields.name")} required disabled={!canEdit} error={errors.name?.message} {...register("name")} />
+            <Textarea label={t("editor.fields.description")} rows={2} disabled={!canEdit} error={errors.description?.message} {...register("description")} />
+          </div>
+        </FormSection>
+        <FormSection title={t("editor.permissions.title")}>
+          {addsApproval ? <Alert variant="warning">{t("editor.approvalNotice")}</Alert> : null}
+          {catalogQuery.isPending ? (
+            <MonoSpinner size="md" label={tCommon("states.loading")} />
+          ) : catalogQuery.isError ? (
+            <Alert variant="danger">{t("errors.GENERIC")}</Alert>
+          ) : (
+            <PermissionGrantPicker catalog={catalog} selected={selected} disabled={!canEdit} onToggle={toggle} />
+          )}
+          {scoped.length > 0 ? (
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-erp-text-main">{t("editor.permissions.scopedTitle")}</p>
+              <p className="text-xs text-erp-text-muted">{t("editor.permissions.scopedHint")}</p>
+              <ul className="list-disc pl-5 text-sm">
+                {scoped.map((g) => (
+                  <li key={`${g.permissionKey}-${g.scope}-${g.branchId ?? "own"}`}>
+                    {g.permissionKey} · {t(`editor.permissions.scope.${g.scope === "branch" ? "branch" : "own"}`)}
+                    {g.branchName ? ` ${g.branchName}` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </FormSection>
+      </FormContainer>
+      {!isCreate && role ? <RoleActivationPanel role={role} canManage={canManage} /> : null}
+    </div>
+  );
+}
+```
+
+สร้าง `frontend/src/app/[locale]/(erp)/settings/roles/[id]/page.tsx`:
+
+```tsx
+"use client";
+
+import React, { use } from "react";
+import { notFound } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { PermissionGuard } from "@/components/auth";
+import { isSupportedLocale } from "@/lib/i18n/locales";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { RoleDefinitionEditor } from "@/features/settings/role-management/components/role-definition-editor";
+
+interface RoleDefinitionDynamicPageProps {
+  params: Promise<{ locale: string; id: string }>;
+}
+
+export default function RoleDefinitionDynamicPage({ params }: RoleDefinitionDynamicPageProps) {
+  const { locale, id } = use(params);
+  const t = useTranslations("roleAdmin");
+
+  if (!isSupportedLocale(locale)) {
+    notFound();
+  }
+
+  return (
+    <PermissionGuard permission={PERMISSIONS.ROLES_MANAGE} title={t("accessDeniedTitle")} detail={t("accessDeniedDetail")}>
+      <RoleDefinitionEditor roleId={id} />
+    </PermissionGuard>
+  );
+}
+```
+Run: `cd frontend && npx vitest run src/features/settings/role-management && npm run typecheck && npm run lint` → Expected: PASS ทั้งหมด, 0 errors. ถ้า test "preserved branch-scope grant is listed" ชน (`/estimates\.read/` พบหลายที่) ให้ใช้ `getAllByText(...).length > 0`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add frontend/src/features/settings/role-management/components "frontend/src/app/[locale]/(erp)/settings/roles"
+git commit -m "feat(roles): add role editor, permission picker and activation panel
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 15: Frontend — คิวคำขอแก้ไข Role (ผู้ตรวจ)
+
+ต่อยอดหน้า `settings/role-requests` เดิม (guard `roles.assign-approval`): เพิ่มตารางคำขอแก้ไข Role ใต้ตารางคำขอมอบ Role. การยกเลิกคำขอโดยผู้ขอทำได้ที่ API เท่านั้นใน G-03b (ไม่มีปุ่มใน UI — ดูข้อจำกัดใน Task 16).
+
+**Files:**
+- Create: `frontend/src/features/settings/role-management/components/role-change-request-queue.tsx` (+ `.test.tsx`)
+- Modify: `frontend/src/app/[locale]/(erp)/settings/role-requests/page.tsx`
+
+- [ ] **Step 1: เขียน failing test**
+
+สร้าง `role-change-request-queue.test.tsx`:
+
+```tsx
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { ApiError } from "@/lib/api/api-error";
+import { RoleChangeRequestQueue } from "./role-change-request-queue";
+
+const mocks = vi.hoisted(() => ({ decide: vi.fn(), success: vi.fn() }));
+
+vi.mock("@/hooks/useToast", () => ({ useToast: () => ({ toast: { success: mocks.success, error: vi.fn() } }) }));
+vi.mock("../api/role-management-queries", () => ({
+  useRoleChangeRequests: () => ({
+    data: {
+      items: [
+        {
+          id: "q1", rowVersion: "request-v1", status: "pending",
+          role: { id: "r1", name: "PO Approver" }, requestedBy: { id: "u1", name: "สมศรี" }, requestedAtUtc: "2026-10-11T00:00:00Z",
+          proposedName: "PO Approver", proposedDescription: null,
+          addedPermissionKeys: ["purchase-orders.approve"], removedPermissionKeys: ["customers.read"],
+        },
+      ],
+    },
+    isLoading: false, isError: false, refetch: vi.fn(),
+  }),
+  useDecideRoleChangeRequest: () => ({ mutateAsync: mocks.decide, isPending: false }),
+}));
+
+describe("RoleChangeRequestQueue", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.decide.mockResolvedValue({});
+  });
+
+  it("lists the role, the requester and what is added and removed", () => {
+    render(<RoleChangeRequestQueue />);
+
+    expect(screen.getByText("PO Approver")).toBeInTheDocument();
+    expect(screen.getByText("สมศรี")).toBeInTheDocument();
+    expect(screen.getByText("purchase-orders.approve")).toBeInTheDocument();
+    expect(screen.getByText("customers.read")).toBeInTheDocument();
+  });
+
+  it("approves only after the confirmation dialog and sends the request row version", async () => {
+    render(<RoleChangeRequestQueue />);
+
+    fireEvent.click(screen.getByRole("button", { name: "อนุมัติ" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(mocks.decide).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole("button", { name: "ยืนยัน" }));
+
+    await waitFor(() => expect(mocks.decide).toHaveBeenCalledWith({ requestId: "q1", decision: "approve", ifMatch: "request-v1" }));
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith("อนุมัติคำขอแล้ว"));
+  });
+
+  it("shows the mapped message when the checker is the requester", async () => {
+    mocks.decide.mockRejectedValueOnce(new ApiError({ status: 403, code: "ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED", message: "x" }));
+    render(<RoleChangeRequestQueue />);
+
+    fireEvent.click(screen.getByRole("button", { name: "ปฏิเสธ" }));
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "ยืนยัน" }));
+
+    expect(await screen.findByText("ผู้ตรวจต้องเป็นคนละคนกับผู้ขอ")).toBeInTheDocument();
+  });
+});
+```
+Run: `cd frontend && npx vitest run src/features/settings/role-management/components/role-change-request-queue.test.tsx` → Expected: FAIL (module ไม่มี).
+
+- [ ] **Step 2: component + page**
+
+สร้าง `role-change-request-queue.tsx` (รูปแบบเดียวกับ `role-request-queue.tsx` ของ CP-02):
+
+```tsx
+"use client";
+
+import React, { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { useToast } from "@/hooks/useToast";
+import { formatDateTime } from "@/lib/formatters/formatters";
+import type { RoleChangeRequestResponse } from "@/lib/api/api-client";
+import { useDecideRoleChangeRequest, useRoleChangeRequests } from "../api/role-management-queries";
+import { roleAdminErrorKey } from "../role-management-errors";
+
+interface PendingDecision {
+  request: RoleChangeRequestResponse;
+  decision: "approve" | "reject";
+}
+
+function KeyList({ label, keys }: { label: string; keys: ReadonlyArray<string> | undefined }) {
+  if (!keys || keys.length === 0) return null;
+  return (
+    <div className="text-xs">
+      <span className="font-medium">{label}: </span>
+      {keys.map((key) => (
+        <code key={key} className="mr-2">{key}</code>
+      ))}
+    </div>
+  );
+}
+
+export function RoleChangeRequestQueue() {
+  const t = useTranslations("roleAdmin");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const { toast } = useToast();
+  const { data, isLoading, isError, refetch } = useRoleChangeRequests("pending");
+  const decideMutation = useDecideRoleChangeRequest();
+  const [pending, setPending] = useState<PendingDecision | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const confirm = async () => {
+    if (!pending?.request.id || !pending.request.rowVersion) return;
+    setErrorMessage(null);
+    try {
+      await decideMutation.mutateAsync({ requestId: pending.request.id, decision: pending.decision, ifMatch: pending.request.rowVersion });
+      toast.success(t(pending.decision === "approve" ? "queue.approved" : "queue.rejected"));
+    } catch (error: unknown) {
+      setErrorMessage(t(`errors.${roleAdminErrorKey(error)}`));
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const columns = useMemo<Column<RoleChangeRequestResponse>[]>(
+    () => [
+      { id: "role", header: t("queue.role"), className: "min-w-[180px]", cell: (_v, r) => <span className="font-medium text-erp-text-main">{r.role?.name ?? "-"}</span> },
+      { id: "requestedBy", header: t("queue.requestedBy"), className: "min-w-[140px]", cell: (_v, r) => <span>{r.requestedBy?.name ?? "-"}</span> },
+      { id: "requestedAt", header: t("queue.requestedAt"), className: "min-w-[160px]", cell: (_v, r) => <span>{formatDateTime(r.requestedAtUtc, locale)}</span> },
+      {
+        id: "changes",
+        header: t("queue.changes"),
+        className: "min-w-[260px]",
+        cell: (_v, r) => (
+          <div className="space-y-1">
+            <KeyList label={t("queue.added")} keys={r.addedPermissionKeys} />
+            <KeyList label={t("queue.removed")} keys={r.removedPermissionKeys} />
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: tCommon("actions.manage"),
+        isAction: true,
+        className: "min-w-[200px] text-right",
+        cell: (_v, r) => (
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="primary" disabled={decideMutation.isPending} onClick={() => setPending({ request: r, decision: "approve" })}>
+              {t("queue.approve")}
+            </Button>
+            <Button size="sm" variant="outline" disabled={decideMutation.isPending} onClick={() => setPending({ request: r, decision: "reject" })}>
+              {t("queue.reject")}
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [decideMutation.isPending, locale, t, tCommon]
+  );
+
+  const roleName = pending?.request.role?.name ?? "-";
+  return (
+    <div className="space-y-6">
+      <PageHeader title={t("queue.title")} subtitle={t("queue.subtitle")} />
+      {errorMessage ? <Alert variant="danger">{errorMessage}</Alert> : null}
+      <DataTable<RoleChangeRequestResponse>
+        columns={columns}
+        data={data?.items ?? []}
+        isLoading={isLoading}
+        isError={isError}
+        error={isError ? t("errors.GENERIC") : null}
+        onRetry={() => refetch()}
+        emptyTitle={t("queue.emptyTitle")}
+        emptyDescription={t("queue.emptyDescription")}
+        hidePagination={true}
+        stickyActionColumn={true}
+      />
+      <ConfirmationModal
+        isOpen={pending !== null}
+        onClose={() => setPending(null)}
+        onConfirm={confirm}
+        title={pending?.decision === "approve" ? t("queue.confirmApproveTitle") : t("queue.confirmRejectTitle")}
+        message={pending?.decision === "approve" ? t("queue.confirmApproveMessage", { role: roleName }) : t("queue.confirmRejectMessage", { role: roleName })}
+        confirmText={tCommon("actions.confirm")}
+        cancelText={tCommon("actions.cancel")}
+        variant={pending?.decision === "approve" ? "info" : "danger"}
+        isLoading={decideMutation.isPending}
+      />
+    </div>
+  );
+}
+```
+
+แก้ `frontend/src/app/[locale]/(erp)/settings/role-requests/page.tsx` ให้แสดงสองคิว:
+
+```tsx
+"use client";
+
+import React from "react";
+import { useTranslations } from "next-intl";
+import { PermissionGuard } from "@/components/auth";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { RoleRequestQueue } from "@/features/settings/user-administration/components/role-request-queue";
+import { RoleChangeRequestQueue } from "@/features/settings/role-management/components/role-change-request-queue";
+
+export default function RoleRequestsPage() {
+  const t = useTranslations("userAdmin");
+
+  return (
+    <PermissionGuard permission={PERMISSIONS.ROLES_ASSIGN_APPROVAL} title={t("accessDeniedTitle")} detail={t("accessDeniedDetail")}>
+      <div className="space-y-10">
+        <RoleRequestQueue />
+        <RoleChangeRequestQueue />
+      </div>
+    </PermissionGuard>
+  );
+}
+```
+Run: `cd frontend && npx vitest run src/features/settings && npm run typecheck && npm run lint` → Expected: PASS, 0 errors.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add frontend/src/features/settings/role-management/components "frontend/src/app/[locale]/(erp)/settings/role-requests/page.tsx"
+git commit -m "feat(roles): add role change request queue
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 16: Verification, เอกสารสถานะ และ gate ปิด G-03b
+
+**Files:**
+- Create: `docs/05-engineering/role-management-verification.md`
+- Modify: `docs/00-overview/implementation-roadmap.md`, `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md`, `docs/03-contracts/role-management-api-contract.md` (สถานะ → Implemented)
+
+- [ ] **Step 1: th/en key parity ทั้งไฟล์**
+
+Run (จาก `frontend/`):
+
+```bash
+python3 - <<'PY'
+import json
+def keys(v, p=""):
+    return [p] if not isinstance(v, dict) else [k for c, x in v.items() for k in keys(x, f"{p}.{c}" if p else c)]
+th = set(keys(json.load(open("src/messages/th.json", encoding="utf-8"))))
+en = set(keys(json.load(open("src/messages/en.json", encoding="utf-8"))))
+print("only th:", sorted(th - en)[:20]); print("only en:", sorted(en - th)[:20])
+raise SystemExit(0 if th == en else 1)
+PY
+```
+Expected: `only th: []`, `only en: []`, exit 0 (ถ้ามีความต่างที่มีมาก่อน G-03b ให้บันทึกในเอกสาร verification — อย่าแก้ key ที่ไม่เกี่ยวข้อง).
+
+- [ ] **Step 2: Gate แบบ focused ของ G-03b (ห้ามรัน IntegrationTests ทั้งโปรเจกต์)**
+
+Run แยกทีละคำสั่ง:
+
+```bash
+dotnet build backend/TanErp.slnx --nologo -v q
+dotnet test backend/tests/TanErp.UnitTests/TanErp.UnitTests.csproj --filter "FullyQualifiedName~IdentityAccess|FullyQualifiedName~Organization"
+dotnet test backend/tests/TanErp.ArchitectureTests/TanErp.ArchitectureTests.csproj
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~RoleManagementEndpointsTests|FullyQualifiedName~OpenApiContractTests" -m:1
+dotnet test backend/tests/TanErp.IntegrationTests/TanErp.IntegrationTests.csproj --filter "FullyQualifiedName~IdentityAdministrationEndpointsTests|FullyQualifiedName~OrganizationAdministrationEndpointsTests|FullyQualifiedName~UsersEndpointsTests|FullyQualifiedName~NotificationEndpointsTests" -m:1
+ConnectionStrings__Database="Host=localhost;Database=design;Username=x;Password=x" dotnet ef migrations has-pending-model-changes --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api
+cd frontend && npm run check:api && npm run lint && npm run typecheck && npx vitest run src/features/settings src/components/layout src/lib && npm run build
+```
+Expected: ทุกคำสั่ง exit 0; จดจำนวน passed/failed ลงเอกสาร verification (ห้ามกล่าวว่า "ผ่าน" โดยไม่มีผลจริง). ชุด regression (Identity/Organization/Users/Notification) ต้องผ่านเพราะ Task 3 ขยาย approval set และ Task 4 เพิ่มคอลัมน์ — ถ้าล้ม ให้แก้สาเหตุใน Task ที่เกี่ยวข้อง ไม่ใช่ปรับ test เดิม. **Full gate** (`dotnet test` ทั้งโซลูชัน 12+ นาที) ไม่ได้รันในขั้นนี้ — ให้ CI ของ PR รัน และบันทึกในเอกสารว่า "ยังไม่รัน full gate ในเครื่อง".
+
+- [ ] **Step 3: ตรวจในเบราว์เซอร์ (ทำจริงหรือบันทึกว่า "ไม่ได้ตรวจ")**
+
+ถ้าสภาพแวดล้อมมี Docker/Browser pane: เริ่ม dev server ตาม `docs/05-engineering/foundation-login-runbook.md` (Backend Test env + `SeedTestData=true`, Frontend dev) แล้วตรวจและบันทึกผลแบบ "ตรวจแล้ว / ไม่ได้ตรวจ" ตามจริง:
+1. `/th/settings/roles`: รายการ, ค้นหา, filter สถานะ, badge `ระบบ` ของ Test Admin; สลับ `/en/`.
+2. `create` → ใส่ชื่อ + เลือกสิทธิ์ → บันทึก → เปิดหน้าแก้ไข → Role ระบบ (`Test Admin`) เป็น read-only ไม่มีปุ่มบันทึก.
+3. Role ที่มีผู้ถือ: ติ๊กสิทธิ์อนุมัติ → เห็นข้อความเตือน → บันทึก → toast "ส่งคำขอแก้ไข..." → Role มี banner รออนุมัติ; ผู้ใช้อีกคนที่มี `roles.assign-approval` เปิด `/th/settings/role-requests` เห็นคำขอและอนุมัติ.
+4. ปิดใช้งาน Role ที่มีผู้ถือ → ปุ่ม disabled + แสดงจำนวนผู้ถือ; Role ว่าง → ปิด/เปิดใช้ได้.
+5. จอ 375px: ไม่มี horizontal scroll, target ≥ 44px, focus ring เห็น, Tab ผ่านฟอร์ม/picker/modal ได้.
+ถ้าข้อใดไม่ได้ตรวจ ให้เขียน "ไม่ได้ตรวจในเบราว์เซอร์" ในเอกสาร — ห้ามอ้างว่าตรวจแล้ว.
+
+- [ ] **Step 4: เอกสาร verification**
+
+สร้าง `docs/05-engineering/role-management-verification.md` (ภาษาไทย รูปแบบเดียวกับ `organization-administration-verification.md`): 1 สถานะ (Implemented G-03b วันที่จริง; focused tests + ผลเบราว์เซอร์ตามจริง; **ยังไม่ผ่าน UAT/Production; ยังไม่รัน full gate ในเครื่อง**), 2 ตารางคำสั่งที่รันจริงพร้อมจำนวน passed/failed จาก Step 2, 3 สิ่งที่ชุดทดสอบพิสูจน์ (anti-escalation เฉพาะ grant ที่เพิ่มและตอนอนุมัติ, system role แก้ไม่ได้, maker–checker เมื่อเพิ่ม grant ให้ Role ที่มีผู้ถือ, ผู้ตรวจ ≠ ผู้ขอ + DB constraint, stale request, last-administrator, `ROLE_IN_USE`, 403 เหมือนกันทุก id/other-org 404, replay/key reuse, ETag/If-Match, audit ไม่มีชื่อ/คำอธิบาย Role, test ล็อก approval set), 4 mutation check (ผลจริงจาก Task 3 Step 7, Task 7 Step 8, Task 8 Step 7, Task 9 Step 7, Task 10 Step 6), 5 การตัดสินใจที่ต้องให้ Business Owner ยืนยัน (D3 กฎ "เพิ่ม grant ใด ๆ ให้ Role ที่ RequiresApproval และมีผู้ถือ" เข้มงวดโดยตั้งใจ, D5 ชุด approval 6 ตัวและรายการ reviewed-not-approval, ปิด Role ต้องไม่มีผู้ถือ), 6 ข้อจำกัดที่ยอมรับ: (ก) R1 `roles.manage`/`roles.assign-approval` ยังไม่อยู่ใน approval set, (ข) R2 ไม่มี notification ถึงผู้ตรวจ, (ค) ไม่มีปุ่มยกเลิกคำขอใน UI (API มี), (ง) เพิ่ม grant ระดับ `branch`/`own` ผ่าน UI ไม่ได้ (API ได้, UI คงของเดิม), (จ) `permissions`/`is_system` ถูก seed เฉพาะ Test env — **Production ต้องมอบ `roles.manage` ให้ Role จริงและตั้ง `is_system` ให้ Role ระบบด้วย bootstrap/สคริปต์ก่อนใช้**, (ฉ) ไม่มีการถอน Role ให้อัตโนมัติเมื่อปิด Role, (ช) คิวคำขอจำกัด 200 รายการและ list ไม่มี pagination.
+
+- [ ] **Step 5: อัปเดตสถานะ (G-03b เท่านั้น)**
+
+- `docs/03-contracts/role-management-api-contract.md`: เปลี่ยน "สถานะ" เป็น Implemented (G-03b).
+- `docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md`: แถวตาราง G-03 (:48) แก้ข้อความสถานะเป็น `G-03a Implemented 2026-10-11; G-03b Implemented <วันที่> (focused tests; G-03c pending; <ผลเบราว์เซอร์ตามจริง>); [แผน G-03](2026-10-10-g03-org-role-authority.md); [Verification G-03a](../../05-engineering/organization-administration-verification.md); [Verification G-03b](../../05-engineering/role-management-verification.md)`; ติ๊ก checkbox "Role management: สร้าง/แก้ Role ..." (:112) — **ห้ามแตะ** checkbox "Approval Authority matrix" และ "Tests" (เป็นของ G-03c).
+- `docs/00-overview/implementation-roadmap.md` แถว Foundation (:29): แก้ประโยค "ยังไม่มีการสร้าง/แก้ Role และ Approval Authority matrix (G-03b/G-03c)" เป็น "มีการสร้าง/แก้/ปิดใช้ Role พร้อม maker–checker (G-03b, <วันที่>, focused tests; ยัง<ตรวจ/ไม่ได้ตรวจ>ในเบราว์เซอร์และยังไม่ผ่าน UAT) แต่ยังไม่มี Approval Authority matrix (G-03c)" และต่อท้ายว่า Production ต้องมอบ `roles.manage` และตั้ง system role ให้ Role จริง; เพิ่มลิงก์ [Role Management Verification](../05-engineering/role-management-verification.md) ในคอลัมน์หลักฐาน.
+- Run: ตรวจลิงก์ภายในด้วยคำสั่งใน Task 1 Step 6 กับไฟล์ที่แก้ → ต้องไม่มี `MISSING`.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add docs/05-engineering/role-management-verification.md docs/00-overview/implementation-roadmap.md docs/superpowers/plans/2026-10-05-erp-gap-closure-plan.md docs/03-contracts/role-management-api-contract.md
+git commit -m "docs(roles): record G-03b verification and update status
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
+```
 
 ## Part 3: G-03c Approval Authority matrix (tasks to be appended)

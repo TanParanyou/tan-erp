@@ -201,6 +201,18 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `BRANCH_HAS_OPEN_DOCUMENTS` | 409 | ปิดใช้สาขาไม่ได้เพราะยังมีเอกสารเปิด; ดู `blockers` จาก `deactivation-check` |
 | `BRANCH_HAS_ACTIVE_MEMBERSHIPS` | 409 | ปิดใช้สาขาไม่ได้เพราะยังมี Membership ที่ใช้งานอยู่หรือ Warehouse ที่ active ผูกกับสาขา |
 | `BRANCH_LAST_ACTIVE` | 409 | ปิดใช้สาขาไม่ได้เพราะเป็นสาขา active สุดท้ายขององค์กร |
+| `ROLE_NAME_ALREADY_EXISTS` | 409 | ชื่อ Role ซ้ำในองค์กรเดียวกัน (ไม่สนตัวพิมพ์เล็กใหญ่) |
+| `ROLE_NAME_RESERVED` | 422 | ชื่อ Role ขึ้นต้นด้วย `system.` ซึ่งถูกสงวนไว้ |
+| `ROLE_PERMISSION_UNKNOWN` | 422 | Permission key ไม่อยู่ใน catalog หรือไม่ active |
+| `ROLE_SYSTEM_IMMUTABLE` | 409 | แก้ ปิด หรือเปิด System Role ไม่ได้ |
+| `ROLE_IN_USE` | 409 | ปิดใช้ Role ไม่ได้เพราะยังมีผู้ถือ Role หรือมีคำขอมอบ Role ที่รอตัดสิน |
+| `ROLE_CHANGE_REQUEST_PENDING` | 409 | มีคำขอแก้ไข Role ที่รอตัดสินอยู่ จึงแก้หรือปิด Role นี้ไม่ได้ |
+| `ROLE_CHANGE_REQUEST_NOT_PENDING` | 409 | คำขอแก้ไข Role ไม่ได้อยู่ในสถานะรอตัดสิน |
+| `ROLE_CHANGE_REQUEST_STALE` | 409 | Role เปลี่ยนไปหลังจากมีการขอแก้ไข ต้องขอใหม่ |
+| `ROLE_CHANGE_INDEPENDENT_CHECKER_REQUIRED` | 403 | ผู้ตัดสินต้องเป็นคนละคนกับผู้ขอแก้ไข |
+| `ROLE_ESCALATION_DENIED` | 403 | Role หรือ grant ที่เพิ่มมี permission/Scope ที่ผู้เรียกไม่ได้ถืออยู่ (การถอน grant ไม่ถูกปฏิเสธด้วยรหัสนี้) |
+| `LAST_ADMINISTRATOR_REQUIRED` | 422 | การเปลี่ยนแปลงจะทำให้องค์กรไม่เหลือผู้ดูแลที่ใช้งานอยู่อย่างน้อยหนึ่งคน (เช่น ถอน `users.manage` จากแหล่งผู้ดูแลคนสุดท้าย) |
+| `BRANCH_NOT_FOUND` | 404 | ไม่พบสาขาที่ระบุในองค์กรนี้ (สาขาขององค์กรอื่นตอบแบบเดียวกัน) |
 
 ## Validation Errors
 

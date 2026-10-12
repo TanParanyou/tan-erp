@@ -17,6 +17,7 @@ import {
   IconChevronDown,
   IconChevronsUpDown,
   IconMapPin,
+  IconLock,
 } from "@/components/common/Icons";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
@@ -76,6 +77,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasRoleRequestApproval = can(activeMembership, "roles.assign-approval");
   const hasOrganizationsManage = can(activeMembership, "organizations.manage");
   const hasBranchesManage = can(activeMembership, "branches.manage");
+  const hasRolesManage = can(activeMembership, "roles.manage");
   const hasItemMasterRead = can(activeMembership, "items.read");
   const hasCostSourcesRead = can(activeMembership, "cost-sources.read");
   const hasCostReviewRead = can(activeMembership, "cost-records.read");
@@ -98,6 +100,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isRoleRequestsActive = pathname.startsWith(`/${locale}/settings/role-requests`);
   const isOrganizationSettingsActive = pathname.startsWith(`/${locale}/settings/organization`);
   const isBranchSettingsActive = pathname.startsWith(`/${locale}/settings/branches`);
+  const isRoleSettingsActive = pathname.startsWith(`/${locale}/settings/roles`);
   const isItemMasterActive = pathname.startsWith(`/${locale}/item-master`);
 
   const crmItems: NavItemDef[] = useMemo(() => {
@@ -494,6 +497,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     hasOrganizationsManage && (!trimmedSearch || tShell("organizationSettings").toLowerCase().includes(trimmedSearch));
   const isBranchSettingsVisible =
     hasBranchesManage && (!trimmedSearch || tShell("branchSettings").toLowerCase().includes(trimmedSearch));
+  const isRoleSettingsVisible =
+    hasRolesManage && (!trimmedSearch || tShell("roleSettings").toLowerCase().includes(trimmedSearch));
 
   const filteredSubgroups = useMemo(() => {
     if (!trimmedSearch) return subgroups;
@@ -517,6 +522,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     isRoleRequestsVisible ||
     isOrganizationSettingsVisible ||
     isBranchSettingsVisible ||
+    isRoleSettingsVisible ||
     filteredSubgroups.some((g) => g.items.length > 0);
 
   const renderLink = (item: NavItemDef) => {
@@ -702,6 +708,17 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
                 label: tShell("branchSettings"),
                 icon: <IconMapPin size={20} />,
                 isActive: isBranchSettingsActive,
+              })}
+            </li>
+          )}
+          {isRoleSettingsVisible && (
+            <li>
+              {renderLink({
+                id: "role-settings",
+                href: `/${locale}/settings/roles`,
+                label: tShell("roleSettings"),
+                icon: <IconLock size={20} />,
+                isActive: isRoleSettingsActive,
               })}
             </li>
           )}
