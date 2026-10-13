@@ -1,6 +1,6 @@
 # Quotation Document API Contract (ข้อตกลง API ไฟล์ PDF ใบเสนอราคาที่เก็บไว้)
 
-**สถานะ:** Implemented 2026-10-13 (G-04) — tests written, not run; รอ Sales/Finance ยืนยัน layout/ข้อมูลหัวเอกสาร และรอ Business ยืนยันเงื่อนไข license ของ QuestPDF ([ADR 0023](../adr/0023-server-side-quotation-pdf-with-questpdf.md)). Preview/Print เดิม (`GET /api/v1/estimates/{id}/quotation/document`) ยังใช้ได้ตาม [ADR 0016](../adr/0016-browser-print-for-quotation-pdf.md).
+**สถานะ:** Implemented (tests written, not yet run) 2026-10-13 (G-04); รอ Sales/Finance ยืนยัน layout/ข้อมูลหัวเอกสาร และรอ Business ยืนยันเงื่อนไข license ของ QuestPDF ([ADR 0023](../adr/0023-server-side-quotation-pdf-with-questpdf.md)). Preview/Print เดิม (`GET /api/v1/estimates/{id}/quotation/document`) ยังใช้ได้ตาม [ADR 0016](../adr/0016-browser-print-for-quotation-pdf.md).
 
 ## Decisions
 
