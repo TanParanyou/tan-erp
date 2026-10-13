@@ -27,6 +27,73 @@ public partial class EstimateEndpointsTests
     private static string Sha256Of(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 
     // G-04 tests of later tasks are inserted below this line.
+    private Task<HttpResponseMessage> GetQuotationPdfAsync(Guid quotationId, string token = "token-org-a", Guid? membership = null) =>
+        _client.SendAsync(CreateAuthenticatedRequest(HttpMethod.Get, $"/api/v1/quotations/{quotationId}/document", token, membership ?? MembershipAId));
+
+    // Simulates a quotation issued before G-04: it has no stored document.
+    private async Task SimulateLegacyQuotationAsync(Guid quotationId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.ExecuteSqlInterpolatedAsync($"DELETE FROM commercial.quotation_documents WHERE quotation_id = {quotationId}");
+    }
+
+    // A user whose quotations.read is scoped to ANOTHER branch of the same organization.
+    private static async Task<Guid> SeedOtherBranchReaderAsync(AppDbContext db)
+    {
+        var (branchId, userId, membershipId, roleId) = (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        db.Branches.Add(new Branch(branchId, OrgAId, $"QR-{branchId:N}"[..12], "Other Branch"));
+        db.Users.Add(new User(userId, "test-only-quotation-reader", "Quotation Reader", "quotation-reader@example.test"));
+        db.Memberships.Add(new Membership(membershipId, OrgAId, branchId, userId));
+        db.Roles.Add(new Role(roleId, OrgAId, "TEST ONLY OTHER BRANCH", "TEST_ONLY other branch"));
+        db.MembershipRoles.Add(new MembershipRole(membershipId, roleId, OrgAId));
+        var read = await db.Permissions.SingleAsync(row => row.Key == "quotations.read");
+        db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), roleId, OrgAId, read.Id, PermissionScope.Branch, branchId, branchId));
+        await db.SaveChangesAsync();
+        return membershipId;
+    }
+
+    [Fact]
+    public async Task QuotationDocument_IsServedFromStorage_AndIsNotChangedByLaterOrganizationProfileChanges()
+    {
+        var (estimateId, _, quotation) = await IssueQuotedEstimateAsync("pdf-download");
+        var summary = (await HistoryAsync(estimateId)).Items.Single().Document!;
+
+        var response = await GetQuotationPdfAsync(quotation.QuotationId);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal($"\"{summary.Sha256}\"", response.Headers.ETag?.Tag);
+        var before = await response.Content.ReadAsByteArrayAsync();
+        Assert.Equal(summary.Sha256, Sha256Of(before));
+
+        // Master data changes after issue: the stored file stays exactly as issued because it is never re-rendered.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.Organizations.SingleAsync(o => o.Id == OrgAId)).UpdateProfile("ชื่อองค์กรใหม่หลังออกเอกสาร", "Renamed after issue", null, "ที่อยู่ใหม่", null, null);
+            await db.SaveChangesAsync();
+        }
+
+        Assert.Equal(before, await (await GetQuotationPdfAsync(quotation.QuotationId)).Content.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public async Task QuotationDocument_OutsideTheCallersOrganizationOrBranch_IsNotFound_AndALegacyQuotationHasNone()
+    {
+        var (_, _, quotation) = await IssueQuotedEstimateAsync("pdf-scope");
+        Guid otherBranchMembership;
+        using (var scope = _factory.Services.CreateScope())
+            otherBranchMembership = await SeedOtherBranchReaderAsync(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+
+        Assert.Equal(HttpStatusCode.NotFound, (await GetQuotationPdfAsync(quotation.QuotationId, "token-org-b", TestOnlyDataSeeder.TestMembershipBId)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await GetQuotationPdfAsync(quotation.QuotationId, "token-quotation-reader", otherBranchMembership)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await GetQuotationPdfAsync(Guid.NewGuid())).StatusCode);
+
+        // A quotation issued before G-04 has no document: a stable code, and the history says so.
+        await SimulateLegacyQuotationAsync(quotation.QuotationId);
+        var missing = await GetQuotationPdfAsync(quotation.QuotationId);
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+        Assert.Equal("QUOTATION_DOCUMENT_NOT_AVAILABLE", await ProblemCodeAsync(missing));
+    }
 
     [Fact]
     public async Task IssueQuotation_StoresOneDocumentRow_WhoseHashMatchesTheStoredBytes()

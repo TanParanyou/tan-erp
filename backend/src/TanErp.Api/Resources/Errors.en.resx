@@ -1145,4 +1145,10 @@
   <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>No active role with this id exists in the organization.</value>
   </data>
+  <data name="QUOTATION_DOCUMENT_NOT_AVAILABLE_TITLE" xml:space="preserve">
+    <value>Quotation PDF not available</value>
+  </data>
+  <data name="QUOTATION_DOCUMENT_NOT_AVAILABLE_DETAIL" xml:space="preserve">
+    <value>This quotation was issued before PDFs were stored, so no stored PDF exists yet. A user who can issue quotations can create it once.</value>
+  </data>
 </root>
