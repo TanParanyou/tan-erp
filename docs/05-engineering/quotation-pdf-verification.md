@@ -129,3 +129,34 @@ cd frontend && npm run build && npm run lint && npx vitest run
 - โลโก้องค์กร (follow-up)
 - ผู้ยืนยัน license QuestPDF
 - endpoint สร้าง PDF ครั้งเดียวตามคำขอสำหรับใบเก่า (ถ้า Business ต้องการ)
+
+## 10. งานที่เหลือ (Backlog) และข้อสังเกตจาก CI — บันทึก 2026-10-13
+
+> สถานะ: โค้ด G-04 ครบ 10 จาก 10 task แล้ว งานที่เหลือเป็นการยืนยัน/ตัดสินใจ ไม่ใช่การเขียนโค้ดใหม่ ขั้น CI และ PR ถูก**ข้ามไว้ก่อนโดยตั้งใจ** ตามคำสั่งผู้ใช้ ([PR #23](https://github.com/TanParanyou/tan-erp/pull/23) ยังเปิดอยู่ ยังไม่ merge)
+
+### 10.1 ต้องทำก่อน merge/ใช้จริง
+
+| # | งาน | ผู้รับผิดชอบ | สถานะ |
+| --- | --- | --- | --- |
+| 1 | รัน test ที่เขียนไว้ตามหัวข้อ 4 (โดยเฉพาะ `EstimateEndpointsTests`, `QuestPdfQuotationRendererTests`, `QuotationDocumentTests`) และ gate เต็มตาม AGENTS.md หมวด 8 | ผู้ใช้/ทีมพัฒนา | ยังไม่ทำ |
+| 2 | เปิด PDF จริงตรวจสระ/วรรณยุกต์ไทย การแบ่งหน้า ข้อความยาว และหัวเอกสาร | Sales/Finance | ยังไม่ทำ |
+| 3 | ยืนยันเงื่อนไข license QuestPDF Community แล้วตั้ง `Documents:QuestPdf:LicenseConfirmed=true` (หรือเปลี่ยนเป็น Professional) | Business Owner | ยังไม่ทำ |
+| 4 | ตั้ง `Storage:BasePath` ให้ชี้ที่เก็บถาวรในทุก environment แล้ว apply migration `AddQuotationDocuments` | ผู้ดูแลระบบ | local dev apply แล้ว ที่อื่นยังไม่ทำ |
+| 5 | merge [PR #23](https://github.com/TanParanyou/tan-erp/pull/23) หลังข้อ 1 ผ่าน | ผู้ใช้ | ข้ามไว้ก่อน |
+
+### 10.2 Follow-up ที่ตั้งใจเลื่อน (ยังไม่อยู่ในขอบเขต G-04)
+
+- **โลโก้องค์กร:** `Organization` ยังไม่มีคอลัมน์โลโก้ ต้องมี schema + owner type + หน้าตั้งค่า (เลื่อนต่อจาก G-03a)
+- **ใบเสนอราคาที่ออกก่อน G-04:** ไม่มี PDF (ดาวน์โหลดได้ 404 `QUOTATION_DOCUMENT_NOT_AVAILABLE`, แก้ด้วยการ Amend) ถ้า Business ต้องการ ให้เพิ่ม endpoint สร้าง PDF ครั้งเดียวตามคำขอ (ประมาณ 150 บรรทัดในแผนเดิมที่ตัดออก)
+- **blob กำพร้า:** ถ้า commit ล้มหลังเขียนไฟล์แล้ว ไฟล์ค้างโดยไม่มี job กวาด
+- **การดาวน์โหลดไม่ถูก audit** และ `GET /api/v1/estimates/{id}/quotations` ยังตรวจเฉพาะ Organization (ของเดิม)
+
+### 10.3 สิ่งที่ CI พบและการแก้ (รอบ 2026-10-13)
+
+CI ของ PR #23 รอบแรกล้ม 1 จาก 530 integration test: `QuotationDocument_OutsideTheCallersOrganizationOrBranch_IsNotFound_AndALegacyQuotationHasNone` ได้ 403 แทน 404 สำหรับผู้อ่านที่ผูกสาขาอื่น
+
+- **สาเหตุ:** ข้อสมมติของ test ผิด ไม่ใช่บั๊กของระบบ — `RequestAccessResolver` ยอมรับสิทธิ์ระดับสาขาเฉพาะ `estimates.read/update/approve` (ตัวแปร `allowBranchScopedEstimatePermission`) สิทธิ์ `quotations.read` ระดับสาขาจึงถูกถือว่าไม่มีสิทธิ์ (403)
+- **การแก้:** seed ผู้อ่านด้วยสิทธิ์ระดับองค์กร และผูก membership กับสาขาอื่น (`RequestAccessContext.HasBranchAccess`: BranchId ว่าง = ทุกสาขา) จึงผ่านการตรวจสิทธิ์แต่ไม่ผ่านการตรวจสาขา ได้ 404 ตามที่ออกแบบ (commit `679b0d7`)
+- **หลักฐาน:** รัน test ตัวนั้นเดี่ยว ๆ ผ่าน 1/1; ส่วนอื่นของชุด .NET ผ่านในรอบเดิม (unit 614, architecture 4, integration 529) ผล CI รอบหลังแก้ยังไม่ได้ตรวจเพราะข้ามไว้
+- **ข้อควรรู้สำหรับ slice ถัดไป:** สิทธิ์ระดับสาขารองรับเฉพาะกลุ่ม `estimates.*` ถ้า feature ใหม่ต้องการจำกัดตามสาขา ให้ใช้สิทธิ์ระดับองค์กรร่วมกับ `BranchId` ของ membership
+

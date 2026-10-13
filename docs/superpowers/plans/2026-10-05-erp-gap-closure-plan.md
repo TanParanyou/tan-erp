@@ -120,6 +120,8 @@
 **แตะ:** `backend/src/TanErp.Application/Commercial/`, projection ของ CP-04, ADR ใหม่ที่ supersede/เสริม [ADR 0016](../../adr/0016-browser-print-for-quotation-pdf.md)
 
 > **สถานะ G-04 (2026-10-13):** Implemented — tests written, not run; browser/PDF not visually checked; ยังไม่ผ่าน UAT. ทุกข้อด้านล่างคง `[ ]` (ยังไม่ตรวจจริง). ทำแล้ว: ADR 0023 ([QuestPDF 2026.9.1 + Sarabun ฝังใน assembly](../../adr/0023-server-side-quotation-pdf-with-questpdf.md)), `IQuotationDocumentRenderer`, render ครั้งเดียวตอน issue/amend ใน unit of work เดียวกัน → `UploadedFile` + `quotation_documents` (sha256 ผูก quotation), pagination/ข้อความยาว/ไทย-อังกฤษ/ข้อมูลองค์กร-สาขา, allowlist + test, cross-scope 404, หน้าลูกค้า CP-07 ดาวน์โหลดไฟล์พร้อม SHA-256 และส่ง hash ตอนยอมรับ (ไม่ตรง → `ACCEPTANCE_CONFLICT`, หลักฐานเก็บ `document_sha256`). **ยังไม่ทำ/ยังเปิด:** โลโก้ (follow-up), PDF ย้อนหลังของใบเก่า (ตอบ `404 QUOTATION_DOCUMENT_NOT_AVAILABLE`; ใช้ Amend), **เงื่อนไข license QuestPDF รอ Business ยืนยันก่อน production**. หมายเหตุ: hash คงที่เพราะเก็บไฟล์ครั้งเดียว ไม่ใช่เพราะ renderer deterministic. [Verification](../../05-engineering/quotation-pdf-verification.md)
+>
+> **งานค้างของ G-04 (บันทึก 2026-10-13):** ดู [Verification หัวข้อ 10](../../05-engineering/quotation-pdf-verification.md) — รัน test เอง, ตรวจ PDF จริง, ยืนยัน license QuestPDF, ตั้ง `Storage:BasePath`, merge PR #23 (ข้าม CI/PR ไว้ก่อนตามคำสั่งผู้ใช้); follow-up: โลโก้, endpoint สร้าง PDF สำหรับใบเก่า, กวาด blob กำพร้า
 
 - [ ] ADR: เลือก renderer (เสนอ: QuestPDF — .NET in-process, ฟอนต์ไทยฝังได้, ไม่มี headless browser) และนโยบาย font ownership (Sarabun/IBM Plex Sans Thai OFL เก็บใน repo)
 - [ ] `IQuotationDocumentRenderer` ใน Application; implementation ใน Infrastructure
