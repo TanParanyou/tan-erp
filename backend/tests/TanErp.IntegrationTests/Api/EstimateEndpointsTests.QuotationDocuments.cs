@@ -92,7 +92,9 @@ public partial class EstimateEndpointsTests
         db.Roles.Add(new Role(roleId, OrgAId, "TEST ONLY OTHER BRANCH", "TEST_ONLY other branch"));
         db.MembershipRoles.Add(new MembershipRole(membershipId, roleId, OrgAId));
         var read = await db.Permissions.SingleAsync(row => row.Key == "quotations.read");
-        db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), roleId, OrgAId, read.Id, PermissionScope.Branch, branchId, branchId));
+        // quotations.read is only honoured at organization scope (RequestAccessResolver allows branch-scoped grants for estimates.* only);
+        // the membership itself is bound to the other branch, so the reader passes the permission check but not the branch check.
+        db.RolePermissions.Add(new RolePermission(Guid.NewGuid(), roleId, OrgAId, read.Id, PermissionScope.Organization, OrgAId));
         await db.SaveChangesAsync();
         return membershipId;
     }
