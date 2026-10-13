@@ -92,6 +92,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Estimates.EstimateWorkItem> EstimateWorkItems => Set<TanErp.Domain.Estimates.EstimateWorkItem>();
     public DbSet<TanErp.Domain.Estimates.EstimateCostComponent> EstimateCostComponents => Set<TanErp.Domain.Estimates.EstimateCostComponent>();
     public DbSet<TanErp.Domain.Commercial.Quotation> Quotations => Set<TanErp.Domain.Commercial.Quotation>();
+    public DbSet<TanErp.Domain.Commercial.QuotationDocument> QuotationDocuments => Set<TanErp.Domain.Commercial.QuotationDocument>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
     public DbSet<TanErp.Domain.MasterData.Geography.Province> Provinces => Set<TanErp.Domain.MasterData.Geography.Province>();
     public DbSet<TanErp.Domain.MasterData.Geography.District> Districts => Set<TanErp.Domain.MasterData.Geography.District>();

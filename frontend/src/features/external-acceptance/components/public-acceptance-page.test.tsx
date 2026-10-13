@@ -36,6 +36,7 @@ function view(overrides: Partial<PublicAcceptanceViewResponse> = {}): PublicAcce
 function renderPage(state: { data?: PublicAcceptanceViewResponse; isPending?: boolean; isError?: boolean }, mutation = { mutateAsync: mutate, isPending: false, isSuccess: false }) {
   vi.spyOn(publicQueries, "usePublicAcceptance").mockReturnValue({ isPending: false, isError: false, ...state } as unknown as ReturnType<typeof publicQueries.usePublicAcceptance>);
   vi.spyOn(publicQueries, "usePublicAcceptMutation").mockReturnValue(mutation as unknown as ReturnType<typeof publicQueries.usePublicAcceptMutation>);
+  vi.spyOn(publicQueries, "usePublicPdfDownload").mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as unknown as ReturnType<typeof publicQueries.usePublicPdfDownload>);
   render(
     <NextIntlClientProvider locale="th" messages={thMessages}>
       <PublicAcceptancePage token={"t".repeat(43)} uiLocale="th" />
@@ -94,7 +95,19 @@ describe("PublicAcceptancePage", () => {
     fireEvent.change(screen.getByLabelText(new RegExp(p.signerRole)), { target: { value: "กรรมการ" } });
     fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: p.accept }));
-    await waitFor(() => expect(mutate).toHaveBeenCalledWith({ signerName: "คุณสมชาย ใจดี", signerRole: "กรรมการ", consentAccepted: true, consentVersion: "2026-10-v1", signatureImage: null }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith({ signerName: "คุณสมชาย ใจดี", signerRole: "กรรมการ", consentAccepted: true, consentVersion: "2026-10-v1", signatureImage: null, documentSha256: null }));
+  });
+
+  it("sends the hash of the PDF it showed, and shows that PDF with its hash", async () => {
+    mutate.mockResolvedValue({});
+    const hash = "c".repeat(64);
+    renderPage({ data: view({ pdf: { sha256: hash, byteCount: 1234 } }) });
+
+    expect(screen.getByText(p.pdfHash.replace("{hash}", hash))).toBeDefined();
+    fireEvent.change(screen.getByLabelText(new RegExp(p.signerName)), { target: { value: "คุณสมชาย ใจดี" } });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: p.accept }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith(expect.objectContaining({ documentSha256: hash })));
   });
 
   it("shows the translated error instead of the raw message", async () => {

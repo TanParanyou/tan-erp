@@ -32,8 +32,9 @@ Public (ไม่ต้อง login; rate limited):
 
 | Action | Method/Path |
 | --- | --- |
-| ดูเอกสาร | `GET /api/public/v1/quotation-acceptance/{token}?locale=th|en` → `{status, expiresAtUtc, signerHint, consentVersion, acceptedAtUtc, document}` |
-| ยอมรับ | `POST /api/public/v1/quotation-acceptance/{token}/accept` `{signerName, signerRole?, consentAccepted, consentVersion, signatureImage?}` → `200 {status, acceptedAtUtc, quotationNumber, evidence}` |
+| ดูเอกสาร | `GET /api/public/v1/quotation-acceptance/{token}?locale=th|en` → `{status, expiresAtUtc, signerHint, consentVersion, acceptedAtUtc, document, pdf}` โดย `pdf = {sha256, byteCount}` หรือ `null` ถ้าใบเสนอราคาไม่มีไฟล์ที่เก็บไว้ |
+| ไฟล์ PDF ที่ใช้ยอมรับ | `GET /api/public/v1/quotation-acceptance/{token}/document` → `200 application/pdf` (ไฟล์ที่เก็บไว้; `no-store`; ใช้กฎลิงก์เดียวกับ view; ไม่มีไฟล์ → `404 ACCEPTANCE_LINK_UNAVAILABLE`) |
+| ยอมรับ | `POST /api/public/v1/quotation-acceptance/{token}/accept` `{signerName, signerRole?, consentAccepted, consentVersion, signatureImage?, documentSha256?}` → `200 {status, acceptedAtUtc, quotationNumber, evidence}` — `documentSha256` ต้องเท่ากับ `pdf.sha256` ที่หน้าแสดง (`null` เท่ากับไม่มีไฟล์) มิฉะนั้น `409 ACCEPTANCE_CONFLICT`; หลักฐานใน DB เก็บ `document_sha256` (ค่าที่ยืนยัน) |
 
 หน้าลูกค้า: `/{locale}/accept/{token}` (อยู่นอก ERP layout ไม่มี sign-in gate/เมนู).
 

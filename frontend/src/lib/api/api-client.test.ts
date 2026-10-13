@@ -469,4 +469,30 @@ describe("ApiClient", () => {
     expect(fetchMock.mock.calls[3][1].headers["Idempotency-Key"]).toBe("key-0123456789abcdef");
     expect(fetchMock.mock.calls[4][1].headers["If-Match"]).toBe('"v1"');
   });
+
+  it("downloads the stored quotation PDF as a blob with the bearer token and membership", async () => {
+    const pdf = new Blob(["%PDF-"], { type: "application/pdf" });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => pdf });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    expect(await client.downloadQuotationDocument("q 1", { token: "tok", membershipId: "m-1", locale: "th" })).toBe(pdf);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect([url, init.method]).toEqual(["http://localhost:5000/api/v1/quotations/q%201/document", "GET"]);
+    expect(init.headers).toMatchObject({ Authorization: "Bearer tok", Accept: "application/pdf", "X-Membership-Id": "m-1" });
+  });
+
+  it("downloads the public quotation PDF without any ERP credentials", async () => {
+    const pdf = new Blob(["%PDF-"], { type: "application/pdf" });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => pdf });
+    global.fetch = fetchMock;
+
+    const client = new ApiClient("http://localhost:5000");
+    expect(await client.downloadPublicQuotationDocument("t".repeat(43))).toBe(pdf);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`http://localhost:5000/api/public/v1/quotation-acceptance/${"t".repeat(43)}/document`);
+    expect(init.headers).toEqual({ Accept: "application/pdf" });
+  });
 });

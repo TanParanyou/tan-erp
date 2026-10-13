@@ -240,6 +240,8 @@ export type CreatedAcceptanceLinkResponse = components["schemas"]["CreatedAccept
 export type AcceptanceLinkResponse = components["schemas"]["AcceptanceLinkResponse"];
 export type AcceptanceLinkListResponse = components["schemas"]["AcceptanceLinkListResponse"];
 export type PublicAcceptanceViewResponse = components["schemas"]["PublicAcceptanceViewResponse"];
+export type PublicQuotationPdfResponse = components["schemas"]["PublicQuotationPdfResponse"];
+export type QuotationDocumentSummaryResponse = components["schemas"]["QuotationDocumentSummaryResponse"];
 export type PublicAcceptRequest = components["schemas"]["PublicAcceptRequest"];
 export type PublicAcceptanceResponse = components["schemas"]["PublicAcceptanceResponse"];
 export type InstallationRequest = components["schemas"]["InstallationRequest"];
@@ -504,7 +506,8 @@ export class ApiClient {
     method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
     headers: Record<string, string>,
     body: unknown,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    read: (response: Response) => Promise<T> = (response) => response.json()
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -535,8 +538,7 @@ export class ApiClient {
         return undefined as T;
       }
 
-      const data: T = await response.json();
-      return data;
+      return await read(response);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         throw err;
@@ -1096,6 +1098,25 @@ export class ApiClient {
     );
   }
 
+  /** Authenticated binary download (the stored quotation PDF). Failures are problem-details errors exactly like JSON calls. */
+  private async requestBlob(endpoint: string, options: RequestOptions): Promise<Blob> {
+    const { token, membershipId, locale = "th", signal } = options;
+    if (!token || token.trim() === "") {
+      throw new ApiError({ status: 401, code: "AUTHENTICATION_REQUIRED", message: "Token is required." });
+    }
+
+    const headers: Record<string, string> = { Authorization: `Bearer ${token.trim()}`, "Accept-Language": locale, Accept: "application/pdf" };
+    if (membershipId) {
+      headers["X-Membership-Id"] = membershipId;
+    }
+
+    return this.execute<Blob>(endpoint, "GET", headers, undefined, signal, (response) => response.blob());
+  }
+
+  async downloadQuotationDocument(quotationId: string, options: RequestOptions): Promise<Blob> {
+    return this.requestBlob(`/api/v1/quotations/${encodeURIComponent(quotationId)}/document`, options);
+  }
+
   async getQuotationHistory(estimateId: string, options: RequestOptions): Promise<QuotationHistoryResponse> {
     return this.request<QuotationHistoryResponse>(`/api/v1/estimates/${encodeURIComponent(estimateId)}/quotations`, "GET", options);
   }
@@ -1124,6 +1145,17 @@ export class ApiClient {
       { Accept: "application/json", "Accept-Language": locale },
       undefined,
       signal
+    );
+  }
+
+  async downloadPublicQuotationDocument(token: string, signal?: AbortSignal): Promise<Blob> {
+    return this.execute<Blob>(
+      `/api/public/v1/quotation-acceptance/${encodeURIComponent(token)}/document`,
+      "GET",
+      { Accept: "application/pdf" },
+      undefined,
+      signal,
+      (response) => response.blob()
     );
   }
 

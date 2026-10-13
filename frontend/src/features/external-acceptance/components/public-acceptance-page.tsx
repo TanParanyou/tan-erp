@@ -13,7 +13,7 @@ import thMessages from "@/messages/th.json";
 import enMessages from "@/messages/en.json";
 import { QuotationDocumentView, type QuotationDocumentLabel } from "@/features/estimates/components/quotation-document-view";
 import { acceptanceLinkErrorCode } from "@/features/estimates/quotation-lifecycle-status";
-import { usePublicAcceptance, usePublicAcceptMutation } from "../api/public-acceptance-queries";
+import { usePublicAcceptance, usePublicAcceptMutation, usePublicPdfDownload } from "../api/public-acceptance-queries";
 import { SignaturePad } from "./signature-pad";
 
 interface PublicAcceptancePageProps {
@@ -29,6 +29,7 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
   const [documentLocale, setDocumentLocale] = useState<"th" | "en">(uiLocale);
   const query = usePublicAcceptance(token, documentLocale);
   const mutation = usePublicAcceptMutation(token, documentLocale);
+  const pdfDownload = usePublicPdfDownload(token);
 
   const [signerName, setSignerName] = useState("");
   const [signerRole, setSignerRole] = useState("");
@@ -81,6 +82,8 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
         consentAccepted: true,
         consentVersion: view.consentVersion,
         signatureImage: signature,
+        // The hash of the PDF shown above; null only when the quotation has no stored PDF. The server rejects any other value.
+        documentSha256: view.pdf?.sha256 ?? null,
       });
     } catch (err: unknown) {
       const code = err instanceof ApiError ? acceptanceLinkErrorCode(err.code) : null;
@@ -96,6 +99,20 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
       </div>
 
       <QuotationDocumentView document={document} documentLocale={documentLocale} label={label} />
+
+      {view.pdf?.sha256 && document.number && (
+        <section className="erp-card space-y-3 p-5 print:hidden" aria-label={t("pdfTitle")}>
+          <h2 className="text-base font-bold text-erp-navy">{t("pdfTitle")}</h2>
+          <p className="text-xs text-erp-text-muted">{t("pdfDescription")}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" variant="outline" isLoading={pdfDownload.isPending} disabled={pdfDownload.isPending}
+              onClick={() => void pdfDownload.mutateAsync(`${document.number}.pdf`).catch(() => setError(t("pdfFailed")))}>
+              {t("pdfDownload")}
+            </Button>
+            <span className="break-all font-mono text-xs text-erp-text-muted">{t("pdfHash", { hash: view.pdf.sha256 })}</span>
+          </div>
+        </section>
+      )}
 
       <section className="erp-card space-y-4 p-5 print:hidden" aria-label={t("acceptTitle")}>
         {accepted ? (

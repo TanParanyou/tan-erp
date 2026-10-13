@@ -1307,4 +1307,10 @@
   <data name="APPROVAL_LIMIT_ROLE_NOT_FOUND_DETAIL" xml:space="preserve">
     <value>ไม่พบบทบาทที่เปิดใช้งานในองค์กรนี้</value>
   </data>
+  <data name="QUOTATION_DOCUMENT_NOT_AVAILABLE_TITLE" xml:space="preserve">
+    <value>ไม่มีไฟล์ PDF ของใบเสนอราคา</value>
+  </data>
+  <data name="QUOTATION_DOCUMENT_NOT_AVAILABLE_DETAIL" xml:space="preserve">
+    <value>ใบเสนอราคานี้ออกก่อนที่ระบบจะเก็บไฟล์ PDF จึงยังไม่มีไฟล์ที่เก็บไว้ ผู้มีสิทธิ์ออกใบเสนอราคาสร้างไฟล์ได้หนึ่งครั้ง</value>
+  </data>
 </root>

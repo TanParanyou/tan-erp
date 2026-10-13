@@ -24352,6 +24352,68 @@
         }
       }
     },
+    "/api/public/v1/quotation-acceptance/{token}/document": {
+      "get": {
+        "tags": [
+          "PublicQuotationAcceptance"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/public/v1/quotation-acceptance/{token}/accept": {
       "post": {
         "tags": [
@@ -26392,6 +26454,69 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/quotations/{id}/document": {
+      "get": {
+        "tags": [
+          "QuotationDocuments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "text/plain": {
                 "schema": {
@@ -39785,6 +39910,10 @@
           "signatureImage": {
             "type": "string",
             "nullable": true
+          },
+          "documentSha256": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -39836,6 +39965,23 @@
           },
           "document": {
             "$ref": "#/components/schemas/QuotationDocumentResponse"
+          },
+          "pdf": {
+            "$ref": "#/components/schemas/PublicQuotationPdfResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicQuotationPdfResponse": {
+        "type": "object",
+        "properties": {
+          "sha256": {
+            "type": "string",
+            "nullable": true
+          },
+          "byteCount": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "additionalProperties": false
@@ -40544,6 +40690,28 @@
         },
         "additionalProperties": false
       },
+      "QuotationDocumentSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "sha256": {
+            "type": "string",
+            "nullable": true
+          },
+          "byteCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "rendererVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "renderedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "QuotationHistoryItemResponse": {
         "type": "object",
         "properties": {
@@ -40617,6 +40785,9 @@
           "rowVersion": {
             "type": "string",
             "format": "uuid"
+          },
+          "document": {
+            "$ref": "#/components/schemas/QuotationDocumentSummaryResponse"
           }
         },
         "additionalProperties": false
@@ -44628,6 +44799,9 @@
     },
     {
       "name": "QuotationAcceptanceLinks"
+    },
+    {
+      "name": "QuotationDocuments"
     },
     {
       "name": "QuotationLifecycle"

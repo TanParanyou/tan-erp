@@ -136,7 +136,7 @@
 | Quotation | `quotations.void` | ยกเลิกใบเสนอราคาที่ออกแล้วและยังไม่ถูกยอมรับ | Organization |
 | Quotation | `quotations.amend` | ออกใบเสนอราคาฉบับแทนที่ | Organization |
 | Quotation | `quotations.share` | สร้าง/เพิกถอนลิงก์ให้ลูกค้ายอมรับ | Organization |
-| Quotation | `quotations.read` | ดู/พิมพ์เอกสาร Quotation ที่ออกแล้ว (Customer-safe Document) | Branch/Project |
+| Quotation | `quotations.read` | ดู/พิมพ์เอกสาร Quotation ที่ออกแล้ว (Customer-safe Document) และดาวน์โหลดไฟล์ PDF ที่เก็บไว้ | Branch/Project |
 | Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
 
 **Shared Attachment (G-01):** ไม่มี permission key ใหม่ — การอ่าน/แนบ/เซ็นไฟล์แนบของ owner ใช้ permission ของ owner ตาม [Attachment API Contract](attachment-api-contract.md) (`installation-job` → read=installations.read, manage=installations.operate, sign=installations.handover).

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using TanErp.Application.Commercial;
+using TanErp.Application.Commercial.Documents;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
@@ -18,12 +19,14 @@ public class QuotationLifecycleStore : IQuotationLifecycleStore
     private readonly AppDbContext _db;
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _numbers;
+    private readonly IQuotationDocumentWriter _documents;
 
-    public QuotationLifecycleStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers)
+    public QuotationLifecycleStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, IQuotationDocumentWriter documents)
     {
         _db = db;
         _clock = clock;
         _numbers = numbers;
+        _documents = documents;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -194,6 +197,9 @@ public class QuotationLifecycleStore : IQuotationLifecycleStore
                 _db.Quotations.Add(replacement);
                 Audit(access, "quotations.amended", replacement.Id, traceId, new { replacement.Number, supersedes = old.Number, total = replacement.TotalAmount }, now);
                 _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, replacement.Id.ToString(), now));
+                // The replacement gets its own PDF in the same unit of work (ADR 0023); the superseded quotation keeps its original one.
+                var staged = await _documents.StageAsync(replacement, access.ActorUserId, traceId, ct);
+                if (staged.IsFailure) return Result<QuotationHistoryProjection>.Failure(staged.Error);
                 await _db.SaveChangesAsync(ct);
                 await tx.CommitAsync(ct);
             }
@@ -222,12 +228,17 @@ public class QuotationLifecycleStore : IQuotationLifecycleStore
         var revisionNos = await _db.EstimateRevisions.AsNoTracking().Where(r => revisionIds.Contains(r.Id)).ToDictionaryAsync(r => r.Id, r => r.RevisionNo, ct);
         var userIds = rows.Where(q => q.VoidedByUserId.HasValue).Select(q => q.VoidedByUserId!.Value).Distinct().ToList();
         var users = await _db.Users.AsNoTracking().Where(u => userIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u.DisplayName, ct);
+        var quotationIds = rows.Select(q => q.Id).ToList();
+        var documents = await _db.QuotationDocuments.AsNoTracking()
+            .Where(d => d.OrganizationId == organizationId && quotationIds.Contains(d.QuotationId))
+            .ToDictionaryAsync(d => d.QuotationId, ct);
 
         string? NumberOf(Guid? id) => id.HasValue && numbers.TryGetValue(id.Value, out var n) ? n : null;
         return new QuotationHistoryProjection(estimateId, rows.Select(q => new QuotationHistoryItem(
             q.Id, q.Number, q.Status, q.TotalAmount, q.EstimateRevisionId, revisionNos.GetValueOrDefault(q.EstimateRevisionId), q.IssuedAtUtc, q.AcceptedAtUtc,
             q.SupersedesQuotationId, NumberOf(q.SupersedesQuotationId), q.SupersededByQuotationId, NumberOf(q.SupersededByQuotationId), q.AmendmentReason,
             q.VoidedAtUtc, q.VoidedByUserId.HasValue ? new QuotationPersonRef(q.VoidedByUserId.Value, users.GetValueOrDefault(q.VoidedByUserId.Value) ?? string.Empty) : null,
-            q.VoidReason, q.RowVersion)).ToList());
+            q.VoidReason, q.RowVersion,
+            documents.TryGetValue(q.Id, out var document) ? new QuotationDocumentSummary(document.Sha256, document.ByteCount, document.RendererVersion, document.RenderedAtUtc) : null)).ToList());
     }
 }

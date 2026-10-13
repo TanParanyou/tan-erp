@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tan
 import { apiClient, type QuotationHistoryResponse, type QuotationLifecycleAction } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
+import { saveBlob } from "@/lib/files/save-blob";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 
@@ -44,6 +45,17 @@ export function useQuotationLifecycleMutation(estimateId: string) {
       queryClient.setQueryData(quotationHistoryKey(membershipId, locale, estimateId), history);
       await queryClient.invalidateQueries({ queryKey: ["business", membershipId, locale, "estimates"] });
       await queryClient.invalidateQueries({ queryKey: ["business", membershipId, locale, "opportunities"] });
+    },
+  });
+}
+
+/** Downloads the stored quotation PDF (the file is never rendered again). */
+export function useQuotationDocumentDownload() {
+  const { options } = useRequestContext();
+  return useMutation({
+    mutationFn: async (input: { quotationId: string; fileName: string }) => {
+      const blob = await apiClient.downloadQuotationDocument(input.quotationId, await options());
+      saveBlob(blob, input.fileName);
     },
   });
 }

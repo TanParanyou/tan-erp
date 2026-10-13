@@ -10,6 +10,8 @@
     <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.11" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="FirebaseAdmin" Version="3.6.0" />
+    <!-- QuestPDF: Community license is free only below the vendor revenue threshold; see ADR 0023 before production. -->
+    <PackageVersion Include="QuestPDF" Version="2026.9.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.14.0" />
     <PackageVersion Include="TngTech.ArchUnitNET.xUnit" Version="0.13.4" />

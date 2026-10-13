@@ -18,7 +18,7 @@
 
 | Action | Method/Path | Permission |
 | --- | --- | --- |
-| ประวัติใบเสนอราคาของประมาณการ | `GET /api/v1/estimates/{id}/quotations` | `quotations.read` |
+| ประวัติใบเสนอราคาของประมาณการ | `GET /api/v1/estimates/{id}/quotations` (แต่ละ item มี `document` = สรุปไฟล์ PDF ที่เก็บไว้ หรือ `null` สำหรับใบที่ออกก่อน G-04 — ดู [Quotation Document API](quotation-document-api-contract.md)) | `quotations.read` |
 | แทนที่ | `POST /api/v1/quotations/{id}/amend` `{reason}` + `If-Match` + `Idempotency-Key` → `201` ประวัติ | `quotations.amend` |
 | ยกเลิก | `POST /api/v1/quotations/{id}/void` `{reason}` + `If-Match` → `200` ประวัติ | `quotations.void` |
 

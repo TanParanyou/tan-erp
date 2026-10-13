@@ -10,6 +10,9 @@ public static class AcceptanceConsent
     public const int MaxSignatureImageChars = SignatureEvidenceLimits.MaxImageChars;
 }
 
+/// <summary>What the customer needs to identify the PDF they are accepting. Nothing internal (renderer, storage) is shown.</summary>
+public sealed record PublicQuotationPdf(string Sha256, long ByteCount);
+
 public sealed record AcceptanceEvidenceSummary(string SignerName, string? SignerRole, string ConsentVersion, bool HasSignatureImage, string? SignatureHash, DateTimeOffset AcceptedAtUtc);
 
 public sealed record AcceptanceLinkProjection(
@@ -51,14 +54,16 @@ public sealed record PublicAcceptanceView(
     string? SignerHint,
     string ConsentVersion,
     DateTimeOffset? AcceptedAtUtc,
-    QuotationDocumentProjection Document);
+    QuotationDocumentProjection Document,
+    PublicQuotationPdf? Pdf);
 
 public sealed record AcceptanceSubmission(
     string? SignerName,
     string? SignerRole,
     bool ConsentAccepted,
     string? ConsentVersion,
-    string? SignatureImage);
+    string? SignatureImage,
+    string? DocumentSha256);
 
 public sealed record ClientInfo(string? RemoteAddress, string? UserAgent);
 

@@ -349,6 +349,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("consent_version");
 
+                    b.Property<string>("DocumentSha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("document_sha256");
+
                     b.Property<Guid>("LinkId")
                         .HasColumnType("uuid")
                         .HasColumnName("link_id");
@@ -472,6 +477,69 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_quotation_acceptance_links_lifetime", "expires_at_utc > created_at_utc");
 
                             t.HasCheckConstraint("ck_quotation_acceptance_links_status", "status IN ('active', 'revoked', 'accepted')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Commercial.QuotationDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("ByteCount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("byte_count");
+
+                    b.Property<Guid>("FileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("file_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("QuotationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("quotation_id");
+
+                    b.Property<DateTimeOffset>("RenderedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("rendered_at_utc");
+
+                    b.Property<Guid>("RenderedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rendered_by_user_id");
+
+                    b.Property<string>("RendererVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("renderer_version");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("sha256");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileId")
+                        .IsUnique();
+
+                    b.HasIndex("QuotationId")
+                        .IsUnique();
+
+                    b.HasIndex("FileId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId", "QuotationId");
+
+                    b.ToTable("quotation_documents", "commercial", t =>
+                        {
+                            t.HasCheckConstraint("ck_quotation_documents_byte_count", "byte_count > 0");
+
+                            t.HasCheckConstraint("ck_quotation_documents_sha256", "sha256 ~ '^[0-9a-f]{64}$'");
                         });
                 });
 
@@ -8982,6 +9050,28 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("RevokedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Commercial.QuotationDocument", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Commercial.Quotation", null)
+                        .WithMany()
+                        .HasForeignKey("QuotationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Files.UploadedFile", null)
+                        .WithMany()
+                        .HasForeignKey("FileId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TanErp.Domain.Common.IdempotencyRecord", b =>

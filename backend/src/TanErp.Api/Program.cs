@@ -183,6 +183,10 @@ builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationLifecycleStor
 builder.Services.AddScoped<TanErp.Application.Commercial.QuotationLifecycleHandler>();
 builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationAcceptanceStore, TanErp.Infrastructure.Persistence.Commercial.QuotationAcceptanceStore>();
 builder.Services.AddScoped<TanErp.Application.Commercial.QuotationAcceptanceHandler>();
+builder.Services.AddSingleton<TanErp.Application.Commercial.Documents.IQuotationDocumentRenderer, TanErp.Infrastructure.Documents.QuestPdfQuotationRenderer>();
+builder.Services.AddScoped<TanErp.Application.Commercial.Documents.IQuotationDocumentWriter, TanErp.Infrastructure.Documents.QuotationDocumentWriter>();
+builder.Services.AddScoped<TanErp.Application.Commercial.Documents.IQuotationDocumentStore, TanErp.Infrastructure.Documents.QuotationDocumentStore>();
+builder.Services.AddScoped<TanErp.Application.Commercial.Documents.QuotationDocumentHandler>();
 builder.Services.AddScoped<TanErp.Application.Production.IProductionStore, TanErp.Infrastructure.Persistence.Production.ProductionStore>();
 builder.Services.AddScoped<TanErp.Application.Production.ProductionHandler>();
 builder.Services.AddScoped<TanErp.Application.Mrp.IMrpStore, TanErp.Infrastructure.Persistence.Mrp.MrpStore>();
@@ -260,6 +264,9 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 var app = builder.Build();
+// Fail fast: resolving the renderer registers the QuestPDF license and the embedded fonts at startup, so a bad configuration
+// surfaces here instead of at the first quotation issue (ADR 0023).
+_ = app.Services.GetRequiredService<TanErp.Application.Commercial.Documents.IQuotationDocumentRenderer>();
 
 // Localization Middleware
 var supportedCultures = new[] { new CultureInfo("th"), new CultureInfo("en") };

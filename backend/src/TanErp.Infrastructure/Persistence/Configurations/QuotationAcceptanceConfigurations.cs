@@ -55,6 +55,7 @@ public class QuotationAcceptanceEvidenceConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.ClientAddressHash).HasColumnName("client_address_hash").HasMaxLength(64).IsRequired();
         builder.Property(x => x.UserAgent).HasColumnName("user_agent").HasMaxLength(200);
         builder.Property(x => x.AcceptedAtUtc).HasColumnName("accepted_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.DocumentSha256).HasColumnName("document_sha256").HasMaxLength(64);
         // One acceptance per link, ever.
         builder.HasIndex(x => x.LinkId).IsUnique();
         builder.HasIndex(x => new { x.OrganizationId, x.QuotationId });

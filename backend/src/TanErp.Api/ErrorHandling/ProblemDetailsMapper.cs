@@ -293,6 +293,7 @@ public static class ProblemDetailsMapper
         "QUOTATION_AMEND_REVISION_PENDING" => StatusCodes.Status409Conflict,
         "QUOTATION_REASON_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "QUOTATION_FIELD_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "QUOTATION_DOCUMENT_NOT_AVAILABLE" => StatusCodes.Status404NotFound,
         "ACCEPTANCE_LINK_UNAVAILABLE" => StatusCodes.Status404NotFound,
         "ACCEPTANCE_LINK_INVALID_STATE" => StatusCodes.Status409Conflict,
         "ACCEPTANCE_LINK_LIFETIME_INVALID" => StatusCodes.Status422UnprocessableEntity,

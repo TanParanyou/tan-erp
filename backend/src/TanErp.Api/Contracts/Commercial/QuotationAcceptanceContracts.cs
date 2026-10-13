@@ -4,6 +4,9 @@ namespace TanErp.Api.Contracts.Commercial;
 
 public sealed record CreateAcceptanceLinkRequest(int? LifetimeDays, string? SignerHint);
 
+/// <summary>Identifies the quotation PDF offered to the customer; the file itself is served by the public document endpoint.</summary>
+public sealed record PublicQuotationPdfResponse(string Sha256, long ByteCount);
+
 public sealed record AcceptanceEvidenceResponse(string SignerName, string? SignerRole, string ConsentVersion, bool HasSignatureImage, string? SignatureHash, DateTimeOffset AcceptedAtUtc);
 
 public sealed record AcceptanceLinkResponse(
@@ -32,8 +35,9 @@ public sealed record PublicAcceptanceViewResponse(
     string? SignerHint,
     string ConsentVersion,
     DateTimeOffset? AcceptedAtUtc,
-    QuotationDocumentResponse Document);
+    QuotationDocumentResponse Document,
+    PublicQuotationPdfResponse? Pdf);
 
-public sealed record PublicAcceptRequest(string? SignerName, string? SignerRole, bool ConsentAccepted, string? ConsentVersion, string? SignatureImage);
+public sealed record PublicAcceptRequest(string? SignerName, string? SignerRole, bool ConsentAccepted, string? ConsentVersion, string? SignatureImage, string? DocumentSha256 = null);
 
 public sealed record PublicAcceptanceResponse(string Status, DateTimeOffset AcceptedAtUtc, string QuotationNumber, AcceptanceEvidenceResponse Evidence);

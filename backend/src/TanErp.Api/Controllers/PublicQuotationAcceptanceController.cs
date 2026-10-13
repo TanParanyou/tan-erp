@@ -41,7 +41,23 @@ public class PublicQuotationAcceptanceController : ControllerBase
         var result = await _handler.GetPublicViewAsync(token, locale, ct);
         if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         var v = result.Value!;
-        return Ok(new PublicAcceptanceViewResponse(v.Status, v.ExpiresAtUtc, v.SignerHint, v.ConsentVersion, v.AcceptedAtUtc, QuotationDocumentResponse.FromProjection(v.Document)));
+        return Ok(new PublicAcceptanceViewResponse(v.Status, v.ExpiresAtUtc, v.SignerHint, v.ConsentVersion, v.AcceptedAtUtc, QuotationDocumentResponse.FromProjection(v.Document),
+            v.Pdf is null ? null : new PublicQuotationPdfResponse(v.Pdf.Sha256, v.Pdf.ByteCount)));
+    }
+
+    [HttpGet("{token}/document")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetDocument([FromRoute] string token, CancellationToken ct)
+    {
+        NoStore();
+        var result = await _handler.GetPublicDocumentAsync(token, ct);
+        if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        var document = result.Value!;
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers.ETag = $"\"{document.Summary.Sha256}\"";
+        return File(document.Content, "application/pdf", document.FileName);
     }
 
     [HttpPost("{token}/accept")]
@@ -55,7 +71,7 @@ public class PublicQuotationAcceptanceController : ControllerBase
         NoStore();
         var client = new ClientInfo(HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
         var result = await _handler.AcceptAsync(
-            token, new AcceptanceSubmission(request.SignerName, request.SignerRole, request.ConsentAccepted, request.ConsentVersion, request.SignatureImage),
+            token, new AcceptanceSubmission(request.SignerName, request.SignerRole, request.ConsentAccepted, request.ConsentVersion, request.SignatureImage, request.DocumentSha256),
             client, HttpContext.TraceIdentifier, ct);
         if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         var r = result.Value!;

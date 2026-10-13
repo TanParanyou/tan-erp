@@ -64,5 +64,6 @@ public class QuotationLifecycleController : ControllerBase
     private static QuotationHistoryResponse ToResponse(QuotationHistoryProjection h) => new(h.EstimateId, h.Items.Select(q => new QuotationHistoryItemResponse(
         q.Id, q.Number, q.Status, q.TotalAmount, q.EstimateRevisionId, q.EstimateRevisionNo, q.IssuedAtUtc, q.AcceptedAtUtc,
         q.SupersedesQuotationId, q.SupersedesNumber, q.SupersededByQuotationId, q.SupersededByNumber, q.AmendmentReason,
-        q.VoidedAtUtc, q.VoidedBy is null ? null : new QuotationPersonResponse(q.VoidedBy.Id, q.VoidedBy.DisplayName), q.VoidReason, q.RowVersion)).ToList());
+        q.VoidedAtUtc, q.VoidedBy is null ? null : new QuotationPersonResponse(q.VoidedBy.Id, q.VoidedBy.DisplayName), q.VoidReason, q.RowVersion,
+        q.Document is null ? null : new QuotationDocumentSummaryResponse(q.Document.Sha256, q.Document.ByteCount, q.Document.RendererVersion, q.Document.RenderedAtUtc))).ToList());
 }
