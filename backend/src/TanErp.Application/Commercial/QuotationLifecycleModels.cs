@@ -1,3 +1,5 @@
+using TanErp.Application.Commercial.Documents;
+
 namespace TanErp.Application.Commercial;
 
 public sealed record QuotationLifecycleCaller(string FirebaseUid, Guid MembershipId, string TraceId);
@@ -22,6 +24,7 @@ public sealed record QuotationHistoryItem(
     DateTimeOffset? VoidedAtUtc,
     QuotationPersonRef? VoidedBy,
     string? VoidReason,
-    Guid RowVersion);
+    Guid RowVersion,
+    QuotationDocumentSummary? Document);
 
 public sealed record QuotationHistoryProjection(Guid EstimateId, IReadOnlyList<QuotationHistoryItem> Items);

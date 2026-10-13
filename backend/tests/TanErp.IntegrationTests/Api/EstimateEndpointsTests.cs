@@ -29,7 +29,7 @@ using Xunit;
 
 namespace TanErp.IntegrationTests.Api;
 
-public class EstimateEndpointsTests : IAsyncLifetime
+public partial class EstimateEndpointsTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _postgres;
     private string _connectionString = string.Empty;
@@ -56,6 +56,7 @@ public class EstimateEndpointsTests : IAsyncLifetime
                 "token-estimate-reviewer" => TestOnlyDataSeeder.TestEstimateReviewerFirebaseUid,
                 "token-test-manager" => "test-only-approval-0",
                 "token-branch-outsider" => "test-only-branch-outsider",
+                "token-quotation-reader" => "test-only-quotation-reader",
                 _ => null
             };
             return Task.FromResult(uid);
@@ -3079,7 +3080,8 @@ public class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal(0, wonHistoryCount);
     }
 
-    private async Task<(Guid EstimateId, Guid OpportunityId, QuotationResponse Quotation)> IssueQuotedEstimateAsync(string prefix)
+    private async Task<(Guid EstimateId, Guid OpportunityId, QuotationResponse Quotation)> IssueQuotedEstimateAsync(
+        string prefix, HttpClient? issueClient = null, HttpStatusCode expectedIssueStatus = HttpStatusCode.Created)
     {
         var (estimate, opportunity, revision) = await SetupCalculatedEstimateAsync($"{prefix}-{Guid.NewGuid():N}");
 
@@ -3100,9 +3102,10 @@ public class EstimateEndpointsTests : IAsyncLifetime
         var issueRequest = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/estimates/{estimate.Id}/quotation", "token-org-a", MembershipAId);
         issueRequest.Headers.Add("Idempotency-Key", $"{prefix}-quote-{Guid.NewGuid():N}");
         issueRequest.Content = JsonContent.Create(new IssueQuotationRequest(approved.RowVersion, opportunity.RowVersion));
-        var issueResponse = await _client.SendAsync(issueRequest);
-        Assert.Equal(HttpStatusCode.Created, issueResponse.StatusCode);
-        return (estimate.Id, opportunity.Id, (await issueResponse.Content.ReadFromJsonAsync<QuotationResponse>())!);
+        var issueResponse = await (issueClient ?? _client).SendAsync(issueRequest);
+        Assert.Equal(expectedIssueStatus, issueResponse.StatusCode);
+        // A non-success expectation (render failure test) has no quotation to return.
+        return (estimate.Id, opportunity.Id, expectedIssueStatus == HttpStatusCode.Created ? (await issueResponse.Content.ReadFromJsonAsync<QuotationResponse>())! : null!);
     }
 
     private async Task<TanErp.Api.Contracts.Commercial.QuotationHistoryResponse> HistoryAsync(Guid estimateId)

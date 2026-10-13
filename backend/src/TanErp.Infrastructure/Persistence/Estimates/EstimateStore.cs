@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Commercial.Documents;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Estimates;
 using TanErp.Application.Estimates.GetQuotationDocument;
@@ -31,6 +32,7 @@ public class EstimateStore : IEstimateStore
     private readonly ILogger<EstimateStore> _logger;
     private readonly INotificationPublisher _notifications;
     private readonly IApprovalAuthority _approvalAuthority;
+    private readonly IQuotationDocumentWriter _documents;
 
     public EstimateStore(
         AppDbContext db,
@@ -40,9 +42,11 @@ public class EstimateStore : IEstimateStore
         IConfiguration configuration,
         ILogger<EstimateStore> logger,
         INotificationPublisher notifications,
-        IApprovalAuthority approvalAuthority)
+        IApprovalAuthority approvalAuthority,
+        IQuotationDocumentWriter documents)
     {
         _approvalAuthority = approvalAuthority;
+        _documents = documents;
         _logger = logger;
         _notifications = notifications;
         _db = db;
@@ -1501,6 +1505,11 @@ public class EstimateStore : IEstimateStore
                     quotation.TotalAmount,
                     estimateNumber = estimate.Number
                 }));
+
+            // Render the PDF once and stage it in the same unit of work (ADR 0023): the quotation, its document and the audit trail
+            // are saved by the one SaveChanges below, so a failed render commits nothing and the idempotency key stays unused.
+            var staged = await _documents.StageAsync(quotation, actorUserId, traceId, cancellationToken);
+            if (staged.IsFailure) return Result<QuotationDetailProjection>.Failure(staged.Error);
 
             _db.AddAuditEvent(oppAudit);
             _db.AddAuditEvent(quoteAudit);
