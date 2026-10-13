@@ -3223,8 +3223,12 @@ public partial class EstimateEndpointsTests : IAsyncLifetime
     private Task<HttpResponseMessage> PublicGetAsync(string token, HttpClient? client = null) =>
         (client ?? _client).SendAsync(new HttpRequestMessage(HttpMethod.Get, $"/api/public/v1/quotation-acceptance/{token}?locale=th"));
 
-    private static TanErp.Api.Contracts.Commercial.PublicAcceptRequest Submission(string name = "คุณสมชาย ใจดี", bool consent = true, string? signature = null, string? version = "2026-10-v1") =>
-        new(name, "กรรมการผู้จัดการ", consent, version, signature);
+    private static TanErp.Api.Contracts.Commercial.PublicAcceptRequest Submission(string name = "คุณสมชาย ใจดี", bool consent = true, string? signature = null, string? version = "2026-10-v1", string? documentSha256 = null) =>
+        new(name, "กรรมการผู้จัดการ", consent, version, signature, documentSha256);
+
+    // The customer page sends the hash of the PDF it showed; a test that wants a successful acceptance does the same.
+    private async Task<string?> PublicPdfHashAsync(string token) =>
+        (await (await PublicGetAsync(token)).Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.PublicAcceptanceViewResponse>())!.Pdf?.Sha256;
 
     private Task<HttpResponseMessage> PublicAcceptAsync(string token, TanErp.Api.Contracts.Commercial.PublicAcceptRequest body, HttpClient? client = null) =>
         (client ?? _client).SendAsync(new HttpRequestMessage(HttpMethod.Post, $"/api/public/v1/quotation-acceptance/{token}/accept") { Content = JsonContent.Create(body) });
@@ -3267,7 +3271,7 @@ public partial class EstimateEndpointsTests : IAsyncLifetime
         Assert.Equal("ACCEPTANCE_SUBMISSION_INVALID", await ProblemCodeAsync(await PublicAcceptAsync(token, Submission(signature: "bm90LWEtcG5n"))));
         Assert.Equal("issued", (await HistoryAsync(estimateId)).Items.Single().Status);
 
-        var accepted = await PublicAcceptAsync(token, Submission(signature: TinyPng));
+        var accepted = await PublicAcceptAsync(token, Submission(signature: TinyPng, documentSha256: await PublicPdfHashAsync(token)));
         Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
         var result = (await accepted.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.PublicAcceptanceResponse>())!;
         Assert.Equal(("accepted", quotation.Number, true), (result.Status, result.QuotationNumber, result.Evidence.HasSignatureImage));
@@ -3363,7 +3367,7 @@ public partial class EstimateEndpointsTests : IAsyncLifetime
         // The replacement gets its own link and that one works.
         var replacement = (await HistoryAsync(estimateId)).Items.Single(i => i.Status == "issued");
         var (_, newToken) = await CreateAcceptanceLinkAsync(replacement.Id);
-        Assert.Equal(HttpStatusCode.OK, (await PublicAcceptAsync(newToken, Submission())).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await PublicAcceptAsync(newToken, Submission(documentSha256: await PublicPdfHashAsync(newToken)))).StatusCode);
         Assert.Equal("accepted", (await HistoryAsync(estimateId)).Items.Single(i => i.Id == replacement.Id).Status);
     }
 

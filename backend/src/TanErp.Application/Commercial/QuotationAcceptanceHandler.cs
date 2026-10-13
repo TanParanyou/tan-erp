@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using TanErp.Application.Commercial.Documents;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
@@ -20,13 +21,15 @@ public class QuotationAcceptanceHandler
     private readonly IQuotationAcceptanceStore _store;
     private readonly IEstimateStore _estimates;
     private readonly IClock _clock;
+    private readonly IQuotationDocumentStore _documents;
 
-    public QuotationAcceptanceHandler(IRequestAccessResolver accessResolver, IQuotationAcceptanceStore store, IEstimateStore estimates, IClock clock)
+    public QuotationAcceptanceHandler(IRequestAccessResolver accessResolver, IQuotationAcceptanceStore store, IEstimateStore estimates, IClock clock, IQuotationDocumentStore documents)
     {
         _accessResolver = accessResolver;
         _store = store;
         _estimates = estimates;
         _clock = clock;
+        _documents = documents;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -93,7 +96,18 @@ public class QuotationAcceptanceHandler
         if (document.IsFailure) return Fail<PublicAcceptanceView>(UnavailableCode, "This acceptance link is not available.");
         if (document.Value!.Number != context.QuotationNumber) return Fail<PublicAcceptanceView>(UnavailableCode, "This acceptance link is not available.");
 
-        return Result<PublicAcceptanceView>.Success(new PublicAcceptanceView(context.LinkStatus, context.ExpiresAtUtc, context.SignerHint, AcceptanceConsent.CurrentVersion, context.AcceptedAtUtc, document.Value));
+        var pdf = await _documents.FindSummaryAsync(context.OrganizationId, context.QuotationId, ct);
+        return Result<PublicAcceptanceView>.Success(new PublicAcceptanceView(
+            context.LinkStatus, context.ExpiresAtUtc, context.SignerHint, AcceptanceConsent.CurrentVersion, context.AcceptedAtUtc, document.Value,
+            pdf is null ? null : new PublicQuotationPdf(pdf.Sha256, pdf.ByteCount)));
+    }
+
+    /// <summary>The exact stored PDF of the quotation this link is for. Same unusable-link rules (and the same 404) as the view.</summary>
+    public async Task<Result<QuotationDocumentFile>> GetPublicDocumentAsync(string? token, CancellationToken ct = default)
+    {
+        var context = await UsableContextAsync(token, false, ct);
+        var file = context is null ? null : await _documents.OpenForAcceptanceAsync(context.OrganizationId, context.QuotationId, ct);
+        return file is null ? Fail<QuotationDocumentFile>(UnavailableCode, "This acceptance link is not available.") : Result<QuotationDocumentFile>.Success(file);
     }
 
     public async Task<Result<PublicAcceptanceResult>> AcceptAsync(string? token, AcceptanceSubmission? submission, ClientInfo client, string traceId, CancellationToken ct = default)
@@ -126,6 +140,14 @@ public class QuotationAcceptanceHandler
             }
 
             signatureHash = SignatureEvidenceRules.HashSubmittedImage(submission.SignatureImage);
+        }
+
+        // The customer attests to the exact PDF they were shown: its hash must equal the stored one, and "no PDF" (null) only matches
+        // a quotation that has none. A PDF that appeared after the page was loaded is a conflict: reload and review again.
+        var storedPdf = await _documents.FindSummaryAsync(context.OrganizationId, context.QuotationId, ct);
+        if (!string.Equals(submission.DocumentSha256, storedPdf?.Sha256, StringComparison.Ordinal))
+        {
+            return Fail<PublicAcceptanceResult>("ACCEPTANCE_CONFLICT", "The document changed while you were reviewing it. Please reload and try again.");
         }
 
         // The accept transaction is keyed by the link, so a retry after a partial failure replays instead of accepting twice.

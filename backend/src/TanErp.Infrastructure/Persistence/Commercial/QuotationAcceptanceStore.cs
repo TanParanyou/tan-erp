@@ -144,7 +144,7 @@ public class QuotationAcceptanceStore : IQuotationAcceptanceStore
             var evidence = new QuotationAcceptanceEvidence(
                 Guid.NewGuid(), context.OrganizationId, link.Id, context.QuotationId, submission.SignerName!, submission.SignerRole, AcceptanceConsent.CurrentVersion,
                 string.IsNullOrEmpty(submission.SignatureImage) ? null : submission.SignatureImage, string.IsNullOrEmpty(signatureHash) ? null : signatureHash,
-                clientAddressHash, userAgent, now);
+                clientAddressHash, userAgent, now, submission.DocumentSha256);
             _db.QuotationAcceptanceEvidences.Add(evidence);
             // The signer's name is evidence, not audit payload.
             Audit(context.OrganizationId, link.CreatedByUserId, null, null, "quotation-acceptance-link.accepted", link.Id, traceId, new { quotation = context.QuotationNumber }, now);

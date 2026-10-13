@@ -27,6 +27,51 @@ public partial class EstimateEndpointsTests
     private static string Sha256Of(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 
     // G-04 tests of later tasks are inserted below this line.
+    [Fact]
+    public async Task ExternalAcceptance_ServesTheStoredPdf_AndRecordsTheHashTheCustomerAttested()
+    {
+        var (_, _, quotation) = await IssueQuotedEstimateAsync("pdf-accept");
+        var (linkId, token) = await CreateAcceptanceLinkAsync(quotation.QuotationId);
+        var view = (await (await PublicGetAsync(token)).Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.PublicAcceptanceViewResponse>())!;
+
+        var pdf = await _client.GetAsync($"/api/public/v1/quotation-acceptance/{token}/document");
+        Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
+        Assert.Equal("no-store", pdf.Headers.CacheControl?.ToString());
+        Assert.Equal(view.Pdf!.Sha256, Sha256Of(await pdf.Content.ReadAsByteArrayAsync()));
+
+        // A wrong hash, or no hash while a PDF exists, is a conflict and accepts nothing.
+        Assert.Equal("ACCEPTANCE_CONFLICT", await ProblemCodeAsync(await PublicAcceptAsync(token, Submission(documentSha256: new string('0', 64)))));
+        Assert.Equal("ACCEPTANCE_CONFLICT", await ProblemCodeAsync(await PublicAcceptAsync(token, Submission())));
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal("issued", (await db.Quotations.AsNoTracking().SingleAsync(q => q.Id == quotation.QuotationId)).Status);
+
+        Assert.Equal(HttpStatusCode.OK, (await PublicAcceptAsync(token, Submission(documentSha256: view.Pdf.Sha256))).StatusCode);
+        Assert.Equal(view.Pdf.Sha256, (await db.QuotationAcceptanceEvidences.AsNoTracking().SingleAsync(e => e.LinkId == linkId)).DocumentSha256);
+
+        // The accepted link stays viewable, and an unknown token learns nothing.
+        Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync($"/api/public/v1/quotation-acceptance/{token}/document")).StatusCode);
+        var unknown = await _client.GetAsync($"/api/public/v1/quotation-acceptance/{new string('x', 43)}/document");
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+        Assert.Equal("ACCEPTANCE_LINK_UNAVAILABLE", await ProblemCodeAsync(unknown));
+    }
+
+    [Fact]
+    public async Task ExternalAcceptance_OfALegacyQuotationWithoutPdf_StillWorks_WithNoHashRecorded()
+    {
+        var (_, _, quotation) = await IssueQuotedEstimateAsync("pdf-accept-legacy");
+        await SimulateLegacyQuotationAsync(quotation.QuotationId);
+        var (linkId, token) = await CreateAcceptanceLinkAsync(quotation.QuotationId);
+
+        Assert.Null((await (await PublicGetAsync(token)).Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.PublicAcceptanceViewResponse>())!.Pdf);
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync($"/api/public/v1/quotation-acceptance/{token}/document")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await PublicAcceptAsync(token, Submission())).StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Null((await db.QuotationAcceptanceEvidences.AsNoTracking().SingleAsync(e => e.LinkId == linkId)).DocumentSha256);
+    }
+
     private Task<HttpResponseMessage> GetQuotationPdfAsync(Guid quotationId, string token = "token-org-a", Guid? membership = null) =>
         _client.SendAsync(CreateAuthenticatedRequest(HttpMethod.Get, $"/api/v1/quotations/{quotationId}/document", token, membership ?? MembershipAId));
 
