@@ -1,0 +1,12 @@
+/** Offers an in-memory file to the user as a download. Revokes the object URL right after the click. */
+export function saveBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

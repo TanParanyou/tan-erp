@@ -15941,6 +15941,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/v1/quotation-acceptance/{token}/document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/v1/quotation-acceptance/{token}/accept": {
         parameters: {
             query?: never;
@@ -17318,6 +17375,63 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quotations/{id}/document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -23341,6 +23455,7 @@ export interface components {
             consentAccepted?: boolean;
             consentVersion?: string | null;
             signatureImage?: string | null;
+            documentSha256?: string | null;
         };
         PublicAcceptanceResponse: {
             status?: string | null;
@@ -23358,6 +23473,12 @@ export interface components {
             /** Format: date-time */
             acceptedAtUtc?: string | null;
             document?: components["schemas"]["QuotationDocumentResponse"];
+            pdf?: components["schemas"]["PublicQuotationPdfResponse"];
+        };
+        PublicQuotationPdfResponse: {
+            sha256?: string | null;
+            /** Format: int64 */
+            byteCount?: number;
         };
         PurchaseOrderActionRequest: {
             note?: string | null;
@@ -23584,6 +23705,14 @@ export interface components {
             sections?: components["schemas"]["QuotationSectionResponse"][] | null;
             totals?: components["schemas"]["QuotationTotalsResponse"];
         };
+        QuotationDocumentSummaryResponse: {
+            sha256?: string | null;
+            /** Format: int64 */
+            byteCount?: number;
+            rendererVersion?: string | null;
+            /** Format: date-time */
+            renderedAtUtc?: string;
+        };
         QuotationHistoryItemResponse: {
             /** Format: uuid */
             id?: string;
@@ -23612,6 +23741,7 @@ export interface components {
             voidReason?: string | null;
             /** Format: uuid */
             rowVersion?: string;
+            document?: components["schemas"]["QuotationDocumentSummaryResponse"];
         };
         QuotationHistoryResponse: {
             /** Format: uuid */
