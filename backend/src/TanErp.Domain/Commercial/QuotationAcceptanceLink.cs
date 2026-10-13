@@ -103,11 +103,14 @@ public class QuotationAcceptanceEvidence : Entity
     public string? UserAgent { get; private set; }
     public DateTimeOffset AcceptedAtUtc { get; private set; }
 
+    /// <summary>SHA-256 of the quotation PDF the customer attested to; null when the quotation had no stored PDF (issued before G-04).</summary>
+    public string? DocumentSha256 { get; private set; }
+
     protected QuotationAcceptanceEvidence() { }
 
     public QuotationAcceptanceEvidence(
         Guid id, Guid organizationId, Guid linkId, Guid quotationId, string signerName, string? signerRole, string consentVersion,
-        string? signatureImage, string? signatureHash, string clientAddressHash, string? userAgent, DateTimeOffset now) : base(id)
+        string? signatureImage, string? signatureHash, string clientAddressHash, string? userAgent, DateTimeOffset now, string? documentSha256 = null) : base(id)
     {
         OrganizationId = organizationId;
         LinkId = linkId;
@@ -119,6 +122,7 @@ public class QuotationAcceptanceEvidence : Entity
         SignatureHash = signatureHash;
         ClientAddressHash = clientAddressHash;
         UserAgent = userAgent;
+        DocumentSha256 = string.IsNullOrWhiteSpace(documentSha256) ? null : documentSha256.Trim();
         AcceptedAtUtc = now.ToUniversalTime();
     }
 }
