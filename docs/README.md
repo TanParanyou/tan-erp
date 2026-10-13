@@ -63,6 +63,7 @@
 | API ของ MRP | [MRP API Contract](03-contracts/mrp-api-contract.md) |
 | API แก้ไข/ยกเลิกใบเสนอราคา | [Quotation Lifecycle API Contract](03-contracts/quotation-lifecycle-api-contract.md) |
 | API ลูกค้ายอมรับใบเสนอราคาผ่านลิงก์ | [External Acceptance API Contract](03-contracts/external-acceptance-api-contract.md) |
+| API ไฟล์ PDF ใบเสนอราคาที่เก็บไว้ | [Quotation Document API Contract](03-contracts/quotation-document-api-contract.md) |
 | API งานติดตั้ง ส่งมอบ ประกัน และบริการหลังการขาย | [Service API Contract](03-contracts/service-api-contract.md) |
 | API ไฟล์แนบและลายเซ็นกลาง (Shared Attachment & Signature) | [Attachment API Contract](03-contracts/attachment-api-contract.md) |
 | API การแจ้งเตือนในระบบ (Notification) | [Notification API Contract](03-contracts/notification-api-contract.md) |

@@ -24,3 +24,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0020 — Role Management และ Approval Permission Set](0020-role-management-and-approval-permission-set.md)
 - [0021 — Approval Authority Matrix](0021-approval-authority-matrix.md)
 - [0022 — Membership Expiry Reminder และ hosted worker ขั้นต่ำ](0022-membership-expiry-reminder-and-hosted-worker.md)
+- [0023 — Server-side Quotation PDF ด้วย QuestPDF และ artifact ที่เก็บครั้งเดียวพร้อม SHA-256](0023-server-side-quotation-pdf-with-questpdf.md)
