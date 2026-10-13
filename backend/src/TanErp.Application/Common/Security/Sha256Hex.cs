@@ -11,4 +11,10 @@ public static class Sha256Hex
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
+
+    public static string ComputeBytes(byte[] content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return Convert.ToHexString(SHA256.HashData(content)).ToLowerInvariant();
+    }
 }

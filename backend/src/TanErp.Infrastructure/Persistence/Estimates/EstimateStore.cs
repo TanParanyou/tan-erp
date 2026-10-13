@@ -2017,24 +2017,6 @@ public class EstimateStore : IEstimateStore
         return Result<QuotationDocumentProjection>.Success(doc);
     }
 
-    private sealed record QuotationBillingSnapshotData(
-        string CustomerType,
-        string DisplayNameTh,
-        string? DisplayNameEn,
-        string? LegalName,
-        string? TaxIdentifier,
-        string? BranchCode,
-        QuotationBillingSnapshotAddress? Address);
-
-    private sealed record QuotationBillingSnapshotAddress(
-        string? Label,
-        string AddressLine1,
-        string? Subdistrict,
-        string? District,
-        string? Province,
-        string? PostalCode,
-        string? CountryCode);
-
     private static EstimateDetailProjection MapToDetailProjection(Estimate estimate)
     {
         var rev = estimate.CurrentRevision;

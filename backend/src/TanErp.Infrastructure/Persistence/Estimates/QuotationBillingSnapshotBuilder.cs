@@ -9,6 +9,14 @@ namespace TanErp.Infrastructure.Persistence.Estimates;
 
 internal sealed record QuotationBillingSnapshot(string Json, string Hash);
 
+/// <summary>The stored billing snapshot read back (camelCase JSON written by BuildAsync). Shared by the JSON document and the PDF model.</summary>
+internal sealed record QuotationBillingSnapshotData(
+    string CustomerType, string DisplayNameTh, string? DisplayNameEn, string? LegalName, string? TaxIdentifier, string? BranchCode,
+    QuotationBillingSnapshotAddress? Address);
+
+internal sealed record QuotationBillingSnapshotAddress(
+    string? Label, string AddressLine1, string? Subdistrict, string? District, string? Province, string? PostalCode, string? CountryCode);
+
 /// <summary>
 /// Freezes the customer's billing identity at issue time. Shared by issuing and amending so both documents
 /// carry exactly the same snapshot shape and the same readiness rules.
