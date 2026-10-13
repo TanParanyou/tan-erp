@@ -3123,10 +3123,12 @@
     "confirm": "Confirm",
     "voided": "Quotation voided.",
     "amended": "Replacement quotation issued.",
+    "document": { "download": "Download PDF", "hash": "SHA-256 {hash}…" },
     "errors": {
       "failed": "The action failed. Please try again.",
       "QUOTATION_INVALID_STATE": "The quotation status does not allow this action.",
       "QUOTATION_ACCEPTED_LOCKED": "An accepted quotation cannot be amended or voided.",
+      "QUOTATION_DOCUMENT_NOT_AVAILABLE": "This quotation has no stored PDF yet.",
       "QUOTATION_AMEND_REVISION_PENDING": "A newer estimate revision is still being prepared; finish or cancel it first.",
       "QUOTATION_REASON_REQUIRED": "A reason is required.",
       "QUOTATION_FIELD_INVALID": "A field value is invalid.",
@@ -3184,6 +3186,11 @@
       "consentRequired": "You must tick the consent statement.",
       "acceptedTitle": "The quotation has been accepted",
       "acceptedDetail": "Recorded on {date}. Thank you.",
+      "pdfTitle": "The PDF you are accepting",
+      "pdfDescription": "The details and totals in this file are the version you accept. Check that a file matches with its SHA-256 value.",
+      "pdfDownload": "Download PDF",
+      "pdfHash": "SHA-256: {hash}",
+      "pdfFailed": "The file could not be downloaded. Please try again.",
       "signerRolePlaceholder": "e.g. Authorized Signatory / Project Owner"
     },
     "errors": {

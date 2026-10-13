@@ -15,6 +15,7 @@ import { can, PERMISSIONS } from "@/lib/permissions/can";
 import type { QuotationHistoryItemResponse, QuotationLifecycleAction } from "@/lib/api/api-client";
 import { useQuotationHistory, useQuotationLifecycleMutation } from "../api/quotation-lifecycle-queries";
 import { isQuotationStatus, quotationLifecycleErrorCode, quotationStatusVariant } from "../quotation-lifecycle-status";
+import { QuotationDocumentActions } from "./quotation-document-actions";
 
 interface QuotationLifecyclePanelProps {
   estimateId: string;
@@ -96,6 +97,7 @@ export function QuotationLifecyclePanel({ estimateId }: QuotationLifecyclePanelP
                 {t("voidedBy", { name: item.voidedBy?.displayName ?? "-", date: item.voidedAtUtc ? formatDateTime(item.voidedAtUtc, locale) : "-" })} · {item.voidReason}
               </div>
             )}
+            {item.document && <QuotationDocumentActions item={item} />}
             {item.status === "issued" && (canAmend || canVoid) && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {canAmend && <Button type="button" size="sm" variant="outline" className="min-h-11" disabled={busy} onClick={() => open(item, "amend")}>{t("amend")}</Button>}

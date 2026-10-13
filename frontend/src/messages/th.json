@@ -3123,10 +3123,12 @@
     "confirm": "ยืนยัน",
     "voided": "ยกเลิกใบเสนอราคาแล้ว",
     "amended": "ออกใบเสนอราคาฉบับใหม่แล้ว",
+    "document": { "download": "ดาวน์โหลด PDF", "hash": "SHA-256 {hash}…" },
     "errors": {
       "failed": "ดำเนินการไม่สำเร็จ โปรดลองอีกครั้ง",
       "QUOTATION_INVALID_STATE": "สถานะใบเสนอราคาไม่อนุญาตให้ทำรายการนี้",
       "QUOTATION_ACCEPTED_LOCKED": "ใบเสนอราคาที่ลูกค้ายอมรับแล้วแก้ไขหรือยกเลิกไม่ได้",
+      "QUOTATION_DOCUMENT_NOT_AVAILABLE": "ใบเสนอราคานี้ยังไม่มีไฟล์ PDF ที่เก็บไว้",
       "QUOTATION_AMEND_REVISION_PENDING": "มีประมาณการฉบับใหม่ที่ยังจัดทำไม่เสร็จ ต้องทำให้เสร็จหรือยกเลิกก่อน",
       "QUOTATION_REASON_REQUIRED": "ต้องระบุเหตุผล",
       "QUOTATION_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง",
@@ -3184,6 +3186,11 @@
       "consentRequired": "ต้องติ๊กยอมรับข้อความยินยอม",
       "acceptedTitle": "ยอมรับใบเสนอราคาเรียบร้อยแล้ว",
       "acceptedDetail": "บันทึกเมื่อ {date} ขอบคุณที่ใช้บริการ",
+      "pdfTitle": "ไฟล์ PDF ฉบับที่ใช้ยอมรับ",
+      "pdfDescription": "รายละเอียดและยอดรวมในไฟล์นี้คือฉบับที่คุณยอมรับ ตรวจสอบว่าไฟล์ตรงกันได้ด้วยค่า SHA-256",
+      "pdfDownload": "ดาวน์โหลด PDF",
+      "pdfHash": "SHA-256: {hash}",
+      "pdfFailed": "ดาวน์โหลดไฟล์ไม่สำเร็จ โปรดลองอีกครั้ง",
       "signerRolePlaceholder": "เช่น ผู้มีอำนาจลงนาม / เจ้าของโครงการ"
     },
     "errors": {
