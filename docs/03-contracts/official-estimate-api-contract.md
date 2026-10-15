@@ -317,6 +317,14 @@ If-Match: "<rowVersion>"
 { "pattern": "QT-{YYYY}-{SEQ:4}", "resetPeriod": "Yearly" }
 ```
 
+## Unit Conversion Snapshot (G-08)
+
+**สถานะ:** Implemented (no tests written, none run) 2026-10-15 — ปิดอยู่จนกว่าจะมี Calculation Policy แบบ `snapshot`; ตัดสินใจใน [ADR 0024](../adr/0024-estimate-unit-conversion-snapshot.md), รายละเอียดใน [Verification](../05-engineering/estimate-unit-conversion-verification.md).
+
+- Request ของ cost component ที่ผูก catalog item ส่ง `conversionId` (optional) เมื่อเลือกหน่วยที่ไม่ใช่หน่วยฐาน; Server ตรึง snapshot ตอนบันทึก draft และ response คืน `conversionSnapshot { conversionId, conversionScope, fromUnit, toUnit, factor }`
+- `GET /api/v1/estimate-catalog/items/{itemId}/units?branchId=` คืน `conversionsEnabled`, `baseUnitCode` และรายการหน่วย (`unitId`, `unitCode`, `isBase`, `conversionId`, `conversionScope`, `factor`)
+- Error: `ESTIMATE_UNIT_CONVERSION_NOT_FOUND`, `ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH` (422); policy ไม่ใช่ `snapshot` → `ESTIMATE_UNIT_INVALID`; conversion ไม่ตรง snapshot → 409 `ITEM_COST_VERSION_CONFLICT`
+
 ## State/Retry Rules
 
 - Draft/Returned แก้ได้; Submitted อ่านอย่างเดียวสำหรับ Maker; Approved/Quoted/Cancelled immutable

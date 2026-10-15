@@ -2,6 +2,8 @@
 status: accepted
 ---
 
+> สถานะ implementation: Implemented (no tests written, none run) — 2026-10-15; ปิดอยู่จนกว่าจะ publish Calculation Policy แบบ `snapshot`. ดู [Verification](../05-engineering/estimate-unit-conversion-verification.md)
+
 # ตรึง Unit Conversion Snapshot บน Cost Component ของ Estimate
 
 Estimate รับต้นทุนจาก Catalog ได้เฉพาะหน่วยฐานของ Item ทั้งที่ Item Master มี Item/Shared Unit Conversion แล้ว (FR-ITEM-005). ADR นี้กำหนดวิธีใช้ conversion ใน Estimate โดย Estimate ที่อนุมัติแล้วต้องไม่เปลี่ยนเมื่อ Item Master เพิ่มรุ่น conversion ใหม่.

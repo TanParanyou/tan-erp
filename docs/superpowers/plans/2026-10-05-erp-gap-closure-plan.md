@@ -50,7 +50,7 @@
 | G-05 | External Acceptance OTP | B | CP-07, G-02 | Sales + Security + Legal | — |
 | G-06 | Item Import Phase 2 (upsert / Cost / Batch) | B | CP-03 Import Phase 1 | Data Steward + Cost Owner | — |
 | G-07 | Survey Template ใน DB + effective period + evidence ต่อ Area | B | CP-03 Survey | Survey Owner | — |
-| G-08 | Estimate Unit Conversion Snapshot | B | FR-ITEM-005 | Cost Owner + Estimator | — |
+| G-08 | Estimate Unit Conversion Snapshot | B | FR-ITEM-005 | Cost Owner + Estimator | G-08 Implemented 2026-10-15 (no tests written, none run; browser not checked; feature OFF until a snapshot-mode calculation policy is published, which has no API yet) — [แผน G-08](2026-10-15-g08-estimate-unit-conversion.md); [ADR 0024](../../adr/0024-estimate-unit-conversion-snapshot.md); [Verification](../../05-engineering/estimate-unit-conversion-verification.md) |
 | G-09 | Quick Estimate: conversion พร้อมรายการ, Branch override, หลักฐาน | B | CP-16, G-01, G-08 | Sales + Cost Owner | — |
 | G-10 | Project Actual Cost / Commitment / WBS | C | CP-09, CP-10, CP-11, CP-12 | PM + Finance | — |
 | G-11 | Purchase Request, Supplier Return, Supplier Invoice (3-way match) | C | CP-10, G-03 | Procurement + Finance | — |
@@ -162,9 +162,11 @@
 
 **แตะ:** `backend/src/TanErp.Domain/Estimates/`, calculation policy ที่ version แล้ว
 
-- [ ] Estimate line ตรึง `conversionSnapshot { fromUnit, toUnit, factor, conversionId }` ตอนเลือกหน่วย
-- [ ] Calculation version ใหม่; Estimate เก่าคำนวณด้วย version เดิม
-- [ ] Tests: แก้ conversion ใน Item Master แล้ว Estimate ที่อนุมัติไม่เปลี่ยน, หน่วยต่างมิติถูกปฏิเสธ
+- [ ] Cost component ที่ผูก catalog item ตรึง `conversionSnapshot { fromUnit, toUnit, factor, conversionId }` (+ `conversionScope`) ตอน **บันทึก draft** ที่เลือกหน่วยที่ไม่ใช่หน่วยฐาน (ไม่ใช่ตอนคลิก; ระดับ Work Item/Quotation ไม่เปลี่ยน)
+- [ ] Calculation **Policy** Version ใหม่ที่ `unit_conversion_mode = snapshot` (ไม่ใช่ตัวนับ `CalculationVersion` ต่อ revision); Estimate เก่าไม่มี snapshot จึงคงผลและ policy string เดิม (ไม่ backfill)
+- [ ] Tests: แก้ conversion ใน Item Master แล้ว Estimate ที่อนุมัติไม่เปลี่ยน, หน่วยต่างมิติถูกปฏิเสธ — **ยังไม่เขียน** (คำสั่งผู้ใช้ให้ไม่เขียน test ในรอบนี้)
+
+> **สถานะ G-08 (2026-10-15):** Implemented — no tests written, none run; browser not checked; ยังไม่ผ่าน UAT. ทุกข้อด้านบนคง `[ ]` (ยังไม่ตรวจจริง). ทำแล้ว: ใช้ตาราง conversion เดิม (Item-specific ก่อน Shared, ตรงหน่วยฐานเท่านั้น) ผ่าน `IUnitConversionResolver` ที่ตรวจมิติซ้ำ; 5 คอลัมน์ snapshot บน `estimate_cost_components`; `calculation_policy_versions.unit_conversion_mode`; สูตร `round(qty × factor × base cost, 2)`; snapshot คงข้ามการบันทึกซ้ำและ `New revision`; ผู้อนุมัติเห็น conversion; endpoint `GET /api/v1/estimate-catalog/items/{itemId}/units`; error ใหม่ `ESTIMATE_UNIT_CONVERSION_NOT_FOUND` และ `…_DIMENSION_MISMATCH`. **ยังไม่ทำ/ยังเปิด:** admin API สำหรับสร้าง/publish Calculation Policy (ต้องมีแถว `snapshot` ก่อนเปิดใช้), conversion หลายขั้น, test ทั้งหมด. **G-09:** ต้องสร้างแถวต้นทุนจาก template ผ่าน `IUnitConversionResolver` และกติกาตรึง/คงค่า (D5) เดียวกัน. [Verification](../../05-engineering/estimate-unit-conversion-verification.md)
 
 ### G-09 — Quick Estimate completion
 
