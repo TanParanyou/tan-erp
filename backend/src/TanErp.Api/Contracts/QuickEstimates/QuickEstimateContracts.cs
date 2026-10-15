@@ -22,7 +22,7 @@ public sealed record MeasurementResponse(Guid LineId, string? WorkSubtype, decim
 
 public sealed record CalculationLineResponse(Guid LineId, string? WorkSubtype, decimal BillableQuantity, decimal BaseAmount, decimal AdjustedAmount);
 
-public sealed record CalculationResponse(int Version, string TemplateCode, int TemplateVersion, decimal NetAmount, decimal TaxAmount, decimal DisplayedLower, decimal DisplayedUpper, DateOnly ValidUntil, string ShareDecision, IReadOnlyList<string> ReasonCodes, string InputHash, IReadOnlyList<CalculationLineResponse> Lines, QePersonResponse CreatedBy, DateTimeOffset CreatedAtUtc);
+public sealed record CalculationResponse(int Version, string TemplateCode, int TemplateVersion, decimal NetAmount, decimal TaxAmount, decimal DisplayedLower, decimal DisplayedUpper, DateOnly ValidUntil, string ShareDecision, IReadOnlyList<string> ReasonCodes, string InputHash, IReadOnlyList<CalculationLineResponse> Lines, QePersonResponse CreatedBy, DateTimeOffset CreatedAtUtc, Guid? BranchOverrideId = null);
 
 public sealed record ReviewResponse(Guid Id, int SourceVersion, string Status, string? RequestNote, QePersonResponse RequestedBy, DateTimeOffset RequestedAtUtc, QePersonResponse? DecidedBy, DateTimeOffset? DecidedAtUtc, string? ReasonCode, string? DecisionNote);
 
