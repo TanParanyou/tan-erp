@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TanErp.Api.Contracts.Estimates;
 using TanErp.Api.Contracts.Items;
 using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.Common.Abstractions;
+using TanErp.Application.Estimates;
 using TanErp.Application.Items.Catalog;
 
 namespace TanErp.Api.Controllers;
@@ -16,13 +18,16 @@ public class EstimateCatalogController : ControllerBase
 {
     private readonly IRequestAccessResolver _accessResolver;
     private readonly IEstimateCatalogReader _catalogReader;
+    private readonly IEstimateUnitOptionsReader _unitOptionsReader;
 
     public EstimateCatalogController(
         IRequestAccessResolver accessResolver,
-        IEstimateCatalogReader catalogReader)
+        IEstimateCatalogReader catalogReader,
+        IEstimateUnitOptionsReader unitOptionsReader)
     {
         _accessResolver = accessResolver;
         _catalogReader = catalogReader;
+        _unitOptionsReader = unitOptionsReader;
     }
 
     [HttpGet]
@@ -75,5 +80,25 @@ public class EstimateCatalogController : ControllerBase
 
         var response = ItemResponseMapper.ToResponse(result.Value!);
         return Ok(response);
+    }
+
+    [HttpGet("{itemId:guid}/units")]
+    [ProducesResponseType<EstimateUnitOptionsResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Units(Guid itemId, [FromQuery, Required] Guid branchId, CancellationToken ct = default)
+    {
+        var authResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (authResult.IsFailure) return ProblemDetailsMapper.CreateProblemResult(authResult.Error.Code, HttpContext);
+
+        var auth = authResult.Value!;
+        var accessResult = await _accessResolver.ResolveBranchAccessAsync(auth.FirebaseUid, auth.MembershipId, "items.read", branchId, ct);
+        if (accessResult.IsFailure) return ProblemDetailsMapper.CreateProblemResult(accessResult.Error.Code, HttpContext);
+
+        var result = await _unitOptionsReader.ListAsync(accessResult.Value!.OrganizationId, branchId, itemId, ct);
+        return result.IsFailure
+            ? ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext)
+            : Ok(EstimateUnitOptionsResponse.From(result.Value!));
     }
 }

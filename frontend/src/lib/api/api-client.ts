@@ -63,6 +63,7 @@ export type SurveyTemplateVersionListResponse = components["schemas"]["SurveyTem
 
 export type EstimateDetailResponse = components["schemas"]["EstimateDetailResponse"];
 export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionResponse"];
+export type EstimateUnitOptionsResponse = components["schemas"]["EstimateUnitOptionsResponse"];
 export type CreateEstimateDraftRequest = components["schemas"]["CreateEstimateDraftRequest"];
 export type UpdateEstimateDraftRequest = components["schemas"]["UpdateEstimateDraftRequest"];
 export type CalculateEstimateRequest = components["schemas"]["CalculateEstimateRequest"];
@@ -1469,6 +1470,14 @@ export class ApiClient {
       "POST",
       options,
       payload
+    );
+  }
+
+  async getEstimateUnitOptions(itemId: string, branchId: string, options: RequestOptions): Promise<EstimateUnitOptionsResponse> {
+    return this.request<EstimateUnitOptionsResponse>(
+      `/api/v1/estimate-catalog/items/${encodeURIComponent(itemId)}/units?branchId=${encodeURIComponent(branchId)}`,
+      "GET",
+      options
     );
   }
 

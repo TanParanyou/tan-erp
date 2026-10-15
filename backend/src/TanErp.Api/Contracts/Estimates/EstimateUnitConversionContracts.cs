@@ -12,3 +12,15 @@ public sealed record EstimateConversionSnapshotResponse(Guid ConversionId, strin
 
     internal static string FormatFactor(decimal factor) => factor.ToString("0.######", CultureInfo.InvariantCulture);
 }
+
+public sealed record EstimateUnitOptionResponse(Guid UnitId, string UnitCode, bool IsBase, Guid? ConversionId, string? ConversionScope, string? Factor);
+
+public sealed record EstimateUnitOptionsResponse(bool ConversionsEnabled, string BaseUnitCode, IReadOnlyList<EstimateUnitOptionResponse> Units)
+{
+    public static EstimateUnitOptionsResponse From(EstimateUnitOptionsProjection projection) => new(
+        projection.ConversionsEnabled,
+        projection.BaseUnitCode,
+        projection.Units.Select(unit => new EstimateUnitOptionResponse(
+            unit.UnitId, unit.UnitCode, unit.IsBase, unit.ConversionId, unit.Scope,
+            unit.Factor is null ? null : EstimateConversionSnapshotResponse.FormatFactor(unit.Factor.Value))).ToList());
+}

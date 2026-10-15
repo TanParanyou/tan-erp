@@ -8874,6 +8874,115 @@
         }
       }
     },
+    "/api/v1/estimate-catalog/items/{itemId}/units": {
+      "get": {
+        "tags": [
+          "EstimateCatalog"
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "branchId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateUnitOptionsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateUnitOptionsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateUnitOptionsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/estimates/review-queue": {
       "get": {
         "tags": [
@@ -35281,6 +35390,32 @@
         },
         "additionalProperties": false
       },
+      "EstimateConversionSnapshotResponse": {
+        "type": "object",
+        "properties": {
+          "conversionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversionScope": {
+            "type": "string",
+            "nullable": true
+          },
+          "fromUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "toUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "factor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "EstimateCostComponentResponse": {
         "type": "object",
         "properties": {
@@ -35413,6 +35548,9 @@
           },
           "isProvisional": {
             "type": "boolean"
+          },
+          "conversionSnapshot": {
+            "$ref": "#/components/schemas/EstimateConversionSnapshotResponse"
           }
         },
         "additionalProperties": false
@@ -35641,6 +35779,9 @@
           },
           "isProvisional": {
             "type": "boolean"
+          },
+          "conversion": {
+            "$ref": "#/components/schemas/EstimateConversionSnapshotResponse"
           }
         },
         "additionalProperties": false
@@ -36149,6 +36290,56 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EstimateWorkItemResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EstimateUnitOptionResponse": {
+        "type": "object",
+        "properties": {
+          "unitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isBase": {
+            "type": "boolean"
+          },
+          "conversionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "conversionScope": {
+            "type": "string",
+            "nullable": true
+          },
+          "factor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EstimateUnitOptionsResponse": {
+        "type": "object",
+        "properties": {
+          "conversionsEnabled": {
+            "type": "boolean"
+          },
+          "baseUnitCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstimateUnitOptionResponse"
             },
             "nullable": true
           }
@@ -43425,6 +43616,11 @@
           },
           "provisionalNote": {
             "type": "string",
+            "nullable": true
+          },
+          "conversionId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         },
