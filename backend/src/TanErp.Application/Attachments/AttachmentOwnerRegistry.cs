@@ -1,4 +1,5 @@
 using TanErp.Domain.Attachments;
+using TanErp.Domain.QuickEstimates;
 using TanErp.Domain.Service;
 
 namespace TanErp.Application.Attachments;
@@ -25,7 +26,15 @@ public static class AttachmentOwnerRegistry
             ManagePermission: "installations.operate",
             SignPermission: "installations.handover",
             ManageStates: new HashSet<string>(StringComparer.Ordinal) { InstallationStatus.Planned, InstallationStatus.InProgress, InstallationStatus.ReadyForHandover },
-            SignStates: new HashSet<string>(StringComparer.Ordinal) { InstallationStatus.ReadyForHandover })
+            SignStates: new HashSet<string>(StringComparer.Ordinal) { InstallationStatus.ReadyForHandover }),
+        // Quick estimates have no signatures: SignPermission mirrors the manage permission and SignStates is empty, so a capture is refused with ATTACHMENT_OWNER_LOCKED.
+        new AttachmentOwnerDescriptor(
+            AttachmentOwnerTypes.QuickEstimate,
+            ReadPermission: "quick-estimates.read",
+            ManagePermission: "quick-estimates.update",
+            SignPermission: "quick-estimates.update",
+            ManageStates: new HashSet<string>(StringComparer.Ordinal) { QuickEstimateStatus.Draft, QuickEstimateStatus.Calculated, QuickEstimateStatus.Returned },
+            SignStates: new HashSet<string>(StringComparer.Ordinal))
     }.ToDictionary(d => d.OwnerType, StringComparer.Ordinal);
 
     public static IReadOnlyCollection<string> OwnerTypes { get; } = Descriptors.Keys.ToArray();

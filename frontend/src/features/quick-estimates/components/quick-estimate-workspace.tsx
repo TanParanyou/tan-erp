@@ -12,6 +12,7 @@ import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { AttachmentList } from "@/components/forms/AttachmentList";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { formatCurrency, formatDate } from "@/lib/formatters/formatters";
@@ -276,6 +277,8 @@ function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateRespons
           </p>
         ))}
       </div>
+
+      <AttachmentList ownerType="quick-estimate" ownerId={id} canManage={editable} purposes={["evidence", "general"]} />
 
       <Modal
         isOpen={dialog !== null}
