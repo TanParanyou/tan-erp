@@ -251,6 +251,7 @@ function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateRespons
           <ul className="space-y-1 text-xs">{(calc.lines ?? []).map((line) => (
             <li key={line.lineId} className="font-mono">{line.workSubtype || "-"} · {t("billableQuantity")} {line.billableQuantity} · {formatCurrency(line.adjustedAmount, "THB", locale)}</li>
           ))}</ul>
+          {calc.branchOverrideId && <p className="text-xs font-semibold text-erp-navy">{t("branchOverrideApplied")}</p>}
           <p className="font-mono text-xs text-erp-text-muted" title={calc.inputHash ?? undefined}>{t("inputHash")}: {(calc.inputHash ?? "").slice(0, 16)}</p>
         </div>
       )}
@@ -273,6 +274,7 @@ function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateRespons
         {(estimate.conversions ?? []).map((conversion) => (
           <p key={conversion.id} className="border-l-4 border-erp-navy bg-erp-surface-subtle px-3 py-2 text-xs">
             {t("conversionLine", { version: conversion.sourceVersion ?? 0 })}{" "}
+            {typeof conversion.mappedLineCount === "number" && <>{t("conversionLines", { count: conversion.mappedLineCount })}{" "}</>}
             <Link href={`/${locale}/estimates/${conversion.officialEstimateId}`} className="font-mono text-erp-navy underline">{t("openEstimate")}</Link>
           </p>
         ))}
