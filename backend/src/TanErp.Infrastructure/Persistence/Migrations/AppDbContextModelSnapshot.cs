@@ -1638,6 +1638,14 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(24)")
                         .HasColumnName("status");
 
+                    b.Property<string>("UnitConversionMode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("none")
+                        .HasColumnName("unit_conversion_mode");
+
                     b.Property<int>("Version")
                         .HasColumnType("integer")
                         .HasColumnName("version");
@@ -1661,6 +1669,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_estimate_calculation_policy_period", "effective_to_utc IS NULL OR effective_to_utc > effective_from_utc");
 
                             t.HasCheckConstraint("ck_estimate_calculation_policy_status", "status IN ('draft', 'published', 'superseded', 'disabled')");
+
+                            t.HasCheckConstraint("ck_estimate_calculation_policy_unit_conversion_mode", "unit_conversion_mode IN ('none', 'snapshot')");
                         });
                 });
 
@@ -2170,6 +2180,30 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<decimal?>("ConversionFactor")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("conversion_factor");
+
+                    b.Property<string>("ConversionFromUnit")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("conversion_from_unit");
+
+                    b.Property<Guid?>("ConversionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conversion_id");
+
+                    b.Property<string>("ConversionScope")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("conversion_scope");
+
+                    b.Property<string>("ConversionToUnit")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("conversion_to_unit");
+
                     b.Property<DateTimeOffset?>("CostEffectiveFromUtc")
                         .HasColumnType("timestamptz")
                         .HasColumnName("cost_effective_from_utc");
@@ -2330,6 +2364,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("estimate_cost_components", "estimates", t =>
                         {
+                            t.HasCheckConstraint("ck_estimate_cost_components_conversion_snapshot", "(conversion_id IS NULL AND conversion_scope IS NULL AND conversion_from_unit IS NULL AND conversion_to_unit IS NULL AND conversion_factor IS NULL) OR (conversion_id IS NOT NULL AND conversion_scope IN ('item', 'shared') AND conversion_from_unit IS NOT NULL AND conversion_to_unit IS NOT NULL AND conversion_factor > 0)");
+
                             t.HasCheckConstraint("ck_estimate_cost_components_cost_origin", "cost_origin IN ('manual', 'catalog')");
 
                             t.HasCheckConstraint("ck_estimate_cost_components_quantity", "quantity > 0");

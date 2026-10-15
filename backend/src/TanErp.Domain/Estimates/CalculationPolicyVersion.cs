@@ -25,6 +25,7 @@ public sealed class CalculationPolicyVersion
     public Guid? PublishedByUserId { get; private set; }
     public DateTimeOffset? PublishedAtUtc { get; private set; }
     public string? ContentHash { get; private set; }
+    public string UnitConversionMode { get; private set; } = UnitConversionModes.None;
 
     private CalculationPolicyVersion() { }
 
@@ -32,7 +33,8 @@ public sealed class CalculationPolicyVersion
         Guid id, Guid organizationId, Guid? branchId, string policyCode, int version,
         string overheadMethod, decimal overheadValue, string roundingMode,
         DateTimeOffset effectiveFromUtc, DateTimeOffset? effectiveToUtc,
-        Guid createdByUserId)
+        Guid createdByUserId,
+        string unitConversionMode = UnitConversionModes.None)
     {
         if (id == Guid.Empty || organizationId == Guid.Empty || createdByUserId == Guid.Empty)
             throw new ArgumentException("Policy identifiers must be provided.");
@@ -44,6 +46,8 @@ public sealed class CalculationPolicyVersion
             throw new ArgumentOutOfRangeException(nameof(overheadValue));
         if (roundingMode != "away-from-zero")
             throw new ArgumentException("Rounding mode is unsupported.", nameof(roundingMode));
+        if (!UnitConversionModes.IsValid(unitConversionMode))
+            throw new ArgumentException("Unit conversion mode is unsupported.", nameof(unitConversionMode));
         if (effectiveToUtc is not null && effectiveToUtc <= effectiveFromUtc)
             throw new ArgumentException("Policy effective period is invalid.");
 
@@ -55,6 +59,7 @@ public sealed class CalculationPolicyVersion
         OverheadMethod = overheadMethod;
         OverheadValue = overheadValue;
         RoundingMode = roundingMode;
+        UnitConversionMode = unitConversionMode;
         EffectiveFromUtc = effectiveFromUtc;
         EffectiveToUtc = effectiveToUtc;
         CreatedByUserId = createdByUserId;
@@ -80,7 +85,9 @@ public sealed class CalculationPolicyVersion
 
     private string CalculateContentHash()
     {
-        var value = FormattableString.Invariant($"{OrganizationId:N}|{BranchId:N}|{PolicyCode}|{Version}|{OverheadMethod}|{OverheadValue}|{RoundingMode}|{EffectiveFromUtc:O}|{EffectiveToUtc:O}");
+        // Appended only when it is not the legacy default so hashes of policies published before G-08 stay reproducible.
+        var modeSuffix = UnitConversionMode == UnitConversionModes.None ? string.Empty : $"|{UnitConversionMode}";
+        var value = FormattableString.Invariant($"{OrganizationId:N}|{BranchId:N}|{PolicyCode}|{Version}|{OverheadMethod}|{OverheadValue}|{RoundingMode}|{EffectiveFromUtc:O}|{EffectiveToUtc:O}{modeSuffix}");
         return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     }
 }

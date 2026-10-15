@@ -38,6 +38,17 @@ public class EstimateCostComponent
     public string? ProvisionalReasonCode { get; private set; }
     public string? ProvisionalNote { get; private set; }
 
+    // Unit conversion snapshot (G-08). All null unless the line is costed in a unit other than the item's base unit.
+    public Guid? ConversionId { get; private set; }
+    public string? ConversionScope { get; private set; }
+    public string? ConversionFromUnit { get; private set; }
+    public string? ConversionToUnit { get; private set; }
+    public decimal? ConversionFactor { get; private set; }
+
+    public EstimateConversionSnapshot? ConversionSnapshot => ConversionId.HasValue
+        ? EstimateConversionSnapshot.Create(ConversionId.Value, ConversionScope!, ConversionFromUnit!, ConversionToUnit!, ConversionFactor!.Value)
+        : null;
+
     public bool IsProvisional => CostOrigin == "manual" ||
         (CostOrigin == "catalog" && (CostSourceIdSnapshot is null ||
             (string.IsNullOrWhiteSpace(CostSourceReferenceSnapshot) && CostEvidenceFileIdSnapshot is null)));
@@ -94,6 +105,8 @@ public class EstimateCostComponent
         decimal unitCost,
         int sortOrder)
     {
+        if (ConversionId.HasValue)
+            throw new EstimateInvalidStateException("A cost component with a unit conversion snapshot is replaced, not updated in place.");
         if (!CostComponentType.IsValid(type))
             throw new ArgumentException($"Invalid cost component type: '{type}'.", nameof(type));
         if (string.IsNullOrWhiteSpace(description))
@@ -219,5 +232,41 @@ public class EstimateCostComponent
         CostRecordReasonSnapshot = null;
         ProvisionalReasonCode = null;
         ProvisionalNote = null;
+        ConversionId = null;
+        ConversionScope = null;
+        ConversionFromUnit = null;
+        ConversionToUnit = null;
+        ConversionFactor = null;
+    }
+
+    /// <summary>
+    /// Freezes the conversion. The catalog cost snapshot must be set first because the factor applies to that base-unit cost.
+    /// The line's unit becomes the conversion's from-unit (canonical code).
+    /// </summary>
+    public void SetConversionSnapshot(EstimateConversionSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        if (CostOrigin != "catalog" || !UnitCostSnapshot.HasValue || string.IsNullOrWhiteSpace(UnitSnapshot))
+            throw new ArgumentException("A unit conversion snapshot requires a catalog cost snapshot in the item's base unit.", nameof(snapshot));
+        if (!string.Equals(UnitSnapshot, snapshot.ToUnit, StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("The conversion must end in the unit of the catalog cost snapshot.", nameof(snapshot));
+
+        ConversionId = snapshot.ConversionId;
+        ConversionScope = snapshot.Scope;
+        ConversionFromUnit = snapshot.FromUnit;
+        ConversionToUnit = snapshot.ToUnit;
+        ConversionFactor = snapshot.Factor;
+        UnitCode = snapshot.FromUnit;
+        ApplyConversionSnapshotTotals();
+    }
+
+    /// <summary>Re-derives the cost from the frozen factor: Quantity x Factor x base-unit cost, rounded once to two decimals.</summary>
+    public void ApplyConversionSnapshotTotals()
+    {
+        if (!ConversionFactor.HasValue || !UnitCostSnapshot.HasValue)
+            return;
+
+        UnitCost = decimal.Round(UnitCostSnapshot.Value * ConversionFactor.Value, 4, MidpointRounding.AwayFromZero);
+        TotalCost = decimal.Round(Quantity * ConversionFactor.Value * UnitCostSnapshot.Value, 2, MidpointRounding.AwayFromZero);
     }
 }
