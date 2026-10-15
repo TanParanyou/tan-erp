@@ -137,6 +137,8 @@ function EstimateWorkspaceSession({ isOpen, onClose, opportunityId, estimate, fo
       case "ESTIMATE_VERSION_CONFLICT": toast.error(t("versionConflict")); break;
       case "ESTIMATE_INVALID_STATE": toast.error(t("invalidState")); break;
       case "ESTIMATE_UNIT_INVALID": toast.error(t("unitInvalid")); break;
+      case "ESTIMATE_UNIT_CONVERSION_NOT_FOUND": toast.error(t("unitConversionNotFound")); break;
+      case "ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH": toast.error(t("unitConversionDimensionMismatch")); break;
       case "ITEM_COST_VERSION_CONFLICT":
       case "ITEM_COST_STALE":
       case "ITEM_COST_AMBIGUOUS":

@@ -63,6 +63,7 @@ export type SurveyTemplateVersionListResponse = components["schemas"]["SurveyTem
 
 export type EstimateDetailResponse = components["schemas"]["EstimateDetailResponse"];
 export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionResponse"];
+export type EstimateConversionSnapshotResponse = components["schemas"]["EstimateConversionSnapshotResponse"];
 export type EstimateUnitOptionsResponse = components["schemas"]["EstimateUnitOptionsResponse"];
 export type CreateEstimateDraftRequest = components["schemas"]["CreateEstimateDraftRequest"];
 export type UpdateEstimateDraftRequest = components["schemas"]["UpdateEstimateDraftRequest"];

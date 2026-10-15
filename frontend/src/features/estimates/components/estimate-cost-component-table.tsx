@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { useEstimateWorkspace } from "./estimate-workspace-context";
 import { catalogCostComponents } from "../utils/estimate-workspace-mapper";
 import { EstimateItemCatalogModal } from "./estimate-item-catalog-modal";
+import { EstimateCostUnitSelect } from "./estimate-cost-unit-select";
 
 interface EstimateCostComponentTableProps {
   sectionIndex: number;
@@ -224,6 +225,8 @@ export function EstimateCostComponentTable({
                       )}
                     />
                   </div>
+
+                  <EstimateCostUnitSelect sectionIndex={sectionIndex} itemIndex={itemIndex} costIndex={cIdx} branchId={branchId} />
 
                   {/* Quantity Input */}
                   <div className="col-span-1">

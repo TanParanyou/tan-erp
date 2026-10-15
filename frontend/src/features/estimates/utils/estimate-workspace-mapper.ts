@@ -1,9 +1,15 @@
-import type { EstimateRevisionResponse, UpdateEstimateDraftRequest } from "@/lib/api/api-client";
+import type { EstimateConversionSnapshotResponse, EstimateRevisionResponse, UpdateEstimateDraftRequest } from "@/lib/api/api-client";
 import type { EstimateDiscountType, EstimateWorkspaceFormData } from "../schemas/estimate-workspace-schema";
 import { getLocalizedText, type CatalogItemModel } from "../api/estimate-catalog-client";
 
 function discountType(value: string | null | undefined): EstimateDiscountType {
   return value === "none" || value === "percent" || value === "fixed-amount" ? value : "";
+}
+
+/** Maps a frozen conversion snapshot; an incomplete snapshot (which the contract never produces) is treated as absent rather than guessed. */
+function toWorkspaceConversion(snapshot: EstimateConversionSnapshotResponse | undefined) {
+  if (!snapshot || !snapshot.conversionId || !snapshot.conversionScope || !snapshot.fromUnit || !snapshot.toUnit || !snapshot.factor) return null;
+  return { conversionId: snapshot.conversionId, scope: snapshot.conversionScope, fromUnit: snapshot.fromUnit, toUnit: snapshot.toUnit, factor: snapshot.factor };
 }
 
 /** Preserve client identities across our own save response, whose sort orders mirror the request. */
@@ -50,6 +56,8 @@ export function toWorkspaceForm(revision?: EstimateRevisionResponse | null, prev
           provisionalReasonCode: cost.provisionalReasonCode ?? null,
           provisionalNote: cost.provisionalNote ?? null,
           isProvisional: cost.isProvisional,
+          baseUnitCost: cost.unitCostSnapshot ?? null,
+          conversion: toWorkspaceConversion(cost.conversionSnapshot),
         })),
       })),
     })),
@@ -75,6 +83,7 @@ export function toDraftRequest(data: EstimateWorkspaceFormData, version: string)
           unitCode: cost.unitCode, unitCost: cost.unitCost, currency: cost.currency, sortOrder: c + 1,
           itemId: cost.itemId ?? null, costRecordId: cost.costRecordId ?? null, costRecordVersion: cost.costRecordVersion ?? null,
           provisionalReasonCode: cost.provisionalReasonCode ?? null, provisionalNote: cost.provisionalNote ?? null,
+          conversionId: cost.conversion?.conversionId ?? null,
         })),
       })),
     })),
@@ -89,6 +98,7 @@ export function catalogCostComponents(items: CatalogItemModel[], locale: string,
       type: item.costComponentType, description: getLocalizedText(item.name, locale), quantity: 1,
       unitCode: cost.unitCode, unitCost: cost.amount, currency: cost.currency, sortOrder: start + index + 1,
       itemId: item.id, costRecordId: cost.costRecordId, costRecordVersion: cost.version,
+      baseUnitCost: cost.amount, conversion: null,
       isProvisional: !cost.costSourceId || (!cost.sourceReference && !cost.evidenceFileId),
     }];
   });
