@@ -34,7 +34,15 @@ public sealed record EstimateCostComponentProjection(
     string? CostRecordReasonSnapshot = null,
     string? ProvisionalReasonCode = null,
     string? ProvisionalNote = null,
-    bool IsProvisional = false);
+    bool IsProvisional = false,
+    EstimateConversionSnapshotProjection? ConversionSnapshot = null);
+
+public sealed record EstimateConversionSnapshotProjection(Guid ConversionId, string Scope, string FromUnit, string ToUnit, decimal Factor)
+{
+    public static EstimateConversionSnapshotProjection? From(EstimateConversionSnapshot? snapshot) => snapshot is null
+        ? null
+        : new EstimateConversionSnapshotProjection(snapshot.ConversionId, snapshot.Scope, snapshot.FromUnit, snapshot.ToUnit, snapshot.Factor);
+}
 
 public sealed record EstimateWorkItemProjection(
     Guid Id,

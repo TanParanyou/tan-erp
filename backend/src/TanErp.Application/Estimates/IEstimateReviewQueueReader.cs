@@ -12,7 +12,8 @@ public sealed record EstimateReviewCostEvidence(
     decimal Quantity, string UnitCode, decimal UnitCost, string Currency, decimal TotalCost,
     string CostOrigin, string? ItemCode, int? CostRecordVersion, string? CostSourceCode,
     string? SourceReference, Guid? EvidenceFileId, string? CostRecordReason,
-    string? ProvisionalReasonCode, string? ProvisionalNote, bool IsProvisional);
+    string? ProvisionalReasonCode, string? ProvisionalNote, bool IsProvisional,
+    EstimateConversionSnapshotProjection? Conversion = null);
 public sealed record EstimateReviewPriceOverride(
     string WorkItemCode, string WorkItemDescription, decimal FixedPriceUnitAmount, string? ReasonCode);
 public sealed record EstimateReviewRevisionDiff(

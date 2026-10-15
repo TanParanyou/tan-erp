@@ -15,7 +15,8 @@ public sealed record UpdateEstimateCostComponentDto(
     Guid? CostRecordId = null,
     int? CostRecordVersion = null,
     [MaxLength(64)] string? ProvisionalReasonCode = null,
-    [MaxLength(1000)] string? ProvisionalNote = null);
+    [MaxLength(1000)] string? ProvisionalNote = null,
+    Guid? ConversionId = null);
 
 public sealed record UpdateEstimateWorkItemDto(
     Guid? Id,

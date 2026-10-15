@@ -23,7 +23,8 @@ public sealed record EstimateReviewCostEvidenceResponse(
     decimal Quantity, string UnitCode, decimal UnitCost, string Currency, decimal TotalCost,
     string CostOrigin, string? ItemCode, int? CostRecordVersion, string? CostSourceCode,
     string? SourceReference, Guid? EvidenceFileId, string? CostRecordReason,
-    string? ProvisionalReasonCode, string? ProvisionalNote, bool IsProvisional);
+    string? ProvisionalReasonCode, string? ProvisionalNote, bool IsProvisional,
+    EstimateConversionSnapshotResponse? Conversion = null);
 public sealed record EstimateReviewPriceOverrideResponse(
     string WorkItemCode, string WorkItemDescription, decimal FixedPriceUnitAmount, string? ReasonCode);
 public sealed record EstimateReviewRevisionDiffResponse(
@@ -78,7 +79,8 @@ public static class EstimateReviewQueueResponseMapper
                 evidence.Quantity, evidence.UnitCode, evidence.UnitCost, evidence.Currency, evidence.TotalCost,
                 evidence.CostOrigin, evidence.ItemCode, evidence.CostRecordVersion, evidence.CostSourceCode,
                 evidence.SourceReference, evidence.EvidenceFileId, evidence.CostRecordReason,
-                evidence.ProvisionalReasonCode, evidence.ProvisionalNote, evidence.IsProvisional)).ToList(),
+                evidence.ProvisionalReasonCode, evidence.ProvisionalNote, evidence.IsProvisional,
+                EstimateConversionSnapshotResponse.From(evidence.Conversion))).ToList(),
             item.RevisionDiff is null ? null : new EstimateReviewRevisionDiffResponse(
                 item.RevisionDiff.PreviousRevisionNo, item.RevisionDiff.PreviousGrandTotal,
                 item.RevisionDiff.GrandTotalDelta, item.RevisionDiff.AddedWorkItems,

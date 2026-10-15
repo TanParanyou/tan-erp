@@ -131,7 +131,8 @@ public sealed class EstimateReviewQueueReader : IEstimateReviewQueueReader
                     component.CostRecordVersion, component.CostSourceCodeSnapshot,
                     component.CostSourceReferenceSnapshot, component.CostEvidenceFileIdSnapshot,
                     component.CostRecordReasonSnapshot, component.ProvisionalReasonCode,
-                    component.ProvisionalNote, component.IsProvisional)))
+                    component.ProvisionalNote, component.IsProvisional,
+                    EstimateConversionSnapshotProjection.From(component.ConversionSnapshot))))
                 .ToList();
             var priceOverrides = revision.Sections
                 .SelectMany(section => section.WorkItems)
