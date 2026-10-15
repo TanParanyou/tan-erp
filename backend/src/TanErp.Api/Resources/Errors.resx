@@ -293,6 +293,10 @@
   <data name="ESTIMATE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องมีอย่างน้อยหนึ่งหมวดงานและหมวดงานต้องมีรายการประเมินราคา</value></data>
   <data name="ESTIMATE_UNIT_INVALID_TITLE" xml:space="preserve"><value>หน่วยต้นทุนไม่ตรงกับหน่วยฐานของสินค้า</value></data>
   <data name="ESTIMATE_UNIT_INVALID_DETAIL" xml:space="preserve"><value>เลือกหน่วยต้นทุนให้ตรงกับหน่วยฐานของสินค้า หรือใช้ต้นทุนที่บันทึกด้วยหน่วยฐานนั้น</value></data>
+  <data name="ESTIMATE_UNIT_CONVERSION_NOT_FOUND_TITLE" xml:space="preserve"><value>ไม่พบอัตราแปลงหน่วย</value></data>
+  <data name="ESTIMATE_UNIT_CONVERSION_NOT_FOUND_DETAIL" xml:space="preserve"><value>ไม่มีอัตราแปลงหน่วยที่ใช้งานได้ ณ วันนี้จากหน่วยที่เลือกไปยังหน่วยฐานของสินค้า ให้ผู้ดูแลข้อมูลสินค้าเพิ่มอัตราแปลงหน่วยก่อน หรือเลือกหน่วยฐาน</value></data>
+  <data name="ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH_TITLE" xml:space="preserve"><value>หน่วยต่างมิติแปลงกันไม่ได้</value></data>
+  <data name="ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH_DETAIL" xml:space="preserve"><value>หน่วยที่เลือกอยู่คนละมิติกับหน่วยฐานของสินค้า เช่น น้ำหนักกับความยาว เลือกหน่วยในมิติเดียวกับหน่วยฐาน</value></data>
   <data name="ESTIMATE_COST_INCOMPLETE_TITLE" xml:space="preserve"><value>รายการงานยังไม่มีต้นทุน</value></data>
   <data name="ESTIMATE_COST_INCOMPLETE_DETAIL" xml:space="preserve"><value>เพิ่มองค์ประกอบต้นทุนอย่างน้อยหนึ่งรายการให้แต่ละรายการงานก่อนส่งตรวจ</value></data>
   <data name="ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุเหตุผลต้นทุนชั่วคราว</value></data>
