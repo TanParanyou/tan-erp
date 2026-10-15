@@ -28,7 +28,7 @@ public sealed record ReviewResponse(Guid Id, int SourceVersion, string Status, s
 
 public sealed record ShareResponse(Guid Id, int SourceVersion, string Channel, string? Recipient, string Locale, QePersonResponse CreatedBy, DateTimeOffset CreatedAtUtc, string SummaryJson);
 
-public sealed record ConversionResponse(Guid Id, int SourceVersion, Guid OfficialEstimateId, DateTimeOffset CreatedAtUtc);
+public sealed record ConversionResponse(Guid Id, int SourceVersion, Guid OfficialEstimateId, DateTimeOffset CreatedAtUtc, int? MappedLineCount = null);
 
 public sealed record QuickEstimateTemplateRefResponse(Guid Id, string Code, int Version, string Name, string Status);
 

@@ -155,7 +155,7 @@ public sealed record ReviewProjection(
 
 public sealed record ShareProjection(Guid Id, int SourceVersion, string Channel, string? Recipient, string Locale, QePerson CreatedBy, DateTimeOffset CreatedAtUtc, string SummaryJson);
 
-public sealed record ConversionProjection(Guid Id, int SourceVersion, Guid OfficialEstimateId, DateTimeOffset CreatedAtUtc);
+public sealed record ConversionProjection(Guid Id, int SourceVersion, Guid OfficialEstimateId, DateTimeOffset CreatedAtUtc, int? MappedLineCount = null);
 
 public sealed record QuickEstimateTemplateRef(Guid Id, string Code, int Version, string Name, string Status);
 
