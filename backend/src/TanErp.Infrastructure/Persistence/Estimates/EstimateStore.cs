@@ -2257,28 +2257,34 @@ public class EstimateStore : IEstimateStore
                     workItem.SellingRuleType,
                     workItem.SellingRuleValue,
                     workItem.SellingRuleReasonCode,
-                    CostComponents = workItem.CostComponents.OrderBy(component => component.SortOrder).Select(component => new
+                    CostComponents = workItem.CostComponents.OrderBy(component => component.SortOrder).Select(component =>
                     {
-                        component.Type,
-                        component.Quantity,
-                        component.UnitCode,
-                        component.UnitCost,
-                        component.Currency,
-                        component.ItemId,
-                        component.CostRecordId,
-                        component.CostRecordVersion,
-                        component.CostEffectiveFromUtc,
-                        component.CostPolicyVersion,
-                        component.CostOrigin,
-                        component.CostSourceIdSnapshot,
-                        component.CostSourceCodeSnapshot,
-                        component.CostSourceReferenceSnapshot,
-                        component.CostEvidenceFileIdSnapshot,
-                        component.CostRecordReasonSnapshot,
-                        component.ProvisionalReasonCode,
-                        component.ProvisionalNote,
-                        component.ConversionId,
-                        component.ConversionFactor
+                        // Lines without a unit-conversion snapshot keep the exact pre-G-08 JSON (and so the same hash);
+                        // the conversion fields are added only for lines that carry a snapshot.
+                        var core = new
+                        {
+                            component.Type,
+                            component.Quantity,
+                            component.UnitCode,
+                            component.UnitCost,
+                            component.Currency,
+                            component.ItemId,
+                            component.CostRecordId,
+                            component.CostRecordVersion,
+                            component.CostEffectiveFromUtc,
+                            component.CostPolicyVersion,
+                            component.CostOrigin,
+                            component.CostSourceIdSnapshot,
+                            component.CostSourceCodeSnapshot,
+                            component.CostSourceReferenceSnapshot,
+                            component.CostEvidenceFileIdSnapshot,
+                            component.CostRecordReasonSnapshot,
+                            component.ProvisionalReasonCode,
+                            component.ProvisionalNote
+                        };
+                        return component.ConversionId is null
+                            ? (object)core
+                            : new { core, component.ConversionId, component.ConversionFactor };
                     })
                 })
             })
