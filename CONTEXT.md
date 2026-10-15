@@ -164,6 +164,10 @@ _Avoid_: Package Size, Conversion Factor
 ความสัมพันธ์ที่ยืนยันแล้วสำหรับแปลงปริมาณระหว่างสองหน่วย โดยอาจใช้ร่วมกันหรือเฉพาะ Item
 _Avoid_: Estimate Formula, Assumed Factor
 
+**Conversion Snapshot (ภาพตรึงการแปลงหน่วย)**:
+ค่า conversion (รหัสที่อ้าง, ชนิด, หน่วยต้นทาง/ปลายทาง, factor) ที่ตรึงบน Cost Component ของ Estimate ตอนบันทึก draft; Estimate คำนวณจากค่านี้ ไม่ใช่จาก Unit Conversion ปัจจุบัน
+_Avoid_: Live Conversion, Current Factor
+
 **Cost Source (แหล่งต้นทุน)**:
 รายการแหล่งที่มาของต้นทุนระดับองค์กรที่เลือกใช้ซ้ำได้ เช่น แหล่งต้นทุนที่บันทึกด้วยมือ; เลขอ้างอิง เหตุผล และไฟล์หลักฐานของราคาหนึ่งฉบับอยู่กับ Cost Record ฉบับนั้น
 _Avoid_: Cost Record, Evidence File, Reference Rate

@@ -181,6 +181,8 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `ESTIMATE_COST_INCOMPLETE` | 422 | Work Item มี Cost Component หรือ Cost Source ไม่ครบ; ระบุ Field/Item ที่ต้องแก้ |
 | `ESTIMATE_FIELD_REQUIRED` | 422 | Field ที่ Gate ปัจจุบันบังคับยังว่าง; คืน Field Pointer ที่แก้ได้ |
 | `ESTIMATE_UNIT_INVALID` | 422 | หน่วย Cost Component ไม่ตรงกับหน่วยฐานของ Catalog Item; เปลี่ยนเป็นหน่วยฐานเพื่อบันทึก Draft |
+| `ESTIMATE_UNIT_CONVERSION_NOT_FOUND` | 422 | ไม่มี Item/Shared Unit Conversion ที่ active และ effective วันนี้จากหน่วยที่เลือกไปหน่วยฐานของ Item; เลือกหน่วยฐานหรือให้ผู้ดูแล Item Master เพิ่ม conversion |
+| `ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH` | 422 | หน่วยที่เลือกอยู่คนละมิติกับหน่วยฐานของ Item (เช่น น้ำหนัก → ความยาว) จึงแปลงไม่ได้ |
 | `ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED` | 422 | ใช้ต้นทุนชั่วคราวแต่ยังไม่มี Reason Code/คำอธิบายที่บังคับ |
 | `ESTIMATE_CUSTOM_WORK_ITEM_REASON_CODE_REQUIRED` | 422 | Work Item ไม่มี Item Master link และยังไม่มี Reason Code |
 | `ESTIMATE_CUSTOM_WORK_ITEM_REASON_REQUIRED` | 422 | Work Item ไม่มี Item Master link และยังไม่มีเหตุผลประกอบ |
