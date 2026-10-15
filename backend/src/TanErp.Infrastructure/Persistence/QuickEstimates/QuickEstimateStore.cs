@@ -387,7 +387,13 @@ public class QuickEstimateStore : IQuickEstimateStore
             var template = await _db.PricingTemplates.AsNoTracking().FirstOrDefaultAsync(t => t.Id == e.TemplateId && t.OrganizationId == access.OrganizationId, ct);
             if (template is null || !template.IsUsableOn(Today)) return ("", Fail<QuickEstimateProjection>("PRICING_TEMPLATE_NOT_USABLE", "The pricing template is not usable."));
 
-            var result = QuickEstimateEngine.Calculate(template, e.ToInput(), Today);
+            // Only an approved override of this quick estimate's own branch, for this exact template version and today's date, can apply.
+            var today = Today;
+            var branchId = e.BranchId;
+            var rateOverride = await _db.BranchRateOverrides.AsNoTracking()
+                .Where(o => o.OrganizationId == access.OrganizationId && o.TemplateId == template.Id && o.BranchId == branchId && o.Status == OverrideStatus.Approved && o.EffectiveFrom <= today && today <= o.EffectiveTo)
+                .Select(o => new RateOverride(o.Id, o.ReferenceRate, o.MinimumCharge)).FirstOrDefaultAsync(ct);
+            var result = QuickEstimateEngine.Calculate(template, e.ToInput(), today, rateOverride);
             var latest = await _db.QuickEstimateCalculations.AsNoTracking().Where(c => c.QuickEstimateId == e.Id).OrderByDescending(c => c.Version).FirstOrDefaultAsync(ct);
             if (latest is not null && latest.InputHash == result.InputHash && latest.TemplateId == template.Id)
             {
@@ -576,7 +582,8 @@ public class QuickEstimateStore : IQuickEstimateStore
                 l.GetProperty("billableQuantity").GetDecimal(), l.GetProperty("baseAmount").GetDecimal(), l.GetProperty("adjustedAmount").GetDecimal())).ToList();
             calcProjection = new CalculationProjection(
                 calc.Version, calc.TemplateCode, calc.TemplateVersion, calc.NetAmount, calc.TaxAmount, calc.DisplayedLower, calc.DisplayedUpper, calc.ValidUntil, calc.ShareDecision,
-                JsonSerializer.Deserialize<List<string>>(calc.ReasonCodesJson) ?? new List<string>(), calc.InputHash, lines, Person(calc.CreatedByUserId)!, calc.CreatedAtUtc);
+                JsonSerializer.Deserialize<List<string>>(calc.ReasonCodesJson) ?? new List<string>(), calc.InputHash, lines, Person(calc.CreatedByUserId)!, calc.CreatedAtUtc,
+                snapshot.TryGetProperty("branchOverride", out var branchOverride) ? branchOverride.GetProperty("id").GetGuid() : (Guid?)null);
         }
 
         return new QuickEstimateProjection(

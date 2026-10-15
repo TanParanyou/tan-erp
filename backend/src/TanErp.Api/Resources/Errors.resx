@@ -1135,6 +1135,14 @@
   <data name="PRICING_TEMPLATE_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะเทมเพลตไม่อนุญาตให้ทำรายการนี้</value></data>
   <data name="PRICING_TEMPLATE_NOT_USABLE_TITLE" xml:space="preserve"><value>เทมเพลตนี้ใช้ประเมินไม่ได้</value></data>
   <data name="PRICING_TEMPLATE_NOT_USABLE_DETAIL" xml:space="preserve"><value>เทมเพลตนี้ใช้ประเมินไม่ได้</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_TITLE" xml:space="preserve"><value>ราคาเฉพาะสาขาไม่ถูกต้อง</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลราคาเฉพาะสาขาไม่ผ่านการตรวจสอบ: ตรวจสอบอัตรา ราคาขั้นต่ำ ช่วงวันที่ (ไม่เกิน 366 วันและต้องไม่สิ้นสุดก่อนวันนี้) และเหตุผล</value></data>
+  <data name="BRANCH_OVERRIDE_OVERLAP_TITLE" xml:space="preserve"><value>ช่วงเวลาซ้อนกับราคาเฉพาะสาขาเดิม</value></data>
+  <data name="BRANCH_OVERRIDE_OVERLAP_DETAIL" xml:space="preserve"><value>สาขานี้มีคำขอหรือราคาเฉพาะสาขาของเทมเพลตนี้ที่ครอบคลุมบางส่วนของช่วงเวลานี้อยู่แล้ว</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะปัจจุบันของราคาเฉพาะสาขาไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="BRANCH_OVERRIDE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ตัดสินคำขอของตนเองไม่ได้</value></data>
+  <data name="BRANCH_OVERRIDE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้ขอราคาเฉพาะสาขาไม่สามารถอนุมัติหรือส่งกลับคำขอของตนเองได้</value></data>
   <data name="PRICING_TEMPLATE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ผู้จัดทำเทมเพลตตัดสินของตนเองไม่ได้</value></data>
   <data name="PRICING_TEMPLATE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้จัดทำเทมเพลตตัดสินของตนเองไม่ได้</value></data>
   <data name="QUICK_ESTIMATE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ราคาเบื้องต้นถูกแก้ไขโดยผู้อื่น</value></data>

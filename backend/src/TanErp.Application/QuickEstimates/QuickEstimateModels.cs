@@ -138,7 +138,8 @@ public sealed record CalculationProjection(
     string InputHash,
     IReadOnlyList<CalculationLineProjection> Lines,
     QePerson CreatedBy,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    Guid? BranchOverrideId = null);
 
 public sealed record ReviewProjection(
     Guid Id,
