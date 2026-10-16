@@ -634,6 +634,7 @@ public class QuickEstimateStore : IQuickEstimateStore
     public async Task<PagedQuickEstimates> ListQuickEstimatesAsync(Guid organizationId, QuickEstimateListQuery query, CancellationToken ct = default)
     {
         var estimates = _db.QuickEstimates.AsNoTracking().Where(e => e.OrganizationId == organizationId);
+        if (query.BranchId is not null) estimates = estimates.Where(e => e.BranchId == query.BranchId);
         if (query.Status is not null) estimates = estimates.Where(e => e.Status == query.Status);
         if (query.Search is not null)
         {

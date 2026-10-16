@@ -196,7 +196,7 @@ public sealed record QuickEstimateListItemProjection(
     string? ShareDecision,
     DateTimeOffset UpdatedAtUtc);
 
-public sealed record QuickEstimateListQuery(string? Search, string? Status, int Page, int PageSize);
+public sealed record QuickEstimateListQuery(string? Search, string? Status, int Page, int PageSize, Guid? BranchId = null);
 
 public sealed record PagedQuickEstimates(IReadOnlyList<QuickEstimateListItemProjection> Items, int TotalCount, int Page, int PageSize);
 
