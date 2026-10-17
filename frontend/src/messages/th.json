@@ -3643,7 +3643,11 @@
       "QUICK_ESTIMATE_OPPORTUNITY_REQUIRED": "ต้องผูกใบประเมินกับโอกาสขายก่อนแปลง",
       "QUICK_ESTIMATE_REASON_REQUIRED": "ต้องระบุรหัสเหตุผล",
       "QUICK_ESTIMATE_FIELD_REQUIRED": "ขาดข้อมูลที่จำเป็น",
-      "QUICK_ESTIMATE_FIELD_INVALID": "ค่าของข้อมูลไม่ถูกต้อง"
+      "QUICK_ESTIMATE_FIELD_INVALID": "ค่าของข้อมูลไม่ถูกต้อง",
+      "BRANCH_OVERRIDE_INVALID": "ตรวจอัตรา ช่วงวันที่ (ไม่เกิน 366 วัน และต้องไม่สิ้นสุดก่อนวันนี้) และเหตุผลอีกครั้ง",
+      "BRANCH_OVERRIDE_OVERLAP": "สาขานี้มีคำขอหรือราคาเฉพาะสาขาของแม่แบบนี้ในช่วงเวลาดังกล่าวอยู่แล้ว",
+      "BRANCH_OVERRIDE_INVALID_STATE": "สถานะปัจจุบันของราคาเฉพาะสาขาไม่อนุญาตให้ทำรายการนี้",
+      "BRANCH_OVERRIDE_SELF_APPROVAL": "ผู้ขอตัดสินคำขอของตนเองไม่ได้"
     },
     "templates": {
       "title": "แม่แบบราคา",
@@ -3848,7 +3852,7 @@
       "conversionLine": "แปลงเวอร์ชัน {version} แล้ว",
       "openEstimate": "เปิดใบประเมินทางการ",
       "convertTitle": "แปลงเป็นใบประเมินทางการ",
-      "convertDescription": "สร้างร่างใบประเมินทางการเปล่า สแนปช็อตของใบประเมินเบื้องต้นถูกเก็บเป็นข้อมูลอ้างอิง",
+      "convertDescription": "สร้างร่างใบประเมินทางการที่มีรายการขอบเขตตามเส้นวัดแต่ละเส้น ไม่คัดลอกราคาหรือต้นทุน ผู้ประเมินต้องเติมต้นทุนและคำนวณใหม่",
       "approveTitle": "อนุมัติใบประเมินเบื้องต้นนี้หรือไม่",
       "returnTitle": "ส่งใบประเมินเบื้องต้นนี้กลับหรือไม่",
       "decisionDescription": "ต้องระบุรหัสเหตุผล",
@@ -3865,7 +3869,21 @@
       "reasonCodePlaceholder": "เช่น SITE_SURVEY_BASE",
       "widthMPlaceholder": "0.00",
       "heightMPlaceholder": "0.00",
-      "depthMPlaceholder": "0.00"
+      "depthMPlaceholder": "0.00",
+      "conversionLines": "สร้างรายการขอบเขต {count} รายการ",
+      "branchOverrideApplied": "การคำนวณนี้ใช้ราคาเฉพาะสาขา"
+    },
+    "overrides": {
+      "title": "ราคาเฉพาะสาขา (Branch Rate Override)", "subtitle": "อัตราเฉพาะสาขาตามช่วงเวลา ต้องมีผู้อนุมัติอิสระ และไม่แก้อัตรามาตรฐาน", "open": "ราคาเฉพาะสาขา",
+      "loadError": "โหลดรายการราคาเฉพาะสาขาไม่สำเร็จ", "empty": "ยังไม่มีราคาเฉพาะสาขา", "request": "ขอราคาเฉพาะสาขา",
+      "requestTitle": "ขอราคาเฉพาะสาขา", "referenceRate": "ราคาอ้างอิง", "minimumCharge": "ราคาขั้นต่ำ",
+      "effectiveFrom": "มีผลตั้งแต่", "effectiveTo": "มีผลถึง", "reasonCode": "รหัสเหตุผล",
+      "reasonDetail": "รายละเอียดเหตุผล", "sourceReference": "เอกสารอ้างอิง", "period": "{from} ถึง {to}",
+      "requestedBy": "ขอโดย {name}", "fieldInvalid": "กรุณาตรวจสอบค่านี้",
+      "statuses": { "requested": "รออนุมัติ", "approved": "อนุมัติแล้ว", "returned": "ส่งกลับ", "revoked": "เพิกถอน" },
+      "approve": "อนุมัติ", "return": "ส่งกลับ", "revoke": "เพิกถอน",
+      "approveTitle": "อนุมัติราคาเฉพาะสาขานี้หรือไม่", "returnTitle": "ส่งราคาเฉพาะสาขานี้กลับหรือไม่", "revokeTitle": "เพิกถอนราคาเฉพาะสาขานี้หรือไม่",
+      "note": "หมายเหตุ", "reasonRequired": "กรอกเหตุผล", "done": "บันทึกแล้ว"
     }
   },
   "richText": {

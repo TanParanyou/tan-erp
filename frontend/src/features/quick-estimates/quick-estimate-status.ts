@@ -46,7 +46,23 @@ export function isShareReason(value: string | null | undefined): value is ShareR
   return SHARE_REASONS.some((reason) => reason === value);
 }
 
+export const OVERRIDE_STATUSES = ["requested", "approved", "returned", "revoked"] as const;
+export type OverrideStatusValue = (typeof OVERRIDE_STATUSES)[number];
+export function isOverrideStatus(value: string | null | undefined): value is OverrideStatusValue {
+  return OVERRIDE_STATUSES.some((status) => status === value);
+}
+
 export type QuickEstimateBadgeVariant = "success" | "warning" | "danger" | "info" | "neutral";
+
+export function overrideStatusVariant(status: string | null | undefined): QuickEstimateBadgeVariant {
+  switch (status) {
+    case "approved": return "success";
+    case "requested": return "warning";
+    case "returned":
+    case "revoked": return "danger";
+    default: return "neutral";
+  }
+}
 
 export function templateStatusVariant(status: string | null | undefined): QuickEstimateBadgeVariant {
   switch (status) {
@@ -87,6 +103,10 @@ const KNOWN_ERROR_CODES = [
   "PRICING_TEMPLATE_INVALID_STATE",
   "PRICING_TEMPLATE_NOT_USABLE",
   "PRICING_TEMPLATE_SELF_APPROVAL",
+  "BRANCH_OVERRIDE_INVALID",
+  "BRANCH_OVERRIDE_OVERLAP",
+  "BRANCH_OVERRIDE_INVALID_STATE",
+  "BRANCH_OVERRIDE_SELF_APPROVAL",
   "QUICK_ESTIMATE_VERSION_CONFLICT",
   "QUICK_ESTIMATE_INVALID_STATE",
   "QUICK_ESTIMATE_STALE_VERSION",

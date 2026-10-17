@@ -61,9 +61,11 @@ public static class QuickEstimateEngine
         _ => Array.Empty<string>()
     };
 
-    public static CalculationResult Calculate(PricingTemplate template, QuickEstimateInput input, DateOnly today)
+    public static CalculationResult Calculate(PricingTemplate template, QuickEstimateInput input, DateOnly today, RateOverride? rateOverride = null)
     {
         var config = template.Config;
+        var referenceRate = rateOverride?.ReferenceRate ?? template.ReferenceRate;
+        var minimumCharge = rateOverride?.MinimumCharge ?? template.MinimumCharge;
         var missing = new List<string>();
         if (string.IsNullOrWhiteSpace(input.PropertyType)) missing.Add("propertyType");
         if (string.IsNullOrWhiteSpace(input.RoomOrArea)) missing.Add("roomOrArea");
@@ -98,14 +100,14 @@ public static class QuickEstimateEngine
                 MeasurementRule.Volume => line.WidthM!.Value * line.HeightM!.Value * line.DepthM!.Value * line.Quantity,
                 _ => line.Quantity
             };
-            var baseAmount = billable * template.ReferenceRate;
+            var baseAmount = billable * referenceRate;
             var perLineAddOns = addOns.Where(a => a.PerLine).Sum(a => a.Amount) * line.Quantity;
             var adjusted = baseAmount * grade.Factor * complexityFactor + perLineAddOns;
             lineResults.Add(new EstimateLineResult(line.LineId, line.WorkSubtype, decimal.Round(billable, 4), Round2(baseAmount), Round2(adjusted)));
         }
 
         var adjustedTotal = lineResults.Sum(l => l.AdjustedAmount) + addOns.Where(a => !a.PerLine).Sum(a => a.Amount);
-        var net = Round2(Math.Max(adjustedTotal, template.MinimumCharge));
+        var net = Round2(Math.Max(adjustedTotal, minimumCharge));
 
         var riskParts = new List<RiskPart> { new("BASE", template.BaseRangeRate) };
         if (input.MeasurementConfidence == MeasurementConfidence.Low) riskParts.Add(new RiskPart("MEASUREMENT_CONFIDENCE_LOW", config.LowConfidenceModifier));
@@ -149,6 +151,17 @@ public static class QuickEstimateEngine
             reasons
         };
         var snapshotJson = JsonSerializer.Serialize(snapshot, Json);
+        if (rateOverride is not null)
+        {
+            // Only an applied override adds this node, so snapshots without one are unchanged.
+            var node = System.Text.Json.Nodes.JsonNode.Parse(snapshotJson)!.AsObject();
+            node["branchOverride"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["id"] = rateOverride.Id, ["referenceRate"] = rateOverride.ReferenceRate, ["minimumCharge"] = rateOverride.MinimumCharge,
+                ["standardReferenceRate"] = template.ReferenceRate, ["standardMinimumCharge"] = template.MinimumCharge
+            };
+            snapshotJson = node.ToJsonString(Json);
+        }
         // The input hash identifies what was priced (template version + inputs), not when, so repeating a calculation is detectable.
         var canonicalInput = JsonSerializer.Serialize(new
         {
@@ -163,8 +176,9 @@ public static class QuickEstimateEngine
             input.CustomMaterial,
             measurements = input.Measurements.OrderBy(m => m.LineId)
         }, Json);
+        if (rateOverride is not null) canonicalInput += FormattableString.Invariant($"|override:{rateOverride.Id:N}:{rateOverride.ReferenceRate}:{rateOverride.MinimumCharge}");
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonicalInput))).ToLowerInvariant();
-        return new CalculationResult(lineResults, Round2(adjustedTotal), template.MinimumCharge, net, taxAmount, risk, riskParts, Round2(rawLower), Round2(rawUpper), displayLower, displayUpper, validUntil, decision, reasons, hash, snapshotJson);
+        return new CalculationResult(lineResults, Round2(adjustedTotal), minimumCharge, net, taxAmount, risk, riskParts, Round2(rawLower), Round2(rawUpper), displayLower, displayUpper, validUntil, decision, reasons, hash, snapshotJson);
     }
 }
 

@@ -31,6 +31,15 @@ public class QuickEstimateHandler
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
 
+    /// <summary>Hides a quick estimate that belongs to another branch the actor cannot reach, the same way a missing one is hidden.</summary>
+    private async Task<Result<T>?> DenyOutsideBranchAsync<T>(RequestAccessContext access, Guid id, CancellationToken ct)
+    {
+        var estimate = await _store.GetQuickEstimateAsync(access.OrganizationId, id, ct);
+        return estimate is null || !access.HasBranchAccess(estimate.BranchId)
+            ? Fail<T>("RESOURCE_NOT_FOUND", "Quick estimate not found.")
+            : null;
+    }
+
     private static (int Page, int PageSize) Paging(int page, int pageSize) =>
         (Math.Max(1, page), pageSize <= 0 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize));
 
@@ -138,6 +147,7 @@ public class QuickEstimateHandler
     {
         var access = await AccessAsync(caller, "quick-estimates.update", ct);
         if (access.IsFailure) return Result<QuickEstimateProjection>.Failure(access.Error);
+        if (await DenyOutsideBranchAsync<QuickEstimateProjection>(access.Value!, id, ct) is { } denied) return denied;
         if (expectedVersion == Guid.Empty) return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_FIELD_REQUIRED", "Expected version is required.");
         if (patch is null) return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_FIELD_INVALID", "A patch body is required.");
         return await _store.PatchDraftAsync(access.Value!, id, expectedVersion, patch, caller.TraceId, ct);
@@ -147,6 +157,7 @@ public class QuickEstimateHandler
     {
         var access = await AccessAsync(caller, "quick-estimates.update", ct);
         if (access.IsFailure) return Result<QuickEstimateProjection>.Failure(access.Error);
+        if (await DenyOutsideBranchAsync<QuickEstimateProjection>(access.Value!, id, ct) is { } denied) return denied;
         if (expectedVersion == Guid.Empty) return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_FIELD_REQUIRED", "Expected version is required.");
         return await _store.CalculateAsync(access.Value!, id, expectedVersion, caller.TraceId, ct);
     }
@@ -155,6 +166,7 @@ public class QuickEstimateHandler
     {
         var access = await AccessAsync(caller, "quick-estimates.update", ct);
         if (access.IsFailure) return Result<QuickEstimateProjection>.Failure(access.Error);
+        if (await DenyOutsideBranchAsync<QuickEstimateProjection>(access.Value!, id, ct) is { } denied) return denied;
         if (note is { Length: > 500 }) return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_FIELD_INVALID", "The note cannot exceed 500 characters.");
         return await _store.SubmitReviewAsync(access.Value!, id, sourceVersion, Clean(note), caller.TraceId, ct);
     }
@@ -163,6 +175,7 @@ public class QuickEstimateHandler
     {
         var access = await AccessAsync(caller, "quick-estimates.review", ct);
         if (access.IsFailure) return Result<QuickEstimateProjection>.Failure(access.Error);
+        if (await DenyOutsideBranchAsync<QuickEstimateProjection>(access.Value!, id, ct) is { } denied) return denied;
         if (decision is not ("approved" or "returned")) return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_FIELD_INVALID", "The decision must be approved or returned.");
         if (string.IsNullOrWhiteSpace(reasonCode)) return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_REASON_REQUIRED", "A reason code is required.");
         if (note is { Length: > 500 }) return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_FIELD_INVALID", "The note cannot exceed 500 characters.");
@@ -173,6 +186,7 @@ public class QuickEstimateHandler
     {
         var access = await AccessAsync(caller, "quick-estimates.share", ct);
         if (access.IsFailure) return Result<QuickEstimateProjection>.Failure(access.Error);
+        if (await DenyOutsideBranchAsync<QuickEstimateProjection>(access.Value!, id, ct) is { } denied) return denied;
         if (input is null || !Channels.Contains(input.Channel ?? string.Empty) || !Locales.Contains(input.Locale ?? string.Empty) || input.Recipient is { Length: > 200 })
         {
             return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_FIELD_INVALID", "A valid channel, locale and recipient are required.");
@@ -188,6 +202,7 @@ public class QuickEstimateHandler
         if (access.IsFailure) return Result<QuickEstimateProjection>.Failure(access.Error);
         var estimates = await AccessAsync(caller, "estimates.create", ct);
         if (estimates.IsFailure) return Result<QuickEstimateProjection>.Failure(estimates.Error);
+        if (await DenyOutsideBranchAsync<QuickEstimateProjection>(access.Value!, id, ct) is { } denied) return denied;
         if (input is null || input.SiteSurveyRevisionId == Guid.Empty) return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_FIELD_REQUIRED", "A site survey revision is required to start an official estimate.");
         var payloadHash = Sha256Hex.Compute($"{id}|{input.SourceVersion}|{input.SiteSurveyRevisionId}");
         return await _store.ConvertAsync(access.Value!, id, input, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
@@ -197,6 +212,7 @@ public class QuickEstimateHandler
     {
         var access = await AccessAsync(caller, "quick-estimates.read", ct);
         if (access.IsFailure) return Result<QuickEstimateProjection>.Failure(access.Error);
+        if (await DenyOutsideBranchAsync<QuickEstimateProjection>(access.Value!, id, ct) is { } denied) return denied;
         var estimate = await _store.GetQuickEstimateAsync(access.Value!.OrganizationId, id, ct);
         return estimate is null ? Fail<QuickEstimateProjection>("RESOURCE_NOT_FOUND", "Quick estimate not found.") : Result<QuickEstimateProjection>.Success(estimate);
     }
@@ -206,6 +222,7 @@ public class QuickEstimateHandler
     {
         var access = await AccessAsync(caller, "quick-estimates.review", ct);
         if (access.IsFailure) return Result<string>.Failure(access.Error);
+        if (await DenyOutsideBranchAsync<string>(access.Value!, id, ct) is { } denied) return denied;
         var snapshot = await _store.GetCalculationSnapshotAsync(access.Value!.OrganizationId, id, version, ct);
         return snapshot is null ? Fail<string>("RESOURCE_NOT_FOUND", "Calculation not found.") : Result<string>.Success(snapshot);
     }
@@ -216,6 +233,6 @@ public class QuickEstimateHandler
         if (access.IsFailure) return Result<PagedQuickEstimates>.Failure(access.Error);
         if (!string.IsNullOrWhiteSpace(status) && !QuickEstimateStatus.All.Contains(status.Trim())) return Fail<PagedQuickEstimates>("QUICK_ESTIMATE_FIELD_INVALID", "The status filter is invalid.");
         var (p, size) = Paging(page, pageSize);
-        return Result<PagedQuickEstimates>.Success(await _store.ListQuickEstimatesAsync(access.Value!.OrganizationId, new QuickEstimateListQuery(Clean(search), Clean(status), p, size), ct));
+        return Result<PagedQuickEstimates>.Success(await _store.ListQuickEstimatesAsync(access.Value!.OrganizationId, new QuickEstimateListQuery(Clean(search), Clean(status), p, size, access.Value!.BranchId), ct));
     }
 }

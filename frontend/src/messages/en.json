@@ -3643,7 +3643,11 @@
       "QUICK_ESTIMATE_OPPORTUNITY_REQUIRED": "Link the quick estimate to an opportunity before converting.",
       "QUICK_ESTIMATE_REASON_REQUIRED": "A reason code is required.",
       "QUICK_ESTIMATE_FIELD_REQUIRED": "A required field is missing.",
-      "QUICK_ESTIMATE_FIELD_INVALID": "A field value is invalid."
+      "QUICK_ESTIMATE_FIELD_INVALID": "A field value is invalid.",
+      "BRANCH_OVERRIDE_INVALID": "Check the rate, the period (at most 366 days, not ending before today) and the reason.",
+      "BRANCH_OVERRIDE_OVERLAP": "This branch already has an override request or override for this template in that period.",
+      "BRANCH_OVERRIDE_INVALID_STATE": "The current status of the override does not allow this action.",
+      "BRANCH_OVERRIDE_SELF_APPROVAL": "You cannot decide an override request you made."
     },
     "templates": {
       "title": "Pricing templates",
@@ -3848,7 +3852,7 @@
       "conversionLine": "Converted version {version}.",
       "openEstimate": "Open official estimate",
       "convertTitle": "Convert to official estimate",
-      "convertDescription": "Creates an empty official estimate draft. The quick estimate snapshot is kept as the source reference.",
+      "convertDescription": "Creates an official estimate draft with one scope line per measurement line. No price or cost is copied; the estimator adds costs and calculates the estimate anew.",
       "approveTitle": "Approve this quick estimate?",
       "returnTitle": "Return this quick estimate?",
       "decisionDescription": "A reason code is required.",
@@ -3865,7 +3869,21 @@
       "reasonCodePlaceholder": "e.g. SITE_SURVEY_BASE",
       "widthMPlaceholder": "0.00",
       "heightMPlaceholder": "0.00",
-      "depthMPlaceholder": "0.00"
+      "depthMPlaceholder": "0.00",
+      "conversionLines": "{count} scope line(s) created.",
+      "branchOverrideApplied": "A branch rate override was applied to this calculation."
+    },
+    "overrides": {
+      "title": "Branch rate overrides", "subtitle": "A branch-specific rate for a limited period. It needs an independent approver and never changes the standard rate.", "open": "Branch overrides",
+      "loadError": "Could not load branch overrides.", "empty": "No branch overrides yet", "request": "Request override",
+      "requestTitle": "Request a branch rate override", "referenceRate": "Reference rate", "minimumCharge": "Minimum charge",
+      "effectiveFrom": "Effective from", "effectiveTo": "Effective to", "reasonCode": "Reason code",
+      "reasonDetail": "Reason detail", "sourceReference": "Source reference", "period": "{from} to {to}",
+      "requestedBy": "Requested by {name}", "fieldInvalid": "Check this value.",
+      "statuses": { "requested": "Awaiting approval", "approved": "Approved", "returned": "Returned", "revoked": "Revoked" },
+      "approve": "Approve", "return": "Return", "revoke": "Revoke",
+      "approveTitle": "Approve this override?", "returnTitle": "Return this override?", "revokeTitle": "Revoke this override?",
+      "note": "Note", "reasonRequired": "Enter a reason.", "done": "Saved."
     }
   },
   "richText": {

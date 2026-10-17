@@ -95,6 +95,7 @@
 | Quick Estimate | `pricing-templates.read` | ดูแม่แบบราคา | Organization |
 | Quick Estimate | `pricing-templates.manage` | สร้าง/แก้/ส่งอนุมัติ/สร้างเวอร์ชันใหม่ของแม่แบบราคา | Organization |
 | Quick Estimate | `pricing-templates.approve` | อนุมัติ/ส่งกลับ/ปรับเทียบ/เปิดใช้/ปิดใช้แม่แบบราคา (ห้ามอนุมัติของตัวเอง) | Organization |
+| Quick Estimate | `pricing-templates.override-rate` | ขอ Branch Rate Override ของแม่แบบ (สาขาของ Membership); ผู้อนุมัติ/เพิกถอนใช้ `pricing-templates.approve` | Organization |
 | Quick Estimate | `quick-estimates.create` | เริ่มใบประเมินเบื้องต้น | Organization |
 | Quick Estimate | `quick-estimates.read` | ดูใบประเมินเบื้องต้น | Organization |
 | Quick Estimate | `quick-estimates.update` | แก้ฉบับร่างและคำนวณ | Organization |

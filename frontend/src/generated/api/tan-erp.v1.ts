@@ -3180,6 +3180,309 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pricing-templates/{templateId}/branch-rate-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchRateOverrideListResponse"];
+                        "application/json": components["schemas"]["BranchRateOverrideListResponse"];
+                        "text/json": components["schemas"]["BranchRateOverrideListResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BranchRateOverrideRequest"];
+                    "text/json": components["schemas"]["BranchRateOverrideRequest"];
+                    "application/*+json": components["schemas"]["BranchRateOverrideRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchRateOverrideResponse"];
+                        "application/json": components["schemas"]["BranchRateOverrideResponse"];
+                        "text/json": components["schemas"]["BranchRateOverrideResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{templateId}/branch-rate-overrides/{overrideId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: string;
+                    overrideId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BranchRateOverrideDecisionRequest"];
+                    "text/json": components["schemas"]["BranchRateOverrideDecisionRequest"];
+                    "application/*+json": components["schemas"]["BranchRateOverrideDecisionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchRateOverrideResponse"];
+                        "application/json": components["schemas"]["BranchRateOverrideResponse"];
+                        "text/json": components["schemas"]["BranchRateOverrideResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pricing-templates/{templateId}/branch-rate-overrides/{overrideId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: string;
+                    overrideId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BranchRateOverrideRevokeRequest"];
+                    "text/json": components["schemas"]["BranchRateOverrideRevokeRequest"];
+                    "application/*+json": components["schemas"]["BranchRateOverrideRevokeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BranchRateOverrideResponse"];
+                        "application/json": components["schemas"]["BranchRateOverrideResponse"];
+                        "text/json": components["schemas"]["BranchRateOverrideResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/items/{itemId}/costs": {
         parameters: {
             query?: never;
@@ -21037,6 +21340,59 @@ export interface components {
             id?: string;
             name?: string | null;
         };
+        BranchRateOverrideDecisionRequest: {
+            decision?: string | null;
+            note?: string | null;
+        };
+        BranchRateOverrideListResponse: {
+            items?: components["schemas"]["BranchRateOverrideResponse"][] | null;
+        };
+        BranchRateOverrideRequest: {
+            /** Format: double */
+            referenceRate?: number;
+            /** Format: double */
+            minimumCharge?: number;
+            /** Format: date */
+            effectiveFrom?: string;
+            /** Format: date */
+            effectiveTo?: string;
+            reasonCode?: string | null;
+            reasonDetail?: string | null;
+            sourceReference?: string | null;
+        };
+        BranchRateOverrideResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            templateId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            branchCode?: string | null;
+            status?: string | null;
+            /** Format: double */
+            referenceRate?: number;
+            /** Format: double */
+            minimumCharge?: number;
+            /** Format: date */
+            effectiveFrom?: string;
+            /** Format: date */
+            effectiveTo?: string;
+            reasonCode?: string | null;
+            reasonDetail?: string | null;
+            sourceReference?: string | null;
+            requestedBy?: components["schemas"]["QePersonResponse"];
+            /** Format: date-time */
+            requestedAtUtc?: string;
+            decidedBy?: components["schemas"]["QePersonResponse"];
+            /** Format: date-time */
+            decidedAtUtc?: string | null;
+            decisionNote?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
+        BranchRateOverrideRevokeRequest: {
+            reason?: string | null;
+        };
         BranchResponse: {
             /** Format: uuid */
             id?: string;
@@ -21110,6 +21466,8 @@ export interface components {
             createdBy?: components["schemas"]["QePersonResponse"];
             /** Format: date-time */
             createdAtUtc?: string;
+            /** Format: uuid */
+            branchOverrideId?: string | null;
         };
         CalculationSnapshotResponse: {
             /** Format: int32 */
@@ -21300,6 +21658,8 @@ export interface components {
             officialEstimateId?: string;
             /** Format: date-time */
             createdAtUtc?: string;
+            /** Format: int32 */
+            mappedLineCount?: number | null;
         };
         CostRecordResponse: {
             /** Format: uuid */

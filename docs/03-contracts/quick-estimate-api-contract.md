@@ -193,7 +193,11 @@ Idempotency-Key: c4986ca7-c535-40d7-87ba-6c22694f6ca6
 }
 ```
 
-Conversion คัดลอก Scope/Measurement/Assumption เป็น Source Snapshot แต่ต้องคำนวณ Official Estimate ใหม่ ไม่ใช้ค่ากลางของ Price Range เป็นราคาขาย
+Conversion คัดลอก Scope/Measurement/Assumption เป็น Source Snapshot และสร้างร่าง Official Estimate ที่มี **รายการขอบเขต** (1 section ชื่อ = `roomOrArea`; 1 work item ต่อเส้นวัด: ปริมาณ = `billableQuantity`, หน่วย = `unitCode` ของแม่แบบ, ไม่มี cost/ราคา) แต่ต้องเติมต้นทุนและคำนวณ Official Estimate ใหม่ ไม่ใช้ค่ากลางของ Price Range เป็นราคาขาย. เติมเฉพาะร่างที่ว่างจริง (Opportunity ที่มี Estimate ที่มีงานแล้ว → ผูกกับของเดิมโดยไม่แตะรายการ); response มี `mappedLineCount`; ใบที่แปลงก่อน G-09 ไม่ถูก backfill.
+
+## Branch Rate Override (G-09)
+
+Base `/api/v1/pricing-templates/{templateId}/branch-rate-overrides` (ต้อง `Authorization` + `X-Membership-Id`): `POST` + `Idempotency-Key` (`pricing-templates.override-rate`; body `{referenceRate, minimumCharge, effectiveFrom, effectiveTo, reasonCode, reasonDetail, sourceReference?}`; สาขา = สาขาของ Membership ไม่รับ `branchId`; template ต้อง `calibration`/`active`) → 201; `GET` (`pricing-templates.read`; Membership ผูกสาขาเห็นเฉพาะสาขาตน); `POST {id}/decision` + `If-Match` (`pricing-templates.approve`; `{decision: approved|returned, note}`; ผู้ขอตัดสินเองไม่ได้); `POST {id}/revoke` + `If-Match` (`pricing-templates.approve`; `{reason}` บังคับ; เฉพาะ `approved`). สถานะ `requested → approved | returned`, `approved → revoked`. ช่วง ≤ 366 วัน, `effectiveTo` ≥ วันนี้, ห้ามซ้อนกับ `requested`/`approved` ของสาขา+template เดียวกัน. Calculate ใช้ override ที่ `approved` ในช่วงวันที่ของ **สาขาของใบประเมิน**; ผลบันทึก `branchOverride` ใน snapshot และ `CalculationResponse.branchOverrideId`. นอกสาขา/องค์กร = `404 RESOURCE_NOT_FOUND`. Error: `403 BRANCH_OVERRIDE_SELF_APPROVAL`; `409 BRANCH_OVERRIDE_OVERLAP`, `BRANCH_OVERRIDE_INVALID_STATE`, `PRICING_TEMPLATE_NOT_USABLE`, `PRICING_TEMPLATE_VERSION_CONFLICT`; `422 BRANCH_OVERRIDE_INVALID`, `QUICK_ESTIMATE_REASON_REQUIRED`, `ACTIVE_BRANCH_REQUIRED`.
 
 ## Effective Template Query
 
@@ -245,8 +249,8 @@ Implement แล้ว: Pricing Template (สร้าง/แก้ฉบับ�
 
 ส่วนต่างจากเอกสารทิศทางข้างต้น (ยังไม่ทำ):
 
-- ไม่มี Branch override, promotion, manual override ของราคา และไม่มีการแนบหลักฐาน/อัปโหลดรูป
+- ไม่มี promotion และ manual override ของราคา; Branch override ทำเฉพาะ `referenceRate`/`minimumCharge`; หลักฐานรูปแนบผ่าน Shared Attachment (owner `quick-estimate`, ดู [Attachment Contract](attachment-api-contract.md))
 - Share รองรับเฉพาะช่องทาง `onscreen` (ไม่ส่งออกภายนอก)
-- Conversion สร้าง **ร่าง Official Estimate เปล่า** และเก็บ snapshot ของ Quick Estimate ใน `quick_estimate_conversions` เป็นอ้างอิงต้นทาง ไม่คัดลอกรายการเข้า Estimate; ต้องระบุ Site Survey Revision
+- Conversion สร้างร่าง Official Estimate ที่มีรายการขอบเขตต่อเส้นวัด (ไม่มีต้นทุน/ราคา — แม่แบบไม่มี mapping ไป Item) และเก็บ snapshot ใน `quick_estimate_conversions`; ต้องระบุ Site Survey Revision
 - ไม่มี mobile capture/offline; ฝั่งเว็บเป็นหน้าฟอร์มปกติ
 - ทุกอัตรา/ตัวคูณ/ช่วงราคา/เพดานแชร์เป็นข้อมูลแม่แบบที่ธุรกิจกรอกเอง ระบบไม่มีค่าตั้งต้น; กฎการตัดสินใจแชร์ (วัสดุพิเศษ, แม่แบบปรับเทียบ, ความมั่นใจต่ำ, ช่วงถึงสูงสุด, เกินเพดาน) เป็นกฎที่ทีมพัฒนาเลือก รอ Sales/Cost Owner ยืนยัน

@@ -61,6 +61,9 @@ _Avoid_: Quotation Template, Free-form Formula
 **Pricing Template Version (รุ่นแม่แบบประเมินราคา)**:
 ฉบับที่มีผลตามช่วงเวลาและไม่แก้ย้อนหลังหลังเผยแพร่ เพื่อให้ Quick Estimate คำนวณซ้ำจากกฎเดิมได้
 _Avoid_: Draft Template, Current Settings
+**Branch Rate Override (ราคาเฉพาะสาขา)**:
+อัตราอ้างอิง/ราคาขั้นต่ำเฉพาะสาขาของ Pricing Template Version หนึ่งในช่วงวันที่ที่กำหนด ต้องผ่านผู้อนุมัติอิสระ ไม่แก้อัตรามาตรฐาน และหมดผลเมื่อพ้นช่วงเวลาหรือแม่แบบเปลี่ยนรุ่น
+_Avoid_: Branch Template, Discount
 
 **Reference Rate (ราคาอ้างอิง)**:
 ราคาฐานที่มีแหล่งที่มาและช่วงเวลามีผล ใช้เป็นข้อมูลคำนวณ Quick Estimate แต่ไม่ใช่ต้นทุนจริงของ Official Estimate

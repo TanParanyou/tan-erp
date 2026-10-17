@@ -89,6 +89,7 @@ export const PERMISSIONS = {
   PRICING_TEMPLATES_READ: "pricing-templates.read",
   PRICING_TEMPLATES_MANAGE: "pricing-templates.manage",
   PRICING_TEMPLATES_APPROVE: "pricing-templates.approve",
+  PRICING_TEMPLATES_OVERRIDE_RATE: "pricing-templates.override-rate",
   QUICK_ESTIMATES_CREATE: "quick-estimates.create",
   QUICK_ESTIMATES_READ: "quick-estimates.read",
   QUICK_ESTIMATES_UPDATE: "quick-estimates.update",
