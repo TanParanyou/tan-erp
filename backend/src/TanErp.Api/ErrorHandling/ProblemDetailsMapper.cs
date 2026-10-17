@@ -84,6 +84,8 @@ public static class ProblemDetailsMapper
         "ESTIMATE_READINESS_BLOCKED" => StatusCodes.Status422UnprocessableEntity,
         "ESTIMATE_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "ESTIMATE_UNIT_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "ESTIMATE_UNIT_CONVERSION_NOT_FOUND" => StatusCodes.Status422UnprocessableEntity,
+        "ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH" => StatusCodes.Status422UnprocessableEntity,
         "ESTIMATE_COST_INCOMPLETE" => StatusCodes.Status422UnprocessableEntity,
         "ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "ESTIMATE_CALCULATION_OUTDATED" => StatusCodes.Status409Conflict,

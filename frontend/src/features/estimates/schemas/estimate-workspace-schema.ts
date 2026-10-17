@@ -15,6 +15,15 @@ export const costComponentSchema = z.object({
   provisionalReasonCode: z.string().nullable().optional(),
   provisionalNote: z.string().nullable().optional(),
   isProvisional: z.boolean().optional(),
+  /** Base-unit cost from the catalog/saved snapshot; the unit picker derives unitCost = baseUnitCost x factor from it. */
+  baseUnitCost: z.number().nullable().optional(),
+  conversion: z.object({
+    conversionId: z.string(),
+    scope: z.string(),
+    fromUnit: z.string(),
+    toUnit: z.string(),
+    factor: z.string(),
+  }).nullable().optional(),
 });
 
 export type CostComponentFormData = z.infer<typeof costComponentSchema>;

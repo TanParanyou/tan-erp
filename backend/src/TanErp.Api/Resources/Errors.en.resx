@@ -293,6 +293,10 @@
   <data name="ESTIMATE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>At least one section is required, and each section must contain an estimate work item.</value></data>
   <data name="ESTIMATE_UNIT_INVALID_TITLE" xml:space="preserve"><value>Cost unit does not match the item's base unit</value></data>
   <data name="ESTIMATE_UNIT_INVALID_DETAIL" xml:space="preserve"><value>Select the item's base unit or use a cost record published in that base unit.</value></data>
+  <data name="ESTIMATE_UNIT_CONVERSION_NOT_FOUND_TITLE" xml:space="preserve"><value>Unit conversion not found</value></data>
+  <data name="ESTIMATE_UNIT_CONVERSION_NOT_FOUND_DETAIL" xml:space="preserve"><value>No active conversion exists today from the selected unit to the item's base unit. Ask the item data owner to add one, or choose the base unit.</value></data>
+  <data name="ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH_TITLE" xml:space="preserve"><value>Units of different dimensions cannot be converted</value></data>
+  <data name="ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH_DETAIL" xml:space="preserve"><value>The selected unit has a different dimension than the item's base unit, for example weight versus length. Choose a unit of the same dimension as the base unit.</value></data>
   <data name="ESTIMATE_COST_INCOMPLETE_TITLE" xml:space="preserve"><value>Work Item Has No Cost</value></data>
   <data name="ESTIMATE_COST_INCOMPLETE_DETAIL" xml:space="preserve"><value>Add at least one cost component to each work item before submitting.</value></data>
   <data name="ESTIMATE_PROVISIONAL_COST_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Provisional Cost Reason Required</value></data>

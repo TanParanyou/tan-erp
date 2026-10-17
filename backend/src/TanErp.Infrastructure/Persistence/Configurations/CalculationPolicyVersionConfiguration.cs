@@ -14,6 +14,7 @@ public sealed class CalculationPolicyVersionConfiguration : IEntityTypeConfigura
             table.HasCheckConstraint("ck_estimate_calculation_policy_status", "status IN ('draft', 'published', 'superseded', 'disabled')");
             table.HasCheckConstraint("ck_estimate_calculation_policy_period", "effective_to_utc IS NULL OR effective_to_utc > effective_from_utc");
             table.HasCheckConstraint("ck_estimate_calculation_policy_overhead", "overhead_value >= 0 AND (overhead_method <> 'percent-direct-cost' OR overhead_value <= 1)");
+            table.HasCheckConstraint("ck_estimate_calculation_policy_unit_conversion_mode", "unit_conversion_mode IN ('none', 'snapshot')");
         });
         builder.HasKey(row => row.Id);
         builder.HasAlternateKey(row => new { row.Id, row.OrganizationId });
@@ -32,6 +33,7 @@ public sealed class CalculationPolicyVersionConfiguration : IEntityTypeConfigura
         builder.Property(row => row.PublishedByUserId).HasColumnName("published_by_user_id");
         builder.Property(row => row.PublishedAtUtc).HasColumnName("published_at_utc");
         builder.Property(row => row.ContentHash).HasColumnName("content_hash").HasMaxLength(64);
+        builder.Property(row => row.UnitConversionMode).HasColumnName("unit_conversion_mode").HasMaxLength(16).HasDefaultValue("none").IsRequired();
         builder.HasIndex(row => new { row.OrganizationId, row.BranchId, row.PolicyCode, row.Version })
             .IsUnique().HasFilter("branch_id IS NOT NULL");
         builder.HasIndex(row => new { row.OrganizationId, row.PolicyCode, row.Version })

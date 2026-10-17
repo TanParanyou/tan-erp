@@ -35,7 +35,8 @@ public sealed record EstimateCostComponentResponse(
     string? CostRecordReasonSnapshot = null,
     string? ProvisionalReasonCode = null,
     string? ProvisionalNote = null,
-    bool IsProvisional = false);
+    bool IsProvisional = false,
+    EstimateConversionSnapshotResponse? ConversionSnapshot = null);
 
 public sealed record EstimateCalculationSnapshotResponse(
     Guid Id,
@@ -237,7 +238,8 @@ public sealed record EstimateDetailResponse(
                     c.CostRecordReasonSnapshot,
                     c.ProvisionalReasonCode,
                     c.ProvisionalNote,
-                    c.IsProvisional)).ToList(),
+                    c.IsProvisional,
+                    EstimateConversionSnapshotResponse.From(c.ConversionSnapshot))).ToList(),
                 w.ItemId.HasValue && w.ItemCodeSnapshot is not null && w.ItemNameThSnapshot is not null
                     ? new EstimateWorkItemItemResponse(w.ItemId.Value, w.ItemCodeSnapshot, w.ItemNameThSnapshot, w.ItemNameEnSnapshot)
                     : null,

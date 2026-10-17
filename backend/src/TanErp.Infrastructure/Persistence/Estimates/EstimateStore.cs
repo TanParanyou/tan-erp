@@ -33,6 +33,7 @@ public class EstimateStore : IEstimateStore
     private readonly INotificationPublisher _notifications;
     private readonly IApprovalAuthority _approvalAuthority;
     private readonly IQuotationDocumentWriter _documents;
+    private readonly IUnitConversionResolver _unitConversions;
 
     public EstimateStore(
         AppDbContext db,
@@ -43,8 +44,10 @@ public class EstimateStore : IEstimateStore
         ILogger<EstimateStore> logger,
         INotificationPublisher notifications,
         IApprovalAuthority approvalAuthority,
-        IQuotationDocumentWriter documents)
+        IQuotationDocumentWriter documents,
+        IUnitConversionResolver unitConversions)
     {
+        _unitConversions = unitConversions;
         _approvalAuthority = approvalAuthority;
         _documents = documents;
         _logger = logger;
@@ -345,6 +348,15 @@ public class EstimateStore : IEstimateStore
             if (revision.Status != EstimateRevisionStatus.Draft && revision.Status != EstimateRevisionStatus.Returned)
                 throw new EstimateInvalidStateException($"Cannot update estimate in status '{revision.Status}'.");
 
+            // Frozen conversions of the components about to be replaced. A posted ConversionId equal to a stored one keeps that snapshot
+            // unchanged, so a newer Item Master conversion version never silently re-prices a saved line.
+            var storedConversions = revision.Sections
+                .SelectMany(section => section.WorkItems)
+                .SelectMany(workItem => workItem.CostComponents)
+                .Where(component => component.ItemId.HasValue && component.ConversionSnapshot is not null)
+                .ToDictionary(component => component.Id, component => (ItemId: component.ItemId!.Value, Snapshot: component.ConversionSnapshot!));
+            bool? unitConversionsEnabled = null;
+
             // Remove existing relational structure
             if (revision.Sections.Count > 0)
             {
@@ -435,12 +447,25 @@ public class EstimateStore : IEstimateStore
                                 throw new ItemCostConflictException("ITEM_NOT_AVAILABLE", $"Item '{item.Code}' is not available in branch '{estimate.BranchId}'.");
                             }
 
-                            if (item.BaseUnit is null ||
-                                !string.Equals(cDto.UnitCode.Trim(), item.BaseUnit.NormalizedCode, StringComparison.OrdinalIgnoreCase))
+                            if (item.BaseUnit is null)
                             {
-                                throw new ItemCostConflictException("ESTIMATE_UNIT_INVALID",
-                                    $"Cost component unit '{cDto.UnitCode}' must match the catalog item's base unit '{item.BaseUnit?.Code ?? string.Empty}'.");
+                                throw new ItemCostConflictException("ESTIMATE_UNIT_INVALID", $"Item '{item.Code}' has no base unit.");
                             }
+
+                            EstimateConversionSnapshot? conversion = null;
+                            if (!string.Equals(cDto.UnitCode.Trim(), item.BaseUnit.NormalizedCode, StringComparison.OrdinalIgnoreCase))
+                            {
+                                unitConversionsEnabled ??= await IsUnitConversionEnabledAsync(_db, organizationId, estimate.BranchId, _clock.UtcNow, cancellationToken);
+                                var storedConversion = cDto.Id.HasValue && storedConversions.TryGetValue(cDto.Id.Value, out var previous) && previous.ItemId == item.Id
+                                    ? previous.Snapshot
+                                    : null;
+                                conversion = await ResolveConversionSnapshotAsync(
+                                    organizationId, item.Id, item.BaseUnit.Code, cDto.UnitCode, cDto.ConversionId, storedConversion,
+                                    unitConversionsEnabled.Value, cancellationToken);
+                            }
+
+                            // Cost tiers are published per base unit, so the tier is chosen with the quantity expressed in the base unit.
+                            var costQuantity = conversion is null ? cDto.Quantity : cDto.Quantity * conversion.Factor;
 
                             var resolveResult = await _costResolver.ResolveAsync(new ResolveCostRequest(
                                 organizationId,
@@ -448,7 +473,7 @@ public class EstimateStore : IEstimateStore
                                 item.Id,
                                 item.BaseUnitId,
                                 cDto.Currency ?? EstimateDefaults.DefaultCurrency,
-                                cDto.Quantity,
+                                costQuantity,
                                 _clock.UtcNow), cancellationToken);
 
                             if (resolveResult.IsFailure)
@@ -471,7 +496,8 @@ public class EstimateStore : IEstimateStore
                                     $"Cost record version mismatch for item '{item.Code}'. Expected v{cDto.CostRecordVersion.Value}, current is v{resolved.Version}.");
                             }
 
-                            if (cDto.UnitCost != resolved.Amount)
+                            // A converted line is priced by the server from the frozen factor; the posted unit cost is not an authority there.
+                            if (conversion is null && cDto.UnitCost != resolved.Amount)
                             {
                                 throw new ItemCostConflictException("ITEM_COST_VERSION_CONFLICT",
                                     $"Unit cost mismatch for item '{item.Code}'. Expected {cDto.UnitCost}, current resolved cost is {resolved.Amount}.");
@@ -497,6 +523,11 @@ public class EstimateStore : IEstimateStore
                                 resolved.SourceReference,
                                 resolved.EvidenceFileId,
                                 resolved.Reason);
+
+                            if (conversion is not null)
+                            {
+                                comp.SetConversionSnapshot(conversion);
+                            }
                         }
 
                         comp.SetProvisionalReason(cDto.ProvisionalReasonCode, cDto.ProvisionalNote);
@@ -1202,6 +1233,50 @@ public class EstimateStore : IEstimateStore
     }
 
     private sealed record ApprovalCandidate(Guid UserId, Guid MembershipId, string ScopeType, Guid ScopeId);
+
+    /// <summary>True when the policy effective for the branch applies frozen unit conversions (unit_conversion_mode = snapshot).</summary>
+    internal static async Task<bool> IsUnitConversionEnabledAsync(
+        AppDbContext db, Guid organizationId, Guid branchId, DateTimeOffset atUtc, CancellationToken cancellationToken)
+    {
+        var policy = await ResolvePolicyAsync(db.CalculationPolicyVersions, organizationId, branchId, atUtc, cancellationToken);
+        return policy is not null && policy.UnitConversionMode == UnitConversionModes.Snapshot;
+    }
+
+    /// <summary>
+    /// Decides the conversion snapshot of a converted line: keeps the stored one when the client echoes its id (unit unchanged), otherwise
+    /// freezes the conversion effective today. A policy without unit conversions keeps the legacy base-unit-only rule.
+    /// </summary>
+    private async Task<EstimateConversionSnapshot> ResolveConversionSnapshotAsync(
+        Guid organizationId, Guid itemId, string baseUnitCode, string unitCode, Guid? postedConversionId,
+        EstimateConversionSnapshot? stored, bool conversionsEnabled, CancellationToken cancellationToken)
+    {
+        if (!conversionsEnabled)
+        {
+            throw new ItemCostConflictException("ESTIMATE_UNIT_INVALID",
+                $"Cost component unit '{unitCode}' must match the catalog item's base unit '{baseUnitCode}'.");
+        }
+
+        if (stored is not null && postedConversionId == stored.ConversionId &&
+            string.Equals(stored.FromUnit, unitCode.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return stored;
+        }
+
+        var resolved = await _unitConversions.ResolveToBaseUnitAsync(
+            organizationId, itemId, unitCode, DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime), cancellationToken);
+        if (resolved.IsFailure)
+            throw new ItemCostConflictException(resolved.Error.Code, resolved.Error.Message);
+
+        var conversion = resolved.Value!;
+        if (postedConversionId.HasValue && postedConversionId.Value != conversion.ConversionId)
+        {
+            throw new ItemCostConflictException("ITEM_COST_VERSION_CONFLICT",
+                $"The unit conversion for '{unitCode}' changed. Re-select the unit.");
+        }
+
+        return EstimateConversionSnapshot.Create(
+            conversion.ConversionId, conversion.Scope, conversion.FromUnitCode, conversion.ToUnitCode, conversion.Factor);
+    }
 
     private static async Task<TPolicy?> ResolvePolicyAsync<TPolicy>(
         IQueryable<TPolicy> policies,
@@ -2112,7 +2187,8 @@ public class EstimateStore : IEstimateStore
                                 c.CostRecordReasonSnapshot,
                                 c.ProvisionalReasonCode,
                                 c.ProvisionalNote,
-                                c.IsProvisional))
+                                c.IsProvisional,
+                                EstimateConversionSnapshotProjection.From(c.ConversionSnapshot)))
                             .ToList(),
                         w.ItemId,
                         w.ItemCodeSnapshot,
@@ -2181,26 +2257,34 @@ public class EstimateStore : IEstimateStore
                     workItem.SellingRuleType,
                     workItem.SellingRuleValue,
                     workItem.SellingRuleReasonCode,
-                    CostComponents = workItem.CostComponents.OrderBy(component => component.SortOrder).Select(component => new
+                    CostComponents = workItem.CostComponents.OrderBy(component => component.SortOrder).Select(component =>
                     {
-                        component.Type,
-                        component.Quantity,
-                        component.UnitCode,
-                        component.UnitCost,
-                        component.Currency,
-                        component.ItemId,
-                        component.CostRecordId,
-                        component.CostRecordVersion,
-                        component.CostEffectiveFromUtc,
-                        component.CostPolicyVersion,
-                        component.CostOrigin,
-                        component.CostSourceIdSnapshot,
-                        component.CostSourceCodeSnapshot,
-                        component.CostSourceReferenceSnapshot,
-                        component.CostEvidenceFileIdSnapshot,
-                        component.CostRecordReasonSnapshot,
-                        component.ProvisionalReasonCode,
-                        component.ProvisionalNote
+                        // Lines without a unit-conversion snapshot keep the exact pre-G-08 JSON (and so the same hash);
+                        // the conversion fields are added only for lines that carry a snapshot.
+                        var core = new
+                        {
+                            component.Type,
+                            component.Quantity,
+                            component.UnitCode,
+                            component.UnitCost,
+                            component.Currency,
+                            component.ItemId,
+                            component.CostRecordId,
+                            component.CostRecordVersion,
+                            component.CostEffectiveFromUtc,
+                            component.CostPolicyVersion,
+                            component.CostOrigin,
+                            component.CostSourceIdSnapshot,
+                            component.CostSourceCodeSnapshot,
+                            component.CostSourceReferenceSnapshot,
+                            component.CostEvidenceFileIdSnapshot,
+                            component.CostRecordReasonSnapshot,
+                            component.ProvisionalReasonCode,
+                            component.ProvisionalNote
+                        };
+                        return component.ConversionId is null
+                            ? (object)core
+                            : new { core, component.ConversionId, component.ConversionFactor };
                     })
                 })
             })

@@ -112,7 +112,8 @@ public sealed record EstimateCostComponentDraftDto(
     Guid? CostRecordId = null,
     int? CostRecordVersion = null,
     string? ProvisionalReasonCode = null,
-    string? ProvisionalNote = null);
+    string? ProvisionalNote = null,
+    Guid? ConversionId = null);
 
 public sealed record EstimateWorkItemDraftDto(
     Guid? Id,

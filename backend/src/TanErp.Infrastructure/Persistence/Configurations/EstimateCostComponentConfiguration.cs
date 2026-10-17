@@ -18,6 +18,9 @@ public class EstimateCostComponentConfiguration : IEntityTypeConfiguration<Estim
             t.HasCheckConstraint("ck_estimate_cost_components_quantity", "quantity > 0");
             t.HasCheckConstraint("ck_estimate_cost_components_unit_cost", "unit_cost >= 0");
             t.HasCheckConstraint("ck_estimate_cost_components_cost_origin", "cost_origin IN ('manual', 'catalog')");
+            t.HasCheckConstraint("ck_estimate_cost_components_conversion_snapshot",
+                "(conversion_id IS NULL AND conversion_scope IS NULL AND conversion_from_unit IS NULL AND conversion_to_unit IS NULL AND conversion_factor IS NULL) OR " +
+                "(conversion_id IS NOT NULL AND conversion_scope IN ('item', 'shared') AND conversion_from_unit IS NOT NULL AND conversion_to_unit IS NOT NULL AND conversion_factor > 0)");
         });
 
         builder.HasKey(x => x.Id);
@@ -63,6 +66,12 @@ public class EstimateCostComponentConfiguration : IEntityTypeConfiguration<Estim
         builder.Property(x => x.CostRecordReasonSnapshot).HasColumnName("cost_record_reason_snapshot").HasMaxLength(1000);
         builder.Property(x => x.ProvisionalReasonCode).HasColumnName("provisional_reason_code").HasMaxLength(64);
         builder.Property(x => x.ProvisionalNote).HasColumnName("provisional_note").HasMaxLength(1000);
+        builder.Property(x => x.ConversionId).HasColumnName("conversion_id");
+        builder.Property(x => x.ConversionScope).HasColumnName("conversion_scope").HasMaxLength(16);
+        builder.Property(x => x.ConversionFromUnit).HasColumnName("conversion_from_unit").HasMaxLength(32);
+        builder.Property(x => x.ConversionToUnit).HasColumnName("conversion_to_unit").HasMaxLength(32);
+        builder.Property(x => x.ConversionFactor).HasColumnName("conversion_factor").HasPrecision(18, 6);
+        builder.Ignore(x => x.ConversionSnapshot);
 
         builder.HasIndex(x => new { x.OrganizationId, x.EstimateWorkItemId });
         builder.HasIndex(x => new { x.OrganizationId, x.ItemId });

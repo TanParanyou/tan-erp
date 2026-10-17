@@ -104,7 +104,7 @@ If-Match: "<expectedRevisionVersion>"
 
 Work Item ใช้ `sellingRuleType` เป็น `margin|markup|fixed_price`, `sellingRuleValue` เป็นค่า Rule และ `sellingRuleReasonCode` เป็น nullable string สูงสุด 64 ตัวอักษร. เมื่อเลือก `fixed_price`, Backend ตรวจ Permission `estimates.override-price` กับ Branch ของ Estimate และบังคับ reason code; Unauthorized คืน 403 `PERMISSION_DENIED`, reason ว่างคืน 400 `ESTIMATE_FIXED_PRICE_REASON_REQUIRED`. Readiness เพิ่ม `ESTIMATE_FIXED_PRICE_OVERRIDE` และ calculation snapshot ตรึง reason ที่ใช้ ผู้ตรวจที่ได้รับมอบหมายเห็น reason/ราคาคงที่ใน review queue; Customer Quotation projection ไม่ส่งฟิลด์นี้
 
-ตัวอย่างตัวเลขเป็น `TEST_ONLY` `unitCost` ที่ Client ส่งเป็น Draft Input เท่านั้น Server ต้อง Resolve/Validate Cost Record และตรึง Cost/Source ใน Draft; Calculation Snapshot จะตรึง Policy และผลคำนวณ. Estimate ปัจจุบันรับ Catalog Cost เฉพาะหน่วยฐานของ Item และยังไม่ใช้ Item/Shared Unit Conversion. หากส่ง Cost Component Unit ที่ไม่ตรงหน่วยฐาน API ตอบ 422 `ESTIMATE_UNIT_INVALID` โดยไม่เขียน Draft; conversion snapshot ใน Estimate เป็นงานต่อเนื่องและห้ามตีความว่ามีการแปลงหน่วยแล้ว. Provisional Cost ใช้ Workflow/Reason แยกตาม Policy Client ห้ามส่ง Total/GP เป็นค่าที่เชื่อถือได้ Server คำนวณและคืน ETag ใหม่ `If-Match` เก่าคืน 409 `ESTIMATE_VERSION_CONFLICT`
+ตัวอย่างตัวเลขเป็น `TEST_ONLY` `unitCost` ที่ Client ส่งเป็น Draft Input เท่านั้น Server ต้อง Resolve/Validate Cost Record และตรึง Cost/Source ใน Draft; Calculation Snapshot จะตรึง Policy และผลคำนวณ.  Provisional Cost ใช้ Workflow/Reason แยกตาม Policy Client ห้ามส่ง Total/GP เป็นค่าที่เชื่อถือได้ Server คำนวณและคืน ETag ใหม่ `If-Match` เก่าคืน 409 `ESTIMATE_VERSION_CONFLICT`
 
 Field, Required Gate, Precision และ Customer Visibility อ้าง [Official Estimate Field Catalog](../01-business/official-estimate-field-catalog.md) Request ที่ส่ง Derived Total, Margin, Tax หรือ Approval State ให้ Reject/Ignore ตาม Contract โดยห้ามใช้เป็นค่าจริง
 
@@ -316,6 +316,14 @@ Permission: document-sequences.manage
 If-Match: "<rowVersion>"
 { "pattern": "QT-{YYYY}-{SEQ:4}", "resetPeriod": "Yearly" }
 ```
+
+## Unit Conversion Snapshot (G-08)
+
+**สถานะ:** Implemented (no tests written, none run) 2026-10-15 — ปิดอยู่จนกว่าจะมี Calculation Policy แบบ `snapshot`; ตัดสินใจใน [ADR 0024](../adr/0024-estimate-unit-conversion-snapshot.md), รายละเอียดใน [Verification](../05-engineering/estimate-unit-conversion-verification.md).
+
+- Request ของ cost component ที่ผูก catalog item ส่ง `conversionId` (optional) เมื่อเลือกหน่วยที่ไม่ใช่หน่วยฐาน; Server ตรึง snapshot ตอนบันทึก draft และ response คืน `conversionSnapshot { conversionId, conversionScope, fromUnit, toUnit, factor }`
+- `GET /api/v1/estimate-catalog/items/{itemId}/units?branchId=` คืน `conversionsEnabled`, `baseUnitCode` และรายการหน่วย (`unitId`, `unitCode`, `isBase`, `conversionId`, `conversionScope`, `factor`)
+- Error: `ESTIMATE_UNIT_CONVERSION_NOT_FOUND`, `ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH` (422); policy ไม่ใช่ `snapshot` → `ESTIMATE_UNIT_INVALID`; conversion ไม่ตรง snapshot → 409 `ITEM_COST_VERSION_CONFLICT`
 
 ## State/Retry Rules
 

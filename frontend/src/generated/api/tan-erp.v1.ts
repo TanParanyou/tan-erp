@@ -5949,6 +5949,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/estimate-catalog/items/{itemId}/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    branchId: string;
+                };
+                header?: never;
+                path: {
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EstimateUnitOptionsResponse"];
+                        "application/json": components["schemas"]["EstimateUnitOptionsResponse"];
+                        "text/json": components["schemas"]["EstimateUnitOptionsResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/estimates/review-queue": {
         parameters: {
             query?: never;
@@ -21872,6 +21946,14 @@ export interface components {
             facets?: components["schemas"]["CatalogFacetsResponse"];
             pageInfo?: components["schemas"]["CatalogPageInfoResponse"];
         };
+        EstimateConversionSnapshotResponse: {
+            /** Format: uuid */
+            conversionId?: string;
+            conversionScope?: string | null;
+            fromUnit?: string | null;
+            toUnit?: string | null;
+            factor?: string | null;
+        };
         EstimateCostComponentResponse: {
             /** Format: uuid */
             id?: string;
@@ -21918,6 +22000,7 @@ export interface components {
             provisionalReasonCode?: string | null;
             provisionalNote?: string | null;
             isProvisional?: boolean;
+            conversionSnapshot?: components["schemas"]["EstimateConversionSnapshotResponse"];
         };
         EstimateDetailResponse: {
             /** Format: uuid */
@@ -21999,6 +22082,7 @@ export interface components {
             provisionalReasonCode?: string | null;
             provisionalNote?: string | null;
             isProvisional?: boolean;
+            conversion?: components["schemas"]["EstimateConversionSnapshotResponse"];
         };
         EstimateReviewFrozenRouteResponse: {
             policyCode?: string | null;
@@ -22181,6 +22265,21 @@ export interface components {
             /** Format: double */
             subtotalSellingPrice?: number;
             workItems?: components["schemas"]["EstimateWorkItemResponse"][] | null;
+        };
+        EstimateUnitOptionResponse: {
+            /** Format: uuid */
+            unitId?: string;
+            unitCode?: string | null;
+            isBase?: boolean;
+            /** Format: uuid */
+            conversionId?: string | null;
+            conversionScope?: string | null;
+            factor?: string | null;
+        };
+        EstimateUnitOptionsResponse: {
+            conversionsEnabled?: boolean;
+            baseUnitCode?: string | null;
+            units?: components["schemas"]["EstimateUnitOptionResponse"][] | null;
         };
         EstimateWorkItemItemResponse: {
             /** Format: uuid */
@@ -24698,6 +24797,8 @@ export interface components {
             costRecordVersion?: number | null;
             provisionalReasonCode?: string | null;
             provisionalNote?: string | null;
+            /** Format: uuid */
+            conversionId?: string | null;
         };
         UpdateEstimateDraftRequest: {
             /** Format: uuid */

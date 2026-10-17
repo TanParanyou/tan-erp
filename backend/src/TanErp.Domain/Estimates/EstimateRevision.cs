@@ -167,6 +167,8 @@ public class EstimateRevision
                             sourceCost.CostSourceIdSnapshot, sourceCost.CostSourceCodeSnapshot,
                             sourceCost.CostSourceReferenceSnapshot, sourceCost.CostEvidenceFileIdSnapshot,
                             sourceCost.CostRecordReasonSnapshot);
+                        if (sourceCost.ConversionSnapshot is { } sourceConversion)
+                            cost.SetConversionSnapshot(sourceConversion);
                     }
                     cost.SetProvisionalReason(sourceCost.ProvisionalReasonCode, sourceCost.ProvisionalNote);
                     item.AddCostComponent(cost);
@@ -296,6 +298,19 @@ public class EstimateRevision
         if (!calculationPolicy.IsEffectiveAt(calculatedAtUtc) || !taxPolicy.IsEffectiveAt(calculatedAtUtc))
             throw new EstimateInvalidStateException("Resolved estimate policies are not currently effective.");
 
+        // Lines costed through a frozen unit conversion are only valid under a policy that knows how to apply it.
+        var conversionComponents = _sections.SelectMany(section => section.WorkItems)
+            .SelectMany(workItem => workItem.CostComponents)
+            .Where(component => component.ConversionId.HasValue)
+            .ToArray();
+        if (conversionComponents.Length > 0)
+        {
+            if (calculationPolicy.UnitConversionMode != UnitConversionModes.Snapshot)
+                throw new EstimatePolicyUnavailableException("The effective calculation policy does not support unit conversion snapshots.");
+            foreach (var component in conversionComponents)
+                component.ApplyConversionSnapshotTotals();
+        }
+
         foreach (var section in _sections)
         {
             section.Recalculate();
@@ -391,6 +406,19 @@ public class EstimateRevision
             overheadMethod = calculationPolicy.OverheadMethod,
             overheadValue = calculationPolicy.OverheadValue,
             overheadAmount,
+            unitConversionMode = calculationPolicy.UnitConversionMode,
+            unitConversions = conversionComponents.Select(component => new
+            {
+                componentId = component.Id,
+                conversionId = component.ConversionId,
+                conversionScope = component.ConversionScope,
+                fromUnit = component.ConversionFromUnit,
+                toUnit = component.ConversionToUnit,
+                factor = component.ConversionFactor,
+                quantity = component.Quantity,
+                unitCostSnapshot = component.UnitCostSnapshot,
+                totalCost = component.TotalCost
+            }),
             calculationPolicyVersionId = calculationPolicy.Id,
             calculationPolicyVersion = CalculationPolicyVersion,
             calculationPolicyHash = calculationPolicy.ContentHash,
