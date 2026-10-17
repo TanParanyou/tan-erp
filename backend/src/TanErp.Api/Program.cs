@@ -110,6 +110,10 @@ builder.Services.AddScoped<TanErp.Application.IdentityAccess.RoleManagement.Role
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.IApprovalAuthority, TanErp.Infrastructure.Persistence.IdentityAccess.ApprovalAuthority>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.IApprovalLimitStore, TanErp.Infrastructure.Persistence.IdentityAccess.ApprovalLimitStore>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.ApprovalLimits.ApprovalLimitHandler>();
+builder.Services.AddScoped<TanErp.Application.Audit.IAuditEventStore, TanErp.Infrastructure.Persistence.Audit.AuditEventStore>();
+builder.Services.AddScoped<TanErp.Application.Audit.AuditEventHandler>();
+// B3: the one audit redaction deny-list (null = built-in default). Audit:RetentionDays is reserved and read by nothing yet (ADR 0027).
+TanErp.Domain.Common.AuditRedactor.Configure(builder.Configuration.GetSection("Audit:RedactedKeys").Get<string[]>());
 builder.Services.AddScoped<IRequestAccessResolver, RequestAccessResolver>();
 builder.Services.AddScoped<GetCurrentUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Users.IUserReadStore, TanErp.Infrastructure.Persistence.IdentityAccess.UserReadStore>();
@@ -333,6 +337,38 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
     Predicate = registration => registration.Tags.Contains("ready"),
     ResponseWriter = TanErp.Api.Health.HealthResponseWriter.WriteAsync
 }).AllowAnonymous();
+
+// Opt-in go-live seeding (ADR 0027 D-C). Both steps are idempotent and never overwrite; a failure is logged, not fatal.
+if (!app.Environment.IsEnvironment("Test"))
+{
+    var seedLimits = app.Configuration.GetSection("ApprovalLimits:Seed")
+        .Get<List<TanErp.Infrastructure.Persistence.IdentityAccess.ApprovalLimitSeedEntry>>() ?? new();
+    var seedAccess = app.Configuration.GetValue<bool>("AccessBootstrap:Enabled");
+    if (seedAccess || seedLimits.Count > 0)
+    {
+        using var seedScope = app.Services.CreateScope();
+        var seedDb = seedScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var seedLog = seedScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoLiveAccessSeeder");
+        try
+        {
+            if (seedAccess)
+            {
+                var granted = await TanErp.Infrastructure.Persistence.IdentityAccess.GoLiveAccessSeeder.EnsureSystemAdministratorPermissionsAsync(seedDb);
+                seedLog.LogInformation("AccessBootstrap: {Granted} permission grant(s) added to system roles.", granted);
+            }
+            if (seedLimits.Count > 0)
+            {
+                var report = await TanErp.Infrastructure.Persistence.IdentityAccess.GoLiveAccessSeeder.SeedApprovalLimitsAsync(
+                    seedDb, seedLimits, DateTimeOffset.UtcNow);
+                foreach (var line in report) seedLog.LogInformation("ApprovalLimits:Seed {Line}", line);
+            }
+        }
+        catch (Exception ex)
+        {
+            seedLog.LogError(ex, "Go-live access seeding failed; the application continues without it.");
+        }
+    }
+}
 
 if (app.Environment.IsEnvironment("Test") && app.Configuration.GetValue<bool>("SeedTestData"))
 {

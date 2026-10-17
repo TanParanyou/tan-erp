@@ -98,7 +98,8 @@
     "organizationSettings": "Organization",
     "branchSettings": "Branches",
     "roleSettings": "Roles",
-    "approvalLimitSettings": "Approval limits"
+    "approvalLimitSettings": "Approval limits",
+    "auditSettings": "Audit log"
   },
   "common": {
     "actions": {
@@ -4345,6 +4346,31 @@
       "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
       "PERMISSION_DENIED": "You do not have permission to do this.",
       "RESOURCE_NOT_FOUND": "The requested record was not found."
+    }
+  },
+  "auditLog": {
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedDetail": "You do not have permission to view the audit log.",
+    "list": {
+      "title": "Audit log",
+      "subtitle": "Change history for the organization, newest first (read-only). Personal data is redacted.",
+      "actionFilter": "Action",
+      "resourceTypeFilter": "Resource type",
+      "fromFilter": "From",
+      "toFilter": "To",
+      "table": {
+        "occurredAt": "Time",
+        "action": "Action",
+        "resourceType": "Resource type",
+        "resourceId": "Resource ID",
+        "actor": "Actor",
+        "reason": "Reason"
+      },
+      "emptyTitle": "No audit events yet",
+      "emptyDescription": "Important changes will appear here once they happen."
+    },
+    "errors": {
+      "GENERIC": "Could not load the audit log. Please try again."
     }
   },
   "approvalLimitAdmin": {

@@ -123,6 +123,9 @@ export type ApprovalLimitListResponse = components["schemas"]["ApprovalLimitList
 export type ApprovalLimitOptionsResponse = components["schemas"]["ApprovalLimitOptionsResponse"];
 export type CreateApprovalLimitRequest = components["schemas"]["CreateApprovalLimitRequest"];
 export type UpdateApprovalLimitRequest = components["schemas"]["UpdateApprovalLimitRequest"];
+export type AuditEventResponse = components["schemas"]["AuditEventResponse"];
+export type AuditEventListResponse = components["schemas"]["AuditEventListResponse"];
+export type AuditEventListParams = NonNullable<paths["/api/v1/audit-events"]["get"]["parameters"]["query"]>;
 export type ApprovalLimitListParams = NonNullable<paths["/api/v1/admin/approval-limits"]["get"]["parameters"]["query"]>;
 
 export type AdminUserListParams = NonNullable<paths["/api/v1/admin/users"]["get"]["parameters"]["query"]>;
@@ -1425,6 +1428,20 @@ export class ApiClient {
   ): Promise<RoleChangeRequestResponse> {
     return this.request<RoleChangeRequestResponse>(
       `/api/v1/admin/role-change-requests/${encodeURIComponent(requestId)}/${decision}`, "POST", options);
+  }
+
+  async listAuditEvents(params: AuditEventListParams, options: RequestOptions): Promise<AuditEventListResponse> {
+    const query = new URLSearchParams();
+    if (params.resourceType) query.set("resourceType", params.resourceType);
+    if (params.resourceId) query.set("resourceId", params.resourceId);
+    if (params.action) query.set("action", params.action);
+    if (params.actorUserId) query.set("actorUserId", params.actorUserId);
+    if (params.from) query.set("from", params.from);
+    if (params.to) query.set("to", params.to);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString();
+    return this.request<AuditEventListResponse>(`/api/v1/audit-events${suffix ? `?${suffix}` : ""}`, "GET", options);
   }
 
   async listApprovalLimits(params: ApprovalLimitListParams, options: RequestOptions): Promise<ApprovalLimitListResponse> {

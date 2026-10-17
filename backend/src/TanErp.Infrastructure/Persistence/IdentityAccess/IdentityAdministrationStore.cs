@@ -139,7 +139,12 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 return Fail<AdminUser>("ROLE_ESCALATION_DENIED", "A role grants permissions the caller does not hold.");
 
             var normalizedEmail = User.NormalizeEmail(input.Email);
-            if (await _db.Users.AsNoTracking().AnyAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken))
+            // D-A/A1: a user lives in one organization. This flow never links an existing user, and the answer is the same
+            // whether the email exists here or elsewhere, so another organization is never revealed.
+            var existingOrganizationIds = await _db.Memberships.AsNoTracking()
+                .Where(m => m.User!.NormalizedEmail == normalizedEmail).Select(m => m.OrganizationId).ToListAsync(cancellationToken);
+            if (!UserOrganizationPolicy.MayHoldMembershipIn(existingOrganizationIds, organizationId)
+                || await _db.Users.AsNoTracking().AnyAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken))
                 return Fail<AdminUser>("USER_EMAIL_ALREADY_EXISTS", "A user with this email already exists.");
 
             var user = User.CreatePending(Guid.NewGuid(), input.DisplayName, input.Email, now);

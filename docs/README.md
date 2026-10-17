@@ -105,6 +105,8 @@
 | API จัดการวงเงินอนุมัติ | [Approval Limit API Contract](03-contracts/approval-limit-api-contract.md) |
 | แผนและขอบเขต CP-02 | [Identity/Organization Administration Plan](superpowers/plans/2026-10-03-identity-organization-administration.md) |
 | ผลตรวจ CP-02 | [Identity Administration Verification](05-engineering/identity-administration-verification.md) |
+| ขั้นตอน go-live ของ Wave A (สิทธิ์, วงเงิน, QuestPDF, Storage, policy, worker) | [Wave A Go-Live Runbook](05-engineering/wave-a-go-live-runbook.md) |
+| Audit API และ Redaction | [Audit API Contract](03-contracts/audit-api-contract.md), [Audit Redaction](04-data/audit-redaction.md) |
 | กู้สิทธิ์ผู้ดูแลที่หายไป | [Administrator Recovery Runbook](06-operations/administrator-recovery.md) |
 | แบบบันทึก Go/No-go ต่อ release candidate | [Go/No-go Record Template](06-operations/go-no-go-record-template.md) |
 | เช็กลิสต์ซ้อมบน Staging | [Staging Rehearsal Checklist](06-operations/staging-rehearsal-checklist.md) |
