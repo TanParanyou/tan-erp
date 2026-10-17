@@ -45,7 +45,7 @@
 | --- | --- | --- | --- | --- | --- |
 | G-01 | Shared Attachment & Signature | A | Files module เดิม | Security | [แผน G-01](2026-10-05-g01-shared-attachment-signature.md) — Implemented 2026-10-06 (focused tests; browser check + full gate pending) |
 | G-02 | Notification Foundation (in-app เท่านั้น; อีเมลเลื่อน) | A | Identity | Security + Operations | [แผน G-02](2026-10-08-g02-notification-foundation.md) — Implemented 2026-10-10 (in-app only; focused tests; browser check + full gate pending); [Verification](../../05-engineering/notification-foundation-verification.md) |
-| G-03 | Organization/Branch CRUD, Role management, Approval Authority matrix | A | CP-02 | System Admin + Security + Finance | G-03a Implemented 2026-10-11 (focused tests; browser check not done in this round); G-03b Implemented 2026-10-11 (tests written, not run; browser not checked); G-03c Implemented 2026-10-12 (tests written, not run; browser not checked; ยังไม่ผ่าน UAT; fail-closed จนกว่าจะตั้งวงเงินจริง); [แผน G-03](2026-10-10-g03-org-role-authority.md); [Verification G-03a](../../05-engineering/organization-administration-verification.md); [Verification G-03b](../../05-engineering/role-management-verification.md); [Verification G-03c](../../05-engineering/approval-authority-verification.md) |
+| G-03 | Organization/Branch CRUD, Role management, Approval Authority matrix | A | CP-02 | System Admin + Security + Finance | G-03a Implemented 2026-10-11 (focused tests; browser check not done in this round); G-03b Implemented 2026-10-11 (tests written, not run; browser not checked); G-03c Implemented 2026-10-12 (tests written, not run; browser not checked; ยังไม่ผ่าน UAT; fail-closed จนกว่าจะตั้งวงเงินจริง); เตรียม go-live 2026-10-17 (seeder สิทธิ์ระบบ + seed วงเงิน opt-in + [runbook](../../05-engineering/wave-a-go-live-runbook.md); no tests written, none run; browser not checked); [แผน G-03](2026-10-10-g03-org-role-authority.md); [Verification G-03a](../../05-engineering/organization-administration-verification.md); [Verification G-03b](../../05-engineering/role-management-verification.md); [Verification G-03c](../../05-engineering/approval-authority-verification.md) |
 | G-04 | Server-side Quotation PDF + artifact hash | B | CP-04, G-01 | Sales + Finance | Implemented 2026-10-13 (tests written, not run; browser/PDF not visually checked; ยังไม่ผ่าน UAT; **เงื่อนไข license QuestPDF รอ Business ยืนยันก่อน production**; โลโก้ยังไม่ทำ) — [แผน G-04](2026-10-12-g04-quotation-pdf.md); [ADR 0023](../../adr/0023-server-side-quotation-pdf-with-questpdf.md); [Verification](../../05-engineering/quotation-pdf-verification.md) |
 | G-05 | External Acceptance OTP | B | CP-07, G-02 | Sales + Security + Legal | — |
 | G-06 | Item Import Phase 2 (upsert / Cost / Batch) | B | CP-03 Import Phase 1 | Data Steward + Cost Owner | — |
@@ -63,7 +63,7 @@
 | G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | — |
 | G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | — |
 | G-20 | Labor Timesheet | C | Identity, CP-09 | PM + Production + Finance | — |
-| G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | G-21 ข้อ 1 Implemented 2026-10-12 (tests written, not run; browser not checked); ข้อ 2–3 รอการตัดสินใจ — [แผน G-21](2026-10-12-g21-membership-expiry.md); [Open Decisions](2026-10-12-g21-open-decisions.md); [Verification](../../05-engineering/membership-expiry-verification.md) |
+| G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | G-21 ข้อ 1 Implemented 2026-10-12 (tests written, not run; browser not checked); ข้อ 2–3 ตัดสิน 2026-10-17 โดย owner delegation (A1, B1+B3, B2 เลื่อน; Legal ต้องยืนยัน retention) และ Implemented 2026-10-17 (no tests written, none run; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md); [แผน G-21](2026-10-12-g21-membership-expiry.md); [Open Decisions](2026-10-12-g21-open-decisions.md); [Verification](../../05-engineering/membership-expiry-verification.md) |
 
 **ลำดับแนะนำ:** Wave A (ของกลาง) → B (Commercial/Estimate) ↔ C (Project/Supply) ทำคู่ขนานได้ → D (Finance/Service) → E (Reporting). ภายใน Wave C: G-20 → G-10 → G-11 → G-12 → G-13 → G-14.
 
@@ -286,8 +286,8 @@
 ### G-21 — CP-02 ค้าง
 
 - [ ] Membership ใกล้หมดอายุ → แจ้งเตือนผู้ดูแล (G-02) — Implemented 2026-10-12 (hosted worker + system-generated notification; tests written, not run; browser not checked) — [Verification](../../05-engineering/membership-expiry-verification.md)
-- [ ] ตัดสินใจ User หลาย Organization (ตาม Validation Question CP-02) แล้วปรับ contract — รอคำตอบ: [Open Decisions](2026-10-12-g21-open-decisions.md) (options + ข้อเสนอแนะ; ยังไม่ implement)
-- [ ] PII visibility/retention ใน Audit ตามที่ Security ตอบ — รอคำตอบ: [Open Decisions](2026-10-12-g21-open-decisions.md) (options + ข้อเสนอแนะ; ยังไม่ implement)
+- [ ] ตัดสินใจ User หลาย Organization (ตาม Validation Question CP-02) แล้วปรับ contract — ตัดสิน A1 เมื่อ 2026-10-17 (owner delegation) และ Implemented (guard `UserOrganizationPolicy` + สัญญา; no tests written, none run; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md)
+- [ ] PII visibility/retention ใน Audit — ตัดสิน B1 + B3 เมื่อ 2026-10-17 (owner delegation; Security/Legal ยังต้องยืนยัน) และ Implemented (`GET /api/v1/audit-events`, หน้า `/settings/audit`, `AuditRedactor`; B2 purge ไม่ทำ มีเพียงคีย์ `Audit:RetentionDays` สงวนไว้; no tests written, none run; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md)
 
 ---
 
