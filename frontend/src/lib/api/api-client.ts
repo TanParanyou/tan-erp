@@ -41,6 +41,7 @@ export type AttachWorkImagesRequest = components["schemas"]["AttachWorkImagesReq
 export type AttachWorkImagesResponse = components["schemas"]["AttachWorkImagesResponse"];
 export type OpportunityWorkImageListResponse = components["schemas"]["OpportunityWorkImageListResponse"];
 export type OpportunityWorkImageResponse = components["schemas"]["OpportunityWorkImageResponse"];
+export type OpportunityMetricsResponse = components["schemas"]["OpportunityMetricsResponse"];
 
 export type SiteSurveyResponse = components["schemas"]["SiteSurveyResponse"];
 export type SiteSurveyRevisionResponse = components["schemas"]["SiteSurveyRevisionResponse"];
@@ -706,6 +707,9 @@ export class ApiClient {
     if (params?.customerId) query.set("customerId", params.customerId);
     if (params?.ownerId) query.set("ownerId", params.ownerId);
     if (params?.stage) query.set("stage", params.stage);
+    if (params?.nextActionPreset) query.set("nextActionPreset", params.nextActionPreset);
+    if (params?.targetDecisionDateFrom) query.set("targetDecisionDateFrom", params.targetDecisionDateFrom);
+    if (params?.targetDecisionDateTo) query.set("targetDecisionDateTo", params.targetDecisionDateTo);
     if (params?.sortBy) query.set("sortBy", params.sortBy);
     if (params?.sortOrder) query.set("sortOrder", params.sortOrder);
     if (params?.page !== undefined && params?.page !== null) query.set("page", params.page.toString());
@@ -715,6 +719,12 @@ export class ApiClient {
     const queryString = query.toString();
     const endpoint = `/api/v1/opportunities${queryString ? `?${queryString}` : ""}`;
     return this.request<OpportunityListResponse>(endpoint, "GET", options);
+  }
+
+  async getOpportunityMetrics(
+    options: RequestOptions
+  ): Promise<OpportunityMetricsResponse> {
+    return this.request<OpportunityMetricsResponse>("/api/v1/opportunities/metrics", "GET", options);
   }
 
   async getOpportunity(

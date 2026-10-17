@@ -12,4 +12,7 @@ public sealed record ListOpportunitiesQuery(
     int Limit = 25,
     string? Cursor = null,
     string? TraceId = null,
-    Guid? OwnerId = null);
+    Guid? OwnerId = null,
+    string? NextActionPreset = null,
+    DateOnly? TargetDecisionDateFrom = null,
+    DateOnly? TargetDecisionDateTo = null);

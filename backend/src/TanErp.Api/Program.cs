@@ -145,6 +145,7 @@ builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.GetOpportunitySt
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.AttachWorkImagesHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.WorkImages.ListWorkImages.ListWorkImagesHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageHandler>();
+builder.Services.AddScoped<TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.GetOpportunityMetricsHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.ISiteSurveyStore, TanErp.Infrastructure.Persistence.Surveys.SiteSurveyStore>();
 builder.Services.AddScoped<TanErp.Application.Surveys.CreateSiteSurvey.CreateSiteSurveyHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.GetSiteSurvey.GetSiteSurveyHandler>();

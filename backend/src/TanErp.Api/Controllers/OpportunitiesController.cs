@@ -29,6 +29,7 @@ public class OpportunitiesController : ControllerBase
     private readonly TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.AttachWorkImagesHandler _attachWorkImagesHandler;
     private readonly TanErp.Application.Crm.Opportunities.WorkImages.ListWorkImages.ListWorkImagesHandler _listWorkImagesHandler;
     private readonly TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageHandler _detachWorkImageHandler;
+    private readonly TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.GetOpportunityMetricsHandler _getMetricsHandler;
 
     public OpportunitiesController(
         CreateOpportunityHandler createHandler,
@@ -41,7 +42,8 @@ public class OpportunitiesController : ControllerBase
         TanErp.Application.Crm.Opportunities.GetOpportunityStageHistory.GetOpportunityStageHistoryHandler getStageHistoryHandler,
         TanErp.Application.Crm.Opportunities.WorkImages.AttachWorkImages.AttachWorkImagesHandler attachWorkImagesHandler,
         TanErp.Application.Crm.Opportunities.WorkImages.ListWorkImages.ListWorkImagesHandler listWorkImagesHandler,
-        TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageHandler detachWorkImageHandler)
+        TanErp.Application.Crm.Opportunities.WorkImages.DetachWorkImage.DetachWorkImageHandler detachWorkImageHandler,
+        TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.GetOpportunityMetricsHandler getMetricsHandler)
     {
         _createHandler = createHandler;
         _listHandler = listHandler;
@@ -54,6 +56,7 @@ public class OpportunitiesController : ControllerBase
         _attachWorkImagesHandler = attachWorkImagesHandler;
         _listWorkImagesHandler = listWorkImagesHandler;
         _detachWorkImageHandler = detachWorkImageHandler;
+        _getMetricsHandler = getMetricsHandler;
     }
 
     [HttpPost]
@@ -120,6 +123,9 @@ public class OpportunitiesController : ControllerBase
         [FromQuery] Guid? customerId,
         [FromQuery] Guid? ownerId,
         [FromQuery] string? stage,
+        [FromQuery] string? nextActionPreset,
+        [FromQuery] DateOnly? targetDecisionDateFrom,
+        [FromQuery] DateOnly? targetDecisionDateTo,
         [FromQuery] string? sortBy = null,
         [FromQuery] string? sortOrder = null,
         [FromQuery] int? page = null,
@@ -148,7 +154,10 @@ public class OpportunitiesController : ControllerBase
             limit,
             cursor,
             traceId,
-            ownerId);
+            ownerId,
+            nextActionPreset,
+            targetDecisionDateFrom,
+            targetDecisionDateTo);
 
         var result = await _listHandler.Handle(query, cancellationToken);
         if (result.IsFailure)
@@ -170,6 +179,44 @@ public class OpportunitiesController : ControllerBase
             result.Value.NextCursor);
 
         return Ok(new OpportunityListResponse(items, pagination));
+    }
+
+    [HttpGet("metrics")]
+    [ProducesResponseType<OpportunityMetricsResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMetrics(CancellationToken cancellationToken = default)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var traceId = HttpContext.TraceIdentifier;
+
+        var query = new TanErp.Application.Crm.Opportunities.GetOpportunityMetrics.GetOpportunityMetricsQuery(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            traceId);
+
+        var result = await _getMetricsHandler.Handle(query, cancellationToken);
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var metrics = result.Value!;
+        var response = new OpportunityMetricsResponse(
+            metrics.TotalPipelineValue,
+            metrics.ActiveDealsCount,
+            metrics.ClosingThisMonthCount,
+            metrics.WonValue,
+            metrics.WonDealsCount,
+            metrics.WinRatePercentage);
+
+        return Ok(response);
     }
 
     [HttpGet("{id:guid}")]

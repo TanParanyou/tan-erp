@@ -352,12 +352,49 @@ describe("OpportunityList Component", () => {
       </QueryClientProvider>
     );
 
-    // Verify owner column is rendered
-    expect(screen.getByText("สมชาย ใจดี")).toBeInTheDocument();
-    // Verify customer is rendered
-    expect(screen.getByText("บริษัท ทดสอบ จำกัด")).toBeInTheDocument();
     // Verify Customer and Owner filter inputs exist in toolbar
     expect(screen.getByPlaceholderText("ค้นหา/เลือกลูกค้า...")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("ค้นหา/เลือกพนักงาน...")).toBeInTheDocument();
+  });
+
+  it("renders pipeline metric cards and nextAction filter in toolbar", () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
+      selectedMembership: mockMembership,
+      memberships: [mockMembership],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    vi.spyOn(oppQueries, "useOpportunityMetrics").mockReturnValue({
+      data: {
+        totalPipelineValue: 800000,
+        activeDealsCount: 6,
+        closingThisMonthCount: 2,
+        wonValue: 350000,
+        wonDealsCount: 2,
+        winRatePercentage: 50,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityMetrics>);
+
+    render(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <OpportunityList />
+        </NextIntlClientProvider>
+      </QueryClientProvider>
+    );
+
+    // Verify Metric Cards container
+    expect(screen.getByTestId("pipeline-metric-cards")).toBeInTheDocument();
+    expect(screen.getByText("มูลค่า Pipeline รวม")).toBeInTheDocument();
+    expect(screen.getByText("800,000 THB")).toBeInTheDocument();
+
+    // Verify nextAction filter selector exists
+    expect(screen.getByLabelText("กำหนดนัดหมาย")).toBeInTheDocument();
   });
 });

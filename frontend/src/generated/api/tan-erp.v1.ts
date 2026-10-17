@@ -13079,6 +13079,9 @@ export interface paths {
                     customerId?: string;
                     ownerId?: string;
                     stage?: string;
+                    nextActionPreset?: string;
+                    targetDecisionDateFrom?: string;
+                    targetDecisionDateTo?: string;
                     sortBy?: string;
                     sortOrder?: string;
                     page?: number;
@@ -13232,6 +13235,65 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/opportunities/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OpportunityMetricsResponse"];
+                        "application/json": components["schemas"]["OpportunityMetricsResponse"];
+                        "text/json": components["schemas"]["OpportunityMetricsResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -22859,6 +22921,20 @@ export interface components {
         OpportunityListResponse: {
             items?: components["schemas"]["OpportunityResponse"][] | null;
             pagination?: components["schemas"]["PaginationMetadataResponse"];
+        };
+        OpportunityMetricsResponse: {
+            /** Format: double */
+            totalPipelineValue?: number;
+            /** Format: int32 */
+            activeDealsCount?: number;
+            /** Format: int32 */
+            closingThisMonthCount?: number;
+            /** Format: double */
+            wonValue?: number;
+            /** Format: int32 */
+            wonDealsCount?: number;
+            /** Format: double */
+            winRatePercentage?: number;
         };
         OpportunityResponse: {
             /** Format: uuid */
