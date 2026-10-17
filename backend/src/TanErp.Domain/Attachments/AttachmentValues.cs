@@ -17,8 +17,9 @@ public class AttachmentDomainException : Exception
 public static class AttachmentOwnerTypes
 {
     public const string InstallationJob = "installation-job";
+    public const string SurveyArea = "survey-area";
 
-    private static readonly HashSet<string> Registered = new(StringComparer.Ordinal) { InstallationJob };
+    private static readonly HashSet<string> Registered = new(StringComparer.Ordinal) { InstallationJob, SurveyArea };
 
     public static IReadOnlyCollection<string> All => Registered;
 

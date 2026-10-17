@@ -8959,6 +8959,69 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Surveys.SurveyTemplateVersionRow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTimeOffset>("EffectiveFromUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("effective_from_utc");
+
+                    b.Property<DateTimeOffset?>("EffectiveToUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("effective_to_utc");
+
+                    b.Property<int>("MinimumAreaEvidenceCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("minimum_area_evidence_count");
+
+                    b.Property<int>("MinimumEvidenceCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("minimum_evidence_count");
+
+                    b.PrimitiveCollection<string[]>("RequiredChecklistItems")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("required_checklist_items");
+
+                    b.Property<string>("SnapshotHashVersion")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("snapshot_hash_version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("survey_template_versions", "crm", t =>
+                        {
+                            t.HasCheckConstraint("CK_survey_template_versions_effective_range", "effective_to_utc IS NULL OR effective_to_utc > effective_from_utc");
+
+                            t.HasCheckConstraint("CK_survey_template_versions_evidence_counts", "minimum_evidence_count >= 0 AND minimum_area_evidence_count >= 0");
+
+                            t.HasCheckConstraint("CK_survey_template_versions_hash_version", "snapshot_hash_version IN ('v2', 'v3', 'v4')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Attachments.AttachmentLink", b =>
                 {
                     b.HasOne("TanErp.Domain.IdentityAccess.User", null)

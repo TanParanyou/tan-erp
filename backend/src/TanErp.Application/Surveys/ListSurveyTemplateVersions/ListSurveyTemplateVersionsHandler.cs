@@ -1,6 +1,5 @@
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Results;
-using TanErp.Domain.Surveys;
 
 namespace TanErp.Application.Surveys.ListSurveyTemplateVersions;
 
@@ -10,16 +9,23 @@ public sealed record SurveyTemplateVersionProjection(
     string Code,
     IReadOnlyList<string> RequiredChecklistItems,
     int MinimumEvidenceCount,
+    int MinimumAreaEvidenceCount,
     string SnapshotHashVersion,
+    DateTimeOffset EffectiveFromUtc,
+    DateTimeOffset? EffectiveToUtc,
     bool IsCurrent);
 
 public class ListSurveyTemplateVersionsHandler
 {
     private readonly IRequestAccessResolver _accessResolver;
+    private readonly ISurveyTemplateStore _store;
+    private readonly IClock _clock;
 
-    public ListSurveyTemplateVersionsHandler(IRequestAccessResolver accessResolver)
+    public ListSurveyTemplateVersionsHandler(IRequestAccessResolver accessResolver, ISurveyTemplateStore store, IClock clock)
     {
         _accessResolver = accessResolver;
+        _store = store;
+        _clock = clock;
     }
 
     public async Task<Result<IReadOnlyList<SurveyTemplateVersionProjection>>> Handle(
@@ -37,13 +43,20 @@ public class ListSurveyTemplateVersionsHandler
             return Result<IReadOnlyList<SurveyTemplateVersionProjection>>.Failure(accessResult.Error);
         }
 
-        IReadOnlyList<SurveyTemplateVersionProjection> items = SurveyTemplates.All
+        var now = _clock.UtcNow;
+        var templates = await _store.ListAsync(cancellationToken);
+        var currentCode = templates.Where(t => t.IsEffectiveAt(now)).OrderByDescending(t => t.EffectiveFromUtc).FirstOrDefault()?.Code;
+
+        IReadOnlyList<SurveyTemplateVersionProjection> items = templates
             .Select(t => new SurveyTemplateVersionProjection(
                 t.Code,
                 t.RequiredChecklistItems,
                 t.MinimumEvidenceCount,
+                t.MinimumAreaEvidenceCount,
                 t.SnapshotHashVersion,
-                t.Code == SurveyDefaults.CurrentTemplateVersion))
+                t.EffectiveFromUtc,
+                t.EffectiveToUtc,
+                t.Code == currentCode))
             .ToList();
 
         return Result<IReadOnlyList<SurveyTemplateVersionProjection>>.Success(items);

@@ -37,6 +37,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Surveys.SiteSurveyRevision> SiteSurveyRevisions => Set<TanErp.Domain.Surveys.SiteSurveyRevision>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyChecklistResult> SiteSurveyChecklistResults => Set<TanErp.Domain.Surveys.SiteSurveyChecklistResult>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyEvidence> SiteSurveyEvidence => Set<TanErp.Domain.Surveys.SiteSurveyEvidence>();
+    public DbSet<TanErp.Domain.Surveys.SurveyTemplateVersionRow> SurveyTemplateVersions => Set<TanErp.Domain.Surveys.SurveyTemplateVersionRow>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyArea> SiteSurveyAreas => Set<TanErp.Domain.Surveys.SiteSurveyArea>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyMeasurement> SiteSurveyMeasurements => Set<TanErp.Domain.Surveys.SiteSurveyMeasurement>();
     public DbSet<TanErp.Domain.Procurement.Supplier> Suppliers => Set<TanErp.Domain.Procurement.Supplier>();

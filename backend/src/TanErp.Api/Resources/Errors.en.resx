@@ -235,6 +235,24 @@
   <data name="SURVEY_TEMPLATE_UNAVAILABLE_DETAIL" xml:space="preserve">
     <value>The survey template referenced by this revision is not available.</value>
   </data>
+  <data name="SURVEY_TEMPLATE_NOT_EFFECTIVE_TITLE" xml:space="preserve">
+    <value>No Effective Survey Template</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_NOT_EFFECTIVE_DETAIL" xml:space="preserve">
+    <value>No survey template is within its effective period, so a new survey cannot be created.</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_CODE_EXISTS_TITLE" xml:space="preserve">
+    <value>Survey Template Code Already Exists</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_CODE_EXISTS_DETAIL" xml:space="preserve">
+    <value>A survey template with this code already exists. Published versions cannot change; publish a new code instead.</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_INVALID_TITLE" xml:space="preserve">
+    <value>Survey Template Invalid</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_INVALID_DETAIL" xml:space="preserve">
+    <value>The survey template data is invalid or the template is already retired.</value>
+  </data>
   <data name="SURVEY_CHECKLIST_INVALID_TITLE" xml:space="preserve">
     <value>Invalid Checklist</value>
   </data>
