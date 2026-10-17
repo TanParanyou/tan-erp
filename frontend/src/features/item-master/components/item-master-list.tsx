@@ -67,6 +67,7 @@ export function ItemMasterList() {
   const writable = can(selectedMembership, PERMISSIONS.ITEMS_CREATE);
   const canImportCosts = can(selectedMembership, "cost-records.create");
   const canUpsertItems = can(selectedMembership, "items.update");
+  const canImport = writable || canImportCosts;
   const canReadTaxonomy = can(selectedMembership, "items.read");
   const canReadCostSources = can(selectedMembership, "cost-sources.read");
   const rows = result.data?.items ?? [];
@@ -218,7 +219,7 @@ export function ItemMasterList() {
           {canReadTaxonomy && <Button variant="outline" href={`/${locale}/item-master/reference-data`}>{t("referenceData")}</Button>}
           {canReadCostSources && <Button variant="outline" href={`/${locale}/item-master/cost-sources`}>{t("costSources")}</Button>}
           <Button variant="outline" href={`/${locale}/item-master/cost-reviews`}>{t("reviewQueue")}</Button>
-          {writable && <Button variant="outline" icon={<IconUpload size={16} />} onClick={() => setIsImportOpen(true)}>{t("import.action")}</Button>}
+          {canImport && <Button variant="outline" icon={<IconUpload size={16} />} onClick={() => setIsImportOpen(true)}>{t("import.action")}</Button>}
           {writable && <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/item-master/create`}>{t("create")}</Button>}
         </div>}
       />
@@ -294,7 +295,7 @@ export function ItemMasterList() {
           </BulkActionToolbar>
         </div>
       )}
-      {writable && <ItemImportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} canImportCosts={canImportCosts} canUpsert={canUpsertItems} />}
+      {canImport && <ItemImportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} canImportItems={writable} canImportCosts={canImportCosts} canUpsert={canUpsertItems} />}
     </section>
   );
 }

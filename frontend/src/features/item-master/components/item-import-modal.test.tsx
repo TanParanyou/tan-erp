@@ -28,7 +28,7 @@ function mockHook() {
 function renderModal(onClose = vi.fn()) {
   render(
     <NextIntlClientProvider locale="th" messages={thMessages}>
-      <ItemImportModal isOpen onClose={onClose} />
+      <ItemImportModal isOpen onClose={onClose} canImportItems canImportCosts={false} />
     </NextIntlClientProvider>
   );
   return onClose;

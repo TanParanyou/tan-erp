@@ -48,4 +48,6 @@ Phase 1 (CP-03) รองรับเฉพาะสร้าง Item ใหม�
 - Job ที่เสร็จบางส่วนไม่ได้เป็น atomic ทั้งไฟล์ (ตั้งใจ ตามแผน G-06 "atomic ต่อ batch"); ผู้ที่ต้องการ all-or-nothing ทั้งไฟล์ต้องอยู่ในเพดาน 500 แถวของ commit ทันที.
 - ไม่มียกเลิก job กลางทาง, ไม่มี retry อัตโนมัติของ batch ที่ถูกปฏิเสธ, ไม่มี notification เมื่อจบ (G-02 ใช้ต่อได้ภายหลัง).
 - ไฟล์ถูกเก็บใน DB จนกว่า job จบ (สูงสุด 10 MB ต่อ job); ไม่มีตัวกวาด job ค้างที่ไม่เคยถูกรับ.
-- การดูสถานะ job ใช้ `items.read` หรือ `cost-records.read`; เห็น job ของทั้ง Organization (payload มีเฉพาะรหัสแถวและรหัส error ไม่มีจำนวนเงิน).
+- การดูสถานะ job ใช้ `items.read` หรือ `cost-records.read`; เห็นเฉพาะ job ที่ตัวเองสร้าง (job ของคนอื่นตอบ 404).
+- Upsert: ช่องว่างใน brandCode, taxCategoryCode, descriptionTh/En ของ Item ที่มีอยู่ = คงค่าเดิม ไฟล์ไม่ล้างค่าเหล่านี้.
+- ปุ่ม import แสดงเมื่อมี `items.create` หรือ `cost-records.create`; ตัวเลือกชนิดแสดงตามสิทธิ์ที่มี.

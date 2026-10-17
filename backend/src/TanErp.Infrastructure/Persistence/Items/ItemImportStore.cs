@@ -181,7 +181,7 @@ public class ItemImportStore : IItemImportStore
             var row = entry.Row!;
             var lookup = entry.Lookup!;
             var name = LocalizedText.Create(row.NameTh, row.NameEn);
-            var description = LocalizedText.CreateOptional(row.DescriptionTh, row.DescriptionEn);
+            var description = ResolveDescription(entry.Existing, row);
             var capabilities = new ItemCapabilities(row.CanSell, row.CanCost, row.CanPurchase, row.CanStock, row.CanProduce);
 
             if (entry.Existing is { } existing)
@@ -339,7 +339,10 @@ public class ItemImportStore : IItemImportStore
 
                 if (errors.Count == 0)
                 {
-                    lookup = new Lookup(categoryId, brandId, baseUnitId, taxCode);
+                    // A blank optional cell on an existing Item keeps the stored value; the file never clears brand, tax category or description.
+                    lookup = existing is null
+                        ? new Lookup(categoryId, brandId, baseUnitId, taxCode)
+                        : new Lookup(categoryId, row.BrandCode is null ? existing.BrandId : brandId, baseUnitId, row.TaxCategoryCode is null ? existing.TaxCategoryCode : taxCode);
                     outcome = existing is null ? ItemImportOutcomes.Created : CompareToExisting(existing, row, lookup, errors);
                 }
             }
@@ -354,6 +357,11 @@ public class ItemImportStore : IItemImportStore
         return results;
     }
 
+    private static LocalizedText? ResolveDescription(Item? existing, ItemImportRow row) =>
+        existing is not null && string.IsNullOrWhiteSpace(row.DescriptionTh) && string.IsNullOrWhiteSpace(row.DescriptionEn)
+            ? existing.Description
+            : LocalizedText.CreateOptional(row.DescriptionTh, row.DescriptionEn);
+
     /// <summary>Upsert of an existing Item: the identity-like cells must match, lifecycle locks win, and an identical row is "unchanged".</summary>
     private static string? CompareToExisting(Item existing, ItemImportRow row, Lookup lookup, List<ItemImportRowError> errors)
     {
@@ -363,7 +371,7 @@ public class ItemImportStore : IItemImportStore
         if (errors.Count > 0) return null;
 
         var name = LocalizedText.Create(row.NameTh, row.NameEn);
-        var description = LocalizedText.CreateOptional(row.DescriptionTh, row.DescriptionEn);
+        var description = ResolveDescription(existing, row);
         var capabilities = new ItemCapabilities(row.CanSell, row.CanCost, row.CanPurchase, row.CanStock, row.CanProduce);
         var taxCode = lookup.TaxCategoryCode?.Trim().ToUpperInvariant();
 

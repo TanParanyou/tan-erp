@@ -5,7 +5,7 @@ namespace TanErp.Application.Items.Import.GetItemImportJob;
 
 public sealed record GetItemImportJobQuery(string FirebaseUid, Guid MembershipId, Guid JobId);
 
-/// <summary>Progress/status of one job. The permission is checked before the job is looked up, and a job of another organization is a 404.</summary>
+/// <summary>Progress/status of one job. The permission is checked before the job is looked up, and a job of another organization or another requester is a 404.</summary>
 public class GetItemImportJobHandler
 {
     // A cost importer may not hold items.read, so either read permission may view job progress.
@@ -28,7 +28,7 @@ public class GetItemImportJobHandler
             return Result<ItemImportJobSnapshot>.Failure(accessResult.Error);
         }
 
-        var job = await _jobStore.GetAsync(accessResult.Value!.OrganizationId, query.JobId, cancellationToken);
+        var job = await _jobStore.GetAsync(accessResult.Value!.OrganizationId, accessResult.Value.ActorUserId, query.JobId, cancellationToken);
         return job is null
             ? Result<ItemImportJobSnapshot>.Failure(new Error("RESOURCE_NOT_FOUND", "Import job not found."))
             : Result<ItemImportJobSnapshot>.Success(job);

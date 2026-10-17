@@ -58,10 +58,10 @@ public class ItemImportJobStore : IItemImportJobStore
         return Result<ItemImportJobSnapshot>.Success(ToSnapshot(job, replayed: false));
     }
 
-    public async Task<ItemImportJobSnapshot?> GetAsync(Guid organizationId, Guid jobId, CancellationToken cancellationToken = default)
+    public async Task<ItemImportJobSnapshot?> GetAsync(Guid organizationId, Guid requestedByUserId, Guid jobId, CancellationToken cancellationToken = default)
     {
         var job = await _db.ItemImportJobs.AsNoTracking()
-            .FirstOrDefaultAsync(j => j.Id == jobId && j.OrganizationId == organizationId, cancellationToken);
+            .FirstOrDefaultAsync(j => j.Id == jobId && j.OrganizationId == organizationId && j.RequestedByUserId == requestedByUserId, cancellationToken);
         return job is null ? null : ToSnapshot(job, replayed: false);
     }
 

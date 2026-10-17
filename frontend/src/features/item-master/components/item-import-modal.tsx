@@ -32,8 +32,10 @@ import { ItemImportJobPanel } from "./item-import-job-panel";
 interface ItemImportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Offered only with items.create. */
+  canImportItems: boolean;
   /** Offered only with cost-records.create. */
-  canImportCosts?: boolean;
+  canImportCosts: boolean;
   /** Offered only with items.update (upsert changes existing Items). */
   canUpsert?: boolean;
 }
@@ -93,7 +95,7 @@ function isImportColumn(value: string | null | undefined): value is ImportField 
  * Item CSV import: pick a file, preview per-row validation (nothing is written), then commit all rows at once.
  * Commit is only offered when every row is valid, mirroring the backend's all-or-nothing rule.
  */
-export function ItemImportModal({ isOpen, onClose, canImportCosts = false, canUpsert = false }: ItemImportModalProps) {
+export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCosts, canUpsert = false }: ItemImportModalProps) {
   const t = useTranslations("itemMaster.import");
   const tCommon = useTranslations("common");
   const { toast } = useToast();
@@ -103,14 +105,14 @@ export function ItemImportModal({ isOpen, onClose, canImportCosts = false, canUp
   const [fileName, setFileName] = useState<string | null>(null);
   const [result, setResult] = useState<StrictPreview | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [kind, setKind] = useState<ItemImportKind>("items");
+  const [kind, setKind] = useState<ItemImportKind>(canImportItems ? "items" : "costs");
   const [mode, setMode] = useState<ItemImportMode>("create");
   // A file too big for the immediate preview is sent as a background job instead (no preview).
   const [isLargeFile, setIsLargeFile] = useState(false);
   // One idempotency key per previewed content, so a retried commit of the same file replays instead of duplicating.
   const commitKeyRef = useRef<{ hash: string; key: string } | null>(null);
   const kindOptions = [
-    { value: "items", label: t("kindItems") },
+    ...(canImportItems ? [{ value: "items", label: t("kindItems") }] : []),
     ...(canImportCosts ? [{ value: "costs", label: t("kindCosts") }] : []),
   ];
   const modeOptions = [
