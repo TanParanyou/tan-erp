@@ -10494,6 +10494,176 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/items/imports/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateItemImportJobRequest"];
+                    "text/json": components["schemas"]["CreateItemImportJobRequest"];
+                    "application/*+json": components["schemas"]["CreateItemImportJobRequest"];
+                };
+            };
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ItemImportJobResponse"];
+                        "application/json": components["schemas"]["ItemImportJobResponse"];
+                        "text/json": components["schemas"]["ItemImportJobResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/items/imports/jobs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    jobId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ItemImportJobResponse"];
+                        "application/json": components["schemas"]["ItemImportJobResponse"];
+                        "text/json": components["schemas"]["ItemImportJobResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/items": {
         parameters: {
             query?: never;
@@ -21607,6 +21777,8 @@ export interface components {
         CommitItemImportRequest: {
             content?: string | null;
             expectedContentSha256?: string | null;
+            kind?: string | null;
+            mode?: string | null;
         };
         CompleteUploadSessionResponse: {
             /** Format: uuid */
@@ -21898,6 +22070,12 @@ export interface components {
             allowedItemTypes?: string[] | null;
             /** Format: int32 */
             sortOrder?: number;
+        };
+        CreateItemImportJobRequest: {
+            kind?: string | null;
+            mode?: string | null;
+            content?: string | null;
+            expectedContentSha256?: string | null;
         };
         CreateItemRequest: {
             code?: string | null;
@@ -23054,6 +23232,55 @@ export interface components {
             createdCount?: number;
             contentSha256?: string | null;
             replayed?: boolean;
+            /** Format: int32 */
+            updatedCount?: number;
+            /** Format: int32 */
+            unchangedCount?: number;
+        };
+        ItemImportJobResponse: {
+            /** Format: uuid */
+            id?: string;
+            kind?: string | null;
+            mode?: string | null;
+            status?: string | null;
+            contentSha256?: string | null;
+            /** Format: int32 */
+            totalRows?: number;
+            /** Format: int32 */
+            processedRows?: number;
+            /** Format: int32 */
+            batchSize?: number;
+            /** Format: int32 */
+            totalBatches?: number;
+            /** Format: int32 */
+            completedBatches?: number;
+            /** Format: int32 */
+            rejectedBatches?: number;
+            /** Format: int32 */
+            createdCount?: number;
+            /** Format: int32 */
+            updatedCount?: number;
+            /** Format: int32 */
+            unchangedCount?: number;
+            /** Format: int32 */
+            errorRowCount?: number;
+            errorsTruncated?: boolean;
+            errors?: components["schemas"]["ItemImportJobRowResponse"][] | null;
+            failureCode?: string | null;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            startedAtUtc?: string | null;
+            /** Format: date-time */
+            completedAtUtc?: string | null;
+            replayed?: boolean;
+        };
+        ItemImportJobRowResponse: {
+            /** Format: int32 */
+            rowNumber?: number;
+            code?: string | null;
+            nameTh?: string | null;
+            errors?: components["schemas"]["ItemImportRowErrorResponse"][] | null;
         };
         ItemImportPreviewResponse: {
             contentSha256?: string | null;
@@ -23064,6 +23291,12 @@ export interface components {
             /** Format: int32 */
             invalidRows?: number;
             rows?: components["schemas"]["ItemImportRowResponse"][] | null;
+            /** Format: int32 */
+            createCount?: number;
+            /** Format: int32 */
+            updateCount?: number;
+            /** Format: int32 */
+            unchangedCount?: number;
         };
         ItemImportRowErrorResponse: {
             field?: string | null;
@@ -23076,6 +23309,7 @@ export interface components {
             nameTh?: string | null;
             isValid?: boolean;
             errors?: components["schemas"]["ItemImportRowErrorResponse"][] | null;
+            outcome?: string | null;
         };
         ItemResponse: {
             /** Format: uuid */
@@ -23589,6 +23823,8 @@ export interface components {
         };
         PreviewItemImportRequest: {
             content?: string | null;
+            kind?: string | null;
+            mode?: string | null;
         };
         PricingTemplateListItemResponse: {
             /** Format: uuid */

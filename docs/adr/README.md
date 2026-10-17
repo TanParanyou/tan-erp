@@ -27,3 +27,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0023 — Server-side Quotation PDF ด้วย QuestPDF และ artifact ที่เก็บครั้งเดียวพร้อม SHA-256](0023-server-side-quotation-pdf-with-questpdf.md)
 - [0024 — Estimate Unit Conversion Snapshot](0024-estimate-unit-conversion-snapshot.md)
 - [0025 — Branch Rate Override ของแม่แบบราคา และ Conversion ที่สร้างรายการขอบเขต](0025-quick-estimate-branch-override-and-scope-line-conversion.md)
+- [0026 — Item Import Phase 2 (upsert, Cost Draft, Batch Job)](0026-item-import-phase2.md)

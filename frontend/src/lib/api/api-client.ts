@@ -425,6 +425,9 @@ export type CommitItemImportRequest = components["schemas"]["CommitItemImportReq
 export type ItemImportPreviewResponse = components["schemas"]["ItemImportPreviewResponse"];
 export type ItemImportRowResponse = components["schemas"]["ItemImportRowResponse"];
 export type ItemImportCommitResponse = components["schemas"]["ItemImportCommitResponse"];
+export type CreateItemImportJobRequest = components["schemas"]["CreateItemImportJobRequest"];
+export type ItemImportJobResponse = components["schemas"]["ItemImportJobResponse"];
+export type ItemImportJobRowResponse = components["schemas"]["ItemImportJobRowResponse"];
 export type CostSourceResponse = components["schemas"]["CostSourceResponse"];
 export type CostSourceRequest = components["schemas"]["CostSourceRequest"];
 export type UpdateCostSourceRequest = components["schemas"]["UpdateCostSourceRequest"];
@@ -1537,6 +1540,14 @@ export class ApiClient {
 
   async commitItemImport(payload: CommitItemImportRequest, options: RequestOptions): Promise<ItemImportCommitResponse> {
     return this.request<ItemImportCommitResponse>("/api/v1/items/imports/commit", "POST", options, payload);
+  }
+
+  async createItemImportJob(payload: CreateItemImportJobRequest, options: RequestOptions): Promise<ItemImportJobResponse> {
+    return this.request<ItemImportJobResponse>("/api/v1/items/imports/jobs", "POST", options, payload);
+  }
+
+  async getItemImportJob(jobId: string, options: RequestOptions): Promise<ItemImportJobResponse> {
+    return this.request<ItemImportJobResponse>(`/api/v1/items/imports/jobs/${encodeURIComponent(jobId)}`, "GET", options);
   }
 
   async listProjects(options: RequestOptions, query: ListProjectsParams): Promise<ProjectListResponse> {

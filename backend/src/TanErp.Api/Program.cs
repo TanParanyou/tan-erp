@@ -228,6 +228,21 @@ builder.Services.AddScoped<TanErp.Application.Projects.ListProjects.ListProjects
 builder.Services.AddScoped<TanErp.Application.Items.IItemImportStore, TanErp.Infrastructure.Persistence.Items.ItemImportStore>();
 builder.Services.AddScoped<TanErp.Application.Items.Import.PreviewItemImport.PreviewItemImportHandler>();
 builder.Services.AddScoped<TanErp.Application.Items.Import.CommitItemImport.CommitItemImportHandler>();
+builder.Services.AddScoped<TanErp.Application.Items.ICostImportStore, TanErp.Infrastructure.Persistence.Items.CostImportStore>();
+builder.Services.AddScoped<TanErp.Application.Items.IItemImportJobStore, TanErp.Infrastructure.Persistence.Items.ItemImportJobStore>();
+builder.Services.AddScoped<TanErp.Application.Items.IItemImportJobRunner, TanErp.Infrastructure.Persistence.Items.ItemImportJobRunner>();
+builder.Services.AddScoped<TanErp.Application.Items.Import.CreateItemImportJob.CreateItemImportJobHandler>();
+builder.Services.AddScoped<TanErp.Application.Items.Import.GetItemImportJob.GetItemImportJobHandler>();
+var itemImportJobOptions = builder.Configuration
+    .GetSection(TanErp.Application.Items.Import.ItemImportJobOptions.SectionName)
+    .Get<TanErp.Application.Items.Import.ItemImportJobOptions>()
+    ?? new TanErp.Application.Items.Import.ItemImportJobOptions();
+builder.Services.AddSingleton(itemImportJobOptions);
+// Same rule as the reminder scheduler: never in the Test environment, so tests stay deterministic.
+if (!builder.Environment.IsEnvironment("Test") && itemImportJobOptions.Enabled)
+{
+    builder.Services.AddHostedService<TanErp.Api.Background.ItemImportJobWorker>();
+}
 builder.Services.AddScoped<TanErp.Application.Common.Abstractions.IOrganizationBranchReader, TanErp.Infrastructure.Persistence.OrganizationBranchReader>();
 builder.Services.AddScoped<TanErp.Application.Items.IItemImageStore, TanErp.Infrastructure.Persistence.Items.ItemImageStore>();
 builder.Services.AddScoped<TanErp.Application.Items.ICostRecordStore, TanErp.Infrastructure.Persistence.Items.CostRecordStore>();
