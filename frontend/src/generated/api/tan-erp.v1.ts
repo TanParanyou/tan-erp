@@ -2317,6 +2317,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/audit-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    resourceType?: string;
+                    resourceId?: string;
+                    action?: string;
+                    actorUserId?: string;
+                    from?: string;
+                    to?: string;
+                    page?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AuditEventListResponse"];
+                        "application/json": components["schemas"]["AuditEventListResponse"];
+                        "text/json": components["schemas"]["AuditEventListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billings": {
         parameters: {
             query?: never;
@@ -20884,6 +20952,26 @@ export interface components {
             /** Format: uuid */
             id?: string;
             displayName?: string | null;
+        };
+        AuditEventListResponse: {
+            items?: components["schemas"]["AuditEventResponse"][] | null;
+            pagination?: components["schemas"]["AdminPaginationResponse"];
+        };
+        AuditEventResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            occurredAtUtc?: string;
+            action?: string | null;
+            resourceType?: string | null;
+            resourceId?: string | null;
+            actor?: components["schemas"]["AdminRefResponse"];
+            /** Format: uuid */
+            branchId?: string | null;
+            traceId?: string | null;
+            requestId?: string | null;
+            reason?: string | null;
+            changesJson?: string | null;
         };
         BillingListItemResponse: {
             /** Format: uuid */

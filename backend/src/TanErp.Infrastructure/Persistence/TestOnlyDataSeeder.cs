@@ -152,6 +152,7 @@ public static class TestOnlyDataSeeder
             ("roles.assign-approval", "Approve Role Assignments"),
             ("roles.manage", "Manage Roles"),
             ("approval-limits.manage", "Manage Approval Limits"),
+            ("audit.read", "Read Audit Trail"),
             ("quotations.read", "Read Quotation Documents"),
             ("quotations.issue", "Issue Quotations"),
             ("quotations.accept", "Accept Quotations"),
