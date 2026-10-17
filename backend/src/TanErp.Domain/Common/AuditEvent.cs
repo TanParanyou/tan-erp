@@ -48,7 +48,8 @@ public class AuditEvent : Entity
         ResourceId = resourceId?.Trim() ?? string.Empty;
         OccurredAtUtc = occurredAtUtc;
         TraceId = traceId?.Trim() ?? string.Empty;
-        ChangesJson = string.IsNullOrWhiteSpace(changesJson) ? "{}" : changesJson;
+        // Every audit write passes here, so redaction lives in exactly one place.
+        ChangesJson = string.IsNullOrWhiteSpace(changesJson) ? "{}" : AuditRedactor.Redact(changesJson);
         BranchId = branchId;
         ActorMembershipId = actorMembershipId;
         RequestId = string.IsNullOrWhiteSpace(requestId) ? null : requestId.Trim();

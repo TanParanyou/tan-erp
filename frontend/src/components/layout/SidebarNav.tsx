@@ -80,6 +80,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasBranchesManage = can(activeMembership, "branches.manage");
   const hasRolesManage = can(activeMembership, "roles.manage");
   const hasApprovalLimitsManage = can(activeMembership, "approval-limits.manage");
+  const hasAuditRead = can(activeMembership, "audit.read");
   const hasItemMasterRead = can(activeMembership, "items.read");
   const hasCostSourcesRead = can(activeMembership, "cost-sources.read");
   const hasCostReviewRead = can(activeMembership, "cost-records.read");
@@ -104,6 +105,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isBranchSettingsActive = pathname.startsWith(`/${locale}/settings/branches`);
   const isRoleSettingsActive = pathname.startsWith(`/${locale}/settings/roles`);
   const isApprovalLimitSettingsActive = pathname.startsWith(`/${locale}/settings/approval-limits`);
+  const isAuditSettingsActive = pathname.startsWith(`/${locale}/settings/audit`);
   const isItemMasterActive = pathname.startsWith(`/${locale}/item-master`);
 
   const crmItems: NavItemDef[] = useMemo(() => {
@@ -502,6 +504,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     hasBranchesManage && (!trimmedSearch || tShell("branchSettings").toLowerCase().includes(trimmedSearch));
   const isRoleSettingsVisible =
     hasRolesManage && (!trimmedSearch || tShell("roleSettings").toLowerCase().includes(trimmedSearch));
+  const isAuditSettingsVisible =
+    hasAuditRead && (!trimmedSearch || tShell("auditSettings").toLowerCase().includes(trimmedSearch));
   const isApprovalLimitSettingsVisible =
     hasApprovalLimitsManage && (!trimmedSearch || tShell("approvalLimitSettings").toLowerCase().includes(trimmedSearch));
 
@@ -529,6 +533,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     isBranchSettingsVisible ||
     isRoleSettingsVisible ||
     isApprovalLimitSettingsVisible ||
+    isAuditSettingsVisible ||
     filteredSubgroups.some((g) => g.items.length > 0);
 
   const renderLink = (item: NavItemDef) => {
@@ -736,6 +741,17 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
                 label: tShell("approvalLimitSettings"),
                 icon: <IconCheckCircle size={20} />,
                 isActive: isApprovalLimitSettingsActive,
+              })}
+            </li>
+          )}
+          {isAuditSettingsVisible && (
+            <li>
+              {renderLink({
+                id: "audit-settings",
+                href: `/${locale}/settings/audit`,
+                label: tShell("auditSettings"),
+                icon: <IconLock size={20} />,
+                isActive: isAuditSettingsActive,
               })}
             </li>
           )}

@@ -1,4 +1,5 @@
 using TanErp.Domain.Attachments;
+using TanErp.Domain.QuickEstimates;
 using TanErp.Domain.Service;
 using TanErp.Domain.Surveys;
 
@@ -34,6 +35,14 @@ public static class AttachmentOwnerRegistry
             ManagePermission: "surveys.update",
             SignPermission: "surveys.update",
             ManageStates: new HashSet<string>(StringComparer.Ordinal) { SurveyRevisionStatus.Draft },
+            SignStates: new HashSet<string>(StringComparer.Ordinal)),
+        // Quick estimates have no signatures: SignPermission mirrors the manage permission and SignStates is empty, so a capture is refused with ATTACHMENT_OWNER_LOCKED.
+        new AttachmentOwnerDescriptor(
+            AttachmentOwnerTypes.QuickEstimate,
+            ReadPermission: "quick-estimates.read",
+            ManagePermission: "quick-estimates.update",
+            SignPermission: "quick-estimates.update",
+            ManageStates: new HashSet<string>(StringComparer.Ordinal) { QuickEstimateStatus.Draft, QuickEstimateStatus.Calculated, QuickEstimateStatus.Returned },
             SignStates: new HashSet<string>(StringComparer.Ordinal))
     }.ToDictionary(d => d.OwnerType, StringComparer.Ordinal);
 

@@ -96,6 +96,7 @@
 | Quick Estimate | `pricing-templates.read` | ดูแม่แบบราคา | Organization |
 | Quick Estimate | `pricing-templates.manage` | สร้าง/แก้/ส่งอนุมัติ/สร้างเวอร์ชันใหม่ของแม่แบบราคา | Organization |
 | Quick Estimate | `pricing-templates.approve` | อนุมัติ/ส่งกลับ/ปรับเทียบ/เปิดใช้/ปิดใช้แม่แบบราคา (ห้ามอนุมัติของตัวเอง) | Organization |
+| Quick Estimate | `pricing-templates.override-rate` | ขอ Branch Rate Override ของแม่แบบ (สาขาของ Membership); ผู้อนุมัติ/เพิกถอนใช้ `pricing-templates.approve` | Organization |
 | Quick Estimate | `quick-estimates.create` | เริ่มใบประเมินเบื้องต้น | Organization |
 | Quick Estimate | `quick-estimates.read` | ดูใบประเมินเบื้องต้น | Organization |
 | Quick Estimate | `quick-estimates.update` | แก้ฉบับร่างและคำนวณ | Organization |
@@ -138,7 +139,7 @@
 | Quotation | `quotations.amend` | ออกใบเสนอราคาฉบับแทนที่ | Organization |
 | Quotation | `quotations.share` | สร้าง/เพิกถอนลิงก์ให้ลูกค้ายอมรับ | Organization |
 | Quotation | `quotations.read` | ดู/พิมพ์เอกสาร Quotation ที่ออกแล้ว (Customer-safe Document) และดาวน์โหลดไฟล์ PDF ที่เก็บไว้ | Branch/Project |
-| Audit | `audit.read` | ดู Audit Trail ตามขอบเขต | Organization/Branch/Project |
+| Audit | `audit.read` | ดู Audit Trail ตามขอบเขต — ใช้จริงที่ `GET /api/v1/audit-events` (Organization; [Audit API Contract](audit-api-contract.md)) | Organization/Branch/Project |
 
 **Shared Attachment (G-01):** ไม่มี permission key ใหม่ — การอ่าน/แนบ/เซ็นไฟล์แนบของ owner ใช้ permission ของ owner ตาม [Attachment API Contract](attachment-api-contract.md) (`installation-job` → read=installations.read, manage=installations.operate, sign=installations.handover).
 

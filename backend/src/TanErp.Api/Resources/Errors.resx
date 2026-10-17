@@ -703,6 +703,16 @@
   <data name="ITEM_IMPORT_VALIDATION_FAILED_DETAIL" xml:space="preserve"><value>มีบางแถวไม่ผ่านการตรวจสอบ ระบบไม่ได้นำเข้าข้อมูลใด ๆ กรุณาแก้ไขแล้วตรวจสอบก่อนนำเข้าอีกครั้ง</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_TITLE" xml:space="preserve"><value>ไฟล์ไม่ตรงกับที่ตรวจสอบไว้</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_DETAIL" xml:space="preserve"><value>เนื้อหาไฟล์ต่างจากฉบับที่ตรวจสอบก่อนนำเข้า กรุณาตรวจสอบไฟล์ใหม่อีกครั้ง</value></data>
+  <data name="ITEM_IMPORT_OPTION_INVALID_TITLE" xml:space="preserve"><value>ตัวเลือกการนำเข้าไม่ถูกต้อง</value></data>
+  <data name="ITEM_IMPORT_OPTION_INVALID_DETAIL" xml:space="preserve"><value>ชนิดหรือโหมดการนำเข้าไม่รองรับ การนำเข้าต้นทุนรองรับเฉพาะโหมดสร้างใหม่</value></data>
+  <data name="ITEM_IMPORT_BATCH_CONFLICT_TITLE" xml:space="preserve"><value>ชุดข้อมูลนำเข้าขัดแย้งกับการเปลี่ยนแปลงอื่น</value></data>
+  <data name="ITEM_IMPORT_BATCH_CONFLICT_DETAIL" xml:space="preserve"><value>มีการเปลี่ยนแปลงพร้อมกันระหว่างนำเข้า ระบบไม่ได้บันทึกชุดข้อมูลนั้น กรุณาลองใหม่</value></data>
+  <data name="ITEM_IMPORT_JOB_LOST_TITLE" xml:space="preserve"><value>งานนำเข้าถูกประมวลผลโดยตัวอื่น</value></data>
+  <data name="ITEM_IMPORT_JOB_LOST_DETAIL" xml:space="preserve"><value>งานนำเข้านี้ถูกส่งต่อให้ตัวประมวลผลอื่นแล้ว กรุณาตรวจสอบสถานะงานอีกครั้ง</value></data>
+  <data name="ITEM_IMPORT_JOB_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะงานนำเข้าไม่รองรับ</value></data>
+  <data name="ITEM_IMPORT_JOB_INVALID_STATE_DETAIL" xml:space="preserve"><value>ไม่สามารถดำเนินการนี้ในสถานะปัจจุบันของงานนำเข้า</value></data>
+  <data name="ITEM_IMPORT_JOB_FAILED_TITLE" xml:space="preserve"><value>งานนำเข้าล้มเหลว</value></data>
+  <data name="ITEM_IMPORT_JOB_FAILED_DETAIL" xml:space="preserve"><value>งานนำเข้าหยุดทำงานเนื่องจากข้อผิดพลาดของระบบ ชุดข้อมูลที่ยังไม่เสร็จจะไม่ถูกบันทึก กรุณาลองใหม่หรือติดต่อผู้ดูแล</value></data>
   <data name="PROJECT_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลโครงการถูกแก้ไข</value></data>
   <data name="PROJECT_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>โครงการถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
   <data name="PROJECT_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะโครงการไม่รองรับ</value></data>
@@ -1153,6 +1163,14 @@
   <data name="PRICING_TEMPLATE_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะเทมเพลตไม่อนุญาตให้ทำรายการนี้</value></data>
   <data name="PRICING_TEMPLATE_NOT_USABLE_TITLE" xml:space="preserve"><value>เทมเพลตนี้ใช้ประเมินไม่ได้</value></data>
   <data name="PRICING_TEMPLATE_NOT_USABLE_DETAIL" xml:space="preserve"><value>เทมเพลตนี้ใช้ประเมินไม่ได้</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_TITLE" xml:space="preserve"><value>ราคาเฉพาะสาขาไม่ถูกต้อง</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลราคาเฉพาะสาขาไม่ผ่านการตรวจสอบ: ตรวจสอบอัตรา ราคาขั้นต่ำ ช่วงวันที่ (ไม่เกิน 366 วันและต้องไม่สิ้นสุดก่อนวันนี้) และเหตุผล</value></data>
+  <data name="BRANCH_OVERRIDE_OVERLAP_TITLE" xml:space="preserve"><value>ช่วงเวลาซ้อนกับราคาเฉพาะสาขาเดิม</value></data>
+  <data name="BRANCH_OVERRIDE_OVERLAP_DETAIL" xml:space="preserve"><value>สาขานี้มีคำขอหรือราคาเฉพาะสาขาของเทมเพลตนี้ที่ครอบคลุมบางส่วนของช่วงเวลานี้อยู่แล้ว</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะปัจจุบันของราคาเฉพาะสาขาไม่อนุญาตให้ทำรายการนี้</value></data>
+  <data name="BRANCH_OVERRIDE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ตัดสินคำขอของตนเองไม่ได้</value></data>
+  <data name="BRANCH_OVERRIDE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้ขอราคาเฉพาะสาขาไม่สามารถอนุมัติหรือส่งกลับคำขอของตนเองได้</value></data>
   <data name="PRICING_TEMPLATE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ผู้จัดทำเทมเพลตตัดสินของตนเองไม่ได้</value></data>
   <data name="PRICING_TEMPLATE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้จัดทำเทมเพลตตัดสินของตนเองไม่ได้</value></data>
   <data name="QUICK_ESTIMATE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ราคาเบื้องต้นถูกแก้ไขโดยผู้อื่น</value></data>

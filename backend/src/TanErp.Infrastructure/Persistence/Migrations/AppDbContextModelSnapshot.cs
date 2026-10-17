@@ -5255,6 +5255,161 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Items.ItemImportJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BatchSize")
+                        .HasColumnType("integer")
+                        .HasColumnName("batch_size");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("completed_at_utc");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("ContentSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("content_sha256");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<int>("CreatedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_count");
+
+                    b.Property<int>("ErrorRowCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("error_row_count");
+
+                    b.Property<string>("ErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("errors_json");
+
+                    b.Property<string>("FailureCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("failure_code");
+
+                    b.Property<string>("IdempotencyKeyHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("idempotency_key_hash");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset?>("LeaseExpiresAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("lease_expires_at_utc");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("mode");
+
+                    b.Property<int>("NextBatchIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("next_batch_index");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<int>("ProcessedRows")
+                        .HasColumnType("integer")
+                        .HasColumnName("processed_rows");
+
+                    b.Property<int>("RejectedBatchCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("rejected_batch_count");
+
+                    b.Property<string>("RequestedByFirebaseUid")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("requested_by_firebase_uid");
+
+                    b.Property<Guid>("RequestedByMembershipId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_by_membership_id");
+
+                    b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_by_user_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<DateTimeOffset?>("StartedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("started_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("TotalBatches")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_batches");
+
+                    b.Property<int>("TotalRows")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_rows");
+
+                    b.Property<string>("TraceId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("trace_id");
+
+                    b.Property<int>("UnchangedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("unchanged_count");
+
+                    b.Property<int>("UpdatedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("updated_count");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "IdempotencyKeyHash")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "CreatedAtUtc");
+
+                    b.ToTable("item_import_jobs", "item_master", t =>
+                        {
+                            t.HasCheckConstraint("CK_item_import_jobs_kind", "kind IN ('items', 'costs')");
+
+                            t.HasCheckConstraint("CK_item_import_jobs_mode", "mode IN ('create', 'upsert')");
+
+                            t.HasCheckConstraint("CK_item_import_jobs_progress", "processed_rows >= 0 AND processed_rows <= total_rows AND next_batch_index >= 0 AND next_batch_index <= total_batches");
+
+                            t.HasCheckConstraint("CK_item_import_jobs_status", "status IN ('queued', 'running', 'completed', 'completed_with_errors', 'failed')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Items.ItemTaxCategory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -7454,6 +7609,131 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId", "ProjectId", "OccurredAtUtc");
 
                     b.ToTable("project_status_history", "projects");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.QuickEstimates.BranchRateOverride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("CloseNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("close_note");
+
+                    b.Property<DateTimeOffset?>("ClosedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("closed_at_utc");
+
+                    b.Property<Guid?>("ClosedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("closed_by_user_id");
+
+                    b.Property<DateTimeOffset?>("DecidedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("decided_at_utc");
+
+                    b.Property<Guid?>("DecidedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_by_user_id");
+
+                    b.Property<string>("DecisionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("decision_note");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateOnly>("EffectiveTo")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_to");
+
+                    b.Property<decimal>("MinimumCharge")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("minimum_charge");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("ReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("reason_code");
+
+                    b.Property<string>("ReasonDetail")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason_detail");
+
+                    b.Property<decimal>("ReferenceRate")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("reference_rate");
+
+                    b.Property<DateTimeOffset>("RequestedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("requested_at_utc");
+
+                    b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_by_user_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("SourceReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("source_reference");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("ClosedByUserId");
+
+                    b.HasIndex("DecidedByUserId");
+
+                    b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("OrganizationId", "TemplateId", "BranchId", "Status");
+
+                    b.ToTable("branch_rate_overrides", "quick_estimate", t =>
+                        {
+                            t.HasCheckConstraint("ck_branch_rate_overrides_decider", "decided_by_user_id IS NULL OR decided_by_user_id <> requested_by_user_id");
+
+                            t.HasCheckConstraint("ck_branch_rate_overrides_period", "effective_to >= effective_from");
+
+                            t.HasCheckConstraint("ck_branch_rate_overrides_rates", "reference_rate > 0 AND minimum_charge >= 0");
+
+                            t.HasCheckConstraint("ck_branch_rate_overrides_status", "status IN ('requested', 'approved', 'returned', 'revoked')");
+                        });
                 });
 
             modelBuilder.Entity("TanErp.Domain.QuickEstimates.PricingTemplate", b =>
@@ -10746,6 +11026,43 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasOne("TanErp.Domain.Projects.Project", null)
                         .WithMany()
                         .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.QuickEstimates.BranchRateOverride", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("ClosedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("DecidedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.QuickEstimates.PricingTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -387,7 +387,13 @@ public class QuickEstimateStore : IQuickEstimateStore
             var template = await _db.PricingTemplates.AsNoTracking().FirstOrDefaultAsync(t => t.Id == e.TemplateId && t.OrganizationId == access.OrganizationId, ct);
             if (template is null || !template.IsUsableOn(Today)) return ("", Fail<QuickEstimateProjection>("PRICING_TEMPLATE_NOT_USABLE", "The pricing template is not usable."));
 
-            var result = QuickEstimateEngine.Calculate(template, e.ToInput(), Today);
+            // Only an approved override of this quick estimate's own branch, for this exact template version and today's date, can apply.
+            var today = Today;
+            var branchId = e.BranchId;
+            var rateOverride = await _db.BranchRateOverrides.AsNoTracking()
+                .Where(o => o.OrganizationId == access.OrganizationId && o.TemplateId == template.Id && o.BranchId == branchId && o.Status == OverrideStatus.Approved && o.EffectiveFrom <= today && today <= o.EffectiveTo)
+                .Select(o => new RateOverride(o.Id, o.ReferenceRate, o.MinimumCharge)).FirstOrDefaultAsync(ct);
+            var result = QuickEstimateEngine.Calculate(template, e.ToInput(), today, rateOverride);
             var latest = await _db.QuickEstimateCalculations.AsNoTracking().Where(c => c.QuickEstimateId == e.Id).OrderByDescending(c => c.Version).FirstOrDefaultAsync(ct);
             if (latest is not null && latest.InputHash == result.InputHash && latest.TemplateId == template.Id)
             {
@@ -526,6 +532,29 @@ public class QuickEstimateStore : IQuickEstimateStore
         var created = await _estimates.CreateDraftAsync(orgId, estimate.OpportunityId.Value, input.SiteSurveyRevisionId, "THB", access.ActorUserId, keyHash, Application.Common.Security.Sha256Hex.Compute($"qe-convert:{payloadHash}"), ct);
         if (created.IsFailure) return Result<QuickEstimateProjection>.Failure(created.Error);
 
+        // Scope lines are added only to a draft that is still empty, so an estimator's work is never overwritten and a retry after a partial
+        // success finds the lines already there. The count comes from the stored draft, not from this attempt.
+        var draft = created.Value!;
+        var stored = draft.CurrentRevision;
+        if (stored is not null && draft.Status == TanErp.Domain.Estimates.EstimateStatus.Draft && stored.RevisionNo == 1 && stored.Sections.Count == 0)
+        {
+            var scope = QuickEstimateConversionMapper.BuildSections(estimate.Number, estimate.RoomOrArea, releasable.Value!.Version, releasable.Value.TemplateCode, releasable.Value.SnapshotJson);
+            if (scope.Count > 0)
+            {
+                try
+                {
+                    _db.ChangeTracker.Clear();
+                    stored = await _estimates.UpdateDraftAsync(orgId, draft.Id, stored.Id, stored.RowVersion, scope, access.ActorUserId, ct);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return Fail<QuickEstimateProjection>("QUICK_ESTIMATE_VERSION_CONFLICT", "The official estimate draft changed while converting; retry.");
+                }
+            }
+        }
+
+        var lineCount = stored?.Sections.Where(s => s.Code == QuickEstimateConversionMapper.SectionCode).Sum(s => s.WorkItems.Count) ?? 0;
+
         var strategy = _db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
@@ -542,7 +571,7 @@ public class QuickEstimateStore : IQuickEstimateStore
             var now = _clock.UtcNow;
             var calc = (await CurrentCalculationAsync(locked, input.SourceVersion, ct))!;
             // Scope, measurements and assumptions are kept as the source of the new estimate. The range itself is not copied as a price.
-            var source = JsonSerializer.Serialize(new { quickEstimate = locked.Number, calculationVersion = calc.Version, calc.TemplateCode, calc.TemplateVersion, locked.PropertyType, locked.RoomOrArea, locked.GradeCode, locked.ComplexityCodes, locked.AddOnCodes, measurements = locked.Measurements }, Json);
+            var source = JsonSerializer.Serialize(new { quickEstimate = locked.Number, calculationVersion = calc.Version, calc.TemplateCode, calc.TemplateVersion, locked.PropertyType, locked.RoomOrArea, locked.GradeCode, locked.ComplexityCodes, locked.AddOnCodes, measurements = locked.Measurements, mappedLineCount = lineCount }, Json);
             _db.QuickEstimateConversions.Add(new QuickEstimateConversion(Guid.NewGuid(), orgId, locked.Id, input.SourceVersion, created.Value!.Id, source, access.ActorUserId, now));
             locked.MarkConverted(now);
             Audit(access, "quick-estimate.converted", "QuickEstimate", locked.Id, traceId, new { number = locked.Number, version = input.SourceVersion, officialEstimateId = created.Value.Id }, now);
@@ -551,6 +580,13 @@ public class QuickEstimateStore : IQuickEstimateStore
             await tx.CommitAsync(ct);
             return Result<QuickEstimateProjection>.Success((await GetQuickEstimateAsync(orgId, locked.Id, ct))!);
         });
+    }
+
+    /// <summary>Conversions made before G-09 have no count in their stored snapshot; null means "not recorded".</summary>
+    private static int? MappedLineCount(string sourceSnapshotJson)
+    {
+        using var document = JsonDocument.Parse(sourceSnapshotJson);
+        return document.RootElement.TryGetProperty("mappedLineCount", out var count) && count.ValueKind == JsonValueKind.Number ? count.GetInt32() : null;
     }
 
     public async Task<QuickEstimateProjection?> GetQuickEstimateAsync(Guid organizationId, Guid id, CancellationToken ct = default)
@@ -576,7 +612,8 @@ public class QuickEstimateStore : IQuickEstimateStore
                 l.GetProperty("billableQuantity").GetDecimal(), l.GetProperty("baseAmount").GetDecimal(), l.GetProperty("adjustedAmount").GetDecimal())).ToList();
             calcProjection = new CalculationProjection(
                 calc.Version, calc.TemplateCode, calc.TemplateVersion, calc.NetAmount, calc.TaxAmount, calc.DisplayedLower, calc.DisplayedUpper, calc.ValidUntil, calc.ShareDecision,
-                JsonSerializer.Deserialize<List<string>>(calc.ReasonCodesJson) ?? new List<string>(), calc.InputHash, lines, Person(calc.CreatedByUserId)!, calc.CreatedAtUtc);
+                JsonSerializer.Deserialize<List<string>>(calc.ReasonCodesJson) ?? new List<string>(), calc.InputHash, lines, Person(calc.CreatedByUserId)!, calc.CreatedAtUtc,
+                snapshot.TryGetProperty("branchOverride", out var branchOverride) ? branchOverride.GetProperty("id").GetGuid() : (Guid?)null);
         }
 
         return new QuickEstimateProjection(
@@ -587,7 +624,7 @@ public class QuickEstimateStore : IQuickEstimateStore
             e.CurrentCalculationVersion, calcProjection,
             reviews.Select(r => new ReviewProjection(r.Id, r.SourceVersion, r.Status, r.RequestNote, Person(r.RequestedByUserId)!, r.RequestedAtUtc, Person(r.DecidedByUserId), r.DecidedAtUtc, r.ReasonCode, r.DecisionNote)).ToList(),
             shares.Select(s => new ShareProjection(s.Id, s.SourceVersion, s.Channel, s.Recipient, s.Locale, Person(s.CreatedByUserId)!, s.CreatedAtUtc, s.SummaryJson)).ToList(),
-            conversions.Select(c => new ConversionProjection(c.Id, c.SourceVersion, c.OfficialEstimateId, c.CreatedAtUtc)).ToList(),
+            conversions.Select(c => new ConversionProjection(c.Id, c.SourceVersion, c.OfficialEstimateId, c.CreatedAtUtc, MappedLineCount(c.SourceSnapshotJson))).ToList(),
             Person(e.CreatedByUserId)!, e.CreatedAtUtc, e.UpdatedAtUtc, e.RowVersion);
     }
 
@@ -597,6 +634,7 @@ public class QuickEstimateStore : IQuickEstimateStore
     public async Task<PagedQuickEstimates> ListQuickEstimatesAsync(Guid organizationId, QuickEstimateListQuery query, CancellationToken ct = default)
     {
         var estimates = _db.QuickEstimates.AsNoTracking().Where(e => e.OrganizationId == organizationId);
+        if (query.BranchId is not null) estimates = estimates.Where(e => e.BranchId == query.BranchId);
         if (query.Status is not null) estimates = estimates.Where(e => e.Status == query.Status);
         if (query.Search is not null)
         {

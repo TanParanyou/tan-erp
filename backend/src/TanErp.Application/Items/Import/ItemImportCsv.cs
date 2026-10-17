@@ -19,14 +19,17 @@ public static class ItemImportCsv
     private const int MaxNameLength = 200;
     private const int MaxDescriptionLength = 1000;
 
-    public static Result<IReadOnlyList<ItemImportRowDraft>> Parse(string? content)
+    public static Result<IReadOnlyList<ItemImportRowDraft>> Parse(string? content) =>
+        Parse(content, ItemImportLimits.MaxRows, ItemImportLimits.MaxContentLength);
+
+    public static Result<IReadOnlyList<ItemImportRowDraft>> Parse(string? content, int maxRows, int maxContentLength)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
             return Fail("The import file is empty.");
         }
 
-        if (content.Length > ItemImportLimits.MaxContentLength)
+        if (content.Length > maxContentLength)
         {
             return Fail("The import file is too large.");
         }
@@ -55,9 +58,9 @@ public static class ItemImportCsv
             return Fail("The import file has no data rows.");
         }
 
-        if (dataRecords.Count > ItemImportLimits.MaxRows)
+        if (dataRecords.Count > maxRows)
         {
-            return Fail($"The import file has more than {ItemImportLimits.MaxRows} rows.");
+            return Fail($"The import file has more than {maxRows} rows.");
         }
 
         var rows = new List<ItemImportRowDraft>(dataRecords.Count);
@@ -82,7 +85,11 @@ public static class ItemImportCsv
     }
 
     /// <summary>Returns the parsed row, or the syntax errors found on it.</summary>
-    public static (ItemImportRow? Row, IReadOnlyList<ItemImportRowError> Errors) Validate(ItemImportRowDraft draft)
+    public static (ItemImportRow? Row, IReadOnlyList<ItemImportRowError> Errors) Validate(ItemImportRowDraft draft) =>
+        Validate(draft, ItemImportMode.Create);
+
+    /// <summary>Upsert uses Item Code as the key, so the code cell is required in that mode.</summary>
+    public static (ItemImportRow? Row, IReadOnlyList<ItemImportRowError> Errors) Validate(ItemImportRowDraft draft, string mode)
     {
         var errors = new List<ItemImportRowError>();
 
@@ -96,6 +103,7 @@ public static class ItemImportCsv
             if (value is { } v && v.Length > max) errors.Add(new ItemImportRowError(field, ItemImportErrorCodes.TooLong));
         }
 
+        if (mode == ItemImportMode.Upsert) Require("code", draft.Code);
         Require("itemType", draft.ItemType);
         Require("categoryCode", draft.CategoryCode);
         Require("baseUnitCode", draft.BaseUnitCode);
@@ -144,11 +152,25 @@ public static class ItemImportCsv
             canSell, canCost, canPurchase, canStock, canProduce), errors);
     }
 
+    /// <summary>Row numbers whose Item Code already appeared on an earlier row of the same file (case-insensitive).</summary>
+    public static IReadOnlySet<int> FindDuplicateCodeRows(IEnumerable<ItemImportRowDraft> drafts)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var duplicates = new HashSet<int>();
+        foreach (var draft in drafts)
+        {
+            if (draft.Code is null) continue;
+            if (!seen.Add(draft.Code.Trim().ToUpperInvariant())) duplicates.Add(draft.RowNumber);
+        }
+
+        return duplicates;
+    }
+
     private static Result<IReadOnlyList<ItemImportRowDraft>> Fail(string message) =>
         Result<IReadOnlyList<ItemImportRowDraft>>.Failure(new Error("ITEM_IMPORT_FILE_INVALID", message));
 
     /// <summary>Splits CSV text into records of cells; returns null when a quoted value is never closed.</summary>
-    private static List<List<string>>? ReadRecords(string text)
+    internal static List<List<string>>? ReadRecords(string text)
     {
         var records = new List<List<string>>();
         var cells = new List<string>();

@@ -59,6 +59,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateReview> QuickEstimateReviews => Set<TanErp.Domain.QuickEstimates.QuickEstimateReview>();
     public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateShare> QuickEstimateShares => Set<TanErp.Domain.QuickEstimates.QuickEstimateShare>();
     public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateConversion> QuickEstimateConversions => Set<TanErp.Domain.QuickEstimates.QuickEstimateConversion>();
+    public DbSet<TanErp.Domain.QuickEstimates.BranchRateOverride> BranchRateOverrides => Set<TanErp.Domain.QuickEstimates.BranchRateOverride>();
     public DbSet<TanErp.Domain.Finance.BillingDocument> BillingDocuments => Set<TanErp.Domain.Finance.BillingDocument>();
     public DbSet<TanErp.Domain.Finance.Payment> Payments => Set<TanErp.Domain.Finance.Payment>();
     public DbSet<TanErp.Domain.Finance.AccountingOutboxMessage> AccountingOutbox => Set<TanErp.Domain.Finance.AccountingOutboxMessage>();
@@ -118,6 +119,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Items.ItemUnitConversion> ItemUnitConversions => Set<TanErp.Domain.Items.ItemUnitConversion>();
     public DbSet<TanErp.Domain.Items.UnitConversion> UnitConversions => Set<TanErp.Domain.Items.UnitConversion>();
     public DbSet<TanErp.Domain.Items.CostRecord> CostRecords => Set<TanErp.Domain.Items.CostRecord>();
+    public DbSet<TanErp.Domain.Items.ItemImportJob> ItemImportJobs => Set<TanErp.Domain.Items.ItemImportJob>();
     public DbSet<TanErp.Domain.Items.CostRecordReview> CostRecordReviews => Set<TanErp.Domain.Items.CostRecordReview>();
     public DbSet<TanErp.Domain.Items.CostSource> CostSources => Set<TanErp.Domain.Items.CostSource>();
 

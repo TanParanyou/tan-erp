@@ -14,6 +14,7 @@ export const PERMISSIONS = {
   ROLES_ASSIGN_APPROVAL: "roles.assign-approval",
   ROLES_MANAGE: "roles.manage",
   APPROVAL_LIMITS_MANAGE: "approval-limits.manage",
+  AUDIT_READ: "audit.read",
 
   // Item Master
   ITEMS_READ: "items.read",
@@ -89,6 +90,7 @@ export const PERMISSIONS = {
   PRICING_TEMPLATES_READ: "pricing-templates.read",
   PRICING_TEMPLATES_MANAGE: "pricing-templates.manage",
   PRICING_TEMPLATES_APPROVE: "pricing-templates.approve",
+  PRICING_TEMPLATES_OVERRIDE_RATE: "pricing-templates.override-rate",
   QUICK_ESTIMATES_CREATE: "quick-estimates.create",
   QUICK_ESTIMATES_READ: "quick-estimates.read",
   QUICK_ESTIMATES_UPDATE: "quick-estimates.update",

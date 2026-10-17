@@ -11,7 +11,7 @@ namespace TanErp.Infrastructure.Persistence.Attachments;
 /// </summary>
 public class AttachmentOwnerScopeReader : IAttachmentOwnerScopeReader
 {
-    public static readonly IReadOnlySet<string> SupportedOwnerTypes = new HashSet<string>(StringComparer.Ordinal) { AttachmentOwnerTypes.InstallationJob, AttachmentOwnerTypes.SurveyArea };
+    public static readonly IReadOnlySet<string> SupportedOwnerTypes = new HashSet<string>(StringComparer.Ordinal) { AttachmentOwnerTypes.InstallationJob, AttachmentOwnerTypes.SurveyArea, AttachmentOwnerTypes.QuickEstimate };
 
     private readonly AppDbContext _db;
 
@@ -42,6 +42,11 @@ public class AttachmentOwnerScopeReader : IAttachmentOwnerScopeReader
                         survey.OrganizationId,
                         survey.BranchId,
                         template.SnapshotHashVersion == SurveyTemplateVersion.AreaEvidenceHashVersion ? revision.Status : "area-evidence-unsupported"))
+                    .FirstOrDefaultAsync(ct);
+            case AttachmentOwnerTypes.QuickEstimate:
+                return await _db.QuickEstimates.AsNoTracking()
+                    .Where(q => q.Id == ownerId && q.OrganizationId == organizationId)
+                    .Select(q => new AttachmentOwnerScope(q.OrganizationId, q.BranchId, q.Status))
                     .FirstOrDefaultAsync(ct);
             default:
                 return null;

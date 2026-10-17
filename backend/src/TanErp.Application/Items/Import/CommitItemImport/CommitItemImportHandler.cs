@@ -10,25 +10,40 @@ public sealed record CommitItemImportCommand(
     string? Content,
     string? ExpectedContentSha256,
     string IdempotencyKey,
-    string TraceId);
+    string TraceId,
+    string Kind = ItemImportKind.Items,
+    string Mode = ItemImportMode.Create);
 
 public class CommitItemImportHandler
 {
     private readonly IRequestAccessResolver _accessResolver;
     private readonly IItemImportStore _store;
+    private readonly ICostImportStore _costStore;
 
-    public CommitItemImportHandler(IRequestAccessResolver accessResolver, IItemImportStore store)
+    public CommitItemImportHandler(IRequestAccessResolver accessResolver, IItemImportStore store, ICostImportStore costStore)
     {
         _accessResolver = accessResolver;
         _store = store;
+        _costStore = costStore;
     }
 
     public async Task<Result<ItemImportCommitResult>> Handle(CommitItemImportCommand command, CancellationToken cancellationToken = default)
     {
-        var accessResult = await _accessResolver.ResolveAsync(command.FirebaseUid, command.MembershipId, "items.create", cancellationToken);
+        var accessResult = await ItemImportAccess.ResolveAsync(
+            _accessResolver, command.FirebaseUid, command.MembershipId, command.Kind, command.Mode, cancellationToken);
         if (accessResult.IsFailure)
         {
             return Result<ItemImportCommitResult>.Failure(accessResult.Error);
+        }
+
+        var contentHash = Sha256Hex.Compute(command.Content ?? string.Empty);
+        if (command.Kind == ItemImportKind.Costs)
+        {
+            var parsedCosts = CostImportCsv.Parse(command.Content);
+            if (parsedCosts.IsFailure) return Result<ItemImportCommitResult>.Failure(parsedCosts.Error);
+            if (ContentChanged(command.ExpectedContentSha256, contentHash)) return ContentChangedFailure();
+            return await _costStore.CommitAsync(
+                accessResult.Value!, parsedCosts.Value!, contentHash, command.IdempotencyKey, command.TraceId, cancellationToken);
         }
 
         var parsed = ItemImportCsv.Parse(command.Content);
@@ -37,15 +52,16 @@ public class CommitItemImportHandler
             return Result<ItemImportCommitResult>.Failure(parsed.Error);
         }
 
-        var contentHash = Sha256Hex.Compute(command.Content!);
-        if (!string.IsNullOrWhiteSpace(command.ExpectedContentSha256)
-            && !string.Equals(command.ExpectedContentSha256, contentHash, StringComparison.OrdinalIgnoreCase))
-        {
-            return Result<ItemImportCommitResult>.Failure(
-                new Error("ITEM_IMPORT_CONTENT_CHANGED", "The file differs from the one that was previewed."));
-        }
+        if (ContentChanged(command.ExpectedContentSha256, contentHash)) return ContentChangedFailure();
 
         return await _store.CommitAsync(
-            accessResult.Value!, parsed.Value!, contentHash, command.IdempotencyKey, command.TraceId, cancellationToken);
+            accessResult.Value!, parsed.Value!, command.Mode, contentHash, command.IdempotencyKey, command.TraceId, cancellationToken);
     }
+
+    private static bool ContentChanged(string? expected, string actual) =>
+        !string.IsNullOrWhiteSpace(expected) && !string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase);
+
+    private static Result<ItemImportCommitResult> ContentChangedFailure() =>
+        Result<ItemImportCommitResult>.Failure(
+            new Error("ITEM_IMPORT_CONTENT_CHANGED", "The file differs from the one that was previewed."));
 }

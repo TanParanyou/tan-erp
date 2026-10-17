@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
@@ -40,6 +41,7 @@ function DetailView({ template }: { template: PricingTemplateResponse }) {
   const t = useTranslations("quickEstimates.templates");
   const tErrors = useTranslations("quickEstimates.errors");
   const tCommon = useTranslations("common");
+  const tOverrides = useTranslations("quickEstimates.overrides");
   const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
@@ -115,6 +117,7 @@ function DetailView({ template }: { template: PricingTemplateResponse }) {
       <div className="erp-card space-y-3 p-5">
         <div className="flex flex-wrap gap-3">
           {canManage && status === "draft" && <Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => setEditing(true)}>{tCommon("actions.edit")}</Button>}
+          {(status === "active" || status === "calibration") && <Link href={`/${locale}/pricing-templates/${id}/overrides`} className="inline-flex min-h-11 items-center border border-erp-border px-4 text-sm font-semibold text-erp-navy">{tOverrides("open")}</Link>}
           {canManage && status === "draft" && <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.step.isPending} disabled={busy} onClick={() => void step("submit")}>{t("submit")}</Button>}
           {canApprove && status === "submitted" && <Button type="button" variant="primary" className="min-h-11" disabled={busy} onClick={() => { setNote(""); setDecision("approved"); }}>{t("approve")}</Button>}
           {canApprove && status === "submitted" && <Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => { setNote(""); setDecision("returned"); }}>{t("return")}</Button>}

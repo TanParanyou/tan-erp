@@ -123,6 +123,9 @@ export type ApprovalLimitListResponse = components["schemas"]["ApprovalLimitList
 export type ApprovalLimitOptionsResponse = components["schemas"]["ApprovalLimitOptionsResponse"];
 export type CreateApprovalLimitRequest = components["schemas"]["CreateApprovalLimitRequest"];
 export type UpdateApprovalLimitRequest = components["schemas"]["UpdateApprovalLimitRequest"];
+export type AuditEventResponse = components["schemas"]["AuditEventResponse"];
+export type AuditEventListResponse = components["schemas"]["AuditEventListResponse"];
+export type AuditEventListParams = NonNullable<paths["/api/v1/audit-events"]["get"]["parameters"]["query"]>;
 export type ApprovalLimitListParams = NonNullable<paths["/api/v1/admin/approval-limits"]["get"]["parameters"]["query"]>;
 
 export type AdminUserListParams = NonNullable<paths["/api/v1/admin/users"]["get"]["parameters"]["query"]>;
@@ -348,6 +351,9 @@ export type QuickEstimateListResponse = components["schemas"]["QuickEstimateList
 export type QuickEstimateListItemResponse = components["schemas"]["QuickEstimateListItemResponse"];
 export type QuickEstimateDraftRequest = components["schemas"]["QuickEstimateDraftRequest"];
 export type TemplateStepName = "submit" | "calibration" | "activate" | "disable";
+export type BranchRateOverrideRequest = components["schemas"]["BranchRateOverrideRequest"];
+export type BranchRateOverrideResponse = components["schemas"]["BranchRateOverrideResponse"];
+export type BranchRateOverrideListResponse = components["schemas"]["BranchRateOverrideListResponse"];
 export interface ListPricingTemplatesParams {
   search?: string;
   status?: string;
@@ -422,6 +428,9 @@ export type CommitItemImportRequest = components["schemas"]["CommitItemImportReq
 export type ItemImportPreviewResponse = components["schemas"]["ItemImportPreviewResponse"];
 export type ItemImportRowResponse = components["schemas"]["ItemImportRowResponse"];
 export type ItemImportCommitResponse = components["schemas"]["ItemImportCommitResponse"];
+export type CreateItemImportJobRequest = components["schemas"]["CreateItemImportJobRequest"];
+export type ItemImportJobResponse = components["schemas"]["ItemImportJobResponse"];
+export type ItemImportJobRowResponse = components["schemas"]["ItemImportJobRowResponse"];
 export type CostSourceResponse = components["schemas"]["CostSourceResponse"];
 export type CostSourceRequest = components["schemas"]["CostSourceRequest"];
 export type UpdateCostSourceRequest = components["schemas"]["UpdateCostSourceRequest"];
@@ -1421,6 +1430,20 @@ export class ApiClient {
       `/api/v1/admin/role-change-requests/${encodeURIComponent(requestId)}/${decision}`, "POST", options);
   }
 
+  async listAuditEvents(params: AuditEventListParams, options: RequestOptions): Promise<AuditEventListResponse> {
+    const query = new URLSearchParams();
+    if (params.resourceType) query.set("resourceType", params.resourceType);
+    if (params.resourceId) query.set("resourceId", params.resourceId);
+    if (params.action) query.set("action", params.action);
+    if (params.actorUserId) query.set("actorUserId", params.actorUserId);
+    if (params.from) query.set("from", params.from);
+    if (params.to) query.set("to", params.to);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString();
+    return this.request<AuditEventListResponse>(`/api/v1/audit-events${suffix ? `?${suffix}` : ""}`, "GET", options);
+  }
+
   async listApprovalLimits(params: ApprovalLimitListParams, options: RequestOptions): Promise<ApprovalLimitListResponse> {
     const query = new URLSearchParams();
     if (params.roleId) query.set("roleId", params.roleId);
@@ -1534,6 +1557,14 @@ export class ApiClient {
 
   async commitItemImport(payload: CommitItemImportRequest, options: RequestOptions): Promise<ItemImportCommitResponse> {
     return this.request<ItemImportCommitResponse>("/api/v1/items/imports/commit", "POST", options, payload);
+  }
+
+  async createItemImportJob(payload: CreateItemImportJobRequest, options: RequestOptions): Promise<ItemImportJobResponse> {
+    return this.request<ItemImportJobResponse>("/api/v1/items/imports/jobs", "POST", options, payload);
+  }
+
+  async getItemImportJob(jobId: string, options: RequestOptions): Promise<ItemImportJobResponse> {
+    return this.request<ItemImportJobResponse>(`/api/v1/items/imports/jobs/${encodeURIComponent(jobId)}`, "GET", options);
   }
 
   async listProjects(options: RequestOptions, query: ListProjectsParams): Promise<ProjectListResponse> {
@@ -1981,6 +2012,22 @@ export class ApiClient {
 
   async decidePricingTemplate(id: string, rowVersion: string, decision: "approved" | "returned", note: string | null, options: RequestOptions): Promise<PricingTemplateResponse> {
     return this.request<PricingTemplateResponse>(`/api/v1/pricing-templates/${encodeURIComponent(id)}/decision`, "POST", { ...options, ifMatch: rowVersion }, { decision, note });
+  }
+
+  async listBranchRateOverrides(templateId: string, options: RequestOptions): Promise<BranchRateOverrideListResponse> {
+    return this.request<BranchRateOverrideListResponse>(`/api/v1/pricing-templates/${encodeURIComponent(templateId)}/branch-rate-overrides`, "GET", options);
+  }
+
+  async requestBranchRateOverride(templateId: string, payload: BranchRateOverrideRequest, options: RequestOptions): Promise<BranchRateOverrideResponse> {
+    return this.request<BranchRateOverrideResponse>(`/api/v1/pricing-templates/${encodeURIComponent(templateId)}/branch-rate-overrides`, "POST", options, payload);
+  }
+
+  async decideBranchRateOverride(templateId: string, overrideId: string, rowVersion: string, decision: "approved" | "returned", note: string | null, options: RequestOptions): Promise<BranchRateOverrideResponse> {
+    return this.request<BranchRateOverrideResponse>(`/api/v1/pricing-templates/${encodeURIComponent(templateId)}/branch-rate-overrides/${encodeURIComponent(overrideId)}/decision`, "POST", { ...options, ifMatch: rowVersion }, { decision, note });
+  }
+
+  async revokeBranchRateOverride(templateId: string, overrideId: string, rowVersion: string, reason: string, options: RequestOptions): Promise<BranchRateOverrideResponse> {
+    return this.request<BranchRateOverrideResponse>(`/api/v1/pricing-templates/${encodeURIComponent(templateId)}/branch-rate-overrides/${encodeURIComponent(overrideId)}/revoke`, "POST", { ...options, ifMatch: rowVersion }, { reason });
   }
 
   async listQuickEstimates(options: RequestOptions, query: ListQuickEstimatesParams): Promise<QuickEstimateListResponse> {

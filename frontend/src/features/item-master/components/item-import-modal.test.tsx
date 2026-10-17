@@ -28,7 +28,7 @@ function mockHook() {
 function renderModal(onClose = vi.fn()) {
   render(
     <NextIntlClientProvider locale="th" messages={thMessages}>
-      <ItemImportModal isOpen onClose={onClose} />
+      <ItemImportModal isOpen onClose={onClose} canImportItems canImportCosts={false} />
     </NextIntlClientProvider>
   );
   return onClose;
@@ -105,10 +105,10 @@ describe("ItemImportModal", () => {
     expect(await screen.findByText(t.fileInvalid)).toBeDefined();
   });
 
-  it("rejects files over 1 MB before sending anything", async () => {
+  it("rejects files over the 10 MB background-job limit before sending anything", async () => {
     renderModal();
     const big = new File(["x"], "big.csv", { type: "text/csv" });
-    Object.defineProperty(big, "size", { value: 1_000_001 });
+    Object.defineProperty(big, "size", { value: 10_000_001 });
 
     fireEvent.change(screen.getByTestId("item-import-file"), { target: { files: [big] } });
 

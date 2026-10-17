@@ -1,11 +1,12 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
-import { apiClient, type AttachItemImageRequest, type CategoryAttributeTemplateResponse, type CostRecordResponse, type CostReviewQueueParams, type CostReviewQueueResponse, type CostSourceRequest, type CostSourceResponse, type CreateCostRecordRequest, type CreateItemBarcodeRequest, type CreateItemBrandRequest, type CreateItemCategoryRequest, type CreateItemRequest, type CreateItemUnitConversionRequest, type CreateItemTaxCategoryRequest, type CreateUnitOfMeasureRequest, type ItemBarcodeResponse, type ItemBrandResponse, type ItemCategoryResponse, type ItemImageDetailResponse, type ItemResponse, type ItemTaxCategoryResponse, type ItemUnitConversionResponse, type ListItemsParams, type OrganizationBranchResponse, type PagedItemsResponse, type RequestOptions, type SetCategoryAttributeTemplatesRequest, type UnitConversionResponse, type UnitOfMeasureResponse, type UpdateCostRecordRequest, type UpdateCostSourceRequest, type UpdateItemBrandRequest, type UpdateItemCategoryRequest, type UpdateItemRequest, type UpdateItemTaxCategoryRequest, type UpdateUnitOfMeasureRequest } from "@/lib/api/api-client";
+import { apiClient, type AttachItemImageRequest, type CategoryAttributeTemplateResponse, type CostRecordResponse, type CostReviewQueueParams, type CostReviewQueueResponse, type CostSourceRequest, type CostSourceResponse, type CreateCostRecordRequest, type CreateItemBarcodeRequest, type CreateItemBrandRequest, type CreateItemCategoryRequest, type CreateItemRequest, type CreateItemUnitConversionRequest, type CreateItemTaxCategoryRequest, type CreateUnitOfMeasureRequest, type ItemBarcodeResponse, type ItemBrandResponse, type ItemCategoryResponse, type ItemImageDetailResponse, type ItemImportJobResponse, type ItemResponse, type ItemTaxCategoryResponse, type ItemUnitConversionResponse, type ListItemsParams, type OrganizationBranchResponse, type PagedItemsResponse, type RequestOptions, type SetCategoryAttributeTemplatesRequest, type UnitConversionResponse, type UnitOfMeasureResponse, type UpdateCostRecordRequest, type UpdateCostSourceRequest, type UpdateItemBrandRequest, type UpdateItemCategoryRequest, type UpdateItemRequest, type UpdateItemTaxCategoryRequest, type UpdateUnitOfMeasureRequest } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { isItemImportJobFinished, isItemImportJobStatus, ITEM_IMPORT_JOB_POLL_MS, type ItemImportKind, type ItemImportMode } from "../item-import-constants";
 
 const itemMasterKey = (membershipId: string | undefined, locale: "th" | "en") => ["business", membershipId, locale, "item-master"] as const;
 export const itemListQueryKey = (membershipId: string | undefined, locale: "th" | "en", params: ListItemsParams) => [...itemMasterKey(membershipId, locale), "items", params] as const;
@@ -528,15 +529,58 @@ export function useItemImport() {
     return { token, membershipId, locale, idempotencyKey };
   };
   const preview = useMutation({
-    mutationFn: async (content: string) => apiClient.previewItemImport({ content }, await options()),
+    mutationFn: async ({ content, kind, mode }: { content: string; kind: ItemImportKind; mode: ItemImportMode }) =>
+      apiClient.previewItemImport({ content, kind, mode }, await options()),
   });
   const commit = useMutation({
-    mutationFn: async ({ content, expectedContentSha256, idempotencyKey }: { content: string; expectedContentSha256: string; idempotencyKey: string }) =>
-      apiClient.commitItemImport({ content, expectedContentSha256 }, await options(idempotencyKey)),
+    mutationFn: async ({ content, expectedContentSha256, idempotencyKey, kind, mode }: { content: string; expectedContentSha256: string; idempotencyKey: string; kind: ItemImportKind; mode: ItemImportMode }) =>
+      apiClient.commitItemImport({ content, expectedContentSha256, kind, mode }, await options(idempotencyKey)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "items"] });
     },
   });
   return { preview, commit };
+}
+
+/** Queues a large file as a background job. One idempotency key per file lets a retried click replay the same job. */
+export function useStartItemImportJob() {
+  const locale: "th" | "en" = useSafeLocale() === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  return useMutation({
+    mutationFn: async ({ content, kind, mode, idempotencyKey }: { content: string; kind: ItemImportKind; mode: ItemImportMode; idempotencyKey: string }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      return apiClient.createItemImportJob({ content, kind, mode }, { token, membershipId, locale, idempotencyKey });
+    },
+  });
+}
+
+/** Polls one import job until it reaches a final status, then refreshes the Item list so imported rows show up. */
+export function useItemImportJobStatus(jobId: string | undefined): UseQueryResult<ItemImportJobResponse, Error> {
+  const queryClient = useQueryClient();
+  const locale: "th" | "en" = useSafeLocale() === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  return useQuery<ItemImportJobResponse, Error>({
+    queryKey: [...itemMasterKey(membershipId, locale), "import-jobs", jobId],
+    enabled: Boolean(membershipId && jobId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return isItemImportJobStatus(status) && isItemImportJobFinished(status) ? false : ITEM_IMPORT_JOB_POLL_MS;
+    },
+    queryFn: async ({ signal }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+      if (!jobId) throw new Error("Import job id is required");
+      const job = await apiClient.getItemImportJob(jobId, { token, membershipId, locale, signal });
+      if (isItemImportJobStatus(job.status) && isItemImportJobFinished(job.status)) {
+        await queryClient.invalidateQueries({ queryKey: [...itemMasterKey(membershipId, locale), "items"] });
+      }
+      return job;
+    },
+  });
 }
 

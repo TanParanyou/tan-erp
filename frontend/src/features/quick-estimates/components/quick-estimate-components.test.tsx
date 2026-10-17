@@ -32,6 +32,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/membership/selected-membership-context", () => ({
   useSelectedMembership: () => ({ selectedMembership: { id: "membership-1" } }),
 }));
+vi.mock("@/components/forms/AttachmentList", () => ({ AttachmentList: () => null }));
 vi.mock("@/lib/permissions/can", () => ({
   can: (_membership: unknown, permission: string) => permissions.granted.includes(permission),
 }));

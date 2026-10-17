@@ -30,6 +30,8 @@ Precision ของ Quantity, Rate และ Money รวมถึง Required G
 - Query ข้อมูลธุรกิจต้องมี Organization Scope
 - Unique business key ที่ซ้ำข้ามองค์กรได้ต้องรวม `organization_id`
 - Cross-organization access tests เป็น Release Gate
+- **1 User = 1 Organization** (หลายสาขาได้): ห้ามสร้าง/ผูก Membership ให้ User เดิมข้าม Organization; ตรวจที่ `UserOrganizationPolicy` ที่เดียว และคืน `USER_EMAIL_ALREADY_EXISTS` โดยไม่เปิดเผย Organization ([ADR 0027](../adr/0027-wave-a-closure-decisions.md)). ระดับตาราง `memberships` ไม่มี unique ต่อ user จึงเป็นกฎระดับ Application
+- Audit: payload ผ่าน `AuditRedactor` ที่จุดเดียว และ `Audit:RetentionDays` สงวนไว้ ([Audit Redaction](audit-redaction.md))
 - Super-admin access ต้องเป็น Use Case ที่กำหนดและ Audit ได้ ไม่ใช่การข้าม Filter แบบทั่วไป
 
 ## Migration

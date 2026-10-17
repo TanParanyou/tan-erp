@@ -45,13 +45,13 @@
 | --- | --- | --- | --- | --- | --- |
 | G-01 | Shared Attachment & Signature | A | Files module เดิม | Security | [แผน G-01](2026-10-05-g01-shared-attachment-signature.md) — Implemented 2026-10-06 (focused tests; browser check + full gate pending) |
 | G-02 | Notification Foundation (in-app เท่านั้น; อีเมลเลื่อน) | A | Identity | Security + Operations | [แผน G-02](2026-10-08-g02-notification-foundation.md) — Implemented 2026-10-10 (in-app only; focused tests; browser check + full gate pending); [Verification](../../05-engineering/notification-foundation-verification.md) |
-| G-03 | Organization/Branch CRUD, Role management, Approval Authority matrix | A | CP-02 | System Admin + Security + Finance | G-03a Implemented 2026-10-11 (focused tests; browser check not done in this round); G-03b Implemented 2026-10-11 (tests written, not run; browser not checked); G-03c Implemented 2026-10-12 (tests written, not run; browser not checked; ยังไม่ผ่าน UAT; fail-closed จนกว่าจะตั้งวงเงินจริง); [แผน G-03](2026-10-10-g03-org-role-authority.md); [Verification G-03a](../../05-engineering/organization-administration-verification.md); [Verification G-03b](../../05-engineering/role-management-verification.md); [Verification G-03c](../../05-engineering/approval-authority-verification.md) |
+| G-03 | Organization/Branch CRUD, Role management, Approval Authority matrix | A | CP-02 | System Admin + Security + Finance | G-03a Implemented 2026-10-11 (focused tests; browser check not done in this round); G-03b Implemented 2026-10-11 (tests written, not run; browser not checked); G-03c Implemented 2026-10-12 (tests written, not run; browser not checked; ยังไม่ผ่าน UAT; fail-closed จนกว่าจะตั้งวงเงินจริง); เตรียม go-live 2026-10-17 (seeder สิทธิ์ระบบ + seed วงเงิน opt-in + [runbook](../../05-engineering/wave-a-go-live-runbook.md); no tests written, none run; browser not checked); [แผน G-03](2026-10-10-g03-org-role-authority.md); [Verification G-03a](../../05-engineering/organization-administration-verification.md); [Verification G-03b](../../05-engineering/role-management-verification.md); [Verification G-03c](../../05-engineering/approval-authority-verification.md) |
 | G-04 | Server-side Quotation PDF + artifact hash | B | CP-04, G-01 | Sales + Finance | Implemented 2026-10-13 (tests written, not run; browser/PDF not visually checked; ยังไม่ผ่าน UAT; **เงื่อนไข license QuestPDF รอ Business ยืนยันก่อน production**; โลโก้ยังไม่ทำ) — [แผน G-04](2026-10-12-g04-quotation-pdf.md); [ADR 0023](../../adr/0023-server-side-quotation-pdf-with-questpdf.md); [Verification](../../05-engineering/quotation-pdf-verification.md) |
 | G-05 | External Acceptance OTP | B | CP-07, G-02 | Sales + Security + Legal | — |
 | G-06 | Item Import Phase 2 (upsert / Cost / Batch) | B | CP-03 Import Phase 1 | Data Steward + Cost Owner | — |
 | G-07 | Survey Template ใน DB + effective period + evidence ต่อ Area | B | CP-03 Survey | Survey Owner | — |
 | G-08 | Estimate Unit Conversion Snapshot | B | FR-ITEM-005 | Cost Owner + Estimator | G-08 Implemented 2026-10-15 (no tests written, none run; browser not checked; feature OFF until a snapshot-mode calculation policy is published, which has no API yet) — [แผน G-08](2026-10-15-g08-estimate-unit-conversion.md); [ADR 0024](../../adr/0024-estimate-unit-conversion-snapshot.md); [Verification](../../05-engineering/estimate-unit-conversion-verification.md) |
-| G-09 | Quick Estimate: conversion พร้อมรายการ, Branch override, หลักฐาน | B | CP-16, G-01, G-08 | Sales + Cost Owner | — |
+| G-09 | Quick Estimate: conversion พร้อมรายการ, Branch override, หลักฐาน | B | CP-16, G-01, G-08 | Sales + Cost Owner | G-09 Implemented 2026-10-15 (no tests written, none run; browser not checked; migration apply เฉพาะ local dev DB; ยังไม่ผ่าน UAT; ร่างที่แปลงมีรายการขอบเขตแต่ยังไม่มีต้นทุน) — [แผน G-09](2026-10-15-g09-quick-estimate-completion.md); [ADR 0025](../../adr/0025-quick-estimate-branch-override-and-scope-line-conversion.md); [Verification](../../05-engineering/quick-estimate-completion-verification.md) |
 | G-10 | Project Actual Cost / Commitment / WBS | C | CP-09, CP-10, CP-11, CP-12 | PM + Finance | — |
 | G-11 | Purchase Request, Supplier Return, Supplier Invoice (3-way match) | C | CP-10, G-03 | Procurement + Finance | — |
 | G-12 | Inventory Location/Lot/Serial, Period Close, Returns | C | CP-11 | Warehouse + Finance | — |
@@ -63,7 +63,7 @@
 | G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | — |
 | G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | — |
 | G-20 | Labor Timesheet | C | Identity, CP-09 | PM + Production + Finance | — |
-| G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | G-21 ข้อ 1 Implemented 2026-10-12 (tests written, not run; browser not checked); ข้อ 2–3 รอการตัดสินใจ — [แผน G-21](2026-10-12-g21-membership-expiry.md); [Open Decisions](2026-10-12-g21-open-decisions.md); [Verification](../../05-engineering/membership-expiry-verification.md) |
+| G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | G-21 ข้อ 1 Implemented 2026-10-12 (tests written, not run; browser not checked); ข้อ 2–3 ตัดสิน 2026-10-17 โดย owner delegation (A1, B1+B3, B2 เลื่อน; Legal ต้องยืนยัน retention) และ Implemented 2026-10-17 (no tests written, none run; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md); [แผน G-21](2026-10-12-g21-membership-expiry.md); [Open Decisions](2026-10-12-g21-open-decisions.md); [Verification](../../05-engineering/membership-expiry-verification.md) |
 
 **ลำดับแนะนำ:** Wave A (ของกลาง) → B (Commercial/Estimate) ↔ C (Project/Supply) ทำคู่ขนานได้ → D (Finance/Service) → E (Reporting). ภายใน Wave C: G-20 → G-10 → G-11 → G-12 → G-13 → G-14.
 
@@ -147,7 +147,9 @@
 - [ ] Mode `upsert` ด้วย key = Item Code; field ที่อนุญาตให้ทับระบุใน contract (ไม่ทับ lifecycle state)
 - [ ] Import Cost: สร้าง Cost Record เป็น **Draft ที่ต้องผ่าน maker–checker เดิม** ไม่ publish อัตโนมัติ
 - [ ] Batch: ไฟล์ใหญ่ทำงานเป็น background job + สถานะ progress; commit ยัง atomic ต่อ batch
-- [ ] Tests: upsert idempotent (ไฟล์เดิมสองครั้งผลเท่าเดิม), cost import ไม่กระทบราคาที่ publish แล้ว, rollback เมื่อแถวใดผิด
+- [ ] Tests: upsert idempotent (ไฟล์เดิมสองครั้งผลเท่าเดิม), cost import ไม่กระทบราคาที่ publish แล้ว, rollback เมื่อแถวใดผิด — **ยังไม่เขียน** (คำสั่งผู้ใช้ให้ไม่เขียน test ในรอบนี้)
+
+> **สถานะ G-06 (2026-10-17):** Implemented — no tests written, none run; browser not checked; ยังไม่ผ่าน UAT. ทุกข้อด้านบนคง `[ ]` (ยังไม่ตรวจจริง). ทำแล้ว: mode `upsert` (key = Item Code; ทับได้เฉพาะชื่อ/รายละเอียด/หมวด/แบรนด์/ประเภทภาษี/ความสามารถ, `itemType` และหน่วยฐานต้องตรงของเดิม, ไม่แตะสถานะ/การเปิดใช้งาน/สาขา/attribute, Item ที่ปิดใช้งานถูกปฏิเสธ, แถวเหมือนเดิมรายงาน `unchanged` และไม่เขียนอะไร); import ต้นทุนเป็น **Draft เท่านั้น** ด้วยสิทธิ์ `cost-records.create` เดิม (ผู้สร้าง = ผู้ import จึงยังติดกฎ maker ≠ checker เดิม; ไม่แตะ record ที่ published และข้ามแถวที่เหมือน record ที่มีอยู่); งานเบื้องหลัง `item_import_jobs` ประมวลผลทีละ batch (ค่าเริ่มต้น 100 แถว ตั้งที่ `ItemImportJobs:BatchSize`) แต่ละ batch commit พร้อม progress ใน transaction เดียว (Serializable) แถวผิดแถวเดียว = ถอย batch นั้นและเก็บ row error (สูงสุด 500 แถว), batch อื่นทำต่อ, worker ตายแล้วทำต่อได้ด้วย lease; endpoint `POST/GET /api/v1/items/imports/jobs`; ไฟล์สูงสุด 20,000 แถว/10 MB; UI เลือกชนิด/โหมด + แผงความคืบหน้า. **ยังไม่ทำ/ยังเปิด:** test ทั้งหมด, export รูปแบบเดียวกับ template, ยกเลิกงานกลางทาง, import Cost แบบแนบ evidence file, การเข้าถึงเมนู import สำหรับผู้ที่มี `cost-records.create` แต่ไม่มี `items.create`, ทิศทาง blank cell ใน upsert (ตอนนี้ล้างค่า; รอ Data Steward ยืนยัน). [ADR 0026](../../adr/0026-item-import-phase2.md), [Verification](../../05-engineering/item-import-phase2-verification.md)
 
 ### G-07 — Survey Template ใน DB
 
@@ -177,7 +179,9 @@
 - [ ] Conversion สร้าง Official Estimate Draft พร้อมรายการตาม template mapping (ไม่ใช่ร่างเปล่า) — idempotent เหมือนเดิม
 - [ ] Branch override ของ template (ต้องผ่าน maker–checker)
 - [ ] แนบรูป/หลักฐานด้วย G-01
-- [ ] Tests: conversion ซ้ำได้ draft เดิม, override ข้าม branch ไม่ได้
+- [ ] Tests: conversion ซ้ำได้ draft เดิม, override ข้าม branch ไม่ได้ — **ยังไม่เขียน** (คำสั่งผู้ใช้ให้ไม่เขียน test ในรอบนี้)
+
+> **สถานะ G-09 (2026-10-15):** Implemented — no tests written, none run; browser not checked; ยังไม่ผ่าน UAT. ทุกข้อด้านบนคง `[ ]` (ยังไม่ตรวจจริง). ทำแล้ว: conversion เติม Work Item ขอบเขตต่อเส้นวัด (ปริมาณ+หน่วยของแม่แบบ ไม่คัดลอกราคา/ต้นทุน; เติมเฉพาะร่างที่ว่าง; ไม่ backfill); Branch Rate Override (`pricing-templates.override-rate` ขอ, `pricing-templates.approve` ตัดสิน/เพิกถอน, เฉพาะ rate/ขั้นต่ำ ≤ 366 วัน, ข้ามสาขาไม่ได้); evidence owner `quick-estimate`. **ข้อเท็จจริงที่คลาดจากแผนหลัก:** แม่แบบไม่มี item/cost mapping จึงไม่ใช้ `IUnitConversionResolver` ของ G-08. **ยังไม่ทำ/ยังเปิด:** cost recipe ในแม่แบบ (decision N1), เพดาน % ของ override, branch scope ของ endpoint Quick Estimate เดิม, test ทั้งหมด. [Verification](../../05-engineering/quick-estimate-completion-verification.md)
 
 ### G-10 — Project Actual Cost / Commitment / WBS
 
@@ -288,8 +292,8 @@
 ### G-21 — CP-02 ค้าง
 
 - [ ] Membership ใกล้หมดอายุ → แจ้งเตือนผู้ดูแล (G-02) — Implemented 2026-10-12 (hosted worker + system-generated notification; tests written, not run; browser not checked) — [Verification](../../05-engineering/membership-expiry-verification.md)
-- [ ] ตัดสินใจ User หลาย Organization (ตาม Validation Question CP-02) แล้วปรับ contract — รอคำตอบ: [Open Decisions](2026-10-12-g21-open-decisions.md) (options + ข้อเสนอแนะ; ยังไม่ implement)
-- [ ] PII visibility/retention ใน Audit ตามที่ Security ตอบ — รอคำตอบ: [Open Decisions](2026-10-12-g21-open-decisions.md) (options + ข้อเสนอแนะ; ยังไม่ implement)
+- [ ] ตัดสินใจ User หลาย Organization (ตาม Validation Question CP-02) แล้วปรับ contract — ตัดสิน A1 เมื่อ 2026-10-17 (owner delegation) และ Implemented (guard `UserOrganizationPolicy` + สัญญา; no tests written, none run; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md)
+- [ ] PII visibility/retention ใน Audit — ตัดสิน B1 + B3 เมื่อ 2026-10-17 (owner delegation; Security/Legal ยังต้องยืนยัน) และ Implemented (`GET /api/v1/audit-events`, หน้า `/settings/audit`, `AuditRedactor`; B2 purge ไม่ทำ มีเพียงคีย์ `Audit:RetentionDays` สงวนไว้; no tests written, none run; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md)
 
 ---
 
