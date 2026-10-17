@@ -1011,6 +1011,8 @@
     "addAreaAction": "Add Survey Area",
     "areaCodeLabel": "Area Code",
     "areaNameLabel": "Area Name",
+    "areaEvidenceTitle": "Evidence for this area",
+    "areaEvidenceSaveFirst": "Save the draft first to attach evidence to this area.",
     "areaDescLabel": "Description",
     "removeAreaAction": "Delete Area",
     "measurementsTitle": "Measurements",

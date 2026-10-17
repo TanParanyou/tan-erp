@@ -54,6 +54,7 @@
 | Survey | `surveys.update` | แก้ Draft Revision | Branch/Opportunity/Own |
 | Survey | `surveys.mark-ready` | ตรวจและล็อก Ready Revision | Branch/Opportunity/Own |
 | Survey | `surveys.create-revision` | Clone เป็น Draft Revision ใหม่ | Branch/Opportunity/Own |
+| Survey | `survey-templates.manage` | Publish/Retire Survey Template Version (ผลกระทบทุก Organization; API เท่านั้น) | System |
 | Survey | `surveys.void` | Void Revision พร้อมเหตุผล | Organization/Branch/Opportunity |
 | Survey | `surveys.export` | Export Survey/Evidence ตาม Allowlist | Organization/Branch/Opportunity |
 | Procurement | `suppliers.read` | ดู Supplier | Organization |

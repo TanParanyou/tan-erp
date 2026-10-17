@@ -9,6 +9,7 @@ using TanErp.Application.Surveys.CreateSiteSurvey;
 using TanErp.Application.Surveys.MarkSurveyReady;
 using TanErp.Application.Surveys.UpdateSurveyDraft;
 using TanErp.Application.Surveys.VoidSurveyRevision;
+using TanErp.Domain.Attachments;
 using TanErp.Domain.Common;
 using TanErp.Domain.Files;
 using TanErp.Domain.Crm.Customers;
@@ -144,12 +145,23 @@ public class SiteSurveyStore : ISiteSurveyStore
                     new Error("SURVEY_SCHEDULE_INVALID", ex.Message));
             }
 
+            // New surveys use the latest template whose effective period covers now; ended templates are never picked.
+            var currentTemplate = await _db.SurveyTemplateVersions.AsNoTracking()
+                .Where(t => t.EffectiveFromUtc <= now && (t.EffectiveToUtc == null || now < t.EffectiveToUtc))
+                .OrderByDescending(t => t.EffectiveFromUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (currentTemplate is null)
+            {
+                return Result<SiteSurveyProjection>.Failure(
+                    new Error("SURVEY_TEMPLATE_NOT_EFFECTIVE", "No survey template is effective right now."));
+            }
+
             var revision = SiteSurveyRevision.CreateBaseline(
                 orgId,
                 survey.Id,
                 access.ActorUserId,
                 now,
-                SurveyDefaults.CurrentTemplateVersion);
+                currentTemplate.Code);
 
             _db.SiteSurveys.Add(survey);
             _db.SiteSurveyRevisions.Add(revision);
@@ -439,7 +451,7 @@ public class SiteSurveyStore : ISiteSurveyStore
 
             if (command.Checklist is not null)
             {
-                var checklistError = ApplyChecklist(revision, orgId, command.Checklist);
+                var checklistError = await ApplyChecklistAsync(revision, orgId, command.Checklist, cancellationToken);
                 if (checklistError is not null)
                 {
                     return Result<SiteSurveyRevisionProjection>.Failure(checklistError);
@@ -607,11 +619,41 @@ public class SiteSurveyStore : ISiteSurveyStore
                     new Error("SURVEY_NOT_READY", "Every evidence file must be uploaded and verified before the revision is ready."));
             }
 
-            var snapshotHash = SurveySnapshotHasher.Compute(survey.SurveyNumber, revision, evidenceFiles);
+            var template = await FindTemplateAsync(revision.SurveyTemplateVersion, cancellationToken);
+            if (template is null)
+            {
+                return Result<SiteSurveyRevisionProjection>.Failure(
+                    new Error("SURVEY_TEMPLATE_UNAVAILABLE", $"Survey template '{revision.SurveyTemplateVersion}' is not available."));
+            }
+
+            IReadOnlyDictionary<Guid, IReadOnlyList<AreaEvidenceEntry>>? areaEvidence = null;
+            if (template.SupportsAreaEvidence)
+            {
+                var areaIds = revision.Areas.Select(a => a.Id).ToList();
+                var links = await (
+                    from link in _db.AttachmentLinks.AsNoTracking()
+                    join file in _db.UploadedFiles.AsNoTracking() on link.FileId equals file.Id
+                    where link.OrganizationId == orgId && link.OwnerType == AttachmentOwnerTypes.SurveyArea
+                        && areaIds.Contains(link.OwnerId) && link.RemovedAtUtc == null
+                    select new { link.OwnerId, link.FileId, link.Purpose, file.ContentSha256 })
+                    .ToListAsync(cancellationToken);
+                areaEvidence = links
+                    .GroupBy(l => l.OwnerId)
+                    .ToDictionary(g => g.Key, g => (IReadOnlyList<AreaEvidenceEntry>)g.Select(l => new AreaEvidenceEntry(l.FileId, l.ContentSha256, l.Purpose)).ToList());
+
+                var shortArea = revision.Areas.FirstOrDefault(a => (areaEvidence.TryGetValue(a.Id, out var items) ? items.Count : 0) < template.MinimumAreaEvidenceCount);
+                if (shortArea is not null)
+                {
+                    return Result<SiteSurveyRevisionProjection>.Failure(
+                        new Error("SURVEY_NOT_READY", $"Area '{shortArea.Name}' needs at least {template.MinimumAreaEvidenceCount} evidence attachment(s)."));
+                }
+            }
+
+            var snapshotHash = SurveySnapshotHasher.Compute(survey.SurveyNumber, revision, evidenceFiles, template, areaEvidence);
 
             try
             {
-                revision.MarkReady(access.ActorUserId, now, snapshotHash);
+                revision.MarkReady(access.ActorUserId, now, snapshotHash, template);
             }
             catch (SurveyReadinessException ex)
             {
@@ -926,12 +968,16 @@ public class SiteSurveyStore : ISiteSurveyStore
         });
     }
 
-    private Error? ApplyChecklist(
+    private async Task<SurveyTemplateVersion?> FindTemplateAsync(string code, CancellationToken cancellationToken) =>
+        (await _db.SurveyTemplateVersions.AsNoTracking().FirstOrDefaultAsync(t => t.Code == code, cancellationToken))?.ToTemplate();
+
+    private async Task<Error?> ApplyChecklistAsync(
         SiteSurveyRevision revision,
         Guid orgId,
-        IReadOnlyList<ChecklistInput> inputs)
+        IReadOnlyList<ChecklistInput> inputs,
+        CancellationToken cancellationToken)
     {
-        var template = SurveyTemplates.Find(revision.SurveyTemplateVersion);
+        var template = await FindTemplateAsync(revision.SurveyTemplateVersion, cancellationToken);
         if (template is null)
         {
             return new Error("SURVEY_TEMPLATE_UNAVAILABLE", $"Survey template '{revision.SurveyTemplateVersion}' is not available.");

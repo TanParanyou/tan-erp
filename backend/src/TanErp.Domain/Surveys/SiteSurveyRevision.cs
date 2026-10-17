@@ -90,7 +90,8 @@ public class SiteSurveyRevision : Entity
         RowVersion = Guid.NewGuid();
     }
 
-    public void MarkReady(Guid actorUserId, DateTimeOffset now, string snapshotHash)
+    /// <param name="template">The revision's template as loaded from the database; null falls back to the built-in baseline definitions.</param>
+    public void MarkReady(Guid actorUserId, DateTimeOffset now, string snapshotHash, SurveyTemplateVersion? template = null)
     {
         if (Status != SurveyRevisionStatus.Draft)
         {
@@ -128,7 +129,7 @@ public class SiteSurveyRevision : Entity
             }
         }
 
-        EnsureTemplateRequirementsMet();
+        EnsureTemplateRequirementsMet(template);
 
         Readiness = SurveyReadiness.Ready;
         Status = SurveyRevisionStatus.Ready;
@@ -138,9 +139,9 @@ public class SiteSurveyRevision : Entity
         RowVersion = Guid.NewGuid();
     }
 
-    private void EnsureTemplateRequirementsMet()
+    private void EnsureTemplateRequirementsMet(SurveyTemplateVersion? providedTemplate)
     {
-        var template = SurveyTemplates.Find(SurveyTemplateVersion)
+        var template = providedTemplate ?? SurveyTemplates.Find(SurveyTemplateVersion)
             ?? throw new SurveyReadinessException(nameof(SurveyTemplateVersion), $"Survey template '{SurveyTemplateVersion}' is not available.");
 
         foreach (var itemCode in template.RequiredChecklistItems)

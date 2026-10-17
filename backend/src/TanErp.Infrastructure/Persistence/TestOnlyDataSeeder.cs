@@ -137,6 +137,7 @@ public static class TestOnlyDataSeeder
             ("surveys.mark-ready", "Mark Site Surveys Ready"),
             ("surveys.create-revision", "Clone Site Survey Revisions"),
             ("surveys.void", "Void Site Survey Revisions"),
+            ("survey-templates.manage", "Publish and retire Survey Template Versions"),
             ("estimates.read", "Read Estimates"),
             ("estimates.create", "Create Estimates"),
             ("estimates.update", "Update Estimates"),

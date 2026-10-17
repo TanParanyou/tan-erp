@@ -235,6 +235,24 @@
   <data name="SURVEY_TEMPLATE_UNAVAILABLE_DETAIL" xml:space="preserve">
     <value>ไม่พบแบบฟอร์มสำรวจที่ฉบับสำรวจนี้อ้างอิงอยู่</value>
   </data>
+  <data name="SURVEY_TEMPLATE_NOT_EFFECTIVE_TITLE" xml:space="preserve">
+    <value>ไม่มีแบบฟอร์มสำรวจที่ใช้งานได้</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_NOT_EFFECTIVE_DETAIL" xml:space="preserve">
+    <value>ขณะนี้ไม่มีแบบฟอร์มสำรวจที่อยู่ในช่วงวันที่มีผล จึงสร้างงานสำรวจใหม่ไม่ได้</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_CODE_EXISTS_TITLE" xml:space="preserve">
+    <value>รหัสแบบฟอร์มสำรวจซ้ำ</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_CODE_EXISTS_DETAIL" xml:space="preserve">
+    <value>มีแบบฟอร์มสำรวจรหัสนี้อยู่แล้ว เวอร์ชันที่เผยแพร่แล้วแก้ไขไม่ได้ ให้เผยแพร่เป็นรหัสใหม่</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลแบบฟอร์มสำรวจไม่ถูกต้อง</value>
+  </data>
+  <data name="SURVEY_TEMPLATE_INVALID_DETAIL" xml:space="preserve">
+    <value>ข้อมูลแบบฟอร์มสำรวจไม่ถูกต้องหรือแบบฟอร์มนี้สิ้นสุดการใช้งานไปแล้ว</value>
+  </data>
   <data name="SURVEY_CHECKLIST_INVALID_TITLE" xml:space="preserve">
     <value>รายการตรวจสอบไม่ถูกต้อง</value>
   </data>

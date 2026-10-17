@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableBody, TableRow, TableHead } from "@/components/ui/Table";
 import { IconPlus, IconTrash, IconBox3D } from "@/components/common/Icons";
 import { ThreeBoxVisualizer } from "@/components/ui/ThreeBoxVisualizer";
+import { AttachmentList } from "@/components/forms/AttachmentList";
 import { SurveyMeasurementRow } from "./survey-measurement-row";
 import { useAreaPresets } from "../hooks/use-area-presets";
 import { useBoxDimensions } from "../hooks/use-box-dimensions";
@@ -17,10 +18,12 @@ import type { SurveyWorkspaceFormData } from "../schemas/survey-workspace-schema
 interface SurveyAreaCardProps {
   areaIndex: number;
   isReady: boolean;
+  /** True when the revision's template hashes area evidence (hash version v4). */
+  areaEvidenceEnabled: boolean;
   onRemoveArea: () => void;
 }
 
-export function SurveyAreaCard({ areaIndex, isReady, onRemoveArea }: SurveyAreaCardProps) {
+export function SurveyAreaCard({ areaIndex, isReady, areaEvidenceEnabled, onRemoveArea }: SurveyAreaCardProps) {
   const t = useTranslations("surveys");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -53,6 +56,8 @@ export function SurveyAreaCard({ areaIndex, isReady, onRemoveArea }: SurveyAreaC
     control,
     name: `areas.${areaIndex}.measurements`,
   });
+
+  const areaId = useWatch({ control, name: `areas.${areaIndex}.id` });
 
   const areaName = useWatch({
     control,
@@ -236,6 +241,17 @@ export function SurveyAreaCard({ areaIndex, isReady, onRemoveArea }: SurveyAreaC
           </div>
         )}
       </div>
+
+      {areaEvidenceEnabled && (
+        <div className="mt-4 pt-3 border-t border-erp-border space-y-2">
+          <div className="text-xs font-bold text-erp-text-muted uppercase tracking-wider">{t("areaEvidenceTitle")}</div>
+          {areaId ? (
+            <AttachmentList ownerType="survey-area" ownerId={areaId} canManage={!isReady} purposes={["evidence", "general"]} />
+          ) : (
+            <p className="text-xs text-erp-text-muted">{t("areaEvidenceSaveFirst")}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

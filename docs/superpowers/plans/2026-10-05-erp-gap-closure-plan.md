@@ -158,7 +158,9 @@
 - [ ] ย้าย template เป็นตาราง `survey_template_versions` (immutable เมื่อ publish) + `effectiveFrom/To`; migrate `v1/v2` เดิมเป็น seed โดย hash ของ Survey เก่าไม่เปลี่ยน
 - [ ] Evidence ต่อ Area (ใช้ G-01)
 - [ ] Hash version ใหม่ (`v4`) เมื่อเพิ่ม field — Survey เดิมคง version เดิม
-- [ ] Tests: Ready Survey เก่า verify hash ผ่านหลัง migration, template หมดอายุใช้สร้างใหม่ไม่ได้
+- [ ] Tests: Ready Survey เก่า verify hash ผ่านหลัง migration, template หมดอายุใช้สร้างใหม่ไม่ได้ — **ยังไม่เขียน** (คำสั่งผู้ใช้ให้ไม่เขียน test ในรอบนี้)
+
+> **สถานะ G-07 (2026-10-17):** Implemented — no tests written, none run; browser not checked; ยังไม่ผ่าน UAT. ทุกข้อด้านบนคง `[ ]` (ยังไม่ตรวจจริง). ทำแล้ว: ตาราง `crm.survey_template_versions` (trigger กันแก้/ลบ ยกเว้นตั้ง `effective_to_utc` ครั้งเดียว) พร้อม seed v1/v2 (ตรวจ hash parity ด้วยสคริปต์ครั้งเดียว: hasher เดิม = ใหม่ = จาก seed); Survey ใหม่เลือก template ที่ effective ล่าสุด ไม่มี → `SURVEY_TEMPLATE_NOT_EFFECTIVE`; hash `v4` = `v3` + evidence ต่อ Area; owner type `survey-area` (G-01); API `POST /survey-template-versions` และ `…/{code}/retire` ด้วย permission ใหม่ `survey-templates.manage`. **ยังไม่ทำ/เปิด:** FE สำหรับ Publish/Retire/ดูรายการ, seed template v4, ตารางเป็น global (รอเจ้าของตัดสิน), test ทั้งหมด, migration ยังไม่ apply. [ADR 0028](../adr/0028-survey-templates-in-db.md), [Verification](../05-engineering/survey-templates-db-verification.md)
 
 ### G-08 — Estimate Unit Conversion Snapshot
 

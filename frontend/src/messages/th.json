@@ -1011,6 +1011,8 @@
     "addAreaAction": "เพิ่มพื้นที่สำรวจ",
     "areaCodeLabel": "รหัสพื้นที่",
     "areaNameLabel": "ชื่อพื้นที่",
+    "areaEvidenceTitle": "หลักฐานของพื้นที่นี้",
+    "areaEvidenceSaveFirst": "บันทึกร่างก่อน จึงจะแนบหลักฐานของพื้นที่นี้ได้",
     "areaDescLabel": "คำอธิบาย",
     "removeAreaAction": "ลบพื้นที่",
     "measurementsTitle": "ระยะที่วัดได้ (Measurements)",

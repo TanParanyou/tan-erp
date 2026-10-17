@@ -1,6 +1,7 @@
 using TanErp.Domain.Attachments;
 using TanErp.Domain.QuickEstimates;
 using TanErp.Domain.Service;
+using TanErp.Domain.Surveys;
 
 namespace TanErp.Application.Attachments;
 
@@ -27,6 +28,14 @@ public static class AttachmentOwnerRegistry
             SignPermission: "installations.handover",
             ManageStates: new HashSet<string>(StringComparer.Ordinal) { InstallationStatus.Planned, InstallationStatus.InProgress, InstallationStatus.ReadyForHandover },
             SignStates: new HashSet<string>(StringComparer.Ordinal) { InstallationStatus.ReadyForHandover }),
+        // Survey area evidence: editable only while the revision is a draft on an area-evidence template; never signed.
+        new AttachmentOwnerDescriptor(
+            AttachmentOwnerTypes.SurveyArea,
+            ReadPermission: "surveys.read",
+            ManagePermission: "surveys.update",
+            SignPermission: "surveys.update",
+            ManageStates: new HashSet<string>(StringComparer.Ordinal) { SurveyRevisionStatus.Draft },
+            SignStates: new HashSet<string>(StringComparer.Ordinal)),
         // Quick estimates have no signatures: SignPermission mirrors the manage permission and SignStates is empty, so a capture is refused with ATTACHMENT_OWNER_LOCKED.
         new AttachmentOwnerDescriptor(
             AttachmentOwnerTypes.QuickEstimate,

@@ -2,7 +2,7 @@
  * Owner types and enums of the shared attachment API. These mirror the backend whitelist
  * (AttachmentOwnerTypes / AttachmentPurposes); register a new owner type in the backend first.
  */
-export const ATTACHMENT_OWNER_TYPES = ["installation-job", "quick-estimate"] as const;
+export const ATTACHMENT_OWNER_TYPES = ["installation-job", "survey-area", "quick-estimate"] as const;
 export type AttachmentOwnerType = (typeof ATTACHMENT_OWNER_TYPES)[number];
 
 export const ATTACHMENT_PURPOSES = ["general", "evidence", "handover", "defect"] as const;

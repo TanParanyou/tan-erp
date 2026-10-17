@@ -13,7 +13,7 @@ import {
 
 describe("attachment owner types", () => {
   it("mirrors the backend whitelist for the registered owner types", () => {
-    expect(ATTACHMENT_OWNER_TYPES).toEqual(["installation-job", "quick-estimate"]);
+    expect(ATTACHMENT_OWNER_TYPES).toEqual(["installation-job", "survey-area", "quick-estimate"]);
   });
 
   it("knows the backend purposes and rejects anything else", () => {

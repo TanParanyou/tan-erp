@@ -173,6 +173,9 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `SURVEY_MEASUREMENT_INVALID` | 422 | Value/Unit/Derivation ไม่ถูกหรือมี Cycle |
 | `SURVEY_FILE_NOT_READY` | 409 | Evidence File ยัง Upload/Validate ไม่เสร็จหรืออยู่นอก Scope |
 | `SURVEY_REVISION_NOT_USABLE` | 422 | Revision ยัง Draft/Void หรือไม่ผ่าน Policy สำหรับ Estimate |
+| `SURVEY_TEMPLATE_NOT_EFFECTIVE` | 409 | ไม่มี Survey Template ที่อยู่ในช่วง effective ตอนสร้าง Survey ใหม่ |
+| `SURVEY_TEMPLATE_CODE_EXISTS` | 409 | รหัส Template ซ้ำ (Published แก้ไม่ได้) |
+| `SURVEY_TEMPLATE_INVALID` | 400 | ข้อมูล Template ไม่ถูกต้อง หรือ retire ซ้ำ |
 | `SURVEY_TEMPLATE_UNAVAILABLE` | 409 | ไม่มี Published Survey Template Version ที่ตรง Work Type/วันที่ |
 
 ## Official Estimate Error Codes

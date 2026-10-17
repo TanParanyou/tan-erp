@@ -20086,7 +20086,139 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PublishSurveyTemplateVersionRequest"];
+                    "text/json": components["schemas"]["PublishSurveyTemplateVersionRequest"];
+                    "application/*+json": components["schemas"]["PublishSurveyTemplateVersionRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyTemplateVersionResponse"];
+                        "application/json": components["schemas"]["SurveyTemplateVersionResponse"];
+                        "text/json": components["schemas"]["SurveyTemplateVersionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/survey-template-versions/{code}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyTemplateVersionResponse"];
+                        "application/json": components["schemas"]["SurveyTemplateVersionResponse"];
+                        "text/json": components["schemas"]["SurveyTemplateVersionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -24339,6 +24471,17 @@ export interface components {
             /** Format: int64 */
             byteCount?: number;
         };
+        PublishSurveyTemplateVersionRequest: {
+            code?: string | null;
+            requiredChecklistItems?: string[] | null;
+            /** Format: int32 */
+            minimumEvidenceCount?: number;
+            /** Format: int32 */
+            minimumAreaEvidenceCount?: number;
+            snapshotHashVersion?: string | null;
+            /** Format: date-time */
+            effectiveFromUtc?: string | null;
+        };
         PurchaseOrderActionRequest: {
             note?: string | null;
         };
@@ -25285,7 +25428,13 @@ export interface components {
             requiredChecklistItems?: string[] | null;
             /** Format: int32 */
             minimumEvidenceCount?: number;
+            /** Format: int32 */
+            minimumAreaEvidenceCount?: number;
             snapshotHashVersion?: string | null;
+            /** Format: date-time */
+            effectiveFromUtc?: string;
+            /** Format: date-time */
+            effectiveToUtc?: string | null;
             isCurrent?: boolean;
         };
         SurveyorSummaryResponse: {

@@ -157,7 +157,9 @@ builder.Services.AddScoped<TanErp.Application.Surveys.UpdateSurveyDraft.UpdateSu
 builder.Services.AddScoped<TanErp.Application.Surveys.MarkSurveyReady.MarkSurveyReadyHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.CloneSurveyRevision.CloneSurveyRevisionHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.VoidSurveyRevision.VoidSurveyRevisionHandler>();
+builder.Services.AddScoped<TanErp.Application.Surveys.ISurveyTemplateStore, TanErp.Infrastructure.Persistence.Surveys.SurveyTemplateStore>();
 builder.Services.AddScoped<TanErp.Application.Surveys.ListSurveyTemplateVersions.ListSurveyTemplateVersionsHandler>();
+builder.Services.AddScoped<TanErp.Application.Surveys.ListSurveyTemplateVersions.ManageSurveyTemplateVersionsHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateStore, TanErp.Infrastructure.Persistence.Estimates.EstimateStore>();
 builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateDraft.CreateEstimateDraftHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.GetEstimate.GetEstimateHandler>();
