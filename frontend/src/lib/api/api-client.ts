@@ -351,6 +351,9 @@ export type QuickEstimateListResponse = components["schemas"]["QuickEstimateList
 export type QuickEstimateListItemResponse = components["schemas"]["QuickEstimateListItemResponse"];
 export type QuickEstimateDraftRequest = components["schemas"]["QuickEstimateDraftRequest"];
 export type TemplateStepName = "submit" | "calibration" | "activate" | "disable";
+export type BranchRateOverrideRequest = components["schemas"]["BranchRateOverrideRequest"];
+export type BranchRateOverrideResponse = components["schemas"]["BranchRateOverrideResponse"];
+export type BranchRateOverrideListResponse = components["schemas"]["BranchRateOverrideListResponse"];
 export interface ListPricingTemplatesParams {
   search?: string;
   status?: string;
@@ -425,6 +428,9 @@ export type CommitItemImportRequest = components["schemas"]["CommitItemImportReq
 export type ItemImportPreviewResponse = components["schemas"]["ItemImportPreviewResponse"];
 export type ItemImportRowResponse = components["schemas"]["ItemImportRowResponse"];
 export type ItemImportCommitResponse = components["schemas"]["ItemImportCommitResponse"];
+export type CreateItemImportJobRequest = components["schemas"]["CreateItemImportJobRequest"];
+export type ItemImportJobResponse = components["schemas"]["ItemImportJobResponse"];
+export type ItemImportJobRowResponse = components["schemas"]["ItemImportJobRowResponse"];
 export type CostSourceResponse = components["schemas"]["CostSourceResponse"];
 export type CostSourceRequest = components["schemas"]["CostSourceRequest"];
 export type UpdateCostSourceRequest = components["schemas"]["UpdateCostSourceRequest"];
@@ -1553,6 +1559,14 @@ export class ApiClient {
     return this.request<ItemImportCommitResponse>("/api/v1/items/imports/commit", "POST", options, payload);
   }
 
+  async createItemImportJob(payload: CreateItemImportJobRequest, options: RequestOptions): Promise<ItemImportJobResponse> {
+    return this.request<ItemImportJobResponse>("/api/v1/items/imports/jobs", "POST", options, payload);
+  }
+
+  async getItemImportJob(jobId: string, options: RequestOptions): Promise<ItemImportJobResponse> {
+    return this.request<ItemImportJobResponse>(`/api/v1/items/imports/jobs/${encodeURIComponent(jobId)}`, "GET", options);
+  }
+
   async listProjects(options: RequestOptions, query: ListProjectsParams): Promise<ProjectListResponse> {
     const params = new URLSearchParams();
     if (query.search) params.set("search", query.search);
@@ -1998,6 +2012,22 @@ export class ApiClient {
 
   async decidePricingTemplate(id: string, rowVersion: string, decision: "approved" | "returned", note: string | null, options: RequestOptions): Promise<PricingTemplateResponse> {
     return this.request<PricingTemplateResponse>(`/api/v1/pricing-templates/${encodeURIComponent(id)}/decision`, "POST", { ...options, ifMatch: rowVersion }, { decision, note });
+  }
+
+  async listBranchRateOverrides(templateId: string, options: RequestOptions): Promise<BranchRateOverrideListResponse> {
+    return this.request<BranchRateOverrideListResponse>(`/api/v1/pricing-templates/${encodeURIComponent(templateId)}/branch-rate-overrides`, "GET", options);
+  }
+
+  async requestBranchRateOverride(templateId: string, payload: BranchRateOverrideRequest, options: RequestOptions): Promise<BranchRateOverrideResponse> {
+    return this.request<BranchRateOverrideResponse>(`/api/v1/pricing-templates/${encodeURIComponent(templateId)}/branch-rate-overrides`, "POST", options, payload);
+  }
+
+  async decideBranchRateOverride(templateId: string, overrideId: string, rowVersion: string, decision: "approved" | "returned", note: string | null, options: RequestOptions): Promise<BranchRateOverrideResponse> {
+    return this.request<BranchRateOverrideResponse>(`/api/v1/pricing-templates/${encodeURIComponent(templateId)}/branch-rate-overrides/${encodeURIComponent(overrideId)}/decision`, "POST", { ...options, ifMatch: rowVersion }, { decision, note });
+  }
+
+  async revokeBranchRateOverride(templateId: string, overrideId: string, rowVersion: string, reason: string, options: RequestOptions): Promise<BranchRateOverrideResponse> {
+    return this.request<BranchRateOverrideResponse>(`/api/v1/pricing-templates/${encodeURIComponent(templateId)}/branch-rate-overrides/${encodeURIComponent(overrideId)}/revoke`, "POST", { ...options, ifMatch: rowVersion }, { reason });
   }
 
   async listQuickEstimates(options: RequestOptions, query: ListQuickEstimatesParams): Promise<QuickEstimateListResponse> {

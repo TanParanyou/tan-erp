@@ -198,6 +198,7 @@ public static class TestOnlyDataSeeder
             ("pricing-templates.read", "Read Pricing Templates"),
             ("pricing-templates.manage", "Create, Edit and Release Pricing Templates"),
             ("pricing-templates.approve", "Approve Pricing Templates"),
+            ("pricing-templates.override-rate", "Request Branch Rate Overrides For Pricing Templates"),
             ("quick-estimates.create", "Create Quick Estimates"),
             ("quick-estimates.read", "Read Quick Estimates"),
             ("quick-estimates.update", "Edit, Calculate and Submit Quick Estimates"),

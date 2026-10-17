@@ -138,7 +138,8 @@ public sealed record CalculationProjection(
     string InputHash,
     IReadOnlyList<CalculationLineProjection> Lines,
     QePerson CreatedBy,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    Guid? BranchOverrideId = null);
 
 public sealed record ReviewProjection(
     Guid Id,
@@ -154,7 +155,7 @@ public sealed record ReviewProjection(
 
 public sealed record ShareProjection(Guid Id, int SourceVersion, string Channel, string? Recipient, string Locale, QePerson CreatedBy, DateTimeOffset CreatedAtUtc, string SummaryJson);
 
-public sealed record ConversionProjection(Guid Id, int SourceVersion, Guid OfficialEstimateId, DateTimeOffset CreatedAtUtc);
+public sealed record ConversionProjection(Guid Id, int SourceVersion, Guid OfficialEstimateId, DateTimeOffset CreatedAtUtc, int? MappedLineCount = null);
 
 public sealed record QuickEstimateTemplateRef(Guid Id, string Code, int Version, string Name, string Status);
 
@@ -195,7 +196,7 @@ public sealed record QuickEstimateListItemProjection(
     string? ShareDecision,
     DateTimeOffset UpdatedAtUtc);
 
-public sealed record QuickEstimateListQuery(string? Search, string? Status, int Page, int PageSize);
+public sealed record QuickEstimateListQuery(string? Search, string? Status, int Page, int PageSize, Guid? BranchId = null);
 
 public sealed record PagedQuickEstimates(IReadOnlyList<QuickEstimateListItemProjection> Items, int TotalCount, int Page, int PageSize);
 

@@ -517,6 +517,16 @@
   <data name="ITEM_IMPORT_VALIDATION_FAILED_DETAIL" xml:space="preserve"><value>Some rows failed validation. Nothing was imported. Fix them and preview again before importing.</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_TITLE" xml:space="preserve"><value>File Differs From Preview</value></data>
   <data name="ITEM_IMPORT_CONTENT_CHANGED_DETAIL" xml:space="preserve"><value>The file content differs from the previewed file. Preview the file again.</value></data>
+  <data name="ITEM_IMPORT_OPTION_INVALID_TITLE" xml:space="preserve"><value>Invalid Import Option</value></data>
+  <data name="ITEM_IMPORT_OPTION_INVALID_DETAIL" xml:space="preserve"><value>The import kind or mode is not supported. Cost import supports create mode only.</value></data>
+  <data name="ITEM_IMPORT_BATCH_CONFLICT_TITLE" xml:space="preserve"><value>Import Batch Conflicted</value></data>
+  <data name="ITEM_IMPORT_BATCH_CONFLICT_DETAIL" xml:space="preserve"><value>A concurrent change conflicted with the import. That batch was not saved. Try again.</value></data>
+  <data name="ITEM_IMPORT_JOB_LOST_TITLE" xml:space="preserve"><value>Import Job Taken Over</value></data>
+  <data name="ITEM_IMPORT_JOB_LOST_DETAIL" xml:space="preserve"><value>This import job was handed to another worker. Check the job status again.</value></data>
+  <data name="ITEM_IMPORT_JOB_INVALID_STATE_TITLE" xml:space="preserve"><value>Import Job State Not Supported</value></data>
+  <data name="ITEM_IMPORT_JOB_INVALID_STATE_DETAIL" xml:space="preserve"><value>This action is not allowed in the current state of the import job.</value></data>
+  <data name="ITEM_IMPORT_JOB_FAILED_TITLE" xml:space="preserve"><value>Import Job Failed</value></data>
+  <data name="ITEM_IMPORT_JOB_FAILED_DETAIL" xml:space="preserve"><value>The import stopped because of a system error. Unfinished batches were not saved. Try again or contact an administrator.</value></data>
   <data name="PROJECT_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Project Changed</value></data>
   <data name="PROJECT_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The project was modified by someone else. Reload and try again.</value></data>
   <data name="PROJECT_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Project Status</value></data>
@@ -973,6 +983,14 @@
   <data name="PRICING_TEMPLATE_INVALID_STATE_DETAIL" xml:space="preserve"><value>The template status does not allow this action.</value></data>
   <data name="PRICING_TEMPLATE_NOT_USABLE_TITLE" xml:space="preserve"><value>Template Not Usable</value></data>
   <data name="PRICING_TEMPLATE_NOT_USABLE_DETAIL" xml:space="preserve"><value>The pricing template is not usable: it must be in calibration or active and inside its effective period.</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_TITLE" xml:space="preserve"><value>Invalid Branch Rate Override</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_DETAIL" xml:space="preserve"><value>The branch rate override failed validation: check the rate, minimum charge, period (at most 366 days and not already ended) and reason.</value></data>
+  <data name="BRANCH_OVERRIDE_OVERLAP_TITLE" xml:space="preserve"><value>Override Period Overlaps</value></data>
+  <data name="BRANCH_OVERRIDE_OVERLAP_DETAIL" xml:space="preserve"><value>This branch already has a request or approved override for this template that covers part of this period.</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Override State</value></data>
+  <data name="BRANCH_OVERRIDE_INVALID_STATE_DETAIL" xml:space="preserve"><value>The current status of the branch rate override does not allow this action.</value></data>
+  <data name="BRANCH_OVERRIDE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Cannot Decide Your Own Request</value></data>
+  <data name="BRANCH_OVERRIDE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>The requester of a branch rate override cannot approve or return their own request.</value></data>
   <data name="PRICING_TEMPLATE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Template Self Approval</value></data>
   <data name="PRICING_TEMPLATE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>The author of a template cannot decide it.</value></data>
   <data name="QUICK_ESTIMATE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Quick Estimate Version Conflict</value></data>

@@ -94,6 +94,10 @@ Backend ส่ง Error ตาม RFC 9457 Problem Details พร้อมรห
 | `PRICING_TEMPLATE_INVALID` | 422 | Formula, Field, Unit หรือ Test Case ไม่ผ่าน; ห้าม Submit/Publish |
 | `PRICING_TEMPLATE_NOT_USABLE` | 409 | Template อยู่ใน Draft, Superseded หรือ Disabled จึงเริ่มคำนวณ/แชร์ใหม่ไม่ได้; Calibration ยังใช้ได้โดยบังคับ Review |
 | `PRICING_TEMPLATE_INVALID_STATE` | 409 | Action ใช้กับสถานะปัจจุบันไม่ได้ เช่น Publish ก่อน Approve |
+| `BRANCH_OVERRIDE_INVALID` | 422 | Branch Rate Override ไม่ผ่าน: อัตรา/ขั้นต่ำ, ช่วงวันที่ (> 366 วันหรือสิ้นสุดก่อนวันนี้), เหตุผลขาด |
+| `BRANCH_OVERRIDE_OVERLAP` | 409 | ช่วงเวลาซ้อนกับคำขอ/ราคาเฉพาะสาขาของ template เดียวกันในสาขาเดียวกัน |
+| `BRANCH_OVERRIDE_INVALID_STATE` | 409 | Action ใช้กับสถานะปัจจุบันของ override ไม่ได้ |
+| `BRANCH_OVERRIDE_SELF_APPROVAL` | 403 | ผู้ขอ override ตัดสินคำขอของตนเองไม่ได้ |
 | `PRICING_TEMPLATE_VERSION_CONFLICT` | 409 | `rowVersion` ไม่ตรงเพราะมีผู้แก้ข้อมูลใหม่กว่า; ให้ Reload/Compare |
 | `PRICING_RATE_PERIOD_OVERLAP` | 409 | Rate/Branch Override ของ Item, Unit และ Scope เดียวกันมี Effective Period ซ้อนกัน |
 | `PRICING_TEMPLATE_PILOT_NOT_PASSED` | 422 | Calibration/Pilot ยังไม่ผ่านเกณฑ์ จึง Activate ไม่ได้ |
