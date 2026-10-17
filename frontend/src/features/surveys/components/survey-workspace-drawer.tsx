@@ -364,7 +364,7 @@ export function SurveyWorkspaceDrawer({
           <SurveyScopeSection isReady={isReady} />
 
           {/* 2. Areas and Measurements Section */}
-          <SurveyAreasSection isReady={isReady} />
+          <SurveyAreasSection isReady={isReady} areaEvidenceEnabled={template?.snapshotHashVersion === "v4"} />
 
           {/* 3. Template checklist and photo evidence */}
           {showChecklist && (

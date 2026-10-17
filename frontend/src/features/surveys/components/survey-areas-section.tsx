@@ -12,9 +12,10 @@ import type { SurveyWorkspaceFormData } from "../schemas/survey-workspace-schema
 
 interface SurveyAreasSectionProps {
   isReady: boolean;
+  areaEvidenceEnabled: boolean;
 }
 
-export function SurveyAreasSection({ isReady }: SurveyAreasSectionProps) {
+export function SurveyAreasSection({ isReady, areaEvidenceEnabled }: SurveyAreasSectionProps) {
   const t = useTranslations("surveys");
   const tc = useTranslations("common");
   const { control, getValues } = useFormContext<SurveyWorkspaceFormData>();
@@ -130,6 +131,7 @@ export function SurveyAreasSection({ isReady }: SurveyAreasSectionProps) {
               key={fieldItem.id}
               areaIndex={aIdx}
               isReady={isReady}
+              areaEvidenceEnabled={areaEvidenceEnabled}
               onRemoveArea={() => handleRequestRemoveArea(aIdx)}
             />
           ))}
