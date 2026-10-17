@@ -118,6 +118,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Items.ItemUnitConversion> ItemUnitConversions => Set<TanErp.Domain.Items.ItemUnitConversion>();
     public DbSet<TanErp.Domain.Items.UnitConversion> UnitConversions => Set<TanErp.Domain.Items.UnitConversion>();
     public DbSet<TanErp.Domain.Items.CostRecord> CostRecords => Set<TanErp.Domain.Items.CostRecord>();
+    public DbSet<TanErp.Domain.Items.ItemImportJob> ItemImportJobs => Set<TanErp.Domain.Items.ItemImportJob>();
     public DbSet<TanErp.Domain.Items.CostRecordReview> CostRecordReviews => Set<TanErp.Domain.Items.CostRecordReview>();
     public DbSet<TanErp.Domain.Items.CostSource> CostSources => Set<TanErp.Domain.Items.CostSource>();
 
