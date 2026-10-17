@@ -147,7 +147,9 @@
 - [ ] Mode `upsert` ด้วย key = Item Code; field ที่อนุญาตให้ทับระบุใน contract (ไม่ทับ lifecycle state)
 - [ ] Import Cost: สร้าง Cost Record เป็น **Draft ที่ต้องผ่าน maker–checker เดิม** ไม่ publish อัตโนมัติ
 - [ ] Batch: ไฟล์ใหญ่ทำงานเป็น background job + สถานะ progress; commit ยัง atomic ต่อ batch
-- [ ] Tests: upsert idempotent (ไฟล์เดิมสองครั้งผลเท่าเดิม), cost import ไม่กระทบราคาที่ publish แล้ว, rollback เมื่อแถวใดผิด
+- [ ] Tests: upsert idempotent (ไฟล์เดิมสองครั้งผลเท่าเดิม), cost import ไม่กระทบราคาที่ publish แล้ว, rollback เมื่อแถวใดผิด — **ยังไม่เขียน** (คำสั่งผู้ใช้ให้ไม่เขียน test ในรอบนี้)
+
+> **สถานะ G-06 (2026-10-17):** Implemented — no tests written, none run; browser not checked; ยังไม่ผ่าน UAT. ทุกข้อด้านบนคง `[ ]` (ยังไม่ตรวจจริง). ทำแล้ว: mode `upsert` (key = Item Code; ทับได้เฉพาะชื่อ/รายละเอียด/หมวด/แบรนด์/ประเภทภาษี/ความสามารถ, `itemType` และหน่วยฐานต้องตรงของเดิม, ไม่แตะสถานะ/การเปิดใช้งาน/สาขา/attribute, Item ที่ปิดใช้งานถูกปฏิเสธ, แถวเหมือนเดิมรายงาน `unchanged` และไม่เขียนอะไร); import ต้นทุนเป็น **Draft เท่านั้น** ด้วยสิทธิ์ `cost-records.create` เดิม (ผู้สร้าง = ผู้ import จึงยังติดกฎ maker ≠ checker เดิม; ไม่แตะ record ที่ published และข้ามแถวที่เหมือน record ที่มีอยู่); งานเบื้องหลัง `item_import_jobs` ประมวลผลทีละ batch (ค่าเริ่มต้น 100 แถว ตั้งที่ `ItemImportJobs:BatchSize`) แต่ละ batch commit พร้อม progress ใน transaction เดียว (Serializable) แถวผิดแถวเดียว = ถอย batch นั้นและเก็บ row error (สูงสุด 500 แถว), batch อื่นทำต่อ, worker ตายแล้วทำต่อได้ด้วย lease; endpoint `POST/GET /api/v1/items/imports/jobs`; ไฟล์สูงสุด 20,000 แถว/10 MB; UI เลือกชนิด/โหมด + แผงความคืบหน้า. **ยังไม่ทำ/ยังเปิด:** test ทั้งหมด, export รูปแบบเดียวกับ template, ยกเลิกงานกลางทาง, import Cost แบบแนบ evidence file, การเข้าถึงเมนู import สำหรับผู้ที่มี `cost-records.create` แต่ไม่มี `items.create`, ทิศทาง blank cell ใน upsert (ตอนนี้ล้างค่า; รอ Data Steward ยืนยัน). [ADR 0026](../../adr/0026-item-import-phase2.md), [Verification](../../05-engineering/item-import-phase2-verification.md)
 
 ### G-07 — Survey Template ใน DB
 

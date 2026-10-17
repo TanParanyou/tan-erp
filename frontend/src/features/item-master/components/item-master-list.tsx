@@ -65,6 +65,8 @@ export function ItemMasterList() {
   }), [state.params.filters.itemType, state.params.filters.status, state.params.limit, state.params.order, state.params.page, state.params.search, state.params.sort]);
   const result = useItemList(query);
   const writable = can(selectedMembership, PERMISSIONS.ITEMS_CREATE);
+  const canImportCosts = can(selectedMembership, "cost-records.create");
+  const canUpsertItems = can(selectedMembership, "items.update");
   const canReadTaxonomy = can(selectedMembership, "items.read");
   const canReadCostSources = can(selectedMembership, "cost-sources.read");
   const rows = result.data?.items ?? [];
@@ -292,7 +294,7 @@ export function ItemMasterList() {
           </BulkActionToolbar>
         </div>
       )}
-      {writable && <ItemImportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} />}
+      {writable && <ItemImportModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} canImportCosts={canImportCosts} canUpsert={canUpsertItems} />}
     </section>
   );
 }
