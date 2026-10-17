@@ -98,7 +98,8 @@
     "organizationSettings": "ข้อมูลองค์กร",
     "branchSettings": "สาขา",
     "roleSettings": "บทบาทและสิทธิ์",
-    "approvalLimitSettings": "วงเงินอนุมัติ"
+    "approvalLimitSettings": "วงเงินอนุมัติ",
+    "auditSettings": "บันทึกการตรวจสอบ"
   },
   "common": {
     "actions": {
@@ -4264,6 +4265,31 @@
       "IDEMPOTENCY_KEY_REUSED": "คำขอซ้ำไม่ตรงกับคำขอเดิม กรุณาลองใหม่",
       "PERMISSION_DENIED": "คุณไม่มีสิทธิ์ดำเนินการนี้",
       "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"
+    }
+  },
+  "auditLog": {
+    "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
+    "accessDeniedDetail": "คุณไม่มีสิทธิ์ดูบันทึกการตรวจสอบ",
+    "list": {
+      "title": "บันทึกการตรวจสอบ",
+      "subtitle": "ประวัติการเปลี่ยนแปลงในองค์กร เรียงจากใหม่ไปเก่า (อ่านอย่างเดียว) ข้อมูลส่วนบุคคลถูกปิดบัง",
+      "actionFilter": "การกระทำ",
+      "resourceTypeFilter": "ประเภททรัพยากร",
+      "fromFilter": "ตั้งแต่",
+      "toFilter": "ถึง",
+      "table": {
+        "occurredAt": "เวลา",
+        "action": "การกระทำ",
+        "resourceType": "ประเภททรัพยากร",
+        "resourceId": "รหัสทรัพยากร",
+        "actor": "ผู้ดำเนินการ",
+        "reason": "เหตุผล"
+      },
+      "emptyTitle": "ยังไม่มีบันทึกการตรวจสอบ",
+      "emptyDescription": "เมื่อมีการเปลี่ยนแปลงข้อมูลสำคัญ บันทึกจะแสดงที่นี่"
+    },
+    "errors": {
+      "GENERIC": "ไม่สามารถโหลดบันทึกการตรวจสอบได้ กรุณาลองใหม่"
     }
   },
   "approvalLimitAdmin": {

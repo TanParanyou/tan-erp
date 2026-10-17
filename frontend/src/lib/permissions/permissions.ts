@@ -14,6 +14,7 @@ export const PERMISSIONS = {
   ROLES_ASSIGN_APPROVAL: "roles.assign-approval",
   ROLES_MANAGE: "roles.manage",
   APPROVAL_LIMITS_MANAGE: "approval-limits.manage",
+  AUDIT_READ: "audit.read",
 
   // Item Master
   ITEMS_READ: "items.read",
