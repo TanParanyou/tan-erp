@@ -38,6 +38,13 @@ Public (ไม่ต้อง login; rate limited):
 
 หน้าลูกค้า: `/{locale}/accept/{token}` (อยู่นอก ERP layout ไม่มี sign-in gate/เมนู).
 
+### OTP ทางอีเมล (G-05, เปิดด้วย `AcceptanceOtp:Required=true`; ดู [ADR 0029](../adr/0029-external-acceptance-otp.md))
+
+- `POST …/{token}/otp` → `202 {resendAfterSeconds, expiresInSeconds}` (ค่าคงที่จาก config เหมือนกันทุกลิงก์; ตอบเหมือนเดิมไม่ว่าลิงก์มีอีเมลหรือไม่ จึงไม่เผยอีเมล)
+- `POST …/{token}/otp/verify` `{code}` → `200 {verificationToken, expiresAtUtc}`; ส่ง `verificationToken` ใน `accept` เป็น `otpVerificationToken`
+- `GET …/{token}` มี `otpRequired` (boolean) ให้หน้าลูกค้าตัดสินใจแสดงขั้น OTP; staff ส่ง `recipientEmail` ตอนสร้างลิงก์ (จำเป็นเมื่อเปิด OTP)
+- Errors: `422 ACCEPTANCE_OTP_REQUIRED|ACCEPTANCE_OTP_INVALID|ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED`, `410 ACCEPTANCE_OTP_EXPIRED` (ไม่มีรหัสที่ใช้ได้/หมดอายุ/ใช้แล้ว), `423 ACCEPTANCE_OTP_LOCKED`, `429 ACCEPTANCE_OTP_RATE_LIMITED`, `503 ACCEPTANCE_OTP_UNAVAILABLE` (ปิดอยู่/ส่งอีเมลไม่ได้); ลิงก์ใช้ไม่ได้ = `404` เดิม
+
 ## Errors
 
 `404`: `ACCEPTANCE_LINK_UNAVAILABLE` (public ทุกกรณีที่ใช้ไม่ได้). `409`: `ACCEPTANCE_LINK_INVALID_STATE`, `ACCEPTANCE_CONFLICT`, `QUOTATION_INVALID_STATE` (สร้างลิงก์ให้ใบที่ไม่ใช่ issued). `422`: `ACCEPTANCE_LINK_LIFETIME_INVALID`, `ACCEPTANCE_SUBMISSION_INVALID`, `ACCEPTANCE_CONSENT_REQUIRED`. `429` เกินโควตา.
