@@ -183,6 +183,68 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Commercial.AcceptanceOtpChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("channel");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code_hash");
+
+                    b.Property<DateTimeOffset?>("ConsumedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("consumed_at_utc");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("expires_at_utc");
+
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("failed_attempts");
+
+                    b.Property<Guid>("LinkId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("link_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("VerificationTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("verification_token_hash");
+
+                    b.Property<DateTimeOffset?>("VerifiedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("verified_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LinkId", "CreatedAtUtc");
+
+                    b.ToTable("acceptance_otp_challenges", "commercial", t =>
+                        {
+                            t.HasCheckConstraint("ck_acceptance_otp_challenges_channel", "channel IN ('email')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Commercial.Quotation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -362,6 +424,19 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
+                    b.Property<Guid?>("OtpChallengeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("otp_challenge_id");
+
+                    b.Property<string>("OtpChannel")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("otp_channel");
+
+                    b.Property<DateTimeOffset?>("OtpVerifiedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("otp_verified_at_utc");
+
                     b.Property<Guid>("QuotationId")
                         .HasColumnType("uuid")
                         .HasColumnName("quotation_id");
@@ -430,9 +505,18 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
+                    b.Property<DateTimeOffset?>("OtpLockedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("otp_locked_at_utc");
+
                     b.Property<Guid>("QuotationId")
                         .HasColumnType("uuid")
                         .HasColumnName("quotation_id");
+
+                    b.Property<string>("RecipientEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("recipient_email");
 
                     b.Property<DateTimeOffset?>("RevokedAtUtc")
                         .HasColumnType("timestamptz")
@@ -9347,6 +9431,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("ImageFileId", "OrganizationId")
                         .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Commercial.AcceptanceOtpChallenge", b =>
+                {
+                    b.HasOne("TanErp.Domain.Commercial.QuotationAcceptanceLink", null)
+                        .WithMany()
+                        .HasForeignKey("LinkId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

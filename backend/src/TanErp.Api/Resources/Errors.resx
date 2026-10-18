@@ -1085,6 +1085,20 @@
   <data name="ACCEPTANCE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องยอมรับข้อความยินยอมฉบับปัจจุบัน</value></data>
   <data name="ACCEPTANCE_CONFLICT_TITLE" xml:space="preserve"><value>เอกสารมีการเปลี่ยนแปลง</value></data>
   <data name="ACCEPTANCE_CONFLICT_DETAIL" xml:space="preserve"><value>เอกสารมีการเปลี่ยนแปลง</value></data>
+  <data name="ACCEPTANCE_OTP_REQUIRED_TITLE" xml:space="preserve"><value>ต้องยืนยันรหัสก่อนอนุมัติ</value></data>
+  <data name="ACCEPTANCE_OTP_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องยืนยันรหัสที่ส่งทางอีเมลก่อนอนุมัติ</value></data>
+  <data name="ACCEPTANCE_OTP_INVALID_TITLE" xml:space="preserve"><value>รหัสยืนยันไม่ถูกต้อง</value></data>
+  <data name="ACCEPTANCE_OTP_INVALID_DETAIL" xml:space="preserve"><value>รหัสยืนยันไม่ถูกต้องหรือไม่สามารถใช้ได้</value></data>
+  <data name="ACCEPTANCE_OTP_EXPIRED_TITLE" xml:space="preserve"><value>รหัสยืนยันหมดอายุ</value></data>
+  <data name="ACCEPTANCE_OTP_EXPIRED_DETAIL" xml:space="preserve"><value>รหัสยืนยันหมดอายุหรือถูกใช้แล้ว กรุณาขอรหัสใหม่</value></data>
+  <data name="ACCEPTANCE_OTP_LOCKED_TITLE" xml:space="preserve"><value>ลิงก์ถูกล็อก</value></data>
+  <data name="ACCEPTANCE_OTP_LOCKED_DETAIL" xml:space="preserve"><value>ใส่รหัสผิดเกินกำหนด กรุณาติดต่อผู้ส่งเพื่อขอลิงก์ใหม่</value></data>
+  <data name="ACCEPTANCE_OTP_RATE_LIMITED_TITLE" xml:space="preserve"><value>ขอรหัสบ่อยเกินไป</value></data>
+  <data name="ACCEPTANCE_OTP_RATE_LIMITED_DETAIL" xml:space="preserve"><value>กรุณารอสักครู่ก่อนขอรหัสใหม่</value></data>
+  <data name="ACCEPTANCE_OTP_UNAVAILABLE_TITLE" xml:space="preserve"><value>ไม่สามารถส่งรหัสได้ในขณะนี้</value></data>
+  <data name="ACCEPTANCE_OTP_UNAVAILABLE_DETAIL" xml:space="preserve"><value>ระบบยืนยันรหัสยังไม่พร้อมใช้งาน กรุณาลองใหม่ภายหลัง</value></data>
+  <data name="ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุอีเมลผู้รับ</value></data>
+  <data name="ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุอีเมลผู้รับเพราะการอนุมัติต้องใช้รหัสยืนยัน</value></data>
   <data name="INSTALLATION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>งานติดตั้งถูกแก้ไขโดยผู้อื่น</value></data>
   <data name="INSTALLATION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>งานติดตั้งถูกแก้ไขโดยผู้อื่น</value></data>
   <data name="INSTALLATION_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะงานติดตั้งไม่อนุญาตให้ทำรายการนี้</value></data>

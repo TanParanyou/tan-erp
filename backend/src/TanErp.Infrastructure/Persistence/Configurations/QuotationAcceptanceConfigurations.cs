@@ -28,6 +28,8 @@ public class QuotationAcceptanceLinkConfiguration : IEntityTypeConfiguration<Quo
         builder.Property(x => x.RevokedAtUtc).HasColumnName("revoked_at_utc").HasColumnType("timestamptz");
         builder.Property(x => x.RevokedByUserId).HasColumnName("revoked_by_user_id");
         builder.Property(x => x.AcceptedAtUtc).HasColumnName("accepted_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.RecipientEmail).HasColumnName("recipient_email").HasMaxLength(254);
+        builder.Property(x => x.OtpLockedAtUtc).HasColumnName("otp_locked_at_utc").HasColumnType("timestamptz");
         builder.HasIndex(x => x.TokenHash).IsUnique();
         builder.HasIndex(x => new { x.OrganizationId, x.QuotationId });
         builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
@@ -56,10 +58,35 @@ public class QuotationAcceptanceEvidenceConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.UserAgent).HasColumnName("user_agent").HasMaxLength(200);
         builder.Property(x => x.AcceptedAtUtc).HasColumnName("accepted_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.DocumentSha256).HasColumnName("document_sha256").HasMaxLength(64);
+        builder.Property(x => x.OtpChannel).HasColumnName("otp_channel").HasMaxLength(16);
+        builder.Property(x => x.OtpVerifiedAtUtc).HasColumnName("otp_verified_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.OtpChallengeId).HasColumnName("otp_challenge_id");
         // One acceptance per link, ever.
         builder.HasIndex(x => x.LinkId).IsUnique();
         builder.HasIndex(x => new { x.OrganizationId, x.QuotationId });
         builder.HasOne<QuotationAcceptanceLink>().WithMany().HasForeignKey(x => x.LinkId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Quotation>().WithMany().HasForeignKey(x => x.QuotationId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class AcceptanceOtpChallengeConfiguration : IEntityTypeConfiguration<AcceptanceOtpChallenge>
+{
+    public void Configure(EntityTypeBuilder<AcceptanceOtpChallenge> builder)
+    {
+        builder.ToTable("acceptance_otp_challenges", "commercial", t => t.HasCheckConstraint("ck_acceptance_otp_challenges_channel", "channel IN ('email')"));
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.LinkId).HasColumnName("link_id").IsRequired();
+        builder.Property(x => x.Channel).HasColumnName("channel").HasMaxLength(16).IsRequired();
+        builder.Property(x => x.CodeHash).HasColumnName("code_hash").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.ExpiresAtUtc).HasColumnName("expires_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.FailedAttempts).HasColumnName("failed_attempts").IsRequired();
+        builder.Property(x => x.VerifiedAtUtc).HasColumnName("verified_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.VerificationTokenHash).HasColumnName("verification_token_hash").HasMaxLength(64);
+        builder.Property(x => x.ConsumedAtUtc).HasColumnName("consumed_at_utc").HasColumnType("timestamptz");
+        builder.HasIndex(x => new { x.LinkId, x.CreatedAtUtc });
+        builder.HasOne<QuotationAcceptanceLink>().WithMany().HasForeignKey(x => x.LinkId).OnDelete(DeleteBehavior.Restrict);
     }
 }

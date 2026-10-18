@@ -46,7 +46,9 @@ public sealed record AcceptanceContext(
     DateTimeOffset ExpiresAtUtc,
     string? SignerHint,
     DateTimeOffset? AcceptedAtUtc,
-    AcceptanceEvidenceSummary? Evidence);
+    AcceptanceEvidenceSummary? Evidence,
+    bool OtpLocked = false,
+    string? RecipientEmail = null);
 
 public sealed record PublicAcceptanceView(
     string Status,
@@ -55,7 +57,8 @@ public sealed record PublicAcceptanceView(
     string ConsentVersion,
     DateTimeOffset? AcceptedAtUtc,
     QuotationDocumentProjection Document,
-    PublicQuotationPdf? Pdf);
+    PublicQuotationPdf? Pdf,
+    bool OtpRequired = false);
 
 public sealed record AcceptanceSubmission(
     string? SignerName,
@@ -63,7 +66,8 @@ public sealed record AcceptanceSubmission(
     bool ConsentAccepted,
     string? ConsentVersion,
     string? SignatureImage,
-    string? DocumentSha256);
+    string? DocumentSha256,
+    string? OtpVerificationToken = null);
 
 public sealed record ClientInfo(string? RemoteAddress, string? UserAgent);
 

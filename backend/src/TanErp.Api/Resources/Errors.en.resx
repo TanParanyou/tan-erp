@@ -923,6 +923,20 @@
   <data name="ACCEPTANCE_CONSENT_REQUIRED_DETAIL" xml:space="preserve"><value>The current consent statement must be accepted.</value></data>
   <data name="ACCEPTANCE_CONFLICT_TITLE" xml:space="preserve"><value>Acceptance Conflict</value></data>
   <data name="ACCEPTANCE_CONFLICT_DETAIL" xml:space="preserve"><value>The document changed while you were reviewing it. Please reload and try again.</value></data>
+  <data name="ACCEPTANCE_OTP_REQUIRED_TITLE" xml:space="preserve"><value>Verification Required</value></data>
+  <data name="ACCEPTANCE_OTP_REQUIRED_DETAIL" xml:space="preserve"><value>A verification code is required before accepting.</value></data>
+  <data name="ACCEPTANCE_OTP_INVALID_TITLE" xml:space="preserve"><value>Invalid Code</value></data>
+  <data name="ACCEPTANCE_OTP_INVALID_DETAIL" xml:space="preserve"><value>The code or verification is not valid.</value></data>
+  <data name="ACCEPTANCE_OTP_EXPIRED_TITLE" xml:space="preserve"><value>Code Expired</value></data>
+  <data name="ACCEPTANCE_OTP_EXPIRED_DETAIL" xml:space="preserve"><value>The code has expired or was already used. Request a new one.</value></data>
+  <data name="ACCEPTANCE_OTP_LOCKED_TITLE" xml:space="preserve"><value>Link Locked</value></data>
+  <data name="ACCEPTANCE_OTP_LOCKED_DETAIL" xml:space="preserve"><value>Too many incorrect codes. Ask the sender for a new link.</value></data>
+  <data name="ACCEPTANCE_OTP_RATE_LIMITED_TITLE" xml:space="preserve"><value>Too Many Requests</value></data>
+  <data name="ACCEPTANCE_OTP_RATE_LIMITED_DETAIL" xml:space="preserve"><value>Please wait before requesting another code.</value></data>
+  <data name="ACCEPTANCE_OTP_UNAVAILABLE_TITLE" xml:space="preserve"><value>Verification Unavailable</value></data>
+  <data name="ACCEPTANCE_OTP_UNAVAILABLE_DETAIL" xml:space="preserve"><value>Verification codes are not available right now.</value></data>
+  <data name="ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED_TITLE" xml:space="preserve"><value>Recipient Email Required</value></data>
+  <data name="ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED_DETAIL" xml:space="preserve"><value>A recipient email is required because acceptance needs a one-time code.</value></data>
   <data name="INSTALLATION_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Installation Version Conflict</value></data>
   <data name="INSTALLATION_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The installation was changed by someone else. Reload and retry.</value></data>
   <data name="INSTALLATION_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Installation State</value></data>
