@@ -85,7 +85,7 @@ export function OpportunityAutocomplete({
         emptyText={t("noOpportunityFound")}
         loadingText={common("states.loading")}
         onSearchChange={setSearch}
-        getItemKey={(item) => item.id}
+        getItemKey={(item) => item.id ?? ""}
         renderSelectedCard={() => (
           <div className="flex min-h-[44px] items-center justify-between border border-erp-navy/40 bg-erp-surface px-3 py-2 text-xs">
             <div className="min-w-0 flex-1 truncate pr-2">
