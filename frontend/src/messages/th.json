@@ -4311,6 +4311,18 @@
         "title": "สิทธิ์ของบทบาท",
         "searchPlaceholder": "ค้นหาสิทธิ์",
         "approvalTag": "สิทธิ์อนุมัติ",
+        "makerCheckerTag": "ต้องตรวจ 2 ขั้นตอน (Maker-Checker)",
+        "documentApprovalTag": "สิทธิ์อนุมัติเอกสาร • ผูกวงเงินได้",
+        "approvalLimitsManageHint": "สิทธิ์ระดับผู้ดูแลในการเข้าไปกำหนด/แก้ไขเพดานวงเงินอนุมัติในระบบ (ไม่ใช่การมอบวงเงินให้แก่บทบาทนี้)",
+        "approvalNoticeHint": "บทบาทนี้มีสิทธิ์อนุมัติเอกสาร เมื่อบันทึกบทบาทแล้ว สามารถไปกำหนดเพดานวงเงินอนุมัติที่เมนู 'วงเงินอนุมัติ'",
+        "selectAll": "เลือกทั้งหมดในกลุ่ม",
+        "clearGroup": "ล้าง",
+        "modules": {
+          "system": "การจัดการระบบและความปลอดภัย (System & Administration)",
+          "crm": "งานขาย ลูกค้า และโอกาสทางการค้า (CRM & Commercial)",
+          "survey_estimating": "สำรวจหน้างานและประมาณการราคา (Survey & Cost Estimates)",
+          "operations": "จัดซื้อ ผลิต และคลังสินค้า (Supply Chain & Operations)"
+        },
         "noMatch": "ไม่พบสิทธิ์ที่ค้นหา",
         "selectedCount": "เลือกแล้ว {count} สิทธิ์",
         "scopedTitle": "สิทธิ์ที่จำกัดขอบเขต (คงไว้ตามเดิม)",
@@ -4461,6 +4473,7 @@
     "roomPlaceholder": "เช่น ห้องนอนใหญ่ Master Bedroom, โถงรับแขก",
     "customRoomOption": "✍️ กรอกชื่อห้องเอง...",
     "selectOrTypeRoom": "— เลือกห้องหรือพิมพ์เอง —",
+    "selectFromList": "เลือกจากลิสต์",
     "rooms": {
       "masterBedroom": "ห้องนอนใหญ่ (Master Bedroom)",
       "livingRoom": "ห้องรับแขก / นั่งเล่น (Living Room)",

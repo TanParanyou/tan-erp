@@ -4311,6 +4311,18 @@
         "title": "Role permissions",
         "searchPlaceholder": "Search permissions",
         "approvalTag": "Approval permission",
+        "makerCheckerTag": "Maker-checker required",
+        "documentApprovalTag": "Document approval • Limit capable",
+        "approvalLimitsManageHint": "Grants administrative access to configure approval limits for roles across the organization (does not grant an approval limit to this role).",
+        "approvalNoticeHint": "This role holds document approval authority. Once saved, you can configure its financial caps under 'Approval Limits'.",
+        "selectAll": "Select all in group",
+        "clearGroup": "Clear",
+        "modules": {
+          "system": "System & Administration",
+          "crm": "CRM & Commercial",
+          "survey_estimating": "Survey & Cost Estimates",
+          "operations": "Supply Chain & Operations"
+        },
         "noMatch": "No permissions match",
         "selectedCount": "{count} selected",
         "scopedTitle": "Scoped permissions (kept as they are)",
@@ -4461,6 +4473,7 @@
     "roomPlaceholder": "e.g. Master Bedroom, Living Room",
     "customRoomOption": "✍️ Type custom room name...",
     "selectOrTypeRoom": "— Select room or type custom —",
+    "selectFromList": "Select from list",
     "rooms": {
       "masterBedroom": "Master Bedroom",
       "livingRoom": "Living Room",

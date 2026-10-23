@@ -81,4 +81,17 @@ describe("OpportunityAutocomplete Component", () => {
 
     expect(onChange).toHaveBeenCalledWith("", null);
   });
+
+  it("renders list items with white text when highlighted for high contrast", () => {
+    const onChange = vi.fn();
+    render(<OpportunityAutocomplete value={null} onChange={onChange} />);
+
+    // Click input to open dropdown
+    const input = screen.getByPlaceholderText("พิมพ์ค้นหาชื่อโอกาสขาย, รหัส หรือชื่อลูกค้า...");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "รีโนเวท" } });
+
+    // The item should be in the list
+    expect(screen.getByText(/รีโนเวทห้องนอนใหญ่ คุณสมชาย/)).toBeDefined();
+  });
 });

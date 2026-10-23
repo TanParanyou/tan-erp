@@ -108,20 +108,34 @@ export function OpportunityAutocomplete({
             )}
           </div>
         )}
-        renderListItem={(item) => (
+        renderListItem={(item, isHighlighted) => (
           <div className="flex flex-col py-1 text-xs">
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate font-semibold text-erp-navy">
+              <span
+                className={`truncate font-semibold ${
+                  isHighlighted ? "text-white" : "text-erp-navy"
+                }`}
+              >
                 {item.code ? `${item.code} · ` : ""}
                 {item.title}
               </span>
               {item.stage && (
-                <span className="shrink-0 border border-erp-border bg-erp-surface-subtle px-1.5 py-0.5 text-[10px] font-medium uppercase text-erp-text-main">
+                <span
+                  className={`shrink-0 border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                    isHighlighted
+                      ? "border-white/40 bg-white/20 text-white"
+                      : "border-erp-border bg-erp-surface-subtle text-erp-text-main"
+                  }`}
+                >
                   {item.stage}
                 </span>
               )}
             </div>
-            <span className="truncate text-erp-text-muted">
+            <span
+              className={`truncate ${
+                isHighlighted ? "text-white/80" : "text-erp-text-muted"
+              }`}
+            >
               {getCustomerName(item)}
             </span>
           </div>

@@ -10,6 +10,7 @@ vi.mock("next-intl", () => ({
       roomPlaceholder: "เช่น ห้องนอนใหญ่ Master Bedroom, โถงรับแขก",
       customRoomOption: "✍️ กรอกชื่อห้องเอง...",
       selectOrTypeRoom: "— เลือกห้องหรือพิมพ์เอง —",
+      selectFromList: "เลือกจากลิสต์",
       "rooms.masterBedroom": "ห้องนอนใหญ่ (Master Bedroom)",
       "rooms.livingRoom": "ห้องรับแขก / นั่งเล่น (Living Room)",
       "rooms.kitchen": "ห้องครัว / แพนทรี (Kitchen & Pantry)",
@@ -31,7 +32,6 @@ describe("RoomNameCombobox Component", () => {
     render(<RoomNameCombobox value="" onChange={onChange} />);
 
     expect(screen.getByText(/ชื่อห้อง \/ บริเวณสำรวจ/)).toBeDefined();
-    // The first option should be the custom typing option
     const options = screen.getAllByRole("option");
     expect(options[1].textContent).toContain("✍️ กรอกชื่อห้องเอง...");
   });
@@ -46,7 +46,7 @@ describe("RoomNameCombobox Component", () => {
     expect(onChange).toHaveBeenCalledWith("ห้องนอนใหญ่ (Master Bedroom)");
   });
 
-  it("allows typing custom room name when custom option is selected or text is typed", () => {
+  it("swaps seamlessly to single-row input when custom option is selected and can switch back", () => {
     const onChange = vi.fn();
     render(<RoomNameCombobox value="" onChange={onChange} />);
 
@@ -54,7 +54,7 @@ describe("RoomNameCombobox Component", () => {
     const select = screen.getByRole("combobox");
     fireEvent.change(select, { target: { value: "__custom__" } });
 
-    // Custom input should now be visible and focused
+    // Custom input should now take over the row
     const customInput = screen.getByPlaceholderText(
       "เช่น ห้องนอนใหญ่ Master Bedroom, โถงรับแขก"
     );
@@ -62,5 +62,12 @@ describe("RoomNameCombobox Component", () => {
 
     fireEvent.change(customInput, { target: { value: "ห้องเก็บไวน์ใต้ดิน" } });
     expect(onChange).toHaveBeenCalledWith("ห้องเก็บไวน์ใต้ดิน");
+
+    // Click switch back to list button
+    const switchBackBtn = screen.getByRole("button", { name: "เลือกจากลิสต์" });
+    fireEvent.click(switchBackBtn);
+
+    // Dropdown returns
+    expect(screen.getByRole("combobox")).toBeDefined();
   });
 });
