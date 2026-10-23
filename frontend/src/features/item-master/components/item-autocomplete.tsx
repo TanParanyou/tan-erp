@@ -67,13 +67,45 @@ export function ItemAutocomplete({
       onSearchChange={setSearch}
       getItemKey={(item) => item.id ?? ""}
       renderSelectedCard={(onClear, item) => (
-        <div className="flex min-h-[44px] items-center gap-3 border border-erp-navy/40 bg-erp-surface px-3 py-2">
-          <span className="min-w-0 flex-1 truncate text-sm text-erp-text-main">{item ? `${item.code ?? "-"} · ${nameOf(item)}` : "-"}</span>
-          {!disabled && <button type="button" className="min-h-[36px] px-2 text-xs text-erp-text-muted hover:text-erp-navy" onClick={onClear}>{common("actions.clear")}</button>}
+        <div className="flex min-h-[44px] items-center justify-between gap-3 border border-erp-navy/40 bg-erp-surface px-3 py-1.5">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-xs font-semibold text-erp-navy">
+              {item ? nameOf(item) : "-"}
+            </span>
+            <span className="truncate text-[11px] text-erp-text-muted">
+              {item?.code ?? "-"}
+              {item?.baseUnit?.code ? ` · ${item.baseUnit.code}` : ""}
+            </span>
+          </div>
+          {!disabled && (
+            <button
+              type="button"
+              className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center text-xs font-medium text-erp-text-muted hover:text-erp-navy"
+              onClick={onClear}
+            >
+              {common("actions.clear")}
+            </button>
+          )}
         </div>
       )}
-      renderListItem={(item) => (
-        <span className="min-w-0 truncate text-sm">{item.code ?? "-"} · {nameOf(item)}{item.baseUnit?.code ? ` (${item.baseUnit.code})` : ""}</span>
+      renderListItem={(item, isHighlighted) => (
+        <div className="flex min-w-0 flex-1 flex-col py-0.5 text-left">
+          <span
+            className={`truncate text-xs font-semibold ${
+              isHighlighted ? "text-white" : "text-erp-navy"
+            }`}
+          >
+            {nameOf(item)}
+          </span>
+          <span
+            className={`truncate text-[11px] ${
+              isHighlighted ? "text-white/80" : "text-erp-text-muted"
+            }`}
+          >
+            {item.code ?? "-"}
+            {item.baseUnit?.code ? ` · ${item.baseUnit.code}` : ""}
+          </span>
+        </div>
       )}
     />
   );

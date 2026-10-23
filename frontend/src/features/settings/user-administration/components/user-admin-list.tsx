@@ -13,6 +13,7 @@ import { ListToolbar } from "@/components/ui/ListToolbar";
 import { StatusBadge, type BadgeVariant } from "@/components/ui/StatusBadge";
 import { TableEntityCell } from "@/components/ui/TableEntityCell";
 import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
+import { Avatar } from "@/components/ui/Avatar";
 import { IconEye, IconPlus } from "@/components/common/Icons";
 import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
 import type { AdminUserResponse } from "@/lib/api/api-client";
@@ -77,13 +78,32 @@ export function UserAdminList() {
         header: t("table.user"),
         sortable: true,
         accessorKey: "displayName",
-        className: "min-w-[240px]",
+        className: "min-w-[260px]",
         cell: (_value, user) => (
-          <TableEntityCell
-            title={user.displayName ?? "-"}
-            subtitle={user.email}
-            href={`/${locale}/settings/users/${user.id}`}
-          />
+          <div className="flex items-center gap-3">
+            <Avatar
+              size="md"
+              initial={user.displayName ?? undefined}
+              fileId={user.avatar?.id}
+              src={user.avatar?.servingUrl}
+            />
+            <TableEntityCell
+              title={user.displayName ?? "-"}
+              subtitle={user.email}
+              href={`/${locale}/settings/users/${user.id}`}
+            />
+          </div>
+        ),
+      },
+      {
+        id: "position",
+        header: t("table.departmentAndJobTitle"),
+        className: "min-w-[180px]",
+        cell: (_value, user) => (
+          <div className="flex flex-col text-xs">
+            <span className="font-medium text-erp-text-main">{user.jobTitle ? `${user.jobTitle.code} - ${user.jobTitle.name}` : "-"}</span>
+            <span className="text-erp-text-muted">{user.department?.name ?? "-"}</span>
+          </div>
         ),
       },
       {

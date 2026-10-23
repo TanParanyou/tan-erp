@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   push: vi.fn(),
   success: vi.fn(),
+  uploadSingleFile: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -16,8 +17,25 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+vi.mock("@/lib/membership/selected-membership-context", () => ({
+  useSelectedMembership: () => ({
+    selectedMembership: {
+      id: "membership-1",
+      permissions: [{ key: "users.manage", scope: "organization" }],
+    },
+  }),
+}));
+
 vi.mock("@/hooks/useToast", () => ({
   useToast: () => ({ toast: { success: mocks.success, error: vi.fn() } }),
+}));
+
+vi.mock("@/hooks/useDeferredFileUpload", () => ({
+  useDeferredFileUpload: () => ({
+    uploadSingleFile: mocks.uploadSingleFile,
+    isUploading: false,
+    resetIntent: vi.fn(),
+  }),
 }));
 
 vi.mock("@/features/item-master/api/item-master-queries", () => ({
@@ -37,6 +55,16 @@ vi.mock("../api/user-admin-queries", () => ({
     },
   }),
   useCreateAdminUser: () => ({ mutateAsync: mocks.create, isPending: false }),
+  useDepartments: () => ({
+    data: [{ id: "dept-1", code: "ENG", name: "Engineering", isActive: true }],
+    isLoading: false,
+  }),
+  useJobTitles: () => ({
+    data: [{ id: "job-1", code: "SE", name: "Software Engineer", isActive: true }],
+    isLoading: false,
+  }),
+  useCreateDepartment: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useCreateJobTitle: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 function fillValidForm() {
@@ -73,6 +101,14 @@ describe("UserAdminEditor", () => {
       displayName: "สมหญิง",
       email: "somying@example.test",
       branchId: null,
+      phoneNumber: null,
+      employeeCode: null,
+      departmentId: null,
+      jobTitleId: null,
+      avatarFileId: null,
+      notes: null,
+      startsAtUtc: null,
+      expiresAtUtc: null,
       roleIds: ["r-read"],
     });
     expect(call.idempotencyKey).toMatch(/[0-9a-f-]{36}/);

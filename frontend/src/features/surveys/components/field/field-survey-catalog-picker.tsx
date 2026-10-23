@@ -123,16 +123,14 @@ export function FieldSurveyCatalogPicker({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {/* Core Material SKU */}
         <div>
-          <label className="mb-1 block text-xs font-semibold text-erp-text-main">
-            {t("coreMaterial")}
-          </label>
           <ItemAutocomplete
+            label={t("coreMaterial")}
             value={value.coreSkuId ?? null}
             onChange={handleCoreChange}
             disabled={disabled}
             placeholder={value.coreSkuName ?? t("coreMaterial")}
           />
-          {value.coreSkuName && (
+          {value.coreSkuName && !value.coreSkuId && (
             <div className="mt-1 flex items-center justify-between border-l-2 border-erp-navy bg-erp-surface-subtle px-2 py-1 text-xs">
               <span className="truncate font-medium text-erp-text-main">{value.coreSkuName}</span>
             </div>
@@ -141,16 +139,14 @@ export function FieldSurveyCatalogPicker({
 
         {/* Surface Finish SKU */}
         <div>
-          <label className="mb-1 block text-xs font-semibold text-erp-text-main">
-            {t("surfaceFinish")}
-          </label>
           <ItemAutocomplete
+            label={t("surfaceFinish")}
             value={value.finishSkuId ?? null}
             onChange={handleFinishChange}
             disabled={disabled}
             placeholder={value.finishSkuName ?? t("surfaceFinish")}
           />
-          {value.finishSkuName && (
+          {value.finishSkuName && !value.finishSkuId && (
             <div className="mt-1 flex items-center justify-between border-l-2 border-erp-navy bg-erp-surface-subtle px-2 py-1 text-xs">
               <span className="truncate font-medium text-erp-text-main">{value.finishSkuName}</span>
             </div>
@@ -159,16 +155,14 @@ export function FieldSurveyCatalogPicker({
 
         {/* Hardware & Fittings SKU */}
         <div>
-          <label className="mb-1 block text-xs font-semibold text-erp-text-main">
-            {t("hardware")}
-          </label>
           <ItemAutocomplete
+            label={t("hardware")}
             value={value.hardwareSkuId ?? null}
             onChange={handleHardwareChange}
             disabled={disabled}
             placeholder={value.hardwareSkuName ?? t("hardware")}
           />
-          {value.hardwareSkuName && (
+          {value.hardwareSkuName && !value.hardwareSkuId && (
             <div className="mt-1 flex items-center justify-between border-l-2 border-erp-navy bg-erp-surface-subtle px-2 py-1 text-xs">
               <span className="truncate font-medium text-erp-text-main">
                 {value.hardwareSkuName}

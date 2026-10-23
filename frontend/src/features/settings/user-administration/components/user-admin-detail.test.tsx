@@ -27,6 +27,14 @@ vi.mock("@/hooks/useToast", () => ({
   useToast: () => ({ toast: { success: mocks.success, error: vi.fn() } }),
 }));
 
+vi.mock("@/hooks/useDeferredFileUpload", () => ({
+  useDeferredFileUpload: () => ({
+    uploadSingleFile: vi.fn().mockResolvedValue(null),
+    isUploading: false,
+    resetIntent: vi.fn(),
+  }),
+}));
+
 vi.mock("@/features/item-master/api/item-master-queries", () => ({
   useOrganizationBranches: () => ({ data: [{ id: "b1", code: "HQ", name: "สาขากรุงเทพ" }] }),
 }));
@@ -52,6 +60,11 @@ vi.mock("../api/user-admin-queries", () => {
     useAssignAdminRole: idle((...args: never[]) => mocks.assign(...args)),
     useRevokeAdminRole: idle((...args: never[]) => mocks.revoke(...args)),
     useDecideAdminRoleRequest: idle((...args: never[]) => mocks.decide(...args)),
+    useUpdateAdminUserProfile: idle(vi.fn()),
+    useDepartments: () => ({ data: [], isLoading: false }),
+    useJobTitles: () => ({ data: [], isLoading: false }),
+    useCreateDepartment: idle(vi.fn()),
+    useCreateJobTitle: idle(vi.fn()),
   };
 });
 

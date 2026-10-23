@@ -16,10 +16,14 @@ import {
   type AdminUserListResponse,
   type AdminUserResponse,
   type CreateAdminUserRequest,
+  type CreateDepartmentRequest,
+  type CreateJobTitleRequest,
+  type DepartmentResponse,
+  type JobTitleResponse,
   type UpdateAdminMembershipRequest,
+  type UpdateAdminUserProfileRequest,
 } from "@/lib/api/api-client";
 import { useApiRequestContext, type ApiLocale } from "@/lib/api/use-api-request-context";
-
 
 export const userAdminKeys = {
   all: (membershipId: string | null | undefined) => ["business", membershipId] as const,
@@ -31,6 +35,10 @@ export const userAdminKeys = {
     ["business", membershipId, locale, "user-admin", "roles"] as const,
   requests: (membershipId: string | null | undefined, locale: ApiLocale, status: string) =>
     ["business", membershipId, locale, "user-admin", "role-requests", status] as const,
+  departments: (membershipId: string | null | undefined, locale: ApiLocale, onlyActive: boolean) =>
+    ["business", membershipId, locale, "user-admin", "departments", onlyActive] as const,
+  jobTitles: (membershipId: string | null | undefined, locale: ApiLocale, departmentId: string | null | undefined, onlyActive: boolean) =>
+    ["business", membershipId, locale, "user-admin", "job-titles", departmentId ?? "all", onlyActive] as const,
 };
 
 /** Access changes also change what /me and every permission-gated screen allow, so refresh all business queries. */
@@ -156,6 +164,68 @@ export function useRevokeAdminRole(): UseMutationResult<void, Error, { membershi
   return useMutation({
     mutationFn: async ({ membershipId, roleId }) => apiClient.revokeAdminRole(membershipId, roleId, await context.buildOptions()),
     onSuccess: () => invalidateAdmin(queryClient, context.membershipId),
+  });
+}
+
+export function useUpdateAdminUserProfile(): UseMutationResult<
+  AdminUserResponse,
+  Error,
+  { userId: string; payload: UpdateAdminUserProfileRequest; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ userId, payload, ifMatch }) =>
+      apiClient.updateAdminUserProfile(userId, payload, await context.buildOptions({ ifMatch })),
+    onSuccess: () => invalidateAdmin(queryClient, context.membershipId),
+  });
+}
+
+export function useDepartments(onlyActive = true, enabled = true): UseQueryResult<DepartmentResponse[], Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: userAdminKeys.departments(context.membershipId, context.locale, onlyActive),
+    enabled: Boolean(context.membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.listDepartments(onlyActive, await context.buildOptions({ signal })),
+  });
+}
+
+export function useCreateDepartment(): UseMutationResult<DepartmentResponse, Error, CreateDepartmentRequest> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async (payload) => apiClient.createDepartment(payload, await context.buildOptions()),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["business", context.membershipId, context.locale, "user-admin", "departments"],
+      });
+    },
+  });
+}
+
+export function useJobTitles(
+  departmentId?: string | null,
+  onlyActive = true,
+  enabled = true
+): UseQueryResult<JobTitleResponse[], Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: userAdminKeys.jobTitles(context.membershipId, context.locale, departmentId, onlyActive),
+    enabled: Boolean(context.membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.listJobTitles(departmentId, onlyActive, await context.buildOptions({ signal })),
+  });
+}
+
+export function useCreateJobTitle(): UseMutationResult<JobTitleResponse, Error, CreateJobTitleRequest> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async (payload) => apiClient.createJobTitle(payload, await context.buildOptions()),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["business", context.membershipId, context.locale, "user-admin", "job-titles"],
+      });
+    },
   });
 }
 

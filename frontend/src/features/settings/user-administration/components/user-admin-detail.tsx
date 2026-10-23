@@ -2,6 +2,9 @@
 
 import React, { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
@@ -10,7 +13,11 @@ import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Select } from "@/components/ui/Select";
 import { StatusBadge, type BadgeVariant } from "@/components/ui/StatusBadge";
+import { Avatar } from "@/components/ui/Avatar";
 import { useToast } from "@/hooks/useToast";
+import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
+import { useApiRequestContext } from "@/lib/api/use-api-request-context";
+import { getAuthToken } from "@/lib/auth/auth-session";
 import { formatDateTime } from "@/lib/formatters/formatters";
 import type { AdminMembershipResponse, AdminUserResponse } from "@/lib/api/api-client";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -21,13 +28,14 @@ import {
   useAdminUser,
   useAssignAdminRole,
   useDecideAdminRoleRequest,
-  useRenameAdminUser,
   useRevokeAdminRole,
   useSetAdminMembershipActive,
   useSetAdminUserActive,
   useUpdateAdminMembership,
+  useUpdateAdminUserProfile,
 } from "../api/user-admin-queries";
 import { adminErrorKey } from "../user-admin-errors";
+import { UserAdminFormFields, type UserAdminFormValues } from "./user-admin-form-fields";
 
 const STATUS_VARIANTS: Record<string, BadgeVariant> = {
   active: "success",
@@ -64,6 +72,7 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const { toast } = useToast();
+  const context = useApiRequestContext();
   const { selectedMembership } = useSelectedMembership();
 
   const canManageUsers = can(selectedMembership, PERMISSIONS.USERS_MANAGE);
@@ -74,7 +83,7 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
   const rolesQuery = useAdminRoles(canAssignRoles);
   const branchesQuery = useOrganizationBranches();
 
-  const renameMutation = useRenameAdminUser();
+  const updateProfileMutation = useUpdateAdminUserProfile();
   const userActiveMutation = useSetAdminUserActive();
   const membershipActiveMutation = useSetAdminMembershipActive();
   const updateMembershipMutation = useUpdateAdminMembership();
@@ -82,10 +91,17 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
   const revokeMutation = useRevokeAdminRole();
   const decideMutation = useDecideAdminRoleRequest();
 
+  const { uploadSingleFile, isUploading: isAvatarUploading } = useDeferredFileUpload({
+    parentType: "user",
+    parentId: userId,
+  });
+
   const assignIntentRef = useRef<{ fingerprint: string; key: string } | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
   const [roleChoice, setRoleChoice] = useState<Record<string, string>>({});
   const [membershipDraft, setMembershipDraft] = useState<
     Record<string, { branchId: string; startsAt: string; expiresAt: string }>
@@ -93,10 +109,51 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
 
   const user: AdminUserResponse | undefined = userQuery.data;
 
+  const profileSchema = z.object({
+    displayName: z.string().trim().min(1, t("validation.displayNameRequired")).max(255, t("validation.displayNameTooLong")),
+    email: z.string(),
+    phoneNumber: z.string().max(50, t("validation.phoneTooLong")),
+    employeeCode: z.string().max(50, t("validation.codeTooLong")),
+    departmentId: z.string(),
+    jobTitleId: z.string(),
+    notes: z.string().max(1000, t("validation.notesTooLong")),
+    branchId: z.string(),
+    startsAt: z.string(),
+    expiresAt: z.string(),
+    roleIds: z.array(z.string()),
+  });
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<UserAdminFormValues>({
+    resolver: zodResolver(profileSchema),
+    values: {
+      displayName: user?.displayName ?? "",
+      email: user?.email ?? "",
+      phoneNumber: user?.phoneNumber ?? "",
+      employeeCode: user?.employeeCode ?? "",
+      departmentId: user?.department?.id ?? "",
+      jobTitleId: user?.jobTitle?.id ?? "",
+      notes: user?.notes ?? "",
+      branchId: "",
+      startsAt: "",
+      expiresAt: "",
+      roleIds: [],
+    },
+  });
+
+  const watchedDisplayName = useWatch({ control, name: "displayName" });
+  const watchedDepartmentId = useWatch({ control, name: "departmentId" });
+
   const fail = (error: unknown) => setErrorMessage(t(`errors.${adminErrorKey(error)}`));
 
   const isBusy =
-    renameMutation.isPending ||
+    updateProfileMutation.isPending ||
+    isAvatarUploading ||
     userActiveMutation.isPending ||
     membershipActiveMutation.isPending ||
     updateMembershipMutation.isPending ||
@@ -114,18 +171,47 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
 
   const userRowVersion = user.rowVersion;
   const status = user.status ?? "inactive";
-  const displayedName = nameDraft ?? user.displayName ?? "";
 
-  const saveName = async () => {
+  const onSaveProfile = handleSubmit(async (values) => {
     setErrorMessage(null);
-    try {
-      await renameMutation.mutateAsync({ userId, displayName: displayedName, ifMatch: userRowVersion });
-      setNameDraft(null);
-      toast.success(t("saved"));
-    } catch (error: unknown) {
-      fail(error);
+    let avatarFileId = user.avatar?.id ?? null;
+
+    if (avatarFile) {
+      try {
+        const token = await getAuthToken();
+        const uploadRes = await uploadSingleFile(avatarFile, {
+          token: token ?? "",
+          membershipId: context.membershipId,
+          locale,
+        });
+        avatarFileId = uploadRes?.fileId ?? null;
+      } catch (err: unknown) {
+        fail(err);
+        return;
+      }
     }
-  };
+
+    try {
+      await updateProfileMutation.mutateAsync({
+        userId,
+        ifMatch: userRowVersion,
+        payload: {
+          displayName: values.displayName.trim(),
+          phoneNumber: values.phoneNumber.trim() || null,
+          employeeCode: values.employeeCode.trim() || null,
+          departmentId: values.departmentId || null,
+          jobTitleId: values.jobTitleId || null,
+          avatarFileId,
+          notes: values.notes.trim() || null,
+        },
+      });
+      setAvatarFile(null);
+      setIsEditingProfile(false);
+      toast.success(t("saved"));
+    } catch (err: unknown) {
+      fail(err);
+    }
+  });
 
   const confirmAction = async () => {
     if (!pendingAction) return;
@@ -261,32 +347,99 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
       {errorMessage ? <Alert variant="danger">{errorMessage}</Alert> : null}
       {status === "pending" ? <Alert variant="info">{t("pendingNotice")}</Alert> : null}
 
-      {canManageUsers ? (
-        <section className="border border-erp-border bg-erp-surface p-4" aria-labelledby="user-profile-heading">
-          <h2 id="user-profile-heading" className="mb-3 text-base font-bold text-erp-text-main">
+      {/* User Information & Master Data Summary Card */}
+      <section className="border border-erp-border bg-erp-surface p-4 space-y-4" aria-labelledby="user-profile-heading">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-erp-border pb-3">
+          <h2 id="user-profile-heading" className="text-base font-bold text-erp-text-main">
             {t("sections.identity")}
           </h2>
-          <div className="flex flex-wrap items-end gap-3">
-            <Input
-              wrapperClassName="min-w-[16rem] flex-1"
-              label={t("fields.displayName")}
-              value={displayedName}
-              placeholder={t("fields.displayNamePlaceholder")}
-              onChange={(event) => setNameDraft(event.target.value)}
-            />
+          {canManageUsers && !isEditingProfile && (
             <Button
-              variant="primary"
-              size="md"
-              isLoading={renameMutation.isPending}
-              disabled={isBusy || nameDraft === null || nameDraft.trim().length === 0}
-              onClick={saveName}
+              variant="outline"
+              size="sm"
+              disabled={isBusy}
+              onClick={() => setIsEditingProfile(true)}
             >
-              {tCommon("actions.save")}
+              {tCommon("actions.edit")}
             </Button>
-          </div>
-        </section>
-      ) : null}
+          )}
+        </div>
 
+        {isEditingProfile ? (
+          <form onSubmit={onSaveProfile} className="space-y-4">
+            <UserAdminFormFields
+              mode="edit"
+              register={register}
+              control={control}
+              errors={errors}
+              avatarFile={avatarFile}
+              onAvatarFileChange={setAvatarFile}
+              existingAvatarFileId={user.avatar?.id}
+              existingAvatarUrl={user.avatar?.servingUrl}
+              currentDisplayName={watchedDisplayName}
+              selectedDepartmentId={watchedDepartmentId}
+              hideRoles={true}
+              hideMembershipDates={true}
+              disabled={isBusy}
+            />
+            <div className="flex justify-end gap-2 pt-2 border-t border-erp-border">
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                disabled={isBusy}
+                onClick={() => {
+                  reset();
+                  setAvatarFile(null);
+                  setIsEditingProfile(false);
+                }}
+              >
+                {tCommon("actions.cancel")}
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={updateProfileMutation.isPending || isAvatarUploading}
+                disabled={isBusy || (!isDirty && avatarFile === null)}
+              >
+                {tCommon("actions.save")}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-xs text-erp-text-muted block">{t("fields.phoneNumber")}</span>
+              <span className="font-medium text-erp-text-main">{user.phoneNumber || "-"}</span>
+            </div>
+            <div>
+              <span className="text-xs text-erp-text-muted block">{t("fields.employeeCode")}</span>
+              <span className="font-medium text-erp-text-main">{user.employeeCode || "-"}</span>
+            </div>
+            <div>
+              <span className="text-xs text-erp-text-muted block">{t("fields.department")}</span>
+              <span className="font-medium text-erp-text-main">
+                {user.department ? `${user.department.code} - ${user.department.name}` : "-"}
+              </span>
+            </div>
+            <div>
+              <span className="text-xs text-erp-text-muted block">{t("fields.jobTitle")}</span>
+              <span className="font-medium text-erp-text-main">
+                {user.jobTitle ? `${user.jobTitle.code} - ${user.jobTitle.name}` : "-"}
+              </span>
+            </div>
+            {user.notes && (
+              <div className="col-span-full">
+                <span className="text-xs text-erp-text-muted block">{t("fields.notes")}</span>
+                <span className="text-erp-text-main">{user.notes}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* Memberships & Roles */}
       {(user.memberships ?? []).map((membership) => {
         const membershipId = membership.id ?? "";
         const draft = membershipDraft[membershipId];
@@ -465,10 +618,10 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
                     }
                   />
                 </div>
-                <div className="mt-3">
+                <div className="mt-3 flex justify-end">
                   <Button
                     variant="primary"
-                    size="sm"
+                    size="md"
                     isLoading={updateMembershipMutation.isPending}
                     disabled={isBusy || !draft}
                     onClick={() => saveMembership(membership)}
@@ -482,22 +635,19 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
         );
       })}
 
-      <ConfirmationModal
-        isOpen={pendingAction !== null}
-        onClose={() => setPendingAction(null)}
-        onConfirm={confirmAction}
-        title={modalCopy?.title}
-        message={modalCopy?.message ?? ""}
-        confirmText={tCommon("actions.confirm")}
-        cancelText={tCommon("actions.cancel")}
-        variant={modalCopy?.variant ?? "info"}
-        isLoading={
-          userActiveMutation.isPending ||
-          membershipActiveMutation.isPending ||
-          revokeMutation.isPending ||
-          decideMutation.isPending
-        }
-      />
+      {pendingAction ? (
+        <ConfirmationModal
+          isOpen={true}
+          title={modalCopy?.title ?? ""}
+          message={modalCopy?.message ?? ""}
+          variant={modalCopy?.variant ?? "info"}
+          confirmText={tCommon("actions.confirm")}
+          cancelText={tCommon("actions.cancel")}
+          isLoading={isBusy}
+          onConfirm={confirmAction}
+          onClose={() => setPendingAction(null)}
+        />
+      ) : null}
     </div>
   );
 }
