@@ -16693,7 +16693,13 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PublicOtpRequest"];
+                    "text/json": components["schemas"]["PublicOtpRequest"];
+                    "application/*+json": components["schemas"]["PublicOtpRequest"];
+                };
+            };
             responses: {
                 /** @description Accepted */
                 202: {
@@ -16708,6 +16714,17 @@ export interface paths {
                 };
                 /** @description Not Found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -22385,6 +22402,7 @@ export interface components {
             lifetimeDays?: number | null;
             signerHint?: string | null;
             recipientEmail?: string | null;
+            recipientPhone?: string | null;
         };
         CreateAdminUserRequest: {
             displayName?: string | null;
@@ -24673,6 +24691,10 @@ export interface components {
             document?: components["schemas"]["QuotationDocumentResponse"];
             pdf?: components["schemas"]["PublicQuotationPdfResponse"];
             otpRequired?: boolean;
+            otpChannels?: string[] | null;
+        };
+        PublicOtpRequest: {
+            channel?: string | null;
         };
         PublicOtpRequestResponse: {
             /** Format: int32 */

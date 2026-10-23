@@ -5,7 +5,7 @@ namespace TanErp.Application.Commercial;
 
 public interface IQuotationAcceptanceStore
 {
-    Task<Result<AcceptanceLinkProjection>> CreateLinkAsync(RequestAccessContext access, Guid quotationId, string tokenHash, string? signerHint, string? recipientEmail, int lifetimeDays, string traceId, CancellationToken ct = default);
+    Task<Result<AcceptanceLinkProjection>> CreateLinkAsync(RequestAccessContext access, Guid quotationId, string tokenHash, string? signerHint, string? recipientEmail, string? recipientPhone, int lifetimeDays, string traceId, CancellationToken ct = default);
     Task<Result<AcceptanceLinkProjection>> RevokeLinkAsync(RequestAccessContext access, Guid linkId, string traceId, CancellationToken ct = default);
     Task<IReadOnlyList<AcceptanceLinkProjection>?> ListLinksAsync(Guid organizationId, Guid quotationId, CancellationToken ct = default);
 

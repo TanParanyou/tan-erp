@@ -29,6 +29,7 @@ public class QuotationAcceptanceLinkConfiguration : IEntityTypeConfiguration<Quo
         builder.Property(x => x.RevokedByUserId).HasColumnName("revoked_by_user_id");
         builder.Property(x => x.AcceptedAtUtc).HasColumnName("accepted_at_utc").HasColumnType("timestamptz");
         builder.Property(x => x.RecipientEmail).HasColumnName("recipient_email").HasMaxLength(254);
+        builder.Property(x => x.RecipientPhone).HasColumnName("recipient_phone").HasMaxLength(16);
         builder.Property(x => x.OtpLockedAtUtc).HasColumnName("otp_locked_at_utc").HasColumnType("timestamptz");
         builder.HasIndex(x => x.TokenHash).IsUnique();
         builder.HasIndex(x => new { x.OrganizationId, x.QuotationId });
@@ -73,7 +74,7 @@ public class AcceptanceOtpChallengeConfiguration : IEntityTypeConfiguration<Acce
 {
     public void Configure(EntityTypeBuilder<AcceptanceOtpChallenge> builder)
     {
-        builder.ToTable("acceptance_otp_challenges", "commercial", t => t.HasCheckConstraint("ck_acceptance_otp_challenges_channel", "channel IN ('email')"));
+        builder.ToTable("acceptance_otp_challenges", "commercial", t => t.HasCheckConstraint("ck_acceptance_otp_challenges_channel", "channel IN ('email', 'sms')"));
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();

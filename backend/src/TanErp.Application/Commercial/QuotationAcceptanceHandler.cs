@@ -25,14 +25,16 @@ public partial class QuotationAcceptanceHandler
     private readonly AcceptanceOtpOptions _otp;
     private readonly IAcceptanceOtpStore _otpStore;
     private readonly IEmailSender _email;
+    private readonly ISmsSender _sms;
 
     public QuotationAcceptanceHandler(
         IRequestAccessResolver accessResolver, IQuotationAcceptanceStore store, IEstimateStore estimates, IClock clock, IQuotationDocumentStore documents,
-        AcceptanceOtpOptions otp, IAcceptanceOtpStore otpStore, IEmailSender email)
+        AcceptanceOtpOptions otp, IAcceptanceOtpStore otpStore, IEmailSender email, ISmsSender sms)
     {
         _otp = otp;
         _otpStore = otpStore;
         _email = email;
+        _sms = sms;
         _accessResolver = accessResolver;
         _store = store;
         _estimates = estimates;
@@ -50,7 +52,7 @@ public partial class QuotationAcceptanceHandler
 
     // ----- internal ----------------------------------------------------------------------------------
 
-    public async Task<Result<CreatedAcceptanceLink>> CreateLinkAsync(QuotationLifecycleCaller caller, Guid quotationId, int? lifetimeDays, string? signerHint, string? recipientEmail, CancellationToken ct = default)
+    public async Task<Result<CreatedAcceptanceLink>> CreateLinkAsync(QuotationLifecycleCaller caller, Guid quotationId, int? lifetimeDays, string? signerHint, string? recipientEmail, string? recipientPhone, CancellationToken ct = default)
     {
         var access = await _accessResolver.ResolveAsync(caller.FirebaseUid, caller.MembershipId, "quotations.share", ct);
         if (access.IsFailure) return Result<CreatedAcceptanceLink>.Failure(access.Error);
@@ -58,13 +60,14 @@ public partial class QuotationAcceptanceHandler
         if (days is < 1 or > 30) return Fail<CreatedAcceptanceLink>("ACCEPTANCE_LINK_LIFETIME_INVALID", "A link must live between 1 and 30 days.");
         if (signerHint is { Length: > 200 }) return Fail<CreatedAcceptanceLink>("ACCEPTANCE_LINK_LIFETIME_INVALID", "The signer hint cannot exceed 200 characters.");
 
-        if (_otp.Required && string.IsNullOrWhiteSpace(recipientEmail))
+        var hasContact = (_otp.Channels.Email && !string.IsNullOrWhiteSpace(recipientEmail)) || (_otp.Channels.Sms && !string.IsNullOrWhiteSpace(recipientPhone));
+        if (_otp.Required && !hasContact)
         {
-            return Fail<CreatedAcceptanceLink>("ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED", "A recipient email is required because acceptance needs a one-time code.");
+            return Fail<CreatedAcceptanceLink>("ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED", "A recipient email or phone for an enabled channel is required because acceptance needs a one-time code.");
         }
 
         var token = NewToken();
-        var created = await _store.CreateLinkAsync(access.Value!, quotationId, HashToken(token), signerHint, recipientEmail, days, caller.TraceId, ct);
+        var created = await _store.CreateLinkAsync(access.Value!, quotationId, HashToken(token), signerHint, recipientEmail, recipientPhone, days, caller.TraceId, ct);
         return created.IsFailure ? Result<CreatedAcceptanceLink>.Failure(created.Error) : Result<CreatedAcceptanceLink>.Success(new CreatedAcceptanceLink(created.Value!, token));
     }
 
@@ -112,7 +115,7 @@ public partial class QuotationAcceptanceHandler
         var pdf = await _documents.FindSummaryAsync(context.OrganizationId, context.QuotationId, ct);
         return Result<PublicAcceptanceView>.Success(new PublicAcceptanceView(
             context.LinkStatus, context.ExpiresAtUtc, context.SignerHint, AcceptanceConsent.CurrentVersion, context.AcceptedAtUtc, document.Value,
-            pdf is null ? null : new PublicQuotationPdf(pdf.Sha256, pdf.ByteCount), _otp.Required));
+            pdf is null ? null : new PublicQuotationPdf(pdf.Sha256, pdf.ByteCount), _otp.Required, AvailableOtpChannels()));
     }
 
     /// <summary>The exact stored PDF of the quotation this link is for. Same unusable-link rules (and the same 404) as the view.</summary>

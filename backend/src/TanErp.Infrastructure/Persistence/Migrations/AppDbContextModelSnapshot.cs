@@ -241,7 +241,7 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("acceptance_otp_challenges", "commercial", t =>
                         {
-                            t.HasCheckConstraint("ck_acceptance_otp_challenges_channel", "channel IN ('email')");
+                            t.HasCheckConstraint("ck_acceptance_otp_challenges_channel", "channel IN ('email', 'sms')");
                         });
                 });
 
@@ -517,6 +517,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)")
                         .HasColumnName("recipient_email");
+
+                    b.Property<string>("RecipientPhone")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("recipient_phone");
 
                     b.Property<DateTimeOffset?>("RevokedAtUtc")
                         .HasColumnType("timestamptz")

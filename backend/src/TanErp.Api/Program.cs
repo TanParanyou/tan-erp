@@ -200,6 +200,9 @@ emailOptions.Validate();
 builder.Services.AddSingleton(emailOptions);
 if (emailOptions.Enabled) builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.IEmailSender, TanErp.Infrastructure.Email.SmtpEmailSender>();
 else builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.IEmailSender, TanErp.Infrastructure.Email.LoggingEmailSender>();
+// Sms:* is reserved for a future provider; until one is implemented the no-op sender keeps the SMS OTP channel reported as unavailable.
+builder.Services.AddSingleton(builder.Configuration.GetSection(TanErp.Infrastructure.Email.SmsOptions.SectionName).Get<TanErp.Infrastructure.Email.SmsOptions>() ?? new TanErp.Infrastructure.Email.SmsOptions());
+builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.ISmsSender, TanErp.Infrastructure.Email.LoggingSmsSender>();
 builder.Services.AddScoped<TanErp.Application.Commercial.QuotationAcceptanceHandler>();
 builder.Services.AddSingleton<TanErp.Application.Commercial.Documents.IQuotationDocumentRenderer, TanErp.Infrastructure.Documents.QuestPdfQuotationRenderer>();
 builder.Services.AddScoped<TanErp.Application.Commercial.Documents.IQuotationDocumentWriter, TanErp.Infrastructure.Documents.QuotationDocumentWriter>();

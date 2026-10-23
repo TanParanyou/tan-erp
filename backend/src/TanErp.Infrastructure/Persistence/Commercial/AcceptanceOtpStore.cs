@@ -74,6 +74,6 @@ public class AcceptanceOtpStore : IAcceptanceOtpStore
     public async Task<OtpVerificationRecord?> FindVerificationAsync(Guid linkId, string verificationTokenHash, CancellationToken ct = default) =>
         await _db.AcceptanceOtpChallenges.AsNoTracking()
             .Where(c => c.LinkId == linkId && c.VerificationTokenHash == verificationTokenHash && c.VerifiedAtUtc != null && c.ConsumedAtUtc == null)
-            .Select(c => new OtpVerificationRecord(c.Id, c.VerifiedAtUtc!.Value))
+            .Select(c => new OtpVerificationRecord(c.Id, c.VerifiedAtUtc!.Value, c.Channel))
             .FirstOrDefaultAsync(ct);
 }

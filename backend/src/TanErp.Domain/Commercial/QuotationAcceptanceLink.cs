@@ -42,12 +42,21 @@ public class QuotationAcceptanceLink : Entity
     /// <summary>Where the one-time code is sent (G-05). Never returned to the customer or written to the audit trail.</summary>
     public string? RecipientEmail { get; private set; }
 
+    /// <summary>E.164 phone for the SMS channel, typed by staff (G-05). Same confidentiality rules as <see cref="RecipientEmail"/>.</summary>
+    public string? RecipientPhone { get; private set; }
+
     /// <summary>Set after too many wrong codes; only a newly issued link clears it.</summary>
     public DateTimeOffset? OtpLockedAtUtc { get; private set; }
 
     protected QuotationAcceptanceLink() { }
 
-    public QuotationAcceptanceLink(Guid id, Guid organizationId, Guid quotationId, string tokenHash, string? signerHint, DateTimeOffset expiresAtUtc, Guid createdByUserId, DateTimeOffset now, string? recipientEmail = null) : base(id)
+    private static readonly System.Text.RegularExpressions.Regex PhonePattern = new(@"^\+[1-9]\d{7,14}$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>Drops the separators people type (space, dash, dot, parentheses); null for blank input.</summary>
+    public static string? NormalizePhone(string? raw) =>
+        string.IsNullOrWhiteSpace(raw) ? null : new string(raw.Where(c => c is not (' ' or '-' or '.' or '(' or ')')).ToArray());
+
+    public QuotationAcceptanceLink(Guid id, Guid organizationId, Guid quotationId, string tokenHash, string? signerHint, DateTimeOffset expiresAtUtc, Guid createdByUserId, DateTimeOffset now, string? recipientEmail = null, string? recipientPhone = null) : base(id)
     {
         if (organizationId == Guid.Empty || quotationId == Guid.Empty || createdByUserId == Guid.Empty) throw new ArgumentException("Organization, quotation and actor are required.");
         if (string.IsNullOrWhiteSpace(tokenHash) || tokenHash.Length != 64) throw new ArgumentException("A SHA-256 token hash is required.", nameof(tokenHash));
@@ -65,9 +74,13 @@ public class QuotationAcceptanceLink : Entity
             throw new AcceptanceLinkException("ACCEPTANCE_LINK_LIFETIME_INVALID", "The recipient email is not valid.");
         }
 
+        var phone = NormalizePhone(recipientPhone);
+        if (phone is not null && !PhonePattern.IsMatch(phone)) throw new AcceptanceLinkException("ACCEPTANCE_LINK_LIFETIME_INVALID", "The recipient phone must be in international format, e.g. +66812345678.");
+
         OrganizationId = organizationId;
         QuotationId = quotationId;
         RecipientEmail = email;
+        RecipientPhone = phone;
         TokenHash = tokenHash;
         SignerHint = hint;
         ExpiresAtUtc = expiresAtUtc.ToUniversalTime();
@@ -156,8 +169,11 @@ public class QuotationAcceptanceEvidence : Entity
 
 public static class OtpChannels
 {
-    /// <summary>Add new channels here (e.g. "sms") and a matching sender; the DB column is free text bounded by a CHECK constraint.</summary>
+    /// <summary>Add new channels here and a matching sender; the DB column is bounded by a CHECK constraint (extend it in a migration).</summary>
     public const string Email = "email";
+    public const string Sms = "sms";
+
+    public static readonly IReadOnlyList<string> All = [Email, Sms];
 }
 
 /// <summary>

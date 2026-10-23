@@ -2,7 +2,7 @@ using TanErp.Api.Contracts.Estimates;
 
 namespace TanErp.Api.Contracts.Commercial;
 
-public sealed record CreateAcceptanceLinkRequest(int? LifetimeDays, string? SignerHint, string? RecipientEmail = null);
+public sealed record CreateAcceptanceLinkRequest(int? LifetimeDays, string? SignerHint, string? RecipientEmail = null, string? RecipientPhone = null);
 
 /// <summary>Identifies the quotation PDF offered to the customer; the file itself is served by the public document endpoint.</summary>
 public sealed record PublicQuotationPdfResponse(string Sha256, long ByteCount);
@@ -44,7 +44,10 @@ public sealed record PublicAcceptanceViewResponse(
     DateTimeOffset? AcceptedAtUtc,
     QuotationDocumentResponse Document,
     PublicQuotationPdfResponse? Pdf,
-    bool OtpRequired);
+    bool OtpRequired,
+    IReadOnlyList<string> OtpChannels);
+
+public sealed record PublicOtpRequest(string? Channel);
 
 public sealed record PublicAcceptRequest(string? SignerName, string? SignerRole, bool ConsentAccepted, string? ConsentVersion, string? SignatureImage, string? DocumentSha256 = null, string? OtpVerificationToken = null);
 

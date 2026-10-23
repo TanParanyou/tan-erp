@@ -10,12 +10,22 @@ namespace TanErp.Application.Commercial;
 // G-05: one-time code over email before a customer may accept. See docs/adr/0029-external-acceptance-otp.md.
 public partial class QuotationAcceptanceHandler
 {
+    private bool ChannelAvailable(string channel) => channel switch
+    {
+        OtpChannels.Email => _otp.Channels.Email && _email.IsEnabled,
+        OtpChannels.Sms => _otp.Channels.Sms && _sms.IsEnabled,
+        _ => false,
+    };
+
+    /// <summary>Channels the customer may choose; empty when OTP is off or no channel is switched on with a working sender.</summary>
+    internal IReadOnlyList<string> AvailableOtpChannels() => _otp.Required ? OtpChannels.All.Where(ChannelAvailable).ToList() : [];
+
     private async Task<Result<AcceptanceContext>> OtpContextAsync(string? token, CancellationToken ct)
     {
         // Unknown/expired/revoked/accepted links keep the single 404 answer; "OTP not in use" is a separate, non-secret answer.
         var context = await UsableContextAsync(token, false, ct);
         if (context is null || context.LinkStatus != AcceptanceLinkStatus.Active) return Fail<AcceptanceContext>(UnavailableCode, "This acceptance link is not available.");
-        if (!_otp.Required || !_email.IsEnabled) return Fail<AcceptanceContext>("ACCEPTANCE_OTP_UNAVAILABLE", "Verification codes are not available right now.");
+        if (!_otp.Required || AvailableOtpChannels().Count == 0) return Fail<AcceptanceContext>("ACCEPTANCE_OTP_UNAVAILABLE", "Verification codes are not available right now.");
         if (context.OtpLocked) return Fail<AcceptanceContext>("ACCEPTANCE_OTP_LOCKED", "Too many incorrect codes. Ask the sender for a new link.");
         return Result<AcceptanceContext>.Success(context);
     }
@@ -24,11 +34,13 @@ public partial class QuotationAcceptanceHandler
         Convert.ToHexString(HMACSHA256.HashData(Encoding.UTF8.GetBytes(_otp.HmacKey), Encoding.UTF8.GetBytes($"{linkId:N}:{code}"))).ToLowerInvariant();
 
     /// <summary>Always the same answer for a usable link, whether or not an email is on file, so the address is never revealed.</summary>
-    public async Task<Result<OtpRequestResult>> RequestOtpAsync(string? token, string traceId, CancellationToken ct = default)
+    public async Task<Result<OtpRequestResult>> RequestOtpAsync(string? token, string? channel, string traceId, CancellationToken ct = default)
     {
+        if (channel is null || !OtpChannels.All.Contains(channel)) return Fail<OtpRequestResult>("ACCEPTANCE_OTP_CHANNEL_INVALID", "The verification channel is not supported.");
         var ctx = await OtpContextAsync(token, ct);
         if (ctx.IsFailure) return Result<OtpRequestResult>.Failure(ctx.Error);
         var context = ctx.Value!;
+        if (!ChannelAvailable(channel)) return Fail<OtpRequestResult>("ACCEPTANCE_OTP_UNAVAILABLE", "Verification codes are not available right now.");
 
         var now = _clock.UtcNow;
         var stats = await _otpStore.GetSendStatsAsync(context.LinkId, now.AddHours(-1), ct);
@@ -38,13 +50,15 @@ public partial class QuotationAcceptanceHandler
         }
 
         var code = RandomNumberGenerator.GetInt32(0, (int)Math.Pow(10, _otp.CodeLength)).ToString($"D{_otp.CodeLength}");
-        await _otpStore.CreateChallengeAsync(context, OtpChannels.Email, HashCode(context.LinkId, code), now, now.AddMinutes(_otp.ExpiryMinutes), traceId, ct);
+        await _otpStore.CreateChallengeAsync(context, channel, HashCode(context.LinkId, code), now, now.AddMinutes(_otp.ExpiryMinutes), traceId, ct);
 
-        if (!string.IsNullOrEmpty(context.RecipientEmail))
+        var recipient = channel == OtpChannels.Sms ? context.RecipientPhone : context.RecipientEmail;
+        if (!string.IsNullOrEmpty(recipient))
         {
             try
             {
-                await _email.SendAsync(new EmailMessage(context.RecipientEmail, OtpEmailTemplate.Subject(context.QuotationNumber), OtpEmailTemplate.Body(context.QuotationNumber, code, _otp.ExpiryMinutes)), ct);
+                if (channel == OtpChannels.Sms) await _sms.SendAsync(new SmsMessage(recipient, OtpEmailTemplate.SmsText(context.QuotationNumber, code, _otp.ExpiryMinutes)), ct);
+                else await _email.SendAsync(new EmailMessage(recipient, OtpEmailTemplate.Subject(context.QuotationNumber), OtpEmailTemplate.Body(context.QuotationNumber, code, _otp.ExpiryMinutes)), ct);
             }
             catch (Exception) when (!ct.IsCancellationRequested)
             {
@@ -93,7 +107,7 @@ public partial class QuotationAcceptanceHandler
         var record = await _otpStore.FindVerificationAsync(context.LinkId, HashToken(verificationToken.Trim()), ct);
         if (record is null) return Fail<OtpEvidence?>("ACCEPTANCE_OTP_INVALID", "The verification is not valid. Request a new code.");
         if (record.VerifiedAtUtc.AddMinutes(_otp.VerificationMinutes) <= _clock.UtcNow) return Fail<OtpEvidence?>("ACCEPTANCE_OTP_EXPIRED", "The verification has expired. Request a new code.");
-        return Result<OtpEvidence?>.Success(new OtpEvidence(OtpChannels.Email, record.VerifiedAtUtc, record.ChallengeId));
+        return Result<OtpEvidence?>.Success(new OtpEvidence(record.Channel, record.VerifiedAtUtc, record.ChallengeId));
     }
 }
 
@@ -101,6 +115,9 @@ public partial class QuotationAcceptanceHandler
 internal static class OtpEmailTemplate
 {
     public static string Subject(string quotationNumber) => $"รหัสยืนยันการอนุมัติใบเสนอราคา {quotationNumber} / Quotation acceptance code";
+
+    public static string SmsText(string quotationNumber, string code, int minutes) =>
+        $"รหัสยืนยันใบเสนอราคา {quotationNumber}: {code} (หมดอายุใน {minutes} นาที) / Verification code: {code} ({minutes} min)";
 
     public static string Body(string quotationNumber, string code, int minutes) =>
         $"รหัสยืนยันสำหรับใบเสนอราคา {quotationNumber}: {code}\nรหัสมีอายุ {minutes} นาที อย่าบอกรหัสนี้กับผู้อื่น\n\n" +

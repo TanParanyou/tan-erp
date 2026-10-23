@@ -1191,12 +1191,12 @@ export class ApiClient {
     );
   }
 
-  async requestPublicAcceptanceOtp(token: string, locale: "th" | "en"): Promise<PublicOtpRequestResponse> {
+  async requestPublicAcceptanceOtp(token: string, channel: string, locale: "th" | "en"): Promise<PublicOtpRequestResponse> {
     return this.execute<PublicOtpRequestResponse>(
       `/api/public/v1/quotation-acceptance/${encodeURIComponent(token)}/otp`,
       "POST",
-      { Accept: "application/json", "Accept-Language": locale },
-      undefined
+      { Accept: "application/json", "Accept-Language": locale, "Content-Type": "application/json" },
+      { channel }
     );
   }
 

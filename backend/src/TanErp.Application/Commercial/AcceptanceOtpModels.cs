@@ -15,6 +15,9 @@ public sealed class AcceptanceOtpOptions
     public int MaxSendsPerHour { get; set; } = 3;
     public int VerificationMinutes { get; set; } = 15;
 
+    /// <summary>Per-channel switches. A channel is offered only when it is also switched on here and its sender reports IsEnabled.</summary>
+    public OtpChannelSwitches Channels { get; set; } = new();
+
     /// <summary>Startup validation; throws so a half-configured OTP never reaches production.</summary>
     public void Validate()
     {
@@ -25,11 +28,17 @@ public sealed class AcceptanceOtpOptions
     }
 }
 
+public sealed class OtpChannelSwitches
+{
+    public bool Email { get; set; } = true;
+    public bool Sms { get; set; }
+}
+
 public sealed record OtpChallengeRecord(Guid Id, string CodeHash, int FailedAttempts);
 
 public sealed record OtpSendStats(int SendsInWindow, DateTimeOffset? LastSentAtUtc);
 
-public sealed record OtpVerificationRecord(Guid ChallengeId, DateTimeOffset VerifiedAtUtc);
+public sealed record OtpVerificationRecord(Guid ChallengeId, DateTimeOffset VerifiedAtUtc, string Channel);
 
 /// <summary>Identical for every link, whether or not an email is on file.</summary>
 public sealed record OtpRequestResult(int ResendAfterSeconds, int ExpiresInSeconds);

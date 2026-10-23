@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { Select } from "@/components/ui/Select";
 import { ApiError } from "@/lib/api/api-error";
 import { formatDateTime } from "@/lib/formatters/formatters";
 import thMessages from "@/messages/th.json";
@@ -40,6 +41,7 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
   const [error, setError] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [pickedChannel, setPickedChannel] = useState("");
   const [otpToken, setOtpToken] = useState<string | null>(null);
 
   const label = useMemo<QuotationDocumentLabel>(() => {
@@ -69,6 +71,9 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
   const accepted = view.status === "accepted" || mutation.isSuccess;
 
   const otpRequired = view.otpRequired;
+  const otpChannels = view.otpChannels ?? [];
+  // The customer only chooses when the server offers more than one channel; with one, it is used directly.
+  const otpChannel = otpChannels.length === 1 ? otpChannels[0] : pickedChannel;
 
   function describeError(err: unknown): string {
     const code = err instanceof ApiError ? acceptanceLinkErrorCode(err.code) : null;
@@ -78,7 +83,7 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
   async function sendCode(): Promise<void> {
     setError(null);
     try {
-      await requestOtp.mutateAsync();
+      await requestOtp.mutateAsync(otpChannel);
       setOtpSent(true);
     } catch (err: unknown) {
       setError(describeError(err));
@@ -172,8 +177,19 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
               <div className="space-y-3" aria-label={t("otpTitle")}>
                 <h3 className="text-sm font-bold text-erp-navy">{t("otpTitle")}</h3>
                 <p className="text-xs text-erp-text-muted">{t("otpDescription")}</p>
+                {otpChannels.length === 0 && <Alert variant="danger">{tErrors("ACCEPTANCE_OTP_UNAVAILABLE")}</Alert>}
+                {otpChannels.length > 1 && (
+                  <Select
+                    label={t("otpChannel")}
+                    placeholder={t("otpChannelPlaceholder")}
+                    value={pickedChannel}
+                    disabled={otpSent || requestOtp.isPending}
+                    options={otpChannels.map((channel) => ({ value: channel, label: t(channel === "sms" ? "otpChannelSms" : "otpChannelEmail") }))}
+                    onChange={(event) => setPickedChannel(event.target.value)}
+                  />
+                )}
                 {otpSent && <Alert variant="info">{t("otpSent")}</Alert>}
-                <Button type="button" variant="outline" isLoading={requestOtp.isPending} disabled={requestOtp.isPending} onClick={() => void sendCode()}>
+                <Button type="button" variant="outline" isLoading={requestOtp.isPending} disabled={requestOtp.isPending || !otpChannel} onClick={() => void sendCode()}>
                   {otpSent ? t("otpResend") : t("otpSend")}
                 </Button>
                 {otpSent && (

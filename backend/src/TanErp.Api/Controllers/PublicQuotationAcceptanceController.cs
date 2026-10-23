@@ -42,7 +42,7 @@ public class PublicQuotationAcceptanceController : ControllerBase
         if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         var v = result.Value!;
         return Ok(new PublicAcceptanceViewResponse(v.Status, v.ExpiresAtUtc, v.SignerHint, v.ConsentVersion, v.AcceptedAtUtc, QuotationDocumentResponse.FromProjection(v.Document),
-            v.Pdf is null ? null : new PublicQuotationPdfResponse(v.Pdf.Sha256, v.Pdf.ByteCount), v.OtpRequired));
+            v.Pdf is null ? null : new PublicQuotationPdfResponse(v.Pdf.Sha256, v.Pdf.ByteCount), v.OtpRequired, v.OtpChannels ?? []));
     }
 
     [HttpGet("{token}/document")]
@@ -63,13 +63,14 @@ public class PublicQuotationAcceptanceController : ControllerBase
     [HttpPost("{token}/otp")]
     [ProducesResponseType<PublicOtpRequestResponse>(StatusCodes.Status202Accepted)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status423Locked)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<IActionResult> RequestOtp([FromRoute] string token, CancellationToken ct)
+    public async Task<IActionResult> RequestOtp([FromRoute] string token, [FromBody] PublicOtpRequest request, CancellationToken ct)
     {
         NoStore();
-        var result = await _handler.RequestOtpAsync(token, HttpContext.TraceIdentifier, ct);
+        var result = await _handler.RequestOtpAsync(token, request.Channel, HttpContext.TraceIdentifier, ct);
         if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         return Accepted(new PublicOtpRequestResponse(result.Value!.ResendAfterSeconds, result.Value.ExpiresInSeconds));
     }

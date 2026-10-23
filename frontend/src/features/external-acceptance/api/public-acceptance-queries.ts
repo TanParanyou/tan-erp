@@ -39,7 +39,7 @@ export function usePublicAcceptMutation(token: string, locale: DocumentLocale) {
 }
 
 export function useRequestOtpMutation(token: string, locale: DocumentLocale) {
-  return useMutation({ mutationFn: async () => apiClient.requestPublicAcceptanceOtp(token, locale) });
+  return useMutation({ mutationFn: async (channel: string) => apiClient.requestPublicAcceptanceOtp(token, channel, locale) });
 }
 
 export function useVerifyOtpMutation(token: string, locale: DocumentLocale) {

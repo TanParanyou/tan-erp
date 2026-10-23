@@ -50,6 +50,7 @@ function PanelBody({ quotationId, quotationStatus, quotationNumber }: PanelBodyP
   const [days, setDays] = useState(DEFAULT_DAYS);
   const [hint, setHint] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const busy = mutations.create.isPending || mutations.revoke.isPending;
@@ -68,11 +69,12 @@ function PanelBody({ quotationId, quotationStatus, quotationNumber }: PanelBodyP
 
     setMessage(null);
     try {
-      const created = await mutations.create.mutateAsync({ lifetimeDays: lifetime, signerHint: hint.trim() || null, recipientEmail: recipientEmail.trim() || null });
+      const created = await mutations.create.mutateAsync({ lifetimeDays: lifetime, signerHint: hint.trim() || null, recipientEmail: recipientEmail.trim() || null, recipientPhone: recipientPhone.trim() || null });
       setCreatedUrl(`${window.location.origin}/${locale}${created.publicPath}`);
       setOpen(false);
       setHint("");
       setRecipientEmail("");
+      setRecipientPhone("");
     } catch (err: unknown) {
       setMessage(describe(err));
     }
@@ -176,6 +178,7 @@ function PanelBody({ quotationId, quotationStatus, quotationNumber }: PanelBodyP
           <Input type="number" min={1} max={30} step={1} label={t("lifetimeDays")} placeholder={t("lifetimeDaysPlaceholder")} value={days} disabled={busy} onChange={(event) => setDays(event.target.value)} />
           <Input label={t("signerHint")} placeholder={t("signerHintPlaceholder")} value={hint} maxLength={200} disabled={busy} onChange={(event) => setHint(event.target.value)} />
           <Input type="email" label={t("recipientEmail")} placeholder={t("recipientEmailPlaceholder")} helperText={t("recipientEmailHelp")} value={recipientEmail} maxLength={254} disabled={busy} onChange={(event) => setRecipientEmail(event.target.value)} />
+          <Input type="tel" label={t("recipientPhone")} placeholder={t("recipientPhonePlaceholder")} helperText={t("recipientPhoneHelp")} value={recipientPhone} maxLength={20} disabled={busy} onChange={(event) => setRecipientPhone(event.target.value)} />
         </div>
       </Drawer>
     </section>

@@ -82,8 +82,8 @@ export function useAcceptanceLinkMutations(quotationId: string) {
     await queryClient.invalidateQueries({ queryKey: ["business", membershipId, locale, "estimates"] });
   };
   const create = useMutation({
-    mutationFn: async (input: { lifetimeDays: number; signerHint: string | null; recipientEmail: string | null }) =>
-      apiClient.createAcceptanceLink(quotationId, { lifetimeDays: input.lifetimeDays, signerHint: input.signerHint, recipientEmail: input.recipientEmail }, await options()),
+    mutationFn: async (input: { lifetimeDays: number; signerHint: string | null; recipientEmail: string | null; recipientPhone: string | null }) =>
+      apiClient.createAcceptanceLink(quotationId, { lifetimeDays: input.lifetimeDays, signerHint: input.signerHint, recipientEmail: input.recipientEmail, recipientPhone: input.recipientPhone }, await options()),
     onSuccess: refresh,
   });
   const revoke = useMutation({

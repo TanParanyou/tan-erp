@@ -48,7 +48,8 @@ public sealed record AcceptanceContext(
     DateTimeOffset? AcceptedAtUtc,
     AcceptanceEvidenceSummary? Evidence,
     bool OtpLocked = false,
-    string? RecipientEmail = null);
+    string? RecipientEmail = null,
+    string? RecipientPhone = null);
 
 public sealed record PublicAcceptanceView(
     string Status,
@@ -58,7 +59,8 @@ public sealed record PublicAcceptanceView(
     DateTimeOffset? AcceptedAtUtc,
     QuotationDocumentProjection Document,
     PublicQuotationPdf? Pdf,
-    bool OtpRequired = false);
+    bool OtpRequired = false,
+    IReadOnlyList<string>? OtpChannels = null);
 
 public sealed record AcceptanceSubmission(
     string? SignerName,

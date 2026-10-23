@@ -314,6 +314,7 @@ public static class ProblemDetailsMapper
         "ACCEPTANCE_OTP_EXPIRED" => StatusCodes.Status410Gone,
         "ACCEPTANCE_OTP_LOCKED" => StatusCodes.Status423Locked,
         "ACCEPTANCE_OTP_RATE_LIMITED" => StatusCodes.Status429TooManyRequests,
+        "ACCEPTANCE_OTP_CHANNEL_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "ACCEPTANCE_OTP_UNAVAILABLE" => StatusCodes.Status503ServiceUnavailable,
         "ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "ATTACHMENT_OWNER_TYPE_INVALID" => StatusCodes.Status422UnprocessableEntity,
