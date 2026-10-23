@@ -4446,5 +4446,92 @@
       "PERMISSION_DENIED": "You do not have permission to do this.",
       "RESOURCE_NOT_FOUND": "The requested record was not found."
     }
+  },
+  "fieldSurvey": {
+    "title": "Field Survey for Renovation",
+    "subtitle": "Capture dimensions, material specs, and on-site photos for estimation",
+    "opportunity": "Opportunity",
+    "selectOpportunity": "— Select opportunity —",
+    "roomName": "Room / Survey Area",
+    "roomPlaceholder": "e.g. Master Bedroom, Living Room",
+    "surveyorNotes": "Site Overview / Customer Preferred Style",
+    "surveyorNotesPlaceholder": "e.g. Customer prefers Modern Classic style with warm wood and gray marble",
+    "itemsSectionTitle": "Custom Items in this Room",
+    "addItem": "Add Custom Item",
+    "itemTitle": "Item Name",
+    "itemTitlePlaceholder": "e.g. Teak Desk, Walk-in Closet, Marble Floor",
+    "category": "Category",
+    "categories": {
+      "built_in": "Built-in Furniture",
+      "loose": "Loose Furniture",
+      "flooring": "Flooring & Tiles",
+      "wall_ceiling": "Walls & Ceiling",
+      "curtain": "Curtains & Soft Furnishings",
+      "mep": "MEP & Electrical Systems"
+    },
+    "measurementType": "Measurement Type",
+    "measurementTypes": {
+      "box": "3D Box (W × D × H)",
+      "area": "Surface Area (sqm with deductions)",
+      "custom": "Custom Points (Pocket/Pillars/Ceiling)"
+    },
+    "spec": {
+      "title": "Material & Hardware Specs",
+      "subtitle": "Select system SKU or add custom requirements notes",
+      "coreMaterial": "Core Structure (Core SKU)",
+      "surfaceFinish": "Surface Finish (Finish SKU)",
+      "hardware": "Hardware & Fittings (Hardware SKU)",
+      "customNotes": "Additional Spec Notes / Custom Requests",
+      "customNotesPlaceholder": "e.g. Rounded 5mm edge, concealed track for 12V LED light",
+      "quickSelect": "Popular quick choices:",
+      "noSkuSelected": "No system SKU selected"
+    },
+    "dimensions": {
+      "title": "Actual Measured Dimensions",
+      "width": "Width",
+      "depth": "Depth",
+      "height": "Height",
+      "grossWidth": "Gross Width",
+      "grossLength": "Gross Length",
+      "grossArea": "Gross Area",
+      "deductions": "Openings / Pillar Deductions",
+      "addDeduction": "Add Deduction",
+      "deductionLabel": "Deduction Name",
+      "deductionLabelPlaceholder": "e.g. Pillar, Stair Opening, Duct",
+      "deductionArea": "Deduction Area (sqm)",
+      "netArea": "Net Area for Production/Flooring",
+      "customPoints": "Custom Measurement Points",
+      "addCustomPoint": "Add Measurement Point",
+      "pointLabel": "Point Name",
+      "pointLabelPlaceholder": "e.g. Window Frame Width, Pocket Depth, Ceiling Height",
+      "pointValue": "Measured Value (mm)",
+      "pointNotes": "Notes",
+      "pointNotesPlaceholder": "e.g. Clearance for light track, watch for AC pipe",
+      "unitMm": "mm",
+      "unitSqm": "sq.m."
+    },
+    "photos": {
+      "title": "Photos & Laser Sketches",
+      "subtitle": "Attach on-site photos, laser sketches, or material samples for accuracy",
+      "uploadBtn": "Take Photo / Choose File",
+      "tagSiteLocation": "Site Location Photo",
+      "tagSketchLaser": "Sketch / Laser Meter Photo",
+      "tagMaterialSwatch": "Material Swatch / Texture Sample",
+      "captionPlaceholder": "Photo caption (e.g. Window side facing south)",
+      "deletePhoto": "Delete Photo",
+      "empty": "No photos attached for this item yet"
+    },
+    "actions": {
+      "saveDraft": "Save Survey Data",
+      "saving": "Saving...",
+      "savedSuccess": "Field survey saved successfully",
+      "sendToEstimator": "Send to Estimator (BOQ)",
+      "deleteItem": "Delete Item",
+      "itemNumber": "Item #{number}"
+    },
+    "empty": {
+      "noItemsTitle": "No custom items yet",
+      "noItemsDesc": "Click 'Add Custom Item' to start recording dimensions and material specs"
+    }
   }
 }
