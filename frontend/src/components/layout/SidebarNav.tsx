@@ -71,6 +71,10 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasWarrantiesRead = can(activeMembership, "warranties.read");
   const hasServiceRequestsRead = can(activeMembership, "service-requests.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
+  const hasFieldSurveysRead =
+    hasOpportunitiesRead ||
+    can(activeMembership, "surveys.create") ||
+    can(activeMembership, "surveys.read");
   const hasEstimateApproval = can(activeMembership, "estimates.approve");
   const hasSettingsRead =
     can(activeMembership, "document-sequences.read") || can(activeMembership, "organizations.read");
@@ -90,6 +94,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/`;
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
+  const isFieldSurveysActive = pathname.startsWith(`/${locale}/surveys/field`);
   const isProjectsActive = pathname.startsWith(`/${locale}/projects`);
   const isProcurementActive = pathname.startsWith(`/${locale}/procurement`);
   const isInventoryActive = pathname.startsWith(`/${locale}/inventory`);
@@ -130,6 +135,16 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         permission: hasOpportunitiesRead,
       });
     }
+    if (hasFieldSurveysRead) {
+      items.push({
+        id: "field-surveys",
+        href: `/${locale}/surveys/field`,
+        label: tShell("fieldSurveys"),
+        icon: <IconMapPin size={20} />,
+        isActive: isFieldSurveysActive,
+        permission: hasFieldSurveysRead,
+      });
+    }
     if (hasProjectsRead) {
       items.push({
         id: "projects",
@@ -144,7 +159,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
       items.push({ id: "estimate-reviews", href: `/${locale}/estimates/review-queue`, label: tShell("estimateReviews"), icon: <IconFileText size={20} />, isActive: isEstimateReviewActive, permission: hasEstimateApproval });
     }
     return items;
-  }, [hasCustomersRead, hasOpportunitiesRead, hasProjectsRead, hasEstimateApproval, locale, tShell, isCustomersActive, isOpportunitiesActive, isProjectsActive, isEstimateReviewActive]);
+  }, [hasCustomersRead, hasOpportunitiesRead, hasFieldSurveysRead, hasProjectsRead, hasEstimateApproval, locale, tShell, isCustomersActive, isOpportunitiesActive, isFieldSurveysActive, isProjectsActive, isEstimateReviewActive]);
 
   const productItems: NavItemDef[] = useMemo(() => {
     const items: NavItemDef[] = [];
