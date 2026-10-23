@@ -28,5 +28,5 @@
 - ไม่มี test ใหม่และไม่ได้รันชุดทดสอบเดิม; Integration test เดิมของ acceptance ไม่ได้ถูกรันกับ constructor/signature ที่เปลี่ยน (compile ผ่านเท่านั้น).
 - `LoggingEmailSender` เมื่อ OTP เปิดแต่ `Email:Enabled=false` → `ACCEPTANCE_OTP_UNAVAILABLE` (503) แทนการแกล้งส่ง.
 - การล็อกลิงก์ไม่มีปุ่ม unlock; ให้สร้างลิงก์ใหม่. UI เจ้าหน้าที่แสดงสถานะล็อกไม่ได้ (ยังไม่ส่งออกใน link response).
-- ยังไม่มี SMS; Legal ยังไม่ยืนยันระดับหลักฐาน.
+- SMS: โครงสร้างพร้อม (`ISmsSender` no-op, `recipient_phone`, `AcceptanceOtp:Channels:*`, `otpChannels`, migration `AddAcceptanceOtpSms` ยังไม่ apply) แต่ **ยังไม่มี provider** จึงใช้ส่งจริงไม่ได้; ไม่ได้เขียน/รันเทสต์ใหม่; Legal ยังไม่ยืนยันระดับหลักฐาน.
 - ไม่ตรวจว่า `Email:Enabled=true` ตอน `Required=true` ตอน start (จะได้ 503 ตอนใช้งาน).
