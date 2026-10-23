@@ -149,6 +149,7 @@ public class SiteSurveyStore : ISiteSurveyStore
             var currentTemplate = await _db.SurveyTemplateVersions.AsNoTracking()
                 .Where(t => t.EffectiveFromUtc <= now && (t.EffectiveToUtc == null || now < t.EffectiveToUtc))
                 .OrderByDescending(t => t.EffectiveFromUtc)
+                .ThenByDescending(t => t.Code) // seeded v1/v2 share effective_from; without a tiebreaker the pick is arbitrary
                 .FirstOrDefaultAsync(cancellationToken);
             if (currentTemplate is null)
             {

@@ -45,7 +45,7 @@ public class ListSurveyTemplateVersionsHandler
 
         var now = _clock.UtcNow;
         var templates = await _store.ListAsync(cancellationToken);
-        var currentCode = templates.Where(t => t.IsEffectiveAt(now)).OrderByDescending(t => t.EffectiveFromUtc).FirstOrDefault()?.Code;
+        var currentCode = templates.Where(t => t.IsEffectiveAt(now)).OrderByDescending(t => t.EffectiveFromUtc).ThenByDescending(t => t.Code).FirstOrDefault()?.Code;
 
         IReadOnlyList<SurveyTemplateVersionProjection> items = templates
             .Select(t => new SurveyTemplateVersionProjection(
