@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { Select } from "@/components/ui/Select";
 import { ApiError } from "@/lib/api/api-error";
 import { formatDateTime } from "@/lib/formatters/formatters";
 import thMessages from "@/messages/th.json";
 import enMessages from "@/messages/en.json";
 import { QuotationDocumentView, type QuotationDocumentLabel } from "@/features/estimates/components/quotation-document-view";
 import { acceptanceLinkErrorCode } from "@/features/estimates/quotation-lifecycle-status";
-import { usePublicAcceptance, usePublicAcceptMutation, usePublicPdfDownload } from "../api/public-acceptance-queries";
+import { usePublicAcceptance, usePublicAcceptMutation, usePublicPdfDownload, useRequestOtpMutation, useVerifyOtpMutation } from "../api/public-acceptance-queries";
 import { SignaturePad } from "./signature-pad";
 
 interface PublicAcceptancePageProps {
@@ -30,12 +31,18 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
   const query = usePublicAcceptance(token, documentLocale);
   const mutation = usePublicAcceptMutation(token, documentLocale);
   const pdfDownload = usePublicPdfDownload(token);
+  const requestOtp = useRequestOtpMutation(token, documentLocale);
+  const verifyOtp = useVerifyOtpMutation(token, documentLocale);
 
   const [signerName, setSignerName] = useState("");
   const [signerRole, setSignerRole] = useState("");
   const [consent, setConsent] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [pickedChannel, setPickedChannel] = useState("");
+  const [otpToken, setOtpToken] = useState<string | null>(null);
 
   const label = useMemo<QuotationDocumentLabel>(() => {
     const translator = createTranslator({
@@ -63,8 +70,48 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
   const document = query.data.document;
   const accepted = view.status === "accepted" || mutation.isSuccess;
 
+  const otpRequired = view.otpRequired;
+  const otpChannels = view.otpChannels ?? [];
+  // The customer only chooses when the server offers more than one channel; with one, it is used directly.
+  const otpChannel = otpChannels.length === 1 ? otpChannels[0] : pickedChannel;
+
+  function describeError(err: unknown): string {
+    const code = err instanceof ApiError ? acceptanceLinkErrorCode(err.code) : null;
+    return code ? tErrors(code) : tErrors("failed");
+  }
+
+  async function sendCode(): Promise<void> {
+    setError(null);
+    try {
+      await requestOtp.mutateAsync(otpChannel);
+      setOtpSent(true);
+    } catch (err: unknown) {
+      setError(describeError(err));
+    }
+  }
+
+  async function verifyCode(): Promise<void> {
+    setError(null);
+    try {
+      const verified = await verifyOtp.mutateAsync(otpCode.trim());
+      if (!verified.verificationToken) {
+        setError(tErrors("failed"));
+        return;
+      }
+
+      setOtpToken(verified.verificationToken);
+      setOtpCode("");
+    } catch (err: unknown) {
+      setError(describeError(err));
+    }
+  }
+
   async function submit(): Promise<void> {
     setError(null);
+    if (otpRequired && !otpToken) {
+      setError(tErrors("ACCEPTANCE_OTP_REQUIRED"));
+      return;
+    }
     if (signerName.trim().length < 2) {
       setError(t("nameRequired"));
       return;
@@ -84,10 +131,11 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
         signatureImage: signature,
         // The hash of the PDF shown above; null only when the quotation has no stored PDF. The server rejects any other value.
         documentSha256: view.pdf?.sha256 ?? null,
+        otpVerificationToken: otpRequired ? otpToken : null,
       });
     } catch (err: unknown) {
-      const code = err instanceof ApiError ? acceptanceLinkErrorCode(err.code) : null;
-      setError(code ? tErrors(code) : tErrors("failed"));
+      if (err instanceof ApiError && (err.code === "ACCEPTANCE_OTP_INVALID" || err.code === "ACCEPTANCE_OTP_EXPIRED")) setOtpToken(null);
+      setError(describeError(err));
     }
   }
 
@@ -125,6 +173,35 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
             <h2 className="text-base font-bold text-erp-navy">{t("acceptTitle")}</h2>
             <p className="text-xs text-erp-text-muted">{t("expires", { date: formatDateTime(view.expiresAtUtc ?? "", documentLocale) })}</p>
             {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
+            {otpRequired && !otpToken ? (
+              <div className="space-y-3" aria-label={t("otpTitle")}>
+                <h3 className="text-sm font-bold text-erp-navy">{t("otpTitle")}</h3>
+                <p className="text-xs text-erp-text-muted">{t("otpDescription")}</p>
+                {otpChannels.length === 0 && <Alert variant="danger">{tErrors("ACCEPTANCE_OTP_UNAVAILABLE")}</Alert>}
+                {otpChannels.length > 1 && (
+                  <Select
+                    label={t("otpChannel")}
+                    placeholder={t("otpChannelPlaceholder")}
+                    value={pickedChannel}
+                    disabled={otpSent || requestOtp.isPending}
+                    options={otpChannels.map((channel) => ({ value: channel, label: t(channel === "sms" ? "otpChannelSms" : "otpChannelEmail") }))}
+                    onChange={(event) => setPickedChannel(event.target.value)}
+                  />
+                )}
+                {otpSent && <Alert variant="info">{t("otpSent")}</Alert>}
+                <Button type="button" variant="outline" isLoading={requestOtp.isPending} disabled={requestOtp.isPending || !otpChannel} onClick={() => void sendCode()}>
+                  {otpSent ? t("otpResend") : t("otpSend")}
+                </Button>
+                {otpSent && (
+                  <div className="flex flex-wrap items-end gap-3">
+                    <Input label={t("otpCode")} inputMode="numeric" autoComplete="one-time-code" maxLength={9} value={otpCode} disabled={verifyOtp.isPending} onChange={(event) => setOtpCode(event.target.value)} />
+                    <Button type="button" variant="primary" isLoading={verifyOtp.isPending} disabled={verifyOtp.isPending || otpCode.trim().length === 0} onClick={() => void verifyCode()}>{t("otpVerify")}</Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+            <>
+            {otpRequired && <Alert variant="success">{t("otpVerified")}</Alert>}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input label={t("signerName")} required maxLength={200} value={signerName} placeholder={view.signerHint ?? undefined} disabled={mutation.isPending} onChange={(event) => setSignerName(event.target.value)} />
               <Input label={t("signerRole")} maxLength={100} value={signerRole} placeholder={t("signerRolePlaceholder")} disabled={mutation.isPending} onChange={(event) => setSignerRole(event.target.value)} />
@@ -137,6 +214,8 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
               label={t("consentText")}
             />
             <Button type="button" variant="primary" className="min-h-11" isLoading={mutation.isPending} disabled={mutation.isPending} onClick={() => void submit()}>{t("accept")}</Button>
+            </>
+            )}
           </>
         )}
       </section>

@@ -71,6 +71,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Service.ServiceRequestEvent> ServiceRequestEvents => Set<TanErp.Domain.Service.ServiceRequestEvent>();
     public DbSet<TanErp.Domain.Commercial.QuotationAcceptanceLink> QuotationAcceptanceLinks => Set<TanErp.Domain.Commercial.QuotationAcceptanceLink>();
     public DbSet<TanErp.Domain.Commercial.QuotationAcceptanceEvidence> QuotationAcceptanceEvidences => Set<TanErp.Domain.Commercial.QuotationAcceptanceEvidence>();
+    public DbSet<TanErp.Domain.Commercial.AcceptanceOtpChallenge> AcceptanceOtpChallenges => Set<TanErp.Domain.Commercial.AcceptanceOtpChallenge>();
     public DbSet<TanErp.Domain.Mrp.MrpRecommendation> MrpRecommendations => Set<TanErp.Domain.Mrp.MrpRecommendation>();
     public DbSet<TanErp.Domain.Inventory.StockBalance> StockBalances => Set<TanErp.Domain.Inventory.StockBalance>();
     public DbSet<TanErp.Domain.Inventory.StockDocument> StockDocuments => Set<TanErp.Domain.Inventory.StockDocument>();

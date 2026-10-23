@@ -42,7 +42,7 @@ public class PublicQuotationAcceptanceController : ControllerBase
         if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         var v = result.Value!;
         return Ok(new PublicAcceptanceViewResponse(v.Status, v.ExpiresAtUtc, v.SignerHint, v.ConsentVersion, v.AcceptedAtUtc, QuotationDocumentResponse.FromProjection(v.Document),
-            v.Pdf is null ? null : new PublicQuotationPdfResponse(v.Pdf.Sha256, v.Pdf.ByteCount)));
+            v.Pdf is null ? null : new PublicQuotationPdfResponse(v.Pdf.Sha256, v.Pdf.ByteCount), v.OtpRequired, v.OtpChannels ?? []));
     }
 
     [HttpGet("{token}/document")]
@@ -60,18 +60,50 @@ public class PublicQuotationAcceptanceController : ControllerBase
         return File(document.Content, "application/pdf", document.FileName);
     }
 
+    [HttpPost("{token}/otp")]
+    [ProducesResponseType<PublicOtpRequestResponse>(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status423Locked)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> RequestOtp([FromRoute] string token, [FromBody] PublicOtpRequest request, CancellationToken ct)
+    {
+        NoStore();
+        var result = await _handler.RequestOtpAsync(token, request.Channel, HttpContext.TraceIdentifier, ct);
+        if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        return Accepted(new PublicOtpRequestResponse(result.Value!.ResendAfterSeconds, result.Value.ExpiresInSeconds));
+    }
+
+    [HttpPost("{token}/otp/verify")]
+    [ProducesResponseType<PublicOtpVerifyResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status410Gone)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status423Locked)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> VerifyOtp([FromRoute] string token, [FromBody] PublicOtpVerifyRequest request, CancellationToken ct)
+    {
+        NoStore();
+        var result = await _handler.VerifyOtpAsync(token, request.Code, HttpContext.TraceIdentifier, ct);
+        if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        return Ok(new PublicOtpVerifyResponse(result.Value!.VerificationToken, result.Value.ExpiresAtUtc));
+    }
+
     [HttpPost("{token}/accept")]
     [ProducesResponseType<PublicAcceptanceResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status423Locked)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Accept([FromRoute] string token, [FromBody] PublicAcceptRequest request, CancellationToken ct)
     {
         NoStore();
         var client = new ClientInfo(HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
         var result = await _handler.AcceptAsync(
-            token, new AcceptanceSubmission(request.SignerName, request.SignerRole, request.ConsentAccepted, request.ConsentVersion, request.SignatureImage, request.DocumentSha256),
+            token, new AcceptanceSubmission(request.SignerName, request.SignerRole, request.ConsentAccepted, request.ConsentVersion, request.SignatureImage, request.DocumentSha256, request.OtpVerificationToken),
             client, HttpContext.TraceIdentifier, ct);
         if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         var r = result.Value!;

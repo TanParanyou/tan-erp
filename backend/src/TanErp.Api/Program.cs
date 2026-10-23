@@ -189,6 +189,20 @@ builder.Services.AddScoped<TanErp.Application.Procurement.ProcurementHandler>();
 builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationLifecycleStore, TanErp.Infrastructure.Persistence.Commercial.QuotationLifecycleStore>();
 builder.Services.AddScoped<TanErp.Application.Commercial.QuotationLifecycleHandler>();
 builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationAcceptanceStore, TanErp.Infrastructure.Persistence.Commercial.QuotationAcceptanceStore>();
+builder.Services.AddScoped<TanErp.Application.Commercial.IAcceptanceOtpStore, TanErp.Infrastructure.Persistence.Commercial.AcceptanceOtpStore>();
+var acceptanceOtpOptions = builder.Configuration.GetSection(TanErp.Application.Commercial.AcceptanceOtpOptions.SectionName).Get<TanErp.Application.Commercial.AcceptanceOtpOptions>()
+    ?? new TanErp.Application.Commercial.AcceptanceOtpOptions();
+acceptanceOtpOptions.Validate();
+builder.Services.AddSingleton(acceptanceOtpOptions);
+var emailOptions = builder.Configuration.GetSection(TanErp.Infrastructure.Email.EmailOptions.SectionName).Get<TanErp.Infrastructure.Email.EmailOptions>()
+    ?? new TanErp.Infrastructure.Email.EmailOptions();
+emailOptions.Validate();
+builder.Services.AddSingleton(emailOptions);
+if (emailOptions.Enabled) builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.IEmailSender, TanErp.Infrastructure.Email.SmtpEmailSender>();
+else builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.IEmailSender, TanErp.Infrastructure.Email.LoggingEmailSender>();
+// Sms:* is reserved for a future provider; until one is implemented the no-op sender keeps the SMS OTP channel reported as unavailable.
+builder.Services.AddSingleton(builder.Configuration.GetSection(TanErp.Infrastructure.Email.SmsOptions.SectionName).Get<TanErp.Infrastructure.Email.SmsOptions>() ?? new TanErp.Infrastructure.Email.SmsOptions());
+builder.Services.AddSingleton<TanErp.Application.Common.Abstractions.ISmsSender, TanErp.Infrastructure.Email.LoggingSmsSender>();
 builder.Services.AddScoped<TanErp.Application.Commercial.QuotationAcceptanceHandler>();
 builder.Services.AddSingleton<TanErp.Application.Commercial.Documents.IQuotationDocumentRenderer, TanErp.Infrastructure.Documents.QuestPdfQuotationRenderer>();
 builder.Services.AddScoped<TanErp.Application.Commercial.Documents.IQuotationDocumentWriter, TanErp.Infrastructure.Documents.QuotationDocumentWriter>();

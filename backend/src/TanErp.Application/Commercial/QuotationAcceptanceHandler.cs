@@ -12,7 +12,7 @@ namespace TanErp.Application.Commercial;
 /// External acceptance. Internal staff create and revoke links; the customer uses the token without an ERP account.
 /// Every public failure that could reveal whether a token exists (unknown, expired, revoked, replaced) returns the same code.
 /// </summary>
-public class QuotationAcceptanceHandler
+public partial class QuotationAcceptanceHandler
 {
     public const int DefaultLifetimeDays = 7;
     public const string UnavailableCode = "ACCEPTANCE_LINK_UNAVAILABLE";
@@ -22,9 +22,19 @@ public class QuotationAcceptanceHandler
     private readonly IEstimateStore _estimates;
     private readonly IClock _clock;
     private readonly IQuotationDocumentStore _documents;
+    private readonly AcceptanceOtpOptions _otp;
+    private readonly IAcceptanceOtpStore _otpStore;
+    private readonly IEmailSender _email;
+    private readonly ISmsSender _sms;
 
-    public QuotationAcceptanceHandler(IRequestAccessResolver accessResolver, IQuotationAcceptanceStore store, IEstimateStore estimates, IClock clock, IQuotationDocumentStore documents)
+    public QuotationAcceptanceHandler(
+        IRequestAccessResolver accessResolver, IQuotationAcceptanceStore store, IEstimateStore estimates, IClock clock, IQuotationDocumentStore documents,
+        AcceptanceOtpOptions otp, IAcceptanceOtpStore otpStore, IEmailSender email, ISmsSender sms)
     {
+        _otp = otp;
+        _otpStore = otpStore;
+        _email = email;
+        _sms = sms;
         _accessResolver = accessResolver;
         _store = store;
         _estimates = estimates;
@@ -42,7 +52,7 @@ public class QuotationAcceptanceHandler
 
     // ----- internal ----------------------------------------------------------------------------------
 
-    public async Task<Result<CreatedAcceptanceLink>> CreateLinkAsync(QuotationLifecycleCaller caller, Guid quotationId, int? lifetimeDays, string? signerHint, CancellationToken ct = default)
+    public async Task<Result<CreatedAcceptanceLink>> CreateLinkAsync(QuotationLifecycleCaller caller, Guid quotationId, int? lifetimeDays, string? signerHint, string? recipientEmail, string? recipientPhone, CancellationToken ct = default)
     {
         var access = await _accessResolver.ResolveAsync(caller.FirebaseUid, caller.MembershipId, "quotations.share", ct);
         if (access.IsFailure) return Result<CreatedAcceptanceLink>.Failure(access.Error);
@@ -50,8 +60,14 @@ public class QuotationAcceptanceHandler
         if (days is < 1 or > 30) return Fail<CreatedAcceptanceLink>("ACCEPTANCE_LINK_LIFETIME_INVALID", "A link must live between 1 and 30 days.");
         if (signerHint is { Length: > 200 }) return Fail<CreatedAcceptanceLink>("ACCEPTANCE_LINK_LIFETIME_INVALID", "The signer hint cannot exceed 200 characters.");
 
+        var hasContact = (_otp.Channels.Email && !string.IsNullOrWhiteSpace(recipientEmail)) || (_otp.Channels.Sms && !string.IsNullOrWhiteSpace(recipientPhone));
+        if (_otp.Required && !hasContact)
+        {
+            return Fail<CreatedAcceptanceLink>("ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED", "A recipient email or phone for an enabled channel is required because acceptance needs a one-time code.");
+        }
+
         var token = NewToken();
-        var created = await _store.CreateLinkAsync(access.Value!, quotationId, HashToken(token), signerHint, days, caller.TraceId, ct);
+        var created = await _store.CreateLinkAsync(access.Value!, quotationId, HashToken(token), signerHint, recipientEmail, recipientPhone, days, caller.TraceId, ct);
         return created.IsFailure ? Result<CreatedAcceptanceLink>.Failure(created.Error) : Result<CreatedAcceptanceLink>.Success(new CreatedAcceptanceLink(created.Value!, token));
     }
 
@@ -99,7 +115,7 @@ public class QuotationAcceptanceHandler
         var pdf = await _documents.FindSummaryAsync(context.OrganizationId, context.QuotationId, ct);
         return Result<PublicAcceptanceView>.Success(new PublicAcceptanceView(
             context.LinkStatus, context.ExpiresAtUtc, context.SignerHint, AcceptanceConsent.CurrentVersion, context.AcceptedAtUtc, document.Value,
-            pdf is null ? null : new PublicQuotationPdf(pdf.Sha256, pdf.ByteCount)));
+            pdf is null ? null : new PublicQuotationPdf(pdf.Sha256, pdf.ByteCount), _otp.Required, AvailableOtpChannels()));
     }
 
     /// <summary>The exact stored PDF of the quotation this link is for. Same unusable-link rules (and the same 404) as the view.</summary>
@@ -142,6 +158,9 @@ public class QuotationAcceptanceHandler
             signatureHash = SignatureEvidenceRules.HashSubmittedImage(submission.SignatureImage);
         }
 
+        var otp = await CheckVerificationForAcceptAsync(context, submission.OtpVerificationToken, ct);
+        if (otp.IsFailure) return Result<PublicAcceptanceResult>.Failure(otp.Error);
+
         // The customer attests to the exact PDF they were shown: its hash must equal the stored one, and "no PDF" (null) only matches
         // a quotation that has none. A PDF that appeared after the page was loaded is a conflict: reload and review again.
         var storedPdf = await _documents.FindSummaryAsync(context.OrganizationId, context.QuotationId, ct);
@@ -166,7 +185,7 @@ public class QuotationAcceptanceHandler
         var addressHash = Sha256Hex.Compute($"{client.RemoteAddress}|{context.LinkId}");
         var recorded = await _store.RecordAcceptanceAsync(
             context, submission with { SignerName = name, SignerRole = role },
-            signatureHash ?? string.Empty, addressHash, client.UserAgent is { Length: > 200 } ua ? ua[..200] : client.UserAgent, traceId, ct);
+            signatureHash ?? string.Empty, addressHash, client.UserAgent is { Length: > 200 } ua ? ua[..200] : client.UserAgent, traceId, otp.Value, ct);
         if (recorded.IsFailure) return Result<PublicAcceptanceResult>.Failure(recorded.Error);
 
         return Result<PublicAcceptanceResult>.Success(new PublicAcceptanceResult("accepted", recorded.Value!.AcceptedAtUtc, context.QuotationNumber, recorded.Value));

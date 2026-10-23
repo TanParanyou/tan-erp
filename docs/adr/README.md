@@ -30,3 +30,4 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0026 — Item Import Phase 2 (upsert, Cost Draft, Batch Job)](0026-item-import-phase2.md)
 - [0027 — Wave A Closure: 1 User = 1 Organization, Audit read/redaction, go-live bootstrap](0027-wave-a-closure-decisions.md)
 - [0028 — Survey Template ใน Database](0028-survey-templates-in-db.md)
+- [0029 — External Acceptance OTP ทางอีเมล](0029-external-acceptance-otp.md)

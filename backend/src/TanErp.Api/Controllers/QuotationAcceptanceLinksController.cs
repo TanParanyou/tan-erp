@@ -41,7 +41,7 @@ public class QuotationAcceptanceLinksController : ControllerBase
     {
         var caller = Caller(out var failure);
         if (caller is null) return failure!;
-        var result = await _handler.CreateLinkAsync(caller, id, request.LifetimeDays, request.SignerHint, ct);
+        var result = await _handler.CreateLinkAsync(caller, id, request.LifetimeDays, request.SignerHint, request.RecipientEmail, request.RecipientPhone, ct);
         if (result.IsFailure) return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
         Response.Headers.CacheControl = "no-store";
         return StatusCode(StatusCodes.Status201Created, new CreatedAcceptanceLinkResponse(ToResponse(result.Value!.Link), result.Value.Token, $"/accept/{result.Value.Token}"));

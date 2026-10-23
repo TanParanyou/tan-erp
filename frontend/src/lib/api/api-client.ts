@@ -249,6 +249,8 @@ export type PublicAcceptanceViewResponse = components["schemas"]["PublicAcceptan
 export type PublicQuotationPdfResponse = components["schemas"]["PublicQuotationPdfResponse"];
 export type QuotationDocumentSummaryResponse = components["schemas"]["QuotationDocumentSummaryResponse"];
 export type PublicAcceptRequest = components["schemas"]["PublicAcceptRequest"];
+export type PublicOtpRequestResponse = components["schemas"]["PublicOtpRequestResponse"];
+export type PublicOtpVerifyResponse = components["schemas"]["PublicOtpVerifyResponse"];
 export type PublicAcceptanceResponse = components["schemas"]["PublicAcceptanceResponse"];
 export type InstallationRequest = components["schemas"]["InstallationRequest"];
 export type InstallationResponse = components["schemas"]["InstallationResponse"];
@@ -1186,6 +1188,24 @@ export class ApiClient {
       "POST",
       { Accept: "application/json", "Accept-Language": locale, "Content-Type": "application/json" },
       payload
+    );
+  }
+
+  async requestPublicAcceptanceOtp(token: string, channel: string, locale: "th" | "en"): Promise<PublicOtpRequestResponse> {
+    return this.execute<PublicOtpRequestResponse>(
+      `/api/public/v1/quotation-acceptance/${encodeURIComponent(token)}/otp`,
+      "POST",
+      { Accept: "application/json", "Accept-Language": locale, "Content-Type": "application/json" },
+      { channel }
+    );
+  }
+
+  async verifyPublicAcceptanceOtp(token: string, code: string, locale: "th" | "en"): Promise<PublicOtpVerifyResponse> {
+    return this.execute<PublicOtpVerifyResponse>(
+      `/api/public/v1/quotation-acceptance/${encodeURIComponent(token)}/otp/verify`,
+      "POST",
+      { Accept: "application/json", "Accept-Language": locale, "Content-Type": "application/json" },
+      { code }
     );
   }
 

@@ -49,7 +49,7 @@ public class QuotationAcceptanceStore : IQuotationAcceptanceStore
         new(e.SignerName, e.SignerRole, e.ConsentVersion, !string.IsNullOrEmpty(e.SignatureImage), e.SignatureHash, e.AcceptedAtUtc);
 
     public async Task<Result<AcceptanceLinkProjection>> CreateLinkAsync(
-        RequestAccessContext access, Guid quotationId, string tokenHash, string? signerHint, int lifetimeDays, string traceId, CancellationToken ct = default)
+        RequestAccessContext access, Guid quotationId, string tokenHash, string? signerHint, string? recipientEmail, string? recipientPhone, int lifetimeDays, string traceId, CancellationToken ct = default)
     {
         var quotation = await _db.Quotations.AsNoTracking().FirstOrDefaultAsync(q => q.Id == quotationId && q.OrganizationId == access.OrganizationId, ct);
         if (quotation is null) return Fail<AcceptanceLinkProjection>("RESOURCE_NOT_FOUND", "Quotation not found.");
@@ -59,7 +59,7 @@ public class QuotationAcceptanceStore : IQuotationAcceptanceStore
         QuotationAcceptanceLink link;
         try
         {
-            link = new QuotationAcceptanceLink(Guid.NewGuid(), access.OrganizationId, quotationId, tokenHash, signerHint, now.AddDays(lifetimeDays), access.ActorUserId, now);
+            link = new QuotationAcceptanceLink(Guid.NewGuid(), access.OrganizationId, quotationId, tokenHash, signerHint, now.AddDays(lifetimeDays), access.ActorUserId, now, recipientEmail, recipientPhone);
         }
         catch (AcceptanceLinkException ex)
         {
@@ -115,11 +115,11 @@ public class QuotationAcceptanceStore : IQuotationAcceptanceStore
         var evidence = await _db.QuotationAcceptanceEvidences.AsNoTracking().FirstOrDefaultAsync(e => e.LinkId == row.l.Id, ct);
         return new AcceptanceContext(
             row.l.Id, row.l.OrganizationId, row.q.Id, row.q.Number, row.q.Status, row.q.EstimateId, row.o.RowVersion, row.l.CreatedByUserId,
-            row.l.Status, row.l.ExpiresAtUtc, row.l.SignerHint, row.l.AcceptedAtUtc, evidence is null ? null : Summarize(evidence));
+            row.l.Status, row.l.ExpiresAtUtc, row.l.SignerHint, row.l.AcceptedAtUtc, evidence is null ? null : Summarize(evidence), row.l.OtpLockedAtUtc.HasValue, row.l.RecipientEmail, row.l.RecipientPhone);
     }
 
     public async Task<Result<AcceptanceEvidenceSummary>> RecordAcceptanceAsync(
-        AcceptanceContext context, AcceptanceSubmission submission, string signatureHash, string clientAddressHash, string? userAgent, string traceId, CancellationToken ct = default)
+        AcceptanceContext context, AcceptanceSubmission submission, string signatureHash, string clientAddressHash, string? userAgent, string traceId, OtpEvidence? otp = null, CancellationToken ct = default)
     {
         var strategy = _db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
@@ -144,8 +144,13 @@ public class QuotationAcceptanceStore : IQuotationAcceptanceStore
             var evidence = new QuotationAcceptanceEvidence(
                 Guid.NewGuid(), context.OrganizationId, link.Id, context.QuotationId, submission.SignerName!, submission.SignerRole, AcceptanceConsent.CurrentVersion,
                 string.IsNullOrEmpty(submission.SignatureImage) ? null : submission.SignatureImage, string.IsNullOrEmpty(signatureHash) ? null : signatureHash,
-                clientAddressHash, userAgent, now, submission.DocumentSha256);
+                clientAddressHash, userAgent, now, submission.DocumentSha256, otp?.Channel, otp?.VerifiedAtUtc, otp?.ChallengeId);
             _db.QuotationAcceptanceEvidences.Add(evidence);
+            if (otp is not null)
+            {
+                var challenge = await _db.AcceptanceOtpChallenges.FirstOrDefaultAsync(c => c.Id == otp.ChallengeId && c.LinkId == link.Id, ct);
+                challenge?.Consume(now);
+            }
             // The signer's name is evidence, not audit payload.
             Audit(context.OrganizationId, link.CreatedByUserId, null, null, "quotation-acceptance-link.accepted", link.Id, traceId, new { quotation = context.QuotationNumber }, now);
             try

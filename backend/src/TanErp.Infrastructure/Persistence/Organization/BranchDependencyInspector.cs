@@ -59,6 +59,7 @@ public sealed class BranchDependencyInspector
         [typeof(RolePermission)] = "Role grant configuration, not an open document.",
         [typeof(AuditEvent)] = "Append-only audit log entry, not an open document.",
         [typeof(ApprovalLimit)] = "Approval limit configuration row; a limit tied to a deactivated branch is simply inert, so it is not an open document.",
+        [typeof(BranchRateOverride)] = "Labor rate override configuration per branch, not an open document.",
     };
 
     private readonly AppDbContext _db;
