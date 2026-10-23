@@ -1730,7 +1730,8 @@
       "warranties": "Warranty",
       "service-requests": "Service Request",
       "billing-documents": "Billing",
-      "payments": "Payment"
+      "payments": "Payment",
+      "quick-estimates": "Quick Estimate"
     },
     "tokens": {
       "prefix": "Prefix",

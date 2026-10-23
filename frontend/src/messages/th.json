@@ -1730,7 +1730,8 @@
       "warranties": "การรับประกัน",
       "service-requests": "งานบริการ",
       "billing-documents": "ใบแจ้งหนี้",
-      "payments": "การรับชำระ"
+      "payments": "การรับชำระ",
+      "quick-estimates": "ใบประเมินราคาเบื้องต้น (Quick Estimate)"
     },
     "tokens": {
       "prefix": "คำนำหน้า (Prefix)",
