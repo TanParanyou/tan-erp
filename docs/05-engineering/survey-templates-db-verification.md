@@ -2,15 +2,17 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-17 (G-07) — no tests written, none run (per user); browser not checked; ยังไม่ผ่าน UAT.** Migration `AddSurveyTemplateVersions` สร้างแล้วแต่ **ยังไม่ได้ apply** กับ DB ใด ๆ.
+**Implemented 2026-10-17 (G-07) — Verified 2026-10-23: Unit + Integration `v4` area evidence passed; Migration `AddSurveyTemplateVersions` applied บน local DB; browser not checked; ยังไม่ผ่าน UAT.**
 
 เอกสารที่เกี่ยวข้อง: [ADR 0028](../adr/0028-survey-templates-in-db.md), [Site Survey Verification](site-survey-verification.md), [Permission Catalog](../03-contracts/permission-catalog.md), [Error Contract](../03-contracts/error-contract.md)
 
-## 2. ผลตรวจที่ทำ
+## 2. ผลตรวจที่ทำ (อัปเดต 2026-10-23)
 
 | รายการ | ผล |
 |---|---|
 | `dotnet build` | 0 warnings / 0 errors |
+| `SurveyChecklistEvidenceTests` (`TanErp.UnitTests`) | **Passed** (รวม `SurveyTemplateVersionRow_EnforcesInvariants_AndV4SnapshotHashCoversAreaEvidenceManifest`) |
+| `SiteSurveyEndpointsTests.SurveyTemplateVersions_PublishAndRetire_AndV4AreaEvidenceEnforcedOnMarkReady` (`TanErp.IntegrationTests`) | **Passed 1/1** (9s) |
 | `npx tsc --noEmit`, `npm run lint`, `npm run build` | ผ่าน |
 | OpenAPI regenerate + `npm run check:api` | ผ่าน (diff เป็นการเพิ่มล้วน) |
 | Hash parity (สคริปต์ throwaway ครั้งเดียว ไม่ commit) | ดูหัวข้อ 3 |

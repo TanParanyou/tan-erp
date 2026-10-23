@@ -9,7 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
 using TanErp.Api.Contracts.Items;
 using TanErp.Api.ErrorHandling;
+using TanErp.Application.Items;
 using TanErp.Application.Items.Import;
+using TanErp.Domain.Items;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
@@ -269,5 +271,126 @@ public class ItemImportEndpointsTests : IAsyncLifetime
         {
             Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         }
+    }
+
+    [Fact]
+    public async Task Phase2_UpsertMode_CostDraftOnlyImport_AndBatchImportJobs_WorkEndToEnd()
+    {
+        // 1. Seed initial item via create import
+        var initialCsv = Csv(Row("IMPF-001", name: "ไม้อัดเดิม"), Row("IMPF-002", name: "กาวเดิม"));
+        Assert.Equal(HttpStatusCode.Created, (await CommitAsync(initialCsv, "import-phase2-init-0001")).StatusCode);
+
+        // 2. Upsert preview + commit: IMPF-001 updated, IMPF-002 unchanged, IMPF-003 created
+        var upsertCsv = Csv(
+            Row("IMPF-001", name: "ไม้อัดใหม่"),
+            Row("IMPF-002", name: "กาวเดิม"),
+            Row("IMPF-003", name: "สกรูใหม่"));
+
+        var upsertPreviewReq = Request(HttpMethod.Post, "/api/v1/items/imports/preview");
+        upsertPreviewReq.Content = JsonContent.Create(new PreviewItemImportRequest(upsertCsv, ItemImportKind.Items, ItemImportMode.Upsert));
+        var upsertPreviewRes = await _client.SendAsync(upsertPreviewReq);
+        Assert.Equal(HttpStatusCode.OK, upsertPreviewRes.StatusCode);
+        var upsertPreview = (await upsertPreviewRes.Content.ReadFromJsonAsync<ItemImportPreviewResponse>())!;
+        Assert.Equal((1, 1, 1), (upsertPreview.CreateCount, upsertPreview.UpdateCount, upsertPreview.UnchangedCount));
+
+        var upsertCommitReq = Request(HttpMethod.Post, "/api/v1/items/imports/commit", idempotencyKey: "import-phase2-upsert-0001");
+        upsertCommitReq.Content = JsonContent.Create(new CommitItemImportRequest(upsertCsv, upsertPreview.ContentSha256, ItemImportKind.Items, ItemImportMode.Upsert));
+        var upsertCommitRes = await _client.SendAsync(upsertCommitReq);
+        Assert.Equal(HttpStatusCode.Created, upsertCommitRes.StatusCode);
+        var upsertCommit = (await upsertCommitRes.Content.ReadFromJsonAsync<ItemImportCommitResponse>())!;
+        Assert.Equal((1, 1, 1, false), (upsertCommit.CreatedCount, upsertCommit.UpdatedCount, upsertCommit.UnchangedCount, upsertCommit.Replayed));
+
+        // 3. Cost import (kind=costs): creates ONLY draft CostRecords and never touches published records or bypasses maker-checker.
+        string costSourceCode = "MANUAL-IMP";
+        Guid publishedCostId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            if (!await db.CostSources.AnyAsync(s => s.OrganizationId == TestOnlyDataSeeder.TestOrgId && s.Code == costSourceCode))
+            {
+                db.CostSources.Add(new CostSource(
+                    Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, costSourceCode,
+                    LocalizedText.Create("นำเข้า", "Import"), 1, true, now, CostSource.ManualType));
+            }
+
+            var item1 = await db.Items.SingleAsync(i => i.OrganizationId == TestOnlyDataSeeder.TestOrgId && i.Code == "IMPF-001");
+            var unit = await db.Units.SingleAsync(u => u.OrganizationId == TestOnlyDataSeeder.TestOrgId && u.Code == _unitCode);
+            var existingPub = CostRecord.CreateDraft(
+                Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, item1.Id, CostScopeType.Organization, null, unit.Id, "THB",
+                500m, 0m, null, new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero), null, 1, null, "REF-OLD", "ราคาเดิม", null, TestOnlyDataSeeder.TestUserId, now);
+            existingPub.Submit(TestOnlyDataSeeder.TestUserId, now);
+            existingPub.Approve(Guid.NewGuid(), now);
+            existingPub.Publish(Guid.NewGuid(), now);
+            db.CostRecords.Add(existingPub);
+            publishedCostId = existingPub.Id;
+            await db.SaveChangesAsync();
+        }
+
+        var costHeader = string.Join(",", CostImportCsv.Columns);
+        var costCsv = string.Join("\n",
+            costHeader,
+            $"IMPF-001,organization,,{_unitCode},THB,650.00,0,,2026-10-01T00:00:00Z,,{costSourceCode},QT-2026-01,ปรับราคาใหม่",
+            $"IMPF-002,organization,,{_unitCode},THB,120.00,0,,2026-10-01T00:00:00Z,,{costSourceCode},QT-2026-02,ราคากาว");
+
+        var costPreviewReq = Request(HttpMethod.Post, "/api/v1/items/imports/preview");
+        costPreviewReq.Content = JsonContent.Create(new PreviewItemImportRequest(costCsv, ItemImportKind.Costs, ItemImportMode.Create));
+        var costPreview = (await (await _client.SendAsync(costPreviewReq)).Content.ReadFromJsonAsync<ItemImportPreviewResponse>())!;
+        Assert.Equal((2, 0), (costPreview.ValidRows, costPreview.InvalidRows));
+
+        var costCommitReq = Request(HttpMethod.Post, "/api/v1/items/imports/commit", idempotencyKey: "import-phase2-cost-0001");
+        costCommitReq.Content = JsonContent.Create(new CommitItemImportRequest(costCsv, costPreview.ContentSha256, ItemImportKind.Costs, ItemImportMode.Create));
+        var costCommitRes = await _client.SendAsync(costCommitReq);
+        Assert.Equal(HttpStatusCode.Created, costCommitRes.StatusCode);
+        var costCommit = (await costCommitRes.Content.ReadFromJsonAsync<ItemImportCommitResponse>())!;
+        Assert.Equal((2, 0), (costCommit.CreatedCount, costCommit.UnchangedCount));
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var publishedAfter = await db.CostRecords.AsNoTracking().SingleAsync(c => c.Id == publishedCostId);
+            Assert.Equal((CostRecordStatus.Published, 500m), (publishedAfter.Status, publishedAfter.Amount));
+
+            var importedCosts = await db.CostRecords.AsNoTracking()
+                .Where(c => c.OrganizationId == TestOnlyDataSeeder.TestOrgId && c.Id != publishedCostId && c.SourceReference != null && c.SourceReference.StartsWith("QT-2026-"))
+                .ToListAsync();
+            Assert.Equal(2, importedCosts.Count);
+            Assert.All(importedCosts, c =>
+            {
+                Assert.Equal(CostRecordStatus.Draft, c.Status);
+                Assert.Equal(TestOnlyDataSeeder.TestUserId, c.CreatedByUserId);
+            });
+        }
+
+        // 4. Batch Import Jobs (POST /api/v1/items/imports/jobs + ItemImportJobRunner + GET /api/v1/items/imports/jobs/{jobId})
+        var jobCsv = Csv(
+            Row("IMPJ-001", name: "งานแบตช์ 1"),
+            Row("IMPJ-002", name: "งานแบตช์ 2"));
+
+        var createJobReq = Request(HttpMethod.Post, "/api/v1/items/imports/jobs", idempotencyKey: "import-phase2-job-0001");
+        createJobReq.Content = JsonContent.Create(new CreateItemImportJobRequest(ItemImportKind.Items, ItemImportMode.Upsert, jobCsv, null));
+        var createJobRes = await _client.SendAsync(createJobReq);
+        Assert.Equal(HttpStatusCode.Accepted, createJobRes.StatusCode);
+        var queuedJob = (await createJobRes.Content.ReadFromJsonAsync<ItemImportJobResponse>())!;
+        Assert.Equal(("queued", 2, false), (queuedJob.Status, queuedJob.TotalRows, queuedJob.Replayed));
+
+        // Idempotent replay of POST /jobs returns the same job with Replayed=true
+        var replayJobReq = Request(HttpMethod.Post, "/api/v1/items/imports/jobs", idempotencyKey: "import-phase2-job-0001");
+        replayJobReq.Content = JsonContent.Create(new CreateItemImportJobRequest(ItemImportKind.Items, ItemImportMode.Upsert, jobCsv, null));
+        var replayJob = (await (await _client.SendAsync(replayJobReq)).Content.ReadFromJsonAsync<ItemImportJobResponse>())!;
+        Assert.Equal((queuedJob.Id, true), (replayJob.Id, replayJob.Replayed));
+
+        // Run the background job via IItemImportJobRunner
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var runner = scope.ServiceProvider.GetRequiredService<IItemImportJobRunner>();
+            Assert.True(await runner.RunNextAsync());
+        }
+
+        var getJobRes = await _client.SendAsync(Request(HttpMethod.Get, $"/api/v1/items/imports/jobs/{queuedJob.Id}"));
+        Assert.Equal(HttpStatusCode.OK, getJobRes.StatusCode);
+        var completedJob = (await getJobRes.Content.ReadFromJsonAsync<ItemImportJobResponse>())!;
+        Assert.Equal(("completed", 2, 2, 0), (completedJob.Status, completedJob.ProcessedRows, completedJob.CreatedCount, completedJob.ErrorRowCount));
+        Assert.Equal(2, await CountItemsAsync("IMPJ-"));
     }
 }

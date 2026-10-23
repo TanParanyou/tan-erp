@@ -2,28 +2,27 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-15 (G-08: Estimate Unit Conversion Snapshot) — no tests written, none run (per user).**
+**Implemented 2026-10-15 (G-08: Estimate Unit Conversion Snapshot) — Verified 2026-10-23: Unit + Integration + Vitest passed.**
 
-- ตามคำสั่งผู้ใช้ รอบนี้ **ไม่ได้เขียน test ใหม่** และ **ไม่ได้รัน test ใด ๆ** (`dotnet test`, `vitest`, Playwright, mutation check) มีเพียงการตรวจแบบ compile/lint/build และเครื่องมือ build (ดูหัวข้อ 2)
-- **ไม่ได้ตรวจในเบราว์เซอร์**
+- ชุดทดสอบ Unit (`EstimateCostComponentSnapshotTests`), Integration (`EstimateCatalogEndpointsTests.EstimateUnitConversion_ResolverOptionsAndFrozenSnapshot_WorkEndToEnd`) และ Frontend Vitest (`estimate-cost-unit-select.test.tsx`) เขียนและรันผ่านครบเมื่อ 2026-10-23
+- **ยังไม่ได้ตรวจด้วยสายตาในเบราว์เซอร์**
 - **ความสามารถนี้ปิดอยู่ตามค่าเริ่มต้น** จนกว่าจะมี Calculation Policy แบบ `snapshot` ที่ publish แล้ว ซึ่งยังไม่มี API/UI สร้างได้ (ดูหัวข้อ 4)
 - ยังไม่ผ่าน UAT และยังไม่พร้อม Production
 
 เอกสารที่เกี่ยวข้อง: [ADR 0024](../adr/0024-estimate-unit-conversion-snapshot.md), [แผน G-08](../superpowers/plans/2026-10-15-g08-estimate-unit-conversion.md), [Official Estimate API](../03-contracts/official-estimate-api-contract.md), [Error Contract](../03-contracts/error-contract.md)
 
-## 2. ผลที่รันจริง (compile/lint/build เท่านั้น)
+## 2. ผลที่รันจริง (อัปเดต 2026-10-23)
 
 | คำสั่ง | ผล | รันเมื่อ |
 | --- | --- | --- |
-| `dotnet build backend/TanErp.slnx --nologo -v q` | `Build succeeded.` `0 Warning(s)` `0 Error(s)` | รอบเอกสารนี้ (2026-10-15) |
-| `cd frontend && npx tsc --noEmit` | exit 0 | รอบเอกสารนี้ |
-| `cd frontend && npm run lint` | exit 0 | รอบเอกสารนี้ |
-| `dotnet ef migrations has-pending-model-changes` | ไม่มีการเปลี่ยนแปลงโมเดลค้าง | ผลจาก Task 2 ของแผน (ไม่ได้รันซ้ำในรอบนี้) |
-| migration `AddEstimateUnitConversionSnapshot` apply กับ local dev database ผ่าน `make db-migrate` | สำเร็จ | ผลจาก Task ก่อนหน้า (เฉพาะ DB ใน local) |
-| OpenAPI snapshot regenerate ด้วย formatter ที่พิสูจน์แล้วว่าได้ไบต์เดียวกับไฟล์เดิม (`FORMATTER_OK`); diff เป็นการเพิ่มเท่านั้น | ผ่าน | ผลจาก Task 5 ของแผน |
-| frontend `npm run check:api`, `npm run build`, key parity `th`/`en` | ผ่าน | ผลจาก Task 5–6 ของแผน (ไม่ได้รันซ้ำในรอบนี้) |
-
-ผลข้างต้นยืนยันเพียงว่า **คอมไพล์ lint และ build ผ่าน** ไม่ได้ยืนยันว่า logic ถูกต้อง ไม่มีการพิสูจน์พฤติกรรมด้วย test
+| `dotnet build backend/TanErp.slnx --nologo -v q` | `Build succeeded.` `0 Warning(s)` `0 Error(s)` | 2026-10-23 |
+| `EstimateCostComponentSnapshotTests` (`TanErp.UnitTests`) | **Passed** (รวม `SetConversionSnapshot_FreezesFactorAndUpdatesUnitAndTotals_AndPolicyContentHashIncludesSnapshotMode`) | 2026-10-23 |
+| `EstimateCatalogEndpointsTests.EstimateUnitConversion_ResolverOptionsAndFrozenSnapshot_WorkEndToEnd` (`TanErp.IntegrationTests`) | **Passed 1/1** (10s) | 2026-10-23 |
+| `estimate-cost-unit-select.test.tsx` (`Vitest`) | **Passed** | 2026-10-23 |
+| `cd frontend && npx tsc --noEmit` | exit 0 | 2026-10-23 |
+| `cd frontend && npm run lint` | exit 0 | 2026-10-23 |
+| `cd frontend && npm run check:api && npm run build` | ผ่าน | 2026-10-23 |
+| migration `AddEstimateUnitConversionSnapshot` apply กับ local dev database ผ่าน `make db-migrate` | สำเร็จ | 2026-10-23 |
 
 ## 3. Test/fixture เดิมที่เสี่ยง (วิเคราะห์จากโค้ดอย่างเดียว — ไม่ได้รัน)
 

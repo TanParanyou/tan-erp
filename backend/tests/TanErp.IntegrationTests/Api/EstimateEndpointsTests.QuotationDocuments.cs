@@ -2,10 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using TanErp.Api.Contracts.Commercial;
+using TanErp.Application.Commercial;
 using TanErp.Application.Commercial.Documents;
+using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Files;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.IdentityAccess;
@@ -18,6 +22,17 @@ namespace TanErp.IntegrationTests.Api;
 // G-04: the server-side quotation PDF. Shares the harness (database, tokens, helpers) of the main file.
 public partial class EstimateEndpointsTests
 {
+    private sealed class CapturingEmailSender : IEmailSender
+    {
+        public bool IsEnabled => true;
+        public List<EmailMessage> Sent { get; } = new();
+        public Task SendAsync(EmailMessage message, CancellationToken ct = default)
+        {
+            Sent.Add(message);
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed class ThrowingQuotationRenderer : IQuotationDocumentRenderer
     {
         public string Version => "test-throwing/v0";
@@ -198,6 +213,159 @@ public partial class EstimateEndpointsTests
         var items = (await amended.Content.ReadFromJsonAsync<TanErp.Api.Contracts.Commercial.QuotationHistoryResponse>())!.Items;
         Assert.Equal(before.Document!.Sha256, items.Single(i => i.Id == original.QuotationId).Document!.Sha256);
         Assert.NotEqual(before.Document.Sha256, items.Single(i => i.Id != original.QuotationId).Document!.Sha256);
+    }
+
+    [Fact]
+    public async Task ExternalAcceptance_OtpFlow_EnforcesRequiredVerificationCooldownLockoutExpiryAndSingleUse()
+    {
+        var (_, _, quotation) = await IssueQuotedEstimateAsync("otp-accept");
+
+        // 1. Default AcceptanceOtp:Required=false -> /otp returns 503 ACCEPTANCE_OTP_UNAVAILABLE and /accept works without OTP.
+        var (_, defaultToken) = await CreateAcceptanceLinkAsync(quotation.QuotationId);
+        var defaultView = (await (await PublicGetAsync(defaultToken)).Content.ReadFromJsonAsync<PublicAcceptanceViewResponse>())!;
+        Assert.False(defaultView.OtpRequired);
+        Assert.Empty(defaultView.OtpChannels);
+        var unavailableOtp = await _client.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{defaultToken}/otp", new PublicOtpRequest("email"));
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, unavailableOtp.StatusCode);
+        Assert.Equal("ACCEPTANCE_OTP_UNAVAILABLE", await ProblemCodeAsync(unavailableOtp));
+
+        // 2. Host with AcceptanceOtp:Required=true and an enabled email sender.
+        var emailSender = new CapturingEmailSender();
+        using var otpFactory = _factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<AcceptanceOtpOptions>();
+            services.AddSingleton(new AcceptanceOtpOptions
+            {
+                Required = true,
+                HmacKey = "0123456789abcdef0123456789abcdef",
+                CodeLength = 6,
+                ExpiryMinutes = 10,
+                MaxAttempts = 5,
+                ResendCooldownSeconds = 60,
+                MaxSendsPerHour = 3,
+                VerificationMinutes = 15,
+                Channels = new OtpChannelSwitches { Email = true, Sms = false }
+            });
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(emailSender);
+        }));
+        using var otpClient = otpFactory.CreateClient();
+
+        // Creating a link when OTP is required demands a recipient email/phone for an enabled channel.
+        var missingEmailReq = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/quotations/{quotation.QuotationId}/acceptance-links", "token-org-a", MembershipAId);
+        missingEmailReq.Content = JsonContent.Create(new CreateAcceptanceLinkRequest(7, "คุณสมชาย", RecipientEmail: null));
+        var missingEmailRes = await otpClient.SendAsync(missingEmailReq);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, missingEmailRes.StatusCode);
+        Assert.Equal("ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED", await ProblemCodeAsync(missingEmailRes));
+
+        async Task<(Guid LinkId, string Token)> CreateOtpLinkAsync(string email)
+        {
+            var req = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/quotations/{quotation.QuotationId}/acceptance-links", "token-org-a", MembershipAId);
+            req.Content = JsonContent.Create(new CreateAcceptanceLinkRequest(7, "คุณสมชาย", RecipientEmail: email));
+            var res = await otpClient.SendAsync(req);
+            Assert.Equal(HttpStatusCode.Created, res.StatusCode);
+            var body = (await res.Content.ReadFromJsonAsync<CreatedAcceptanceLinkResponse>())!;
+            return (body.Link.Id, body.Token);
+        }
+
+        // Link 1: Test 5 wrong attempts -> 423 ACCEPTANCE_OTP_LOCKED and cooldown -> 429 ACCEPTANCE_OTP_RATE_LIMITED
+        var (lockLinkId, lockToken) = await CreateOtpLinkAsync("lock@example.test");
+        var otpView = (await (await PublicGetAsync(lockToken, otpClient)).Content.ReadFromJsonAsync<PublicAcceptanceViewResponse>())!;
+        Assert.True(otpView.OtpRequired);
+        Assert.Equal(new[] { "email" }, otpView.OtpChannels);
+
+        // Verify before requesting any challenge -> 410 ACCEPTANCE_OTP_EXPIRED
+        var verifyBeforeReq = await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{lockToken}/otp/verify", new PublicOtpVerifyRequest("000000"));
+        Assert.Equal(HttpStatusCode.Gone, verifyBeforeReq.StatusCode);
+        Assert.Equal("ACCEPTANCE_OTP_EXPIRED", await ProblemCodeAsync(verifyBeforeReq));
+
+        // Request OTP -> 202 Accepted
+        var reqOtp1 = await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{lockToken}/otp", new PublicOtpRequest("email"));
+        Assert.Equal(HttpStatusCode.Accepted, reqOtp1.StatusCode);
+
+        // Request again inside ResendCooldownSeconds -> 429 ACCEPTANCE_OTP_RATE_LIMITED
+        var cooldownRes = await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{lockToken}/otp", new PublicOtpRequest("email"));
+        Assert.Equal(HttpStatusCode.TooManyRequests, cooldownRes.StatusCode);
+        Assert.Equal("ACCEPTANCE_OTP_RATE_LIMITED", await ProblemCodeAsync(cooldownRes));
+
+        // 4 wrong attempts -> 422 ACCEPTANCE_OTP_INVALID, 5th wrong attempt -> 423 ACCEPTANCE_OTP_LOCKED
+        for (var attempt = 1; attempt <= 4; attempt++)
+        {
+            var wrong = await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{lockToken}/otp/verify", new PublicOtpVerifyRequest("000000"));
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, wrong.StatusCode);
+            Assert.Equal("ACCEPTANCE_OTP_INVALID", await ProblemCodeAsync(wrong));
+        }
+
+        var fifthWrong = await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{lockToken}/otp/verify", new PublicOtpVerifyRequest("000000"));
+        Assert.Equal(HttpStatusCode.Locked, fifthWrong.StatusCode);
+        Assert.Equal("ACCEPTANCE_OTP_LOCKED", await ProblemCodeAsync(fifthWrong));
+
+        // Locked link refuses both /otp and /accept with 423 ACCEPTANCE_OTP_LOCKED
+        var lockedAccept = await PublicAcceptAsync(lockToken, Submission(documentSha256: otpView.Pdf!.Sha256), otpClient);
+        Assert.Equal(HttpStatusCode.Locked, lockedAccept.StatusCode);
+        Assert.Equal("ACCEPTANCE_OTP_LOCKED", await ProblemCodeAsync(lockedAccept));
+
+        // Link 2: Test missing OTP token on /accept (422 ACCEPTANCE_OTP_REQUIRED), expired challenge (410 ACCEPTANCE_OTP_EXPIRED),
+        // valid verify + accept recording otp_channel/otp_verified_at_utc/otp_challenge_id, and single-use challenge consumption.
+        emailSender.Sent.Clear();
+        var (acceptLinkId, acceptToken) = await CreateOtpLinkAsync("customer@example.test");
+
+        var withoutOtp = await PublicAcceptAsync(acceptToken, new PublicAcceptRequest("คุณสมชาย ใจดี", "กรรมการ", true, "2026-10-v1", null, otpView.Pdf.Sha256, null), otpClient);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, withoutOtp.StatusCode);
+        Assert.Equal("ACCEPTANCE_OTP_REQUIRED", await ProblemCodeAsync(withoutOtp));
+
+        // Request OTP, expire it in DB, and verify -> 410 ACCEPTANCE_OTP_EXPIRED
+        Assert.Equal(HttpStatusCode.Accepted, (await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{acceptToken}/otp", new PublicOtpRequest("email"))).StatusCode);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var pastNow = DateTimeOffset.UtcNow;
+            await db.AcceptanceOtpChallenges
+                .Where(c => c.LinkId == acceptLinkId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(c => c.CreatedAtUtc, pastNow.AddMinutes(-20))
+                    .SetProperty(c => c.ExpiresAtUtc, pastNow.AddMinutes(-10)));
+        }
+
+        var expiredVerify = await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{acceptToken}/otp/verify", new PublicOtpVerifyRequest("123456"));
+        Assert.Equal(HttpStatusCode.Gone, expiredVerify.StatusCode);
+        Assert.Equal("ACCEPTANCE_OTP_EXPIRED", await ProblemCodeAsync(expiredVerify));
+
+        // Request fresh OTP, extract 6-digit code from captured email, verify -> 200 OK
+        emailSender.Sent.Clear();
+        Assert.Equal(HttpStatusCode.Accepted, (await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{acceptToken}/otp", new PublicOtpRequest("email"))).StatusCode);
+        var sentMail = Assert.Single(emailSender.Sent);
+        var codeMatch = Regex.Match(sentMail.TextBody, @"\b(\d{6})\b");
+        Assert.True(codeMatch.Success);
+        var otpCode = codeMatch.Groups[1].Value;
+
+        var verifyOk = await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{acceptToken}/otp/verify", new PublicOtpVerifyRequest(otpCode));
+        Assert.Equal(HttpStatusCode.OK, verifyOk.StatusCode);
+        var verified = (await verifyOk.Content.ReadFromJsonAsync<PublicOtpVerifyResponse>())!;
+        Assert.NotEmpty(verified.VerificationToken);
+
+        // Re-verifying the same challenge after it was already verified -> 410 ACCEPTANCE_OTP_EXPIRED (no active unverified challenge)
+        var replayVerify = await otpClient.PostAsJsonAsync($"/api/public/v1/quotation-acceptance/{acceptToken}/otp/verify", new PublicOtpVerifyRequest(otpCode));
+        Assert.Equal(HttpStatusCode.Gone, replayVerify.StatusCode);
+        Assert.Equal("ACCEPTANCE_OTP_EXPIRED", await ProblemCodeAsync(replayVerify));
+
+        // Accept with verificationToken -> 200 OK and records otp evidence in DB
+        var acceptOk = await PublicAcceptAsync(
+            acceptToken,
+            new PublicAcceptRequest("คุณสมชาย ใจดี", "กรรมการ", true, "2026-10-v1", null, otpView.Pdf.Sha256, verified.VerificationToken),
+            otpClient);
+        Assert.Equal(HttpStatusCode.OK, acceptOk.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var evidence = await db.QuotationAcceptanceEvidences.AsNoTracking().SingleAsync(e => e.LinkId == acceptLinkId);
+            Assert.Equal("email", evidence.OtpChannel);
+            Assert.NotNull(evidence.OtpVerifiedAtUtc);
+            Assert.NotNull(evidence.OtpChallengeId);
+            var challenge = await db.AcceptanceOtpChallenges.AsNoTracking().SingleAsync(c => c.Id == evidence.OtpChallengeId);
+            Assert.NotNull(challenge.ConsumedAtUtc);
+        }
     }
 
 }

@@ -122,4 +122,52 @@ public class SurveyChecklistEvidenceTests
         Assert.All(clone.ChecklistResults, c => Assert.Equal(clone.Id, c.SiteSurveyRevisionId));
         Assert.Equal(source.SurveyTemplateVersion, clone.SurveyTemplateVersion);
     }
+
+    [Fact]
+    public void SurveyTemplateVersionRow_EnforcesInvariants_AndV4SnapshotHashCoversAreaEvidenceManifest()
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        // Invalid code, invalid hash version, or area evidence with v3 hash version is rejected
+        Assert.Throws<SurveyTemplateInvalidException>(() =>
+            new SurveyTemplateVersionRow(Guid.NewGuid(), "x", Array.Empty<string>(), 0, 0, "v3", now, now, _userId));
+        Assert.Throws<SurveyTemplateInvalidException>(() =>
+            new SurveyTemplateVersionRow(Guid.NewGuid(), "SURVEY-BAD-V2", Array.Empty<string>(), 0, 0, "v2", now, now, _userId));
+        Assert.Throws<SurveyTemplateInvalidException>(() =>
+            new SurveyTemplateVersionRow(Guid.NewGuid(), "SURVEY-BAD-AREA", Array.Empty<string>(), 0, 1, "v3", now, now, _userId));
+
+        var row = new SurveyTemplateVersionRow(
+            Guid.NewGuid(), "SURVEY-V4-AREA", new[] { "site_access_confirmed" }, 1, 1, "v4", now, now, _userId);
+        var template = row.ToTemplate();
+        Assert.True(template.SupportsAreaEvidence);
+        Assert.True(template.IsEffectiveAt(now));
+
+        row.Retire(now.AddHours(1));
+        Assert.Throws<SurveyTemplateInvalidException>(() => row.Retire(now.AddHours(2)));
+
+        // v4 hash includes per-area evidence manifest and changes when area evidence checksum or purpose changes
+        var revision = CreateDraft("SURVEY-V4-AREA", false, true);
+        revision.AddChecklistResult(new SiteSurveyChecklistResult(Guid.NewGuid(), _orgId, revision.Id, "site_access_confirmed", ChecklistResultValue.Pass, null));
+        var areaId = revision.Areas.Single().Id;
+        var revFileId = revision.Evidence.Single().FileId;
+        var areaFileId = Guid.NewGuid();
+
+        var evidenceChecksums = new Dictionary<Guid, string?> { [revFileId] = "rev-sha-1" };
+        var areaManifestA = new Dictionary<Guid, IReadOnlyList<AreaEvidenceEntry>>
+        {
+            [areaId] = new[] { new AreaEvidenceEntry(areaFileId, "area-sha-1", "evidence") }
+        };
+        var areaManifestB = new Dictionary<Guid, IReadOnlyList<AreaEvidenceEntry>>
+        {
+            [areaId] = new[] { new AreaEvidenceEntry(areaFileId, "area-sha-2", "evidence") }
+        };
+
+        var hashA1 = SurveySnapshotHasher.Compute("SRV-V4", revision, evidenceChecksums, template, areaManifestA);
+        var hashA2 = SurveySnapshotHasher.Compute("SRV-V4", revision, evidenceChecksums, template, areaManifestA);
+        var hashB = SurveySnapshotHasher.Compute("SRV-V4", revision, evidenceChecksums, template, areaManifestB);
+
+        Assert.StartsWith("v4:", hashA1);
+        Assert.Equal(hashA1, hashA2);
+        Assert.NotEqual(hashA1, hashB);
+    }
 }

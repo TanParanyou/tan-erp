@@ -120,4 +120,48 @@ public class ItemImportCsvTests
         var tooLong = ItemImportCsv.Parse(Csv($"ITM-1,material,CAT,,PCS,{longName},,,,,false,true,false,false,false")).Value![0];
         Assert.Contains(new ItemImportRowError("nameTh", ItemImportErrorCodes.TooLong), ItemImportCsv.Validate(tooLong).Errors);
     }
+
+    [Fact]
+    public void CostImportCsv_ParseAndValidate_EnforcesColumnsScopeBranchCurrencyAndQuantities()
+    {
+        var costHeader = string.Join(",", CostImportCsv.Columns);
+        string CostCsv(params string[] rows) => string.Join("\n", new[] { costHeader }.Concat(rows));
+
+        Assert.True(CostImportCsv.Parse("itemCode,scope\nA,organization").IsFailure);
+
+        var validOrg = "ITM-1,organization,,PCS,thb,1250.50,0,100,2026-10-01T00:00:00Z,2026-12-31T00:00:00Z,MANUAL,QT-001,ราคาตั้งต้น";
+        var validBranch = "ITM-2,branch,B01,PCS,THB,990,,50,2026-10-01T00:00:00Z,,MANUAL,QT-002,ราคาสาขา";
+        var parsed = CostImportCsv.Parse(CostCsv(validOrg, validBranch));
+        Assert.True(parsed.IsSuccess);
+        Assert.Equal(2, parsed.Value!.Count);
+
+        var (row1, errors1) = CostImportCsv.Validate(parsed.Value[0]);
+        Assert.Empty(errors1);
+        Assert.NotNull(row1);
+        Assert.Equal(("organization", "THB", 1250.50m, 0m, 100m), (row1.Scope, row1.Currency, row1.Amount, row1.MinimumQuantity, row1.MaximumQuantity));
+
+        var (row2, errors2) = CostImportCsv.Validate(parsed.Value[1]);
+        Assert.Empty(errors2);
+        Assert.NotNull(row2);
+        Assert.Equal(("branch", "B01"), (row2.Scope, row2.BranchCode));
+
+        // Branch scope without branchCode, organization scope with branchCode, negative amount, max <= min, end < start
+        var invalidRows = CostImportCsv.Parse(CostCsv(
+            "ITM-1,branch,,PCS,THB,100,10,5,2026-10-10T00:00:00Z,2026-10-01T00:00:00Z,MANUAL,REF,เหตุผล",
+            "ITM-1,organization,B01,PCS,TH,not-a-number,-1,,bad-date,,MANUAL,,")).Value!;
+
+        var (_, bad1) = CostImportCsv.Validate(invalidRows[0]);
+        Assert.Contains(new ItemImportRowError("branchCode", ItemImportErrorCodes.Required), bad1);
+        Assert.Contains(new ItemImportRowError("maximumQuantity", ItemImportErrorCodes.Invalid), bad1);
+        Assert.Contains(new ItemImportRowError("effectiveToUtc", ItemImportErrorCodes.Invalid), bad1);
+
+        var (_, bad2) = CostImportCsv.Validate(invalidRows[1]);
+        Assert.Contains(new ItemImportRowError("branchCode", ItemImportErrorCodes.Invalid), bad2);
+        Assert.Contains(new ItemImportRowError("currency", ItemImportErrorCodes.Invalid), bad2);
+        Assert.Contains(new ItemImportRowError("amount", ItemImportErrorCodes.Invalid), bad2);
+        Assert.Contains(new ItemImportRowError("minimumQuantity", ItemImportErrorCodes.Invalid), bad2);
+        Assert.Contains(new ItemImportRowError("effectiveFromUtc", ItemImportErrorCodes.Invalid), bad2);
+        Assert.Contains(new ItemImportRowError("sourceReference", ItemImportErrorCodes.Required), bad2);
+        Assert.Contains(new ItemImportRowError("reason", ItemImportErrorCodes.Required), bad2);
+    }
 }

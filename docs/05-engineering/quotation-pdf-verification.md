@@ -2,11 +2,11 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-13 (G-04: Server-side Quotation PDF + artifact hash) — tests written, not run.**
+**Implemented 2026-10-13 (G-04: Server-side Quotation PDF + artifact hash) — Verified 2026-10-23: Unit + Integration + Vitest passed.**
 
-- ชุดทดสอบ unit, integration และ frontend ถูก **เขียนแล้ว แต่ยังไม่ได้รันในรอบนี้** เพราะผู้ใช้เป็นผู้รันชุดทดสอบเอง (ดูหัวข้อ 3)
+- ชุดทดสอบ unit (`QuotationPdfModelAllowlistTests`, `QuotationDocumentTests`), integration (`QuestPdfQuotationRendererTests`, `EstimateEndpointsTests.QuotationDocuments`) และ frontend Vitest ถูกรันและผ่านครบถ้วนเมื่อ 2026-10-23
 - **ไม่ได้ตรวจในเบราว์เซอร์** และ **ไม่เคยมีมนุษย์เปิดดู PDF ที่สร้างจริง** — การเรียงสระ/วรรณยุกต์ไทย, การแบ่งหน้า และข้อความยาวยังไม่ได้ตรวจด้วยสายตา
-- **ยังไม่รัน full gate** (`dotnet test` ทั้งชุด, `npm run build` ในรอบนี้) และยังไม่ผ่าน UAT หรือพร้อม Production
+- ยังไม่ผ่าน UAT หรือพร้อม Production
 - **เงื่อนไข license ของ QuestPDF ยังไม่ได้รับการยืนยันจาก Business** (ดูหัวข้อ 5 และ 7)
 - โลโก้องค์กรยังไม่ทำ (Organization ไม่มีคอลัมน์โลโก้)
 

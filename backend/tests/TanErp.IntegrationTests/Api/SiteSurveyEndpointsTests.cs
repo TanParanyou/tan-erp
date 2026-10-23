@@ -7,7 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
+using TanErp.Api.Contracts.Attachments;
 using TanErp.Api.Contracts.Surveys;
+using TanErp.Domain.Attachments;
 using TanErp.Domain.Common;
 using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
@@ -684,6 +686,93 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         return (await db.SiteSurveyRevisions.AsNoTracking().SingleAsync(r => r.Id == revisionId)).RowVersion;
+    }
+
+    [Fact]
+    public async Task SurveyTemplateVersions_PublishAndRetire_AndV4AreaEvidenceEnforcedOnMarkReady()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var v4Code = $"SURVEY-V4-{Guid.NewGuid():N}"[..18].ToUpperInvariant();
+
+        // 1. Publish a v4 survey template requiring 1 checklist item, 1 revision evidence, and 1 area evidence per area
+        var publishReq = CreateAuthenticatedRequest(HttpMethod.Post, "/api/v1/survey-template-versions", "token-org-a", MembershipAId);
+        publishReq.Content = JsonContent.Create(new PublishSurveyTemplateVersionRequest(
+            v4Code,
+            new[] { SurveyChecklistItems.SiteAccessConfirmed },
+            MinimumEvidenceCount: 1,
+            MinimumAreaEvidenceCount: 1,
+            SnapshotHashVersion: "v4",
+            EffectiveFromUtc: now.AddMinutes(-1)));
+        var publishRes = await _client.SendAsync(publishReq);
+        Assert.Equal(HttpStatusCode.Created, publishRes.StatusCode);
+        var published = (await publishRes.Content.ReadFromJsonAsync<SurveyTemplateVersionResponse>())!;
+        Assert.Equal((v4Code, "v4", 1), (published.Code, published.SnapshotHashVersion, published.MinimumAreaEvidenceCount));
+
+        // Duplicate code returns 409 Conflict
+        var dupReq = CreateAuthenticatedRequest(HttpMethod.Post, "/api/v1/survey-template-versions", "token-org-a", MembershipAId);
+        dupReq.Content = JsonContent.Create(new PublishSurveyTemplateVersionRequest(
+            v4Code, new[] { SurveyChecklistItems.SiteAccessConfirmed }, 1, 1, "v4", now));
+        Assert.Equal(HttpStatusCode.Conflict, (await _client.SendAsync(dupReq)).StatusCode);
+
+        // 2. Create a new survey; because v4Code is the newest effective template, the draft revision uses v4Code
+        var (_, siteId, oppId, oppVersion) = await SetupQualifiedOpportunityAsync();
+        var createSurveyRes = await PostAsync(
+            $"/api/v1/opportunities/{oppId}/surveys",
+            $"v4-survey-create-{Guid.NewGuid():N}",
+            new CreateSiteSurveyRequest(siteId, UserAId, now.AddDays(1), now.AddDays(1).AddHours(2), oppVersion));
+        Assert.Equal(HttpStatusCode.Created, createSurveyRes.StatusCode);
+        var survey = (await createSurveyRes.Content.ReadFromJsonAsync<SiteSurveyResponse>())!;
+        var draft = survey.CurrentRevision!;
+        Assert.Equal(v4Code, draft.SurveyTemplateVersion);
+
+        // 3. Update draft with 1 area, checklist, and revision evidence (no area attachment yet)
+        var revEvidenceFileId = await SeedEvidenceFileAsync(oppId);
+        var updated = (await (await PutDraftAsync(oppId, survey.Id, draft, DraftBody(
+            draft,
+            new List<UpdateSurveyChecklistRequest> { new(SurveyChecklistItems.SiteAccessConfirmed, ChecklistResultValue.Pass, null) },
+            new List<UpdateSurveyEvidenceRequest> { new(revEvidenceFileId, EvidenceKind.SitePhoto, "ภาพรวมหน้างาน", 1) })))
+            .Content.ReadFromJsonAsync<SiteSurveyRevisionResponse>())!;
+        var areaId = Assert.Single(updated.Areas!).Id;
+
+        Guid oppVersionNow;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            oppVersionNow = (await scope.ServiceProvider.GetRequiredService<AppDbContext>().Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId)).RowVersion;
+        }
+
+        // 4. MarkReady fails with 422 SURVEY_NOT_READY when the area has fewer than MinimumAreaEvidenceCount attachments
+        var markUrl = $"/api/v1/opportunities/{oppId}/surveys/{survey.Id}/revisions/{updated.Id}/mark-ready";
+        var missingAreaEv = await PostAsync(markUrl, $"v4-ready-missing-{Guid.NewGuid():N}", new MarkSurveyReadyRequest(updated.RowVersion, oppVersionNow));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, missingAreaEv.StatusCode);
+
+        // 5. Attach area evidence via /api/v1/attachment-owners/survey-area/{areaId}/attachments
+        var areaFileId = await SeedEvidenceFileAsync(areaId, AttachmentOwnerTypes.SurveyArea);
+        var attachRes = await PostAsync(
+            $"/api/v1/attachment-owners/{AttachmentOwnerTypes.SurveyArea}/{areaId}/attachments",
+            $"v4-area-attach-{Guid.NewGuid():N}",
+            new AttachFilesRequest("evidence", new[] { areaFileId }));
+        Assert.Equal(HttpStatusCode.Created, attachRes.StatusCode);
+        var areaAttachments = (await attachRes.Content.ReadFromJsonAsync<AttachmentListResponse>())!;
+        Assert.Single(areaAttachments.Items);
+
+        // 6. MarkReady now succeeds and produces a v4: snapshot hash; once Ready, the survey-area owner is locked against new attachments
+        var ready = await MarkReadyAsync(oppId, survey.Id, updated, $"v4-ready-ok-{Guid.NewGuid():N}");
+        Assert.Equal(SurveyRevisionStatus.Ready, ready.Status);
+        Assert.StartsWith("v4:", ready.SnapshotHash);
+
+        var extraAreaFileId = await SeedEvidenceFileAsync(areaId, AttachmentOwnerTypes.SurveyArea);
+        var lockedAttachRes = await PostAsync(
+            $"/api/v1/attachment-owners/{AttachmentOwnerTypes.SurveyArea}/{areaId}/attachments",
+            $"v4-area-locked-{Guid.NewGuid():N}",
+            new AttachFilesRequest("evidence", new[] { extraAreaFileId }));
+        Assert.Equal(HttpStatusCode.Conflict, lockedAttachRes.StatusCode);
+
+        // 7. Retire the v4 template; existing Ready revision keeps its template, while list shows EffectiveToUtc populated
+        var retireReq = CreateAuthenticatedRequest(HttpMethod.Post, $"/api/v1/survey-template-versions/{v4Code}/retire", "token-org-a", MembershipAId);
+        var retireRes = await _client.SendAsync(retireReq);
+        Assert.Equal(HttpStatusCode.OK, retireRes.StatusCode);
+        var retired = (await retireRes.Content.ReadFromJsonAsync<SurveyTemplateVersionResponse>())!;
+        Assert.NotNull(retired.EffectiveToUtc);
     }
 }
 

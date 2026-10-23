@@ -7,10 +7,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
+using TanErp.Api.Contracts.Attachments;
 using TanErp.Api.Contracts.QuickEstimates;
 using TanErp.Api.ErrorHandling;
+using TanErp.Application.Estimates;
+using TanErp.Domain.Crm.Customers;
+using TanErp.Domain.Crm.Opportunities;
+using TanErp.Domain.Crm.Sites;
+using TanErp.Domain.Files;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
+using TanErp.Domain.Surveys;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
@@ -359,5 +366,198 @@ public class QuickEstimateEndpointsTests : IAsyncLifetime
         var key = Key();
         var first = await Ok<QuickEstimateResponse>(await SendAsync(HttpMethod.Post, "/api/v1/quick-estimates", new CreateQuickEstimateRequest(null, null), key: key), HttpStatusCode.Created);
         Assert.Equal(first.Id, (await Ok<QuickEstimateResponse>(await SendAsync(HttpMethod.Post, "/api/v1/quick-estimates", new CreateQuickEstimateRequest(null, null), key: key), HttpStatusCode.Created)).Id);
+    }
+
+    [Fact]
+    public async Task BranchRateOverrides_AndConversionWithAttachments_WorkEndToEnd()
+    {
+        var template = await ActiveTemplateAsync("QE-G09-WARDROBE");
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // 1. Create a second branch (Branch2) and a branch-bound membership for Approver on Branch2 to test cross-branch isolation
+        Guid branch2Id = Guid.NewGuid();
+        Guid branch2MembershipId = Guid.NewGuid();
+        Guid customerId;
+        Guid oppId;
+        Guid surveyRevId;
+        Guid uploadedPhotoId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            var branch2 = new Branch(branch2Id, OrgId, "B02-G09", "สาขา 2 G09", true, now);
+            db.Branches.Add(branch2);
+            var adminRole = await db.Roles.SingleAsync(r => r.OrganizationId == OrgId && r.Name == "Test Admin");
+            db.Memberships.Add(new Membership(branch2MembershipId, OrgId, branch2Id, ApproverUserId, isActive: true));
+            db.MembershipRoles.Add(new MembershipRole(branch2MembershipId, adminRole.Id, OrgId));
+
+            // Seed Customer, Site, Opportunity (Estimating), Ready Survey Revision, and UploadedFile for conversion & attachments
+            var customer = Customer.CreateDraft(
+                Guid.NewGuid(), OrgId, UserId, CustomerType.Person, "ลูกค้า G09", null, "th",
+                new PrimaryContactInput("คุณสมชาย G09", null, "0812345678", null, "phone"), now);
+            customer.Activate(customer.RowVersion);
+            var siteAddress = new SiteAddressInput("99 ถนนพระราม 9", "ห้วยขวาง", "ห้วยขวาง", "กรุงเทพมหานคร", "10310", "TH");
+            var site = Site.CreateActive(Guid.NewGuid(), OrgId, customer.Id, UserId, "ไซต์ G09", siteAddress, 13.7m, 100.5m, null, now);
+            var opp = Opportunity.CreateDraft(
+                Guid.NewGuid(), OrgId, BranchId, customer.Id, site.Id, UserId, UserId,
+                "โครงการบิลต์อิน G09", "งานตู้เสื้อผ้า", new[] { "built-in" }, null, 500000m, "THB",
+                new DateOnly(2026, 12, 31), now.AddDays(2), "เตรียมประเมินราคา", now);
+            opp.Qualify(opp.RowVersion);
+            opp.EnterSurveying(opp.RowVersion, site.Id);
+            opp.EnterEstimating(opp.RowVersion);
+            var survey = SiteSurvey.CreateAppointment(OrgId, BranchId, opp.Id, site.Id, UserId, UserId, now, now.AddHours(2), now);
+            var surveyRev = SiteSurveyRevision.CreateBaseline(OrgId, survey.Id, UserId, now);
+            var area = new SiteSurveyArea(Guid.NewGuid(), OrgId, surveyRev.Id, "AREA-01", "ห้องนอนใหญ่", null, 1);
+            area.AddMeasurement(new SiteSurveyMeasurement(Guid.NewGuid(), OrgId, area.Id, "width", 3.0m, "m", "measured", null, 1));
+            surveyRev.AddArea(area);
+            surveyRev.UpdateDraft(now, "สำรวจห้องนอนใหญ่", null, null, null);
+            surveyRev.MarkReady(UserId, now, "1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff");
+
+            var photo = new UploadedFile(Guid.NewGuid(), OrgId, "qe-g09/photo1.jpg", "photo1.jpg", "image/jpeg", 2048, "qe-g09-session-1", UserId, now);
+            db.Customers.Add(customer);
+            db.Sites.Add(site);
+            db.Opportunities.Add(opp);
+            db.SiteSurveys.Add(survey);
+            db.SiteSurveyRevisions.Add(surveyRev);
+            db.UploadedFiles.Add(photo);
+            await db.SaveChangesAsync();
+
+            customerId = customer.Id;
+            oppId = opp.Id;
+            surveyRevId = surveyRev.Id;
+            uploadedPhotoId = photo.Id;
+        }
+
+        // 2. Branch Rate Override lifecycle: POST request -> overlap 409 -> self-approval 422 -> cross-branch 404 -> second admin approves -> QE calculation uses override rate -> revoke
+        var overrideBody = new BranchRateOverrideRequest(10000m, 25000m, today.AddDays(-1), today.AddDays(30), "REGIONAL_COST", "ค่าขนส่งและแรงงานพื้นที่พิเศษ", "REF-G09-01");
+        var overrideKey = Key();
+        var createdOverride = await Ok<BranchRateOverrideResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/pricing-templates/{template.Id}/branch-rate-overrides", overrideBody, key: overrideKey),
+            HttpStatusCode.Created);
+        Assert.Equal(("requested", 10000m, 25000m, BranchId), (createdOverride.Status, createdOverride.ReferenceRate, createdOverride.MinimumCharge, createdOverride.BranchId));
+
+        // Overlapping request in same branch returns 409 BRANCH_OVERRIDE_OVERLAP
+        var overlapRes = await SendAsync(HttpMethod.Post, $"/api/v1/pricing-templates/{template.Id}/branch-rate-overrides",
+            overrideBody with { EffectiveFrom = today, EffectiveTo = today.AddDays(10) }, key: Key());
+        Assert.Equal(HttpStatusCode.Conflict, overlapRes.StatusCode);
+        Assert.Equal("BRANCH_OVERRIDE_OVERLAP", await ErrorCodeAsync(overlapRes));
+
+        // Self-approval by requester returns 403 BRANCH_OVERRIDE_SELF_APPROVAL
+        var selfApproveRes = await SendAsync(HttpMethod.Post, $"/api/v1/pricing-templates/{template.Id}/branch-rate-overrides/{createdOverride.Id}/decision",
+            new BranchRateOverrideDecisionRequest("approved", "อนุมัติเอง"), ifMatch: createdOverride.RowVersion);
+        Assert.Equal(HttpStatusCode.Forbidden, selfApproveRes.StatusCode);
+        Assert.Equal("BRANCH_OVERRIDE_SELF_APPROVAL", await ErrorCodeAsync(selfApproveRes));
+
+        // Cross-branch approver (bound to Branch2) gets 404 RESOURCE_NOT_FOUND
+        var crossBranchRes = await SendAsync(HttpMethod.Post, $"/api/v1/pricing-templates/{template.Id}/branch-rate-overrides/{createdOverride.Id}/decision",
+            new BranchRateOverrideDecisionRequest("approved", "ข้ามสาขา"), token: "token-approver", membership: branch2MembershipId, ifMatch: createdOverride.RowVersion);
+        Assert.Equal(HttpStatusCode.NotFound, crossBranchRes.StatusCode);
+        Assert.Equal("RESOURCE_NOT_FOUND", await ErrorCodeAsync(crossBranchRes));
+
+        // Second admin in same branch approves the override
+        var approvedOverride = await Ok<BranchRateOverrideResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/pricing-templates/{template.Id}/branch-rate-overrides/{createdOverride.Id}/decision",
+                new BranchRateOverrideDecisionRequest("approved", "อนุมัติเรตสาขา"), token: "token-approver", ifMatch: createdOverride.RowVersion));
+        Assert.Equal("approved", approvedOverride.Status);
+
+        var overrideList = await Ok<BranchRateOverrideListResponse>(
+            await SendAsync(HttpMethod.Get, $"/api/v1/pricing-templates/{template.Id}/branch-rate-overrides"));
+        Assert.Single(overrideList.Items);
+
+        // 3. Create Quick Estimate linked to Customer & Opportunity, attach photo via 'quick-estimate' attachment owner, and verify signature is rejected
+        var qe = await Ok<QuickEstimateResponse>(
+            await SendAsync(HttpMethod.Post, "/api/v1/quick-estimates", new CreateQuickEstimateRequest(customerId, oppId), key: Key()),
+            HttpStatusCode.Created);
+
+        Guid secondPhotoId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            var session1 = new FileUploadSession(Guid.NewGuid(), OrgId, "quick-estimate", qe.Id, null, UserId, now, now.AddHours(1), Guid.NewGuid().ToString("N"), Guid.NewGuid().ToString("N"));
+            var file1 = new UploadedFile(Guid.NewGuid(), OrgId, $"{OrgId}/{session1.Id}/photo1.webp", "photo1.webp", "image/webp", 2048, session1.Id.ToString(), UserId, now, contentSha256: Guid.NewGuid().ToString("N"));
+            var session2 = new FileUploadSession(Guid.NewGuid(), OrgId, "quick-estimate", qe.Id, null, UserId, now, now.AddHours(1), Guid.NewGuid().ToString("N"), Guid.NewGuid().ToString("N"));
+            var file2 = new UploadedFile(Guid.NewGuid(), OrgId, $"{OrgId}/{session2.Id}/photo2.webp", "photo2.webp", "image/webp", 2048, session2.Id.ToString(), UserId, now, contentSha256: Guid.NewGuid().ToString("N"));
+            db.FileUploadSessions.AddRange(session1, session2);
+            db.UploadedFiles.AddRange(file1, file2);
+            await db.SaveChangesAsync();
+            uploadedPhotoId = file1.Id;
+            secondPhotoId = file2.Id;
+        }
+
+        var attachRes = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/attachment-owners/quick-estimate/{qe.Id}/attachments",
+            new AttachFilesRequest("evidence", new[] { uploadedPhotoId }),
+            key: Key());
+        var attachedList = await Ok<AttachmentListResponse>(attachRes, HttpStatusCode.Created);
+        Assert.Single(attachedList.Items);
+        Assert.Equal(("quick-estimate", qe.Id, uploadedPhotoId), (attachedList.Items[0].OwnerType, attachedList.Items[0].OwnerId, attachedList.Items[0].FileId));
+
+        // Signatures are never allowed on quick-estimate (SignStates is empty -> 409 ATTACHMENT_OWNER_LOCKED)
+        var sigRes = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/attachment-owners/quick-estimate/{qe.Id}/signatures",
+            new CaptureSignatureRequest("handover", "คุณลูกค้า ใจดี", "เจ้าของบ้าน", secondPhotoId, true, "handover-2026-10-v1"),
+            key: Key());
+        Assert.Equal(HttpStatusCode.Conflict, sigRes.StatusCode);
+        Assert.Equal("ATTACHMENT_OWNER_LOCKED", await ErrorCodeAsync(sigRes));
+
+        // 4. Calculate Quick Estimate: uses the approved BranchRateOverride (rate 10,000 instead of 8,000)
+        //    3.0 x 2.6 = 7.8 m² x 10,000 x 1.3 (premium) + 5,000 delivery = 106,400 THB
+        qe = await PatchAsync(qe, FullDraft(template.Id));
+        var calculated = await CalculateAsync(qe);
+        Assert.Equal(106400m, calculated.CurrentCalculation!.NetAmount);
+        Assert.Equal(approvedOverride.Id, calculated.CurrentCalculation.BranchOverrideId);
+
+        // 5. Convert Quick Estimate to Official Estimate draft (idempotent, populates 'QE' section work items and records MappedLineCount)
+        var convertKey = Key();
+        var convertBody = new ConversionRequest(1, surveyRevId);
+        var converted = await Ok<QuickEstimateResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/quick-estimates/{qe.Id}/conversion", convertBody, key: convertKey),
+            HttpStatusCode.Created);
+        Assert.Equal("converted", converted.Status);
+        var conversion = Assert.Single(converted.Conversions);
+        Assert.Equal(1, conversion.MappedLineCount);
+
+        // Replay with same Idempotency-Key returns same conversion without error
+        var replayed = await Ok<QuickEstimateResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/quick-estimates/{qe.Id}/conversion", convertBody, key: convertKey),
+            HttpStatusCode.Created);
+        Assert.Equal(conversion.OfficialEstimateId, Assert.Single(replayed.Conversions).OfficialEstimateId);
+
+        // New key after conversion returns 409 QUICK_ESTIMATE_ALREADY_CONVERTED
+        var duplicateConvert = await SendAsync(HttpMethod.Post, $"/api/v1/quick-estimates/{qe.Id}/conversion", convertBody, key: Key());
+        Assert.Equal(HttpStatusCode.Conflict, duplicateConvert.StatusCode);
+        Assert.Equal("QUICK_ESTIMATE_ALREADY_CONVERTED", await ErrorCodeAsync(duplicateConvert));
+
+        // Verify the Official Estimate draft in DB has the mapped 'QE' section and work item
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var estimateStore = scope.ServiceProvider.GetRequiredService<IEstimateStore>();
+            var officialEstimate = await estimateStore.GetByIdAsync(OrgId, conversion.OfficialEstimateId, CancellationToken.None);
+            Assert.NotNull(officialEstimate);
+            var qeSection = Assert.Single(officialEstimate!.CurrentRevision!.Sections);
+            Assert.Equal("QE", qeSection.Code);
+            var qeWorkItem = Assert.Single(qeSection.WorkItems);
+            Assert.Equal(("QE-01", 7.8m, "m2", "QUICK_ESTIMATE_CONVERSION"),
+                (qeWorkItem.Code, qeWorkItem.Quantity, qeWorkItem.UnitCode, qeWorkItem.OverrideReasonCode));
+        }
+
+        // Attachments are locked once QuickEstimate is in 'converted' state
+        var attachAfterConvert = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/attachment-owners/quick-estimate/{qe.Id}/attachments",
+            new AttachFilesRequest("evidence", new[] { secondPhotoId }),
+            key: Key());
+        Assert.Equal(HttpStatusCode.Conflict, attachAfterConvert.StatusCode);
+        Assert.Equal("ATTACHMENT_OWNER_LOCKED", await ErrorCodeAsync(attachAfterConvert));
+
+        // 6. Revoke the branch rate override
+        var revokedOverride = await Ok<BranchRateOverrideResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/pricing-templates/{template.Id}/branch-rate-overrides/{approvedOverride.Id}/revoke",
+                new BranchRateOverrideRevokeRequest("ยกเลิกเรตพิเศษหลังจบแคมเปญ"), token: "token-approver", ifMatch: approvedOverride.RowVersion));
+        Assert.Equal("revoked", revokedOverride.Status);
     }
 }

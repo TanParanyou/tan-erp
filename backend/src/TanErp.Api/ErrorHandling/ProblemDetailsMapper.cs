@@ -429,9 +429,13 @@ public static class ProblemDetailsMapper
         StatusCodes.Status403Forbidden => code,
         StatusCodes.Status404NotFound => code,
         StatusCodes.Status409Conflict => code,
+        StatusCodes.Status410Gone => code,
         StatusCodes.Status422UnprocessableEntity => code,
+        StatusCodes.Status423Locked => code,
         StatusCodes.Status428PreconditionRequired => code,
-        StatusCodes.Status500InternalServerError when code == "INTERNAL_SERVER_ERROR" => code,
+        StatusCodes.Status429TooManyRequests => code,
+        StatusCodes.Status503ServiceUnavailable => code,
+        StatusCodes.Status500InternalServerError when code is "INTERNAL_SERVER_ERROR" or "ITEM_IMPORT_JOB_FAILED" => code,
         _ => "INTERNAL_SERVER_ERROR"
     };
 

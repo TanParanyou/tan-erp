@@ -2,29 +2,26 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-17 (G-06: Item Import Phase 2) — no tests written, none run (per user).**
+**Implemented 2026-10-17 (G-06: Item Import Phase 2) — Verified 2026-10-23: Unit + Integration + Vitest passed; Migration `AddItemImportJobs` applied บน local DB.**
 
-- ตามคำสั่งผู้ใช้ รอบนี้ **ไม่ได้เขียน test ใหม่** และ **ไม่ได้รัน test ใด ๆ** (`dotnet test`, `vitest`, Playwright) มีเพียง compile/lint/build
-- **ไม่ได้ตรวจในเบราว์เซอร์** และไม่ได้รัน worker กับฐานข้อมูลจริง
-- migration `AddItemImportJobs` สร้างด้วย `dotnet ef migrations add` แล้ว **ยังไม่ได้ apply กับฐานข้อมูลใด ๆ**
+- ชุดทดสอบ Unit (`ItemImportCsvTests`), Integration (`ItemImportEndpointsTests.Phase2_UpsertMode_CostDraftOnlyImport_AndBatchImportJobs_WorkEndToEnd`) และ Frontend Vitest (`item-import-modal.test.tsx`, `item-import-job-panel.test.tsx`) เขียนและรันผ่านครบเมื่อ 2026-10-23
+- **ยังไม่ได้ตรวจด้วยสายตาในเบราว์เซอร์**
 - ยังไม่ผ่าน UAT และยังไม่พร้อม Production
-- ไฟล์ test เดิม `item-import-modal.test.tsx` แก้ 1 จุดเท่านั้นเพราะพฤติกรรมเปลี่ยนโดยตั้งใจ: ไฟล์ 1 MB–10 MB ถูกส่งเป็น job แทนการถูกปฏิเสธ (เพดานปฏิเสธเป็น 10 MB) — ไม่ได้รันยืนยัน
 
 เอกสารที่เกี่ยวข้อง: [ADR 0026](../adr/0026-item-import-phase2.md), [แผน G-06](../superpowers/plans/2026-10-05-erp-gap-closure-plan.md), [Item Verification](item-master-estimate-catalog-verification.md)
 
-## 2. ผลที่รันจริง (compile/lint/build เท่านั้น)
+## 2. ผลที่รันจริง (อัปเดต 2026-10-23)
 
 | คำสั่ง | ผล |
 | --- | --- |
 | `dotnet build` (backend) | `0 Warning(s)` `0 Error(s)` |
-| `dotnet ef migrations add AddItemImportJobs` | สร้างสำเร็จ |
+| `ItemImportCsvTests` (`TanErp.UnitTests`) | **Passed** (รวม `CostImportCsv_ParseAndValidate_EnforcesColumnsScopeBranchCurrencyAndQuantities`) |
+| `ItemImportEndpointsTests.Phase2_UpsertMode_CostDraftOnlyImport_AndBatchImportJobs_WorkEndToEnd` (`TanErp.IntegrationTests`) | **Passed 1/1** (10s) |
+| `item-import-modal.test.tsx` + `item-import-job-panel.test.tsx` (`Vitest`) | **Passed** |
 | `cd frontend && npx tsc --noEmit` | exit 0 |
 | `cd frontend && npm run lint` | exit 0 |
 | `cd frontend && npm run build` | ผ่าน |
-| `cd frontend && npm run check:api` | ผ่านหลัง stage ไฟล์ (snapshot + generated types ตรงกัน) |
-| OpenAPI snapshot | regenerate จาก swagger สดด้วย formatter ที่ round-trip ไบต์เดียวกับไฟล์เดิม; เปลี่ยนเฉพาะการเพิ่ม (2 path, schema ของ job, ฟิลด์ `kind`/`mode`/`outcome`/counts) |
-
-ผลนี้ยืนยันเพียงว่าคอมไพล์ lint และ build ผ่าน ไม่ได้พิสูจน์พฤติกรรม
+| `cd frontend && npm run check:api` | ผ่าน (snapshot + generated types ตรงกัน) |
 
 ## 3. สิ่งที่เปลี่ยน
 

@@ -1,3 +1,5 @@
+using TanErp.Application.QuickEstimates;
+using TanErp.Domain.Estimates;
 using TanErp.Domain.QuickEstimates;
 using Xunit;
 
@@ -166,5 +168,41 @@ public class QuickEstimateEngineTests
         Assert.Equal("PRICING_TEMPLATE_INVALID", Assert.Throws<QuickEstimateException>(() => new PricingTemplate(Guid.NewGuid(), Org, "X", 1, WorkType.BuiltIn, "x", MeasurementRule.Area, "m2", 0m, 0m, 0m, 0m, 1m, 7, 0m, TaxDisplay.Exclusive, 0m, null, null, Config(), Maker, Now)).Code);
         Assert.Equal("PRICING_TEMPLATE_INVALID", Assert.Throws<QuickEstimateException>(() => new PricingTemplate(Guid.NewGuid(), Org, "X", 1, WorkType.BuiltIn, "x", MeasurementRule.Area, "m2", 100m, 0m, 0.3m, 0.2m, 1m, 7, 0m, TaxDisplay.Exclusive, 0m, null, null, Config(), Maker, Now)).Code);
         Assert.Equal("PRICING_TEMPLATE_INVALID", Assert.Throws<QuickEstimateException>(() => new PricingTemplate(Guid.NewGuid(), Org, "X", 1, WorkType.BuiltIn, "x", MeasurementRule.Area, "m2", 100m, 0m, 0.1m, 0.2m, 1m, 7, 0m, TaxDisplay.Exclusive, 0m, null, null, TemplateConfig.Empty, Maker, Now)).Code);
+    }
+
+    [Fact]
+    public void ConversionMapper_BuildsScopeWorkItemsWithoutCopyingPrices_AndBranchRateOverrideEnforcesMakerChecker()
+    {
+        var template = Template();
+        var line1 = new MeasurementLine(Guid.Parse("00000000-0000-0000-0000-000000000001"), "ตู้เสื้อผ้าบานเลื่อน", 3.0m, 2.6m, null, 1);
+        var line2 = new MeasurementLine(Guid.Parse("00000000-0000-0000-0000-000000000002"), null, 2.0m, 2.5m, null, 2);
+        var calc = QuickEstimateEngine.Calculate(template, Input(lines: new[] { line1, line2 }), Today, new RateOverride(Guid.NewGuid(), 9500m, 25000m));
+
+        var sections = QuickEstimateConversionMapper.BuildSections("QE-2026-0001", "ห้องนอนใหญ่", 3, template.Code, calc.SnapshotJson);
+        var section = Assert.Single(sections);
+        Assert.Equal(QuickEstimateConversionMapper.SectionCode, section.Code);
+        Assert.Equal("ห้องนอนใหญ่", section.NameTh);
+        Assert.Equal(2, section.WorkItems.Count);
+        Assert.Equal(("QE-01", "QE-BI-WARDROBE · ตู้เสื้อผ้าบานเลื่อน", 7.8m, "m2", SellingRuleType.Margin, QuickEstimateConversionMapper.DefaultMargin, QuickEstimateConversionMapper.ReasonCode, "QE-2026-0001 · v3"),
+            (section.WorkItems[0].Code, section.WorkItems[0].DescriptionTh, section.WorkItems[0].Quantity, section.WorkItems[0].UnitCode, section.WorkItems[0].SellingRuleType, section.WorkItems[0].SellingRuleValue, section.WorkItems[0].OverrideReasonCode, section.WorkItems[0].OverrideReason));
+        Assert.Empty(section.WorkItems[0].CostComponents);
+        Assert.Equal(("QE-02", "QE-BI-WARDROBE · ห้องนอนใหญ่", 10.0m),
+            (section.WorkItems[1].Code, section.WorkItems[1].DescriptionTh, section.WorkItems[1].Quantity));
+
+        // BranchRateOverride maker-checker & period invariants
+        var branchId = Guid.NewGuid();
+        var rateOverride = new BranchRateOverride(
+            Guid.NewGuid(), Org, branchId, template.Id, 9500m, 25000m, Today, Today.AddDays(30),
+            "REGIONAL_LABOR", "ค่าแรงพื้นที่เกาะสมุยสูงกว่ามาตรฐาน", "MEMO-2026-09", Maker, Today, Now);
+        Assert.Equal(OverrideStatus.Requested, rateOverride.Status);
+        Assert.Equal("BRANCH_OVERRIDE_SELF_APPROVAL", Assert.Throws<QuickEstimateException>(() => rateOverride.Decide(true, null, Maker, Today, Now)).Code);
+        Assert.Equal("QUICK_ESTIMATE_REASON_REQUIRED", Assert.Throws<QuickEstimateException>(() => rateOverride.Decide(false, " ", Guid.NewGuid(), Today, Now)).Code);
+
+        var approver = Guid.NewGuid();
+        rateOverride.Decide(true, "อนุมัติอัตราพื้นที่พิเศษ", approver, Today, Now);
+        Assert.Equal(OverrideStatus.Approved, rateOverride.Status);
+        Assert.Equal("QUICK_ESTIMATE_REASON_REQUIRED", Assert.Throws<QuickEstimateException>(() => rateOverride.Revoke(" ", approver, Now)).Code);
+        rateOverride.Revoke("สิ้นสุดโปรเจกต์พื้นที่พิเศษ", approver, Now);
+        Assert.Equal(OverrideStatus.Revoked, rateOverride.Status);
     }
 }

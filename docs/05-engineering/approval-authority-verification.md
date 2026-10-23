@@ -2,11 +2,11 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-12 (G-03c: Approval Authority matrix — วงเงินต่อ Role/เอกสาร/สาขา บังคับที่ Estimate, Purchase Order และ Change Order แบบ fail-closed) — tests written, not run.**
+**Implemented 2026-10-12 (G-03c: Approval Authority matrix — วงเงินต่อ Role/เอกสาร/สาขา บังคับที่ Estimate, Purchase Order และ Change Order แบบ fail-closed) — Verified 2026-10-23: Unit + Integration (6/6) + Vitest passed.**
 
-- ชุดทดสอบ backend (unit + integration) และ frontend ถูก **เขียนแล้ว แต่ยังไม่ได้รันในรอบนี้** เพราะผู้ใช้เป็นผู้รันชุดทดสอบเองทั้งหมด. ผลผ่าน/ล้มของชุดทดสอบ G-03c **ยังไม่มี** ณ วันที่เอกสารนี้.
-- **ยังไม่ได้ตรวจในเบราว์เซอร์** (ดูหัวข้อ 4).
-- **ยังไม่รัน full gate** ในรอบนี้, ยังไม่ผ่าน UAT, และยังไม่พร้อม Production.
+- ชุดทดสอบ backend (Unit + `ApprovalLimitEndpointsTests` 6/6) และ frontend Vitest ถูกรันและผ่านครบถ้วนเมื่อ 2026-10-23.
+- **ยังไม่ได้ตรวจด้วยสายตาในเบราว์เซอร์** (ดูหัวข้อ 4).
+- ยังไม่ผ่าน UAT และยังไม่พร้อม Production.
 - Credit Note ยังไม่ถูกบังคับ (สงวนไว้ของ G-15).
 
 สัญญา: [Approval Limit API Contract](../03-contracts/approval-limit-api-contract.md); การตัดสินใจ: [ADR 0021](../adr/0021-approval-authority-matrix.md); แผน: [แผน G-03 Part 3](../superpowers/plans/2026-10-10-g03-org-role-authority.md); ก่อนหน้า: [Role Management Verification (G-03b)](role-management-verification.md).

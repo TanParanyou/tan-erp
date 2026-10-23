@@ -2,29 +2,25 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-15 (G-09: Quick Estimate Completion) — no tests written, none run (per user).**
+**Implemented 2026-10-15 (G-09: Quick Estimate Completion) — Verified 2026-10-23: Unit + Integration + Vitest passed.**
 
-- ตามคำสั่งผู้ใช้ รอบนี้ **ไม่ได้เขียน test ใหม่** และ **ไม่ได้รัน test ใด ๆ** (`dotnet test`, `vitest`, Playwright, mutation check) มีเพียงการตรวจแบบ compile/lint/build และเครื่องมือ build (ดูหัวข้อ 2)
-- **ไม่ได้ตรวจในเบราว์เซอร์**
-- migration `AddBranchRateOverrides` apply กับ local dev database แล้วเท่านั้น (ยังไม่ apply ใน environment อื่น)
+- ชุดทดสอบ Unit (`QuickEstimateEngineTests`), Integration (`QuickEstimateEndpointsTests.BranchRateOverrides_AndConversionWithAttachments_WorkEndToEnd`) และ Frontend Vitest (`pricing-template-overrides.test.tsx`) เขียนและรันผ่านครบเมื่อ 2026-10-23
+- **ยังไม่ได้ตรวจด้วยสายตาในเบราว์เซอร์**
+- migration `AddBranchRateOverrides` apply กับ local dev database แล้ว (ยังไม่ apply ใน environment อื่น)
 - ยังไม่ผ่าน UAT และยังไม่พร้อม Production
 
 เอกสารที่เกี่ยวข้อง: [ADR 0025](../adr/0025-quick-estimate-branch-override-and-scope-line-conversion.md), [แผน G-09](../superpowers/plans/2026-10-15-g09-quick-estimate-completion.md), [Quick Estimate API](../03-contracts/quick-estimate-api-contract.md), [Quick Estimate Verification (CP-16)](quick-estimate-verification.md)
 
-## 2. ผลที่รันจริง (compile/lint/build เท่านั้น)
+## 2. ผลที่รันจริง (อัปเดต 2026-10-23)
 
 | คำสั่ง | ผล | รันเมื่อ |
 | --- | --- | --- |
-| `dotnet build backend/TanErp.slnx --nologo -v q` | `0 Warning(s)` `0 Error(s)` | รอบเอกสารนี้ (2026-10-15) |
-| `dotnet ef migrations has-pending-model-changes` | `No changes have been made to the model since the last migration.` | รอบเอกสารนี้ |
-| `cd frontend && npx tsc --noEmit` | exit 0 | รอบเอกสารนี้ |
-| `cd frontend && npm run lint` | exit 0 | รอบเอกสารนี้ |
-| `cd frontend && npm run check:api` | สำเร็จ (generate แล้วตรงกับ index) | รอบเอกสารนี้ |
-| formatter OpenAPI round-trip ไบต์เดียวกับ snapshot เดิม (`FORMATTER_OK`) แล้ว regenerate snapshot จาก swagger สด | ผ่าน; เทียบ JSON เดิมกับใหม่ได้เฉพาะการเพิ่ม (3 path, 5 schema, `branchOverrideId`, `mappedLineCount`, tag `BranchRateOverrides`) ไม่มีการลบหรือแก้ของเดิม | Task 7 (2026-10-15) |
-| key parity `th`/`en` และ `npm run build` | `KEY_PARITY_OK`; build ผ่าน | Task 8 (2026-10-15) — ไม่ได้รันซ้ำในรอบเอกสารนี้ |
-| migration `AddBranchRateOverrides` | apply กับ local dev database แล้ว (โดย controller) | ก่อนหน้า |
-
-ผลข้างต้นยืนยันเพียงว่า **คอมไพล์ lint และ build ผ่าน** ไม่ได้ยืนยันว่า logic ถูกต้อง ไม่มีการพิสูจน์พฤติกรรมด้วย test ผลของ Task 2–6 ที่เป็น compile-only เป็นผลที่ยกมาจาก Task ก่อนหน้า
+| `dotnet build backend/TanErp.slnx --nologo -v q` | `0 Warning(s)` `0 Error(s)` | 2026-10-23 |
+| `QuickEstimateEngineTests` (`TanErp.UnitTests`) | **Passed** (รวม `ConversionMapper_BuildsScopeWorkItemsWithoutCopyingPrices_AndBranchRateOverrideEnforcesMakerChecker`) | 2026-10-23 |
+| `QuickEstimateEndpointsTests.BranchRateOverrides_AndConversionWithAttachments_WorkEndToEnd` (`TanErp.IntegrationTests`) | **Passed 1/1** (11s) | 2026-10-23 |
+| `pricing-template-overrides.test.tsx` (`Vitest`) | **Passed** | 2026-10-23 |
+| `cd frontend && npx tsc --noEmit && npm run lint && npm run check:api && npm run build` | ผ่าน | 2026-10-23 |
+| migration `AddBranchRateOverrides` | apply กับ local dev database แล้ว | 2026-10-23 |
 
 ## 3. สิ่งที่เปลี่ยน
 

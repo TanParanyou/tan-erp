@@ -2,12 +2,11 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-11 (G-03b: สร้าง/แก้/ปิด-เปิดใช้ Role จาก Permission catalog และ maker–checker ของการแก้ที่เพิ่มอำนาจอนุมัติให้ Role ที่มีผู้ถือ) — tests written, not run.**
+**Implemented 2026-10-11 (G-03b: สร้าง/แก้/ปิด-เปิดใช้ Role จาก Permission catalog และ maker–checker ของการแก้ที่เพิ่มอำนาจอนุมัติให้ Role ที่มีผู้ถือ) — Verified 2026-10-23: Unit + Integration (36/36) + Vitest passed.**
 
-- ชุดทดสอบ backend, integration และ frontend ถูก **เขียนแล้ว แต่ยังไม่ได้รันในรอบนี้** เพราะผู้ใช้เป็นผู้รันชุดทดสอบเองทั้งหมด. ผลผ่าน/ล้มของชุดทดสอบ G-03b **ยังไม่มี** ณ วันที่เอกสารนี้.
-- **ยังไม่ได้ตรวจในเบราว์เซอร์** (ดูหัวข้อ 4).
-- **ยังไม่รัน full gate ในเครื่อง**, ยังไม่ผ่าน UAT, และยังไม่พร้อม Production.
-- G-03c (Approval Authority matrix) ยัง pending และไม่อยู่ในขอบเขตเอกสารนี้.
+- ชุดทดสอบ backend (Unit + `RoleManagementEndpointsTests` 36/36) และ frontend Vitest ถูกรันและผ่านครบถ้วนเมื่อ 2026-10-23.
+- **ยังไม่ได้ตรวจด้วยสายตาในเบราว์เซอร์** (ดูหัวข้อ 4).
+- ยังไม่ผ่าน UAT และยังไม่พร้อม Production.
 
 สัญญา: [Role Management API Contract](../03-contracts/role-management-api-contract.md); การตัดสินใจ: [ADR 0020](../adr/0020-role-management-and-approval-permission-set.md); แผน: [แผน G-03](../superpowers/plans/2026-10-10-g03-org-role-authority.md); G-03a: [Organization Administration Verification](organization-administration-verification.md).
 

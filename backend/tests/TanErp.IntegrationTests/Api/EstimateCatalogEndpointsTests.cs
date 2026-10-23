@@ -9,11 +9,18 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TanErp.Api;
+using TanErp.Api.Contracts.Estimates;
 using TanErp.Api.Contracts.Items;
+using TanErp.Application.Estimates;
+using TanErp.Application.Items;
+using TanErp.Domain.Crm.Customers;
+using TanErp.Domain.Crm.Opportunities;
+using TanErp.Domain.Crm.Sites;
 using TanErp.Domain.Estimates;
 using TanErp.Domain.Items;
 using TanErp.Domain.Files;
 using TanErp.Domain.Organization;
+using TanErp.Domain.Surveys;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
 using TanErp.IntegrationTests.Support;
@@ -477,5 +484,210 @@ public class EstimateCatalogEndpointsTests : IAsyncLifetime
         var res = await _client.SendAsync(req);
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task EstimateUnitConversion_ResolverOptionsAndFrozenSnapshot_WorkEndToEnd()
+    {
+        Guid solarItemId;
+        Guid unitPieceId;
+        Guid unitBoxId;
+        Guid unitMeterId;
+        Guid sharedBoxConvId;
+        Guid itemBoxConvId;
+        Guid estimateId;
+        Guid revisionId;
+        Guid revisionVersion;
+
+        var now = DateTimeOffset.UtcNow;
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
+        var actorId = TestOnlyDataSeeder.TestUserId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var solarItem = await db.Items.SingleAsync(i => i.OrganizationId == OrgId && i.Code == "SOLAR-PANEL-550W");
+            solarItemId = solarItem.Id;
+            unitPieceId = solarItem.BaseUnitId;
+
+            var unitBox = new UnitOfMeasure(Guid.NewGuid(), OrgId, "BOX", LocalizedText.Create("กล่อง", "Box"), "box", "count", 0, "half_up", actorId, now);
+            var unitPallet = new UnitOfMeasure(Guid.NewGuid(), OrgId, "PALLET", LocalizedText.Create("พาเลท", "Pallet"), "pallet", "count", 0, "half_up", actorId, now);
+            var unitMeter = new UnitOfMeasure(Guid.NewGuid(), OrgId, "M", LocalizedText.Create("เมตร", "Meter"), "m", "length", 2, "half_up", actorId, now);
+            unitBoxId = unitBox.Id;
+            unitMeterId = unitMeter.Id;
+            db.Units.AddRange(unitBox, unitPallet, unitMeter);
+
+            // Shared conversion BOX -> PCS = 10, PALLET -> PCS = 30; Item-specific conversion BOX -> PCS = 12 (overrides shared BOX -> PCS)
+            var sharedBox = new UnitConversion(Guid.NewGuid(), OrgId, unitBox.Id, unitPieceId, 10m, today.AddDays(-5), null, "มาตรฐานกล่องรวม", actorId, now);
+            var sharedPallet = new UnitConversion(Guid.NewGuid(), OrgId, unitPallet.Id, unitPieceId, 30m, today.AddDays(-5), null, "มาตรฐานพาเลท", actorId, now);
+            var itemBox = new ItemUnitConversion(Guid.NewGuid(), OrgId, solarItemId, unitBox.Id, unitPieceId, 12m, today.AddDays(-5), null, "กล่องเฉพาะแผง 550W บรรจุ 12 แผง", actorId, now);
+            sharedBoxConvId = sharedBox.Id;
+            itemBoxConvId = itemBox.Id;
+            db.UnitConversions.AddRange(sharedBox, sharedPallet);
+            db.ItemUnitConversions.Add(itemBox);
+            await db.SaveChangesAsync();
+
+            var resolver = scope.ServiceProvider.GetRequiredService<IUnitConversionResolver>();
+
+            // 1. Item-specific conversion overrides shared conversion for BOX -> PCS
+            var resolvedBox = await resolver.ResolveToBaseUnitAsync(OrgId, solarItemId, "BOX", today, CancellationToken.None);
+            Assert.True(resolvedBox.IsSuccess);
+            Assert.Equal((itemBoxConvId, UnitConversionScopes.Item, "BOX", "PCS", 12m),
+                (resolvedBox.Value!.ConversionId, resolvedBox.Value.Scope, resolvedBox.Value.FromUnitCode, resolvedBox.Value.ToUnitCode, resolvedBox.Value.Factor));
+
+            // 2. Shared conversion is used when no item-specific override exists (PALLET -> PCS)
+            var resolvedPallet = await resolver.ResolveToBaseUnitAsync(OrgId, solarItemId, "PALLET", today, CancellationToken.None);
+            Assert.True(resolvedPallet.IsSuccess);
+            Assert.Equal((sharedPallet.Id, UnitConversionScopes.Shared, 30m),
+                (resolvedPallet.Value!.ConversionId, resolvedPallet.Value.Scope, resolvedPallet.Value.Factor));
+
+            // 3. Dimension mismatch returns ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH
+            var mismatch = await resolver.ResolveToBaseUnitAsync(OrgId, solarItemId, "M", today, CancellationToken.None);
+            Assert.True(mismatch.IsFailure);
+            Assert.Equal("ESTIMATE_UNIT_CONVERSION_DIMENSION_MISMATCH", mismatch.Error.Code);
+
+            // 4. Missing active conversion returns ESTIMATE_UNIT_CONVERSION_NOT_FOUND
+            var notFound = await resolver.ResolveToBaseUnitAsync(OrgId, solarItemId, "SET", today, CancellationToken.None);
+            Assert.True(notFound.IsFailure);
+            Assert.Equal("ESTIMATE_UNIT_CONVERSION_NOT_FOUND", notFound.Error.Code);
+        }
+
+        // 5. GET /api/v1/estimate-catalog/items/{itemId}/units with policy mode = 'none' (default) returns ConversionsEnabled=false & base unit only
+        var unitsNoneRes = await _client.SendAsync(CreateRequest($"/api/v1/estimate-catalog/items/{solarItemId}/units?branchId={BranchAId}"));
+        Assert.Equal(HttpStatusCode.OK, unitsNoneRes.StatusCode);
+        var unitsNone = (await unitsNoneRes.Content.ReadFromJsonAsync<EstimateUnitOptionsResponse>())!;
+        Assert.False(unitsNone.ConversionsEnabled);
+        Assert.Equal("PCS", unitsNone.BaseUnitCode);
+        Assert.Single(unitsNone.Units);
+
+        // Publish a branch CalculationPolicyVersion for BranchA with UnitConversionMode = 'snapshot'
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var existingPolicies = await db.CalculationPolicyVersions.Where(p => p.OrganizationId == OrgId && p.BranchId == BranchAId).ToListAsync();
+            db.CalculationPolicyVersions.RemoveRange(existingPolicies);
+            var snapshotPolicy = new CalculationPolicyVersion(
+                Guid.NewGuid(), OrgId, BranchAId, "CALC-SNAP-B01", 1, "none", 0m, "away-from-zero",
+                now.AddDays(-1), null, actorId, UnitConversionModes.Snapshot);
+            snapshotPolicy.Publish(Guid.NewGuid(), now);
+            db.CalculationPolicyVersions.Add(snapshotPolicy);
+
+            // Seed a customer, site, opportunity (in Estimating) and Ready survey revision so we can create & update an Official Estimate draft
+            var customer = Customer.CreateDraft(
+                Guid.NewGuid(), OrgId, actorId, CustomerType.Person, "ลูกค้าทดสอบ G08", null, "th",
+                new PrimaryContactInput("คุณสมชาย G08", null, "0812345678", null, "phone"), now);
+            customer.Activate(customer.RowVersion);
+            var siteAddress = new SiteAddressInput("123 ถนนสุขุมวิท", "คลองเตย", "คลองเตย", "กรุงเทพมหานคร", "10110", "TH");
+            var site = Site.CreateActive(Guid.NewGuid(), OrgId, customer.Id, actorId, "ไซต์ G08", siteAddress, 13.7m, 100.5m, null, now);
+            var opp = Opportunity.CreateDraft(
+                Guid.NewGuid(), OrgId, BranchAId, customer.Id, site.Id, actorId, actorId,
+                "โครงการทดสอบ G08", "งานโซลาร์เซลล์", new[] { "built-in" }, null, 500000m, "THB",
+                new DateOnly(2026, 12, 31), now.AddDays(2), "เตรียมประเมินราคา", now);
+            opp.Qualify(opp.RowVersion);
+            opp.EnterSurveying(opp.RowVersion, site.Id);
+            opp.EnterEstimating(opp.RowVersion);
+            var survey = SiteSurvey.CreateAppointment(OrgId, BranchAId, opp.Id, site.Id, actorId, actorId, now, now.AddHours(2), now);
+            var surveyRev = SiteSurveyRevision.CreateBaseline(OrgId, survey.Id, actorId, now);
+            var area = new SiteSurveyArea(Guid.NewGuid(), OrgId, surveyRev.Id, "AREA-01", "หลังคา", null, 1);
+            area.AddMeasurement(new SiteSurveyMeasurement(Guid.NewGuid(), OrgId, area.Id, "width", 10.0m, "m", "measured", null, 1));
+            surveyRev.AddArea(area);
+            surveyRev.UpdateDraft(now, "สำรวจหลังคา", null, null, null);
+            surveyRev.MarkReady(actorId, now, "aaaa1111bbbb2222cccc3333dddd4444eeee5555ffff6666aaaa1111bbbb2222");
+            db.Customers.Add(customer);
+            db.Sites.Add(site);
+            db.Opportunities.Add(opp);
+            db.SiteSurveys.Add(survey);
+            db.SiteSurveyRevisions.Add(surveyRev);
+            await db.SaveChangesAsync();
+
+            var estimateStore = scope.ServiceProvider.GetRequiredService<IEstimateStore>();
+            var draftRes = await estimateStore.CreateDraftAsync(OrgId, opp.Id, surveyRev.Id, "THB", actorId, "g08-create-key", "g08-create-hash", CancellationToken.None);
+            Assert.True(draftRes.IsSuccess);
+            estimateId = draftRes.Value!.Id;
+            revisionId = draftRes.Value.CurrentRevision!.Id;
+            revisionVersion = draftRes.Value.CurrentRevision.RowVersion;
+        }
+
+        // 6. Now GET /api/v1/estimate-catalog/items/{itemId}/units returns ConversionsEnabled=true with PCS, BOX (item factor 12), and PALLET (shared factor 30)
+        var unitsSnapRes = await _client.SendAsync(CreateRequest($"/api/v1/estimate-catalog/items/{solarItemId}/units?branchId={BranchAId}"));
+        Assert.Equal(HttpStatusCode.OK, unitsSnapRes.StatusCode);
+        var unitsSnap = (await unitsSnapRes.Content.ReadFromJsonAsync<EstimateUnitOptionsResponse>())!;
+        Assert.True(unitsSnap.ConversionsEnabled);
+        Assert.Equal(3, unitsSnap.Units.Count);
+        var boxOption = unitsSnap.Units.Single(u => u.UnitCode == "BOX");
+        Assert.Equal(itemBoxConvId, boxOption.ConversionId);
+        Assert.Equal(UnitConversionScopes.Item, boxOption.ConversionScope);
+        Assert.Equal("12", boxOption.Factor);
+
+        // 7. Save estimate draft with a cost component in BOX (Quantity = 2 BOX = 24 PCS @ 3,200 THB/PCS = 76,800 THB)
+        Guid savedComponentId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var estimateStore = scope.ServiceProvider.GetRequiredService<IEstimateStore>();
+            var sections = new[]
+            {
+                new EstimateSectionDraftDto(
+                    null, "SEC-01", "งานแผงโซลาร์", "Solar Array", 1,
+                    new[]
+                    {
+                        new EstimateWorkItemDraftDto(
+                            null, "WI-01", "ติดตั้งแผงโซลาร์", "Install Solar Panels", 1m, "SET", SellingRuleType.Margin, 0.20m, 1,
+                            new[]
+                            {
+                                new EstimateCostComponentDraftDto(
+                                    null, CostComponentType.Material, "แผงโซลาร์ 550W (ยกกล่อง)", 2m, "BOX", 3200m, "THB", 1,
+                                    ItemId: solarItemId, ProvisionalReasonCode: "LEGACY_IMPORT")
+                            },
+                            ItemId: solarItemId)
+                    })
+            };
+
+            var updated = await estimateStore.UpdateDraftAsync(OrgId, estimateId, revisionId, revisionVersion, sections, actorId, CancellationToken.None);
+            revisionVersion = updated.RowVersion;
+            var comp = Assert.Single(updated.Sections.Single().WorkItems.Single().CostComponents);
+            savedComponentId = comp.Id;
+            Assert.NotNull(comp.ConversionSnapshot);
+            Assert.Equal((itemBoxConvId, UnitConversionScopes.Item, "BOX", "PCS", 12m),
+                (comp.ConversionSnapshot!.ConversionId, comp.ConversionSnapshot.Scope, comp.ConversionSnapshot.FromUnit, comp.ConversionSnapshot.ToUnit, comp.ConversionSnapshot.Factor));
+            Assert.Equal(38400m, comp.UnitCost); // 12 * 3,200
+            Assert.Equal(76800m, comp.TotalCost); // 2 * 12 * 3,200
+        }
+
+        // 8. Replace the item conversion in DB with a new factor (15 PCS per BOX) and re-save the draft echoing the original Component Id & ConversionId:
+        //    the frozen conversion snapshot (factor 12) must remain untouched!
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var oldConv = await db.ItemUnitConversions.SingleAsync(c => c.Id == itemBoxConvId);
+            db.ItemUnitConversions.Remove(oldConv);
+            db.ItemUnitConversions.Add(new ItemUnitConversion(Guid.NewGuid(), OrgId, solarItemId, unitBoxId, unitPieceId, 15m, today.AddDays(-1), null, "เปลี่ยนขนาดกล่องใหม่ 15 แผง", actorId, now));
+            await db.SaveChangesAsync();
+
+            var estimateStore = scope.ServiceProvider.GetRequiredService<IEstimateStore>();
+            var sectionsEcho = new[]
+            {
+                new EstimateSectionDraftDto(
+                    null, "SEC-01", "งานแผงโซลาร์ (อัปเดตชื่อ)", "Solar Array Updated", 1,
+                    new[]
+                    {
+                        new EstimateWorkItemDraftDto(
+                            null, "WI-01", "ติดตั้งแผงโซลาร์", "Install Solar Panels", 1m, "SET", SellingRuleType.Margin, 0.20m, 1,
+                            new[]
+                            {
+                                new EstimateCostComponentDraftDto(
+                                    savedComponentId, CostComponentType.Material, "แผงโซลาร์ 550W (ยกกล่อง)", 2m, "BOX", 38400m, "THB", 1,
+                                    ItemId: solarItemId, ProvisionalReasonCode: "LEGACY_IMPORT", ConversionId: itemBoxConvId)
+                            },
+                            ItemId: solarItemId)
+                    })
+            };
+
+            var reSaved = await estimateStore.UpdateDraftAsync(OrgId, estimateId, revisionId, revisionVersion, sectionsEcho, actorId, CancellationToken.None);
+            var compAfter = Assert.Single(reSaved.Sections.Single().WorkItems.Single().CostComponents);
+            Assert.NotNull(compAfter.ConversionSnapshot);
+            Assert.Equal(itemBoxConvId, compAfter.ConversionSnapshot!.ConversionId);
+            Assert.Equal(12m, compAfter.ConversionSnapshot.Factor);
+            Assert.Equal(76800m, compAfter.TotalCost);
+        }
     }
 }

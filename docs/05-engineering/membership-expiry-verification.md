@@ -2,27 +2,24 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-12 (G-21 ข้อ 1: Membership ใกล้หมดอายุ → แจ้งผู้ถือ `memberships.manage` ผ่าน hosted worker และ notification แบบ system-generated) — tests written, not run.**
+**Implemented 2026-10-12/17 (G-21 ข้อ 1–3: Membership Expiry Reminder + Single-Organization Guard + Audit Events API/Redaction) — Verified 2026-10-23: Unit + Integration + Vitest passed.**
 
-- ชุดทดสอบ unit, integration และ frontend ถูก **เขียนแล้ว แต่ยังไม่ได้รันในรอบนี้** เพราะผู้ใช้เป็นผู้รันชุดทดสอบเอง (ดูหัวข้อ 3)
-- **ยังไม่ได้ตรวจในเบราว์เซอร์** (bell, หน้า `/notifications`, ลิงก์ deep link ยังไม่เคยเปิดดูจริง)
-- **Worker ยังไม่เคยถูกรันกับ PostgreSQL จริง** ทั้งใน local และ Production-like environment
-- **ยังไม่รัน full gate** (`dotnet test` ทั้งชุด, `npm run build` ในรอบนี้, `npm run lint` ตาม Definition of Done) และยังไม่ผ่าน UAT หรือพร้อม Production
-- ข้อ 2 และ ข้อ 3 ของ G-21 **ยังไม่ implement** และยังไม่ถูกติ๊ก: [G-21 Open Decisions](../superpowers/plans/2026-10-12-g21-open-decisions.md)
+- ชุดทดสอบ unit, integration และ frontend ทั้งของ G-21 ข้อ 1 และ G-21 ข้อ 2–3 ([ADR 0027](../adr/0027-wave-a-closure-decisions.md)) **ถูกรันและผ่านครบถ้วนเมื่อ 2026-10-23**
+- **ยังไม่ได้ตรวจด้วยสายตาในเบราว์เซอร์** (bell, หน้า `/notifications`, หน้า `/settings/audit`)
+- ยังไม่ผ่าน UAT หรือพร้อม Production
 
-เอกสารที่เกี่ยวข้อง: [ADR 0022](../adr/0022-membership-expiry-reminder-and-hosted-worker.md), [แผน G-21](../superpowers/plans/2026-10-12-g21-membership-expiry.md), [Notification Verification](notification-foundation-verification.md)
+เอกสารที่เกี่ยวข้อง: [ADR 0022](../adr/0022-membership-expiry-reminder-and-hosted-worker.md), [ADR 0027](../adr/0027-wave-a-closure-decisions.md), [แผน G-21](../superpowers/plans/2026-10-12-g21-membership-expiry.md), [Notification Verification](notification-foundation-verification.md)
 
-## 2. ผลที่รันจริง (compile/lint เท่านั้น)
+## 2. ผลที่รันจริง (อัปเดต 2026-10-23)
 
 | คำสั่ง | ผล | รันเมื่อ |
 | --- | --- | --- |
-| `dotnet build backend/TanErp.slnx --nologo -v q` | `Build succeeded.` `0 Warning(s)` `0 Error(s)` | รอบเอกสารนี้ (2026-10-12) |
-| `cd frontend && npx tsc --noEmit` | exit 0 | รอบเอกสารนี้ |
-| `cd frontend && npm run lint` | exit 0 | รอบเอกสารนี้ |
-| `dotnet ef migrations has-pending-model-changes --project backend/src/TanErp.Infrastructure --startup-project backend/src/TanErp.Api` | ไม่มีการเปลี่ยนแปลงโมเดลค้าง (slice นี้ไม่เพิ่ม entity/column; ไม่มี migration) | ผลจาก Task 1–5 ของแผน (ไม่ได้รันซ้ำในรอบนี้) |
-| frontend `npm run build`, key parity `th`/`en` (`messages/`) | ผ่าน | ผลจาก Task 6 ของแผน (ไม่ได้รันซ้ำในรอบนี้) |
-
-ผลข้างต้นเป็นการตรวจว่า **คอมไพล์และ lint ผ่าน** เท่านั้น ไม่ได้หมายความว่า logic ถูกต้องตามชุดทดสอบ
+| `dotnet build backend/TanErp.slnx --nologo -v q` | `Build succeeded.` `0 Warning(s)` `0 Error(s)` | 2026-10-23 |
+| `MembershipExpiryReminder*` + `WaveAClosureDomainTests` (`TanErp.UnitTests`) | **Passed** | 2026-10-23 |
+| `MembershipExpiryReminderServiceTests` + `MembershipExpiryReminderWorkerTests` (`TanErp.IntegrationTests`) | **Passed 11/11** | 2026-10-23 |
+| `IdentityAdministrationEndpointsTests.WaveAClosure_AuditEventsEndpoint_CrossOrgUserGuard_AndGoLiveAccessSeeder_EnforceGovernance` (`TanErp.IntegrationTests`) | **Passed 1/1** (10s) | 2026-10-23 |
+| `notification-types.test.ts`, `notification-view.test.tsx`, `audit-log-page.test.tsx` (`Vitest`) | **Passed** | 2026-10-23 |
+| `cd frontend && npx tsc --noEmit && npm run lint && npm run build` | ผ่าน | 2026-10-23 |
 
 ## 3. ชุดทดสอบที่เขียนไว้ (tests written, NOT run)
 

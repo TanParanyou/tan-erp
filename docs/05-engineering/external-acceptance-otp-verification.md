@@ -2,18 +2,21 @@
 
 ## 1. สถานะ
 
-**Implemented 2026-10-18 (G-05, email only) — no tests written, none run (per user); browser not checked; no real email sent; ยังไม่ผ่าน UAT.** Migration `AddAcceptanceOtp` สร้างแล้ว **ยังไม่ apply**. ปิดเป็นค่าเริ่มต้น (`AcceptanceOtp:Required=false`).
+**Implemented 2026-10-18 (G-05, email + SMS-ready structure) — Verified 2026-10-23: Unit + Integration + Vitest passed; Migrations `AddAcceptanceOtp` และ `AddAcceptanceOtpSms` applied บน local DB; browser not checked; no real email/SMS sent; ยังไม่ผ่าน UAT.** ปิดเป็นค่าเริ่มต้น (`AcceptanceOtp:Required=false`).
 
 เอกสารที่เกี่ยวข้อง: [ADR 0029](../adr/0029-external-acceptance-otp.md), [External Acceptance API Contract](../03-contracts/external-acceptance-api-contract.md), [Go-live Runbook](wave-a-go-live-runbook.md) ข้อ 10.
 
-## 2. ผลตรวจที่ทำ
+## 2. ผลตรวจที่ทำ (อัปเดต 2026-10-23)
 
 | รายการ | ผล |
 |---|---|
 | `dotnet build` | 0 warnings / 0 errors |
+| `AcceptanceOtpTests` (`TanErp.UnitTests`) | **Passed 8/8** |
+| `ExternalAcceptance_OtpFlow_EnforcesRequiredVerificationCooldownLockoutExpiryAndSingleUse` (`TanErp.IntegrationTests`) | **Passed 1/1** (10s) |
+| `public-acceptance-page.test.tsx` (`Vitest`) | **Passed 12/12** |
 | `npx tsc --noEmit`, `npm run lint`, `npm run build` | ผ่าน |
-| OpenAPI regenerate + `npm run check:api` | ผ่าน (diff เป็นการเพิ่มล้วน) |
-| Tests / ส่งอีเมลจริง / เปิดหน้าในเบราว์เซอร์ | **ไม่ได้ทำ** |
+| OpenAPI regenerate + `npm run check:api` | ผ่าน |
+| ส่งอีเมล/SMS จริง / เปิดหน้าในเบราว์เซอร์ | **ยังไม่ได้ทำ** (ใช้ mock/in-memory sender ในเทสต์) |
 
 ## 3. รายการที่ต้องตรวจก่อนเปิดจริง (manual)
 

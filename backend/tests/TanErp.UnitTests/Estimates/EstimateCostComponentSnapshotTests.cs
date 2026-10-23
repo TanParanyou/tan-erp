@@ -119,4 +119,62 @@ public class EstimateCostComponentSnapshotTests
                 costPolicyVersion: "v1",
                 resolvedAtUtc: DateTimeOffset.UtcNow));
     }
+
+    [Fact]
+    public void SetConversionSnapshot_FreezesFactorAndUpdatesUnitAndTotals_AndPolicyContentHashIncludesSnapshotMode()
+    {
+        var comp = new EstimateCostComponent(
+            Guid.NewGuid(),
+            _orgId,
+            _workItemId,
+            CostComponentType.Material,
+            "Galvanized Steel Pipe",
+            quantity: 4m,
+            unitCode: "BOX",
+            unitCost: 100m);
+
+        var snapshot = EstimateConversionSnapshot.Create(Guid.NewGuid(), UnitConversionScopes.Item, "BOX", "PCS", 12.5m);
+        Assert.Throws<ArgumentException>(() => comp.SetConversionSnapshot(snapshot));
+
+        comp.SetCatalogCostSnapshot(
+            itemId: Guid.NewGuid(),
+            costRecordId: Guid.NewGuid(),
+            costRecordVersion: 1,
+            itemCodeSnapshot: "PIPE-01",
+            itemNameSnapshot: LocalizedText.Create("ท่อเหล็ก", "Steel Pipe"),
+            unitSnapshot: "PCS",
+            unitCostSnapshot: 100m,
+            currencySnapshot: "THB",
+            costScopeSnapshot: "organization",
+            costEffectiveFromUtc: DateTimeOffset.UtcNow.AddDays(-1),
+            costPolicyVersion: "v1",
+            resolvedAtUtc: DateTimeOffset.UtcNow);
+
+        comp.SetConversionSnapshot(snapshot);
+        Assert.NotNull(comp.ConversionSnapshot);
+        Assert.Equal(snapshot.ConversionId, comp.ConversionId);
+        Assert.Equal(UnitConversionScopes.Item, comp.ConversionScope);
+        Assert.Equal("BOX", comp.ConversionFromUnit);
+        Assert.Equal("PCS", comp.ConversionToUnit);
+        Assert.Equal(12.5m, comp.ConversionFactor);
+        Assert.Equal("BOX", comp.UnitCode);
+        // UnitCost = 100 * 12.5 = 1250; TotalCost = 4 * 12.5 * 100 = 5000
+        Assert.Equal(1250m, comp.UnitCost);
+        Assert.Equal(5000m, comp.TotalCost);
+        Assert.Throws<EstimateInvalidStateException>(() =>
+            comp.Update(CostComponentType.Material, "Edited", 1m, "BOX", 1250m, 1));
+
+        // CalculationPolicyVersion hash differs when UnitConversionMode is Snapshot vs None
+        var effectiveFrom = new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero);
+        var publishedAt = new DateTimeOffset(2026, 10, 2, 0, 0, 0, TimeSpan.Zero);
+        var creator = Guid.NewGuid();
+        var publisher = Guid.NewGuid();
+        var nonePolicy = new CalculationPolicyVersion(
+            Guid.NewGuid(), _orgId, null, "CALC-STD", 1, "none", 0m, "away-from-zero", effectiveFrom, null, creator, UnitConversionModes.None);
+        var snapshotPolicy = new CalculationPolicyVersion(
+            Guid.NewGuid(), _orgId, null, "CALC-STD", 1, "none", 0m, "away-from-zero", effectiveFrom, null, creator, UnitConversionModes.Snapshot);
+        nonePolicy.Publish(publisher, publishedAt);
+        snapshotPolicy.Publish(publisher, publishedAt);
+        Assert.NotEqual(nonePolicy.ContentHash, snapshotPolicy.ContentHash);
+    }
 }

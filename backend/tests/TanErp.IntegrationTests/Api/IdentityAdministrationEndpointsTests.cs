@@ -8,12 +8,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
+using TanErp.Api.Contracts.Audit;
 using TanErp.Api.Contracts.IdentityAccess;
 using TanErp.Api.Contracts.IdentityAccess.Administration;
+using TanErp.Domain.Common;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
+using TanErp.Infrastructure.Persistence.IdentityAccess;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -546,6 +549,84 @@ public class IdentityAdministrationEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, login.StatusCode);
         await using var db = NewDb();
         Assert.Null((await db.Users.AsNoTracking().SingleAsync(u => u.Id == created.Id)).FirebaseUid);
+    }
+
+    [Fact]
+    public async Task WaveAClosure_AuditEventsEndpoint_CrossOrgUserGuard_AndGoLiveAccessSeeder_EnforceGovernance()
+    {
+        var created = await CreateUserAsync("audit-check@example.test", _viewerRoleId);
+
+        // 1. Cross-org user creation/membership guard (D-A/A1): Org B cannot create or link a user whose email belongs to Org A,
+        // and user deactivation refuses when a user holds a membership in another organization.
+        await using (var db = NewDb())
+        {
+            var orgBRoleId = await db.Roles.AsNoTracking().Where(r => r.OrganizationId == TestOnlyDataSeeder.TestOrgBId).Select(r => r.Id).FirstAsync();
+            var crossCreate = await Send(HttpMethod.Post, "/api/v1/admin/users", OrgBToken,
+                new CreateAdminUserRequest("Cross Org Attempt", "audit-check@example.test", null, new[] { orgBRoleId }),
+                membershipId: TestOnlyDataSeeder.TestMembershipBId);
+            Assert.Equal(HttpStatusCode.Conflict, crossCreate.StatusCode);
+            Assert.Equal("USER_EMAIL_ALREADY_EXISTS", await ReadCode(crossCreate));
+
+            // Simulate a legacy shared user across Org A and Org B: Org A admin cannot deactivate global user record.
+            db.Memberships.Add(new Membership(Guid.NewGuid(), TestOnlyDataSeeder.TestOrgBId, TestOnlyDataSeeder.TestBranchBId, created.Id));
+            await db.SaveChangesAsync();
+        }
+
+        var sharedDeactivate = await Send(HttpMethod.Post, $"/api/v1/admin/users/{created.Id}/deactivate", AdminToken, ifMatch: created.RowVersion);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, sharedDeactivate.StatusCode);
+        Assert.Equal("USER_SHARED_ACROSS_ORGANIZATIONS", await ReadCode(sharedDeactivate));
+
+        // 2. GET /api/v1/audit-events requires audit.read, filters by resourceType/action/actor/date, and redacts legacy unredacted rows on read.
+        var forbiddenAudit = await Send(HttpMethod.Get, "/api/v1/audit-events", ViewerToken, membershipId: ViewerMembershipId);
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenAudit.StatusCode);
+
+        var badRange = await Send(HttpMethod.Get, "/api/v1/audit-events?from=2026-10-20T00:00:00Z&to=2026-10-10T00:00:00Z", AdminToken);
+        Assert.Equal(HttpStatusCode.BadRequest, badRange.StatusCode);
+
+        Guid legacyAuditId = Guid.NewGuid();
+        const string rawLegacyChanges = "{\"email\":\"raw-pii@example.test\",\"safeField\":\"kept\"}";
+        await using (var db = NewDb())
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO audit.audit_events (id, organization_id, actor_user_id, action, resource_type, resource_id, occurred_at_utc, trace_id, changes)
+                VALUES ({legacyAuditId}, {TestOnlyDataSeeder.TestOrgId}, {TestOnlyDataSeeder.TestUserId}, 'legacy.pii', 'User', {created.Id.ToString()}, {DateTimeOffset.UtcNow}, 'trace-legacy', CAST({rawLegacyChanges} AS jsonb))
+                """);
+        }
+
+        var auditRes = await Send(HttpMethod.Get, $"/api/v1/audit-events?resourceType=User&resourceId={created.Id}&page=1&limit=10", AdminToken);
+        Assert.Equal(HttpStatusCode.OK, auditRes.StatusCode);
+        var auditPage = (await auditRes.Content.ReadFromJsonAsync<AuditEventListResponse>())!;
+        Assert.True(auditPage.Pagination.TotalCount >= 2);
+        var legacyItem = Assert.Single(auditPage.Items, i => i.Id == legacyAuditId);
+        Assert.DoesNotContain("raw-pii@example.test", legacyItem.ChangesJson);
+        Assert.Contains(AuditRedactor.Placeholder, legacyItem.ChangesJson);
+        Assert.Contains("kept", legacyItem.ChangesJson);
+
+        // 3. GoLiveAccessSeeder idempotently grants system administrator permissions and seeds approval limits with audit events.
+        await using (var db = NewDb())
+        {
+            var sysRole = new Role(Guid.NewGuid(), TestOnlyDataSeeder.TestOrgId, "GoLive System Admin", "System Admin", isActive: true, isSystem: true);
+            db.Roles.Add(sysRole);
+            await db.SaveChangesAsync();
+
+            var firstAdded = await GoLiveAccessSeeder.EnsureSystemAdministratorPermissionsAsync(db);
+            Assert.True(firstAdded >= GoLiveAccessSeeder.SystemAdministratorKeys.Count);
+            var secondAdded = await GoLiveAccessSeeder.EnsureSystemAdministratorPermissionsAsync(db);
+            Assert.Equal(0, secondAdded);
+
+            var seedEntries = new[]
+            {
+                new ApprovalLimitSeedEntry { DocumentType = "estimate", RoleCode = "GoLive System Admin", MaxAmount = 750000m, Currency = "THB" },
+                new ApprovalLimitSeedEntry { DocumentType = "estimate", RoleCode = "NO_SUCH_ROLE", MaxAmount = 100m, Currency = "THB" }
+            };
+            var report1 = await GoLiveAccessSeeder.SeedApprovalLimitsAsync(db, seedEntries, DateTimeOffset.UtcNow);
+            Assert.Contains(report1, r => r.StartsWith("created estimate/GoLive System Admin", StringComparison.Ordinal));
+            Assert.Contains(report1, r => r.Contains("no active role", StringComparison.Ordinal));
+
+            var report2 = await GoLiveAccessSeeder.SeedApprovalLimitsAsync(db, seedEntries, DateTimeOffset.UtcNow);
+            Assert.Contains(report2, r => r.StartsWith("kept estimate/GoLive System Admin", StringComparison.Ordinal));
+            Assert.True(await db.AuditEvents.AnyAsync(a => a.Action == "approval-limits.seeded" && a.OrganizationId == TestOnlyDataSeeder.TestOrgId));
+        }
     }
 
     // ------------------------------------------------------------------ helpers
