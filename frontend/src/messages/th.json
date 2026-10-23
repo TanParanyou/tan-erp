@@ -361,7 +361,8 @@
     "errors": {
       "unexpected": "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง",
       "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
-      "accessDeniedDetail": "คุณไม่มีสิทธิ์เข้าถึงข้อมูลหรือดำเนินการในส่วนนี้สำหรับองค์กรที่เลือก"
+      "accessDeniedDetail": "คุณไม่มีสิทธิ์เข้าถึงข้อมูลหรือดำเนินการในส่วนนี้สำหรับองค์กรที่เลือก",
+      "readAccessDeniedDetail": "คุณไม่มีสิทธิ์เข้าดูหน้านี้หรือดำเนินการในส่วนนี้"
     },
     "quickTemplates": {
       "label": "ข้อความด่วนที่ใช้บ่อย:",
@@ -4453,8 +4454,29 @@
     "subtitle": "บันทึกขนาด สเปกวัสดุ และภาพถ่ายหน้างานจริง สำหรับส่งต่อทีมประเมินราคา",
     "opportunity": "โอกาสทางการขาย",
     "selectOpportunity": "— เลือกโอกาสทางการขาย —",
+    "searchOpportunityPlaceholder": "พิมพ์ค้นหาชื่อโอกาสขาย, รหัส หรือชื่อลูกค้า...",
+    "noOpportunityFound": "ไม่พบโอกาสทางการขาย",
+    "createNewOpportunity": "+ สร้างโอกาสทางการขายใหม่",
     "roomName": "ชื่อห้อง / บริเวณสำรวจ",
     "roomPlaceholder": "เช่น ห้องนอนใหญ่ Master Bedroom, โถงรับแขก",
+    "customRoomOption": "✍️ กรอกชื่อห้องเอง...",
+    "selectOrTypeRoom": "— เลือกห้องหรือพิมพ์เอง —",
+    "rooms": {
+      "masterBedroom": "ห้องนอนใหญ่ (Master Bedroom)",
+      "livingRoom": "ห้องรับแขก / นั่งเล่น (Living Room)",
+      "kitchen": "ห้องครัว / แพนทรี (Kitchen & Pantry)",
+      "walkInCloset": "ห้องแต่งตัว (Walk-in Closet)",
+      "homeOffice": "ห้องทำงาน (Home Office / Study)",
+      "bedroom2": "ห้องนอน 2 (Bedroom 2)",
+      "bedroom3": "ห้องนอน 3 (Bedroom 3)",
+      "masterBathroom": "ห้องน้ำใหญ่ (Master Bathroom)",
+      "hallway": "โถงทางเดิน / บันได (Hallway & Foyer)",
+      "balcony": "ระเบียงพักผ่อน (Balcony)"
+    },
+    "collapseAll": "ย่อทุกรายการ",
+    "expandAll": "ขยายทุกรายการ",
+    "itemsCount": "{count} ชิ้นงาน",
+    "totalPhotos": "{count} ภาพถ่าย",
     "surveyorNotes": "บันทึกภาพรวมหน้างาน / สไตล์ที่ลูกค้าชอบ",
     "surveyorNotesPlaceholder": "เช่น ลูกค้าชอบสไตล์ Modern Classic หรูหรา โทนไม้อุ่นตัดหินอ่อนเทา",
     "itemsSectionTitle": "รายการที่ลูกค้าสั่งทำในห้องนี้",

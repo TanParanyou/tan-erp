@@ -361,7 +361,8 @@
     "errors": {
       "unexpected": "An unexpected error occurred. Please try again.",
       "accessDeniedTitle": "Access Denied",
-      "accessDeniedDetail": "You do not have permission to access or perform this action for the selected organization."
+      "accessDeniedDetail": "You do not have permission to access or perform this action for the selected organization.",
+      "readAccessDeniedDetail": "You do not have permission to view this page or perform this action."
     },
     "quickTemplates": {
       "label": "Quick Templates:",
@@ -4453,8 +4454,29 @@
     "subtitle": "Capture dimensions, material specs, and on-site photos for estimation",
     "opportunity": "Opportunity",
     "selectOpportunity": "— Select opportunity —",
+    "searchOpportunityPlaceholder": "Search opportunity title, code, or customer...",
+    "noOpportunityFound": "No opportunity found",
+    "createNewOpportunity": "+ Create New Opportunity",
     "roomName": "Room / Survey Area",
     "roomPlaceholder": "e.g. Master Bedroom, Living Room",
+    "customRoomOption": "✍️ Type custom room name...",
+    "selectOrTypeRoom": "— Select room or type custom —",
+    "rooms": {
+      "masterBedroom": "Master Bedroom",
+      "livingRoom": "Living Room",
+      "kitchen": "Kitchen & Pantry",
+      "walkInCloset": "Walk-in Closet",
+      "homeOffice": "Home Office / Study",
+      "bedroom2": "Bedroom 2",
+      "bedroom3": "Bedroom 3",
+      "masterBathroom": "Master Bathroom",
+      "hallway": "Hallway & Foyer",
+      "balcony": "Balcony"
+    },
+    "collapseAll": "Collapse All",
+    "expandAll": "Expand All",
+    "itemsCount": "{count} items",
+    "totalPhotos": "{count} photos",
     "surveyorNotes": "Site Overview / Customer Preferred Style",
     "surveyorNotesPlaceholder": "e.g. Customer prefers Modern Classic style with warm wood and gray marble",
     "itemsSectionTitle": "Custom Items in this Room",

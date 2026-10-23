@@ -25,6 +25,10 @@ vi.mock("next-intl", () => ({
       "categories.wall_ceiling": "งานผนังและฝ้าเพดาน",
       "categories.curtain": "งานม่านและตกแต่งอ่อน",
       "categories.mep": "งานระบบไฟฟ้า/ประปา",
+      collapseAll: "ย่อทุกรายการ",
+      expandAll: "ขยายทุกรายการ",
+      itemsCount: `${params?.count ?? ""} ชิ้นงาน`,
+      totalPhotos: `${params?.count ?? ""} ภาพถ่าย`,
       "actions.saveDraft": "บันทึกข้อมูลสำรวจ",
       "actions.saving": "กำลังบันทึก...",
       "actions.savedSuccess": "บันทึกข้อมูลสำรวจหน้างานเรียบร้อยแล้ว",
@@ -39,23 +43,42 @@ vi.mock("next-intl", () => ({
   useLocale: () => "th",
 }));
 
-vi.mock("@/features/opportunities/api/opportunity-queries", () => ({
-  useOpportunityList: () => ({
-    data: {
-      pages: [
-        {
-          items: [
-            {
-              id: "opp-123",
-              title: "รีโนเวทคอนโด 2 ห้องนอน คุณสมชาย",
-              customer: { name: "คุณสมชาย" },
-            },
-          ],
-        },
-      ],
-    },
-    isLoading: false,
-  }),
+vi.mock("@/features/opportunities/components/opportunity-autocomplete", () => ({
+  OpportunityAutocomplete: ({
+    value,
+    onChange,
+  }: {
+    value?: string | null;
+    onChange: (id: string) => void;
+  }) => (
+    <div data-testid="mock-opportunity-autocomplete">
+      <input
+        aria-label="โอกาสทางการขาย"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="พิมพ์ค้นหาชื่อโอกาสขาย, รหัส หรือชื่อลูกค้า..."
+      />
+    </div>
+  ),
+}));
+
+vi.mock("./room-name-combobox", () => ({
+  RoomNameCombobox: ({
+    value,
+    onChange,
+  }: {
+    value: string;
+    onChange: (name: string) => void;
+  }) => (
+    <div data-testid="mock-room-name-combobox">
+      <label>ชื่อห้อง / บริเวณสำรวจ</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="เช่น ห้องนอนใหญ่ Master Bedroom, โถงรับแขก"
+      />
+    </div>
+  ),
 }));
 
 vi.mock("./field-survey-catalog-picker", () => ({
@@ -75,8 +98,8 @@ describe("FieldSurveyWorkspace Component", () => {
     render(<FieldSurveyWorkspace />);
 
     expect(screen.getByText("สำรวจหน้างานสำหรับรีโนเวท")).toBeDefined();
-    expect(screen.getByText("โอกาสทางการขาย")).toBeDefined();
-    expect(screen.getByText("ชื่อห้อง / บริเวณสำรวจ")).toBeDefined();
+    expect(screen.getByTestId("mock-opportunity-autocomplete")).toBeDefined();
+    expect(screen.getByTestId("mock-room-name-combobox")).toBeDefined();
     expect(screen.getByText("ยังไม่มีรายการสั่งทำ")).toBeDefined();
   });
 
@@ -90,6 +113,32 @@ describe("FieldSurveyWorkspace Component", () => {
     expect(screen.getByTestId("mock-measurement-pad")).toBeDefined();
     expect(screen.getByTestId("mock-catalog-picker")).toBeDefined();
     expect(screen.getByTestId("mock-photo-manager")).toBeDefined();
+  });
+
+  it("toggles card collapse when clicking card header", () => {
+    render(<FieldSurveyWorkspace />);
+
+    // Add an item
+    const addBtn = screen.getAllByRole("button", { name: /เพิ่มรายการสั่งทำ/ })[0];
+    fireEvent.click(addBtn);
+
+    // Enter title
+    const titleInput = screen.getByPlaceholderText("เช่น โต๊ะทำงานไม้สัก, ตู้เสื้อผ้า Walk-in, พื้นหินอ่อน");
+    fireEvent.change(titleInput, { target: { value: "โต๊ะทำงานไม้สัก" } });
+
+    // Item starts expanded
+    expect(screen.getByTestId("mock-measurement-pad")).toBeDefined();
+
+    // Click card header to collapse
+    const header = screen.getByText(/รายการที่ 1:/);
+    fireEvent.click(header);
+
+    // Body subcomponents are now hidden in collapsed state
+    expect(screen.queryByTestId("mock-measurement-pad")).toBeNull();
+
+    // Click again to re-expand
+    fireEvent.click(header);
+    expect(screen.getByTestId("mock-measurement-pad")).toBeDefined();
   });
 
   it("removes item card when clicking delete item button", () => {
