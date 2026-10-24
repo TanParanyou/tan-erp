@@ -4,6 +4,12 @@ namespace TanErp.Api.Contracts.IdentityAccess.Administration;
 
 public record AdminRefResponse(Guid Id, string Name);
 
+public record AdminAvatarResponse(Guid Id, string ServingUrl);
+
+public record AdminDepartmentResponse(Guid Id, string Code, string Name);
+
+public record AdminJobTitleResponse(Guid Id, string Code, string Name);
+
 public record AdminPendingRoleRequestResponse(Guid Id, Guid RowVersion, AdminRefResponse Role, AdminRefResponse RequestedBy, DateTimeOffset RequestedAtUtc);
 
 public record AdminMembershipResponse(
@@ -22,7 +28,14 @@ public record AdminUserResponse(
     string Email,
     string Status,
     Guid RowVersion,
-    IReadOnlyList<AdminMembershipResponse> Memberships)
+    IReadOnlyList<AdminMembershipResponse> Memberships,
+    string? PhoneNumber = null,
+    string? EmployeeCode = null,
+    AdminDepartmentResponse? Department = null,
+    AdminJobTitleResponse? JobTitle = null,
+    AdminAvatarResponse? Avatar = null,
+    string? Notes = null,
+    DateTimeOffset? CreatedAtUtc = null)
 {
     public static AdminUserResponse From(AdminUser user) => new(
         user.Id,
@@ -43,7 +56,14 @@ public record AdminUserResponse(
                 p.RowVersion,
                 new AdminRefResponse(p.Role.Id, p.Role.Name),
                 new AdminRefResponse(p.RequestedBy.Id, p.RequestedBy.Name),
-                p.RequestedAtUtc)).ToList())).ToList());
+                p.RequestedAtUtc)).ToList())).ToList(),
+        user.PhoneNumber,
+        user.EmployeeCode,
+        user.Department is null ? null : new AdminDepartmentResponse(user.Department.Id, user.Department.Code, user.Department.Name),
+        user.JobTitle is null ? null : new AdminJobTitleResponse(user.JobTitle.Id, user.JobTitle.Code, user.JobTitle.Name),
+        user.Avatar is null ? null : new AdminAvatarResponse(user.Avatar.Id, user.Avatar.ServingUrl),
+        user.Notes,
+        user.CreatedAtUtc);
 }
 
 public record AdminPaginationResponse(int Page, int PageSize, int TotalCount, int TotalPages);
@@ -77,9 +97,30 @@ public record AdminRoleRequestListResponse(IReadOnlyList<AdminRoleRequestRespons
 
 public record AdminAssignRoleResponse(AdminUserResponse User, AdminRoleRequestResponse? PendingRequest);
 
-public record CreateAdminUserRequest(string? DisplayName, string? Email, Guid? BranchId, IReadOnlyList<Guid>? RoleIds);
+public record CreateAdminUserRequest(
+    string? DisplayName,
+    string? Email,
+    Guid? BranchId,
+    IReadOnlyList<Guid>? RoleIds,
+    string? PhoneNumber = null,
+    string? EmployeeCode = null,
+    Guid? DepartmentId = null,
+    Guid? JobTitleId = null,
+    Guid? AvatarFileId = null,
+    string? Notes = null,
+    DateTimeOffset? StartsAtUtc = null,
+    DateTimeOffset? ExpiresAtUtc = null);
 
 public record RenameAdminUserRequest(string? DisplayName);
+
+public record UpdateAdminUserProfileRequest(
+    string? DisplayName,
+    string? PhoneNumber = null,
+    string? EmployeeCode = null,
+    Guid? DepartmentId = null,
+    Guid? JobTitleId = null,
+    Guid? AvatarFileId = null,
+    string? Notes = null);
 
 public record UpdateAdminMembershipRequest(Guid? BranchId, DateTimeOffset? StartsAtUtc, DateTimeOffset? ExpiresAtUtc);
 

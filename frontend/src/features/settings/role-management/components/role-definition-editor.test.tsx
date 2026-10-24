@@ -62,6 +62,9 @@ describe("RoleDefinitionEditor", () => {
   it("validates the name before creating", async () => {
     render(<RoleDefinitionEditor roleId="create" />);
 
+    expect(screen.getByPlaceholderText("เช่น เจ้าหน้าที่ฝ่ายขาย, ผู้จัดการโครงการ")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("ระบุหน้าที่หรือขอบเขตความรับผิดชอบของบทบาทนี้")).toBeInTheDocument();
+
     fireEvent.change(screen.getByLabelText(/ชื่อบทบาท/), { target: { value: "ab" } });
     fireEvent.click(screen.getByRole("button", { name: "เพิ่มบทบาท" }));
 

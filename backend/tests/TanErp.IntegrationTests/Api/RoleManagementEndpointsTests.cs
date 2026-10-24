@@ -190,6 +190,19 @@ public class RoleManagementEndpointsTests : IAsyncLifetime
         Assert.True(items.Single(i => i.Key == "estimates.approve").IsApprovalPermission);
         Assert.True(items.Single(i => i.Key == "purchase-orders.approve").IsApprovalPermission);
         Assert.False(items.Single(i => i.Key == "customers.read").IsApprovalPermission);
+
+        // Domain-driven classification & approval authority metadata
+        var approvalLimitsManage = items.Single(i => i.Key == "approval-limits.manage");
+        Assert.Equal("system", approvalLimitsManage.Module);
+        Assert.True(approvalLimitsManage.RequiresMakerChecker);
+        Assert.False(approvalLimitsManage.IsDocumentApproval);
+
+        var estimatesApprove = items.Single(i => i.Key == "estimates.approve");
+        Assert.Equal("survey_estimating", estimatesApprove.Module);
+        Assert.True(estimatesApprove.RequiresMakerChecker);
+        Assert.True(estimatesApprove.IsDocumentApproval);
+
+        Assert.Equal("crm", items.Single(i => i.Key == "customers.read").Module);
     }
 
     [Fact]

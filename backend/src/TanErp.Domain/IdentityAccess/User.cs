@@ -14,6 +14,15 @@ public class User : Entity
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public Guid RowVersion { get; private set; } = Guid.NewGuid();
 
+    public string? PhoneNumber { get; private set; }
+    public string? EmployeeCode { get; private set; }
+    public Guid? DepartmentId { get; private set; }
+    public Department? Department { get; set; }
+    public Guid? JobTitleId { get; private set; }
+    public JobTitle? JobTitle { get; set; }
+    public Guid? AvatarFileId { get; private set; }
+    public string? Notes { get; private set; }
+
     public bool IsPending => FirebaseUid is null;
 
     private readonly List<Membership> _memberships = new();
@@ -21,7 +30,19 @@ public class User : Entity
 
     protected User() { }
 
-    public User(Guid id, string firebaseUid, string displayName, string email, bool isActive = true, DateTimeOffset? createdAtUtc = null)
+    public User(
+        Guid id,
+        string firebaseUid,
+        string displayName,
+        string email,
+        bool isActive = true,
+        DateTimeOffset? createdAtUtc = null,
+        string? phoneNumber = null,
+        string? employeeCode = null,
+        Guid? departmentId = null,
+        Guid? jobTitleId = null,
+        Guid? avatarFileId = null,
+        string? notes = null)
         : base(id)
     {
         if (string.IsNullOrWhiteSpace(firebaseUid))
@@ -33,10 +54,26 @@ public class User : Entity
         NormalizedEmail = NormalizeEmail(Email);
         IsActive = isActive;
         CreatedAtUtc = createdAtUtc ?? DateTimeOffset.UtcNow;
+        PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
+        EmployeeCode = string.IsNullOrWhiteSpace(employeeCode) ? null : employeeCode.Trim().ToUpperInvariant();
+        DepartmentId = departmentId;
+        JobTitleId = jobTitleId;
+        AvatarFileId = avatarFileId;
+        Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
     }
 
     /// <summary>Creates an administrator-invited user that has no Firebase identity yet.</summary>
-    public static User CreatePending(Guid id, string displayName, string email, DateTimeOffset? createdAtUtc = null)
+    public static User CreatePending(
+        Guid id,
+        string displayName,
+        string email,
+        DateTimeOffset? createdAtUtc = null,
+        string? phoneNumber = null,
+        string? employeeCode = null,
+        Guid? departmentId = null,
+        Guid? jobTitleId = null,
+        Guid? avatarFileId = null,
+        string? notes = null)
     {
         if (string.IsNullOrWhiteSpace(displayName))
             throw new ArgumentException("Display name cannot be empty.", nameof(displayName));
@@ -53,7 +90,13 @@ public class User : Entity
             NormalizedEmail = normalized,
             IsActive = true,
             CreatedAtUtc = createdAtUtc ?? DateTimeOffset.UtcNow,
-            RowVersion = Guid.NewGuid()
+            RowVersion = Guid.NewGuid(),
+            PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim(),
+            EmployeeCode = string.IsNullOrWhiteSpace(employeeCode) ? null : employeeCode.Trim().ToUpperInvariant(),
+            DepartmentId = departmentId,
+            JobTitleId = jobTitleId,
+            AvatarFileId = avatarFileId,
+            Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim()
         };
     }
 
@@ -76,6 +119,34 @@ public class User : Entity
         if (string.IsNullOrWhiteSpace(displayName))
             throw new ArgumentException("Display name cannot be empty.", nameof(displayName));
         DisplayName = displayName.Trim();
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void UpdateProfile(
+        string displayName,
+        string? phoneNumber,
+        string? employeeCode,
+        Guid? departmentId,
+        Guid? jobTitleId,
+        Guid? avatarFileId,
+        string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+            throw new ArgumentException("Display name cannot be empty.", nameof(displayName));
+
+        DisplayName = displayName.Trim();
+        PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
+        EmployeeCode = string.IsNullOrWhiteSpace(employeeCode) ? null : employeeCode.Trim().ToUpperInvariant();
+        DepartmentId = departmentId;
+        JobTitleId = jobTitleId;
+        AvatarFileId = avatarFileId;
+        Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void SetAvatar(Guid? avatarFileId)
+    {
+        AvatarFileId = avatarFileId;
         RowVersion = Guid.NewGuid();
     }
 

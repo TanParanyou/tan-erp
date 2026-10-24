@@ -2,14 +2,17 @@
 
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Controller, type Control, type FieldErrors, type UseFormRegister } from "react-hook-form";
+import { Controller, type Control, type FieldErrors, type UseFormRegister, type UseFormSetValue } from "react-hook-form";
 import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Drawer } from "@/components/ui/Drawer";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Alert } from "@/components/ui/Alert";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { IconPlus } from "@/components/common/Icons";
 import { FormSection } from "@/components/forms/FormSection";
 import { AvatarUpload } from "./avatar-upload";
@@ -47,6 +50,7 @@ interface UserAdminFormFieldsProps {
   existingAvatarUrl?: string | null;
   currentDisplayName?: string;
   selectedDepartmentId?: string;
+  setValue?: UseFormSetValue<UserAdminFormValues>;
   disabled?: boolean;
   hideRoles?: boolean;
   hideMembershipDates?: boolean;
@@ -63,6 +67,7 @@ export function UserAdminFormFields({
   existingAvatarUrl,
   currentDisplayName,
   selectedDepartmentId,
+  setValue,
   disabled = false,
   hideRoles = false,
   hideMembershipDates = false,
@@ -78,16 +83,18 @@ export function UserAdminFormFields({
   const createDeptMutation = useCreateDepartment();
   const createJobTitleMutation = useCreateJobTitle();
 
-  // Quick Add state for Department
+  // Quick Add Drawer state for Department
   const [showQuickDept, setShowQuickDept] = useState(false);
   const [newDeptCode, setNewDeptCode] = useState("");
   const [newDeptName, setNewDeptName] = useState("");
+  const [newDeptNameEn, setNewDeptNameEn] = useState("");
   const [deptError, setDeptError] = useState<string | null>(null);
 
-  // Quick Add state for Job Title
+  // Quick Add Drawer state for Job Title
   const [showQuickJob, setShowQuickJob] = useState(false);
   const [newJobCode, setNewJobCode] = useState("");
   const [newJobName, setNewJobName] = useState("");
+  const [newJobNameEn, setNewJobNameEn] = useState("");
   const [jobError, setJobError] = useState<string | null>(null);
 
   const branches = branchesQuery.data ?? [];
@@ -99,12 +106,17 @@ export function UserAdminFormFields({
     if (!newDeptCode.trim() || !newDeptName.trim()) return;
     setDeptError(null);
     try {
-      await createDeptMutation.mutateAsync({
+      const created = await createDeptMutation.mutateAsync({
         code: newDeptCode.trim(),
         name: newDeptName.trim(),
+        nameEn: newDeptNameEn.trim() || null,
       });
+      if (created?.id && setValue) {
+        setValue("departmentId", created.id, { shouldDirty: true, shouldValidate: true });
+      }
       setNewDeptCode("");
       setNewDeptName("");
+      setNewDeptNameEn("");
       setShowQuickDept(false);
     } catch (err: unknown) {
       setDeptError(err instanceof Error ? err.message : t("errors.GENERIC"));
@@ -115,13 +127,18 @@ export function UserAdminFormFields({
     if (!newJobCode.trim() || !newJobName.trim()) return;
     setJobError(null);
     try {
-      await createJobTitleMutation.mutateAsync({
+      const created = await createJobTitleMutation.mutateAsync({
         code: newJobCode.trim(),
         name: newJobName.trim(),
+        nameEn: newJobNameEn.trim() || null,
         departmentId: selectedDepartmentId || null,
       });
+      if (created?.id && setValue) {
+        setValue("jobTitleId", created.id, { shouldDirty: true, shouldValidate: true });
+      }
       setNewJobCode("");
       setNewJobName("");
+      setNewJobNameEn("");
       setShowQuickJob(false);
     } catch (err: unknown) {
       setJobError(err instanceof Error ? err.message : t("errors.GENERIC"));
@@ -181,129 +198,77 @@ export function UserAdminFormFields({
       <FormSection title={t("sections.masterData")} description={t("sections.masterDataHint")}>
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <div className="flex items-end gap-2">
+            <div className="erp-form-group !mb-0">
+              <label htmlFor="user-admin-department" className="erp-label">
+                {t("fields.department")}
+              </label>
+              <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <Select
-                    label={t("fields.department")}
+                    id="user-admin-department"
+                    wrapperClassName="!mb-0"
                     disabled={disabled || departmentsQuery.isLoading}
                     options={departments.map((d) => ({ value: d.id ?? "", label: `${d.code} - ${d.name}` }))}
                     placeholder={t("fields.selectDepartment")}
-                    error={errors.departmentId?.message}
                     {...register("departmentId")}
                   />
                 </div>
                 {!disabled && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    className="shrink-0 mb-[1px]"
-                    icon={<IconPlus size={16} />}
-                    onClick={() => setShowQuickDept((v) => !v)}
-                    title={t("masterData.quickAddDepartment")}
-                  >
-                    {t("masterData.add")}
-                  </Button>
-                )}
-              </div>
-
-              {showQuickDept && (
-                <div className="border border-erp-border bg-erp-surface-muted p-3 space-y-3">
-                  <h4 className="text-xs font-bold text-erp-navy">{t("masterData.newDepartmentTitle")}</h4>
-                  {deptError && <Alert variant="danger">{deptError}</Alert>}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <Input
-                      label={t("masterData.code")}
-                      value={newDeptCode}
-                      placeholder="DEP-01"
-                      onChange={(e) => setNewDeptCode(e.target.value)}
-                    />
-                    <Input
-                      label={t("masterData.name")}
-                      value={newDeptName}
-                      placeholder={t("masterData.namePlaceholder")}
-                      onChange={(e) => setNewDeptName(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" size="sm" variant="outline" onClick={() => setShowQuickDept(false)}>
-                      {tCommon("actions.cancel")}
-                    </Button>
+                  <Tooltip content={t("masterData.quickAddDepartment")} position="top">
                     <Button
                       type="button"
-                      size="sm"
-                      variant="primary"
-                      isLoading={createDeptMutation.isPending}
-                      onClick={handleCreateDepartment}
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 h-[44px] w-[44px] border-erp-border"
+                      onClick={() => setShowQuickDept(true)}
+                      aria-label={t("masterData.quickAddDepartment")}
                     >
-                      {tCommon("actions.save")}
+                      <IconPlus size={18} />
                     </Button>
-                  </div>
-                </div>
+                  </Tooltip>
+                )}
+              </div>
+              {errors.departmentId?.message && (
+                <p className="erp-error-text" role="alert">
+                  {errors.departmentId.message}
+                </p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-end gap-2">
+            <div className="erp-form-group !mb-0">
+              <label htmlFor="user-admin-job-title" className="erp-label">
+                {t("fields.jobTitle")}
+              </label>
+              <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <Select
-                    label={t("fields.jobTitle")}
+                    id="user-admin-job-title"
+                    wrapperClassName="!mb-0"
                     disabled={disabled || jobTitlesQuery.isLoading}
                     options={jobTitles.map((j) => ({ value: j.id ?? "", label: `${j.code} - ${j.name}` }))}
                     placeholder={t("fields.selectJobTitle")}
-                    error={errors.jobTitleId?.message}
                     {...register("jobTitleId")}
                   />
                 </div>
                 {!disabled && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    className="shrink-0 mb-[1px]"
-                    icon={<IconPlus size={16} />}
-                    onClick={() => setShowQuickJob((v) => !v)}
-                    title={t("masterData.quickAddJobTitle")}
-                  >
-                    {t("masterData.add")}
-                  </Button>
-                )}
-              </div>
-
-              {showQuickJob && (
-                <div className="border border-erp-border bg-erp-surface-muted p-3 space-y-3">
-                  <h4 className="text-xs font-bold text-erp-navy">{t("masterData.newJobTitleTitle")}</h4>
-                  {jobError && <Alert variant="danger">{jobError}</Alert>}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <Input
-                      label={t("masterData.code")}
-                      value={newJobCode}
-                      placeholder="POS-01"
-                      onChange={(e) => setNewJobCode(e.target.value)}
-                    />
-                    <Input
-                      label={t("masterData.name")}
-                      value={newJobName}
-                      placeholder={t("masterData.namePlaceholder")}
-                      onChange={(e) => setNewJobName(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" size="sm" variant="outline" onClick={() => setShowQuickJob(false)}>
-                      {tCommon("actions.cancel")}
-                    </Button>
+                  <Tooltip content={t("masterData.quickAddJobTitle")} position="top">
                     <Button
                       type="button"
-                      size="sm"
-                      variant="primary"
-                      isLoading={createJobTitleMutation.isPending}
-                      onClick={handleCreateJobTitle}
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 h-[44px] w-[44px] border-erp-border"
+                      onClick={() => setShowQuickJob(true)}
+                      aria-label={t("masterData.quickAddJobTitle")}
                     >
-                      {tCommon("actions.save")}
+                      <IconPlus size={18} />
                     </Button>
-                  </div>
-                </div>
+                  </Tooltip>
+                )}
+              </div>
+              {errors.jobTitleId?.message && (
+                <p className="erp-error-text" role="alert">
+                  {errors.jobTitleId.message}
+                </p>
               )}
             </div>
           </div>
@@ -398,6 +363,132 @@ export function UserAdminFormFields({
           )}
         </FormSection>
       )}
+
+      {/* Quick Add Department Drawer */}
+      <Drawer
+        isOpen={showQuickDept}
+        onClose={() => {
+          setShowQuickDept(false);
+          setDeptError(null);
+        }}
+        title={t("masterData.newDepartmentTitle")}
+        description={t("masterData.newDepartmentDescription")}
+        size="md"
+        footer={
+          <div className="flex w-full items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setShowQuickDept(false);
+                setDeptError(null);
+              }}
+              disabled={createDeptMutation.isPending}
+            >
+              {tCommon("actions.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              isLoading={createDeptMutation.isPending}
+              onClick={handleCreateDepartment}
+              disabled={!newDeptCode.trim() || !newDeptName.trim()}
+            >
+              {tCommon("actions.save")}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2">
+          {deptError && <Alert variant="danger">{deptError}</Alert>}
+          <Input
+            label={t("masterData.code")}
+            value={newDeptCode}
+            placeholder="DEP-01"
+            onChange={(e) => setNewDeptCode(e.target.value)}
+            required
+            autoFocus
+          />
+          <Input
+            label={t("masterData.name")}
+            value={newDeptName}
+            placeholder={t("masterData.namePlaceholder")}
+            onChange={(e) => setNewDeptName(e.target.value)}
+            required
+          />
+          <Input
+            label={t("masterData.nameEn")}
+            value={newDeptNameEn}
+            placeholder={t("masterData.nameEnPlaceholder")}
+            onChange={(e) => setNewDeptNameEn(e.target.value)}
+          />
+        </div>
+      </Drawer>
+
+      {/* Quick Add Job Title Drawer */}
+      <Drawer
+        isOpen={showQuickJob}
+        onClose={() => {
+          setShowQuickJob(false);
+          setJobError(null);
+        }}
+        title={t("masterData.newJobTitleTitle")}
+        description={t("masterData.newJobTitleDescription")}
+        size="md"
+        footer={
+          <div className="flex w-full items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setShowQuickJob(false);
+                setJobError(null);
+              }}
+              disabled={createJobTitleMutation.isPending}
+            >
+              {tCommon("actions.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              isLoading={createJobTitleMutation.isPending}
+              onClick={handleCreateJobTitle}
+              disabled={!newJobCode.trim() || !newJobName.trim()}
+            >
+              {tCommon("actions.save")}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2">
+          {jobError && <Alert variant="danger">{jobError}</Alert>}
+          <Input
+            label={t("masterData.code")}
+            value={newJobCode}
+            placeholder="POS-01"
+            onChange={(e) => setNewJobCode(e.target.value)}
+            required
+            autoFocus
+          />
+          <Input
+            label={t("masterData.name")}
+            value={newJobName}
+            placeholder={t("masterData.namePlaceholder")}
+            onChange={(e) => setNewJobName(e.target.value)}
+            required
+          />
+          <Input
+            label={t("masterData.nameEn")}
+            value={newJobNameEn}
+            placeholder={t("masterData.nameEnPlaceholder")}
+            onChange={(e) => setNewJobNameEn(e.target.value)}
+          />
+        </div>
+      </Drawer>
     </div>
   );
 }

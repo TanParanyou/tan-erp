@@ -17,6 +17,7 @@ using TanErp.Application.IdentityAccess.Administration.RevokeRole;
 using TanErp.Application.IdentityAccess.Administration.SetMembershipActive;
 using TanErp.Application.IdentityAccess.Administration.SetUserActive;
 using TanErp.Application.IdentityAccess.Administration.UpdateMembership;
+using TanErp.Application.IdentityAccess.Administration.UpdateUserProfile;
 
 namespace TanErp.Api.Controllers;
 
@@ -30,6 +31,7 @@ public class AdminUsersController : ControllerBase
     private readonly GetAdminUserHandler _getUser;
     private readonly CreateAdminUserHandler _createUser;
     private readonly RenameAdminUserHandler _renameUser;
+    private readonly UpdateAdminUserProfileHandler _updateProfile;
     private readonly SetAdminUserActiveHandler _setUserActive;
     private readonly UpdateAdminMembershipHandler _updateMembership;
     private readonly SetAdminMembershipActiveHandler _setMembershipActive;
@@ -44,6 +46,7 @@ public class AdminUsersController : ControllerBase
         GetAdminUserHandler getUser,
         CreateAdminUserHandler createUser,
         RenameAdminUserHandler renameUser,
+        UpdateAdminUserProfileHandler updateProfile,
         SetAdminUserActiveHandler setUserActive,
         UpdateAdminMembershipHandler updateMembership,
         SetAdminMembershipActiveHandler setMembershipActive,
@@ -57,6 +60,7 @@ public class AdminUsersController : ControllerBase
         _getUser = getUser;
         _createUser = createUser;
         _renameUser = renameUser;
+        _updateProfile = updateProfile;
         _setUserActive = setUserActive;
         _updateMembership = updateMembership;
         _setMembershipActive = setMembershipActive;
@@ -114,7 +118,21 @@ public class AdminUsersController : ControllerBase
 
         var result = await _createUser.Handle(
             new CreateAdminUserCommand(
-                idempotent!.Caller, idempotent.Key, request.DisplayName, request.Email, request.BranchId, request.RoleIds, HttpContext.TraceIdentifier),
+                idempotent!.Caller,
+                idempotent.Key,
+                request.DisplayName,
+                request.Email,
+                request.BranchId,
+                request.RoleIds,
+                HttpContext.TraceIdentifier,
+                request.PhoneNumber,
+                request.EmployeeCode,
+                request.DepartmentId,
+                request.JobTitleId,
+                request.AvatarFileId,
+                request.Notes,
+                request.StartsAtUtc,
+                request.ExpiresAtUtc),
             cancellationToken);
         if (result.IsFailure) return Problem(result.Error);
 
@@ -132,6 +150,30 @@ public class AdminUsersController : ControllerBase
 
         var result = await _renameUser.Handle(
             new RenameAdminUserCommand(conditional!.Caller, userId, conditional.RowVersion, request.DisplayName, HttpContext.TraceIdentifier),
+            cancellationToken);
+        return UserResult(result);
+    }
+
+    [HttpPut("users/{userId:guid}/profile")]
+    [ProducesResponseType<AdminUserResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateUserProfile([FromRoute] Guid userId, [FromBody] UpdateAdminUserProfileRequest request, CancellationToken cancellationToken)
+    {
+        var conditional = ReadConditional(out var failure);
+        if (failure is not null) return failure;
+
+        var result = await _updateProfile.Handle(
+            new UpdateAdminUserProfileCommand(
+                conditional!.Caller,
+                userId,
+                conditional.RowVersion,
+                request.DisplayName ?? string.Empty,
+                request.PhoneNumber,
+                request.EmployeeCode,
+                request.DepartmentId,
+                request.JobTitleId,
+                request.AvatarFileId,
+                request.Notes,
+                HttpContext.TraceIdentifier),
             cancellationToken);
         return UserResult(result);
     }

@@ -128,6 +128,7 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<UserAdminFormValues>({
     resolver: zodResolver(profileSchema),
@@ -372,6 +373,7 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
               register={register}
               control={control}
               errors={errors}
+              setValue={setValue}
               avatarFile={avatarFile}
               onAvatarFileChange={setAvatarFile}
               existingAvatarFileId={user.avatar?.id}

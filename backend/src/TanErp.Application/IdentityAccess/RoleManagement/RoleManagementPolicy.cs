@@ -71,3 +71,55 @@ public static class RoleManagementPolicy
     public static bool NeedsChecker(bool hasHolders, IEnumerable<string> resultingKeys, IReadOnlyCollection<PermissionGrant> added) =>
         hasHolders && added.Count > 0 && AdministrationPolicy.RequiresApproval(resultingKeys);
 }
+
+/// <summary>
+/// Domain-driven permission catalog classification (G-03b / Atelier UI).
+/// Groups permissions into 4 business domains and identifies document approval authorities.
+/// </summary>
+public static class PermissionMetadataPolicy
+{
+    public const string ModuleSystem = "system";
+    public const string ModuleCrm = "crm";
+    public const string ModuleSurveyEstimating = "survey_estimating";
+    public const string ModuleOperations = "operations";
+
+    public static readonly IReadOnlySet<string> DocumentApprovalKeys = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "estimates.approve",
+        "purchase-orders.approve",
+        "projects.change-orders.approve",
+        "mrp.approve",
+        "boms.approve"
+    };
+
+    public static string ResolveModule(string key)
+    {
+        if (key.StartsWith("organizations.") || key.StartsWith("branches.") ||
+            key.StartsWith("users.") || key.StartsWith("memberships.") ||
+            key.StartsWith("roles.") || key.StartsWith("approval-limits.") ||
+            key.StartsWith("audit."))
+        {
+            return ModuleSystem;
+        }
+
+        if (key.StartsWith("customers.") || key.StartsWith("customer-contacts.") ||
+            key.StartsWith("sites.") || key.StartsWith("opportunities.") ||
+            key.StartsWith("quotations."))
+        {
+            return ModuleCrm;
+        }
+
+        if (key.StartsWith("surveys.") || key.StartsWith("survey-templates.") ||
+            key.StartsWith("items.") || key.StartsWith("units.") ||
+            key.StartsWith("item-imports.") || key.StartsWith("cost-records.") ||
+            key.StartsWith("cost-sources.") || key.StartsWith("estimates.") ||
+            key.StartsWith("pricing-templates.") || key.StartsWith("quick-estimates."))
+        {
+            return ModuleSurveyEstimating;
+        }
+
+        return ModuleOperations;
+    }
+
+    public static bool IsDocumentApproval(string key) => DocumentApprovalKeys.Contains(key);
+}

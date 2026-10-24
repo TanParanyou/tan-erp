@@ -74,6 +74,12 @@ public sealed record AdminActor(Guid UserId, Guid MembershipId);
 
 public sealed record AdminRef(Guid Id, string Name);
 
+public sealed record AdminAvatarRef(Guid Id, string ServingUrl);
+
+public sealed record AdminDepartmentRef(Guid Id, string Code, string Name);
+
+public sealed record AdminJobTitleRef(Guid Id, string Code, string Name);
+
 public sealed record AdminPendingRoleRequest(Guid Id, Guid RowVersion, AdminRef Role, AdminRef RequestedBy, DateTimeOffset RequestedAtUtc);
 
 public sealed record AdminMembership(
@@ -92,7 +98,14 @@ public sealed record AdminUser(
     string Email,
     string Status,
     Guid RowVersion,
-    IReadOnlyList<AdminMembership> Memberships);
+    IReadOnlyList<AdminMembership> Memberships,
+    string? PhoneNumber = null,
+    string? EmployeeCode = null,
+    AdminDepartmentRef? Department = null,
+    AdminJobTitleRef? JobTitle = null,
+    AdminAvatarRef? Avatar = null,
+    string? Notes = null,
+    DateTimeOffset? CreatedAtUtc = null);
 
 public sealed record AdminUserPage(IReadOnlyList<AdminUser> Items, int TotalCount, int Page, int PageSize);
 
@@ -107,6 +120,27 @@ public sealed record AdminRoleRequest(
     AdminRef RequestedBy,
     DateTimeOffset RequestedAtUtc);
 
-public sealed record CreateAdminUserInput(string DisplayName, string Email, Guid? BranchId, IReadOnlyList<Guid> RoleIds);
+public sealed record CreateAdminUserInput(
+    string DisplayName,
+    string Email,
+    Guid? BranchId,
+    IReadOnlyList<Guid> RoleIds,
+    string? PhoneNumber = null,
+    string? EmployeeCode = null,
+    Guid? DepartmentId = null,
+    Guid? JobTitleId = null,
+    Guid? AvatarFileId = null,
+    string? Notes = null,
+    DateTimeOffset? StartsAtUtc = null,
+    DateTimeOffset? ExpiresAtUtc = null);
+
+public sealed record UpdateAdminUserProfileInput(
+    string DisplayName,
+    string? PhoneNumber = null,
+    string? EmployeeCode = null,
+    Guid? DepartmentId = null,
+    Guid? JobTitleId = null,
+    Guid? AvatarFileId = null,
+    string? Notes = null);
 
 public sealed record AssignRoleOutcome(bool Pending, AdminUser User, AdminRoleRequest? Request);

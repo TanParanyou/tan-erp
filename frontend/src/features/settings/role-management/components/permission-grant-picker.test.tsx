@@ -4,9 +4,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { PermissionGrantPicker } from "./permission-grant-picker";
 
 const catalog = [
-  { key: "customers.read", description: "Read customers", isApprovalPermission: false },
-  { key: "estimates.approve", description: "Approve estimates", isApprovalPermission: true },
-  { key: "estimates.read", description: null, isApprovalPermission: false },
+  { key: "customers.read", description: "Read customers", module: "crm", isApprovalPermission: false },
+  { key: "estimates.approve", description: "Approve estimates", module: "survey_estimating", isDocumentApproval: true, requiresMakerChecker: true, isApprovalPermission: true },
+  { key: "estimates.read", description: null, module: "survey_estimating", isApprovalPermission: false },
+  { key: "approval-limits.manage", description: "Manage limits", module: "system", isDocumentApproval: false, requiresMakerChecker: true, isApprovalPermission: true },
 ];
 
 describe("PermissionGrantPicker", () => {
@@ -16,7 +17,9 @@ describe("PermissionGrantPicker", () => {
 
     expect(screen.getByLabelText("customers.read")).toBeChecked();
     expect(screen.getByLabelText("estimates.approve")).not.toBeChecked();
-    expect(screen.getByText("สิทธิ์อนุมัติ")).toBeInTheDocument();
+    expect(screen.getByText("สิทธิ์อนุมัติเอกสาร • ผูกวงเงินได้")).toBeInTheDocument();
+    expect(screen.getByText("ต้องตรวจ 2 ขั้นตอน (Maker-Checker)")).toBeInTheDocument();
+    expect(screen.getByText(/สิทธิ์ระดับผู้ดูแลในการเข้าไปกำหนด/)).toBeInTheDocument();
     expect(screen.getByText("เลือกแล้ว 1 สิทธิ์")).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText("estimates.approve"));
@@ -24,6 +27,40 @@ describe("PermissionGrantPicker", () => {
 
     fireEvent.change(screen.getByPlaceholderText("ค้นหาสิทธิ์"), { target: { value: "zzz" } });
     expect(screen.getByText("ไม่พบสิทธิ์ที่ค้นหา")).toBeInTheDocument();
+  });
+
+  it("supports batch toggling by group with icon action buttons", () => {
+    const onBatchToggle = vi.fn();
+    const { rerender } = render(
+      <PermissionGrantPicker
+        catalog={catalog}
+        selected={new Set(["estimates.read"])}
+        disabled={false}
+        onToggle={vi.fn()}
+        onBatchToggle={onBatchToggle}
+      />
+    );
+
+    // Module order: system (0), crm (1), survey_estimating (2)
+    const selectButtons = screen.getAllByRole("button", { name: "เลือกทั้งหมดในกลุ่ม" });
+    fireEvent.click(selectButtons[0]);
+    expect(onBatchToggle).toHaveBeenCalledWith(["approval-limits.manage"], true);
+
+    // When all items in system group are selected, its button switches to clear
+    rerender(
+      <PermissionGrantPicker
+        catalog={catalog}
+        selected={new Set(["approval-limits.manage", "estimates.read"])}
+        disabled={false}
+        onToggle={vi.fn()}
+        onBatchToggle={onBatchToggle}
+      />
+    );
+
+    const clearButton = screen.getByRole("button", { name: "ล้างการเลือกในกลุ่ม" });
+    expect(clearButton).toBeInTheDocument();
+    fireEvent.click(clearButton);
+    expect(onBatchToggle).toHaveBeenCalledWith(["approval-limits.manage"], false);
   });
 
   it("disables every checkbox when read-only", () => {

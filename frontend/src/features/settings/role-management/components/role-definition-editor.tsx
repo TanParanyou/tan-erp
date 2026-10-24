@@ -77,7 +77,18 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
   const catalog = useMemo<CatalogItem[]>(
     () =>
       (catalogQuery.data?.items ?? []).flatMap((item) =>
-        item.key ? [{ key: item.key, description: item.description ?? null, isApprovalPermission: item.isApprovalPermission === true }] : []
+        item.key
+          ? [
+              {
+                key: item.key,
+                description: item.description ?? null,
+                module: item.module ?? null,
+                requiresMakerChecker: item.requiresMakerChecker ?? item.isApprovalPermission === true,
+                isDocumentApproval: item.isDocumentApproval === true,
+                isApprovalPermission: item.isApprovalPermission === true,
+              },
+            ]
+          : []
       ),
     [catalogQuery.data]
   );
@@ -116,11 +127,21 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
   const canEdit = canManage && !locked;
   const addsApproval =
     !isCreate && (role?.memberCount ?? 0) > 0 && catalog.some((c) => c.isApprovalPermission && selected.has(c.key) && !baseline.has(c.key));
+  const hasDocumentApproval = catalog.some((c) => c.isDocumentApproval && selected.has(c.key));
 
   const toggle = (key: string) => {
     const next = new Set(selected);
     if (next.has(key)) next.delete(key);
     else next.add(key);
+    setEdited(next);
+  };
+
+  const batchToggle = (keys: string[], select: boolean) => {
+    const next = new Set(selected);
+    for (const key of keys) {
+      if (select) next.add(key);
+      else next.delete(key);
+    }
     setEdited(next);
   };
 
@@ -185,18 +206,43 @@ export function RoleDefinitionEditor({ roleId }: { roleId: string }) {
         {role?.pendingChange != null ? <Alert variant="warning">{t("editor.pendingBanner")}</Alert> : null}
         <FormSection title={isCreate ? t("editor.createTitle") : t("editor.editTitle")}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input label={t("editor.fields.name")} required disabled={!canEdit} error={errors.name?.message} {...register("name")} />
-            <Textarea label={t("editor.fields.description")} rows={2} disabled={!canEdit} error={errors.description?.message} {...register("description")} />
+            <Input
+              label={t("editor.fields.name")}
+              placeholder={t("editor.fields.namePlaceholder")}
+              required
+              disabled={!canEdit}
+              error={errors.name?.message}
+              {...register("name")}
+            />
+            <Textarea
+              label={t("editor.fields.description")}
+              placeholder={t("editor.fields.descriptionPlaceholder")}
+              rows={2}
+              disabled={!canEdit}
+              error={errors.description?.message}
+              {...register("description")}
+            />
           </div>
         </FormSection>
         <FormSection title={t("editor.permissions.title")}>
           {addsApproval ? <Alert variant="warning">{t("editor.approvalNotice")}</Alert> : null}
+          {hasDocumentApproval ? (
+            <div className="border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900">
+              💡 {t("editor.permissions.approvalNoticeHint")}
+            </div>
+          ) : null}
           {catalogQuery.isPending ? (
             <MonoSpinner size="md" label={tCommon("states.loading")} />
           ) : catalogQuery.isError ? (
             <Alert variant="danger">{t("errors.GENERIC")}</Alert>
           ) : (
-            <PermissionGrantPicker catalog={catalog} selected={selected} disabled={!canEdit} onToggle={toggle} />
+            <PermissionGrantPicker
+              catalog={catalog}
+              selected={selected}
+              disabled={!canEdit}
+              onToggle={toggle}
+              onBatchToggle={batchToggle}
+            />
           )}
           {scoped.length > 0 ? (
             <div className="space-y-1">

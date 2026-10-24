@@ -16,7 +16,13 @@ public static class RoleSortKey
     public static bool IsValid(string value) => value is Name or CreatedAt;
 }
 
-public sealed record PermissionCatalogEntry(string Key, string? Description, bool IsApprovalPermission);
+public sealed record PermissionCatalogEntry(
+    string Key,
+    string? Description,
+    string Module,
+    bool RequiresMakerChecker,
+    bool IsDocumentApproval,
+    bool IsApprovalPermission);
 
 public sealed record RoleGrantInput(string PermissionKey, string Scope, Guid? BranchId);
 

@@ -300,6 +300,43 @@ public class FileParentAccessResolver : IFileParentAccessResolver
                 return Result<FileParentAccess>.Success(new FileParentAccess(normalizedParentType, parentId, null, access.OrganizationId));
             }
 
+            case FileParentTypes.User:
+            {
+                var requiredPerm = operation == FileAccessOperation.Read ? "users.read" : "users.manage";
+                var hasPerm = await HasPermissionAsync(access.MembershipId, requiredPerm, cancellationToken);
+                if (!hasPerm && operation == FileAccessOperation.Read)
+                {
+                    hasPerm = await HasPermissionAsync(access.MembershipId, "users.manage", cancellationToken);
+                }
+
+                if (!hasPerm)
+                {
+                    return Result<FileParentAccess>.Failure(
+                        new Error("PERMISSION_DENIED", "Access is denied for the requested operation."));
+                }
+
+                if (parentId.HasValue)
+                {
+                    var exists = await _db.Users
+                        .AsNoTracking()
+                        .AnyAsync(u => u.Id == parentId.Value && u.Memberships.Any(m => m.OrganizationId == access.OrganizationId), cancellationToken);
+
+                    if (!exists)
+                    {
+                        return Result<FileParentAccess>.Failure(
+                            new Error("RESOURCE_NOT_FOUND", "User not found."));
+                    }
+
+                    return Result<FileParentAccess>.Success(
+                        new FileParentAccess(normalizedParentType, parentId, null, access.OrganizationId));
+                }
+                else
+                {
+                    return Result<FileParentAccess>.Success(
+                        new FileParentAccess(normalizedParentType, null, creationIntentId, access.OrganizationId));
+                }
+            }
+
             default:
                 return await ResolveRegisteredOwnerAsync(access, normalizedParentType, parentId, operation, cancellationToken);
         }

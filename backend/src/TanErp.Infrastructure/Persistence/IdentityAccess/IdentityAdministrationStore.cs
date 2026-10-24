@@ -147,8 +147,48 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                 || await _db.Users.AsNoTracking().AnyAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken))
                 return Fail<AdminUser>("USER_EMAIL_ALREADY_EXISTS", "A user with this email already exists.");
 
-            var user = User.CreatePending(Guid.NewGuid(), input.DisplayName, input.Email, now);
-            var membership = new Membership(Guid.NewGuid(), organizationId, input.BranchId, user.Id, isActive: true, createdAtUtc: now);
+            if (input.DepartmentId.HasValue)
+            {
+                var deptExists = await _db.Departments.AsNoTracking()
+                    .AnyAsync(d => d.Id == input.DepartmentId.Value && d.OrganizationId == organizationId, cancellationToken);
+                if (!deptExists) return Fail<AdminUser>("DEPARTMENT_NOT_FOUND", "Department not found.");
+            }
+
+            if (input.JobTitleId.HasValue)
+            {
+                var jobExists = await _db.JobTitles.AsNoTracking()
+                    .AnyAsync(j => j.Id == input.JobTitleId.Value && j.OrganizationId == organizationId, cancellationToken);
+                if (!jobExists) return Fail<AdminUser>("JOB_TITLE_NOT_FOUND", "Job title not found.");
+            }
+
+            if (input.AvatarFileId.HasValue)
+            {
+                var fileExists = await _db.UploadedFiles.AsNoTracking()
+                    .AnyAsync(f => f.Id == input.AvatarFileId.Value && f.OrganizationId == organizationId, cancellationToken);
+                if (!fileExists) return Fail<AdminUser>("FILE_NOT_FOUND", "Avatar file not found.");
+            }
+
+            var user = User.CreatePending(
+                Guid.NewGuid(),
+                input.DisplayName,
+                input.Email,
+                now,
+                input.PhoneNumber,
+                input.EmployeeCode,
+                input.DepartmentId,
+                input.JobTitleId,
+                input.AvatarFileId,
+                input.Notes);
+
+            var membership = new Membership(
+                Guid.NewGuid(),
+                organizationId,
+                input.BranchId,
+                user.Id,
+                isActive: true,
+                startsAtUtc: input.StartsAtUtc,
+                expiresAtUtc: input.ExpiresAtUtc,
+                createdAtUtc: now);
             _db.Users.Add(user);
             _db.Memberships.Add(membership);
 
@@ -206,6 +246,61 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
             var before = user.RowVersion;
             user.Rename(displayName);
             AddAudit(organizationId, actor, "users.renamed", "User", user.Id.ToString(), traceId, _clock.UtcNow, new { renamed = true }, before, user.RowVersion);
+            await _db.SaveChangesAsync(cancellationToken);
+            return await ReloadUserAsync(organizationId, user.Id, cancellationToken);
+        }, cancellationToken);
+
+    public Task<Result<AdminUser>> UpdateUserProfileAsync(
+        Guid organizationId, Guid userId, Guid expectedRowVersion, UpdateAdminUserProfileInput input, AdminActor actor, string traceId, CancellationToken cancellationToken) =>
+        RunAsync(async () =>
+        {
+            var user = await FindUserInOrganizationAsync(organizationId, userId, cancellationToken);
+            if (user is null) return NotFound<AdminUser>("User");
+            if (user.RowVersion != expectedRowVersion) return VersionConflict<AdminUser>();
+
+            if (input.DepartmentId.HasValue)
+            {
+                var deptExists = await _db.Departments.AsNoTracking()
+                    .AnyAsync(d => d.Id == input.DepartmentId.Value && d.OrganizationId == organizationId, cancellationToken);
+                if (!deptExists) return Fail<AdminUser>("DEPARTMENT_NOT_FOUND", "Department not found.");
+            }
+
+            if (input.JobTitleId.HasValue)
+            {
+                var jobExists = await _db.JobTitles.AsNoTracking()
+                    .AnyAsync(j => j.Id == input.JobTitleId.Value && j.OrganizationId == organizationId, cancellationToken);
+                if (!jobExists) return Fail<AdminUser>("JOB_TITLE_NOT_FOUND", "Job title not found.");
+            }
+
+            if (input.AvatarFileId.HasValue)
+            {
+                var fileExists = await _db.UploadedFiles.AsNoTracking()
+                    .AnyAsync(f => f.Id == input.AvatarFileId.Value && f.OrganizationId == organizationId, cancellationToken);
+                if (!fileExists) return Fail<AdminUser>("FILE_NOT_FOUND", "Avatar file not found.");
+            }
+
+            var before = user.RowVersion;
+            user.UpdateProfile(
+                input.DisplayName,
+                input.PhoneNumber,
+                input.EmployeeCode,
+                input.DepartmentId,
+                input.JobTitleId,
+                input.AvatarFileId,
+                input.Notes);
+
+            AddAudit(organizationId, actor, "users.profile_updated", "User", user.Id.ToString(), traceId, _clock.UtcNow,
+                new
+                {
+                    displayName = input.DisplayName,
+                    phoneNumber = input.PhoneNumber,
+                    employeeCode = input.EmployeeCode,
+                    departmentId = input.DepartmentId,
+                    jobTitleId = input.JobTitleId,
+                    avatarFileId = input.AvatarFileId
+                },
+                before, user.RowVersion);
+
             await _db.SaveChangesAsync(cancellationToken);
             return await ReloadUserAsync(organizationId, user.Id, cancellationToken);
         }, cancellationToken);
@@ -550,7 +645,26 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
 
         var users = await _db.Users.AsNoTracking()
             .Where(u => userIds.Contains(u.Id) && u.Memberships.Any(m => m.OrganizationId == organizationId))
-            .Select(u => new { u.Id, u.DisplayName, u.Email, u.IsActive, u.FirebaseUid, u.RowVersion })
+            .Select(u => new
+            {
+                u.Id,
+                u.DisplayName,
+                u.Email,
+                u.IsActive,
+                u.FirebaseUid,
+                u.RowVersion,
+                u.PhoneNumber,
+                u.EmployeeCode,
+                DepartmentId = u.Department != null ? (Guid?)u.Department.Id : null,
+                DepartmentCode = u.Department != null ? u.Department.Code : null,
+                DepartmentName = u.Department != null ? u.Department.Name : null,
+                JobTitleId = u.JobTitle != null ? (Guid?)u.JobTitle.Id : null,
+                JobTitleCode = u.JobTitle != null ? u.JobTitle.Code : null,
+                JobTitleName = u.JobTitle != null ? u.JobTitle.Name : null,
+                u.AvatarFileId,
+                u.Notes,
+                u.CreatedAtUtc
+            })
             .ToListAsync(cancellationToken);
 
         var memberships = await _db.Memberships.AsNoTracking()
@@ -597,7 +711,31 @@ public class IdentityAdministrationStore : IIdentityAdministrationStore
                     x.Request.RequestedAtUtc)).ToList())).ToList();
 
             var status = !u.IsActive ? "inactive" : u.FirebaseUid is null ? "pending" : "active";
-            result.Add(new AdminUser(u.Id, u.DisplayName, u.Email, status, u.RowVersion, items));
+
+            var department = u.DepartmentId.HasValue && u.DepartmentCode != null && u.DepartmentName != null
+                ? new AdminDepartmentRef(u.DepartmentId.Value, u.DepartmentCode, u.DepartmentName)
+                : null;
+            var jobTitle = u.JobTitleId.HasValue && u.JobTitleCode != null && u.JobTitleName != null
+                ? new AdminJobTitleRef(u.JobTitleId.Value, u.JobTitleCode, u.JobTitleName)
+                : null;
+            var avatar = u.AvatarFileId.HasValue
+                ? new AdminAvatarRef(u.AvatarFileId.Value, $"/api/v1/files/{u.AvatarFileId.Value}/content")
+                : null;
+
+            result.Add(new AdminUser(
+                u.Id,
+                u.DisplayName,
+                u.Email,
+                status,
+                u.RowVersion,
+                items,
+                u.PhoneNumber,
+                u.EmployeeCode,
+                department,
+                jobTitle,
+                avatar,
+                u.Notes,
+                u.CreatedAtUtc));
         }
 
         return result;

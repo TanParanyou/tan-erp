@@ -41,7 +41,19 @@ public sealed class RoleManagementStore : IRoleManagementStore
         var rows = await _db.Permissions.AsNoTracking().Where(p => p.IsActive)
             .Select(p => new { p.Key, p.Description }).ToListAsync(ct);
         // Ordinal order in memory: Postgres collation would order '-' and '.' differently from the documented key order.
-        return rows.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => new PermissionCatalogEntry(p.Key, p.Description, AdministrationPolicy.ApprovalPermissionKeys.Contains(p.Key))).ToList();
+        return rows.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p =>
+        {
+            var isApproval = AdministrationPolicy.ApprovalPermissionKeys.Contains(p.Key);
+            var module = PermissionMetadataPolicy.ResolveModule(p.Key);
+            var isDocApproval = PermissionMetadataPolicy.IsDocumentApproval(p.Key);
+            return new PermissionCatalogEntry(
+                p.Key,
+                p.Description,
+                module,
+                isApproval,
+                isDocApproval,
+                isApproval);
+        }).ToList();
     }
 
     public async Task<RoleDefinitionPage> ListRolesAsync(Guid organizationId, RoleListQuery q, CancellationToken ct)

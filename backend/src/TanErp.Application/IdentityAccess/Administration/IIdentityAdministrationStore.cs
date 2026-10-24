@@ -17,6 +17,8 @@ public interface IIdentityAdministrationStore
 
     Task<Result<AdminUser>> RenameUserAsync(Guid organizationId, Guid userId, Guid expectedRowVersion, string displayName, AdminActor actor, string traceId, CancellationToken cancellationToken);
 
+    Task<Result<AdminUser>> UpdateUserProfileAsync(Guid organizationId, Guid userId, Guid expectedRowVersion, UpdateAdminUserProfileInput input, AdminActor actor, string traceId, CancellationToken cancellationToken);
+
     Task<Result<AdminUser>> SetUserActiveAsync(Guid organizationId, Guid userId, Guid expectedRowVersion, bool active, AdminActor actor, string traceId, CancellationToken cancellationToken);
 
     Task<Result<AdminUser>> UpdateMembershipAsync(Guid organizationId, Guid membershipId, Guid expectedRowVersion, Guid? branchId, DateTimeOffset? startsAtUtc, DateTimeOffset? expiresAtUtc, AdminActor actor, string traceId, CancellationToken cancellationToken);

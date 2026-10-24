@@ -41,15 +41,45 @@ public class CreateAdminUserHandler
         if (!AdminHandlerSupport.IsPlausibleEmail(email))
             return AdminHandlerSupport.Validation<AdminUser>("A valid email is required.");
 
+        var phone = command.PhoneNumber?.Trim();
+        if (phone is { Length: > 50 })
+            return AdminHandlerSupport.Validation<AdminUser>("Phone number must not exceed 50 characters.");
+
+        var code = command.EmployeeCode?.Trim();
+        if (code is { Length: > 50 })
+            return AdminHandlerSupport.Validation<AdminUser>("Employee code must not exceed 50 characters.");
+
+        var notes = command.Notes?.Trim();
+        if (notes is { Length: > 1000 })
+            return AdminHandlerSupport.Validation<AdminUser>("Notes must not exceed 1000 characters.");
+
+        if (command.StartsAtUtc.HasValue && command.ExpiresAtUtc.HasValue && command.StartsAtUtc > command.ExpiresAtUtc)
+            return AdminHandlerSupport.Validation<AdminUser>("Starts at must be before or equal to expires at.");
+
         var roles = (command.RoleIds ?? Array.Empty<Guid>()).Distinct().ToList();
         if (roles.Count == 0 || roles.Count > AdministrationPolicy.MaxRolesPerRequest || roles.Contains(Guid.Empty))
             return AdminHandlerSupport.Validation<AdminUser>("Between 1 and 20 roles are required.");
 
         var payloadHash = Sha256Hex.Compute(
-            $"{name}|{User.NormalizeEmail(email)}|{command.BranchId}|{string.Join(",", roles.OrderBy(id => id))}");
+            $"{name}|{User.NormalizeEmail(email)}|{command.BranchId}|{command.DepartmentId}|{command.JobTitleId}|{string.Join(",", roles.OrderBy(id => id))}");
+
+        var input = new CreateAdminUserInput(
+            name,
+            email!,
+            command.BranchId,
+            roles,
+            phone,
+            code,
+            command.DepartmentId,
+            command.JobTitleId,
+            command.AvatarFileId,
+            notes,
+            command.StartsAtUtc,
+            command.ExpiresAtUtc);
+
         return await _store.CreateUserAsync(
             access!.OrganizationId,
-            new CreateAdminUserInput(name, email!, command.BranchId, roles),
+            input,
             new AdminActor(access.ActorUserId, access.MembershipId),
             Sha256Hex.Compute(command.IdempotencyKey),
             payloadHash,

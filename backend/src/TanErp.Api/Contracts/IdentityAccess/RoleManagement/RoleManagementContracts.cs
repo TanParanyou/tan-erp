@@ -3,12 +3,24 @@ using TanErp.Application.IdentityAccess.RoleManagement;
 
 namespace TanErp.Api.Contracts.IdentityAccess.RoleManagement;
 
-public record PermissionCatalogEntryResponse(string Key, string? Description, bool IsApprovalPermission);
+public record PermissionCatalogEntryResponse(
+    string Key,
+    string? Description,
+    string Module,
+    bool RequiresMakerChecker,
+    bool IsDocumentApproval,
+    bool IsApprovalPermission);
 
 public record PermissionCatalogResponse(IReadOnlyList<PermissionCatalogEntryResponse> Items)
 {
     public static PermissionCatalogResponse From(IReadOnlyList<PermissionCatalogEntry> items) =>
-        new(items.Select(i => new PermissionCatalogEntryResponse(i.Key, i.Description, i.IsApprovalPermission)).ToList());
+        new(items.Select(i => new PermissionCatalogEntryResponse(
+            i.Key,
+            i.Description,
+            i.Module,
+            i.RequiresMakerChecker,
+            i.IsDocumentApproval,
+            i.IsApprovalPermission)).ToList());
 }
 
 public record RoleDefinitionSummaryResponse(

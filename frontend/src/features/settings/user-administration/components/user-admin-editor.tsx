@@ -62,6 +62,7 @@ export function UserAdminEditor() {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<UserAdminFormValues>({
     resolver: zodResolver(schema),
@@ -167,6 +168,7 @@ export function UserAdminEditor() {
         register={register}
         control={control}
         errors={errors}
+        setValue={setValue}
         avatarFile={avatarFile}
         onAvatarFileChange={setAvatarFile}
         currentDisplayName={watchedDisplayName}
