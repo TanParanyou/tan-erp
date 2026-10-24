@@ -74,7 +74,14 @@ describe("SidebarNav Component", () => {
     render(<SidebarNav currentUser={mockUser} isCollapsed={false} />);
     const link = screen.getByRole("link", { name: "สำรวจหน้างาน" });
     expect(link).toBeDefined();
-    expect(link).toHaveAttribute("href", "/th/surveys/field");
+    expect(link).toHaveAttribute("href", "/th/surveys");
+  });
+
+  it("renders survey master data menu link when user has survey or settings permissions", () => {
+    render(<SidebarNav currentUser={mockUser} isCollapsed={false} />);
+    const link = screen.getByRole("link", { name: "ข้อมูลสำรวจและดีไซน์" });
+    expect(link).toBeDefined();
+    expect(link).toHaveAttribute("href", "/th/settings/surveys");
   });
 
   it("filters menu items in real time when typing in search input", () => {

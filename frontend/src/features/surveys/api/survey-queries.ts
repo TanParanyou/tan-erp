@@ -9,11 +9,18 @@ import {
   type CloneSurveyRevisionRequest,
   type VoidSurveyRevisionRequest,
   type SurveyTemplateVersionListResponse,
+  type SurveyReferenceDataResponse,
+  type SurveyDesignStyleResponse,
+  type CreateSurveyDesignStyleRequest,
+  type UpdateSurveyDesignStyleRequest,
+  type SurveyMoodToneResponse,
+  type CreateSurveyMoodToneRequest,
+  type UpdateSurveyMoodToneRequest,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError, ApiError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSafeLocale } from "@/lib/i18n/i18n-context";
-import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
+import { useSelectedMembership, useOptionalSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { opportunityDetailQueryKey } from "@/features/opportunities/api/opportunity-queries";
 
 export function opportunitySurveyQueryKey(
@@ -29,6 +36,33 @@ export function surveyTemplateVersionsQueryKey(
   locale: "th" | "en"
 ): readonly ["business", string | null | undefined, "th" | "en", "surveys", "template-versions"] {
   return ["business", membershipId, locale, "surveys", "template-versions"] as const;
+}
+
+export function surveyReferenceDataQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en"
+): readonly ["business", string | null | undefined, "th" | "en", "surveys", "reference-data"] {
+  return ["business", membershipId, locale, "surveys", "reference-data"] as const;
+}
+
+export function useSurveyReferenceData(): UseQueryResult<SurveyReferenceDataResponse, Error> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const membershipContext = useOptionalSelectedMembership();
+  const membershipId = membershipContext?.selectedMembership?.id;
+
+  return useQuery({
+    queryKey: surveyReferenceDataQueryKey(membershipId, normalizedLocale),
+    queryFn: async () => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.getSurveyReferenceData({ token, membershipId, locale: normalizedLocale });
+    },
+    enabled: Boolean(membershipId),
+    staleTime: 60 * 60 * 1000,
+  });
 }
 
 export function useSurveyTemplateVersions(): UseQueryResult<SurveyTemplateVersionListResponse, Error> {
@@ -286,6 +320,206 @@ export function useVoidSurveyRevision(
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: opportunitySurveyQueryKey(membershipId, normalizedLocale, opportunityId),
+      });
+    },
+  });
+}
+
+export function surveyDesignStylesQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  onlyActive?: boolean
+): readonly ["business", string | null | undefined, "th" | "en", "surveys", "design-styles", boolean | undefined] {
+  return ["business", membershipId, locale, "surveys", "design-styles", onlyActive] as const;
+}
+
+export function surveyMoodTonesQueryKey(
+  membershipId: string | null | undefined,
+  locale: "th" | "en",
+  onlyActive?: boolean
+): readonly ["business", string | null | undefined, "th" | "en", "surveys", "mood-tones", boolean | undefined] {
+  return ["business", membershipId, locale, "surveys", "mood-tones", onlyActive] as const;
+}
+
+export function useSurveyDesignStyles(
+  onlyActive?: boolean
+): UseQueryResult<SurveyDesignStyleResponse[], Error> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const membershipContext = useOptionalSelectedMembership();
+  const membershipId = membershipContext?.selectedMembership?.id;
+
+  return useQuery({
+    queryKey: surveyDesignStylesQueryKey(membershipId, normalizedLocale, onlyActive),
+    queryFn: async () => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.listSurveyDesignStyles(
+        { token, membershipId, locale: normalizedLocale },
+        onlyActive
+      );
+    },
+    enabled: Boolean(membershipId),
+  });
+}
+
+export function useCreateSurveyDesignStyle(): UseMutationResult<
+  SurveyDesignStyleResponse,
+  Error,
+  CreateSurveyDesignStyleRequest
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: CreateSurveyDesignStyleRequest) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.createSurveyDesignStyle(payload, {
+        token,
+        membershipId,
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["business", membershipId, normalizedLocale, "surveys", "design-styles"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: surveyReferenceDataQueryKey(membershipId, normalizedLocale),
+      });
+    },
+  });
+}
+
+export function useUpdateSurveyDesignStyle(): UseMutationResult<
+  SurveyDesignStyleResponse,
+  Error,
+  { id: string; payload: UpdateSurveyDesignStyleRequest }
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: UpdateSurveyDesignStyleRequest }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.updateSurveyDesignStyle(id, payload, {
+        token,
+        membershipId,
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["business", membershipId, normalizedLocale, "surveys", "design-styles"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: surveyReferenceDataQueryKey(membershipId, normalizedLocale),
+      });
+    },
+  });
+}
+
+export function useSurveyMoodTones(
+  onlyActive?: boolean
+): UseQueryResult<SurveyMoodToneResponse[], Error> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const membershipContext = useOptionalSelectedMembership();
+  const membershipId = membershipContext?.selectedMembership?.id;
+
+  return useQuery({
+    queryKey: surveyMoodTonesQueryKey(membershipId, normalizedLocale, onlyActive),
+    queryFn: async () => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.listSurveyMoodTones(
+        { token, membershipId, locale: normalizedLocale },
+        onlyActive
+      );
+    },
+    enabled: Boolean(membershipId),
+  });
+}
+
+export function useCreateSurveyMoodTone(): UseMutationResult<
+  SurveyMoodToneResponse,
+  Error,
+  CreateSurveyMoodToneRequest
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: CreateSurveyMoodToneRequest) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.createSurveyMoodTone(payload, {
+        token,
+        membershipId,
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["business", membershipId, normalizedLocale, "surveys", "mood-tones"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: surveyReferenceDataQueryKey(membershipId, normalizedLocale),
+      });
+    },
+  });
+}
+
+export function useUpdateSurveyMoodTone(): UseMutationResult<
+  SurveyMoodToneResponse,
+  Error,
+  { id: string; payload: UpdateSurveyMoodToneRequest }
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: UpdateSurveyMoodToneRequest }) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.updateSurveyMoodTone(id, payload, {
+        token,
+        membershipId,
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["business", membershipId, normalizedLocale, "surveys", "mood-tones"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: surveyReferenceDataQueryKey(membershipId, normalizedLocale),
       });
     },
   });

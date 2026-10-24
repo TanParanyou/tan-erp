@@ -14,6 +14,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   rightIcon?: React.ReactNode;
   isReadOnly?: boolean;
   wrapperClassName?: string;
+  labelClassName?: string;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -21,6 +22,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     {
       className,
       wrapperClassName,
+      labelClassName,
       type = "text",
       label,
       error,
@@ -59,7 +61,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={cn("erp-form-group", wrapperClassName)}>
         {label && (
-          <label htmlFor={generatedId} className="erp-label">
+          <label htmlFor={generatedId} className={cn("erp-label", labelClassName)}>
             {label}
             {required && <span className="erp-label-required">*</span>}
           </label>

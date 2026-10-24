@@ -55,6 +55,7 @@
     "opportunities": "โอกาสทางการขาย",
     "fieldSurveys": "สำรวจหน้างาน",
     "documentNumbering": "รูปแบบเลขที่เอกสาร",
+    "surveySettings": "ข้อมูลสำรวจและดีไซน์",
     "itemMaster": "ข้อมูลหลักสินค้า",
     "mainNavigation": "เมนูหลัก",
     "workspaceGroup": "พื้นที่ทำงาน",
@@ -709,6 +710,7 @@
     "opportunityDetail": "รายละเอียดโอกาสทางการขาย",
     "opportunityList": "รายการโอกาสทางการขาย",
     "backToList": "กลับหน้ารายการโอกาสทางการขาย",
+    "surveyFieldAction": "บันทึกสำรวจหน้างาน",
     "emptyTitle": "ยังไม่มีโอกาสทางการขาย",
     "emptyDetail": "ยังไม่มีการสร้างโอกาสทางการขายในระบบ",
     "createFirstCta": "สร้างโอกาสทางการขายแรก",
@@ -1004,6 +1006,7 @@
       "void": "ยกเลิก"
     },
     "openWorkspace": "เปิดหน้าต่างสำรวจ (Workspace)",
+    "fieldSurveyAction": "สำรวจห้อง/ขนาดจริง",
     "workspaceTitle": "บันทึกผลการสำรวจหน้างาน (Site Survey Workspace)",
     "workspaceDesc": "บันทึกข้อมูลพื้นที่ ขนาดที่วัดได้ ข้อจำกัด และตรวจรับความพร้อมเพื่อส่งต่อการประเมินราคา",
     "visitedAtLabel": "วันที่และเวลาเข้าพบจริง",
@@ -1760,6 +1763,59 @@
       "preview": "ตัวอย่างรหัส"
     }
   },
+  "surveySettings": {
+    "title": "ตั้งค่าข้อมูลสำรวจและดีไซน์ (Survey & Design Settings)",
+    "description": "จัดการข้อมูลหลักสไตล์การออกแบบ (Design Styles) และมู้ดโทนสี (Mood & Tones) สำหรับงานสำรวจหน้างาน",
+    "loadError": "ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
+    "tabs": {
+      "designStyles": "สไตล์การออกแบบ (Design Styles)",
+      "moodTones": "มู้ดและโทนสี (Mood & Tones)"
+    },
+    "actions": {
+      "addStyle": "เพิ่มสไตล์การออกแบบ",
+      "editStyle": "แก้ไขสไตล์การออกแบบ",
+      "addMoodTone": "เพิ่มมู้ดและโทนสี",
+      "editMoodTone": "แก้ไขมู้ดและโทนสี",
+      "addColor": "เพิ่มสี",
+      "removeColor": "ลบสี",
+      "save": "บันทึกข้อมูล",
+      "cancel": "ยกเลิก"
+    },
+    "fields": {
+      "code": "รหัสอ้างอิง (Code)",
+      "codePlaceholder": "เช่น modern, japandi, warm-cozy",
+      "styleName": "ชื่อสไตล์การออกแบบ",
+      "moodToneName": "ชื่อมู้ดและโทนสี",
+      "description": "คำอธิบาย",
+      "descriptionPlaceholder": "ระบุคำอธิบายลักษณะหรือความต้องการ...",
+      "colorPalette": "ชุดโทนสี (Color Palette)",
+      "colorHexPlaceholder": "#3B82F6 หรือชื่อสี",
+      "sortOrder": "ลำดับการแสดงผล",
+      "isActive": "เปิดใช้งาน",
+      "status": "สถานะ"
+    },
+    "table": {
+      "code": "รหัส",
+      "name": "ชื่อ (TH / EN)",
+      "description": "คำอธิบาย",
+      "palette": "ชุดสี",
+      "sortOrder": "ลำดับ",
+      "status": "สถานะ",
+      "actions": "การจัดการ"
+    },
+    "status": {
+      "active": "เปิดใช้งาน",
+      "inactive": "ปิดใช้งาน"
+    },
+    "messages": {
+      "createSuccess": "สร้างข้อมูลสำเร็จแล้ว",
+      "updateSuccess": "บันทึกการแก้ไขสำเร็จแล้ว",
+      "codeRequired": "กรุณาระบุรหัสอ้างอิง",
+      "nameRequired": "กรุณาระบุชื่อภาษาไทย",
+      "saveFailed": "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+      "noData": "ยังไม่มีรายการข้อมูล"
+    }
+  },
   "signatures": {
     "saved": "บันทึกลายเซ็น \"{name}\" ลงในคลังเรียบร้อยแล้ว",
     "deleted": "ลบลายเซ็น \"{name}\" ออกจากคลังเรียบร้อยแล้ว"
@@ -2253,7 +2309,8 @@
     "table": {
       "user": "ผู้ใช้",
       "status": "สถานะ",
-      "access": "สิทธิ์การเข้าถึง"
+      "access": "สิทธิ์การเข้าถึง",
+      "departmentAndJobTitle": "ตำแหน่ง / แผนก"
     },
     "status": {
       "pending": "รอเข้าระบบครั้งแรก",
@@ -2262,14 +2319,30 @@
     },
     "sections": {
       "identity": "ข้อมูลผู้ใช้",
-      "identityHint": "ใช้อีเมลเดียวกับที่ผู้ใช้จะล็อกอินด้วย",
-      "access": "สิทธิ์การเข้าถึง",
-      "accessHint": "เลือกสาขาและบทบาทที่ผู้ใช้จะได้รับ"
+      "identityHint": "ข้อมูลพื้นฐานและข้อมูลติดต่อของพนักงาน",
+      "masterData": "แผนกและตำแหน่งงาน",
+      "masterDataHint": "กำหนดแผนก ตำแหน่ง และบันทึกช่วยจำ",
+      "access": "การเข้าถึงและสมาชิกภาพ",
+      "accessHint": "เลือกสาขาและช่วงเวลาที่มีผล",
+      "roles": "บทบาทหน้าที่",
+      "rolesHint": "เลือกบทบาทที่ผู้ใช้จะได้รับในระบบ"
     },
     "fields": {
       "displayName": "ชื่อที่แสดง",
       "email": "อีเมล",
       "emailHint": "ผูกบัญชีอัตโนมัติเมื่อผู้ใช้ล็อกอินด้วยอีเมลนี้ที่ผ่านการยืนยันแล้ว",
+      "phoneNumber": "เบอร์โทรศัพท์",
+      "phoneNumberPlaceholder": "081-234-5678",
+      "employeeCode": "รหัสพนักงาน",
+      "employeeCodePlaceholder": "EMP-001",
+      "department": "แผนก",
+      "selectDepartment": "เลือกแผนก",
+      "jobTitle": "ตำแหน่งงาน",
+      "selectJobTitle": "เลือกตำแหน่งงาน",
+      "notes": "บันทึกช่วยจำ / หมายเหตุ",
+      "notesPlaceholder": "ระบุหมายเหตุภายในเพิ่มเติม",
+      "uploadAvatar": "อัปโหลดรูปโปรไฟล์",
+      "avatarHint": "รองรับไฟล์ PNG, JPG หรือ WebP ขนาดไม่เกิน 5MB",
       "branch": "สาขา",
       "roles": "บทบาท",
       "startsAt": "เริ่มมีผล",
@@ -2277,12 +2350,31 @@
       "displayNamePlaceholder": "เช่น สมชาย ใจดี",
       "emailPlaceholder": "user@example.com"
     },
+    "masterData": {
+      "quickAddDepartment": "เพิ่มแผนกใหม่",
+      "quickAddJobTitle": "เพิ่มตำแหน่งงานใหม่",
+      "add": "เพิ่ม",
+      "newDepartmentTitle": "เพิ่มแผนกใหม่",
+      "newDepartmentDescription": "สร้างแผนกใหม่สำหรับจัดกลุ่มบุคลากรในองค์กร",
+      "newJobTitleTitle": "เพิ่มตำแหน่งงานใหม่",
+      "newJobTitleDescription": "สร้างตำแหน่งงานใหม่สำหรับกำหนดบทบาทหน้าที่ของพนักงาน",
+      "code": "รหัส",
+      "name": "ชื่อภาษาไทย",
+      "namePlaceholder": "ระบุชื่อ",
+      "nameEn": "ชื่อภาษาอังกฤษ",
+      "nameEnPlaceholder": "ระบุชื่อภาษาอังกฤษ (ถ้ามี)",
+      "description": "รายละเอียด / คำอธิบาย",
+      "descriptionPlaceholder": "ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
+    },
     "validation": {
       "displayNameRequired": "กรุณากรอกชื่อที่แสดง",
       "displayNameTooLong": "ชื่อที่แสดงต้องไม่เกิน 255 ตัวอักษร",
       "emailRequired": "กรุณากรอกอีเมล",
       "emailInvalid": "รูปแบบอีเมลไม่ถูกต้อง",
-      "roleRequired": "กรุณาเลือกอย่างน้อยหนึ่งบทบาท"
+      "roleRequired": "กรุณาเลือกอย่างน้อยหนึ่งบทบาท",
+      "phoneTooLong": "เบอร์โทรศัพท์ต้องไม่เกิน 50 ตัวอักษร",
+      "codeTooLong": "รหัสพนักงานต้องไม่เกิน 50 ตัวอักษร",
+      "notesTooLong": "หมายเหตุต้องไม่เกิน 1,000 ตัวอักษร"
     },
     "requiresApproval": "ต้องมีผู้ตรวจอนุมัติ",
     "notAssignable": "มอบไม่ได้",
@@ -4301,7 +4393,9 @@
       "approvalNotice": "การเพิ่มสิทธิ์อนุมัติให้บทบาทที่มีผู้ถืออยู่ต้องให้ผู้ตรวจอีกคนอนุมัติก่อนมีผล",
       "fields": {
         "name": "ชื่อบทบาท",
-        "description": "คำอธิบาย"
+        "namePlaceholder": "เช่น เจ้าหน้าที่ฝ่ายขาย, ผู้จัดการโครงการ",
+        "description": "คำอธิบาย",
+        "descriptionPlaceholder": "ระบุหน้าที่หรือขอบเขตความรับผิดชอบของบทบาทนี้"
       },
       "validation": {
         "nameRequired": "กรุณากรอกชื่อบทบาท",
@@ -4316,7 +4410,7 @@
         "approvalLimitsManageHint": "สิทธิ์ระดับผู้ดูแลในการเข้าไปกำหนด/แก้ไขเพดานวงเงินอนุมัติในระบบ (ไม่ใช่การมอบวงเงินให้แก่บทบาทนี้)",
         "approvalNoticeHint": "บทบาทนี้มีสิทธิ์อนุมัติเอกสาร เมื่อบันทึกบทบาทแล้ว สามารถไปกำหนดเพดานวงเงินอนุมัติที่เมนู 'วงเงินอนุมัติ'",
         "selectAll": "เลือกทั้งหมดในกลุ่ม",
-        "clearGroup": "ล้าง",
+        "clearGroup": "ล้างการเลือกในกลุ่ม",
         "modules": {
           "system": "การจัดการระบบและความปลอดภัย (System & Administration)",
           "crm": "งานขาย ลูกค้า และโอกาสทางการค้า (CRM & Commercial)",
@@ -4464,12 +4558,18 @@
   "fieldSurvey": {
     "title": "สำรวจหน้างานสำหรับรีโนเวท",
     "subtitle": "บันทึกขนาด สเปกวัสดุ และภาพถ่ายหน้างานจริง สำหรับส่งต่อทีมประเมินราคา",
+    "backToList": "กลับไปรายการสำรวจ",
+    "surveyTargetSection": "ข้อมูลโอกาสทางการขายและบริเวณสำรวจ",
+    "surveyTargetSectionDesc": "ระบุโอกาสทางการขายที่เกี่ยวข้องและเลือกห้องที่ต้องการสำรวจ",
     "opportunity": "โอกาสทางการขาย",
     "selectOpportunity": "— เลือกโอกาสทางการขาย —",
     "searchOpportunityPlaceholder": "พิมพ์ค้นหาชื่อโอกาสขาย, รหัส หรือชื่อลูกค้า...",
     "noOpportunityFound": "ไม่พบโอกาสทางการขาย",
-    "createNewOpportunity": "+ สร้างโอกาสทางการขายใหม่",
+    "createNewOpportunity": "สร้างโอกาสทางการขายใหม่",
     "roomName": "ชื่อห้อง / บริเวณสำรวจ",
+    "roomNameRequired": "กรุณาระบุชื่อห้อง / บริเวณสำรวจ",
+    "jumpToItem": "ข้ามไปยัง:",
+    "unnamedItem": "(ยังไม่ได้ระบุชื่อ)",
     "roomPlaceholder": "เช่น ห้องนอนใหญ่ Master Bedroom, โถงรับแขก",
     "customRoomOption": "✍️ กรอกชื่อห้องเอง...",
     "selectOrTypeRoom": "— เลือกห้องหรือพิมพ์เอง —",
@@ -4493,6 +4593,7 @@
     "surveyorNotes": "บันทึกภาพรวมหน้างาน / สไตล์ที่ลูกค้าชอบ",
     "surveyorNotesPlaceholder": "เช่น ลูกค้าชอบสไตล์ Modern Classic หรูหรา โทนไม้อุ่นตัดหินอ่อนเทา",
     "itemsSectionTitle": "รายการที่ลูกค้าสั่งทำในห้องนี้",
+    "itemsSectionDesc": "บันทึกขนาด สเปกวัสดุ และภาพถ่ายของแต่ละชิ้นงานที่ต้องการสั่งทำ",
     "addItem": "เพิ่มรายการสั่งทำ",
     "itemTitle": "ชื่อรายการ / ชิ้นงาน",
     "itemTitlePlaceholder": "เช่น โต๊ะทำงานไม้สัก, ตู้เสื้อผ้า Walk-in, พื้นหินอ่อน",
@@ -4520,7 +4621,28 @@
       "customNotes": "หมายเหตุสเปกเพิ่มเติม / งานสั่งทำพิเศษ",
       "customNotesPlaceholder": "เช่น ขอบโต๊ะลบมน 5 มม. ไม่เห็นเสี้ยนไม้ รางม่านซ่อนไฟ 12V",
       "quickSelect": "เลือกสเปกยอดนิยม:",
-      "noSkuSelected": "ยังไม่ได้ระบุ SKU จากระบบ"
+      "noSkuSelected": "ยังไม่ได้ระบุ SKU จากระบบ",
+      "presets": {
+        "plywoodHpl": {
+          "label": "ไม้อัดยาง 15mm + ปิดผิวลามิเนต",
+          "coreSkuName": "ไม้อัดยาง 15 มม. เกรดเฟอร์นิเจอร์",
+          "finishSkuName": "แผ่นลามิเนต HPL ผิวสัมผัสด้าน"
+        },
+        "teakWoodPu": {
+          "label": "ไม้สักทอง + พ่น PU ด้าน",
+          "coreSkuName": "ไม้สักทองคัดเกรด A อบแห้ง",
+          "finishSkuName": "พ่นแลคเกอร์ / PU สัมผัสด้าน 50%"
+        },
+        "marbleFlooring": {
+          "label": "ปูพื้นหินอ่อน Grigio + ยาแนวตรงเบอร์",
+          "finishSkuName": "หินอ่อน Grigio Orobico 60x60 ซม."
+        },
+        "doubleCurtain": {
+          "label": "ผ้าม่าน 2 ชั้น + รางไฟฟ้า",
+          "coreSkuName": "รางม่านไฟฟ้าระบบเงียบ Zigbee",
+          "finishSkuName": "ผ้าโปร่ง Dim-out + ผ้าทึบกัน UV 100%"
+        }
+      }
     },
     "dimensions": {
       "title": "มิติและขนาดที่วัดได้จริง",
@@ -4532,19 +4654,24 @@
       "grossArea": "พื้นที่รวม",
       "deductions": "รายการหักพื้นที่ช่องเปิด / เสาโครงสร้าง",
       "addDeduction": "เพิ่มรายการหักพื้นที่",
+      "removeDeduction": "ลบรายการหักพื้นที่",
       "deductionLabel": "ชื่อจุดที่หัก",
       "deductionLabelPlaceholder": "เช่น เสาโครงสร้าง, ช่องเปิดบันได, ช่องท่อ",
       "deductionArea": "พื้นที่ที่หัก (ตร.ม.)",
       "netArea": "พื้นที่สุทธิสำหรับสั่งผลิต/ปูพื้น",
       "customPoints": "รายการจุดวัดเฉพาะทาง",
       "addCustomPoint": "เพิ่มจุดวัด",
+      "removePoint": "ลบจุดวัด",
       "pointLabel": "ชื่อจุดวัด",
       "pointLabelPlaceholder": "เช่น ความกว้างกรอบหน้าต่าง, หลืบม่านลึก, สูงถึงบัว",
       "pointValue": "ระยะที่วัดได้ (มม.)",
       "pointNotes": "หมายเหตุจุดวัด",
       "pointNotesPlaceholder": "เช่น เว้นรางไฟ, ระวังท่อแอร์",
       "unitMm": "มม.",
-      "unitSqm": "ตร.ม."
+      "unitSqm": "ตร.ม.",
+      "boxSummary": "{w} × {d} × {h} มม.",
+      "areaSummary": "พื้นที่ {area} ตร.ม.",
+      "customSummary": "{count} จุดวัด"
     },
     "photos": {
       "title": "ภาพถ่ายและระยะสเก็ตช์",
@@ -4553,6 +4680,9 @@
       "tagSiteLocation": "ภาพตำแหน่งหน้างาน",
       "tagSketchLaser": "ภาพสเก็ตช์ / หน้าจอเลเซอร์",
       "tagMaterialSwatch": "ภาพตัวอย่างวัสดุ / ลวดลาย",
+      "tagConstraintDefect": "ภาพอุปสรรค / จุดชำรุด",
+      "tagMoodTone": "ภาพตัวอย่าง Mood & Tone",
+      "tagOther": "ภาพอื่นๆ",
       "captionPlaceholder": "คำอธิบายภาพ (เช่น ริมหน้าต่างทิศใต้)",
       "deletePhoto": "ลบภาพนี้",
       "empty": "ยังไม่มีภาพแนบสำหรับรายการนี้"
@@ -4561,13 +4691,54 @@
       "saveDraft": "บันทึกข้อมูลสำรวจ",
       "saving": "กำลังบันทึก...",
       "savedSuccess": "บันทึกข้อมูลสำรวจหน้างานเรียบร้อยแล้ว",
+      "saveFailed": "ไม่สามารถบันทึกข้อมูลสำรวจได้ กรุณาลองใหม่อีกครั้ง",
       "sendToEstimator": "ส่งให้ทีมประเมินราคา (BOQ)",
       "deleteItem": "ลบรายการนี้",
       "itemNumber": "รายการที่ {number}"
     },
+    "completionModal": {
+      "title": "บันทึกข้อมูลสำรวจเรียบร้อยแล้ว",
+      "subtitle": "ข้อมูลห้องและรายการสั่งทำถูกบันทึกเข้าสู่โอกาสทางการขายแล้ว",
+      "summaryRoom": "บริเวณสำรวจ:",
+      "summaryItems": "{count} รายการสั่งทำ",
+      "summaryPhotos": "{count} ภาพถ่าย",
+      "nextRoomBtn": "สำรวจห้องถัดไป (งานเดิม)",
+      "viewOpportunityBtn": "ดูสรุปภาพรวมโอกาสขาย",
+      "stayOnPageBtn": "อยู่หน้านี้ต่อเพื่อตรวจสอบ",
+      "readyForNextRoomToast": "พร้อมสำหรับบันทึกห้องถัดไปแล้ว"
+    },
     "empty": {
       "noItemsTitle": "ยังไม่มีรายการสั่งทำ",
       "noItemsDesc": "กดปุ่ม 'เพิ่มรายการสั่งทำ' เพื่อเริ่มบันทึกขนาดและสเปกวัสดุ"
+    },
+    "style": {
+      "sectionTitle": "สไตล์และมู้ดแอนด์โทนที่ลูกค้าชอบ (Mood & Tone)",
+      "sectionDesc": "บันทึกทิศทางความชอบด้านดีไซน์และโทนสี เพื่อเป็นข้อมูลอ้างอิงให้ทีมออกแบบและคำนวณราคา",
+      "designStyleLabel": "สไตล์การตกแต่ง (Design Style)",
+      "selectDesignStyle": "-- เลือกสไตล์ที่ลูกค้าชอบ --",
+      "moodToneLabel": "มู้ดและโทนสี (Mood & Tone)",
+      "selectMoodTone": "-- เลือกโทนสีที่ลูกค้าชอบ --",
+      "samplePalette": "คู่สีตัวอย่าง:",
+      "customStyleNotes": "ข้อจำกัดหรือข้อกำหนดพิเศษด้านสไตล์/สี",
+      "customStyleNotesPlaceholder": "เช่น ลูกค้าไม่เอาไม้โทนแดง, เน้นไฟวอร์มไลท์ 3000K, บัวพื้นสีขาวล้วน"
     }
+  },
+  "surveyList": {
+    "title": "งานสำรวจหน้างาน (Field Surveys)",
+    "subtitle": "รายการโอกาสทางการขายและงานที่ต้องสำรวจพื้นที่ เก็บขนาดสเปกจริงหน้างาน",
+    "recordNewSurvey": "บันทึกสำรวจหน้างาน",
+    "searchPlaceholder": "ค้นหาตามชื่อโครงการ รหัส หรือลูกค้า...",
+    "stageAll": "ทุกขั้นตอนสำรวจ",
+    "stageSurveying": "กำลังสำรวจหน้างาน (Surveying)",
+    "stageQualified": "พร้อมเริ่มสำรวจ (Qualified)",
+    "stageEstimating": "สำรวจเสร็จสิ้น/ส่งทำราคา (Estimating)",
+    "emptyTitle": "ไม่พบงานสำรวจหน้างาน",
+    "emptyDetail": "ยังไม่มีโอกาสทางการขายที่อยู่ในขั้นตอนสำรวจ หรือไม่พบข้อมูลตามตัวกรอง",
+    "actionSurvey": "สำรวจหน้างาน",
+    "actionView": "ดูรายละเอียด",
+    "appointment": "วันนัดหมายสำรวจ",
+    "surveyor": "ผู้สำรวจ",
+    "customer": "ลูกค้า",
+    "project": "โครงการ / โอกาสขาย"
   }
 }

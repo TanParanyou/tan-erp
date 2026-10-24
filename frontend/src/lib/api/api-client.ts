@@ -61,6 +61,18 @@ export type UpdateSurveyChecklistRequest = components["schemas"]["UpdateSurveyCh
 export type UpdateSurveyEvidenceRequest = components["schemas"]["UpdateSurveyEvidenceRequest"];
 export type SurveyTemplateVersionResponse = components["schemas"]["SurveyTemplateVersionResponse"];
 export type SurveyTemplateVersionListResponse = components["schemas"]["SurveyTemplateVersionListResponse"];
+export type SurveyReferenceDataResponse = components["schemas"]["SurveyReferenceDataResponse"];
+export type SurveyCategoryOptionResponse = components["schemas"]["SurveyCategoryOptionResponse"];
+export type SurveyPhotoTagOptionResponse = components["schemas"]["SurveyPhotoTagOptionResponse"];
+export type SurveyMeasurementTypeOptionResponse = components["schemas"]["SurveyMeasurementTypeOptionResponse"];
+export type SurveyDesignStyleOptionResponse = components["schemas"]["SurveyDesignStyleOptionResponse"];
+export type SurveyMoodToneOptionResponse = components["schemas"]["SurveyMoodToneOptionResponse"];
+export type SurveyDesignStyleResponse = components["schemas"]["SurveyDesignStyleResponse"];
+export type CreateSurveyDesignStyleRequest = components["schemas"]["CreateSurveyDesignStyleRequest"];
+export type UpdateSurveyDesignStyleRequest = components["schemas"]["UpdateSurveyDesignStyleRequest"];
+export type SurveyMoodToneResponse = components["schemas"]["SurveyMoodToneResponse"];
+export type CreateSurveyMoodToneRequest = components["schemas"]["CreateSurveyMoodToneRequest"];
+export type UpdateSurveyMoodToneRequest = components["schemas"]["UpdateSurveyMoodToneRequest"];
 
 export type EstimateDetailResponse = components["schemas"]["EstimateDetailResponse"];
 export type EstimateRevisionResponse = components["schemas"]["EstimateRevisionResponse"];
@@ -97,9 +109,14 @@ export type AdminRoleRequestResponse = components["schemas"]["AdminRoleRequestRe
 export type AdminRoleRequestListResponse = components["schemas"]["AdminRoleRequestListResponse"];
 export type AdminAssignRoleResponse = components["schemas"]["AdminAssignRoleResponse"];
 export type CreateAdminUserRequest = components["schemas"]["CreateAdminUserRequest"];
+export type UpdateAdminUserProfileRequest = components["schemas"]["UpdateAdminUserProfileRequest"];
 export type RenameAdminUserRequest = components["schemas"]["RenameAdminUserRequest"];
 export type UpdateAdminMembershipRequest = components["schemas"]["UpdateAdminMembershipRequest"];
 export type AssignAdminRoleRequest = components["schemas"]["AssignAdminRoleRequest"];
+export type DepartmentResponse = components["schemas"]["DepartmentResponse"];
+export type CreateDepartmentRequest = components["schemas"]["CreateDepartmentRequest"];
+export type JobTitleResponse = components["schemas"]["JobTitleResponse"];
+export type CreateJobTitleRequest = components["schemas"]["CreateJobTitleRequest"];
 export type OrganizationProfileResponse = components["schemas"]["OrganizationProfileResponse"];
 export type UpdateOrganizationProfileRequest = components["schemas"]["UpdateOrganizationProfileRequest"];
 export type AdminBranchResponse = components["schemas"]["BranchResponse"];
@@ -986,6 +1003,88 @@ export class ApiClient {
     );
   }
 
+  async getSurveyReferenceData(options: RequestOptions): Promise<SurveyReferenceDataResponse> {
+    return this.request<SurveyReferenceDataResponse>(
+      "/api/v1/surveys/reference-data",
+      "GET",
+      options
+    );
+  }
+
+  async listSurveyDesignStyles(
+    options: RequestOptions,
+    onlyActive?: boolean
+  ): Promise<SurveyDesignStyleResponse[]> {
+    const query = onlyActive !== undefined ? `?onlyActive=${onlyActive}` : "";
+    return this.request<SurveyDesignStyleResponse[]>(
+      `/api/v1/settings/surveys/design-styles${query}`,
+      "GET",
+      options
+    );
+  }
+
+  async createSurveyDesignStyle(
+    payload: CreateSurveyDesignStyleRequest,
+    options: RequestOptions
+  ): Promise<SurveyDesignStyleResponse> {
+    return this.request<SurveyDesignStyleResponse>(
+      "/api/v1/settings/surveys/design-styles",
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async updateSurveyDesignStyle(
+    id: string,
+    payload: UpdateSurveyDesignStyleRequest,
+    options: RequestOptions
+  ): Promise<SurveyDesignStyleResponse> {
+    return this.request<SurveyDesignStyleResponse>(
+      `/api/v1/settings/surveys/design-styles/${encodeURIComponent(id)}`,
+      "PUT",
+      options,
+      payload
+    );
+  }
+
+  async listSurveyMoodTones(
+    options: RequestOptions,
+    onlyActive?: boolean
+  ): Promise<SurveyMoodToneResponse[]> {
+    const query = onlyActive !== undefined ? `?onlyActive=${onlyActive}` : "";
+    return this.request<SurveyMoodToneResponse[]>(
+      `/api/v1/settings/surveys/mood-tones${query}`,
+      "GET",
+      options
+    );
+  }
+
+  async createSurveyMoodTone(
+    payload: CreateSurveyMoodToneRequest,
+    options: RequestOptions
+  ): Promise<SurveyMoodToneResponse> {
+    return this.request<SurveyMoodToneResponse>(
+      "/api/v1/settings/surveys/mood-tones",
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async updateSurveyMoodTone(
+    id: string,
+    payload: UpdateSurveyMoodToneRequest,
+    options: RequestOptions
+  ): Promise<SurveyMoodToneResponse> {
+    return this.request<SurveyMoodToneResponse>(
+      `/api/v1/settings/surveys/mood-tones/${encodeURIComponent(id)}`,
+      "PUT",
+      options,
+      payload
+    );
+  }
+
   async getEstimate(
     id: string,
     options: RequestOptions
@@ -1256,6 +1355,29 @@ export class ApiClient {
 
   async renameAdminUser(userId: string, payload: RenameAdminUserRequest, options: RequestOptions): Promise<AdminUserResponse> {
     return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}`, "PATCH", options, payload);
+  }
+
+  async updateAdminUserProfile(userId: string, payload: UpdateAdminUserProfileRequest, options: RequestOptions): Promise<AdminUserResponse> {
+    return this.request<AdminUserResponse>(`/api/v1/admin/users/${encodeURIComponent(userId)}/profile`, "PUT", options, payload);
+  }
+
+  async listDepartments(onlyActive = true, options: RequestOptions): Promise<DepartmentResponse[]> {
+    return this.request<DepartmentResponse[]>(`/api/v1/departments?onlyActive=${onlyActive}`, "GET", options);
+  }
+
+  async createDepartment(payload: CreateDepartmentRequest, options: RequestOptions): Promise<DepartmentResponse> {
+    return this.request<DepartmentResponse>("/api/v1/departments", "POST", options, payload);
+  }
+
+  async listJobTitles(departmentId: string | null | undefined, onlyActive = true, options: RequestOptions): Promise<JobTitleResponse[]> {
+    const query = new URLSearchParams();
+    if (departmentId) query.set("departmentId", departmentId);
+    query.set("onlyActive", String(onlyActive));
+    return this.request<JobTitleResponse[]>(`/api/v1/job-titles?${query.toString()}`, "GET", options);
+  }
+
+  async createJobTitle(payload: CreateJobTitleRequest, options: RequestOptions): Promise<JobTitleResponse> {
+    return this.request<JobTitleResponse>("/api/v1/job-titles", "POST", options, payload);
   }
 
   async setAdminUserActive(userId: string, active: boolean, options: RequestOptions): Promise<AdminUserResponse> {

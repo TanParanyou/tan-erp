@@ -19,6 +19,7 @@ import {
   IconMapPin,
   IconLock,
   IconCheckCircle,
+  IconPalette,
 } from "@/components/common/Icons";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
@@ -94,7 +95,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/`;
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
-  const isFieldSurveysActive = pathname.startsWith(`/${locale}/surveys/field`);
+  const isFieldSurveysActive = pathname.startsWith(`/${locale}/surveys`);
   const isProjectsActive = pathname.startsWith(`/${locale}/projects`);
   const isProcurementActive = pathname.startsWith(`/${locale}/procurement`);
   const isInventoryActive = pathname.startsWith(`/${locale}/inventory`);
@@ -104,6 +105,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isQuickEstimateActive = pathname.startsWith(`/${locale}/quick-estimates`) || pathname.startsWith(`/${locale}/pricing-templates`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
+  const isSurveySettingsActive = pathname.startsWith(`/${locale}/settings/surveys`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
   const isRoleRequestsActive = pathname.startsWith(`/${locale}/settings/role-requests`);
   const isOrganizationSettingsActive = pathname.startsWith(`/${locale}/settings/organization`);
@@ -138,7 +140,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     if (hasFieldSurveysRead) {
       items.push({
         id: "field-surveys",
-        href: `/${locale}/surveys/field`,
+        href: `/${locale}/surveys`,
         label: tShell("fieldSurveys"),
         icon: <IconMapPin size={20} />,
         isActive: isFieldSurveysActive,
@@ -508,6 +510,9 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isDocNumberingVisible =
     hasSettingsRead &&
     (!trimmedSearch || tShell("documentNumbering").toLowerCase().includes(trimmedSearch));
+  const isSurveySettingsVisible =
+    (hasSettingsRead || hasFieldSurveysRead) &&
+    (!trimmedSearch || tShell("surveySettings").toLowerCase().includes(trimmedSearch));
 
   const isUserAdminVisible =
     hasUsersRead && (!trimmedSearch || tShell("userAdmin").toLowerCase().includes(trimmedSearch));
@@ -542,6 +547,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasAnyResults =
     isHomeVisible ||
     isDocNumberingVisible ||
+    isSurveySettingsVisible ||
     isUserAdminVisible ||
     isRoleRequestsVisible ||
     isOrganizationSettingsVisible ||
@@ -688,6 +694,20 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
                 label: tShell("documentNumbering"),
                 icon: <IconFileText size={20} />,
                 isActive: isDocumentNumberingActive,
+              })}
+            </li>
+          )}
+
+          {/* Survey Master Data (Settings) */}
+          {isSurveySettingsVisible && (
+            <li>
+              <div className="erp-nav-divider" />
+              {renderLink({
+                id: "survey-settings",
+                href: `/${locale}/settings/surveys`,
+                label: tShell("surveySettings"),
+                icon: <IconPalette size={20} />,
+                isActive: isSurveySettingsActive,
               })}
             </li>
           )}

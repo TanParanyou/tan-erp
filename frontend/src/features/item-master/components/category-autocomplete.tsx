@@ -69,7 +69,7 @@ export function CategoryAutocomplete({
       onSearchChange={setSearchQuery}
       getItemKey={(category) => category.id ?? ""}
       renderSelectedCard={(onClear, category) => (
-        <div className="flex min-h-[44px] items-center gap-3 border border-erp-navy/40 bg-erp-surface px-3 py-2">
+        <div className="flex h-11 min-h-[44px] items-center gap-3 border border-erp-navy/40 bg-erp-surface px-3 py-1.5 box-border">
           <Avatar initial={(locale === "en" ? category?.name?.english : category?.name?.thai) ?? undefined} fileId={category?.imageFileId} alt={resolvedLabel} size="sm" />
           <span className="min-w-0 flex-1 truncate text-sm text-erp-text-main">
             {category ? `${category.code ?? "-"} · ${locale === "en" ? category.name?.english ?? "-" : category.name?.thai ?? "-"}` : "-"}

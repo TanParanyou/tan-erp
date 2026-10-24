@@ -66,7 +66,7 @@ export function BrandAutocomplete({
       onSearchChange={setSearchQuery}
       getItemKey={(brand) => brand.id ?? ""}
       renderSelectedCard={(onClear, brand) => (
-        <div className="flex min-h-[44px] items-center gap-3 border border-erp-navy/40 bg-erp-surface px-3 py-2">
+        <div className="flex h-11 min-h-[44px] items-center gap-3 border border-erp-navy/40 bg-erp-surface px-3 py-1.5 box-border">
           <Avatar initial={(locale === "en" ? brand?.name?.english : brand?.name?.thai) ?? undefined} fileId={brand?.imageFileId} alt={resolvedLabel} size="sm" />
           <span className="min-w-0 flex-1 truncate text-sm text-erp-text-main">
             {brand ? `${brand.code ?? "-"} · ${locale === "en" ? brand.name?.english ?? "-" : brand.name?.thai ?? "-"}` : "-"}

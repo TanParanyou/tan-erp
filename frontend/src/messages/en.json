@@ -55,6 +55,7 @@
     "opportunities": "Opportunities",
     "fieldSurveys": "Field Surveys",
     "documentNumbering": "Document Numbering",
+    "surveySettings": "Survey & Design Data",
     "itemMaster": "Item Master",
     "mainNavigation": "Main navigation",
     "workspaceGroup": "Workspace",
@@ -709,6 +710,7 @@
     "opportunityDetail": "Opportunity Details",
     "opportunityList": "Opportunity List",
     "backToList": "Back to Opportunities",
+    "surveyFieldAction": "Field Survey",
     "emptyTitle": "No Opportunities Found",
     "emptyDetail": "No sales opportunities have been created yet.",
     "createFirstCta": "Create the first opportunity",
@@ -1004,6 +1006,7 @@
       "void": "Void"
     },
     "openWorkspace": "Open Workspace",
+    "fieldSurveyAction": "Field Room Survey",
     "workspaceTitle": "Site Survey Workspace",
     "workspaceDesc": "Record survey areas, measurements, constraints and verify readiness to hand off for estimation.",
     "visitedAtLabel": "Actual Visit Date & Time",
@@ -1760,6 +1763,59 @@
       "preview": "Sample Code"
     }
   },
+  "surveySettings": {
+    "title": "Survey & Design Settings",
+    "description": "Manage master data for survey design styles and mood/color tones",
+    "loadError": "Failed to load master data. Please try again.",
+    "tabs": {
+      "designStyles": "Design Styles",
+      "moodTones": "Mood & Tones"
+    },
+    "actions": {
+      "addStyle": "Add Design Style",
+      "editStyle": "Edit Design Style",
+      "addMoodTone": "Add Mood & Tone",
+      "editMoodTone": "Edit Mood & Tone",
+      "addColor": "Add Color",
+      "removeColor": "Remove Color",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "fields": {
+      "code": "Code",
+      "codePlaceholder": "e.g., modern, japandi, warm-cozy",
+      "styleName": "Design Style Name",
+      "moodToneName": "Mood & Tone Name",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe style characteristics or aesthetics...",
+      "colorPalette": "Color Palette",
+      "colorHexPlaceholder": "#3B82F6 or color name",
+      "sortOrder": "Sort Order",
+      "isActive": "Active",
+      "status": "Status"
+    },
+    "table": {
+      "code": "Code",
+      "name": "Name (TH / EN)",
+      "description": "Description",
+      "palette": "Palette",
+      "sortOrder": "Order",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "messages": {
+      "createSuccess": "Created successfully",
+      "updateSuccess": "Updated successfully",
+      "codeRequired": "Code is required",
+      "nameRequired": "Thai name is required",
+      "saveFailed": "Failed to save. Please try again.",
+      "noData": "No items found"
+    }
+  },
   "signatures": {
     "saved": "Signature \"{name}\" saved to library successfully",
     "deleted": "Signature \"{name}\" removed from library successfully"
@@ -2253,7 +2309,8 @@
     "table": {
       "user": "User",
       "status": "Status",
-      "access": "Access"
+      "access": "Access",
+      "departmentAndJobTitle": "Job Title / Department"
     },
     "status": {
       "pending": "Awaiting first sign-in",
@@ -2262,14 +2319,30 @@
     },
     "sections": {
       "identity": "User details",
-      "identityHint": "Use the same email the user will sign in with",
-      "access": "Access",
-      "accessHint": "Choose the branch and the roles this user receives"
+      "identityHint": "Basic information and employee contact details",
+      "masterData": "Department & Job Title",
+      "masterDataHint": "Assign department, job title, and internal notes",
+      "access": "Access and Membership",
+      "accessHint": "Choose the branch and effective dates",
+      "roles": "Roles and Permissions",
+      "rolesHint": "Select roles assigned to this user"
     },
     "fields": {
       "displayName": "Display name",
       "email": "Email",
       "emailHint": "The account is linked automatically when the user signs in with this verified email",
+      "phoneNumber": "Phone number",
+      "phoneNumberPlaceholder": "081-234-5678",
+      "employeeCode": "Employee code",
+      "employeeCodePlaceholder": "EMP-001",
+      "department": "Department",
+      "selectDepartment": "Select department",
+      "jobTitle": "Job title",
+      "selectJobTitle": "Select job title",
+      "notes": "Internal notes / Remarks",
+      "notesPlaceholder": "Enter additional internal notes",
+      "uploadAvatar": "Upload profile photo",
+      "avatarHint": "Supports PNG, JPG, or WebP up to 5MB",
       "branch": "Branch",
       "roles": "Roles",
       "startsAt": "Starts at",
@@ -2277,12 +2350,31 @@
       "displayNamePlaceholder": "e.g. John Doe",
       "emailPlaceholder": "user@example.com"
     },
+    "masterData": {
+      "quickAddDepartment": "Add new department",
+      "quickAddJobTitle": "Add new job title",
+      "add": "Add",
+      "newDepartmentTitle": "Add new department",
+      "newDepartmentDescription": "Create a new department for organizing personnel",
+      "newJobTitleTitle": "Add new job title",
+      "newJobTitleDescription": "Create a new job title for defining employee responsibilities",
+      "code": "Code",
+      "name": "Name",
+      "namePlaceholder": "Enter name",
+      "nameEn": "English Name",
+      "nameEnPlaceholder": "Enter English name (optional)",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter additional details (optional)"
+    },
     "validation": {
       "displayNameRequired": "Enter a display name",
       "displayNameTooLong": "Display name must be 255 characters or fewer",
       "emailRequired": "Enter an email",
       "emailInvalid": "The email format is invalid",
-      "roleRequired": "Select at least one role"
+      "roleRequired": "Select at least one role",
+      "phoneTooLong": "Phone number must be 50 characters or fewer",
+      "codeTooLong": "Employee code must be 50 characters or fewer",
+      "notesTooLong": "Notes must be 1,000 characters or fewer"
     },
     "requiresApproval": "Needs checker approval",
     "notAssignable": "Not assignable",
@@ -4301,7 +4393,9 @@
       "approvalNotice": "Adding approval permissions to a role that people already hold needs another checker to approve before it takes effect.",
       "fields": {
         "name": "Role name",
-        "description": "Description"
+        "namePlaceholder": "e.g. Sales Specialist, Project Manager",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the duties and scope of this role"
       },
       "validation": {
         "nameRequired": "Enter the role name",
@@ -4316,7 +4410,7 @@
         "approvalLimitsManageHint": "Grants administrative access to configure approval limits for roles across the organization (does not grant an approval limit to this role).",
         "approvalNoticeHint": "This role holds document approval authority. Once saved, you can configure its financial caps under 'Approval Limits'.",
         "selectAll": "Select all in group",
-        "clearGroup": "Clear",
+        "clearGroup": "Clear group selection",
         "modules": {
           "system": "System & Administration",
           "crm": "CRM & Commercial",
@@ -4464,12 +4558,18 @@
   "fieldSurvey": {
     "title": "Field Survey for Renovation",
     "subtitle": "Capture dimensions, material specs, and on-site photos for estimation",
+    "backToList": "Back to Field Surveys",
+    "surveyTargetSection": "Opportunity & Survey Area",
+    "surveyTargetSectionDesc": "Select the related sales opportunity and specify the room to survey",
     "opportunity": "Opportunity",
     "selectOpportunity": "— Select opportunity —",
     "searchOpportunityPlaceholder": "Search opportunity title, code, or customer...",
     "noOpportunityFound": "No opportunity found",
-    "createNewOpportunity": "+ Create New Opportunity",
+    "createNewOpportunity": "Create New Opportunity",
     "roomName": "Room / Survey Area",
+    "roomNameRequired": "Survey area / room name is required",
+    "jumpToItem": "Jump to:",
+    "unnamedItem": "(Unnamed Item)",
     "roomPlaceholder": "e.g. Master Bedroom, Living Room",
     "customRoomOption": "✍️ Type custom room name...",
     "selectOrTypeRoom": "— Select room or type custom —",
@@ -4493,6 +4593,7 @@
     "surveyorNotes": "Site Overview / Customer Preferred Style",
     "surveyorNotesPlaceholder": "e.g. Customer prefers Modern Classic style with warm wood and gray marble",
     "itemsSectionTitle": "Custom Items in this Room",
+    "itemsSectionDesc": "Record dimensions, specifications, and on-site photos for each custom item",
     "addItem": "Add Custom Item",
     "itemTitle": "Item Name",
     "itemTitlePlaceholder": "e.g. Teak Desk, Walk-in Closet, Marble Floor",
@@ -4520,7 +4621,28 @@
       "customNotes": "Additional Spec Notes / Custom Requests",
       "customNotesPlaceholder": "e.g. Rounded 5mm edge, concealed track for 12V LED light",
       "quickSelect": "Popular quick choices:",
-      "noSkuSelected": "No system SKU selected"
+      "noSkuSelected": "No system SKU selected",
+      "presets": {
+        "plywoodHpl": {
+          "label": "15mm Plywood + Laminate Finish",
+          "coreSkuName": "15mm Furniture Grade Plywood",
+          "finishSkuName": "HPL Laminate Sheet (Matte)"
+        },
+        "teakWoodPu": {
+          "label": "Teak Wood + Matte PU Coating",
+          "coreSkuName": "Kiln-dried Grade A Teak Wood",
+          "finishSkuName": "50% Matte PU / Lacquer Finish"
+        },
+        "marbleFlooring": {
+          "label": "Grigio Marble Flooring + Matched Grout",
+          "finishSkuName": "Grigio Orobico Marble 60x60 cm"
+        },
+        "doubleCurtain": {
+          "label": "Double Layer Curtain + Motorized Track",
+          "coreSkuName": "Zigbee Silent Motorized Curtain Track",
+          "finishSkuName": "Dim-out Sheer + 100% UV Blockout"
+        }
+      }
     },
     "dimensions": {
       "title": "Actual Measured Dimensions",
@@ -4532,19 +4654,24 @@
       "grossArea": "Gross Area",
       "deductions": "Openings / Pillar Deductions",
       "addDeduction": "Add Deduction",
+      "removeDeduction": "Remove deduction",
       "deductionLabel": "Deduction Name",
       "deductionLabelPlaceholder": "e.g. Pillar, Stair Opening, Duct",
       "deductionArea": "Deduction Area (sqm)",
       "netArea": "Net Area for Production/Flooring",
       "customPoints": "Custom Measurement Points",
       "addCustomPoint": "Add Measurement Point",
+      "removePoint": "Remove measurement point",
       "pointLabel": "Point Name",
       "pointLabelPlaceholder": "e.g. Window Frame Width, Pocket Depth, Ceiling Height",
       "pointValue": "Measured Value (mm)",
       "pointNotes": "Notes",
       "pointNotesPlaceholder": "e.g. Clearance for light track, watch for AC pipe",
       "unitMm": "mm",
-      "unitSqm": "sq.m."
+      "unitSqm": "sq.m.",
+      "boxSummary": "{w} × {d} × {h} mm",
+      "areaSummary": "Area {area} sq.m.",
+      "customSummary": "{count} points"
     },
     "photos": {
       "title": "Photos & Laser Sketches",
@@ -4553,6 +4680,9 @@
       "tagSiteLocation": "Site Location Photo",
       "tagSketchLaser": "Sketch / Laser Meter Photo",
       "tagMaterialSwatch": "Material Swatch / Texture Sample",
+      "tagConstraintDefect": "Constraint / Defect Photo",
+      "tagMoodTone": "Mood & Tone / Reference Photo",
+      "tagOther": "Other Photo",
       "captionPlaceholder": "Photo caption (e.g. Window side facing south)",
       "deletePhoto": "Delete Photo",
       "empty": "No photos attached for this item yet"
@@ -4561,13 +4691,54 @@
       "saveDraft": "Save Survey Data",
       "saving": "Saving...",
       "savedSuccess": "Field survey saved successfully",
+      "saveFailed": "Failed to save survey data. Please try again.",
       "sendToEstimator": "Send to Estimator (BOQ)",
       "deleteItem": "Delete Item",
       "itemNumber": "Item #{number}"
     },
+    "completionModal": {
+      "title": "Survey Data Saved Successfully",
+      "subtitle": "Room details and custom items have been saved to the opportunity.",
+      "summaryRoom": "Survey Area:",
+      "summaryItems": "{count} items",
+      "summaryPhotos": "{count} photos",
+      "nextRoomBtn": "Survey Next Room (Same Opportunity)",
+      "viewOpportunityBtn": "View Opportunity Summary",
+      "stayOnPageBtn": "Stay on this page",
+      "readyForNextRoomToast": "Ready for next room"
+    },
     "empty": {
       "noItemsTitle": "No custom items yet",
       "noItemsDesc": "Click 'Add Custom Item' to start recording dimensions and material specs"
+    },
+    "style": {
+      "sectionTitle": "Customer Preferred Style & Mood/Tone",
+      "sectionDesc": "Record customer design direction and color tone to guide the design and estimation teams",
+      "designStyleLabel": "Design Style",
+      "selectDesignStyle": "-- Select preferred style --",
+      "moodToneLabel": "Mood & Tone",
+      "selectMoodTone": "-- Select preferred tone --",
+      "samplePalette": "Sample Palette:",
+      "customStyleNotes": "Style/Color Constraints & Specific Requirements",
+      "customStyleNotesPlaceholder": "e.g., Prefers warm oak over reddish wood, 3000K warm lighting, plain white baseboards"
     }
+  },
+  "surveyList": {
+    "title": "Field Surveys",
+    "subtitle": "Track sales opportunities requiring site measurements and on-site specifications",
+    "recordNewSurvey": "New Field Survey",
+    "searchPlaceholder": "Search by project title, code, or customer...",
+    "stageAll": "All Survey Stages",
+    "stageSurveying": "Surveying on-site",
+    "stageQualified": "Ready for Survey (Qualified)",
+    "stageEstimating": "Survey Completed (Estimating)",
+    "emptyTitle": "No Field Surveys Found",
+    "emptyDetail": "No sales opportunities in the survey stage match your current filters.",
+    "actionSurvey": "Record Survey",
+    "actionView": "View Details",
+    "appointment": "Appointment Date",
+    "surveyor": "Assigned Surveyor",
+    "customer": "Customer",
+    "project": "Project / Opportunity"
   }
 }
