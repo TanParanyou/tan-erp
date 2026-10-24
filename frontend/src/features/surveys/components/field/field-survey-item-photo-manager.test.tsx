@@ -13,12 +13,29 @@ vi.mock("next-intl", () => ({
       tagSiteLocation: "ภาพตำแหน่งหน้างาน",
       tagSketchLaser: "ภาพสเก็ตช์ / หน้าจอเลเซอร์",
       tagMaterialSwatch: "ภาพตัวอย่างวัสดุ / ลวดลาย",
+      tagConstraintDefect: "ภาพอุปสรรค / จุดชำรุด",
       captionPlaceholder: "คำอธิบายภาพ (เช่น ริมหน้าต่างทิศใต้)",
       deletePhoto: "ลบภาพนี้",
       empty: "ยังไม่มีภาพแนบสำหรับรายการนี้",
     };
     return translations[key] ?? key;
   },
+}));
+
+vi.mock("../../api/survey-queries", () => ({
+  useSurveyReferenceData: () => ({
+    data: {
+      categories: [],
+      photoTags: [
+        { code: "site_photo", name: { thai: "ภาพตำแหน่งหน้างาน", english: "Site Location" } },
+        { code: "measurement_sketch", name: { thai: "ภาพสเก็ตช์ / หน้าจอเลเซอร์", english: "Sketch / Laser Display" } },
+        { code: "material_swatch", name: { thai: "ภาพตัวอย่างวัสดุ / ลวดลาย", english: "Material / Swatch" } },
+        { code: "constraint_defect", name: { thai: "ภาพอุปสรรค / จุดชำรุด", english: "Constraint / Defect" } },
+      ],
+      measurementTypes: [],
+    },
+    isLoading: false,
+  }),
 }));
 
 describe("FieldSurveyItemPhotoManager Component", () => {
@@ -95,7 +112,7 @@ describe("FieldSurveyItemPhotoManager Component", () => {
     expect(onChange).toHaveBeenCalledWith([
       expect.objectContaining({
         id: "p1",
-        tag: "sketch_laser",
+        tag: "measurement_sketch",
       }),
     ]);
   });

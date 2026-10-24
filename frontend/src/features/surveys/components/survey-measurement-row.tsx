@@ -4,6 +4,8 @@ import React from "react";
 import { useFormContext, Controller, useController } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
 import { TableRow, TableCell } from "@/components/ui/Table";
 import { IconTrash } from "@/components/common/Icons";
 import { MeasurementAmountInput } from "@/components/forms/MeasurementAmountInput";
@@ -42,23 +44,22 @@ export function SurveyMeasurementRow({
       {/* 1. Desktop Table Row View (>= md) */}
       <TableRow className="hidden md:table-row border-b border-erp-border hover:bg-erp-surface-subtle/50 transition-colors">
         {/* Type Select */}
-        <TableCell className="p-2 border border-erp-border w-36 align-top">
+        <TableCell className="p-2 border border-erp-border w-44 align-top">
           <Controller
             control={control}
             name={`areas.${areaIndex}.measurements.${measurementIndex}.measurementType`}
             render={({ field }) => (
-              <select
-                className="erp-select text-xs py-1.5 px-2 w-full bg-erp-surface border-erp-border"
+              <Select
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isReady}
-              >
-                {measurementTypes.map((type) => (
-                  <option key={type.code} value={type.code}>
-                    {t(type.labelKey as Parameters<typeof t>[0])}
-                  </option>
-                ))}
-              </select>
+                wrapperClassName="!mb-0"
+                className="text-xs h-11 min-h-[44px]"
+                options={measurementTypes.map((type) => ({
+                  value: type.code,
+                  label: t(type.labelKey as Parameters<typeof t>[0]),
+                }))}
+              />
             )}
           />
         </TableCell>
@@ -132,28 +133,24 @@ export function SurveyMeasurementRow({
 
             {/* Type Dropdown Full Width */}
             <div>
-              <label className="block text-xs font-semibold text-erp-text-muted mb-1">
-                {t("measurementTypeLabel")}
-              </label>
               <Controller
                 control={control}
                 name={`areas.${areaIndex}.measurements.${measurementIndex}.measurementType`}
                 render={({ field }) => (
-                  <select
-                    className="erp-select text-sm py-2 px-3 w-full bg-erp-surface border-erp-border min-h-[44px]"
+                  <Select
+                    label={t("measurementTypeLabel")}
                     value={field.value}
                     onChange={field.onChange}
                     disabled={isReady}
-                  >
-                    {measurementTypes.map((type) => (
-                  <option key={type.code} value={type.code}>
-                    {t(type.labelKey as Parameters<typeof t>[0])}
-                  </option>
-                ))}
-              </select>
-            )}
-          />
-        </div>
+                    wrapperClassName="!mb-0"
+                    options={measurementTypes.map((type) => ({
+                      value: type.code,
+                      label: t(type.labelKey as Parameters<typeof t>[0]),
+                    }))}
+                  />
+                )}
+              />
+            </div>
 
         {/* Compound Value + Unit Combo */}
         <div>

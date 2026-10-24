@@ -2,11 +2,14 @@
 
 import React, { useRef } from "react";
 import { useTranslations } from "next-intl";
+import { useSafeLocale } from "@/lib/i18n/i18n-context";
 import type {
   FieldSurveyPhoto,
   FieldSurveyPhotoTag,
 } from "../../schemas/field-survey-schema";
+import { useSurveyReferenceData } from "../../api/survey-queries";
 import { IconCamera, IconTrash } from "@/components/common/Icons";
+import { Input } from "@/components/ui/Input";
 
 export interface FieldSurveyItemPhotoManagerProps {
   photos: readonly FieldSurveyPhoto[];
@@ -20,7 +23,30 @@ export function FieldSurveyItemPhotoManager({
   disabled = false,
 }: FieldSurveyItemPhotoManagerProps) {
   const t = useTranslations("fieldSurvey.photos");
+  const locale = useSafeLocale();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: refData } = useSurveyReferenceData();
+
+  const photoTagOptions = refData?.photoTags && refData.photoTags.length > 0
+    ? refData.photoTags.map((pt) => ({
+        code: pt.code as FieldSurveyPhotoTag,
+        label: locale === "en" ? pt.name?.english || pt.code : pt.name?.thai || pt.code,
+      }))
+    : [
+        { code: "site_photo" as FieldSurveyPhotoTag, label: t("tagSiteLocation") },
+        { code: "measurement_sketch" as FieldSurveyPhotoTag, label: t("tagSketchLaser") },
+        { code: "material_swatch" as FieldSurveyPhotoTag, label: t("tagMaterialSwatch") },
+        { code: "constraint_defect" as FieldSurveyPhotoTag, label: t("tagConstraintDefect") },
+        { code: "mood_tone" as FieldSurveyPhotoTag, label: t("tagMoodTone") },
+        { code: "other" as FieldSurveyPhotoTag, label: t("tagOther") },
+      ];
+
+  const isTagActive = (photoTag: string, targetCode: string) => {
+    if (photoTag === targetCode) return true;
+    if (targetCode === "site_photo" && photoTag === "site_location") return true;
+    if (targetCode === "measurement_sketch" && photoTag === "sketch_laser") return true;
+    return false;
+  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -125,54 +151,36 @@ export function FieldSurveyItemPhotoManager({
 
               {/* Tag Selector Buttons */}
               <div className="mb-2">
-                <div className="grid grid-cols-3 gap-1">
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => handleTagChange(photo.id, "site_location")}
-                    className={`min-h-[32px] px-1 text-[10px] font-semibold transition-colors ${
-                      photo.tag === "site_location"
-                        ? "border border-erp-navy bg-erp-navy text-white"
-                        : "border border-erp-border bg-white text-erp-text-main hover:bg-erp-surface"
-                    }`}
-                  >
-                    {t("tagSiteLocation")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => handleTagChange(photo.id, "sketch_laser")}
-                    className={`min-h-[32px] px-1 text-[10px] font-semibold transition-colors ${
-                      photo.tag === "sketch_laser"
-                        ? "border border-erp-navy bg-erp-navy text-white"
-                        : "border border-erp-border bg-white text-erp-text-main hover:bg-erp-surface"
-                    }`}
-                  >
-                    {t("tagSketchLaser")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => handleTagChange(photo.id, "material_swatch")}
-                    className={`min-h-[32px] px-1 text-[10px] font-semibold transition-colors ${
-                      photo.tag === "material_swatch"
-                        ? "border border-erp-navy bg-erp-navy text-white"
-                        : "border border-erp-border bg-white text-erp-text-main hover:bg-erp-surface"
-                    }`}
-                  >
-                    {t("tagMaterialSwatch")}
-                  </button>
+                <div className="flex flex-wrap gap-1">
+                  {photoTagOptions.map((opt) => {
+                    const active = isTagActive(photo.tag, opt.code);
+                    return (
+                      <button
+                        key={opt.code}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => handleTagChange(photo.id, opt.code)}
+                        className={`min-h-[32px] px-2 text-[10px] font-semibold transition-colors ${
+                          active
+                            ? "border border-erp-navy bg-erp-navy text-white"
+                            : "border border-erp-border bg-white text-erp-text-main hover:bg-erp-surface"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Caption Input */}
-              <input
-                type="text"
+              <Input
                 disabled={disabled}
                 value={photo.caption ?? ""}
                 onChange={(e) => handleCaptionChange(photo.id, e.target.value)}
                 placeholder={t("captionPlaceholder")}
-                className="min-h-[36px] w-full border border-erp-border bg-white px-2.5 py-1 text-xs text-erp-text-main focus:border-erp-navy focus:outline-none"
+                wrapperClassName="!mb-0"
+                className="text-xs"
               />
             </div>
           ))}

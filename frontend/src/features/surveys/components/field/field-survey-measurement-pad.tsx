@@ -11,6 +11,8 @@ import {
   calculateNetAreaSqm,
 } from "../../schemas/field-survey-schema";
 import { IconPlus, IconTrash } from "@/components/common/Icons";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 export interface FieldSurveyMeasurementPadProps {
   measurementType: FieldSurveyMeasurementType;
@@ -163,48 +165,39 @@ export function FieldSurveyMeasurementPad({
       {/* Mode 1: 3D Box Dimensions */}
       {measurementType === "box" && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-erp-text-main">
-              {t("dimensions.width")} ({t("dimensions.unitMm")})
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              disabled={disabled}
-              value={boxDimensions.widthMm || ""}
-              onChange={(e) => handleBoxFieldChange("widthMm", e.target.value)}
-              placeholder="0"
-              className="min-h-[44px] w-full border border-erp-border bg-white px-3 py-2 text-sm font-semibold text-erp-navy focus:border-erp-navy focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-erp-text-main">
-              {t("dimensions.depth")} ({t("dimensions.unitMm")})
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              disabled={disabled}
-              value={boxDimensions.depthMm || ""}
-              onChange={(e) => handleBoxFieldChange("depthMm", e.target.value)}
-              placeholder="0"
-              className="min-h-[44px] w-full border border-erp-border bg-white px-3 py-2 text-sm font-semibold text-erp-navy focus:border-erp-navy focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-erp-text-main">
-              {t("dimensions.height")} ({t("dimensions.unitMm")})
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              disabled={disabled}
-              value={boxDimensions.heightMm || ""}
-              onChange={(e) => handleBoxFieldChange("heightMm", e.target.value)}
-              placeholder="0"
-              className="min-h-[44px] w-full border border-erp-border bg-white px-3 py-2 text-sm font-semibold text-erp-navy focus:border-erp-navy focus:outline-none"
-            />
-          </div>
+          <Input
+            label={`${t("dimensions.width")} (${t("dimensions.unitMm")})`}
+            type="number"
+            inputMode="numeric"
+            disabled={disabled}
+            value={boxDimensions.widthMm || ""}
+            onChange={(e) => handleBoxFieldChange("widthMm", e.target.value)}
+            placeholder="0"
+            wrapperClassName="!mb-0"
+            className="text-sm font-semibold text-erp-navy"
+          />
+          <Input
+            label={`${t("dimensions.depth")} (${t("dimensions.unitMm")})`}
+            type="number"
+            inputMode="numeric"
+            disabled={disabled}
+            value={boxDimensions.depthMm || ""}
+            onChange={(e) => handleBoxFieldChange("depthMm", e.target.value)}
+            placeholder="0"
+            wrapperClassName="!mb-0"
+            className="text-sm font-semibold text-erp-navy"
+          />
+          <Input
+            label={`${t("dimensions.height")} (${t("dimensions.unitMm")})`}
+            type="number"
+            inputMode="numeric"
+            disabled={disabled}
+            value={boxDimensions.heightMm || ""}
+            onChange={(e) => handleBoxFieldChange("heightMm", e.target.value)}
+            placeholder="0"
+            wrapperClassName="!mb-0"
+            className="text-sm font-semibold text-erp-navy"
+          />
         </div>
       )}
 
@@ -212,34 +205,28 @@ export function FieldSurveyMeasurementPad({
       {measurementType === "area" && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-erp-text-main">
-                {t("dimensions.grossWidth")} ({t("dimensions.unitMm")})
-              </label>
-              <input
-                type="number"
-                inputMode="numeric"
-                disabled={disabled}
-                value={areaDimensions.grossWidthMm || ""}
-                onChange={(e) => handleAreaDimensionChange("grossWidthMm", e.target.value)}
-                placeholder="0"
-                className="min-h-[44px] w-full border border-erp-border bg-white px-3 py-2 text-sm font-semibold text-erp-navy focus:border-erp-navy focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-erp-text-main">
-                {t("dimensions.grossLength")} ({t("dimensions.unitMm")})
-              </label>
-              <input
-                type="number"
-                inputMode="numeric"
-                disabled={disabled}
-                value={areaDimensions.grossLengthMm || ""}
-                onChange={(e) => handleAreaDimensionChange("grossLengthMm", e.target.value)}
-                placeholder="0"
-                className="min-h-[44px] w-full border border-erp-border bg-white px-3 py-2 text-sm font-semibold text-erp-navy focus:border-erp-navy focus:outline-none"
-              />
-            </div>
+            <Input
+              label={`${t("dimensions.grossWidth")} (${t("dimensions.unitMm")})`}
+              type="number"
+              inputMode="numeric"
+              disabled={disabled}
+              value={areaDimensions.grossWidthMm || ""}
+              onChange={(e) => handleAreaDimensionChange("grossWidthMm", e.target.value)}
+              placeholder="0"
+              wrapperClassName="!mb-0"
+              className="text-sm font-semibold text-erp-navy"
+            />
+            <Input
+              label={`${t("dimensions.grossLength")} (${t("dimensions.unitMm")})`}
+              type="number"
+              inputMode="numeric"
+              disabled={disabled}
+              value={areaDimensions.grossLengthMm || ""}
+              onChange={(e) => handleAreaDimensionChange("grossLengthMm", e.target.value)}
+              placeholder="0"
+              wrapperClassName="!mb-0"
+              className="text-sm font-semibold text-erp-navy"
+            />
           </div>
 
           {/* Area Summary Banner */}
@@ -265,15 +252,16 @@ export function FieldSurveyMeasurementPad({
               <span className="text-xs font-semibold text-erp-text-main">
                 {t("dimensions.deductions")}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 disabled={disabled}
                 onClick={handleAddDeduction}
-                className="inline-flex min-h-[36px] items-center gap-1 border border-erp-border bg-white px-2.5 py-1 text-xs font-semibold text-erp-navy hover:bg-erp-surface active:bg-erp-surface-subtle"
+                icon={<IconPlus size={14} />}
               >
-                <IconPlus size={14} />
                 {t("dimensions.addDeduction")}
-              </button>
+              </Button>
             </div>
 
             {areaDimensions.deductions.length > 0 && (
@@ -283,16 +271,16 @@ export function FieldSurveyMeasurementPad({
                     key={index}
                     className="flex flex-col gap-2 border border-erp-border bg-erp-surface-subtle p-2 sm:flex-row sm:items-center"
                   >
-                    <input
-                      type="text"
+                    <Input
                       disabled={disabled}
                       value={d.label}
                       onChange={(e) => handleUpdateDeduction(index, { label: e.target.value })}
                       placeholder={t("dimensions.deductionLabelPlaceholder")}
-                      className="min-h-[38px] flex-1 border border-erp-border bg-white px-2.5 py-1 text-xs"
+                      wrapperClassName="!mb-0 flex-1"
+                      className="text-xs"
                     />
                     <div className="flex items-center gap-2">
-                      <input
+                      <Input
                         type="number"
                         inputMode="decimal"
                         step="0.01"
@@ -304,20 +292,23 @@ export function FieldSurveyMeasurementPad({
                           })
                         }
                         placeholder="0.00"
-                        className="min-h-[38px] w-28 border border-erp-border bg-white px-2.5 py-1 text-xs font-semibold text-erp-navy"
+                        wrapperClassName="!mb-0 w-28"
+                        className="text-xs font-semibold text-erp-navy"
                       />
                       <span className="text-xs text-erp-text-muted">
                         {t("dimensions.unitSqm")}
                       </span>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         disabled={disabled}
                         onClick={() => handleRemoveDeduction(index)}
-                        className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center border border-erp-border text-erp-danger hover:bg-erp-danger-bg"
-                        aria-label="Remove deduction"
+                        className="text-erp-danger hover:bg-erp-danger-bg"
+                        aria-label={t("dimensions.removeDeduction")}
                       >
                         <IconTrash size={16} />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -334,15 +325,16 @@ export function FieldSurveyMeasurementPad({
             <span className="text-xs font-semibold text-erp-text-main">
               {t("dimensions.customPoints")}
             </span>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               disabled={disabled}
               onClick={handleAddCustomPoint}
-              className="inline-flex min-h-[36px] items-center gap-1 border border-erp-border bg-white px-2.5 py-1 text-xs font-semibold text-erp-navy hover:bg-erp-surface active:bg-erp-surface-subtle"
+              icon={<IconPlus size={14} />}
             >
-              <IconPlus size={14} />
               {t("dimensions.addCustomPoint")}
-            </button>
+            </Button>
           </div>
 
           {customMeasurements.length === 0 ? (
@@ -357,16 +349,16 @@ export function FieldSurveyMeasurementPad({
                   className="space-y-2 border border-erp-border bg-erp-surface-subtle p-3"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <input
-                      type="text"
+                    <Input
                       disabled={disabled}
                       value={p.label}
                       onChange={(e) => handleUpdateCustomPoint(index, { label: e.target.value })}
                       placeholder={t("dimensions.pointLabelPlaceholder")}
-                      className="min-h-[40px] flex-1 border border-erp-border bg-white px-3 py-1.5 text-xs font-medium"
+                      wrapperClassName="!mb-0 flex-1"
+                      className="text-xs font-medium"
                     />
                     <div className="flex items-center gap-2">
-                      <input
+                      <Input
                         type="number"
                         inputMode="numeric"
                         disabled={disabled}
@@ -377,29 +369,32 @@ export function FieldSurveyMeasurementPad({
                           })
                         }
                         placeholder="0"
-                        className="min-h-[40px] w-32 border border-erp-border bg-white px-3 py-1.5 text-xs font-bold text-erp-navy"
+                        wrapperClassName="!mb-0 w-32"
+                        className="text-xs font-bold text-erp-navy"
                       />
                       <span className="text-xs text-erp-text-muted">
                         {t("dimensions.unitMm")}
                       </span>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         disabled={disabled}
                         onClick={() => handleRemoveCustomPoint(index)}
-                        className="inline-flex min-h-[40px] min-w-[40px] items-center justify-center border border-erp-border text-erp-danger hover:bg-erp-danger-bg"
-                        aria-label="Remove point"
+                        className="text-erp-danger hover:bg-erp-danger-bg"
+                        aria-label={t("dimensions.removePoint")}
                       >
                         <IconTrash size={16} />
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                  <input
-                    type="text"
+                  <Input
                     disabled={disabled}
                     value={p.notes ?? ""}
                     onChange={(e) => handleUpdateCustomPoint(index, { notes: e.target.value })}
                     placeholder={t("dimensions.pointNotesPlaceholder")}
-                    className="min-h-[36px] w-full border border-erp-border bg-white px-3 py-1 text-xs text-erp-text-muted"
+                    wrapperClassName="!mb-0 w-full"
+                    className="text-xs text-erp-text-muted"
                   />
                 </div>
               ))}

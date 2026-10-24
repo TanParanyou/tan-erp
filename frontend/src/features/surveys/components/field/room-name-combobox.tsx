@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils/cn";
 
 export interface RoomNameComboboxProps {
   value: string;
@@ -68,10 +69,12 @@ export function RoomNameCombobox({
   };
 
   return (
-    <div className={className}>
-      <label className="mb-1 block text-xs font-semibold text-erp-text-main">
-        {t("roomName")} {required && <span className="text-erp-danger">*</span>}
-      </label>
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <div className="flex items-center justify-between min-h-[20px]">
+        <label className="erp-label !mb-0 font-medium text-erp-text-main">
+          {t("roomName")} {required && <span className="erp-label-required">*</span>}
+        </label>
+      </div>
 
       {/* Single Unified 44px Row: Swaps cleanly without stacked 2-tier clutter */}
       {!isCustomMode ? (
@@ -79,7 +82,7 @@ export function RoomNameCombobox({
           value={value}
           onChange={handleSelectChange}
           disabled={disabled}
-          className="min-h-[44px] w-full border border-erp-border bg-white px-3 py-2 text-xs font-medium text-erp-text-main focus:border-erp-navy focus:outline-none"
+          className="erp-select h-11 min-h-[44px] w-full text-sm font-medium text-erp-text-main focus:border-erp-navy focus:outline-none"
         >
           <option value="">{t("selectOrTypeRoom")}</option>
           {/* First option: Custom typing mode */}
@@ -94,7 +97,7 @@ export function RoomNameCombobox({
           ))}
         </select>
       ) : (
-        <div className="relative flex min-h-[44px] items-center">
+        <div className="relative flex h-11 min-h-[44px] items-center">
           <input
             type="text"
             autoFocus
@@ -103,13 +106,13 @@ export function RoomNameCombobox({
             disabled={disabled}
             required={required}
             placeholder={t("roomPlaceholder")}
-            className="min-h-[44px] w-full border border-erp-navy bg-white pl-3 pr-28 text-xs font-semibold text-erp-navy focus:outline-none focus:ring-1 focus:ring-erp-navy"
+            className="erp-input h-11 min-h-[44px] w-full pl-3 pr-28 text-sm font-medium text-erp-navy focus:outline-none focus:ring-1 focus:ring-erp-navy"
           />
           <button
             type="button"
             disabled={disabled}
             onClick={handleSwitchToSelect}
-            className="absolute right-1 inline-flex min-h-[36px] items-center border border-erp-border bg-erp-surface-subtle px-2.5 text-[11px] font-medium text-erp-text-muted transition-colors hover:bg-erp-surface hover:text-erp-navy active:bg-erp-surface-subtle"
+            className="absolute right-1 inline-flex h-8 min-h-[32px] items-center border border-erp-border bg-erp-surface-subtle px-2.5 text-[11px] font-medium text-erp-text-muted transition-colors hover:bg-erp-surface hover:text-erp-navy active:bg-erp-surface-subtle"
           >
             {t("selectFromList")}
           </button>

@@ -4,9 +4,14 @@ export const FIELD_SURVEY_MEASUREMENT_TYPES = ["box", "area", "custom"] as const
 export type FieldSurveyMeasurementType = (typeof FIELD_SURVEY_MEASUREMENT_TYPES)[number];
 
 export const FIELD_SURVEY_PHOTO_TAGS = [
+  "site_photo",
+  "measurement_sketch",
+  "material_swatch",
+  "constraint_defect",
+  "mood_tone",
+  "other",
   "site_location",
   "sketch_laser",
-  "material_swatch",
 ] as const;
 export type FieldSurveyPhotoTag = (typeof FIELD_SURVEY_PHOTO_TAGS)[number];
 
@@ -82,6 +87,9 @@ export const fieldSurveyFormSchema = z.object({
   opportunityId: z.string().uuid("Invalid opportunity ID"),
   roomName: z.string().min(1, "Room name is required"),
   surveyorNotes: z.string().nullable().optional(),
+  designStyle: z.string().nullable().optional(),
+  moodTone: z.string().nullable().optional(),
+  styleNotes: z.string().nullable().optional(),
   items: z.array(fieldSurveyItemSchema).min(1, "At least one item is required"),
 });
 

@@ -10,10 +10,13 @@ import { FieldSurveyWorkspace } from "@/features/surveys/components/field/field-
 
 interface FieldSurveyPageProps {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ opportunityId?: string }>;
 }
 
-export default function FieldSurveyPage({ params }: FieldSurveyPageProps) {
+export default function FieldSurveyPage({ params, searchParams }: FieldSurveyPageProps) {
   const { locale } = use(params);
+  const resolvedSearchParams = searchParams ? use(searchParams) : undefined;
+  const initialOpportunityId = resolvedSearchParams?.opportunityId || undefined;
 
   if (!isSupportedLocale(locale)) {
     notFound();
@@ -27,9 +30,7 @@ export default function FieldSurveyPage({ params }: FieldSurveyPageProps) {
       title={tCommon("errors.accessDeniedTitle")}
       detail={tCommon("errors.readAccessDeniedDetail")}
     >
-      <div className="py-2">
-        <FieldSurveyWorkspace />
-      </div>
+      <FieldSurveyWorkspace initialOpportunityId={initialOpportunityId} />
     </PermissionGuard>
   );
 }

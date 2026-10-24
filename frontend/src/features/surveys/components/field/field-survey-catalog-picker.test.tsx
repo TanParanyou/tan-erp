@@ -16,6 +16,17 @@ vi.mock("next-intl", () => ({
       customNotesPlaceholder: "เช่น ขอบโต๊ะลบมน 5 มม. ไม่เห็นเสี้ยนไม้ รางม่านซ่อนไฟ 12V",
       quickSelect: "เลือกสเปกยอดนิยม:",
       noSkuSelected: "ยังไม่ได้ระบุ SKU จากระบบ",
+      "presets.plywoodHpl.label": "ไม้อัดยาง 15mm + ปิดผิวลามิเนต",
+      "presets.plywoodHpl.coreSkuName": "ไม้อัดยาง 15 มม. เกรดเฟอร์นิเจอร์",
+      "presets.plywoodHpl.finishSkuName": "แผ่นลามิเนต HPL ผิวสัมผัสด้าน",
+      "presets.teakWoodPu.label": "ไม้สักทอง + พ่น PU ด้าน",
+      "presets.teakWoodPu.coreSkuName": "ไม้สักทองคัดเกรด A อบแห้ง",
+      "presets.teakWoodPu.finishSkuName": "พ่นแลคเกอร์ / PU สัมผัสด้าน 50%",
+      "presets.marbleFlooring.label": "ปูพื้นหินอ่อน Grigio + ยาแนวตรงเบอร์",
+      "presets.marbleFlooring.finishSkuName": "หินอ่อน Grigio Orobico 60x60 ซม.",
+      "presets.doubleCurtain.label": "ผ้าม่าน 2 ชั้น + รางไฟฟ้า",
+      "presets.doubleCurtain.coreSkuName": "รางม่านไฟฟ้าระบบเงียบ Zigbee",
+      "presets.doubleCurtain.finishSkuName": "ผ้าโปร่ง Dim-out + ผ้าทึบกัน UV 100%",
     };
     return translations[key] ?? key;
   },

@@ -4,6 +4,7 @@ import React, { useId } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import type { SpecSelection } from "../../schemas/field-survey-schema";
 import { ItemAutocomplete } from "@/features/item-master/components/item-autocomplete";
+import { Textarea } from "@/components/ui/Textarea";
 import type { ItemResponse } from "@/lib/api/api-client";
 
 export interface FieldSurveyCatalogPickerProps {
@@ -13,32 +14,27 @@ export interface FieldSurveyCatalogPickerProps {
 }
 
 interface QuickPreset {
+  key: string;
   label: string;
   coreSkuName?: string;
   finishSkuName?: string;
   hardwareSkuName?: string;
 }
 
-const QUICK_PRESETS: readonly QuickPreset[] = [
-  {
-    label: "ไม้อัดยาง 15mm + ปิดผิวลามิเนต",
-    coreSkuName: "ไม้อัดยาง 15 มม. เกรดเฟอร์นิเจอร์",
-    finishSkuName: "แผ่นลามิเนต HPL ผิวสัมผัสด้าน",
-  },
-  {
-    label: "ไม้สักทอง + พ่น PU ด้าน",
-    coreSkuName: "ไม้สักทองคัดเกรด A อบแห้ง",
-    finishSkuName: "พ่นแลคเกอร์ / PU สัมผัสด้าน 50%",
-  },
-  {
-    label: "ปูพื้นหินอ่อน Grigio + ยาแนวตรงเบอร์",
-    finishSkuName: "หินอ่อน Grigio Orobico 60x60 ซม.",
-  },
-  {
-    label: "ผ้าม่าน 2 ชั้น + รางไฟฟ้า",
-    coreSkuName: "รางม่านไฟฟ้าระบบเงียบ Zigbee",
-    finishSkuName: "ผ้าโปร่ง Dim-out + ผ้าทึบกัน UV 100%",
-  },
+type PresetKey = "plywoodHpl" | "teakWoodPu" | "marbleFlooring" | "doubleCurtain";
+
+interface QuickPresetConfig {
+  key: PresetKey;
+  hasCoreSku?: boolean;
+  hasFinishSku?: boolean;
+  hasHardwareSku?: boolean;
+}
+
+const PRESET_CONFIGS: readonly QuickPresetConfig[] = [
+  { key: "plywoodHpl", hasCoreSku: true, hasFinishSku: true },
+  { key: "teakWoodPu", hasCoreSku: true, hasFinishSku: true },
+  { key: "marbleFlooring", hasFinishSku: true },
+  { key: "doubleCurtain", hasCoreSku: true, hasFinishSku: true },
 ];
 
 export function FieldSurveyCatalogPicker({
@@ -84,6 +80,13 @@ export function FieldSurveyCatalogPicker({
     });
   };
 
+  const presets: readonly QuickPreset[] = PRESET_CONFIGS.map((cfg) => ({
+    key: cfg.key,
+    label: t(`presets.${cfg.key}.label`),
+    coreSkuName: cfg.hasCoreSku ? t(`presets.${cfg.key}.coreSkuName`) : undefined,
+    finishSkuName: cfg.hasFinishSku ? t(`presets.${cfg.key}.finishSkuName`) : undefined,
+  }));
+
   const applyPreset = (preset: QuickPreset) => {
     onChange({
       ...value,
@@ -106,9 +109,9 @@ export function FieldSurveyCatalogPicker({
           {t("quickSelect")}
         </span>
         <div className="flex flex-wrap gap-2">
-          {QUICK_PRESETS.map((preset) => (
+          {presets.map((preset) => (
             <button
-              key={preset.label}
+              key={preset.key}
               type="button"
               disabled={disabled}
               onClick={() => applyPreset(preset)}
@@ -174,20 +177,16 @@ export function FieldSurveyCatalogPicker({
 
       {/* Custom Spec Notes */}
       <div className="mt-4">
-        <label
-          htmlFor={notesId}
-          className="mb-1 block text-xs font-semibold text-erp-text-main"
-        >
-          {t("customNotes")}
-        </label>
-        <textarea
+        <Textarea
           id={notesId}
+          label={t("customNotes")}
           value={value.customNotes ?? ""}
           onChange={handleNotesChange}
           disabled={disabled}
           rows={2}
           placeholder={t("customNotesPlaceholder")}
-          className="w-full border border-erp-border bg-white p-2.5 text-xs text-erp-text-main focus:border-erp-navy focus:outline-none focus:ring-1 focus:ring-erp-navy disabled:cursor-not-allowed disabled:bg-erp-surface-subtle"
+          wrapperClassName="!mb-0"
+          className="text-xs"
         />
       </div>
     </div>

@@ -148,26 +148,40 @@ export function SurveyCard({
           )}
         </div>
 
-        {opportunityId && opportunityRowVersion && (
-          <Button
-            variant={survey.currentRevision?.status === "ready" ? "secondary" : "primary"}
-            size="sm"
-            onClick={() => setIsWorkspaceOpen(true)}
-            className="flex items-center gap-1.5 font-semibold"
-          >
-            {survey.currentRevision?.status === "ready" || !canEdit ? (
-              <>
-                <IconEye size={15} />
-                <span>{t("openWorkspace")}</span>
-              </>
-            ) : (
-              <>
-                <IconEdit size={15} />
-                <span>{t("openWorkspace")}</span>
-              </>
-            )}
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {opportunityId && (
+            <Button
+              href={`/${locale}/surveys/field?opportunityId=${opportunityId}`}
+              variant="outline"
+              size="sm"
+              icon={<IconMapPin size={15} />}
+              className="font-semibold"
+            >
+              {t("fieldSurveyAction")}
+            </Button>
+          )}
+
+          {opportunityId && opportunityRowVersion && (
+            <Button
+              variant={survey.currentRevision?.status === "ready" ? "secondary" : "primary"}
+              size="sm"
+              onClick={() => setIsWorkspaceOpen(true)}
+              className="flex items-center gap-1.5 font-semibold"
+            >
+              {survey.currentRevision?.status === "ready" || !canEdit ? (
+                <>
+                  <IconEye size={15} />
+                  <span>{t("openWorkspace")}</span>
+                </>
+              ) : (
+                <>
+                  <IconEdit size={15} />
+                  <span>{t("openWorkspace")}</span>
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
       {opportunityId && (
