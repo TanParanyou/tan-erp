@@ -44,7 +44,7 @@ export function SurveyMeasurementRow({
       {/* 1. Desktop Table Row View (>= md) */}
       <TableRow className="hidden md:table-row border-b border-erp-border hover:bg-erp-surface-subtle/50 transition-colors">
         {/* Type Select */}
-        <TableCell className="p-2 border border-erp-border w-44 align-top">
+        <TableCell className="py-2 px-2.5 border border-erp-border w-44 align-top">
           <Controller
             control={control}
             name={`areas.${areaIndex}.measurements.${measurementIndex}.measurementType`}
@@ -54,7 +54,7 @@ export function SurveyMeasurementRow({
                 onChange={field.onChange}
                 disabled={isReady}
                 wrapperClassName="!mb-0"
-                className="text-xs h-11 min-h-[44px]"
+                className="text-xs h-9 min-h-[36px]"
                 options={measurementTypes.map((type) => ({
                   value: type.code,
                   label: t(type.labelKey as Parameters<typeof t>[0]),
@@ -62,10 +62,11 @@ export function SurveyMeasurementRow({
               />
             )}
           />
+          <div className="mt-1 min-h-[16px] invisible select-none" aria-hidden="true">-</div>
         </TableCell>
 
         {/* Value + Unit Compound Combo Input */}
-        <TableCell className="p-2 border border-erp-border w-56 align-top">
+        <TableCell className="py-2 px-2.5 border border-erp-border w-56 align-top">
           <MeasurementAmountInput
             value={valueField.value === 0 ? "" : valueField.value}
             onChange={(val) => valueField.onChange(val ?? 0)}
@@ -74,11 +75,15 @@ export function SurveyMeasurementRow({
             unitOptions={units}
             disabled={isReady}
             placeholder={t("measurementValueLabel")}
+            className="!mb-0"
+            inputClassName="text-xs h-9 min-h-[36px]"
+            selectClassName="text-xs h-9 min-h-[36px]"
+            showMmConversion={true}
           />
         </TableCell>
 
         {/* Notes Input */}
-        <TableCell className="p-2 border border-erp-border align-top">
+        <TableCell className="py-2 px-2.5 border border-erp-border align-top">
           <Controller
             control={control}
             name={`areas.${areaIndex}.measurements.${measurementIndex}.notes`}
@@ -88,23 +93,29 @@ export function SurveyMeasurementRow({
                 placeholder={t("measurementNotesLabel")}
                 onChange={field.onChange}
                 disabled={isReady}
+                wrapperClassName="!mb-0"
+                className="text-xs h-9 min-h-[36px]"
               />
             )}
           />
+          <div className="mt-1 min-h-[16px] invisible select-none" aria-hidden="true">-</div>
         </TableCell>
 
         {/* Delete Action */}
         {!isReady && (
-          <TableCell className="p-2 border border-erp-border w-14 text-center align-middle">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center text-erp-danger hover:text-red-700 hover:bg-erp-danger-bg p-1.5 transition-colors cursor-pointer"
-              onClick={onRemove}
-              title={t("removeMeasurementAction")}
-              aria-label={t("removeMeasurementAction")}
-            >
-              <IconTrash size={16} strokeWidth={2} />
-            </button>
+          <TableCell className="py-2 px-2 border border-erp-border w-12 text-center align-top">
+            <div className="h-9 flex items-center justify-center">
+              <button
+                type="button"
+                className="h-8 w-8 inline-flex items-center justify-center text-erp-danger hover:text-red-700 hover:bg-erp-danger-bg p-1.5 transition-colors cursor-pointer"
+                onClick={onRemove}
+                title={t("removeMeasurementAction")}
+                aria-label={t("removeMeasurementAction")}
+              >
+                <IconTrash size={16} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="mt-1 min-h-[16px] invisible select-none" aria-hidden="true">-</div>
           </TableCell>
         )}
       </TableRow>

@@ -27,9 +27,34 @@ export function SurveyAreasSection({ isReady, areaEvidenceEnabled }: SurveyAreas
 
   const [areaToDeleteIndex, setAreaToDeleteIndex] = useState<number | null>(null);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
+  const [expandedMap, setExpandedMap] = useState<Record<number, boolean>>({});
+
+  const handleToggleArea = (idx: number) => {
+    setExpandedMap((prev) => ({
+      ...prev,
+      [idx]: !(prev[idx] ?? true),
+    }));
+  };
+
+  const handleExpandAll = () => {
+    const next: Record<number, boolean> = {};
+    fields.forEach((_, idx) => {
+      next[idx] = true;
+    });
+    setExpandedMap(next);
+  };
+
+  const handleCollapseAll = () => {
+    const next: Record<number, boolean> = {};
+    fields.forEach((_, idx) => {
+      next[idx] = false;
+    });
+    setExpandedMap(next);
+  };
 
   const handleAddArea = () => {
     const nextIdx = fields.length + 1;
+    setExpandedMap((prev) => ({ ...prev, [fields.length]: true }));
     append({
       code: `AREA-${String(nextIdx).padStart(2, "0")}`,
       name: "",
@@ -51,6 +76,7 @@ export function SurveyAreasSection({ isReady, areaEvidenceEnabled }: SurveyAreas
   const handleBatchAddAreas = (selectedRooms: { code: string; name: string }[]) => {
     selectedRooms.forEach((room, i) => {
       const nextIdx = fields.length + i + 1;
+      setExpandedMap((prev) => ({ ...prev, [fields.length + i]: true }));
       append({
         code: `AREA-${String(nextIdx).padStart(2, "0")}`,
         name: room.name,
@@ -90,34 +116,63 @@ export function SurveyAreasSection({ isReady, areaEvidenceEnabled }: SurveyAreas
   const targetArea = areaToDeleteIndex !== null ? getValues(`areas.${areaToDeleteIndex}`) : null;
 
   return (
-    <div className="border-t border-erp-border pt-6">
+    <div className="pt-2">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <h3 className="text-base font-bold text-erp-navy">
           {t("areasTitle")}
         </h3>
-        {!isReady && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsBatchModalOpen(true)}
-              type="button"
-              className="text-xs min-h-[38px]"
-            >
-              {t("batchTemplateAction")}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleAddArea}
-              type="button"
-              className="flex items-center gap-1.5 min-h-[38px]"
-            >
-              <IconPlus size={16} strokeWidth={2} />
-              <span>{t("addAreaAction")}</span>
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {fields.length > 1 && (
+            <div className="flex items-center gap-1.5 mr-1">
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={handleCollapseAll}
+                className="text-xs min-h-[38px]"
+                title={t("collapseAll")}
+                aria-label={t("collapseAll")}
+              >
+                {t("collapseAll")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={handleExpandAll}
+                className="text-xs min-h-[38px]"
+                title={t("expandAll")}
+                aria-label={t("expandAll")}
+              >
+                {t("expandAll")}
+              </Button>
+            </div>
+          )}
+
+          {!isReady && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsBatchModalOpen(true)}
+                type="button"
+                className="text-xs min-h-[38px]"
+              >
+                {t("batchTemplateAction")}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleAddArea}
+                type="button"
+                className="flex items-center gap-1.5 min-h-[38px] font-semibold"
+              >
+                <IconPlus size={16} strokeWidth={2} />
+                <span>{t("addAreaAction")}</span>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {fields.length === 0 ? (
@@ -125,7 +180,7 @@ export function SurveyAreasSection({ isReady, areaEvidenceEnabled }: SurveyAreas
           {t("readinessErrors.missingArea")}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {fields.map((fieldItem, aIdx) => (
             <SurveyAreaCard
               key={fieldItem.id}
@@ -133,6 +188,8 @@ export function SurveyAreasSection({ isReady, areaEvidenceEnabled }: SurveyAreas
               isReady={isReady}
               areaEvidenceEnabled={areaEvidenceEnabled}
               onRemoveArea={() => handleRequestRemoveArea(aIdx)}
+              isExpanded={expandedMap[aIdx] ?? true}
+              onToggleExpand={() => handleToggleArea(aIdx)}
             />
           ))}
         </div>

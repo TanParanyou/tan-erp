@@ -675,6 +675,114 @@ describe("Survey Components", () => {
         expect(screen.queryByRole("button", { name: "รีเซ็ตมุมมอง" })).toBeNull();
       });
     });
+
+    it("toggles fullscreen mode when maximize/restore button is clicked", async () => {
+      render(
+        <QueryClientProvider client={client}>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <ToastProvider>
+              <SurveyWorkspaceDrawer
+                isOpen={true}
+                onClose={vi.fn()}
+                opportunityId={sampleOpportunity.id ?? ""}
+                survey={sampleSurvey}
+                currentOpportunityVersion={sampleOpportunity.rowVersion ?? ""}
+              />
+            </ToastProvider>
+          </NextIntlClientProvider>
+        </QueryClientProvider>
+      );
+
+      // Maximize button should be in the drawer header
+      const toggleFullscreenBtn = screen.getByRole("button", { name: "ขยายเต็มจอ" });
+      expect(toggleFullscreenBtn).toBeDefined();
+
+      // Click to toggle full screen
+      fireEvent.click(toggleFullscreenBtn);
+
+      // Label should change to restore size
+      expect(await screen.findByRole("button", { name: "ย่อหน้าต่าง" })).toBeDefined();
+
+      // Click again to restore
+      fireEvent.click(screen.getByRole("button", { name: "ย่อหน้าต่าง" }));
+      expect(await screen.findByRole("button", { name: "ขยายเต็มจอ" })).toBeDefined();
+    });
+
+    it("switches tabs and keeps DOM inputs registered", async () => {
+      render(
+        <QueryClientProvider client={client}>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <ToastProvider>
+              <SurveyWorkspaceDrawer
+                isOpen={true}
+                onClose={vi.fn()}
+                opportunityId={sampleOpportunity.id ?? ""}
+                survey={sampleSurvey}
+                currentOpportunityVersion={sampleOpportunity.rowVersion ?? ""}
+              />
+            </ToastProvider>
+          </NextIntlClientProvider>
+        </QueryClientProvider>
+      );
+
+      // Switch to Scope & Schedule tab
+      const scopeTabBtn = screen.getByRole("tab", { name: /ขอบเขตและวันเวลา/ });
+      fireEvent.click(scopeTabBtn);
+      expect(scopeTabBtn.getAttribute("aria-selected")).toBe("true");
+
+      // Switch to Notes & Constraints tab
+      const notesTabBtn = screen.getByRole("tab", { name: /ข้อกำหนดและข้อจำกัด/ });
+      fireEvent.click(notesTabBtn);
+      expect(notesTabBtn.getAttribute("aria-selected")).toBe("true");
+
+      // Switch back to Areas tab
+      const areasTabBtn = screen.getByRole("tab", { name: /พื้นที่และระยะวัด/ });
+      fireEvent.click(areasTabBtn);
+      expect(areasTabBtn.getAttribute("aria-selected")).toBe("true");
+    });
+
+    it("expands and collapses area cards individually and via expandAll/collapseAll", async () => {
+      render(
+        <QueryClientProvider client={client}>
+          <NextIntlClientProvider locale="th" messages={thMessages}>
+            <ToastProvider>
+              <SurveyWorkspaceDrawer
+                isOpen={true}
+                onClose={vi.fn()}
+                opportunityId={sampleOpportunity.id ?? ""}
+                survey={sampleSurvey}
+                currentOpportunityVersion={sampleOpportunity.rowVersion ?? ""}
+              />
+            </ToastProvider>
+          </NextIntlClientProvider>
+        </QueryClientProvider>
+      );
+
+      // Add 2 areas
+      const addAreaBtn = screen.getByRole("button", { name: /เพิ่มพื้นที่สำรวจ/ });
+      fireEvent.click(addAreaBtn);
+      fireEvent.click(addAreaBtn);
+
+      // Collapse all button should appear when multiple areas exist
+      const collapseAllBtn = await screen.findByRole("button", { name: "ยุบทุกห้อง" });
+      const expandAllBtn = screen.getByRole("button", { name: "ขยายทุกห้อง" });
+
+      // Click collapse all
+      fireEvent.click(collapseAllBtn);
+
+      // Verify toggle button reflects collapsed state
+      const toggleAreaButtons = screen.getAllByRole("button", { name: "ยุบ/ขยายพื้นที่นี้" });
+      expect(toggleAreaButtons[0].getAttribute("aria-expanded")).toBe("false");
+
+      // Click expand on first area
+      fireEvent.click(toggleAreaButtons[0]);
+      expect(toggleAreaButtons[0].getAttribute("aria-expanded")).toBe("true");
+
+      // Click expand all
+      fireEvent.click(expandAllBtn);
+      expect(toggleAreaButtons[0].getAttribute("aria-expanded")).toBe("true");
+      expect(toggleAreaButtons[1].getAttribute("aria-expanded")).toBe("true");
+    });
   });
 });
 

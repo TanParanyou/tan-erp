@@ -153,10 +153,16 @@ export function MeasurementAmountInput({
         </div>
       </div>
 
-      {/* Live Millimeter (mm) Conversion Result */}
-      {showMmConversion && conversion.convertedValue !== null && unitCode !== "mm" && (
-        <div className="mt-1 text-[11px] font-mono font-semibold text-erp-navy text-right">
-          = {conversion.formattedText}
+      {/* Live Millimeter (mm) Conversion Result - Stable container to prevent table height jumping */}
+      {showMmConversion && (
+        <div className="mt-1 min-h-[16px] text-[11px] font-mono font-semibold text-erp-navy text-right">
+          {conversion.convertedValue !== null && unitCode !== "mm" ? (
+            `= ${conversion.formattedText}`
+          ) : (
+            <span className="invisible select-none" aria-hidden="true">
+              -
+            </span>
+          )}
         </div>
       )}
 
