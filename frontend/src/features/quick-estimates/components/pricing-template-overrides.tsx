@@ -152,7 +152,15 @@ export function PricingTemplateOverrides({ templateId }: { templateId: string })
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {FIELDS.map((name) => (
             <Controller key={name} name={name} control={control} render={({ field, fieldState }) => (
-              <Input {...field} label={t(name)} type={name === "effectiveFrom" || name === "effectiveTo" ? "date" : "text"} required={name !== "sourceReference"} disabled={busy} error={fieldState.error ? t("fieldInvalid") : undefined} />
+              <Input
+                {...field}
+                label={t(name)}
+                type={name === "effectiveFrom" || name === "effectiveTo" ? "date" : "text"}
+                placeholder={t(`${name}Placeholder`)}
+                required={name !== "sourceReference"}
+                disabled={busy}
+                error={fieldState.error ? t("fieldInvalid") : undefined}
+              />
             )} />
           ))}
         </div>
@@ -166,7 +174,7 @@ export function PricingTemplateOverrides({ templateId }: { templateId: string })
           </div>
         )}
       >
-        {target && <Input label={t("note")} value={note} maxLength={500} disabled={busy} required={target.mode !== "approved"} error={noteError ? t("reasonRequired") : undefined} onChange={(event) => setNote(event.target.value)} />}
+        {target && <Input label={t("note")} value={note} maxLength={500} placeholder={t("notePlaceholder")} disabled={busy} required={target.mode !== "approved"} error={noteError ? t("reasonRequired") : undefined} onChange={(event) => setNote(event.target.value)} />}
       </Modal>
     </section>
   );

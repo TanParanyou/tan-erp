@@ -235,6 +235,7 @@ export function CostRecordMaintenance({ itemId }: CostRecordMaintenanceProps) {
               label={t("effectiveFrom")}
               required
               type="datetime-local"
+              placeholder={t("datetimePlaceholder")}
               {...form.register("effectiveFrom")}
               disabled={saving}
             />

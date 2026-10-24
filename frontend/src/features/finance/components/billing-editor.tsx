@@ -76,7 +76,7 @@ export function BillingEditor() {
         <Select label={t("kind")} value={kind} disabled={isBusy} options={BILLING_KINDS.map((value) => ({ value, label: t(`kinds.${value}`) }))} onChange={(event) => setKind(event.target.value)} />
         <Input label={t("description")} placeholder={t("descriptionPlaceholder")} required value={description} maxLength={200} disabled={isBusy} onChange={(event) => setDescription(event.target.value)} />
         <Input type="number" min={0} step="0.01" label={t("amount")} placeholder={t("amountPlaceholder")} required value={amount} disabled={isBusy} onChange={(event) => setAmount(event.target.value)} />
-        <Input type="date" label={t("dueDate")} value={dueDate} disabled={isBusy} onChange={(event) => setDueDate(event.target.value)} />
+        <Input type="date" label={t("dueDate")} placeholder={t("datePlaceholder")} value={dueDate} disabled={isBusy} onChange={(event) => setDueDate(event.target.value)} />
         {summary.data && (
           <dl className="grid grid-cols-3 gap-3 text-xs md:col-span-2" aria-label={t("summaryTitle")}>
             <div><dt className="text-erp-text-muted">{t("contractAmount")}</dt><dd className="font-mono font-semibold">{formatCurrency(summary.data.contractAmount, "THB", locale)}</dd></div>

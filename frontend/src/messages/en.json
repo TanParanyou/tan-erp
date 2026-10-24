@@ -55,6 +55,7 @@
     "opportunities": "Opportunities",
     "fieldSurveys": "Field Surveys",
     "documentNumbering": "Document Numbering",
+    "documentTemplates": "Document Templates",
     "surveySettings": "Survey & Design Data",
     "itemMaster": "Item Master",
     "mainNavigation": "Main navigation",
@@ -253,7 +254,10 @@
       "localizedTextThPlaceholder": "Enter information in Thai",
       "localizedTextEnPlaceholder": "Enter information in English",
       "localizedTextareaThPlaceholder": "Enter details in Thai",
-      "localizedTextareaEnPlaceholder": "Enter details in English"
+      "localizedTextareaEnPlaceholder": "Enter details in English",
+      "datePlaceholder": "dd/mm/yyyy",
+      "datetimePlaceholder": "dd/mm/yyyy --:--",
+      "otherPlaceholder": "Specify other..."
     },
     "addressAutocomplete": {
       "label": "Quick Address Search",
@@ -747,9 +751,9 @@
     "nextActionNotePlaceholder": "e.g., Submit revised quotation, Meet board of directors",
     "nextActionFilter": "Next Action Date",
     "nextActionAll": "All Dates",
-    "nextActionToday": "Today",
+    "nextActionToday": "Action scheduled for today",
     "nextActionThisWeek": "This Week",
-    "nextActionOverdue": "Overdue",
+    "nextActionOverdue": "Action is overdue",
     "targetDecisionDateFrom": "Decision Date From",
     "targetDecisionDateTo": "Decision Date To",
     "metrics": {
@@ -903,9 +907,7 @@
     "commercialAndOwnerTitle": "Sales & System Metadata",
     "nextActionCardTitle": "Next Action & Follow-up",
     "nextActionEmpty": "No next action scheduled",
-    "nextActionOverdue": "Action is overdue",
     "nextActionUpcoming": "Upcoming",
-    "nextActionToday": "Action scheduled for today",
     "stageTerminated": "Terminated",
     "mobileWorkspaceTabs": "Mobile workspace sections",
     "viewCustomerProfile": "Quick view customer profile",
@@ -1009,6 +1011,25 @@
     "fieldSurveyAction": "Field Room Survey",
     "workspaceTitle": "Site Survey Workspace",
     "workspaceDesc": "Record survey areas, measurements, constraints and verify readiness to hand off for estimation.",
+    "workspaceTabs": {
+      "areas": "Areas & Measurements",
+      "scope": "Scope & Schedule",
+      "checklist": "Checklist & Evidence",
+      "notes": "Constraints & Notes"
+    },
+    "hud": {
+      "areasSummary": "{count} Areas ({measurements} Points)",
+      "evidenceSummary": "{count} Photos (Min ≥ {min})",
+      "evidenceSummaryNoMin": "{count} Photos",
+      "checklistSummary": "{passed}/{total} Passed",
+      "notesSummary": "{count} Notes"
+    },
+    "collapseAll": "Collapse All",
+    "expandAll": "Expand All",
+    "toggleArea": "Expand/collapse this area",
+    "expandFullscreen": "Maximize workspace",
+    "collapseFullscreen": "Restore size",
+    "measurementsSummary": "{count} measurements",
     "visitedAtLabel": "Actual Visit Date & Time",
     "scopeSummaryLabel": "Scope Summary",
     "scopeSummaryPlaceholder": "Summary of on-site survey scope, e.g. master bedroom built-in wardrobe...",
@@ -1167,7 +1188,10 @@
     "evidenceLoadMore": "Load more photos",
     "checklistNotePlaceholder": "Enter site checklist note...",
     "voidReasonPlaceholder": "Enter reason for survey cancellation...",
-    "cloneReasonPlaceholder": "Enter reason for creating new revision..."
+    "cloneReasonPlaceholder": "Enter reason for creating new revision...",
+    "visitedAtPlaceholder": "dd/mm/yyyy --:--",
+    "scheduledStartPlaceholder": "dd/mm/yyyy --:--",
+    "scheduledEndPlaceholder": "dd/mm/yyyy --:--"
   },
   "estimates": {
     "reviewQueueTitle": "Estimate Review Queue",
@@ -1792,7 +1816,8 @@
       "colorHexPlaceholder": "#3B82F6 or color name",
       "sortOrder": "Sort Order",
       "isActive": "Active",
-      "status": "Status"
+      "status": "Status",
+      "sortOrderPlaceholder": "0"
     },
     "table": {
       "code": "Code",
@@ -2288,7 +2313,9 @@
     "codeRequired": "Code is required",
     "imageAltTextPlaceholder": "Image description e.g. 15mm Plywood",
     "branchSaveFailed": "Failed to save branch availability",
-    "approve": "Approve"
+    "approve": "Approve",
+    "datePlaceholder": "dd/mm/yyyy",
+    "datetimePlaceholder": "dd/mm/yyyy --:--"
   },
   "userAdmin": {
     "title": "Users and Access",
@@ -2348,7 +2375,9 @@
       "startsAt": "Starts at",
       "expiresAt": "Expires at",
       "displayNamePlaceholder": "e.g. John Doe",
-      "emailPlaceholder": "user@example.com"
+      "emailPlaceholder": "user@example.com",
+      "startsAtPlaceholder": "dd/mm/yyyy --:--",
+      "expiresAtPlaceholder": "dd/mm/yyyy --:--"
     },
     "masterData": {
       "quickAddDepartment": "Add new department",
@@ -2685,8 +2714,10 @@
       "titlePlaceholder": "e.g. Change laminate finish spec",
       "notePlaceholder": "Enter decision notes...",
       "namePlaceholder": "e.g. Milestone 1 - Structure Handover",
-      "weightPlaceholder": "100"
-    }
+      "weightPlaceholder": "100",
+      "datePlaceholder": "dd/mm/yyyy"
+    },
+    "datePlaceholder": "dd/mm/yyyy"
   },
   "procurement": {
     "accessDeniedTitle": "No access to procurement",
@@ -2842,7 +2873,8 @@
       "receiveQuantityPlaceholder": "0.0000",
       "receiptNotePlaceholder": "Enter receiving note...",
       "reasonPlaceholder": "Enter reason...",
-      "notePlaceholder": "Enter purchase order note..."
+      "notePlaceholder": "Enter purchase order note...",
+      "datePlaceholder": "dd/mm/yyyy"
     }
   },
   "inventory": {
@@ -3281,7 +3313,8 @@
       "confirmConvert": "Create document",
       "unitPricePlaceholder": "0.00",
       "purchaseLeadTimePlaceholder": "7",
-      "productionLeadTimePlaceholder": "14"
+      "productionLeadTimePlaceholder": "14",
+      "datePlaceholder": "dd/mm/yyyy"
     }
   },
   "quotationLifecycle": {
@@ -3306,7 +3339,10 @@
     "confirm": "Confirm",
     "voided": "Quotation voided.",
     "amended": "Replacement quotation issued.",
-    "document": { "download": "Download PDF", "hash": "SHA-256 {hash}…" },
+    "document": {
+      "download": "Download PDF",
+      "hash": "SHA-256 {hash}…"
+    },
     "errors": {
       "failed": "The action failed. Please try again.",
       "QUOTATION_INVALID_STATE": "The quotation status does not allow this action.",
@@ -3392,7 +3428,8 @@
       "pdfDownload": "Download PDF",
       "pdfHash": "SHA-256: {hash}",
       "pdfFailed": "The file could not be downloaded. Please try again.",
-      "signerRolePlaceholder": "e.g. Authorized Signatory / Project Owner"
+      "signerRolePlaceholder": "e.g. Authorized Signatory / Project Owner",
+      "otpCodePlaceholder": "123456"
     },
     "errors": {
       "failed": "The action failed. Please try again.",
@@ -3555,7 +3592,8 @@
       "textPlaceholder": "Enter details...",
       "crewPlaceholder": "e.g. Woodwork Team A (Foreman Somsak)",
       "notePlaceholder": "Enter installation remarks...",
-      "newChecklistItemPlaceholder": "e.g. Verify cabinet door alignment"
+      "newChecklistItemPlaceholder": "e.g. Verify cabinet door alignment",
+      "datePlaceholder": "dd/mm/yyyy"
     },
     "warranties": {
       "title": "Warranties",
@@ -3646,7 +3684,8 @@
       "reopenReasonPlaceholder": "Enter rework / reopening reason...",
       "resolutionNotePlaceholder": "Enter troubleshooting and resolution details...",
       "titleFieldPlaceholder": "e.g. Wardrobe door does not close properly",
-      "descriptionPlaceholder": "Describe issue symptoms in detail..."
+      "descriptionPlaceholder": "Describe issue symptoms in detail...",
+      "datePlaceholder": "dd/mm/yyyy"
     }
   },
   "finance": {
@@ -3748,7 +3787,8 @@
       "paymentReferencePlaceholder": "e.g. Bank slip or transaction ID",
       "reasonPlaceholder": "Enter reason...",
       "descriptionPlaceholder": "e.g. Milestone 1 - 30% Advance Deposit",
-      "amountPlaceholder": "0.00"
+      "amountPlaceholder": "0.00",
+      "datePlaceholder": "dd/mm/yyyy"
     },
     "sync": {
       "title": "Accounting sync",
@@ -3950,7 +3990,8 @@
       "riskModifierPlaceholder": "0.0000",
       "amountPlaceholder": "0.00",
       "assumptionsPlaceholder": "e.g. Installation labor included",
-      "exclusionsPlaceholder": "e.g. Electrical wiring excluded"
+      "exclusionsPlaceholder": "e.g. Electrical wiring excluded",
+      "datePlaceholder": "dd/mm/yyyy"
     },
     "estimates": {
       "title": "Quick estimates",
@@ -4061,16 +4102,46 @@
       "branchOverrideApplied": "A branch rate override was applied to this calculation."
     },
     "overrides": {
-      "title": "Branch rate overrides", "subtitle": "A branch-specific rate for a limited period. It needs an independent approver and never changes the standard rate.", "open": "Branch overrides",
-      "loadError": "Could not load branch overrides.", "empty": "No branch overrides yet", "request": "Request override",
-      "requestTitle": "Request a branch rate override", "referenceRate": "Reference rate", "minimumCharge": "Minimum charge",
-      "effectiveFrom": "Effective from", "effectiveTo": "Effective to", "reasonCode": "Reason code",
-      "reasonDetail": "Reason detail", "sourceReference": "Source reference", "period": "{from} to {to}",
-      "requestedBy": "Requested by {name}", "fieldInvalid": "Check this value.",
-      "statuses": { "requested": "Awaiting approval", "approved": "Approved", "returned": "Returned", "revoked": "Revoked" },
-      "approve": "Approve", "return": "Return", "revoke": "Revoke",
-      "approveTitle": "Approve this override?", "returnTitle": "Return this override?", "revokeTitle": "Revoke this override?",
-      "note": "Note", "reasonRequired": "Enter a reason.", "done": "Saved."
+      "title": "Branch rate overrides",
+      "subtitle": "A branch-specific rate for a limited period. It needs an independent approver and never changes the standard rate.",
+      "open": "Branch overrides",
+      "loadError": "Could not load branch overrides.",
+      "empty": "No branch overrides yet",
+      "request": "Request override",
+      "requestTitle": "Request a branch rate override",
+      "referenceRate": "Reference rate",
+      "minimumCharge": "Minimum charge",
+      "effectiveFrom": "Effective from",
+      "effectiveTo": "Effective to",
+      "reasonCode": "Reason code",
+      "reasonDetail": "Reason detail",
+      "sourceReference": "Source reference",
+      "period": "{from} to {to}",
+      "requestedBy": "Requested by {name}",
+      "fieldInvalid": "Check this value.",
+      "statuses": {
+        "requested": "Awaiting approval",
+        "approved": "Approved",
+        "returned": "Returned",
+        "revoked": "Revoked"
+      },
+      "approve": "Approve",
+      "return": "Return",
+      "revoke": "Revoke",
+      "approveTitle": "Approve this override?",
+      "returnTitle": "Return this override?",
+      "revokeTitle": "Revoke this override?",
+      "note": "Note",
+      "reasonRequired": "Enter a reason.",
+      "done": "Saved.",
+      "notePlaceholder": "Enter notes or reason...",
+      "referenceRatePlaceholder": "0.00",
+      "minimumChargePlaceholder": "0.00",
+      "effectiveFromPlaceholder": "dd/mm/yyyy",
+      "effectiveToPlaceholder": "dd/mm/yyyy",
+      "reasonCodePlaceholder": "e.g. MARKET_ADJUSTMENT",
+      "reasonDetailPlaceholder": "Enter detailed reason...",
+      "sourceReferencePlaceholder": "e.g. PO-2026-001"
     }
   },
   "richText": {
@@ -4253,7 +4324,15 @@
       },
       "save": "Save organization",
       "saveSuccess": "Organization saved",
-      "readOnlyNotice": "You can view this data but not edit it."
+      "readOnlyNotice": "You can view this data but not edit it.",
+      "placeholders": {
+        "name": "e.g. Tan Trans Co., Ltd.",
+        "nameEn": "e.g. Tan Trans Co., Ltd.",
+        "taxIdentifier": "0123456789012",
+        "phone": "e.g. +66 2 xxx xxxx",
+        "addressTh": "Address in Thai",
+        "addressEn": "Building, street, district, province, postal code"
+      }
     },
     "branches": {
       "title": "Branches",
@@ -4333,6 +4412,16 @@
         "warehouses": "Active warehouses",
         "memberships": "Users assigned to this branch",
         "last_active_branch": "The organization must keep at least one active branch"
+      },
+      "placeholders": {
+        "code": "e.g. BKK01, HQ",
+        "name": "e.g. Head Office or Bangkok Branch",
+        "nameEn": "e.g. Head Office or Bangkok Branch",
+        "taxBranchCode": "00000",
+        "phone": "e.g. +66 2 xxx xxxx",
+        "addressTh": "Branch address in Thai",
+        "addressEn": "Building, street, district, province, postal code",
+        "deactivateReason": "Reason for deactivating branch..."
       }
     },
     "errors": {
@@ -4513,7 +4602,11 @@
   "approvalLimitAdmin": {
     "accessDeniedTitle": "Access denied",
     "accessDeniedDetail": "You do not have permission to manage approval limits.",
-    "documentType": { "estimate": "Estimate", "purchase_order": "Purchase order", "change_order": "Change order" },
+    "documentType": {
+      "estimate": "Estimate",
+      "purchase_order": "Purchase order",
+      "change_order": "Change order"
+    },
     "list": {
       "title": "Approval limits",
       "subtitle": "The most each role may approve, per document type and branch",
@@ -4521,8 +4614,17 @@
       "failClosedNotice": "A role with no active limit cannot approve estimates, purchase orders or change orders. Set the limits before relying on approvals.",
       "documentTypeFilter": "Document type",
       "statusFilter": "Status",
-      "status": { "active": "Active", "inactive": "Inactive" },
-      "table": { "role": "Role", "documentType": "Document type", "branch": "Branch", "limit": "Limit", "status": "Status" },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "table": {
+        "role": "Role",
+        "documentType": "Document type",
+        "branch": "Branch",
+        "limit": "Limit",
+        "status": "Status"
+      },
       "organizationWide": "Whole organization",
       "unlimited": "Unlimited",
       "emptyTitle": "No approval limits yet",
@@ -4538,10 +4640,32 @@
       "saveSuccess": "Limit saved",
       "backToList": "Back to limits",
       "identityLocked": "Role, document type, branch and currency cannot be changed. Add a new limit instead.",
-      "fields": { "role": "Role", "documentType": "Document type", "branch": "Branch", "currency": "Currency", "isUnlimited": "Unlimited", "maxAmount": "Maximum amount", "isActive": "Active" },
-      "hints": { "branch": "Leave empty for the whole organization. A branch limit replaces the organization limit of that role in that branch.", "unlimited": "The role can approve any amount of this document type.", "inactive": "An inactive limit counts as no limit." },
-      "placeholders": { "role": "— Select a role —", "documentType": "— Select a document type —", "organizationWide": "Whole organization" },
-      "validation": { "roleRequired": "Select a role", "documentTypeRequired": "Select a document type", "amountRequired": "Enter the maximum amount", "amountInvalid": "Enter 0 or more with at most 2 decimal places" }
+      "fields": {
+        "role": "Role",
+        "documentType": "Document type",
+        "branch": "Branch",
+        "currency": "Currency",
+        "isUnlimited": "Unlimited",
+        "maxAmount": "Maximum amount",
+        "isActive": "Active"
+      },
+      "hints": {
+        "branch": "Leave empty for the whole organization. A branch limit replaces the organization limit of that role in that branch.",
+        "unlimited": "The role can approve any amount of this document type.",
+        "inactive": "An inactive limit counts as no limit."
+      },
+      "placeholders": {
+        "role": "— Select a role —",
+        "documentType": "— Select a document type —",
+        "organizationWide": "Whole organization",
+        "maxAmount": "0.00"
+      },
+      "validation": {
+        "roleRequired": "Select a role",
+        "documentTypeRequired": "Select a document type",
+        "amountRequired": "Enter the maximum amount",
+        "amountInvalid": "Enter 0 or more with at most 2 decimal places"
+      }
     },
     "errors": {
       "GENERIC": "The action failed. Please try again.",
@@ -4740,5 +4864,115 @@
     "surveyor": "Assigned Surveyor",
     "customer": "Customer",
     "project": "Project / Opportunity"
+  },
+  "documentTemplates": {
+    "title": "Document & Print Form Customizer",
+    "subtitle": "Customize headers, logos, columns, commercial terms, and signature blocks with instant A4 live preview",
+    "previewTitle": "Live Print Preview",
+    "noTemplateSelected": "Please select or create a template to begin customizing",
+    "defaultBadge": "Default",
+    "saveSuccess": "Document template saved successfully",
+    "saveError": "Failed to save document template",
+    "createSuccess": "New template created successfully",
+    "createError": "Failed to create new template",
+    "deleteSuccess": "Document template deleted successfully",
+    "deleteError": "Failed to delete document template",
+    "resetSuccess": "Template settings reset successfully",
+    "actions": {
+      "print": "Print / PDF",
+      "fullscreen": "Fullscreen Preview",
+      "zoomFit": "Fit",
+      "zoom100": "100%",
+      "reset": "Reset",
+      "delete": "Delete",
+      "save": "Save Changes",
+      "createTemplate": "New Template",
+      "chooseLogo": "Choose Logo Image",
+      "removeLogo": "Remove Logo"
+    },
+    "selectors": {
+      "documentType": "Document Type",
+      "template": "Active Template",
+      "isDefaultTemplate": "Set as default template for this type"
+    },
+    "tabs": {
+      "branding": "1. Branding & Header",
+      "columns": "2. Columns & Table",
+      "terms": "3. Terms & Bank",
+      "signatures": "4. Signatures"
+    },
+    "sections": {
+      "tableColumns": "Item Table Columns",
+      "summaryFields": "Financial Summary & Calculations"
+    },
+    "fields": {
+      "templateName": "Template Name",
+      "newTemplateName": "New Template Name",
+      "documentTitle": "Document Title (e.g. Quotation)",
+      "showLogo": "Show Company Logo on Header",
+      "logoPosition": "Logo Position",
+      "logoHeight": "Logo Height",
+      "uploadLogo": "Upload Logo File",
+      "companyNameTh": "Company Name (Thai)",
+      "companyNameEn": "Company Name (English)",
+      "taxId": "Tax Identification Number (13 Digits)",
+      "address": "Office / Branch Address",
+      "phone": "Contact Phone",
+      "email": "Contact Email",
+      "showSku": "Show Product SKU",
+      "showSpecs": "Show Product Specifications",
+      "showThumbnail": "Show Product Thumbnail",
+      "showLineDiscount": "Show Line Item Discount",
+      "showVat": "Show Value Added Tax (VAT 7%)",
+      "showWithholdingTax": "Show Withholding Tax (WHT)",
+      "showBahtText": "Show Thai Baht Text",
+      "validityPeriodText": "Price Validity Period Text",
+      "commercialTermsText": "Commercial & Payment Terms",
+      "showBankDetails": "Show Bank Details for Wire Transfer",
+      "bankName": "Bank Name",
+      "accountNo": "Account Number",
+      "accountName": "Account Name",
+      "footerNote": "Footer Note",
+      "signatureCount": "Signature Block Count",
+      "box1Label": "Signature Box 1 Label",
+      "box2Label": "Signature Box 2 Label",
+      "box3Label": "Signature Box 3 Label",
+      "templateNamePlaceholder": "e.g. Standard Quotation Template",
+      "documentTitlePlaceholder": "e.g. QUOTATION",
+      "companyNameThPlaceholder": "e.g. Tan Trans Co., Ltd. (Thai)",
+      "companyNameEnPlaceholder": "e.g. Tan Trans Co., Ltd.",
+      "taxIdPlaceholder": "13-digit tax identification number",
+      "addressPlaceholder": "Building, street, district, province...",
+      "phonePlaceholder": "e.g. +66 2 xxx xxxx",
+      "emailPlaceholder": "e.g. contact@company.com",
+      "bankNamePlaceholder": "e.g. Kasikornbank",
+      "accountNoPlaceholder": "e.g. 123-4-56789-0",
+      "accountNamePlaceholder": "e.g. Tan Trans Co., Ltd.",
+      "box1LabelPlaceholder": "e.g. Authorized Signatory",
+      "box2LabelPlaceholder": "e.g. Prepared By",
+      "box3LabelPlaceholder": "e.g. Approved By",
+      "validityPeriodTextPlaceholder": "e.g. Quotation valid for 30 days",
+      "commercialTermsTextPlaceholder": "Payment terms or project milestone conditions",
+      "footerNotePlaceholder": "Footer note or remarks",
+      "newTemplateNamePlaceholder": "e.g. Standard Branch Template"
+    },
+    "descriptions": {
+      "showSku": "Display product code in line item table",
+      "showSpecs": "Display additional specifications below item name",
+      "showThumbnail": "Display small product image thumbnail in table row",
+      "showLineDiscount": "Display discount column for each line item",
+      "showVat": "Calculate and show 7% Value Added Tax",
+      "showWithholdingTax": "Display statutory withholding tax deduction",
+      "showBahtText": "Display grand total written out in Thai words"
+    },
+    "modal": {
+      "createTitle": "Create New Document Template",
+      "createDesc": "Enter a name for the new template. Default configurations will be copied from the active template.",
+      "cancel": "Cancel",
+      "confirmCreate": "Create Template",
+      "deleteTitle": "Confirm Delete Template",
+      "deleteMsg": "Are you sure you want to delete template \"{name}\"? This action cannot be undone.",
+      "confirmDelete": "Delete Template"
+    }
   }
 }

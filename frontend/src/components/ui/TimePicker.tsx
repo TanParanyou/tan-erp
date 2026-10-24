@@ -78,6 +78,7 @@ const CustomTimeInput = React.forwardRef<HTMLInputElement, CustomTimeInputProps>
 
     return (
       <input
+        placeholder="--:--"
         {...rest}
         ref={ref}
         value={displayVal}

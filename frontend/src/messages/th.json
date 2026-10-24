@@ -55,6 +55,7 @@
     "opportunities": "โอกาสทางการขาย",
     "fieldSurveys": "สำรวจหน้างาน",
     "documentNumbering": "รูปแบบเลขที่เอกสาร",
+    "documentTemplates": "จัดการเทมเพลตเอกสาร",
     "surveySettings": "ข้อมูลสำรวจและดีไซน์",
     "itemMaster": "ข้อมูลหลักสินค้า",
     "mainNavigation": "เมนูหลัก",
@@ -253,7 +254,10 @@
       "localizedTextThPlaceholder": "ระบุข้อมูลภาษาไทย",
       "localizedTextEnPlaceholder": "Enter information in English",
       "localizedTextareaThPlaceholder": "ระบุรายละเอียดภาษาไทย",
-      "localizedTextareaEnPlaceholder": "Enter details in English"
+      "localizedTextareaEnPlaceholder": "Enter details in English",
+      "datePlaceholder": "วว/ดด/ปปปป",
+      "datetimePlaceholder": "วว/ดด/ปปปป --:--",
+      "otherPlaceholder": "ระบุเพิ่มเติม..."
     },
     "addressAutocomplete": {
       "label": "ค้นหาที่อยู่ด่วน",
@@ -747,9 +751,9 @@
     "nextActionNotePlaceholder": "เช่น ส่งใบเสนอราคาฉบับแก้ไข, นัดพบบอร์ดบริหาร",
     "nextActionFilter": "กำหนดนัดหมาย",
     "nextActionAll": "ทุกกำหนดนัดหมาย",
-    "nextActionToday": "วันนี้ (Today)",
+    "nextActionToday": "กำหนดดำเนินการวันนี้",
     "nextActionThisWeek": "สัปดาห์นี้ (This Week)",
-    "nextActionOverdue": "เลยกำหนด (Overdue)",
+    "nextActionOverdue": "เกินกำหนดนัดหมายแล้ว",
     "targetDecisionDateFrom": "ตัดสินใจตั้งแต่",
     "targetDecisionDateTo": "ถึงวันที่",
     "metrics": {
@@ -903,9 +907,7 @@
     "commercialAndOwnerTitle": "ข้อมูลฝ่ายขายและระบบ",
     "nextActionCardTitle": "การติดตามผลและนัดหมายถัดไป",
     "nextActionEmpty": "ยังไม่มีการกำหนดนัดหมายถัดไป",
-    "nextActionOverdue": "เกินกำหนดนัดหมายแล้ว",
     "nextActionUpcoming": "รอถึงกำหนด",
-    "nextActionToday": "กำหนดดำเนินการวันนี้",
     "stageTerminated": "ยุติกระบวนการ",
     "mobileWorkspaceTabs": "แท็บหมวดหมู่สำหรับมือถือ",
     "viewCustomerProfile": "ดูข้อมูลลูกค้าฉบับย่อ",
@@ -1009,6 +1011,25 @@
     "fieldSurveyAction": "สำรวจห้อง/ขนาดจริง",
     "workspaceTitle": "บันทึกผลการสำรวจหน้างาน (Site Survey Workspace)",
     "workspaceDesc": "บันทึกข้อมูลพื้นที่ ขนาดที่วัดได้ ข้อจำกัด และตรวจรับความพร้อมเพื่อส่งต่อการประเมินราคา",
+    "workspaceTabs": {
+      "areas": "พื้นที่และระยะวัด",
+      "scope": "ขอบเขตและวันเวลา",
+      "checklist": "ตรวจรับและภาพถ่าย",
+      "notes": "ข้อกำหนดและข้อจำกัด"
+    },
+    "hud": {
+      "areasSummary": "{count} พื้นที่ ({measurements} จุดวัด)",
+      "evidenceSummary": "{count} ภาพ (เกณฑ์ ≥ {min})",
+      "evidenceSummaryNoMin": "{count} ภาพ",
+      "checklistSummary": "{passed}/{total} ผ่าน",
+      "notesSummary": "{count} ข้อกำหนด"
+    },
+    "collapseAll": "ยุบทุกห้อง",
+    "expandAll": "ขยายทุกห้อง",
+    "toggleArea": "ยุบ/ขยายพื้นที่นี้",
+    "expandFullscreen": "ขยายเต็มจอ",
+    "collapseFullscreen": "ย่อหน้าต่าง",
+    "measurementsSummary": "{count} จุดวัด",
     "visitedAtLabel": "วันที่และเวลาเข้าพบจริง",
     "scopeSummaryLabel": "สรุปขอบเขตงานสำรวจ",
     "scopeSummaryPlaceholder": "ระบุภาพรวมของงานสำรวจ เช่น สำรวจพื้นที่ทำตู้เสื้อผ้า built-in...",
@@ -1167,7 +1188,10 @@
     "evidenceLoadMore": "โหลดภาพเพิ่ม",
     "checklistNotePlaceholder": "ระบุหมายเหตุการตรวจเช็กหน้างาน...",
     "voidReasonPlaceholder": "ระบุเหตุผลในการยกเลิกการสำรวจ...",
-    "cloneReasonPlaceholder": "ระบุเหตุผลในการสร้างฉบับแก้ไขใหม่..."
+    "cloneReasonPlaceholder": "ระบุเหตุผลในการสร้างฉบับแก้ไขใหม่...",
+    "visitedAtPlaceholder": "วว/ดด/ปปปป --:--",
+    "scheduledStartPlaceholder": "วว/ดด/ปปปป --:--",
+    "scheduledEndPlaceholder": "วว/ดด/ปปปป --:--"
   },
   "estimates": {
     "reviewQueueTitle": "คิวตรวจสอบการประเมินราคา",
@@ -1792,7 +1816,8 @@
       "colorHexPlaceholder": "#3B82F6 หรือชื่อสี",
       "sortOrder": "ลำดับการแสดงผล",
       "isActive": "เปิดใช้งาน",
-      "status": "สถานะ"
+      "status": "สถานะ",
+      "sortOrderPlaceholder": "0"
     },
     "table": {
       "code": "รหัส",
@@ -2288,7 +2313,9 @@
     "codeRequired": "กรุณาระบุรหัส",
     "imageAltTextPlaceholder": "อธิบายรูปภาพสินค้า เช่น ไม้อัดยาง 15 มม.",
     "branchSaveFailed": "บันทึกข้อมูลสาขาไม่สำเร็จ",
-    "approve": "อนุมัติ"
+    "approve": "อนุมัติ",
+    "datePlaceholder": "วว/ดด/ปปปป",
+    "datetimePlaceholder": "วว/ดด/ปปปป --:--"
   },
   "userAdmin": {
     "title": "ผู้ใช้และสิทธิ์การเข้าถึง",
@@ -2348,7 +2375,9 @@
       "startsAt": "เริ่มมีผล",
       "expiresAt": "หมดอายุ",
       "displayNamePlaceholder": "เช่น สมชาย ใจดี",
-      "emailPlaceholder": "user@example.com"
+      "emailPlaceholder": "user@example.com",
+      "startsAtPlaceholder": "วว/ดด/ปปปป --:--",
+      "expiresAtPlaceholder": "วว/ดด/ปปปป --:--"
     },
     "masterData": {
       "quickAddDepartment": "เพิ่มแผนกใหม่",
@@ -2685,8 +2714,10 @@
       "titlePlaceholder": "เช่น ปรับเปลี่ยนสเปกลามิเนตหน้าบาน",
       "notePlaceholder": "ระบุหมายเหตุการอนุมัติ/ปฏิเสธ...",
       "namePlaceholder": "เช่น ส่งมอบงานงวดที่ 1 (ติดตั้งโครงสร้าง)",
-      "weightPlaceholder": "100"
-    }
+      "weightPlaceholder": "100",
+      "datePlaceholder": "วว/ดด/ปปปป"
+    },
+    "datePlaceholder": "วว/ดด/ปปปป"
   },
   "procurement": {
     "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึงงานจัดซื้อ",
@@ -2842,7 +2873,8 @@
       "receiveQuantityPlaceholder": "0.0000",
       "receiptNotePlaceholder": "ระบุหมายเหตุการรับสินค้า...",
       "reasonPlaceholder": "ระบุเหตุผล...",
-      "notePlaceholder": "ระบุหมายเหตุใบสั่งซื้อ..."
+      "notePlaceholder": "ระบุหมายเหตุใบสั่งซื้อ...",
+      "datePlaceholder": "วว/ดด/ปปปป"
     }
   },
   "inventory": {
@@ -3281,7 +3313,8 @@
       "confirmConvert": "สร้างเอกสาร",
       "unitPricePlaceholder": "0.00",
       "purchaseLeadTimePlaceholder": "7",
-      "productionLeadTimePlaceholder": "14"
+      "productionLeadTimePlaceholder": "14",
+      "datePlaceholder": "วว/ดด/ปปปป"
     }
   },
   "quotationLifecycle": {
@@ -3306,7 +3339,10 @@
     "confirm": "ยืนยัน",
     "voided": "ยกเลิกใบเสนอราคาแล้ว",
     "amended": "ออกใบเสนอราคาฉบับใหม่แล้ว",
-    "document": { "download": "ดาวน์โหลด PDF", "hash": "SHA-256 {hash}…" },
+    "document": {
+      "download": "ดาวน์โหลด PDF",
+      "hash": "SHA-256 {hash}…"
+    },
     "errors": {
       "failed": "ดำเนินการไม่สำเร็จ โปรดลองอีกครั้ง",
       "QUOTATION_INVALID_STATE": "สถานะใบเสนอราคาไม่อนุญาตให้ทำรายการนี้",
@@ -3392,7 +3428,8 @@
       "pdfDownload": "ดาวน์โหลด PDF",
       "pdfHash": "SHA-256: {hash}",
       "pdfFailed": "ดาวน์โหลดไฟล์ไม่สำเร็จ โปรดลองอีกครั้ง",
-      "signerRolePlaceholder": "เช่น ผู้มีอำนาจลงนาม / เจ้าของโครงการ"
+      "signerRolePlaceholder": "เช่น ผู้มีอำนาจลงนาม / เจ้าของโครงการ",
+      "otpCodePlaceholder": "123456"
     },
     "errors": {
       "failed": "ดำเนินการไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -3555,7 +3592,8 @@
       "textPlaceholder": "ระบุรายละเอียด...",
       "crewPlaceholder": "เช่น ทีมช่างไม้ A (หัวหน้าสมศักดิ์)",
       "notePlaceholder": "ระบุหมายเหตุการติดตั้ง...",
-      "newChecklistItemPlaceholder": "เช่น ตรวจสอบความเรียบร้อยของหน้าบานตู้"
+      "newChecklistItemPlaceholder": "เช่น ตรวจสอบความเรียบร้อยของหน้าบานตู้",
+      "datePlaceholder": "วว/ดด/ปปปป"
     },
     "warranties": {
       "title": "การรับประกัน",
@@ -3646,7 +3684,8 @@
       "reopenReasonPlaceholder": "ระบุเหตุผลที่ต้องเปิดงานซ่อมซ้ำ...",
       "resolutionNotePlaceholder": "ระบุแนวทางและผลการแก้ไขปัญหา...",
       "titleFieldPlaceholder": "เช่น หน้าบานตู้เสื้อผ้าปิดไม่สนิท",
-      "descriptionPlaceholder": "อธิบายอาการหรือปัญหาที่พบอย่างละเอียด..."
+      "descriptionPlaceholder": "อธิบายอาการหรือปัญหาที่พบอย่างละเอียด...",
+      "datePlaceholder": "วว/ดด/ปปปป"
     }
   },
   "finance": {
@@ -3748,7 +3787,8 @@
       "paymentReferencePlaceholder": "เช่น เลขที่สลิป หรือ รหัสรายการโอน",
       "reasonPlaceholder": "ระบุเหตุผล...",
       "descriptionPlaceholder": "เช่น งวดที่ 1 มัดจำ 30% เมื่องานเริ่ม",
-      "amountPlaceholder": "0.00"
+      "amountPlaceholder": "0.00",
+      "datePlaceholder": "วว/ดด/ปปปป"
     },
     "sync": {
       "title": "ส่งข้อมูลให้ระบบบัญชี",
@@ -3950,7 +3990,8 @@
       "riskModifierPlaceholder": "0.0000",
       "amountPlaceholder": "0.00",
       "assumptionsPlaceholder": "เช่น รวมค่าแรงติดตั้งแล้ว",
-      "exclusionsPlaceholder": "เช่น ไม่รวมงานระบบไฟ"
+      "exclusionsPlaceholder": "เช่น ไม่รวมงานระบบไฟ",
+      "datePlaceholder": "วว/ดด/ปปปป"
     },
     "estimates": {
       "title": "ประเมินราคาเบื้องต้น",
@@ -4061,16 +4102,46 @@
       "branchOverrideApplied": "การคำนวณนี้ใช้ราคาเฉพาะสาขา"
     },
     "overrides": {
-      "title": "ราคาเฉพาะสาขา (Branch Rate Override)", "subtitle": "อัตราเฉพาะสาขาตามช่วงเวลา ต้องมีผู้อนุมัติอิสระ และไม่แก้อัตรามาตรฐาน", "open": "ราคาเฉพาะสาขา",
-      "loadError": "โหลดรายการราคาเฉพาะสาขาไม่สำเร็จ", "empty": "ยังไม่มีราคาเฉพาะสาขา", "request": "ขอราคาเฉพาะสาขา",
-      "requestTitle": "ขอราคาเฉพาะสาขา", "referenceRate": "ราคาอ้างอิง", "minimumCharge": "ราคาขั้นต่ำ",
-      "effectiveFrom": "มีผลตั้งแต่", "effectiveTo": "มีผลถึง", "reasonCode": "รหัสเหตุผล",
-      "reasonDetail": "รายละเอียดเหตุผล", "sourceReference": "เอกสารอ้างอิง", "period": "{from} ถึง {to}",
-      "requestedBy": "ขอโดย {name}", "fieldInvalid": "กรุณาตรวจสอบค่านี้",
-      "statuses": { "requested": "รออนุมัติ", "approved": "อนุมัติแล้ว", "returned": "ส่งกลับ", "revoked": "เพิกถอน" },
-      "approve": "อนุมัติ", "return": "ส่งกลับ", "revoke": "เพิกถอน",
-      "approveTitle": "อนุมัติราคาเฉพาะสาขานี้หรือไม่", "returnTitle": "ส่งราคาเฉพาะสาขานี้กลับหรือไม่", "revokeTitle": "เพิกถอนราคาเฉพาะสาขานี้หรือไม่",
-      "note": "หมายเหตุ", "reasonRequired": "กรอกเหตุผล", "done": "บันทึกแล้ว"
+      "title": "ราคาเฉพาะสาขา (Branch Rate Override)",
+      "subtitle": "อัตราเฉพาะสาขาตามช่วงเวลา ต้องมีผู้อนุมัติอิสระ และไม่แก้อัตรามาตรฐาน",
+      "open": "ราคาเฉพาะสาขา",
+      "loadError": "โหลดรายการราคาเฉพาะสาขาไม่สำเร็จ",
+      "empty": "ยังไม่มีราคาเฉพาะสาขา",
+      "request": "ขอราคาเฉพาะสาขา",
+      "requestTitle": "ขอราคาเฉพาะสาขา",
+      "referenceRate": "ราคาอ้างอิง",
+      "minimumCharge": "ราคาขั้นต่ำ",
+      "effectiveFrom": "มีผลตั้งแต่",
+      "effectiveTo": "มีผลถึง",
+      "reasonCode": "รหัสเหตุผล",
+      "reasonDetail": "รายละเอียดเหตุผล",
+      "sourceReference": "เอกสารอ้างอิง",
+      "period": "{from} ถึง {to}",
+      "requestedBy": "ขอโดย {name}",
+      "fieldInvalid": "กรุณาตรวจสอบค่านี้",
+      "statuses": {
+        "requested": "รออนุมัติ",
+        "approved": "อนุมัติแล้ว",
+        "returned": "ส่งกลับ",
+        "revoked": "เพิกถอน"
+      },
+      "approve": "อนุมัติ",
+      "return": "ส่งกลับ",
+      "revoke": "เพิกถอน",
+      "approveTitle": "อนุมัติราคาเฉพาะสาขานี้หรือไม่",
+      "returnTitle": "ส่งราคาเฉพาะสาขานี้กลับหรือไม่",
+      "revokeTitle": "เพิกถอนราคาเฉพาะสาขานี้หรือไม่",
+      "note": "หมายเหตุ",
+      "reasonRequired": "กรอกเหตุผล",
+      "done": "บันทึกแล้ว",
+      "notePlaceholder": "ระบุหมายเหตุหรือเหตุผลประกอบ...",
+      "referenceRatePlaceholder": "0.00",
+      "minimumChargePlaceholder": "0.00",
+      "effectiveFromPlaceholder": "วว/ดด/ปปปป",
+      "effectiveToPlaceholder": "วว/ดด/ปปปป",
+      "reasonCodePlaceholder": "เช่น MARKET_ADJUSTMENT",
+      "reasonDetailPlaceholder": "ระบุรายละเอียดเหตุผล...",
+      "sourceReferencePlaceholder": "เช่น PO-2026-001"
     }
   },
   "richText": {
@@ -4253,7 +4324,15 @@
       },
       "save": "บันทึกข้อมูลองค์กร",
       "saveSuccess": "บันทึกข้อมูลองค์กรแล้ว",
-      "readOnlyNotice": "คุณดูข้อมูลได้เท่านั้น ไม่มีสิทธิ์แก้ไข"
+      "readOnlyNotice": "คุณดูข้อมูลได้เท่านั้น ไม่มีสิทธิ์แก้ไข",
+      "placeholders": {
+        "name": "เช่น บริษัท แทนทรานส์ จำกัด",
+        "nameEn": "e.g. Tan Trans Co., Ltd.",
+        "taxIdentifier": "0123456789012",
+        "phone": "เช่น 02-xxx-xxxx หรือ 08x-xxx-xxxx",
+        "addressTh": "เลขที่ อาคาร ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์",
+        "addressEn": "Building, street, district, province, postal code"
+      }
     },
     "branches": {
       "title": "สาขา",
@@ -4333,6 +4412,16 @@
         "warehouses": "คลังสินค้าที่ยังใช้งาน",
         "memberships": "ผู้ใช้ที่สังกัดสาขานี้",
         "last_active_branch": "องค์กรต้องมีสาขาที่เปิดใช้อย่างน้อยหนึ่งสาขา"
+      },
+      "placeholders": {
+        "code": "เช่น BKK01, HQ",
+        "name": "เช่น สำนักงานใหญ่ หรือ สาขากรุงเทพฯ",
+        "nameEn": "e.g. Head Office or Bangkok Branch",
+        "taxBranchCode": "00000",
+        "phone": "เช่น 02-xxx-xxxx หรือ 08x-xxx-xxxx",
+        "addressTh": "เลขที่ อาคาร ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์",
+        "addressEn": "Building, street, district, province, postal code",
+        "deactivateReason": "ระบุเหตุผลในการปิดใช้งานสาขา..."
       }
     },
     "errors": {
@@ -4513,7 +4602,11 @@
   "approvalLimitAdmin": {
     "accessDeniedTitle": "ไม่มีสิทธิ์เข้าถึง",
     "accessDeniedDetail": "คุณไม่มีสิทธิ์จัดการวงเงินอนุมัติ",
-    "documentType": { "estimate": "ใบประเมินราคา", "purchase_order": "ใบสั่งซื้อ", "change_order": "ใบเปลี่ยนแปลงงาน" },
+    "documentType": {
+      "estimate": "ใบประเมินราคา",
+      "purchase_order": "ใบสั่งซื้อ",
+      "change_order": "ใบเปลี่ยนแปลงงาน"
+    },
     "list": {
       "title": "วงเงินอนุมัติ",
       "subtitle": "เพดานยอดที่แต่ละบทบาทอนุมัติได้ แยกตามประเภทเอกสารและสาขา",
@@ -4521,8 +4614,17 @@
       "failClosedNotice": "บทบาทที่ไม่มีวงเงินที่ใช้งานอยู่จะอนุมัติใบประเมินราคา ใบสั่งซื้อ หรือใบเปลี่ยนแปลงงานไม่ได้ ควรตั้งวงเงินก่อนใช้งานจริง",
       "documentTypeFilter": "ประเภทเอกสาร",
       "statusFilter": "สถานะ",
-      "status": { "active": "ใช้งาน", "inactive": "ปิดใช้งาน" },
-      "table": { "role": "บทบาท", "documentType": "ประเภทเอกสาร", "branch": "สาขา", "limit": "วงเงิน", "status": "สถานะ" },
+      "status": {
+        "active": "ใช้งาน",
+        "inactive": "ปิดใช้งาน"
+      },
+      "table": {
+        "role": "บทบาท",
+        "documentType": "ประเภทเอกสาร",
+        "branch": "สาขา",
+        "limit": "วงเงิน",
+        "status": "สถานะ"
+      },
       "organizationWide": "ทั้งองค์กร",
       "unlimited": "ไม่จำกัด",
       "emptyTitle": "ยังไม่มีวงเงินอนุมัติ",
@@ -4538,10 +4640,32 @@
       "saveSuccess": "บันทึกวงเงินแล้ว",
       "backToList": "กลับไปรายการวงเงิน",
       "identityLocked": "บทบาท ประเภทเอกสาร สาขา และสกุลเงินแก้ไขไม่ได้ หากต้องการเปลี่ยนให้เพิ่มวงเงินใหม่",
-      "fields": { "role": "บทบาท", "documentType": "ประเภทเอกสาร", "branch": "สาขา", "currency": "สกุลเงิน", "isUnlimited": "ไม่จำกัดวงเงิน", "maxAmount": "วงเงินสูงสุด", "isActive": "ใช้งาน" },
-      "hints": { "branch": "เว้นว่างไว้เพื่อใช้ทั้งองค์กร วงเงินเฉพาะสาขาจะแทนวงเงินทั้งองค์กรของบทบาทนั้นในสาขานั้น", "unlimited": "บทบาทนี้อนุมัติเอกสารประเภทนี้ได้ไม่จำกัดยอด", "inactive": "วงเงินที่ปิดใช้งานถือเสมือนไม่มีวงเงิน" },
-      "placeholders": { "role": "— เลือกบทบาท —", "documentType": "— เลือกประเภทเอกสาร —", "organizationWide": "ทั้งองค์กร" },
-      "validation": { "roleRequired": "เลือกบทบาท", "documentTypeRequired": "เลือกประเภทเอกสาร", "amountRequired": "กรอกวงเงินสูงสุด", "amountInvalid": "กรอกจำนวนตั้งแต่ 0 ขึ้นไป ทศนิยมไม่เกิน 2 ตำแหน่ง" }
+      "fields": {
+        "role": "บทบาท",
+        "documentType": "ประเภทเอกสาร",
+        "branch": "สาขา",
+        "currency": "สกุลเงิน",
+        "isUnlimited": "ไม่จำกัดวงเงิน",
+        "maxAmount": "วงเงินสูงสุด",
+        "isActive": "ใช้งาน"
+      },
+      "hints": {
+        "branch": "เว้นว่างไว้เพื่อใช้ทั้งองค์กร วงเงินเฉพาะสาขาจะแทนวงเงินทั้งองค์กรของบทบาทนั้นในสาขานั้น",
+        "unlimited": "บทบาทนี้อนุมัติเอกสารประเภทนี้ได้ไม่จำกัดยอด",
+        "inactive": "วงเงินที่ปิดใช้งานถือเสมือนไม่มีวงเงิน"
+      },
+      "placeholders": {
+        "role": "— เลือกบทบาท —",
+        "documentType": "— เลือกประเภทเอกสาร —",
+        "organizationWide": "ทั้งองค์กร",
+        "maxAmount": "0.00"
+      },
+      "validation": {
+        "roleRequired": "เลือกบทบาท",
+        "documentTypeRequired": "เลือกประเภทเอกสาร",
+        "amountRequired": "กรอกวงเงินสูงสุด",
+        "amountInvalid": "กรอกจำนวนตั้งแต่ 0 ขึ้นไป ทศนิยมไม่เกิน 2 ตำแหน่ง"
+      }
     },
     "errors": {
       "GENERIC": "ดำเนินการไม่สำเร็จ กรุณาลองใหม่",
@@ -4740,5 +4864,115 @@
     "surveyor": "ผู้สำรวจ",
     "customer": "ลูกค้า",
     "project": "โครงการ / โอกาสขาย"
+  },
+  "documentTemplates": {
+    "title": "จัดการเทมเพลตเอกสารและฟอร์มพิมพ์",
+    "subtitle": "ปรับแต่งหัวกระดาษ โลโก้ คอลัมน์ เงื่อนไขทางการค้า และช่องลงนาม พร้อมดูตัวอย่างพิมพ์ A4 ทันที",
+    "previewTitle": "ตัวอย่างเอกสารแบบเรียลไทม์ (Live Print Preview)",
+    "noTemplateSelected": "กรุณาเลือกหรือสร้างเทมเพลตเพื่อเริ่มการปรับแต่ง",
+    "defaultBadge": "ค่าเริ่มต้น",
+    "saveSuccess": "บันทึกเทมเพลตเอกสารเรียบร้อยแล้ว",
+    "saveError": "เกิดข้อผิดพลาดในการบันทึกเทมเพลต",
+    "createSuccess": "สร้างเทมเพลตใหม่เรียบร้อยแล้ว",
+    "createError": "เกิดข้อผิดพลาดในการสร้างเทมเพลต",
+    "deleteSuccess": "ลบเทมเพลตเอกสารเรียบร้อยแล้ว",
+    "deleteError": "เกิดข้อผิดพลาดในการลบเทมเพลต",
+    "resetSuccess": "คืนค่าการตั้งค่าจากเทมเพลตเรียบร้อยแล้ว",
+    "actions": {
+      "print": "พิมพ์ / PDF",
+      "fullscreen": "ดูตัวอย่างเต็มจอ",
+      "zoomFit": "พอดีจอ",
+      "zoom100": "100%",
+      "reset": "คืนค่าเริ่มต้น",
+      "delete": "ลบเทมเพลต",
+      "save": "บันทึกการเปลี่ยนแปลง",
+      "createTemplate": "สร้างเทมเพลตใหม่",
+      "chooseLogo": "เลือกรูปภาพโลโก้",
+      "removeLogo": "นำโลโก้ออก"
+    },
+    "selectors": {
+      "documentType": "ประเภทเอกสาร",
+      "template": "เทมเพลตที่เลือกใช้งาน",
+      "isDefaultTemplate": "ตั้งเป็นเทมเพลตค่าเริ่มต้นของประเภทนี้"
+    },
+    "tabs": {
+      "branding": "1. หัวกระดาษและแบรนด์",
+      "columns": "2. คอลัมน์และตาราง",
+      "terms": "3. เงื่อนไขและธนาคาร",
+      "signatures": "4. ช่องลงนาม"
+    },
+    "sections": {
+      "tableColumns": "คอลัมน์ในตารางรายการสินค้า",
+      "summaryFields": "ยอดเงินรวมและการคำนวณ"
+    },
+    "fields": {
+      "templateName": "ชื่อเทมเพลต",
+      "newTemplateName": "ชื่อเทมเพลตใหม่",
+      "documentTitle": "ชื่อเอกสาร (เช่น ใบเสนอราคา / QUOTATION)",
+      "showLogo": "แสดงโลโก้บริษัทบนหัวเอกสาร",
+      "logoPosition": "ตำแหน่งของโลโก้",
+      "logoHeight": "ขนาดความสูงของโลโก้",
+      "uploadLogo": "อัปโหลดไฟล์โลโก้",
+      "companyNameTh": "ชื่อบริษัทภาษาไทย",
+      "companyNameEn": "ชื่อบริษัทภาษาอังกฤษ",
+      "taxId": "เลขประจำตัวผู้เสียภาษี 13 หลัก",
+      "address": "ที่อยู่สำนักงาน / สาขา",
+      "phone": "เบอร์โทรศัพท์ติดต่อ",
+      "email": "อีเมลติดต่อ",
+      "showSku": "แสดงรหัสสินค้า (SKU)",
+      "showSpecs": "แสดงรายละเอียดสเปกสินค้า",
+      "showThumbnail": "แสดงภาพตัวอย่างสินค้า",
+      "showLineDiscount": "แสดงส่วนลดรายบรรทัด",
+      "showVat": "แสดงภาษีมูลค่าเพิ่ม (VAT 7%)",
+      "showWithholdingTax": "แสดงหักภาษี ณ ที่จ่าย",
+      "showBahtText": "แสดงจำนวนเงินตัวอักษรภาษาไทย (บาทถ้วน)",
+      "validityPeriodText": "ข้อความกำหนดยืนราคา",
+      "commercialTermsText": "เงื่อนไขทางการค้าและการชำระเงิน",
+      "showBankDetails": "แสดงข้อมูลบัญชีธนาคารสำหรับโอนชำระเงิน",
+      "bankName": "ชื่อธนาคาร",
+      "accountNo": "เลขที่บัญชี",
+      "accountName": "ชื่อบัญชี",
+      "footerNote": "หมายเหตุท้ายเอกสาร",
+      "signatureCount": "จำนวนช่องลงนามท้ายเอกสาร",
+      "box1Label": "ชื่อช่องลงนามที่ 1",
+      "box2Label": "ชื่อช่องลงนามที่ 2",
+      "box3Label": "ชื่อช่องลงนามที่ 3",
+      "templateNamePlaceholder": "เช่น แบบฟอร์มมาตรฐาน ใบเสนอราคา",
+      "documentTitlePlaceholder": "เช่น ใบเสนอราคา / QUOTATION",
+      "companyNameThPlaceholder": "เช่น บริษัท แทนทรานส์ จำกัด",
+      "companyNameEnPlaceholder": "e.g. Tan Trans Co., Ltd.",
+      "taxIdPlaceholder": "เลขประจำตัว 13 หลัก",
+      "addressPlaceholder": "เลขที่ อาคาร ถนน แขวง/ตำบล...",
+      "phonePlaceholder": "เช่น 02-xxx-xxxx หรือ 08x-xxx-xxxx",
+      "emailPlaceholder": "เช่น contact@company.com",
+      "bankNamePlaceholder": "เช่น ธนาคารกสิกรไทย",
+      "accountNoPlaceholder": "เช่น 123-4-56789-0",
+      "accountNamePlaceholder": "เช่น บจก. แทนทรานส์",
+      "box1LabelPlaceholder": "เช่น ผู้มีอำนาจลงนาม",
+      "box2LabelPlaceholder": "เช่น ผู้จัดทำ / ผู้เสนอราคา",
+      "box3LabelPlaceholder": "เช่น ผู้อนุมัติ / ผู้ตรวจสอบ",
+      "validityPeriodTextPlaceholder": "เช่น กำหนดยืนราคา 30 วัน",
+      "commercialTermsTextPlaceholder": "ระบุเงื่อนไขการชำระเงิน หรือ งวดงาน",
+      "footerNotePlaceholder": "หมายเหตุท้ายเอกสาร",
+      "newTemplateNamePlaceholder": "เช่น แบบฟอร์มมาตรฐาน สาขาหลัก"
+    },
+    "descriptions": {
+      "showSku": "แสดงรหัสสินค้าในตารางรายการ",
+      "showSpecs": "แสดงคำอธิบายสเปกเพิ่มเติมใต้ชื่อสินค้า",
+      "showThumbnail": "แสดงรูปภาพสินค้าขนาดเล็กในแถว",
+      "showLineDiscount": "แสดงคอลัมน์ส่วนลดสำหรับแต่ละรายการ",
+      "showVat": "คำนวณและแสดงยอดภาษีมูลค่าเพิ่ม 7%",
+      "showWithholdingTax": "แสดงการหักภาษี ณ ที่จ่ายตามที่กฎหมายกำหนด",
+      "showBahtText": "แสดงตัวอักษรบาทถ้วนเพื่อความถูกต้องทางกฎหมาย"
+    },
+    "modal": {
+      "createTitle": "สร้างเทมเพลตเอกสารใหม่",
+      "createDesc": "ระบุชื่อสำหรับเทมเพลตใหม่ โดยจะคัดลอกการตั้งค่าเริ่มต้นมาจากเทมเพลตปัจจุบัน",
+      "cancel": "ยกเลิก",
+      "confirmCreate": "สร้างเทมเพลต",
+      "deleteTitle": "ยืนยันการลบเทมเพลต",
+      "deleteMsg": "คุณแน่ใจหรือไม่ว่าต้องการลบเทมเพลต \"{name}\"? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "confirmDelete": "ลบเทมเพลต"
+    }
   }
 }

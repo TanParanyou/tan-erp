@@ -167,6 +167,7 @@ export function BranchAdminEditor({ branchId }: { branchId: string }) {
               label={t("branches.fields.code")}
               required={isCreate}
               disabled={!isCreate}
+              placeholder={t("branches.placeholders.code")}
               helperText={isCreate ? undefined : t("branches.createSubtitle")}
               error={errors.code?.message}
               {...register("code")}
@@ -177,14 +178,15 @@ export function BranchAdminEditor({ branchId }: { branchId: string }) {
               inputMode="numeric"
               maxLength={5}
               disabled={!canManage}
+              placeholder={t("branches.placeholders.taxBranchCode")}
               error={errors.taxBranchCode?.message}
               {...register("taxBranchCode")}
             />
-            <Input label={t("branches.fields.name")} required disabled={!canManage} error={errors.name?.message} {...register("name")} />
-            <Input label={t("branches.fields.nameEn")} disabled={!canManage} error={errors.nameEn?.message} {...register("nameEn")} />
-            <Textarea label={t("branches.fields.addressTh")} rows={3} disabled={!canManage} error={errors.addressTh?.message} {...register("addressTh")} />
-            <Textarea label={t("branches.fields.addressEn")} rows={3} disabled={!canManage} error={errors.addressEn?.message} {...register("addressEn")} />
-            <Input label={t("branches.fields.phone")} disabled={!canManage} error={errors.phone?.message} {...register("phone")} />
+            <Input label={t("branches.fields.name")} required disabled={!canManage} placeholder={t("branches.placeholders.name")} error={errors.name?.message} {...register("name")} />
+            <Input label={t("branches.fields.nameEn")} disabled={!canManage} placeholder={t("branches.placeholders.nameEn")} error={errors.nameEn?.message} {...register("nameEn")} />
+            <Textarea label={t("branches.fields.addressTh")} rows={3} disabled={!canManage} placeholder={t("branches.placeholders.addressTh")} error={errors.addressTh?.message} {...register("addressTh")} />
+            <Textarea label={t("branches.fields.addressEn")} rows={3} disabled={!canManage} placeholder={t("branches.placeholders.addressEn")} error={errors.addressEn?.message} {...register("addressEn")} />
+            <Input label={t("branches.fields.phone")} disabled={!canManage} placeholder={t("branches.placeholders.phone")} error={errors.phone?.message} {...register("phone")} />
           </div>
         </FormSection>
       </FormContainer>

@@ -47,8 +47,8 @@ export function ProjectPlanCard({ control, canEdit, mutation, describeError }: P
       <h3 className="text-sm font-bold text-erp-navy">{t("planTitle")}</h3>
       {editable ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
-          <Input type="date" label={t("plannedStart")} value={start} disabled={mutation.isPending} onChange={(e) => setStart(e.target.value)} />
-          <Input type="date" label={t("plannedEnd")} value={end} disabled={mutation.isPending} onChange={(e) => setEnd(e.target.value)} />
+          <Input type="date" label={t("plannedStart")} placeholder={t("datePlaceholder")} value={start} disabled={mutation.isPending} onChange={(e) => setStart(e.target.value)} />
+          <Input type="date" label={t("plannedEnd")} placeholder={t("datePlaceholder")} value={end} disabled={mutation.isPending} onChange={(e) => setEnd(e.target.value)} />
           <Button type="button" variant="primary" className="min-h-11" isLoading={mutation.isPending} disabled={!isDirty || mutation.isPending} onClick={() => void save()}>
             {t("savePlan")}
           </Button>

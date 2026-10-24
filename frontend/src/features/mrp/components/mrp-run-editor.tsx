@@ -89,7 +89,7 @@ export function MrpRunEditor() {
       {error && <Alert variant="danger" onClose={() => setError(null)}>{error}</Alert>}
 
       <div className="erp-card p-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Input type="date" label={t("asOfDate")} value={asOfDate} disabled={isBusy} onChange={(event) => setAsOfDate(event.target.value)} />
+        <Input type="date" label={t("asOfDate")} placeholder={t("datePlaceholder")} value={asOfDate} disabled={isBusy} onChange={(event) => setAsOfDate(event.target.value)} />
         <Input type="number" min={0} step="1" label={t("purchaseLeadTime")} value={purchaseLead} disabled={isBusy} placeholder={t("purchaseLeadTimePlaceholder")} onChange={(event) => setPurchaseLead(event.target.value)} />
         <Input type="number" min={0} step="1" label={t("productionLeadTime")} value={productionLead} disabled={isBusy} placeholder={t("productionLeadTimePlaceholder")} onChange={(event) => setProductionLead(event.target.value)} />
         <div className="flex items-center md:col-span-3">
@@ -104,7 +104,7 @@ export function MrpRunEditor() {
             <li key={line.key} className="grid grid-cols-1 gap-2 border border-erp-border bg-erp-surface-subtle p-3 sm:grid-cols-[1fr_120px_150px_160px_auto] sm:items-end">
               <div className="text-sm font-medium text-erp-text-main">{line.label}</div>
               <Input type="number" min={0} step="0.0001" aria-label={t("quantity")} placeholder={t("quantity")} value={line.quantity} disabled={isBusy} onChange={(event) => updateLine(line.key, { quantity: event.target.value })} />
-              <Input type="date" aria-label={t("needBy")} value={line.needBy} disabled={isBusy} onChange={(event) => updateLine(line.key, { needBy: event.target.value })} />
+              <Input type="date" aria-label={t("needBy")} placeholder={t("datePlaceholder")} value={line.needBy} disabled={isBusy} onChange={(event) => updateLine(line.key, { needBy: event.target.value })} />
               <Input aria-label={t("reference")} placeholder={t("reference")} maxLength={100} value={line.reference} disabled={isBusy} onChange={(event) => updateLine(line.key, { reference: event.target.value })} />
               <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={isBusy} onClick={() => setLines((current) => current.filter((l) => l.key !== line.key))}>{t("removeLine")}</Button>
             </li>

@@ -86,6 +86,7 @@ export function BranchActivationPanel({ branch, canManage }: BranchActivationPan
           rows={2}
           maxLength={MAX_REASON_LENGTH}
           value={reason}
+          placeholder={t("branches.placeholders.deactivateReason")}
           onChange={(event) => setReason(event.target.value)}
         />
       ) : null}

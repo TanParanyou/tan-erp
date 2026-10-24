@@ -195,8 +195,8 @@ export function PricingTemplateEditor({ template, onDone }: PricingTemplateEdito
           <Select label={t("measurementRule")} value={form.measurementRule} disabled={isBusy} options={MEASUREMENT_RULES.map((value) => ({ value, label: t(`measurementRules.${value}`) }))} onChange={(event) => set("measurementRule", event.target.value)} />
           <Input label={t("unitCode")} required value={form.unitCode} maxLength={20} disabled={isBusy} placeholder={t("unitCodePlaceholder")} onChange={(event) => set("unitCode", event.target.value)} />
           <Select label={t("taxDisplay")} value={form.taxDisplay} disabled={isBusy} options={TAX_DISPLAYS.map((value) => ({ value, label: t(`taxDisplays.${value}`) }))} onChange={(event) => set("taxDisplay", event.target.value)} />
-          <Input type="date" label={t("effectiveFrom")} value={form.effectiveFrom} disabled={isBusy} onChange={(event) => set("effectiveFrom", event.target.value)} />
-          <Input type="date" label={t("effectiveTo")} value={form.effectiveTo} disabled={isBusy} onChange={(event) => set("effectiveTo", event.target.value)} />
+          <Input type="date" label={t("effectiveFrom")} value={form.effectiveFrom} placeholder={t("datePlaceholder")} disabled={isBusy} onChange={(event) => set("effectiveFrom", event.target.value)} />
+          <Input type="date" label={t("effectiveTo")} value={form.effectiveTo} placeholder={t("datePlaceholder")} disabled={isBusy} onChange={(event) => set("effectiveTo", event.target.value)} />
         </div>
       </div>
 

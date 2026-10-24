@@ -71,6 +71,7 @@ export function OtpInput({
           type="text"
           inputMode="numeric"
           maxLength={1}
+          placeholder="○"
           disabled={disabled}
           value={value[index] || ""}
           onChange={(e) => handleChange(e, index)}

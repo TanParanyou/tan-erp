@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Select, type SelectProps } from "@/components/ui/Select";
 import { Input, type InputProps } from "@/components/ui/Input";
 import { cn } from "@/lib/utils/cn";
@@ -24,6 +25,7 @@ export function SelectWithOther({
   triggerValue = "other",
   containerClassName,
 }: SelectWithOtherProps): React.JSX.Element {
+  const t = useTranslations("common.form");
   const isTriggerSelected = String(selectProps.value ?? "") === triggerValue;
 
   return (
@@ -39,6 +41,7 @@ export function SelectWithOther({
           <Input
             type="text"
             required={true}
+            placeholder={otherProps.placeholder ?? t("otherPlaceholder")}
             {...otherProps}
           />
         </div>

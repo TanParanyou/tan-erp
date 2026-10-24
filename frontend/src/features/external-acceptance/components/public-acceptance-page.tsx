@@ -194,7 +194,7 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
                 </Button>
                 {otpSent && (
                   <div className="flex flex-wrap items-end gap-3">
-                    <Input label={t("otpCode")} inputMode="numeric" autoComplete="one-time-code" maxLength={9} value={otpCode} disabled={verifyOtp.isPending} onChange={(event) => setOtpCode(event.target.value)} />
+                    <Input label={t("otpCode")} inputMode="numeric" autoComplete="one-time-code" maxLength={9} value={otpCode} placeholder={t("otpCodePlaceholder")} disabled={verifyOtp.isPending} onChange={(event) => setOtpCode(event.target.value)} />
                     <Button type="button" variant="primary" isLoading={verifyOtp.isPending} disabled={verifyOtp.isPending || otpCode.trim().length === 0} onClick={() => void verifyCode()}>{t("otpVerify")}</Button>
                   </div>
                 )}

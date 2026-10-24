@@ -199,27 +199,30 @@ export function ApprovalLimitEditor({ limitId }: { limitId: string }) {
             </>
           ) : (
             <>
-              <Input label={t("editor.fields.role")} readOnly disabled value={limit?.role?.name ?? "-"} />
+              <Input label={t("editor.fields.role")} readOnly disabled placeholder="-" value={limit?.role?.name ?? "-"} />
               <Input
                 label={t("editor.fields.documentType")}
                 readOnly
                 disabled
+                placeholder="-"
                 value={limit?.documentType && isApprovalDocumentType(limit.documentType) ? t(`documentType.${limit.documentType}`) : "-"}
               />
               <Input
                 label={t("editor.fields.branch")}
                 readOnly
                 disabled
+                placeholder={t("editor.placeholders.organizationWide")}
                 value={limit?.branch ? (limit.branch.name ?? "-") : t("editor.placeholders.organizationWide")}
               />
             </>
           )}
-          <Input label={t("editor.fields.currency")} readOnly disabled value={isCreate ? CURRENCY : (limit?.currency ?? "-")} />
+          <Input label={t("editor.fields.currency")} readOnly disabled placeholder="THB" value={isCreate ? CURRENCY : (limit?.currency ?? "-")} />
         </div>
         <Checkbox label={t("editor.fields.isUnlimited")} description={t("editor.hints.unlimited")} disabled={!canManage} {...register("isUnlimited")} />
         <Input
           label={t("editor.fields.maxAmount")}
           inputMode="decimal"
+          placeholder={t("editor.placeholders.maxAmount")}
           disabled={!canManage || isUnlimited}
           error={errors.maxAmount?.message}
           {...register("maxAmount")}

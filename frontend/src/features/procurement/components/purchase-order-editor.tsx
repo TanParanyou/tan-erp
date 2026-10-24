@@ -157,7 +157,7 @@ function EditorForm({ order }: { order?: PurchaseOrderResponse }) {
             onChange={(event) => setProjectId(event.target.value)}
           />
         )}
-        <Input type="date" label={t("expectedDelivery")} value={expectedDelivery} disabled={isBusy} onChange={(event) => setExpectedDelivery(event.target.value)} />
+        <Input type="date" label={t("expectedDelivery")} placeholder={t("datePlaceholder")} value={expectedDelivery} disabled={isBusy} onChange={(event) => setExpectedDelivery(event.target.value)} />
         <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
       </div>
 

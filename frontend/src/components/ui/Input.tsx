@@ -45,6 +45,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const actualType = isPasswordType ? (showPassword ? "text" : "password") : type;
     const isActuallyReadOnly = readOnly || isReadOnly;
 
+    const defaultPlaceholder =
+      type === "date"
+        ? t("datePlaceholder")
+        : type === "datetime-local"
+        ? t("datetimePlaceholder")
+        : undefined;
+
     const generatedId = id || (label ? `input-${label.replace(/\s+/g, "-").toLowerCase()}` : undefined);
     const errorId = generatedId ? `${generatedId}-error` : undefined;
     const helperId = generatedId ? `${generatedId}-helper` : undefined;
@@ -92,6 +99,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             required={required}
             aria-invalid={Boolean(error)}
             aria-describedby={describedByIds || undefined}
+            placeholder={props.placeholder ?? defaultPlaceholder}
             className={cn(
               "erp-input",
               error && "erp-input-error",

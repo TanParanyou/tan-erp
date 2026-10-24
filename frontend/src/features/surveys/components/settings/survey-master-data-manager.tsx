@@ -694,6 +694,7 @@ export function SurveyMasterDataManager() {
                   sortOrder: parseInt(e.target.value, 10) || 0,
                 }))
               }
+              placeholder={t("fields.sortOrderPlaceholder")}
               disabled={isSaving}
               className="h-11 min-h-[44px]"
             />

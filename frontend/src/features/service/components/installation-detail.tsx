@@ -274,7 +274,7 @@ function DetailView({ job }: { job: InstallationResponse }) {
               {outcome === "accepted" && (
                 <>
                   <Input type="number" min={0} max={120} step={1} label={t("warrantyMonths")} required value={months} disabled={busy} placeholder={t("warrantyMonthsPlaceholder")} onChange={(event) => setMonths(event.target.value)} />
-                  <Input type="date" label={t("handoverDate")} value={handoverDate} disabled={busy} onChange={(event) => setHandoverDate(event.target.value)} />
+                  <Input type="date" label={t("handoverDate")} placeholder={t("datePlaceholder")} value={handoverDate} disabled={busy} onChange={(event) => setHandoverDate(event.target.value)} />
                 </>
               )}
             </>

@@ -98,8 +98,8 @@ export function InstallationEditor() {
           onChange={(event) => setProjectId(event.target.value)}
         />
         <Input label={t("crew")} value={crew} maxLength={200} disabled={isBusy} placeholder={t("crewPlaceholder")} onChange={(event) => setCrew(event.target.value)} />
-        <Input type="date" label={t("scheduledStart")} required value={start} disabled={isBusy} onChange={(event) => setStart(event.target.value)} />
-        <Input type="date" label={t("scheduledEnd")} required value={end} disabled={isBusy} onChange={(event) => setEnd(event.target.value)} />
+        <Input type="date" label={t("scheduledStart")} placeholder={t("datePlaceholder")} required value={start} disabled={isBusy} onChange={(event) => setStart(event.target.value)} />
+        <Input type="date" label={t("scheduledEnd")} placeholder={t("datePlaceholder")} required value={end} disabled={isBusy} onChange={(event) => setEnd(event.target.value)} />
         <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
       </div>
 

@@ -33,6 +33,7 @@ export function SurveyScopeSection({ isReady }: SurveyScopeSectionProps) {
               type="datetime-local"
               value={field.value}
               onChange={field.onChange}
+              placeholder={t("visitedAtPlaceholder")}
               disabled={isReady}
             />
           )}

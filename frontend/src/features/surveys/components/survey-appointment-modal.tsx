@@ -199,6 +199,7 @@ export function SurveyAppointmentModal({
             <Input
               type="datetime-local"
               label={t("scheduledStartLabel")}
+              placeholder={t("scheduledStartPlaceholder")}
               value={scheduledStart}
               onChange={(e) => {
                 setScheduledStart(e.target.value);
@@ -209,6 +210,7 @@ export function SurveyAppointmentModal({
             <Input
               type="datetime-local"
               label={t("scheduledEndLabel")}
+              placeholder={t("scheduledEndPlaceholder")}
               value={scheduledEnd}
               onChange={(e) => {
                 setScheduledEnd(e.target.value);

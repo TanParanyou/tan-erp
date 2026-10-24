@@ -127,20 +127,21 @@ export function OrganizationProfileForm() {
       {!canManage ? <Alert variant="info">{t("profile.readOnlyNotice")}</Alert> : null}
       <FormSection title={t("profile.title")} description={t("profile.subtitle")}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Input label={t("profile.fields.name")} required disabled={!canManage} error={errors.name?.message} {...register("name")} />
-          <Input label={t("profile.fields.nameEn")} disabled={!canManage} error={errors.nameEn?.message} {...register("nameEn")} />
+          <Input label={t("profile.fields.name")} required disabled={!canManage} placeholder={t("profile.placeholders.name")} error={errors.name?.message} {...register("name")} />
+          <Input label={t("profile.fields.nameEn")} disabled={!canManage} placeholder={t("profile.placeholders.nameEn")} error={errors.nameEn?.message} {...register("nameEn")} />
           <Input
             label={t("profile.fields.taxIdentifier")}
             helperText={t("profile.fields.taxIdentifierHint")}
             inputMode="numeric"
             maxLength={13}
             disabled={!canManage}
+            placeholder={t("profile.placeholders.taxIdentifier")}
             error={errors.taxIdentifier?.message}
             {...register("taxIdentifier")}
           />
-          <Input label={t("profile.fields.phone")} disabled={!canManage} error={errors.phone?.message} {...register("phone")} />
-          <Textarea label={t("profile.fields.addressTh")} rows={3} disabled={!canManage} error={errors.addressTh?.message} {...register("addressTh")} />
-          <Textarea label={t("profile.fields.addressEn")} rows={3} disabled={!canManage} error={errors.addressEn?.message} {...register("addressEn")} />
+          <Input label={t("profile.fields.phone")} disabled={!canManage} placeholder={t("profile.placeholders.phone")} error={errors.phone?.message} {...register("phone")} />
+          <Textarea label={t("profile.fields.addressTh")} rows={3} disabled={!canManage} placeholder={t("profile.placeholders.addressTh")} error={errors.addressTh?.message} {...register("addressTh")} />
+          <Textarea label={t("profile.fields.addressEn")} rows={3} disabled={!canManage} placeholder={t("profile.placeholders.addressEn")} error={errors.addressEn?.message} {...register("addressEn")} />
         </div>
       </FormSection>
     </FormContainer>

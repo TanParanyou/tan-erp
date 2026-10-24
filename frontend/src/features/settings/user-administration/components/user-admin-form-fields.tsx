@@ -298,6 +298,7 @@ export function UserAdminFormFields({
                 label={t("fields.startsAt")}
                 type="datetime-local"
                 disabled={disabled}
+                placeholder={t("fields.startsAtPlaceholder")}
                 error={errors.startsAt?.message}
                 {...register("startsAt")}
               />
@@ -305,6 +306,7 @@ export function UserAdminFormFields({
                 label={t("fields.expiresAt")}
                 type="datetime-local"
                 disabled={disabled}
+                placeholder={t("fields.expiresAtPlaceholder")}
                 error={errors.expiresAt?.message}
                 {...register("expiresAt")}
               />

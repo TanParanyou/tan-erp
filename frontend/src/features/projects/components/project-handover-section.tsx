@@ -151,6 +151,7 @@ export function ProjectHandoverSection({
           <Input
             type="date"
             label={t("plannedStartDate")}
+            placeholder={t("datePlaceholder")}
             value={plannedStart}
             disabled={createMutation.isPending}
             onChange={(event) => setPlannedStart(event.target.value)}

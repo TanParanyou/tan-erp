@@ -107,20 +107,22 @@ export function ItemBarcodeMaintenance({ itemId, item }: ItemBarcodeMaintenanceP
           <h3 className="text-sm font-semibold text-erp-ink">{t("unitConversions")}</h3>
           <p className="mt-1 text-xs text-erp-muted">{t("unitConversionHelp", { baseUnit: baseUnit?.code ?? "-" })}</p>
         </div>
-        <div className="erp-form-group">
-          <label className="erp-label" htmlFor="conversion-unit">{t("fromUnit")}</label>
-          <select id="conversion-unit" className="erp-input" value={conversionUnitId} onChange={(event) => setConversionUnitId(event.target.value)} required disabled={busy || lookups.isLoading}>
-            <option value="">{t("selectUnit")}</option>
-            {lookups.data?.units.filter((unit) => unit.status === "active" && unit.id !== baseUnit?.id).map((unit) => <option key={unit.id} value={unit.id}>{unit.code} · {locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}</option>)}
-          </select>
+        <div className="erp-form-group mb-0">
+          <label className="erp-label min-h-[20px]" htmlFor="conversion-unit">{t("fromUnit")}</label>
+          <div className="erp-input-wrapper">
+            <select id="conversion-unit" className="erp-select h-11 min-h-[44px]" value={conversionUnitId} onChange={(event) => setConversionUnitId(event.target.value)} required disabled={busy || lookups.isLoading}>
+              <option value="">{t("selectUnit")}</option>
+              {lookups.data?.units.filter((unit) => unit.status === "active" && unit.id !== baseUnit?.id).map((unit) => <option key={unit.id} value={unit.id}>{unit.code} · {locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}</option>)}
+            </select>
+          </div>
         </div>
-        <Input label={t("conversionFactor")} type="number" min="0.000001" step="0.000001" value={conversionFactor} onChange={(event) => setConversionFactor(event.target.value)} required disabled={busy} placeholder={t("conversionFactorPlaceholder")} />
-        <Input label={t("effectiveFrom")} type="date" value={conversionEffectiveFrom} onChange={(event) => setConversionEffectiveFrom(event.target.value)} required disabled={busy} />
-        <Input label={t("effectiveTo")} type="date" value={conversionEffectiveTo} onChange={(event) => setConversionEffectiveTo(event.target.value)} disabled={busy} />
+        <Input label={t("conversionFactor")} labelClassName="min-h-[20px]" wrapperClassName="mb-0" className="h-11 min-h-[44px]" type="number" min="0.000001" step="0.000001" value={conversionFactor} onChange={(event) => setConversionFactor(event.target.value)} required disabled={busy} placeholder={t("conversionFactorPlaceholder")} />
+        <Input label={t("effectiveFrom")} labelClassName="min-h-[20px]" wrapperClassName="mb-0" className="h-11 min-h-[44px]" type="date" value={conversionEffectiveFrom} onChange={(event) => setConversionEffectiveFrom(event.target.value)} placeholder={t("datePlaceholder")} required disabled={busy} />
+        <Input label={t("effectiveTo")} labelClassName="min-h-[20px]" wrapperClassName="mb-0" className="h-11 min-h-[44px]" type="date" value={conversionEffectiveTo} onChange={(event) => setConversionEffectiveTo(event.target.value)} placeholder={t("datePlaceholder")} disabled={busy} />
         <div className="sm:col-span-2 lg:col-span-2">
-          <Input label={t("reason")} value={conversionReason} onChange={(event) => setConversionReason(event.target.value)} required disabled={busy} maxLength={500} placeholder={t("reasonPlaceholder")} />
+          <Input label={t("reason")} labelClassName="min-h-[20px]" wrapperClassName="mb-0" className="h-11 min-h-[44px]" value={conversionReason} onChange={(event) => setConversionReason(event.target.value)} required disabled={busy} maxLength={500} placeholder={t("reasonPlaceholder")} />
         </div>
-        <div className="flex items-end justify-end lg:col-span-6"><Button type="submit" disabled={busy || !conversionUnitId || !conversionFactor || !conversionReason.trim()} isLoading={conversionMutations.create.isPending}>{t("addConversion")}</Button></div>
+        <div className="flex items-end justify-end lg:col-span-6"><Button type="submit" variant="primary" className="h-11 min-h-[44px] px-5" disabled={busy || !conversionUnitId || !conversionFactor || !conversionReason.trim()} isLoading={conversionMutations.create.isPending}>{t("addConversion")}</Button></div>
         {conversionMutations.create.isError && <p role="alert" className="sm:col-span-2 lg:col-span-6 border border-erp-danger p-3 text-sm text-erp-danger">{t("conversionSaveFailed")}</p>}
         {(conversions.isError || sharedConversions.isError) && <p role="alert" className="sm:col-span-2 lg:col-span-6 border border-erp-danger p-3 text-sm text-erp-danger">{t("conversionLoadFailed")}</p>}
         {activeConversions.length > 0 && (
@@ -152,38 +154,44 @@ export function ItemBarcodeMaintenance({ itemId, item }: ItemBarcodeMaintenanceP
       </form>}
 
       {canManage && item.status !== "inactive" && <form onSubmit={(event) => { void create(event); }} className="grid grid-cols-1 gap-3 border-y border-erp-border py-4 sm:grid-cols-2 lg:grid-cols-6">
-        <div className="erp-form-group">
-          <label className="erp-label" htmlFor="barcode-type">{t("identifierType")}</label>
-          <select id="barcode-type" className="erp-input" value={identifierType} onChange={(event) => setIdentifierType(event.target.value)} disabled={busy}>
-            <option value="gtin">GTIN</option><option value="internal">{t("internalBarcode")}</option>
-          </select>
+        <div className="erp-form-group mb-0">
+          <label className="erp-label min-h-[20px]" htmlFor="barcode-type">{t("identifierType")}</label>
+          <div className="erp-input-wrapper">
+            <select id="barcode-type" className="erp-select h-11 min-h-[44px]" value={identifierType} onChange={(event) => setIdentifierType(event.target.value)} disabled={busy}>
+              <option value="gtin">GTIN</option><option value="internal">{t("internalBarcode")}</option>
+            </select>
+          </div>
         </div>
         <div className="sm:col-span-1 lg:col-span-2">
-          <Input label={t("barcodeValue")} value={value} onChange={(event) => setValue(event.target.value)} required disabled={busy} maxLength={64} placeholder={t("barcodeValuePlaceholder")} />
+          <Input label={t("barcodeValue")} labelClassName="min-h-[20px]" wrapperClassName="mb-0" className="h-11 min-h-[44px]" value={value} onChange={(event) => setValue(event.target.value)} required disabled={busy} maxLength={64} placeholder={t("barcodeValuePlaceholder")} />
         </div>
-        <div className="erp-form-group">
-          <label className="erp-label" htmlFor="barcode-unit">{t("unit")}</label>
-          <select id="barcode-unit" className="erp-input" value={unitId} onChange={(event) => {
-            setUnitId(event.target.value);
-            const conversion = effectiveConversions.find((row) => row.fromUnitId === event.target.value && row.toUnitId === baseUnit?.id)
-              ?? effectiveSharedConversions.find((row) => row.fromUnitId === event.target.value && row.toUnitId === baseUnit?.id);
-            if (conversion?.factor) setQuantity(conversion.factor);
-            else if (event.target.value === baseUnit?.id) setQuantity("1");
-          }} disabled={busy || lookups.isLoading} required>
-            {lookups.data?.units.filter((unit) => unit.status === "active" && (unit.id === baseUnit?.id || effectiveConversions.some((conversion) => conversion.fromUnitId === unit.id) || effectiveSharedConversions.some((conversion) => conversion.fromUnitId === unit.id && conversion.toUnitId === baseUnit?.id))).map((unit) => <option key={unit.id} value={unit.id}>{unit.code} · {locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}</option>)}
-          </select>
+        <div className="erp-form-group mb-0">
+          <label className="erp-label min-h-[20px]" htmlFor="barcode-unit">{t("unit")}</label>
+          <div className="erp-input-wrapper">
+            <select id="barcode-unit" className="erp-select h-11 min-h-[44px]" value={unitId} onChange={(event) => {
+              setUnitId(event.target.value);
+              const conversion = effectiveConversions.find((row) => row.fromUnitId === event.target.value && row.toUnitId === baseUnit?.id)
+                ?? effectiveSharedConversions.find((row) => row.fromUnitId === event.target.value && row.toUnitId === baseUnit?.id);
+              if (conversion?.factor) setQuantity(conversion.factor);
+              else if (event.target.value === baseUnit?.id) setQuantity("1");
+            }} disabled={busy || lookups.isLoading} required>
+              {lookups.data?.units.filter((unit) => unit.status === "active" && (unit.id === baseUnit?.id || effectiveConversions.some((conversion) => conversion.fromUnitId === unit.id) || effectiveSharedConversions.some((conversion) => conversion.fromUnitId === unit.id && conversion.toUnitId === baseUnit?.id))).map((unit) => <option key={unit.id} value={unit.id}>{unit.code} · {locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}</option>)}
+            </select>
+          </div>
         </div>
-        <Input label={t("quantityInBaseUnit")} type="number" min="0.0001" step="0.0001" value={quantity} onChange={(event) => setQuantity(event.target.value)} required disabled={busy} placeholder={t("quantityInBaseUnitPlaceholder")} />
-        <div className="erp-form-group">
-          <label className="erp-label" htmlFor="barcode-packaging">{t("packagingLevel")}</label>
-          <select id="barcode-packaging" className="erp-input" value={packagingLevel} onChange={(event) => setPackagingLevel(event.target.value)} disabled={busy}>
-            <option value="each">{t("packagingEach")}</option><option value="inner">{t("packagingInner")}</option><option value="case">{t("packagingCase")}</option><option value="pallet">{t("packagingPallet")}</option>
-          </select>
+        <Input label={t("quantityInBaseUnit")} labelClassName="min-h-[20px]" wrapperClassName="mb-0" className="h-11 min-h-[44px]" type="number" min="0.0001" step="0.0001" value={quantity} onChange={(event) => setQuantity(event.target.value)} required disabled={busy} placeholder={t("quantityInBaseUnitPlaceholder")} />
+        <div className="erp-form-group mb-0">
+          <label className="erp-label min-h-[20px]" htmlFor="barcode-packaging">{t("packagingLevel")}</label>
+          <div className="erp-input-wrapper">
+            <select id="barcode-packaging" className="erp-select h-11 min-h-[44px]" value={packagingLevel} onChange={(event) => setPackagingLevel(event.target.value)} disabled={busy}>
+              <option value="each">{t("packagingEach")}</option><option value="inner">{t("packagingInner")}</option><option value="case">{t("packagingCase")}</option><option value="pallet">{t("packagingPallet")}</option>
+            </select>
+          </div>
         </div>
         <div className="flex min-h-[44px] items-center sm:col-span-2 lg:col-span-3">
           <Checkbox checked={isPrimary} onCheckedChange={(checked) => setIsPrimary(checked === true)} disabled={busy} label={t("primaryBarcode")} />
         </div>
-        <div className="flex items-end justify-end lg:col-span-3"><Button type="submit" disabled={busy || !unitId} isLoading={mutations.create.isPending}>{t("addBarcode")}</Button></div>
+        <div className="flex items-end justify-end lg:col-span-3"><Button type="submit" variant="primary" className="h-11 min-h-[44px] px-5" disabled={busy || !unitId} isLoading={mutations.create.isPending}>{t("addBarcode")}</Button></div>
       </form>}
 
       {query.isLoading ? (

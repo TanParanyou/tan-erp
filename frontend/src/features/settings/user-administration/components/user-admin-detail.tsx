@@ -592,6 +592,7 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
                   <Input
                     label={t("fields.startsAt")}
                     type="datetime-local"
+                    placeholder={t("fields.startsAtPlaceholder")}
                     value={draft?.startsAt ?? toInputValue(membership.startsAtUtc)}
                     onChange={(event) =>
                       setMembershipDraft((current) => ({
@@ -607,6 +608,7 @@ export function UserAdminDetail({ userId }: UserAdminDetailProps) {
                   <Input
                     label={t("fields.expiresAt")}
                     type="datetime-local"
+                    placeholder={t("fields.expiresAtPlaceholder")}
                     value={draft?.expiresAt ?? toInputValue(membership.expiresAtUtc)}
                     onChange={(event) =>
                       setMembershipDraft((current) => ({
