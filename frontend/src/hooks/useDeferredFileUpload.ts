@@ -12,6 +12,7 @@ export type FileParentType =
   | "item-category"
   | "item-brand"
   | "costRecord"
+  | "user"
   | AttachmentOwnerType;
 
 export interface FileItemToUpload {

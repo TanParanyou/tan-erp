@@ -23,6 +23,7 @@ import {
   IconBriefcase,
   IconEye,
   IconDownload,
+  IconMapPin,
 } from "@/components/common/Icons";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
@@ -294,15 +295,25 @@ export function OpportunityList() {
         id: "actions",
         header: tCommon("actions.view"),
         align: "right",
-        cell: (_value, opp) => (
-          <TableActionGroup>
-            <TableAction
-              label={tCommon("actions.view")}
-              href={`/${locale}/opportunities/${opp.id}`}
-              icon={<IconEye size={15} strokeWidth={2} />}
-            />
-          </TableActionGroup>
-        ),
+        cell: (_value, opp) => {
+          const isSurveying = opp.stage?.toLowerCase() === "surveying";
+          return (
+            <TableActionGroup>
+              {isSurveying && (
+                <TableAction
+                  label={t("surveyFieldAction")}
+                  href={`/${locale}/surveys/field?opportunityId=${opp.id}`}
+                  icon={<IconMapPin size={15} strokeWidth={2} />}
+                />
+              )}
+              <TableAction
+                label={tCommon("actions.view")}
+                href={`/${locale}/opportunities/${opp.id}`}
+                icon={<IconEye size={15} strokeWidth={2} />}
+              />
+            </TableActionGroup>
+          );
+        },
       },
     ],
     [locale, t, tCommon]
@@ -415,7 +426,7 @@ export function OpportunityList() {
       {/* Key Pipeline Metric Cards */}
       <PipelineMetricCards metrics={metricsData} isLoading={isMetricsLoading} />
 
-      {/* List Toolbar with Search, Customer, Owner, Stage, and Date Filters */}
+      {/* List Toolbar with Search, Customer, Owner, Stage, and Date Filters (2-Tier Architectural Layout) */}
       <ListToolbar
         activeFilters={
           activeChips.length > 0 ? (
@@ -435,95 +446,100 @@ export function OpportunityList() {
           ) : undefined
         }
       >
-        <ListSearchInput
-          id="opportunity-search-input"
-          value={listState.draftSearch}
-          onChange={(val) => listState.actions.setSearch(val)}
-          onClear={() => listState.actions.setSearch("", true)}
-          onSubmit={(val) => listState.actions.setSearch(val, true)}
-          placeholder={t("searchPlaceholder")}
-          isDebouncing={listState.isDebouncing}
-          label={tCommon("actions.search")}
-          widthClassName="w-full md:w-64 shrink-0"
-        />
+        <div className="flex w-full flex-col gap-3.5">
+          {/* Tier 1: Search & Export Action */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <ListSearchInput
+              id="opportunity-search-input"
+              value={listState.draftSearch}
+              onChange={(val) => listState.actions.setSearch(val)}
+              onClear={() => listState.actions.setSearch("", true)}
+              onSubmit={(val) => listState.actions.setSearch(val, true)}
+              placeholder={t("searchPlaceholder")}
+              isDebouncing={listState.isDebouncing}
+              label={tCommon("actions.search")}
+              widthClassName="w-full sm:max-w-md lg:max-w-lg"
+            />
 
-        <div className="flex flex-wrap items-end gap-3 flex-1 min-w-0">
-          <ListFilterSelect
-            id="filter-stage-select"
-            label={t("stage")}
-            value={listState.params.filters.stage || ""}
-            onChange={(val) => listState.actions.setFilter("stage", val || undefined)}
-            options={CANONICAL_OPPORTUNITY_STAGES.map((s) => ({
-              value: s,
-              label: resolveStageLabel(s),
-            }))}
-            widthClassName="w-full sm:w-40 shrink-0"
-          />
+            <div className="flex items-center gap-2 self-start sm:self-end">
+              <ExportDropdown
+                onExport={(format) => exportAll(format)}
+                isLoading={isExporting}
+                disabled={allItems.length === 0}
+                label={t("export")}
+                variant="outline"
+                size="sm"
+              />
+            </div>
+          </div>
 
-          <CustomerAutocomplete
-            variant="filter"
-            value={listState.params.filters.customerId || ""}
-            onChange={(val) => {
-              listState.actions.setFilter("customerId", val || undefined);
-              if (!val) setSelectedCustomerLabel(null);
-            }}
-            onSelectedCustomerChange={(c) => {
-              if (c) {
-                const name = (locale === "en" && c.displayNameEn ? c.displayNameEn : (c.displayNameTh || c.code || c.id)) ?? null;
-                setSelectedCustomerLabel(name);
-              } else {
-                setSelectedCustomerLabel(null);
-              }
-            }}
-            label={t("customer")}
-            placeholder={t("customerFilterPlaceholder")}
-            className="w-full sm:w-56 shrink-0"
-          />
+          {/* Tier 2: Refined Filters Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-erp-border/60">
+            <ListFilterSelect
+              id="filter-stage-select"
+              label={t("stage")}
+              value={listState.params.filters.stage || ""}
+              onChange={(val) => listState.actions.setFilter("stage", val || undefined)}
+              options={CANONICAL_OPPORTUNITY_STAGES.map((s) => ({
+                value: s,
+                label: resolveStageLabel(s),
+              }))}
+              widthClassName="w-full"
+            />
 
-          <UserAutocomplete
-            variant="filter"
-            value={listState.params.filters.ownerId || ""}
-            onChange={(val) => {
-              listState.actions.setFilter("ownerId", val || undefined);
-              if (!val) setSelectedOwnerLabel(null);
-            }}
-            onSelectedUserChange={(u) => {
-              if (u) {
-                setSelectedOwnerLabel(u.displayName || u.email || u.id || null);
-              } else {
-                setSelectedOwnerLabel(null);
-              }
-            }}
-            label={t("owner")}
-            placeholder={t("ownerFilterPlaceholder")}
-            className="w-full sm:w-48 shrink-0"
-          />
+            <CustomerAutocomplete
+              variant="filter"
+              value={listState.params.filters.customerId || ""}
+              onChange={(val) => {
+                listState.actions.setFilter("customerId", val || undefined);
+                if (!val) setSelectedCustomerLabel(null);
+              }}
+              onSelectedCustomerChange={(c) => {
+                if (c) {
+                  const name = (locale === "en" && c.displayNameEn ? c.displayNameEn : (c.displayNameTh || c.code || c.id)) ?? null;
+                  setSelectedCustomerLabel(name);
+                } else {
+                  setSelectedCustomerLabel(null);
+                }
+              }}
+              label={t("customer")}
+              placeholder={t("customerFilterPlaceholder")}
+              className="w-full"
+            />
 
-          <ListFilterSelect
-            id="filter-next-action-select"
-            label={t("nextActionFilter")}
-            value={listState.params.filters.nextActionPreset || ""}
-            onChange={(val) => listState.actions.setFilter("nextActionPreset", val || undefined)}
-            options={[
-              { value: "", label: t("nextActionAll") },
-              { value: "today", label: t("nextActionToday") },
-              { value: "this_week", label: t("nextActionThisWeek") },
-              { value: "overdue", label: t("nextActionOverdue") },
-            ]}
-            widthClassName="w-full sm:w-44 shrink-0"
-          />
-        </div>
+            <UserAutocomplete
+              variant="filter"
+              value={listState.params.filters.ownerId || ""}
+              onChange={(val) => {
+                listState.actions.setFilter("ownerId", val || undefined);
+                if (!val) setSelectedOwnerLabel(null);
+              }}
+              onSelectedUserChange={(u) => {
+                if (u) {
+                  setSelectedOwnerLabel(u.displayName || u.email || u.id || null);
+                } else {
+                  setSelectedOwnerLabel(null);
+                }
+              }}
+              label={t("owner")}
+              placeholder={t("ownerFilterPlaceholder")}
+              className="w-full"
+            />
 
-        {/* Export Dropdown Button (CSV & Excel, Aligned to bottom edge of inputs) */}
-        <div className="flex items-end self-end">
-          <ExportDropdown
-            onExport={(format) => exportAll(format)}
-            isLoading={isExporting}
-            disabled={allItems.length === 0}
-            label={t("export")}
-            variant="outline"
-            size="sm"
-          />
+            <ListFilterSelect
+              id="filter-next-action-select"
+              label={t("nextActionFilter")}
+              value={listState.params.filters.nextActionPreset || ""}
+              onChange={(val) => listState.actions.setFilter("nextActionPreset", val || undefined)}
+              allOptionLabel={t("nextActionAll")}
+              options={[
+                { value: "today", label: t("nextActionToday") },
+                { value: "this_week", label: t("nextActionThisWeek") },
+                { value: "overdue", label: t("nextActionOverdue") },
+              ]}
+              widthClassName="w-full"
+            />
+          </div>
         </div>
       </ListToolbar>
 

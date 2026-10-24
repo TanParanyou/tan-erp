@@ -28,8 +28,18 @@ export interface FormActionBarProps {
   className?: string;
   actionsClassName?: string;
   sticky?: boolean;
+  /** Maximum width of the inner content container (e.g. "lg" for max-w-5xl, "md" for max-w-3xl, or "full") */
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "full" | string;
   children?: React.ReactNode;
 }
+
+const maxWidthMap: Record<string, string> = {
+  sm: "max-w-xl",
+  md: "max-w-3xl",
+  lg: "max-w-5xl",
+  xl: "max-w-7xl",
+  full: "w-full",
+};
 
 export function FormActionBar({
   isDirty,
@@ -52,6 +62,7 @@ export function FormActionBar({
   className,
   actionsClassName,
   sticky = true,
+  maxWidth = "full",
   children,
 }: FormActionBarProps) {
   const t = useTranslations("common.actions");
@@ -69,71 +80,79 @@ export function FormActionBar({
   const shouldShowCancel = showCancel ?? (Boolean(onCancel) || Boolean(cancelHref));
   const resolvedSaveText = saveText || (isEditMode ? t("saveChanges") : t("save"));
   const hasStatus = Boolean(isDirty || statusContent);
+  const resolvedMaxWidth = maxWidthMap[maxWidth] || maxWidth;
 
   return (
     <div
       className={cn(
         sticky
-          ? "erp-form-action-bar-fixed fixed bottom-0 left-0 right-0 z-40 w-full px-4 py-3 sm:px-6 sm:py-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-4 border-t border-erp-border bg-erp-surface shadow-[0_-4px_16px_rgba(0,0,0,0.05)] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-          : "relative mt-8 w-full p-4 border-t border-erp-border bg-erp-surface flex items-center justify-between",
+          ? "erp-form-action-bar-fixed fixed bottom-0 left-0 right-0 z-40 w-full px-4 py-3 sm:px-6 sm:py-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-4 border-t border-erp-border bg-erp-surface shadow-[0_-4px_16px_rgba(0,0,0,0.05)]"
+          : "relative mt-8 w-full p-4 border-t border-erp-border bg-erp-surface",
         className
       )}
     >
-      {/* Left Slot: Unsaved Alert or Status Content */}
       <div
         className={cn(
-          "flex items-center gap-3",
-          !hasStatus && "hidden sm:flex"
+          "w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
+          resolvedMaxWidth !== "w-full" && cn("mx-auto", resolvedMaxWidth)
         )}
       >
-        {isDirty && (
-          <span className="erp-action-bar-dirty-alert">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-none bg-erp-warning opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-none bg-erp-warning" />
+        {/* Left Slot: Unsaved Alert or Status Content */}
+        <div
+          className={cn(
+            "flex items-center gap-3",
+            !hasStatus && "hidden sm:flex"
+          )}
+        >
+          {isDirty && (
+            <span className="erp-action-bar-dirty-alert">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-none bg-erp-warning opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-none bg-erp-warning" />
+              </span>
+              <span>{unsavedText || tFeedback("unsavedChanges")}</span>
             </span>
-            <span>{unsavedText || tFeedback("unsavedChanges")}</span>
-          </span>
-        )}
-        {statusContent}
-      </div>
-
-      {children}
-
-      {/* Right Slot: Action Buttons */}
-      {actions ? (
-        <div className={cn("flex w-full items-center gap-2.5 sm:w-auto justify-end", actionsClassName)}>
-          {actions}
+          )}
+          {statusContent}
         </div>
-      ) : (
-        <div className={cn("flex w-full items-center gap-2.5 sm:w-auto justify-end", actionsClassName)}>
-          {extraActions}
 
-          {shouldShowCancel && (
+        {children}
+
+        {/* Right Slot: Action Buttons */}
+        {actions ? (
+          <div className={cn("flex w-full items-center gap-2.5 sm:w-auto justify-end", actionsClassName)}>
+            {actions}
+          </div>
+        ) : (
+          <div className={cn("flex w-full items-center gap-2.5 sm:w-auto justify-end", actionsClassName)}>
+            {extraActions}
+
+            {shouldShowCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isCancelDisabled || isLoading}
+                className="flex-1 sm:flex-none"
+              >
+                {cancelText || t("cancel")}
+              </Button>
+            )}
+
             <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isCancelDisabled || isLoading}
+              type={saveButtonType}
+              variant="primary"
+              isLoading={isLoading}
+              disabled={isSaveDisabled || isLoading}
+              onClick={onSave}
+              icon={saveIcon !== undefined ? saveIcon : <IconSave size={16} />}
               className="flex-1 sm:flex-none"
             >
-              {cancelText || t("cancel")}
+              {resolvedSaveText}
             </Button>
-          )}
-
-          <Button
-            type={saveButtonType}
-            variant="primary"
-            isLoading={isLoading}
-            disabled={isSaveDisabled || isLoading}
-            onClick={onSave}
-            icon={saveIcon !== undefined ? saveIcon : <IconSave size={16} />}
-            className="flex-1 sm:flex-none"
-          >
-            {resolvedSaveText}
-          </Button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

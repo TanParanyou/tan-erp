@@ -26,6 +26,7 @@ import {
   IconCamera,
   IconClock,
   IconCheckCircle,
+  IconMapPin,
 } from "@/components/common/Icons";
 import { EntityDetailHeader } from "@/components/ui/EntityDetailHeader";
 import { Badge } from "@/components/ui/Badge";
@@ -428,6 +429,17 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                 className="font-semibold"
               >
                 {t("scheduleSurveyAction")}
+              </Button>
+            )}
+            {opportunity.stage === "surveying" && (
+              <Button
+                href={`/${locale}/surveys/field?opportunityId=${opportunity.id}`}
+                variant="primary"
+                size="md"
+                icon={<IconMapPin size={16} />}
+                className="font-semibold"
+              >
+                {t("surveyFieldAction")}
               </Button>
             )}
             {canAcceptQuotation && (

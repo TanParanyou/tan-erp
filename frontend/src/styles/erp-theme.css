@@ -404,6 +404,61 @@
   outline-offset: 2px;
 }
 
+/* Radio */
+.erp-radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--erp-text-main);
+  cursor: pointer;
+  user-select: none;
+  min-height: 32px;
+}
+
+.erp-radio-label-disabled {
+  opacity: 0.55;
+  cursor: not-allowed !important;
+}
+
+.erp-radio {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 0 !important;
+  border: 1.5px solid var(--erp-border);
+  background-color: var(--erp-surface);
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: background-color 120ms ease, border-color 120ms ease;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.erp-radio:checked {
+  border-color: var(--erp-navy);
+  background-color: var(--erp-surface);
+}
+
+.erp-radio:checked::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 0 !important;
+  background-color: var(--erp-navy);
+}
+
+.erp-radio:focus-visible {
+  outline: 2px solid var(--erp-navy);
+  outline-offset: 2px;
+}
+
+.erp-radio:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 /* ==========================================================================
    Table (.erp-table-wrapper, .erp-table, .erp-th, .erp-td)
    ========================================================================== */

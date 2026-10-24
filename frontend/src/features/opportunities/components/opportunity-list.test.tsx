@@ -397,4 +397,46 @@ describe("OpportunityList Component", () => {
     // Verify nextAction filter selector exists
     expect(screen.getByLabelText("กำหนดนัดหมาย")).toBeInTheDocument();
   });
+
+  it("renders quick survey action link for opportunities in surveying stage", () => {
+    const surveyingOpportunity = {
+      ...sampleOpportunity,
+      id: "opp-survey-99",
+      code: "OPP-0099",
+      stage: "surveying",
+      title: "งานรีโนเวทคอนโดริมน้ำ",
+    };
+
+    vi.spyOn(membershipContext, "useSelectedMembership").mockReturnValue({
+      currentUser: mockCurrentUser,
+      selectedMembership: mockMembership,
+      memberships: [mockMembership],
+      setSelectedMembershipId: vi.fn(),
+    });
+
+    vi.spyOn(oppQueries, "useOpportunityList").mockReturnValue({
+      data: {
+        pages: [{ items: [surveyingOpportunity], totalCount: 1 }],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    } as unknown as ReturnType<typeof oppQueries.useOpportunityList>);
+
+    render(
+      <QueryClientProvider client={client}>
+        <NextIntlClientProvider locale="th" messages={thMessages}>
+          <OpportunityList />
+        </NextIntlClientProvider>
+      </QueryClientProvider>
+    );
+
+    const surveyActionLink = screen.getByRole("link", { name: "บันทึกสำรวจหน้างาน" });
+    expect(surveyActionLink).toBeInTheDocument();
+    expect(surveyActionLink.getAttribute("href")).toBe("/th/surveys/field?opportunityId=opp-survey-99");
+  });
 });

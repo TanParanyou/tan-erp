@@ -10,7 +10,7 @@ vi.mock("next-intl", () => ({
       opportunity: "โอกาสทางการขาย",
       searchOpportunityPlaceholder: "พิมพ์ค้นหาชื่อโอกาสขาย, รหัส หรือชื่อลูกค้า...",
       noOpportunityFound: "ไม่พบโอกาสทางการขาย",
-      createNewOpportunity: "+ สร้างโอกาสทางการขายใหม่",
+      createNewOpportunity: "สร้างโอกาสทางการขายใหม่",
     };
     return map[key] ?? key;
   },
@@ -38,6 +38,10 @@ vi.mock("../api/opportunity-queries", () => ({
         },
       ],
     },
+    isLoading: false,
+  }),
+  useOpportunityDetail: (id?: string) => ({
+    data: id === mockOpportunity.id ? mockOpportunity : undefined,
     isLoading: false,
   }),
 }));
@@ -93,5 +97,22 @@ describe("OpportunityAutocomplete Component", () => {
 
     // The item should be in the list
     expect(screen.getByText(/รีโนเวทห้องนอนใหญ่ คุณสมชาย/)).toBeDefined();
+  });
+
+  it("renders create opportunity link in header labelAction slot", () => {
+    const onChange = vi.fn();
+    render(<OpportunityAutocomplete value={null} onChange={onChange} />);
+
+    const link = screen.getByRole("link", { name: /สร้างโอกาสทางการขายใหม่/i });
+    expect(link).toBeDefined();
+    expect(link.getAttribute("href")).toBe("/th/opportunities/create");
+  });
+
+  it("auto-fetches and selects opportunity when value id is provided without selectedOpportunity", () => {
+    const onChange = vi.fn();
+    render(<OpportunityAutocomplete value="opp-001" onChange={onChange} />);
+
+    expect(screen.getByText(/รีโนเวทห้องนอนใหญ่ คุณสมชาย/)).toBeDefined();
+    expect(onChange).toHaveBeenCalledWith("opp-001", mockOpportunity);
   });
 });

@@ -167,6 +167,29 @@
 - **อิสระในการคลิกสลับแท็บ (Unrestricted Navigation):** ผู้ใช้สามารถคลิกสลับแท็บไปมาเพื่อกรอกข้อมูลส่วนใดก่อนก็ได้ ไม่มีการบล็อกลำดับขั้นตอน
 - **การรักษา DOM ของฟอร์ม (CSS `hidden` vs Unmount):** สลับแท็บด้วย Class `hidden` เสมอ ห้ามใช้การ Unmount เพื่อป้องกัน React Hook Form สูญเสียการลงทะเบียนของช่องอินพุต
 
+### 4.3.2 มาตรฐานความสูงของช่องกรอกข้อมูลและปุ่ม Action มุมขวาบน (Input Height Harmony & Top-Right Label Actions)
+
+เพื่อให้การวางช่องข้อมูลใน Grid แนวนอนมีระเบียบวินัยและความสมดุลทางสายตาสูงสุด:
+- **Strict Input Height Invariant (`h-11 min-h-[44px]`):** ช่องกรอกข้อมูลทุกประเภท ทั้ง `<input>`, `<select>`, `<textarea>`, `<EntityAutocomplete>` และ Selected Summary Cards ต้องมีความสูง $44\text{px}$ (`h-11 min-h-[44px]`) และขนาดตัวอักษรมาตรฐาน `text-sm` สม่ำเสมอเท่ากันในทุกเบราว์เซอร์
+- **Top-Right Field Actions (ปุ่ม Action ประจำฟิลด์):** ลิงก์หรือปุ่มสร้างข้อมูลใหม่/ช่วยเหลือประจำฟิลด์ (เช่น `[+ สร้างโอกาสทางการขายใหม่]`, `[เลือกจากลิสต์]`) ต้องจัดวางอยู่ที่ **มุมขวาบนของ Input ในระนาบเดียวกับ Label เสมอ** (`flex items-center justify-between min-h-[20px] mb-1.5`) ห้ามปล่อยให้ห้อยอยู่ใต้ Input ให้เสียสมดุลแนวตั้งของ Grid ในแถวเดียวกัน
+- **Icon-First Adjacent Field Actions with Tooltip (`size="icon"` + `<Tooltip />`):** ปุ่ม Action ที่อยู่ระนาบเดียวกับ Input/Select (เช่น ปุ่ม Quick-Add Master Data `+`, ปุ่มสุ่มรหัส, ปุ่มค้นหา):
+  1. ต้องใช้ **Icon-only Button (`size="icon"` ขนาด $44\text{px} \times 44\text{px}$)** เสมอ ห้ามเขียนข้อความยาวๆ เช่น `[+ เพิ่ม]` เพื่อประหยัดพื้นที่แนวนอนและป้องกันข้อความตกบรรทัด
+  2. ต้องครอบด้วย `<Tooltip content="..." position="top">` พร้อมใส่ `aria-label` ทุกครั้ง เพื่อคงความสามารถในการเข้าถึง (Accessibility)
+  3. คอนเทนเนอร์ Input/Select ต้องใส่ `wrapperClassName="!mb-0"` และจัดแนวแถวด้วย `flex items-center gap-2` เพื่อล็อกขอบบนและล่างให้ขนานกับช่องกรอกพอดีเป๊ะ
+- **Name-First Dropdown & Autocomplete Hierarchy:** การแสดงผลตัวเลือกและผลลัพธ์การค้นหาต้องนำชื่อรายการที่สื่อความหมาย (Item Name, Title, Customer Name) ขึ้นเป็นหลัก (Primary / Hero) ตัวหนาชัดเจน ควบคู่กับรหัส Code และสถานะเป็นข้อความรอง (Secondary / Meta) เสมอ ห้ามแสดงเฉพาะรหัสตัวเลขเดี่ยวๆ
+- **No Duplicate Symbols in i18n:** เมื่อใส่ไอคอน SVG (เช่น `<IconPlus />`) ในปุ่ม Action ข้อความในระบบแปลภาษา (`th.json`, `en.json`) ต้องเป็นตัวอักษรล้วน ห้ามใส่เครื่องหมาย `+ ` ซ้ำซ้อน
+
+### 4.5 มาตรฐาน 2-Tier Architectural Filter Toolbar ในหน้ารายการ (List Toolbar Standards)
+
+สำหรับหน้าแสดงรายการที่มีตัวกรองมากกว่า 2 มิติขึ้นไป (เช่น มีทั้ง Search, หมวดหมู่/สถานะ, ผู้รับผิดชอบ, ลูกค้า หรือช่วงเวลา) **ห้ามยัดทุกตัวกรองในแถวเดียวแบบบีบอัด (`flex flex-wrap items-end`)**:
+1. **Tier 1 (แถวค้นหาหลักและ Actions):** จัดวาง `ListSearchInput` กว้างสมส่วน (`w-full sm:max-w-md lg:max-w-lg`) ร่วมกับปุ่ม Action (เช่น `ExportDropdown` หรือ Export Button) ชิดขวาในแนวระนาบเดียวกัน (`self-start sm:self-end`)
+2. **Tier 2 (กริดตัวกรองละเอียด Refined Grid):** คั่นด้วยเส้น `border-t border-erp-border/60 pt-2` แล้วจัดวางตัวกรองด้วย CSS Grid สม่ำเสมอ:
+   - Desktop: `lg:grid-cols-4 gap-3` (หรือ 3-4 คอลัมน์เต็มพื้นที่ตามจำนวนตัวกรอง)
+   - Tablet: `sm:grid-cols-2 gap-3`
+   - Mobile: `grid-cols-1 gap-3`
+   - อินพุตและตัวกรองทุกชิ้นใน Grid (ทั้ง `ListFilterSelect`, `CustomerAutocomplete`, `UserAutocomplete`) ต้องกำหนด `widthClassName="w-full"` หรือ `className="w-full"` เพื่อให้กว้างเต็มช่องสม่ำเสมอ ไม่หักฟันปลาหรือเกิดช่องว่างแหว่ง
+3. **Tier 3 (Active Filter Chips):** ส่งผ่าน prop `activeFilters` ของ `<ListToolbar />` เพื่อแสดงชิปตัวกรองด้านล่างสุดของ Toolbar เสมอ
+
 ### 4.4 มาตรฐานขนาดและบทบาทของปุ่ม (Button Scale & Usage Rules)
 
 เพื่อป้องกันปัญหาปุ่มสูงต่ำไม่เท่ากันหรือไม่สอดคล้องกันข้ามหน้าจอ ระบบกำหนดขนาดปุ่มกลางของ Atelier Architectural Navy Sharp ไว้อย่างเคร่งครัด:

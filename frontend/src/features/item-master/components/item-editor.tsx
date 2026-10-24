@@ -415,11 +415,11 @@ export function ItemEditor({ id }: ItemEditorProps) {
               disabled={!canSave || fieldsLocked}
             />
           </FormSection>
-          {branches.isError && <p role="alert" className="text-sm text-erp-danger">{t("branchesLoadFailed")}</p>}
+          {branches.isError && <Alert variant="danger">{t("branchesLoadFailed")}</Alert>}
         </div>
-        {(mutations.createItem.isError || mutations.updateItem.isError) && <p role="alert" className="border border-erp-danger p-3 text-sm text-erp-danger">{t("createFailed")}</p>}
+        {(mutations.createItem.isError || mutations.updateItem.isError) && <Alert variant="danger">{t("createFailed")}</Alert>}
         {imageUploadFailed && <Alert variant="warning" title={t("imageSaveFailed")}>{t("imagePendingRetry")}</Alert>}
-        {mutations.setBranchAvailability.isError && <p role="alert" className="border border-erp-danger p-3 text-sm text-erp-danger">{t("branchSaveFailed")}</p>}
+        {mutations.setBranchAvailability.isError && <Alert variant="danger">{t("branchSaveFailed")}</Alert>}
         <FormActionBar
           isDirty={form.formState.isDirty}
           isLoading={saving}

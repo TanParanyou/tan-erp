@@ -94,6 +94,17 @@ This repository is in **Application Implementation**. ก่อนประเ�
 - **Safety Confirmation Modal:** การลบ (Delete), การยกเลิก (Void/Cancel) หรือการกระทำที่มีความเสี่ยงสูง ต้องมี Confirmation Modal ยืนยันเสมอ พร้อมทั้งปุ่มยืนยันใน Modal ต้องมี `isLoading` ล็อกปุ่มไว้ขณะยิง API
 - **Minimal Mono Loading:** ขณะดึงข้อมูล Edit ให้ใช้ Minimal Loading Component ในคอนเทนเนอร์ (ห้ามใช้ Skeleton Loader)
 - **Tabbed Form Architecture (`FormTabs` & `useFormTabErrors`):** สำหรับฟอร์มที่มีข้อมูลหลายกลุ่มเพื่อลดการ scroll ให้ใช้ `<FormTabs />` กลาง พร้อม Red Dot Error Indicator บนหัวแท็บ, Auto-Switch ไปแท็บแรกที่มี Error เมื่อ submit ไม่ผ่าน, อิสระในการคลิกสลับแท็บ (Unrestricted) และซ่อนด้วย CSS `hidden` เพื่อรักษา DOM input registration
+- **Strict Input Height Harmony (`h-11 min-h-[44px]`):** ช่องกรอกข้อมูลทุกประเภท ทั้ง `<input>`, `<select>`, `<EntityAutocomplete>` ในระดับกริดเดียวกันต้องมีความสูงเท่ากันอย่างเข้มงวด `h-11 min-h-[44px]` พร้อมขนาดฟอนต์ `text-sm` สม่ำเสมอ
+- **Top-Right Field Actions:** ปุ่มหรือลิงก์สร้างข้อมูลใหม่/ช่วยเหลือประจำฟิลด์ (เช่น `[+ สร้างใหม่]`, `[เลือกจากลิสต์]`) ต้องจัดวางที่มุมขวาบนของ Input ในระนาบเดียวกับ Label เสมอ (`min-h-[20px] mb-1.5`) ห้ามปล่อยให้ห้อยอยู่ใต้ Input
+- **Icon-First Adjacent Field Actions with Tooltip (`size="icon"` + `<Tooltip />`):** ปุ่ม Action ที่อยู่ระนาบเดียวกับ Input/Select (เช่น ปุ่ม Quick-Add Master Data `+`, ปุ่มสุ่มรหัส, ปุ่มค้นหา):
+  1. ต้องใช้ **Icon-only Button (`size="icon"` ขนาด `h-[44px] w-[44px]`)** เสมอ ห้ามเขียนข้อความยาวๆ เช่น `[+ เพิ่ม]` เพื่อประหยัดพื้นที่แนวนอนและป้องกันข้อความตกบรรทัด
+  2. ต้องครอบด้วย `<Tooltip content="..." position="top">` พร้อมใส่ `aria-label` ทุกครั้ง เพื่อคงความสามารถในการเข้าถึง (Accessibility)
+  3. คอนเทนเนอร์ Input/Select ต้องใส่ `wrapperClassName="!mb-0"` และจัดแนวแถวด้วย `flex items-center gap-2` เพื่อล็อกขอบบนและล่างให้ขนานกับช่องกรอกพอดีเป๊ะ
+- **Name-First Dropdown Hierarchy:** การแสดงผลใน Autocomplete / Combobox ต้องแสดงชื่อรายการเป็นหลัก (Name-First) ตัวหนาชัดเจน ควบคู่กับรหัส Code ห้ามแสดงเฉพาะรหัสตัวเลขเดี่ยวๆ
+- **Table-Preserved Form Input Balance & Primary Action Prominence:**
+  1. ในฟอร์มแบบตารางรายการ (Dynamic Array / Table Rows) ช่อง Input ทุกคอลัมน์ต้องระบุ `h-11 min-h-[44px]` พร้อม `wrapperClassName="!mb-0"` และจัดแนวแถวตารางเป็น `align-middle`
+  2. หากคอลัมน์ใดมี Sub-label ด้านล่าง (เช่น ข้อความระบุหน่วย `หน่วย: ...` หรือ Badge กำกับ) ให้ใส่ Spacer ล่องหน (`invisible select-none` พร้อม `aria-hidden="true"`) ในคอลัมน์ข้างเคียง เพื่อรักษาสมดุลความสูงกล่อง ให้ทุก Input และปุ่ม Action ขนานในระนาบแนวนอนเดียวกันพอดีเป๊ะ
+  3. ปุ่ม Action หลักสำหรับเพิ่มรายการเข้าตาราง (เช่น `+ เพิ่มคุณสมบัติ`, `+ เพิ่มแถว`) ต้องใช้ `variant="primary"` (Solid Navy `#0B3056`) เสมอ ห้ามใช้ `variant="outline"` หรือ `variant="ghost"` เพื่อให้โดดเด่นและมองเห็นชัดเจน
 
 ---
 
@@ -119,6 +130,14 @@ This repository is in **Application Implementation**. ก่อนประเ�
 - **Strict TypeScript:** ห้ามใช้ type `any`, `as any` หรือ `@ts-ignore` เด็ดขาด กำหนด DTO / Interface ให้ครบถ้วน หรือใช้ `unknown` แล้ว narrow
 - **Strict Error Handling & No Arbitrary Fallback:** ห้ามดักจับหรือเปรียบเทียบ Error ด้วย String message ดิบ (เช่น `error.message === "..."`) และ**ห้ามทำ Loose / Arbitrary Fallback ต่อกันเป็นลูกโซ่เด็ดขาด** (เช่น `valA || valB || valC` หรือเดา field อื่นมาแสดงแทนเมื่อไม่มีข้อมูล) ไม่ว่าจะเป็น guard functions, UI components, resolvers หรือ data mappers ต้องยึดถือ Single Source of Truth และ Structured Contract ที่แน่นอน หากไม่มีข้อมูลให้แสดงสถานะว่าง/ไม่มีข้อมูลตามมาตรฐาน (`-`) ห้ามเดาสุ่มหรือประดิษฐ์ข้อมูลขึ้นมาเองเพื่อเอาใจเทสต์
 - **No FE Find Logic & Backend Structured Projection (JsonDocument):** ข้อมูลความสัมพันธ์ที่ต้องใช้แสดงผลบนหน้าจอ (เช่น ผู้รับผิดชอบ, สถานที่, ลูกค้า) ต้องถูกโปรเจกต์เป็น Structured JSON Object / JsonDocument จาก Backend มาใน Response โดยตรง (เช่น `owner: { id, displayName, email }`, `assignedSurveyor: { id, displayName }`) **ห้ามส่งคืนเฉพาะ Foreign Key UUID ดิบ แล้วเขียน logic `array.find(...)` จับคู่ข้อมูลเองที่ Frontend เด็ดขาด**
+- **Backend-Driven Metadata & Single Source of Truth (No FE String Hacking):** เมื่อต้องการจัดกลุ่มทางธุรกิจ, แสดงหมวดหมู่ หรือจำแนกประเภทความปลอดภัย (เช่น Approval Authority vs Maker-Checker, หมวดหมู่สิทธิ์ หรือสถานะเอกสาร) ต้องส่งเป็น Structured Metadata หรือ Boolean Flags จาก Backend Application DTO เสมอ **ห้ามเขียนโค้ด Parse string ดิบ เช่น `key.split('.')` หรือเขียน `if (key === '...')` ดักรายชื่อเองที่ Frontend เด็ดขาด** เพื่อรักษาความเรียบง่าย ไม่ Hardcode และดูแลง่ายในระยะยาว
+- **Central UI Components First (Zero Raw HTML Controls):** ในหน้าฟอร์ม, หน้าแสดงผล และตารางรายการ **ห้ามใช้แท็ก HTML ดิบเด็ดขาด** (เช่น `<input>`, `<select>`, `<textarea>`, `<table>`, `<p role="alert">`, `<button>` ลอยๆ) ให้ใช้คอมโพเนนต์กลางจาก `@/components/ui/` เสมอ:
+  - `<Input />`, `<Select />`, `<Textarea />`, `<Checkbox />`, `<Radio />`, `<RadioGroup />`
+  - `<Table />`, `<TableHeader />`, `<TableBody />`, `<TableRow />`, `<TableHead />`, `<TableCell />`
+  - `<Alert />` สำหรับกล่องแจ้งเตือนสถานะหรือข้อผิดพลาด
+  - `<EmptyState />` สำหรับกรณีไม่มีข้อมูล
+  - `<Button />` หรือ `<Button size="icon">` ครอบด้วย `<Tooltip />` สำหรับปุ่มกด
+- **Direct Sub-path Imports for Core UI:** ใน Form Components และ Feature Components ให้ใช้ Direct Sub-path Import (เช่น `import { Input } from "@/components/ui/Input";`, `import { Select } from "@/components/ui/Select";`) หลีกเลี่ยง Barrel Import ดิบจาก `@/components/ui` ที่อาจนำพาโมดูลหนัก (เช่น RichTextEditor / TipTap) เข้ามาปนเปื้อนใน Client Bundles หรือ Vitest Runtime
 - จัดโครงสร้างตาม Business Feature (`src/features/<feature>/`)
 - TanStack Query เป็นเจ้าของ Server State; ห้าม fetch API ใน `useEffect` โดยตรง
 - ห้ามเรียก Database ตรงจาก Frontend Code; ทุกอย่างต้องผ่าน API Client

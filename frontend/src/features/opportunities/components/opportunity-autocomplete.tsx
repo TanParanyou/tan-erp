@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import type { OpportunityResponse } from "@/lib/api/api-client";
-import { useOpportunityList } from "../api/opportunity-queries";
+import { useOpportunityList, useOpportunityDetail } from "../api/opportunity-queries";
 import { EntityAutocomplete } from "@/components/forms/EntityAutocomplete";
 import { IconPlus } from "@/components/common/Icons";
 
@@ -18,6 +18,8 @@ export interface OpportunityAutocompleteProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  showCreateAction?: boolean;
+  createActionHref?: string;
 }
 
 const MAX_OPPORTUNITIES = 20;
@@ -32,6 +34,8 @@ export function OpportunityAutocomplete({
   required,
   disabled = false,
   className,
+  showCreateAction = true,
+  createActionHref,
 }: OpportunityAutocompleteProps) {
   const locale = useLocale();
   const t = useTranslations("fieldSurvey");
@@ -49,6 +53,16 @@ export function OpportunityAutocomplete({
 
   const opportunities: OpportunityResponse[] =
     query.data?.pages.flatMap((page) => page.items ?? []) ?? [];
+
+  // Auto-fetch detail if value is passed from URL/parent but selected isn't resolved yet
+  const detailQuery = useOpportunityDetail(!selected && value ? value : undefined);
+
+  useEffect(() => {
+    if (detailQuery.data && !selected) {
+      setSelected(detailQuery.data);
+      onChange(value ?? "", detailQuery.data);
+    }
+  }, [detailQuery.data, selected, value, onChange]);
 
   const getCustomerName = (opp: OpportunityResponse | null | undefined): string => {
     if (!opp?.customer) return "-";
@@ -68,6 +82,17 @@ export function OpportunityAutocomplete({
     onChange("", null);
   };
 
+  const createAction = showCreateAction ? (
+    <Link
+      href={createActionHref ?? `/${locale}/opportunities/create`}
+      target="_blank"
+      className="inline-flex items-center gap-1 text-[11px] font-semibold text-erp-navy hover:underline"
+    >
+      <IconPlus size={12} />
+      <span>{t("createNewOpportunity")}</span>
+    </Link>
+  ) : null;
+
   return (
     <div className={className}>
       <EntityAutocomplete<OpportunityResponse>
@@ -76,10 +101,12 @@ export function OpportunityAutocomplete({
         selectedItem={selected ?? selectedOpportunity ?? null}
         onSelectedItemChange={setSelected}
         label={label ?? t("opportunity")}
+        labelAction={createAction}
         placeholder={placeholder ?? t("searchOpportunityPlaceholder")}
         error={error}
         required={required}
         disabled={disabled}
+        className="!mb-0"
         items={opportunities}
         isLoading={query.isLoading}
         emptyText={t("noOpportunityFound")}
@@ -87,7 +114,7 @@ export function OpportunityAutocomplete({
         onSearchChange={setSearch}
         getItemKey={(item) => item.id ?? ""}
         renderSelectedCard={() => (
-          <div className="flex min-h-[44px] items-center justify-between border border-erp-navy/40 bg-erp-surface px-3 py-2 text-xs">
+          <div className="flex h-11 min-h-[44px] items-center justify-between border border-erp-navy/40 bg-erp-surface px-3 py-2 text-xs">
             <div className="min-w-0 flex-1 truncate pr-2">
               <span className="font-semibold text-erp-navy">
                 {selected?.code ? `${selected.code} · ` : ""}
@@ -141,18 +168,6 @@ export function OpportunityAutocomplete({
           </div>
         )}
       />
-
-      {/* Quick create link underneath if not found */}
-      <div className="mt-1 flex justify-end">
-        <Link
-          href={`/${locale}/opportunities/create`}
-          target="_blank"
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-erp-navy hover:underline"
-        >
-          <IconPlus size={12} />
-          {t("createNewOpportunity")}
-        </Link>
-      </div>
     </div>
   );
 }

@@ -93,7 +93,7 @@ export function CustomerAutocomplete({
       renderSelectedCard={(onClear) => {
         if (variant === "filter") {
           return (
-            <div className="flex items-center justify-between gap-2 h-10 px-3 bg-erp-surface border border-erp-navy/60 shadow-sm text-xs min-w-0">
+            <div className="flex items-center justify-between gap-2 h-11 min-h-[44px] px-3 bg-erp-surface border border-erp-navy/60 shadow-sm text-xs min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
                 {selectedCustomer?.code && (
                   <span className="font-mono font-bold text-erp-navy bg-erp-surface-subtle px-1 py-0.5 border border-erp-border shrink-0">

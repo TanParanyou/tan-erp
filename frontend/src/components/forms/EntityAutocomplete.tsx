@@ -12,6 +12,7 @@ export interface EntityAutocompleteProps<T> {
   value?: string | null;
   onChange: (id: string) => void;
   label?: string;
+  labelAction?: React.ReactNode;
   placeholder?: string;
   error?: string;
   required?: boolean;
@@ -49,6 +50,7 @@ export function EntityAutocomplete<T>({
   value,
   onChange,
   label,
+  labelAction,
   placeholder,
   error,
   required,
@@ -192,17 +194,24 @@ export function EntityAutocomplete<T>({
         className
       )}
     >
-      {label && (
-        <label
-          htmlFor={inputId}
-          className={cn(
-            "erp-label",
-            variant === "filter" && "text-sm font-semibold text-erp-navy !mb-0"
+      {(label || labelAction) && (
+        <div className="flex items-center justify-between min-h-[20px]">
+          {label ? (
+            <label
+              htmlFor={inputId}
+              className={cn(
+                "erp-label !mb-0",
+                variant === "filter" && "text-sm font-semibold text-erp-navy"
+              )}
+            >
+              {label}
+              {required && <span className="erp-label-required">*</span>}
+            </label>
+          ) : (
+            <span />
           )}
-        >
-          {label}
-          {required && <span className="erp-label-required">*</span>}
-        </label>
+          {labelAction}
+        </div>
       )}
 
       {/* State 1: Selected Item Summary Card */}
@@ -247,7 +256,7 @@ export function EntityAutocomplete<T>({
               placeholder={placeholder}
               autoComplete="off"
               className={cn(
-                "erp-input w-full min-h-[44px] pl-9 pr-16 text-sm text-erp-text-main rounded-none outline-none transition-colors",
+                "erp-input w-full h-11 min-h-[44px] pl-9 pr-16 text-sm text-erp-text-main rounded-none outline-none transition-colors",
                 "focus:border-erp-navy focus:ring-1 focus:ring-erp-navy",
                 "disabled:cursor-not-allowed disabled:bg-erp-surface-subtle disabled:opacity-60",
                 error ? "border-red-600 focus:border-red-600 focus:ring-red-600" : ""

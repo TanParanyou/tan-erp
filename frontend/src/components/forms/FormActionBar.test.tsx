@@ -33,4 +33,10 @@ describe("FormActionBar component", () => {
     const nonStickyBar = container.firstChild as HTMLElement;
     expect(nonStickyBar.className).not.toContain("fixed");
   });
+
+  it("applies inner max-width container when maxWidth prop is provided", () => {
+    const { container } = render(<FormActionBar maxWidth="lg" />);
+    const innerContainer = container.querySelector(".max-w-5xl");
+    expect(innerContainer).not.toBeNull();
+  });
 });

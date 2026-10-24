@@ -48,8 +48,8 @@ export function ListFilterSelect({
         aria-label={label}
         options={allOptions}
         wrapperClassName="!mb-0 !gap-1.5"
-        labelClassName="text-sm font-semibold text-erp-navy"
-        className="h-10 text-xs sm:text-sm !min-h-[40px]"
+        labelClassName="text-sm font-semibold text-erp-navy min-h-[20px] flex items-center"
+        className="h-11 min-h-[44px] text-xs sm:text-sm"
       />
     </div>
   );
