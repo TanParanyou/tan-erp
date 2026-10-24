@@ -102,9 +102,18 @@ This repository is in **Application Implementation**. ก่อนประเ�
   3. คอนเทนเนอร์ Input/Select ต้องใส่ `wrapperClassName="!mb-0"` และจัดแนวแถวด้วย `flex items-center gap-2` เพื่อล็อกขอบบนและล่างให้ขนานกับช่องกรอกพอดีเป๊ะ
 - **Name-First Dropdown Hierarchy:** การแสดงผลใน Autocomplete / Combobox ต้องแสดงชื่อรายการเป็นหลัก (Name-First) ตัวหนาชัดเจน ควบคู่กับรหัส Code ห้ามแสดงเฉพาะรหัสตัวเลขเดี่ยวๆ
 - **Table-Preserved Form Input Balance & Primary Action Prominence:**
-  1. ในฟอร์มแบบตารางรายการ (Dynamic Array / Table Rows) ช่อง Input ทุกคอลัมน์ต้องระบุ `h-11 min-h-[44px]` พร้อม `wrapperClassName="!mb-0"` และจัดแนวแถวตารางเป็น `align-middle`
+  1. ในฟอร์มแบบตารางรายการ (Dynamic Array / Table Rows) ช่อง Input ทุกคอลัมน์ต้องระบุ `h-11 min-h-[44px]` (หรือ `h-9 min-h-[36px]` ในโหมดตารางกะทัดรัด) พร้อม `wrapperClassName="!mb-0"` และจัดแนวแถวตารางเป็น `align-middle`
   2. หากคอลัมน์ใดมี Sub-label ด้านล่าง (เช่น ข้อความระบุหน่วย `หน่วย: ...` หรือ Badge กำกับ) ให้ใส่ Spacer ล่องหน (`invisible select-none` พร้อม `aria-hidden="true"`) ในคอลัมน์ข้างเคียง เพื่อรักษาสมดุลความสูงกล่อง ให้ทุก Input และปุ่ม Action ขนานในระนาบแนวนอนเดียวกันพอดีเป๊ะ
   3. ปุ่ม Action หลักสำหรับเพิ่มรายการเข้าตาราง (เช่น `+ เพิ่มคุณสมบัติ`, `+ เพิ่มแถว`) ต้องใช้ `variant="primary"` (Solid Navy `#0B3056`) เสมอ ห้ามใช้ `variant="outline"` หรือ `variant="ghost"` เพื่อให้โดดเด่นและมองเห็นชัดเจน
+- **Single-Row Architectural Card Header (Zero-Void Standard):** สำหรับการ์ดข้อมูลหรือ Array รายการที่สามารถเปิด-ปิดย่อ/ขยายได้ (Collapsible Cards):
+  1. หัวการ์ดต้องจัดอยู่ในแถวเดียวแบบกะทัดรัด (Single Compact Row) ประกอบด้วย: ปุ่มเปิด-ปิด `[ v ]`, รหัสข้อมูลหลัก, ช่องกรอกชื่อข้อมูลหลัก (หรือชื่อแสดงผลที่สำคัญ), เมนูตัวช่วย/Preset, Badge สรุปจำนวน และปุ่มลบ
+  2. ชื่อข้อมูลหลัก (Primary Name/Title) ต้องมองเห็นและแก้ไขได้เสมอแม้จะอยู่ในสถานะย่อ (Collapsed) ห้ามนำไปซ่อนไว้ด้านในการ์ด
+  3. ห้ามปล่อยให้เกิดช่องว่างขนาดใหญ่ (Empty Void) ในหัวการ์ดเด็ดขาด
+- **Zero-Layout-Shift for Live Calculation/Conversion Cells:** ในฟอร์มตาราง (Table Rows) ที่มีการคำนวณหรือแปลงหน่วยสด (เช่น `= 50,000 mm`):
+  1. คอนเทนเนอร์ข้อความแปลงผลลัพธ์ต้องล็อกความสูงขั้นต่ำคงที่ (`mt-1 min-h-[16px]`) และหากยังไม่มีผลลัพธ์หรือเลือกหน่วยหลัก ให้แสดงตัวคั่นล่องหน `<span className="invisible select-none" aria-hidden="true">-</span>` เสมอ
+  2. คอลัมน์ข้างเคียงทุกคอลัมน์ในแถวเดียวกัน (เช่น Select, Notes, Action Buttons) ต้องใส่ Invisible Spacer ความสูงเดียวกันกำกับไว้ เพื่อล็อกความสูงของแถวไม่ให้เด้งขึ้นเด้งลง (Zero Bouncing)
+- **DOM-Preserved Collapsible Sections:** การเปิด-ปิดซ่อนเนื้อหาฟอร์ม (Expand/Collapse) ต้องใช้ CSS `className={cn("...", !isExpanded && "hidden")}` เสมอ ห้ามใช้ `{isExpanded && <Fields />}` เพื่อรักษาการลงทะเบียน (Register) และค่าฟิลด์ใน React Hook Form ให้ครบถ้วนสมบูรณ์
+- **Mandatory Input Placeholder Coverage & i18n:** ช่องกรอกข้อมูลทุกประเภททั้ง `<Input>`, `<Textarea>`, `<input>`, `<textarea>` ต้องระบุ `placeholder` เสมอ (ยกเว้น hidden, checkbox, radio, file, color, range) โดยข้อความต้องดึงผ่านระบบแปลภาษา (i18n) ครบทั้งสองภาษา (`th` และ `en`) เสมอ ห้ามปล่อยว่างหรือ Hardcode เด็ดขาด สำหรับช่องวันที่/เวลาให้ใช้มาตรฐาน `วว/ดด/ปปปป` หรือระบุผ่าน fallback ของระบบ
 
 ---
 
