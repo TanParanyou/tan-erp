@@ -32,6 +32,8 @@ public static class GoLiveAccessSeeder
         ("roles.assign-approval", "Approve Role Assignments"),
         ("roles.manage", "Manage Roles"),
         ("approval-limits.manage", "Manage Approval Limits"),
+        ("document-templates.read", "Read Document Templates"),
+        ("document-templates.manage", "Manage Document Templates"),
         ("audit.read", "Read Audit Trail")
     };
 

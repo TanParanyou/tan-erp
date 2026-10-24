@@ -1649,6 +1649,73 @@ export class ApiClient {
     );
   }
 
+  async listDocumentTemplates(
+    params: { documentType?: string; branchId?: string },
+    options: RequestOptions
+  ): Promise<import("@/features/settings/document-templates/types").DocumentTemplateItem[]> {
+    const q = new URLSearchParams();
+    if (params.documentType) q.set("documentType", params.documentType);
+    if (params.branchId) q.set("branchId", params.branchId);
+    const queryString = q.toString() ? `?${q.toString()}` : "";
+    return this.request<import("@/features/settings/document-templates/types").DocumentTemplateItem[]>(
+      `/api/v1/settings/document-templates${queryString}`,
+      "GET",
+      options
+    );
+  }
+
+  async getDocumentTemplate(
+    id: string,
+    options: RequestOptions
+  ): Promise<import("@/features/settings/document-templates/types").DocumentTemplateItem> {
+    return this.request<import("@/features/settings/document-templates/types").DocumentTemplateItem>(
+      `/api/v1/settings/document-templates/${encodeURIComponent(id)}`,
+      "GET",
+      options
+    );
+  }
+
+  async createDocumentTemplate(
+    payload: import("@/features/settings/document-templates/types").CreateDocumentTemplatePayload,
+    options: RequestOptions
+  ): Promise<import("@/features/settings/document-templates/types").DocumentTemplateItem> {
+    return this.request<import("@/features/settings/document-templates/types").DocumentTemplateItem>(
+      "/api/v1/settings/document-templates",
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async updateDocumentTemplate(
+    id: string,
+    payload: import("@/features/settings/document-templates/types").UpdateDocumentTemplatePayload,
+    ifMatch: string,
+    options: RequestOptions
+  ): Promise<import("@/features/settings/document-templates/types").DocumentTemplateItem> {
+    const opts: RequestOptions = {
+      ...options,
+      ifMatch: ifMatch.startsWith('"') ? ifMatch : `"${ifMatch}"`
+    };
+    return this.request<import("@/features/settings/document-templates/types").DocumentTemplateItem>(
+      `/api/v1/settings/document-templates/${encodeURIComponent(id)}`,
+      "PUT",
+      opts,
+      payload
+    );
+  }
+
+  async deleteDocumentTemplate(
+    id: string,
+    options: RequestOptions
+  ): Promise<void> {
+    return this.request<void>(
+      `/api/v1/settings/document-templates/${encodeURIComponent(id)}`,
+      "DELETE",
+      options
+    );
+  }
+
   async getEstimateUnitOptions(itemId: string, branchId: string, options: RequestOptions): Promise<EstimateUnitOptionsResponse> {
     return this.request<EstimateUnitOptionsResponse>(
       `/api/v1/estimate-catalog/items/${encodeURIComponent(itemId)}/units?branchId=${encodeURIComponent(branchId)}`,

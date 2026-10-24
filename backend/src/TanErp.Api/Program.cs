@@ -293,6 +293,11 @@ builder.Services.AddScoped<TanErp.Application.Common.Abstractions.IDocumentNumbe
 builder.Services.AddScoped<TanErp.Application.DocumentNumbering.ListDocumentSequences.ListDocumentSequencesHandler>();
 builder.Services.AddScoped<TanErp.Application.DocumentNumbering.UpdateDocumentSequence.UpdateDocumentSequenceHandler>();
 builder.Services.AddScoped<TanErp.Application.DocumentNumbering.PreviewDocumentSequence.PreviewDocumentSequenceHandler>();
+builder.Services.AddScoped<TanErp.Application.DocumentTemplates.ListDocumentTemplates.ListDocumentTemplatesHandler>();
+builder.Services.AddScoped<TanErp.Application.DocumentTemplates.GetDocumentTemplate.GetDocumentTemplateByIdHandler>();
+builder.Services.AddScoped<TanErp.Application.DocumentTemplates.CreateDocumentTemplate.CreateDocumentTemplateHandler>();
+builder.Services.AddScoped<TanErp.Application.DocumentTemplates.UpdateDocumentTemplate.UpdateDocumentTemplateHandler>();
+builder.Services.AddScoped<TanErp.Application.DocumentTemplates.DeleteDocumentTemplate.DeleteDocumentTemplateHandler>();
 
 // Authentication & Authorization
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)

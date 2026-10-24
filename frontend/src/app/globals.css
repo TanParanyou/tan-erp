@@ -86,13 +86,41 @@ textarea,
  */
 @media print {
   @page {
-    size: A4;
-    margin: 12mm;
+    size: A4 portrait;
+    margin: 8mm;
   }
 
+  /* Hide entire application shell and interactive controls */
   .erp-header,
   .erp-sidebar,
-  .erp-sidebar-backdrop {
+  .erp-sidebar-backdrop,
+  .no-print,
+  [data-no-print="true"] {
     display: none !important;
+  }
+
+  /* Reset layout containers for clean 1:1 print */
+  html, body, main, #__next {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* A4 Print Sheet adjustments */
+  .a4-print-sheet {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-after: avoid;
+    break-after: avoid;
+    transform: none !important;
   }
 }

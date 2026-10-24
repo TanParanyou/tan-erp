@@ -112,6 +112,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Files.FileUploadSlot> FileUploadSlots => Set<TanErp.Domain.Files.FileUploadSlot>();
     public DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition> DocumentSequenceDefinitions => Set<TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition>();
     public DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceCounter> DocumentSequenceCounters => Set<TanErp.Domain.DocumentNumbering.DocumentSequenceCounter>();
+    public DbSet<TanErp.Domain.DocumentTemplates.DocumentTemplate> DocumentTemplates => Set<TanErp.Domain.DocumentTemplates.DocumentTemplate>();
     public DbSet<TanErp.Domain.Items.Item> Items => Set<TanErp.Domain.Items.Item>();
     public DbSet<TanErp.Domain.Items.ItemCategory> ItemCategories => Set<TanErp.Domain.Items.ItemCategory>();
     public DbSet<TanErp.Domain.Items.ItemBrand> ItemBrands => Set<TanErp.Domain.Items.ItemBrand>();

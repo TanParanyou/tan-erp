@@ -215,6 +215,8 @@ public static class TestOnlyDataSeeder
             ("document-sequences.read", "Read Document Sequences"),
             ("document-sequences.manage", "Manage Document Sequences"),
             ("document-sequences.manual-override", "Manual Override Document Numbers"),
+            ("document-templates.read", "Read Document Templates"),
+            ("document-templates.manage", "Manage Document Templates"),
             ("items.read", "Read Items and Estimate Catalog"),
             ("items.create", "Create Items"),
             ("items.update", "Update Items"),
@@ -473,6 +475,9 @@ public static class TestOnlyDataSeeder
         {
             await SeedQuickEstimateSampleTemplatesAsync(db);
         }
+
+        await TanErp.Infrastructure.Persistence.DocumentTemplates.DocumentTemplateSeeder.SeedAsync(
+            db, TestOrgId, TestBranchId, DateTimeOffset.UtcNow);
 
         await db.SaveChangesAsync();
     }

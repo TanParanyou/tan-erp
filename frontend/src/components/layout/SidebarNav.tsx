@@ -20,6 +20,7 @@ import {
   IconLock,
   IconCheckCircle,
   IconPalette,
+  IconPrinter,
 } from "@/components/common/Icons";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
@@ -105,6 +106,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isQuickEstimateActive = pathname.startsWith(`/${locale}/quick-estimates`) || pathname.startsWith(`/${locale}/pricing-templates`);
   const isEstimateReviewActive = pathname.startsWith(`/${locale}/estimates/review-queue`);
   const isDocumentNumberingActive = pathname.startsWith(`/${locale}/settings/document-numbering`);
+  const isDocumentTemplatesActive = pathname.startsWith(`/${locale}/settings/document-templates`);
   const isSurveySettingsActive = pathname.startsWith(`/${locale}/settings/surveys`);
   const isUserAdminActive = pathname.startsWith(`/${locale}/settings/users`);
   const isRoleRequestsActive = pathname.startsWith(`/${locale}/settings/role-requests`);
@@ -510,6 +512,9 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isDocNumberingVisible =
     hasSettingsRead &&
     (!trimmedSearch || tShell("documentNumbering").toLowerCase().includes(trimmedSearch));
+  const isDocTemplatesVisible =
+    hasSettingsRead &&
+    (!trimmedSearch || tShell("documentTemplates").toLowerCase().includes(trimmedSearch));
   const isSurveySettingsVisible =
     (hasSettingsRead || hasFieldSurveysRead) &&
     (!trimmedSearch || tShell("surveySettings").toLowerCase().includes(trimmedSearch));
@@ -547,6 +552,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasAnyResults =
     isHomeVisible ||
     isDocNumberingVisible ||
+    isDocTemplatesVisible ||
     isSurveySettingsVisible ||
     isUserAdminVisible ||
     isRoleRequestsVisible ||
@@ -694,6 +700,19 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
                 label: tShell("documentNumbering"),
                 icon: <IconFileText size={20} />,
                 isActive: isDocumentNumberingActive,
+              })}
+            </li>
+          )}
+
+          {/* Document Templates (Settings) */}
+          {isDocTemplatesVisible && (
+            <li>
+              {renderLink({
+                id: "doc-templates",
+                href: `/${locale}/settings/document-templates`,
+                label: tShell("documentTemplates"),
+                icon: <IconPrinter size={20} />,
+                isActive: isDocumentTemplatesActive,
               })}
             </li>
           )}

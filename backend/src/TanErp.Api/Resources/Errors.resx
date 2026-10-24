@@ -405,6 +405,30 @@
   <data name="DOCUMENT_SEQUENCE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>เวอร์ชันของรูปแบบเลขที่เอกสารไม่ตรงกับข้อมูลล่าสุดในระบบ กรุณาโหลดข้อมูลใหม่</value>
   </data>
+  <data name="DOCUMENT_TEMPLATE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบเทมเพลตเอกสาร</value>
+  </data>
+  <data name="DOCUMENT_TEMPLATE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบเทมเพลตเอกสารที่ระบุในองค์กรนี้</value>
+  </data>
+  <data name="DOCUMENT_TEMPLATE_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>เทมเพลตเอกสารถูกแก้ไขโดยผู้อื่น</value>
+  </data>
+  <data name="DOCUMENT_TEMPLATE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>เทมเพลตเอกสารถูกแก้ไขโดยผู้ใช้อื่นแล้ว โปรดรีเฟรชหน้าจอเพื่อรับข้อมูลล่าสุด</value>
+  </data>
+  <data name="TEMPLATE_NAME_DUPLICATE_TITLE" xml:space="preserve">
+    <value>ชื่อเทมเพลตซ้ำ</value>
+  </data>
+  <data name="TEMPLATE_NAME_DUPLICATE_DETAIL" xml:space="preserve">
+    <value>มีเทมเพลตชื่อนี้อยู่แล้วในประเภทเอกสารเดียวกัน</value>
+  </data>
+  <data name="CANNOT_DELETE_DEFAULT_TEMPLATE_TITLE" xml:space="preserve">
+    <value>ไม่สามารถลบเทมเพลตเริ่มต้นได้</value>
+  </data>
+  <data name="CANNOT_DELETE_DEFAULT_TEMPLATE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถลบเทมเพลตเริ่มต้นของระบบได้ กรุณากำหนดเทมเพลตอื่นเป็นค่าเริ่มต้นก่อน</value>
+  </data>
   <data name="ITEM_NOT_FOUND_TITLE" xml:space="preserve">
     <value>ไม่พบรายการสินค้า</value>
   </data>

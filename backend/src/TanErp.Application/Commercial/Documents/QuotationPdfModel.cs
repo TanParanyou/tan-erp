@@ -37,4 +37,7 @@ public interface IQuotationDocumentRenderer
     string Version { get; }
 
     byte[] Render(QuotationPdfModel model);
+
+    byte[] Render(QuotationPdfModel model, TanErp.Domain.DocumentTemplates.DocumentTemplateLayoutConfig? layoutConfig) =>
+        Render(model);
 }

@@ -28,7 +28,9 @@ public sealed class QuestPdfQuotationRenderer : IQuotationDocumentRenderer
 
     public string Version => $"questpdf-{typeof(QuestPDF.Settings).Assembly.GetName().Version?.ToString(3)}/{LayoutVersion}";
 
-    public byte[] Render(QuotationPdfModel model)
+    public byte[] Render(QuotationPdfModel model) => Render(model, null);
+
+    public byte[] Render(QuotationPdfModel model, TanErp.Domain.DocumentTemplates.DocumentTemplateLayoutConfig? layoutConfig)
     {
         ArgumentNullException.ThrowIfNull(model);
         var document = Document.Create(container => container.Page(page =>
@@ -37,7 +39,7 @@ public sealed class QuestPdfQuotationRenderer : IQuotationDocumentRenderer
             page.Margin(32);
             page.DefaultTextStyle(style => style.FontFamily(QuestPdfRuntime.FontFamily).FontSize(9.5f));
             page.Header().AlignRight().Text(model.Number).FontSize(8).FontColor(Colors.Grey.Darken1);
-            page.Content().Element(content => Compose(content, model));
+            page.Content().Element(content => Compose(content, model, layoutConfig));
             page.Footer().AlignCenter().Text(text =>
             {
                 text.DefaultTextStyle(style => style.FontSize(8).FontColor(Colors.Grey.Darken1));
@@ -68,10 +70,12 @@ public sealed class QuestPdfQuotationRenderer : IQuotationDocumentRenderer
         foreach (var line in lines.Where(line => !string.IsNullOrWhiteSpace(line))) column.Item().Text(line);
     }
 
-    private static void Compose(IContainer container, QuotationPdfModel model)
+    private static void Compose(IContainer container, QuotationPdfModel model, TanErp.Domain.DocumentTemplates.DocumentTemplateLayoutConfig? layoutConfig)
     {
         var issued = model.IssuedAtUtc.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy", Invariant); // Thailand has no DST
         var issuer = model.Issuer;
+        var docTitle = layoutConfig?.Header?.DocumentTitle ?? "ใบเสนอราคา / Quotation";
+
         container.Column(column =>
         {
             column.Spacing(8);
@@ -85,9 +89,9 @@ public sealed class QuestPdfQuotationRenderer : IQuotationDocumentRenderer
                             issuer.TaxBranchCode is null ? null : $"สาขา / Branch {issuer.TaxBranchCode}"),
                         issuer.AddressTh, issuer.AddressEn, issuer.Phone is null ? null : $"โทร / Tel {issuer.Phone}");
                 });
-                row.ConstantItem(190).Column(right =>
+                row.ConstantItem(210).Column(right =>
                 {
-                    right.Item().AlignRight().Text("ใบเสนอราคา / Quotation").Bold().FontSize(15).FontColor(Navy);
+                    right.Item().AlignRight().Text(docTitle).Bold().FontSize(14).FontColor(Navy);
                     right.Item().AlignRight().Text($"เลขที่ / No. {model.Number}");
                     right.Item().AlignRight().Text($"วันที่ / Date {issued}");
                     right.Item().AlignRight().Text($"สกุลเงิน / Currency {model.Currency}");
@@ -121,6 +125,63 @@ public sealed class QuestPdfQuotationRenderer : IQuotationDocumentRenderer
                 totals.Item().PaddingTop(2).LineHorizontal(1.5f).LineColor(Navy);
                 Line($"ยอดรวมสุทธิ / Grand total ({model.Currency})", model.Totals.GrandTotal, strong: true);
             });
+
+            // Terms & Notes
+            if (layoutConfig?.Terms != null)
+            {
+                column.Item().ShowEntire().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(6).Column(terms =>
+                {
+                    if (!string.IsNullOrWhiteSpace(layoutConfig.Terms.ValidityPeriodText))
+                    {
+                        terms.Item().Text($"ระยะเวลายืนราคา: {layoutConfig.Terms.ValidityPeriodText}").FontSize(8.5f);
+                    }
+                    if (!string.IsNullOrWhiteSpace(layoutConfig.Terms.CommercialTermsText))
+                    {
+                        terms.Item().PaddingTop(2).Text(layoutConfig.Terms.CommercialTermsText).FontSize(8.5f);
+                    }
+                    if (layoutConfig.Terms.ShowBankDetails && !string.IsNullOrWhiteSpace(layoutConfig.Terms.BankName))
+                    {
+                        terms.Item().PaddingTop(2).Text($"การชำระเงิน: {layoutConfig.Terms.BankName} {layoutConfig.Terms.AccountNo} ({layoutConfig.Terms.AccountName})").FontSize(8.5f).Bold();
+                    }
+                });
+            }
+
+            // Signatures Section
+            if (layoutConfig?.Signatures != null && layoutConfig.Signatures.SignatureCount > 0)
+            {
+                column.Item().ShowEntire().PaddingTop(8).Row(sigRow =>
+                {
+                    var count = layoutConfig.Signatures.SignatureCount;
+                    sigRow.RelativeItem().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(8).Column(sig =>
+                    {
+                        sig.Item().AlignCenter().Text(layoutConfig.Signatures.Box1Label).FontSize(8.5f).Bold();
+                        sig.Item().PaddingTop(24).LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                        sig.Item().AlignCenter().Text("วันที่ / Date: ...../...../.........").FontSize(7.5f).FontColor(Colors.Grey.Darken1);
+                    });
+
+                    if (count >= 3 && !string.IsNullOrWhiteSpace(layoutConfig.Signatures.Box2Label))
+                    {
+                        sigRow.ConstantItem(8);
+                        sigRow.RelativeItem().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(8).Column(sig =>
+                        {
+                            sig.Item().AlignCenter().Text(layoutConfig.Signatures.Box2Label).FontSize(8.5f).Bold();
+                            sig.Item().PaddingTop(24).LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                            sig.Item().AlignCenter().Text("วันที่ / Date: ...../...../.........").FontSize(7.5f).FontColor(Colors.Grey.Darken1);
+                        });
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(layoutConfig.Signatures.Box3Label))
+                    {
+                        sigRow.ConstantItem(8);
+                        sigRow.RelativeItem().Border(0.5f).BorderColor(Colors.Grey.Lighten1).Padding(8).Column(sig =>
+                        {
+                            sig.Item().AlignCenter().Text(layoutConfig.Signatures.Box3Label).FontSize(8.5f).Bold();
+                            sig.Item().PaddingTop(24).LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                            sig.Item().AlignCenter().Text("วันที่ / Date: ...../...../.........").FontSize(7.5f).FontColor(Colors.Grey.Darken1);
+                        });
+                    }
+                });
+            }
         });
     }
 

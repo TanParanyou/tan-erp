@@ -177,7 +177,7 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                 table: "users",
                 column: "avatar_file_id",
                 principalSchema: "files",
-                principalTable: "file_records",
+                principalTable: "uploaded_files",
                 principalColumn: "id",
                 onDelete: ReferentialAction.SetNull);
 

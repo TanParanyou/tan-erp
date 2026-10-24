@@ -18,6 +18,7 @@ public interface IApplicationDbContext
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceDefinition> DocumentSequenceDefinitions { get; }
     DbSet<TanErp.Domain.DocumentNumbering.DocumentSequenceCounter> DocumentSequenceCounters { get; }
+    DbSet<TanErp.Domain.DocumentTemplates.DocumentTemplate> DocumentTemplates { get; }
 
     void AddAuditEvent(AuditEvent auditEvent);
 

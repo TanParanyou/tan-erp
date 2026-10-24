@@ -405,6 +405,30 @@
   <data name="DOCUMENT_SEQUENCE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
     <value>The document sequence configuration was modified by another user. Please refresh and try again.</value>
   </data>
+  <data name="DOCUMENT_TEMPLATE_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Document template not found</value>
+  </data>
+  <data name="DOCUMENT_TEMPLATE_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>The requested document template was not found in this organization.</value>
+  </data>
+  <data name="DOCUMENT_TEMPLATE_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Document template version conflict</value>
+  </data>
+  <data name="DOCUMENT_TEMPLATE_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The document template was modified by another user. Please refresh and try again.</value>
+  </data>
+  <data name="TEMPLATE_NAME_DUPLICATE_TITLE" xml:space="preserve">
+    <value>Duplicate template name</value>
+  </data>
+  <data name="TEMPLATE_NAME_DUPLICATE_DETAIL" xml:space="preserve">
+    <value>A template with this name already exists for the selected document type.</value>
+  </data>
+  <data name="CANNOT_DELETE_DEFAULT_TEMPLATE_TITLE" xml:space="preserve">
+    <value>Cannot delete default template</value>
+  </data>
+  <data name="CANNOT_DELETE_DEFAULT_TEMPLATE_DETAIL" xml:space="preserve">
+    <value>The default template cannot be deleted. Please set another template as default first.</value>
+  </data>
   <data name="MAKER_CHECKER_VIOLATION_TITLE" xml:space="preserve">
     <value>Maker-Checker Violation</value>
   </data>
