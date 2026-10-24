@@ -37,7 +37,10 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
 
         if (FirebaseApp.DefaultInstance == null)
         {
-            var emulatorHost = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST");
+            var emulatorHost = Environment.GetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST")
+                ?? configuration["Firebase:AuthEmulatorHost"]
+                ?? (!isProduction ? "localhost:9099" : null);
+
             if (!string.IsNullOrEmpty(emulatorHost))
             {
                 if (isProduction)
@@ -45,6 +48,8 @@ public class FirebaseTokenVerifier : IFirebaseTokenVerifier
                     throw new InvalidOperationException(
                         "FIREBASE_AUTH_EMULATOR_HOST must not be set in production.");
                 }
+
+                Environment.SetEnvironmentVariable("FIREBASE_AUTH_EMULATOR_HOST", emulatorHost);
 
                 FirebaseApp.Create(new AppOptions
                 {

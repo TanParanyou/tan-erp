@@ -79,12 +79,18 @@ public static class EvidenceKind
 {
     public const string SitePhoto = "site_photo";
     public const string MeasurementSketch = "measurement_sketch";
+    public const string MaterialSwatch = "material_swatch";
+    public const string ConstraintDefect = "constraint_defect";
+    public const string MoodTone = "mood_tone";
     public const string Other = "other";
 
     public static readonly HashSet<string> All = new(StringComparer.Ordinal)
     {
         SitePhoto,
         MeasurementSketch,
+        MaterialSwatch,
+        ConstraintDefect,
+        MoodTone,
         Other
     };
 

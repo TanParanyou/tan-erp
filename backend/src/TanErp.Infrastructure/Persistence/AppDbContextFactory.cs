@@ -9,11 +9,8 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     public AppDbContext CreateDbContext(string[] args)
     {
         var connectionString = args.FirstOrDefault(a => a.Contains("Host="))
-            ?? Environment.GetEnvironmentVariable("ConnectionStrings__Database");
-
-        connectionString = RequiredConfiguration.Require(
-            connectionString,
-            "ConnectionStrings__Database");
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__Database")
+            ?? "Host=localhost;Port=5432;Database=tan_erp;Username=postgres;Password=postgres";
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseNpgsql(connectionString);

@@ -15,6 +15,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Branch> Branches => Set<Branch>();
+    public DbSet<Department> Departments => Set<Department>();
+    public DbSet<JobTitle> JobTitles => Set<JobTitle>();
     public DbSet<Membership> Memberships => Set<Membership>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
@@ -40,6 +42,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Surveys.SurveyTemplateVersionRow> SurveyTemplateVersions => Set<TanErp.Domain.Surveys.SurveyTemplateVersionRow>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyArea> SiteSurveyAreas => Set<TanErp.Domain.Surveys.SiteSurveyArea>();
     public DbSet<TanErp.Domain.Surveys.SiteSurveyMeasurement> SiteSurveyMeasurements => Set<TanErp.Domain.Surveys.SiteSurveyMeasurement>();
+    public DbSet<TanErp.Domain.Surveys.SurveyDesignStyle> SurveyDesignStyles => Set<TanErp.Domain.Surveys.SurveyDesignStyle>();
+    public DbSet<TanErp.Domain.Surveys.SurveyMoodTone> SurveyMoodTones => Set<TanErp.Domain.Surveys.SurveyMoodTone>();
     public DbSet<TanErp.Domain.Procurement.Supplier> Suppliers => Set<TanErp.Domain.Procurement.Supplier>();
     public DbSet<TanErp.Domain.Procurement.PurchaseOrder> PurchaseOrders => Set<TanErp.Domain.Procurement.PurchaseOrder>();
     public DbSet<TanErp.Domain.Procurement.PurchaseOrderLine> PurchaseOrderLines => Set<TanErp.Domain.Procurement.PurchaseOrderLine>();

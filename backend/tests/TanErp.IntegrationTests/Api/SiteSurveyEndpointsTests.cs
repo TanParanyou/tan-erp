@@ -774,5 +774,33 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
         var retired = (await retireRes.Content.ReadFromJsonAsync<SurveyTemplateVersionResponse>())!;
         Assert.NotNull(retired.EffectiveToUtc);
     }
+
+    [Fact]
+    public async Task GetSurveyReferenceData_Returns200WithCategoriesAndPhotoTags()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/surveys/reference-data");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-org-a");
+        request.Headers.Add("X-Organization-Id", OrgAId.ToString());
+        request.Headers.Add("X-Branch-Id", BranchAId.ToString());
+        request.Headers.Add("X-Membership-Id", MembershipAId.ToString());
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var refData = await response.Content.ReadFromJsonAsync<SurveyReferenceDataResponse>();
+        Assert.NotNull(refData);
+        Assert.NotEmpty(refData.Categories);
+        Assert.Contains(refData.Categories, c => c.Code == "built_in");
+        Assert.NotEmpty(refData.PhotoTags);
+        Assert.Contains(refData.PhotoTags, t => t.Code == EvidenceKind.SitePhoto);
+        Assert.Contains(refData.PhotoTags, t => t.Code == EvidenceKind.ConstraintDefect);
+        Assert.Contains(refData.PhotoTags, t => t.Code == EvidenceKind.MoodTone);
+        Assert.NotEmpty(refData.MeasurementTypes);
+        Assert.Contains(refData.MeasurementTypes, m => m.Code == "box");
+        Assert.NotEmpty(refData.DesignStyles);
+        Assert.Contains(refData.DesignStyles, s => s.Code == "modern_luxury");
+        Assert.NotEmpty(refData.MoodTones);
+        Assert.Contains(refData.MoodTones, m => m.Code == "warm_earthy");
+    }
 }
 

@@ -1463,6 +1463,51 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/v1/admin/users/{userId}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateAdminUserProfileRequest"];
+                    "text/json": components["schemas"]["UpdateAdminUserProfileRequest"];
+                    "application/*+json": components["schemas"]["UpdateAdminUserProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserResponse"];
+                        "application/json": components["schemas"]["AdminUserResponse"];
+                        "text/json": components["schemas"]["AdminUserResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users/{userId}/deactivate": {
         parameters: {
             query?: never;
@@ -5983,6 +6028,116 @@ export interface paths {
                         "text/plain": components["schemas"]["CustomerAddressResponse"];
                         "application/json": components["schemas"]["CustomerAddressResponse"];
                         "text/json": components["schemas"]["CustomerAddressResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    onlyActive?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DepartmentResponse"][];
+                        "application/json": components["schemas"]["DepartmentResponse"][];
+                        "text/json": components["schemas"]["DepartmentResponse"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateDepartmentRequest"];
+                    "text/json": components["schemas"]["CreateDepartmentRequest"];
+                    "application/*+json": components["schemas"]["CreateDepartmentRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DepartmentResponse"];
+                        "application/json": components["schemas"]["DepartmentResponse"];
+                        "text/json": components["schemas"]["DepartmentResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
                     };
                 };
             };
@@ -13128,6 +13283,117 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/job-titles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    departmentId?: string;
+                    onlyActive?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["JobTitleResponse"][];
+                        "application/json": components["schemas"]["JobTitleResponse"][];
+                        "text/json": components["schemas"]["JobTitleResponse"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateJobTitleRequest"];
+                    "text/json": components["schemas"]["CreateJobTitleRequest"];
+                    "application/*+json": components["schemas"]["CreateJobTitleRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["JobTitleResponse"];
+                        "application/json": components["schemas"]["JobTitleResponse"];
+                        "text/json": components["schemas"]["JobTitleResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/mrp/runs": {
         parameters: {
             query?: never;
@@ -19284,6 +19550,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/surveys/reference-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyReferenceDataResponse"];
+                        "application/json": components["schemas"]["SurveyReferenceDataResponse"];
+                        "text/json": components["schemas"]["SurveyReferenceDataResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/opportunities/{opportunityId}/surveys": {
         parameters: {
             query?: never;
@@ -20239,6 +20542,448 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/surveys/design-styles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    onlyActive?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyDesignStyleResponse"][];
+                        "application/json": components["schemas"]["SurveyDesignStyleResponse"][];
+                        "text/json": components["schemas"]["SurveyDesignStyleResponse"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSurveyDesignStyleRequest"];
+                    "text/json": components["schemas"]["CreateSurveyDesignStyleRequest"];
+                    "application/*+json": components["schemas"]["CreateSurveyDesignStyleRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyDesignStyleResponse"];
+                        "application/json": components["schemas"]["SurveyDesignStyleResponse"];
+                        "text/json": components["schemas"]["SurveyDesignStyleResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/surveys/design-styles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateSurveyDesignStyleRequest"];
+                    "text/json": components["schemas"]["UpdateSurveyDesignStyleRequest"];
+                    "application/*+json": components["schemas"]["UpdateSurveyDesignStyleRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyDesignStyleResponse"];
+                        "application/json": components["schemas"]["SurveyDesignStyleResponse"];
+                        "text/json": components["schemas"]["SurveyDesignStyleResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/surveys/mood-tones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    onlyActive?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyMoodToneResponse"][];
+                        "application/json": components["schemas"]["SurveyMoodToneResponse"][];
+                        "text/json": components["schemas"]["SurveyMoodToneResponse"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSurveyMoodToneRequest"];
+                    "text/json": components["schemas"]["CreateSurveyMoodToneRequest"];
+                    "application/*+json": components["schemas"]["CreateSurveyMoodToneRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyMoodToneResponse"];
+                        "application/json": components["schemas"]["SurveyMoodToneResponse"];
+                        "text/json": components["schemas"]["SurveyMoodToneResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/surveys/mood-tones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateSurveyMoodToneRequest"];
+                    "text/json": components["schemas"]["UpdateSurveyMoodToneRequest"];
+                    "application/*+json": components["schemas"]["UpdateSurveyMoodToneRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SurveyMoodToneResponse"];
+                        "application/json": components["schemas"]["SurveyMoodToneResponse"];
+                        "text/json": components["schemas"]["SurveyMoodToneResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -21603,6 +22348,23 @@ export interface components {
             user?: components["schemas"]["AdminUserResponse"];
             pendingRequest?: components["schemas"]["AdminRoleRequestResponse"];
         };
+        AdminAvatarResponse: {
+            /** Format: uuid */
+            id?: string;
+            servingUrl?: string | null;
+        };
+        AdminDepartmentResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+        };
+        AdminJobTitleResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+        };
         AdminMembershipResponse: {
             /** Format: uuid */
             id?: string;
@@ -21681,6 +22443,14 @@ export interface components {
             /** Format: uuid */
             rowVersion?: string;
             memberships?: components["schemas"]["AdminMembershipResponse"][] | null;
+            phoneNumber?: string | null;
+            employeeCode?: string | null;
+            department?: components["schemas"]["AdminDepartmentResponse"];
+            jobTitle?: components["schemas"]["AdminJobTitleResponse"];
+            avatar?: components["schemas"]["AdminAvatarResponse"];
+            notes?: string | null;
+            /** Format: date-time */
+            createdAtUtc?: string | null;
         };
         ApiProblemDetails: {
             type?: string | null;
@@ -22410,6 +23180,19 @@ export interface components {
             /** Format: uuid */
             branchId?: string | null;
             roleIds?: string[] | null;
+            phoneNumber?: string | null;
+            employeeCode?: string | null;
+            /** Format: uuid */
+            departmentId?: string | null;
+            /** Format: uuid */
+            jobTitleId?: string | null;
+            /** Format: uuid */
+            avatarFileId?: string | null;
+            notes?: string | null;
+            /** Format: date-time */
+            startsAtUtc?: string | null;
+            /** Format: date-time */
+            expiresAtUtc?: string | null;
         };
         CreateApprovalLimitRequest: {
             /** Format: uuid */
@@ -22478,6 +23261,11 @@ export interface components {
             imageFileId?: string | null;
             /** Format: uuid */
             fileUploadIntentId?: string | null;
+        };
+        CreateDepartmentRequest: {
+            code?: string | null;
+            name?: string | null;
+            nameEn?: string | null;
         };
         CreateEstimateDraftRequest: {
             /** Format: uuid */
@@ -22560,6 +23348,13 @@ export interface components {
             /** Format: date */
             effectiveTo?: string | null;
             reason: string;
+        };
+        CreateJobTitleRequest: {
+            code?: string | null;
+            name?: string | null;
+            /** Format: uuid */
+            departmentId?: string | null;
+            nameEn?: string | null;
         };
         CreateOpportunityRequest: {
             /** Format: uuid */
@@ -22645,6 +23440,21 @@ export interface components {
             scheduledEndUtc?: string | null;
             /** Format: uuid */
             expectedOpportunityVersion?: string;
+        };
+        CreateSurveyDesignStyleRequest: {
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedNameContract"];
+            description?: components["schemas"]["SurveyLocalizedNameContract"];
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        CreateSurveyMoodToneRequest: {
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedNameContract"];
+            description?: components["schemas"]["SurveyLocalizedNameContract"];
+            colorPalette?: string[] | null;
+            /** Format: int32 */
+            sortOrder?: number;
         };
         CreateUnitOfMeasureRequest: {
             code?: string | null;
@@ -22820,6 +23630,14 @@ export interface components {
             /** Format: int32 */
             reopenCount?: number;
             lastReopenReason?: string | null;
+        };
+        DepartmentResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+            nameEn?: string | null;
+            isActive?: boolean;
         };
         DisableCostRecordRequest: {
             reason: string;
@@ -23840,6 +24658,16 @@ export interface components {
             /** Format: uuid */
             rowVersion?: string;
         };
+        JobTitleResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            departmentId?: string | null;
+            code?: string | null;
+            name?: string | null;
+            nameEn?: string | null;
+            isActive?: boolean;
+        };
         LocalizedTextDto: {
             thai?: string | null;
             english?: string | null;
@@ -24242,6 +25070,9 @@ export interface components {
         PermissionCatalogEntryResponse: {
             key?: string | null;
             description?: string | null;
+            module?: string | null;
+            requiresMakerChecker?: boolean;
+            isDocumentApproval?: boolean;
             isApprovalPermission?: boolean;
         };
         PermissionCatalogResponse: {
@@ -25664,6 +26495,82 @@ export interface components {
             /** Format: date-time */
             createdAtUtc?: string;
         };
+        SurveyCategoryOptionResponse: {
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedLabel"];
+            description?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        SurveyDesignStyleOptionResponse: {
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedLabel"];
+            description?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        SurveyDesignStyleResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedNameContract"];
+            description?: components["schemas"]["SurveyLocalizedNameContract"];
+            /** Format: int32 */
+            sortOrder?: number;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        SurveyLocalizedLabel: {
+            thai?: string | null;
+            english?: string | null;
+        };
+        SurveyLocalizedNameContract: {
+            thai?: string | null;
+            english?: string | null;
+        };
+        SurveyMeasurementTypeOptionResponse: {
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedLabel"];
+            unitCode?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        SurveyMoodToneOptionResponse: {
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedLabel"];
+            description?: string | null;
+            colorPalette?: string[] | null;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        SurveyMoodToneResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedNameContract"];
+            description?: components["schemas"]["SurveyLocalizedNameContract"];
+            colorPalette?: string[] | null;
+            /** Format: int32 */
+            sortOrder?: number;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        SurveyPhotoTagOptionResponse: {
+            code?: string | null;
+            name?: components["schemas"]["SurveyLocalizedLabel"];
+            description?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        SurveyReferenceDataResponse: {
+            categories?: components["schemas"]["SurveyCategoryOptionResponse"][] | null;
+            photoTags?: components["schemas"]["SurveyPhotoTagOptionResponse"][] | null;
+            measurementTypes?: components["schemas"]["SurveyMeasurementTypeOptionResponse"][] | null;
+            designStyles?: components["schemas"]["SurveyDesignStyleOptionResponse"][] | null;
+            moodTones?: components["schemas"]["SurveyMoodToneOptionResponse"][] | null;
+        };
         SurveyTemplateVersionListResponse: {
             items?: components["schemas"]["SurveyTemplateVersionResponse"][] | null;
         };
@@ -25767,6 +26674,18 @@ export interface components {
             startsAtUtc?: string | null;
             /** Format: date-time */
             expiresAtUtc?: string | null;
+        };
+        UpdateAdminUserProfileRequest: {
+            displayName?: string | null;
+            phoneNumber?: string | null;
+            employeeCode?: string | null;
+            /** Format: uuid */
+            departmentId?: string | null;
+            /** Format: uuid */
+            jobTitleId?: string | null;
+            /** Format: uuid */
+            avatarFileId?: string | null;
+            notes?: string | null;
         };
         UpdateApprovalLimitRequest: {
             isUnlimited?: boolean | null;
@@ -26027,6 +26946,13 @@ export interface components {
             result?: string | null;
             note?: string | null;
         };
+        UpdateSurveyDesignStyleRequest: {
+            name?: components["schemas"]["SurveyLocalizedNameContract"];
+            description?: components["schemas"]["SurveyLocalizedNameContract"];
+            /** Format: int32 */
+            sortOrder?: number;
+            isActive?: boolean;
+        };
         UpdateSurveyDraftRequest: {
             /** Format: uuid */
             expectedRevisionVersion?: string;
@@ -26059,6 +26985,14 @@ export interface components {
             notes?: string | null;
             /** Format: int32 */
             sortOrder?: number;
+        };
+        UpdateSurveyMoodToneRequest: {
+            name?: components["schemas"]["SurveyLocalizedNameContract"];
+            description?: components["schemas"]["SurveyLocalizedNameContract"];
+            colorPalette?: string[] | null;
+            /** Format: int32 */
+            sortOrder?: number;
+            isActive?: boolean;
         };
         UpdateUnitOfMeasureRequest: {
             code: string;

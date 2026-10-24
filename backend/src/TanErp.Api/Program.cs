@@ -90,6 +90,10 @@ builder.Services.AddSingleton<IFirebaseTokenVerifier, FirebaseTokenVerifier>();
 builder.Services.AddScoped<ICurrentUserReader, CurrentUserReader>();
 builder.Services.AddScoped<IFirebaseIdentityLinker, TanErp.Infrastructure.Persistence.FirebaseIdentityLinker>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.IIdentityAdministrationStore, TanErp.Infrastructure.Persistence.IdentityAccess.IdentityAdministrationStore>();
+builder.Services.AddScoped<TanErp.Application.Organization.MasterData.IMasterDataOrganizationStore, TanErp.Infrastructure.Persistence.OrgMasterData.MasterDataOrganizationStore>();
+builder.Services.AddScoped<TanErp.Application.Organization.MasterData.MasterDataOrganizationHandler>();
+builder.Services.AddScoped<TanErp.Application.Surveys.MasterData.ISurveyMasterDataStore, TanErp.Infrastructure.Persistence.Surveys.SurveyMasterDataStore>();
+builder.Services.AddScoped<TanErp.Application.Surveys.MasterData.SurveyMasterDataHandler>();
 builder.Services.AddScoped<TanErp.Application.Organization.Administration.IOrganizationAdministrationStore, TanErp.Infrastructure.Persistence.OrganizationAdministration.OrganizationAdministrationStore>();
 builder.Services.AddScoped<TanErp.Application.Organization.Administration.OrganizationAdministrationHandler>();
 builder.Services.AddScoped<TanErp.Infrastructure.Persistence.OrganizationAdministration.BranchDependencyInspector>();
@@ -97,6 +101,7 @@ builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.List
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.GetUser.GetAdminUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.CreateUser.CreateAdminUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.RenameUser.RenameAdminUserHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.UpdateUserProfile.UpdateAdminUserProfileHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.SetUserActive.SetAdminUserActiveHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.UpdateMembership.UpdateAdminMembershipHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Administration.SetMembershipActive.SetAdminMembershipActiveHandler>();
