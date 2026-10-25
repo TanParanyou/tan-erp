@@ -756,15 +756,19 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
               <dl className="erp-dl text-xs">
                 <dt>{t("customer")}:</dt>
-                <dd>
+                <dd className="![word-break:normal] [overflow-wrap:anywhere]">
                   {customer ? (
                     <button
                       type="button"
                       onClick={() => customerDrawer.open()}
-                      className="font-semibold text-erp-navy hover:underline text-left cursor-pointer inline-flex items-center gap-1 focus-visible:outline-2 focus-visible:outline-erp-navy bg-transparent border-0 p-0 text-xs"
+                      className="font-semibold text-erp-navy hover:underline text-left cursor-pointer inline-flex flex-col items-start gap-0.5 focus-visible:outline-2 focus-visible:outline-erp-navy bg-transparent border-0 p-0 text-xs"
                     >
-                      {customer.code ? `[${customer.code}] ` : ""}
                       {customer.displayNameTh || customer.displayNameEn || "-"}
+                      {customer.code ? (
+                        <span className="text-[11px] font-mono font-normal text-erp-text-muted">
+                          {customer.code}
+                        </span>
+                      ) : null}
                     </button>
                   ) : (
                     <span className="text-erp-text-muted">-</span>
