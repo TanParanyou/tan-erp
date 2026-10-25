@@ -68,4 +68,25 @@ describe("PermissionGrantPicker", () => {
 
     expect(screen.getByLabelText("customers.read")).toBeDisabled();
   });
+
+  it("supports batch toggling for an entire feature card", () => {
+    const onBatchToggle = vi.fn();
+    render(
+      <PermissionGrantPicker
+        catalog={catalog}
+        selected={new Set()}
+        disabled={false}
+        onToggle={vi.fn()}
+        onBatchToggle={onBatchToggle}
+      />
+    );
+
+    // Feature toggle for estimates (has estimates.approve and estimates.read)
+    const featureToggle = screen.getByRole("button", {
+      name: "เลือกทั้งหมดในหมวด การประเมินราคาทางการ (Official Estimates)",
+    });
+    expect(featureToggle).toBeInTheDocument();
+    fireEvent.click(featureToggle);
+    expect(onBatchToggle).toHaveBeenCalledWith(["estimates.approve", "estimates.read"], true);
+  });
 });

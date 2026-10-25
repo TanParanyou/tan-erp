@@ -483,6 +483,14 @@ export function IconChevronDown({ size = 18, strokeWidth = 2, ...props }: IconPr
   );
 }
 
+export function IconChevronUp({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  );
+}
+
 export function IconGrid({ size = 18, strokeWidth = 2, ...props }: IconProps) {
   return (
     <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>

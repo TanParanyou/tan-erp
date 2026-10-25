@@ -62,4 +62,20 @@ describe("Modal component", () => {
 
     expect(secondInput).toHaveFocus();
   });
+
+  it("renders headerActions alongside close button", () => {
+    render(
+      <Modal
+        isOpen={true}
+        onClose={vi.fn()}
+        title="Action Modal"
+        headerActions={<button type="button">Custom Action</button>}
+      >
+        <p>Modal Content</p>
+      </Modal>
+    );
+
+    expect(screen.getByRole("button", { name: "Custom Action" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Close modal")).toBeInTheDocument();
+  });
 });

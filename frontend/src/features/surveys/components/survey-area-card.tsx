@@ -10,6 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead } from "@/components
 import { IconPlus, IconTrash, IconBox3D, IconChevronDown } from "@/components/common/Icons";
 import { ThreeBoxVisualizer } from "@/components/ui/ThreeBoxVisualizer";
 import { AttachmentList } from "@/components/forms/AttachmentList";
+import { ComboboxInput, type ComboboxInputOption } from "@/components/forms/ComboboxInput";
 import { cn } from "@/lib/utils/cn";
 import { SurveyMeasurementRow } from "./survey-measurement-row";
 import { useAreaPresets } from "../hooks/use-area-presets";
@@ -44,24 +45,16 @@ export function SurveyAreaCard({
   const isExpanded = controlledExpanded ?? internalExpanded;
   const toggleExpand = onToggleExpand ?? (() => setInternalExpanded((prev) => !prev));
 
-  const presetOptions = [
-    { value: "", label: t("areaPresetPlaceholder") },
-    ...presets.map((p) => ({
-      value: p.code,
-      label: t(p.labelKey as Parameters<typeof t>[0]),
-    })),
-  ];
+  const presetOptions: ComboboxInputOption[] = presets.map((p) => ({
+    value: p.code,
+    label: t(p.labelKey as Parameters<typeof t>[0]),
+  }));
 
-  const handleSelectPreset = (presetCode: string) => {
-    if (!presetCode) return;
-    const found = presets.find((p) => p.code === presetCode);
-    if (found) {
-      const roomName = t(found.labelKey as Parameters<typeof t>[0]);
-      setValue(`areas.${areaIndex}.name`, roomName, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
+  const handleSelectPreset = (option: ComboboxInputOption) => {
+    setValue(`areas.${areaIndex}.name`, option.label, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   const [show3D, setShow3D] = useState(false);
@@ -136,38 +129,24 @@ export function SurveyAreaCard({
               )}
             />
 
-            {/* Area Name (ALWAYS visible in the header row) */}
+            {/* Area Name with Presets Combobox (Single unified input) */}
             <Controller
               control={control}
               name={`areas.${areaIndex}.name`}
               render={({ field }) => (
-                <Input
-                  wrapperClassName="!mb-0 flex-1 min-w-[140px]"
-                  className="w-full font-bold text-sm h-9 min-h-[36px]"
+                <ComboboxInput
+                  className="flex-1 min-w-[160px]"
+                  inputClassName="font-bold text-sm h-9 min-h-[36px]"
                   value={field.value}
-                  placeholder={t("areaNameLabel")}
                   onChange={field.onChange}
+                  options={presetOptions}
+                  onSelectOption={handleSelectPreset}
                   disabled={isReady}
+                  placeholder={t("areaNameLabel")}
                   aria-label={t("areaNameLabel")}
                 />
               )}
             />
-
-            {/* Room Preset Dropdown (Quick template) */}
-            {!isReady && (
-              <div className="w-36 sm:w-44 shrink-0 hidden sm:block">
-                <Select
-                  options={presetOptions}
-                  value=""
-                  onChange={(e) => handleSelectPreset(e.target.value)}
-                  placeholder={t("areaPresetPlaceholder")}
-                  wrapperClassName="!mb-0"
-                  className="w-full text-xs h-9 min-h-[36px]"
-                  disabled={isReady}
-                  aria-label={t("areaPresetLabel")}
-                />
-              </div>
-            )}
           </div>
 
           {/* Right Block: Stats badge + Delete */}

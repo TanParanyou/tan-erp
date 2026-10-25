@@ -4,6 +4,9 @@
 
 > ⚠️ **กฎเหล็กก่อนเริ่มงาน (Mandatory Pre-work & Development Rules):**
 > - **ก่อนทำให้อ่าน `AGENTS.md` และ `design.md` เสมอ:** เพื่อเข้าใจกฎระเบียบของระบบ ข้อจำกัดทางสถาปัตยกรรม และมาตรฐาน Design System *Atelier Architectural Navy Sharp*
+> - **ไม่ทำเกินที่ขอ & ไม่แก้ส่วนที่ไม่ได้สั่ง (Strict Scope & Minimal Blast Radius):** ทำเฉพาะสิ่งที่ได้รับมอบหมายอย่างเคร่งครัด แตะเฉพาะไฟล์ที่เกี่ยวข้องโดยตรง ห้าม refactor, จัดระเบียบ หรือแก้โค้ด/ดีไซน์ในจุดที่ไม่ได้รับคำสั่งเด็ดขาด
+> - **ไม่ชัด ให้ถามก่อน ห้ามเดา (Clarify Before Acting):** หากความต้องการไม่ชัดเจน มีความกำกวม หรือมีทางเลือกที่ต้องตัดสินใจ ให้สอบถามผู้ใช้ทันที ห้ามคาดเดาหรืออนุมานเอาเอง
+> - **ตรวจก่อน แล้วบอกว่าตรวจอะไร (Verify & Report Evidence):** ก่อนส่งงานหรือยืนยันความเรียบร้อย ต้องรันคำสั่งตรวจสอบ (เช่น type check, test, build หรือ linter) และระบุผลการตรวจสอบชัดเจนเสมอว่าตรวจอะไรไปบ้างและผลลัพธ์เป็นอย่างไร
 > - **ห้ามใช้ type `any`, `as any` หรือ `@ts-ignore` เด็ดขาด:** ให้ใช้ strict types, interfaces หรือ `unknown` แล้ว narrow อย่างรัดกุม
 > - **ห้าม Hardcode ข้อความและค่าคงที่:** ข้อความที่แสดงบนหน้าจอทั้งหมดต้องดึงผ่านระบบแปลภาษา (i18n) เสมอ
 > - **แปลภาษาให้ครบทั้งสองภาษา (`th` และ `en`):** ภาษาไทยเป็นค่าเริ่มต้น และต้องมีคู่เทียบภาษาอังกฤษเสมอใน `messages/` (`th.json` และ `en.json`) ห้ามตกหล่น
@@ -114,6 +117,9 @@ This repository is in **Application Implementation**. ก่อนประเ�
   2. คอลัมน์ข้างเคียงทุกคอลัมน์ในแถวเดียวกัน (เช่น Select, Notes, Action Buttons) ต้องใส่ Invisible Spacer ความสูงเดียวกันกำกับไว้ เพื่อล็อกความสูงของแถวไม่ให้เด้งขึ้นเด้งลง (Zero Bouncing)
 - **DOM-Preserved Collapsible Sections:** การเปิด-ปิดซ่อนเนื้อหาฟอร์ม (Expand/Collapse) ต้องใช้ CSS `className={cn("...", !isExpanded && "hidden")}` เสมอ ห้ามใช้ `{isExpanded && <Fields />}` เพื่อรักษาการลงทะเบียน (Register) และค่าฟิลด์ใน React Hook Form ให้ครบถ้วนสมบูรณ์
 - **Mandatory Input Placeholder Coverage & i18n:** ช่องกรอกข้อมูลทุกประเภททั้ง `<Input>`, `<Textarea>`, `<input>`, `<textarea>` ต้องระบุ `placeholder` เสมอ (ยกเว้น hidden, checkbox, radio, file, color, range) โดยข้อความต้องดึงผ่านระบบแปลภาษา (i18n) ครบทั้งสองภาษา (`th` และ `en`) เสมอ ห้ามปล่อยว่างหรือ Hardcode เด็ดขาด สำหรับช่องวันที่/เวลาให้ใช้มาตรฐาน `วว/ดด/ปปปป` หรือระบุผ่าน fallback ของระบบ
+- **Table Cell Flow Integrity (Zero Table Shifting):** ห้ามใส่คลาส `sr-only` ลงบนแท็ก `<th>`, `<td>`, `<TableHead>` หรือ `<TableCell>` โดยเด็ดขาด เพราะ `sr-only` ใช้ `position: absolute` ซึ่งจะตัดเซลล์นั้นออกจาก Table Flow ทำให้จำนวนคอลัมน์ของ `<thead>` และ `<tbody>` คลาดเคลื่อนและตารางเบี้ยว หากต้องการซ่อนข้อความคอลัมน์ ให้ใส่ `<span className="sr-only">ข้อความ</span>` *ภายใน* เซลล์เสมอ
+- **Modal Header Clean Focus (No Hover/Focus Artifacts):** ปุ่ม Action หรือเครื่องมือบนแถบ Header ของ Modal (เช่น ปุ่มเต็มจอ ปุ่มรีเฟรช) ห้ามครอบด้วย `<Tooltip>` ที่เปิดอัตโนมัติเมื่อได้รับ Focus เพราะ Focus Trap ของ Modal จะกระโดดไปโฟกัสปุ่มแรกทันทีที่เปิด ทำให้ Tooltip เด้งค้าง ให้ใช้ `title="..."` และ `aria-label="..."` แทน
+- **MultiLangInput in Single-Row Card Headers:** เมื่อใช้ `MultiLangInput` ในหัวการ์ดแถวเดียว (Single-Row Compact Header) ต้องระบุ `hideLabel={true}` เสมอ เพื่อจัดวางช่องกรอกและปุ่มสลับภาษา `[TH | EN]` ในระนาบเดียวกัน ล็อกความสูง `h-11 min-h-[44px]` ขนานกับปุ่มเปิด-ปิดและช่องรหัส ป้องกันการเหลื่อมแนวตั้ง
 
 ---
 

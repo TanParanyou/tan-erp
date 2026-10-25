@@ -405,4 +405,61 @@ describe("EstimateItemCatalogModal (Server-State Driven)", () => {
       })
     );
   });
+
+  it("toggles fullscreen mode between dialog and full workspace", () => {
+    vi.mocked(useEstimateCatalog).mockReturnValue({
+      data: mockCatalogData,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useEstimateCatalog>);
+
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
+
+    const fullscreenBtn = screen.getByRole("button", { name: "โหมดเต็มจอ" });
+    expect(fullscreenBtn).toBeInTheDocument();
+
+    fireEvent.click(fullscreenBtn);
+    expect(screen.getByRole("button", { name: "ออกจากโหมดเต็มจอ" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "ออกจากโหมดเต็มจอ" }));
+    expect(screen.getByRole("button", { name: "โหมดเต็มจอ" })).toBeInTheDocument();
+  });
+
+  it("opens selected items review tray and allows removing items or clearing all", () => {
+    vi.mocked(useEstimateCatalog).mockReturnValue({
+      data: mockCatalogData,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useEstimateCatalog>);
+
+    renderModal(<EstimateItemCatalogModal {...defaultProps} />);
+
+    // Select first item
+    const firstItemRow = screen.getByText("WD-001").closest("tr");
+    fireEvent.click(firstItemRow!);
+
+    const viewTrayBtn = screen.getByRole("button", { name: /ดูรายการที่เลือกไว้/i });
+    expect(viewTrayBtn).toBeInTheDocument();
+
+    // Open tray
+    fireEvent.click(viewTrayBtn);
+    expect(screen.getByText("ถาดตรวจสอบรายการที่เลือกไว้")).toBeInTheDocument();
+
+    // Remove item from tray
+    const removeBtn = screen.getByRole("button", { name: /ลบออก ✕/i });
+    fireEvent.click(removeBtn);
+
+    // Confirm button should now be disabled (0 items)
+    expect(screen.getByRole("button", { name: /แทรก 0 รายการที่เลือก/i })).toBeDisabled();
+
+    // Select again and clear all
+    fireEvent.click(firstItemRow!);
+    expect(screen.getByRole("button", { name: /แทรก 1 รายการที่เลือก/i })).toBeEnabled();
+
+    const clearAllBtn = screen.getByRole("button", { name: "ล้างการเลือกทั้งหมด" });
+    fireEvent.click(clearAllBtn);
+    expect(screen.getByRole("button", { name: /แทรก 0 รายการที่เลือก/i })).toBeDisabled();
+  });
 });

@@ -21,6 +21,7 @@ export interface ModalProps {
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
   footer?: React.ReactNode;
+  headerActions?: React.ReactNode;
   className?: string;
   contentClassName?: string;
 }
@@ -47,6 +48,7 @@ export function Modal({
   closeOnOverlayClick = true,
   closeOnEscape = true,
   footer,
+  headerActions,
   className,
   contentClassName,
 }: ModalProps) {
@@ -71,7 +73,7 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        {(title || showCloseButton) && (
+        {(title || showCloseButton || headerActions) && (
           <div className="shrink-0 flex items-start justify-between gap-4 border-b border-erp-border px-5 py-3.5 bg-erp-surface">
             <div className="min-w-0 flex-1">
               {title && (
@@ -91,16 +93,21 @@ export function Modal({
                 </p>
               )}
             </div>
-            {showCloseButton && (
-              <button
-                type="button"
-                aria-label="Close modal"
-                onClick={onClose}
-                disabled={closeDisabled}
-                className="shrink-0 rounded-none p-1.5 text-erp-text-muted hover:bg-erp-surface-muted hover:text-erp-text-main disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-erp-navy"
-              >
-                <IconClose size={20} />
-              </button>
+            {(headerActions || showCloseButton) && (
+              <div className="shrink-0 flex items-center gap-1">
+                {headerActions}
+                {showCloseButton && (
+                  <button
+                    type="button"
+                    aria-label="Close modal"
+                    onClick={onClose}
+                    disabled={closeDisabled}
+                    className="shrink-0 rounded-none p-1.5 text-erp-text-muted hover:bg-erp-surface-muted hover:text-erp-text-main disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-erp-navy"
+                  >
+                    <IconClose size={20} />
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}

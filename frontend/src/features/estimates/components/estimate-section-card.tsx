@@ -128,10 +128,46 @@ export function EstimateSectionCard({ sectionIndex, currency, isInitiallyExpande
     <section id={currentSection.id ? `estimate-target-${currentSection.id}` : undefined} tabIndex={-1} aria-label={currentSection.code}
       className={cn("border border-erp-border bg-erp-surface focus-visible:outline-2 focus-visible:outline-erp-navy", !sectionVisible && "hidden")}>
       <div className="flex flex-col gap-2 border-b border-erp-border bg-erp-surface-subtle p-2">
-        <div className="flex min-w-0 flex-wrap items-start gap-2 sm:flex-nowrap">
-          <Button variant="ghost" size="icon" onClick={() => setIsExpanded((value) => !value)} aria-expanded={isExpanded} aria-label={isExpanded ? t("collapseAll") : t("expandAll")} icon={<IconChevronDown size={18} className={isExpanded ? "" : "-rotate-90"} />} />
-          <div className="w-24 shrink-0"><Controller control={control} name={`sections.${sectionIndex}.code`} render={({ field, fieldState }) => <Input {...field} id={`estimate-section-code-${sectionIndex}`} aria-label={t("sectionCode")} placeholder={t("sectionCode")} error={fieldState.error ? t("workspace.codeRequired") : undefined} wrapperClassName="mb-0" className="font-mono" />} /></div>
-          <div className="w-full min-w-0 sm:w-auto sm:flex-1 [&>.erp-form-group]:mb-0"><MultiLangInput id={`section-name-${sectionIndex}`} label={t("workspace.sectionName")} value={{ th: currentSection.nameTh, en: currentSection.nameEn }} onChange={(value) => { setValue(`sections.${sectionIndex}.nameTh`, value.th ?? "", { shouldDirty: true }); setValue(`sections.${sectionIndex}.nameEn`, value.en ?? "", { shouldDirty: true }); }} /></div>
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsExpanded((value) => !value)}
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? t("collapseAll") : t("expandAll")}
+            icon={<IconChevronDown size={18} className={isExpanded ? "" : "-rotate-90"} />}
+            className="shrink-0 h-11 w-11"
+          />
+          <div className="w-28 shrink-0">
+            <Controller
+              control={control}
+              name={`sections.${sectionIndex}.code`}
+              render={({ field, fieldState }) => (
+                <Input
+                  {...field}
+                  id={`estimate-section-code-${sectionIndex}`}
+                  aria-label={t("sectionCode")}
+                  placeholder={t("sectionCode")}
+                  error={fieldState.error ? t("workspace.codeRequired") : undefined}
+                  wrapperClassName="mb-0"
+                  className="font-mono h-11 !min-h-[44px]"
+                />
+              )}
+            />
+          </div>
+          <div className="w-full min-w-0 sm:w-auto sm:flex-1 [&>.erp-form-group]:mb-0">
+            <MultiLangInput
+              id={`section-name-${sectionIndex}`}
+              label={t("workspace.sectionName")}
+              placeholder={t("workspace.sectionName")}
+              hideLabel={true}
+              value={{ th: currentSection.nameTh, en: currentSection.nameEn }}
+              onChange={(value) => {
+                setValue(`sections.${sectionIndex}.nameTh`, value.th ?? "", { shouldDirty: true });
+                setValue(`sections.${sectionIndex}.nameEn`, value.en ?? "", { shouldDirty: true });
+              }}
+            />
+          </div>
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="mr-auto break-words text-xs font-bold font-mono text-erp-navy" title={t("sectionSubtotal")}>{formatFinancialNumber(sectionSummary.totalSellingPrice)} {currency} <span className="text-xs">({formatPercentRate(sectionSummary.marginRate, 1)})</span></span>

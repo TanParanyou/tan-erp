@@ -582,12 +582,15 @@ describe("Survey Components", () => {
       const addAreaBtn = screen.getByRole("button", { name: /เพิ่มพื้นที่สำรวจ/ });
       fireEvent.click(addAreaBtn);
 
-      // Select preset from dropdown
-      const presetSelect = screen.getByLabelText("เลือกห้อง/พื้นที่มาตรฐาน");
-      fireEvent.change(presetSelect, { target: { value: "master_bedroom" } });
+      // Focus on area name input to show preset suggestions
+      const areaNameInput = screen.getByPlaceholderText("ชื่อพื้นที่") as HTMLInputElement;
+      fireEvent.focus(areaNameInput);
+
+      // Select preset suggestion from listbox
+      const presetOption = screen.getByText("ห้องนอนใหญ่ (Master Bedroom)");
+      fireEvent.click(presetOption);
 
       // Check that the area name input is auto-filled
-      const areaNameInput = screen.getByPlaceholderText("ชื่อพื้นที่") as HTMLInputElement;
       expect(areaNameInput.value).toBe("ห้องนอนใหญ่ (Master Bedroom)");
     });
 

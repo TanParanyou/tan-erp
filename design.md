@@ -179,6 +179,14 @@
 - **Name-First Dropdown & Autocomplete Hierarchy:** การแสดงผลตัวเลือกและผลลัพธ์การค้นหาต้องนำชื่อรายการที่สื่อความหมาย (Item Name, Title, Customer Name) ขึ้นเป็นหลัก (Primary / Hero) ตัวหนาชัดเจน ควบคู่กับรหัส Code และสถานะเป็นข้อความรอง (Secondary / Meta) เสมอ ห้ามแสดงเฉพาะรหัสตัวเลขเดี่ยวๆ
 - **No Duplicate Symbols in i18n:** เมื่อใส่ไอคอน SVG (เช่น `<IconPlus />`) ในปุ่ม Action ข้อความในระบบแปลภาษา (`th.json`, `en.json`) ต้องเป็นตัวอักษรล้วน ห้ามใส่เครื่องหมาย `+ ` ซ้ำซ้อน
 
+### 4.3.3 มาตรฐานความสมดุลของหัวการ์ดแถวเดียวและช่องหลายภาษา (Single-Row Card Header & MultiLangInput Baseline)
+- **Single-Row Compact Card Header (Zero-Void Standard):** เมื่อออกแบบหัวการ์ดที่พับได้ (Collapsible Cards หรือ Sections) ให้ทุกองค์ประกอบ (ปุ่มเปิด-ปิด, รหัส, ช่องกรอกชื่อ, เมนูกรอบช่วย, ปุ่มลบ) อยู่ในแนวระนาบเดียวกัน ล็อกความสูงเท่ากันเป๊ะที่ $44\text{px}$ (`h-11 min-h-[44px]`)
+- **MultiLangInput ใน Single-Row Header:** ต้องส่ง `hideLabel={true}` เสมอ เพื่อให้ช่องกรอกและปุ่มสลับภาษา `[TH | EN]` วางขนานในระนาบแนวนอนเดียวกัน ความสูง $44\text{px}$ พอดีเป๊ะ ป้องกันการเกิดความเหลื่อมล้ำแนวตั้ง (Zero Vertical Baseline Offset)
+
+### 4.3.4 มาตรฐานความสมบูรณ์ของโครงสร้างตารางและโฟกัสของหน้าต่างป็อปอัป (Table Cell Flow Integrity & Modal Clean Focus)
+- **Table Cell Flow Integrity (Zero Table Shifting):** ห้ามใส่คลาส `sr-only` ลงบนแท็ก `<th>`, `<td>`, `<TableHead>` หรือ `<TableCell>` โดยเด็ดขาด เพราะ `position: absolute` จะตัดเซลล์ออกจาก Table Flow Calculation ทำให้จำนวนคอลัมน์ของ `<thead>` และ `<tbody>` ไม่เท่ากัน ส่งผลให้คอลัมน์ทั้งหมดเลื่อนเยื้องไป 1 ช่องและตารางเบี้ยว หากต้องการซ่อนข้อความ ให้ใส่ `<span className="sr-only">...</span>` ภายในเซลล์เสมอ
+- **Modal Header Clean Focus (No Hover/Focus Artifacts):** ปุ่ม Action บนส่วนหัวของ Modal หรือ Dialog (เช่น ปุ่มขยายเต็มจอ ปุ่มรีเฟรช) ห้ามครอบด้วย `<Tooltip>` ที่เปิดอัตโนมัติเมื่อได้รับ Focus เพราะ Focus Trap ของ Modal จะดึงโฟกัสไปที่ปุ่มแรกทันที ทำให้ Tooltip เด้งค้าง ให้ใช้แอตทริบิวต์ Native `title="..."` และ `aria-label="..."` แทน เช่นเดียวกับปุ่มปิด Modal
+
 ### 4.5 มาตรฐาน 2-Tier Architectural Filter Toolbar ในหน้ารายการ (List Toolbar Standards)
 
 สำหรับหน้าแสดงรายการที่มีตัวกรองมากกว่า 2 มิติขึ้นไป (เช่น มีทั้ง Search, หมวดหมู่/สถานะ, ผู้รับผิดชอบ, ลูกค้า หรือช่วงเวลา) **ห้ามยัดทุกตัวกรองในแถวเดียวแบบบีบอัด (`flex flex-wrap items-end`)**:

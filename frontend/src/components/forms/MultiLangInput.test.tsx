@@ -40,4 +40,19 @@ describe("MultiLangInput component", () => {
       en: "สินค้า ก",
     });
   });
+
+  it("renders with hideLabel and accessible sr-only label", () => {
+    const onChange = vi.fn();
+    render(
+      <MultiLangInput
+        label="Compact Name"
+        hideLabel={true}
+        value={{ th: "ชื่อสั้น", en: "Short Name" }}
+        onChange={onChange}
+      />
+    );
+
+    expect(screen.getByLabelText(/Compact Name/)).toBeInTheDocument();
+    expect(screen.getByDisplayValue("ชื่อสั้น")).toBeInTheDocument();
+  });
 });

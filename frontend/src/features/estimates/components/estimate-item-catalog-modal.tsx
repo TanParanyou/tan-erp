@@ -18,6 +18,10 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconRefresh,
+  IconMaximize,
+  IconMinimize,
+  IconChevronUp,
+  IconChevronDown,
 } from "@/components/common/Icons";
 import {
   useEstimateCatalog,
@@ -118,6 +122,8 @@ export function EstimateItemCatalogModal({
     new Map()
   );
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isTrayOpen, setIsTrayOpen] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Debounce search input
@@ -181,8 +187,21 @@ export function EstimateItemCatalogModal({
       setSelectedAttributeValue(undefined);
       setCursor(undefined);
       setCursorHistory([undefined]);
+      setIsTrayOpen(false);
     }
   }, [isOpen]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedItemsMap(new Map());
+  }, []);
+
+  const handleRemoveSelectedItem = useCallback((itemId: string) => {
+    setSelectedItemsMap((prev) => {
+      const next = new Map(prev);
+      next.delete(itemId);
+      return next;
+    });
+  }, []);
 
   const { data, isLoading: isQueryLoading, isPlaceholderData, isError, refetch } = useEstimateCatalog({
     branchId: branchId || "",
@@ -315,22 +334,38 @@ export function EstimateItemCatalogModal({
   const currentPageNumber = cursorHistory.length;
 
   const attributeFilters = attributeKeys.length > 0 && (
-    <div className="shrink-0 border-b border-erp-border bg-erp-surface p-2.5 space-y-2">
-      <div className="text-xs font-semibold text-erp-navy">
-        {t("catalogFacets.attributesTitle")}
+    <div className="shrink-0 border-b border-erp-border bg-erp-surface p-2 space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-erp-navy">
+          {t("catalogFacets.attributesTitle")}
+        </span>
+        {selectedAttributeKey && (
+          <button
+            type="button"
+            onClick={() => handleAttributeKeyChange("")}
+            className="text-[11px] text-erp-text-muted hover:text-rose-600 underline"
+          >
+            {t("catalogFacets.allAttributeNames")}
+          </button>
+        )}
       </div>
       <div
         role="group"
         aria-label={t("catalogFacets.attributeName")}
-        className="flex flex-wrap gap-x-1 gap-y-0.5"
+        className="flex items-center gap-1 overflow-x-auto pb-1"
       >
         <Button
           type="button"
-          size="md"
+          size="sm"
           variant="ghost"
           aria-pressed={!selectedAttributeKey}
           onClick={() => handleAttributeKeyChange("")}
-          className={cn("border-b-2 border-b-transparent px-2.5 text-xs font-normal", !selectedAttributeKey && "border-b-erp-navy bg-erp-navy-light text-erp-navy")}
+          className={cn(
+            "h-8 px-2.5 text-xs font-normal border shrink-0",
+            !selectedAttributeKey
+              ? "border-erp-navy bg-erp-navy text-white font-semibold"
+              : "border-erp-border bg-erp-surface hover:bg-erp-surface-subtle"
+          )}
         >
           {t("catalogFacets.allAttributeNames")}
         </Button>
@@ -338,22 +373,27 @@ export function EstimateItemCatalogModal({
           <Button
             key={key}
             type="button"
-            size="md"
+            size="sm"
             variant="ghost"
             aria-pressed={selectedAttributeKey === key}
             onClick={() => handleAttributeKeyChange(key)}
-            className={cn("border-b-2 border-b-transparent px-2.5 text-xs font-normal whitespace-normal", selectedAttributeKey === key && "border-b-erp-navy bg-erp-navy-light text-erp-navy")}
+            className={cn(
+              "h-8 px-2.5 text-xs font-normal whitespace-nowrap border shrink-0",
+              selectedAttributeKey === key
+                ? "border-erp-navy bg-erp-navy text-white font-semibold"
+                : "border-erp-border bg-erp-surface hover:bg-erp-surface-subtle"
+            )}
           >
             {getAttributeLabel(key)}
           </Button>
         ))}
       </div>
       {selectedAttributeKey && (
-        <fieldset className="border-t border-erp-border-subtle pt-2 space-y-1.5">
+        <fieldset className="border-t border-erp-border-subtle pt-1.5 space-y-1">
           <legend className="text-[11px] text-erp-text-muted">
             {getAttributeLabel(selectedAttributeKey)}
           </legend>
-          <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+          <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
             <label className="relative cursor-pointer">
               <input
                 type="radio"
@@ -363,7 +403,7 @@ export function EstimateItemCatalogModal({
                 onChange={() => handleAttributeValueChange("")}
                 className="peer sr-only"
               />
-              <span className="flex min-h-[44px] items-center justify-center border border-erp-border bg-erp-surface px-3 text-center text-[11px] text-erp-text-main peer-checked:border-erp-navy peer-checked:bg-erp-navy-light peer-checked:text-erp-navy peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-erp-navy">
+              <span className="flex h-8 items-center justify-center border border-erp-border bg-erp-surface px-2.5 text-center text-xs text-erp-text-main peer-checked:border-erp-navy peer-checked:bg-erp-navy-light peer-checked:text-erp-navy peer-checked:font-semibold peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-erp-navy">
                 {t("catalogFacets.allAttributeValues")}
               </span>
             </label>
@@ -380,7 +420,7 @@ export function EstimateItemCatalogModal({
                     onChange={() => handleAttributeValueChange(value)}
                     className="peer sr-only"
                   />
-                  <span className="flex min-h-[44px] items-center justify-between gap-1 border border-erp-border bg-erp-surface px-3 text-[11px] text-erp-text-main peer-checked:border-erp-navy peer-checked:bg-erp-navy-light peer-checked:text-erp-navy peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-erp-navy">
+                  <span className="flex h-8 items-center justify-between gap-1 border border-erp-border bg-erp-surface px-2.5 text-xs text-erp-text-main peer-checked:border-erp-navy peer-checked:bg-erp-navy-light peer-checked:text-erp-navy peer-checked:font-semibold peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-erp-navy">
                     <span className="truncate" title={value}>{value}</span>
                     <span className="shrink-0 font-mono tabular-nums text-[10px] opacity-70">
                       ({facet.count ?? 0})
@@ -402,50 +442,106 @@ export function EstimateItemCatalogModal({
       size="full"
       title={t("catalogModalTitle")}
       description={t("catalogModalDesc")}
-      className="h-full sm:h-[92vh] sm:max-w-6xl w-full"
-      contentClassName="p-3 sm:p-4 overflow-hidden flex flex-col flex-1 h-full min-h-0"
-      footer={isMobile && showMobileFilters ? (
-        <Button type="button" size="md" variant="primary" onClick={() => setShowMobileFilters(false)} className="w-full text-xs">
-          {t("catalogFacets.showResults")}
-        </Button>
-      ) : (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between w-full gap-2 sm:gap-3">
-          <div className="flex items-center justify-between sm:justify-start gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={handleToggleSelectAll}
-              disabled={items.length === 0 || isLoading}
-              className="text-xs"
-            >
-              {isAllCurrentPageSelected ? t("deselectAll") : t("selectAll")}
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={onClose}
-              className="text-xs flex-1 sm:flex-initial"
-            >
-              {tc("actions.cancel")}
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              disabled={selectedItemsMap.size === 0}
-              onClick={handleConfirmInsert}
-              className="text-xs flex-1 sm:flex-initial"
-            >
-              {t("insertSelectedCount", { count: selectedItemsMap.size })}
-            </Button>
-          </div>
-        </div>
+      className={cn(
+        "transition-all duration-150",
+        isFullscreen
+          ? "!w-screen !h-screen !max-w-none !max-h-none !m-0 !inset-0 fixed"
+          : "h-full sm:h-[92vh] sm:max-w-6xl w-full"
       )}
+      headerActions={
+        <button
+          type="button"
+          title={isFullscreen ? t("catalogFacets.exitFullscreen") : t("catalogFacets.fullscreen")}
+          aria-label={isFullscreen ? t("catalogFacets.exitFullscreen") : t("catalogFacets.fullscreen")}
+          onClick={() => setIsFullscreen((prev) => !prev)}
+          className="shrink-0 rounded-none p-1.5 text-erp-text-muted hover:bg-erp-surface-muted hover:text-erp-text-main focus-visible:outline-2 focus-visible:outline-erp-navy transition-colors"
+        >
+          {isFullscreen ? <IconMinimize size={18} /> : <IconMaximize size={18} />}
+        </button>
+      }
+      contentClassName="p-3 sm:p-4 overflow-hidden flex flex-col flex-1 h-full min-h-0"
+      footer={
+        isMobile && showMobileFilters ? (
+          <Button
+            type="button"
+            size="md"
+            variant="primary"
+            onClick={() => setShowMobileFilters(false)}
+            className="w-full text-xs"
+          >
+            {t("catalogFacets.showResults")}
+          </Button>
+        ) : (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between w-full gap-2 sm:gap-3">
+            <div className="flex items-center justify-between sm:justify-start gap-2 flex-wrap">
+              {!singleSelect && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={handleToggleSelectAll}
+                  disabled={items.length === 0 || isLoading}
+                  className="text-xs"
+                >
+                  {isAllCurrentPageSelected ? t("deselectAll") : t("selectAll")}
+                </Button>
+              )}
+
+              {!singleSelect && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="md"
+                  onClick={() => setIsTrayOpen((prev) => !prev)}
+                  disabled={selectedItemsMap.size === 0}
+                  className={cn(
+                    "text-xs gap-1.5 border border-erp-border",
+                    isTrayOpen && "bg-erp-navy-light text-erp-navy border-erp-navy font-semibold"
+                  )}
+                >
+                  <span>{t("catalogFacets.viewSelectedTray")}</span>
+                  <span className="font-mono text-[10px] bg-erp-navy text-white px-1.5 py-0.2">
+                    {selectedItemsMap.size}
+                  </span>
+                  {isTrayOpen ? <IconChevronDown size={14} /> : <IconChevronUp size={14} />}
+                </Button>
+              )}
+
+              {selectedItemsMap.size > 0 && !singleSelect && (
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="text-[11px] text-erp-text-muted hover:text-rose-600 transition-colors px-1"
+                >
+                  {t("catalogFacets.clearSelection")}
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                onClick={onClose}
+                className="text-xs flex-1 sm:flex-initial"
+              >
+                {tc("actions.cancel")}
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                disabled={selectedItemsMap.size === 0}
+                onClick={handleConfirmInsert}
+                className="text-xs flex-1 sm:flex-initial"
+              >
+                {t("insertSelectedCount", { count: selectedItemsMap.size })}
+              </Button>
+            </div>
+          </div>
+        )
+      }
     >
       <div className="flex flex-col space-y-2.5 sm:space-y-3 flex-1 overflow-hidden h-full min-h-0">
         {/* Top Controls: Search, Filter Toggle, Scope */}
@@ -513,12 +609,12 @@ export function EstimateItemCatalogModal({
           <div className="flex flex-col md:flex-row gap-2.5 sm:gap-3 flex-1 overflow-hidden min-h-0">
             {/* Left Filter Sidebar */}
             <aside
-              className={cn("md:w-56 md:flex md:flex-none flex-col border border-erp-border bg-erp-surface text-xs overflow-y-auto min-h-0", showMobileFilters ? "flex flex-1" : "hidden")}
+              className={cn("md:w-64 md:flex md:flex-none flex-col border border-erp-border bg-erp-surface text-xs overflow-y-auto min-h-0", showMobileFilters ? "flex flex-1" : "hidden")}
             >
-              <div className="sticky top-0 z-10 pl-2.5 border-b border-erp-border bg-erp-surface flex min-h-11 items-center justify-between font-bold text-erp-navy">
+              <div className="sticky top-0 z-10 px-3 border-b border-erp-border bg-erp-surface flex min-h-11 items-center justify-between font-bold text-erp-navy">
                 <span>{t("catalogFacets.filtersTitle")}</span>
                 {activeFiltersCount > 0 && (
-                  <Button type="button" size="md" variant="ghost" onClick={handleResetFilters} className="px-2 text-[11px] font-normal">
+                  <Button type="button" size="sm" variant="ghost" onClick={handleResetFilters} className="px-2 text-[11px] font-normal text-erp-text-muted hover:text-rose-600">
                     {t("catalogFacets.clearFilters")}
                   </Button>
                 )}
@@ -526,22 +622,37 @@ export function EstimateItemCatalogModal({
 
               {/* Types Filter */}
               <div className="p-2.5 border-b border-erp-border-subtle">
-                <div className="grid grid-cols-2 gap-1" role="group" aria-label={t("catalogFacets.costType")}>
+                <div className="grid grid-cols-2 gap-1.5" role="group" aria-label={t("catalogFacets.costType")}>
                   {(facets?.itemTypes ?? []).map((facet) => {
                     const value = facet.value;
                     if (!value) return null;
+                    const isTypeSelected = selectedType === value;
                     return (
                       <Button
                         key={value}
                         type="button"
-                        size="md"
-                        variant="ghost"
-                        aria-pressed={selectedType === value}
+                        size="sm"
+                        variant={isTypeSelected ? "primary" : "ghost"}
+                        aria-pressed={isTypeSelected}
                         onClick={() => handleTypeChange(value)}
-                        className={cn("justify-between px-2 text-xs font-normal", selectedType === value && "bg-erp-navy-light text-erp-navy")}
+                        className={cn(
+                          "justify-between px-2 text-xs font-normal border border-erp-border h-9",
+                          isTypeSelected
+                            ? "bg-erp-navy text-white font-semibold border-erp-navy"
+                            : "bg-erp-surface hover:bg-erp-surface-subtle text-erp-text-main"
+                        )}
                       >
-                        <span>{itemTypeLabels[value] ?? value}</span>
-                        <span className="font-mono tabular-nums text-[10px] text-erp-text-muted">{facet.count ?? 0}</span>
+                        <span className="truncate">{itemTypeLabels[value] ?? value}</span>
+                        <span
+                          className={cn(
+                            "font-mono tabular-nums text-[10px] ml-1 shrink-0 px-1",
+                            isTypeSelected
+                              ? "bg-white/20 text-white"
+                              : "text-erp-text-muted"
+                          )}
+                        >
+                          {facet.count ?? 0}
+                        </span>
                       </Button>
                     );
                   })}
@@ -553,7 +664,7 @@ export function EstimateItemCatalogModal({
                 <div className="font-semibold text-erp-text-secondary mb-1.5">
                   {t("catalogFacets.category")}
                 </div>
-                <div className="space-y-0.5 max-h-32 overflow-y-auto">
+                <div className="space-y-0.5 max-h-44 overflow-y-auto">
                   {(facets?.categories ?? []).map((cat) => {
                     const catId = cat.id || "";
                     if (!catId) return null;
@@ -562,7 +673,10 @@ export function EstimateItemCatalogModal({
                     return (
                       <label
                         key={catId}
-                        className="flex min-h-11 items-center justify-between gap-1 px-1 hover:bg-erp-surface-subtle cursor-pointer select-none"
+                        className={cn(
+                          "flex min-h-11 items-center justify-between gap-1 px-1.5 border border-transparent hover:bg-erp-surface-subtle cursor-pointer select-none transition-colors",
+                          isChecked && "bg-erp-navy-light/60 border-erp-navy/30 text-erp-navy font-semibold"
+                        )}
                       >
                         <div className="flex items-center gap-2 truncate">
                           <Avatar initial={catName} fileId={cat.imageFileId} alt={catName} size="sm" />
@@ -590,7 +704,7 @@ export function EstimateItemCatalogModal({
                 <div className="font-semibold text-erp-text-secondary mb-1.5">
                   {t("catalogFacets.brand")}
                 </div>
-                <div className="space-y-0.5 max-h-32 overflow-y-auto">
+                <div className="space-y-0.5 max-h-44 overflow-y-auto">
                   {(facets?.brands ?? []).map((brand) => {
                     const brandId = brand.id || "";
                     if (!brandId) return null;
@@ -599,7 +713,10 @@ export function EstimateItemCatalogModal({
                     return (
                       <label
                         key={brandId}
-                        className="flex min-h-11 items-center justify-between gap-1 px-1 hover:bg-erp-surface-subtle cursor-pointer select-none"
+                        className={cn(
+                          "flex min-h-11 items-center justify-between gap-1 px-1.5 border border-transparent hover:bg-erp-surface-subtle cursor-pointer select-none transition-colors",
+                          isChecked && "bg-erp-navy-light/60 border-erp-navy/30 text-erp-navy font-semibold"
+                        )}
                       >
                         <div className="flex items-center gap-2 truncate">
                           <Avatar initial={brandName} fileId={brand.imageFileId} alt={brandName} size="sm" />
@@ -655,29 +772,33 @@ export function EstimateItemCatalogModal({
                   <Table wrapperClassName="w-full border-none" className="text-xs table-fixed">
                     <TableHeader className="sticky top-0 bg-erp-surface-subtle text-erp-text-secondary border-b border-erp-border font-bold text-[11px] z-10">
                       <TableRow>
-                        <TableHead scope="col" className={cn("p-2 w-8 text-center", singleSelect && "sr-only")}>
-                          <Checkbox
-                            checked={isAllCurrentPageSelected}
-                            onChange={handleToggleSelectAll}
-                            aria-label={
-                              isAllCurrentPageSelected
-                                ? t("catalogFacets.deselectAll")
-                                : t("catalogFacets.selectAll")
-                            }
-                            wrapperClassName="mb-0"
-                            className="w-3.5 h-3.5"
-                          />
+                        <TableHead scope="col" className="p-2 w-10 text-center border-r border-erp-border/60">
+                          {!singleSelect ? (
+                            <Checkbox
+                              checked={isAllCurrentPageSelected}
+                              onChange={handleToggleSelectAll}
+                              aria-label={
+                                isAllCurrentPageSelected
+                                  ? t("catalogFacets.deselectAll")
+                                  : t("catalogFacets.selectAll")
+                              }
+                              wrapperClassName="mb-0"
+                              className="w-3.5 h-3.5"
+                            />
+                          ) : (
+                            <span className="sr-only">{tc("actions.select")}</span>
+                          )}
                         </TableHead>
-                        <TableHead scope="col" className="p-2 w-12 text-center border-r border-erp-border/60">
+                        <TableHead scope="col" className="p-2 w-14 text-center border-r border-erp-border/60">
                           <span className="sr-only">{t("catalogFacets.thumbnail")}</span>
                         </TableHead>
                         <TableHead scope="col" className="p-2 border-r border-erp-border/60">
                           {t("itemCodeAndDesc")}
                         </TableHead>
-                        <TableHead scope="col" className="p-2 w-44 border-r border-erp-border/60 hidden sm:table-cell">
+                        <TableHead scope="col" className="p-2 w-48 border-r border-erp-border/60 hidden sm:table-cell">
                           {t("catalogFacets.brand")} / {t("catalogFacets.category")}
                         </TableHead>
-                        <TableHead scope="col" className="p-2 w-32 text-right">
+                        <TableHead scope="col" className="p-2 w-36 text-right">
                           {t("unitCost")} ({currency})
                         </TableHead>
                       </TableRow>
@@ -698,14 +819,15 @@ export function EstimateItemCatalogModal({
                           <TableRow
                             key={item.id}
                             onClick={() => handleToggleItem(item)}
-                            className={`cursor-pointer transition-colors ${
+                            className={cn(
+                              "cursor-pointer transition-colors",
                               isSelected
-                                ? "bg-erp-navy/10 text-erp-navy font-medium"
+                                ? "bg-erp-navy/5 text-erp-navy font-medium border-l-4 border-l-erp-navy"
                                 : "hover:bg-erp-surface-subtle/50"
-                            }`}
+                            )}
                           >
                             <TableCell
-                              className="p-2 text-center align-top"
+                              className="p-2 w-10 text-center border-r border-erp-border/60 align-top"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="flex items-center justify-center pt-1">
@@ -719,7 +841,7 @@ export function EstimateItemCatalogModal({
                               </div>
                             </TableCell>
                             <TableCell
-                              className="p-1.5 text-center border-r border-erp-border/60 align-top"
+                              className="p-1.5 w-14 text-center border-r border-erp-border/60 align-top"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <PrivateThumbnail
@@ -727,48 +849,52 @@ export function EstimateItemCatalogModal({
                                 altText={itemAlt}
                               />
                             </TableCell>
-                            <TableCell className="p-2 border-r border-erp-border/60 align-top">
+                            <TableCell className="p-2.5 border-r border-erp-border/60 align-top">
                               <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
                                 <span className="font-mono font-bold text-erp-navy text-xs">
                                   {item.code}
                                 </span>
-                                <span className="px-1 py-0.2 text-[9px] border border-erp-border uppercase font-mono text-erp-text-secondary">
+                                <span className="px-1.5 py-0.2 text-[9px] border border-erp-border uppercase font-mono text-erp-text-secondary bg-erp-surface-subtle">
                                   {item.itemType}
                                 </span>
                               </div>
-                              <div className="font-semibold text-erp-text-main text-xs leading-tight">
+                              <div className="font-semibold text-erp-text-main text-xs leading-snug">
                                 {itemName}
                               </div>
                               {item.description && (
-                                <div className="text-[11px] text-erp-text-muted truncate mt-0.5">
+                                <div className="text-[11px] text-erp-text-muted line-clamp-1 mt-0.5">
                                   {getLocalizedText(item.description, locale, "")}
                                 </div>
                               )}
                               {Object.keys(item.attributes ?? {}).length > 0 && (
-                                <div className="text-[10px] text-erp-text-muted mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+                                <div className="text-[10px] text-erp-text-muted mt-1.5 flex flex-wrap gap-1">
                                   {Object.entries(item.attributes ?? {}).map(([key, value]) => (
-                                    <span key={key}>
-                                      <span className="font-medium">{getAttributeLabel(key)}:</span> {value}
+                                    <span
+                                      key={key}
+                                      className="inline-flex items-center gap-1 border border-erp-border bg-erp-surface-subtle px-1.5 py-0.5"
+                                    >
+                                      <span className="font-medium text-erp-text-secondary">{getAttributeLabel(key)}:</span>
+                                      <span className="font-mono text-erp-text-main font-semibold">{value}</span>
                                     </span>
                                   ))}
                                 </div>
                               )}
                             </TableCell>
-                            <TableCell className="p-2 border-r border-erp-border/60 align-top hidden sm:table-cell">
-                              <div className="font-medium text-erp-text-main text-xs truncate">
-                                {brandName}
+                            <TableCell className="p-2.5 w-48 border-r border-erp-border/60 align-top hidden sm:table-cell">
+                              <div className="font-semibold text-erp-text-main text-xs truncate">
+                                {brandName || "-"}
                               </div>
                               <div className="text-[11px] text-erp-text-muted truncate mt-0.5">
-                                {categoryName}
+                                {categoryName || "-"}
                               </div>
                             </TableCell>
-                            <TableCell className="p-2 text-right align-top">
+                            <TableCell className="p-2.5 w-36 text-right align-top">
                               {item.resolvedCost ? (
                                 <>
-                                  <div className="font-mono font-bold text-erp-navy text-xs">
+                                  <div className="font-mono font-bold text-erp-navy text-sm">
                                     {formatFinancialNumber(item.resolvedCost.amount)}
                                   </div>
-                                  <div className="text-[10px] font-mono text-erp-text-muted">
+                                  <div className="text-[10px] font-mono text-erp-text-muted mt-0.5">
                                     / {item.resolvedCost.unitCode}
                                   </div>
                                 </>
@@ -823,6 +949,65 @@ export function EstimateItemCatalogModal({
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Selected Items Quick-Review Tray */}
+        {isTrayOpen && selectedItemsMap.size > 0 && !singleSelect && (
+          <div className="shrink-0 border-t-2 border-erp-navy bg-erp-surface">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-erp-surface-subtle border-b border-erp-border text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-erp-navy">
+                  {t("catalogFacets.selectedItemsTitle")}
+                </span>
+                <span className="font-mono text-[10px] bg-erp-navy text-white px-1.5 py-0.2">
+                  {t("catalogFacets.selectedItemsCount", { count: selectedItemsMap.size })}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTrayOpen(false)}
+                className="text-[11px] text-erp-text-muted hover:text-erp-navy flex items-center gap-1 font-medium"
+              >
+                <span>{t("catalogFacets.hideSelectedTray")}</span>
+                <IconChevronDown size={12} />
+              </button>
+            </div>
+            <div className="max-h-36 overflow-y-auto p-2 space-y-1 divide-y divide-erp-border/60 text-xs">
+              {Array.from(selectedItemsMap.values()).map((selectedItem) => {
+                const name = getLocalizedText(selectedItem.name, locale);
+                return (
+                  <div
+                    key={selectedItem.id}
+                    className="flex items-center justify-between pt-1.5 pb-1 gap-2"
+                  >
+                    <div className="flex items-center gap-2 truncate min-w-0">
+                      <span className="font-mono font-bold text-erp-navy text-xs shrink-0">
+                        {selectedItem.code}
+                      </span>
+                      <span className="truncate text-erp-text-main text-xs" title={name}>
+                        {name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {selectedItem.resolvedCost && (
+                        <span className="font-mono text-[11px] font-bold text-erp-navy">
+                          {formatFinancialNumber(selectedItem.resolvedCost.amount)} {currency} / {selectedItem.resolvedCost.unitCode}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSelectedItem(selectedItem.id)}
+                        className="text-[11px] text-rose-600 hover:bg-rose-50 border border-rose-200 px-1.5 py-0.5 font-bold transition-colors"
+                        title={t("catalogFacets.removeItem")}
+                      >
+                        {t("catalogFacets.removeItem")} ✕
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

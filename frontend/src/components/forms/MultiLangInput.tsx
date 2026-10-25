@@ -23,6 +23,8 @@ export interface MultiLangInputProps {
   defaultLang?: "th" | "en";
   id?: string;
   disabled?: boolean;
+  hideLabel?: boolean;
+  wrapperClassName?: string;
 }
 
 const langs = [
@@ -41,6 +43,8 @@ export function MultiLangInput({
   defaultLang,
   id,
   disabled = false,
+  hideLabel = false,
+  wrapperClassName,
 }: MultiLangInputProps) {
   const systemLocale = useLocale();
   const validSystemLang = (systemLocale === "en" ? "en" : "th") as "th" | "en";
@@ -74,8 +78,95 @@ export function MultiLangInput({
 
   const generatedId = id || `multilang-${label.replace(/\s+/g, "-").toLowerCase()}`;
 
+  if (hideLabel) {
+    return (
+      <div className={cn("erp-form-group mb-0 w-full", wrapperClassName)}>
+        <label htmlFor={generatedId} className="sr-only">
+          {label}
+          {required && <span className="erp-label-required">*</span>}
+        </label>
+
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex-1 min-w-0">
+            {type === "textarea" ? (
+              <Textarea
+                id={generatedId}
+                value={safeValue[activeLang] || ""}
+                onChange={(e) => handleChange(e.target.value)}
+                placeholder={currentPlaceholder}
+                required={required && activeLang === "th"}
+                disabled={disabled}
+                rows={3}
+                error={error}
+                wrapperClassName="mb-0"
+              />
+            ) : (
+              <Input
+                id={generatedId}
+                type="text"
+                value={safeValue[activeLang] || ""}
+                onChange={(e) => handleChange(e.target.value)}
+                placeholder={currentPlaceholder}
+                required={required && activeLang === "th"}
+                disabled={disabled}
+                error={error}
+                wrapperClassName="mb-0"
+                className="h-11 !min-h-[44px]"
+              />
+            )}
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={handleCopySource}
+              disabled={disabled || !safeValue.th?.trim()}
+              title="Copy TH to EN"
+              aria-label="Copy TH to EN"
+              className="h-11 w-11 border border-erp-border bg-erp-surface hover:bg-erp-surface-muted text-erp-text-muted hover:text-erp-text-main disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-erp-navy rounded-none"
+            >
+              <IconCopy size={16} />
+            </button>
+
+            <div className="inline-flex border border-erp-border rounded-none overflow-hidden h-11">
+              {langs.map((lang) => {
+                const hasContent = Boolean(safeValue[lang.key]?.trim());
+                const isActive = activeLang === lang.key;
+                return (
+                  <button
+                    key={lang.key}
+                    type="button"
+                    onClick={() => setSelectedLang(lang.key)}
+                    disabled={disabled}
+                    className={cn(
+                      "px-3 h-full text-xs font-semibold uppercase transition-colors inline-flex items-center justify-center gap-1 focus-visible:outline-2 focus-visible:outline-erp-navy",
+                      isActive
+                        ? "bg-erp-navy text-white font-bold"
+                        : "bg-erp-surface text-erp-text-muted hover:bg-erp-surface-muted hover:text-erp-text-main"
+                    )}
+                  >
+                    <span>{lang.label}</span>
+                    {hasContent && (
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-none",
+                          isActive ? "bg-white" : "bg-erp-navy"
+                        )}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="erp-form-group">
+    <div className={cn("erp-form-group", wrapperClassName)}>
       <div className="flex items-center justify-between min-h-[24px]">
         <label htmlFor={generatedId} className="erp-label">
           {label}

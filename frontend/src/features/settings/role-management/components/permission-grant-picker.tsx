@@ -28,24 +28,79 @@ interface PermissionGrantPickerProps {
 
 const MODULE_ORDER: readonly string[] = ["system", "crm", "survey_estimating", "operations"];
 
-/** Organization-scope permission picker, grouped by business module with Maker-Checker / Approval distinctions. */
+function parsePermissionKey(key: string): { resource: string; action: string } {
+  const lastDot = key.lastIndexOf(".");
+  const resource = lastDot !== -1 ? key.substring(0, lastDot) : key;
+  const action = lastDot !== -1 ? key.substring(lastDot + 1) : "";
+  return { resource, action };
+}
+
+interface FeatureGroup {
+  resource: string;
+  items: CatalogItem[];
+}
+
+interface ModuleGroup {
+  moduleName: string;
+  items: CatalogItem[];
+  features: FeatureGroup[];
+}
+
+/** Feature-First Permission Picker: All permissions stay unified within their functional domain. */
 export function PermissionGrantPicker({ catalog, selected, disabled, onToggle, onBatchToggle }: PermissionGrantPickerProps) {
   const t = useTranslations("roleAdmin.editor.permissions");
   const [query, setQuery] = useState("");
 
-  const groups = useMemo(() => {
+  const getModuleLabel = (moduleName: string): string => {
+    if (t.has(`modules.${moduleName}`)) {
+      return t(`modules.${moduleName}`);
+    }
+    return moduleName;
+  };
+
+  const getResourceLabel = (resource: string): string => {
+    if (t.has(`resourceNames.${resource}`)) {
+      return t(`resourceNames.${resource}`);
+    }
+    return resource.replace(/-/g, " ");
+  };
+
+  const getActionLabel = (item: CatalogItem): string => {
+    const actionKey = item.key.replace(/[\.-]/g, "_");
+    if (t.has(`actions.${actionKey}`)) {
+      return t(`actions.${actionKey}`);
+    }
+    if (item.description) {
+      return item.description;
+    }
+    const { action } = parsePermissionKey(item.key);
+    return action;
+  };
+
+  const groups = useMemo<ModuleGroup[]>(() => {
     const needle = query.trim().toLowerCase();
-    const matches = catalog.filter(
-      (item) => needle === "" || item.key.toLowerCase().includes(needle) || (item.description ?? "").toLowerCase().includes(needle)
-    );
+    const matches = catalog.filter((item) => {
+      if (needle === "") return true;
+      const { resource } = parsePermissionKey(item.key);
+      const resLabel = getResourceLabel(resource).toLowerCase();
+      const modLabel = (item.module ? getModuleLabel(item.module) : "").toLowerCase();
+      const actionLabel = getActionLabel(item).toLowerCase();
+      return (
+        item.key.toLowerCase().includes(needle) ||
+        (item.description ?? "").toLowerCase().includes(needle) ||
+        resLabel.includes(needle) ||
+        modLabel.includes(needle) ||
+        actionLabel.includes(needle)
+      );
+    });
+
     const byModule = new Map<string, CatalogItem[]>();
     for (const item of matches) {
       const moduleName = item.module || item.key.split(".")[0];
       byModule.set(moduleName, [...(byModule.get(moduleName) ?? []), item]);
     }
 
-    // Sort groups according to domain business hierarchy
-    return [...byModule.entries()].sort(([a], [b]) => {
+    const sortedModuleEntries = [...byModule.entries()].sort(([a], [b]) => {
       const indexA = MODULE_ORDER.indexOf(a);
       const indexB = MODULE_ORDER.indexOf(b);
       if (indexA !== -1 && indexB !== -1) return indexA - indexB;
@@ -53,10 +108,25 @@ export function PermissionGrantPicker({ catalog, selected, disabled, onToggle, o
       if (indexB !== -1) return 1;
       return a.localeCompare(b);
     });
+
+    return sortedModuleEntries.map(([moduleName, items]) => {
+      const resMap = new Map<string, CatalogItem[]>();
+      for (const item of items) {
+        const { resource } = parsePermissionKey(item.key);
+        resMap.set(resource, [...(resMap.get(resource) ?? []), item]);
+      }
+
+      const features: FeatureGroup[] = [...resMap.entries()].map(([resource, resItems]) => ({
+        resource,
+        items: resItems,
+      }));
+
+      return { moduleName, items, features };
+    });
   }, [catalog, query]);
 
-  const handleGroupToggle = (items: CatalogItem[], selectAll: boolean) => {
-    if (disabled) return;
+  const handleBatchToggle = (items: CatalogItem[], selectAll: boolean) => {
+    if (disabled || items.length === 0) return;
     if (onBatchToggle) {
       onBatchToggle(items.map((i) => i.key), selectAll);
     } else {
@@ -68,15 +138,23 @@ export function PermissionGrantPicker({ catalog, selected, disabled, onToggle, o
     }
   };
 
-  const getModuleLabel = (moduleName: string): string => {
-    if (t.has(`modules.${moduleName}`)) {
-      return t(`modules.${moduleName}`);
-    }
-    return moduleName;
+  const renderSecurityBadges = (item: CatalogItem) => {
+    return (
+      <div className="flex flex-wrap items-center gap-1">
+        {item.isDocumentApproval ? (
+          <StatusBadge label={t("documentApprovalTag")} variant="info" className="text-[10px] px-1 py-0" />
+        ) : item.requiresMakerChecker ? (
+          <StatusBadge label={t("makerCheckerTag")} variant="warning" className="text-[10px] px-1 py-0" />
+        ) : item.isApprovalPermission ? (
+          <StatusBadge label={t("approvalTag")} variant="warning" className="text-[10px] px-1 py-0" />
+        ) : null}
+      </div>
+    );
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Search and Global Counter */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <Input
           label={t("searchPlaceholder")}
@@ -85,69 +163,172 @@ export function PermissionGrantPicker({ catalog, selected, disabled, onToggle, o
           onChange={(event) => setQuery(event.target.value)}
           wrapperClassName="w-full sm:w-80 !mb-0"
         />
-        <span className="text-sm text-erp-text-muted">{t("selectedCount", { count: selected.size })}</span>
+        <span className="text-sm font-medium text-erp-text-main">
+          {t("selectedCount", { count: selected.size })}
+        </span>
       </div>
+
       {groups.length === 0 ? <p className="text-sm text-erp-text-muted">{t("noMatch")}</p> : null}
-      {groups.map(([moduleName, items]) => {
-        const allSelected = items.length > 0 && items.every((i) => selected.has(i.key));
+
+      {/* Modules */}
+      {groups.map(({ moduleName, items: moduleItems, features }) => {
+        const selectedInModule = moduleItems.filter((i) => selected.has(i.key)).length;
+        const allModuleSelected = moduleItems.length > 0 && selectedInModule === moduleItems.length;
+
         return (
-          <fieldset key={moduleName} className="space-y-2 border border-erp-border p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-erp-border-hairline pb-2">
-              <legend className="px-1 text-sm font-semibold text-erp-text-main">{getModuleLabel(moduleName)}</legend>
+          <div key={moduleName} className="border border-erp-border bg-erp-surface">
+            {/* Module Header Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-erp-border bg-erp-surface-subtle px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <div>
+                  <h3 className="text-sm font-semibold text-erp-navy">{getModuleLabel(moduleName)}</h3>
+                  <span className="text-xs text-erp-text-muted font-mono">{moduleName}</span>
+                </div>
+                <span className="text-xs text-erp-text-muted bg-erp-surface px-2 py-0.5 border border-erp-border">
+                  {selectedInModule} / {moduleItems.length}
+                </span>
+              </div>
               {!disabled && (
-                <div className="flex items-center gap-1.5">
-                  <Tooltip content={allSelected ? t("clearGroup") : t("selectAll")} position="top">
+                <div className="flex items-center gap-2">
+                  <Tooltip content={allModuleSelected ? t("clearGroup") : t("selectAll")} position="top">
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className={`h-7 w-7 min-h-[28px] min-w-[28px] p-0 border border-erp-border ${
-                        allSelected
+                      className={`h-8 w-8 min-h-[32px] min-w-[32px] p-0 border border-erp-border ${
+                        allModuleSelected
                           ? "text-erp-text-muted hover:border-erp-danger hover:text-erp-danger"
                           : "text-erp-navy hover:bg-erp-bg-subtle"
                       }`}
-                      onClick={() => handleGroupToggle(items, !allSelected)}
-                      aria-label={allSelected ? t("clearGroup") : t("selectAll")}
-                      icon={allSelected ? <IconClose size={14} /> : <IconCheck size={14} />}
+                      onClick={() => handleBatchToggle(moduleItems, !allModuleSelected)}
+                      aria-label={allModuleSelected ? t("clearGroup") : t("selectAll")}
+                      icon={allModuleSelected ? <IconClose size={15} /> : <IconCheck size={15} />}
                     />
                   </Tooltip>
                 </div>
               )}
             </div>
 
-            <div className="space-y-2 pt-1">
-              {items.map((item) => {
-                const isSelected = selected.has(item.key);
+            {/* Feature Cards Grid */}
+            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {features.map(({ resource, items: featureItems }) => {
+                const selectedInFeature = featureItems.filter((i) => selected.has(i.key)).length;
+                const allFeatureSelected = featureItems.length > 0 && selectedInFeature === featureItems.length;
+                const resourceLabel = getResourceLabel(resource);
+
                 return (
-                  <div key={item.key} className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <Checkbox
-                        label={item.key}
-                        checked={isSelected}
-                        disabled={disabled}
-                        onCheckedChange={() => onToggle(item.key)}
-                        wrapperClassName="mb-0"
-                      />
-                      {item.isDocumentApproval ? (
-                        <StatusBadge label={t("documentApprovalTag")} variant="info" />
-                      ) : item.requiresMakerChecker ? (
-                        <StatusBadge label={t("makerCheckerTag")} variant="warning" />
-                      ) : item.isApprovalPermission ? (
-                        <StatusBadge label={t("approvalTag")} variant="warning" />
-                      ) : null}
-                      {item.description ? <span className="text-xs text-erp-text-muted">{item.description}</span> : null}
+                  <div
+                    key={resource}
+                    className={`border transition-colors flex flex-col justify-between ${
+                      selectedInFeature > 0 ? "border-erp-navy/30 bg-erp-surface" : "border-erp-border bg-erp-surface"
+                    }`}
+                  >
+                    {/* Feature Card Header */}
+                    <div className="flex items-center justify-between gap-2 border-b border-erp-border bg-erp-surface-subtle/50 px-3.5 py-2.5">
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-semibold text-erp-text-main truncate">
+                          {resourceLabel}
+                        </h4>
+                        <span className="text-[11px] text-erp-text-muted font-mono block">
+                          {resource}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-erp-text-muted font-mono">
+                          {selectedInFeature}/{featureItems.length}
+                        </span>
+                        {!disabled && (
+                          <Tooltip
+                            content={
+                              allFeatureSelected
+                                ? t("clearFeature", { feature: resourceLabel })
+                                : t("selectAllFeature", { feature: resourceLabel })
+                            }
+                            position="top"
+                          >
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className={`h-7 w-7 min-h-[28px] min-w-[28px] p-0 border border-erp-border ${
+                                allFeatureSelected
+                                  ? "text-erp-text-muted hover:border-erp-danger hover:text-erp-danger"
+                                  : "text-erp-navy hover:bg-erp-bg-subtle"
+                              }`}
+                              onClick={() => handleBatchToggle(featureItems, !allFeatureSelected)}
+                              aria-label={
+                                allFeatureSelected
+                                  ? t("clearFeature", { feature: resourceLabel })
+                                  : t("selectAllFeature", { feature: resourceLabel })
+                              }
+                              icon={allFeatureSelected ? <IconClose size={13} /> : <IconCheck size={13} />}
+                            />
+                          </Tooltip>
+                        )}
+                      </div>
                     </div>
 
-                    {item.key === "approval-limits.manage" ? (
-                      <div className="ml-7 rounded-none border-l-2 border-amber-500 bg-amber-50/70 p-2 text-xs text-amber-900">
-                        {t("approvalLimitsManageHint")}
-                      </div>
-                    ) : null}
+                    {/* Permissions List for Feature */}
+                    <div className="divide-y divide-erp-border-hairline flex-1">
+                      {featureItems.map((item) => {
+                        const isSelected = selected.has(item.key);
+                        const actionTitle = getActionLabel(item);
+
+                        return (
+                          <div
+                            key={item.key}
+                            className={`p-3 transition-colors ${
+                              isSelected ? "bg-erp-surface-subtle/40" : "hover:bg-erp-surface-subtle/20"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <Checkbox
+                                id={`checkbox-${item.key}`}
+                                aria-label={item.key}
+                                checked={isSelected}
+                                disabled={disabled}
+                                onCheckedChange={() => onToggle(item.key)}
+                                wrapperClassName="!mb-0 mt-0.5"
+                              />
+                              <div className="space-y-1 flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <label
+                                    htmlFor={`checkbox-${item.key}`}
+                                    className={`text-xs font-semibold cursor-pointer ${
+                                      isSelected ? "text-erp-navy" : "text-erp-text-main"
+                                    }`}
+                                  >
+                                    {actionTitle}
+                                  </label>
+                                  {renderSecurityBadges(item)}
+                                </div>
+
+                                <span className="text-[11px] text-erp-text-muted font-mono block">
+                                  {item.key}
+                                </span>
+
+                                {item.description && item.description !== actionTitle ? (
+                                  <p className="text-[11px] text-erp-text-muted leading-relaxed">
+                                    {item.description}
+                                  </p>
+                                ) : null}
+
+                                {item.key === "approval-limits.manage" ? (
+                                  <div className="mt-1.5 rounded-none border-l-2 border-amber-500 bg-amber-50/80 p-2 text-xs text-amber-900">
+                                    {t("approvalLimitsManageHint")}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </fieldset>
+          </div>
         );
       })}
     </div>
