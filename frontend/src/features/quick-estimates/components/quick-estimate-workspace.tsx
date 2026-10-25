@@ -42,19 +42,28 @@ export function QuickEstimateWorkspace({ estimateId }: QuickEstimateWorkspacePro
   const query = useQuickEstimate(estimateId);
   const templates = useEffectiveTemplates();
   const t = useTranslations("quickEstimates.estimates");
+  // Held here, not in WorkspaceView: the keyed view remounts after every saved draft and would lose the error.
+  const [message, setMessage] = useState<string | null>(null);
 
   if (query.isLoading || templates.isLoading) return <div className="py-16 flex justify-center" role="status"><MonoSpinner size="md" /></div>;
   if (query.isError || !query.data) return <Alert variant="danger">{t("loadError")}</Alert>;
 
   // Keyed by row version so the form resets to the server state after every change.
-  return <WorkspaceView key={query.data.rowVersion} estimate={query.data} templates={templates.data ?? []} />;
+  return <WorkspaceView key={query.data.rowVersion} estimate={query.data} templates={templates.data ?? []} message={message} setMessage={setMessage} />;
 }
 
 function numberOrNull(value: string): number | null {
   return value.trim() === "" ? null : Number(value);
 }
 
-function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateResponse; templates: EffectiveTemplateResponse[] }) {
+interface WorkspaceViewProps {
+  estimate: QuickEstimateResponse;
+  templates: EffectiveTemplateResponse[];
+  message: string | null;
+  setMessage: (value: string | null) => void;
+}
+
+function WorkspaceView({ estimate, templates, message, setMessage }: WorkspaceViewProps) {
   const t = useTranslations("quickEstimates.estimates");
   const tErrors = useTranslations("quickEstimates.errors");
   const tCommon = useTranslations("common");
@@ -88,7 +97,6 @@ function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateRespons
       depthM: m.depthM == null ? "" : String(m.depthM), quantity: String(m.quantity ?? 1),
     })),
   );
-  const [message, setMessage] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"approved" | "returned" | "convert" | null>(null);
   const [reasonCode, setReasonCode] = useState("");
   const [surveyRevisionId, setSurveyRevisionId] = useState("");
@@ -187,8 +195,8 @@ function WorkspaceView({ estimate, templates }: { estimate: QuickEstimateRespons
         <h3 className="text-sm font-bold text-erp-navy">{t("sectionInput")}</h3>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <Select label={t("template")} value={templateId} disabled={!editable || busy} options={[{ value: "", label: t("selectTemplate") }, ...templates.map((item) => ({ value: item.id ?? "", label: `${item.code ?? ""} v${item.version ?? ""} · ${item.name ?? ""}` }))]} onChange={(event) => { setTemplateId(event.target.value); setGradeCode(""); setComplexityCodes([]); setAddOnCodes([]); }} />
-          <Input label={t("propertyType")} value={propertyType} maxLength={100} disabled={!editable || busy} placeholder={t("propertyTypePlaceholder")} onChange={(event) => setPropertyType(event.target.value)} />
-          <Input label={t("roomOrArea")} value={roomOrArea} maxLength={200} disabled={!editable || busy} placeholder={t("roomOrAreaPlaceholder")} onChange={(event) => setRoomOrArea(event.target.value)} />
+          <Input label={t("propertyType")} required value={propertyType} maxLength={100} disabled={!editable || busy} placeholder={t("propertyTypePlaceholder")} onChange={(event) => setPropertyType(event.target.value)} />
+          <Input label={t("roomOrArea")} required value={roomOrArea} maxLength={200} disabled={!editable || busy} placeholder={t("roomOrAreaPlaceholder")} onChange={(event) => setRoomOrArea(event.target.value)} />
           <Select label={t("grade")} value={gradeCode} disabled={!editable || busy || !template} options={[{ value: "", label: t("selectGrade") }, ...(template?.grades ?? []).map((grade) => ({ value: grade.code ?? "", label: grade.name ?? "" }))]} onChange={(event) => setGradeCode(event.target.value)} />
           <Select label={t("confidence")} value={confidence} disabled={!editable || busy} options={CONFIDENCES.map((value) => ({ value, label: t(`confidences.${value}`) }))} onChange={(event) => setConfidence(event.target.value)} />
           <div className="flex min-h-11 items-center self-end">
