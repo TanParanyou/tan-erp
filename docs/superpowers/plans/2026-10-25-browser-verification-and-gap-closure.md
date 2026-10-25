@@ -99,3 +99,9 @@ snapshot-mode Calculation Policy API, allowlist ฟิลด์ใบเสน�
 ข้อสังเกต UI: dialog แปลงแสดงเพียง "ดำเนินการไม่สำเร็จ" เมื่อ 400 และ placeholder `SRV-2026-0001` ทำให้เข้าใจว่าใส่รหัสใบสำรวจได้ ทั้งที่ต้องเป็น UUID.
 
 ข้อมูล demo ที่สร้าง: QT-2026-0009 (id `31012215-5f87-4654-bd2c-0799430ab020`, แทน QT-2026-0008), ลิงก์ acceptance ของ QT-2026-0009 (เพิกถอนแล้ว), QE-2026-0002 (id `c08e2863-a001-4252-8089-d51d8f911675`).
+
+### รอบที่สาม: build และ OTP (API-level)
+
+- **`npm run build` (frontend):** ผ่าน (exit 0) ที่ commit `c4f517b` รันใน git worktree แยกเพื่อไม่ทับ `.next` ของ dev server (ต้อง clone `node_modules` ด้วย `cp -Rc` เพราะ Turbopack ไม่รับ symlink)
+- **OTP (G-05):** ทดสอบผ่าน API บน backend ชั่วคราว (`AcceptanceOtp:Required=true`, SMTP → Mailpit) ไม่ได้ทดสอบหน้าลูกค้าใน UI. ผล: สร้างลิงก์ไม่ใส่อีเมล → 422 `ACCEPTANCE_RECIPIENT_EMAIL_REQUIRED`; ใส่อีเมล → หน้า public มี `otpRequired=true`, `otpChannels=["email"]`; ขอรหัส (`POST …/otp {"channel":"email"}`) → 202, อีเมลสองภาษาถึงผู้รับ; รหัสผิด → 422 `ACCEPTANCE_OTP_INVALID`; รหัสถูก → 200 + `verificationToken`; ใช้รหัสซ้ำ → 410 `ACCEPTANCE_OTP_EXPIRED`; `accept` โดยไม่มี OTP token → 422 `ACCEPTANCE_OTP_REQUIRED`; ไม่ได้กดยอมรับจริง; ลิงก์ทดสอบถูกเพิกถอนแล้ว (404) ยังไม่ได้ทดสอบ lockout/rate limit และ UI ขั้นกรอก OTP
+- **การแปล Quick Estimate:** ยังไม่ทำ ต้องตัดสินใจ: API ใบสำรวจมีเฉพาะต่อ opportunity (`/opportunities/{id}/surveys`) ไม่มี endpoint รายการ revision ที่พร้อมใช้ทั้งองค์กร ช่องเลือกจึงต้องเพิ่ม endpoint ที่ backend (หรือผูก Quick Estimate กับ Opportunity)
