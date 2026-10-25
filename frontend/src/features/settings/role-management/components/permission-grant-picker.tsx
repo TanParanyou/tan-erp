@@ -59,8 +59,10 @@ export function PermissionGrantPicker({ catalog, selected, disabled, onToggle, o
   };
 
   const getResourceLabel = (resource: string): string => {
-    if (t.has(`resourceNames.${resource}`)) {
-      return t(`resourceNames.${resource}`);
+    // Dots would be read by next-intl as nesting, so dotted resources use "_" in the message key.
+    const resourceKey = resource.replace(/\./g, "_");
+    if (t.has(`resourceNames.${resourceKey}`)) {
+      return t(`resourceNames.${resourceKey}`);
     }
     return resource.replace(/-/g, " ");
   };
