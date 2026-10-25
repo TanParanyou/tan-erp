@@ -85,3 +85,17 @@ snapshot-mode Calculation Policy API, allowlist ฟิลด์ใบเสน�
 **Verification ที่รัน:** `npx tsc --noEmit` ผ่าน, `npm run lint` ผ่าน, key parity th/en ใต้ `roleAdmin.editor.permissions` ตรงกัน.
 
 **ข้อมูลทดสอบที่ต้องจัดการ:** สาขา `ZZTB01`, Role "ZZ-TEST-ROLE EDIT" (inactive) และไฟล์ CSV เทมเพลตใน Downloads.
+
+### รอบที่สอง (backend เปิด demo flags ด้วย `make dev`)
+
+| รายการ | ผล |
+| --- | --- |
+| A5 Preview th/en | ผ่าน: ไม่แสดงต้นทุน/margin |
+| A5 / G-04 Amend → PDF ฝั่งเซิร์ฟเวอร์ | ผ่านบางส่วน: Amend QT-2026-0008 → QT-2026-0009 มีปุ่มดาวน์โหลด, PDF 30,332 bytes, SHA-256 `92c4cb5d…bc46`; ตรวจ PDF ด้วยสายตาแล้ว (ดึงจาก `GET /api/v1/quotations/{id}/document`, SHA-256 ตรงกับที่แสดงบนหน้า): สระ/วรรณยุกต์ไทยเรียงถูก, 1 หน้า A4, สองภาษา, ไม่มีต้นทุน/margin, VAT 5,000.00 และยอดสุทธิ 76,428.57 ตรงกับหน้า preview |
+| A6 ลิงก์ acceptance + หน้าลูกค้า | ผ่าน: หน้าลูกค้าแสดง SHA-256 ตรงกับ PDF, placeholder th/en ถูกต้อง, เพิกถอนลิงก์แล้วใช้ไม่ได้; ลิงก์เก่าของฉบับที่ถูกแทนที่ตรวจ runtime ไม่ได้จาก UI (สัญญา [External Acceptance API](../../03-contracts/external-acceptance-api-contract.md) ระบุว่าใช้ไม่ได้อัตโนมัติเมื่อใบไม่ใช่ `issued` และตอบ 404 แบบเดียวกัน; ยังไม่ได้ยืนยันด้วย token จริง); ไม่ได้ทดสอบ OTP (ปิดอยู่) |
+| A9 Quick Estimate: error 422 | ผ่าน: alert แสดงแล้ว |
+| A9 แปลงเป็นร่าง Official Estimate | BLOCKED: dialog ต้องการ UUID ของ survey revision, UI ไม่แสดง UUID และ survey demo ทั้ง 4 ยังไม่พร้อมแปลง (backend ตอบ 400) |
+
+ข้อสังเกต UI: dialog แปลงแสดงเพียง "ดำเนินการไม่สำเร็จ" เมื่อ 400 และ placeholder `SRV-2026-0001` ทำให้เข้าใจว่าใส่รหัสใบสำรวจได้ ทั้งที่ต้องเป็น UUID.
+
+ข้อมูล demo ที่สร้าง: QT-2026-0009 (id `31012215-5f87-4654-bd2c-0799430ab020`, แทน QT-2026-0008), ลิงก์ acceptance ของ QT-2026-0009 (เพิกถอนแล้ว), QE-2026-0002 (id `c08e2863-a001-4252-8089-d51d8f911675`).
