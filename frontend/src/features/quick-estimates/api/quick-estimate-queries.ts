@@ -126,7 +126,8 @@ export function useQuickEstimateMutations() {
     await queryClient.invalidateQueries({ queryKey: [...quickEstimateKey(membershipId, locale), "estimates", "list"] });
   };
   const create = useMutation({
-    mutationFn: async (idempotencyKey: string) => apiClient.createQuickEstimate(await options(idempotencyKey)),
+    mutationFn: async (input: { idempotencyKey: string; opportunityId: string | null }) =>
+      apiClient.createQuickEstimate(input.opportunityId, await options(input.idempotencyKey)),
     onSuccess: store,
   });
   const saveDraft = useMutation({

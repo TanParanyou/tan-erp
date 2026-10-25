@@ -16,6 +16,7 @@ import { AttachmentList } from "@/components/forms/AttachmentList";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import { formatCurrency, formatDate } from "@/lib/formatters/formatters";
+import { useOpportunitySurvey } from "@/features/surveys/api/survey-queries";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -99,10 +100,13 @@ function WorkspaceView({ estimate, templates, message, setMessage }: WorkspaceVi
   );
   const [dialog, setDialog] = useState<"approved" | "returned" | "convert" | null>(null);
   const [reasonCode, setReasonCode] = useState("");
-  const [surveyRevisionId, setSurveyRevisionId] = useState("");
   const [dialogError, setDialogError] = useState(false);
   // Keys are regenerated after each success so a retry replays but a new action does not.
   const actionKeyRef = useRef(crypto.randomUUID());
+
+  const opportunityId = estimate.opportunityId ?? null;
+  const survey = useOpportunitySurvey(dialog === "convert" ? opportunityId : null);
+  const surveyRevisionId = survey.data?.latestReadyRevision?.id ?? null;
 
   const template = templates.find((item) => item.id === templateId);
   const busy = mutations.saveDraft.isPending || mutations.calculate.isPending || mutations.submitReview.isPending || mutations.decideReview.isPending || mutations.share.isPending || mutations.convert.isPending;
@@ -159,8 +163,8 @@ function WorkspaceView({ estimate, templates, message, setMessage }: WorkspaceVi
     if (!dialog) return;
     const version = estimate.currentCalculationVersion ?? 0;
     if (dialog === "convert") {
-      if (!surveyRevisionId.trim()) { setDialogError(true); return; }
-      const done = await run(() => mutations.convert.mutateAsync({ id, sourceVersion: version, siteSurveyRevisionId: surveyRevisionId.trim(), idempotencyKey: actionKeyRef.current }), t("convertedDone"));
+      if (!surveyRevisionId) return;
+      const done = await run(() => mutations.convert.mutateAsync({ id, sourceVersion: version, siteSurveyRevisionId: surveyRevisionId, idempotencyKey: actionKeyRef.current }), t("convertedDone"));
       if (done) setDialog(null);
       return;
     }
@@ -173,7 +177,6 @@ function WorkspaceView({ estimate, templates, message, setMessage }: WorkspaceVi
   function open(next: "approved" | "returned" | "convert"): void {
     setDialog(next);
     setReasonCode("");
-    setSurveyRevisionId("");
     setDialogError(false);
   }
 
@@ -302,12 +305,12 @@ function WorkspaceView({ estimate, templates, message, setMessage }: WorkspaceVi
         footer={(
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => setDialog(null)}>{tCommon("actions.cancel")}</Button>
-            <Button type="button" variant="primary" className="min-h-11" isLoading={busy} disabled={busy} onClick={() => void confirmDialog()}>{tCommon("actions.confirm")}</Button>
+            <Button type="button" variant="primary" className="min-h-11" isLoading={busy} disabled={busy || (dialog === "convert" && !surveyRevisionId)} onClick={() => void confirmDialog()}>{tCommon("actions.confirm")}</Button>
           </div>
         )}
       >
         {dialog === "convert" ? (
-          <Input label={t("surveyRevisionId")} required value={surveyRevisionId} disabled={busy} placeholder={t("surveyRevisionIdPlaceholder")} error={dialogError ? t("surveyRevisionRequired") : undefined} onChange={(event) => { setSurveyRevisionId(event.target.value); setDialogError(false); }} />
+          <ConvertSurveySource opportunityId={opportunityId} survey={survey} locale={locale} />
         ) : (
           <Input label={t("reasonCode")} required value={reasonCode} maxLength={64} disabled={busy} placeholder={t("reasonCodePlaceholder")} error={dialogError ? t("reasonCodeRequired") : undefined} onChange={(event) => { setReasonCode(event.target.value); setDialogError(false); }} />
         )}
@@ -316,3 +319,30 @@ function WorkspaceView({ estimate, templates, message, setMessage }: WorkspaceVi
   );
 }
 
+interface ConvertSurveySourceProps {
+  opportunityId: string | null;
+  survey: ReturnType<typeof useOpportunitySurvey>;
+  locale: string;
+}
+
+function ConvertSurveySource({ opportunityId, survey, locale }: ConvertSurveySourceProps) {
+  const t = useTranslations("quickEstimates.estimates");
+  if (!opportunityId) return <Alert variant="warning">{t("convertNoOpportunity")}</Alert>;
+  if (survey.isLoading) return <div className="flex justify-center py-4" role="status"><MonoSpinner size="sm" /></div>;
+  if (survey.isError) return <Alert variant="danger">{t("convertSurveyLoadError")}</Alert>;
+  const revision = survey.data?.latestReadyRevision;
+  if (!revision) {
+    return (
+      <Alert variant="warning">
+        {t("convertNoReadySurvey")}{" "}
+        <Link href={`/${locale}/opportunities/${opportunityId}`} className="font-semibold underline">{t("openOpportunity")}</Link>
+      </Alert>
+    );
+  }
+  return (
+    <dl className="border-l-4 border-erp-navy bg-erp-surface-subtle px-3 py-2 text-sm">
+      <dt className="text-xs text-erp-text-muted">{t("convertSurveySource")}</dt>
+      <dd className="font-mono font-semibold text-erp-navy">{t("convertSurveyRevision", { number: survey.data?.surveyNumber ?? "-", revision: revision.revisionNumber ?? 0 })}</dd>
+    </dl>
+  );
+}

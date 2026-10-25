@@ -2252,8 +2252,8 @@ export class ApiClient {
     return this.request<QuickEstimateResponse>(`/api/v1/quick-estimates/${encodeURIComponent(id)}`, "GET", options);
   }
 
-  async createQuickEstimate(options: RequestOptions): Promise<QuickEstimateResponse> {
-    return this.request<QuickEstimateResponse>("/api/v1/quick-estimates", "POST", options, { customerId: null, opportunityId: null });
+  async createQuickEstimate(opportunityId: string | null, options: RequestOptions): Promise<QuickEstimateResponse> {
+    return this.request<QuickEstimateResponse>("/api/v1/quick-estimates", "POST", options, { customerId: null, opportunityId });
   }
 
   async patchQuickEstimateDraft(id: string, rowVersion: string, payload: QuickEstimateDraftRequest, options: RequestOptions): Promise<QuickEstimateResponse> {

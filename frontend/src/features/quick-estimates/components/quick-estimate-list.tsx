@@ -12,6 +12,7 @@ import { ActiveFilterChips, type ActiveFilterChipItem } from "@/components/ui/Ac
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { IconPlus } from "@/components/common/Icons";
@@ -22,6 +23,7 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { QuickEstimateListItemResponse } from "@/lib/api/api-client";
+import { OpportunityAutocomplete } from "@/features/opportunities/components/opportunity-autocomplete";
 import { useQuickEstimateList, useQuickEstimateMutations } from "../api/quick-estimate-queries";
 import { QUICK_ESTIMATE_STATUSES, isQuickEstimateStatus, isShareDecision, quickEstimateStatusVariant, shareDecisionVariant } from "../quick-estimate-status";
 
@@ -40,6 +42,8 @@ export function QuickEstimateList() {
   const canCreate = can(selectedMembership, PERMISSIONS.QUICK_ESTIMATES_CREATE);
   const mutations = useQuickEstimateMutations();
   const [createError, setCreateError] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [opportunityId, setOpportunityId] = useState("");
   // One key per click session so a retried create replays instead of opening a second draft.
   const createKeyRef = useRef(crypto.randomUUID());
   const state = useListState<Filters>({
@@ -66,12 +70,14 @@ export function QuickEstimateList() {
   async function create(): Promise<void> {
     setCreateError(false);
     try {
-      const created = await mutations.create.mutateAsync(createKeyRef.current);
+      const created = await mutations.create.mutateAsync({ idempotencyKey: createKeyRef.current, opportunityId: opportunityId || null });
       createKeyRef.current = crypto.randomUUID();
       toast.success(t("created"));
       router.push(`/${locale}/quick-estimates/${created.id}`);
     } catch {
       setCreateError(true);
+    } finally {
+      setCreateOpen(false);
     }
   }
 
@@ -90,8 +96,26 @@ export function QuickEstimateList() {
         title={t("title")}
         subtitle={t("subtitle")}
         breadcrumbs={[{ label: t("title") }]}
-        actions={canCreate ? <Button size="md" icon={<IconPlus size={16} />} isLoading={mutations.create.isPending} disabled={mutations.create.isPending} onClick={() => void create()}>{t("create")}</Button> : undefined}
+        actions={canCreate ? <Button size="md" icon={<IconPlus size={16} />} isLoading={mutations.create.isPending} disabled={mutations.create.isPending} onClick={() => { setOpportunityId(""); setCreateOpen(true); }}>{t("create")}</Button> : undefined}
       />
+      <Modal
+        isOpen={createOpen}
+        onClose={() => { if (!mutations.create.isPending) setCreateOpen(false); }}
+        title={t("createTitle")}
+        description={t("createDescription")}
+        size="sm"
+        closeDisabled={mutations.create.isPending}
+        closeOnOverlayClick={!mutations.create.isPending}
+        closeOnEscape={!mutations.create.isPending}
+        footer={(
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" className="min-h-11" disabled={mutations.create.isPending} onClick={() => setCreateOpen(false)}>{tCommon("actions.cancel")}</Button>
+            <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.create.isPending} disabled={mutations.create.isPending} onClick={() => void create()}>{tCommon("actions.confirm")}</Button>
+          </div>
+        )}
+      >
+        <OpportunityAutocomplete value={opportunityId} onChange={(id) => setOpportunityId(id)} disabled={mutations.create.isPending} />
+      </Modal>
       {createError && <Alert variant="danger" onClose={() => setCreateError(false)}>{t("createFailed")}</Alert>}
       <ListToolbar activeFilters={<ActiveFilterChips filters={activeFilters} onRemove={() => state.actions.setFilter("status", undefined)} onClear={state.actions.clearFilters} />}>
         <div className="flex w-full flex-wrap items-end gap-3">

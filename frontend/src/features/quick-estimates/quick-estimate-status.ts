@@ -122,6 +122,7 @@ const KNOWN_ERROR_CODES = [
   "QUICK_ESTIMATE_REASON_REQUIRED",
   "QUICK_ESTIMATE_FIELD_REQUIRED",
   "QUICK_ESTIMATE_FIELD_INVALID",
+  "SURVEY_NOT_READY",
 ] as const;
 
 export type QuickEstimateErrorCode = (typeof KNOWN_ERROR_CODES)[number];
