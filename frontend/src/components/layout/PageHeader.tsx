@@ -87,8 +87,8 @@ export function PageHeader({
       ) : null}
 
       {/* Title & Actions (Tier 2) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex min-w-0 flex-1 sm:basis-auto items-center gap-3">
           {(backHref || onBack) && breadcrumbs && breadcrumbs.length > 0 && (
             onBack ? (
               <button
@@ -121,7 +121,7 @@ export function PageHeader({
           </div>
         </div>
         {actions && (
-          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">{actions}</div>
+          <div className="flex flex-wrap items-center gap-2">{actions}</div>
         )}
       </div>
     </div>
