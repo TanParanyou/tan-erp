@@ -203,7 +203,7 @@ export function PublicAcceptancePage({ token, uiLocale }: PublicAcceptancePagePr
             <>
             {otpRequired && <Alert variant="success">{t("otpVerified")}</Alert>}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Input label={t("signerName")} required maxLength={200} value={signerName} placeholder={view.signerHint ?? undefined} disabled={mutation.isPending} onChange={(event) => setSignerName(event.target.value)} />
+              <Input label={t("signerName")} required maxLength={200} value={signerName} placeholder={view.signerHint ?? t("signerNamePlaceholder")} disabled={mutation.isPending} onChange={(event) => setSignerName(event.target.value)} />
               <Input label={t("signerRole")} maxLength={100} value={signerRole} placeholder={t("signerRolePlaceholder")} disabled={mutation.isPending} onChange={(event) => setSignerRole(event.target.value)} />
             </div>
             <SignaturePad label={t("signature")} clearLabel={t("clearSignature")} disabled={mutation.isPending} onChange={setSignature} />

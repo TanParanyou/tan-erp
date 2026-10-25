@@ -3424,6 +3424,7 @@
       "acceptTitle": "ยอมรับใบเสนอราคา",
       "expires": "ลิงก์นี้ใช้ได้ถึง {date}",
       "signerName": "ชื่อ-นามสกุลผู้ลงนาม",
+      "signerNamePlaceholder": "เช่น สมชาย ใจดี",
       "signerRole": "ตำแหน่ง",
       "signature": "ลายเซ็น (ไม่บังคับ)",
       "clearSignature": "ล้างลายเซ็น",

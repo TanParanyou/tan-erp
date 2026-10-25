@@ -3424,6 +3424,7 @@
       "acceptTitle": "Accept this quotation",
       "expires": "This link is valid until {date}",
       "signerName": "Signer's full name",
+      "signerNamePlaceholder": "e.g. John Smith",
       "signerRole": "Position",
       "signature": "Signature (optional)",
       "clearSignature": "Clear signature",
