@@ -101,7 +101,7 @@ function PanelBody({ quotationId, quotationStatus, quotationNumber }: PanelBodyP
   }
 
   return (
-    <section className="erp-card space-y-3 p-5 print:hidden" aria-label={t("title")}>
+    <section className="erp-card space-y-3 p-5 print:hidden" aria-label={t("title", { number: quotationNumber })}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-bold text-erp-navy">{t("title", { number: quotationNumber })}</h2>
         {canShare && quotationStatus === "issued" && (
