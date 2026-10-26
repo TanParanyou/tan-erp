@@ -37,6 +37,9 @@ dev_dependencies:
   very_good_analysis: ^11.0.0
 
 flutter:
+  # Xcode 26 fails to compile firebase-ios-sdk's Package.swift manifest; build iOS via CocoaPods.
+  config:
+    enable-swift-package-manager: false
   generate: true
   uses-material-design: true
   assets:

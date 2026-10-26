@@ -34,10 +34,14 @@ public class UpdateMyPreferencesHandler
         if (command.TextScale is not { } textScale || textScale < User.MinTextScale || textScale > User.MaxTextScale)
             return Validation("Text scale must be between 90 and 130.");
 
+        var locale = string.IsNullOrWhiteSpace(command.PreferredLocale) ? null : command.PreferredLocale.Trim().ToLowerInvariant();
+        if (locale is not null && !User.SupportedLocales.Contains(locale))
+            return Validation("Preferred locale must be 'th' or 'en'.");
+
         return await _store.UpdateAsync(
             access.Value!.OrganizationId,
             new AdminActor(access.Value.ActorUserId, access.Value.MembershipId),
-            new UpdateMyPreferencesInput(themeMode, density, textScale),
+            new UpdateMyPreferencesInput(themeMode, density, textScale, locale),
             command.TraceId,
             cancellationToken);
     }

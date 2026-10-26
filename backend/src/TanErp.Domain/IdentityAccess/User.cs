@@ -182,7 +182,7 @@ public class User : Entity
         RowVersion = Guid.NewGuid();
     }
 
-    public void UpdateThemePreferences(string themeMode, string density, int textScale)
+    public void UpdateThemePreferences(string themeMode, string density, int textScale, string? preferredLocale = null)
     {
         if (!SupportedThemeModes.Contains(themeMode))
             throw new ArgumentException("Theme mode is not supported.", nameof(themeMode));
@@ -194,6 +194,12 @@ public class User : Entity
         ThemeMode = themeMode;
         Density = density;
         TextScale = textScale;
+        if (preferredLocale is not null)
+        {
+            if (!SupportedLocales.Contains(preferredLocale))
+                throw new ArgumentException("Preferred locale is not supported.", nameof(preferredLocale));
+            PreferredLocale = preferredLocale;
+        }
         RowVersion = Guid.NewGuid();
     }
 

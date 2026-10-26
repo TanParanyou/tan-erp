@@ -26,11 +26,11 @@ public class MyPreferencesStore : IMyPreferencesStore
             return Result<UserContext>.Failure(new Error("RESOURCE_NOT_FOUND", "User was not found."));
 
         var before = user.RowVersion;
-        user.UpdateThemePreferences(input.ThemeMode, input.Density, input.TextScale);
+        user.UpdateThemePreferences(input.ThemeMode, input.Density, input.TextScale, input.PreferredLocale);
 
         IdentityAdministrationSupport.AddAudit(
             _db, organizationId, actor, "users.own_preferences_updated", "User", user.Id.ToString(), traceId, _clock.UtcNow,
-            new { themeMode = input.ThemeMode, density = input.Density, textScale = input.TextScale },
+            new { themeMode = input.ThemeMode, density = input.Density, textScale = input.TextScale, preferredLocale = user.PreferredLocale },
             before, user.RowVersion);
 
         await _db.SaveChangesAsync(cancellationToken);

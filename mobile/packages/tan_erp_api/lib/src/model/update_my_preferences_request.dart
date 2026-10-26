@@ -14,6 +14,7 @@ part 'update_my_preferences_request.g.dart';
 /// * [themeMode] 
 /// * [density] 
 /// * [textScale] 
+/// * [preferredLocale] 
 @BuiltValue()
 abstract class UpdateMyPreferencesRequest implements Built<UpdateMyPreferencesRequest, UpdateMyPreferencesRequestBuilder> {
   @BuiltValueField(wireName: r'themeMode')
@@ -24,6 +25,9 @@ abstract class UpdateMyPreferencesRequest implements Built<UpdateMyPreferencesRe
 
   @BuiltValueField(wireName: r'textScale')
   int? get textScale;
+
+  @BuiltValueField(wireName: r'preferredLocale')
+  String? get preferredLocale;
 
   UpdateMyPreferencesRequest._();
 
@@ -67,6 +71,13 @@ class _$UpdateMyPreferencesRequestSerializer implements PrimitiveSerializer<Upda
       yield serializers.serialize(
         object.textScale,
         specifiedType: const FullType.nullable(int),
+      );
+    }
+    if (object.preferredLocale != null) {
+      yield r'preferredLocale';
+      yield serializers.serialize(
+        object.preferredLocale,
+        specifiedType: const FullType.nullable(String),
       );
     }
   }
@@ -115,6 +126,14 @@ class _$UpdateMyPreferencesRequestSerializer implements PrimitiveSerializer<Upda
           ) as int?;
           if (valueDes == null) continue;
           result.textScale = valueDes;
+          break;
+        case r'preferredLocale':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.preferredLocale = valueDes;
           break;
         default:
           unhandled.add(key);

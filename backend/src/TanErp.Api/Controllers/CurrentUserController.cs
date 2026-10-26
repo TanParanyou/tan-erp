@@ -118,6 +118,7 @@ public class CurrentUserController : ControllerBase
                 request.ThemeMode,
                 request.Density,
                 request.TextScale,
+                request.PreferredLocale,
                 HttpContext.TraceIdentifier),
             cancellationToken);
 

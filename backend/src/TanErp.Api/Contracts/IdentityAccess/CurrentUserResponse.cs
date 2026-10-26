@@ -15,7 +15,7 @@ public sealed record UserDto(
 
 public sealed record UserPreferencesDto(string ThemeMode, string Density, int TextScale);
 
-public sealed record UpdateMyPreferencesRequest(string? ThemeMode, string? Density, int? TextScale);
+public sealed record UpdateMyPreferencesRequest(string? ThemeMode, string? Density, int? TextScale, string? PreferredLocale = null);
 
 public sealed record UpdateMyProfileRequest(
     string? DisplayName,

@@ -27518,6 +27518,7 @@ export interface components {
             density?: string | null;
             /** Format: int32 */
             textScale?: number | null;
+            preferredLocale?: string | null;
         };
         UpdateMyProfileRequest: {
             displayName?: string | null;

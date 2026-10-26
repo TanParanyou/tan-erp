@@ -72,8 +72,8 @@ class MePage extends ConsumerWidget {
             ErpOption(value: 'th', label: l10n.languageThai),
             ErpOption(value: 'en', label: l10n.languageEnglish),
           ],
-          onChanged: (code) =>
-              ref.read(localeProvider.notifier).locale = Locale(code),
+          enabled: !save.isSaving,
+          onChanged: (code) => saver.saveLocale(Locale(code)),
         ),
         SizedBox(height: t.space4),
         if (save.failure != null) ...[

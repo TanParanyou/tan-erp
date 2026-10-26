@@ -6,6 +6,7 @@ public sealed record UpdateMyPreferencesCommand(
     string? ThemeMode,
     string? Density,
     int? TextScale,
+    string? PreferredLocale,
     string TraceId);
 
-public sealed record UpdateMyPreferencesInput(string ThemeMode, string Density, int TextScale);
+public sealed record UpdateMyPreferencesInput(string ThemeMode, string Density, int TextScale, string? PreferredLocale);

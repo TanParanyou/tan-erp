@@ -13,12 +13,15 @@ class _$UpdateMyPreferencesRequest extends UpdateMyPreferencesRequest {
   final String? density;
   @override
   final int? textScale;
+  @override
+  final String? preferredLocale;
 
   factory _$UpdateMyPreferencesRequest(
           [void Function(UpdateMyPreferencesRequestBuilder)? updates]) =>
       (UpdateMyPreferencesRequestBuilder()..update(updates))._build();
 
-  _$UpdateMyPreferencesRequest._({this.themeMode, this.density, this.textScale})
+  _$UpdateMyPreferencesRequest._(
+      {this.themeMode, this.density, this.textScale, this.preferredLocale})
       : super._();
   @override
   UpdateMyPreferencesRequest rebuild(
@@ -35,7 +38,8 @@ class _$UpdateMyPreferencesRequest extends UpdateMyPreferencesRequest {
     return other is UpdateMyPreferencesRequest &&
         themeMode == other.themeMode &&
         density == other.density &&
-        textScale == other.textScale;
+        textScale == other.textScale &&
+        preferredLocale == other.preferredLocale;
   }
 
   @override
@@ -44,6 +48,7 @@ class _$UpdateMyPreferencesRequest extends UpdateMyPreferencesRequest {
     _$hash = $jc(_$hash, themeMode.hashCode);
     _$hash = $jc(_$hash, density.hashCode);
     _$hash = $jc(_$hash, textScale.hashCode);
+    _$hash = $jc(_$hash, preferredLocale.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -53,7 +58,8 @@ class _$UpdateMyPreferencesRequest extends UpdateMyPreferencesRequest {
     return (newBuiltValueToStringHelper(r'UpdateMyPreferencesRequest')
           ..add('themeMode', themeMode)
           ..add('density', density)
-          ..add('textScale', textScale))
+          ..add('textScale', textScale)
+          ..add('preferredLocale', preferredLocale))
         .toString();
   }
 }
@@ -75,6 +81,11 @@ class UpdateMyPreferencesRequestBuilder
   int? get textScale => _$this._textScale;
   set textScale(int? textScale) => _$this._textScale = textScale;
 
+  String? _preferredLocale;
+  String? get preferredLocale => _$this._preferredLocale;
+  set preferredLocale(String? preferredLocale) =>
+      _$this._preferredLocale = preferredLocale;
+
   UpdateMyPreferencesRequestBuilder() {
     UpdateMyPreferencesRequest._defaults(this);
   }
@@ -85,6 +96,7 @@ class UpdateMyPreferencesRequestBuilder
       _themeMode = $v.themeMode;
       _density = $v.density;
       _textScale = $v.textScale;
+      _preferredLocale = $v.preferredLocale;
       _$v = null;
     }
     return this;
@@ -109,6 +121,7 @@ class UpdateMyPreferencesRequestBuilder
           themeMode: themeMode,
           density: density,
           textScale: textScale,
+          preferredLocale: preferredLocale,
         );
     replace(_$result);
     return _$result;

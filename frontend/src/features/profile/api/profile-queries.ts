@@ -44,7 +44,7 @@ export function useUpdateMyPreferences(): UseMutationResult<UserDto, Error, Upda
  * On failure the screen reverts to the last server values and an error toast is shown.
  */
 export function useSaveThemePreferences(): {
-  save: (change: Partial<ThemePreferences>) => Promise<boolean>;
+  save: (change: Partial<ThemePreferences> & { preferredLocale?: "th" | "en" }) => Promise<boolean>;
   isPending: boolean;
 } {
   const t = useTranslations("myProfile");
@@ -54,12 +54,12 @@ export function useSaveThemePreferences(): {
   const mutation = useUpdateMyPreferences();
   const serverPreferences = readServerPreferences(currentUser.user?.preferences);
 
-  const save = async (change: Partial<ThemePreferences>): Promise<boolean> => {
+  const save = async ({ preferredLocale, ...change }: Partial<ThemePreferences> & { preferredLocale?: "th" | "en" }): Promise<boolean> => {
     if (mutation.isPending) return false;
     const next: ThemePreferences = { themeMode: theme, density, textScale, ...change };
     applyPreferences(next);
     try {
-      await mutation.mutateAsync(next);
+      await mutation.mutateAsync(preferredLocale ? { ...next, preferredLocale } : next);
       return true;
     } catch (error: unknown) {
       if (serverPreferences) applyPreferences(serverPreferences);

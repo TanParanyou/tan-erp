@@ -169,6 +169,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           {/* Locale switcher link */}
           <Link
             href={`/${targetLocale}`}
+            onClick={() => void saveThemePreferences({ preferredLocale: targetLocale })}
             className="erp-header-lang-btn"
             style={{
               minHeight: "44px",

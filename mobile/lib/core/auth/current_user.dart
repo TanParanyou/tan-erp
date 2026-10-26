@@ -89,26 +89,33 @@ ThemeSettings? mapPreferences(UserPreferencesDto? dto) {
   return ThemeSettings(mode: mode, density: density, textScale: percent / 100);
 }
 
-UpdateMyPreferencesRequest preferencesRequest(ThemeSettings s) =>
-    UpdateMyPreferencesRequest(
-      (b) => b
-        ..themeMode = switch (s.mode) {
-          ThemeMode.light => 'light',
-          ThemeMode.dark => 'dark',
-          ThemeMode.system => 'system',
-        }
-        ..density = switch (s.density) {
-          ErpDensity.normal => 'comfortable',
-          ErpDensity.compact => 'compact',
-        }
-        ..textScale = (s.textScale * 100).round(),
-    );
+UpdateMyPreferencesRequest preferencesRequest(
+  ThemeSettings s, {
+  String? preferredLocale,
+}) => UpdateMyPreferencesRequest(
+  (b) => b
+    ..themeMode = switch (s.mode) {
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+      ThemeMode.system => 'system',
+    }
+    ..density = switch (s.density) {
+      ErpDensity.normal => 'comfortable',
+      ErpDensity.compact => 'compact',
+    }
+    ..textScale = (s.textScale * 100).round()
+    ..preferredLocale = preferredLocale,
+);
 
 abstract interface class CurrentUserRepository {
   Future<CurrentUser> load();
 
-  /// `PUT /api/v1/me/preferences`; the endpoint needs all three values.
-  Future<void> savePreferences(ThemeSettings settings);
+  /// `PUT /api/v1/me/preferences`; the endpoint needs all three theme values;
+  /// [preferredLocale] is optional and left unchanged when null.
+  Future<void> savePreferences(
+    ThemeSettings settings, {
+    String? preferredLocale,
+  });
 }
 
 class ApiCurrentUserRepository implements CurrentUserRepository {
@@ -122,10 +129,16 @@ class ApiCurrentUserRepository implements CurrentUserRepository {
   );
 
   @override
-  Future<void> savePreferences(ThemeSettings settings) async {
+  Future<void> savePreferences(
+    ThemeSettings settings, {
+    String? preferredLocale,
+  }) async {
     await _api.call(
       () => _api.api.getCurrentUserApi().apiV1MePreferencesPut(
-        updateMyPreferencesRequest: preferencesRequest(settings),
+        updateMyPreferencesRequest: preferencesRequest(
+          settings,
+          preferredLocale: preferredLocale,
+        ),
       ),
     );
   }
