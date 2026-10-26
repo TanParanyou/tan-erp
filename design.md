@@ -238,3 +238,44 @@
 - ทดสอบการย่อ-ขยายหน้าต่างเบราว์เซอร์เพื่อดูการปรับเลย์เอาต์อัตโนมัติ (Desktop $\rightarrow$ Tablet $\rightarrow$ Mobile)
 - บนจอมือถือ สามารถทดสอบแตะแท็บสลับระหว่าง **ตารางสเปก** และ **ชิ้นส่วน BOM** ได้ทันที
 - สลับโหมดสว่าง/มืดได้ทันทีผ่านปุ่มบน Header
+
+---
+
+## 7. Theming & Cross-platform Design Tokens (เว็บ + แอป Flutter)
+
+> เหตุผลการตัดสินใจ: [ADR 0031](docs/adr/0031-cross-platform-design-tokens-and-theming.md). สถานะ: มาตรฐานใหม่ — ยังอยู่ระหว่างย้ายค่าที่เขียนตายตัวในเว็บ (แผน: [Mobile Foundation Phase 0](docs/superpowers/plans/2026-10-26-mobile-foundation-phase-0.md))
+
+### 7.1 แหล่งความจริงเดียว
+
+- ค่าดีไซน์ทั้งหมด (สี, รูปทรงมุม, เส้นขอบ, ระยะห่าง, ความสูง control, ตัวอักษร) อยู่ใน `design-tokens/` (W3C DTCG JSON) แล้ว build ด้วย Style Dictionary เป็น `frontend/src/styles/tokens.css` และ `mobile/lib/core/theme/tokens.g.dart` — **ห้ามแก้ไฟล์ที่ generate ด้วยมือ**
+- ชั้นของ token: **primitive** (ค่าดิบ เช่น `navy.900`) → **semantic** (ความหมาย เช่น `color.action.primary`, `radius.control`, `border.width.hairline`) → **component** (เฉพาะจำเป็น เช่น `button.height.default`)
+- ค่าในหมวด 3 (สี light/dark, numeric scales) คือค่าของ primitive/semantic token ชุดเริ่มต้น **Atelier Architectural Navy Sharp**
+
+### 7.2 กฎการใช้ใน Component
+
+- ใช้ได้เฉพาะ semantic/component token: เว็บผ่าน Tailwind semantic classes / `var(--…)`, Flutter ผ่าน `Theme.of(context).extension<ErpTokens>()`
+- **ห้าม** hex/rgb ตรง, ห้ามตัวเลข radius/border-width ตรง, ห้าม `!important` เพื่อบังคับรูปทรง — ทั้งหมดต้องมาจาก token
+- **รูปทรงคมเป็นค่าเริ่มต้นของ token** (`radius.* = 0`) ไม่ใช่การเขียน `border-radius: 0 !important` ในแต่ละ selector; หน้าตาที่ผู้ใช้เห็นต้องเหมือนเดิมทุกพิกเซล
+- ตรวจด้วย lint ทั้งสองฝั่ง (เว็บ: ESLint/Stylelint ห้าม hex และ `rounded-*` ที่ไม่ผ่าน token; Flutter: `custom_lint` ห้าม `Color(0x…)` / `BorderRadius.circular(...)` นอก `core/theme/`)
+
+### 7.3 ใครปรับอะไรได้
+
+| ระดับ | ปรับได้ | ค่าเริ่มต้น | เก็บที่ |
+| :--- | :--- | :--- | :--- |
+| ผู้ใช้ | โหมด สว่าง/มืด/ตามเครื่อง, ความแน่น ปกติ/กะทัดรัด, ขนาดตัวอักษร 90–130% | ตามเครื่อง / ปกติ / 100% | preference ของผู้ใช้ใน Backend (เว็บและแอปได้ค่าเดียวกัน) |
+| Admin องค์กร | โลโก้, สีหลักแบรนด์ 1 สี | Atelier Navy `#0B3056` | ค่าตั้งขององค์กรใน Backend |
+| ทีมพัฒนา | รูปทรงมุม, ความหนาเส้นขอบ, ระยะห่าง, ฟอนต์, สเกลสี | Atelier (radius 0, hairline 1px) | token ใน repo |
+
+- ผู้ใช้และ admin **ปรับรูปทรงมุม เส้นขอบ หรือระยะห่างไม่ได้**
+- ความแน่นแบบกะทัดรัดลดระยะห่างและความสูงแถวตารางได้ แต่ปุ่มกดบนอุปกรณ์สัมผัสต้องสูง ≥ 44px เสมอ
+- ขนาดตัวอักษรต้องปรับได้โดยเลย์เอาต์ไม่ตัดข้อความ (ทดสอบที่ 130%)
+
+### 7.4 สีแบรนด์องค์กร
+
+- ต้องผ่าน WCAG AA ก่อนบันทึก: ข้อความขาวบนสีหลัก ≥ 4.5:1 และสีหลักบนพื้น canvas ≥ 3:1 — ตรวจทั้งที่ Backend และแสดงผลสดในหน้า admin; ไม่ผ่าน = ปุ่มบันทึก disabled พร้อมเหตุผล
+- สีโหมดมืดคำนวณจากสีแบรนด์อัตโนมัติและต้องผ่านเกณฑ์เดียวกัน
+- มีปุ่มรีเซ็ตกลับ Atelier Navy เสมอ
+
+### 7.5 เปลี่ยนเอกลักษณ์ดีไซน์ในอนาคต
+
+แก้ค่า token จุดเดียว → build → เว็บและแอปเปลี่ยนพร้อมกัน และต้องอัปเดตเอกสารนี้ในรอบเดียวกัน; การเพิ่มแกนให้ผู้ใช้ปรับต้องมี ADR ใหม่

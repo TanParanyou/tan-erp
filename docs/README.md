@@ -48,6 +48,8 @@
 | ขอบเขต Module | [Module Boundaries](02-architecture/module-boundaries.md) |
 | Backend | [Backend Architecture](02-architecture/backend-architecture.md) |
 | Frontend | [Frontend Architecture](02-architecture/frontend-architecture.md) |
+| แอปภาคสนาม (Flutter) | [Mobile Architecture](02-architecture/mobile-architecture.md), [ADR 0030](adr/0030-flutter-field-companion-app.md), [Mobile Foundation Phase 0](superpowers/plans/2026-10-26-mobile-foundation-phase-0.md) |
+| Design Tokens และการปรับธีม (เว็บ + แอป) | [design.md หมวด 7](../design.md), [ADR 0031](adr/0031-cross-platform-design-tokens-and-theming.md) |
 | UI/UX Design System | [Design System (Atelier Navy Sharp)](../design.md) |
 | มาตรฐานฟอร์ม ERP | [Building ERP Forms](../.agents/skills/building-erp-forms/SKILL.md) |
 | มาตรฐานเลขที่เอกสารและ Master Data Codes | [ERP Document Numbering](../.agents/skills/erp-document-numbering/SKILL.md) |

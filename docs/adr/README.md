@@ -31,3 +31,5 @@ ADR บันทึกการตัดสินใจที่เปลี่�
 - [0027 — Wave A Closure: 1 User = 1 Organization, Audit read/redaction, go-live bootstrap](0027-wave-a-closure-decisions.md)
 - [0028 — Survey Template ใน Database](0028-survey-templates-in-db.md)
 - [0029 — External Acceptance OTP ทางอีเมล](0029-external-acceptance-otp.md)
+- [0030 — แอปภาคสนามด้วย Flutter (Field Companion App)](0030-flutter-field-companion-app.md)
+- [0031 — Design Tokens ชุดเดียวสำหรับเว็บและแอป และขอบเขตการปรับธีม](0031-cross-platform-design-tokens-and-theming.md)

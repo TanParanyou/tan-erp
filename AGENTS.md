@@ -88,8 +88,8 @@ This repository is in **Application Implementation**. ก่อนประเ�
 > ศึกษาคู่มือละเอียดเพิ่มเติมได้ที่ `.agents/skills/building-erp-forms/SKILL.md` (ฟอร์มบันทึกข้อมูล), `.agents/skills/building-erp-lists/SKILL.md` (ตารางรายการข้อมูลและ Table-Preserved Architecture) และข้อกำหนดด้านการออกแบบที่ `design.md`
 
 - **Visual Theme:** ยึดมั่นตาม **Atelier Architectural Navy Sharp**
-  - `border-radius: 0px !important` (คม เหลี่ยม ปราศจากความโค้งมน)
-  - Solid Navy `#0B3056` เป็นสีหลักของระบบ
+  - รูปทรงคม 0px (คม เหลี่ยม ปราศจากความโค้งมน) เป็นค่าเริ่มต้นของ radius token — ห้ามเขียน `border-radius`/`!important` หรือ hex ตรงใน component ให้ใช้ Design Tokens ตาม `design.md` หมวด 7 (ADR 0031)
+  - Solid Navy `#0B3056` เป็นสีหลักเริ่มต้นของระบบ (ผ่าน token `color.action.primary`)
   - Pure SVG Stroke Icons (ห้ามพึ่งพา CDN หรือ Icon Pack ภายนอก)
 - **Single Dynamic Route `[id]`:** ใช้หน้าเดียวรองรับทั้ง Create (`id="create"` หรือ `"add"`) และ Edit (`id` จริง)
 - **Deferred File Upload:** เมื่อเลือกไฟล์แนบ/รูปภาพ ให้อัปโหลดจริงในฟังก์ชัน `onSubmit` เท่านั้น ห้ามยิง API อัปโหลดทันทีที่เลือก เพื่อป้องกันไฟล์ขยะค้างในระบบ และ**ต้องใช้ Custom Hook กลาง `useDeferredFileUpload` เสมอ** (ห้ามยิง `fileClient` ดิบใน Form Components)
