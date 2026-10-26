@@ -9,7 +9,8 @@ public sealed record AttachmentPerson(Guid Id, string DisplayName);
 /// <summary>Where an owner record lives and what state it is in; null from the reader means "not visible to this organization".</summary>
 public sealed record AttachmentOwnerScope(Guid OrganizationId, Guid? BranchId, string State);
 
-public sealed record AttachFilesInput(string? Purpose, IReadOnlyList<Guid>? FileIds);
+/// <summary>Tag and caption (optional) apply to every file of the request.</summary>
+public sealed record AttachFilesInput(string? Purpose, IReadOnlyList<Guid>? FileIds, string? Tag = null, string? Caption = null);
 
 public sealed record SignatureCaptureInput(string? Purpose, string? SignerName, string? SignerRole, Guid ImageFileId, bool ConsentAccepted, string? ConsentTextVersion);
 
@@ -18,7 +19,7 @@ public sealed record SignatureCaptureCommand(string Purpose, string SignerName, 
 
 public sealed record AttachmentLinkProjection(
     Guid Id, string OwnerType, Guid OwnerId, Guid FileId, string Purpose, string Filename, string MediaType, long FileSizeBytes,
-    string ServingUrl, AttachmentPerson CreatedBy, DateTimeOffset CreatedAtUtc);
+    string ServingUrl, AttachmentPerson CreatedBy, DateTimeOffset CreatedAtUtc, string? Tag = null, string? Caption = null);
 
 public sealed record SignatureCaptureProjection(
     Guid Id, string OwnerType, Guid OwnerId, string Purpose, string SignerName, string? SignerRole, DateTimeOffset SignedAtUtc,

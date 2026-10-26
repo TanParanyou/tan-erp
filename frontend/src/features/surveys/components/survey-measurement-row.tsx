@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { TableRow, TableCell } from "@/components/ui/Table";
 import { IconTrash } from "@/components/common/Icons";
 import { MeasurementAmountInput } from "@/components/forms/MeasurementAmountInput";
@@ -38,6 +39,12 @@ export function SurveyMeasurementRow({
     control,
     name: `areas.${areaIndex}.measurements.${measurementIndex}.unitCode`,
   });
+
+  const { field: captureMethodField } = useController({
+    control,
+    name: `areas.${areaIndex}.measurements.${measurementIndex}.captureMethod`,
+  });
+  const isPhotoEstimated = captureMethodField.value === "photo_estimated";
 
   return (
     <>
@@ -80,6 +87,9 @@ export function SurveyMeasurementRow({
             selectClassName="text-xs h-9 min-h-[36px]"
             showMmConversion={true}
           />
+          {isPhotoEstimated && (
+            <Badge variant="info" className="mt-1">{t("capturePhotoEstimated")}</Badge>
+          )}
         </TableCell>
 
         {/* Notes Input */}
@@ -175,6 +185,9 @@ export function SurveyMeasurementRow({
             disabled={isReady}
             placeholder={t("measurementValueLabel")}
           />
+          {isPhotoEstimated && (
+            <Badge variant="info" className="mt-1">{t("capturePhotoEstimated")}</Badge>
+          )}
         </div>
 
         {/* Notes */}

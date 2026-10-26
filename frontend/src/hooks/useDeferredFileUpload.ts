@@ -39,6 +39,8 @@ export interface UploadExecutionOptions {
   membershipId?: string | null;
   locale?: string;
   signal?: AbortSignal;
+  /** Parent created after the hook was rendered (e.g. an area id returned by a save); overrides `parentId`. */
+  parentId?: string;
 }
 
 export interface UploadResult {
@@ -84,6 +86,7 @@ export function useDeferredFileUpload({
       }
 
       const { token, membershipId, locale = "th", signal } = options;
+      const effectiveParentId = options.parentId ?? parentId;
       const normalizedLocale: "th" | "en" = locale === "en" ? "en" : "th";
 
       setIsUploading(true);
@@ -94,7 +97,7 @@ export function useDeferredFileUpload({
           item instanceof File ? { file: item } : item
         );
 
-        const hasExistingParent = Boolean(parentId);
+        const hasExistingParent = Boolean(effectiveParentId);
         if (!hasExistingParent) {
           creationIntentIdRef.current ??= crypto.randomUUID();
         }
@@ -106,7 +109,7 @@ export function useDeferredFileUpload({
         // Step 1: Create parent-bound upload session
         const sessionPayload = {
           parentType,
-          parentId: parentId ?? null,
+          parentId: effectiveParentId ?? null,
           creationIntentId: effectiveIntentId,
           files: normalizedItems.map((item) => ({
             filename: item.file.name,
@@ -120,7 +123,7 @@ export function useDeferredFileUpload({
           membershipId: membershipId || undefined,
           idempotencyKey: effectiveIntentId
             ? `file-sess-${effectiveIntentId}`
-            : `file-sess-${parentId}-${Date.now()}`,
+            : `file-sess-${effectiveParentId}-${Date.now()}`,
           locale: normalizedLocale,
           signal,
         };

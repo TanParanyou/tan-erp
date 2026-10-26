@@ -28,6 +28,8 @@ public class AttachmentLinkConfiguration : IEntityTypeConfiguration<AttachmentLi
         builder.Property(x => x.OwnerId).HasColumnName("owner_id").IsRequired();
         builder.Property(x => x.FileId).HasColumnName("file_id").IsRequired();
         builder.Property(x => x.Purpose).HasColumnName("purpose").HasMaxLength(32).IsRequired();
+        builder.Property(x => x.Tag).HasColumnName("tag").HasMaxLength(AttachmentLink.MaxTagLength);
+        builder.Property(x => x.Caption).HasColumnName("caption").HasMaxLength(AttachmentLink.MaxCaptionLength);
         builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.RemovedAtUtc).HasColumnName("removed_at_utc").HasColumnType("timestamptz");

@@ -8,6 +8,7 @@ import type {
   FieldSurveyItem,
   FieldSurveyFormData,
 } from "../../schemas/field-survey-schema";
+import { resolveFieldSurveyPhotoPurpose, resolveFieldSurveyPhotoTag, resolveGrossAreaSqm, resolveNetAreaSqm } from "../../schemas/field-survey-schema";
 import {
   useOpportunitySurvey,
   useCreateSiteSurvey,
@@ -20,6 +21,7 @@ import type {
   UpdateSurveyMeasurementRequest,
   UpdateSurveyDraftRequest,
 } from "@/lib/api/api-client";
+import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useOptionalSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { FieldSurveyMeasurementPad } from "./field-survey-measurement-pad";
@@ -98,6 +100,7 @@ export function FieldSurveyWorkspace({
   const opportunityQuery = useOpportunityDetail(opportunityId || undefined);
   const surveyQuery = useOpportunitySurvey(opportunityId || undefined);
   const createSurveyMutation = useCreateSiteSurvey(opportunityId);
+  const photoUploader = useDeferredFileUpload({ parentType: "survey-area" });
 
   const categoryOptions = refData?.categories && refData.categories.length > 0
     ? refData.categories
@@ -306,14 +309,14 @@ export function FieldSurveyWorkspace({
               });
             }
           } else if (it.measurementType === "area" && it.areaDimensions) {
-            const netArea = (it.areaDimensions.grossWidthMm * it.areaDimensions.grossLengthMm) / 1000000;
+            const netArea = resolveNetAreaSqm(it.areaDimensions);
             if (netArea > 0) {
               measurements.push({
                 id: null,
                 measurementType: "area",
-                value: Number(netArea.toFixed(2)),
+                value: netArea,
                 unitCode: "sqm",
-                captureMethod: "measured",
+                captureMethod: it.areaDimensions.photoMeasurement ? "photo_estimated" : "measured",
                 notes: `${it.title} (พื้นที่) ${categoryTag}`.trim(),
                 sortOrder: mSort++,
               });
@@ -405,7 +408,7 @@ export function FieldSurveyWorkspace({
           throw new Error("Authentication required");
         }
 
-        await apiClient.updateSurveyDraft(
+        const savedRevision = await apiClient.updateSurveyDraft(
           opportunityId,
           surveyId,
           revisionId,
@@ -416,6 +419,46 @@ export function FieldSurveyWorkspace({
             ifMatch: `"${currentRevision.rowVersion}"`,
           }
         );
+
+        // Photos upload only now: the area id exists once the draft is saved.
+        const photoFiles = items.flatMap((it) => it.photos).filter((p): p is typeof p & { file: File } => p.file instanceof File);
+        if (photoFiles.length > 0) {
+          const savedAreaId = savedRevision.areas?.find((a) => a.code === roomCode)?.id;
+          if (!savedAreaId) {
+            throw new Error("Saved survey area not found");
+          }
+          const uploadOptions = {
+            token,
+            membershipId: membershipContext?.selectedMembership?.id,
+            locale,
+            parentId: savedAreaId,
+          };
+          const uploaded = await photoUploader.uploadFiles(
+            photoFiles.map((p) => ({ file: p.file, caption: p.caption ?? undefined })),
+            uploadOptions
+          );
+          // One attach per photo: tag and caption belong to a single file.
+          for (const [i, photo] of photoFiles.entries()) {
+            const fileId = uploaded.files[i]?.fileId;
+            if (!fileId) continue;
+            await apiClient.attachFiles(
+              "survey-area",
+              savedAreaId,
+              {
+                purpose: resolveFieldSurveyPhotoPurpose(photo.tag),
+                tag: resolveFieldSurveyPhotoTag(photo.tag),
+                caption: photo.caption?.trim() || null,
+                fileIds: [fileId],
+              },
+              {
+                token,
+                membershipId: uploadOptions.membershipId,
+                locale: uploadOptions.locale,
+                idempotencyKey: `survey-photo-${crypto.randomUUID()}`,
+              }
+            );
+          }
+        }
       } else {
         // Fallback simulated save
         await new Promise((resolve) => setTimeout(resolve, 600));
@@ -770,9 +813,8 @@ export function FieldSurveyWorkspace({
                 });
               }
             } else if (item.measurementType === "area" && item.areaDimensions) {
-              const { grossWidthMm, grossLengthMm } = item.areaDimensions;
-              if (grossWidthMm && grossLengthMm) {
-                const area = ((grossWidthMm * grossLengthMm) / 1000000).toFixed(2);
+              if (resolveGrossAreaSqm(item.areaDimensions) > 0) {
+                const area = resolveNetAreaSqm(item.areaDimensions).toFixed(2);
                 dimensionSummary = t("dimensions.areaSummary", { area });
               }
             } else if (item.measurementType === "custom" && item.customMeasurements) {
@@ -895,6 +937,9 @@ export function FieldSurveyWorkspace({
                         onTypeChange={(type) => handleUpdateItem(index, { measurementType: type })}
                         onBoxChange={(box) => handleUpdateItem(index, { boxDimensions: box })}
                         onAreaChange={(area) => handleUpdateItem(index, { areaDimensions: area })}
+                        onPhotoAdd={(photo) =>
+                          handleUpdateItem(index, { photos: [...item.photos, photo] })
+                        }
                         onCustomChange={(custom) =>
                           handleUpdateItem(index, { customMeasurements: custom })
                         }

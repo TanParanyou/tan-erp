@@ -137,10 +137,11 @@ public static class CaptureMethod
     public const string Measured = "measured";
     public const string CustomerProvided = "customer_provided";
     public const string Derived = "derived";
+    public const string PhotoEstimated = "photo_estimated";
 
     public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
     {
-        Measured, CustomerProvided, Derived
+        Measured, CustomerProvided, Derived, PhotoEstimated
     };
 
     public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());

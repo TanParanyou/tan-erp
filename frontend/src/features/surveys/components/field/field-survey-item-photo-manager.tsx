@@ -60,6 +60,7 @@ export function FieldSurveyItemPhotoManager({
       id: `photo-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       url: URL.createObjectURL(file),
       fileName: file.name,
+      file,
       tag: "site_location" as const,
       caption: "",
     }));

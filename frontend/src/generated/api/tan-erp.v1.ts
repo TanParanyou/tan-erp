@@ -22501,6 +22501,8 @@ export interface components {
         };
         AttachFilesRequest: {
             purpose?: string | null;
+            tag?: string | null;
+            caption?: string | null;
             fileIds?: string[] | null;
         };
         AttachItemImageRequest: {
@@ -22541,6 +22543,8 @@ export interface components {
             createdBy?: components["schemas"]["AttachmentPersonResponse"];
             /** Format: date-time */
             createdAtUtc?: string;
+            tag?: string | null;
+            caption?: string | null;
         };
         AttachmentListResponse: {
             items?: components["schemas"]["AttachmentLinkResponse"][] | null;

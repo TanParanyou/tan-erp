@@ -3,7 +3,7 @@ namespace TanErp.Api.Contracts.Attachments;
 public sealed record AttachmentPersonResponse(Guid Id, string DisplayName);
 
 /// <summary>Body of POST /api/v1/attachment-owners/{ownerType}/{ownerId}/attachments.</summary>
-public sealed record AttachFilesRequest(string? Purpose, IReadOnlyList<Guid>? FileIds);
+public sealed record AttachFilesRequest(string? Purpose, IReadOnlyList<Guid>? FileIds, string? Tag = null, string? Caption = null);
 
 public sealed record AttachmentLinkResponse(
     Guid Id,
@@ -16,7 +16,9 @@ public sealed record AttachmentLinkResponse(
     long FileSizeBytes,
     string ServingUrl,
     AttachmentPersonResponse CreatedBy,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    string? Tag = null,
+    string? Caption = null);
 
 public sealed record AttachmentListResponse(IReadOnlyList<AttachmentLinkResponse> Items);
 

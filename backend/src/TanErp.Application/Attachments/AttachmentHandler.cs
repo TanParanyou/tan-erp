@@ -3,6 +3,7 @@ using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Common.Security;
 using TanErp.Domain.Attachments;
+using TanErp.Domain.Surveys;
 
 namespace TanErp.Application.Attachments;
 
@@ -94,7 +95,16 @@ public class AttachmentHandler
         if (purpose is null) return Fail<IReadOnlyList<AttachmentLinkProjection>>("ATTACHMENT_PURPOSE_INVALID", $"Purpose '{input.Purpose}' is not supported.");
         if (fileIds.Distinct().Count() != fileIds.Count) return Fail<IReadOnlyList<AttachmentLinkProjection>>("ATTACHMENT_DUPLICATE", "The same file was listed more than once.");
 
+        var tag = string.IsNullOrWhiteSpace(input.Tag) ? null : input.Tag.Trim();
+        var caption = string.IsNullOrWhiteSpace(input.Caption) ? null : input.Caption.Trim();
         var resolved = owner.Value!;
+        // Tags are meaningful only for survey-area photos (survey photo tag reference data); other owners accept none.
+        var tagAllowed = tag is null || (resolved.Descriptor.OwnerType == AttachmentOwnerTypes.SurveyArea && EvidenceKind.IsValid(tag));
+        if (!tagAllowed || tag?.Length > AttachmentLink.MaxTagLength || caption?.Length > AttachmentLink.MaxCaptionLength)
+        {
+            return Fail<IReadOnlyList<AttachmentLinkProjection>>("ATTACHMENT_FIELD_INVALID", "Tag or caption is not valid for this record.");
+        }
+
         if (!resolved.Descriptor.ManageStates.Contains(resolved.Scope.State))
         {
             return Fail<IReadOnlyList<AttachmentLinkProjection>>("ATTACHMENT_OWNER_LOCKED", "The record's status does not allow attachment changes.");
@@ -110,9 +120,9 @@ public class AttachmentHandler
             return Fail<IReadOnlyList<AttachmentLinkProjection>>("ATTACHMENT_LIMIT_EXCEEDED", $"A record can have at most {AttachmentLink.MaxActiveLinksPerOwner} attachments.");
         }
 
-        var normalized = new AttachFilesInput(purpose, fileIds.ToList());
+        var normalized = new AttachFilesInput(purpose, fileIds.ToList(), tag, caption);
         var keyHash = Sha256Hex.Compute(idempotencyKey);
-        var payloadHash = Sha256Hex.Compute(FormattableString.Invariant($"{resolved.Descriptor.OwnerType}|{ownerId:D}|{purpose}|{string.Join(",", fileIds.Select(id => id.ToString("D")))}"));
+        var payloadHash = Sha256Hex.Compute(FormattableString.Invariant($"{resolved.Descriptor.OwnerType}|{ownerId:D}|{purpose}|{string.Join(",", fileIds.Select(id => id.ToString("D")))}|{tag}|{caption}"));
         return await _store.AttachAsync(resolved.Access, resolved.Descriptor.OwnerType, ownerId, normalized, keyHash, payloadHash, caller.TraceId, ct);
     }
 

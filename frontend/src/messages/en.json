@@ -1067,6 +1067,7 @@
     "confirmDeleteAreaDesc": "Are you sure you want to delete area {name} and all its measurements?",
     "convertedToMm": "Converted to {value} mm",
     "convertedEquivalent": "Equivalent",
+    "capturePhotoEstimated": "Photo estimate",
     "measurementCardTitle": "Measurement #{number}",
     "readinessErrors": {
       "missingVisit": "Visit date and time is required",
@@ -5010,6 +5011,55 @@
       "captionPlaceholder": "Photo caption (e.g. Window side facing south)",
       "deletePhoto": "Delete Photo",
       "empty": "No photos attached for this item yet"
+    },
+    "photoMeasure": {
+      "badge": "Photo estimate",
+      "openTooltip": "Measure area from photo",
+      "title": "Measure Area from Photo",
+      "subtitle": "Place an object of known size on the same flat surface as the area, take a photo, then tap the points step by step",
+      "stepsLabel": "Measurement steps",
+      "steps": {
+        "photo": "Photo",
+        "reference": "Reference",
+        "area": "Area"
+      },
+      "limitsHint": "Accuracy is about 2–5%. Works only on a flat surface that is on the same plane as the reference object. Use for estimating and confirm before quotation.",
+      "choosePhoto": "Take Photo / Choose File",
+      "changePhoto": "Change Photo",
+      "photoHint": "Capture the whole area together with the reference object (e.g. an A4 sheet) lying flat on it",
+      "photoAlt": "Photo for area measurement",
+      "referenceLabel": "Reference object",
+      "referenceKinds": {
+        "a4": "A4 paper (210 × 297 mm)",
+        "a3": "A3 paper (297 × 420 mm)",
+        "custom": "Custom size"
+      },
+      "customWidth": "Reference width",
+      "customHeight": "Reference length",
+      "customWidthPlaceholder": "e.g. 210",
+      "customHeightPlaceholder": "e.g. 297",
+      "instructions": {
+        "reference": "Tap the 4 corners of the reference object ({count}/4)",
+        "area": "Tap at least 3 corners of the area to measure ({count} so far), then close the polygon",
+        "closed": "Polygon closed. Drag any point to fine-tune it"
+      },
+      "undo": "Undo last point",
+      "clearArea": "Clear all area points",
+      "closePolygon": "Close polygon",
+      "errors": {
+        "imageLoadFailed": "This image cannot be opened. Please choose a JPG or PNG file",
+        "referenceSizeInvalid": "Enter the reference size as numbers greater than 0",
+        "referenceDegenerate": "The reference corners do not form a valid convex quadrilateral. Please adjust all 4 corners",
+        "selfIntersecting": "The area outline crosses itself. Please adjust the points"
+      },
+      "result": {
+        "area": "Area",
+        "size": "Approx. size",
+        "vertices": "Points"
+      },
+      "annotatedCaption": "Photo area measurement: {area} sq.m.",
+      "cancel": "Cancel",
+      "confirm": "Use this value"
     },
     "actions": {
       "saveDraft": "Save Survey Data",

@@ -30,6 +30,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Caption")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("caption");
+
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("timestamptz")
                         .HasColumnName("created_at_utc");
@@ -69,6 +74,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("RemovedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("removed_by_user_id");
+
+                    b.Property<string>("Tag")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("tag");
 
                     b.HasKey("Id");
 
@@ -9387,7 +9397,7 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("site_survey_measurements", "crm", t =>
                         {
-                            t.HasCheckConstraint("CK_site_survey_measurements_capture_method", "capture_method IN ('measured', 'customer_provided', 'derived')");
+                            t.HasCheckConstraint("CK_site_survey_measurements_capture_method", "capture_method IN ('measured', 'customer_provided', 'derived', 'photo_estimated')");
 
                             t.HasCheckConstraint("CK_site_survey_measurements_type", "measurement_type IN ('width', 'depth', 'height', 'length', 'area', 'opening', 'count', 'custom')");
 

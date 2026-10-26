@@ -6,12 +6,17 @@ namespace TanErp.Domain.Attachments;
 public class AttachmentLink : Entity
 {
     public const int MaxActiveLinksPerOwner = 50;
+    public const int MaxTagLength = 64;
+    public const int MaxCaptionLength = 500;
 
     public Guid OrganizationId { get; private set; }
     public string OwnerType { get; private set; } = string.Empty;
     public Guid OwnerId { get; private set; }
     public Guid FileId { get; private set; }
     public string Purpose { get; private set; } = string.Empty;
+    /// <summary>Optional owner-specific classification (validated by the Application layer per owner type).</summary>
+    public string? Tag { get; private set; }
+    public string? Caption { get; private set; }
     public Guid CreatedByUserId { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset? RemovedAtUtc { get; private set; }
@@ -23,7 +28,7 @@ public class AttachmentLink : Entity
 
     public AttachmentLink(
         Guid id, Guid organizationId, string ownerType, Guid ownerId, Guid fileOrganizationId, Guid fileId,
-        string purpose, Guid createdByUserId, DateTimeOffset now) : base(id)
+        string purpose, Guid createdByUserId, DateTimeOffset now, string? tag = null, string? caption = null) : base(id)
     {
         if (organizationId == Guid.Empty || ownerId == Guid.Empty || fileId == Guid.Empty || createdByUserId == Guid.Empty)
         {
@@ -45,6 +50,12 @@ public class AttachmentLink : Entity
         OwnerId = ownerId;
         FileId = fileId;
         Purpose = normalizedPurpose;
+        Tag = string.IsNullOrWhiteSpace(tag) ? null : tag.Trim();
+        Caption = string.IsNullOrWhiteSpace(caption) ? null : caption.Trim();
+        if (Tag is { Length: > MaxTagLength } || Caption is { Length: > MaxCaptionLength })
+        {
+            throw new AttachmentDomainException("ATTACHMENT_FIELD_INVALID", $"Tag is limited to {MaxTagLength} and caption to {MaxCaptionLength} characters.");
+        }
         CreatedByUserId = createdByUserId;
         CreatedAtUtc = now.ToUniversalTime();
     }

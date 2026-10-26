@@ -14,7 +14,7 @@ public class SiteSurveyMeasurementConfiguration : IEntityTypeConfiguration<SiteS
             t.HasCheckConstraint("CK_site_survey_measurements_value", "value > 0");
             t.HasCheckConstraint("CK_site_survey_measurements_type", "measurement_type IN ('width', 'depth', 'height', 'length', 'area', 'opening', 'count', 'custom')");
             t.HasCheckConstraint("CK_site_survey_measurements_unit", "unit_code IN ('mm', 'cm', 'm', 'sqm', 'unit')");
-            t.HasCheckConstraint("CK_site_survey_measurements_capture_method", "capture_method IN ('measured', 'customer_provided', 'derived')");
+            t.HasCheckConstraint("CK_site_survey_measurements_capture_method", "capture_method IN ('measured', 'customer_provided', 'derived', 'photo_estimated')");
         });
 
         builder.HasKey(x => x.Id);

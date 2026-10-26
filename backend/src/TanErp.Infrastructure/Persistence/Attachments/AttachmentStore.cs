@@ -81,7 +81,7 @@ public class AttachmentStore : IAttachmentStore
 
         return rows.Select(r => new AttachmentLinkProjection(
             r.Link.Id, r.Link.OwnerType, r.Link.OwnerId, r.Link.FileId, r.Link.Purpose, r.OriginalFilename, r.MediaType, r.FileSizeBytes,
-            ServingUrl(r.Link.FileId), new AttachmentPerson(r.UserId, r.DisplayName), r.Link.CreatedAtUtc)).ToList();
+            ServingUrl(r.Link.FileId), new AttachmentPerson(r.UserId, r.DisplayName), r.Link.CreatedAtUtc, r.Link.Tag, r.Link.Caption)).ToList();
     }
 
     public async Task<Result<IReadOnlyList<AttachmentLinkProjection>>> AttachAsync(
@@ -124,7 +124,7 @@ public class AttachmentStore : IAttachmentStore
                 foreach (var fileId in fileIds)
                 {
                     var file = files.Single(f => f.Id == fileId);
-                    var link = new AttachmentLink(Guid.NewGuid(), orgId, ownerType, ownerId, file.OrganizationId, file.Id, input.Purpose!, access.ActorUserId, now);
+                    var link = new AttachmentLink(Guid.NewGuid(), orgId, ownerType, ownerId, file.OrganizationId, file.Id, input.Purpose!, access.ActorUserId, now, input.Tag, input.Caption);
                     AttachmentLink.AssertCanAdd(active, link);
                     active.Add(link);
                     _db.AttachmentLinks.Add(link);

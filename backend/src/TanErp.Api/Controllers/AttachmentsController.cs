@@ -53,7 +53,7 @@ public class AttachmentsController : ControllerBase
     private static AttachmentPersonResponse To(AttachmentPerson person) => new(person.Id, person.DisplayName);
 
     private static AttachmentLinkResponse To(AttachmentLinkProjection p) => new(
-        p.Id, p.OwnerType, p.OwnerId, p.FileId, p.Purpose, p.Filename, p.MediaType, p.FileSizeBytes, p.ServingUrl, To(p.CreatedBy), p.CreatedAtUtc);
+        p.Id, p.OwnerType, p.OwnerId, p.FileId, p.Purpose, p.Filename, p.MediaType, p.FileSizeBytes, p.ServingUrl, To(p.CreatedBy), p.CreatedAtUtc, p.Tag, p.Caption);
 
     private static SignatureCaptureResponse To(SignatureCaptureProjection p) => new(
         p.Id, p.OwnerType, p.OwnerId, p.Purpose, p.SignerName, p.SignerRole, p.SignedAtUtc, p.ImageFileId, p.ServingUrl,
@@ -82,7 +82,7 @@ public class AttachmentsController : ControllerBase
     {
         var caller = ReadCaller(out var key, true, out var failure);
         if (caller is null) return failure!;
-        var result = await _handler.AttachAsync(caller, ownerType, ownerId, key, new AttachFilesInput(request.Purpose, request.FileIds), ct);
+        var result = await _handler.AttachAsync(caller, ownerType, ownerId, key, new AttachFilesInput(request.Purpose, request.FileIds, request.Tag, request.Caption), ct);
         return result.IsFailure
             ? Problem(result.Error.Code)
             : StatusCode(StatusCodes.Status201Created, new AttachmentListResponse(result.Value!.Select(To).ToList()));

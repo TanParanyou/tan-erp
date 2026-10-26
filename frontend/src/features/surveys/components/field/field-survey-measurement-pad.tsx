@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   type FieldSurveyMeasurementType,
@@ -8,11 +8,19 @@ import {
   type AreaDimensions,
   type CustomMeasurementPoint,
   type AreaDeduction,
-  calculateNetAreaSqm,
+  type FieldSurveyPhoto,
+  resolveGrossAreaSqm,
+  resolveNetAreaSqm,
 } from "../../schemas/field-survey-schema";
-import { IconPlus, IconTrash } from "@/components/common/Icons";
+import { IconCamera, IconPlus, IconTrash } from "@/components/common/Icons";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Tooltip } from "@/components/ui/Tooltip";
+import {
+  FieldSurveyPhotoAreaMeasure,
+  type PhotoAreaMeasureResult,
+} from "./field-survey-photo-area-measure";
 
 export interface FieldSurveyMeasurementPadProps {
   measurementType: FieldSurveyMeasurementType;
@@ -23,6 +31,8 @@ export interface FieldSurveyMeasurementPadProps {
   onBoxChange?: (dimensions: BoxDimensions) => void;
   onAreaChange?: (dimensions: AreaDimensions) => void;
   onCustomChange?: (points: CustomMeasurementPoint[]) => void;
+  /** Called with the annotated photo produced by the photo area measurement. */
+  onPhotoAdd?: (photo: FieldSurveyPhoto) => void;
   disabled?: boolean;
 }
 
@@ -35,9 +45,11 @@ export function FieldSurveyMeasurementPad({
   onBoxChange,
   onAreaChange,
   onCustomChange,
+  onPhotoAdd,
   disabled = false,
 }: FieldSurveyMeasurementPadProps) {
   const t = useTranslations("fieldSurvey");
+  const [isPhotoMeasureOpen, setIsPhotoMeasureOpen] = useState(false);
 
   // Box Handlers
   const handleBoxFieldChange = (field: keyof BoxDimensions, valStr: string) => {
@@ -51,10 +63,22 @@ export function FieldSurveyMeasurementPad({
   // Area Handlers
   const handleAreaDimensionChange = (field: "grossWidthMm" | "grossLengthMm", valStr: string) => {
     const num = Math.max(0, Number(valStr) || 0);
+    // A manual edit overrides the photo estimate.
     onAreaChange?.({
       ...areaDimensions,
       [field]: num,
+      photoMeasurement: null,
     });
+  };
+
+  const handlePhotoMeasureApply = (result: PhotoAreaMeasureResult) => {
+    onAreaChange?.({
+      ...areaDimensions,
+      grossWidthMm: result.grossWidthMm,
+      grossLengthMm: result.grossLengthMm,
+      photoMeasurement: result.photoMeasurement,
+    });
+    onPhotoAdd?.(result.annotatedPhoto);
   };
 
   const handleAddDeduction = () => {
@@ -107,13 +131,8 @@ export function FieldSurveyMeasurementPad({
     onCustomChange?.(nextPoints);
   };
 
-  const grossAreaSqm =
-    Math.round(((areaDimensions.grossWidthMm / 1000) * (areaDimensions.grossLengthMm / 1000)) * 100) / 100;
-  const netAreaSqm = calculateNetAreaSqm(
-    areaDimensions.grossWidthMm,
-    areaDimensions.grossLengthMm,
-    areaDimensions.deductions
-  );
+  const grossAreaSqm = Math.round(resolveGrossAreaSqm(areaDimensions) * 100) / 100;
+  const netAreaSqm = resolveNetAreaSqm(areaDimensions);
 
   return (
     <div className="border border-erp-border bg-white p-4">
@@ -204,6 +223,25 @@ export function FieldSurveyMeasurementPad({
       {/* Mode 2: Surface Area with Deductions */}
       {measurementType === "area" && (
         <div className="space-y-4">
+          <div className="flex min-h-[44px] flex-wrap items-center justify-between gap-2">
+            <div>
+              {areaDimensions.photoMeasurement && (
+                <Badge variant="info">{t("photoMeasure.badge")}</Badge>
+              )}
+            </div>
+            <Tooltip content={t("photoMeasure.openTooltip")} position="top">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                disabled={disabled}
+                onClick={() => setIsPhotoMeasureOpen(true)}
+                aria-label={t("photoMeasure.openTooltip")}
+              >
+                <IconCamera size={16} />
+              </Button>
+            </Tooltip>
+          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
               label={`${t("dimensions.grossWidth")} (${t("dimensions.unitMm")})`}
@@ -316,6 +354,13 @@ export function FieldSurveyMeasurementPad({
             )}
           </div>
         </div>
+      )}
+
+      {isPhotoMeasureOpen && (
+        <FieldSurveyPhotoAreaMeasure
+          onClose={() => setIsPhotoMeasureOpen(false)}
+          onApply={handlePhotoMeasureApply}
+        />
       )}
 
       {/* Mode 3: Custom Point Measurements */}

@@ -34740,6 +34740,14 @@
             "type": "string",
             "nullable": true
           },
+          "tag": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
           "fileIds": {
             "type": "array",
             "items": {
@@ -35592,6 +35600,14 @@
           "createdAtUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "tag": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
