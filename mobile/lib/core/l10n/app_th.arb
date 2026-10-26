@@ -1,0 +1,108 @@
+{
+  "@@locale": "th",
+  "appTitle": "TAN Field",
+  "commonCancel": "ยกเลิก",
+  "commonConfirm": "ยืนยัน",
+  "commonRetry": "ลองใหม่",
+  "commonSelect": "เลือก",
+  "commonFieldRequired": "กรุณากรอกข้อมูล",
+  "loginTitle": "เข้าสู่ระบบ",
+  "loginEmailLabel": "อีเมล",
+  "loginEmailPlaceholder": "name@company.com",
+  "loginPasswordLabel": "รหัสผ่าน",
+  "loginPasswordPlaceholder": "กรอกรหัสผ่าน",
+  "loginSubmit": "เข้าสู่ระบบ",
+  "notConfiguredTitle": "ยังไม่ได้ตั้งค่า Firebase",
+  "notConfiguredBody": "เพิ่มค่า FIREBASE_* ในไฟล์ config ของ flavor นี้ แล้วรันแอปใหม่ด้วย --dart-define-from-file",
+  "unlockTitle": "ปลดล็อกแอป",
+  "unlockBody": "ยืนยันตัวตนเพื่อเข้าใช้งานต่อ",
+  "unlockAction": "ปลดล็อก",
+  "unlockReason": "ยืนยันตัวตนเพื่อเข้าใช้ TAN Field",
+  "unlockUseOtherAccount": "ใช้บัญชีอื่น",
+  "membershipTitle": "เลือกสาขา",
+  "membershipLabel": "สาขาที่ทำงาน",
+  "membershipAllBranches": "ทุกสาขา",
+  "membershipContinue": "เข้าใช้งาน",
+  "navToday": "งานวันนี้",
+  "navSurvey": "สำรวจ",
+  "navScan": "สแกน",
+  "navNotifications": "แจ้งเตือน",
+  "navMe": "ฉัน",
+  "inDevelopmentTitle": "กำลังพัฒนา",
+  "inDevelopmentBody": "เมนูนี้จะเปิดให้ใช้งานในเวอร์ชันถัดไป",
+  "meTitle": "ฉัน",
+  "meProfile": "โปรไฟล์",
+  "meOrganization": "องค์กร",
+  "meBranch": "สาขา",
+  "meSwitchBranch": "เปลี่ยนสาขา",
+  "meLanguage": "ภาษา",
+  "meAppVersion": "เวอร์ชันแอป",
+  "meLogout": "ออกจากระบบ",
+  "meUiGallery": "ตัวอย่างคอมโพเนนต์",
+  "languageThai": "ไทย",
+  "languageEnglish": "English",
+  "themeMode": "โหมดสี",
+  "themeModeSystem": "ตามเครื่อง",
+  "themeModeLight": "สว่าง",
+  "themeModeDark": "มืด",
+  "themeDensity": "ความแน่น",
+  "themeDensityNormal": "ปกติ",
+  "themeDensityCompact": "กะทัดรัด",
+  "themeTextScale": "ขนาดตัวอักษร",
+  "themeTextScaleValue": "{percent}%",
+  "@themeTextScaleValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "logoutConfirmTitle": "ออกจากระบบ",
+  "logoutConfirmBody": "ต้องการออกจากระบบใช่หรือไม่",
+  "forceUpdateTitle": "ต้องอัปเดตแอป",
+  "forceUpdateBody": "เวอร์ชันนี้ไม่รองรับแล้ว กรุณาอัปเดตเป็นเวอร์ชัน {minimum} ขึ้นไป",
+  "@forceUpdateBody": {
+    "placeholders": {
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "forceUpdateCurrent": "เวอร์ชันปัจจุบัน {current}",
+  "@forceUpdateCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "errorInvalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+  "errorAccountDisabled": "บัญชีนี้ถูกปิดการใช้งาน",
+  "errorNoMembership": "บัญชีนี้ยังไม่มีสิทธิ์เข้าใช้งานสาขาใด",
+  "errorNetwork": "เชื่อมต่อเครือข่ายไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต",
+  "errorTooManyAttempts": "ลองเข้าสู่ระบบหลายครั้งเกินไป กรุณารอสักครู่",
+  "errorUnauthorized": "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่",
+  "errorForbidden": "ไม่มีสิทธิ์ทำรายการนี้",
+  "errorNotFound": "ไม่พบข้อมูล",
+  "errorConflict": "ข้อมูลถูกแก้ไขแล้ว กรุณาโหลดใหม่",
+  "errorValidation": "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
+  "errorBiometricFailed": "ยืนยันตัวตนไม่สำเร็จ",
+  "errorUnknown": "เกิดข้อผิดพลาด กรุณาลองใหม่",
+  "galleryTitle": "ตัวอย่างคอมโพเนนต์",
+  "galleryPrimaryButton": "ปุ่มหลัก",
+  "galleryOutlineButton": "ปุ่มรอง",
+  "galleryGhostButton": "ปุ่มข้อความ",
+  "galleryLoadingButton": "กำลังบันทึก",
+  "galleryTextField": "ช่องกรอกข้อมูล",
+  "galleryTextFieldPlaceholder": "พิมพ์ข้อความ",
+  "gallerySelect": "ตัวเลือก",
+  "galleryAlertInfo": "ข้อมูลทั่วไป",
+  "galleryAlertSuccess": "บันทึกสำเร็จ",
+  "galleryAlertWarning": "โปรดตรวจสอบก่อนดำเนินการ",
+  "galleryAlertDanger": "เกิดข้อผิดพลาด",
+  "galleryConfirmOpen": "เปิดกล่องยืนยัน",
+  "galleryConfirmMessage": "ต้องการดำเนินการต่อใช่หรือไม่",
+  "galleryEmptyTitle": "ไม่มีรายการ",
+  "galleryEmptyMessage": "ยังไม่มีข้อมูลในหมวดนี้",
+  "galleryEmptyAction": "เพิ่มรายการ"
+}

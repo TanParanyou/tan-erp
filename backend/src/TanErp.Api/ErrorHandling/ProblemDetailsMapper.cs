@@ -57,6 +57,7 @@ public static class ProblemDetailsMapper
         "INVALID_DOCUMENT_TYPE" => StatusCodes.Status400BadRequest,
         "INVALID_FORMAT_PATTERN" => StatusCodes.Status400BadRequest,
         "INVALID_PADDING" => StatusCodes.Status400BadRequest,
+        "APP_PLATFORM_INVALID" => StatusCodes.Status400BadRequest,
         "INVALID_RESET_PERIOD" => StatusCodes.Status400BadRequest,
         "USER_ACCESS_DISABLED" => StatusCodes.Status403Forbidden,
         "ACTIVE_MEMBERSHIP_REQUIRED" => StatusCodes.Status403Forbidden,

@@ -1,0 +1,11 @@
+name: erp_lints
+description: Local custom_lint rules enforcing the design-token rules (design.md section 7.2).
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  analyzer: any
+  custom_lint_builder: ^0.8.1

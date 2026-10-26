@@ -4997,6 +4997,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/app/version-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    platform?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AppVersionPolicyResponse"];
+                        "application/json": components["schemas"]["AppVersionPolicyResponse"];
+                        "text/json": components["schemas"]["AppVersionPolicyResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -22916,6 +22966,10 @@ export interface components {
             } | null;
         } & {
             [key: string]: unknown;
+        };
+        AppVersionPolicyResponse: {
+            minimumVersion?: string | null;
+            latestVersion?: string | null;
         };
         ApprovalLimitListResponse: {
             items?: components["schemas"]["ApprovalLimitResponse"][] | null;

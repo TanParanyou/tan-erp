@@ -387,6 +387,12 @@
   <data name="INVALID_PADDING_DETAIL" xml:space="preserve">
     <value>จำนวนหลักของตัวเลขรันลำดับต้องอยู่ระหว่าง 1 ถึง 10 หลัก</value>
   </data>
+  <data name="APP_PLATFORM_INVALID_TITLE" xml:space="preserve">
+    <value>แพลตฟอร์มไม่ถูกต้อง</value>
+  </data>
+  <data name="APP_PLATFORM_INVALID_DETAIL" xml:space="preserve">
+    <value>แพลตฟอร์มต้องเป็น ios หรือ android</value>
+  </data>
   <data name="DOCUMENT_NUMBER_ALLOCATION_FAILED_TITLE" xml:space="preserve">
     <value>การจัดสรรเลขที่เอกสารล้มเหลว</value>
   </data>

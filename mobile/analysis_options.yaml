@@ -1,0 +1,28 @@
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  # custom_lint still loads through the legacy plugin entry; silence the
+  # deprecation notice until custom_lint ships the new plugin system.
+  errors:
+    analysis_options_deprecated_plugins: ignore
+  plugins:
+    - custom_lint
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - build/**
+    - lib/generated/**
+    - lib/core/l10n/gen/**
+    - lib/core/theme/tokens.g.dart
+    - packages/**
+    - android/**
+    - ios/**
+
+linter:
+  rules:
+    # Thai/English strings live in ARB; public API docs are not required for an app.
+    public_member_api_docs: false
+    # Dart 3.13 'new' constructor syntax is not used in this codebase yet.
+    unnecessary_type_name_in_constructor: false

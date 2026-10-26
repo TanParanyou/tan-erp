@@ -387,6 +387,12 @@
   <data name="INVALID_PADDING_DETAIL" xml:space="preserve">
     <value>Sequence padding must be between 1 and 10 digits.</value>
   </data>
+  <data name="APP_PLATFORM_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Platform</value>
+  </data>
+  <data name="APP_PLATFORM_INVALID_DETAIL" xml:space="preserve">
+    <value>Platform must be ios or android.</value>
+  </data>
   <data name="DOCUMENT_NUMBER_ALLOCATION_FAILED_TITLE" xml:space="preserve">
     <value>Document Number Allocation Failed</value>
   </data>

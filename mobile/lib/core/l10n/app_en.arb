@@ -1,0 +1,108 @@
+{
+  "@@locale": "en",
+  "appTitle": "TAN Field",
+  "commonCancel": "Cancel",
+  "commonConfirm": "Confirm",
+  "commonRetry": "Retry",
+  "commonSelect": "Select",
+  "commonFieldRequired": "This field is required",
+  "loginTitle": "Sign in",
+  "loginEmailLabel": "Email",
+  "loginEmailPlaceholder": "name@company.com",
+  "loginPasswordLabel": "Password",
+  "loginPasswordPlaceholder": "Enter your password",
+  "loginSubmit": "Sign in",
+  "notConfiguredTitle": "Firebase is not configured",
+  "notConfiguredBody": "Add the FIREBASE_* values to this flavor's config file and restart the app with --dart-define-from-file",
+  "unlockTitle": "Unlock the app",
+  "unlockBody": "Verify your identity to continue",
+  "unlockAction": "Unlock",
+  "unlockReason": "Verify your identity to open TAN Field",
+  "unlockUseOtherAccount": "Use another account",
+  "membershipTitle": "Choose a branch",
+  "membershipLabel": "Working branch",
+  "membershipAllBranches": "All branches",
+  "membershipContinue": "Continue",
+  "navToday": "Today",
+  "navSurvey": "Survey",
+  "navScan": "Scan",
+  "navNotifications": "Alerts",
+  "navMe": "Me",
+  "inDevelopmentTitle": "Under development",
+  "inDevelopmentBody": "This tab will be available in a later version",
+  "meTitle": "Me",
+  "meProfile": "Profile",
+  "meOrganization": "Organization",
+  "meBranch": "Branch",
+  "meSwitchBranch": "Switch branch",
+  "meLanguage": "Language",
+  "meAppVersion": "App version",
+  "meLogout": "Sign out",
+  "meUiGallery": "UI gallery",
+  "languageThai": "ไทย",
+  "languageEnglish": "English",
+  "themeMode": "Colour mode",
+  "themeModeSystem": "System",
+  "themeModeLight": "Light",
+  "themeModeDark": "Dark",
+  "themeDensity": "Density",
+  "themeDensityNormal": "Normal",
+  "themeDensityCompact": "Compact",
+  "themeTextScale": "Text size",
+  "themeTextScaleValue": "{percent}%",
+  "@themeTextScaleValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "logoutConfirmTitle": "Sign out",
+  "logoutConfirmBody": "Do you want to sign out?",
+  "forceUpdateTitle": "Update required",
+  "forceUpdateBody": "This version is no longer supported. Please update to version {minimum} or later",
+  "@forceUpdateBody": {
+    "placeholders": {
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "forceUpdateCurrent": "Current version {current}",
+  "@forceUpdateCurrent": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "errorInvalidCredentials": "Incorrect email or password",
+  "errorAccountDisabled": "This account has been disabled",
+  "errorNoMembership": "This account has no access to any branch yet",
+  "errorNetwork": "Cannot reach the network. Check your connection",
+  "errorTooManyAttempts": "Too many sign-in attempts. Please wait a moment",
+  "errorUnauthorized": "Your session expired. Please sign in again",
+  "errorForbidden": "You do not have permission for this action",
+  "errorNotFound": "Not found",
+  "errorConflict": "This record was changed. Reload and try again",
+  "errorValidation": "Some data is invalid. Please check and try again",
+  "errorBiometricFailed": "Verification failed",
+  "errorUnknown": "Something went wrong. Please try again",
+  "galleryTitle": "UI gallery",
+  "galleryPrimaryButton": "Primary button",
+  "galleryOutlineButton": "Outline button",
+  "galleryGhostButton": "Ghost button",
+  "galleryLoadingButton": "Saving",
+  "galleryTextField": "Text field",
+  "galleryTextFieldPlaceholder": "Type something",
+  "gallerySelect": "Select",
+  "galleryAlertInfo": "General information",
+  "galleryAlertSuccess": "Saved successfully",
+  "galleryAlertWarning": "Please review before continuing",
+  "galleryAlertDanger": "An error occurred",
+  "galleryConfirmOpen": "Open confirm dialog",
+  "galleryConfirmMessage": "Do you want to continue?",
+  "galleryEmptyTitle": "No items",
+  "galleryEmptyMessage": "There is nothing in this category yet",
+  "galleryEmptyAction": "Add item"
+}
