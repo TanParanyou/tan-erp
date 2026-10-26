@@ -4002,6 +4002,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("phone_number");
 
+                    b.Property<string>("PreferredLocale")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
+                        .HasColumnName("preferred_locale");
+
                     b.Property<Guid>("RowVersion")
                         .IsConcurrencyToken()
                         .HasColumnType("uuid")

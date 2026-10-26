@@ -1,4 +1,7 @@
 import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
@@ -19,6 +22,20 @@ export async function signOutSession(client: QueryClient): Promise<void> {
   client.clear();
   // 3. Sign out of Firebase
   await firebaseSignOut(auth);
+}
+
+/**
+ * Changes the signed-in user's password. Re-authenticates with the current password first,
+ * so a stolen session alone cannot change credentials. Errors are Firebase AuthErrors (code `auth/...`).
+ */
+export async function changeOwnPassword(currentPassword: string, newPassword: string): Promise<void> {
+  const currentUser = auth.currentUser;
+  if (!currentUser || !currentUser.email) {
+    throw new Error("AUTHENTICATION_REQUIRED");
+  }
+  const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+  await reauthenticateWithCredential(currentUser, credential);
+  await updatePassword(currentUser, newPassword);
 }
 
 export async function getAuthToken(forceRefresh = false): Promise<string | null> {

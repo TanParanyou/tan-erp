@@ -98,7 +98,7 @@ public class CurrentUserReader : ICurrentUserReader
             .ToList();
 
         var result = new GetCurrentUserResult(
-            new UserContext(user.Id, user.DisplayName, user.Email),
+            new UserContext(user.Id, user.DisplayName, user.Email, user.PhoneNumber, user.AvatarFileId, user.PreferredLocale),
             membershipContexts);
 
         return Result<GetCurrentUserResult>.Success(result);

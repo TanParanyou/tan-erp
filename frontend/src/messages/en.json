@@ -5224,5 +5224,63 @@
       "deleteMsg": "Are you sure you want to delete template \"{name}\"? This action cannot be undone.",
       "confirmDelete": "Delete Template"
     }
+  },
+  "myProfile": {
+    "title": "My Profile",
+    "subtitle": "Manage your personal information and account security",
+    "openProfile": "Open my profile",
+    "tabs": {
+      "personal": "Personal Info",
+      "security": "Security"
+    },
+    "fields": {
+      "displayName": "Full name",
+      "displayNamePlaceholder": "Enter your full name",
+      "email": "Email",
+      "emailHint": "Email is used to sign in and cannot be changed here",
+      "phoneNumber": "Phone number",
+      "phoneNumberPlaceholder": "e.g. 0812345678",
+      "preferredLocale": "Language",
+      "localeDefault": "System default",
+      "localeTh": "ไทย",
+      "localeEn": "English",
+      "currentPassword": "Current password",
+      "currentPasswordPlaceholder": "Enter your current password",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "Enter a new password (at least 8 characters)",
+      "confirmPassword": "Confirm new password",
+      "confirmPasswordPlaceholder": "Enter the new password again"
+    },
+    "avatar": {
+      "upload": "Upload profile picture",
+      "remove": "Remove picture",
+      "hint": "PNG, JPG or WebP"
+    },
+    "validation": {
+      "displayNameRequired": "Full name is required",
+      "displayNameTooLong": "Name must not exceed 255 characters",
+      "phoneTooLong": "Phone number must not exceed 50 characters",
+      "currentPasswordRequired": "Current password is required",
+      "newPasswordTooShort": "New password must be at least 8 characters",
+      "passwordMismatch": "Password confirmation does not match",
+      "passwordSameAsCurrent": "New password must differ from the current password"
+    },
+    "actions": {
+      "save": "Save profile",
+      "changePassword": "Change password"
+    },
+    "saveSuccess": "Profile saved successfully",
+    "passwordSuccess": "Password changed successfully",
+    "securityTitle": "Change password",
+    "securityHint": "Your current password is verified before the new one is applied",
+    "errors": {
+      "GENERIC": "Something went wrong. Please try again.",
+      "REQUEST_VALIDATION_FAILED": "Invalid data. Please check and try again.",
+      "FILE_NOT_FOUND": "Profile picture file was not found. Please upload it again.",
+      "WRONG_PASSWORD": "The current password is incorrect",
+      "WEAK_PASSWORD": "The new password is too weak. Please choose a stronger one.",
+      "REQUIRES_RECENT_LOGIN": "Please sign out and sign in again before changing your password",
+      "TOO_MANY_REQUESTS": "Too many attempts. Please wait a moment and try again."
+    }
   }
 }

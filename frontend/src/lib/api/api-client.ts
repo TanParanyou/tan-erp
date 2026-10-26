@@ -3,6 +3,8 @@ import { ApiError } from "./api-error";
 import type { ProblemDetails } from "./problem-details";
 
 export type CurrentUserResponse = components["schemas"]["CurrentUserResponse"];
+export type UserDto = components["schemas"]["UserDto"];
+export type UpdateMyProfileRequest = components["schemas"]["UpdateMyProfileRequest"];
 export type CustomerListResponse = components["schemas"]["CustomerListResponse"];
 export type CustomerListItemResponse = components["schemas"]["CustomerListItemResponse"];
 export type CustomerResponse = components["schemas"]["CustomerResponse"];
@@ -593,6 +595,10 @@ export class ApiClient {
       locale,
       signal,
     });
+  }
+
+  async updateMyProfile(payload: UpdateMyProfileRequest, options: RequestOptions): Promise<UserDto> {
+    return this.request<UserDto>("/api/v1/me/profile", "PUT", options, payload);
   }
 
   async listCustomers(

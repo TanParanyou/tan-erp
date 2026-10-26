@@ -1140,8 +1140,12 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.625rem;
   font-size: 0.8125rem;
   max-width: 180px;
+  max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

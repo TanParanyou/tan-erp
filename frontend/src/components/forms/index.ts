@@ -27,4 +27,5 @@ export * from "./AttachmentList";
 export * from "./SignatureCapturePanel";
 export * from "./TaxIdInput";
 export * from "./ComboboxInput";
+export * from "./AvatarUpload";
 

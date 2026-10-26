@@ -7,7 +7,10 @@ public sealed record GetCurrentUserResult(
 public sealed record UserContext(
     Guid Id,
     string DisplayName,
-    string Email);
+    string Email,
+    string? PhoneNumber = null,
+    Guid? AvatarFileId = null,
+    string? PreferredLocale = null);
 
 public sealed record MembershipContext(
     Guid Id,

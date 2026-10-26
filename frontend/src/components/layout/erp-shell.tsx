@@ -17,7 +17,6 @@ import {
   IconLogOut,
   IconGlobe,
   IconBriefcase,
-  IconUser,
   IconBuilding,
   IconGitBranch,
   IconFileText,
@@ -28,6 +27,7 @@ import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { Avatar } from "@/components/ui/Avatar";
 import { SidebarNav } from "./SidebarNav";
 import { NotificationBell } from "./NotificationBell";
 
@@ -45,6 +45,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
   const tShell = useTranslations("shell");
   const tAuth = useTranslations("auth");
   const tApp = useTranslations("app");
+  const tProfile = useTranslations("myProfile");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -127,16 +128,32 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
 
         <div className="erp-header-right">
           {/* User information (desktop/tablet only) */}
-          <div className="erp-header-user-info">
-            <span style={{ fontWeight: 600, color: "#FFFFFF", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {user?.displayName || user?.email || tShell("user")}
-            </span>
-            {user?.displayName && user?.email && (
-              <span style={{ color: "#D1D5DB", fontSize: "0.75rem", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {user.email}
+          <Link
+            href={`/${locale}/profile`}
+            className="erp-header-user-info"
+            aria-label={tProfile("openProfile")}
+            title={tProfile("openProfile")}
+            style={{ textDecoration: "none", minHeight: "44px" }}
+          >
+            <div className="flex flex-col items-end text-right min-w-0">
+              <span style={{ fontWeight: 600, color: "#FFFFFF", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {user?.displayName || user?.email || tShell("user")}
               </span>
-            )}
-          </div>
+              {user?.displayName && user?.email && (
+                <span style={{ color: "#D1D5DB", fontSize: "0.75rem", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user.email}
+                </span>
+              )}
+            </div>
+            <Avatar
+              size="sm"
+              fileId={user?.avatarFileId}
+              initial={user?.displayName || user?.email || undefined}
+              alt={user?.displayName || user?.email || tShell("user")}
+              variant="outline"
+              className="border-white/25 bg-white/10 text-white shrink-0"
+            />
+          </Link>
 
           {/* In-app notifications (renders nothing without a selected membership) */}
           <NotificationBell />
@@ -226,24 +243,15 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
 
           {/* Mobile-only Context & User Info */}
           <div className="erp-drawer-context">
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  backgroundColor: "var(--erp-surface)",
-                  border: "1px solid var(--erp-border)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--erp-navy)",
-                  flexShrink: 0,
-                }}
-                aria-label={tShell("user")}
-                title={tShell("user")}
-              >
-                <IconUser size={20} />
-              </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <Avatar
+                size="md"
+                fileId={user?.avatarFileId}
+                initial={user?.displayName || user?.email || undefined}
+                alt={user?.displayName || user?.email || tShell("user")}
+                variant="outline"
+                className="border-erp-border bg-erp-surface text-erp-navy shrink-0"
+              />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontWeight: 600, color: "var(--erp-text-main)", fontSize: "0.875rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user?.displayName || user?.email || "-"}

@@ -24,6 +24,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.JobTitleId).HasColumnName("job_title_id");
         builder.Property(x => x.AvatarFileId).HasColumnName("avatar_file_id");
         builder.Property(x => x.Notes).HasColumnName("notes").HasMaxLength(1000);
+        builder.Property(x => x.PreferredLocale).HasColumnName("preferred_locale").HasMaxLength(5);
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();

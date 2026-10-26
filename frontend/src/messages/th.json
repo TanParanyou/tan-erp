@@ -5224,5 +5224,63 @@
       "deleteMsg": "คุณแน่ใจหรือไม่ว่าต้องการลบเทมเพลต \"{name}\"? การกระทำนี้ไม่สามารถย้อนกลับได้",
       "confirmDelete": "ลบเทมเพลต"
     }
+  },
+  "myProfile": {
+    "title": "โปรไฟล์ของฉัน",
+    "subtitle": "จัดการข้อมูลส่วนตัวและความปลอดภัยของบัญชี",
+    "openProfile": "เปิดโปรไฟล์ของฉัน",
+    "tabs": {
+      "personal": "ข้อมูลส่วนตัว",
+      "security": "ความปลอดภัย"
+    },
+    "fields": {
+      "displayName": "ชื่อ-นามสกุล",
+      "displayNamePlaceholder": "กรอกชื่อ-นามสกุล",
+      "email": "อีเมล",
+      "emailHint": "อีเมลใช้สำหรับเข้าสู่ระบบ ไม่สามารถแก้ไขได้ที่นี่",
+      "phoneNumber": "เบอร์โทรศัพท์",
+      "phoneNumberPlaceholder": "เช่น 0812345678",
+      "preferredLocale": "ภาษาที่ใช้",
+      "localeDefault": "ตามค่าเริ่มต้นของระบบ",
+      "localeTh": "ไทย",
+      "localeEn": "English",
+      "currentPassword": "รหัสผ่านปัจจุบัน",
+      "currentPasswordPlaceholder": "กรอกรหัสผ่านปัจจุบัน",
+      "newPassword": "รหัสผ่านใหม่",
+      "newPasswordPlaceholder": "กรอกรหัสผ่านใหม่ อย่างน้อย 8 ตัวอักษร",
+      "confirmPassword": "ยืนยันรหัสผ่านใหม่",
+      "confirmPasswordPlaceholder": "กรอกรหัสผ่านใหม่อีกครั้ง"
+    },
+    "avatar": {
+      "upload": "อัปโหลดรูปโปรไฟล์",
+      "remove": "ลบรูป",
+      "hint": "รองรับ PNG, JPG, WebP"
+    },
+    "validation": {
+      "displayNameRequired": "กรุณากรอกชื่อ-นามสกุล",
+      "displayNameTooLong": "ชื่อต้องไม่เกิน 255 ตัวอักษร",
+      "phoneTooLong": "เบอร์โทรศัพท์ต้องไม่เกิน 50 ตัวอักษร",
+      "currentPasswordRequired": "กรุณากรอกรหัสผ่านปัจจุบัน",
+      "newPasswordTooShort": "รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร",
+      "passwordMismatch": "รหัสผ่านยืนยันไม่ตรงกัน",
+      "passwordSameAsCurrent": "รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านปัจจุบัน"
+    },
+    "actions": {
+      "save": "บันทึกโปรไฟล์",
+      "changePassword": "เปลี่ยนรหัสผ่าน"
+    },
+    "saveSuccess": "บันทึกโปรไฟล์เรียบร้อยแล้ว",
+    "passwordSuccess": "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว",
+    "securityTitle": "เปลี่ยนรหัสผ่าน",
+    "securityHint": "ระบบจะยืนยันรหัสผ่านปัจจุบันก่อนเปลี่ยนรหัสผ่านใหม่",
+    "errors": {
+      "GENERIC": "ไม่สามารถดำเนินการได้ กรุณาลองใหม่อีกครั้ง",
+      "REQUEST_VALIDATION_FAILED": "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
+      "FILE_NOT_FOUND": "ไม่พบไฟล์รูปโปรไฟล์ กรุณาอัปโหลดใหม่",
+      "WRONG_PASSWORD": "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+      "WEAK_PASSWORD": "รหัสผ่านใหม่ไม่ปลอดภัยพอ กรุณาใช้รหัสผ่านที่คาดเดาได้ยากขึ้น",
+      "REQUIRES_RECENT_LOGIN": "กรุณาออกจากระบบและเข้าสู่ระบบใหม่ก่อนเปลี่ยนรหัสผ่าน",
+      "TOO_MANY_REQUESTS": "ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่"
+    }
   }
 }

@@ -240,6 +240,101 @@ public class CurrentUserEndpointTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task UpdateMyProfile_NoAuthorization_Returns401()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/me/profile")
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(new { displayName = "New Name" }),
+                System.Text.Encoding.UTF8,
+                "application/json")
+        };
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateMyProfile_ValidToken_UpdatesProfileAndReflectsInGetCurrentUser()
+    {
+        var membershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a11");
+        var updatePayload = new
+        {
+            displayName = "นายทดสอบ โปรไฟล์ใหม่",
+            phoneNumber = "0899998888",
+            preferredLocale = "en",
+            avatarFileId = (Guid?)null
+        };
+
+        var updateRequest = new HttpRequestMessage(HttpMethod.Put, "/api/v1/me/profile")
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(updatePayload),
+                System.Text.Encoding.UTF8,
+                "application/json")
+        };
+        updateRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-valid-active");
+        updateRequest.Headers.Add("X-Membership-Id", membershipId.ToString());
+
+        var updateResponse = await _client.SendAsync(updateRequest);
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+
+        var updateBody = await updateResponse.Content.ReadAsStringAsync();
+        var updatedUser = JsonSerializer.Deserialize<UserDto>(updateBody, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(updatedUser);
+        Assert.Equal("นายทดสอบ โปรไฟล์ใหม่", updatedUser.DisplayName);
+        Assert.Equal("0899998888", updatedUser.PhoneNumber);
+        Assert.Equal("en", updatedUser.PreferredLocale);
+
+        // Verify GET /api/v1/me returns the updated user values
+        var getMeRequest = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        getMeRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-valid-active");
+
+        var getMeResponse = await _client.SendAsync(getMeRequest);
+        Assert.Equal(HttpStatusCode.OK, getMeResponse.StatusCode);
+
+        var getMeBody = await getMeResponse.Content.ReadAsStringAsync();
+        var meResult = JsonSerializer.Deserialize<CurrentUserResponse>(getMeBody, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(meResult);
+        Assert.Equal("นายทดสอบ โปรไฟล์ใหม่", meResult.User.DisplayName);
+        Assert.Equal("0899998888", meResult.User.PhoneNumber);
+        Assert.Equal("en", meResult.User.PreferredLocale);
+    }
+
+    [Fact]
+    public async Task UpdateMyProfile_InvalidLocale_Returns400ValidationFailed()
+    {
+        var membershipId = Guid.Parse("019a3cf8-96f0-7c9f-b207-93aa818f4a11");
+        var updatePayload = new
+        {
+            displayName = "ผู้ใช้",
+            preferredLocale = "invalid_locale"
+        };
+
+        var updateRequest = new HttpRequestMessage(HttpMethod.Put, "/api/v1/me/profile")
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(updatePayload),
+                System.Text.Encoding.UTF8,
+                "application/json")
+        };
+        updateRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "token-valid-active");
+        updateRequest.Headers.Add("X-Membership-Id", membershipId.ToString());
+
+        var updateResponse = await _client.SendAsync(updateRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, updateResponse.StatusCode);
+
+        var body = await updateResponse.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ApiProblemDetails>(body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        Assert.NotNull(problem);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", problem.Code);
+    }
+
+
+    [Fact]
     public async Task GetCurrentUser_WhenPermissionInactive_OmitsPermissionButReturns200()
     {
         using var scope = _factory.Services.CreateScope();

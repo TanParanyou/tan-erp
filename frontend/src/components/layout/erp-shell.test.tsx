@@ -84,6 +84,7 @@ describe("ErpShell Component", () => {
     expect(screen.getByTestId("branch-name").textContent).toBe("สาขาทดสอบ");
     expect(screen.getAllByText("สมชาย รักสงบ").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("organizations.read")).toBeDefined();
+    expect(screen.getAllByLabelText("สมชาย รักสงบ").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders Customers navigation link when customers.read permission is present", () => {

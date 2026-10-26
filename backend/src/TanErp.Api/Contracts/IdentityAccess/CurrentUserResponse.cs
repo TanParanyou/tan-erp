@@ -7,7 +7,16 @@ public sealed record CurrentUserResponse(
 public sealed record UserDto(
     Guid Id,
     string DisplayName,
-    string Email);
+    string Email,
+    string? PhoneNumber = null,
+    Guid? AvatarFileId = null,
+    string? PreferredLocale = null);
+
+public sealed record UpdateMyProfileRequest(
+    string? DisplayName,
+    string? PhoneNumber = null,
+    string? PreferredLocale = null,
+    Guid? AvatarFileId = null);
 
 public sealed record MembershipDto(
     Guid Id,

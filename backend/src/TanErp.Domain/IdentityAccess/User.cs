@@ -22,6 +22,10 @@ public class User : Entity
     public JobTitle? JobTitle { get; set; }
     public Guid? AvatarFileId { get; private set; }
     public string? Notes { get; private set; }
+    /// <summary>Self-selected UI language ("th" or "en"); null means follow the browser/route default.</summary>
+    public string? PreferredLocale { get; private set; }
+
+    public static readonly IReadOnlyList<string> SupportedLocales = new[] { "th", "en" };
 
     public bool IsPending => FirebaseUid is null;
 
@@ -141,6 +145,23 @@ public class User : Entity
         JobTitleId = jobTitleId;
         AvatarFileId = avatarFileId;
         Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+        RowVersion = Guid.NewGuid();
+    }
+
+    /// <summary>Self-service profile edit: only the fields a user may change about themselves.</summary>
+    public void UpdateOwnProfile(string displayName, string? phoneNumber, string? preferredLocale, Guid? avatarFileId)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+            throw new ArgumentException("Display name cannot be empty.", nameof(displayName));
+
+        var locale = string.IsNullOrWhiteSpace(preferredLocale) ? null : preferredLocale.Trim().ToLowerInvariant();
+        if (locale is not null && !SupportedLocales.Contains(locale))
+            throw new ArgumentException("Preferred locale is not supported.", nameof(preferredLocale));
+
+        DisplayName = displayName.Trim();
+        PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
+        PreferredLocale = locale;
+        AvatarFileId = avatarFileId;
         RowVersion = Guid.NewGuid();
     }
 
