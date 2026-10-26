@@ -1,113 +1,7 @@
 /* Atelier Architectural Navy Sharp - Centralized ERP Design System */
 
-:root {
-  /* Atelier Architectural Navy Scale (50-950) */
-  --erp-navy-50: #F0F5FA;
-  --erp-navy-100: #E1EBF5;
-  --erp-navy-200: #C3D7EC;
-  --erp-navy-300: #98BCDF;
-  --erp-navy-400: #659BD0;
-  --erp-navy-500: #3D7BC0;
-  --erp-navy-600: #255FA3;
-  --erp-navy-700: #194B85;
-  --erp-navy-800: #123968;
-  --erp-navy-900: #0B3056;
-  --erp-navy-950: #071F38;
-
-  /* Architectural Ice Slate Scale (50-900) */
-  --erp-slate-50: #F8FAFC;
-  --erp-slate-100: #F1F5F9;
-  --erp-slate-200: #E2EBF4;
-  --erp-slate-300: #D1DEEC;
-  --erp-slate-400: #94A3B8;
-  --erp-slate-500: #64748B;
-  --erp-slate-600: #536B88;
-  --erp-slate-700: #334155;
-  --erp-slate-800: #1E293B;
-  --erp-slate-900: #0A192F;
-
-  /* Navy Brand Tokens (Atelier Architectural Navy) */
-  --erp-navy: var(--erp-navy-900);
-  --erp-navy-hover: var(--erp-navy-950);
-  --erp-navy-light: var(--erp-navy-50);
-  --erp-navy-border: var(--erp-navy-900);
-
-  /* Neutral Surface & Canvas (Architectural Drafting Colors) */
-  --erp-canvas: #F4F6F9;
-  --erp-surface: #FFFFFF;
-  --erp-surface-muted: var(--erp-slate-50);
-  --erp-surface-subtle: #EBF1F7;
-  --erp-border: var(--erp-slate-300);
-  --erp-border-subtle: var(--erp-slate-200);
-  --erp-border-strong: var(--erp-navy-900);
-
-  /* Typography Colors */
-  --erp-text-main: var(--erp-slate-900);
-  --erp-text-body: var(--erp-slate-700);
-  --erp-text-muted: var(--erp-slate-600);
-  --erp-text-subtle: #7E95B0;
-  --erp-text-on-navy: #FFFFFF;
-
-  /* Status Semantics (Maker-Checker Semantics) */
-  --erp-success: #14532D;
-  --erp-success-bg: #EBF7F0;
-  --erp-success-border: #A7F3D0;
-  --erp-warning: #92400E;
-  --erp-warning-bg: #FFFBEB;
-  --erp-warning-border: #FDE68A;
-  --erp-warning-text: #78350F;
-  --erp-danger: #991B1B;
-  --erp-danger-bg: #FEF2F2;
-  --erp-danger-border: #FECACA;
-  --erp-info: #1D518A;
-  --erp-info-bg: #EFF6FF;
-
-  /* Architectural Constraints */
-  --erp-radius: 0px;
-  --erp-min-touch: 44px;
-  --erp-focus-ring: 2px solid var(--erp-navy);
-}
-
-/* Midnight Architectural Navy - Dark Mode (design.md 3.2) */
-[data-theme="dark"] {
-  /* Navy Brand Tokens (High-contrast Royal/Architectural Navy for dark canvas) */
-  --erp-navy: #2563EB;
-  --erp-navy-hover: #1D4ED8;
-  --erp-navy-light: #162C4E;
-  --erp-navy-border: #3B82F6;
-
-  /* Dark Surface & Canvas (Midnight Architectural Navy) */
-  --erp-canvas: #050E1A;
-  --erp-surface: #0B1728;
-  --erp-surface-muted: #101E33;
-  --erp-surface-subtle: #142742;
-  --erp-border: #1F3D68;
-  --erp-border-subtle: #162C4E;
-  --erp-border-strong: #2563EB;
-
-  /* Typography Colors */
-  --erp-text-main: #F0F5FA;
-  --erp-text-body: #CBD5E1;
-  --erp-text-muted: #9BB0C9;
-  --erp-text-subtle: #64748B;
-  --erp-text-on-navy: #FFFFFF;
-
-  /* Status Semantics (Dark Mode high legibility) */
-  --erp-success: #4ADE80;
-  --erp-success-bg: #064E3B;
-  --erp-success-border: #059669;
-  --erp-warning: #FBBF24;
-  --erp-warning-bg: #78350F;
-  --erp-warning-border: #D97706;
-  --erp-warning-text: #FDE68A;
-  --erp-danger: #F87171;
-  --erp-danger-bg: #7F1D1D;
-  --erp-danger-border: #DC2626;
-  --erp-info: #60A5FA;
-  --erp-info-bg: #1E3A8A;
-
-  --erp-focus-ring: 2px solid #60A5FA;
-}
+/* Design tokens (--erp-*) are generated from design-tokens/*.json; do not redeclare them here. */
+@import "./tokens.css";
 
 /* ==========================================================================
    Base Buttons (.erp-btn)
@@ -119,7 +13,7 @@
   gap: 0.5rem;
   min-height: var(--erp-min-touch);
   padding: 0.5rem 1rem;
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   border: 1px solid transparent;
   font-family: inherit;
   font-size: 0.875rem;
@@ -256,7 +150,7 @@
 .erp-select,
 .erp-textarea {
   width: 100%;
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   border: 1px solid var(--erp-border);
   background-color: var(--erp-surface);
   color: var(--erp-text-main);
@@ -363,7 +257,7 @@
   appearance: none;
   width: 18px;
   height: 18px;
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   border: 1.5px solid var(--erp-border);
   background-color: var(--erp-surface);
   cursor: pointer;
@@ -425,7 +319,7 @@
   appearance: none;
   width: 18px;
   height: 18px;
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   border: 1.5px solid var(--erp-border);
   background-color: var(--erp-surface);
   cursor: pointer;
@@ -445,7 +339,7 @@
   content: "";
   width: 8px;
   height: 8px;
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   background-color: var(--erp-navy);
 }
 
@@ -518,7 +412,7 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.25rem 0.625rem;
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   font-size: 0.75rem;
   font-weight: 600;
   border: 1px solid transparent;
@@ -561,7 +455,7 @@
 .erp-card {
   background-color: var(--erp-surface);
   border: 1px solid var(--erp-border);
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   padding: 1.5rem;
 }
 
@@ -601,7 +495,7 @@
   bottom: 0;
   background-color: var(--erp-surface);
   border-left: 1px solid var(--erp-border);
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
@@ -623,7 +517,7 @@
 .erp-modal-window {
   background-color: var(--erp-surface);
   border: 1px solid var(--erp-border);
-  border-radius: 0 !important;
+  border-radius: var(--erp-radius);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
   width: 90%;
   max-height: 90vh;
@@ -893,7 +787,7 @@
   padding: 0 1.75rem 0 2rem;
   background-color: var(--erp-surface-muted);
   border: 1px solid var(--erp-border);
-  border-radius: 0px !important;
+  border-radius: var(--erp-radius);
   color: var(--erp-text-main);
   font-size: 0.8125rem;
   outline: none;
@@ -917,7 +811,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0px !important;
+  border-radius: var(--erp-radius);
 }
 
 .erp-nav-search-clear:hover {
@@ -932,7 +826,7 @@
   padding: 0.375rem 0.5rem;
   background: transparent;
   border: 1px dashed var(--erp-border-subtle);
-  border-radius: 0px !important;
+  border-radius: var(--erp-radius);
   color: var(--erp-text-muted);
   font-size: 0.75rem;
   font-weight: 500;
@@ -974,7 +868,7 @@
   padding: 0.5rem 1.25rem;
   background: transparent;
   border: none;
-  border-radius: 0px !important;
+  border-radius: var(--erp-radius);
   color: var(--erp-text-body);
   font-size: 0.8125rem;
   font-weight: 650;
