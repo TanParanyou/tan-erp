@@ -1,6 +1,6 @@
 # Mobile Foundation Phase 0 — Design Tokens + Flutter App Skeleton
 
-- Status: **Implemented** (2026-10-26) — A1–A5 และ B1–B7 เสร็จ; ไม่มี test ใหม่และไม่ได้รัน test (ตามผู้ใช้); ยังไม่ได้ทดสอบบนเครื่องจริง/emulator; iOS build ติดปัญหา SwiftPM ของ Xcode 26 กับ firebase-ios-sdk; iOS flavor ใช้ bundle ID เดียว; การเปลี่ยนภาษาในแอปยังไม่บันทึกที่ Backend (ต้องมี endpoint locale-only)
+- Status: **Implemented** (2026-10-26) — A1–A5 และ B1–B7 เสร็จ; ไม่มี test ใหม่และไม่ได้รัน test (ตามผู้ใช้); ยังไม่ได้ทดสอบบนเครื่องจริง/emulator; Android dev APK รันบน emulator ได้ (จอ Firebase not configured); iOS ใช้ CocoaPods แทน SwiftPM แล้ว แต่ build ต้องติดตั้ง iOS platform ของ Xcode ก่อน (`xcodebuild -downloadPlatform iOS`); iOS flavor ใช้ bundle ID เดียว; ภาษาบันทึกผ่าน `PUT /me/preferences` แล้ว; ล็อกอินจริงและซิงก์ธีมเว็บ↔แอป รอ Firebase dev project
 - Decisions: [ADR 0030](../../adr/0030-flutter-field-companion-app.md), [ADR 0031](../../adr/0031-cross-platform-design-tokens-and-theming.md)
 - Architecture: [Mobile Architecture](../../02-architecture/mobile-architecture.md), [design.md หมวด 7](../../../design.md)
 - Tests: ไม่เขียนและไม่รัน test ใหม่ (ตามข้อตกลงกับผู้ใช้); รักษา test เดิมให้ compile ได้
