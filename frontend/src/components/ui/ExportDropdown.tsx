@@ -112,7 +112,7 @@ export function ExportDropdown({
         aria-haspopup="menu"
         aria-label={buttonLabel}
         className={buttonClasses}
-        style={{ borderRadius: "0px" }}
+        style={{ borderRadius: "var(--erp-radius)" }}
       >
         {isLoading ? <MonoSpinner size="sm" /> : <IconDownload size={15} />}
         <span>{buttonLabel}</span>
@@ -134,7 +134,7 @@ export function ExportDropdown({
             direction === "up" ? "bottom-full mb-1" : "mt-1",
             align === "right" ? "right-0" : "left-0"
           )}
-          style={{ borderRadius: "0px" }}
+          style={{ borderRadius: "var(--erp-radius)" }}
         >
           <button
             type="button"

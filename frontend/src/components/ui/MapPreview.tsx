@@ -52,7 +52,7 @@ export function MapPreview({
         className="w-full border border-erp-border bg-erp-surface-muted overflow-hidden relative"
         style={{
           height: typeof height === "number" ? `${height}px` : height,
-          borderRadius: "0px",
+          borderRadius: "var(--erp-radius)",
         }}
       >
         <iframe

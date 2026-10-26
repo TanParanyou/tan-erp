@@ -166,7 +166,7 @@ export function CameraCaptureModal({
           {!snapshot && isActive && (
             <div
               className="absolute top-4 right-4 px-3 py-1.5 bg-black/85 border border-white/30 text-white text-xs font-mono tracking-wider z-20"
-              style={{ borderRadius: "0px" }}
+              style={{ borderRadius: "var(--erp-radius)" }}
             >
               {facingMode === "environment" ? t("backCamera") : t("frontCamera")}
             </div>
@@ -184,7 +184,7 @@ export function CameraCaptureModal({
               />
               <div
                 className="absolute top-4 left-4 px-3 py-1.5 bg-black/85 border border-white/30 text-white text-xs font-mono tracking-wider uppercase z-20"
-                style={{ borderRadius: "0px" }}
+                style={{ borderRadius: "var(--erp-radius)" }}
               >
                 {t("useThisPhoto")}?
               </div>

@@ -101,7 +101,7 @@ export function LoginForm({ onSuccess }: LoginFormProps = {}) {
               border: "1px solid var(--erp-danger-border)",
               color: "var(--erp-danger)",
               fontSize: "0.875rem",
-              borderRadius: 0,
+              borderRadius: "var(--erp-radius)",
               display: "flex",
               alignItems: "center",
               gap: "0.5rem",

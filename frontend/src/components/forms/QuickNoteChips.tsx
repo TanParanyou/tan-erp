@@ -55,7 +55,7 @@ export function QuickNoteChips({
               "focus-visible:outline-2 focus-visible:outline-erp-navy",
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-erp-border disabled:hover:text-erp-text-main"
             )}
-            style={{ borderRadius: "0px" }}
+            style={{ borderRadius: "var(--erp-radius)" }}
           >
             <IconPlus size={12} className="text-erp-text-muted shrink-0" />
             <span>{tpl.label}</span>

@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax -- token-exempt: ImageResponse rendered outside CSS */
 import { ImageResponse } from "next/og";
 
 export const size = {

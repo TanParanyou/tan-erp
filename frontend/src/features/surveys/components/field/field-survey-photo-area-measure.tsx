@@ -227,6 +227,7 @@ export function FieldSurveyPhotoAreaMeasure({ onClose, onApply }: FieldSurveyPho
 
     const styles = getComputedStyle(document.documentElement);
     const navy = styles.getPropertyValue("--erp-navy").trim();
+    const onNavy = styles.getPropertyValue("--erp-text-on-navy").trim();
     const warning = styles.getPropertyValue("--erp-warning").trim();
     const lineWidth = Math.max(2, canvas.width / 400);
 
@@ -259,7 +260,7 @@ export function FieldSurveyPhotoAreaMeasure({ onClose, onApply }: FieldSurveyPho
     const labelWidth = ctx.measureText(label).width + pad * 2;
     ctx.fillStyle = navy;
     ctx.fillRect(pad, pad, labelWidth, fontSize + pad * 2);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = onNavy;
     ctx.textBaseline = "top";
     ctx.fillText(label, pad * 2, pad * 2);
 

@@ -124,7 +124,7 @@ export function DropdownMenu({
           aria-expanded={isOpen}
           aria-haspopup="menu"
           className="erp-btn erp-btn-outline erp-btn-md inline-flex items-center gap-1.5 font-semibold"
-          style={{ borderRadius: "0px" }}
+          style={{ borderRadius: "var(--erp-radius)" }}
         >
           <span>{triggerLabel}</span>
           <IconChevronDown
@@ -143,7 +143,7 @@ export function DropdownMenu({
             "absolute z-50 mt-1 min-w-[200px] max-w-[calc(100vw-2rem)] whitespace-nowrap border border-erp-border bg-erp-surface py-1 shadow-lg focus:outline-none",
             computedAlign === "right" ? "right-0" : "left-0"
           )}
-          style={{ borderRadius: "0px" }}
+          style={{ borderRadius: "var(--erp-radius)" }}
         >
           {visibleItems.map((item) => (
             <React.Fragment key={item.key}>

@@ -107,18 +107,20 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <LogoIcon size={26} color="#FFFFFF" strokeWidth={2} style={{ flexShrink: 0 }} />
+            <LogoIcon size={26} color="var(--erp-text-on-navy)" strokeWidth={2} style={{ flexShrink: 0 }} />
             <span className="erp-header-title">
               {tApp("title")}
             </span>
           </div>
 
           <div className="erp-header-context-info">
+            {/* eslint-disable-next-line no-restricted-syntax -- token-exempt: no semantic token for gray-200 header text */}
             <span style={{ color: "#E5E7EB" }}>
               <strong>{tShell("organization")}:</strong>{" "}
               <span data-testid="org-name">{orgName}</span>
             </span>
-            <span style={{ color: "rgba(255, 255, 255, 0.4)" }}>|</span>
+            <span style={{ color: "color-mix(in srgb, var(--erp-text-on-navy) 40%, transparent)" }}>|</span>
+            {/* eslint-disable-next-line no-restricted-syntax -- token-exempt: no semantic token for gray-200 header text */}
             <span style={{ color: "#E5E7EB" }}>
               <strong>{tShell("branch")}:</strong>{" "}
               <span data-testid="branch-name">{branchName}</span>
@@ -136,10 +138,11 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
             style={{ textDecoration: "none", minHeight: "44px" }}
           >
             <div className="flex flex-col items-end text-right min-w-0">
-              <span style={{ fontWeight: 600, color: "#FFFFFF", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ fontWeight: 600, color: "var(--erp-text-on-navy)", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {user?.displayName || user?.email || tShell("user")}
               </span>
               {user?.displayName && user?.email && (
+                // eslint-disable-next-line no-restricted-syntax -- token-exempt: no semantic token for gray-300 header text
                 <span style={{ color: "#D1D5DB", fontSize: "0.75rem", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user.email}
                 </span>
@@ -213,7 +216,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           {/* Mobile Drawer Header */}
           <div className="erp-drawer-header">
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="square">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--erp-text-on-navy)" strokeWidth="2" strokeLinecap="square">
                 <rect x="3" y="3" width="18" height="18" />
                 <line x1="3" y1="9" x2="21" y2="9" />
                 <line x1="9" y1="21" x2="9" y2="9" />
@@ -225,7 +228,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
               style={{
                 background: "transparent",
                 border: "none",
-                color: "#FFFFFF",
+                color: "var(--erp-text-on-navy)",
                 cursor: "pointer",
                 padding: "0.5rem",
                 display: "inline-flex",

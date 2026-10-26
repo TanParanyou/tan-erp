@@ -129,6 +129,7 @@ export function AccessGate({ children }: AccessGateProps) {
                 {tGate("noMembershipTitle")}
               </h2>
             </div>
+            {/* eslint-disable-next-line no-restricted-syntax -- token-exempt: warning-text token flips in dark mode; literal is fixed in both */}
             <p style={{ color: "#78350F", lineHeight: 1.6, fontSize: "0.9375rem" }}>
               {tGate("noMembershipDetail")}
             </p>
@@ -173,6 +174,7 @@ export function AccessGate({ children }: AccessGateProps) {
                 {tGate("userDisabledTitle")}
               </h2>
             </div>
+            {/* eslint-disable-next-line no-restricted-syntax -- token-exempt: no matching token (danger-bg in dark); literal is fixed in both */}
             <p style={{ color: "#7F1D1D", lineHeight: 1.6, fontSize: "0.9375rem" }}>
               {tGate("userDisabledDetail")}
             </p>

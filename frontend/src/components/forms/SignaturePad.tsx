@@ -70,6 +70,7 @@ export function SignaturePad({
     if (!ctx) return;
 
     ctx.scale(dpr, dpr);
+    // eslint-disable-next-line no-restricted-syntax -- token-exempt: canvas 2D context needs a raw colour string
     ctx.strokeStyle = "#0B3056"; // Solid Architectural Navy
     ctx.lineWidth = 2.5;
     ctx.lineCap = "square";

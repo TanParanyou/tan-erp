@@ -79,7 +79,7 @@ export function SurveyCard({
       role="region"
       aria-label={t("surveyCardTitle")}
       className="erp-card p-4 border-erp-border bg-erp-surface flex flex-col gap-3 shadow-xs"
-      style={{ borderRadius: "0px" }}
+      style={{ borderRadius: "var(--erp-radius)" }}
     >
       <div className="flex items-center justify-between border-b border-erp-border-subtle pb-2">
         <div className="flex items-center gap-2">

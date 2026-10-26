@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable no-restricted-syntax -- token-exempt: fallback design-style swatch palettes are data, not theme colours */
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";

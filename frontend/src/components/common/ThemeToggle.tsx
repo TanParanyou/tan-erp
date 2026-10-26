@@ -38,8 +38,8 @@ export function ThemeToggle({ className, style }: ThemeToggleProps) {
         padding: "0.5rem",
         backgroundColor: "transparent",
         color: "inherit",
-        border: "1px solid rgba(255, 255, 255, 0.3)",
-        borderRadius: 0,
+        border: "1px solid color-mix(in srgb, var(--erp-text-on-navy) 30%, transparent)",
+        borderRadius: "var(--erp-radius)",
         cursor: "pointer",
         ...style,
       }}

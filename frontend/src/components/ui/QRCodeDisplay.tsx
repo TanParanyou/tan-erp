@@ -64,7 +64,7 @@ export function QRCodeDisplay({
                   y={r * cellSize}
                   width={cellSize}
                   height={cellSize}
-                  fill="#0B3056"
+                  fill="var(--erp-navy-900)"
                 />
               ) : null
             )

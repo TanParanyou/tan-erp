@@ -478,7 +478,7 @@ function LightboxModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
-      style={{ backgroundColor: "rgba(7, 31, 56, 0.98)" }}
+      style={{ backgroundColor: "color-mix(in srgb, var(--erp-navy-950) 98%, transparent)" }}
       className="fixed inset-0 z-[9999] flex flex-col justify-between backdrop-blur-md select-none"
       onClick={onClose}
     >
@@ -565,7 +565,7 @@ function LightboxModal({
           <button
             type="button"
             onClick={onPrev}
-            style={{ backgroundColor: "#0B3056" }}
+            style={{ backgroundColor: "var(--erp-navy-900)" }}
             className="absolute left-3 sm:left-6 z-30 w-12 sm:w-14 h-16 sm:h-20 hover:brightness-125 text-white border-2 border-white/60 shadow-2xl transition-all flex items-center justify-center cursor-pointer rounded-none"
             aria-label={t("lightbox.previous")}
             title={t("lightbox.previous")}
@@ -596,7 +596,7 @@ function LightboxModal({
           <button
             type="button"
             onClick={onNext}
-            style={{ backgroundColor: "#0B3056" }}
+            style={{ backgroundColor: "var(--erp-navy-900)" }}
             className="absolute right-3 sm:right-6 z-30 w-12 sm:w-14 h-16 sm:h-20 hover:brightness-125 text-white border-2 border-white/60 shadow-2xl transition-all flex items-center justify-center cursor-pointer rounded-none"
             aria-label={t("lightbox.next")}
             title={t("lightbox.next")}
@@ -607,7 +607,7 @@ function LightboxModal({
 
         {/* Floating Action Dock (ชัดเจน เห็นได้ทันที มี icon + label) */}
         <div
-          style={{ backgroundColor: "rgba(11, 48, 86, 0.96)" }}
+          style={{ backgroundColor: "color-mix(in srgb, var(--erp-navy-900) 96%, transparent)" }}
           className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-wrap items-center justify-center gap-1 sm:gap-2 px-3 py-2 border-2 border-white/40 shadow-2xl rounded-none text-white max-w-[95vw]"
           onClick={(e) => e.stopPropagation()}
         >
@@ -616,7 +616,7 @@ function LightboxModal({
             type="button"
             onClick={onZoomOut}
             disabled={scale <= 1}
-            style={{ backgroundColor: "#194B85" }}
+            style={{ backgroundColor: "var(--erp-navy-700)" }}
             className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-bold hover:brightness-125 border border-white/40 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all rounded-none cursor-pointer"
             title={t("lightbox.zoomOut")}
             aria-label={t("lightbox.zoomOut")}
@@ -640,7 +640,7 @@ function LightboxModal({
             type="button"
             onClick={onZoomIn}
             disabled={scale >= 3}
-            style={{ backgroundColor: "#194B85" }}
+            style={{ backgroundColor: "var(--erp-navy-700)" }}
             className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-bold hover:brightness-125 border border-white/40 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all rounded-none cursor-pointer"
             title={t("lightbox.zoomIn")}
             aria-label={t("lightbox.zoomIn")}
@@ -655,7 +655,7 @@ function LightboxModal({
           <button
             type="button"
             onClick={onRotateCcw}
-            style={{ backgroundColor: "#194B85" }}
+            style={{ backgroundColor: "var(--erp-navy-700)" }}
             className="p-1.5 sm:px-2.5 h-8 inline-flex items-center gap-1 text-xs font-bold hover:brightness-125 border border-white/40 text-white transition-all rounded-none cursor-pointer"
             title={t("lightbox.rotateCcw")}
             aria-label={t("lightbox.rotateCcw")}
@@ -667,7 +667,7 @@ function LightboxModal({
           <button
             type="button"
             onClick={onRotateCw}
-            style={{ backgroundColor: "#194B85" }}
+            style={{ backgroundColor: "var(--erp-navy-700)" }}
             className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-bold hover:brightness-125 border border-white/40 text-white transition-all rounded-none cursor-pointer"
             title={t("lightbox.rotateCw")}
             aria-label={t("lightbox.rotateCw")}
@@ -708,7 +708,7 @@ function LightboxModal({
       {/* 3. Bottom Thumbnails Strip */}
       {hasMultiple && (
         <div
-          style={{ backgroundColor: "rgba(7, 31, 56, 0.98)" }}
+          style={{ backgroundColor: "color-mix(in srgb, var(--erp-navy-950) 98%, transparent)" }}
           className="shrink-0 flex items-center justify-center gap-2.5 px-4 py-3 border-t border-white/20 overflow-x-auto shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >

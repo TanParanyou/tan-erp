@@ -105,7 +105,7 @@ export function OpportunityStageTimeline({ opportunityId }: OpportunityStageTime
                 {/* Dot marker */}
                 <span
                   className="absolute -left-[31px] top-1.5 w-3 h-3 bg-erp-navy border-2 border-white ring-1 ring-erp-border"
-                  style={{ borderRadius: "0px" }}
+                  style={{ borderRadius: "var(--erp-radius)" }}
                 />
 
                 <div className="flex flex-col gap-1.5 bg-erp-bg-subtle p-3 border border-erp-border">

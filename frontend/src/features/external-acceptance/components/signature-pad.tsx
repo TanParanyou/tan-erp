@@ -25,6 +25,7 @@ export function SignaturePad({ label, clearLabel, disabled = false, onChange }: 
     if (!context) return;
     context.lineWidth = 2;
     context.lineCap = "round";
+    // eslint-disable-next-line no-restricted-syntax -- token-exempt: canvas 2D context needs a raw colour string
     context.strokeStyle = "#0B3056";
   }, []);
 

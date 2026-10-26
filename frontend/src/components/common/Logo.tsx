@@ -60,9 +60,9 @@ export function Logo({
   variant = "navy",
 }: LogoProps) {
   const isLight = variant === "light";
-  const iconColor = isLight ? "#FFFFFF" : "#0B3056";
-  const textColor = isLight ? "#FFFFFF" : "var(--erp-navy)";
-  const subtitleColor = isLight ? "#94A3B8" : "var(--erp-text-muted)";
+  const iconColor = isLight ? "var(--erp-text-on-navy)" : "var(--erp-navy-900)";
+  const textColor = isLight ? "var(--erp-text-on-navy)" : "var(--erp-navy)";
+  const subtitleColor = isLight ? "var(--erp-slate-400)" : "var(--erp-text-muted)";
 
   return (
     <div

@@ -64,6 +64,7 @@ export function SurveyMasterDataManager() {
   const [activeTab, setActiveTab] = useState<MasterDataTab>("design-styles");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editorState, setEditorState] = useState<ItemEditorState>(initialEditorState);
+  // eslint-disable-next-line no-restricted-syntax -- token-exempt: default value of a colour picker input (user data, not theme)
   const [newColorInput, setNewColorInput] = useState("#3B82F6");
   const [validationError, setValidationError] = useState<string | null>(null);
 

@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable no-restricted-syntax -- token-exempt: recharts needs raw colour strings and tooltip literals are fixed in dark mode; no runtime token helper yet */
+
 import React, { useState, useEffect } from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
@@ -83,7 +85,7 @@ export function DonutChart({
               contentStyle={{
                 backgroundColor: "#FFFFFF",
                 borderColor: "#0B3056",
-                borderRadius: "0px",
+                borderRadius: "var(--erp-radius)",
                 fontSize: "12px",
               }}
             />

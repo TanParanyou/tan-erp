@@ -75,7 +75,7 @@ function ImagePickerItem({
   return (
     <div
       className="border border-erp-border bg-white dark:bg-erp-slate-900 p-3 space-y-2 relative shadow-none"
-      style={{ borderRadius: "0px" }}
+      style={{ borderRadius: "var(--erp-radius)" }}
     >
       {/* Thumbnail with overlay status */}
       <div className="relative aspect-video w-full bg-erp-slate-100 dark:bg-erp-slate-800 overflow-hidden border border-erp-border">
@@ -93,7 +93,7 @@ function ImagePickerItem({
             type="button"
             onClick={() => onRemove(item.id)}
             className="absolute top-1 right-1 p-1 bg-erp-navy/90 hover:bg-destructive text-white transition-colors z-10"
-            style={{ borderRadius: "0px" }}
+            style={{ borderRadius: "var(--erp-radius)" }}
             title={removeTitleText}
           >
             <IconClose className="w-4 h-4" />
@@ -325,7 +325,7 @@ export function MultiImagePicker({
               ? "border-erp-navy bg-erp-navy/5"
               : "border-erp-slate-300 dark:border-erp-slate-700 bg-erp-slate-50/60 dark:bg-erp-slate-900/30 hover:border-erp-navy hover:bg-erp-slate-100/50"
           }`}
-          style={{ borderRadius: "0px" }}
+          style={{ borderRadius: "var(--erp-radius)" }}
         >
           <div className="flex flex-col items-center justify-center space-y-3">
             <div>
@@ -342,7 +342,7 @@ export function MultiImagePicker({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="w-28 h-28 aspect-square flex flex-col items-center justify-center gap-2 p-3 bg-white dark:bg-erp-slate-800 border-2 border-erp-border hover:border-erp-navy hover:bg-erp-surface-subtle text-erp-navy dark:text-erp-slate-200 transition-all select-none focus:outline-none focus:border-erp-navy active:translate-y-0.5"
-                style={{ borderRadius: "0px" }}
+                style={{ borderRadius: "var(--erp-radius)" }}
                 title={t("browseFiles")}
               >
                 <IconUpload size={28} className="text-erp-navy dark:text-erp-slate-200 shrink-0" />
@@ -356,7 +356,7 @@ export function MultiImagePicker({
                   type="button"
                   onClick={() => setIsCameraModalOpen(true)}
                   className="w-28 h-28 aspect-square flex flex-col items-center justify-center gap-2 p-3 bg-erp-navy hover:bg-erp-navy-950 border-2 border-erp-navy text-white transition-all select-none focus:outline-none active:translate-y-0.5"
-                  style={{ borderRadius: "0px" }}
+                  style={{ borderRadius: "var(--erp-radius)" }}
                   title={t("takePhotoAction")}
                 >
                   <IconCamera size={28} className="text-white shrink-0" />

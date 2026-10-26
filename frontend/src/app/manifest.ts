@@ -8,6 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Tan ERP - Project & Manufacturing Management",
     start_url: "/",
     display: "standalone",
+    // eslint-disable-next-line no-restricted-syntax -- token-exempt: web manifest metadata, not CSS
     background_color: "#FFFFFF",
     theme_color: siteConfig.themeColor,
     icons: [
