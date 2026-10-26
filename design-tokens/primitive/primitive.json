@@ -1,0 +1,280 @@
+{
+  "color": {
+    "navy": {
+      "50": {
+        "$type": "color",
+        "$value": "#F0F5FA",
+        "$description": "navy scale step 50 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-50"
+          }
+        }
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#E1EBF5",
+        "$description": "navy scale step 100 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-100"
+          }
+        }
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#C3D7EC",
+        "$description": "navy scale step 200 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-200"
+          }
+        }
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#98BCDF",
+        "$description": "navy scale step 300 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-300"
+          }
+        }
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#659BD0",
+        "$description": "navy scale step 400 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-400"
+          }
+        }
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#3D7BC0",
+        "$description": "navy scale step 500 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-500"
+          }
+        }
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#255FA3",
+        "$description": "navy scale step 600 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-600"
+          }
+        }
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#194B85",
+        "$description": "navy scale step 700 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-700"
+          }
+        }
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#123968",
+        "$description": "navy scale step 800 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-800"
+          }
+        }
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#0B3056",
+        "$description": "navy scale step 900 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-900"
+          }
+        }
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#071F38",
+        "$description": "navy scale step 950 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-950"
+          }
+        }
+      }
+    },
+    "slate": {
+      "50": {
+        "$type": "color",
+        "$value": "#F8FAFC",
+        "$description": "slate scale step 50 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-50"
+          }
+        }
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#F1F5F9",
+        "$description": "slate scale step 100 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-100"
+          }
+        }
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#E2EBF4",
+        "$description": "slate scale step 200 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-200"
+          }
+        }
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#D1DEEC",
+        "$description": "slate scale step 300 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-300"
+          }
+        }
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#94A3B8",
+        "$description": "slate scale step 400 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-400"
+          }
+        }
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#64748B",
+        "$description": "slate scale step 500 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-500"
+          }
+        }
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#536B88",
+        "$description": "slate scale step 600 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-600"
+          }
+        }
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#334155",
+        "$description": "slate scale step 700 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-700"
+          }
+        }
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#1E293B",
+        "$description": "slate scale step 800 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-800"
+          }
+        }
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#0A192F",
+        "$description": "slate scale step 900 (design.md 3.0.1)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-slate-900"
+          }
+        }
+      }
+    }
+  },
+  "space": {
+    "1": {
+      "$type": "dimension",
+      "$value": "4px",
+      "$description": "Spacing step 1 (4px)",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-space-1"
+        }
+      }
+    },
+    "2": {
+      "$type": "dimension",
+      "$value": "8px",
+      "$description": "Spacing step 2 (8px)",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-space-2"
+        }
+      }
+    },
+    "3": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$description": "Spacing step 3 (12px)",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-space-3"
+        }
+      }
+    },
+    "4": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$description": "Spacing step 4 (16px)",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-space-4"
+        }
+      }
+    },
+    "6": {
+      "$type": "dimension",
+      "$value": "24px",
+      "$description": "Spacing step 6 (24px)",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-space-6"
+        }
+      }
+    },
+    "8": {
+      "$type": "dimension",
+      "$value": "32px",
+      "$description": "Spacing step 8 (32px)",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-space-8"
+        }
+      }
+    }
+  }
+}

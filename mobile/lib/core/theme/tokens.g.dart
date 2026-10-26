@@ -1,0 +1,131 @@
+// generated — do not edit, run npm run tokens:build
+// ignore_for_file: public_member_api_docs
+
+import 'dart:ui' show Color;
+
+abstract final class ErpTokensLight {
+  static const Color navy50 = Color(0xFFF0F5FA);
+  static const Color navy100 = Color(0xFFE1EBF5);
+  static const Color navy200 = Color(0xFFC3D7EC);
+  static const Color navy300 = Color(0xFF98BCDF);
+  static const Color navy400 = Color(0xFF659BD0);
+  static const Color navy500 = Color(0xFF3D7BC0);
+  static const Color navy600 = Color(0xFF255FA3);
+  static const Color navy700 = Color(0xFF194B85);
+  static const Color navy800 = Color(0xFF123968);
+  static const Color navy900 = Color(0xFF0B3056);
+  static const Color navy950 = Color(0xFF071F38);
+  static const Color slate50 = Color(0xFFF8FAFC);
+  static const Color slate100 = Color(0xFFF1F5F9);
+  static const Color slate200 = Color(0xFFE2EBF4);
+  static const Color slate300 = Color(0xFFD1DEEC);
+  static const Color slate400 = Color(0xFF94A3B8);
+  static const Color slate500 = Color(0xFF64748B);
+  static const Color slate600 = Color(0xFF536B88);
+  static const Color slate700 = Color(0xFF334155);
+  static const Color slate800 = Color(0xFF1E293B);
+  static const Color slate900 = Color(0xFF0A192F);
+  static const Color navy = Color(0xFF0B3056);
+  static const Color navyHover = Color(0xFF071F38);
+  static const Color navyLight = Color(0xFFF0F5FA);
+  static const Color navyBorder = Color(0xFF0B3056);
+  static const Color canvas = Color(0xFFF4F6F9);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceMuted = Color(0xFFF8FAFC);
+  static const Color surfaceSubtle = Color(0xFFEBF1F7);
+  static const Color border = Color(0xFFD1DEEC);
+  static const Color borderSubtle = Color(0xFFE2EBF4);
+  static const Color borderStrong = Color(0xFF0B3056);
+  static const Color textMain = Color(0xFF0A192F);
+  static const Color textBody = Color(0xFF334155);
+  static const Color textMuted = Color(0xFF536B88);
+  static const Color textSubtle = Color(0xFF7E95B0);
+  static const Color textOnNavy = Color(0xFFFFFFFF);
+  static const Color success = Color(0xFF14532D);
+  static const Color successBg = Color(0xFFEBF7F0);
+  static const Color successBorder = Color(0xFFA7F3D0);
+  static const Color warning = Color(0xFF92400E);
+  static const Color warningBg = Color(0xFFFFFBEB);
+  static const Color warningBorder = Color(0xFFFDE68A);
+  static const Color warningText = Color(0xFF78350F);
+  static const Color danger = Color(0xFF991B1B);
+  static const Color dangerBg = Color(0xFFFEF2F2);
+  static const Color dangerBorder = Color(0xFFFECACA);
+  static const Color info = Color(0xFF1D518A);
+  static const Color infoBg = Color(0xFFEFF6FF);
+  static const Color accentMeasure = Color(0xFF8A5A24);
+}
+
+abstract final class ErpTokensDark {
+  static const Color navy50 = Color(0xFFF0F5FA);
+  static const Color navy100 = Color(0xFFE1EBF5);
+  static const Color navy200 = Color(0xFFC3D7EC);
+  static const Color navy300 = Color(0xFF98BCDF);
+  static const Color navy400 = Color(0xFF659BD0);
+  static const Color navy500 = Color(0xFF3D7BC0);
+  static const Color navy600 = Color(0xFF255FA3);
+  static const Color navy700 = Color(0xFF194B85);
+  static const Color navy800 = Color(0xFF123968);
+  static const Color navy900 = Color(0xFF0B3056);
+  static const Color navy950 = Color(0xFF071F38);
+  static const Color slate50 = Color(0xFFF8FAFC);
+  static const Color slate100 = Color(0xFFF1F5F9);
+  static const Color slate200 = Color(0xFFE2EBF4);
+  static const Color slate300 = Color(0xFFD1DEEC);
+  static const Color slate400 = Color(0xFF94A3B8);
+  static const Color slate500 = Color(0xFF64748B);
+  static const Color slate600 = Color(0xFF536B88);
+  static const Color slate700 = Color(0xFF334155);
+  static const Color slate800 = Color(0xFF1E293B);
+  static const Color slate900 = Color(0xFF0A192F);
+  static const Color navy = Color(0xFF2563EB);
+  static const Color navyHover = Color(0xFF1D4ED8);
+  static const Color navyLight = Color(0xFF162C4E);
+  static const Color navyBorder = Color(0xFF3B82F6);
+  static const Color canvas = Color(0xFF050E1A);
+  static const Color surface = Color(0xFF0B1728);
+  static const Color surfaceMuted = Color(0xFF101E33);
+  static const Color surfaceSubtle = Color(0xFF142742);
+  static const Color border = Color(0xFF1F3D68);
+  static const Color borderSubtle = Color(0xFF162C4E);
+  static const Color borderStrong = Color(0xFF2563EB);
+  static const Color textMain = Color(0xFFF0F5FA);
+  static const Color textBody = Color(0xFFCBD5E1);
+  static const Color textMuted = Color(0xFF9BB0C9);
+  static const Color textSubtle = Color(0xFF64748B);
+  static const Color textOnNavy = Color(0xFFFFFFFF);
+  static const Color success = Color(0xFF4ADE80);
+  static const Color successBg = Color(0xFF064E3B);
+  static const Color successBorder = Color(0xFF059669);
+  static const Color warning = Color(0xFFFBBF24);
+  static const Color warningBg = Color(0xFF78350F);
+  static const Color warningBorder = Color(0xFFD97706);
+  static const Color warningText = Color(0xFFFDE68A);
+  static const Color danger = Color(0xFFF87171);
+  static const Color dangerBg = Color(0xFF7F1D1D);
+  static const Color dangerBorder = Color(0xFFDC2626);
+  static const Color info = Color(0xFF60A5FA);
+  static const Color infoBg = Color(0xFF1E3A8A);
+  static const Color accentMeasure = Color(0xFF8A5A24);
+}
+
+abstract final class ErpTokensScale {
+  static const double space1 = 4;
+  static const double space2 = 8;
+  static const double space3 = 12;
+  static const double space4 = 16;
+  static const double space6 = 24;
+  static const double space8 = 32;
+  static const double radius = 0;
+  static const double minTouch = 44;
+  static const double controlHeight = 44;
+  static const double appActionPrimary = 52;
+  static const double appTapTarget = 48;
+  static const double appKeypadKey = 56;
+  static const double borderWidthHairline = 1;
+  static const double appTextCaption = 13;
+  static const double appTextBody = 15;
+  static const double appTextSubtitle = 17;
+  static const double appTextTitle = 22;
+  static const double appTextMeasure = 44;
+}

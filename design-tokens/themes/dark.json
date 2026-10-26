@@ -1,0 +1,314 @@
+{
+  "color": {
+    "action": {
+      "primary": {
+        "$type": "color",
+        "$value": "#2563EB",
+        "$description": "Primary action and selected-state fill (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy"
+          }
+        }
+      },
+      "primary-hover": {
+        "$type": "color",
+        "$value": "#1D4ED8",
+        "$description": "Primary action hover/pressed fill (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-hover"
+          }
+        }
+      },
+      "primary-subtle": {
+        "$type": "color",
+        "$value": "#162C4E",
+        "$description": "Subtle tint of the primary colour (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-light"
+          }
+        }
+      },
+      "primary-border": {
+        "$type": "color",
+        "$value": "#3B82F6",
+        "$description": "Border drawn in the primary colour (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-navy-border"
+          }
+        }
+      }
+    },
+    "surface": {
+      "canvas": {
+        "$type": "color",
+        "$value": "#050E1A",
+        "$description": "Page background behind surfaces (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-canvas"
+          }
+        }
+      },
+      "default": {
+        "$type": "color",
+        "$value": "#0B1728",
+        "$description": "Default card and panel surface (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-surface"
+          }
+        }
+      },
+      "muted": {
+        "$type": "color",
+        "$value": "#101E33",
+        "$description": "Muted surface for secondary areas (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-surface-muted"
+          }
+        }
+      },
+      "subtle": {
+        "$type": "color",
+        "$value": "#142742",
+        "$description": "Subtle surface for hover and striping (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-surface-subtle"
+          }
+        }
+      }
+    },
+    "border": {
+      "default": {
+        "$type": "color",
+        "$value": "#1F3D68",
+        "$description": "Default hairline border (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-border"
+          }
+        }
+      },
+      "subtle": {
+        "$type": "color",
+        "$value": "#162C4E",
+        "$description": "Quiet divider border (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-border-subtle"
+          }
+        }
+      },
+      "strong": {
+        "$type": "color",
+        "$value": "#2563EB",
+        "$description": "Emphasised border (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-border-strong"
+          }
+        }
+      }
+    },
+    "text": {
+      "main": {
+        "$type": "color",
+        "$value": "#F0F5FA",
+        "$description": "Headings and primary text (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-text-main"
+          }
+        }
+      },
+      "body": {
+        "$type": "color",
+        "$value": "#CBD5E1",
+        "$description": "Body text (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-text-body"
+          }
+        }
+      },
+      "muted": {
+        "$type": "color",
+        "$value": "#9BB0C9",
+        "$description": "Secondary text (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-text-muted"
+          }
+        }
+      },
+      "subtle": {
+        "$type": "color",
+        "$value": "#64748B",
+        "$description": "Tertiary and placeholder text (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-text-subtle"
+          }
+        }
+      },
+      "on-primary": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Text on primary-coloured fill (dark)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-text-on-navy"
+          }
+        }
+      }
+    },
+    "status": {
+      "success": {
+        "fg": {
+          "$type": "color",
+          "$value": "#4ADE80",
+          "$description": "Success foreground (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-success"
+            }
+          }
+        },
+        "bg": {
+          "$type": "color",
+          "$value": "#064E3B",
+          "$description": "Success background (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-success-bg"
+            }
+          }
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#059669",
+          "$description": "Success border (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-success-border"
+            }
+          }
+        }
+      },
+      "warning": {
+        "fg": {
+          "$type": "color",
+          "$value": "#FBBF24",
+          "$description": "Warning foreground (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-warning"
+            }
+          }
+        },
+        "bg": {
+          "$type": "color",
+          "$value": "#78350F",
+          "$description": "Warning background (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-warning-bg"
+            }
+          }
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#D97706",
+          "$description": "Warning border (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-warning-border"
+            }
+          }
+        },
+        "text": {
+          "$type": "color",
+          "$value": "#FDE68A",
+          "$description": "Warning text on warning background (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-warning-text"
+            }
+          }
+        }
+      },
+      "danger": {
+        "fg": {
+          "$type": "color",
+          "$value": "#F87171",
+          "$description": "Danger foreground (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-danger"
+            }
+          }
+        },
+        "bg": {
+          "$type": "color",
+          "$value": "#7F1D1D",
+          "$description": "Danger background (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-danger-bg"
+            }
+          }
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#DC2626",
+          "$description": "Danger border (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-danger-border"
+            }
+          }
+        }
+      },
+      "info": {
+        "fg": {
+          "$type": "color",
+          "$value": "#60A5FA",
+          "$description": "Info foreground (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-info"
+            }
+          }
+        },
+        "bg": {
+          "$type": "color",
+          "$value": "#1E3A8A",
+          "$description": "Info background (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-info-bg"
+            }
+          }
+        }
+      }
+    }
+  },
+  "focus": {
+    "ring": {
+      "$type": "string",
+      "$value": "2px solid #60A5FA",
+      "$description": "Keyboard focus ring (width, style, colour) (dark)",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-focus-ring"
+        }
+      }
+    }
+  }
+}
