@@ -17,6 +17,7 @@ const camel = (css) => css.replace(/^erp-/, '').replace(/-(\w)/g, (_, c) => c.to
 const mk = (source, platforms) => new StyleDictionary({ source, log: { verbosity: 'silent' }, platforms });
 
 let darkTokens = [];
+let compactTokens = [];
 
 StyleDictionary.registerFormat({
   name: 'tanerp/css',
@@ -30,7 +31,8 @@ StyleDictionary.registerFormat({
       return `  --${cssName(t)}: ${v};`;
     });
     const dark = darkTokens.filter((t) => t.filePath.endsWith('dark.json')).map((t) => `  --${cssName(t)}: ${t.$value};`);
-    return `/* ${HEADER} */\n\n:root {\n${light.join('\n')}\n}\n\n[data-theme="dark"] {\n${dark.join('\n')}\n}\n`;
+    const compact = compactTokens.filter((t) => t.filePath.endsWith('compact.json')).map((t) => `  --${cssName(t)}: ${t.$value};`);
+    return `/* ${HEADER} */\n\n:root {\n${light.join('\n')}\n}\n\n[data-theme="dark"] {\n${dark.join('\n')}\n}\n\n[data-density="compact"] {\n${compact.join('\n')}\n}\n`;
   },
 });
 
@@ -39,7 +41,7 @@ StyleDictionary.registerFormat({
   format: ({ dictionary }) => {
     const colors = (tokens) => tokens.filter((t) => t.$type === 'color')
       .map((t) => `  static const Color ${camel(cssName(t))} = Color(0xFF${hex(t.$value)});`).join('\n');
-    const nums = dictionary.allTokens.filter((t) => t.$type === 'dimension')
+    const nums = dictionary.allTokens.filter((t) => t.$type === 'dimension' && !t.$extensions.tanerp.webOnly)
       .map((t) => `  static const double ${camel(cssName(t))} = ${parseFloat(t.$value)};`).join('\n');
     return `// ${HEADER}\n// ignore_for_file: public_member_api_docs\n\nimport 'dart:ui' show Color;\n\n`
       + `abstract final class ErpTokensLight {\n${colors(dictionary.allTokens)}\n}\n\n`
@@ -51,6 +53,10 @@ StyleDictionary.registerFormat({
 const dark = mk([...base, `${here}/themes/dark.json`], { x: {} });
 await dark.hasInitialized;
 darkTokens = (await dark.getPlatformTokens('x')).allTokens;
+
+const compact = mk([...base, `${here}/themes/compact.json`], { x: {} });
+await compact.hasInitialized;
+compactTokens = (await compact.getPlatformTokens('x')).allTokens;
 
 const light = mk(base, {
   css: {

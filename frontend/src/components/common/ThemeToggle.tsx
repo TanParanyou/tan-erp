@@ -1,18 +1,21 @@
 "use client";
 
 import React from "react";
-import { useTheme } from "@/providers/theme-provider";
+import { useTheme, type ThemeMode } from "@/providers/theme-provider";
 import { useTranslations } from "next-intl";
 import { IconSun, IconMoon } from "@/components/common/Icons";
 
 interface ThemeToggleProps {
   className?: string;
   style?: React.CSSProperties;
+  /** Called with the new mode after a toggle, so a signed-in caller can persist it. */
+  onThemeChange?: (mode: ThemeMode) => void;
+  disabled?: boolean;
 }
 
-export function ThemeToggle({ className, style }: ThemeToggleProps) {
+export function ThemeToggle({ className, style, onThemeChange, disabled = false }: ThemeToggleProps) {
   const [mounted, setMounted] = React.useState(false);
-  const { resolvedTheme, toggleTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const t = useTranslations("shell");
 
   React.useEffect(() => {
@@ -25,7 +28,12 @@ export function ThemeToggle({ className, style }: ThemeToggleProps) {
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      disabled={disabled}
+      onClick={() => {
+        const next: ThemeMode = isDark ? "light" : "dark";
+        setTheme(next);
+        onThemeChange?.(next);
+      }}
       className={className}
       aria-label={`${t("toggleTheme")}: ${label}`}
       title={`${t("toggleTheme")}: ${label}`}

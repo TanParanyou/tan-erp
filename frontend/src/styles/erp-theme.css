@@ -376,7 +376,7 @@
   background-color: var(--erp-surface-subtle);
   color: var(--erp-text-main);
   font-weight: 600;
-  padding: 0.75rem 1rem;
+  padding: var(--erp-cell-pad-y) 1rem;
   border-bottom: 1px solid var(--erp-border);
   white-space: nowrap;
 }
@@ -390,7 +390,7 @@
 }
 
 .erp-td {
-  padding: 0.75rem 1rem;
+  padding: var(--erp-cell-pad-y) 1rem;
   border-bottom: 1px solid var(--erp-border-subtle);
   color: var(--erp-text-body);
   vertical-align: middle;

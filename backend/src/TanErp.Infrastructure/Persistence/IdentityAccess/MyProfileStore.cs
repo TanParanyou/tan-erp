@@ -50,6 +50,7 @@ public class MyProfileStore : IMyProfileStore
         await _db.SaveChangesAsync(cancellationToken);
 
         return Result<UserContext>.Success(new UserContext(
-            user.Id, user.DisplayName, user.Email, user.PhoneNumber, user.AvatarFileId, user.PreferredLocale));
+            user.Id, user.DisplayName, user.Email, user.PhoneNumber, user.AvatarFileId, user.PreferredLocale,
+            new UserPreferencesContext(user.ThemeMode, user.Density, user.TextScale)));
     }
 }

@@ -5231,6 +5231,7 @@
     "openProfile": "Open my profile",
     "tabs": {
       "personal": "Personal Info",
+      "appearance": "Appearance",
       "security": "Security"
     },
     "fields": {
@@ -5281,6 +5282,20 @@
       "WEAK_PASSWORD": "The new password is too weak. Please choose a stronger one.",
       "REQUIRES_RECENT_LOGIN": "Please sign out and sign in again before changing your password",
       "TOO_MANY_REQUESTS": "Too many attempts. Please wait a moment and try again."
+    },
+    "appearance": {
+      "description": "Adjust colour mode, screen density and text size. Saved values follow you on every device.",
+      "themeMode": "Colour mode",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeSystem": "Follow device",
+      "density": "Screen density",
+      "densityComfortable": "Comfortable",
+      "densityCompact": "Compact",
+      "textScale": "Text size",
+      "textScaleHint": "Adjustable from 90% to 130% of the default size",
+      "save": "Save appearance",
+      "saveSuccess": "Appearance saved"
     }
   }
 }

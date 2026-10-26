@@ -3952,6 +3952,14 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamptz")
                         .HasColumnName("created_at_utc");
 
+                    b.Property<string>("Density")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)")
+                        .HasDefaultValue("comfortable")
+                        .HasColumnName("density");
+
                     b.Property<Guid?>("DepartmentId")
                         .HasColumnType("uuid")
                         .HasColumnName("department_id");
@@ -4012,6 +4020,20 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("row_version");
 
+                    b.Property<int>("TextScale")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(100)
+                        .HasColumnName("text_scale");
+
+                    b.Property<string>("ThemeMode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("system")
+                        .HasColumnName("theme_mode");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AvatarFileId");
@@ -4034,7 +4056,14 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_users_normalized_email")
                         .HasFilter("normalized_email <> ''");
 
-                    b.ToTable("users", "identity_access");
+                    b.ToTable("users", "identity_access", t =>
+                        {
+                            t.HasCheckConstraint("ck_users_density", "density IN ('comfortable', 'compact')");
+
+                            t.HasCheckConstraint("ck_users_text_scale", "text_scale BETWEEN 90 AND 130");
+
+                            t.HasCheckConstraint("ck_users_theme_mode", "theme_mode IN ('light', 'dark', 'system')");
+                        });
                 });
 
             modelBuilder.Entity("TanErp.Domain.Inventory.StockBalance", b =>

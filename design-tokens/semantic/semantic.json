@@ -458,5 +458,18 @@
         }
       }
     }
+  },
+  "density": {
+    "cell-pad-y": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$description": "Vertical padding of table cells (web only; compact density overrides)",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-cell-pad-y",
+          "webOnly": true
+        }
+      }
+    }
   }
 }

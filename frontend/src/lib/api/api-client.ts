@@ -5,6 +5,8 @@ import type { ProblemDetails } from "./problem-details";
 export type CurrentUserResponse = components["schemas"]["CurrentUserResponse"];
 export type UserDto = components["schemas"]["UserDto"];
 export type UpdateMyProfileRequest = components["schemas"]["UpdateMyProfileRequest"];
+export type UpdateMyPreferencesRequest = components["schemas"]["UpdateMyPreferencesRequest"];
+export type UserPreferencesDto = components["schemas"]["UserPreferencesDto"];
 export type CustomerListResponse = components["schemas"]["CustomerListResponse"];
 export type CustomerListItemResponse = components["schemas"]["CustomerListItemResponse"];
 export type CustomerResponse = components["schemas"]["CustomerResponse"];
@@ -595,6 +597,10 @@ export class ApiClient {
       locale,
       signal,
     });
+  }
+
+  async updateMyPreferences(payload: UpdateMyPreferencesRequest, options: RequestOptions): Promise<UserDto> {
+    return this.request<UserDto>("/api/v1/me/preferences", "PUT", options, payload);
   }
 
   async updateMyProfile(payload: UpdateMyProfileRequest, options: RequestOptions): Promise<UserDto> {

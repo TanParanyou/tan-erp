@@ -1994,6 +1994,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/app/version-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    platform?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AppVersionPolicyResponse"];
+                        "application/json": components["schemas"]["AppVersionPolicyResponse"];
+                        "text/json": components["schemas"]["AppVersionPolicyResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attachment-owners/{ownerType}/{ownerId}/attachments": {
         parameters: {
             query?: never;
@@ -4997,56 +5047,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/app/version-policy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    platform?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["AppVersionPolicyResponse"];
-                        "application/json": components["schemas"]["AppVersionPolicyResponse"];
-                        "text/json": components["schemas"]["AppVersionPolicyResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ApiProblemDetails"];
-                        "application/json": components["schemas"]["ApiProblemDetails"];
-                        "text/json": components["schemas"]["ApiProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -5126,6 +5126,93 @@ export interface paths {
                     "application/json": components["schemas"]["UpdateMyProfileRequest"];
                     "text/json": components["schemas"]["UpdateMyProfileRequest"];
                     "application/*+json": components["schemas"]["UpdateMyProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserDto"];
+                        "application/json": components["schemas"]["UserDto"];
+                        "text/json": components["schemas"]["UserDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateMyPreferencesRequest"];
+                    "text/json": components["schemas"]["UpdateMyPreferencesRequest"];
+                    "application/*+json": components["schemas"]["UpdateMyPreferencesRequest"];
                 };
             };
             responses: {
@@ -23005,9 +23092,9 @@ export interface components {
         };
         AttachFilesRequest: {
             purpose?: string | null;
+            fileIds?: string[] | null;
             tag?: string | null;
             caption?: string | null;
-            fileIds?: string[] | null;
         };
         AttachItemImageRequest: {
             /** Format: uuid */
@@ -27426,6 +27513,12 @@ export interface components {
             /** Format: int32 */
             sortOrder?: number;
         };
+        UpdateMyPreferencesRequest: {
+            themeMode?: string | null;
+            density?: string | null;
+            /** Format: int32 */
+            textScale?: number | null;
+        };
         UpdateMyProfileRequest: {
             displayName?: string | null;
             phoneNumber?: string | null;
@@ -27573,6 +27666,7 @@ export interface components {
             /** Format: uuid */
             avatarFileId?: string | null;
             preferredLocale?: string | null;
+            preferences?: components["schemas"]["UserPreferencesDto"];
         };
         UserListItemResponse: {
             /** Format: uuid */
@@ -27586,6 +27680,12 @@ export interface components {
             items?: components["schemas"]["UserListItemResponse"][] | null;
             /** Format: int32 */
             totalCount?: number;
+        };
+        UserPreferencesDto: {
+            themeMode?: string | null;
+            density?: string | null;
+            /** Format: int32 */
+            textScale?: number;
         };
         VoidSurveyRevisionRequest: {
             /** Format: uuid */

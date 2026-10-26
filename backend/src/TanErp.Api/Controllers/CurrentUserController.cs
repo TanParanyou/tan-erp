@@ -5,6 +5,7 @@ using TanErp.Api.Contracts.IdentityAccess;
 using TanErp.Api.ErrorHandling;
 using TanErp.Api.RequestContext;
 using TanErp.Application.IdentityAccess.CurrentUser.GetCurrentUser;
+using TanErp.Application.IdentityAccess.CurrentUser.UpdateMyPreferences;
 using TanErp.Application.IdentityAccess.CurrentUser.UpdateMyProfile;
 
 namespace TanErp.Api.Controllers;
@@ -15,10 +16,16 @@ public class CurrentUserController : ControllerBase
     private readonly GetCurrentUserHandler _handler;
     private readonly UpdateMyProfileHandler _updateMyProfile;
 
-    public CurrentUserController(GetCurrentUserHandler handler, UpdateMyProfileHandler updateMyProfile)
+    private readonly UpdateMyPreferencesHandler _updateMyPreferences;
+
+    public CurrentUserController(
+        GetCurrentUserHandler handler,
+        UpdateMyProfileHandler updateMyProfile,
+        UpdateMyPreferencesHandler updateMyPreferences)
     {
         _handler = handler;
         _updateMyProfile = updateMyProfile;
+        _updateMyPreferences = updateMyPreferences;
     }
 
     [HttpGet("/api/v1/me")]
@@ -89,6 +96,37 @@ public class CurrentUserController : ControllerBase
             : Ok(ToDto(result.Value!));
     }
 
+    [HttpPut("/api/v1/me/preferences")]
+    [Authorize]
+    [ProducesResponseType<UserDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateMyPreferences([FromBody] UpdateMyPreferencesRequest request, CancellationToken cancellationToken)
+    {
+        var authenticated = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (authenticated.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(authenticated.Error.Code, HttpContext);
+        }
+
+        var result = await _updateMyPreferences.Handle(
+            new UpdateMyPreferencesCommand(
+                authenticated.Value!.FirebaseUid,
+                authenticated.Value.MembershipId,
+                request.ThemeMode,
+                request.Density,
+                request.TextScale,
+                HttpContext.TraceIdentifier),
+            cancellationToken);
+
+        return result.IsFailure
+            ? ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext)
+            : Ok(ToDto(result.Value!));
+    }
+
     private static UserDto ToDto(UserContext user) =>
-        new(user.Id, user.DisplayName, user.Email, user.PhoneNumber, user.AvatarFileId, user.PreferredLocale);
+        new(user.Id, user.DisplayName, user.Email, user.PhoneNumber, user.AvatarFileId, user.PreferredLocale,
+            user.Preferences is null ? null : new UserPreferencesDto(user.Preferences.ThemeMode, user.Preferences.Density, user.Preferences.TextScale));
 }

@@ -125,6 +125,8 @@ builder.Services.AddScoped<IRequestAccessResolver, RequestAccessResolver>();
 builder.Services.AddScoped<GetCurrentUserHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.CurrentUser.UpdateMyProfile.IMyProfileStore, TanErp.Infrastructure.Persistence.IdentityAccess.MyProfileStore>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.CurrentUser.UpdateMyProfile.UpdateMyProfileHandler>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.CurrentUser.UpdateMyPreferences.IMyPreferencesStore, TanErp.Infrastructure.Persistence.IdentityAccess.MyPreferencesStore>();
+builder.Services.AddScoped<TanErp.Application.IdentityAccess.CurrentUser.UpdateMyPreferences.UpdateMyPreferencesHandler>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Users.IUserReadStore, TanErp.Infrastructure.Persistence.IdentityAccess.UserReadStore>();
 builder.Services.AddScoped<TanErp.Application.IdentityAccess.Users.ListUsers.ListUsersHandler>();
 builder.Services.AddScoped<TanErp.Application.Crm.Customers.ICustomerCreationStore, TanErp.Infrastructure.Persistence.Crm.CustomerCreationStore>();

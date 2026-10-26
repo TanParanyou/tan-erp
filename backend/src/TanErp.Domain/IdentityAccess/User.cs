@@ -27,6 +27,23 @@ public class User : Entity
 
     public static readonly IReadOnlyList<string> SupportedLocales = new[] { "th", "en" };
 
+    public const string ThemeModeLight = "light";
+    public const string ThemeModeDark = "dark";
+    public const string ThemeModeSystem = "system";
+    public const string DensityComfortable = "comfortable";
+    public const string DensityCompact = "compact";
+    public const int MinTextScale = 90;
+    public const int MaxTextScale = 130;
+    public static readonly IReadOnlyList<string> SupportedThemeModes = new[] { ThemeModeLight, ThemeModeDark, ThemeModeSystem };
+    public static readonly IReadOnlyList<string> SupportedDensities = new[] { DensityComfortable, DensityCompact };
+
+    /// <summary>Self-selected colour mode: "light", "dark" or "system" (follow the device).</summary>
+    public string ThemeMode { get; private set; } = ThemeModeSystem;
+    /// <summary>Self-selected layout density: "comfortable" or "compact".</summary>
+    public string Density { get; private set; } = DensityComfortable;
+    /// <summary>Self-selected text size as a percentage, 90-130.</summary>
+    public int TextScale { get; private set; } = 100;
+
     public bool IsPending => FirebaseUid is null;
 
     private readonly List<Membership> _memberships = new();
@@ -162,6 +179,21 @@ public class User : Entity
         PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
         PreferredLocale = locale;
         AvatarFileId = avatarFileId;
+        RowVersion = Guid.NewGuid();
+    }
+
+    public void UpdateThemePreferences(string themeMode, string density, int textScale)
+    {
+        if (!SupportedThemeModes.Contains(themeMode))
+            throw new ArgumentException("Theme mode is not supported.", nameof(themeMode));
+        if (!SupportedDensities.Contains(density))
+            throw new ArgumentException("Density is not supported.", nameof(density));
+        if (textScale is < MinTextScale or > MaxTextScale)
+            throw new ArgumentException("Text scale must be between 90 and 130.", nameof(textScale));
+
+        ThemeMode = themeMode;
+        Density = density;
+        TextScale = textScale;
         RowVersion = Guid.NewGuid();
     }
 

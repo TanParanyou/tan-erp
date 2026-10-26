@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ErpShell } from "./erp-shell";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
+import { ToastProvider } from "@/hooks/useToast";
 import { SelectedMembershipProvider } from "@/lib/membership/selected-membership-context";
 
 const mockPush = vi.fn();
@@ -71,9 +72,11 @@ describe("ErpShell Component", () => {
   const renderWithClient = (ui: React.ReactElement, user: CurrentUserResponse = mockCurrentUser) =>
     render(
       <QueryClientProvider client={testQueryClient}>
-        <SelectedMembershipProvider currentUser={user}>
-          {ui}
-        </SelectedMembershipProvider>
+        <ToastProvider>
+          <SelectedMembershipProvider currentUser={user}>
+            {ui}
+          </SelectedMembershipProvider>
+        </ToastProvider>
       </QueryClientProvider>
     );
 

@@ -70,6 +70,7 @@
   --erp-app-text-subtitle: 17px;
   --erp-app-text-title: 22px;
   --erp-app-text-measure: 44px;
+  --erp-cell-pad-y: 12px;
 }
 
 [data-theme="dark"] {
@@ -102,4 +103,8 @@
   --erp-info: #60A5FA;
   --erp-info-bg: #1E3A8A;
   --erp-focus-ring: 2px solid #60A5FA;
+}
+
+[data-density="compact"] {
+  --erp-cell-pad-y: 6px;
 }

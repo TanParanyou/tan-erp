@@ -10,7 +10,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.ToTable("users", "identity_access");
+        builder.ToTable("users", "identity_access", t =>
+        {
+            t.HasCheckConstraint("ck_users_theme_mode", "theme_mode IN ('light', 'dark', 'system')");
+            t.HasCheckConstraint("ck_users_density", "density IN ('comfortable', 'compact')");
+            t.HasCheckConstraint("ck_users_text_scale", "text_scale BETWEEN 90 AND 130");
+        });
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
@@ -25,6 +30,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.AvatarFileId).HasColumnName("avatar_file_id");
         builder.Property(x => x.Notes).HasColumnName("notes").HasMaxLength(1000);
         builder.Property(x => x.PreferredLocale).HasColumnName("preferred_locale").HasMaxLength(5);
+        builder.Property(x => x.ThemeMode).HasColumnName("theme_mode").HasMaxLength(10).IsRequired().HasDefaultValue(User.ThemeModeSystem);
+        builder.Property(x => x.Density).HasColumnName("density").HasMaxLength(12).IsRequired().HasDefaultValue(User.DensityComfortable);
+        builder.Property(x => x.TextScale).HasColumnName("text_scale").IsRequired().HasDefaultValue(100);
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();

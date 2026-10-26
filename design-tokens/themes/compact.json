@@ -1,0 +1,15 @@
+{
+  "density": {
+    "cell-pad-y": {
+      "$type": "dimension",
+      "$value": "6px",
+      "$description": "Compact density: tighter table rows",
+      "$extensions": {
+        "tanerp": {
+          "css": "erp-cell-pad-y",
+          "webOnly": true
+        }
+      }
+    }
+  }
+}

@@ -10,7 +10,10 @@ public sealed record UserContext(
     string Email,
     string? PhoneNumber = null,
     Guid? AvatarFileId = null,
-    string? PreferredLocale = null);
+    string? PreferredLocale = null,
+    UserPreferencesContext? Preferences = null);
+
+public sealed record UserPreferencesContext(string ThemeMode, string Density, int TextScale);
 
 public sealed record MembershipContext(
     Guid Id,

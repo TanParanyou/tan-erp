@@ -10,7 +10,12 @@ public sealed record UserDto(
     string Email,
     string? PhoneNumber = null,
     Guid? AvatarFileId = null,
-    string? PreferredLocale = null);
+    string? PreferredLocale = null,
+    UserPreferencesDto? Preferences = null);
+
+public sealed record UserPreferencesDto(string ThemeMode, string Density, int TextScale);
+
+public sealed record UpdateMyPreferencesRequest(string? ThemeMode, string? Density, int? TextScale);
 
 public sealed record UpdateMyProfileRequest(
     string? DisplayName,

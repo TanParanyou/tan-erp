@@ -29,6 +29,7 @@ import { useSelectedMembership } from "@/lib/membership/selected-membership-cont
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Avatar } from "@/components/ui/Avatar";
 import { SidebarNav } from "./SidebarNav";
+import { useSaveThemePreferences } from "@/features/profile/api/profile-queries";
 import { NotificationBell } from "./NotificationBell";
 
 interface ErpShellProps {
@@ -46,6 +47,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
   const tAuth = useTranslations("auth");
   const tApp = useTranslations("app");
   const tProfile = useTranslations("myProfile");
+  const { save: saveThemePreferences, isPending: isSavingTheme } = useSaveThemePreferences();
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -162,7 +164,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           <NotificationBell />
 
           {/* Theme switcher toggle */}
-          <ThemeToggle />
+          <ThemeToggle onThemeChange={(themeMode) => void saveThemePreferences({ themeMode })} disabled={isSavingTheme} />
 
           {/* Locale switcher link */}
           <Link
