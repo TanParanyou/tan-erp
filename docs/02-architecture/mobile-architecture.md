@@ -11,7 +11,7 @@
 | เว็บ (AGENTS.md) | แอป |
 |---|---|
 | ห้าม `any` / `as any` / `@ts-ignore` | ห้าม `dynamic` และ cast ไม่ตรวจ: `strict-casts`, `strict-inference`, `strict-raw-types` + `very_good_analysis` |
-| Type จาก OpenAPI เท่านั้น | `lib/generated/api/` จาก openapi-generator (`dart-dio`) ห้ามเขียน DTO เอง |
+| Type จาก OpenAPI เท่านั้น | path package `packages/tan_erp_api` จาก openapi-generator (`dart-dio`, สร้างด้วย `tool/generate_api.sh`) ห้ามเขียน DTO เอง |
 | TanStack Query ถือ server state | Riverpod ถือ server state (`AsyncNotifier`/`FutureProvider`), ห้ามเก็บซ้ำใน widget state |
 | ห้าม fetch ใน component | Widget เรียก provider เท่านั้น; provider เรียก repository; repository เรียก API client |
 | i18n th/en ครบทุกคีย์ | ARB `app_th.arb` (ค่าเริ่มต้น) + `app_en.arb`, ตรวจ parity ใน CI |
@@ -67,7 +67,7 @@ mobile/
 │  │  ├─ l10n/                ← ARB + generated
 │  │  └─ router/              ← go_router routes + guards
 │  ├─ native/                 ← camera, scanner, laser_meter, location (interface + impl)
-│  ├─ generated/api/          ← จาก OpenAPI (ห้ามแก้มือ)
+│  ├─ (API client อยู่ที่ mobile/packages/tan_erp_api ← จาก OpenAPI ห้ามแก้มือ)
 │  └─ features/
 │     └─ <feature>/
 │        ├─ data/             ← repository impl, mappers, drift tables ของ feature

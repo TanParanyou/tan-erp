@@ -3,34 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:tan_erp_field/core/network/api_client.dart';
 import 'package:tan_erp_field/core/network/api_failure.dart';
+import 'package:tan_erp_field/core/network/interceptors.dart';
 import 'package:tan_erp_field/features/app_update/domain/version_policy.dart';
-
-/// Maps the raw version-policy JSON to [VersionPolicy].
-///
-/// PENDING CODEGEN: override with a mapper from the generated
-/// `AppVersionPolicyResponse` after `tool/generate_api.sh`; no hand-written
-/// DTO parsing.
-typedef VersionPolicyParser = VersionPolicy Function(Object? json);
-
-final versionPolicyParserProvider = Provider<VersionPolicyParser>(
-  (ref) =>
-      (_) => throw const UnknownFailure(code: 'PENDING_CODEGEN'),
-);
 
 final versionPolicyProvider = FutureProvider<VersionPolicy?>((ref) async {
   final api = ref.watch(apiClientProvider);
-  final parse = ref.watch(versionPolicyParserProvider);
   final platform = defaultTargetPlatform == TargetPlatform.iOS
       ? 'ios'
       : 'android';
   try {
-    return parse(
-      await api.getJson(
-        '/api/v1/app/version-policy',
-        query: {'platform': platform},
-        authenticated: false,
+    final response = await api.call(
+      () => api.api.getAppVersionApi().apiV1AppVersionPolicyGet(
+        platform: platform,
+        extra: {skipAuthKey: true},
       ),
     );
+    final minimum = response.minimumVersion;
+    final latest = response.latestVersion;
+    if (minimum == null || latest == null) return null;
+    return VersionPolicy(minimumVersion: minimum, latestVersion: latest);
   } on ApiFailure {
     return null; // fail open: a failed check must never lock users out
   }

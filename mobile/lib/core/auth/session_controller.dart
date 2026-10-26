@@ -6,7 +6,9 @@ import 'package:tan_erp_field/core/auth/biometric_gate.dart';
 import 'package:tan_erp_field/core/auth/current_user.dart';
 import 'package:tan_erp_field/core/auth/session_storage.dart';
 import 'package:tan_erp_field/core/config/app_config.dart';
+import 'package:tan_erp_field/core/l10n/locale_provider.dart';
 import 'package:tan_erp_field/core/network/api_failure.dart';
+import 'package:tan_erp_field/core/theme/theme_settings.dart';
 
 @immutable
 sealed class Session {
@@ -108,6 +110,13 @@ class SessionController extends Notifier<Session> {
     if (user.memberships.isEmpty) {
       throw const ForbiddenFailure(code: 'ACTIVE_MEMBERSHIP_REQUIRED');
     }
+    // Server preferences win on every login/unlock; null keeps local values.
+    final preferences = user.preferences;
+    if (preferences != null) {
+      ref.read(themeSettingsProvider.notifier).settings = preferences;
+    }
+    final locale = user.preferredLocale;
+    if (locale != null) ref.read(localeProvider.notifier).locale = locale;
     final lastId = await ref.read(sessionStorageProvider).readMembershipId();
     final remembered = user.memberships.where((m) => m.id == lastId);
     if (remembered.isNotEmpty) {

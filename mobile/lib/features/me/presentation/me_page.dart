@@ -3,15 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tan_erp_field/core/auth/session_controller.dart';
 import 'package:tan_erp_field/core/config/app_config.dart';
+import 'package:tan_erp_field/core/l10n/failure_messages.dart';
 import 'package:tan_erp_field/core/l10n/l10n.dart';
 import 'package:tan_erp_field/core/l10n/locale_provider.dart';
 import 'package:tan_erp_field/core/router/routes.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/theme/theme_settings.dart';
+import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
 import 'package:tan_erp_field/core/ui/erp_confirm_dialog.dart';
 import 'package:tan_erp_field/core/ui/erp_select.dart';
 import 'package:tan_erp_field/features/app_update/data/version_policy_repository.dart';
+import 'package:tan_erp_field/features/me/presentation/preferences_controller.dart';
 
 class MePage extends ConsumerWidget {
   const MePage({super.key});
@@ -26,7 +29,8 @@ class MePage extends ConsumerWidget {
     final t = context.tokens;
     final text = Theme.of(context).textTheme;
     final settings = ref.watch(themeSettingsProvider);
-    final controller = ref.read(themeSettingsProvider.notifier);
+    final save = ref.watch(preferencesSaveProvider);
+    final saver = ref.read(preferencesSaveProvider.notifier);
     final version = ref.watch(appVersionProvider).value ?? '';
     final membership = session.membership;
 
@@ -72,8 +76,13 @@ class MePage extends ConsumerWidget {
               ref.read(localeProvider.notifier).locale = Locale(code),
         ),
         SizedBox(height: t.space4),
-        // TODO(A5): persist theme mode/density/text scale via the backend
-        // preferences API; these three controls are local-only until then.
+        if (save.failure != null) ...[
+          ErpAlert(
+            message: failureMessage(l10n, save.failure!),
+            severity: ErpAlertSeverity.danger,
+          ),
+          SizedBox(height: t.space4),
+        ],
         ErpSelect<ThemeMode>(
           label: l10n.themeMode,
           placeholder: l10n.commonSelect,
@@ -83,7 +92,8 @@ class MePage extends ConsumerWidget {
             ErpOption(value: ThemeMode.light, label: l10n.themeModeLight),
             ErpOption(value: ThemeMode.dark, label: l10n.themeModeDark),
           ],
-          onChanged: (v) => controller.settings = settings.copyWith(mode: v),
+          enabled: !save.isSaving,
+          onChanged: (v) => saver.save(settings.copyWith(mode: v)),
         ),
         SizedBox(height: t.space4),
         ErpSelect<ErpDensity>(
@@ -97,7 +107,8 @@ class MePage extends ConsumerWidget {
               label: l10n.themeDensityCompact,
             ),
           ],
-          onChanged: (v) => controller.settings = settings.copyWith(density: v),
+          enabled: !save.isSaving,
+          onChanged: (v) => saver.save(settings.copyWith(density: v)),
         ),
         SizedBox(height: t.space4),
         ErpSelect<double>(
@@ -111,8 +122,8 @@ class MePage extends ConsumerWidget {
                 label: l10n.themeTextScaleValue((s * 100).round()),
               ),
           ],
-          onChanged: (v) =>
-              controller.settings = settings.copyWith(textScale: v),
+          enabled: !save.isSaving,
+          onChanged: (v) => saver.save(settings.copyWith(textScale: v)),
         ),
         SizedBox(height: t.space6),
         info(l10n.meAppVersion, version),

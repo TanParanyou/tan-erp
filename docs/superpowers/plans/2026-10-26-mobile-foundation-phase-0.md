@@ -1,6 +1,6 @@
 # Mobile Foundation Phase 0 — Design Tokens + Flutter App Skeleton
 
-- Status: **Proposed** (2026-10-26) — เอกสารได้รับอนุมัติให้เขียน; การ implement ต้องได้รับอนุมัติแผนนี้ก่อน
+- Status: **Implemented** (2026-10-26) — A1–A5 และ B1–B7 เสร็จ; ไม่มี test ใหม่และไม่ได้รัน test (ตามผู้ใช้); ยังไม่ได้ทดสอบบนเครื่องจริง/emulator; iOS build ติดปัญหา SwiftPM ของ Xcode 26 กับ firebase-ios-sdk; iOS flavor ใช้ bundle ID เดียว; การเปลี่ยนภาษาในแอปยังไม่บันทึกที่ Backend (ต้องมี endpoint locale-only)
 - Decisions: [ADR 0030](../../adr/0030-flutter-field-companion-app.md), [ADR 0031](../../adr/0031-cross-platform-design-tokens-and-theming.md)
 - Architecture: [Mobile Architecture](../../02-architecture/mobile-architecture.md), [design.md หมวด 7](../../../design.md)
 - Tests: ไม่เขียนและไม่รัน test ใหม่ (ตามข้อตกลงกับผู้ใช้); รักษา test เดิมให้ compile ได้
@@ -56,7 +56,7 @@ Push notification (iOS ต้องมีบัญชี Apple Developer), offli
 - Done: `flutter analyze` 0 issue; `flutter run --flavor dev` เปิดบน simulator/emulator
 
 ### B2. Network + Contract
-- สคริปต์ generate API client จาก `contracts/openapi/tan-erp.v1.json` (openapi-generator `dart-dio`) ลง `lib/generated/api/`
+- สคริปต์ generate API client จาก `contracts/openapi/tan-erp.v1.json` (openapi-generator `dart-dio`) ลง path package `packages/tan_erp_api` (ผลจริง)
 - dio + interceptors: Firebase ID token, membership header (ชื่อเดียวกับเว็บ), `Accept-Language`, idempotency key สำหรับคำสั่งเขียน, `If-Match`; แปลง RFC 7807 เป็น `ApiFailure` (sealed: validation, conflict, unauthorized, forbidden, notFound, network, unknown) โดยอ่าน `code` ไม่อ่าน message
 - Done: เรียก `GET /api/v1/me` ผ่าน LAN สำเร็จจาก flavor dev
 

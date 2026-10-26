@@ -27,9 +27,8 @@ class ThemeSettings {
   );
 }
 
-// TODO(A5): load/save through the backend user-preferences API so web and app
-// share the same values.
-/// LOCAL ONLY for now; in-memory, set via `state`.
+/// In-memory settings: filled from `/me` on login, saved through
+/// `PreferencesSaveController`.
 class ThemeSettingsController extends Notifier<ThemeSettings> {
   @override
   ThemeSettings build() => const ThemeSettings();

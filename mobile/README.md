@@ -36,5 +36,5 @@ dart run tool/check_l10n_parity.dart # app_th.arb vs app_en.arb keys
 ## Generated code
 
 - `lib/core/theme/tokens.g.dart`: from `npm run tokens:build` at the repo root. Never edit by hand.
-- `lib/generated/api/`: `tool/generate_api.sh` (openapi-generator dart-dio). Until it has run, API calls are generic (`ApiClient.getJson`) and the two mappers marked `PENDING CODEGEN` (`currentUserParserProvider`, `versionPolicyParserProvider`) must be replaced with mappers over the generated types.
+- `packages/tan_erp_api/`: `tool/generate_api.sh` (openapi-generator 7.26.0 `dart-dio` + built_value, pinned in `openapitools.json`; needs a JDK, Android Studio's JBR is auto-detected). Path dependency; excluded from analysis. `ApiClient` (`lib/core/network/api_client.dart`) runs the generated client on the app's own dio.
 - `lib/core/l10n/gen/`: `flutter gen-l10n` (also run by `flutter pub get`/build).

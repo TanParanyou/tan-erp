@@ -19,6 +19,7 @@ class ErpSelect<T> extends StatelessWidget {
     required this.onChanged,
     this.value,
     this.errorText,
+    this.enabled = true,
     super.key,
   });
 
@@ -28,6 +29,7 @@ class ErpSelect<T> extends StatelessWidget {
   final T? value;
   final ValueChanged<T> onChanged;
   final String? errorText;
+  final bool enabled;
 
   Future<void> _open(BuildContext context) async {
     final t = context.tokens;
@@ -96,9 +98,10 @@ class ErpSelect<T> extends StatelessWidget {
         SizedBox(height: t.space1),
         Semantics(
           button: true,
+          enabled: enabled,
           label: label,
           child: InkWell(
-            onTap: () => _open(context),
+            onTap: enabled ? () => _open(context) : null,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: t.surface,

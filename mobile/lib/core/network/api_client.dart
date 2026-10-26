@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tan_erp_api/tan_erp_api.dart';
 import 'package:tan_erp_field/core/auth/auth_repository.dart';
 import 'package:tan_erp_field/core/config/app_config.dart';
 import 'package:tan_erp_field/core/l10n/locale_provider.dart';
@@ -7,26 +8,20 @@ import 'package:tan_erp_field/core/membership/membership_provider.dart';
 import 'package:tan_erp_field/core/network/api_failure.dart';
 import 'package:tan_erp_field/core/network/interceptors.dart';
 
-/// Thin dio wrapper. PENDING CODEGEN: calls are generic (raw JSON) until
-/// `tool/generate_api.sh` produces typed clients in lib/generated/api; callers
-/// must not hand-write DTOs on top of this.
+/// Typed API access: the generated `tan_erp_api` client running on the app's
+/// own [Dio] (interceptors do auth, headers and Problem Details mapping).
 class ApiClient {
-  ApiClient(this._dio);
+  ApiClient(Dio dio) : api = TanErpApi(dio: dio, interceptors: const []);
 
-  final Dio _dio;
+  final TanErpApi api;
 
-  Future<Object?> getJson(
-    String path, {
-    Map<String, Object?>? query,
-    bool authenticated = true,
-  }) async {
+  /// Runs a generated call and returns its body; failures surface as
+  /// [ApiFailure] only.
+  Future<T> call<T>(Future<Response<T>> Function() request) async {
     try {
-      final response = await _dio.get<Object?>(
-        path,
-        queryParameters: query,
-        options: Options(extra: {skipAuthKey: !authenticated}),
-      );
-      return response.data;
+      final data = (await request()).data;
+      if (data == null) throw const UnknownFailure(code: 'EMPTY_RESPONSE');
+      return data;
     } on DioException catch (e) {
       final failure = e.error;
       throw failure is ApiFailure ? failure : const UnknownFailure();

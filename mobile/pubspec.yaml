@@ -24,6 +24,8 @@ dependencies:
   package_info_plus: ^10.2.2
   reactive_forms: ^18.2.2
   talker: ^5.2.0
+  tan_erp_api:
+    path: packages/tan_erp_api
   uuid: ^4.6.0
 
 dev_dependencies:
