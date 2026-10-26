@@ -120,6 +120,8 @@ presentation (screens/widgets) → providers (Riverpod) → repository (interfac
 
 ## UX หลัก
 
+มาตรฐานเต็ม (มุมคม Atelier, สีเน้นไม้โอ๊กสำหรับค่าวัด, กฎจัดหน้าจอ) อยู่ที่ [design.md หมวด 8](../../design.md).
+
 - **มือถือ:** bottom navigation 5 เมนู — งานวันนี้ · สำรวจ · สแกน · แจ้งเตือน · ฉัน.
 - **แท็บเล็ต (≥ 768dp):** navigation rail + master-detail split ตาม [design.md หมวด 2](../../design.md).
 - ปุ่มกดสูง ≥ 44dp, safe area ทุกจอ, focus/semantics label ครบสำหรับ screen reader, รองรับ text scale ของระบบ.
