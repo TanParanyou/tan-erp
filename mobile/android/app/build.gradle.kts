@@ -65,3 +65,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Native AR floor measure (Device Lab); the app stays installable without ARCore.
+    implementation("com.google.ar:core:1.57.0")
+}

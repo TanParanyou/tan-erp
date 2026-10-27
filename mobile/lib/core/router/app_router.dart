@@ -15,12 +15,15 @@ import 'package:tan_erp_field/features/auth/presentation/login_page.dart';
 import 'package:tan_erp_field/features/auth/presentation/membership_page.dart';
 import 'package:tan_erp_field/features/auth/presentation/not_configured_page.dart';
 import 'package:tan_erp_field/features/dev/presentation/ui_gallery_page.dart';
+import 'package:tan_erp_field/features/device_lab/presentation/device_lab_page.dart';
 import 'package:tan_erp_field/features/home/presentation/placeholder_tab.dart';
 import 'package:tan_erp_field/features/me/presentation/me_page.dart';
 
 /// Route guard: forced update first, then the session state decides.
 String? _redirect(Ref ref, GoRouterState state) {
   final at = state.matchedLocation;
+  // Dev-only route (registered only for dev); reachable before sign-in too.
+  if (at == AppRoutes.deviceLab) return null;
   if (ref.read(updateRequirementProvider) != null) {
     return at == AppRoutes.updateRequired ? null : AppRoutes.updateRequired;
   }
@@ -80,6 +83,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         GoRoute(
           path: AppRoutes.gallery,
           builder: (_, _) => const UiGalleryPage(),
+        ),
+      if (isDev)
+        GoRoute(
+          path: AppRoutes.deviceLab,
+          builder: (_, _) => const DeviceLabPage(),
         ),
       StatefulShellRoute.indexedStack(
         builder: (context, _, shell) {

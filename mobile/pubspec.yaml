@@ -34,6 +34,7 @@ dev_dependencies:
     path: packages/erp_lints
   flutter_test:
     sdk: flutter
+  pigeon: ^26.3.2
   very_good_analysis: ^11.0.0
 
 flutter:

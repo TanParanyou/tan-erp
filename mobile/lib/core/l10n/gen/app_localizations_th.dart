@@ -269,4 +269,116 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get galleryEmptyAction => 'เพิ่มรายการ';
+
+  @override
+  String get deviceLabTitle => 'ห้องทดลองอุปกรณ์';
+
+  @override
+  String get deviceLabIntro =>
+      'ทดลองความสามารถเฉพาะของเครื่อง ผลลัพธ์ไม่ถูกบันทึกลงระบบ';
+
+  @override
+  String get arCardTitle => 'AR วัดพื้น';
+
+  @override
+  String get arCardBody =>
+      'วางจุดตามมุมห้องบนพื้นผ่านกล้อง แล้วแอปคำนวณพื้นที่ให้';
+
+  @override
+  String get arAvailabilitySupported => 'เครื่องนี้รองรับ AR';
+
+  @override
+  String get arAvailabilityNeedsInstall =>
+      'ต้องติดตั้งหรืออัปเดต Google Play Services for AR ระบบจะถามเมื่อเริ่มวัด';
+
+  @override
+  String get arAvailabilityUnsupported =>
+      'เครื่องนี้ไม่รองรับ ARCore กรุณาทดลองกับมือถือที่รองรับ';
+
+  @override
+  String get arAvailabilityUnknown => 'ตรวจสอบการรองรับ AR ไม่ได้';
+
+  @override
+  String get arStart => 'เริ่มวัดพื้น';
+
+  @override
+  String get arResultTitle => 'ผลการวัดล่าสุด';
+
+  @override
+  String get arResultArea => 'พื้นที่';
+
+  @override
+  String get arResultPerimeter => 'เส้นรอบรูป';
+
+  @override
+  String arResultEdge(int index) {
+    return 'ด้านที่ $index';
+  }
+
+  @override
+  String arValueMeters(String value) {
+    return '$value ม.';
+  }
+
+  @override
+  String arValueSquareMeters(String value) {
+    return '$value ตร.ม.';
+  }
+
+  @override
+  String get arUnitMeter => 'ม.';
+
+  @override
+  String get arUnitSquareMeter => 'ตร.ม.';
+
+  @override
+  String get arSearchingPlane => 'ส่องกล้องไปที่พื้นแล้วค่อยๆ ขยับเครื่อง';
+
+  @override
+  String get arTapToPlace => 'แตะบนพื้นเพื่อวางจุดแรก';
+
+  @override
+  String get arAddMorePoints => 'แตะวางจุดถัดไป ต้องมีอย่างน้อย 3 จุด';
+
+  @override
+  String get arReadyToClose => 'วางครบทุกมุมแล้วแตะ ปิดรูป';
+
+  @override
+  String get arClosedHint => 'ตรวจรูปแล้วแตะ เสร็จ';
+
+  @override
+  String get arTrackingLost =>
+      'ติดตามภาพไม่ได้ ขยับเครื่องช้าลงและส่องพื้นที่มีลวดลาย';
+
+  @override
+  String get arNotOnPlane => 'ไม่พบพื้นตรงจุดที่แตะ';
+
+  @override
+  String get arSelfIntersecting => 'เส้นตัดกัน แตะ ย้อนกลับ แล้ววางจุดใหม่';
+
+  @override
+  String get arUndo => 'ย้อนกลับ';
+
+  @override
+  String get arCloseShape => 'ปิดรูป';
+
+  @override
+  String get arDone => 'เสร็จ';
+
+  @override
+  String get arErrorCameraPermission =>
+      'ไม่ได้รับสิทธิ์ใช้กล้อง กรุณาอนุญาตในการตั้งค่าเครื่อง';
+
+  @override
+  String get arErrorInstallDeclined =>
+      'ยังไม่ได้ติดตั้ง Google Play Services for AR';
+
+  @override
+  String get arErrorUnavailable => 'เครื่องนี้ใช้ AR ไม่ได้';
+
+  @override
+  String get arErrorSessionFailed => 'เปิดกล้อง AR ไม่สำเร็จ กรุณาลองใหม่';
+
+  @override
+  String get arErrorBusy => 'กำลังวัดอยู่แล้ว';
 }

@@ -271,4 +271,120 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get galleryEmptyAction => 'Add item';
+
+  @override
+  String get deviceLabTitle => 'Device lab';
+
+  @override
+  String get deviceLabIntro =>
+      'Try device-specific features. Results are not saved';
+
+  @override
+  String get arCardTitle => 'AR floor measure';
+
+  @override
+  String get arCardBody =>
+      'Place points on the floor corners through the camera and the app calculates the area';
+
+  @override
+  String get arAvailabilitySupported => 'This device supports AR';
+
+  @override
+  String get arAvailabilityNeedsInstall =>
+      'Google Play Services for AR must be installed or updated. You will be asked when you start';
+
+  @override
+  String get arAvailabilityUnsupported =>
+      'This device does not support ARCore. Try a supported phone';
+
+  @override
+  String get arAvailabilityUnknown => 'Could not check AR support';
+
+  @override
+  String get arStart => 'Start measuring';
+
+  @override
+  String get arResultTitle => 'Latest measurement';
+
+  @override
+  String get arResultArea => 'Area';
+
+  @override
+  String get arResultPerimeter => 'Perimeter';
+
+  @override
+  String arResultEdge(int index) {
+    return 'Side $index';
+  }
+
+  @override
+  String arValueMeters(String value) {
+    return '$value m';
+  }
+
+  @override
+  String arValueSquareMeters(String value) {
+    return '$value m²';
+  }
+
+  @override
+  String get arUnitMeter => 'm';
+
+  @override
+  String get arUnitSquareMeter => 'm²';
+
+  @override
+  String get arSearchingPlane =>
+      'Point the camera at the floor and move the phone slowly';
+
+  @override
+  String get arTapToPlace => 'Tap the floor to place the first point';
+
+  @override
+  String get arAddMorePoints =>
+      'Tap to place the next point. At least 3 points are needed';
+
+  @override
+  String get arReadyToClose => 'When every corner is placed, tap Close shape';
+
+  @override
+  String get arClosedHint => 'Check the shape, then tap Done';
+
+  @override
+  String get arTrackingLost =>
+      'Tracking lost. Move slower and point at a textured floor';
+
+  @override
+  String get arNotOnPlane => 'No floor found where you tapped';
+
+  @override
+  String get arSelfIntersecting =>
+      'Lines cross. Tap Undo and place the points again';
+
+  @override
+  String get arUndo => 'Undo';
+
+  @override
+  String get arCloseShape => 'Close shape';
+
+  @override
+  String get arDone => 'Done';
+
+  @override
+  String get arErrorCameraPermission =>
+      'Camera access was denied. Allow it in the device settings';
+
+  @override
+  String get arErrorInstallDeclined =>
+      'Google Play Services for AR is not installed';
+
+  @override
+  String get arErrorUnavailable => 'AR is not available on this device';
+
+  @override
+  String get arErrorSessionFailed =>
+      'Could not start the AR camera. Please try again';
+
+  @override
+  String get arErrorBusy => 'A measurement is already running';
 }

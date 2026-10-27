@@ -10,4 +10,5 @@ abstract final class AppRoutes {
   static const notifications = '/notifications';
   static const me = '/me';
   static const gallery = '/dev/gallery';
+  static const deviceLab = '/dev/device-lab';
 }

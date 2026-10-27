@@ -104,5 +104,59 @@
   "galleryConfirmMessage": "Do you want to continue?",
   "galleryEmptyTitle": "No items",
   "galleryEmptyMessage": "There is nothing in this category yet",
-  "galleryEmptyAction": "Add item"
+  "galleryEmptyAction": "Add item",
+  "deviceLabTitle": "Device lab",
+  "deviceLabIntro": "Try device-specific features. Results are not saved",
+  "arCardTitle": "AR floor measure",
+  "arCardBody": "Place points on the floor corners through the camera and the app calculates the area",
+  "arAvailabilitySupported": "This device supports AR",
+  "arAvailabilityNeedsInstall": "Google Play Services for AR must be installed or updated. You will be asked when you start",
+  "arAvailabilityUnsupported": "This device does not support ARCore. Try a supported phone",
+  "arAvailabilityUnknown": "Could not check AR support",
+  "arStart": "Start measuring",
+  "arResultTitle": "Latest measurement",
+  "arResultArea": "Area",
+  "arResultPerimeter": "Perimeter",
+  "arResultEdge": "Side {index}",
+  "@arResultEdge": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "arValueMeters": "{value} m",
+  "@arValueMeters": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "arValueSquareMeters": "{value} m²",
+  "@arValueSquareMeters": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "arUnitMeter": "m",
+  "arUnitSquareMeter": "m²",
+  "arSearchingPlane": "Point the camera at the floor and move the phone slowly",
+  "arTapToPlace": "Tap the floor to place the first point",
+  "arAddMorePoints": "Tap to place the next point. At least 3 points are needed",
+  "arReadyToClose": "When every corner is placed, tap Close shape",
+  "arClosedHint": "Check the shape, then tap Done",
+  "arTrackingLost": "Tracking lost. Move slower and point at a textured floor",
+  "arNotOnPlane": "No floor found where you tapped",
+  "arSelfIntersecting": "Lines cross. Tap Undo and place the points again",
+  "arUndo": "Undo",
+  "arCloseShape": "Close shape",
+  "arDone": "Done",
+  "arErrorCameraPermission": "Camera access was denied. Allow it in the device settings",
+  "arErrorInstallDeclined": "Google Play Services for AR is not installed",
+  "arErrorUnavailable": "AR is not available on this device",
+  "arErrorSessionFailed": "Could not start the AR camera. Please try again",
+  "arErrorBusy": "A measurement is already running"
 }

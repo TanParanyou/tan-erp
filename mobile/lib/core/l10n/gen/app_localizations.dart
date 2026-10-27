@@ -601,6 +601,204 @@ abstract class AppLocalizations {
   /// In th, this message translates to:
   /// **'เพิ่มรายการ'**
   String get galleryEmptyAction;
+
+  /// No description provided for @deviceLabTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ห้องทดลองอุปกรณ์'**
+  String get deviceLabTitle;
+
+  /// No description provided for @deviceLabIntro.
+  ///
+  /// In th, this message translates to:
+  /// **'ทดลองความสามารถเฉพาะของเครื่อง ผลลัพธ์ไม่ถูกบันทึกลงระบบ'**
+  String get deviceLabIntro;
+
+  /// No description provided for @arCardTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'AR วัดพื้น'**
+  String get arCardTitle;
+
+  /// No description provided for @arCardBody.
+  ///
+  /// In th, this message translates to:
+  /// **'วางจุดตามมุมห้องบนพื้นผ่านกล้อง แล้วแอปคำนวณพื้นที่ให้'**
+  String get arCardBody;
+
+  /// No description provided for @arAvailabilitySupported.
+  ///
+  /// In th, this message translates to:
+  /// **'เครื่องนี้รองรับ AR'**
+  String get arAvailabilitySupported;
+
+  /// No description provided for @arAvailabilityNeedsInstall.
+  ///
+  /// In th, this message translates to:
+  /// **'ต้องติดตั้งหรืออัปเดต Google Play Services for AR ระบบจะถามเมื่อเริ่มวัด'**
+  String get arAvailabilityNeedsInstall;
+
+  /// No description provided for @arAvailabilityUnsupported.
+  ///
+  /// In th, this message translates to:
+  /// **'เครื่องนี้ไม่รองรับ ARCore กรุณาทดลองกับมือถือที่รองรับ'**
+  String get arAvailabilityUnsupported;
+
+  /// No description provided for @arAvailabilityUnknown.
+  ///
+  /// In th, this message translates to:
+  /// **'ตรวจสอบการรองรับ AR ไม่ได้'**
+  String get arAvailabilityUnknown;
+
+  /// No description provided for @arStart.
+  ///
+  /// In th, this message translates to:
+  /// **'เริ่มวัดพื้น'**
+  String get arStart;
+
+  /// No description provided for @arResultTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ผลการวัดล่าสุด'**
+  String get arResultTitle;
+
+  /// No description provided for @arResultArea.
+  ///
+  /// In th, this message translates to:
+  /// **'พื้นที่'**
+  String get arResultArea;
+
+  /// No description provided for @arResultPerimeter.
+  ///
+  /// In th, this message translates to:
+  /// **'เส้นรอบรูป'**
+  String get arResultPerimeter;
+
+  /// No description provided for @arResultEdge.
+  ///
+  /// In th, this message translates to:
+  /// **'ด้านที่ {index}'**
+  String arResultEdge(int index);
+
+  /// No description provided for @arValueMeters.
+  ///
+  /// In th, this message translates to:
+  /// **'{value} ม.'**
+  String arValueMeters(String value);
+
+  /// No description provided for @arValueSquareMeters.
+  ///
+  /// In th, this message translates to:
+  /// **'{value} ตร.ม.'**
+  String arValueSquareMeters(String value);
+
+  /// No description provided for @arUnitMeter.
+  ///
+  /// In th, this message translates to:
+  /// **'ม.'**
+  String get arUnitMeter;
+
+  /// No description provided for @arUnitSquareMeter.
+  ///
+  /// In th, this message translates to:
+  /// **'ตร.ม.'**
+  String get arUnitSquareMeter;
+
+  /// No description provided for @arSearchingPlane.
+  ///
+  /// In th, this message translates to:
+  /// **'ส่องกล้องไปที่พื้นแล้วค่อยๆ ขยับเครื่อง'**
+  String get arSearchingPlane;
+
+  /// No description provided for @arTapToPlace.
+  ///
+  /// In th, this message translates to:
+  /// **'แตะบนพื้นเพื่อวางจุดแรก'**
+  String get arTapToPlace;
+
+  /// No description provided for @arAddMorePoints.
+  ///
+  /// In th, this message translates to:
+  /// **'แตะวางจุดถัดไป ต้องมีอย่างน้อย 3 จุด'**
+  String get arAddMorePoints;
+
+  /// No description provided for @arReadyToClose.
+  ///
+  /// In th, this message translates to:
+  /// **'วางครบทุกมุมแล้วแตะ ปิดรูป'**
+  String get arReadyToClose;
+
+  /// No description provided for @arClosedHint.
+  ///
+  /// In th, this message translates to:
+  /// **'ตรวจรูปแล้วแตะ เสร็จ'**
+  String get arClosedHint;
+
+  /// No description provided for @arTrackingLost.
+  ///
+  /// In th, this message translates to:
+  /// **'ติดตามภาพไม่ได้ ขยับเครื่องช้าลงและส่องพื้นที่มีลวดลาย'**
+  String get arTrackingLost;
+
+  /// No description provided for @arNotOnPlane.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่พบพื้นตรงจุดที่แตะ'**
+  String get arNotOnPlane;
+
+  /// No description provided for @arSelfIntersecting.
+  ///
+  /// In th, this message translates to:
+  /// **'เส้นตัดกัน แตะ ย้อนกลับ แล้ววางจุดใหม่'**
+  String get arSelfIntersecting;
+
+  /// No description provided for @arUndo.
+  ///
+  /// In th, this message translates to:
+  /// **'ย้อนกลับ'**
+  String get arUndo;
+
+  /// No description provided for @arCloseShape.
+  ///
+  /// In th, this message translates to:
+  /// **'ปิดรูป'**
+  String get arCloseShape;
+
+  /// No description provided for @arDone.
+  ///
+  /// In th, this message translates to:
+  /// **'เสร็จ'**
+  String get arDone;
+
+  /// No description provided for @arErrorCameraPermission.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่ได้รับสิทธิ์ใช้กล้อง กรุณาอนุญาตในการตั้งค่าเครื่อง'**
+  String get arErrorCameraPermission;
+
+  /// No description provided for @arErrorInstallDeclined.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่ได้ติดตั้ง Google Play Services for AR'**
+  String get arErrorInstallDeclined;
+
+  /// No description provided for @arErrorUnavailable.
+  ///
+  /// In th, this message translates to:
+  /// **'เครื่องนี้ใช้ AR ไม่ได้'**
+  String get arErrorUnavailable;
+
+  /// No description provided for @arErrorSessionFailed.
+  ///
+  /// In th, this message translates to:
+  /// **'เปิดกล้อง AR ไม่สำเร็จ กรุณาลองใหม่'**
+  String get arErrorSessionFailed;
+
+  /// No description provided for @arErrorBusy.
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังวัดอยู่แล้ว'**
+  String get arErrorBusy;
 }
 
 class _AppLocalizationsDelegate

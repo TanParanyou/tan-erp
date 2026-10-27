@@ -133,6 +133,12 @@ class MePage extends ConsumerWidget {
             variant: ErpButtonVariant.ghost,
             onPressed: () => context.push(AppRoutes.gallery),
           ),
+        if (ref.watch(appConfigProvider).isDev)
+          ErpButton(
+            label: l10n.deviceLabTitle,
+            variant: ErpButtonVariant.ghost,
+            onPressed: () => context.push(AppRoutes.deviceLab),
+          ),
         SizedBox(height: t.space6),
         ErpButton(
           label: l10n.meLogout,

@@ -104,5 +104,59 @@
   "galleryConfirmMessage": "ต้องการดำเนินการต่อใช่หรือไม่",
   "galleryEmptyTitle": "ไม่มีรายการ",
   "galleryEmptyMessage": "ยังไม่มีข้อมูลในหมวดนี้",
-  "galleryEmptyAction": "เพิ่มรายการ"
+  "galleryEmptyAction": "เพิ่มรายการ",
+  "deviceLabTitle": "ห้องทดลองอุปกรณ์",
+  "deviceLabIntro": "ทดลองความสามารถเฉพาะของเครื่อง ผลลัพธ์ไม่ถูกบันทึกลงระบบ",
+  "arCardTitle": "AR วัดพื้น",
+  "arCardBody": "วางจุดตามมุมห้องบนพื้นผ่านกล้อง แล้วแอปคำนวณพื้นที่ให้",
+  "arAvailabilitySupported": "เครื่องนี้รองรับ AR",
+  "arAvailabilityNeedsInstall": "ต้องติดตั้งหรืออัปเดต Google Play Services for AR ระบบจะถามเมื่อเริ่มวัด",
+  "arAvailabilityUnsupported": "เครื่องนี้ไม่รองรับ ARCore กรุณาทดลองกับมือถือที่รองรับ",
+  "arAvailabilityUnknown": "ตรวจสอบการรองรับ AR ไม่ได้",
+  "arStart": "เริ่มวัดพื้น",
+  "arResultTitle": "ผลการวัดล่าสุด",
+  "arResultArea": "พื้นที่",
+  "arResultPerimeter": "เส้นรอบรูป",
+  "arResultEdge": "ด้านที่ {index}",
+  "@arResultEdge": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "arValueMeters": "{value} ม.",
+  "@arValueMeters": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "arValueSquareMeters": "{value} ตร.ม.",
+  "@arValueSquareMeters": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "arUnitMeter": "ม.",
+  "arUnitSquareMeter": "ตร.ม.",
+  "arSearchingPlane": "ส่องกล้องไปที่พื้นแล้วค่อยๆ ขยับเครื่อง",
+  "arTapToPlace": "แตะบนพื้นเพื่อวางจุดแรก",
+  "arAddMorePoints": "แตะวางจุดถัดไป ต้องมีอย่างน้อย 3 จุด",
+  "arReadyToClose": "วางครบทุกมุมแล้วแตะ ปิดรูป",
+  "arClosedHint": "ตรวจรูปแล้วแตะ เสร็จ",
+  "arTrackingLost": "ติดตามภาพไม่ได้ ขยับเครื่องช้าลงและส่องพื้นที่มีลวดลาย",
+  "arNotOnPlane": "ไม่พบพื้นตรงจุดที่แตะ",
+  "arSelfIntersecting": "เส้นตัดกัน แตะ ย้อนกลับ แล้ววางจุดใหม่",
+  "arUndo": "ย้อนกลับ",
+  "arCloseShape": "ปิดรูป",
+  "arDone": "เสร็จ",
+  "arErrorCameraPermission": "ไม่ได้รับสิทธิ์ใช้กล้อง กรุณาอนุญาตในการตั้งค่าเครื่อง",
+  "arErrorInstallDeclined": "ยังไม่ได้ติดตั้ง Google Play Services for AR",
+  "arErrorUnavailable": "เครื่องนี้ใช้ AR ไม่ได้",
+  "arErrorSessionFailed": "เปิดกล้อง AR ไม่สำเร็จ กรุณาลองใหม่",
+  "arErrorBusy": "กำลังวัดอยู่แล้ว"
 }
