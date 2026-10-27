@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert } from "@/components/ui/Alert";
 import { useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { z } from "zod";
@@ -150,7 +151,7 @@ export function CostRecordMaintenance({ itemId }: CostRecordMaintenanceProps) {
   return (
     <section className="space-y-3 border-t border-erp-border pt-5" aria-labelledby="item-costs-heading">
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="item-costs-heading" className="text-lg font-semibold text-erp-text-main">{t("costHistory")}</h2>{mayCreate && <Button type="button" onClick={() => setOpen(true)}>{createdDraft ? t("finishCostDraft") : t("createCostDraft")}</Button>}</div>
-      {(costs.isError || lookups.isError || sources.isError) && <p role="alert" className="border border-erp-danger p-3 text-erp-danger">{t("createFailed")}</p>}
+      {(costs.isError || lookups.isError || sources.isError) && <Alert variant="danger">{t("createFailed")}</Alert>}
       <DataTable<CostRecordResponse> columns={columns} data={rows} isLoading={costs.isLoading} isError={costs.isError} error={costs.error} onRetry={() => { void costs.refetch(); }} emptyTitle={t("noCostRecords")} hidePagination />
       <Drawer
         isOpen={open}

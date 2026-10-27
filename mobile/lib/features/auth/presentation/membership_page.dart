@@ -5,6 +5,7 @@ import 'package:tan_erp_field/core/auth/session_controller.dart';
 import 'package:tan_erp_field/core/l10n/l10n.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
+import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
 import 'package:tan_erp_field/core/ui/erp_select.dart';
 
@@ -41,7 +42,7 @@ class _MembershipPageState extends ConsumerState<MembershipPage> {
         children: [
           Expanded(
             child: ListView(
-              padding: EdgeInsets.all(t.space4),
+              padding: ErpPagePadding.of(context),
               children: [
                 ErpSelect<Membership>(
                   label: l10n.membershipLabel,

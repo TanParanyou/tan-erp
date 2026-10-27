@@ -108,6 +108,8 @@
   "galleryEmptyTitle": "ไม่มีรายการ",
   "galleryEmptyMessage": "ยังไม่มีข้อมูลในหมวดนี้",
   "galleryEmptyAction": "เพิ่มรายการ",
+  "galleryCardTitle": "หัวการ์ด",
+  "galleryCardBody": "เนื้อหาในการ์ด",
   "deviceLabTitle": "ห้องทดลองอุปกรณ์",
   "deviceLabIntro": "ทดลองความสามารถเฉพาะของเครื่อง ผลลัพธ์ไม่ถูกบันทึกลงระบบ",
   "arCardTitle": "AR วัดพื้น",

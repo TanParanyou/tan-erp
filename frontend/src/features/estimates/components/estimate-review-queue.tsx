@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { formatCurrency, formatDateTime, formatPercent } from "@/lib/formatters/formatters";
 import { Modal } from "@/components/ui/Modal";
 import { ListToolbar } from "@/components/ui/ListToolbar";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -33,10 +34,10 @@ export function EstimateReviewQueue() {
     { id: "customer", header: t("reviewCustomer"), cell: (_value, row) => locale === "en" ? row.customer?.displayNameEn ?? row.customer?.displayNameTh ?? "-" : row.customer?.displayNameTh ?? "-" },
     { id: "branch", header: t("reviewBranch"), cell: (_value, row) => row.branch?.name ?? "-" },
     { id: "revision", header: t("reviewRevision"), cell: (_value, row) => t("revision", { number: row.revisionNo ?? 0 }) },
-    { id: "grandTotal", header: t("grandTotal"), cell: (_value, row) => row.currency && row.grandTotal !== undefined ? new Intl.NumberFormat(locale, { style: "currency", currency: row.currency }).format(row.grandTotal) : "-", className: "text-right tabular-nums" },
-    { id: "margin", header: t("reviewMargin"), cell: (_value, row) => row.marginRate !== undefined ? new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 2 }).format(row.marginRate) : "-", className: "text-right tabular-nums" },
+    { id: "grandTotal", header: t("grandTotal"), cell: (_value, row) => row.currency && row.grandTotal !== undefined ? formatCurrency(row.grandTotal, row.currency, locale) : "-", className: "text-right tabular-nums" },
+    { id: "margin", header: t("reviewMargin"), cell: (_value, row) => row.marginRate !== undefined ? formatPercent(row.marginRate, locale) : "-", className: "text-right tabular-nums" },
     { id: "readiness", header: t("reviewReadiness"), cell: (_value, row) => <span className="capitalize">{row.readiness ?? "-"}{(row.provisionalCostCount ?? 0) > 0 ? ` · ${t("provisionalCostCount", { count: row.provisionalCostCount ?? 0 })}` : ""}</span> },
-    { id: "requestedAt", header: t("reviewRequestedAt"), cell: (_value, row) => row.requestedAtUtc ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(row.requestedAtUtc)) : "-" },
+    { id: "requestedAt", header: t("reviewRequestedAt"), cell: (_value, row) => row.requestedAtUtc ? formatDateTime(row.requestedAtUtc, locale) : "-" },
     { id: "actions", header: common("actions.actions"), isAction: true, sticky: "right", cell: (_value, row) => <Button type="button" size="sm" variant="outline" className="min-h-[44px]" onClick={() => setSelectedRow(row)}>{t("reviewDetails")}</Button> },
   ], [common, locale, t]);
 
@@ -65,8 +66,8 @@ export function EstimateReviewQueue() {
             <Detail label={t("revision", { number: selectedRow.revisionNo ?? 0 })} value={selectedRow.revisionStatus} />
             <Detail label={t("reviewRequestedBy")} value={selectedRow.requestedBy?.displayName} />
             <Detail label={t("reviewSubmissionNote")} value={selectedRow.submissionNote} />
-            <Detail label={t("grandTotal")} value={selectedRow.currency ? new Intl.NumberFormat(locale, { style: "currency", currency: selectedRow.currency }).format(selectedRow.grandTotal ?? 0) : "-"} />
-            <Detail label={t("reviewMargin")} value={selectedRow.marginRate !== undefined ? new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 2 }).format(selectedRow.marginRate) : "-"} />
+            <Detail label={t("grandTotal")} value={selectedRow.currency ? formatCurrency(selectedRow.grandTotal ?? 0, selectedRow.currency, locale) : "-"} />
+            <Detail label={t("reviewMargin")} value={selectedRow.marginRate !== undefined ? formatPercent(selectedRow.marginRate, locale) : "-"} />
             <Detail label={t("calculationVersion")} value={String(selectedRow.calculationVersion ?? "-")} />
             <Detail label={t("reviewRoutePolicy")} value={`${selectedRow.frozenRoute?.policyCode ?? "-"} v${selectedRow.frozenRoute?.policyVersion ?? "-"}`} />
             <Detail label={t("reviewScope")} value={`${selectedRow.frozenRoute?.scopeType ?? "-"} · ${selectedRow.frozenRoute?.scopeId ?? "-"}`} />
@@ -88,14 +89,14 @@ export function EstimateReviewQueue() {
             {(selectedRow.priceOverrides ?? []).length === 0
               ? <p className="text-sm text-muted-foreground">{t("reviewNoPriceOverrides")}</p>
               : <ul className="divide-y divide-border border-y border-border">{selectedRow.priceOverrides?.map((priceOverride, index) => <li className="space-y-1 py-3 text-sm" key={`${priceOverride.workItemCode}-${index}`}>
-                <div className="flex flex-wrap items-baseline justify-between gap-2"><strong>{priceOverride.workItemCode} · {priceOverride.workItemDescription}</strong><span className="font-mono tabular-nums">{selectedRow.currency ? new Intl.NumberFormat(locale, { style: "currency", currency: selectedRow.currency }).format(priceOverride.fixedPriceUnitAmount ?? 0) : "-"}</span></div>
+                <div className="flex flex-wrap items-baseline justify-between gap-2"><strong>{priceOverride.workItemCode} · {priceOverride.workItemDescription}</strong><span className="font-mono tabular-nums">{selectedRow.currency ? formatCurrency(priceOverride.fixedPriceUnitAmount ?? 0, selectedRow.currency, locale) : "-"}</span></div>
                 <div className="text-warning">{t("sellingRuleReasonCode")}: {priceOverride.reasonCode ?? "-"}</div>
               </li>)}</ul>}
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold">{t("reviewCostEvidence")}</h3>
             {(selectedRow.costEvidence ?? []).length === 0 ? <p className="text-sm text-muted-foreground">{t("reviewNoCostEvidence")}</p> : <ul className="divide-y divide-border border-y border-border">{selectedRow.costEvidence?.map((evidence, index) => <li className="space-y-1 py-3 text-sm" key={`${evidence.workItemCode}-${evidence.description}-${index}`}>
-              <div className="flex flex-wrap items-baseline justify-between gap-2"><strong>{evidence.workItemCode} · {evidence.workItemDescription}</strong><span className="font-mono tabular-nums">{evidence.currency ? new Intl.NumberFormat(locale, { style: "currency", currency: evidence.currency }).format(evidence.totalCost ?? 0) : "-"}</span></div>
+              <div className="flex flex-wrap items-baseline justify-between gap-2"><strong>{evidence.workItemCode} · {evidence.workItemDescription}</strong><span className="font-mono tabular-nums">{evidence.currency ? formatCurrency(evidence.totalCost ?? 0, evidence.currency, locale) : "-"}</span></div>
               <div className="text-muted-foreground">{evidence.type} · {evidence.description} · {evidence.quantity} {evidence.unitCode} × {evidence.unitCost}</div>
               {evidence.conversion?.fromUnit && evidence.conversion.toUnit && evidence.conversion.factor && <div className="text-xs text-muted-foreground">{t("reviewUnitConversion", { from: evidence.conversion.fromUnit, factor: evidence.conversion.factor, to: evidence.conversion.toUnit })}</div>}
               <div className="break-words text-xs text-muted-foreground">{evidence.itemCode ? `${evidence.itemCode} · ` : ""}{evidence.costSourceCode ?? "-"}{evidence.sourceReference ? ` · ${evidence.sourceReference}` : ""}{evidence.costRecordVersion ? ` · v${evidence.costRecordVersion}` : ""}{evidence.evidenceFileId ? ` · ${t("reviewEvidenceFile")}: ${evidence.evidenceFileId}` : ""}{evidence.costRecordReason ? ` · ${evidence.costRecordReason}` : ""}</div>
@@ -105,7 +106,7 @@ export function EstimateReviewQueue() {
           <div className="space-y-2">
             <h3 className="font-semibold">{t("reviewRevisionDiff")}</h3>
             {selectedRow.revisionDiff ? <div className="grid gap-3 border-y border-border py-3 sm:grid-cols-2 lg:grid-cols-3">
-              <Detail label={t("reviewPreviousTotal")} value={selectedRow.currency ? new Intl.NumberFormat(locale, { style: "currency", currency: selectedRow.currency }).format(selectedRow.revisionDiff.previousGrandTotal ?? 0) : "-"} />
+              <Detail label={t("reviewPreviousTotal")} value={selectedRow.currency ? formatCurrency(selectedRow.revisionDiff.previousGrandTotal ?? 0, selectedRow.currency, locale) : "-"} />
               <Detail label={t("reviewTotalDelta")} value={selectedRow.currency ? new Intl.NumberFormat(locale, { style: "currency", currency: selectedRow.currency, signDisplay: "always" }).format(selectedRow.revisionDiff.grandTotalDelta ?? 0) : "-"} />
               <Detail label={t("reviewAddedWorkItems")} value={String(selectedRow.revisionDiff.addedWorkItems ?? 0)} />
               <Detail label={t("reviewChangedWorkItems")} value={String(selectedRow.revisionDiff.changedWorkItems ?? 0)} />
@@ -127,7 +128,7 @@ function Detail({ label, value, mono = false }: { label: string; value: string |
 }
 
 function formatTriggerValue(value: number, unit: string | null | undefined, locale: string) {
-  if (unit === "rate") return new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 2 }).format(value);
-  if (unit === "THB") return new Intl.NumberFormat(locale, { style: "currency", currency: "THB" }).format(value);
+  if (unit === "rate") return formatPercent(value, locale);
+  if (unit === "THB") return formatCurrency(value, "THB", locale);
   return `${new Intl.NumberFormat(locale).format(value)}${unit ? ` ${unit}` : ""}`;
 }

@@ -6,6 +6,7 @@ import 'package:tan_erp_field/core/l10n/l10n.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
+import 'package:tan_erp_field/core/ui/erp_card.dart';
 import 'package:tan_erp_field/core/ui/erp_select.dart';
 import 'package:tan_erp_field/core/ui/erp_text_field.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/photo_area_page.dart';
@@ -86,79 +87,67 @@ class _PhotoAreaCardState extends State<PhotoAreaCard> {
     final l10n = context.l10n;
     final t = context.tokens;
     final text = Theme.of(context).textTheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: t.surface,
-        borderRadius: t.corner,
-        border: Border.all(color: t.border, width: t.borderWidth),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(t.space4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.photoAreaCardTitle, style: text.titleMedium),
-            SizedBox(height: t.space2),
-            Text(l10n.photoAreaCardBody, style: text.bodyMedium),
-            SizedBox(height: t.space4),
-            ErpSelect<_RefPreset>(
-              label: l10n.photoAreaReferenceLabel,
-              placeholder: l10n.photoAreaReferencePlaceholder,
-              value: _preset,
-              options: [
-                ErpOption(value: _RefPreset.a4, label: l10n.photoAreaPresetA4),
-                ErpOption(value: _RefPreset.a3, label: l10n.photoAreaPresetA3),
-                ErpOption(
-                  value: _RefPreset.custom,
-                  label: l10n.photoAreaPresetCustom,
-                ),
-              ],
-              onChanged: (v) => setState(() => _preset = v),
-            ),
-            if (_preset == _RefPreset.custom) ...[
-              SizedBox(height: t.space3),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: ErpTextField(
-                      control: _width,
-                      label: l10n.photoAreaWidthLabel,
-                      placeholder: l10n.photoAreaWidthPlaceholder,
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  SizedBox(width: t.space3),
-                  Expanded(
-                    child: ErpTextField(
-                      control: _height,
-                      label: l10n.photoAreaHeightLabel,
-                      placeholder: l10n.photoAreaHeightPlaceholder,
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            if (_error != null) ...[
-              SizedBox(height: t.space3),
-              ErpAlert(message: _error!, severity: ErpAlertSeverity.danger),
-            ],
-            SizedBox(height: t.space4),
-            ErpButton(
-              label: l10n.photoAreaPickGallery,
-              isLoading: _busy,
-              onPressed: () => _pick(ImageSource.gallery),
-            ),
-            SizedBox(height: t.space2),
-            ErpButton(
-              label: l10n.photoAreaPickCamera,
-              variant: ErpButtonVariant.outline,
-              onPressed: _busy ? null : () => _pick(ImageSource.camera),
+    return ErpCard(
+      title: l10n.photoAreaCardTitle,
+      children: [
+        Text(l10n.photoAreaCardBody, style: text.bodyMedium),
+        SizedBox(height: t.space4),
+        ErpSelect<_RefPreset>(
+          label: l10n.photoAreaReferenceLabel,
+          placeholder: l10n.photoAreaReferencePlaceholder,
+          value: _preset,
+          options: [
+            ErpOption(value: _RefPreset.a4, label: l10n.photoAreaPresetA4),
+            ErpOption(value: _RefPreset.a3, label: l10n.photoAreaPresetA3),
+            ErpOption(
+              value: _RefPreset.custom,
+              label: l10n.photoAreaPresetCustom,
             ),
           ],
+          onChanged: (v) => setState(() => _preset = v),
         ),
-      ),
+        if (_preset == _RefPreset.custom) ...[
+          SizedBox(height: t.space3),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ErpTextField(
+                  control: _width,
+                  label: l10n.photoAreaWidthLabel,
+                  placeholder: l10n.photoAreaWidthPlaceholder,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              SizedBox(width: t.space3),
+              Expanded(
+                child: ErpTextField(
+                  control: _height,
+                  label: l10n.photoAreaHeightLabel,
+                  placeholder: l10n.photoAreaHeightPlaceholder,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+        ],
+        if (_error != null) ...[
+          SizedBox(height: t.space3),
+          ErpAlert(message: _error!, severity: ErpAlertSeverity.danger),
+        ],
+        SizedBox(height: t.space4),
+        ErpButton(
+          label: l10n.photoAreaPickGallery,
+          isLoading: _busy,
+          onPressed: () => _pick(ImageSource.gallery),
+        ),
+        SizedBox(height: t.space2),
+        ErpButton(
+          label: l10n.photoAreaPickCamera,
+          variant: ErpButtonVariant.outline,
+          onPressed: _busy ? null : () => _pick(ImageSource.camera),
+        ),
+      ],
     );
   }
 }

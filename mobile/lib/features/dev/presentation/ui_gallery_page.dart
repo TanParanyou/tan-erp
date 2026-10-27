@@ -5,9 +5,11 @@ import 'package:tan_erp_field/core/theme/app_theme.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
+import 'package:tan_erp_field/core/ui/erp_card.dart';
 import 'package:tan_erp_field/core/ui/erp_confirm_dialog.dart';
 import 'package:tan_erp_field/core/ui/erp_empty_state.dart';
 import 'package:tan_erp_field/core/ui/erp_mono_loading.dart';
+import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
 import 'package:tan_erp_field/core/ui/erp_select.dart';
 import 'package:tan_erp_field/core/ui/erp_text_field.dart';
@@ -52,7 +54,7 @@ class _UiGalleryPageState extends State<UiGalleryPage> {
             body: ColoredBox(
               color: t.canvas,
               child: ListView(
-                padding: EdgeInsets.all(t.space4),
+                padding: ErpPagePadding.of(context),
                 children: [
                   ErpSelect<Brightness>(
                     label: l10n.themeMode,
@@ -158,6 +160,10 @@ class _UiGalleryPageState extends State<UiGalleryPage> {
                   ErpAlert(
                     message: l10n.galleryAlertDanger,
                     severity: ErpAlertSeverity.danger,
+                  ),
+                  ErpCard(
+                    title: l10n.galleryCardTitle,
+                    children: [Text(l10n.galleryCardBody)],
                   ),
                   SizedBox(height: t.space6),
                   ErpEmptyState(

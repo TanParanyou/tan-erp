@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ListFilterSelect } from "@/components/ui/ListFilterSelect";
 import { ListSearchInput } from "@/components/ui/ListSearchInput";
 import { ListToolbar } from "@/components/ui/ListToolbar";
-import { StatusBadge, type BadgeVariant } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { TableEntityCell } from "@/components/ui/TableEntityCell";
 import { TableAction, TableActionGroup } from "@/components/ui/TableAction";
 import { Avatar } from "@/components/ui/Avatar";
@@ -20,16 +20,11 @@ import type { AdminUserResponse } from "@/lib/api/api-client";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can, PERMISSIONS } from "@/lib/permissions/can";
 import { useAdminUsers } from "../api/user-admin-queries";
+import { STATUS_VARIANTS } from "../user-admin-status";
 
 interface UserAdminFilters extends ListFilterRecord {
   status?: string;
 }
-
-const STATUS_VARIANTS: Record<string, BadgeVariant> = {
-  active: "success",
-  pending: "warning",
-  inactive: "neutral",
-};
 
 const STATUS_VALUES = ["pending", "active", "inactive"] as const;
 

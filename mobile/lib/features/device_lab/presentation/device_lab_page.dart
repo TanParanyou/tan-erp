@@ -5,7 +5,9 @@ import 'package:tan_erp_field/core/l10n/l10n.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
+import 'package:tan_erp_field/core/ui/erp_card.dart';
 import 'package:tan_erp_field/core/ui/erp_mono_loading.dart';
+import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
 import 'package:tan_erp_field/features/device_lab/data/ar_measure_repository.dart';
 import 'package:tan_erp_field/features/device_lab/domain/ar_measure_failure.dart';
@@ -23,7 +25,7 @@ class DeviceLabPage extends StatelessWidget {
     return ErpScreen(
       title: l10n.deviceLabTitle,
       body: ListView(
-        padding: EdgeInsets.all(t.space4),
+        padding: ErpPagePadding.of(context),
         children: [
           Text(
             l10n.deviceLabIntro,
@@ -57,10 +59,9 @@ class _ArMeasureCard extends ConsumerWidget {
       ArAvailability.unsupported || null => false,
     };
 
-    return _Panel(
+    return ErpCard(
+      title: l10n.arCardTitle,
       children: [
-        Text(l10n.arCardTitle, style: text.titleMedium),
-        SizedBox(height: t.space2),
         Text(l10n.arCardBody, style: text.bodyMedium),
         SizedBox(height: t.space4),
         availability.when(
@@ -184,7 +185,7 @@ class _ResultCard extends StatelessWidget {
       ),
     );
 
-    return _Panel(
+    return ErpCard(
       children: [
         Text(l10n.arResultTitle, style: text.titleSmall),
         SizedBox(height: t.space3),
@@ -215,32 +216,6 @@ class _ResultCard extends StatelessWidget {
             l10n.arValueMeters(number.format(edge)),
           ),
       ],
-    );
-  }
-}
-
-/// Square bordered panel built from tokens.
-class _Panel extends StatelessWidget {
-  const _Panel({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tokens;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: t.surface,
-        borderRadius: t.corner,
-        border: Border.all(color: t.border, width: t.borderWidth),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(t.space4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
-        ),
-      ),
     );
   }
 }

@@ -108,6 +108,8 @@
   "galleryEmptyTitle": "No items",
   "galleryEmptyMessage": "There is nothing in this category yet",
   "galleryEmptyAction": "Add item",
+  "galleryCardTitle": "Card title",
+  "galleryCardBody": "Card body text",
   "deviceLabTitle": "Device lab",
   "deviceLabIntro": "Try device-specific features. Results are not saved",
   "arCardTitle": "AR floor measure",

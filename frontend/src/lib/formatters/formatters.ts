@@ -182,6 +182,20 @@ export function formatCurrency(
   }).format(parsed);
 }
 
+/** formatPercent: formats a ratio (0.25 -> "25%") with up to 2 decimals. */
+export function formatPercent(
+  ratio: number | string | null | undefined,
+  locale: string = "th"
+): string {
+  if (ratio === null || ratio === undefined) return "-";
+  const parsed = Number(ratio);
+  if (isNaN(parsed)) return "-";
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "th-TH", {
+    style: "percent",
+    maximumFractionDigits: 2,
+  }).format(parsed);
+}
+
 function parseFlexibleDate(value: string): Date | null {
   if (value.includes("T")) {
     const timePart = value.split("T")[1].replace("Z", "");

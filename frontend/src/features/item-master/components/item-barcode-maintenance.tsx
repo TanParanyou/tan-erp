@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert } from "@/components/ui/Alert";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -98,9 +99,9 @@ export function ItemBarcodeMaintenance({ itemId, item }: ItemBarcodeMaintenanceP
         <p className="mt-1 text-sm text-erp-muted">{t("barcodeHelp")}</p>
       </div>
 
-      {query.isError && <p role="alert" className="border border-erp-danger p-3 text-sm text-erp-danger">{t("barcodeLoadFailed")}</p>}
-      {mutations.create.isError && <p role="alert" className="border border-erp-danger p-3 text-sm text-erp-danger">{t("barcodeSaveFailed")}</p>}
-      {(mutations.setPrimary.isError || mutations.deactivate.isError) && <p role="alert" className="border border-erp-danger p-3 text-sm text-erp-danger">{t("versionConflict")}</p>}
+      {query.isError && <Alert variant="danger">{t("barcodeLoadFailed")}</Alert>}
+      {mutations.create.isError && <Alert variant="danger">{t("barcodeSaveFailed")}</Alert>}
+      {(mutations.setPrimary.isError || mutations.deactivate.isError) && <Alert variant="danger">{t("versionConflict")}</Alert>}
 
       {canManage && item.status !== "inactive" && <form onSubmit={(event) => { void createConversion(event); }} className="grid grid-cols-1 gap-3 border-y border-erp-border py-4 sm:grid-cols-2 lg:grid-cols-6">
         <div className="sm:col-span-2 lg:col-span-6">
@@ -123,8 +124,8 @@ export function ItemBarcodeMaintenance({ itemId, item }: ItemBarcodeMaintenanceP
           <Input label={t("reason")} labelClassName="min-h-[20px]" wrapperClassName="mb-0" className="h-11 min-h-[44px]" value={conversionReason} onChange={(event) => setConversionReason(event.target.value)} required disabled={busy} maxLength={500} placeholder={t("reasonPlaceholder")} />
         </div>
         <div className="flex items-end justify-end lg:col-span-6"><Button type="submit" variant="primary" className="h-11 min-h-[44px] px-5" disabled={busy || !conversionUnitId || !conversionFactor || !conversionReason.trim()} isLoading={conversionMutations.create.isPending}>{t("addConversion")}</Button></div>
-        {conversionMutations.create.isError && <p role="alert" className="sm:col-span-2 lg:col-span-6 border border-erp-danger p-3 text-sm text-erp-danger">{t("conversionSaveFailed")}</p>}
-        {(conversions.isError || sharedConversions.isError) && <p role="alert" className="sm:col-span-2 lg:col-span-6 border border-erp-danger p-3 text-sm text-erp-danger">{t("conversionLoadFailed")}</p>}
+        {conversionMutations.create.isError && <Alert variant="danger" className="sm:col-span-2 lg:col-span-6">{t("conversionSaveFailed")}</Alert>}
+        {(conversions.isError || sharedConversions.isError) && <Alert variant="danger" className="sm:col-span-2 lg:col-span-6">{t("conversionLoadFailed")}</Alert>}
         {activeConversions.length > 0 && (
           <div className="sm:col-span-2 lg:col-span-6">
             <Table wrapperClassName="min-w-[680px]">

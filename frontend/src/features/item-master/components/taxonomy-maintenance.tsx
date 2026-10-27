@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert } from "@/components/ui/Alert";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { z } from "zod";
@@ -487,10 +488,10 @@ export function TaxonomyMaintenance() {
           <ExportDropdown label={t("exportReferenceData")} isLoading={exportData.isExporting} disabled={filteredRows.length === 0} onExport={async (format) => { try { await exportData.exportAll(format); } catch { toast.error(t("exportMaintenanceFailed")); } }} />
         </div>
       </ListToolbar>
-      {data.isError && <p role="alert" className="border border-erp-danger p-4 text-erp-danger">{data.error.message}</p>}
+      {data.isError && <Alert variant="danger">{data.error.message}</Alert>}
       <DataTable<ReferenceRow> columns={columns} data={pageRows} pagination={{ page: list.params.page, limit: list.params.limit, totalPages: pageCount, total: filteredRows.length }} sorting={{ key: list.params.sort ?? "code", order: list.params.order }} onPageChange={list.actions.setPage} onLimitChange={(limit) => { if (isListPageSize(limit)) list.actions.setLimit(limit); }} onSort={list.actions.setSort} isLoading={data.isLoading} isError={data.isError} error={data.error} onRetry={() => { void data.refetch(); }} emptyTitle={list.params.search || list.params.filters.status ? t("noReferenceResults") : t("noReferenceRows")} emptyDescription={filteredRows.length === 0 && (list.params.search || list.params.filters.status) ? t("noReferenceResultsHelp") : t("noReferenceRowsHelp")} />
       {kind === "units" && <FormSection title={t("sharedUnitConversions")} description={t("sharedUnitConversionHelp")}>
-        {sharedConversions.isError && <p role="alert" className="border border-erp-danger p-3 text-sm text-erp-danger">{t("conversionLoadFailed")}</p>}
+        {sharedConversions.isError && <Alert variant="danger">{t("conversionLoadFailed")}</Alert>}
         {canManage && <form noValidate onSubmit={(event) => { void submitSharedConversion(event); }} className="grid grid-cols-1 gap-x-5 gap-y-4 border-t border-erp-border pt-5 sm:grid-cols-2 xl:grid-cols-3">
           <Select id="shared-conversion-from" label={t("fromUnit")} value={conversionFromUnitId} onChange={(event) => { setConversionFromUnitId(event.target.value); setConversionErrors((errors) => ({ ...errors, fromUnitId: undefined, toUnitId: undefined })); }} options={(data.data?.units ?? []).filter(hasActiveUnitIdentity).map((unit) => ({ value: unit.id, label: `${unit.code} · ${locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}` }))} placeholder={t("selectUnit")} required disabled={savingConversion || data.isLoading} error={conversionErrors.fromUnitId ? t(conversionErrors.fromUnitId) : undefined} />
           <Select id="shared-conversion-to" label={t("toUnit")} value={conversionToUnitId} onChange={(event) => { setConversionToUnitId(event.target.value); setConversionErrors((errors) => ({ ...errors, toUnitId: undefined })); }} options={(data.data?.units ?? []).filter(hasActiveUnitIdentity).map((unit) => ({ value: unit.id, label: `${unit.code} · ${locale === "en" ? unit.name?.english ?? "-" : unit.name?.thai ?? "-"}` }))} placeholder={t("selectUnit")} required disabled={savingConversion || data.isLoading} error={conversionErrors.toUnitId ? t(conversionErrors.toUnitId) : undefined} />
@@ -498,7 +499,7 @@ export function TaxonomyMaintenance() {
           <Input label={t("effectiveFrom")} type="date" value={conversionEffectiveFrom} onChange={(event) => { setConversionEffectiveFrom(event.target.value); setConversionErrors((errors) => ({ ...errors, effectiveFrom: undefined, effectiveTo: undefined })); }} placeholder={t("datePlaceholder")} required disabled={savingConversion} error={conversionErrors.effectiveFrom ? t(conversionErrors.effectiveFrom) : undefined} />
           <Input label={t("effectiveTo")} type="date" value={conversionEffectiveTo} onChange={(event) => { setConversionEffectiveTo(event.target.value); setConversionErrors((errors) => ({ ...errors, effectiveTo: undefined })); }} placeholder={t("datePlaceholder")} disabled={savingConversion} error={conversionErrors.effectiveTo ? t(conversionErrors.effectiveTo) : undefined} />
           <Input wrapperClassName="sm:col-span-2 xl:col-span-3" label={t("reason")} value={conversionReason} onChange={(event) => { setConversionReason(event.target.value); setConversionErrors((errors) => ({ ...errors, reason: undefined })); }} required disabled={savingConversion} maxLength={500} placeholder={t("reasonPlaceholder")} error={conversionErrors.reason ? t(conversionErrors.reason) : undefined} />
-          {sharedConversionMutations.create.isError && <p role="alert" className="sm:col-span-2 xl:col-span-3 border border-erp-danger p-3 text-sm text-erp-danger">{t("conversionSaveFailed")}</p>}
+          {sharedConversionMutations.create.isError && <Alert variant="danger" className="sm:col-span-2 xl:col-span-3">{t("conversionSaveFailed")}</Alert>}
           <div className="flex justify-end border-t border-erp-border pt-4 sm:col-span-2 xl:col-span-3"><Button type="submit" disabled={savingConversion || !conversionFromUnitId || !conversionToUnitId || !conversionFactor || !conversionReason.trim()} isLoading={savingConversion}>{t("addConversion")}</Button></div>
         </form>}
         {sharedConversions.isLoading ? (

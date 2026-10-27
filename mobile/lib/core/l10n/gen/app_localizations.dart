@@ -620,6 +620,18 @@ abstract class AppLocalizations {
   /// **'เพิ่มรายการ'**
   String get galleryEmptyAction;
 
+  /// No description provided for @galleryCardTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'หัวการ์ด'**
+  String get galleryCardTitle;
+
+  /// No description provided for @galleryCardBody.
+  ///
+  /// In th, this message translates to:
+  /// **'เนื้อหาในการ์ด'**
+  String get galleryCardBody;
+
   /// No description provided for @deviceLabTitle.
   ///
   /// In th, this message translates to:

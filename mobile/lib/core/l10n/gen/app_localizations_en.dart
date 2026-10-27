@@ -282,6 +282,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get galleryEmptyAction => 'Add item';
 
   @override
+  String get galleryCardTitle => 'Card title';
+
+  @override
+  String get galleryCardBody => 'Card body text';
+
+  @override
   String get deviceLabTitle => 'Device lab';
 
   @override

@@ -22,7 +22,7 @@ import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/useToast";
-import { ApiError } from "@/lib/api/api-error";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 import { customerSiteListQueryKey } from "../api/site-queries";
 
 const siteUpdateSchema = z.object({
@@ -93,7 +93,7 @@ export function SiteDetailDrawer({
       toast.success(tCommon("feedback.saveSuccess"));
       onClose();
     } catch (error: unknown) {
-      toast.error(error instanceof ApiError ? error.message : t("errors.saveUnexpected"));
+      toast.error(getApiErrorMessage(error, t("errors.saveUnexpected")));
     } finally {
       setIsSaving(false);
     }
@@ -130,7 +130,7 @@ export function SiteDetailDrawer({
       toast.success(tCommon("feedback.saveSuccess"));
       onClose();
     } catch (error: unknown) {
-      toast.error(error instanceof ApiError ? error.message : t("errors.saveUnexpected"));
+      toast.error(getApiErrorMessage(error, t("errors.saveUnexpected")));
     } finally {
       setIsDeactivating(false);
     }

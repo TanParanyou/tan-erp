@@ -10,6 +10,7 @@ import 'package:tan_erp_field/core/network/api_failure.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
+import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
 import 'package:tan_erp_field/core/ui/erp_text_field.dart';
 
@@ -91,7 +92,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return ErpScreen(
       title: l10n.loginTitle,
       body: ListView(
-        padding: EdgeInsets.all(t.space4),
+        padding: ErpPagePadding.of(context),
         children: [
           if (_error != null) ...[
             ErpAlert(

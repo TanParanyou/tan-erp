@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
 import { Avatar } from "@/components/ui/Avatar";
+import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/utils/cn";
 import { useIsMobile } from "@/hooks/useMediaQuery";
@@ -747,7 +748,7 @@ export function EstimateItemCatalogModal({
               <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
                 {isLoading ? (
                   <div className="py-20 text-center text-xs text-erp-text-muted flex flex-col items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-erp-navy border-t-transparent animate-spin" />
+                    <MonoSpinner size="sm" />
                     <span>{t("loadingCatalog")}</span>
                   </div>
                 ) : isError ? (

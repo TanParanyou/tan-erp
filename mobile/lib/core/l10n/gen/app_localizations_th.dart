@@ -280,6 +280,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get galleryEmptyAction => 'เพิ่มรายการ';
 
   @override
+  String get galleryCardTitle => 'หัวการ์ด';
+
+  @override
+  String get galleryCardBody => 'เนื้อหาในการ์ด';
+
+  @override
   String get deviceLabTitle => 'ห้องทดลองอุปกรณ์';
 
   @override

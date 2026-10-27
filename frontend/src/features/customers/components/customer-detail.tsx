@@ -22,7 +22,7 @@ import { apiClient } from "@/lib/api/api-client";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/useToast";
-import { ApiError } from "@/lib/api/api-error";
+import { ApiError, getApiErrorMessage } from "@/lib/api/api-error";
 import { CustomerProfileEditor } from "./customer-profile-editor";
 import { CustomerAddressManager } from "./customer-address-manager";
 import { CustomerContactManager } from "./customer-contact-manager";
@@ -147,7 +147,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
       await refetch();
       toast.success(t("deactivateSuccess"));
     } catch (err: unknown) {
-      toast.error(err instanceof ApiError ? err.message : t("errors.saveUnexpected"));
+      toast.error(getApiErrorMessage(err, t("errors.saveUnexpected")));
     } finally {
       setIsChangingStatus(false);
     }
@@ -169,7 +169,7 @@ export function CustomerDetail({ customerId }: CustomerDetailProps) {
       await refetch();
       toast.success(t("reactivateSuccess"));
     } catch (err: unknown) {
-      toast.error(err instanceof ApiError ? err.message : t("errors.saveUnexpected"));
+      toast.error(getApiErrorMessage(err, t("errors.saveUnexpected")));
     } finally {
       setIsChangingStatus(false);
     }

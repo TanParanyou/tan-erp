@@ -20,7 +20,7 @@ import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/useToast";
-import { ApiError } from "@/lib/api/api-error";
+import { ApiError, getApiErrorMessage } from "@/lib/api/api-error";
 import { can } from "@/lib/permissions/can";
 import { createTaxIdSchema } from "@/lib/validation/tax-id";
 import { CustomerIdentityFields, type CustomerLeadSource, type CustomerType, type CustomerLocale } from "./customer-identity-fields";
@@ -121,7 +121,7 @@ export function CustomerProfileEditor({ customerId, onCancel, onSaved }: Custome
       } catch (error: unknown) {
         const message = error instanceof ApiError && error.code === "CUSTOMER_VERSION_CONFLICT"
           ? t("errors.activateConflict")
-          : error instanceof ApiError ? error.message : t("errors.saveUnexpected");
+          : getApiErrorMessage(error, t("errors.saveUnexpected"));
         toast.error(message);
       }
     }}

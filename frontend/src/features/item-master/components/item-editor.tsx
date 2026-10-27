@@ -195,7 +195,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
   }, tabErrors.handleFormError);
 
   if (!isCreate && item.isLoading) return <section><MonoSpinner label={t("loading")} /></section>;
-  if (!isCreate && item.isError) return <section><p role="alert" className="border border-erp-danger p-4 text-erp-danger">{item.error.message}</p><Button type="button" variant="outline" onClick={() => { void item.refetch(); }}>{common("actions.retry")}</Button></section>;
+  if (!isCreate && item.isError) return <section><Alert variant="danger">{item.error.message}</Alert><Button type="button" variant="outline" onClick={() => { void item.refetch(); }}>{common("actions.retry")}</Button></section>;
   if (lookups.isLoading) return <section><MonoSpinner label={t("loading")} /></section>;
   const saving = form.formState.isSubmitting || mutations.createItem.isPending || mutations.updateItem.isPending || mutations.attachItemImage.isPending || mutations.setBranchAvailability.isPending;
   const fieldsLocked = saving || Boolean(createdItemId);
@@ -223,7 +223,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
   return (
     <section className="space-y-5 pb-40 sm:pb-28">
       <PageHeader title={isCreate ? t("createTitle") : t("editTitle")} subtitle={t("editorHelp")} backHref={`/${locale}/item-master`} breadcrumbs={[{ label: t("title"), href: `/${locale}/item-master` }, { label: isCreate ? t("createTitle") : (item.data?.code ?? t("editTitle")) }]} actions={!isCreate && item.data?.status !== "active" && canActivate ? <Button type="button" disabled={statusChanging || !item.data?.rowVersion} isLoading={mutations.activateItem.isPending} onClick={() => { void changeStatus("active"); }}>{t("activate")}</Button> : !isCreate && item.data?.status === "active" && canDeactivate ? <Button type="button" variant="danger" disabled={statusChanging || !item.data?.rowVersion} onClick={() => setDeactivationOpen(true)}>{t("deactivate")}</Button> : null} />
-      {lookups.isError && <p role="alert" className="border border-erp-danger p-4 text-erp-danger">{lookups.error.message}</p>}
+      {lookups.isError && <Alert variant="danger">{lookups.error.message}</Alert>}
       <form onSubmit={(event) => { void onSubmit(event); }} noValidate className="mx-auto max-w-6xl space-y-5">
         <FormTabs ariaLabel={t("formSections")} activeTab={activeTab} onChange={setActiveTab} tabs={[{ id: "identity", label: t("identityTab"), hasError: tabErrors.tabErrorMap.identity }, { id: "details", label: t("detailsTab"), hasError: tabErrors.tabErrorMap.details }, { id: "operations", label: t("operationsTab"), hasError: tabErrors.tabErrorMap.operations }]} />
         <div role="tabpanel" id="tabpanel-identity" aria-labelledby="tab-identity" hidden={activeTab !== "identity"} className={cn("grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]", activeTab !== "identity" && "hidden")}>

@@ -1,0 +1,12 @@
+{
+  "brand": {
+    "textContrastMin": { "$type": "number", "$value": 4.5, "$description": "Min contrast of white text on the brand colour (WCAG AA)" },
+    "canvasContrastMin": { "$type": "number", "$value": 3, "$description": "Min contrast of the brand colour on the canvas (non-text AA)" },
+    "hoverMixRatio": { "$type": "number", "$value": 0.25, "$description": "Hover colour = action mixed this much toward hoverTarget" },
+    "hoverTarget": { "$type": "color", "$value": "#000000", "$description": "Mix target for the hover colour (closest to navy-900 -> navy-950)" },
+    "lightMixRatioLightTheme": { "$type": "number", "$value": 0.92, "$description": "Light-theme subtle tint: action mixed this much toward white" },
+    "lightMixRatioDarkTheme": { "$type": "number", "$value": 0.2, "$description": "Dark-theme subtle tint: dark canvas mixed this much toward action" },
+    "darkVariantStep": { "$type": "number", "$value": 0.05, "$description": "Lightening increment per step for the dark-theme action colour" },
+    "darkVariantSteps": { "$type": "number", "$value": 20, "$description": "Max lightening steps for the dark-theme action colour" }
+  }
+}

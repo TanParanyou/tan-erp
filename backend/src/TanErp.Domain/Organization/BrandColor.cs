@@ -25,12 +25,11 @@ public static class WcagContrast
 /// <summary>Organization brand colour rule (design.md 7.4): white text on it >= 4.5:1 and it on the light canvas >= 3:1.</summary>
 public static partial class BrandColor
 {
-    public const double MinTextContrast = 4.5;
-    public const double MinCanvasContrast = 3.0;
+    public const double MinTextContrast = BrandRules.MinTextContrast;
+    public const double MinCanvasContrast = BrandRules.MinCanvasContrast;
 
-    // Light --erp-bg-canvas value from design-tokens (tokens.css --erp-canvas).
-    private static readonly double LightCanvasLuminance = WcagContrast.RelativeLuminance(0xF4, 0xF6, 0xF9);
-    private static readonly double WhiteLuminance = WcagContrast.RelativeLuminance(0xFF, 0xFF, 0xFF);
+    private static readonly double LightCanvasLuminance = WcagContrast.RelativeLuminance(BrandRules.LightCanvas[0], BrandRules.LightCanvas[1], BrandRules.LightCanvas[2]);
+    private static readonly double WhiteLuminance = WcagContrast.RelativeLuminance(BrandRules.White[0], BrandRules.White[1], BrandRules.White[2]);
 
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex HexPattern();

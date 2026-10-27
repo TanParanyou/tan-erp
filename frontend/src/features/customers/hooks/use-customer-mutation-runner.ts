@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getAuthToken } from "@/lib/auth/auth-session";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { useToast } from "@/hooks/useToast";
-import { ApiError } from "@/lib/api/api-error";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 import { customerQueryRootKey } from "../api/customer-queries";
 
 export interface CustomerMutationContext {
@@ -43,7 +43,7 @@ export function useCustomerMutationRunner() {
       toast.success(tCommon("feedback.saveSuccess"));
       return { succeeded: true, value };
     } catch (error: unknown) {
-      toast.error(error instanceof ApiError ? error.message : t("errors.saveUnexpected"));
+      toast.error(getApiErrorMessage(error, t("errors.saveUnexpected")));
       return { succeeded: false };
     }
   };

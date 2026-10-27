@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tan_erp_field/core/theme/brand_rules.g.dart';
 import 'package:tan_erp_field/core/theme/tokens.g.dart';
 
 /// Action colours derived from the organization brand colour. Mirrors
@@ -15,9 +16,6 @@ class BrandActionColors {
   final Color hover;
   final Color light;
 }
-
-const double _minTextContrast = 4.5;
-const double _minCanvasContrast = 3;
 
 /// Parses `#RRGGBB`; null for null or malformed input (default Atelier Navy).
 Color? parseBrandColor(String? hex) {
@@ -37,10 +35,14 @@ double contrastRatio(Color a, Color b) {
 /// keeps [color] if no step satisfies both.
 Color darkVariant(Color color, Color canvas) {
   const white = ErpTokensDark.textOnNavy;
-  for (var step = 0; step <= 20; step++) {
-    final candidate = Color.lerp(color, white, step * 0.05)!;
-    if (contrastRatio(white, candidate) < _minTextContrast) break;
-    if (contrastRatio(candidate, canvas) >= _minCanvasContrast) {
+  for (var step = 0; step <= BrandRules.darkVariantSteps; step++) {
+    final candidate = Color.lerp(
+      color,
+      white,
+      step * BrandRules.darkVariantStep,
+    )!;
+    if (contrastRatio(white, candidate) < BrandRules.textContrastMin) break;
+    if (contrastRatio(candidate, canvas) >= BrandRules.canvasContrastMin) {
       return candidate;
     }
   }
@@ -51,9 +53,21 @@ BrandActionColors brandActionColors(Color brand, {required bool dark}) {
   final action = dark ? darkVariant(brand, ErpTokensDark.canvas) : brand;
   return BrandActionColors(
     action: action,
-    hover: Color.lerp(action, ErpTokensLight.textMain, 0.25)!,
+    hover: Color.lerp(
+      action,
+      BrandRules.hoverTarget,
+      BrandRules.hoverMixRatio,
+    )!,
     light: dark
-        ? Color.lerp(ErpTokensDark.canvas, action, 0.2)!
-        : Color.lerp(action, ErpTokensLight.surface, 0.92)!,
+        ? Color.lerp(
+            ErpTokensDark.canvas,
+            action,
+            BrandRules.lightMixRatioDarkTheme,
+          )!
+        : Color.lerp(
+            action,
+            ErpTokensLight.textOnNavy,
+            BrandRules.lightMixRatioLightTheme,
+          )!,
   );
 }

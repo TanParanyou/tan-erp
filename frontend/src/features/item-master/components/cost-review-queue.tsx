@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -28,7 +29,7 @@ function localizedName(name: components["schemas"]["LocalizedTextResponse"] | un
 
 function amountText(amount: number | undefined, currency: string | null | undefined, locale: string): string {
   if (amount === undefined || !currency) return "-";
-  return new Intl.NumberFormat(locale === "en" ? "en" : "th", { style: "currency", currency }).format(amount);
+  return formatCurrency(amount, currency, locale);
 }
 
 export function CostReviewQueue() {

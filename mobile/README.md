@@ -37,6 +37,7 @@ Backend side: run `TanErp.Api` with `ASPNETCORE_ENVIRONMENT=Development`; `appse
 flutter analyze
 dart run custom_lint                 # bans Color(0x..) and BorderRadius.circular outside lib/core/theme
 dart run tool/check_l10n_parity.dart # app_th.arb vs app_en.arb keys
+dart run tool/check_plane_measurement.dart # cases live in shared-fixtures/plane-measurement.json (run from mobile/)
 ```
 
 ## Generated code

@@ -12,6 +12,7 @@ import 'package:tan_erp_field/core/theme/theme_settings.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
 import 'package:tan_erp_field/core/ui/erp_confirm_dialog.dart';
+import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_select.dart';
 import 'package:tan_erp_field/features/app_update/data/version_policy_repository.dart';
 import 'package:tan_erp_field/features/me/presentation/preferences_controller.dart';
@@ -46,7 +47,7 @@ class MePage extends ConsumerWidget {
     );
 
     return ListView(
-      padding: EdgeInsets.all(t.space4),
+      padding: ErpPagePadding.of(context),
       children: [
         Text(l10n.meTitle, style: text.titleLarge),
         SizedBox(height: t.space4),

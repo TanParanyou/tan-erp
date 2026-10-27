@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/useToast";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
 import { IconAlertCircle } from "@/components/common/Icons";
-import { ApiError } from "@/lib/api/api-error";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 import { DuplicateCandidateCard } from "./duplicate-candidate-card";
 import { DuplicateConfirmationModal } from "./duplicate-confirmation-modal";
 import { CustomerQuickViewDrawer } from "./customer-quick-view-drawer";
@@ -244,7 +244,7 @@ export function CustomerEditor() {
       router.push(`/${locale}/customers/${created.id}`);
     } catch (err: unknown) {
       failedSubmissionRef.current = true;
-      const message = err instanceof ApiError ? err.message : t("errors.saveUnexpected");
+      const message = getApiErrorMessage(err, t("errors.saveUnexpected"));
       setSubmitError(message);
       toast.error(message);
     }

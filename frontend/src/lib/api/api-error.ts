@@ -94,3 +94,8 @@ export function isMembershipRequiredError(error: unknown): boolean {
   }
   return false;
 }
+
+/** Returns the ApiError message, or the given fallback for any other error. */
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof ApiError ? error.message : fallback;
+}

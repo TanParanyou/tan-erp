@@ -12,7 +12,7 @@ import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { Input } from "@/components/ui/Input";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { Select } from "@/components/ui/Select";
-import { StatusBadge, type BadgeVariant } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { useToast } from "@/hooks/useToast";
 import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
@@ -36,12 +36,7 @@ import {
 } from "../api/user-admin-queries";
 import { adminErrorKey } from "../user-admin-errors";
 import { UserAdminFormFields, type UserAdminFormValues } from "./user-admin-form-fields";
-
-const STATUS_VARIANTS: Record<string, BadgeVariant> = {
-  active: "success",
-  pending: "warning",
-  inactive: "neutral",
-};
+import { STATUS_VARIANTS } from "../user-admin-status";
 
 type PendingAction =
   | { kind: "user-active"; active: boolean }

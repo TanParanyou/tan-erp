@@ -1,0 +1,31 @@
+{
+  "description": "Shared fixture for the plane/area measurement formula. Consumed by mobile/tool/check_plane_measurement.dart and intended for frontend/src/lib/geometry/plane-measurement.ts. Homography maps mm (plane) to px (image). Points under referenceMm and polygonMm are plane mm; polygonPx is raw image px.",
+  "homography": [0.9, 0.15, 200, -0.05, 0.7, 150, 0.00012, 0.00025, 1],
+  "referenceSizeMm": { "widthMm": 210, "heightMm": 297 },
+  "tolerance": 1e-6,
+  "cases": [
+    {
+      "name": "rectangle 3000x2000 mm",
+      "referenceMm": [[500, 500], [710, 500], [710, 797], [500, 797]],
+      "polygonMm": [[1000, 1000], [4000, 1000], [4000, 3000], [1000, 3000]],
+      "expect": { "areaSqm": 6, "widthMm": 2000, "lengthMm": 3000 }
+    },
+    {
+      "name": "L-shape",
+      "referenceMm": [[500, 500], [710, 500], [710, 797], [500, 797]],
+      "polygonMm": [[1000, 1000], [4000, 1000], [4000, 2000], [3000, 2000], [3000, 3000], [1000, 3000]],
+      "expect": { "areaSqm": 5 }
+    },
+    {
+      "name": "degenerate reference",
+      "referenceMm": [[0, 0], [100, 0], [200, 0], [300, 0]],
+      "polygonMm": [[1000, 1000], [4000, 1000], [4000, 3000]],
+      "expect": null
+    },
+    {
+      "name": "bowtie is not simple",
+      "polygonPx": [[0, 0], [10, 10], [10, 0], [0, 10]],
+      "expect": { "simple": false }
+    }
+  ]
+}

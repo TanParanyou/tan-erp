@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/useToast";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useDeferredFileUpload } from "@/hooks/useDeferredFileUpload";
 import { IconAlertCircle, IconMapPin } from "@/components/common/Icons";
-import { ApiError } from "@/lib/api/api-error";
+import { getApiErrorMessage } from "@/lib/api/api-error";
 
 interface SiteEditorProps {
   customerId: string;
@@ -244,7 +244,7 @@ export function SiteEditor({ customerId }: SiteEditorProps) {
       router.push(`/${locale}/customers/${customerId}`);
     } catch (err: unknown) {
       failedSubmissionRef.current = true;
-      const message = err instanceof ApiError ? err.message : t("errors.saveUnexpected");
+      const message = getApiErrorMessage(err, t("errors.saveUnexpected"));
       setSubmitError(message);
       toast.error(message);
     }
