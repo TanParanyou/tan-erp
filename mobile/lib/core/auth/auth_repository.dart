@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tan_erp_field/core/auth/auth_failure.dart';
 import 'package:tan_erp_field/core/auth/firebase_email_auth_repository.dart';
+import 'package:tan_erp_field/core/auth/mock_auth_repository.dart';
 import 'package:tan_erp_field/core/config/app_config.dart';
 
 /// Identity provider boundary. Email/password via Firebase first; other
@@ -35,8 +36,10 @@ class NotConfiguredAuthRepository implements AuthRepository {
   Future<void> signOut() async {}
 }
 
-final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => ref.watch(appConfigProvider).firebase.isConfigured
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final config = ref.watch(appConfigProvider);
+  if (config.isMockAuth) return MockAuthRepository();
+  return config.firebase.isConfigured
       ? FirebaseEmailAuthRepository()
-      : const NotConfiguredAuthRepository(),
-);
+      : const NotConfiguredAuthRepository();
+});

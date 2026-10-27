@@ -48,6 +48,7 @@
   --erp-danger: #991B1B;
   --erp-danger-bg: #FEF2F2;
   --erp-danger-border: #FECACA;
+  --erp-danger-text: #7F1D1D;
   --erp-info: #1D518A;
   --erp-info-bg: #EFF6FF;
   --erp-accent-measure: #8A5A24;
@@ -100,6 +101,7 @@
   --erp-danger: #F87171;
   --erp-danger-bg: #7F1D1D;
   --erp-danger-border: #DC2626;
+  --erp-danger-text: #FECACA;
   --erp-info: #60A5FA;
   --erp-info-bg: #1E3A8A;
   --erp-focus-ring: 2px solid #60A5FA;

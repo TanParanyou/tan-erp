@@ -43,6 +43,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get loginPasswordPlaceholder => 'กรอกรหัสผ่าน';
 
   @override
+  String get loginMockBanner => 'โหมดทดสอบ (Mock login)';
+
+  @override
+  String get loginMockUidLabel => 'รหัสผู้ใช้ (uid)';
+
+  @override
+  String get loginMockUidPlaceholder => 'เช่น foundation-user-test-only';
+
+  @override
   String get loginSubmit => 'เข้าสู่ระบบ';
 
   @override

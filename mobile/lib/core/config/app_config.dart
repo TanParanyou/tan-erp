@@ -35,6 +35,7 @@ class AppConfig {
     required this.flavor,
     required this.apiBaseUrl,
     required this.firebase,
+    this.mockAuth = false,
   });
 
   factory AppConfig.fromEnvironment(Flavor flavor) {
@@ -42,6 +43,9 @@ class AppConfig {
     const appIdIos = String.fromEnvironment('FIREBASE_APP_ID_IOS');
     return AppConfig(
       flavor: flavor,
+      // Mock login is dev-flavor only; other flavors ignore MOCK_AUTH.
+      mockAuth:
+          flavor == Flavor.dev && const bool.fromEnvironment('MOCK_AUTH'),
       apiBaseUrl: const String.fromEnvironment('API_BASE_URL'),
       firebase: FirebaseConfig(
         apiKey: const String.fromEnvironment('FIREBASE_API_KEY'),
@@ -60,8 +64,12 @@ class AppConfig {
   final Flavor flavor;
   final String apiBaseUrl;
   final FirebaseConfig firebase;
+  final bool mockAuth;
 
   bool get isDev => flavor == Flavor.dev;
+
+  /// DEV ONLY: sign in with a backend `dev-uid:<uid>` token, no Firebase.
+  bool get isMockAuth => isDev && mockAuth;
 }
 
 /// Overridden in bootstrap with the real config.

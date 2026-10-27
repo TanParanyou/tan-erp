@@ -51,6 +51,7 @@ abstract final class ErpTokensLight {
   static const Color danger = Color(0xFF991B1B);
   static const Color dangerBg = Color(0xFFFEF2F2);
   static const Color dangerBorder = Color(0xFFFECACA);
+  static const Color dangerText = Color(0xFF7F1D1D);
   static const Color info = Color(0xFF1D518A);
   static const Color infoBg = Color(0xFFEFF6FF);
   static const Color accentMeasure = Color(0xFF8A5A24);
@@ -104,6 +105,7 @@ abstract final class ErpTokensDark {
   static const Color danger = Color(0xFFF87171);
   static const Color dangerBg = Color(0xFF7F1D1D);
   static const Color dangerBorder = Color(0xFFDC2626);
+  static const Color dangerText = Color(0xFFFECACA);
   static const Color info = Color(0xFF60A5FA);
   static const Color infoBg = Color(0xFF1E3A8A);
   static const Color accentMeasure = Color(0xFF8A5A24);

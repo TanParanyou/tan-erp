@@ -70,6 +70,14 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
 
   const targetLocale = locale === "th" ? "en" : "th";
 
+  // Save the locale first, then navigate. A failed save shows its toast and still navigates.
+  const handleLocaleSwitch = async (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    if (isSavingTheme) return;
+    await saveThemePreferences({ preferredLocale: targetLocale });
+    router.push(`/${targetLocale}`);
+  };
+
   const handleSignOut = async () => {
     await signOutSession(queryClient);
     router.push(`/${locale}/login`);
@@ -169,7 +177,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           {/* Locale switcher link */}
           <Link
             href={`/${targetLocale}`}
-            onClick={() => void saveThemePreferences({ preferredLocale: targetLocale })}
+            onClick={handleLocaleSwitch}
             className="erp-header-lang-btn"
             style={{
               minHeight: "44px",

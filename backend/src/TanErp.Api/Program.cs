@@ -87,6 +87,19 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddSingleton<IClock, TanErp.Infrastructure.Common.SystemClock>();
 builder.Services.AddSingleton<IFirebaseTokenVerifier, FirebaseTokenVerifier>();
+if (builder.Configuration.GetValue<bool>("Authentication:DevelopmentTokens:Enabled"))
+{
+    // Fail closed: mock "dev-uid:" tokens bypass Firebase, so they may exist only in Development.
+    if (!builder.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException(
+            "Authentication:DevelopmentTokens:Enabled must not be true outside the Development environment.");
+    }
+
+    builder.Services.AddSingleton<IFirebaseTokenVerifier>(sp =>
+        new DevelopmentTokenVerifier(ActivatorUtilities.CreateInstance<FirebaseTokenVerifier>(sp)));
+    Console.Error.WriteLine("WARNING: Authentication:DevelopmentTokens is ENABLED; 'dev-uid:<uid>' tokens bypass Firebase. Development only.");
+}
 builder.Services.AddScoped<ICurrentUserReader, CurrentUserReader>();
 builder.Services.AddSingleton(builder.Configuration.GetSection("AppVersionPolicy").Get<TanErp.Application.AppVersion.AppVersionPolicyOptions>() ?? new());
 builder.Services.AddScoped<TanErp.Application.AppVersion.GetAppVersionPolicyHandler>();

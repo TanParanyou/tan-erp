@@ -45,7 +45,8 @@ class SessionActive extends Session {
 class SessionController extends Notifier<Session> {
   @override
   Session build() {
-    if (!ref.watch(appConfigProvider).firebase.isConfigured) {
+    final config = ref.watch(appConfigProvider);
+    if (!config.firebase.isConfigured && !config.isMockAuth) {
       return const SessionUnavailable();
     }
     return ref.read(authRepositoryProvider).hasSession

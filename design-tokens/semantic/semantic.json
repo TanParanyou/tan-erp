@@ -273,6 +273,16 @@
               "css": "erp-danger-border"
             }
           }
+        },
+        "text": {
+          "$type": "color",
+          "$value": "#7F1D1D",
+          "$description": "Danger text on danger background",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-danger-text"
+            }
+          }
         }
       },
       "info": {

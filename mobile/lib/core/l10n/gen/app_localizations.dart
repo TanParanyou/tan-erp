@@ -164,6 +164,24 @@ abstract class AppLocalizations {
   /// **'กรอกรหัสผ่าน'**
   String get loginPasswordPlaceholder;
 
+  /// No description provided for @loginMockBanner.
+  ///
+  /// In th, this message translates to:
+  /// **'โหมดทดสอบ (Mock login)'**
+  String get loginMockBanner;
+
+  /// No description provided for @loginMockUidLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสผู้ใช้ (uid)'**
+  String get loginMockUidLabel;
+
+  /// No description provided for @loginMockUidPlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เช่น foundation-user-test-only'**
+  String get loginMockUidPlaceholder;
+
   /// No description provided for @loginSubmit.
   ///
   /// In th, this message translates to:

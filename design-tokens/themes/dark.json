@@ -273,6 +273,16 @@
               "css": "erp-danger-border"
             }
           }
+        },
+        "text": {
+          "$type": "color",
+          "$value": "#FECACA",
+          "$description": "Danger text on danger background (dark)",
+          "$extensions": {
+            "tanerp": {
+              "css": "erp-danger-text"
+            }
+          }
         }
       },
       "info": {

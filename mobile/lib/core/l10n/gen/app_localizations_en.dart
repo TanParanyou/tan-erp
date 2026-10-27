@@ -43,6 +43,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginPasswordPlaceholder => 'Enter your password';
 
   @override
+  String get loginMockBanner => 'Test mode (Mock login)';
+
+  @override
+  String get loginMockUidLabel => 'User ID (uid)';
+
+  @override
+  String get loginMockUidPlaceholder => 'e.g. foundation-user-test-only';
+
+  @override
   String get loginSubmit => 'Sign in';
 
   @override

@@ -14,6 +14,12 @@ flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=config/dev
 Without `FIREBASE_*` values the app starts and shows a "not configured" screen.
 Firebase options come from the config file; no `google-services.json` / `GoogleService-Info.plist` is committed.
 
+## Mock login (dev only)
+
+Sign in against a local backend without Firebase. Set `"MOCK_AUTH": true` in `config/dev.json` (default `false`; ignored by staging/prod, which never construct the mock repository). The sign-in page then shows a uid field (default `foundation-user-test-only`) and the app sends `Authorization: Bearer dev-uid:<uid>`.
+
+Backend side: run `TanErp.Api` with `ASPNETCORE_ENVIRONMENT=Development`; `appsettings.Development.json` sets `Authentication:DevelopmentTokens:Enabled=true`. The backend throws at startup if that flag is true in any other environment. Users are matched by `FirebaseUid`, so the uid must exist in the database. `TestOnlyDataSeeder` seeds `foundation-user-test-only` (and `foundation-user-b-test-only`) but only runs when the environment is `Test` and `SeedTestData=true`; seed the local DB once with `ASPNETCORE_ENVIRONMENT=Test SeedTestData=true` (same `ConnectionStrings__Database`), then restart in `Development` for mock login.
+
 ## Flavors
 
 | Flavor | Bundle ID | Entry |
