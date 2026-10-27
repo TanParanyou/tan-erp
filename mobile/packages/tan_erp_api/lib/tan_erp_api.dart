@@ -334,6 +334,8 @@ export 'package:tan_erp_api/src/model/opportunity_stage_history_list_response.da
 export 'package:tan_erp_api/src/model/opportunity_work_image_list_response.dart';
 export 'package:tan_erp_api/src/model/opportunity_work_image_response.dart';
 export 'package:tan_erp_api/src/model/organization_branch_response.dart';
+export 'package:tan_erp_api/src/model/organization_branding_dto.dart';
+export 'package:tan_erp_api/src/model/organization_branding_response.dart';
 export 'package:tan_erp_api/src/model/organization_dto.dart';
 export 'package:tan_erp_api/src/model/organization_profile_response.dart';
 export 'package:tan_erp_api/src/model/outbox_list_response.dart';
@@ -522,6 +524,7 @@ export 'package:tan_erp_api/src/model/update_item_tax_category_request.dart';
 export 'package:tan_erp_api/src/model/update_my_preferences_request.dart';
 export 'package:tan_erp_api/src/model/update_my_profile_request.dart';
 export 'package:tan_erp_api/src/model/update_open_opportunity_request.dart';
+export 'package:tan_erp_api/src/model/update_organization_branding_request.dart';
 export 'package:tan_erp_api/src/model/update_organization_profile_request.dart';
 export 'package:tan_erp_api/src/model/update_project_milestone_request.dart';
 export 'package:tan_erp_api/src/model/update_role_definition_response.dart';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tan_erp_field/core/theme/brand_color.dart';
 import 'package:tan_erp_field/core/theme/tokens.g.dart';
 
 enum ErpDensity { normal, compact }
@@ -53,7 +54,10 @@ class ErpTokens extends ThemeExtension<ErpTokens> {
 
   /// Light palette + scale tokens. [density] only shrinks spacing; tap
   /// targets never go below `appTapTarget`.
-  factory ErpTokens.light([ErpDensity density = ErpDensity.normal]) => _build(
+  factory ErpTokens.light([
+    ErpDensity density = ErpDensity.normal,
+    Color? brand,
+  ]) => _build(
     density,
     canvas: ErpTokensLight.canvas,
     surface: ErpTokensLight.surface,
@@ -65,9 +69,15 @@ class ErpTokens extends ThemeExtension<ErpTokens> {
     textBody: ErpTokensLight.textBody,
     textMuted: ErpTokensLight.textMuted,
     textSubtle: ErpTokensLight.textSubtle,
-    action: ErpTokensLight.navy,
-    actionHover: ErpTokensLight.navyHover,
-    actionLight: ErpTokensLight.navyLight,
+    action: brand == null
+        ? ErpTokensLight.navy
+        : brandActionColors(brand, dark: false).action,
+    actionHover: brand == null
+        ? ErpTokensLight.navyHover
+        : brandActionColors(brand, dark: false).hover,
+    actionLight: brand == null
+        ? ErpTokensLight.navyLight
+        : brandActionColors(brand, dark: false).light,
     onAction: ErpTokensLight.textOnNavy,
     success: ErpTokensLight.success,
     successBg: ErpTokensLight.successBg,
@@ -83,7 +93,10 @@ class ErpTokens extends ThemeExtension<ErpTokens> {
     accentMeasure: ErpTokensLight.accentMeasure,
   );
 
-  factory ErpTokens.dark([ErpDensity density = ErpDensity.normal]) => _build(
+  factory ErpTokens.dark([
+    ErpDensity density = ErpDensity.normal,
+    Color? brand,
+  ]) => _build(
     density,
     canvas: ErpTokensDark.canvas,
     surface: ErpTokensDark.surface,
@@ -95,9 +108,15 @@ class ErpTokens extends ThemeExtension<ErpTokens> {
     textBody: ErpTokensDark.textBody,
     textMuted: ErpTokensDark.textMuted,
     textSubtle: ErpTokensDark.textSubtle,
-    action: ErpTokensDark.navy,
-    actionHover: ErpTokensDark.navyHover,
-    actionLight: ErpTokensDark.navyLight,
+    action: brand == null
+        ? ErpTokensDark.navy
+        : brandActionColors(brand, dark: true).action,
+    actionHover: brand == null
+        ? ErpTokensDark.navyHover
+        : brandActionColors(brand, dark: true).hover,
+    actionLight: brand == null
+        ? ErpTokensDark.navyLight
+        : brandActionColors(brand, dark: true).light,
     onAction: ErpTokensDark.textOnNavy,
     success: ErpTokensDark.success,
     successBg: ErpTokensDark.successBg,

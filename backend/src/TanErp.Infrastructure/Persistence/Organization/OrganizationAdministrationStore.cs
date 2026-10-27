@@ -70,6 +70,44 @@ public sealed class OrganizationAdministrationStore : IOrganizationAdministratio
             return Result<OrganizationProfile>.Success(ToProfile(org));
         }, VersionConflict, ct);
 
+    private static OrganizationBranding ToBranding(TanErp.Domain.Organization.Organization o) =>
+        new(o.BrandPrimaryColor, o.BrandLogoFileId,
+            o.BrandLogoFileId is { } id ? $"/api/v1/files/{id}/content" : null, o.RowVersion);
+
+    public async Task<Result<OrganizationBranding>> GetBrandingAsync(Guid organizationId, CancellationToken ct)
+    {
+        var org = await _db.Organizations.AsNoTracking().FirstOrDefaultAsync(o => o.Id == organizationId, ct);
+        return org is null ? Fail<OrganizationBranding>("RESOURCE_NOT_FOUND", "Organization was not found.") : Result<OrganizationBranding>.Success(ToBranding(org));
+    }
+
+    public Task<Result<OrganizationBranding>> UpdateBrandingAsync(
+        Guid organizationId, OrganizationBrandingInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
+        SerializableTransactionRunner.RunAsync(_db, async () =>
+        {
+            var org = await _db.Organizations.FirstOrDefaultAsync(o => o.Id == organizationId, ct);
+            if (org is null) return Fail<OrganizationBranding>("RESOURCE_NOT_FOUND", "Organization was not found.");
+            if (org.RowVersion != ifMatch) return Fail<OrganizationBranding>(VersionConflict, "The organization was modified by another user.");
+
+            if (input.LogoFileId is { } logoId
+                && !await _db.UploadedFiles.AsNoTracking().AnyAsync(f => f.Id == logoId && f.OrganizationId == organizationId, ct))
+                return Fail<OrganizationBranding>("FILE_NOT_FOUND", "Logo file not found.");
+
+            var before = org.RowVersion;
+            try
+            {
+                org.UpdateBranding(input.PrimaryColor, input.LogoFileId);
+            }
+            catch (OrganizationDomainException ex)
+            {
+                return Fail<OrganizationBranding>(ex.Code, ex.Message);
+            }
+
+            AddAudit(organizationId, actor, "organization.branding-updated", "Organization", org.Id.ToString(), traceId,
+                new { primaryColor = org.BrandPrimaryColor, logoFileId = org.BrandLogoFileId }, before, org.RowVersion);
+            await _db.SaveChangesAsync(ct);
+            return Result<OrganizationBranding>.Success(ToBranding(org));
+        }, VersionConflict, ct);
+
     /// <summary>Field names only: addresses and tax ids must never be copied into the audit log.</summary>
     private static string[] ChangedFields(TanErp.Domain.Organization.Organization o, OrganizationProfileInput i)
     {

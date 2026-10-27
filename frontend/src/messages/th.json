@@ -4455,7 +4455,42 @@
       "BRANCH_LAST_ACTIVE": "องค์กรต้องมีสาขาที่เปิดใช้อย่างน้อยหนึ่งสาขา",
       "IDEMPOTENCY_KEY_REUSED": "คำขอซ้ำไม่ตรงกับคำขอเดิม กรุณาลองใหม่",
       "PERMISSION_DENIED": "คุณไม่มีสิทธิ์ดำเนินการนี้",
-      "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ"
+      "RESOURCE_NOT_FOUND": "ไม่พบข้อมูลที่ต้องการ",
+      "ORGANIZATION_BRAND_COLOR_INVALID": "สีแบรนด์ไม่ผ่านเกณฑ์ contrast เพื่อการเข้าถึง",
+      "FILE_NOT_FOUND": "ไม่พบไฟล์โลโก้ กรุณาอัปโหลดอีกครั้ง"
+    },
+    "branding": {
+      "title": "แบรนด์องค์กร",
+      "subtitle": "โลโก้และสีหลักของแบรนด์ที่แสดงทั่วระบบเว็บ",
+      "logo": {
+        "upload": "อัปโหลดโลโก้",
+        "remove": "ลบโลโก้",
+        "hint": "ไฟล์ PNG, JPG หรือ WebP แสดงที่แถบหัวหน้าจอ"
+      },
+      "color": {
+        "label": "สีหลัก",
+        "hint": "รูปแบบ #RRGGBB เว้นว่างเพื่อใช้ Atelier Navy",
+        "placeholder": "เช่น #0B3056",
+        "reset": "รีเซ็ตเป็น Atelier Navy",
+        "default": "ใช้สี Atelier Navy ค่าเริ่มต้น"
+      },
+      "contrast": {
+        "onText": "ข้อความสีขาวบนสีนี้ (ต้องได้ 4.5:1)",
+        "onCanvas": "สีนี้บนพื้นหน้าจอ (ต้องได้ 3:1)",
+        "pass": "ผ่าน",
+        "fail": "ไม่ผ่าน"
+      },
+      "preview": {
+        "label": "ตัวอย่าง",
+        "button": "ปุ่มหลัก"
+      },
+      "validation": {
+        "hexFormat": "กรอกสีในรูปแบบ #RRGGBB",
+        "contrastFailed": "สีนี้ไม่ผ่านเกณฑ์ contrast เพื่อการเข้าถึง จึงบันทึกไม่ได้"
+      },
+      "save": "บันทึกแบรนด์",
+      "saveSuccess": "บันทึกแบรนด์แล้ว",
+      "readOnlyNotice": "คุณดูข้อมูลนี้ได้แต่แก้ไขไม่ได้"
     }
   },
   "roleAdmin": {

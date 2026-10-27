@@ -56,7 +56,8 @@ public class CurrentUserController : ControllerBase
             ToDto(data.User),
             data.Memberships.Select(m => new MembershipDto(
                 m.Id,
-                new OrganizationDto(m.Organization.Id, m.Organization.Name),
+                new OrganizationDto(m.Organization.Id, m.Organization.Name,
+                    m.Organization.Branding is null ? null : new OrganizationBrandingDto(m.Organization.Branding.PrimaryColor, m.Organization.Branding.LogoUrl, m.Organization.Branding.LogoFileId)),
                 m.Branch != null ? new BranchDto(m.Branch.Id, m.Branch.Name) : null,
                 m.Permissions.Select(p => new PermissionDto(p.Key, p.Scope, p.ScopeId)).ToList()
             )).ToList()

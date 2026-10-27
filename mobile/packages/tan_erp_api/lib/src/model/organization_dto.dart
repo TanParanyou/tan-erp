@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/organization_branding_dto.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -13,6 +14,7 @@ part 'organization_dto.g.dart';
 /// Properties:
 /// * [id] 
 /// * [name] 
+/// * [branding] 
 @BuiltValue()
 abstract class OrganizationDto implements Built<OrganizationDto, OrganizationDtoBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -20,6 +22,9 @@ abstract class OrganizationDto implements Built<OrganizationDto, OrganizationDto
 
   @BuiltValueField(wireName: r'name')
   String? get name;
+
+  @BuiltValueField(wireName: r'branding')
+  OrganizationBrandingDto? get branding;
 
   OrganizationDto._();
 
@@ -56,6 +61,13 @@ class _$OrganizationDtoSerializer implements PrimitiveSerializer<OrganizationDto
       yield serializers.serialize(
         object.name,
         specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.branding != null) {
+      yield r'branding';
+      yield serializers.serialize(
+        object.branding,
+        specifiedType: const FullType(OrganizationBrandingDto),
       );
     }
   }
@@ -96,6 +108,14 @@ class _$OrganizationDtoSerializer implements PrimitiveSerializer<OrganizationDto
           ) as String?;
           if (valueDes == null) continue;
           result.name = valueDes;
+          break;
+        case r'branding':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(OrganizationBrandingDto),
+          ) as OrganizationBrandingDto?;
+          if (valueDes == null) continue;
+          result.branding.replace(valueDes);
           break;
         default:
           unhandled.add(key);

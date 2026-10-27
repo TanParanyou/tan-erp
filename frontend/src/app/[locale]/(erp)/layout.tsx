@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AccessGate } from "@/features/auth";
 import { ErpShell } from "@/components/layout/erp-shell";
 import { SelectedMembershipProvider } from "@/lib/membership/selected-membership-context";
+import { OrganizationBrandingSync } from "@/features/settings/organization/components/organization-branding-sync";
 import { UserPreferencesSync } from "@/features/profile/components/user-preferences-sync";
 import { LightboxProvider } from "@/providers/lightbox-provider";
 import { isSupportedLocale } from "@/lib/i18n/locales";
@@ -26,6 +27,7 @@ export default function ErpLayout({ children, params }: ErpLayoutProps) {
       {(currentUser) => (
         <SelectedMembershipProvider currentUser={currentUser}>
           <UserPreferencesSync />
+          <OrganizationBrandingSync />
           <LightboxProvider>
             <ErpShell currentUser={currentUser}>
               {children}

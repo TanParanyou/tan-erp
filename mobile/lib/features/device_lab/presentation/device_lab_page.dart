@@ -10,6 +10,7 @@ import 'package:tan_erp_field/core/ui/erp_screen.dart';
 import 'package:tan_erp_field/features/device_lab/data/ar_measure_repository.dart';
 import 'package:tan_erp_field/features/device_lab/domain/ar_measure_failure.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/ar_measure_controller.dart';
+import 'package:tan_erp_field/features/device_lab/presentation/photo_area_card.dart';
 
 /// Dev-flavor only: tries device-specific features. Nothing is saved.
 class DeviceLabPage extends StatelessWidget {
@@ -30,6 +31,8 @@ class DeviceLabPage extends StatelessWidget {
           ),
           SizedBox(height: t.space4),
           const _ArMeasureCard(),
+          SizedBox(height: t.space4),
+          const PhotoAreaCard(),
         ],
       ),
     );

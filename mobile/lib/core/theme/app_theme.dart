@@ -10,10 +10,11 @@ ThemeData buildTheme({
   required Brightness mode,
   ErpDensity density = ErpDensity.normal,
   double textScale = 1,
+  Color? brandColor,
 }) {
   final t = mode == Brightness.dark
-      ? ErpTokens.dark(density)
-      : ErpTokens.light(density);
+      ? ErpTokens.dark(density, brandColor)
+      : ErpTokens.light(density, brandColor);
   final shape = RoundedRectangleBorder(borderRadius: t.corner);
   final side = BorderSide(color: t.border, width: t.borderWidth);
 

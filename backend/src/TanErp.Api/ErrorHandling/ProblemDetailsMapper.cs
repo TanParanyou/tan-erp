@@ -19,6 +19,7 @@ public static class ProblemDetailsMapper
         "BRANCH_HAS_ACTIVE_MEMBERSHIPS" => StatusCodes.Status409Conflict,
         "BRANCH_LAST_ACTIVE" => StatusCodes.Status409Conflict,
         "ORGANIZATION_TAX_ID_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "ORGANIZATION_BRAND_COLOR_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "LAST_ADMINISTRATOR_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "ROLE_ESCALATION_DENIED" => StatusCodes.Status403Forbidden,
         "SELF_ROLE_CHANGE_FORBIDDEN" => StatusCodes.Status403Forbidden,

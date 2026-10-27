@@ -23,7 +23,10 @@ public sealed record MembershipContext(
 
 public sealed record OrganizationContext(
     Guid Id,
-    string Name);
+    string Name,
+    OrganizationBrandingContext? Branding = null);
+
+public sealed record OrganizationBrandingContext(string? PrimaryColor, string? LogoUrl, Guid? LogoFileId);
 
 public sealed record BranchContext(
     Guid Id,

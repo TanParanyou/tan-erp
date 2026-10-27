@@ -11,7 +11,9 @@ import {
   type AdminBranchResponse,
   type BranchDeactivationCheckResponse,
   type CreateAdminBranchRequest,
+  type OrganizationBrandingResponse,
   type OrganizationProfileResponse,
+  type UpdateOrganizationBrandingRequest,
   type UpdateAdminBranchRequest,
   type UpdateOrganizationProfileRequest,
 } from "@/lib/api/api-client";
@@ -21,6 +23,8 @@ export const organizationAdminKeys = {
   all: (membershipId: string | null | undefined) => ["business", membershipId] as const,
   profile: (membershipId: string | null | undefined, locale: ApiLocale) =>
     ["business", membershipId, locale, "org-admin", "profile"] as const,
+  branding: (membershipId: string | null | undefined, locale: ApiLocale) =>
+    ["business", membershipId, locale, "org-admin", "branding"] as const,
   branches: (membershipId: string | null | undefined, locale: ApiLocale, status: string) =>
     ["business", membershipId, locale, "org-admin", "branches", status] as const,
   branch: (membershipId: string | null | undefined, locale: ApiLocale, branchId: string) =>
@@ -52,6 +56,31 @@ export function useUpdateOrganizationProfile(): UseMutationResult<
     mutationFn: async ({ payload, ifMatch }) =>
       apiClient.updateOrganizationProfile(payload, await context.buildOptions({ ifMatch })),
     onSuccess: () => invalidateOrg(queryClient, context.membershipId),
+  });
+}
+
+export function useOrganizationBranding(): UseQueryResult<OrganizationBrandingResponse, Error> {
+  const context = useApiRequestContext();
+  return useQuery({
+    queryKey: organizationAdminKeys.branding(context.membershipId, context.locale),
+    enabled: Boolean(context.membershipId),
+    queryFn: async ({ signal }) => apiClient.getOrganizationBranding(await context.buildOptions({ signal })),
+  });
+}
+
+/** Saves the brand, then refreshes /me so the shell applies the new colour and logo immediately. */
+export function useUpdateOrganizationBranding(): UseMutationResult<
+  OrganizationBrandingResponse, Error, { payload: UpdateOrganizationBrandingRequest; ifMatch: string }
+> {
+  const queryClient = useQueryClient();
+  const context = useApiRequestContext();
+  return useMutation({
+    mutationFn: async ({ payload, ifMatch }) =>
+      apiClient.updateOrganizationBranding(payload, await context.buildOptions({ ifMatch })),
+    onSuccess: () => {
+      invalidateOrg(queryClient, context.membershipId);
+      void queryClient.invalidateQueries({ queryKey: ["current-user"] });
+    },
   });
 }
 

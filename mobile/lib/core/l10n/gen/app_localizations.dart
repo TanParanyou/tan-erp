@@ -817,6 +817,156 @@ abstract class AppLocalizations {
   /// In th, this message translates to:
   /// **'กำลังวัดอยู่แล้ว'**
   String get arErrorBusy;
+
+  /// No description provided for @photoAreaCardTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'วัดพื้นที่จากรูป + A4'**
+  String get photoAreaCardTitle;
+
+  /// No description provided for @photoAreaCardBody.
+  ///
+  /// In th, this message translates to:
+  /// **'ถ่ายรูปพื้นที่ที่มีกระดาษขนาดมาตรฐานวางอยู่ แล้วแตะมุมกระดาษและมุมพื้นที่'**
+  String get photoAreaCardBody;
+
+  /// No description provided for @photoAreaReferenceLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'กระดาษอ้างอิง'**
+  String get photoAreaReferenceLabel;
+
+  /// No description provided for @photoAreaReferencePlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เลือกขนาดอ้างอิง'**
+  String get photoAreaReferencePlaceholder;
+
+  /// No description provided for @photoAreaPresetA4.
+  ///
+  /// In th, this message translates to:
+  /// **'A4 (210 × 297 มม.)'**
+  String get photoAreaPresetA4;
+
+  /// No description provided for @photoAreaPresetA3.
+  ///
+  /// In th, this message translates to:
+  /// **'A3 (297 × 420 มม.)'**
+  String get photoAreaPresetA3;
+
+  /// No description provided for @photoAreaPresetCustom.
+  ///
+  /// In th, this message translates to:
+  /// **'กำหนดขนาดเอง'**
+  String get photoAreaPresetCustom;
+
+  /// No description provided for @photoAreaWidthLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'กว้าง (มม.)'**
+  String get photoAreaWidthLabel;
+
+  /// No description provided for @photoAreaWidthPlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เช่น 210'**
+  String get photoAreaWidthPlaceholder;
+
+  /// No description provided for @photoAreaHeightLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'ยาว (มม.)'**
+  String get photoAreaHeightLabel;
+
+  /// No description provided for @photoAreaHeightPlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เช่น 297'**
+  String get photoAreaHeightPlaceholder;
+
+  /// No description provided for @photoAreaErrorSize.
+  ///
+  /// In th, this message translates to:
+  /// **'กรอกความกว้างและความยาวที่มากกว่า 0'**
+  String get photoAreaErrorSize;
+
+  /// No description provided for @photoAreaPickGallery.
+  ///
+  /// In th, this message translates to:
+  /// **'เลือกจากคลังรูป'**
+  String get photoAreaPickGallery;
+
+  /// No description provided for @photoAreaPickCamera.
+  ///
+  /// In th, this message translates to:
+  /// **'ถ่ายรูป'**
+  String get photoAreaPickCamera;
+
+  /// No description provided for @photoAreaErrorPick.
+  ///
+  /// In th, this message translates to:
+  /// **'เปิดรูปไม่สำเร็จ กรุณาลองใหม่'**
+  String get photoAreaErrorPick;
+
+  /// No description provided for @photoAreaTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'วัดจากรูป'**
+  String get photoAreaTitle;
+
+  /// No description provided for @photoAreaStepReference.
+  ///
+  /// In th, this message translates to:
+  /// **'แตะมุมทั้ง 4 ของกระดาษอ้างอิง ({count}/4)'**
+  String photoAreaStepReference(int count);
+
+  /// No description provided for @photoAreaStepArea.
+  ///
+  /// In th, this message translates to:
+  /// **'แตะมุมของพื้นที่ อย่างน้อย 3 จุด ({count})'**
+  String photoAreaStepArea(int count);
+
+  /// No description provided for @photoAreaStepAdjust.
+  ///
+  /// In th, this message translates to:
+  /// **'ลากจุดเพื่อปรับตำแหน่ง'**
+  String get photoAreaStepAdjust;
+
+  /// No description provided for @photoAreaClear.
+  ///
+  /// In th, this message translates to:
+  /// **'ล้าง'**
+  String get photoAreaClear;
+
+  /// No description provided for @photoAreaWidth.
+  ///
+  /// In th, this message translates to:
+  /// **'กว้าง'**
+  String get photoAreaWidth;
+
+  /// No description provided for @photoAreaLength.
+  ///
+  /// In th, this message translates to:
+  /// **'ยาว'**
+  String get photoAreaLength;
+
+  /// No description provided for @photoAreaVertices.
+  ///
+  /// In th, this message translates to:
+  /// **'จำนวนจุด'**
+  String get photoAreaVertices;
+
+  /// No description provided for @photoAreaValueMm.
+  ///
+  /// In th, this message translates to:
+  /// **'{value} มม.'**
+  String photoAreaValueMm(String value);
+
+  /// No description provided for @photoAreaErrorReference.
+  ///
+  /// In th, this message translates to:
+  /// **'มุมกระดาษอ้างอิงไม่ถูกต้อง ย้ายจุดให้ตรงมุมทั้งสี่ของกระดาษ'**
+  String get photoAreaErrorReference;
 }
 
 class _AppLocalizationsDelegate

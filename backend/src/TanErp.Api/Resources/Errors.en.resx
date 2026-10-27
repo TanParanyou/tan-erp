@@ -801,6 +801,12 @@
   <data name="ORGANIZATION_TAX_ID_INVALID_DETAIL" xml:space="preserve">
     <value>The tax identifier must be 13 digits with a valid check digit.</value>
   </data>
+  <data name="ORGANIZATION_BRAND_COLOR_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid brand colour</value>
+  </data>
+  <data name="ORGANIZATION_BRAND_COLOR_INVALID_DETAIL" xml:space="preserve">
+    <value>The brand colour must be #RRGGBB, white text on it must reach 4.5:1 contrast and it must reach 3:1 against the page background.</value>
+  </data>
   <data name="LAST_ADMINISTRATOR_REQUIRED_TITLE" xml:space="preserve">
     <value>At least one administrator is required</value>
   </data>

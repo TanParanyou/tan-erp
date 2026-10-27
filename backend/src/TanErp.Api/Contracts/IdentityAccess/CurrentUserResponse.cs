@@ -31,7 +31,11 @@ public sealed record MembershipDto(
 
 public sealed record OrganizationDto(
     Guid Id,
-    string Name);
+    string Name,
+    OrganizationBrandingDto? Branding = null);
+
+/// <summary>Null PrimaryColor means the default Atelier Navy; null LogoUrl means no logo.</summary>
+public sealed record OrganizationBrandingDto(string? PrimaryColor, string? LogoUrl, Guid? LogoFileId);
 
 public sealed record BranchDto(
     Guid Id,

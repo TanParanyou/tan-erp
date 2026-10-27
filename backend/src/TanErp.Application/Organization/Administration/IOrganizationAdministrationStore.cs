@@ -8,6 +8,9 @@ public interface IOrganizationAdministrationStore
     Task<Result<OrganizationProfile>> GetProfileAsync(Guid organizationId, CancellationToken ct);
     Task<Result<OrganizationProfile>> UpdateProfileAsync(
         Guid organizationId, OrganizationProfileInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct);
+    Task<Result<OrganizationBranding>> GetBrandingAsync(Guid organizationId, CancellationToken ct);
+    Task<Result<OrganizationBranding>> UpdateBrandingAsync(
+        Guid organizationId, OrganizationBrandingInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct);
     Task<IReadOnlyList<BranchDetail>> ListBranchesAsync(Guid organizationId, BranchStatusFilter filter, CancellationToken ct);
     Task<Result<BranchDetail>> GetBranchAsync(Guid organizationId, Guid branchId, CancellationToken ct);
     Task<Result<BranchDetail>> CreateBranchAsync(

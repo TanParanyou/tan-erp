@@ -6620,6 +6620,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("address_th");
 
+                    b.Property<Guid?>("BrandLogoFileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("brand_logo_file_id");
+
+                    b.Property<string>("BrandPrimaryColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("brand_primary_color");
+
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("timestamptz")
                         .HasColumnName("created_at_utc");
@@ -6655,6 +6664,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnName("tax_identifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BrandLogoFileId");
 
                     b.ToTable("organizations", "organization");
                 });
@@ -11167,6 +11178,14 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Navigation("Organization");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Organization.Organization", b =>
+                {
+                    b.HasOne("TanErp.Domain.Files.UploadedFile", null)
+                        .WithMany()
+                        .HasForeignKey("BrandLogoFileId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("TanErp.Domain.Procurement.GoodsReceipt", b =>

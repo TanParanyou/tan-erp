@@ -79,6 +79,8 @@ Class | Method | HTTP request | Description
 [*AdminOrganizationApi*](doc/AdminOrganizationApi.md) | [**apiV1AdminBranchesBranchIdPut**](doc/AdminOrganizationApi.md#apiv1adminbranchesbranchidput) | **PUT** /api/v1/admin/branches/{branchId} | 
 [*AdminOrganizationApi*](doc/AdminOrganizationApi.md) | [**apiV1AdminBranchesGet**](doc/AdminOrganizationApi.md#apiv1adminbranchesget) | **GET** /api/v1/admin/branches | 
 [*AdminOrganizationApi*](doc/AdminOrganizationApi.md) | [**apiV1AdminBranchesPost**](doc/AdminOrganizationApi.md#apiv1adminbranchespost) | **POST** /api/v1/admin/branches | 
+[*AdminOrganizationApi*](doc/AdminOrganizationApi.md) | [**apiV1AdminOrganizationBrandingGet**](doc/AdminOrganizationApi.md#apiv1adminorganizationbrandingget) | **GET** /api/v1/admin/organization/branding | 
+[*AdminOrganizationApi*](doc/AdminOrganizationApi.md) | [**apiV1AdminOrganizationBrandingPut**](doc/AdminOrganizationApi.md#apiv1adminorganizationbrandingput) | **PUT** /api/v1/admin/organization/branding | 
 [*AdminOrganizationApi*](doc/AdminOrganizationApi.md) | [**apiV1AdminOrganizationGet**](doc/AdminOrganizationApi.md#apiv1adminorganizationget) | **GET** /api/v1/admin/organization | 
 [*AdminOrganizationApi*](doc/AdminOrganizationApi.md) | [**apiV1AdminOrganizationPut**](doc/AdminOrganizationApi.md#apiv1adminorganizationput) | **PUT** /api/v1/admin/organization | 
 [*AdminRolesApi*](doc/AdminRolesApi.md) | [**apiV1AdminPermissionsGet**](doc/AdminRolesApi.md#apiv1adminpermissionsget) | **GET** /api/v1/admin/permissions | 
@@ -678,6 +680,8 @@ Class | Method | HTTP request | Description
  - [OpportunityWorkImageListResponse](doc/OpportunityWorkImageListResponse.md)
  - [OpportunityWorkImageResponse](doc/OpportunityWorkImageResponse.md)
  - [OrganizationBranchResponse](doc/OrganizationBranchResponse.md)
+ - [OrganizationBrandingDto](doc/OrganizationBrandingDto.md)
+ - [OrganizationBrandingResponse](doc/OrganizationBrandingResponse.md)
  - [OrganizationDto](doc/OrganizationDto.md)
  - [OrganizationProfileResponse](doc/OrganizationProfileResponse.md)
  - [OutboxListResponse](doc/OutboxListResponse.md)
@@ -866,6 +870,7 @@ Class | Method | HTTP request | Description
  - [UpdateMyPreferencesRequest](doc/UpdateMyPreferencesRequest.md)
  - [UpdateMyProfileRequest](doc/UpdateMyProfileRequest.md)
  - [UpdateOpenOpportunityRequest](doc/UpdateOpenOpportunityRequest.md)
+ - [UpdateOrganizationBrandingRequest](doc/UpdateOrganizationBrandingRequest.md)
  - [UpdateOrganizationProfileRequest](doc/UpdateOrganizationProfileRequest.md)
  - [UpdateProjectMilestoneRequest](doc/UpdateProjectMilestoneRequest.md)
  - [UpdateRoleDefinitionResponse](doc/UpdateRoleDefinitionResponse.md)

@@ -40,6 +40,21 @@ public sealed class OrganizationAdministrationHandler
             : await _store.UpdateProfileAsync(access.Value!.OrganizationId, input, ifMatch, Actor(access.Value), traceId, ct);
     }
 
+    public async Task<Result<OrganizationBranding>> GetBrandingAsync(AdminCaller caller, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.OrganizationsRead, ct);
+        return access.IsFailure ? Denied<OrganizationBranding>(access) : await _store.GetBrandingAsync(access.Value!.OrganizationId, ct);
+    }
+
+    public async Task<Result<OrganizationBranding>> UpdateBrandingAsync(
+        AdminCaller caller, Guid ifMatch, OrganizationBrandingInput input, string traceId, CancellationToken ct)
+    {
+        var access = await AccessAsync(caller, OrganizationAdminPermissions.OrganizationsManage, ct);
+        return access.IsFailure
+            ? Denied<OrganizationBranding>(access)
+            : await _store.UpdateBrandingAsync(access.Value!.OrganizationId, input, ifMatch, Actor(access.Value), traceId, ct);
+    }
+
     public async Task<Result<IReadOnlyList<BranchDetail>>> ListBranchesAsync(AdminCaller caller, BranchStatusFilter filter, CancellationToken ct)
     {
         var access = await AccessAsync(caller, OrganizationAdminPermissions.BranchesManage, ct);

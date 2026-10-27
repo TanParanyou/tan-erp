@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tan_erp_api/tan_erp_api.dart';
 import 'package:tan_erp_field/core/network/api_client.dart';
 import 'package:tan_erp_field/core/network/api_failure.dart';
+import 'package:tan_erp_field/core/theme/brand_color.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/theme/theme_settings.dart';
 
@@ -33,6 +34,7 @@ class Membership {
     required this.id,
     required this.organizationName,
     this.branchName,
+    this.brandColor,
   });
 
   final String id;
@@ -40,6 +42,9 @@ class Membership {
 
   /// Null = organisation-wide membership (all branches).
   final String? branchName;
+
+  /// Organization brand colour (#RRGGBB from `/me`); null = default Atelier Navy.
+  final Color? brandColor;
 }
 
 /// Text shown when the server sent no value (AGENTS.md: `-`).
@@ -59,6 +64,7 @@ CurrentUser mapCurrentUser(CurrentUserResponse response) {
             id: id,
             organizationName: m.organization?.name ?? _empty,
             branchName: m.branch?.name,
+            brandColor: parseBrandColor(m.organization?.branding?.primaryColor),
           ),
     ],
     preferences: mapPreferences(user.preferences),

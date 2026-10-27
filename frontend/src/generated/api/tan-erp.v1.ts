@@ -393,6 +393,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/organization/branding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OrganizationBrandingResponse"];
+                        "application/json": components["schemas"]["OrganizationBrandingResponse"];
+                        "text/json": components["schemas"]["OrganizationBrandingResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateOrganizationBrandingRequest"];
+                    "text/json": components["schemas"]["UpdateOrganizationBrandingRequest"];
+                    "application/*+json": components["schemas"]["UpdateOrganizationBrandingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["OrganizationBrandingResponse"];
+                        "application/json": components["schemas"]["OrganizationBrandingResponse"];
+                        "text/json": components["schemas"]["OrganizationBrandingResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/branches": {
         parameters: {
             query?: never;
@@ -25595,10 +25692,25 @@ export interface components {
             code?: string | null;
             name?: string | null;
         };
+        OrganizationBrandingDto: {
+            primaryColor?: string | null;
+            logoUrl?: string | null;
+            /** Format: uuid */
+            logoFileId?: string | null;
+        };
+        OrganizationBrandingResponse: {
+            primaryColor?: string | null;
+            /** Format: uuid */
+            logoFileId?: string | null;
+            logoUrl?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
         OrganizationDto: {
             /** Format: uuid */
             id?: string;
             name?: string | null;
+            branding?: components["schemas"]["OrganizationBrandingDto"];
         };
         OrganizationProfileResponse: {
             /** Format: uuid */
@@ -27542,6 +27654,11 @@ export interface components {
             /** Format: date-time */
             nextActionAtUtc?: string | null;
             nextActionNote?: string | null;
+        };
+        UpdateOrganizationBrandingRequest: {
+            primaryColor?: string | null;
+            /** Format: uuid */
+            logoFileId?: string | null;
         };
         UpdateOrganizationProfileRequest: {
             name?: string | null;

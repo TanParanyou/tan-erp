@@ -22,6 +22,7 @@ import {
   IconFileText,
 } from "@/components/common/Icons";
 import { LogoIcon } from "@/components/common/Logo";
+import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { can } from "@/lib/permissions/can";
@@ -59,6 +60,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
   const memberships = currentUser.memberships || [];
   const activeMembership = selectedMembership || memberships[0];
   const orgName = activeMembership?.organization?.name || "-";
+  const brandLogoFileId = activeMembership?.organization?.branding?.logoFileId ?? null;
   const branchName = activeMembership?.branch?.name || tShell("noBranch");
 
   const hasCustomersRead = can(activeMembership, "customers.read");
@@ -117,7 +119,13 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <LogoIcon size={26} color="var(--erp-text-on-navy)" strokeWidth={2} style={{ flexShrink: 0 }} />
+            {brandLogoFileId ? (
+              <span className="flex h-8 shrink-0 items-center bg-erp-surface px-1">
+                <AuthenticatedFileImage fileId={brandLogoFileId} alt={orgName} className="h-6 w-auto max-w-[120px] object-contain" />
+              </span>
+            ) : (
+              <LogoIcon size={26} color="var(--erp-text-on-navy)" strokeWidth={2} style={{ flexShrink: 0 }} />
+            )}
             <span className="erp-header-title">
               {tApp("title")}
             </span>

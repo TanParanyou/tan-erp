@@ -4,6 +4,7 @@ import React from "react";
 import { useTranslations } from "next-intl";
 import { PermissionGuard } from "@/components/auth";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { OrganizationBrandingForm } from "@/features/settings/organization/components/organization-branding-form";
 import { OrganizationProfileForm } from "@/features/settings/organization/components/organization-profile-form";
 
 export default function OrganizationSettingsPage() {
@@ -12,6 +13,7 @@ export default function OrganizationSettingsPage() {
   return (
     <PermissionGuard permission={PERMISSIONS.ORGANIZATIONS_READ} title={t("accessDeniedTitle")} detail={t("accessDeniedDetail")}>
       <OrganizationProfileForm />
+      <OrganizationBrandingForm />
     </PermissionGuard>
   );
 }

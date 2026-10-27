@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useState, useMemo } from "react";
+import { BRAND_CSS_VARIABLES, brandCssVariables, parseHexColor } from "@/lib/color/wcag";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
@@ -37,6 +38,8 @@ interface ThemeContextValue {
   toggleTheme: () => void;
   /** Applies preferences locally (html attributes + localStorage); it never calls the API. */
   applyPreferences: (preferences: ThemePreferences) => void;
+  /** Overrides the action (navy) tokens with the organization brand colour (#RRGGBB); null restores Atelier Navy. */
+  applyBrandColor: (primaryColor: string | null) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -118,6 +121,18 @@ export function ThemeProvider({
     }
   }, [resolvedTheme]);
 
+  const [brandColor, setBrandColor] = useState<string | null>(null);
+
+  useEffect(() => {
+    const style = document.documentElement.style;
+    const rgb = brandColor === null ? null : parseHexColor(brandColor);
+    const variables = rgb ? brandCssVariables(rgb, resolvedTheme) : null;
+    for (const name of BRAND_CSS_VARIABLES) {
+      if (variables) style.setProperty(name, variables[name]);
+      else style.removeProperty(name);
+    }
+  }, [brandColor, resolvedTheme]);
+
   useEffect(() => {
     document.documentElement.setAttribute("data-density", density);
   }, [density]);
@@ -141,6 +156,8 @@ export function ThemeProvider({
     writeStorage(TEXT_SCALE_STORAGE_KEY, String(preferences.textScale));
   }, []);
 
+  const applyBrandColor = useCallback((primaryColor: string | null) => setBrandColor(primaryColor), []);
+
   const toggleTheme = () => {
     const nextTheme: ThemeMode = resolvedTheme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
@@ -155,8 +172,9 @@ export function ThemeProvider({
       setTheme,
       toggleTheme,
       applyPreferences,
+      applyBrandColor,
     }),
-    [theme, resolvedTheme, density, textScale, applyPreferences]
+    [theme, resolvedTheme, density, textScale, applyPreferences, applyBrandColor]
   );
 
   return (
@@ -174,6 +192,7 @@ const defaultThemeContext: ThemeContextValue = {
   setTheme: () => {},
   toggleTheme: () => {},
   applyPreferences: () => {},
+  applyBrandColor: () => {},
 };
 
 export function useTheme(): ThemeContextValue {

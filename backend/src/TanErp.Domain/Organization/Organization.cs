@@ -13,6 +13,8 @@ public class Organization : Entity
     public string? AddressTh { get; private set; }
     public string? AddressEn { get; private set; }
     public string? Phone { get; private set; }
+    public string? BrandPrimaryColor { get; private set; }
+    public Guid? BrandLogoFileId { get; private set; }
     public Guid RowVersion { get; private set; } = Guid.NewGuid();
 
     private readonly List<Branch> _branches = new();
@@ -51,6 +53,21 @@ public class Organization : Entity
         AddressTh = ProfileText.Optional(addressTh, OrganizationLimits.Address, "Thai address");
         AddressEn = ProfileText.Optional(addressEn, OrganizationLimits.Address, "English address");
         Phone = ProfileText.Optional(phone, OrganizationLimits.Phone, "Phone");
+        RowVersion = Guid.NewGuid();
+    }
+
+    /// <summary>Null colour/logo means the default Atelier Navy / no logo.</summary>
+    public void UpdateBranding(string? primaryColor, Guid? logoFileId)
+    {
+        string? color = null;
+        if (!string.IsNullOrWhiteSpace(primaryColor))
+        {
+            color = BrandColor.NormalizeIfAccessible(primaryColor.Trim())
+                ?? throw new OrganizationDomainException("ORGANIZATION_BRAND_COLOR_INVALID", "Brand colour must be #RRGGBB with contrast >= 4.5:1 against white text and >= 3:1 against the canvas.");
+        }
+
+        BrandPrimaryColor = color;
+        BrandLogoFileId = logoFileId;
         RowVersion = Guid.NewGuid();
     }
 

@@ -11,11 +11,13 @@ class _$OrganizationDto extends OrganizationDto {
   final String? id;
   @override
   final String? name;
+  @override
+  final OrganizationBrandingDto? branding;
 
   factory _$OrganizationDto([void Function(OrganizationDtoBuilder)? updates]) =>
       (OrganizationDtoBuilder()..update(updates))._build();
 
-  _$OrganizationDto._({this.id, this.name}) : super._();
+  _$OrganizationDto._({this.id, this.name, this.branding}) : super._();
   @override
   OrganizationDto rebuild(void Function(OrganizationDtoBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -26,7 +28,10 @@ class _$OrganizationDto extends OrganizationDto {
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is OrganizationDto && id == other.id && name == other.name;
+    return other is OrganizationDto &&
+        id == other.id &&
+        name == other.name &&
+        branding == other.branding;
   }
 
   @override
@@ -34,6 +39,7 @@ class _$OrganizationDto extends OrganizationDto {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, name.hashCode);
+    _$hash = $jc(_$hash, branding.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -42,7 +48,8 @@ class _$OrganizationDto extends OrganizationDto {
   String toString() {
     return (newBuiltValueToStringHelper(r'OrganizationDto')
           ..add('id', id)
-          ..add('name', name))
+          ..add('name', name)
+          ..add('branding', branding))
         .toString();
   }
 }
@@ -59,6 +66,12 @@ class OrganizationDtoBuilder
   String? get name => _$this._name;
   set name(String? name) => _$this._name = name;
 
+  OrganizationBrandingDtoBuilder? _branding;
+  OrganizationBrandingDtoBuilder get branding =>
+      _$this._branding ??= OrganizationBrandingDtoBuilder();
+  set branding(OrganizationBrandingDtoBuilder? branding) =>
+      _$this._branding = branding;
+
   OrganizationDtoBuilder() {
     OrganizationDto._defaults(this);
   }
@@ -68,6 +81,7 @@ class OrganizationDtoBuilder
     if ($v != null) {
       _id = $v.id;
       _name = $v.name;
+      _branding = $v.branding?.toBuilder();
       _$v = null;
     }
     return this;
@@ -87,11 +101,25 @@ class OrganizationDtoBuilder
   OrganizationDto build() => _build();
 
   _$OrganizationDto _build() {
-    final _$result = _$v ??
-        _$OrganizationDto._(
-          id: id,
-          name: name,
-        );
+    _$OrganizationDto _$result;
+    try {
+      _$result = _$v ??
+          _$OrganizationDto._(
+            id: id,
+            name: name,
+            branding: _branding?.build(),
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'branding';
+        _branding?.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(
+            r'OrganizationDto', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }

@@ -334,6 +334,8 @@ lib/src/model/opportunity_stage_history_list_response.dart
 lib/src/model/opportunity_work_image_list_response.dart
 lib/src/model/opportunity_work_image_response.dart
 lib/src/model/organization_branch_response.dart
+lib/src/model/organization_branding_dto.dart
+lib/src/model/organization_branding_response.dart
 lib/src/model/organization_dto.dart
 lib/src/model/organization_profile_response.dart
 lib/src/model/outbox_list_response.dart
@@ -522,6 +524,7 @@ lib/src/model/update_item_tax_category_request.dart
 lib/src/model/update_my_preferences_request.dart
 lib/src/model/update_my_profile_request.dart
 lib/src/model/update_open_opportunity_request.dart
+lib/src/model/update_organization_branding_request.dart
 lib/src/model/update_organization_profile_request.dart
 lib/src/model/update_project_milestone_request.dart
 lib/src/model/update_role_definition_response.dart

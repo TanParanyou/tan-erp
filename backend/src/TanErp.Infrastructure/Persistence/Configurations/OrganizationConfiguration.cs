@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TanErp.Domain.Files;
 using TanErp.Domain.Organization;
 
 namespace TanErp.Infrastructure.Persistence.Configurations;
@@ -20,7 +21,14 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
         builder.Property(x => x.AddressTh).HasColumnName("address_th").HasMaxLength(500);
         builder.Property(x => x.AddressEn).HasColumnName("address_en").HasMaxLength(500);
         builder.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(30);
+        builder.Property(x => x.BrandPrimaryColor).HasColumnName("brand_primary_color").HasMaxLength(7);
+        builder.Property(x => x.BrandLogoFileId).HasColumnName("brand_logo_file_id");
         builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+
+        builder.HasOne<UploadedFile>()
+            .WithMany()
+            .HasForeignKey(x => x.BrandLogoFileId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasMany(x => x.Branches)
             .WithOne(x => x.Organization)

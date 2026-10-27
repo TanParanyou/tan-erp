@@ -396,4 +396,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get arErrorBusy => 'A measurement is already running';
+
+  @override
+  String get photoAreaCardTitle => 'Measure area from photo + reference sheet';
+
+  @override
+  String get photoAreaCardBody =>
+      'Take a photo of the floor with a sheet of known size lying on it, tap the sheet corners and the area corners';
+
+  @override
+  String get photoAreaReferenceLabel => 'Reference sheet';
+
+  @override
+  String get photoAreaReferencePlaceholder => 'Choose a reference size';
+
+  @override
+  String get photoAreaPresetA4 => 'A4 (210 × 297 mm)';
+
+  @override
+  String get photoAreaPresetA3 => 'A3 (297 × 420 mm)';
+
+  @override
+  String get photoAreaPresetCustom => 'Custom size';
+
+  @override
+  String get photoAreaWidthLabel => 'Width (mm)';
+
+  @override
+  String get photoAreaWidthPlaceholder => 'e.g. 210';
+
+  @override
+  String get photoAreaHeightLabel => 'Height (mm)';
+
+  @override
+  String get photoAreaHeightPlaceholder => 'e.g. 297';
+
+  @override
+  String get photoAreaErrorSize => 'Enter a width and height greater than 0';
+
+  @override
+  String get photoAreaPickGallery => 'Choose from gallery';
+
+  @override
+  String get photoAreaPickCamera => 'Take a photo';
+
+  @override
+  String get photoAreaErrorPick => 'Could not open the photo. Please try again';
+
+  @override
+  String get photoAreaTitle => 'Measure from photo';
+
+  @override
+  String photoAreaStepReference(int count) {
+    return 'Tap the 4 corners of the reference sheet ($count/4)';
+  }
+
+  @override
+  String photoAreaStepArea(int count) {
+    return 'Tap the corners of the area, at least 3 ($count)';
+  }
+
+  @override
+  String get photoAreaStepAdjust => 'Drag a point to adjust it';
+
+  @override
+  String get photoAreaClear => 'Clear';
+
+  @override
+  String get photoAreaWidth => 'Width';
+
+  @override
+  String get photoAreaLength => 'Length';
+
+  @override
+  String get photoAreaVertices => 'Points';
+
+  @override
+  String photoAreaValueMm(String value) {
+    return '$value mm';
+  }
+
+  @override
+  String get photoAreaErrorReference =>
+      'The reference corners are invalid. Move them onto the four corners of the sheet';
 }

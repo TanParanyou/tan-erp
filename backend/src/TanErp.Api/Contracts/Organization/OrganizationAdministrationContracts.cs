@@ -12,6 +12,13 @@ public sealed record OrganizationProfileResponse(
         new(p.Id, p.Name, p.NameEn, p.TaxIdentifier, p.AddressTh, p.AddressEn, p.Phone, p.RowVersion);
 }
 
+public sealed record UpdateOrganizationBrandingRequest(string? PrimaryColor, Guid? LogoFileId);
+
+public sealed record OrganizationBrandingResponse(string? PrimaryColor, Guid? LogoFileId, string? LogoUrl, Guid RowVersion)
+{
+    public static OrganizationBrandingResponse From(OrganizationBranding b) => new(b.PrimaryColor, b.LogoFileId, b.LogoUrl, b.RowVersion);
+}
+
 public sealed record CreateBranchRequest(
     string Code, string Name, string? NameEn, string? TaxBranchCode, string? AddressTh, string? AddressEn, string? Phone);
 

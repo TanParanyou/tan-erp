@@ -50,6 +50,39 @@ public sealed class AdminOrganizationController : ControllerBase
         return ProfileResult(result);
     }
 
+    [HttpGet("organization/branding")]
+    [ProducesResponseType<OrganizationBrandingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetBranding(CancellationToken cancellationToken)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return Problem(auth.Error);
+
+        return BrandingResult(await _handler.GetBrandingAsync(Caller(auth.Value!), cancellationToken));
+    }
+
+    [HttpPut("organization/branding")]
+    [ProducesResponseType<OrganizationBrandingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpdateBranding([FromBody] UpdateOrganizationBrandingRequest request, CancellationToken cancellationToken)
+    {
+        var conditional = RequestContextReader.ReadConditionalAuthenticatedRequest(HttpContext);
+        if (conditional.IsFailure) return Problem(conditional.Error);
+
+        return BrandingResult(await _handler.UpdateBrandingAsync(
+            new AdminCaller(conditional.Value!.FirebaseUid, conditional.Value.MembershipId), conditional.Value.IfMatchRowVersion,
+            new OrganizationBrandingInput(request.PrimaryColor, request.LogoFileId), HttpContext.TraceIdentifier, cancellationToken));
+    }
+
+    private IActionResult BrandingResult(Result<OrganizationBranding> result)
+    {
+        if (result.IsFailure) return Problem(result.Error);
+
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Ok(OrganizationBrandingResponse.From(result.Value));
+    }
+
     private IActionResult ProfileResult(Result<OrganizationProfile> result)
     {
         if (result.IsFailure) return Problem(result.Error);

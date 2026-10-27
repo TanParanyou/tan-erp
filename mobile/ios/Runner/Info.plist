@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Unlock the app with Face ID.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take site photos and measure areas.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a photo to measure an area.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!-- Dev only (documented in mobile/README.md): HTTP to LAN IPs / .local hosts. HTTPS elsewhere is unaffected. -->

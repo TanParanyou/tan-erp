@@ -963,6 +963,12 @@
   <data name="ORGANIZATION_TAX_ID_INVALID_DETAIL" xml:space="preserve">
     <value>เลขประจำตัวผู้เสียภาษีต้องมี 13 หลักและผ่านการตรวจเลขตรวจสอบ</value>
   </data>
+  <data name="ORGANIZATION_BRAND_COLOR_INVALID_TITLE" xml:space="preserve">
+    <value>สีแบรนด์ไม่ถูกต้อง</value>
+  </data>
+  <data name="ORGANIZATION_BRAND_COLOR_INVALID_DETAIL" xml:space="preserve">
+    <value>สีแบรนด์ต้องเป็นรูปแบบ #RRGGBB ข้อความสีขาวบนสีนี้ต้องมี contrast อย่างน้อย 4.5:1 และสีนี้บนพื้นหน้าจอต้องมี contrast อย่างน้อย 3:1</value>
+  </data>
   <data name="LAST_ADMINISTRATOR_REQUIRED_TITLE" xml:space="preserve">
     <value>ต้องมีผู้ดูแลอย่างน้อยหนึ่งคน</value>
   </data>

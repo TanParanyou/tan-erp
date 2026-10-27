@@ -51,6 +51,8 @@ public class CurrentUserReader : ICurrentUserReader
                 m.Id,
                 OrgId = m.Organization!.Id,
                 OrgName = m.Organization.Name,
+                OrgBrandColor = m.Organization.BrandPrimaryColor,
+                OrgBrandLogoFileId = m.Organization.BrandLogoFileId,
                 BranchId = m.Branch != null ? (Guid?)m.Branch.Id : null,
                 BranchName = m.Branch != null ? m.Branch.Name : null,
                 RolePermissions = m.MembershipRoles
@@ -91,7 +93,11 @@ public class CurrentUserReader : ICurrentUserReader
 
                 return new MembershipContext(
                     m.Id,
-                    new OrganizationContext(m.OrgId, m.OrgName),
+                    new OrganizationContext(m.OrgId, m.OrgName,
+                        new OrganizationBrandingContext(
+                            m.OrgBrandColor,
+                            m.OrgBrandLogoFileId is { } logoId ? $"/api/v1/files/{logoId}/content" : null,
+                            m.OrgBrandLogoFileId)),
                     m.BranchId.HasValue ? new BranchContext(m.BranchId.Value, m.BranchName!) : null,
                     permissions);
             })

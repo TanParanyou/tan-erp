@@ -4455,7 +4455,42 @@
       "BRANCH_LAST_ACTIVE": "The organization must keep at least one active branch.",
       "IDEMPOTENCY_KEY_REUSED": "This repeated request differs from the original. Please try again.",
       "PERMISSION_DENIED": "You do not have permission to do this.",
-      "RESOURCE_NOT_FOUND": "The requested record was not found."
+      "RESOURCE_NOT_FOUND": "The requested record was not found.",
+      "ORGANIZATION_BRAND_COLOR_INVALID": "The brand colour does not meet the accessibility contrast requirements.",
+      "FILE_NOT_FOUND": "The logo file was not found. Upload it again."
+    },
+    "branding": {
+      "title": "Brand",
+      "subtitle": "Logo and primary brand colour shown across the web app",
+      "logo": {
+        "upload": "Upload logo",
+        "remove": "Remove logo",
+        "hint": "PNG, JPG or WebP. Shown in the page header."
+      },
+      "color": {
+        "label": "Primary colour",
+        "hint": "#RRGGBB. Leave empty to use Atelier Navy.",
+        "placeholder": "e.g. #0B3056",
+        "reset": "Reset to Atelier Navy",
+        "default": "Using the default Atelier Navy."
+      },
+      "contrast": {
+        "onText": "White text on this colour (needs 4.5:1)",
+        "onCanvas": "This colour on the page background (needs 3:1)",
+        "pass": "Pass",
+        "fail": "Fail"
+      },
+      "preview": {
+        "label": "Preview",
+        "button": "Primary button"
+      },
+      "validation": {
+        "hexFormat": "Enter the colour as #RRGGBB",
+        "contrastFailed": "This colour does not meet the accessibility contrast requirements, so it cannot be saved."
+      },
+      "save": "Save brand",
+      "saveSuccess": "Brand saved",
+      "readOnlyNotice": "You can view this data but not edit it."
     }
   },
   "roleAdmin": {

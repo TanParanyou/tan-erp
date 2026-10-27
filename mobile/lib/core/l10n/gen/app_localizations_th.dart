@@ -390,4 +390,87 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get arErrorBusy => 'กำลังวัดอยู่แล้ว';
+
+  @override
+  String get photoAreaCardTitle => 'วัดพื้นที่จากรูป + A4';
+
+  @override
+  String get photoAreaCardBody =>
+      'ถ่ายรูปพื้นที่ที่มีกระดาษขนาดมาตรฐานวางอยู่ แล้วแตะมุมกระดาษและมุมพื้นที่';
+
+  @override
+  String get photoAreaReferenceLabel => 'กระดาษอ้างอิง';
+
+  @override
+  String get photoAreaReferencePlaceholder => 'เลือกขนาดอ้างอิง';
+
+  @override
+  String get photoAreaPresetA4 => 'A4 (210 × 297 มม.)';
+
+  @override
+  String get photoAreaPresetA3 => 'A3 (297 × 420 มม.)';
+
+  @override
+  String get photoAreaPresetCustom => 'กำหนดขนาดเอง';
+
+  @override
+  String get photoAreaWidthLabel => 'กว้าง (มม.)';
+
+  @override
+  String get photoAreaWidthPlaceholder => 'เช่น 210';
+
+  @override
+  String get photoAreaHeightLabel => 'ยาว (มม.)';
+
+  @override
+  String get photoAreaHeightPlaceholder => 'เช่น 297';
+
+  @override
+  String get photoAreaErrorSize => 'กรอกความกว้างและความยาวที่มากกว่า 0';
+
+  @override
+  String get photoAreaPickGallery => 'เลือกจากคลังรูป';
+
+  @override
+  String get photoAreaPickCamera => 'ถ่ายรูป';
+
+  @override
+  String get photoAreaErrorPick => 'เปิดรูปไม่สำเร็จ กรุณาลองใหม่';
+
+  @override
+  String get photoAreaTitle => 'วัดจากรูป';
+
+  @override
+  String photoAreaStepReference(int count) {
+    return 'แตะมุมทั้ง 4 ของกระดาษอ้างอิง ($count/4)';
+  }
+
+  @override
+  String photoAreaStepArea(int count) {
+    return 'แตะมุมของพื้นที่ อย่างน้อย 3 จุด ($count)';
+  }
+
+  @override
+  String get photoAreaStepAdjust => 'ลากจุดเพื่อปรับตำแหน่ง';
+
+  @override
+  String get photoAreaClear => 'ล้าง';
+
+  @override
+  String get photoAreaWidth => 'กว้าง';
+
+  @override
+  String get photoAreaLength => 'ยาว';
+
+  @override
+  String get photoAreaVertices => 'จำนวนจุด';
+
+  @override
+  String photoAreaValueMm(String value) {
+    return '$value มม.';
+  }
+
+  @override
+  String get photoAreaErrorReference =>
+      'มุมกระดาษอ้างอิงไม่ถูกต้อง ย้ายจุดให้ตรงมุมทั้งสี่ของกระดาษ';
 }

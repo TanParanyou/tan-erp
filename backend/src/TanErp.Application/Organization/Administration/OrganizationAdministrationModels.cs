@@ -13,6 +13,10 @@ public sealed record OrganizationProfile(
 public sealed record OrganizationProfileInput(
     string Name, string? NameEn, string? TaxIdentifier, string? AddressTh, string? AddressEn, string? Phone);
 
+public sealed record OrganizationBranding(string? PrimaryColor, Guid? LogoFileId, string? LogoUrl, Guid RowVersion);
+
+public sealed record OrganizationBrandingInput(string? PrimaryColor, Guid? LogoFileId);
+
 public sealed record BranchDetail(
     Guid Id, string Code, string Name, string? NameEn, string? TaxBranchCode, string? AddressTh, string? AddressEn,
     string? Phone, bool IsActive, Guid RowVersion, DateTimeOffset CreatedAtUtc);

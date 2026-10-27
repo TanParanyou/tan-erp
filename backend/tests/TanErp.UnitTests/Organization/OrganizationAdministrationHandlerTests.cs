@@ -40,6 +40,15 @@ public class OrganizationAdministrationHandlerTests
         public Task<Result<OrganizationProfile>> UpdateProfileAsync(Guid organizationId, OrganizationProfileInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
             GetProfileAsync(organizationId, ct);
 
+        public Task<Result<OrganizationBranding>> GetBrandingAsync(Guid organizationId, CancellationToken ct)
+        {
+            Calls++;
+            return Task.FromResult(Result<OrganizationBranding>.Failure(new Error("RESOURCE_NOT_FOUND", "x")));
+        }
+
+        public Task<Result<OrganizationBranding>> UpdateBrandingAsync(Guid organizationId, OrganizationBrandingInput input, Guid ifMatch, AdminActor actor, string traceId, CancellationToken ct) =>
+            GetBrandingAsync(organizationId, ct);
+
         public string? LastKeyHash { get; private set; }
 
         private static BranchDetail Branch() => new(Guid.NewGuid(), "B1", "n", null, null, null, null, null, true, Guid.NewGuid(), DateTimeOffset.UtcNow);

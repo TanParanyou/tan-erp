@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tan_erp_field/core/auth/session_controller.dart';
 import 'package:tan_erp_field/core/l10n/l10n.dart';
 import 'package:tan_erp_field/core/l10n/locale_provider.dart';
 import 'package:tan_erp_field/core/router/app_router.dart';
@@ -12,10 +13,15 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(themeSettingsProvider);
+    final session = ref.watch(sessionProvider);
+    final brandColor = session is SessionActive
+        ? session.membership.brandColor
+        : null;
     ThemeData theme(Brightness mode) => buildTheme(
       mode: mode,
       density: settings.density,
       textScale: settings.textScale,
+      brandColor: brandColor,
     );
     return MaterialApp.router(
       onGenerateTitle: (context) => context.l10n.appTitle,

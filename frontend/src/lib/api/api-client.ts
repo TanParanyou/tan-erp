@@ -123,6 +123,8 @@ export type JobTitleResponse = components["schemas"]["JobTitleResponse"];
 export type CreateJobTitleRequest = components["schemas"]["CreateJobTitleRequest"];
 export type OrganizationProfileResponse = components["schemas"]["OrganizationProfileResponse"];
 export type UpdateOrganizationProfileRequest = components["schemas"]["UpdateOrganizationProfileRequest"];
+export type OrganizationBrandingResponse = components["schemas"]["OrganizationBrandingResponse"];
+export type UpdateOrganizationBrandingRequest = components["schemas"]["UpdateOrganizationBrandingRequest"];
 export type AdminBranchResponse = components["schemas"]["BranchResponse"];
 export type CreateAdminBranchRequest = components["schemas"]["CreateBranchRequest"];
 export type UpdateAdminBranchRequest = components["schemas"]["UpdateBranchRequest"];
@@ -1434,6 +1436,17 @@ export class ApiClient {
     options: RequestOptions
   ): Promise<OrganizationProfileResponse> {
     return this.request<OrganizationProfileResponse>("/api/v1/admin/organization", "PUT", options, payload);
+  }
+
+  async getOrganizationBranding(options: RequestOptions): Promise<OrganizationBrandingResponse> {
+    return this.request<OrganizationBrandingResponse>("/api/v1/admin/organization/branding", "GET", options);
+  }
+
+  async updateOrganizationBranding(
+    payload: UpdateOrganizationBrandingRequest,
+    options: RequestOptions
+  ): Promise<OrganizationBrandingResponse> {
+    return this.request<OrganizationBrandingResponse>("/api/v1/admin/organization/branding", "PUT", options, payload);
   }
 
   async listAdminBranches(status: "active" | "inactive" | undefined, options: RequestOptions): Promise<AdminBranchResponse[]> {
