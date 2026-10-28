@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="th" data-direction="a" data-device="mobile" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TAN Field (Flutter) — Interactive UX/UI Direction Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & DIRECTION SYSTEM (W3C DTCG / ErpTokens Mapping)
+       ========================================================================== */
+    :root {
+      --font-sans: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Studio Shell Colors (Outer Showcase Chrome) */
+      --studio-bg: #0E1726;
+      --studio-surface: #162235;
+      --studio-border: #263854;
+      --studio-text: #F0F5FA;
+      --studio-muted: #9BB0C9;
+      --studio-accent: #38BDF8;
+      --studio-oak: #D99B52;
+
+      /* Default Direction A: Atelier Navy Sharp 2.0 (design.md Section 7 & 8) */
+      --erp-canvas: #F4F6F9;
+      --erp-surface: #FFFFFF;
+      --erp-surface-subtle: #EBF1F7;
+      --erp-surface-muted: #E2EBF4;
+      --erp-border: #D1DEEC;
+      --erp-border-strong: #0B3056;
+      --erp-text-main: #0A192F;
+      --erp-text-body: #334155;
+      --erp-text-muted: #536B88;
+      --erp-text-subtle: #7E95B0;
+      --erp-action: #0B3056;
+      --erp-action-hover: #071F38;
+      --erp-action-light: #E7EFF7;
+      --erp-on-action: #FFFFFF;
+      --erp-accent-measure: #8A5A24;
+      --erp-accent-measure-bg: #FDF8F2;
+      --erp-success: #14532D;
+      --erp-success-bg: #EBF7F0;
+      --erp-success-border: #A7F3D0;
+      --erp-warning: #92400E;
+      --erp-warning-bg: #FFFBEB;
+      --erp-warning-border: #FDE68A;
+      --erp-danger: #991B1B;
+      --erp-danger-bg: #FEF2F2;
+      --erp-danger-border: #FECACA;
+      --erp-info: #1E40AF;
+      --erp-info-bg: #EFF6FF;
+      --erp-radius: 0px;
+      --erp-radius-pill: 0px;
+      --erp-border-width: 1px;
+      --erp-card-shadow: none;
+    }
+
+    /* Direction B: Field Wayfinder (Guided Instrument & Warm Stone Ground) */
+    html[data-direction="b"][data-theme="light"] {
+      --erp-canvas: #F3F1EC;
+      --erp-surface: #FFFFFF;
+      --erp-surface-subtle: #EAE6DD;
+      --erp-surface-muted: #E0DBD0;
+      --erp-border: #CFC8B8;
+      --erp-border-strong: #0B2545;
+      --erp-text-main: #0B192C;
+      --erp-text-body: #2C3E50;
+      --erp-text-muted: #596573;
+      --erp-text-subtle: #7F8C9A;
+      --erp-action: #0B2545;
+      --erp-action-hover: #061529;
+      --erp-action-light: #E6EEF8;
+      --erp-on-action: #FFFFFF;
+      --erp-accent-measure: #9A5B13;
+      --erp-accent-measure-bg: #FEF6EB;
+      --erp-radius: 0px;
+      --erp-radius-pill: 0px;
+      --erp-border-width: 1.5px;
+      --erp-card-shadow: none;
+    }
+
+    /* Direction C: Warm Atelier Craft (Softened 8px Chamfer & Tactile Depth) */
+    html[data-direction="c"][data-theme="light"] {
+      --erp-canvas: #EFF3F8;
+      --erp-surface: #FFFFFF;
+      --erp-surface-subtle: #F7F9FC;
+      --erp-surface-muted: #E5EDF5;
+      --erp-border: #D5E0EC;
+      --erp-border-strong: #164370;
+      --erp-text-main: #0F233C;
+      --erp-text-body: #33475B;
+      --erp-text-muted: #5B708B;
+      --erp-text-subtle: #8296B0;
+      --erp-action: #0E3A66;
+      --erp-action-hover: #092644;
+      --erp-action-light: #EBF3FA;
+      --erp-on-action: #FFFFFF;
+      --erp-accent-measure: #8A5A24;
+      --erp-accent-measure-bg: #FCF6EE;
+      --erp-radius: 8px;
+      --erp-radius-pill: 6px;
+      --erp-border-width: 1px;
+      --erp-card-shadow: 0 2px 6px rgba(11, 48, 86, 0.06);
+    }
+
+    /* Dark Mode Overrides for Flutter Simulator */
+    html[data-theme="dark"] {
+      --erp-canvas: #050E1A;
+      --erp-surface: #0B1728;
+      --erp-surface-subtle: #142742;
+      --erp-surface-muted: #1B3254;
+      --erp-border: #1F3D68;
+      --erp-border-strong: #38BDF8;
+      --erp-text-main: #F0F5FA;
+      --erp-text-body: #CBD5E1;
+      --erp-text-muted: #9BB0C9;
+      --erp-text-subtle: #64748B;
+      --erp-action: #2563EB;
+      --erp-action-hover: #1D4ED8;
+      --erp-action-light: #162C4E;
+      --erp-on-action: #FFFFFF;
+      --erp-accent-measure: #E09F5A;
+      --erp-accent-measure-bg: #231C14;
+      --erp-success: #4ADE80;
+      --erp-success-bg: #082F1E;
+      --erp-success-border: #166534;
+      --erp-warning: #FBBF24;
+      --erp-warning-bg: #2E1F05;
+      --erp-warning-border: #854D0E;
+      --erp-danger: #F87171;
+      --erp-danger-bg: #310E0E;
+      --erp-danger-border: #991B1B;
+      --erp-info: #60A5FA;
+      --erp-info-bg: #0F2442;
+    }
+
+    html[data-direction="c"][data-theme="dark"] {
+      --erp-radius: 8px;
+      --erp-radius-pill: 6px;
+      --erp-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    /* ==========================================================================
+       2. BASE & RESET
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    ::selection {
+      background: var(--studio-accent);
+      color: #050E1A;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--studio-bg);
+      color: var(--studio-text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+    }
+
+    /* ==========================================================================
+       3. SHOWCASE CONTROL HEADER (TOP DECK)
+       ========================================================================== */
+    .showcase-header {
+      background: var(--studio-surface);
+      border-bottom: 1px solid var(--studio-border);
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .showcase-header-inner {
+      max-width: 1640px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-title-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      background: #0B3056;
+      border: 1px solid var(--studio-accent);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      color: #FFFFFF;
+    }
+
+    .brand-title-block h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--studio-text);
+      line-height: 1.25;
+    }
+
+    .brand-title-block p {
+      font-size: 13.5px;
+      color: var(--studio-muted);
+    }
+
+    .control-bar-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .segmented-group {
+      display: inline-flex;
+      background: #09101B;
+      border: 1px solid var(--studio-border);
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .seg-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--studio-muted);
+      padding: 7px 13px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+      min-height: 36px;
+    }
+
+    .seg-btn:hover {
+      color: var(--studio-text);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .seg-btn.active {
+      background: #0B3056;
+      color: #FFFFFF;
+      border-color: var(--studio-accent);
+    }
+
+    .seg-badge {
+      font-size: 12px;
+      padding: 2px 7px;
+      background: rgba(56, 189, 248, 0.16);
+      color: var(--studio-accent);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       4. MAIN WORKSPACE LAYOUT (LEFT: DIRECTION SELECTOR & BRIEF, RIGHT: SIMULATOR)
+       ========================================================================== */
+    .showcase-main {
+      max-width: 1640px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 28px;
+      align-items: start;
+      flex: 1;
+    }
+
+    @media (max-width: 1180px) {
+      .showcase-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Column: Direction Cards & Architecture Mapping */
+    .direction-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-box {
+      background: var(--studio-surface);
+      border: 1px solid var(--studio-border);
+      padding: 18px;
+    }
+
+    .panel-box h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--studio-text);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .direction-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dir-card {
+      background: #0F192A;
+      border: 1px solid var(--studio-border);
+      padding: 14px 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 150ms ease, background-color 150ms ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dir-card:hover {
+      border-color: #4B6A96;
+      background: #132035;
+    }
+
+    .dir-card.active {
+      background: #132744;
+      border: 1px solid var(--studio-accent);
+      outline: 1px solid var(--studio-accent);
+    }
+
+    .dir-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .dir-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .dir-tag {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      background: rgba(56, 189, 248, 0.14);
+      color: var(--studio-accent);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .dir-tag.oak {
+      background: rgba(217, 155, 82, 0.16);
+      color: var(--studio-oak);
+      border-color: rgba(217, 155, 82, 0.4);
+    }
+
+    .dir-card-desc {
+      font-size: 13.5px;
+      color: var(--studio-muted);
+      line-height: 1.5;
+    }
+
+    .dir-swatches {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .swatch-chip {
+      min-height: 22px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Spec & Flutter Widget Mapping List */
+    .spec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .spec-item {
+      background: #0F192A;
+      border: 1px solid var(--studio-border);
+      padding: 12px 14px;
+      font-size: 13.5px;
+    }
+
+    .spec-item strong {
+      color: #FFFFFF;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .spec-item code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--studio-accent);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 1px 5px;
+    }
+
+    .choose-cta-btn {
+      width: 100%;
+      min-height: 48px;
+      background: var(--studio-accent);
+      color: #050E1A;
+      border: none;
+      font-weight: 700;
+      font-size: 14.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+      transition: filter 150ms ease;
+    }
+
+    .choose-cta-btn:hover {
+      filter: brightness(1.08);
+    }
+
+    .selected-feedback {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      color: #86EFAC;
+      font-size: 12.5px;
+      display: none;
+    }
+
+    .selected-feedback.show {
+      display: block;
+    }
+
+    /* ==========================================================================
+       5. RIGHT STAGE: INTERACTIVE FLUTTER DEVICE SIMULATOR
+       ========================================================================== */
+    .simulator-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .stage-toolbar {
+      width: 100%;
+      background: var(--studio-surface);
+      border: 1px solid var(--studio-border);
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .stage-screen-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .screen-pill {
+      background: #09101B;
+      border: 1px solid var(--studio-border);
+      color: var(--studio-muted);
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .screen-pill.active {
+      background: #0B3056;
+      color: #FFFFFF;
+      border-color: var(--studio-accent);
+    }
+
+    .stage-hint {
+      font-size: 12.5px;
+      color: var(--studio-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Device Frame Container */
+    .device-frame {
+      background: var(--erp-canvas);
+      color: var(--erp-text-main);
+      border: 8px solid #1E293B;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    html[data-device="mobile"] .device-frame {
+      width: 412px;
+      min-height: 844px;
+      max-width: 100%;
+    }
+
+    html[data-device="tablet"] .device-frame {
+      width: 100%;
+      max-width: 1120px;
+      min-height: 740px;
+    }
+
+    /* Simulated OS Status Bar */
+    .os-status-bar {
+      min-height: 36px;
+      background: var(--erp-surface);
+      border-bottom: 1px solid var(--erp-border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--erp-text-muted);
+      flex-shrink: 0;
+    }
+
+    .os-status-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ErpSyncBanner (design.md 8.2: แถบซิงก์บางด้านบน) */
+    .erp-sync-banner {
+      background: var(--erp-surface-subtle);
+      border-bottom: 1px solid var(--erp-border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: var(--erp-text-body);
+      flex-shrink: 0;
+    }
+
+    .erp-sync-banner.offline {
+      background: var(--erp-warning-bg);
+      color: var(--erp-warning);
+      border-bottom-color: var(--erp-warning-border);
+    }
+
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--erp-success);
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .erp-sync-banner.offline .sync-dot {
+      background: var(--erp-warning);
+    }
+
+    /* ==========================================================================
+       6. FLUTTER SHELL ARCHITECTURE (ErpNavShell: Bottom Nav vs NavigationRail)
+       ========================================================================== */
+    .flutter-shell-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    /* NavigationRail (Visible only on Tablet >= 768dp) */
+    .erp-nav-rail {
+      display: none;
+      width: 88px;
+      background: var(--erp-surface);
+      border-right: var(--erp-border-width) solid var(--erp-border);
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 6px;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    html[data-device="tablet"] .erp-nav-rail {
+      display: flex;
+    }
+
+    .rail-item {
+      width: 100%;
+      min-height: 56px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--erp-radius);
+      color: var(--erp-text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 6px;
+    }
+
+    .rail-item.active {
+      background: var(--erp-action-light);
+      color: var(--erp-action);
+      border-color: var(--erp-border-strong);
+      font-weight: 700;
+    }
+
+    /* Bottom NavigationBar (Visible on Mobile < 768dp) */
+    .erp-bottom-nav {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: var(--erp-surface);
+      border-top: var(--erp-border-width) solid var(--erp-border);
+      min-height: 60px;
+      flex-shrink: 0;
+    }
+
+    html[data-device="tablet"] .erp-bottom-nav {
+      display: none;
+    }
+
+    .bottom-nav-item {
+      background: transparent;
+      border: none;
+      color: var(--erp-text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 56px;
+      padding: 6px 4px;
+      position: relative;
+    }
+
+    .bottom-nav-item.active {
+      color: var(--erp-action);
+      font-weight: 700;
+      background: var(--erp-action-light);
+    }
+
+    .bottom-nav-item.active::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--erp-action);
+    }
+
+    /* ==========================================================================
+       7. FLUTTER SCREEN CONTENT AREA & MASTER-DETAIL ADAPTATION
+       ========================================================================== */
+    .erp-screen-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--erp-canvas);
+    }
+
+    /* ErpScreen AppBar */
+    .erp-app-bar {
+      min-height: 54px;
+      background: var(--erp-surface);
+      border-bottom: var(--erp-border-width) solid var(--erp-border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    html[data-direction="b"] .erp-app-bar {
+      background: var(--erp-action);
+      color: var(--erp-on-action);
+      border-bottom-color: var(--erp-action);
+    }
+
+    .app-bar-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-bar-title {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .app-bar-subtitle {
+      font-size: 12px;
+      color: var(--erp-text-muted);
+    }
+
+    html[data-direction="b"] .app-bar-subtitle {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .icon-btn-48 {
+      width: 44px;
+      height: 44px;
+      background: var(--erp-surface-subtle);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      color: var(--erp-text-main);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    html[data-direction="b"] .icon-btn-48 {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #FFFFFF;
+    }
+
+    /* Direction B Wayfinding Stage Strip */
+    .wayfinding-band {
+      display: none;
+      background: #FEF6EB;
+      color: #7C4408;
+      border-bottom: 1.5px solid #E5B97B;
+      padding: 8px 16px;
+      font-size: 12.5px;
+      font-weight: 700;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    html[data-theme="dark"] .wayfinding-band {
+      background: #2A1D0D;
+      color: #FCD34D;
+      border-bottom-color: #78350F;
+    }
+
+    html[data-direction="b"] .wayfinding-band {
+      display: flex;
+    }
+
+    /* Screen Container Views */
+    .screen-view {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .screen-view.active {
+      display: flex;
+    }
+
+    .screen-scroll-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Tablet Split Master-Detail Grid inside Screen View */
+    .tablet-split-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .tablet-side-inspector {
+      display: none;
+    }
+
+    html[data-device="tablet"] .tablet-split-container {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+    }
+
+    html[data-device="tablet"] .tablet-side-inspector {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      background: var(--erp-surface);
+      border-left: var(--erp-border-width) solid var(--erp-border);
+      overflow-y: auto;
+    }
+
+    /* ==========================================================================
+       8. CENTRAL FLUTTER UI WIDGETS (ErpCard, ErpButton, ErpMeasureDisplay, etc.)
+       ========================================================================== */
+    .erp-card {
+      background: var(--erp-surface);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      box-shadow: var(--erp-card-shadow);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 150ms ease;
+    }
+
+    .erp-card.selected {
+      border-color: var(--erp-action);
+      background: var(--erp-action-light);
+    }
+
+    .erp-status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--erp-radius-pill);
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .erp-status-badge.warning {
+      background: var(--erp-warning-bg);
+      color: var(--erp-warning);
+      border-color: var(--erp-warning-border);
+    }
+
+    .erp-status-badge.success {
+      background: var(--erp-success-bg);
+      color: var(--erp-success);
+      border-color: var(--erp-success-border);
+    }
+
+    .erp-status-badge.info {
+      background: var(--erp-info-bg);
+      color: var(--erp-info);
+      border-color: var(--erp-border);
+    }
+
+    /* ErpMeasureDisplay (44sp tabular figures + #8A5A24 Oak Dimension Line) */
+    .erp-measure-hero {
+      background: var(--erp-accent-measure-bg);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .erp-measure-hero:hover {
+      border-color: var(--erp-accent-measure);
+    }
+
+    .erp-measure-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--erp-text-muted);
+    }
+
+    .erp-measure-value-wrap {
+      border-bottom: 1px solid var(--erp-accent-measure);
+      box-shadow: 0 1px 0 var(--erp-accent-measure);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .erp-measure-44sp {
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1.08;
+      color: var(--erp-text-main);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .erp-measure-unit {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--erp-accent-measure);
+    }
+
+    .erp-measure-dimension-caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--erp-accent-measure);
+      font-weight: 600;
+      padding-top: 2px;
+    }
+
+    /* Quick Method Bar (design.md 8.2: ปุ่มวัดด่วนในแถววิธีวัด) */
+    .measure-method-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .method-btn {
+      min-height: 48px;
+      background: var(--erp-surface);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      color: var(--erp-text-main);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      cursor: pointer;
+      padding: 6px 4px;
+    }
+
+    .method-btn.active {
+      border: 1px solid var(--erp-accent-measure);
+      outline: 1px solid var(--erp-accent-measure);
+      background: var(--erp-accent-measure-bg);
+      color: var(--erp-accent-measure);
+      font-weight: 700;
+    }
+
+    /* Room Selector Strip */
+    .room-pills-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .room-pill-btn {
+      min-height: 44px;
+      padding: 8px 14px;
+      background: var(--erp-surface);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      color: var(--erp-text-body);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .room-pill-btn.active {
+      background: var(--erp-action);
+      color: var(--erp-on-action);
+      border-color: var(--erp-action);
+    }
+
+    /* ErpBottomActionBar (design.md 8.2: 1 จอ 1 งาน ปุ่มหลักสูง 52dp ติดล่างจอ) */
+    .erp-bottom-action-bar {
+      background: var(--erp-surface);
+      border-top: var(--erp-border-width) solid var(--erp-border);
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .erp-btn-primary {
+      flex: 1;
+      min-height: 52px;
+      background: var(--erp-action);
+      color: var(--erp-on-action);
+      border: var(--erp-border-width) solid var(--erp-action);
+      border-radius: var(--erp-radius);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .erp-btn-primary:hover {
+      background: var(--erp-action-hover);
+    }
+
+    .erp-btn-outline {
+      min-height: 52px;
+      padding: 0 16px;
+      background: var(--erp-surface);
+      color: var(--erp-text-main);
+      border: var(--erp-border-width) solid var(--erp-border-strong);
+      border-radius: var(--erp-radius);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* Interactive 56dp Custom Number Pad Bottom Sheet */
+    .numpad-sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 14, 26, 0.58);
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      z-index: 40;
+    }
+
+    .numpad-sheet-overlay.open {
+      display: flex;
+    }
+
+    .numpad-sheet {
+      background: var(--erp-surface);
+      border-top: 1px solid var(--erp-border-strong);
+      border-top-left-radius: var(--erp-radius);
+      border-top-right-radius: var(--erp-radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .numpad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .numpad-grid-bottom {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .numpad-key {
+      height: 56px;
+      background: var(--erp-surface);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--erp-text-main);
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .numpad-key:active {
+      background: var(--erp-action-light);
+      border-color: var(--erp-action);
+    }
+
+    .numpad-key.muted {
+      background: var(--erp-surface-subtle);
+      font-size: 15px;
+    }
+
+    /* Search & Filter Row in Today Screen */
+    .erp-search-input {
+      width: 100%;
+      height: 48px;
+      background: var(--erp-surface);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      padding: 0 14px;
+      font-size: 14px;
+      color: var(--erp-text-main);
+    }
+
+    .filter-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .filter-chip-btn {
+      min-height: 44px;
+      background: var(--erp-surface);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      color: var(--erp-text-body);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .filter-chip-btn.active {
+      background: var(--erp-action);
+      color: var(--erp-on-action);
+      border-color: var(--erp-action);
+    }
+
+    /* Photo Evidence Strip */
+    .photo-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .photo-slot {
+      min-height: 72px;
+      background: var(--erp-surface-subtle);
+      border: var(--erp-border-width) solid var(--erp-border);
+      border-radius: var(--erp-radius);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--erp-text-muted);
+    }
+
+    .photo-slot.add-slot {
+      border-style: dashed;
+      align-items: center;
+      justify-content: center;
+      color: var(--erp-action);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Update Banner Note */
+    .impeccable-notice {
+      font-size: 12.5px;
+      color: var(--studio-muted);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--studio-border);
+      padding: 10px 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       TOP SHOWCASE HEADER: SWITCH DIRECTIONS, DEVICE SIZE & THEME
+       ======================================================================== -->
+  <header class="showcase-header">
+    <div class="showcase-header-inner">
+      <div class="brand-title-block">
+        <div class="brand-mark">TAN</div>
+        <div>
+          <h1>TAN Field (Flutter) — UX/UI Direction Showcase</h1>
+          <p>เปรียบเทียบ 3 แนวทางดีไซน์สำหรับแอปภาคสนาม (Mobile มือเดียว &amp; Tablet Master-Detail)</p>
+        </div>
+      </div>
+
+      <div class="control-bar-group">
+        <!-- Direction Switcher -->
+        <div class="segmented-group" role="group" aria-label="เลือกแนวทางดีไซน์">
+          <button type="button" class="seg-btn active" onclick="setDirection('a')" id="btn-dir-a">
+            <span>A: Atelier Sharp 2.0</span>
+            <span class="seg-badge">ต่อยอดมาตรฐานเดิม</span>
+          </button>
+          <button type="button" class="seg-btn" onclick="setDirection('b')" id="btn-dir-b">
+            <span>B: Field Wayfinder</span>
+            <span class="seg-badge">เน้นนำทางไว/กลางแจ้ง</span>
+          </button>
+          <button type="button" class="seg-btn" onclick="setDirection('c')" id="btn-dir-c">
+            <span>C: Warm Tactile 8px</span>
+            <span class="seg-badge">ลดความแข็งตึง</span>
+          </button>
+        </div>
+
+        <!-- Device Form Factor Switcher -->
+        <div class="segmented-group" role="group" aria-label="ขนาดหน้าจออุปกรณ์">
+          <button type="button" class="seg-btn active" onclick="setDevice('mobile')" id="btn-dev-mobile">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="0"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+            <span>มือถือ (390dp มือเดียว)</span>
+          </button>
+          <button type="button" class="seg-btn" onclick="setDevice('tablet')" id="btn-dev-tablet">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="0"/><line x1="8" y1="4" x2="8" y2="20"/></svg>
+            <span>แท็บเล็ต (≥768dp Rail + Split)</span>
+          </button>
+        </div>
+
+        <!-- Light / Dark Theme Switcher -->
+        <div class="segmented-group" role="group" aria-label="โหมดสี">
+          <button type="button" class="seg-btn active" onclick="setTheme('light')" id="btn-theme-light">สว่าง (Light)</button>
+          <button type="button" class="seg-btn" onclick="setTheme('dark')" id="btn-theme-dark">มืด (Dark)</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN WORKSPACE: LEFT DECISION BRIEF + RIGHT LIVE FLUTTER SIMULATOR
+       ======================================================================== -->
+  <main class="showcase-main">
+
+    <!-- LEFT COLUMN: 3 DIRECTIONS & FLUTTER ARCHITECTURE MAPPING -->
+    <aside class="direction-sidebar">
+      <section class="panel-box">
+        <h2>
+          <span>เลือกเปรียบเทียบ 3 ทิศทางดีไซน์</span>
+          <span style="font-size: 12px; color: var(--studio-accent); font-weight: 600;">คลิกการ์ดเพื่อสลับดูผลสด</span>
+        </h2>
+
+        <div class="direction-cards">
+          <!-- Card A -->
+          <button type="button" class="dir-card active" id="card-dir-a" onclick="setDirection('a')">
+            <div class="dir-card-top">
+              <span class="dir-card-title">A. Atelier Architectural Navy Sharp 2.0</span>
+              <span class="dir-tag">Impeccable’s Pick</span>
+            </div>
+            <p class="dir-card-desc">
+              รักษาเอกลักษณ์มุมฉาก 0px และสีกรมท่า <code>#0B3056</code> ตาม <code>design.md</code> 100% แต่จัดระเบียบความสำคัญใหม่: แยกแถบห้องให้สลับด้วยนิ้วโป้งเดียว ยกตัวเลขวัดขนาด <code>44sp</code> พร้อมเส้นบอกขนาดสีไม้โอ๊ก <code>#8A5A24</code> ให้เด่นที่สุดในหน้าจอ
+            </p>
+            <div class="dir-swatches">
+              <span class="swatch-chip" style="background:#0B3056;color:#FFF">#0B3056</span>
+              <span class="swatch-chip" style="background:#8A5A24;color:#FFF">#8A5A24 Oak</span>
+              <span class="swatch-chip" style="background:#F4F6F9;color:#0A192F">0px Sharp</span>
+            </div>
+          </button>
+
+          <!-- Card B -->
+          <button type="button" class="dir-card" id="card-dir-b" onclick="setDirection('b')">
+            <div class="dir-card-top">
+              <span class="dir-card-title">B. Field Wayfinder &amp; Stage Folio</span>
+              <span class="dir-tag oak">Assigned Roll · กลางแจ้งชัดสุด</span>
+            </div>
+            <p class="dir-card-desc">
+              ออกแบบเพื่อคนทำงานหน้างานในคอนโด/ไซต์งานฝุ่นเยอะ ใช้พื้นสีหินปูนอุ่นตัดแสงสะท้อน (<code>#F3F1EC</code>) พร้อมแถบนำทางสีเหลืองอำพันด้านบน บอกชัดเจนว่า “อยู่ขั้นตอนไหน เหลืออีกกี่จุด” กดง่ายไม่ต้องเพ่งเส้นตารางถี่ๆ
+            </p>
+            <div class="dir-swatches">
+              <span class="swatch-chip" style="background:#0B2545;color:#FFF">#0B2545</span>
+              <span class="swatch-chip" style="background:#FEF6EB;color:#7C4408">Wayfinding Band</span>
+              <span class="swatch-chip" style="background:#F3F1EC;color:#0B192C">Warm Stone</span>
+            </div>
+          </button>
+
+          <!-- Card C -->
+          <button type="button" class="dir-card" id="card-dir-c" onclick="setDirection('c')">
+            <div class="dir-card-top">
+              <span class="dir-card-title">C. Warm Atelier Craft (Softened 8px)</span>
+              <span class="dir-tag">ลดความตึงเครียดสายตา</span>
+            </div>
+            <p class="dir-card-desc">
+              ปรับลดความคมแข็งของมุมฉาก 0px เป็นมุมลบเหลี่ยม <code>radius: 8px</code> ผ่าน <code>ErpTokensScale.radius</code> จุดเดียว เพิ่มมิติเงาบางๆ ช่วยแยกการ์ดงานออกจากพื้นหลัง <code>#EFF3F8</code> ให้ดูเป็นมิตร น่าใช้งานเหมือนแอปมือถือสมัยใหม่
+            </p>
+            <div class="dir-swatches">
+              <span class="swatch-chip" style="background:#0E3A66;color:#FFF">#0E3A66</span>
+              <span class="swatch-chip" style="background:#8A5A24;color:#FFF">#8A5A24 Oak</span>
+              <span class="swatch-chip" style="background:#FFFFFF;color:#0F233C">Radius 8dp</span>
+            </div>
+          </button>
+        </div>
+      </section>
+
+      <!-- Dynamic Design Brief & Flutter Component Mapping -->
+      <section class="panel-box">
+        <h2>
+          <span>สรุปแนวทาง &amp; การเชื่อมเข้าโค้ด Flutter</span>
+          <span id="active-dir-code" style="font-family: var(--font-mono); font-size: 12px; color: var(--studio-oak);">OPTION A</span>
+        </h2>
+
+        <div class="spec-list" id="spec-list-content">
+          <div class="spec-item">
+            <strong>1. โครงสร้าง Navigation (มือถือ vs แท็บเล็ต)</strong>
+            ใช้ <code>ErpNavShell</code> แสดง Bottom Navigation 5 เมนูบนมือถือ และสลับเป็น <code>NavigationRail</code> + Master-Detail อัตโนมัติเมื่อจอ <code>&ge; 768dp</code>
+          </div>
+          <div class="spec-item">
+            <strong>2. จุดเด่นการวัดระยะ (44sp Focal Measure)</strong>
+            ปรับปรุง <code>ErpMeasureDisplay</code> ให้แสดงค่าวัดหลัก <code>44sp</code> ตัวเลข Tabular ขีดเส้นใต้สีไม้โอ๊ก <code>t.accentMeasure</code> แตะปุ๊บเปิด <code>ErpNumberPadSheet</code> (ปุ่มสูง 56dp) ทันที
+          </div>
+          <div class="spec-item">
+            <strong>3. กฎ 1 จอ 1 งานหลัก (Thumb-Zone Ergonomics)</strong>
+            ตรึง <code>ErpBottomActionBar</code> สูง <code>52dp</code> ไว้ล่างสุดในระยะนิ้วโป้ง พร้อมสถานะล็อกปุ่มกันกดซ้ำ (Double-Submit Protection)
+          </div>
+        </div>
+
+        <button type="button" class="choose-cta-btn" onclick="confirmSelection()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="choose-btn-label">เลือกแนวทาง A (Atelier Sharp 2.0) เป็น Design Brief</span>
+        </button>
+
+        <div class="selected-feedback" id="selected-feedback-box"></div>
+      </section>
+
+      <div class="impeccable-notice">
+        A newer Impeccable (v4.8.0) is available. Update now? It runs <code>npx impeccable update</code>.
+      </div>
+    </aside>
+
+    <!-- RIGHT COLUMN: LIVE INTERACTIVE FLUTTER DEVICE SIMULATOR -->
+    <section class="simulator-stage">
+      <div class="stage-toolbar">
+        <div class="stage-screen-tabs" role="tablist" aria-label="เลือกหน้าจอ Flutter ที่ต้องการทดสอบ">
+          <button type="button" class="screen-pill active" id="pill-survey" onclick="setScreen('survey')">
+            1. หน้าสำรวจและวัดพื้นที่ (Survey &amp; 44sp Measure)
+          </button>
+          <button type="button" class="screen-pill" id="pill-today" onclick="setScreen('today')">
+            2. หน้างานวันนี้ (Today's Queue)
+          </button>
+          <button type="button" class="screen-pill" id="pill-estimate" onclick="setScreen('estimate')">
+            3. หน้าประเมินราคาด่วน &amp; BOQ (Quick Estimate)
+          </button>
+        </div>
+
+        <div class="stage-hint">
+          <span>ลองคลิกที่ตัวเลข <strong>44sp</strong> เพื่อเปิดแป้นพิมพ์ 56dp หรือสลับห้องได้จริง</span>
+        </div>
+      </div>
+
+      <!-- FLUTTER SIMULATED VIEWPORT -->
+      <div class="device-frame" id="flutter-device">
+        <!-- Simulated iOS/Android Status Bar -->
+        <div class="os-status-bar">
+          <span class="tabular">09:42</span>
+          <span>TAN FIELD · สาขาสำนักงานใหญ่ (HQ)</span>
+          <div class="os-status-right">
+            <button type="button" onclick="toggleOffline()" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:700;color:var(--erp-action);text-decoration:underline;">
+              สลับสถานะเน็ต
+            </button>
+            <span class="tabular">5G · 94%</span>
+          </div>
+        </div>
+
+        <!-- ErpSyncBanner -->
+        <div class="erp-sync-banner" id="sync-banner">
+          <div>
+            <span class="sync-dot"></span>
+            <span id="sync-banner-text">ซิงก์ข้อมูลล่าสุดเมื่อ 1 นาทีที่แล้ว · พร้อมทำงานออฟไลน์ (Drift SQLite)</span>
+          </div>
+          <span class="tabular" style="font-weight:700;">คิวส่ง 0</span>
+        </div>
+
+        <!-- ErpNavShell Body -->
+        <div class="flutter-shell-body">
+
+          <!-- Tablet NavigationRail (>= 768dp) -->
+          <nav class="erp-nav-rail" aria-label="เมนูหลักแท็บเล็ต">
+            <button type="button" class="rail-item" id="rail-today" onclick="setScreen('today')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>งานวันนี้</span>
+            </button>
+            <button type="button" class="rail-item active" id="rail-survey" onclick="setScreen('survey')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12h20"/><path d="M6 8v8"/><path d="M12 6v12"/><path d="M18 8v8"/></svg>
+              <span>สำรวจ</span>
+            </button>
+            <button type="button" class="rail-item" id="rail-estimate" onclick="setScreen('estimate')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+              <span>ประเมินราคา</span>
+            </button>
+            <button type="button" class="rail-item" onclick="openNumpad()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>แป้นวัดไว</span>
+            </button>
+          </nav>
+
+          <!-- Main Screen Viewport -->
+          <div class="erp-screen-viewport">
+
+            <!-- ==============================================================
+                 SCREEN 1: SURVEY & 44sp MEASUREMENT WORKSPACE (DEFAULT)
+                 ============================================================== -->
+            <div class="screen-view active" id="view-survey">
+              <div class="erp-app-bar">
+                <div class="app-bar-title-wrap">
+                  <div class="app-bar-title">SV-2026-0108 · คอนโด The Residences 38</div>
+                  <div class="app-bar-subtitle">คุณกิตติพงศ์ วัฒนากุล · ชั้น 24 ห้อง 24B (งานบิวต์อิน + ผ้าม่าน)</div>
+                </div>
+                <span class="erp-status-badge warning">กำลังสำรวจ</span>
+              </div>
+
+              <!-- Direction B Wayfinding Banner -->
+              <div class="wayfinding-band">
+                <span>ขั้นตอนที่ 2/3: วัดขนาดพื้นที่รายห้อง (ครบแล้ว 2 จาก 3 ห้อง)</span>
+                <span class="tabular">ถัดไป: ยืนยันส่งประเมินราคา</span>
+              </div>
+
+              <div class="tablet-split-container">
+                <div class="screen-scroll-body">
+
+                  <!-- Room Selector Strip (Thumb-friendly) -->
+                  <div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                      <span style="font-size:13px;font-weight:700;color:var(--erp-text-muted);">เลือกพื้นที่สำรวจ (แตะสลับห้องได้ทันที)</span>
+                      <button type="button" onclick="addRoomDemo()" style="background:none;border:none;color:var(--erp-action);font-size:13px;font-weight:700;cursor:pointer;">+ เพิ่มพื้นที่</button>
+                    </div>
+                    <div class="room-pills-row" id="room-pills">
+                      <button type="button" class="room-pill-btn active" onclick="selectRoom(0)">
+                        <span>A-01 ห้องนั่งเล่น (ผนังทีวี)</span>
+                        <span class="tabular" style="opacity:0.8">14.40 ตร.ม.</span>
+                      </button>
+                      <button type="button" class="room-pill-btn" onclick="selectRoom(1)">
+                        <span>A-02 ห้องนอนใหญ่ (ตู้เสื้อผ้า)</span>
+                        <span class="tabular" style="opacity:0.8">8.64 ตร.ม.</span>
+                      </button>
+                      <button type="button" class="room-pill-btn" onclick="selectRoom(2)">
+                        <span>A-03 โถงครัวบิวต์อิน</span>
+                        <span class="tabular" style="opacity:0.8">6.20 ตร.ม.</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- HERO 44sp MEASUREMENT DISPLAY (design.md 8.2: ตัวเลขค่าวัดเด่นที่สุด 44sp + เส้นไม้โอ๊ก) -->
+                  <div class="erp-measure-hero" onclick="openNumpad()" role="button" tabindex="0" aria-label="แตะเพื่อแก้ไขค่าวัด">
+                    <div class="erp-measure-top-row">
+                      <span id="active-room-label">A-01 ห้องนั่งเล่น · พื้นที่ผนังกรุบิวต์อิน</span>
+                      <span id="active-method-badge" style="color:var(--erp-accent-measure);font-weight:700;">วัดด้วยเลเซอร์ Bluetooth</span>
+                    </div>
+                    <div class="erp-measure-value-wrap">
+                      <span class="erp-measure-44sp tabular" id="hero-measure-val">14.40</span>
+                      <span class="erp-measure-unit" id="hero-measure-unit">ตร.ม. (sqm)</span>
+                    </div>
+                    <div class="erp-measure-dimension-caption">
+                      <span class="tabular" id="hero-sub-dims">กว้าง 4.50 ม. &times; สูง 3.20 ม. (เพดานดรอปฝ้า)</span>
+                      <span>แตะตัวเลขเพื่อเปิดแป้น 56dp</span>
+                    </div>
+                  </div>
+
+                  <!-- Quick Capture Method Selector (48dp targets) -->
+                  <div>
+                    <div style="font-size:12.5px;font-weight:700;color:var(--erp-text-muted);margin-bottom:6px;">
+                      วิธีวัดระยะด่วน (แตะสลับเครื่องมือวัด)
+                    </div>
+                    <div class="measure-method-grid">
+                      <button type="button" class="method-btn" id="m-pad" onclick="selectMethod('pad', 'แป้นตัวเลข 56dp', true)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/></svg>
+                        <span>แป้นตัวเลข</span>
+                      </button>
+                      <button type="button" class="method-btn active" id="m-laser" onclick="selectMethod('laser', 'วัดด้วยเลเซอร์ Bluetooth', false)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+                        <span>เลเซอร์ BT</span>
+                      </button>
+                      <button type="button" class="method-btn" id="m-photo" onclick="selectMethod('photo', 'คำนวณพื้นที่จากรูปถ่าย A4', false)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <span>วัดจากรูป</span>
+                      </button>
+                      <button type="button" class="method-btn" id="m-ar" onclick="selectMethod('ar', 'สแกนพื้นที่ด้วย AR / LiDAR', false)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        <span>สแกน AR</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Breakdown Dimensions List (Max 3 lines per item per design.md 8.2) -->
+                  <div class="erp-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <strong style="font-size:14px;">รายการค่าวัดย่อยของห้องนี้ (3 จุด)</strong>
+                      <button type="button" onclick="openNumpad()" style="background:none;border:none;color:var(--erp-action);font-size:13px;font-weight:700;cursor:pointer;">+ เพิ่มค่าวัด</button>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--erp-border);">
+                      <div>
+                        <div style="font-size:14px;font-weight:600;">ความกว้างผนังหลังโซฟา</div>
+                        <div style="font-size:12px;color:var(--erp-text-muted);">ติดปลั๊กไฟเดิม 2 จุด · ต้องเว้นช่องแอร์</div>
+                      </div>
+                      <span class="tabular" style="font-size:16px;font-weight:700;color:var(--erp-text-main);">4.50 ม.</span>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--erp-border);">
+                      <div>
+                        <div style="font-size:14px;font-weight:600;">ความสูงพื้นถึงฝ้าหลุม</div>
+                        <div style="font-size:12px;color:var(--erp-text-muted);">วัดด้วย Leica Disto D2</div>
+                      </div>
+                      <span class="tabular" style="font-size:16px;font-weight:700;color:var(--erp-text-main);">3.20 ม.</span>
+                    </div>
+                  </div>
+
+                  <!-- Photo Evidence & Progressive Disclosure -->
+                  <div class="erp-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <strong style="font-size:14px;">รูปถ่ายหน้างานและข้อจำกัดพื้นที่</strong>
+                      <span class="tabular" style="font-size:12px;color:var(--erp-text-muted);">แนบแล้ว 2 รูป (Deferred Upload)</span>
+                    </div>
+                    <div class="photo-strip">
+                      <div class="photo-slot">
+                        <strong style="color:var(--erp-text-main);">IMG_0142.jpg</strong>
+                        <span>มุมผนังทีวี · 09:35</span>
+                      </div>
+                      <div class="photo-slot">
+                        <strong style="color:var(--erp-text-main);">IMG_0143.jpg</strong>
+                        <span>ตำแหน่งตู้ไฟ · 09:38</span>
+                      </div>
+                      <button type="button" class="photo-slot add-slot" onclick="alert('จำลองการเปิดกล้องถ่ายภาพหน้างาน พร้อมประทับเวลาและพิกัดลงคิว Offline')">
+                        + ถ่ายรูปเพิ่ม
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Tablet Master-Detail Right Inspector Pane (Visible on Tablet >= 768dp) -->
+                <aside class="tablet-side-inspector" aria-label="แผงตรวจสอบสเปกและราคาเบื้องต้นบนแท็บเล็ต">
+                  <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--erp-border);padding-bottom:10px;">
+                    <div>
+                      <strong style="font-size:14.5px;display:block;">แผงสรุปสเปก &amp; ประเมินราคาสด</strong>
+                      <span style="font-size:12px;color:var(--erp-text-muted);">Tablet Master-Detail Inspector</span>
+                    </div>
+                    <span class="erp-status-badge success">▲ GP 36.4%</span>
+                  </div>
+
+                  <div class="erp-card">
+                    <div style="font-size:12px;color:var(--erp-text-muted);font-weight:600;">ยอดประเมินเบื้องต้นของห้องที่เลือก</div>
+                    <div class="tabular" style="font-size:24px;font-weight:700;color:var(--erp-action);">216,000 บาท</div>
+                    <div style="font-size:12px;color:var(--erp-text-body);">
+                      คำนวณจากพื้นที่วัดจริง <strong class="tabular">14.40 ตร.ม.</strong> &times; แม่แบบบิวต์อินกรุผนัง HMR 18mm
+                    </div>
+                  </div>
+
+                  <div class="erp-card">
+                    <strong style="font-size:13.5px;">รายการวัสดุหลัก (BOM Preview)</strong>
+                    <div style="display:flex;justify-content:space-between;font-size:12.5px;padding-top:6px;border-top:1px solid var(--erp-border);">
+                      <span>ไม้อัด HMR 18mm กันชื้น (เกรด A)</span>
+                      <span class="tabular" style="font-weight:700;">6 แผ่น</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:12.5px;padding-top:6px;border-top:1px solid var(--erp-border);">
+                      <span>ลามิเนต Formica Oak ลายไม้แนวตั้ง</span>
+                      <span class="tabular" style="font-weight:700;">6 แผ่น</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:12.5px;padding-top:6px;border-top:1px solid var(--erp-border);">
+                      <span>รางลิ้นชัก Blum Tandembox Soft-close</span>
+                      <span class="tabular" style="font-weight:700;">3 ชุด</span>
+                    </div>
+                  </div>
+
+                  <div class="erp-card">
+                    <strong style="font-size:13.5px;">Checklist ความพร้อมก่อนส่งทำราคา</strong>
+                    <div style="font-size:12.5px;color:var(--erp-success);font-weight:600;">✓ วัดขนาดกว้าง × สูง ครบทุกด้านแล้ว</div>
+                    <div style="font-size:12.5px;color:var(--erp-success);font-weight:600;">✓ แนบรูปถ่ายจุดปลั๊กไฟและแอร์แล้ว (2 รูป)</div>
+                    <div style="font-size:12.5px;color:var(--erp-text-muted);">• พร้อมกด Mark Ready เพื่อล็อก Snapshot Hash</div>
+                  </div>
+                </aside>
+              </div>
+
+              <!-- Sticky 52dp Thumb-Zone Primary Action Bar -->
+              <div class="erp-bottom-action-bar">
+                <button type="button" class="erp-btn-outline" onclick="setScreen('estimate')">
+                  ดูราคาเบื้องต้น
+                </button>
+                <button type="button" class="erp-btn-primary" id="btn-save-survey" onclick="triggerSaveSurvey()">
+                  บันทึกผลสำรวจลงเครื่อง
+                </button>
+              </div>
+            </div>
+
+            <!-- ==============================================================
+                 SCREEN 2: TODAY'S FIELD QUEUE (TodayPage)
+                 ============================================================== -->
+            <div class="screen-view" id="view-today">
+              <div class="erp-app-bar">
+                <div class="app-bar-title-wrap">
+                  <div class="app-bar-title">งานสำรวจวันนี้ (พุธ 28 ต.ค.)</div>
+                  <div class="app-bar-subtitle">ได้รับมอบหมาย 3 โครงการ · เสร็จแล้ว 1 โครงการ</div>
+                </div>
+                <button type="button" class="icon-btn-48" aria-label="รีเฟรชรายการ" onclick="triggerSaveSurvey()">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+              </div>
+
+              <div class="wayfinding-band">
+                <span>คิวถัดไป: นัดเวลา 10:30 น. ที่ คอนโด The Residences 38 (สุขุมวิท)</span>
+                <span>เดินทาง 15 นาที</span>
+              </div>
+
+              <div class="screen-scroll-body">
+                <input type="search" class="erp-search-input" placeholder="ค้นหารหัสโอกาสขาย ชื่อลูกค้า หรือสถานที่..." />
+
+                <div class="filter-row-3">
+                  <button type="button" class="filter-chip-btn active">ทั้งหมด (3)</button>
+                  <button type="button" class="filter-chip-btn">กำลังสำรวจ (2)</button>
+                  <button type="button" class="filter-chip-btn">ผ่านคัดกรอง (1)</button>
+                </div>
+
+                <!-- Card 1 (3 concise lines per design.md 8.2) -->
+                <div class="erp-card selected">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <strong style="font-size:15px;">OPP-2026-0142 · คอนโด The Residences 38</strong>
+                    <span class="erp-status-badge warning">กำลังสำรวจ</span>
+                  </div>
+                  <div style="font-size:13.5px;color:var(--erp-text-muted);">
+                    คุณกิตติพงศ์ วัฒนากุล · อาคาร A ชั้น 24 ห้อง 24B
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                    <span class="tabular" style="font-size:12.5px;color:var(--erp-accent-measure);font-weight:700;">นัดสำรวจ 10:30 น. · วัดแล้ว 2/3 ห้อง</span>
+                    <button type="button" class="erp-btn-outline" style="min-height:40px;padding:0 14px;" onclick="setScreen('survey')">
+                      เปิดใบสำรวจ
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="erp-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <strong style="font-size:15px;">OPP-2026-0149 · บ้านเดี่ยว นันทวัน พระราม 9</strong>
+                    <span class="erp-status-badge info">รอนัดเข้าวัด</span>
+                  </div>
+                  <div style="font-size:13.5px;color:var(--erp-text-muted);">
+                    บจก. เอเพ็กซ์ ดีไซน์ สตูดิโอ · แปลงมุม ซอย 4
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                    <span class="tabular" style="font-size:12.5px;color:var(--erp-text-muted);">นัดสำรวจ 14:00 น. · งานครัวและตู้เสื้อผ้า</span>
+                    <button type="button" class="erp-btn-outline" style="min-height:40px;padding:0 14px;" onclick="setScreen('survey')">
+                      เริ่มสำรวจ
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="erp-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <strong style="font-size:15px;">OPP-2026-0135 · เพนต์เฮาส์ ริเวอร์ไซด์ เจริญนคร</strong>
+                    <span class="erp-status-badge success">พร้อมทำราคา</span>
+                  </div>
+                  <div style="font-size:13.5px;color:var(--erp-text-muted);">
+                    คุณพิมพ์ชนก อัศวเมธี · ชั้น 41 (Snapshot Hash ยืนยันแล้ว)
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                    <span class="tabular" style="font-size:12.5px;color:var(--erp-success);font-weight:600;">ส่งเข้า Official Estimate แล้ว</span>
+                    <button type="button" class="erp-btn-outline" style="min-height:40px;padding:0 14px;" onclick="setScreen('estimate')">
+                      ดูสรุปงบ
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="erp-bottom-action-bar">
+                <button type="button" class="erp-btn-primary" onclick="setScreen('survey')">
+                  เปิดงานสำรวจปัจจุบัน (OPP-2026-0142)
+                </button>
+              </div>
+            </div>
+
+            <!-- ==============================================================
+                 SCREEN 3: QUICK ESTIMATE & BOQ SUMMARY
+                 ============================================================== -->
+            <div class="screen-view" id="view-estimate">
+              <div class="erp-app-bar">
+                <div class="app-bar-title-wrap">
+                  <div class="app-bar-title">ประเมินราคาเบื้องต้น (Quick Estimate)</div>
+                  <div class="app-bar-subtitle">คำนวณจากพื้นที่สำรวจจริง 29.24 ตร.ม. · แม่แบบราคา REV.04</div>
+                </div>
+                <span class="erp-status-badge info">ช่วงราคาหน้างาน</span>
+              </div>
+
+              <div class="wayfinding-band">
+                <span>ตรวจสอบช่วงราคามาตรฐานก่อนแชร์หน้าจอให้ลูกค้าดู (ไม่เปิดเผยต้นทุนภายใน)</span>
+                <span>GP เป้าหมาย &ge; 30%</span>
+              </div>
+
+              <div class="screen-scroll-body">
+                <!-- Hero Price Range Display -->
+                <div class="erp-measure-hero" style="cursor:default;">
+                  <div class="erp-measure-top-row">
+                    <span>ช่วงราคาประเมินเบื้องต้นรวม VAT 7% (ปัดเศษตามเกณฑ์องค์กร)</span>
+                    <span class="erp-status-badge success">▲ GP 36.4% (ผ่านเกณฑ์)</span>
+                  </div>
+                  <div class="erp-measure-value-wrap">
+                    <span class="erp-measure-44sp tabular" style="font-size:32px;">480,000 – 530,000</span>
+                    <span class="erp-measure-unit">บาท</span>
+                  </div>
+                  <div class="erp-measure-dimension-caption">
+                    <span>อ้างอิงใบสำรวจ SV-2026-0108 (พื้นที่รวม 29.24 ตร.ม.)</span>
+                    <span>ส่งต่อเป็นร่าง Official Estimate ได้ทันที</span>
+                  </div>
+                </div>
+
+                <!-- Work Item Cards (No cramped tables on mobile per design.md 8.2) -->
+                <div class="erp-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14.5px;">1. งานกรุผนังทีวีบิวต์อิน (A-01 ห้องนั่งเล่น)</strong>
+                    <span class="tabular" style="font-weight:700;font-size:15px;color:var(--erp-action);">216,000 ฿</span>
+                  </div>
+                  <div style="font-size:12.5px;color:var(--erp-text-muted);">
+                    โครงไม้อัด HMR 18mm กันชื้น · ปิดผิวลามิเนต Formica Oak · ซ่อนไฟเส้น LED Warm White
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--erp-text-body);padding-top:4px;border-top:1px solid var(--erp-border);">
+                    <span class="tabular">ปริมาณ: 14.40 ตร.ม. &times; 15,000 ฿/ตร.ม.</span>
+                    <span class="tabular" style="color:var(--erp-success);font-weight:700;">GP 38.2%</span>
+                  </div>
+                </div>
+
+                <div class="erp-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14.5px;">2. ตู้เสื้อผ้าบิวต์อินสูงชนฝ้า (A-02 ห้องนอนใหญ่)</strong>
+                    <span class="tabular" style="font-weight:700;font-size:15px;color:var(--erp-action);">172,800 ฿</span>
+                  </div>
+                  <div style="font-size:12.5px;color:var(--erp-text-muted);">
+                    โครง HMR 18mm · หน้าบานกระจกเฟรมอลูมิเนียมสีชาทอง · รางลิ้นชัก Blum Tandembox
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--erp-text-body);padding-top:4px;border-top:1px solid var(--erp-border);">
+                    <span class="tabular">ปริมาณ: 8.64 ตร.ม. &times; 20,000 ฿/ตร.ม.</span>
+                    <span class="tabular" style="color:var(--erp-success);font-weight:700;">GP 35.5%</span>
+                  </div>
+                </div>
+
+                <div class="erp-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14.5px;">3. ชุดเคาน์เตอร์ครัวและตู้แขวนบน (A-03 โถงครัว)</strong>
+                    <span class="tabular" style="font-weight:700;font-size:15px;color:var(--erp-action);">111,600 ฿</span>
+                  </div>
+                  <div style="font-size:12.5px;color:var(--erp-text-muted);">
+                    โครง HMR กันชื้นพิเศษ · ท็อปหินควอตซ์สีขาว · บานพับ Soft-close Hafele
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--erp-text-body);padding-top:4px;border-top:1px solid var(--erp-border);">
+                    <span class="tabular">ปริมาณ: 6.20 ตร.ม. &times; 18,000 ฿/ตร.ม.</span>
+                    <span class="tabular" style="color:var(--erp-success);font-weight:700;">GP 34.8%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="erp-bottom-action-bar">
+                <button type="button" class="erp-btn-outline" onclick="setScreen('survey')">
+                  กลับไปแก้มิติวัด
+                </button>
+                <button type="button" class="erp-btn-primary" onclick="triggerSaveSurvey()">
+                  แปลงเป็นร่างใบประเมินราคาทางการ
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Mobile 5-Tab Bottom NavigationBar (design.md 8.4) -->
+        <nav class="erp-bottom-nav" aria-label="เมนูหลักด้านล่าง">
+          <button type="button" class="bottom-nav-item" id="bnav-today" onclick="setScreen('today')">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>งานวันนี้</span>
+          </button>
+          <button type="button" class="bottom-nav-item active" id="bnav-survey" onclick="setScreen('survey')">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12h20"/><path d="M6 8v8"/><path d="M12 6v12"/><path d="M18 8v8"/></svg>
+            <span>สำรวจ</span>
+          </button>
+          <button type="button" class="bottom-nav-item" onclick="openNumpad()">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+            <span>สแกน/วัด</span>
+          </button>
+          <button type="button" class="bottom-nav-item" id="bnav-estimate" onclick="setScreen('estimate')">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span>ประเมินงบ</span>
+          </button>
+          <button type="button" class="bottom-nav-item" onclick="setTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light')">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>ฉัน (สลับสี)</span>
+          </button>
+        </nav>
+
+        <!-- ================================================================
+             INTERACTIVE 56dp CUSTOM NUMBER PAD BOTTOM SHEET (ErpNumberPadSheet)
+             ================================================================ -->
+        <div class="numpad-sheet-overlay" id="numpad-overlay">
+          <div class="numpad-sheet">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <strong style="font-size:15px;">ป้อนค่าวัดพื้นที่ (แป้นตัวเลข 56dp มือเดียว)</strong>
+              <span style="font-size:12px;color:var(--erp-text-muted);">กดแป้นแรกแทนค่าเดิมทันที</span>
+            </div>
+
+            <div class="erp-measure-hero" style="cursor:default;">
+              <div class="erp-measure-value-wrap">
+                <span class="erp-measure-44sp tabular" id="numpad-buffer">14.40</span>
+                <span class="erp-measure-unit">ตร.ม. (sqm)</span>
+              </div>
+            </div>
+
+            <div class="numpad-grid">
+              <button type="button" class="numpad-key" onclick="pressKey('7')">7</button>
+              <button type="button" class="numpad-key" onclick="pressKey('8')">8</button>
+              <button type="button" class="numpad-key" onclick="pressKey('9')">9</button>
+              <button type="button" class="numpad-key" onclick="pressKey('4')">4</button>
+              <button type="button" class="numpad-key" onclick="pressKey('5')">5</button>
+              <button type="button" class="numpad-key" onclick="pressKey('6')">6</button>
+              <button type="button" class="numpad-key" onclick="pressKey('1')">1</button>
+              <button type="button" class="numpad-key" onclick="pressKey('2')">2</button>
+              <button type="button" class="numpad-key" onclick="pressKey('3')">3</button>
+            </div>
+
+            <div class="numpad-grid-bottom">
+              <button type="button" class="numpad-key muted" onclick="pressKey('C')">ล้าง</button>
+              <button type="button" class="numpad-key" onclick="pressKey('0')">0</button>
+              <button type="button" class="numpad-key" onclick="pressKey('.')">.</button>
+              <button type="button" class="numpad-key muted" onclick="pressKey('BS')">ลบ</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+              <button type="button" class="erp-btn-outline" onclick="closeNumpad()">ยกเลิก</button>
+              <button type="button" class="erp-btn-primary" onclick="applyNumpad()">บันทึกค่าวัด</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const rooms = [
+      {
+        label: 'A-01 ห้องนั่งเล่น · พื้นที่ผนังกรุบิวต์อิน',
+        value: '14.40',
+        unit: 'ตร.ม. (sqm)',
+        sub: 'กว้าง 4.50 ม. × สูง 3.20 ม. (เพดานดรอปฝ้า)',
+      },
+      {
+        label: 'A-02 ห้องนอนใหญ่ · ตู้เสื้อผ้าสูงชนฝ้า',
+        value: '8.64',
+        unit: 'ตร.ม. (sqm)',
+        sub: 'กว้าง 2.70 ม. × สูง 3.20 ม. (หน้าบานกระจกชาทอง)',
+      },
+      {
+        label: 'A-03 โถงครัวบิวต์อิน · เคาน์เตอร์และตู้แขวน',
+        value: '6.20',
+        unit: 'ตร.ม. (sqm)',
+        sub: 'ยาว 3.10 ม. × สูง 2.00 ม. (ท็อปหินควอตซ์ขาว)',
+      },
+    ];
+
+    const directionMeta = {
+      a: {
+        code: 'OPTION A · ATELIER SHARP 2.0',
+        btnText: 'เลือกแนวทาง A (Atelier Sharp 2.0) เป็น Design Brief',
+        specs: [
+          {
+            title: '1. รักษามาตรฐาน 토큰 (Zero Lint Conflict)',
+            body: 'ใช้ <code>radius: 0</code>, สีหลัก <code>#0B3056</code> และเส้นไม้โอ๊ก <code>#8A5A24</code> ผ่าน <code>context.tokens</code> ครบ 100% ไม่ต้องแก้กฎ <code>erp_lints</code>',
+          },
+          {
+            title: '2. ยกระดับหน้า Survey Workspace',
+            body: 'เพิ่มแถบสลับห้องแนวนอน (Thumb Strip) + การ์ดตัวเลข <code>44sp</code> เด่นชัดที่สุด พร้อมแผงปุ่มเครื่องมือวัด 4 โหมดใน 1 แตะ',
+          },
+          {
+            title: '3. รองรับทั้งมือถือและแท็บเล็ตในโค้ดชุดเดียว',
+            body: 'อัปเกรด <code>SurveyWorkspacePage</code> และ <code>TodayPage</code> ให้จัดเลย์เอาต์กระชับ ไม่ต้องเลื่อนหน้าจอยาว',
+          },
+        ],
+      },
+      b: {
+        code: 'OPTION B · FIELD WAYFINDER',
+        btnText: 'เลือกแนวทาง B (Field Wayfinder) เป็น Design Brief',
+        specs: [
+          {
+            title: '1. แถบนำทางขั้นตอน (Wayfinding Progress Strip)',
+            body: 'เพิ่มแถบสถานะขั้นตอนด้านบนของ <code>ErpScreen</code> ให้ช่างหน้างานรู้ทันทีว่าวัดไปแล้วกี่ห้องและต้องทำอะไรต่อ',
+          },
+          {
+            title: '2. พื้นผิว Warm Stone ตัดแสงสะท้อนกลางแจ้ง',
+            body: 'ปรับ Token พื้นหลังเป็นโทนหินปูนอุ่น <code>#F3F1EC</code> และเส้นกรอบเข้ม <code>1.5px</code> ช่วยให้อ่านตัวเลขกลางแดดที่ไซต์งานได้สบายตากว่าสีขาวจ้า',
+          },
+          {
+            title: '3. โหมดโฟกัสตัวเลข 44sp เต็มพิกัด',
+            body: 'เน้นความคมชัดของป้ายตัวเลขวัดระยะและปุ่มกดขนาดใหญ่ ลดรายละเอียดตัวหนังสือรองที่ไม่จำเป็นขณะถือเครื่องมือวัด',
+          },
+        ],
+      },
+      c: {
+        code: 'OPTION C · WARM ATELIER CRAFT (8px)',
+        btnText: 'เลือกแนวทาง C (Warm Tactile 8px) เป็น Design Brief',
+        specs: [
+          {
+            title: '1. ปรับความโค้งมนที่จุดกำเนิดเดียว (Single Token Change)',
+            body: 'เปลี่ยนค่า <code>radius</code> ใน <code>design-tokens/</code> จาก <code>0px</code> เป็น <code>8px</code> แล้วรัน build เพื่ออัปเดต <code>tokens.g.dart</code> ทั้งแอปพร้อมกัน',
+          },
+          {
+            title: '2. แยกชั้นการ์ดด้วย Soft Elevation',
+            body: 'ใช้พื้นหลัง <code>#EFF3F8</code> คู่กับการ์ดสีขาวขอบมนและเงาบางๆ ช่วยลดความรู้สึกแข็งเกร็งของตารางวิศวกรรม',
+          },
+          {
+            title: '3. คงความแม่นยำของตัวเลขและเส้นไม้โอ๊ก',
+            body: 'ยังคงใช้ตัวเลข Tabular <code>44sp</code> และสีไม้โอ๊ก <code>#8A5A24</code> สำหรับเส้นบอกขนาด เพื่อให้ดูเป็นมืออาชีพและใช้ง่าย',
+          },
+        ],
+      },
+    };
+
+    let currentDirection = 'a';
+    let currentRoomIndex = 0;
+    let numpadBuffer = '14.40';
+    let replaceOnFirstKey = true;
+    let isOffline = false;
+
+    function setDirection(dir) {
+      currentDirection = dir;
+      document.documentElement.setAttribute('data-direction', dir);
+      ['a', 'b', 'c'].forEach((k) => {
+        document.getElementById('btn-dir-' + k).classList.toggle('active', k === dir);
+        document.getElementById('card-dir-' + k).classList.toggle('active', k === dir);
+      });
+
+      const meta = directionMeta[dir];
+      document.getElementById('active-dir-code').textContent = meta.code;
+      document.getElementById('choose-btn-label').textContent = meta.btnText;
+
+      const listEl = document.getElementById('spec-list-content');
+      listEl.innerHTML = meta.specs
+        .map((s) => `<div class="spec-item"><strong>${s.title}</strong>${s.body}</div>`)
+        .join('');
+    }
+
+    function setDevice(dev) {
+      document.documentElement.setAttribute('data-device', dev);
+      document.getElementById('btn-dev-mobile').classList.toggle('active', dev === 'mobile');
+      document.getElementById('btn-dev-tablet').classList.toggle('active', dev === 'tablet');
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('btn-theme-light').classList.toggle('active', theme === 'light');
+      document.getElementById('btn-theme-dark').classList.toggle('active', theme === 'dark');
+    }
+
+    function setScreen(screen) {
+      ['survey', 'today', 'estimate'].forEach((s) => {
+        document.getElementById('view-' + s).classList.toggle('active', s === screen);
+        document.getElementById('pill-' + s).classList.toggle('active', s === screen);
+        const rail = document.getElementById('rail-' + s);
+        if (rail) rail.classList.toggle('active', s === screen);
+        const bnav = document.getElementById('bnav-' + s);
+        if (bnav) bnav.classList.toggle('active', s === screen);
+      });
+    }
+
+    function selectRoom(idx) {
+      currentRoomIndex = idx;
+      const pills = document.querySelectorAll('#room-pills .room-pill-btn');
+      pills.forEach((btn, i) => btn.classList.toggle('active', i === idx));
+
+      const r = rooms[idx];
+      document.getElementById('active-room-label').textContent = r.label;
+      document.getElementById('hero-measure-val').textContent = r.value;
+      document.getElementById('hero-measure-unit').textContent = r.unit;
+      document.getElementById('hero-sub-dims').textContent = r.sub;
+    }
+
+    function selectMethod(id, label, openPadNow) {
+      ['pad', 'laser', 'photo', 'ar'].forEach((m) => {
+        document.getElementById('m-' + m).classList.toggle('active', m === id);
+      });
+      document.getElementById('active-method-badge').textContent = label;
+      if (openPadNow) {
+        openNumpad();
+      }
+    }
+
+    function openNumpad() {
+      numpadBuffer = document.getElementById('hero-measure-val').textContent;
+      replaceOnFirstKey = true;
+      document.getElementById('numpad-buffer').textContent = numpadBuffer;
+      document.getElementById('numpad-overlay').classList.add('open');
+    }
+
+    function closeNumpad() {
+      document.getElementById('numpad-overlay').classList.remove('open');
+    }
+
+    function pressKey(key) {
+      if (key === 'C') {
+        numpadBuffer = '0';
+        replaceOnFirstKey = false;
+      } else if (key === 'BS') {
+        if (replaceOnFirstKey || numpadBuffer.length <= 1) {
+          numpadBuffer = '0';
+          replaceOnFirstKey = false;
+        } else {
+          numpadBuffer = numpadBuffer.slice(0, -1);
+        }
+      } else if (replaceOnFirstKey) {
+        numpadBuffer = key === '.' ? '0.' : key;
+        replaceOnFirstKey = false;
+      } else if (key === '.') {
+        if (!numpadBuffer.includes('.')) numpadBuffer += '.';
+      } else {
+        numpadBuffer = numpadBuffer === '0' ? key : (numpadBuffer.length < 8 ? numpadBuffer + key : numpadBuffer);
+      }
+      document.getElementById('numpad-buffer').textContent = numpadBuffer;
+    }
+
+    function applyNumpad() {
+      const val = parseFloat(numpadBuffer) || 0;
+      const formatted = val.toFixed(2);
+      rooms[currentRoomIndex].value = formatted;
+      document.getElementById('hero-measure-val').textContent = formatted;
+      closeNumpad();
+    }
+
+    function toggleOffline() {
+      isOffline = !isOffline;
+      const banner = document.getElementById('sync-banner');
+      const text = document.getElementById('sync-banner-text');
+      banner.classList.toggle('offline', isOffline);
+      text.textContent = isOffline
+        ? 'โหมดออฟไลน์ · บันทึกลงเครื่อง (Drift Outbox) และจะซิงก์อัตโนมัติเมื่อมีสัญญาณ'
+        : 'ซิงก์ข้อมูลล่าสุดเมื่อสักครู่ · พร้อมทำงานออฟไลน์ (Drift SQLite)';
+    }
+
+    function addRoomDemo() {
+      const nextNum = rooms.length + 1;
+      const code = 'A-0' + nextNum;
+      rooms.push({
+        label: code + ' ห้องทำงานบิวต์อิน · โต๊ะและชั้นหนังสือ',
+        value: '5.40',
+        unit: 'ตร.ม. (sqm)',
+        sub: 'กว้าง 2.25 ม. × สูง 2.40 ม.',
+      });
+      const container = document.getElementById('room-pills');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'room-pill-btn';
+      const newIdx = rooms.length - 1;
+      btn.onclick = () => selectRoom(newIdx);
+      btn.innerHTML = `<span>${code} ห้องทำงาน</span><span class="tabular" style="opacity:0.8">5.40 ตร.ม.</span>`;
+      container.appendChild(btn);
+      selectRoom(newIdx);
+    }
+
+    function triggerSaveSurvey() {
+      const btn = document.getElementById('btn-save-survey');
+      const original = btn.textContent;
+      btn.textContent = 'กำลังบันทึกลงเครื่อง...';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.textContent = 'บันทึกสำเร็จ ✓';
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.disabled = false;
+        }, 900);
+      }, 450);
+    }
+
+    function confirmSelection() {
+      const box = document.getElementById('selected-feedback-box');
+      const names = {
+        a: 'แนวทาง A: Atelier Architectural Navy Sharp 2.0 (คมเข้ม มาตรฐานเดิม + ยกเครื่อง UX มือเดียว)',
+        b: 'แนวทาง B: Field Wayfinder & Stage Folio (แถบนำทางขั้นตอนชัด + พื้นหินปูนตัดแสงกลางแจ้ง)',
+        c: 'แนวทาง C: Warm Atelier Craft (ลดความแข็งด้วยมุม 8px + การ์ดมีมิติใช้งานสบายตา)',
+      };
+      box.textContent = 'เลือก ' + names[currentDirection] + ' แล้ว — แจ้งในแชตได้เลยครับว่าต้องการให้ลงมือปรับโค้ด Flutter ตามแนวทางนี้!';
+      box.classList.add('show');
+    }
+  </script>
+</body>
+</html>
