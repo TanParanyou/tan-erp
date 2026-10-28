@@ -485,4 +485,638 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get photoAreaErrorReference =>
       'The reference corners are invalid. Move them onto the four corners of the sheet';
+
+  @override
+  String get syncBannerOffline => 'Offline. Changes are saved on this device';
+
+  @override
+  String syncBannerSyncing(int count) {
+    return 'Syncing ($count)';
+  }
+
+  @override
+  String syncBannerPending(int count) {
+    return '$count changes waiting to sync';
+  }
+
+  @override
+  String syncBannerConflict(int count) {
+    return '$count sync conflicts found. Tap to review';
+  }
+
+  @override
+  String get syncQueueTitle => 'Sync queue';
+
+  @override
+  String get syncQueueEmpty => 'All changes are synced';
+
+  @override
+  String get syncQueueSendNow => 'Send all now';
+
+  @override
+  String get syncQueueClearFailed => 'Remove failed item';
+
+  @override
+  String get syncStatusPending => 'Queued';
+
+  @override
+  String get syncStatusSyncing => 'Syncing';
+
+  @override
+  String get syncStatusConflict => 'Conflict';
+
+  @override
+  String get syncStatusFailed => 'Failed';
+
+  @override
+  String get numpadClear => 'Clear';
+
+  @override
+  String get numpadBackspace => 'Delete';
+
+  @override
+  String get numpadDone => 'Done';
+
+  @override
+  String get todayTitle => 'Today';
+
+  @override
+  String get todayRefresh => 'Refresh';
+
+  @override
+  String get todaySearchPlaceholder =>
+      'Search opportunity code, customer or site';
+
+  @override
+  String get todayFilterAll => 'All';
+
+  @override
+  String get todayFilterSurveying => 'Surveying';
+
+  @override
+  String get todayFilterQualified => 'Ready to schedule';
+
+  @override
+  String get todayEmptyTitle => 'No surveys scheduled today';
+
+  @override
+  String get todayEmptyBody =>
+      'There are no survey tasks in this branch yet. Tap to refresh';
+
+  @override
+  String get todayOpenSurvey => 'Open survey';
+
+  @override
+  String get todayStartSurvey => 'Start field survey';
+
+  @override
+  String get todayStageQualified => 'Qualified';
+
+  @override
+  String get todayStageSurveying => 'Surveying';
+
+  @override
+  String get todayStageEstimating => 'Estimating';
+
+  @override
+  String get todayNoSite => 'No site assigned';
+
+  @override
+  String todayScheduledAt(String date) {
+    return 'Scheduled $date';
+  }
+
+  @override
+  String get surveyListTitle => 'Field surveys';
+
+  @override
+  String get surveySearchPlaceholder =>
+      'Search survey number or opportunity title';
+
+  @override
+  String get surveyEmptyTitle => 'No site surveys yet';
+
+  @override
+  String get surveyEmptyBody =>
+      'Pick an opportunity from Today to start recording measurements';
+
+  @override
+  String get surveyGoToToday => 'Go to Today';
+
+  @override
+  String get surveyStatusDraft => 'Draft';
+
+  @override
+  String get surveyStatusReady => 'Ready for estimate';
+
+  @override
+  String get surveyStatusVoided => 'Voided';
+
+  @override
+  String get surveyStatusScheduled => 'Scheduled';
+
+  @override
+  String surveyDetailTitle(String number) {
+    return 'Survey $number';
+  }
+
+  @override
+  String get surveyScopeLabel => 'Scope summary';
+
+  @override
+  String get surveyScopePlaceholder =>
+      'Describe the site scope or customer requirements';
+
+  @override
+  String get surveyAreasSection => 'Survey areas';
+
+  @override
+  String get surveySelectArea => 'Select area';
+
+  @override
+  String get surveyBreakdownMeasurements => 'Breakdown measurements';
+
+  @override
+  String get surveyTabletInspectorTitle => 'Survey & Spec Summary';
+
+  @override
+  String get surveyAddArea => 'Add area';
+
+  @override
+  String get surveyAreaNameLabel => 'Area name';
+
+  @override
+  String get surveyAreaNamePlaceholder => 'e.g. Ground floor hall, Kitchen';
+
+  @override
+  String get surveyAreaCodeLabel => 'Area code';
+
+  @override
+  String get surveyAreaCodePlaceholder => 'e.g. A-01';
+
+  @override
+  String get surveyAreaNotesLabel => 'Area notes';
+
+  @override
+  String get surveyAreaNotesPlaceholder => 'Site constraints or remarks';
+
+  @override
+  String get surveyDeleteArea => 'Delete area';
+
+  @override
+  String get surveyDeleteAreaConfirm =>
+      'Delete this area and all of its measurements?';
+
+  @override
+  String get surveyMeasurementsSection => 'Measurements';
+
+  @override
+  String get surveyAddMeasurement => 'Add measurement';
+
+  @override
+  String get surveyMeasureTypeArea => 'Area';
+
+  @override
+  String get surveyMeasureTypeLength => 'Length';
+
+  @override
+  String get surveyMeasureTypeWidth => 'Width';
+
+  @override
+  String get surveyMeasureTypeHeight => 'Height';
+
+  @override
+  String get surveyMeasureTypeCount => 'Count';
+
+  @override
+  String get surveyUnitSqm => 'm²';
+
+  @override
+  String get surveyUnitM => 'm';
+
+  @override
+  String get surveyUnitMm => 'mm';
+
+  @override
+  String get surveyUnitPcs => 'pcs';
+
+  @override
+  String get surveyCaptureMeasured => 'Measured';
+
+  @override
+  String get surveyCapturePhoto => 'Photo A4';
+
+  @override
+  String get surveyCaptureAr => 'AR floor';
+
+  @override
+  String get surveyCaptureCustomer => 'Customer provided';
+
+  @override
+  String get surveyMeasureByPad => 'Keypad';
+
+  @override
+  String get surveyMeasureByPhoto => 'Photo A4';
+
+  @override
+  String get surveyMeasureByAr => 'AR floor';
+
+  @override
+  String get surveyMeasureNotesLabel => 'Measurement notes';
+
+  @override
+  String get surveyMeasureNotesPlaceholder =>
+      'e.g. Deduct 2 columns, includes skirting';
+
+  @override
+  String get surveySaveDraft => 'Save draft';
+
+  @override
+  String get surveySavedOffline =>
+      'Saved to offline queue. Will sync when online';
+
+  @override
+  String get surveySavedOnline => 'Survey draft saved';
+
+  @override
+  String get surveyMarkReady => 'Mark ready for estimate';
+
+  @override
+  String get surveyMarkReadyConfirm =>
+      'Once marked ready, this revision is locked. Continue?';
+
+  @override
+  String get surveyNoAreas =>
+      'No survey areas yet. Tap Add area to begin measuring';
+
+  @override
+  String get scanTitle => 'Scan item';
+
+  @override
+  String get scanSearchLabel => 'Barcode or item code';
+
+  @override
+  String get scanSearchPlaceholder => 'Enter barcode or SKU e.g. ITM-0001';
+
+  @override
+  String get scanSearchAction => 'Search';
+
+  @override
+  String get scanToggleCamera => 'Open camera scanner';
+
+  @override
+  String get scanCloseCamera => 'Close camera';
+
+  @override
+  String get scanCameraHint =>
+      'Align the frame with the item barcode or QR code';
+
+  @override
+  String get scanResultTitle => 'Item details';
+
+  @override
+  String get scanItemCode => 'Item code';
+
+  @override
+  String get scanItemType => 'Item type';
+
+  @override
+  String get scanBaseUnit => 'Base unit';
+
+  @override
+  String get scanBarcodeValue => 'Barcode';
+
+  @override
+  String get scanPackaging => 'Packaging level';
+
+  @override
+  String get scanStockSection => 'Stock balance by warehouse';
+
+  @override
+  String scanStockAvailable(String qty, String unit) {
+    return 'Available $qty $unit';
+  }
+
+  @override
+  String scanStockOnHand(String onHand, String reserved) {
+    return 'On hand $onHand, Reserved $reserved';
+  }
+
+  @override
+  String get scanStockEmpty => 'No stock balances found in this branch';
+
+  @override
+  String get scanRecentTitle => 'Recent scans';
+
+  @override
+  String get scanEmptyTitle => 'Ready to scan or search';
+
+  @override
+  String get scanEmptyBody =>
+      'Scan a barcode with the camera or enter an item code above to inspect item details and stock';
+
+  @override
+  String get scanNotFound => 'No item matches this code';
+
+  @override
+  String get notificationsTitle => 'Alerts';
+
+  @override
+  String get notificationsFilterAll => 'All';
+
+  @override
+  String get notificationsFilterUnread => 'Unread';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all read';
+
+  @override
+  String get notificationsMarkRead => 'Mark as read';
+
+  @override
+  String get notificationsEmptyTitle => 'No notifications';
+
+  @override
+  String get notificationsEmptyBody =>
+      'Pending approvals and relevant updates will appear here';
+
+  @override
+  String get notificationsUnreadBadge => 'New';
+
+  @override
+  String get notificationsReadBadge => 'Read';
+
+  @override
+  String get notificationsTypeEstimate => 'Official estimate';
+
+  @override
+  String get notificationsTypeCost => 'Item cost';
+
+  @override
+  String get notificationsTypePo => 'Purchase order';
+
+  @override
+  String get notificationsTypeChangeOrder => 'Change order';
+
+  @override
+  String get notificationsTypeMrp => 'MRP plan';
+
+  @override
+  String get notificationsTypeRole => 'Role permission';
+
+  @override
+  String get notificationsTypeMembership => 'Branch membership';
+
+  @override
+  String get notificationsTypeGeneral => 'System alert';
+
+  @override
+  String get attachmentSectionTitle => 'Area photos & evidence';
+
+  @override
+  String get attachmentTakePhoto => 'Take photo';
+
+  @override
+  String get attachmentPickGallery => 'Gallery';
+
+  @override
+  String get attachmentEmptyHint => 'No photos attached to this area yet';
+
+  @override
+  String get attachmentStatusPending => 'Pending sync';
+
+  @override
+  String get attachmentStatusSynced => 'Synced';
+
+  @override
+  String get attachmentDeleteTitle => 'Delete photo';
+
+  @override
+  String get attachmentDeleteConfirm =>
+      'Remove this photo from the survey area?';
+
+  @override
+  String get surveyCaptureLaser => 'BLE laser meter';
+
+  @override
+  String get surveyMeasureByLaser => 'Measure with Bluetooth laser';
+
+  @override
+  String get laserSheetTitle => 'Bluetooth laser distance meter';
+
+  @override
+  String get laserScanStart => 'Scan for laser meters';
+
+  @override
+  String get laserScanStop => 'Stop scan';
+
+  @override
+  String get laserScanning => 'Scanning for BLE devices...';
+
+  @override
+  String get laserNoDevices => 'No laser distance meters found nearby';
+
+  @override
+  String get laserConnect => 'Connect';
+
+  @override
+  String get laserDisconnect => 'Disconnect';
+
+  @override
+  String laserConnectedLabel(String deviceName) {
+    return 'Connected: $deviceName';
+  }
+
+  @override
+  String get laserLatestReading => 'Latest laser reading';
+
+  @override
+  String get laserUseReading => 'Use this reading';
+
+  @override
+  String get laserSimulateButton => 'Simulate laser reading (test mode)';
+
+  @override
+  String get laserSimulatedDeviceName => 'DISTO-SIM (BLE Simulator)';
+
+  @override
+  String get laserBluetoothOff =>
+      'Bluetooth is off or unavailable on this device. You can use the simulator button to test.';
+
+  @override
+  String get pushSectionTitle => 'Push notifications';
+
+  @override
+  String get pushStatusEnabled => 'Push notifications enabled';
+
+  @override
+  String get pushStatusDisabled => 'Push notifications not enabled';
+
+  @override
+  String get pushStatusUnavailable =>
+      'Firebase Push is not configured on this device';
+
+  @override
+  String get pushEnableAction => 'Enable push notifications';
+
+  @override
+  String get pushTokenLabel => 'Device token (FCM)';
+
+  @override
+  String get quickEstimateOpenButton => 'Field quick estimate';
+
+  @override
+  String quickEstimateTitle(String number) {
+    return 'Quick estimate ($number)';
+  }
+
+  @override
+  String get quickEstimateCreateAction => 'Create quick estimate';
+
+  @override
+  String get quickEstimateTemplateLabel => 'Pricing template';
+
+  @override
+  String get quickEstimatePropertyTypeLabel => 'Property type';
+
+  @override
+  String get quickEstimatePropertyCondo => 'Condominium';
+
+  @override
+  String get quickEstimatePropertyHouse => 'Detached house / Townhome';
+
+  @override
+  String get quickEstimatePropertyOffice => 'Office / Commercial';
+
+  @override
+  String get quickEstimateGradeLabel => 'Material grade';
+
+  @override
+  String get quickEstimateGradeStandard => 'Standard';
+
+  @override
+  String get quickEstimateGradePremium => 'Premium';
+
+  @override
+  String get quickEstimateGradeLuxury => 'Luxury';
+
+  @override
+  String get quickEstimateCalculateAction => 'Calculate price range';
+
+  @override
+  String get quickEstimateRangeLabel => 'Estimated price range (incl. tax)';
+
+  @override
+  String get quickEstimateNetAmountLabel => 'Net amount';
+
+  @override
+  String get quickEstimateTaxAmountLabel => 'VAT 7%';
+
+  @override
+  String quickEstimateValidUntilLabel(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get quickEstimateShareAction => 'Show customer share screen';
+
+  @override
+  String get quickEstimateShareSheetTitle =>
+      'Preliminary price range for customer';
+
+  @override
+  String get quickEstimateShareDisclaimer =>
+      'This is a preliminary range based on on-site survey measurements. Official pricing follows BOQ verification.';
+
+  @override
+  String get quickEstimateShareConfirmAction => 'Record customer share';
+
+  @override
+  String get quickEstimateShareSuccess => 'Customer share recorded';
+
+  @override
+  String get quickEstimateConvertAction =>
+      'Convert to official estimate draft (BOQ)';
+
+  @override
+  String get quickEstimateConvertConfirmTitle =>
+      'Convert to official estimate draft?';
+
+  @override
+  String get quickEstimateConvertConfirmBody =>
+      'This will create an official estimate draft linked to this survey revision and measurements.';
+
+  @override
+  String get quickEstimateConvertSuccess => 'Official estimate draft created';
+
+  @override
+  String get quickEstimateLinesSection => 'Surveyed lines & quantities';
+
+  @override
+  String get approvalSheetTitle => 'Document approval review';
+
+  @override
+  String get approvalDocumentLabel => 'Document number';
+
+  @override
+  String get approvalSummaryLabel => 'Summary';
+
+  @override
+  String get approvalNoteLabel => 'Review note';
+
+  @override
+  String get approvalNotePlaceholder =>
+      'Enter reason or note (required when returning/rejecting)...';
+
+  @override
+  String get approvalApproveAction => 'Approve document';
+
+  @override
+  String get approvalReturnAction => 'Return / Reject';
+
+  @override
+  String get approvalConfirmApproveTitle => 'Confirm document approval?';
+
+  @override
+  String get approvalConfirmReturnTitle =>
+      'Confirm returning / rejecting document?';
+
+  @override
+  String get approvalSuccessApproved => 'Document approval recorded';
+
+  @override
+  String get approvalSuccessReturned => 'Document return recorded';
+
+  @override
+  String get approvalNoteRequiredError =>
+      'Please enter a note before returning';
+
+  @override
+  String get approvalQuickActionHint => 'Tap to review & approve';
+
+  @override
+  String get conflictSheetTitle => 'Resolve sync conflict (409/412)';
+
+  @override
+  String get conflictDescription =>
+      'Server data changed while you were working offline. Choose how to resolve this item.';
+
+  @override
+  String get conflictFieldColumn => 'Field';
+
+  @override
+  String get conflictLocalColumn => 'Your device';
+
+  @override
+  String get conflictServerColumn => 'Server state';
+
+  @override
+  String get conflictKeepLocalAction => 'Keep device changes (Retry)';
+
+  @override
+  String get conflictAcceptServerAction =>
+      'Accept server version (Discard local)';
+
+  @override
+  String get conflictResolveAction => 'Inspect & resolve conflict';
 }

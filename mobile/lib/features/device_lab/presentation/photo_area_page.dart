@@ -11,6 +11,7 @@ import 'package:tan_erp_field/core/l10n/l10n.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
+import 'package:tan_erp_field/core/ui/erp_measure_display.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/photo_area_controller.dart';
 
@@ -425,6 +426,13 @@ class _BottomPanel extends StatelessWidget {
                 ),
               ],
             ),
+            if (result != null) ...[
+              SizedBox(height: t.space2),
+              ErpButton(
+                label: l10n.arDone,
+                onPressed: () => Navigator.of(context).pop(result),
+              ),
+            ],
           ],
         ),
       ),
@@ -462,22 +470,8 @@ class _ResultBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Main measured value: the single focal point (design.md 8.2).
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: t.accentMeasure,
-                width: t.borderWidth * 2,
-              ),
-            ),
-          ),
-          child: Text(
-            l10n.arValueSquareMeters(area.format(result.areaSqm)),
-            style: text.displayMedium?.copyWith(
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
+        ErpMeasureDisplay(
+          valueText: l10n.arValueSquareMeters(area.format(result.areaSqm)),
         ),
         SizedBox(height: t.space2),
         Row(

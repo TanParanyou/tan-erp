@@ -6,14 +6,17 @@ import 'package:tan_erp_field/core/config/app_config.dart';
 import 'package:tan_erp_field/core/l10n/failure_messages.dart';
 import 'package:tan_erp_field/core/l10n/l10n.dart';
 import 'package:tan_erp_field/core/l10n/locale_provider.dart';
+import 'package:tan_erp_field/core/notifications/push_notification_service.dart';
 import 'package:tan_erp_field/core/router/routes.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/theme/theme_settings.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
+import 'package:tan_erp_field/core/ui/erp_card.dart';
 import 'package:tan_erp_field/core/ui/erp_confirm_dialog.dart';
 import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_select.dart';
+import 'package:tan_erp_field/core/ui/erp_status_badge.dart';
 import 'package:tan_erp_field/features/app_update/data/version_policy_repository.dart';
 import 'package:tan_erp_field/features/me/presentation/preferences_controller.dart';
 
@@ -34,6 +37,7 @@ class MePage extends ConsumerWidget {
     final saver = ref.read(preferencesSaveProvider.notifier);
     final version = ref.watch(appVersionProvider).value ?? '';
     final membership = session.membership;
+    final pushState = ref.watch(pushNotificationProvider);
 
     Widget info(String label, String value) => Padding(
       padding: EdgeInsets.only(bottom: t.space3),
@@ -140,6 +144,53 @@ class MePage extends ConsumerWidget {
             variant: ErpButtonVariant.ghost,
             onPressed: () => context.push(AppRoutes.deviceLab),
           ),
+        SizedBox(height: t.space6),
+        ErpCard(
+          title: l10n.pushSectionTitle,
+          children: [
+            Row(
+              children: [
+                ErpStatusBadge(
+                  label: switch (pushState.status) {
+                    PushPermissionStatus.enabled => l10n.pushStatusEnabled,
+                    PushPermissionStatus.disabled => l10n.pushStatusDisabled,
+                    PushPermissionStatus.unavailable =>
+                      l10n.pushStatusUnavailable,
+                  },
+                  tone: switch (pushState.status) {
+                    PushPermissionStatus.enabled => ErpBadgeTone.success,
+                    PushPermissionStatus.disabled => ErpBadgeTone.warning,
+                    PushPermissionStatus.unavailable => ErpBadgeTone.neutral,
+                  },
+                ),
+              ],
+            ),
+            if (pushState.fcmToken != null) ...[
+              SizedBox(height: t.space2),
+              Text(
+                '${l10n.pushTokenLabel}: ${pushState.fcmToken}',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: t.textCaption,
+                  color: t.textMuted,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            if (pushState.status != PushPermissionStatus.enabled) ...[
+              SizedBox(height: t.space3),
+              ErpButton(
+                label: l10n.pushEnableAction,
+                variant: ErpButtonVariant.outline,
+                isLoading: pushState.isRequesting,
+                onPressed: () => ref
+                    .read(pushNotificationProvider.notifier)
+                    .requestPermissionAndToken(),
+              ),
+            ],
+          ],
+        ),
         SizedBox(height: t.space6),
         ErpButton(
           label: l10n.meLogout,

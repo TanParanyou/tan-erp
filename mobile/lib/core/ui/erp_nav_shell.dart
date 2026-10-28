@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_icon.dart';
+import 'package:tan_erp_field/core/ui/erp_sync_banner.dart';
 
 class ErpNavDestination {
   const ErpNavDestination({required this.icon, required this.label});
@@ -34,6 +35,13 @@ class ErpNavShell extends StatelessWidget {
     Widget iconFor(ErpNavDestination d, {required bool selected}) =>
         ErpIcon(d.icon, color: selected ? t.action : t.textMuted);
 
+    final bodyWithBanner = Column(
+      children: [
+        const ErpSyncBanner(),
+        Expanded(child: child),
+      ],
+    );
+
     if (wide) {
       return Scaffold(
         body: SafeArea(
@@ -53,14 +61,14 @@ class ErpNavShell extends StatelessWidget {
                 ],
               ),
               VerticalDivider(width: t.borderWidth, color: t.border),
-              Expanded(child: child),
+              Expanded(child: bodyWithBanner),
             ],
           ),
         ),
       );
     }
     return Scaffold(
-      body: SafeArea(child: child),
+      body: SafeArea(child: bodyWithBanner),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: onSelected,

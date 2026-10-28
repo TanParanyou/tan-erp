@@ -979,6 +979,1182 @@ abstract class AppLocalizations {
   /// In th, this message translates to:
   /// **'มุมกระดาษอ้างอิงไม่ถูกต้อง ย้ายจุดให้ตรงมุมทั้งสี่ของกระดาษ'**
   String get photoAreaErrorReference;
+
+  /// No description provided for @syncBannerOffline.
+  ///
+  /// In th, this message translates to:
+  /// **'ออฟไลน์ บันทึกลงเครื่องแล้ว'**
+  String get syncBannerOffline;
+
+  /// No description provided for @syncBannerSyncing.
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังซิงก์ข้อมูล ({count})'**
+  String syncBannerSyncing(int count);
+
+  /// No description provided for @syncBannerPending.
+  ///
+  /// In th, this message translates to:
+  /// **'รอส่งขึ้นเซิร์ฟเวอร์ {count} รายการ'**
+  String syncBannerPending(int count);
+
+  /// No description provided for @syncBannerConflict.
+  ///
+  /// In th, this message translates to:
+  /// **'พบข้อมูลขัดแย้ง {count} รายการ แตะเพื่อตรวจสอบ'**
+  String syncBannerConflict(int count);
+
+  /// No description provided for @syncQueueTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'คิวซิงก์ข้อมูล'**
+  String get syncQueueTitle;
+
+  /// No description provided for @syncQueueEmpty.
+  ///
+  /// In th, this message translates to:
+  /// **'ซิงก์ข้อมูลครบทุกรายการแล้ว'**
+  String get syncQueueEmpty;
+
+  /// No description provided for @syncQueueSendNow.
+  ///
+  /// In th, this message translates to:
+  /// **'ส่งทั้งหมดตอนนี้'**
+  String get syncQueueSendNow;
+
+  /// No description provided for @syncQueueClearFailed.
+  ///
+  /// In th, this message translates to:
+  /// **'ลบรายการที่ค้าง'**
+  String get syncQueueClearFailed;
+
+  /// No description provided for @syncStatusPending.
+  ///
+  /// In th, this message translates to:
+  /// **'รอส่ง'**
+  String get syncStatusPending;
+
+  /// No description provided for @syncStatusSyncing.
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังส่ง'**
+  String get syncStatusSyncing;
+
+  /// No description provided for @syncStatusConflict.
+  ///
+  /// In th, this message translates to:
+  /// **'ข้อมูลขัดแย้ง'**
+  String get syncStatusConflict;
+
+  /// No description provided for @syncStatusFailed.
+  ///
+  /// In th, this message translates to:
+  /// **'ส่งไม่สำเร็จ'**
+  String get syncStatusFailed;
+
+  /// No description provided for @numpadClear.
+  ///
+  /// In th, this message translates to:
+  /// **'ล้าง'**
+  String get numpadClear;
+
+  /// No description provided for @numpadBackspace.
+  ///
+  /// In th, this message translates to:
+  /// **'ลบ'**
+  String get numpadBackspace;
+
+  /// No description provided for @numpadDone.
+  ///
+  /// In th, this message translates to:
+  /// **'ตกลง'**
+  String get numpadDone;
+
+  /// No description provided for @todayTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'งานวันนี้'**
+  String get todayTitle;
+
+  /// No description provided for @todayRefresh.
+  ///
+  /// In th, this message translates to:
+  /// **'โหลดข้อมูลใหม่'**
+  String get todayRefresh;
+
+  /// No description provided for @todaySearchPlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'ค้นหาเลขงาน ชื่อลูกค้า หรือสถานที่'**
+  String get todaySearchPlaceholder;
+
+  /// No description provided for @todayFilterAll.
+  ///
+  /// In th, this message translates to:
+  /// **'ทั้งหมด'**
+  String get todayFilterAll;
+
+  /// No description provided for @todayFilterSurveying.
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังสำรวจ'**
+  String get todayFilterSurveying;
+
+  /// No description provided for @todayFilterQualified.
+  ///
+  /// In th, this message translates to:
+  /// **'รอนัดสำรวจ'**
+  String get todayFilterQualified;
+
+  /// No description provided for @todayEmptyTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่มีงานสำรวจวันนี้'**
+  String get todayEmptyTitle;
+
+  /// No description provided for @todayEmptyBody.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่มีรายการนัดสำรวจในสาขานี้ แตะเพื่อโหลดข้อมูลใหม่'**
+  String get todayEmptyBody;
+
+  /// No description provided for @todayOpenSurvey.
+  ///
+  /// In th, this message translates to:
+  /// **'เปิดใบสำรวจ'**
+  String get todayOpenSurvey;
+
+  /// No description provided for @todayStartSurvey.
+  ///
+  /// In th, this message translates to:
+  /// **'เริ่มสำรวจหน้างาน'**
+  String get todayStartSurvey;
+
+  /// No description provided for @todayStageQualified.
+  ///
+  /// In th, this message translates to:
+  /// **'ผ่านคัดกรอง'**
+  String get todayStageQualified;
+
+  /// No description provided for @todayStageSurveying.
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังสำรวจ'**
+  String get todayStageSurveying;
+
+  /// No description provided for @todayStageEstimating.
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังประเมินราคา'**
+  String get todayStageEstimating;
+
+  /// No description provided for @todayNoSite.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่ระบุสถานที่'**
+  String get todayNoSite;
+
+  /// No description provided for @todayScheduledAt.
+  ///
+  /// In th, this message translates to:
+  /// **'นัดหมาย {date}'**
+  String todayScheduledAt(String date);
+
+  /// No description provided for @surveyListTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'สำรวจหน้างาน'**
+  String get surveyListTitle;
+
+  /// No description provided for @surveySearchPlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'ค้นหาเลขใบสำรวจ หรือชื่องาน'**
+  String get surveySearchPlaceholder;
+
+  /// No description provided for @surveyEmptyTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่มีใบสำรวจ'**
+  String get surveyEmptyTitle;
+
+  /// No description provided for @surveyEmptyBody.
+  ///
+  /// In th, this message translates to:
+  /// **'เลือกงานจากหน้า งานวันนี้ เพื่อเริ่มบันทึกผลสำรวจหน้างาน'**
+  String get surveyEmptyBody;
+
+  /// No description provided for @surveyGoToToday.
+  ///
+  /// In th, this message translates to:
+  /// **'ไปหน้างานวันนี้'**
+  String get surveyGoToToday;
+
+  /// No description provided for @surveyStatusDraft.
+  ///
+  /// In th, this message translates to:
+  /// **'ฉบับร่าง'**
+  String get surveyStatusDraft;
+
+  /// No description provided for @surveyStatusReady.
+  ///
+  /// In th, this message translates to:
+  /// **'พร้อมประเมินราคา'**
+  String get surveyStatusReady;
+
+  /// No description provided for @surveyStatusVoided.
+  ///
+  /// In th, this message translates to:
+  /// **'ยกเลิก'**
+  String get surveyStatusVoided;
+
+  /// No description provided for @surveyStatusScheduled.
+  ///
+  /// In th, this message translates to:
+  /// **'นัดหมายแล้ว'**
+  String get surveyStatusScheduled;
+
+  /// No description provided for @surveyDetailTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ใบสำรวจ {number}'**
+  String surveyDetailTitle(String number);
+
+  /// No description provided for @surveyScopeLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'สรุปขอบเขตงาน'**
+  String get surveyScopeLabel;
+
+  /// No description provided for @surveyScopePlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'ระบุรายละเอียดหน้างานหรือสิ่งที่ลูกค้าต้องการ'**
+  String get surveyScopePlaceholder;
+
+  /// No description provided for @surveyAreasSection.
+  ///
+  /// In th, this message translates to:
+  /// **'พื้นที่สำรวจ'**
+  String get surveyAreasSection;
+
+  /// No description provided for @surveySelectArea.
+  ///
+  /// In th, this message translates to:
+  /// **'เลือกพื้นที่สำรวจ'**
+  String get surveySelectArea;
+
+  /// No description provided for @surveyBreakdownMeasurements.
+  ///
+  /// In th, this message translates to:
+  /// **'รายการค่าวัดย่อย'**
+  String get surveyBreakdownMeasurements;
+
+  /// No description provided for @surveyTabletInspectorTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'แผงสรุปผลสำรวจและสเปก'**
+  String get surveyTabletInspectorTitle;
+
+  /// No description provided for @surveyAddArea.
+  ///
+  /// In th, this message translates to:
+  /// **'เพิ่มพื้นที่'**
+  String get surveyAddArea;
+
+  /// No description provided for @surveyAreaNameLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'ชื่อพื้นที่'**
+  String get surveyAreaNameLabel;
+
+  /// No description provided for @surveyAreaNamePlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เช่น ห้องโถงชั้น 1, ห้องครัว'**
+  String get surveyAreaNamePlaceholder;
+
+  /// No description provided for @surveyAreaCodeLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสพื้นที่'**
+  String get surveyAreaCodeLabel;
+
+  /// No description provided for @surveyAreaCodePlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เช่น A-01'**
+  String get surveyAreaCodePlaceholder;
+
+  /// No description provided for @surveyAreaNotesLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'หมายเหตุพื้นที่'**
+  String get surveyAreaNotesLabel;
+
+  /// No description provided for @surveyAreaNotesPlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'ข้อจำกัดหน้างานหรือรายละเอียดเพิ่มเติม'**
+  String get surveyAreaNotesPlaceholder;
+
+  /// No description provided for @surveyDeleteArea.
+  ///
+  /// In th, this message translates to:
+  /// **'ลบพื้นที่'**
+  String get surveyDeleteArea;
+
+  /// No description provided for @surveyDeleteAreaConfirm.
+  ///
+  /// In th, this message translates to:
+  /// **'ต้องการลบพื้นที่นี้และค่าวัดทั้งหมดในพื้นที่ใช่หรือไม่'**
+  String get surveyDeleteAreaConfirm;
+
+  /// No description provided for @surveyMeasurementsSection.
+  ///
+  /// In th, this message translates to:
+  /// **'รายการวัดขนาด'**
+  String get surveyMeasurementsSection;
+
+  /// No description provided for @surveyAddMeasurement.
+  ///
+  /// In th, this message translates to:
+  /// **'เพิ่มค่าวัด'**
+  String get surveyAddMeasurement;
+
+  /// No description provided for @surveyMeasureTypeArea.
+  ///
+  /// In th, this message translates to:
+  /// **'พื้นที่'**
+  String get surveyMeasureTypeArea;
+
+  /// No description provided for @surveyMeasureTypeLength.
+  ///
+  /// In th, this message translates to:
+  /// **'ความยาว'**
+  String get surveyMeasureTypeLength;
+
+  /// No description provided for @surveyMeasureTypeWidth.
+  ///
+  /// In th, this message translates to:
+  /// **'ความกว้าง'**
+  String get surveyMeasureTypeWidth;
+
+  /// No description provided for @surveyMeasureTypeHeight.
+  ///
+  /// In th, this message translates to:
+  /// **'ความสูง'**
+  String get surveyMeasureTypeHeight;
+
+  /// No description provided for @surveyMeasureTypeCount.
+  ///
+  /// In th, this message translates to:
+  /// **'จำนวน'**
+  String get surveyMeasureTypeCount;
+
+  /// No description provided for @surveyUnitSqm.
+  ///
+  /// In th, this message translates to:
+  /// **'ตร.ม.'**
+  String get surveyUnitSqm;
+
+  /// No description provided for @surveyUnitM.
+  ///
+  /// In th, this message translates to:
+  /// **'ม.'**
+  String get surveyUnitM;
+
+  /// No description provided for @surveyUnitMm.
+  ///
+  /// In th, this message translates to:
+  /// **'มม.'**
+  String get surveyUnitMm;
+
+  /// No description provided for @surveyUnitPcs.
+  ///
+  /// In th, this message translates to:
+  /// **'ชิ้น'**
+  String get surveyUnitPcs;
+
+  /// No description provided for @surveyCaptureMeasured.
+  ///
+  /// In th, this message translates to:
+  /// **'วัดจริง'**
+  String get surveyCaptureMeasured;
+
+  /// No description provided for @surveyCapturePhoto.
+  ///
+  /// In th, this message translates to:
+  /// **'วัดจากรูป A4'**
+  String get surveyCapturePhoto;
+
+  /// No description provided for @surveyCaptureAr.
+  ///
+  /// In th, this message translates to:
+  /// **'วัดด้วย AR'**
+  String get surveyCaptureAr;
+
+  /// No description provided for @surveyCaptureCustomer.
+  ///
+  /// In th, this message translates to:
+  /// **'ลูกค้าแจ้ง'**
+  String get surveyCaptureCustomer;
+
+  /// No description provided for @surveyMeasureByPad.
+  ///
+  /// In th, this message translates to:
+  /// **'ป้อนตัวเลข'**
+  String get surveyMeasureByPad;
+
+  /// No description provided for @surveyMeasureByPhoto.
+  ///
+  /// In th, this message translates to:
+  /// **'วัดจากรูป A4'**
+  String get surveyMeasureByPhoto;
+
+  /// No description provided for @surveyMeasureByAr.
+  ///
+  /// In th, this message translates to:
+  /// **'AR วัดพื้น'**
+  String get surveyMeasureByAr;
+
+  /// No description provided for @surveyMeasureNotesLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'หมายเหตุค่าวัด'**
+  String get surveyMeasureNotesLabel;
+
+  /// No description provided for @surveyMeasureNotesPlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เช่น หักเสา 2 ต้น หรือวัดรวมบัว'**
+  String get surveyMeasureNotesPlaceholder;
+
+  /// No description provided for @surveySaveDraft.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกร่าง'**
+  String get surveySaveDraft;
+
+  /// No description provided for @surveySavedOffline.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกลงคิวออฟไลน์แล้ว ระบบจะซิงก์เมื่อออนไลน์'**
+  String get surveySavedOffline;
+
+  /// No description provided for @surveySavedOnline.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกใบสำรวจสำเร็จ'**
+  String get surveySavedOnline;
+
+  /// No description provided for @surveyMarkReady.
+  ///
+  /// In th, this message translates to:
+  /// **'ยืนยันพร้อมประเมินราคา'**
+  String get surveyMarkReady;
+
+  /// No description provided for @surveyMarkReadyConfirm.
+  ///
+  /// In th, this message translates to:
+  /// **'เมื่อยืนยันแล้วจะไม่สามารถแก้ไขฉบับนี้ได้ ต้องการยืนยันใช่หรือไม่'**
+  String get surveyMarkReadyConfirm;
+
+  /// No description provided for @surveyNoAreas.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่มีพื้นที่สำรวจ แตะ เพิ่มพื้นที่ เพื่อเริ่มวัด'**
+  String get surveyNoAreas;
+
+  /// No description provided for @scanTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'สแกนสินค้า'**
+  String get scanTitle;
+
+  /// No description provided for @scanSearchLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสบาร์โค้ด หรือรหัสสินค้า'**
+  String get scanSearchLabel;
+
+  /// No description provided for @scanSearchPlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'กรอกบาร์โค้ด หรือรหัส SKU เช่น ITM-0001'**
+  String get scanSearchPlaceholder;
+
+  /// No description provided for @scanSearchAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ค้นหา'**
+  String get scanSearchAction;
+
+  /// No description provided for @scanToggleCamera.
+  ///
+  /// In th, this message translates to:
+  /// **'เปิดกล้องสแกน'**
+  String get scanToggleCamera;
+
+  /// No description provided for @scanCloseCamera.
+  ///
+  /// In th, this message translates to:
+  /// **'ปิดกล้อง'**
+  String get scanCloseCamera;
+
+  /// No description provided for @scanCameraHint.
+  ///
+  /// In th, this message translates to:
+  /// **'เล็งกรอบให้ตรงกับบาร์โค้ดหรือ QR ของสินค้า'**
+  String get scanCameraHint;
+
+  /// No description provided for @scanResultTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ข้อมูลสินค้า'**
+  String get scanResultTitle;
+
+  /// No description provided for @scanItemCode.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสสินค้า'**
+  String get scanItemCode;
+
+  /// No description provided for @scanItemType.
+  ///
+  /// In th, this message translates to:
+  /// **'ประเภท'**
+  String get scanItemType;
+
+  /// No description provided for @scanBaseUnit.
+  ///
+  /// In th, this message translates to:
+  /// **'หน่วยนับหลัก'**
+  String get scanBaseUnit;
+
+  /// No description provided for @scanBarcodeValue.
+  ///
+  /// In th, this message translates to:
+  /// **'บาร์โค้ด'**
+  String get scanBarcodeValue;
+
+  /// No description provided for @scanPackaging.
+  ///
+  /// In th, this message translates to:
+  /// **'หน่วยบรรจุ'**
+  String get scanPackaging;
+
+  /// No description provided for @scanStockSection.
+  ///
+  /// In th, this message translates to:
+  /// **'ยอดสต็อกคงเหลือตามคลัง'**
+  String get scanStockSection;
+
+  /// No description provided for @scanStockAvailable.
+  ///
+  /// In th, this message translates to:
+  /// **'พร้อมใช้ {qty} {unit}'**
+  String scanStockAvailable(String qty, String unit);
+
+  /// No description provided for @scanStockOnHand.
+  ///
+  /// In th, this message translates to:
+  /// **'คงคลัง {onHand} จอง {reserved}'**
+  String scanStockOnHand(String onHand, String reserved);
+
+  /// No description provided for @scanStockEmpty.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่พบยอดคงเหลือในคลังของสาขานี้'**
+  String get scanStockEmpty;
+
+  /// No description provided for @scanRecentTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'สแกนล่าสุด'**
+  String get scanRecentTitle;
+
+  /// No description provided for @scanEmptyTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'พร้อมสแกนหรือค้นหาสินค้า'**
+  String get scanEmptyTitle;
+
+  /// No description provided for @scanEmptyBody.
+  ///
+  /// In th, this message translates to:
+  /// **'สแกนบาร์โค้ดด้วยกล้อง หรือพิมพ์รหัสสินค้าด้านบนเพื่อดูรายละเอียดและยอดสต็อก'**
+  String get scanEmptyBody;
+
+  /// No description provided for @scanNotFound.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่พบสินค้าที่ตรงกับรหัสนี้'**
+  String get scanNotFound;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'แจ้งเตือน'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsFilterAll.
+  ///
+  /// In th, this message translates to:
+  /// **'ทั้งหมด'**
+  String get notificationsFilterAll;
+
+  /// No description provided for @notificationsFilterUnread.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่อ่าน'**
+  String get notificationsFilterUnread;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In th, this message translates to:
+  /// **'อ่านทั้งหมด'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsMarkRead.
+  ///
+  /// In th, this message translates to:
+  /// **'ทำเครื่องหมายว่าอ่านแล้ว'**
+  String get notificationsMarkRead;
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ไม่มีรายการแจ้งเตือน'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptyBody.
+  ///
+  /// In th, this message translates to:
+  /// **'เมื่อมีงานรออนุมัติหรือการเปลี่ยนแปลงที่เกี่ยวข้อง จะแสดงที่นี่'**
+  String get notificationsEmptyBody;
+
+  /// No description provided for @notificationsUnreadBadge.
+  ///
+  /// In th, this message translates to:
+  /// **'ใหม่'**
+  String get notificationsUnreadBadge;
+
+  /// No description provided for @notificationsReadBadge.
+  ///
+  /// In th, this message translates to:
+  /// **'อ่านแล้ว'**
+  String get notificationsReadBadge;
+
+  /// No description provided for @notificationsTypeEstimate.
+  ///
+  /// In th, this message translates to:
+  /// **'ใบประเมินราคา'**
+  String get notificationsTypeEstimate;
+
+  /// No description provided for @notificationsTypeCost.
+  ///
+  /// In th, this message translates to:
+  /// **'ต้นทุนสินค้า'**
+  String get notificationsTypeCost;
+
+  /// No description provided for @notificationsTypePo.
+  ///
+  /// In th, this message translates to:
+  /// **'ใบสั่งซื้อ'**
+  String get notificationsTypePo;
+
+  /// No description provided for @notificationsTypeChangeOrder.
+  ///
+  /// In th, this message translates to:
+  /// **'ใบสั่งเปลี่ยนแปลงงาน'**
+  String get notificationsTypeChangeOrder;
+
+  /// No description provided for @notificationsTypeMrp.
+  ///
+  /// In th, this message translates to:
+  /// **'แผนวัสดุ MRP'**
+  String get notificationsTypeMrp;
+
+  /// No description provided for @notificationsTypeRole.
+  ///
+  /// In th, this message translates to:
+  /// **'สิทธิ์ผู้ใช้งาน'**
+  String get notificationsTypeRole;
+
+  /// No description provided for @notificationsTypeMembership.
+  ///
+  /// In th, this message translates to:
+  /// **'อายุสมาชิกสาขา'**
+  String get notificationsTypeMembership;
+
+  /// No description provided for @notificationsTypeGeneral.
+  ///
+  /// In th, this message translates to:
+  /// **'แจ้งเตือนระบบ'**
+  String get notificationsTypeGeneral;
+
+  /// No description provided for @attachmentSectionTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'รูปถ่ายและหลักฐานพื้นที่'**
+  String get attachmentSectionTitle;
+
+  /// No description provided for @attachmentTakePhoto.
+  ///
+  /// In th, this message translates to:
+  /// **'ถ่ายรูป'**
+  String get attachmentTakePhoto;
+
+  /// No description provided for @attachmentPickGallery.
+  ///
+  /// In th, this message translates to:
+  /// **'คลังภาพ'**
+  String get attachmentPickGallery;
+
+  /// No description provided for @attachmentEmptyHint.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่มีรูปถ่ายในพื้นที่นี้'**
+  String get attachmentEmptyHint;
+
+  /// No description provided for @attachmentStatusPending.
+  ///
+  /// In th, this message translates to:
+  /// **'รอซิงก์'**
+  String get attachmentStatusPending;
+
+  /// No description provided for @attachmentStatusSynced.
+  ///
+  /// In th, this message translates to:
+  /// **'ซิงก์แล้ว'**
+  String get attachmentStatusSynced;
+
+  /// No description provided for @attachmentDeleteTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ลบรูปถ่าย'**
+  String get attachmentDeleteTitle;
+
+  /// No description provided for @attachmentDeleteConfirm.
+  ///
+  /// In th, this message translates to:
+  /// **'ต้องการลบรูปถ่ายนี้ออกจากพื้นที่สำรวจใช่หรือไม่'**
+  String get attachmentDeleteConfirm;
+
+  /// No description provided for @surveyCaptureLaser.
+  ///
+  /// In th, this message translates to:
+  /// **'วัดด้วยเลเซอร์ BLE'**
+  String get surveyCaptureLaser;
+
+  /// No description provided for @surveyMeasureByLaser.
+  ///
+  /// In th, this message translates to:
+  /// **'วัดด้วยเลเซอร์ Bluetooth'**
+  String get surveyMeasureByLaser;
+
+  /// No description provided for @laserSheetTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'เครื่องวัดระยะเลเซอร์ Bluetooth'**
+  String get laserSheetTitle;
+
+  /// No description provided for @laserScanStart.
+  ///
+  /// In th, this message translates to:
+  /// **'สแกนหาเครื่องวัดเลเซอร์'**
+  String get laserScanStart;
+
+  /// No description provided for @laserScanStop.
+  ///
+  /// In th, this message translates to:
+  /// **'หยุดสแกน'**
+  String get laserScanStop;
+
+  /// No description provided for @laserScanning.
+  ///
+  /// In th, this message translates to:
+  /// **'กำลังค้นหาอุปกรณ์ BLE...'**
+  String get laserScanning;
+
+  /// No description provided for @laserNoDevices.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่พบเครื่องวัดเลเซอร์ในระยะใกล้'**
+  String get laserNoDevices;
+
+  /// No description provided for @laserConnect.
+  ///
+  /// In th, this message translates to:
+  /// **'เชื่อมต่อ'**
+  String get laserConnect;
+
+  /// No description provided for @laserDisconnect.
+  ///
+  /// In th, this message translates to:
+  /// **'ตัดการเชื่อมต่อ'**
+  String get laserDisconnect;
+
+  /// No description provided for @laserConnectedLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'เชื่อมต่อแล้ว: {deviceName}'**
+  String laserConnectedLabel(String deviceName);
+
+  /// No description provided for @laserLatestReading.
+  ///
+  /// In th, this message translates to:
+  /// **'ค่าวัดล่าสุดจากเลเซอร์'**
+  String get laserLatestReading;
+
+  /// No description provided for @laserUseReading.
+  ///
+  /// In th, this message translates to:
+  /// **'ใช้ค่าวัดนี้'**
+  String get laserUseReading;
+
+  /// No description provided for @laserSimulateButton.
+  ///
+  /// In th, this message translates to:
+  /// **'จำลองค่าวัดเลเซอร์ (โหมดทดสอบ)'**
+  String get laserSimulateButton;
+
+  /// No description provided for @laserSimulatedDeviceName.
+  ///
+  /// In th, this message translates to:
+  /// **'DISTO-SIM (จำลอง BLE)'**
+  String get laserSimulatedDeviceName;
+
+  /// No description provided for @laserBluetoothOff.
+  ///
+  /// In th, this message translates to:
+  /// **'บลูทูธปิดอยู่ หรืออุปกรณ์ไม่รองรับ BLE สามารถใช้ปุ่มจำลองค่าวัดเพื่อทดสอบได้'**
+  String get laserBluetoothOff;
+
+  /// No description provided for @pushSectionTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'การแจ้งเตือนแบบพุช (Push Notification)'**
+  String get pushSectionTitle;
+
+  /// No description provided for @pushStatusEnabled.
+  ///
+  /// In th, this message translates to:
+  /// **'เปิดรับแจ้งเตือนแล้ว'**
+  String get pushStatusEnabled;
+
+  /// No description provided for @pushStatusDisabled.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่ได้เปิดรับแจ้งเตือน'**
+  String get pushStatusDisabled;
+
+  /// No description provided for @pushStatusUnavailable.
+  ///
+  /// In th, this message translates to:
+  /// **'ยังไม่ได้ตั้งค่า Firebase Push บนเครื่องนี้'**
+  String get pushStatusUnavailable;
+
+  /// No description provided for @pushEnableAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ขอสิทธิ์รับแจ้งเตือนพุช'**
+  String get pushEnableAction;
+
+  /// No description provided for @pushTokenLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสอุปกรณ์ (FCM Token)'**
+  String get pushTokenLabel;
+
+  /// No description provided for @quickEstimateOpenButton.
+  ///
+  /// In th, this message translates to:
+  /// **'ประเมินราคาด่วนหน้างาน'**
+  String get quickEstimateOpenButton;
+
+  /// No description provided for @quickEstimateTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ประเมินราคาด่วน ({number})'**
+  String quickEstimateTitle(String number);
+
+  /// No description provided for @quickEstimateCreateAction.
+  ///
+  /// In th, this message translates to:
+  /// **'สร้างใบประเมินราคาด่วน'**
+  String get quickEstimateCreateAction;
+
+  /// No description provided for @quickEstimateTemplateLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'แม่แบบราคา'**
+  String get quickEstimateTemplateLabel;
+
+  /// No description provided for @quickEstimatePropertyTypeLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'ประเภทอสังหาริมทรัพย์'**
+  String get quickEstimatePropertyTypeLabel;
+
+  /// No description provided for @quickEstimatePropertyCondo.
+  ///
+  /// In th, this message translates to:
+  /// **'คอนโดมิเนียม'**
+  String get quickEstimatePropertyCondo;
+
+  /// No description provided for @quickEstimatePropertyHouse.
+  ///
+  /// In th, this message translates to:
+  /// **'บ้านเดี่ยว / ทาวน์โฮม'**
+  String get quickEstimatePropertyHouse;
+
+  /// No description provided for @quickEstimatePropertyOffice.
+  ///
+  /// In th, this message translates to:
+  /// **'สำนักงาน / พื้นที่พาณิชย์'**
+  String get quickEstimatePropertyOffice;
+
+  /// No description provided for @quickEstimateGradeLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'เกรดวัสดุ'**
+  String get quickEstimateGradeLabel;
+
+  /// No description provided for @quickEstimateGradeStandard.
+  ///
+  /// In th, this message translates to:
+  /// **'มาตรฐาน (Standard)'**
+  String get quickEstimateGradeStandard;
+
+  /// No description provided for @quickEstimateGradePremium.
+  ///
+  /// In th, this message translates to:
+  /// **'พรีเมียม (Premium)'**
+  String get quickEstimateGradePremium;
+
+  /// No description provided for @quickEstimateGradeLuxury.
+  ///
+  /// In th, this message translates to:
+  /// **'ลักชัวรี (Luxury)'**
+  String get quickEstimateGradeLuxury;
+
+  /// No description provided for @quickEstimateCalculateAction.
+  ///
+  /// In th, this message translates to:
+  /// **'คำนวณช่วงราคา'**
+  String get quickEstimateCalculateAction;
+
+  /// No description provided for @quickEstimateRangeLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'ช่วงราคาประเมินเบื้องต้น (รวมภาษี)'**
+  String get quickEstimateRangeLabel;
+
+  /// No description provided for @quickEstimateNetAmountLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'ยอดก่อนภาษี'**
+  String get quickEstimateNetAmountLabel;
+
+  /// No description provided for @quickEstimateTaxAmountLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'ภาษีมูลค่าเพิ่ม 7%'**
+  String get quickEstimateTaxAmountLabel;
+
+  /// No description provided for @quickEstimateValidUntilLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'ยืนราคาถึงวันที่ {date}'**
+  String quickEstimateValidUntilLabel(String date);
+
+  /// No description provided for @quickEstimateShareAction.
+  ///
+  /// In th, this message translates to:
+  /// **'แสดงหน้าจอแชร์ให้ลูกค้า'**
+  String get quickEstimateShareAction;
+
+  /// No description provided for @quickEstimateShareSheetTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ข้อเสนอราคาเบื้องต้นสำหรับลูกค้า'**
+  String get quickEstimateShareSheetTitle;
+
+  /// No description provided for @quickEstimateShareDisclaimer.
+  ///
+  /// In th, this message translates to:
+  /// **'ราคานี้เป็นการประเมินเบื้องต้นจากพื้นที่สำรวจหน้างาน ราคาทางการจะออกหลังตรวจสอบรายการวัสดุ (BOQ)'**
+  String get quickEstimateShareDisclaimer;
+
+  /// No description provided for @quickEstimateShareConfirmAction.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกการแชร์ให้ลูกค้า'**
+  String get quickEstimateShareConfirmAction;
+
+  /// No description provided for @quickEstimateShareSuccess.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกการแชร์ช่วงราคาเรียบร้อยแล้ว'**
+  String get quickEstimateShareSuccess;
+
+  /// No description provided for @quickEstimateConvertAction.
+  ///
+  /// In th, this message translates to:
+  /// **'แปลงเป็นร่างใบประเมินทางการ (BOQ)'**
+  String get quickEstimateConvertAction;
+
+  /// No description provided for @quickEstimateConvertConfirmTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ยืนยันแปลงเป็นร่างใบประเมินทางการ?'**
+  String get quickEstimateConvertConfirmTitle;
+
+  /// No description provided for @quickEstimateConvertConfirmBody.
+  ///
+  /// In th, this message translates to:
+  /// **'ระบบจะสร้างร่างใบประเมินราคาทางการ (Official Estimate Draft) จากใบสำรวจหน้างานและรายการวัดนี้'**
+  String get quickEstimateConvertConfirmBody;
+
+  /// No description provided for @quickEstimateConvertSuccess.
+  ///
+  /// In th, this message translates to:
+  /// **'สร้างร่างใบประเมินราคาทางการเรียบร้อยแล้ว'**
+  String get quickEstimateConvertSuccess;
+
+  /// No description provided for @quickEstimateLinesSection.
+  ///
+  /// In th, this message translates to:
+  /// **'รายการพื้นที่และปริมาณที่นำมาคำนวณ'**
+  String get quickEstimateLinesSection;
+
+  /// No description provided for @approvalSheetTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'พิจารณาอนุมัติเอกสาร'**
+  String get approvalSheetTitle;
+
+  /// No description provided for @approvalDocumentLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'เลขที่เอกสาร'**
+  String get approvalDocumentLabel;
+
+  /// No description provided for @approvalSummaryLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'รายการ'**
+  String get approvalSummaryLabel;
+
+  /// No description provided for @approvalNoteLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'หมายเหตุประกอบการพิจารณา'**
+  String get approvalNoteLabel;
+
+  /// No description provided for @approvalNotePlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'ระบุเหตุผลหรือข้อสังเกต (จำเป็นเมื่อส่งกลับแก้ไข)...'**
+  String get approvalNotePlaceholder;
+
+  /// No description provided for @approvalApproveAction.
+  ///
+  /// In th, this message translates to:
+  /// **'อนุมัติเอกสาร'**
+  String get approvalApproveAction;
+
+  /// No description provided for @approvalReturnAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ส่งกลับแก้ไข / ปฏิเสธ'**
+  String get approvalReturnAction;
+
+  /// No description provided for @approvalConfirmApproveTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ยืนยันการอนุมัติเอกสาร?'**
+  String get approvalConfirmApproveTitle;
+
+  /// No description provided for @approvalConfirmReturnTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ยืนยันการส่งกลับ / ปฏิเสธเอกสาร?'**
+  String get approvalConfirmReturnTitle;
+
+  /// No description provided for @approvalSuccessApproved.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกการอนุมัติเอกสารเรียบร้อยแล้ว'**
+  String get approvalSuccessApproved;
+
+  /// No description provided for @approvalSuccessReturned.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกการส่งกลับแก้ไขเรียบร้อยแล้ว'**
+  String get approvalSuccessReturned;
+
+  /// No description provided for @approvalNoteRequiredError.
+  ///
+  /// In th, this message translates to:
+  /// **'กรุณาระบุหมายเหตุก่อนส่งกลับแก้ไข'**
+  String get approvalNoteRequiredError;
+
+  /// No description provided for @approvalQuickActionHint.
+  ///
+  /// In th, this message translates to:
+  /// **'แตะเพื่อพิจารณาอนุมัติด่วน'**
+  String get approvalQuickActionHint;
+
+  /// No description provided for @conflictSheetTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'เปรียบเทียบข้อมูลขัดแย้ง (409/412)'**
+  String get conflictSheetTitle;
+
+  /// No description provided for @conflictDescription.
+  ///
+  /// In th, this message translates to:
+  /// **'ข้อมูลบนเซิร์ฟเวอร์ถูกแก้ไขโดยผู้ใช้อื่นในระหว่างที่คุณทำงานออฟไลน์ กรุณาเลือกเวอร์ชันที่ต้องการใช้'**
+  String get conflictDescription;
+
+  /// No description provided for @conflictFieldColumn.
+  ///
+  /// In th, this message translates to:
+  /// **'ฟิลด์ข้อมูล'**
+  String get conflictFieldColumn;
+
+  /// No description provided for @conflictLocalColumn.
+  ///
+  /// In th, this message translates to:
+  /// **'ค่าในเครื่องของคุณ'**
+  String get conflictLocalColumn;
+
+  /// No description provided for @conflictServerColumn.
+  ///
+  /// In th, this message translates to:
+  /// **'ค่าบนเซิร์ฟเวอร์'**
+  String get conflictServerColumn;
+
+  /// No description provided for @conflictKeepLocalAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ใช้ค่าในเครื่อง (ส่งซ้ำ)'**
+  String get conflictKeepLocalAction;
+
+  /// No description provided for @conflictAcceptServerAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ใช้ค่าบนเซิร์ฟเวอร์ (ละทิ้งของเครื่อง)'**
+  String get conflictAcceptServerAction;
+
+  /// No description provided for @conflictResolveAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ตรวจสอบและแก้ไขข้อขัดแย้ง'**
+  String get conflictResolveAction;
 }
 
 class _AppLocalizationsDelegate

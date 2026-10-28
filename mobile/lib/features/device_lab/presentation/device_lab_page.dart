@@ -6,6 +6,7 @@ import 'package:tan_erp_field/core/theme/erp_tokens.dart';
 import 'package:tan_erp_field/core/ui/erp_alert.dart';
 import 'package:tan_erp_field/core/ui/erp_button.dart';
 import 'package:tan_erp_field/core/ui/erp_card.dart';
+import 'package:tan_erp_field/core/ui/erp_measure_display.dart';
 import 'package:tan_erp_field/core/ui/erp_mono_loading.dart';
 import 'package:tan_erp_field/core/ui/erp_page_padding.dart';
 import 'package:tan_erp_field/core/ui/erp_screen.dart';
@@ -13,6 +14,7 @@ import 'package:tan_erp_field/features/device_lab/data/ar_measure_repository.dar
 import 'package:tan_erp_field/features/device_lab/domain/ar_measure_failure.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/ar_measure_controller.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/photo_area_card.dart';
+import 'package:tan_erp_field/native/laser_meter/laser_meter_service.dart';
 
 /// Dev-flavor only: tries device-specific features. Nothing is saved.
 class DeviceLabPage extends StatelessWidget {
@@ -35,6 +37,8 @@ class DeviceLabPage extends StatelessWidget {
           const _ArMeasureCard(),
           SizedBox(height: t.space4),
           const PhotoAreaCard(),
+          SizedBox(height: t.space4),
+          const LaserMeterLabCard(),
         ],
       ),
     );
@@ -189,21 +193,9 @@ class _ResultCard extends StatelessWidget {
       children: [
         Text(l10n.arResultTitle, style: text.titleSmall),
         SizedBox(height: t.space3),
-        Text(l10n.arResultArea, style: text.bodySmall),
-        // Main measured value: the single focal point (design.md 8.2).
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: t.accentMeasure,
-                width: t.borderWidth * 2,
-              ),
-            ),
-          ),
-          child: Text(
-            l10n.arValueSquareMeters(number.format(result.areaSqm)),
-            style: text.displayMedium,
-          ),
+        ErpMeasureDisplay(
+          label: l10n.arResultArea,
+          valueText: l10n.arValueSquareMeters(number.format(result.areaSqm)),
         ),
         SizedBox(height: t.space2),
         row(
@@ -215,6 +207,51 @@ class _ResultCard extends StatelessWidget {
             l10n.arResultEdge(i + 1),
             l10n.arValueMeters(number.format(edge)),
           ),
+      ],
+    );
+  }
+}
+
+/// Device Lab card: connects or simulates a BLE laser meter.
+class LaserMeterLabCard extends StatefulWidget {
+  const LaserMeterLabCard({super.key});
+
+  @override
+  State<LaserMeterLabCard> createState() => _LaserMeterLabCardState();
+}
+
+class _LaserMeterLabCardState extends State<LaserMeterLabCard> {
+  double? _lastReadingMeters;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final t = context.tokens;
+    final fmt = NumberFormat(
+      '#,##0.00',
+      Localizations.localeOf(context).toLanguageTag(),
+    );
+
+    return ErpCard(
+      title: l10n.laserSheetTitle,
+      children: [
+        if (_lastReadingMeters != null) ...[
+          ErpMeasureDisplay(
+            label: l10n.laserLatestReading,
+            valueText:
+                '${fmt.format(_lastReadingMeters)} ${l10n.surveyUnitM}',
+          ),
+          SizedBox(height: t.space4),
+        ],
+        ErpButton(
+          label: l10n.laserScanStart,
+          onPressed: () async {
+            final meters = await showLaserMeterSheet(context);
+            if (meters != null && mounted) {
+              setState(() => _lastReadingMeters = meters);
+            }
+          },
+        ),
       ],
     );
   }

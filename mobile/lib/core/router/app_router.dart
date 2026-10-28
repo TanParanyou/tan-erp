@@ -16,8 +16,11 @@ import 'package:tan_erp_field/features/auth/presentation/membership_page.dart';
 import 'package:tan_erp_field/features/auth/presentation/not_configured_page.dart';
 import 'package:tan_erp_field/features/dev/presentation/ui_gallery_page.dart';
 import 'package:tan_erp_field/features/device_lab/presentation/device_lab_page.dart';
-import 'package:tan_erp_field/features/home/presentation/placeholder_tab.dart';
 import 'package:tan_erp_field/features/me/presentation/me_page.dart';
+import 'package:tan_erp_field/features/notifications/presentation/notifications_page.dart';
+import 'package:tan_erp_field/features/scan/presentation/scan_page.dart';
+import 'package:tan_erp_field/features/survey/presentation/survey_list_page.dart';
+import 'package:tan_erp_field/features/today/presentation/today_page.dart';
 
 /// Route guard: forced update first, then the session state decides.
 String? _redirect(Ref ref, GoRouterState state) {
@@ -54,11 +57,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     ..onDispose(refresh.dispose);
 
   final isDev = ref.watch(appConfigProvider).isDev;
-
-  GoRoute tab(String path, ErpIcons icon) => GoRoute(
-    path: path,
-    builder: (_, _) => PlaceholderTab(icon: icon),
-  );
 
   return GoRouter(
     initialLocation: AppRoutes.today,
@@ -111,12 +109,36 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
         branches: [
           StatefulShellBranch(
-            routes: [tab(AppRoutes.today, ErpIcons.calendar)],
+            routes: [
+              GoRoute(
+                path: AppRoutes.today,
+                builder: (_, _) => const TodayPage(),
+              ),
+            ],
           ),
-          StatefulShellBranch(routes: [tab(AppRoutes.survey, ErpIcons.mapPin)]),
-          StatefulShellBranch(routes: [tab(AppRoutes.scan, ErpIcons.camera)]),
           StatefulShellBranch(
-            routes: [tab(AppRoutes.notifications, ErpIcons.bell)],
+            routes: [
+              GoRoute(
+                path: AppRoutes.survey,
+                builder: (_, _) => const SurveyListPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.scan,
+                builder: (_, _) => const ScanPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.notifications,
+                builder: (_, _) => const NotificationsPage(),
+              ),
+            ],
           ),
           StatefulShellBranch(
             routes: [

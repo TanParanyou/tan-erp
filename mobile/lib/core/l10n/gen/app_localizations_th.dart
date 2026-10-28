@@ -479,4 +479,632 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get photoAreaErrorReference =>
       'มุมกระดาษอ้างอิงไม่ถูกต้อง ย้ายจุดให้ตรงมุมทั้งสี่ของกระดาษ';
+
+  @override
+  String get syncBannerOffline => 'ออฟไลน์ บันทึกลงเครื่องแล้ว';
+
+  @override
+  String syncBannerSyncing(int count) {
+    return 'กำลังซิงก์ข้อมูล ($count)';
+  }
+
+  @override
+  String syncBannerPending(int count) {
+    return 'รอส่งขึ้นเซิร์ฟเวอร์ $count รายการ';
+  }
+
+  @override
+  String syncBannerConflict(int count) {
+    return 'พบข้อมูลขัดแย้ง $count รายการ แตะเพื่อตรวจสอบ';
+  }
+
+  @override
+  String get syncQueueTitle => 'คิวซิงก์ข้อมูล';
+
+  @override
+  String get syncQueueEmpty => 'ซิงก์ข้อมูลครบทุกรายการแล้ว';
+
+  @override
+  String get syncQueueSendNow => 'ส่งทั้งหมดตอนนี้';
+
+  @override
+  String get syncQueueClearFailed => 'ลบรายการที่ค้าง';
+
+  @override
+  String get syncStatusPending => 'รอส่ง';
+
+  @override
+  String get syncStatusSyncing => 'กำลังส่ง';
+
+  @override
+  String get syncStatusConflict => 'ข้อมูลขัดแย้ง';
+
+  @override
+  String get syncStatusFailed => 'ส่งไม่สำเร็จ';
+
+  @override
+  String get numpadClear => 'ล้าง';
+
+  @override
+  String get numpadBackspace => 'ลบ';
+
+  @override
+  String get numpadDone => 'ตกลง';
+
+  @override
+  String get todayTitle => 'งานวันนี้';
+
+  @override
+  String get todayRefresh => 'โหลดข้อมูลใหม่';
+
+  @override
+  String get todaySearchPlaceholder => 'ค้นหาเลขงาน ชื่อลูกค้า หรือสถานที่';
+
+  @override
+  String get todayFilterAll => 'ทั้งหมด';
+
+  @override
+  String get todayFilterSurveying => 'กำลังสำรวจ';
+
+  @override
+  String get todayFilterQualified => 'รอนัดสำรวจ';
+
+  @override
+  String get todayEmptyTitle => 'ไม่มีงานสำรวจวันนี้';
+
+  @override
+  String get todayEmptyBody =>
+      'ยังไม่มีรายการนัดสำรวจในสาขานี้ แตะเพื่อโหลดข้อมูลใหม่';
+
+  @override
+  String get todayOpenSurvey => 'เปิดใบสำรวจ';
+
+  @override
+  String get todayStartSurvey => 'เริ่มสำรวจหน้างาน';
+
+  @override
+  String get todayStageQualified => 'ผ่านคัดกรอง';
+
+  @override
+  String get todayStageSurveying => 'กำลังสำรวจ';
+
+  @override
+  String get todayStageEstimating => 'กำลังประเมินราคา';
+
+  @override
+  String get todayNoSite => 'ยังไม่ระบุสถานที่';
+
+  @override
+  String todayScheduledAt(String date) {
+    return 'นัดหมาย $date';
+  }
+
+  @override
+  String get surveyListTitle => 'สำรวจหน้างาน';
+
+  @override
+  String get surveySearchPlaceholder => 'ค้นหาเลขใบสำรวจ หรือชื่องาน';
+
+  @override
+  String get surveyEmptyTitle => 'ยังไม่มีใบสำรวจ';
+
+  @override
+  String get surveyEmptyBody =>
+      'เลือกงานจากหน้า งานวันนี้ เพื่อเริ่มบันทึกผลสำรวจหน้างาน';
+
+  @override
+  String get surveyGoToToday => 'ไปหน้างานวันนี้';
+
+  @override
+  String get surveyStatusDraft => 'ฉบับร่าง';
+
+  @override
+  String get surveyStatusReady => 'พร้อมประเมินราคา';
+
+  @override
+  String get surveyStatusVoided => 'ยกเลิก';
+
+  @override
+  String get surveyStatusScheduled => 'นัดหมายแล้ว';
+
+  @override
+  String surveyDetailTitle(String number) {
+    return 'ใบสำรวจ $number';
+  }
+
+  @override
+  String get surveyScopeLabel => 'สรุปขอบเขตงาน';
+
+  @override
+  String get surveyScopePlaceholder =>
+      'ระบุรายละเอียดหน้างานหรือสิ่งที่ลูกค้าต้องการ';
+
+  @override
+  String get surveyAreasSection => 'พื้นที่สำรวจ';
+
+  @override
+  String get surveySelectArea => 'เลือกพื้นที่สำรวจ';
+
+  @override
+  String get surveyBreakdownMeasurements => 'รายการค่าวัดย่อย';
+
+  @override
+  String get surveyTabletInspectorTitle => 'แผงสรุปผลสำรวจและสเปก';
+
+  @override
+  String get surveyAddArea => 'เพิ่มพื้นที่';
+
+  @override
+  String get surveyAreaNameLabel => 'ชื่อพื้นที่';
+
+  @override
+  String get surveyAreaNamePlaceholder => 'เช่น ห้องโถงชั้น 1, ห้องครัว';
+
+  @override
+  String get surveyAreaCodeLabel => 'รหัสพื้นที่';
+
+  @override
+  String get surveyAreaCodePlaceholder => 'เช่น A-01';
+
+  @override
+  String get surveyAreaNotesLabel => 'หมายเหตุพื้นที่';
+
+  @override
+  String get surveyAreaNotesPlaceholder =>
+      'ข้อจำกัดหน้างานหรือรายละเอียดเพิ่มเติม';
+
+  @override
+  String get surveyDeleteArea => 'ลบพื้นที่';
+
+  @override
+  String get surveyDeleteAreaConfirm =>
+      'ต้องการลบพื้นที่นี้และค่าวัดทั้งหมดในพื้นที่ใช่หรือไม่';
+
+  @override
+  String get surveyMeasurementsSection => 'รายการวัดขนาด';
+
+  @override
+  String get surveyAddMeasurement => 'เพิ่มค่าวัด';
+
+  @override
+  String get surveyMeasureTypeArea => 'พื้นที่';
+
+  @override
+  String get surveyMeasureTypeLength => 'ความยาว';
+
+  @override
+  String get surveyMeasureTypeWidth => 'ความกว้าง';
+
+  @override
+  String get surveyMeasureTypeHeight => 'ความสูง';
+
+  @override
+  String get surveyMeasureTypeCount => 'จำนวน';
+
+  @override
+  String get surveyUnitSqm => 'ตร.ม.';
+
+  @override
+  String get surveyUnitM => 'ม.';
+
+  @override
+  String get surveyUnitMm => 'มม.';
+
+  @override
+  String get surveyUnitPcs => 'ชิ้น';
+
+  @override
+  String get surveyCaptureMeasured => 'วัดจริง';
+
+  @override
+  String get surveyCapturePhoto => 'วัดจากรูป A4';
+
+  @override
+  String get surveyCaptureAr => 'วัดด้วย AR';
+
+  @override
+  String get surveyCaptureCustomer => 'ลูกค้าแจ้ง';
+
+  @override
+  String get surveyMeasureByPad => 'ป้อนตัวเลข';
+
+  @override
+  String get surveyMeasureByPhoto => 'วัดจากรูป A4';
+
+  @override
+  String get surveyMeasureByAr => 'AR วัดพื้น';
+
+  @override
+  String get surveyMeasureNotesLabel => 'หมายเหตุค่าวัด';
+
+  @override
+  String get surveyMeasureNotesPlaceholder => 'เช่น หักเสา 2 ต้น หรือวัดรวมบัว';
+
+  @override
+  String get surveySaveDraft => 'บันทึกร่าง';
+
+  @override
+  String get surveySavedOffline =>
+      'บันทึกลงคิวออฟไลน์แล้ว ระบบจะซิงก์เมื่อออนไลน์';
+
+  @override
+  String get surveySavedOnline => 'บันทึกใบสำรวจสำเร็จ';
+
+  @override
+  String get surveyMarkReady => 'ยืนยันพร้อมประเมินราคา';
+
+  @override
+  String get surveyMarkReadyConfirm =>
+      'เมื่อยืนยันแล้วจะไม่สามารถแก้ไขฉบับนี้ได้ ต้องการยืนยันใช่หรือไม่';
+
+  @override
+  String get surveyNoAreas =>
+      'ยังไม่มีพื้นที่สำรวจ แตะ เพิ่มพื้นที่ เพื่อเริ่มวัด';
+
+  @override
+  String get scanTitle => 'สแกนสินค้า';
+
+  @override
+  String get scanSearchLabel => 'รหัสบาร์โค้ด หรือรหัสสินค้า';
+
+  @override
+  String get scanSearchPlaceholder => 'กรอกบาร์โค้ด หรือรหัส SKU เช่น ITM-0001';
+
+  @override
+  String get scanSearchAction => 'ค้นหา';
+
+  @override
+  String get scanToggleCamera => 'เปิดกล้องสแกน';
+
+  @override
+  String get scanCloseCamera => 'ปิดกล้อง';
+
+  @override
+  String get scanCameraHint => 'เล็งกรอบให้ตรงกับบาร์โค้ดหรือ QR ของสินค้า';
+
+  @override
+  String get scanResultTitle => 'ข้อมูลสินค้า';
+
+  @override
+  String get scanItemCode => 'รหัสสินค้า';
+
+  @override
+  String get scanItemType => 'ประเภท';
+
+  @override
+  String get scanBaseUnit => 'หน่วยนับหลัก';
+
+  @override
+  String get scanBarcodeValue => 'บาร์โค้ด';
+
+  @override
+  String get scanPackaging => 'หน่วยบรรจุ';
+
+  @override
+  String get scanStockSection => 'ยอดสต็อกคงเหลือตามคลัง';
+
+  @override
+  String scanStockAvailable(String qty, String unit) {
+    return 'พร้อมใช้ $qty $unit';
+  }
+
+  @override
+  String scanStockOnHand(String onHand, String reserved) {
+    return 'คงคลัง $onHand จอง $reserved';
+  }
+
+  @override
+  String get scanStockEmpty => 'ไม่พบยอดคงเหลือในคลังของสาขานี้';
+
+  @override
+  String get scanRecentTitle => 'สแกนล่าสุด';
+
+  @override
+  String get scanEmptyTitle => 'พร้อมสแกนหรือค้นหาสินค้า';
+
+  @override
+  String get scanEmptyBody =>
+      'สแกนบาร์โค้ดด้วยกล้อง หรือพิมพ์รหัสสินค้าด้านบนเพื่อดูรายละเอียดและยอดสต็อก';
+
+  @override
+  String get scanNotFound => 'ไม่พบสินค้าที่ตรงกับรหัสนี้';
+
+  @override
+  String get notificationsTitle => 'แจ้งเตือน';
+
+  @override
+  String get notificationsFilterAll => 'ทั้งหมด';
+
+  @override
+  String get notificationsFilterUnread => 'ยังไม่อ่าน';
+
+  @override
+  String get notificationsMarkAllRead => 'อ่านทั้งหมด';
+
+  @override
+  String get notificationsMarkRead => 'ทำเครื่องหมายว่าอ่านแล้ว';
+
+  @override
+  String get notificationsEmptyTitle => 'ไม่มีรายการแจ้งเตือน';
+
+  @override
+  String get notificationsEmptyBody =>
+      'เมื่อมีงานรออนุมัติหรือการเปลี่ยนแปลงที่เกี่ยวข้อง จะแสดงที่นี่';
+
+  @override
+  String get notificationsUnreadBadge => 'ใหม่';
+
+  @override
+  String get notificationsReadBadge => 'อ่านแล้ว';
+
+  @override
+  String get notificationsTypeEstimate => 'ใบประเมินราคา';
+
+  @override
+  String get notificationsTypeCost => 'ต้นทุนสินค้า';
+
+  @override
+  String get notificationsTypePo => 'ใบสั่งซื้อ';
+
+  @override
+  String get notificationsTypeChangeOrder => 'ใบสั่งเปลี่ยนแปลงงาน';
+
+  @override
+  String get notificationsTypeMrp => 'แผนวัสดุ MRP';
+
+  @override
+  String get notificationsTypeRole => 'สิทธิ์ผู้ใช้งาน';
+
+  @override
+  String get notificationsTypeMembership => 'อายุสมาชิกสาขา';
+
+  @override
+  String get notificationsTypeGeneral => 'แจ้งเตือนระบบ';
+
+  @override
+  String get attachmentSectionTitle => 'รูปถ่ายและหลักฐานพื้นที่';
+
+  @override
+  String get attachmentTakePhoto => 'ถ่ายรูป';
+
+  @override
+  String get attachmentPickGallery => 'คลังภาพ';
+
+  @override
+  String get attachmentEmptyHint => 'ยังไม่มีรูปถ่ายในพื้นที่นี้';
+
+  @override
+  String get attachmentStatusPending => 'รอซิงก์';
+
+  @override
+  String get attachmentStatusSynced => 'ซิงก์แล้ว';
+
+  @override
+  String get attachmentDeleteTitle => 'ลบรูปถ่าย';
+
+  @override
+  String get attachmentDeleteConfirm =>
+      'ต้องการลบรูปถ่ายนี้ออกจากพื้นที่สำรวจใช่หรือไม่';
+
+  @override
+  String get surveyCaptureLaser => 'วัดด้วยเลเซอร์ BLE';
+
+  @override
+  String get surveyMeasureByLaser => 'วัดด้วยเลเซอร์ Bluetooth';
+
+  @override
+  String get laserSheetTitle => 'เครื่องวัดระยะเลเซอร์ Bluetooth';
+
+  @override
+  String get laserScanStart => 'สแกนหาเครื่องวัดเลเซอร์';
+
+  @override
+  String get laserScanStop => 'หยุดสแกน';
+
+  @override
+  String get laserScanning => 'กำลังค้นหาอุปกรณ์ BLE...';
+
+  @override
+  String get laserNoDevices => 'ยังไม่พบเครื่องวัดเลเซอร์ในระยะใกล้';
+
+  @override
+  String get laserConnect => 'เชื่อมต่อ';
+
+  @override
+  String get laserDisconnect => 'ตัดการเชื่อมต่อ';
+
+  @override
+  String laserConnectedLabel(String deviceName) {
+    return 'เชื่อมต่อแล้ว: $deviceName';
+  }
+
+  @override
+  String get laserLatestReading => 'ค่าวัดล่าสุดจากเลเซอร์';
+
+  @override
+  String get laserUseReading => 'ใช้ค่าวัดนี้';
+
+  @override
+  String get laserSimulateButton => 'จำลองค่าวัดเลเซอร์ (โหมดทดสอบ)';
+
+  @override
+  String get laserSimulatedDeviceName => 'DISTO-SIM (จำลอง BLE)';
+
+  @override
+  String get laserBluetoothOff =>
+      'บลูทูธปิดอยู่ หรืออุปกรณ์ไม่รองรับ BLE สามารถใช้ปุ่มจำลองค่าวัดเพื่อทดสอบได้';
+
+  @override
+  String get pushSectionTitle => 'การแจ้งเตือนแบบพุช (Push Notification)';
+
+  @override
+  String get pushStatusEnabled => 'เปิดรับแจ้งเตือนแล้ว';
+
+  @override
+  String get pushStatusDisabled => 'ยังไม่ได้เปิดรับแจ้งเตือน';
+
+  @override
+  String get pushStatusUnavailable =>
+      'ยังไม่ได้ตั้งค่า Firebase Push บนเครื่องนี้';
+
+  @override
+  String get pushEnableAction => 'ขอสิทธิ์รับแจ้งเตือนพุช';
+
+  @override
+  String get pushTokenLabel => 'รหัสอุปกรณ์ (FCM Token)';
+
+  @override
+  String get quickEstimateOpenButton => 'ประเมินราคาด่วนหน้างาน';
+
+  @override
+  String quickEstimateTitle(String number) {
+    return 'ประเมินราคาด่วน ($number)';
+  }
+
+  @override
+  String get quickEstimateCreateAction => 'สร้างใบประเมินราคาด่วน';
+
+  @override
+  String get quickEstimateTemplateLabel => 'แม่แบบราคา';
+
+  @override
+  String get quickEstimatePropertyTypeLabel => 'ประเภทอสังหาริมทรัพย์';
+
+  @override
+  String get quickEstimatePropertyCondo => 'คอนโดมิเนียม';
+
+  @override
+  String get quickEstimatePropertyHouse => 'บ้านเดี่ยว / ทาวน์โฮม';
+
+  @override
+  String get quickEstimatePropertyOffice => 'สำนักงาน / พื้นที่พาณิชย์';
+
+  @override
+  String get quickEstimateGradeLabel => 'เกรดวัสดุ';
+
+  @override
+  String get quickEstimateGradeStandard => 'มาตรฐาน (Standard)';
+
+  @override
+  String get quickEstimateGradePremium => 'พรีเมียม (Premium)';
+
+  @override
+  String get quickEstimateGradeLuxury => 'ลักชัวรี (Luxury)';
+
+  @override
+  String get quickEstimateCalculateAction => 'คำนวณช่วงราคา';
+
+  @override
+  String get quickEstimateRangeLabel => 'ช่วงราคาประเมินเบื้องต้น (รวมภาษี)';
+
+  @override
+  String get quickEstimateNetAmountLabel => 'ยอดก่อนภาษี';
+
+  @override
+  String get quickEstimateTaxAmountLabel => 'ภาษีมูลค่าเพิ่ม 7%';
+
+  @override
+  String quickEstimateValidUntilLabel(String date) {
+    return 'ยืนราคาถึงวันที่ $date';
+  }
+
+  @override
+  String get quickEstimateShareAction => 'แสดงหน้าจอแชร์ให้ลูกค้า';
+
+  @override
+  String get quickEstimateShareSheetTitle => 'ข้อเสนอราคาเบื้องต้นสำหรับลูกค้า';
+
+  @override
+  String get quickEstimateShareDisclaimer =>
+      'ราคานี้เป็นการประเมินเบื้องต้นจากพื้นที่สำรวจหน้างาน ราคาทางการจะออกหลังตรวจสอบรายการวัสดุ (BOQ)';
+
+  @override
+  String get quickEstimateShareConfirmAction => 'บันทึกการแชร์ให้ลูกค้า';
+
+  @override
+  String get quickEstimateShareSuccess => 'บันทึกการแชร์ช่วงราคาเรียบร้อยแล้ว';
+
+  @override
+  String get quickEstimateConvertAction => 'แปลงเป็นร่างใบประเมินทางการ (BOQ)';
+
+  @override
+  String get quickEstimateConvertConfirmTitle =>
+      'ยืนยันแปลงเป็นร่างใบประเมินทางการ?';
+
+  @override
+  String get quickEstimateConvertConfirmBody =>
+      'ระบบจะสร้างร่างใบประเมินราคาทางการ (Official Estimate Draft) จากใบสำรวจหน้างานและรายการวัดนี้';
+
+  @override
+  String get quickEstimateConvertSuccess =>
+      'สร้างร่างใบประเมินราคาทางการเรียบร้อยแล้ว';
+
+  @override
+  String get quickEstimateLinesSection => 'รายการพื้นที่และปริมาณที่นำมาคำนวณ';
+
+  @override
+  String get approvalSheetTitle => 'พิจารณาอนุมัติเอกสาร';
+
+  @override
+  String get approvalDocumentLabel => 'เลขที่เอกสาร';
+
+  @override
+  String get approvalSummaryLabel => 'รายการ';
+
+  @override
+  String get approvalNoteLabel => 'หมายเหตุประกอบการพิจารณา';
+
+  @override
+  String get approvalNotePlaceholder =>
+      'ระบุเหตุผลหรือข้อสังเกต (จำเป็นเมื่อส่งกลับแก้ไข)...';
+
+  @override
+  String get approvalApproveAction => 'อนุมัติเอกสาร';
+
+  @override
+  String get approvalReturnAction => 'ส่งกลับแก้ไข / ปฏิเสธ';
+
+  @override
+  String get approvalConfirmApproveTitle => 'ยืนยันการอนุมัติเอกสาร?';
+
+  @override
+  String get approvalConfirmReturnTitle => 'ยืนยันการส่งกลับ / ปฏิเสธเอกสาร?';
+
+  @override
+  String get approvalSuccessApproved => 'บันทึกการอนุมัติเอกสารเรียบร้อยแล้ว';
+
+  @override
+  String get approvalSuccessReturned => 'บันทึกการส่งกลับแก้ไขเรียบร้อยแล้ว';
+
+  @override
+  String get approvalNoteRequiredError => 'กรุณาระบุหมายเหตุก่อนส่งกลับแก้ไข';
+
+  @override
+  String get approvalQuickActionHint => 'แตะเพื่อพิจารณาอนุมัติด่วน';
+
+  @override
+  String get conflictSheetTitle => 'เปรียบเทียบข้อมูลขัดแย้ง (409/412)';
+
+  @override
+  String get conflictDescription =>
+      'ข้อมูลบนเซิร์ฟเวอร์ถูกแก้ไขโดยผู้ใช้อื่นในระหว่างที่คุณทำงานออฟไลน์ กรุณาเลือกเวอร์ชันที่ต้องการใช้';
+
+  @override
+  String get conflictFieldColumn => 'ฟิลด์ข้อมูล';
+
+  @override
+  String get conflictLocalColumn => 'ค่าในเครื่องของคุณ';
+
+  @override
+  String get conflictServerColumn => 'ค่าบนเซิร์ฟเวอร์';
+
+  @override
+  String get conflictKeepLocalAction => 'ใช้ค่าในเครื่อง (ส่งซ้ำ)';
+
+  @override
+  String get conflictAcceptServerAction =>
+      'ใช้ค่าบนเซิร์ฟเวอร์ (ละทิ้งของเครื่อง)';
+
+  @override
+  String get conflictResolveAction => 'ตรวจสอบและแก้ไขข้อขัดแย้ง';
 }
