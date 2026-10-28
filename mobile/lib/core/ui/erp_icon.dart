@@ -13,8 +13,17 @@ enum ErpIcons {
   checkCircle('check_circle'),
   info('info'),
   chevronDown('chevron_down'),
+  chevronRight('chevron_right'),
   logOut('log_out'),
-  check('check');
+  check('check'),
+  plus('plus'),
+  search('search'),
+  refresh('refresh'),
+  trash('trash'),
+  ruler('ruler'),
+  box('box'),
+  calculator('calculator'),
+  cloudOff('cloud_off');
 
   ErpIcons(this.file);
   final String file;
