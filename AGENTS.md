@@ -130,6 +130,7 @@ This repository is in **Application Implementation**. ก่อนประเ�
 > - มาตรฐานเลขที่เอกสารและ Master Data Codes: `.agents/skills/erp-document-numbering/SKILL.md` (ระบบรันเลขที่เอกสาร, Concurrency Lock, Token Format และการแยกรอบรีเซ็ต)
 > - Backend: `docs/02-architecture/backend-architecture.md`
 > - Frontend: `docs/02-architecture/frontend-architecture.md`
+> - Mobile: `docs/02-architecture/mobile-architecture.md` และ [`mobile/AGENTS.md`](mobile/AGENTS.md)
 > - API and errors: `docs/03-contracts/`
 > - Data and Raw SQL: `docs/04-data/`
 > - Testing and completion gates: `docs/05-engineering/`
@@ -158,6 +159,15 @@ This repository is in **Application Implementation**. ก่อนประเ�
 - ห้ามเรียก Database ตรงจาก Frontend Code; ทุกอย่างต้องผ่าน API Client
 - Frontend Permission Guard มีไว้เพื่อประสบการณ์ผู้ใช้ (UX) แต่ Backend คือผู้ถือกฎความปลอดภัยสูงสุด (Security Authority)
 
+### Mobile (Flutter Field Companion App - Clean Architecture & Riverpod)
+- อ่านข้อกำหนดฉบับสมบูรณ์ที่ [`mobile/AGENTS.md`](mobile/AGENTS.md) และสถาปัตยกรรม [`docs/02-architecture/mobile-architecture.md`](docs/02-architecture/mobile-architecture.md)
+- **Strict Dart Types & Zero `dynamic`:** บังคับใช้ `strict-casts`, `strict-inference`, `strict-raw-types` ร่วมกับ `very_good_analysis` ห้ามใช้ `dynamic` หรือ loose cast (`as`) โดยเด็ดขาด
+- **OpenAPI Single Source of Truth:** โมเดล DTO และ Request/Response ทั้งหมดต้องมาจาก `packages/tan_erp_api` ที่ generate ผ่าน `tool/generate_api.sh` เท่านั้น ห้ามเขียน DTO เองซ้ำซ้อน
+- **Riverpod Server State:** ให้ Riverpod (`AsyncNotifier`/`FutureProvider`) ถือ Server State เท่านั้น ห้ามเก็บใน Widget Local State และห้ามยิง API ใน Widget ตรงๆ
+- **Central UI Components & Design Tokens:** ใช้ Widget กลางจาก `lib/core/ui/` (`ErpButton`, `ErpTextField`, `ErpSelect`, `ErpCard`, `ErpAlert`, `ErpConfirmDialog`, `ErpEmptyState`, `ErpMonoLoading`, `ErpScreen`, `ErpIcon`) และอ่านสี/ขนาดจาก `context.tokens` (`ErpTokens`) เสมอ ห้ามใส่ `Color(0x...)` หรือ `BorderRadius.circular` (มี `custom_lint` คอยสกัด)
+- **i18n Parity:** ห้าม Hardcode ข้อความบน UI และต้องมีคู่เทียบแปลภาษาครบทั้ง `app_th.arb` และ `app_en.arb` เสมอ ตรวจสอบด้วย `dart run tool/check_l10n_parity.dart`
+- **Sealed ApiFailure & RFC 7807:** ข้อผิดพลาดจาก API ถูกแปลงเป็น `ApiFailure` Sealed Hierarchy ห้ามเทียบ string message และต้อง map ผ่าน `FailureMessages` / ARB
+
 ---
 
 ## 8. Definition of Done & Verification Before Completion
@@ -172,6 +182,13 @@ This repository is in **Application Implementation**. ก่อนประเ�
   # Frontend
   npm run build
   npm run lint
+
+  # Mobile (Flutter)
+  cd mobile
+  flutter analyze
+  dart run custom_lint
+  dart run tool/check_l10n_parity.dart
+  flutter test
   ```
 - **ห้ามกล่าวอ้างว่างาน "เสร็จแล้ว" หรือ "ผ่านแล้ว" หากยังไม่ได้รันคำสั่ง Verify และยืนยันผลลัพธ์จริง**
 

@@ -28,6 +28,7 @@ BACKEND_SLN   := backend/TanErp.slnx
 BACKEND_API   := backend/src/TanErp.Api
 BACKEND_INFRA := backend/src/TanErp.Infrastructure
 FRONTEND_DIR  := frontend
+MOBILE_DIR    := mobile
 
 .PHONY: help \
         check-ports kill-ports \
@@ -38,7 +39,8 @@ FRONTEND_DIR  := frontend
         verify verify-backend verify-frontend \
         test test-backend test-frontend test-e2e e2e test-fixtures \
         lint typecheck \
-        build clean clean-all deps install open
+        build clean clean-all deps install open \
+        mobile-dev mobile-ios mobile-analyze
 
 # -----------------------------------------------------------------
 # 1. แสดงคู่มือและรายการคำสั่งทั้งหมด (Help)
@@ -59,6 +61,11 @@ help:
 	@echo "    make dev-env        - เตรียมไฟล์ frontend/.env.local จาก .env.example (หากยังไม่มี)"
 	@echo "    make deps / install - ติดตั้ง dependencies ทั้งหมดในโปรเจกต์ (npm + dotnet restore)"
 	@echo "    make open           - เปิดเบราว์เซอร์ไปยังหน้า Login (http://localhost:$(FE_PORT)/th/login)"
+	@echo ""
+	@echo "  📱 แอปพลิเคชันมือถือ (Mobile / Flutter):"
+	@echo "    make mobile-dev     - รัน Flutter Field App (โหมด Dev พร้อม dev.json)"
+	@echo "    make mobile-ios     - รัน Flutter Field App สำหรับ iOS (Simulator/Device)"
+	@echo "    make mobile-analyze - ตรวจสอบโค้ด Flutter (analyze + custom_lint)"
 	@echo ""
 	@echo "  🔌 การจัดการพอร์ต (Port Management):"
 	@echo "    make check-ports    - ตรวจสอบสถานะของพอร์ต $(FE_PORT), $(BE_PORT), $(EMULATOR_PORT), $(DB_PORT)"
@@ -361,3 +368,20 @@ clean-all: clean down
 	@echo "กำลังลบ node_modules และ dependencies ทั้งหมด..."
 	rm -rf node_modules $(FRONTEND_DIR)/node_modules 2>/dev/null || true
 	@echo "ล้างทั้งหมดสมบูรณ์"
+
+# -----------------------------------------------------------------
+# 9. แอปพลิเคชันมือถือ (Mobile / Flutter)
+# -----------------------------------------------------------------
+# รัน Flutter App ในโหมด Development (Android / Default)
+mobile-dev:
+	@echo "กำลังรัน Mobile App (Dev Flavor)..."
+	cd $(MOBILE_DIR) && flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=config/dev.json
+
+# รัน Flutter App สำหรับ iOS Simulator / Device
+mobile-ios:
+	@echo "กำลังรัน Mobile App สำหรับ iOS..."
+	cd $(MOBILE_DIR) && flutter run -t lib/main_dev.dart --dart-define-from-file=config/dev.json
+
+# ตรวจสอบ Lint และ Static Analysis ของ Flutter
+mobile-analyze:
+	cd $(MOBILE_DIR) && flutter analyze && dart run custom_lint
