@@ -445,4 +445,139 @@ public class ProjectControlEndpointsTests : IAsyncLifetime
         var unchanged = await GetControlAsync(projectId);
         Assert.Null(unchanged.PlannedStartDate);
     }
+
+    [Fact]
+    public async Task WbsHierarchy_LaborTimesheets_CostLedger_AndBudgetOverrunNotification_WorkEndToEnd()
+    {
+        var projectId = await CreateProjectAsync();
+        var control = await GetControlAsync(projectId);
+        control = await ControlAsync(await SendAsync(HttpMethod.Put, $"/api/v1/projects/{projectId}/plan", new SetProjectPlanRequest(Start, End), ifMatch: control.RowVersion));
+
+        // 1. Create 3-level WBS hierarchy (Phase -> Deliverable -> Work Package)
+        control = await ControlAsync(await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/wbs", new AddProjectWbsNodeRequest(null, "1.0", "งานโครงสร้างหลัก")));
+        var phase = Assert.Single(control.WbsNodes);
+        Assert.Equal(1, phase.Level);
+
+        // Duplicate code in same project -> 409 PROJECT_WBS_CODE_CONFLICT
+        var duplicateCode = await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/wbs", new AddProjectWbsNodeRequest(null, "1.0", "ซ้ำ"));
+        Assert.Equal(HttpStatusCode.Conflict, duplicateCode.StatusCode);
+        Assert.Equal("PROJECT_WBS_CODE_CONFLICT", await ErrorCodeAsync(duplicateCode));
+
+        control = await ControlAsync(await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/wbs", new AddProjectWbsNodeRequest(phase.Id, "1.1", "ตู้เสื้อผ้าบิลท์อิน")));
+        var deliverable = control.WbsNodes.Single(w => w.Code == "1.1");
+        Assert.Equal(2, deliverable.Level);
+
+        control = await ControlAsync(await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/wbs", new AddProjectWbsNodeRequest(deliverable.Id, "1.1.1", "ประกอบโครงตู้")));
+        var workPackage = control.WbsNodes.Single(w => w.Code == "1.1.1");
+        Assert.Equal(3, workPackage.Level);
+
+        // Level 4 is rejected -> 422 PROJECT_WBS_DEPTH_EXCEEDED
+        var level4 = await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/wbs", new AddProjectWbsNodeRequest(workPackage.Id, "1.1.1.1", "เกินระดับ 3"));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, level4.StatusCode);
+        Assert.Equal("PROJECT_WBS_DEPTH_EXCEEDED", await ErrorCodeAsync(level4));
+
+        // Cannot delete parent WBS node that has children -> 409 PROJECT_WBS_IN_USE
+        var deleteParent = await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/wbs/{phase.Id}/delete", new ProjectWbsNodeVersionRequest(phase.RowVersion));
+        Assert.Equal(HttpStatusCode.Conflict, deleteParent.StatusCode);
+        Assert.Equal("PROJECT_WBS_IN_USE", await ErrorCodeAsync(deleteParent));
+
+        // 2. Link budget lines to WBS and activate project (Total Budget = 2,000 THB)
+        var budgetLines = new List<ProjectBudgetLineRequest>
+        {
+            new("labor", "ค่าแรงประกอบโครงตู้", 2000m, workPackage.Id)
+        };
+        control = await ControlAsync(await SendAsync(HttpMethod.Put, $"/api/v1/projects/{projectId}/budget", new ReplaceProjectBudgetRequest(budgetLines), ifMatch: control.RowVersion));
+        Assert.Equal(workPackage.Id, control.Budget.Lines.Single().WbsNodeId);
+        Assert.Equal("1.1.1", control.Budget.Lines.Single().WbsCode);
+
+        // Cannot delete WBS node referenced by budget line -> 409 PROJECT_WBS_IN_USE
+        var deleteBudgeted = await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/wbs/{workPackage.Id}/delete", new ProjectWbsNodeVersionRequest(workPackage.RowVersion));
+        Assert.Equal(HttpStatusCode.Conflict, deleteBudgeted.StatusCode);
+        Assert.Equal("PROJECT_WBS_IN_USE", await ErrorCodeAsync(deleteBudgeted));
+
+        control = await ControlAsync(await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/transitions", new TransitionProjectRequest("active", null), ifMatch: control.RowVersion));
+        Assert.Equal("active", control.Status);
+
+        // 3. Configure worker labor rate (250 THB/hr)
+        control = await ControlAsync(await SendAsync(HttpMethod.Put, $"/api/v1/projects/{projectId}/labor-rates", new SetProjectLaborRateRequest(UserId, 250m)));
+        var rate = Assert.Single(control.LaborRates);
+        Assert.Equal(250m, rate.HourlyRate);
+
+        // 4. Create labor timesheet (10 hours on 2026-11-05 -> 2,500 THB, triggers overtime warning > 8h)
+        var workDate = new DateOnly(2026, 11, 5);
+        control = await ControlAsync(await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/timesheets",
+            new CreateProjectTimesheetRequest(UserId, workDate, 10m, workPackage.Id, null, "ประกอบโครงตู้และติดตั้งบานพับ"),
+            key: "ts-create-key-0001"));
+        var ts = Assert.Single(control.Timesheets);
+        Assert.StartsWith("TS", ts.Number);
+        Assert.Equal("draft", ts.Status);
+        Assert.True(ts.IsOvertimeWarning);
+        Assert.Equal(250m, ts.HourlyRate);
+        Assert.Equal(2500m, ts.CostAmount);
+
+        // Exceeding 24h in same day for same worker -> 422 TIMESHEET_DAILY_HOURS_EXCEEDED
+        var over24h = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/timesheets",
+            new CreateProjectTimesheetRequest(UserId, workDate, 15m, workPackage.Id, null, "กะดึกเกิน 24 ชม."),
+            key: "ts-create-key-0002");
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, over24h.StatusCode);
+        Assert.Equal("TIMESHEET_DAILY_HOURS_EXCEEDED", await ErrorCodeAsync(over24h));
+
+        // 5. Submit timesheet & verify Maker-Checker + Approval
+        control = await ControlAsync(await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/timesheets/{ts.Id}/submit",
+            new ProjectTimesheetActionRequest(ts.RowVersion, null)));
+        ts = control.Timesheets.Single();
+        Assert.Equal("submitted", ts.Status);
+
+        var selfApprove = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/timesheets/{ts.Id}/approve",
+            new ProjectTimesheetActionRequest(ts.RowVersion, "อนุมัติตัวเอง"));
+        Assert.Equal(HttpStatusCode.Forbidden, selfApprove.StatusCode);
+        Assert.Equal("TIMESHEET_SELF_APPROVAL", await ErrorCodeAsync(selfApprove));
+
+        control = await ControlAsync(await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/timesheets/{ts.Id}/approve",
+            new ProjectTimesheetActionRequest(ts.RowVersion, "อนุมัติค่าแรง"),
+            token: "token-approver"));
+        ts = control.Timesheets.Single();
+        Assert.Equal("approved", ts.Status);
+
+        // Approved timesheet is immutable -> 409 TIMESHEET_IMMUTABLE
+        var cancelApproved = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/projects/{projectId}/timesheets/{ts.Id}/cancel",
+            new ProjectTimesheetActionRequest(ts.RowVersion, null));
+        Assert.Equal(HttpStatusCode.Conflict, cancelApproved.StatusCode);
+        Assert.Equal("TIMESHEET_IMMUTABLE", await ErrorCodeAsync(cancelApproved));
+
+        // 6. Verify Cost Ledger & WBS Subtree Rollup & Budget Overrun Notification
+        var ledgerEntry = Assert.Single(control.CostLedger);
+        Assert.Equal("actual", ledgerEntry.EntryType);
+        Assert.Equal("labor", ledgerEntry.Category);
+        Assert.Equal("labor_timesheet", ledgerEntry.SourceType);
+        Assert.Equal(2500m, ledgerEntry.Amount);
+        Assert.Equal(2500m, control.Budget.ActualAmount);
+        Assert.Equal(-500m, control.Budget.AvailableBudget);
+        Assert.Equal(-500m, control.Budget.VarianceAmount);
+
+        var phaseSummary = control.WbsCostSummary.Single(s => s.WbsNodeId == phase.Id);
+        Assert.Equal(2000m, phaseSummary.BaselineBudget);
+        Assert.Equal(2500m, phaseSummary.ActualAmount);
+        Assert.Equal(-500m, phaseSummary.RemainingBudget);
+        Assert.True(phaseSummary.IsOverrun);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var overrunNotifications = await db.Notifications.AsNoTracking()
+            .Where(n => n.OrganizationId == OrgId && n.Type == "project.budget-overrun")
+            .ToListAsync();
+        Assert.Contains(overrunNotifications, n => n.PayloadJson.Contains(projectId.ToString()));
+    }
 }

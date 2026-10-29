@@ -70,9 +70,27 @@ public sealed record ProjectHandoverSourceResponse(
 
 public sealed record SetProjectPlanRequest(DateOnly? PlannedStartDate, DateOnly? PlannedEndDate);
 
-public sealed record ProjectBudgetLineRequest(string Category, string Description, decimal Amount);
+public sealed record ProjectBudgetLineRequest(string Category, string Description, decimal Amount, Guid? WbsNodeId = null);
 
 public sealed record ReplaceProjectBudgetRequest(List<ProjectBudgetLineRequest>? Lines);
+
+public sealed record AddProjectWbsNodeRequest(Guid? ParentId, string Code, string Name);
+
+public sealed record UpdateProjectWbsNodeRequest(string Code, string Name, Guid ExpectedVersion);
+
+public sealed record ProjectWbsNodeVersionRequest(Guid ExpectedVersion);
+
+public sealed record SetProjectLaborRateRequest(Guid WorkerUserId, decimal HourlyRate);
+
+public sealed record CreateProjectTimesheetRequest(
+    Guid WorkerUserId,
+    DateOnly WorkDate,
+    decimal Hours,
+    Guid? WbsNodeId,
+    Guid? WorkOrderId,
+    string TaskDescription);
+
+public sealed record ProjectTimesheetActionRequest(Guid ExpectedVersion, string? Note);
 
 public sealed record AddProjectMilestoneRequest(string Name, DateOnly? PlannedDate, int Weight);
 
@@ -86,7 +104,15 @@ public sealed record CreateProjectChangeOrderRequest(string Title, string Reason
 
 public sealed record ProjectChangeOrderActionRequest(Guid ExpectedVersion, string? Note);
 
-public sealed record ProjectBudgetLineResponse(Guid Id, string Category, string Description, decimal Amount, int SortOrder);
+public sealed record ProjectBudgetLineResponse(
+    Guid Id,
+    string Category,
+    string Description,
+    decimal Amount,
+    int SortOrder,
+    Guid? WbsNodeId = null,
+    string? WbsCode = null,
+    string? WbsName = null);
 
 public sealed record ProjectBudgetResponse(
     decimal? BaselineTotal,
@@ -96,8 +122,75 @@ public sealed record ProjectBudgetResponse(
     decimal ApprovedBudgetDelta,
     decimal? CurrentTotal,
     decimal CommittedAmount,
+    decimal ActualAmount,
     decimal? AvailableBudget,
+    decimal? VarianceAmount,
     IReadOnlyList<ProjectBudgetLineResponse> Lines);
+
+public sealed record ProjectWbsNodeResponse(
+    Guid Id,
+    Guid? ParentId,
+    string Code,
+    string Name,
+    int Level,
+    int SortOrder,
+    Guid RowVersion);
+
+public sealed record ProjectWbsCostSummaryResponse(
+    Guid? WbsNodeId,
+    string WbsCode,
+    string WbsName,
+    int Level,
+    decimal BaselineBudget,
+    decimal CommittedAmount,
+    decimal ActualAmount,
+    decimal RemainingBudget,
+    bool IsOverrun);
+
+public sealed record ProjectCostLedgerEntryResponse(
+    Guid Id,
+    Guid? WbsNodeId,
+    string? WbsCode,
+    string Category,
+    string EntryType,
+    string SourceType,
+    Guid SourceId,
+    string SourceNumber,
+    string Description,
+    decimal Amount,
+    bool IsReversal,
+    ProjectPersonResponse Actor,
+    DateTimeOffset OccurredAtUtc);
+
+public sealed record LaborRateResponse(
+    Guid Id,
+    ProjectPersonResponse Worker,
+    decimal HourlyRate,
+    DateTimeOffset UpdatedAtUtc,
+    Guid RowVersion);
+
+public sealed record LaborTimesheetResponse(
+    Guid Id,
+    string Number,
+    ProjectPersonResponse Worker,
+    DateOnly WorkDate,
+    decimal Hours,
+    decimal HourlyRate,
+    decimal CostAmount,
+    Guid? WbsNodeId,
+    string? WbsCode,
+    Guid? WorkOrderId,
+    string? WorkOrderNumber,
+    string TaskDescription,
+    string Status,
+    bool IsOvertimeWarning,
+    ProjectPersonResponse CreatedBy,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? SubmittedAtUtc,
+    ProjectPersonResponse? DecidedBy,
+    DateTimeOffset? DecidedAtUtc,
+    string? DecisionNote,
+    Guid RowVersion);
 
 public sealed record ProjectMilestoneResponse(
     Guid Id,
@@ -149,6 +242,11 @@ public sealed record ProjectControlResponse(
     ProjectBudgetResponse Budget,
     ProjectContractResponse Contract,
     ProjectProgressResponse Progress,
+    IReadOnlyList<ProjectWbsNodeResponse> WbsNodes,
+    IReadOnlyList<ProjectWbsCostSummaryResponse> WbsCostSummary,
+    IReadOnlyList<ProjectCostLedgerEntryResponse> CostLedger,
+    IReadOnlyList<LaborRateResponse> LaborRates,
+    IReadOnlyList<LaborTimesheetResponse> Timesheets,
     IReadOnlyList<ProjectMilestoneResponse> Milestones,
     IReadOnlyList<ProjectChangeOrderResponse> ChangeOrders,
     IReadOnlyList<ProjectStatusHistoryResponse> History);

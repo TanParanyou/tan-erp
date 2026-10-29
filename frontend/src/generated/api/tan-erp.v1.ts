@@ -3743,6 +3743,254 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calculation-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CalculationPolicyListResponse"];
+                        "application/json": components["schemas"]["CalculationPolicyListResponse"];
+                        "text/json": components["schemas"]["CalculationPolicyListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateCalculationPolicyRequest"];
+                    "text/json": components["schemas"]["CreateCalculationPolicyRequest"];
+                    "application/*+json": components["schemas"]["CreateCalculationPolicyRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CalculationPolicyVersionResponse"];
+                        "application/json": components["schemas"]["CalculationPolicyVersionResponse"];
+                        "text/json": components["schemas"]["CalculationPolicyVersionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calculation-policies/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CalculationPolicyVersionResponse"];
+                        "application/json": components["schemas"]["CalculationPolicyVersionResponse"];
+                        "text/json": components["schemas"]["CalculationPolicyVersionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/items/{itemId}/costs": {
         parameters: {
             query?: never;
@@ -16657,6 +16905,571 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectId}/wbs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddProjectWbsNodeRequest"];
+                    "text/json": components["schemas"]["AddProjectWbsNodeRequest"];
+                    "application/*+json": components["schemas"]["AddProjectWbsNodeRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/wbs/{wbsNodeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    wbsNodeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectWbsNodeRequest"];
+                    "text/json": components["schemas"]["UpdateProjectWbsNodeRequest"];
+                    "application/*+json": components["schemas"]["UpdateProjectWbsNodeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/wbs/{wbsNodeId}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    wbsNodeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectWbsNodeVersionRequest"];
+                    "text/json": components["schemas"]["ProjectWbsNodeVersionRequest"];
+                    "application/*+json": components["schemas"]["ProjectWbsNodeVersionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/labor-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetProjectLaborRateRequest"];
+                    "text/json": components["schemas"]["SetProjectLaborRateRequest"];
+                    "application/*+json": components["schemas"]["SetProjectLaborRateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/timesheets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectTimesheetRequest"];
+                    "text/json": components["schemas"]["CreateProjectTimesheetRequest"];
+                    "application/*+json": components["schemas"]["CreateProjectTimesheetRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/timesheets/{timesheetId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    timesheetId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectTimesheetActionRequest"];
+                    "text/json": components["schemas"]["ProjectTimesheetActionRequest"];
+                    "application/*+json": components["schemas"]["ProjectTimesheetActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/timesheets/{timesheetId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    timesheetId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectTimesheetActionRequest"];
+                    "text/json": components["schemas"]["ProjectTimesheetActionRequest"];
+                    "application/*+json": components["schemas"]["ProjectTimesheetActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/timesheets/{timesheetId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    timesheetId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectTimesheetActionRequest"];
+                    "text/json": components["schemas"]["ProjectTimesheetActionRequest"];
+                    "application/*+json": components["schemas"]["ProjectTimesheetActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/timesheets/{timesheetId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    timesheetId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ProjectTimesheetActionRequest"];
+                    "text/json": components["schemas"]["ProjectTimesheetActionRequest"];
+                    "application/*+json": components["schemas"]["ProjectTimesheetActionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectControlResponse"];
+                        "application/json": components["schemas"]["ProjectControlResponse"];
+                        "text/json": components["schemas"]["ProjectControlResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/milestones": {
         parameters: {
             query?: never;
@@ -23201,6 +24014,12 @@ export interface components {
             /** Format: int32 */
             weight?: number;
         };
+        AddProjectWbsNodeRequest: {
+            /** Format: uuid */
+            parentId?: string | null;
+            code?: string | null;
+            name?: string | null;
+        };
         AddressSearchResponse: {
             items?: components["schemas"]["AddressSearchResultItem"][] | null;
         };
@@ -23737,6 +24556,37 @@ export interface components {
             /** Format: double */
             adjustedAmount?: number;
         };
+        CalculationPolicyListResponse: {
+            items?: components["schemas"]["CalculationPolicyVersionResponse"][] | null;
+        };
+        CalculationPolicyVersionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            /** Format: uuid */
+            branchId?: string | null;
+            policyCode?: string | null;
+            /** Format: int32 */
+            version?: number;
+            status?: string | null;
+            overheadMethod?: string | null;
+            /** Format: double */
+            overheadValue?: number;
+            roundingMode?: string | null;
+            unitConversionMode?: string | null;
+            /** Format: date-time */
+            effectiveFromUtc?: string;
+            /** Format: date-time */
+            effectiveToUtc?: string | null;
+            /** Format: uuid */
+            createdByUserId?: string;
+            /** Format: uuid */
+            publishedByUserId?: string | null;
+            /** Format: date-time */
+            publishedAtUtc?: string | null;
+            contentHash?: string | null;
+        };
         CalculationResponse: {
             /** Format: int32 */
             version?: number;
@@ -24126,6 +24976,22 @@ export interface components {
             addressEn?: string | null;
             phone?: string | null;
         };
+        CreateCalculationPolicyRequest: {
+            /** Format: uuid */
+            branchId?: string | null;
+            policyCode: string;
+            /** Format: int32 */
+            version?: number;
+            overheadMethod: string;
+            /** Format: double */
+            overheadValue?: number;
+            roundingMode: string;
+            unitConversionMode: string;
+            /** Format: date-time */
+            effectiveFromUtc?: string;
+            /** Format: date-time */
+            effectiveToUtc?: string | null;
+        };
         CreateCostRecordRequest: {
             scope: string;
             /** Format: uuid */
@@ -24322,6 +25188,19 @@ export interface components {
             /** Format: date */
             plannedStartDate?: string | null;
             name?: string | null;
+        };
+        CreateProjectTimesheetRequest: {
+            /** Format: uuid */
+            workerUserId?: string;
+            /** Format: date */
+            workDate?: string;
+            /** Format: double */
+            hours?: number;
+            /** Format: uuid */
+            wbsNodeId?: string | null;
+            /** Format: uuid */
+            workOrderId?: string | null;
+            taskDescription?: string | null;
         };
         CreateQuickEstimateRequest: {
             /** Format: uuid */
@@ -25611,6 +26490,51 @@ export interface components {
             nameEn?: string | null;
             isActive?: boolean;
         };
+        LaborRateResponse: {
+            /** Format: uuid */
+            id?: string;
+            worker?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: double */
+            hourlyRate?: number;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
+        LaborTimesheetResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            worker?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: date */
+            workDate?: string;
+            /** Format: double */
+            hours?: number;
+            /** Format: double */
+            hourlyRate?: number;
+            /** Format: double */
+            costAmount?: number;
+            /** Format: uuid */
+            wbsNodeId?: string | null;
+            wbsCode?: string | null;
+            /** Format: uuid */
+            workOrderId?: string | null;
+            workOrderNumber?: string | null;
+            taskDescription?: string | null;
+            status?: string | null;
+            isOvertimeWarning?: boolean;
+            createdBy?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            submittedAtUtc?: string | null;
+            decidedBy?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: date-time */
+            decidedAtUtc?: string | null;
+            decisionNote?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
         LocalizedTextDto: {
             thai?: string | null;
             english?: string | null;
@@ -26238,6 +27162,8 @@ export interface components {
             description?: string | null;
             /** Format: double */
             amount?: number;
+            /** Format: uuid */
+            wbsNodeId?: string | null;
         };
         ProjectBudgetLineResponse: {
             /** Format: uuid */
@@ -26248,6 +27174,10 @@ export interface components {
             amount?: number;
             /** Format: int32 */
             sortOrder?: number;
+            /** Format: uuid */
+            wbsNodeId?: string | null;
+            wbsCode?: string | null;
+            wbsName?: string | null;
         };
         ProjectBudgetResponse: {
             /** Format: double */
@@ -26263,7 +27193,11 @@ export interface components {
             /** Format: double */
             committedAmount?: number;
             /** Format: double */
+            actualAmount?: number;
+            /** Format: double */
             availableBudget?: number | null;
+            /** Format: double */
+            varianceAmount?: number | null;
             lines?: components["schemas"]["ProjectBudgetLineResponse"][] | null;
         };
         ProjectChangeOrderActionRequest: {
@@ -26320,9 +27254,34 @@ export interface components {
             budget?: components["schemas"]["ProjectBudgetResponse"];
             contract?: components["schemas"]["ProjectContractResponse"];
             progress?: components["schemas"]["ProjectProgressResponse"];
+            wbsNodes?: components["schemas"]["ProjectWbsNodeResponse"][] | null;
+            wbsCostSummary?: components["schemas"]["ProjectWbsCostSummaryResponse"][] | null;
+            costLedger?: components["schemas"]["ProjectCostLedgerEntryResponse"][] | null;
+            laborRates?: components["schemas"]["LaborRateResponse"][] | null;
+            timesheets?: components["schemas"]["LaborTimesheetResponse"][] | null;
             milestones?: components["schemas"]["ProjectMilestoneResponse"][] | null;
             changeOrders?: components["schemas"]["ProjectChangeOrderResponse"][] | null;
             history?: components["schemas"]["ProjectStatusHistoryResponse"][] | null;
+        };
+        ProjectCostLedgerEntryResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            wbsNodeId?: string | null;
+            wbsCode?: string | null;
+            category?: string | null;
+            entryType?: string | null;
+            sourceType?: string | null;
+            /** Format: uuid */
+            sourceId?: string;
+            sourceNumber?: string | null;
+            description?: string | null;
+            /** Format: double */
+            amount?: number;
+            isReversal?: boolean;
+            actor?: components["schemas"]["ProjectPersonResponse"];
+            /** Format: date-time */
+            occurredAtUtc?: string;
         };
         ProjectCustomerResponse: {
             /** Format: uuid */
@@ -26452,6 +27411,46 @@ export interface components {
             actor?: components["schemas"]["ProjectPersonResponse"];
             /** Format: date-time */
             occurredAtUtc?: string;
+        };
+        ProjectTimesheetActionRequest: {
+            /** Format: uuid */
+            expectedVersion?: string;
+            note?: string | null;
+        };
+        ProjectWbsCostSummaryResponse: {
+            /** Format: uuid */
+            wbsNodeId?: string | null;
+            wbsCode?: string | null;
+            wbsName?: string | null;
+            /** Format: int32 */
+            level?: number;
+            /** Format: double */
+            baselineBudget?: number;
+            /** Format: double */
+            committedAmount?: number;
+            /** Format: double */
+            actualAmount?: number;
+            /** Format: double */
+            remainingBudget?: number;
+            isOverrun?: boolean;
+        };
+        ProjectWbsNodeResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            parentId?: string | null;
+            code?: string | null;
+            name?: string | null;
+            /** Format: int32 */
+            level?: number;
+            /** Format: int32 */
+            sortOrder?: number;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
+        ProjectWbsNodeVersionRequest: {
+            /** Format: uuid */
+            expectedVersion?: string;
         };
         PublicAcceptRequest: {
             signerName?: string | null;
@@ -27134,6 +28133,12 @@ export interface components {
         };
         SetCategoryAttributeTemplatesRequest: {
             templates?: components["schemas"]["CategoryAttributeTemplateDto"][] | null;
+        };
+        SetProjectLaborRateRequest: {
+            /** Format: uuid */
+            workerUserId?: string;
+            /** Format: double */
+            hourlyRate?: number;
         };
         SetProjectPlanRequest: {
             /** Format: date */
@@ -27910,6 +28915,12 @@ export interface components {
             plannedDate?: string | null;
             /** Format: int32 */
             weight?: number;
+            /** Format: uuid */
+            expectedVersion?: string;
+        };
+        UpdateProjectWbsNodeRequest: {
+            code?: string | null;
+            name?: string | null;
             /** Format: uuid */
             expectedVersion?: string;
         };

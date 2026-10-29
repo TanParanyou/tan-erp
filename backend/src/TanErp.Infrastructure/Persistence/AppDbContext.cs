@@ -82,7 +82,11 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Inventory.StockMovement> StockMovements => Set<TanErp.Domain.Inventory.StockMovement>();
     public DbSet<TanErp.Domain.Inventory.StockReservation> StockReservations => Set<TanErp.Domain.Inventory.StockReservation>();
     public DbSet<TanErp.Domain.Projects.Project> Projects => Set<TanErp.Domain.Projects.Project>();
+    public DbSet<TanErp.Domain.Projects.ProjectWbsNode> ProjectWbsNodes => Set<TanErp.Domain.Projects.ProjectWbsNode>();
     public DbSet<TanErp.Domain.Projects.ProjectBudgetLine> ProjectBudgetLines => Set<TanErp.Domain.Projects.ProjectBudgetLine>();
+    public DbSet<TanErp.Domain.Projects.ProjectCostLedgerEntry> ProjectCostLedgerEntries => Set<TanErp.Domain.Projects.ProjectCostLedgerEntry>();
+    public DbSet<TanErp.Domain.Projects.LaborRate> LaborRates => Set<TanErp.Domain.Projects.LaborRate>();
+    public DbSet<TanErp.Domain.Projects.LaborTimesheetEntry> LaborTimesheetEntries => Set<TanErp.Domain.Projects.LaborTimesheetEntry>();
     public DbSet<TanErp.Domain.Projects.ProjectMilestone> ProjectMilestones => Set<TanErp.Domain.Projects.ProjectMilestone>();
     public DbSet<TanErp.Domain.Projects.ProjectChangeOrder> ProjectChangeOrders => Set<TanErp.Domain.Projects.ProjectChangeOrder>();
     public DbSet<TanErp.Domain.Projects.ProjectStatusHistory> ProjectStatusHistories => Set<TanErp.Domain.Projects.ProjectStatusHistory>();

@@ -1243,4 +1243,106 @@
   <data name="QUOTATION_DOCUMENT_NOT_AVAILABLE_DETAIL" xml:space="preserve">
     <value>This quotation was issued before PDFs were stored, so no stored PDF exists yet. A user who can issue quotations can create it once.</value>
   </data>
+  <data name="PROJECT_WBS_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid project WBS node</value>
+  </data>
+  <data name="PROJECT_WBS_INVALID_DETAIL" xml:space="preserve">
+    <value>The WBS code or name is invalid, or the specified WBS node does not exist in this project.</value>
+  </data>
+  <data name="PROJECT_WBS_DEPTH_EXCEEDED_TITLE" xml:space="preserve">
+    <value>WBS depth limit exceeded</value>
+  </data>
+  <data name="PROJECT_WBS_DEPTH_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>Project WBS supports up to 3 levels (Phase, Deliverable, Work Package).</value>
+  </data>
+  <data name="PROJECT_WBS_CODE_CONFLICT_TITLE" xml:space="preserve">
+    <value>Duplicate WBS code in project</value>
+  </data>
+  <data name="PROJECT_WBS_CODE_CONFLICT_DETAIL" xml:space="preserve">
+    <value>This WBS code is already in use in this project. Specify a unique WBS code.</value>
+  </data>
+  <data name="PROJECT_WBS_IN_USE_TITLE" xml:space="preserve">
+    <value>Cannot delete WBS node in use</value>
+  </data>
+  <data name="PROJECT_WBS_IN_USE_DETAIL" xml:space="preserve">
+    <value>This WBS node still has child nodes, budget lines, cost ledger entries, or labor timesheets linked to it.</value>
+  </data>
+  <data name="PROJECT_WBS_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>WBS node was modified concurrently</value>
+  </data>
+  <data name="PROJECT_WBS_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The WBS node has been updated since it was loaded. Refresh and try again.</value>
+  </data>
+  <data name="PROJECT_COST_ENTRY_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid project cost ledger entry</value>
+  </data>
+  <data name="PROJECT_COST_ENTRY_INVALID_DETAIL" xml:space="preserve">
+    <value>The cost entry type, budget category, source document reference, or amount is invalid.</value>
+  </data>
+  <data name="PROJECT_COST_ENTRY_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>Project cost ledger entries are immutable</value>
+  </data>
+  <data name="PROJECT_COST_ENTRY_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>Project cost ledger entries are append-only. Record a reversal entry to adjust posted costs.</value>
+  </data>
+  <data name="LABOR_RATE_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid hourly labor rate</value>
+  </data>
+  <data name="LABOR_RATE_INVALID_DETAIL" xml:space="preserve">
+    <value>The hourly labor rate must be greater than zero and within the allowed limit, and the worker must exist in the organization.</value>
+  </data>
+  <data name="TIMESHEET_FIELD_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid labor timesheet data</value>
+  </data>
+  <data name="TIMESHEET_FIELD_INVALID_DETAIL" xml:space="preserve">
+    <value>Provide a valid worker, task description, or rejection note.</value>
+  </data>
+  <data name="TIMESHEET_HOURS_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid timesheet hours</value>
+  </data>
+  <data name="TIMESHEET_HOURS_INVALID_DETAIL" xml:space="preserve">
+    <value>Timesheet hours per entry must be between 0.25 and 24.00 hours.</value>
+  </data>
+  <data name="TIMESHEET_DAILY_HOURS_EXCEEDED_TITLE" xml:space="preserve">
+    <value>Daily timesheet hours exceed 24 hours</value>
+  </data>
+  <data name="TIMESHEET_DAILY_HOURS_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>The worker's total logged hours for this work date exceed 24 hours.</value>
+  </data>
+  <data name="TIMESHEET_TARGET_REQUIRED_TITLE" xml:space="preserve">
+    <value>WBS node or work order required</value>
+  </data>
+  <data name="TIMESHEET_TARGET_REQUIRED_DETAIL" xml:space="preserve">
+    <value>A labor timesheet entry must be linked to a project WBS node or a project work order.</value>
+  </data>
+  <data name="TIMESHEET_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve">
+    <value>Project status does not allow timesheet entries</value>
+  </data>
+  <data name="TIMESHEET_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve">
+    <value>Cannot create or approve labor timesheets for a closed or cancelled project.</value>
+  </data>
+  <data name="TIMESHEET_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>Invalid timesheet status for action</value>
+  </data>
+  <data name="TIMESHEET_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>The current status of the labor timesheet does not allow this transition.</value>
+  </data>
+  <data name="TIMESHEET_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>Approved timesheet is immutable</value>
+  </data>
+  <data name="TIMESHEET_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>An approved labor timesheet that has posted actual cost to the project is locked and cannot be modified or cancelled.</value>
+  </data>
+  <data name="TIMESHEET_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Timesheet was modified concurrently</value>
+  </data>
+  <data name="TIMESHEET_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The labor timesheet has been updated since it was loaded. Refresh and try again.</value>
+  </data>
+  <data name="TIMESHEET_SELF_APPROVAL_TITLE" xml:space="preserve">
+    <value>Cannot approve own labor timesheet (Maker-Checker)</value>
+  </data>
+  <data name="TIMESHEET_SELF_APPROVAL_DETAIL" xml:space="preserve">
+    <value>The creator or worker of a labor timesheet cannot approve or reject their own timesheet.</value>
+  </data>
 </root>

@@ -1405,4 +1405,106 @@
   <data name="QUOTATION_DOCUMENT_NOT_AVAILABLE_DETAIL" xml:space="preserve">
     <value>ใบเสนอราคานี้ออกก่อนที่ระบบจะเก็บไฟล์ PDF จึงยังไม่มีไฟล์ที่เก็บไว้ ผู้มีสิทธิ์ออกใบเสนอราคาสร้างไฟล์ได้หนึ่งครั้ง</value>
   </data>
+  <data name="PROJECT_WBS_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลโครงสร้างงาน (WBS) ไม่ถูกต้อง</value>
+  </data>
+  <data name="PROJECT_WBS_INVALID_DETAIL" xml:space="preserve">
+    <value>รหัสหรือชื่อโครงสร้างงาน (WBS) ไม่ถูกต้อง หรือไม่พบโหนดที่ระบุในโครงการนี้</value>
+  </data>
+  <data name="PROJECT_WBS_DEPTH_EXCEEDED_TITLE" xml:space="preserve">
+    <value>ระดับชั้นโครงสร้างงาน (WBS) เกินกว่าที่กำหนด</value>
+  </data>
+  <data name="PROJECT_WBS_DEPTH_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>โครงสร้างงาน (WBS) รองรับสูงสุดไม่เกิน 3 ระดับชั้น (Phase, Deliverable, Work Package)</value>
+  </data>
+  <data name="PROJECT_WBS_CODE_CONFLICT_TITLE" xml:space="preserve">
+    <value>รหัสโครงสร้างงาน (WBS) ซ้ำในโครงการเดียวกัน</value>
+  </data>
+  <data name="PROJECT_WBS_CODE_CONFLICT_DETAIL" xml:space="preserve">
+    <value>รหัส WBS นี้ถูกใช้งานแล้วในโครงการเดียวกัน กรุณาระบุรหัสที่ไม่ซ้ำ</value>
+  </data>
+  <data name="PROJECT_WBS_IN_USE_TITLE" xml:space="preserve">
+    <value>ไม่สามารถลบโครงสร้างงาน (WBS) ที่กำลังใช้งานได้</value>
+  </data>
+  <data name="PROJECT_WBS_IN_USE_DETAIL" xml:space="preserve">
+    <value>โหนด WBS นี้ยังมีรายการย่อย งบประมาณ ต้นทุน หรือใบบันทึกเวลาทำงานผูกอยู่</value>
+  </data>
+  <data name="PROJECT_WBS_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลโครงสร้างงาน (WBS) มีการแก้ไขจากผู้ใช้อื่น</value>
+  </data>
+  <data name="PROJECT_WBS_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ข้อมูลโครงสร้างงาน (WBS) ถูกอัปเดตไปก่อนหน้านี้ กรุณาโหลดข้อมูลล่าสุดแล้วลองใหม่อีกครั้ง</value>
+  </data>
+  <data name="PROJECT_COST_ENTRY_INVALID_TITLE" xml:space="preserve">
+    <value>รายการบัญชีต้นทุนโครงการไม่ถูกต้อง</value>
+  </data>
+  <data name="PROJECT_COST_ENTRY_INVALID_DETAIL" xml:space="preserve">
+    <value>ข้อมูลประเภทต้นทุน หมวดงบประมาณ เอกสารอ้างอิง หรือยอดเงินไม่ถูกต้อง</value>
+  </data>
+  <data name="PROJECT_COST_ENTRY_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>ไม่อนุญาตให้แก้ไขรายการต้นทุนที่บันทึกแล้ว</value>
+  </data>
+  <data name="PROJECT_COST_ENTRY_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>สมุดบัญชีต้นทุนโครงการเป็นแบบบันทึกเพิ่มเท่านั้น (Append-only) หากต้องการปรับปรุงให้บันทึกรายการกลับรายการ</value>
+  </data>
+  <data name="LABOR_RATE_INVALID_TITLE" xml:space="preserve">
+    <value>อัตราค่าแรงต่อชั่วโมงไม่ถูกต้อง</value>
+  </data>
+  <data name="LABOR_RATE_INVALID_DETAIL" xml:space="preserve">
+    <value>อัตราค่าแรงต่อชั่วโมงต้องมากกว่า 0 และไม่เกินขีดจำกัดที่ระบบกำหนด หรือไม่พบข้อมูลผู้ปฏิบัติงานในองค์กร</value>
+  </data>
+  <data name="TIMESHEET_FIELD_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลใบบันทึกเวลาทำงานไม่ถูกต้อง</value>
+  </data>
+  <data name="TIMESHEET_FIELD_INVALID_DETAIL" xml:space="preserve">
+    <value>กรุณาระบุผู้ปฏิบัติงาน รายละเอียดงาน หรือหมายเหตุการไม่อนุมัติให้ครบถ้วนและถูกต้อง</value>
+  </data>
+  <data name="TIMESHEET_HOURS_INVALID_TITLE" xml:space="preserve">
+    <value>จำนวนชั่วโมงทำงานไม่ถูกต้อง</value>
+  </data>
+  <data name="TIMESHEET_HOURS_INVALID_DETAIL" xml:space="preserve">
+    <value>จำนวนชั่วโมงทำงานต่อรายการต้องอยู่ระหว่าง 0.25 ถึง 24.00 ชั่วโมง</value>
+  </data>
+  <data name="TIMESHEET_DAILY_HOURS_EXCEEDED_TITLE" xml:space="preserve">
+    <value>จำนวนชั่วโมงทำงานรวมต่อวันเกิน 24 ชั่วโมง</value>
+  </data>
+  <data name="TIMESHEET_DAILY_HOURS_EXCEEDED_DETAIL" xml:space="preserve">
+    <value>จำนวนชั่วโมงทำงานรวมของผู้ปฏิบัติงานรายนี้ในวันดังกล่าวเกิน 24 ชั่วโมงต่อวัน</value>
+  </data>
+  <data name="TIMESHEET_TARGET_REQUIRED_TITLE" xml:space="preserve">
+    <value>ต้องระบุโครงสร้างงาน (WBS) หรือใบสั่งผลิต</value>
+  </data>
+  <data name="TIMESHEET_TARGET_REQUIRED_DETAIL" xml:space="preserve">
+    <value>ใบบันทึกเวลาทำงานต้องผูกกับโหนด WBS ของโครงการ หรือใบสั่งผลิตของโครงการอย่างน้อยหนึ่งรายการ</value>
+  </data>
+  <data name="TIMESHEET_PROJECT_NOT_ACTIVE_TITLE" xml:space="preserve">
+    <value>สถานะโครงการไม่อนุญาตให้บันทึกเวลาทำงาน</value>
+  </data>
+  <data name="TIMESHEET_PROJECT_NOT_ACTIVE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถสร้างหรืออนุมัติใบบันทึกเวลาทำงานในโครงการที่ปิดงานหรือยกเลิกแล้ว</value>
+  </data>
+  <data name="TIMESHEET_INVALID_STATE_TITLE" xml:space="preserve">
+    <value>สถานะใบบันทึกเวลาทำงานไม่ถูกต้อง</value>
+  </data>
+  <data name="TIMESHEET_INVALID_STATE_DETAIL" xml:space="preserve">
+    <value>สถานะปัจจุบันของใบบันทึกเวลาทำงานไม่รองรับการดำเนินการนี้</value>
+  </data>
+  <data name="TIMESHEET_IMMUTABLE_TITLE" xml:space="preserve">
+    <value>ใบบันทึกเวลาทำงานที่อนุมัติแล้วไม่สามารถแก้ไขหรือยกเลิกได้</value>
+  </data>
+  <data name="TIMESHEET_IMMUTABLE_DETAIL" xml:space="preserve">
+    <value>ใบบันทึกเวลาทำงานที่ได้รับการอนุมัติและรับรู้ต้นทุนเข้าโครงการแล้ว ถูกล็อกห้ามแก้ไขหรือยกเลิก</value>
+  </data>
+  <data name="TIMESHEET_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลใบบันทึกเวลาทำงานมีการเปลี่ยนแปลง</value>
+  </data>
+  <data name="TIMESHEET_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ใบบันทึกเวลาทำงานถูกอัปเดตโดยผู้ใช้อื่น กรุณาโหลดข้อมูลล่าสุดแล้วลองใหม่อีกครั้ง</value>
+  </data>
+  <data name="TIMESHEET_SELF_APPROVAL_TITLE" xml:space="preserve">
+    <value>ไม่อนุญาตให้อนุมัติใบบันทึกเวลาทำงานของตนเอง (Maker-Checker)</value>
+  </data>
+  <data name="TIMESHEET_SELF_APPROVAL_DETAIL" xml:space="preserve">
+    <value>ผู้บันทึกหรือผู้ปฏิบัติงานไม่สามารถอนุมัติหรือปฏิเสธใบบันทึกเวลาทำงานของตนเองได้ ต้องให้หัวหน้างานหรือผู้มีสิทธิ์ท่านอื่นดำเนินการ</value>
+  </data>
 </root>

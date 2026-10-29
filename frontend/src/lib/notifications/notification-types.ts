@@ -18,7 +18,8 @@ export type NotificationMessageKey =
   | "changeOrderApprovalRequested"
   | "mrpRunApprovalRequested"
   | "roleAssignmentApprovalRequested"
-  | "membershipExpiring";
+  | "membershipExpiring"
+  | "projectBudgetOverrun";
 
 export interface NotificationTypeDescriptor {
   messageKey: NotificationMessageKey;
@@ -54,6 +55,10 @@ export const NOTIFICATION_TYPES = {
   "membership.expiring": {
     messageKey: "membershipExpiring",
     fields: ["subjectDisplayName", "daysRemaining"],
+  },
+  "project.budget-overrun": {
+    messageKey: "projectBudgetOverrun",
+    fields: ["documentNumber", "actorDisplayName"],
   },
 } as const satisfies Record<string, NotificationTypeDescriptor>;
 

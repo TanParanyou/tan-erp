@@ -16,6 +16,7 @@ public static class DocumentTypes
     public const string Quotations = "quotations";
     public const string Projects = "projects";
     public const string ProjectChangeOrders = "project-change-orders";
+    public const string LaborTimesheets = "labor-timesheets";
     public const string Suppliers = "suppliers";
     public const string PurchaseOrders = "purchase-orders";
     public const string GoodsReceipts = "goods-receipts";
@@ -77,6 +78,7 @@ public static class DocumentTypes
         Quotations,
         Projects,
         ProjectChangeOrders,
+        LaborTimesheets,
         Suppliers,
         PurchaseOrders,
         GoodsReceipts,
@@ -153,6 +155,7 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.Quotations => "QT",
             DocumentTypes.Projects => "PRJ",
             DocumentTypes.ProjectChangeOrders => "PCO",
+            DocumentTypes.LaborTimesheets => "TS",
             DocumentTypes.PurchaseOrders => "PO",
             DocumentTypes.GoodsReceipts => "GR",
             DocumentTypes.StockReceipts => "SR",

@@ -347,6 +347,7 @@ public class ProcurementStore : IProcurementStore
             if (order.RowVersion != expectedVersion) return Fail<PurchaseOrderProjection>("PURCHASE_ORDER_VERSION_CONFLICT", "Purchase order version conflict.");
 
             var now = _clock.UtcNow;
+            var wasCommitted = CommittedStatuses.Contains(order.Status);
             try
             {
                 switch (action)
@@ -356,6 +357,18 @@ public class ProcurementStore : IProcurementStore
                         break;
                     case PurchaseOrderAction.Cancel:
                         order.Cancel(note ?? string.Empty, now);
+                        if (wasCommitted && order.ProjectId.HasValue)
+                        {
+                            var remainingCommitment = decimal.Round(order.Lines.Sum(l => l.RemainingQuantity * l.UnitPrice), 2);
+                            if (remainingCommitment > 0m)
+                            {
+                                _db.ProjectCostLedgerEntries.Add(new ProjectCostLedgerEntry(
+                                    Guid.NewGuid(), orgId, order.ProjectId.Value, null,
+                                    ProjectBudgetCategory.Material, ProjectCostEntryType.Commitment, ProjectCostSourceType.PurchaseOrder,
+                                    order.Id, order.Number, $"Purchase order {order.Number} cancelled",
+                                    -remainingCommitment, true, access.ActorUserId, now));
+                            }
+                        }
                         break;
                     default:
                         if (action == PurchaseOrderAction.Approve)
@@ -371,6 +384,14 @@ public class ProcurementStore : IProcurementStore
                         }
 
                         order.Decide(action == PurchaseOrderAction.Approve, access.ActorUserId, note, now);
+                        if (action == PurchaseOrderAction.Approve && order.ProjectId.HasValue && order.TotalAmount > 0m)
+                        {
+                            _db.ProjectCostLedgerEntries.Add(new ProjectCostLedgerEntry(
+                                Guid.NewGuid(), orgId, order.ProjectId.Value, null,
+                                ProjectBudgetCategory.Material, ProjectCostEntryType.Commitment, ProjectCostSourceType.PurchaseOrder,
+                                order.Id, order.Number, $"Purchase order {order.Number} approved",
+                                order.TotalAmount, false, access.ActorUserId, now));
+                        }
                         break;
                 }
             }
@@ -558,6 +579,19 @@ public class ProcurementStore : IProcurementStore
             }
 
             _db.GoodsReceipts.Add(receipt);
+            if (order.ProjectId.HasValue)
+            {
+                var receiptValue = decimal.Round(receipt.Lines.Sum(l => l.Quantity * l.UnitPrice), 2);
+                if (receiptValue > 0m)
+                {
+                    _db.ProjectCostLedgerEntries.Add(new ProjectCostLedgerEntry(
+                        Guid.NewGuid(), orgId, order.ProjectId.Value, null,
+                        ProjectBudgetCategory.Material, ProjectCostEntryType.Commitment, ProjectCostSourceType.GoodsReceipt,
+                        receipt.Id, receipt.Number, $"Goods receipt {receipt.Number} against {order.Number}",
+                        -receiptValue, true, access.ActorUserId, now));
+                }
+            }
+
             Audit(access, "goods-receipt.posted", "GoodsReceipt", receipt.Id, traceId,
                 new { number, purchaseOrderNumber = order.Number, lineCount = receipt.Lines.Count, orderStatus = order.Status }, null, now);
             _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, receipt.Id.ToString(), now));

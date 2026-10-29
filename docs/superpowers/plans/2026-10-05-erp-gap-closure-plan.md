@@ -52,7 +52,7 @@
 | G-07 | Survey Template ใน DB + effective period + evidence ต่อ Area | B | CP-03 Survey | Survey Owner | Implemented 2026-10-17 (verified 2026-10-23: Unit + Integration `v4` area evidence passed; browser not checked) — [ADR 0028](../../adr/0028-survey-templates-in-db.md); [Verification](../../05-engineering/survey-templates-db-verification.md) |
 | G-08 | Estimate Unit Conversion Snapshot | B | FR-ITEM-005 | Cost Owner + Estimator | G-08 Implemented 2026-10-15 (verified 2026-10-23: Unit + Integration + Vitest passed; browser not checked; feature OFF until a snapshot-mode calculation policy is published, which has no API yet) — [แผน G-08](2026-10-15-g08-estimate-unit-conversion.md); [ADR 0024](../../adr/0024-estimate-unit-conversion-snapshot.md); [Verification](../../05-engineering/estimate-unit-conversion-verification.md) |
 | G-09 | Quick Estimate: conversion พร้อมรายการ, Branch override, หลักฐาน | B | CP-16, G-01, G-08 | Sales + Cost Owner | G-09 Implemented 2026-10-15 (verified 2026-10-23: Unit + Integration + Vitest passed; browser not checked; migration apply เฉพาะ local dev DB; ยังไม่ผ่าน UAT; ร่างที่แปลงมีรายการขอบเขตแต่ยังไม่มีต้นทุน) — [แผน G-09](2026-10-15-g09-quick-estimate-completion.md); [ADR 0025](../../adr/0025-quick-estimate-branch-override-and-scope-line-conversion.md); [Verification](../../05-engineering/quick-estimate-completion-verification.md) |
-| G-10 | Project Actual Cost / Commitment / WBS | C | CP-09, CP-10, CP-11, CP-12 | PM + Finance | — |
+| G-10 | Project Actual Cost / Commitment / WBS | C | CP-09, CP-10, CP-11, CP-12 | PM + Finance | [แผน G-20 + G-10](2026-10-29-g20-g10-timesheet-project-wbs-cost.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/project-handover-verification.md)) |
 | G-11 | Purchase Request, Supplier Return, Supplier Invoice (3-way match) | C | CP-10, G-03 | Procurement + Finance | — |
 | G-12 | Inventory Location/Lot/Serial, Period Close, Returns | C | CP-11 | Warehouse + Finance | — |
 | G-13 | Production Routing/Work Center/Capacity, Labor, Subcontracting | C | CP-12, G-20 | Production | — |
@@ -62,7 +62,7 @@
 | G-17 | Accounting Connector จริง (+ Journal Export ชั่วคราว) | D | CP-15, G-15 | Finance + Security | — |
 | G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | — |
 | G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | — |
-| G-20 | Labor Timesheet | C | Identity, CP-09 | PM + Production + Finance | — |
+| G-20 | Labor Timesheet | C | Identity, CP-09 | PM + Production + Finance | [แผน G-20 + G-10](2026-10-29-g20-g10-timesheet-project-wbs-cost.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/project-handover-verification.md)) |
 | G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | G-21 ข้อ 1 Implemented 2026-10-12 (verified 2026-10-23: Unit + Integration 11/11 passed; browser not checked); ข้อ 2–3 ตัดสิน 2026-10-17 โดย owner delegation (A1, B1+B3, B2 เลื่อน; Legal ต้องยืนยัน retention) และ Implemented 2026-10-17 (verified 2026-10-23: Unit 6/6, Integration 1/1, Vitest 5/5 passed; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md); [แผน G-21](2026-10-12-g21-membership-expiry.md); [Open Decisions](2026-10-12-g21-open-decisions.md); [Verification](../../05-engineering/membership-expiry-verification.md) |
 
 **ลำดับแนะนำ:** Wave A (ของกลาง) → B (Commercial/Estimate) ↔ C (Project/Supply) ทำคู่ขนานได้ → D (Finance/Service) → E (Reporting). ภายใน Wave C: G-20 → G-10 → G-11 → G-12 → G-13 → G-14.
@@ -187,13 +187,13 @@
 
 ### G-10 — Project Actual Cost / Commitment / WBS
 
-**แตะ:** `backend/src/TanErp.Domain/Projects/` (`ProjectBudgetLine.cs`), Dapper read สำหรับ cost rollup ใน `backend/src/TanErp.Infrastructure/Persistence/Projects/`
+**แตะ:** `backend/src/TanErp.Domain/Projects/` (`ProjectBudgetLine.cs`, `ProjectWbsNode.cs`, `ProjectCostLedgerEntry.cs`), `backend/src/TanErp.Infrastructure/Persistence/Projects/ProjectControlStore.cs`
 
-- [ ] WBS: `ProjectWbsNode` ลำดับชั้น (ลึกสุด 3 ระดับ TEST_ONLY); budget line ผูก node
-- [ ] Commitment = PO approved ที่ยังไม่รับ; Actual = Goods issue (CP-11), WO material cost (CP-12), Labor (G-20), Supplier Invoice (G-11)
-- [ ] Cost ledger ต่อโครงการแบบ append-only อ้างเอกสารต้นทาง (ไม่คำนวณสดจากหลายตารางแบบเดา)
-- [ ] รายงาน Budget vs Commitment vs Actual ต่อ WBS
-- [ ] Tests: ยอดย้อนเอกสารต้นทางได้, void ต้นทาง → reversal entry, เกินงบแจ้งเตือน (G-02)
+- [x] WBS: `ProjectWbsNode` ลำดับชั้น (ลึกสุด 3 ระดับ TEST_ONLY); budget line ผูก node
+- [x] Commitment = PO approved ที่ยังไม่รับ; Actual = Goods issue (CP-11), WO material cost (CP-12), Labor (G-20) *(Supplier Invoice รอผูกต่อใน G-11)*
+- [x] Cost ledger ต่อโครงการแบบ append-only อ้างเอกสารต้นทาง (ไม่คำนวณสดจากหลายตารางแบบเดา)
+- [x] รายงาน Budget vs Commitment vs Actual ต่อ WBS
+- [x] Tests: ยอดย้อนเอกสารต้นทางได้, void/cancel/return ต้นทาง → reversal entry, เกินงบแจ้งเตือน (`project.budget-overrun`, G-02)
 
 ### G-11 — Procurement completion
 
@@ -287,9 +287,9 @@
 
 ### G-20 — Labor Timesheet
 
-- [ ] Timesheet ต่อผู้ใช้ต่อวัน ผูก Project WBS (G-10) หรือ Work Order operation (G-13) + อัตราค่าแรงต่อ Role/คน (TEST_ONLY)
-- [ ] อนุมัติโดยหัวหน้า → post เข้า Project cost ledger / WO cost
-- [ ] Tests: แก้หลังอนุมัติไม่ได้, ชั่วโมงเกินต่อวันถูกเตือน
+- [x] Timesheet ต่อผู้ใช้ต่อวัน ผูก Project WBS (G-10) หรือ Work Order (G-13) + อัตราค่าแรงต่อคน (`LaborRate`, ค่าเริ่มต้น `TEST_ONLY` 150 บาท/ชม.)
+- [x] อนุมัติโดยหัวหน้า (Maker ≠ Checker) → post เข้า Project cost ledger พร้อมตรวจแจ้งเตือนเกินงบ
+- [x] Tests: แก้หลังอนุมัติไม่ได้, ชั่วโมงเกินต่อวันถูกเตือน (`> 8` ชม./วัน) และห้ามเกินเพดาน 24 ชม./วัน
 
 ### G-21 — CP-02 ค้าง
 

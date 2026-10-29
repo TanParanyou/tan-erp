@@ -23,6 +23,7 @@ interface DraftLine {
   category: ProjectBudgetCategoryValue;
   description: string;
   amount: string;
+  wbsNodeId: string;
 }
 
 function toDraft(control: ProjectControlResponse): DraftLine[] {
@@ -31,6 +32,7 @@ function toDraft(control: ProjectControlResponse): DraftLine[] {
     category: isBudgetCategory(line.category) ? line.category : "other",
     description: line.description ?? "",
     amount: String(line.amount ?? 0),
+    wbsNodeId: line.wbsNodeId ?? "",
   }));
 }
 
@@ -45,6 +47,10 @@ export function ProjectBudgetCard({ control, canEdit, mutation, describeError }:
   const [error, setError] = useState<string | null>(null);
 
   const draftTotal = lines.reduce((sum, line) => sum + (Number(line.amount) || 0), 0);
+  const wbsOptions = [
+    { value: "", label: t("budgetWbsUnassigned") },
+    ...(control.wbsNodes ?? []).map((n) => ({ value: n.id ?? "", label: `${n.code} — ${n.name}` })),
+  ];
 
   function update(key: string, patch: Partial<DraftLine>): void {
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...patch } : line)));
@@ -61,6 +67,7 @@ export function ProjectBudgetCard({ control, canEdit, mutation, describeError }:
       category: line.category,
       description: line.description.trim(),
       amount: Number(line.amount),
+      ...(line.wbsNodeId ? { wbsNodeId: line.wbsNodeId } : {}),
     }));
     try {
       await mutation.mutateAsync({ rowVersion: control.rowVersion ?? "", lines: payload });
@@ -77,24 +84,33 @@ export function ProjectBudgetCard({ control, canEdit, mutation, describeError }:
           <h3 className="text-sm font-bold text-erp-navy">{t("budgetTitle")}</h3>
           <p className="mt-1 text-xs text-erp-text-muted">{budget?.isFrozen ? t("budgetFrozenHint") : t("budgetEditableHint")}</p>
         </div>
-        <dl className="grid grid-cols-2 gap-4 text-right text-xs sm:grid-cols-5">
+        <dl className="grid grid-cols-2 gap-4 text-right text-xs sm:grid-cols-4 lg:grid-cols-7">
           <div><dt className="text-erp-text-muted">{t("baselineBudget")}</dt><dd className="font-mono font-semibold">{budget?.baselineTotal != null ? formatCurrency(budget.baselineTotal, "THB", locale) : "-"}</dd></div>
           <div><dt className="text-erp-text-muted">{t("approvedBudgetDelta")}</dt><dd className="font-mono font-semibold">{formatCurrency(budget?.approvedBudgetDelta ?? 0, "THB", locale)}</dd></div>
           <div><dt className="text-erp-text-muted">{t("currentBudget")}</dt><dd className="font-mono font-semibold">{budget?.currentTotal != null ? formatCurrency(budget.currentTotal, "THB", locale) : "-"}</dd></div>
           <div><dt className="text-erp-text-muted">{t("committedAmount")}</dt><dd className="font-mono font-semibold">{formatCurrency(budget?.committedAmount ?? 0, "THB", locale)}</dd></div>
+          <div><dt className="text-erp-text-muted">{t("actualAmount")}</dt><dd className="font-mono font-semibold">{formatCurrency(budget?.actualAmount ?? 0, "THB", locale)}</dd></div>
           <div><dt className="text-erp-text-muted">{t("availableBudget")}</dt><dd className="font-mono font-semibold">{budget?.availableBudget != null ? formatCurrency(budget.availableBudget, "THB", locale) : "-"}</dd></div>
+          <div><dt className="text-erp-text-muted">{t("varianceAmount")}</dt><dd className="font-mono font-semibold">{budget?.varianceAmount != null ? formatCurrency(budget.varianceAmount, "THB", locale) : "-"}</dd></div>
         </dl>
       </div>
 
       <div className="space-y-2">
         {lines.map((line) => (
-          <div key={line.key} className="grid grid-cols-1 gap-2 sm:grid-cols-[160px_1fr_160px_auto] sm:items-end">
+          <div key={line.key} className="grid grid-cols-1 gap-2 sm:grid-cols-[140px_180px_1fr_140px_auto] sm:items-end">
             <Select
               aria-label={t("budgetCategory")}
               value={line.category}
               disabled={!editable || mutation.isPending}
               options={PROJECT_BUDGET_CATEGORIES.map((value) => ({ value, label: t(`budgetCategories.${value}`) }))}
               onChange={(e) => { const next = e.target.value; if (isBudgetCategory(next)) update(line.key, { category: next }); }}
+            />
+            <Select
+              aria-label={t("budgetWbsNode")}
+              value={line.wbsNodeId}
+              disabled={!editable || mutation.isPending}
+              options={wbsOptions}
+              onChange={(e) => update(line.key, { wbsNodeId: e.target.value })}
             />
             <Input aria-label={t("budgetDescription")} placeholder={t("budgetDescription")} value={line.description} maxLength={200} disabled={!editable || mutation.isPending} onChange={(e) => update(line.key, { description: e.target.value })} />
             <Input aria-label={t("budgetAmount")} placeholder={t("budgetAmount")} type="number" min={0} step="0.01" value={line.amount} disabled={!editable || mutation.isPending} onChange={(e) => update(line.key, { amount: e.target.value })} />
@@ -110,7 +126,7 @@ export function ProjectBudgetCard({ control, canEdit, mutation, describeError }:
 
       {editable && (
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={mutation.isPending} onClick={() => setLines((current) => [...current, { key: crypto.randomUUID(), category: "material", description: "", amount: "0" }])}>
+          <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={mutation.isPending} onClick={() => setLines((current) => [...current, { key: crypto.randomUUID(), category: "material", description: "", amount: "0", wbsNodeId: "" }])}>
             {t("addLine")}
           </Button>
           <div className="flex items-center gap-3">

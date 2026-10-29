@@ -8,7 +8,16 @@ import { ProjectControlPanel } from "./project-control-panel";
 import * as projectQueries from "../api/project-queries";
 import { ApiError } from "@/lib/api/api-error";
 import type { ProjectControlResponse } from "@/lib/api/api-client";
-import { allowedProjectTransitions, transitionNeedsReason, PROJECT_STATUSES, CHANGE_ORDER_STATUSES, PROJECT_BUDGET_CATEGORIES } from "../project-status";
+import {
+  allowedProjectTransitions,
+  transitionNeedsReason,
+  PROJECT_STATUSES,
+  CHANGE_ORDER_STATUSES,
+  PROJECT_BUDGET_CATEGORIES,
+  TIMESHEET_STATUSES,
+  PROJECT_COST_ENTRY_TYPES,
+  PROJECT_COST_SOURCE_TYPES,
+} from "../project-status";
 
 const toastMocks = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 const permissions = vi.hoisted(() => ({ granted: [] as string[] }));
@@ -38,6 +47,11 @@ function control(overrides: Partial<ProjectControlResponse> = {}): ProjectContro
     budget: { baselineTotal: null, baselineHash: null, isFrozen: false, approvedBudgetDelta: 0, currentTotal: null, lines: [] },
     contract: { baselineAmount: 1000, approvedDelta: 0, currentAmount: 1000 },
     progress: { totalMilestones: 0, completedMilestones: 0, totalWeight: 0, completedWeight: 0, percent: 0 },
+    wbsNodes: [],
+    wbsCostSummary: [],
+    costLedger: [],
+    laborRates: [],
+    timesheets: [],
     milestones: [],
     changeOrders: [],
     history: [],
@@ -55,6 +69,12 @@ const mutateFns = {
   createChangeOrder: vi.fn(),
   changeOrderAction: vi.fn(),
   updateMilestone: vi.fn(),
+  addWbsNode: vi.fn(),
+  updateWbsNode: vi.fn(),
+  deleteWbsNode: vi.fn(),
+  setLaborRate: vi.fn(),
+  createTimesheet: vi.fn(),
+  timesheetAction: vi.fn(),
 };
 
 function setup(data: ProjectControlResponse, granted: string[] = ALL_PERMISSIONS) {
@@ -88,12 +108,15 @@ describe("project status helpers", () => {
     expect(transitionNeedsReason("ready_for_handover", "completed")).toBe(false);
   });
 
-  it("has Thai and English text for every status, category and change order status", () => {
+  it("has Thai and English text for every status, category, change order status, timesheet status, and cost type", () => {
     for (const messages of [thMessages, enMessages]) {
       for (const status of PROJECT_STATUSES) expect(messages.projects.control.transitions[status]).toBeTruthy();
       for (const category of PROJECT_BUDGET_CATEGORIES) expect(messages.projects.control.budgetCategories[category]).toBeTruthy();
       for (const status of CHANGE_ORDER_STATUSES) expect(messages.projects.control.changeOrderStatuses[status]).toBeTruthy();
-      expect(Object.keys(messages.projects.control.errors).length).toBeGreaterThanOrEqual(17);
+      for (const status of TIMESHEET_STATUSES) expect(messages.projects.control.timesheetStatuses[status]).toBeTruthy();
+      for (const type of PROJECT_COST_ENTRY_TYPES) expect(messages.projects.control.costEntryTypes[type]).toBeTruthy();
+      for (const source of PROJECT_COST_SOURCE_TYPES) expect(messages.projects.control.costSourceTypes[source]).toBeTruthy();
+      expect(Object.keys(messages.projects.control.errors).length).toBeGreaterThanOrEqual(36);
     }
   });
 });
@@ -252,5 +275,206 @@ describe("ProjectControlPanel", () => {
   it("shows the status history", () => {
     setup(control({ status: "active", history: [{ id: "h1", fromStatus: "planned", toStatus: "active", reason: null, actor: { id: "u", displayName: "คุณผู้จัดการ" }, occurredAtUtc: "2026-10-04T00:00:00Z" }] }));
     expect(screen.getByText(c.historyEntry.replace("{from}", t.statuses.planned).replace("{to}", t.statuses.active))).toBeDefined();
+  });
+
+  it("renders WBS cost rollup table with overrun badge and adds a WBS node", async () => {
+    mutateFns.addWbsNode.mockResolvedValue(control());
+    const wbsNode = {
+      id: "wbs-1",
+      code: "1.1",
+      name: "งานโครงสร้าง",
+      level: 1,
+      sortOrder: 1,
+      rowVersion: "00000000-0000-0000-0000-0000000000d1",
+    };
+    const summary = {
+      wbsNodeId: "wbs-1",
+      wbsCode: "1.1",
+      wbsName: "งานโครงสร้าง",
+      level: 1,
+      baselineBudget: 10000,
+      committedAmount: 8000,
+      actualAmount: 5000,
+      remainingBudget: -3000,
+      isOverrun: true,
+    };
+
+    setup(control({ status: "active", wbsNodes: [wbsNode], wbsCostSummary: [summary] }));
+
+    expect(screen.getByText("1.1")).toBeDefined();
+    expect(screen.getByText("งานโครงสร้าง")).toBeDefined();
+    expect(screen.getByText(c.wbsOverrun)).toBeDefined();
+
+    // Add a child node
+    fireEvent.change(screen.getByPlaceholderText(c.wbsCodePlaceholder), { target: { value: "1.2" } });
+    fireEvent.change(screen.getByPlaceholderText(c.wbsNamePlaceholder), { target: { value: "งานตกแต่ง" } });
+    fireEvent.click(screen.getByRole("button", { name: c.addWbsNode }));
+
+    await waitFor(() => expect(mutateFns.addWbsNode).toHaveBeenCalledTimes(1));
+    expect(mutateFns.addWbsNode).toHaveBeenCalledWith({
+      parentId: null,
+      code: "1.2",
+      name: "งานตกแต่ง",
+    });
+  });
+
+  it("creates timesheet on active project and displays overtime warning", async () => {
+    mutateFns.createTimesheet.mockResolvedValue(control());
+    const ts = {
+      id: "ts-1",
+      number: "TS-2026-0001",
+      worker: { id: "w-1", displayName: "ช่างสมคิด" },
+      workDate: "2026-10-29",
+      hours: 10,
+      hourlyRate: 200,
+      costAmount: 2000,
+      wbsCode: "1.1",
+      taskDescription: "ติดตั้งบานหน้าต่าง",
+      status: "draft",
+      isOvertimeWarning: true,
+      rowVersion: "00000000-0000-0000-0000-0000000000e1",
+    };
+
+    setup(control({ status: "active", timesheets: [ts] }));
+
+    expect(screen.getByText("TS-2026-0001")).toBeDefined();
+    expect(screen.getByText(c.timesheetOvertimeWarning)).toBeDefined();
+    expect(screen.getByText("ติดตั้งบานหน้าต่าง")).toBeDefined();
+
+    // Create new timesheet via Drawer
+    fireEvent.click(screen.getByRole("button", { name: c.newTimesheet }));
+    const drawer = await screen.findByRole("dialog");
+    fireEvent.change(within(drawer).getByPlaceholderText(c.workerUserIdPlaceholder), { target: { value: "w-2" } });
+    fireEvent.change(within(drawer).getByPlaceholderText(c.timesheetTaskPlaceholder), { target: { value: "ประกอบตู้" } });
+    fireEvent.change(within(drawer).getByPlaceholderText(c.timesheetHoursPlaceholder), { target: { value: "8" } });
+    fireEvent.click(within(drawer).getByRole("button", { name: c.createTimesheet }));
+
+    await waitFor(() => expect(mutateFns.createTimesheet).toHaveBeenCalledTimes(1));
+    const call = mutateFns.createTimesheet.mock.calls[0][0];
+    expect(call.payload.workerUserId).toBe("w-2");
+    expect(call.payload.taskDescription).toBe("ประกอบตู้");
+    expect(call.payload.hours).toBe(8);
+    expect(typeof call.idempotencyKey).toBe("string");
+  });
+
+  it("submits a draft timesheet and approves/rejects submitted timesheet with note", async () => {
+    mutateFns.timesheetAction.mockResolvedValue(control());
+    const draftTs = {
+      id: "ts-1",
+      number: "TS-2026-0001",
+      worker: { id: "w-1", displayName: "ช่างสมคิด" },
+      workDate: "2026-10-29",
+      hours: 8,
+      hourlyRate: 150,
+      costAmount: 1200,
+      status: "draft",
+      taskDescription: "งานทั่วไป",
+      rowVersion: "v1",
+    };
+    const submittedTs = {
+      id: "ts-2",
+      number: "TS-2026-0002",
+      worker: { id: "w-2", displayName: "ช่างวิชัย" },
+      workDate: "2026-10-29",
+      hours: 8,
+      hourlyRate: 150,
+      costAmount: 1200,
+      status: "submitted",
+      taskDescription: "งานโครงเหล็ก",
+      rowVersion: "v2",
+    };
+
+    setup(control({ status: "active", timesheets: [draftTs, submittedTs] }));
+
+    // Submit draft
+    fireEvent.click(screen.getByRole("button", { name: c.submitTimesheet }));
+    await waitFor(() =>
+      expect(mutateFns.timesheetAction).toHaveBeenCalledWith({
+        timesheetId: "ts-1",
+        action: "submit",
+        expectedVersion: "v1",
+        note: null,
+      })
+    );
+
+    // Reject submitted timesheet with note
+    fireEvent.click(screen.getByRole("button", { name: c.rejectTimesheet }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.change(within(dialog).getByPlaceholderText(c.decisionNotePlaceholder), { target: { value: "ชั่วโมงไม่ตรงกับหน้างาน" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: c.rejectTimesheet }));
+
+    await waitFor(() =>
+      expect(mutateFns.timesheetAction).toHaveBeenCalledWith({
+        timesheetId: "ts-2",
+        action: "reject",
+        expectedVersion: "v2",
+        note: "ชั่วโมงไม่ตรงกับหน้างาน",
+      })
+    );
+  });
+
+  it("renders cost ledger entries showing commitment, actual and reversal badges", () => {
+    const entries = [
+      {
+        id: "cle-1",
+        sourceNumber: "PO-2026-0001",
+        entryType: "commitment",
+        sourceType: "purchase_order",
+        wbsCode: "1.1",
+        description: "สั่งซื้อไม้อัดสัก",
+        amount: 50000,
+        isReversal: false,
+        occurredAtUtc: "2026-10-29T10:00:00Z",
+      },
+      {
+        id: "cle-2",
+        sourceNumber: "TS-2026-0001",
+        entryType: "actual",
+        sourceType: "labor_timesheet",
+        wbsCode: "1.1",
+        description: "ค่าแรงงานโครงสร้าง",
+        amount: 2000,
+        isReversal: false,
+        occurredAtUtc: "2026-10-29T11:00:00Z",
+      },
+      {
+        id: "cle-3",
+        sourceNumber: "PO-2026-0001",
+        entryType: "commitment",
+        sourceType: "purchase_order",
+        wbsCode: "1.1",
+        description: "ยกเลิกคำสั่งซื้อ",
+        amount: -50000,
+        isReversal: true,
+        occurredAtUtc: "2026-10-29T12:00:00Z",
+      },
+    ];
+
+    setup(control({ status: "active", costLedger: entries }));
+
+    expect(screen.getAllByText("PO-2026-0001").length).toBe(2);
+    expect(screen.getByText("TS-2026-0001")).toBeDefined();
+    expect(screen.getByText("สั่งซื้อไม้อัดสัก")).toBeDefined();
+    expect(screen.getByText(c.costReversal)).toBeDefined();
+    expect(screen.getAllByText(c.costEntryTypes.commitment).length).toBe(2);
+    expect(screen.getByText(c.costEntryTypes.actual)).toBeDefined();
+  });
+
+  it("has full key parity between th.json and en.json for projects.control", () => {
+    const thControl = thMessages.projects.control;
+    const enControl = enMessages.projects.control;
+
+    function assertKeys(obj1: Record<string, unknown>, obj2: Record<string, unknown>, prefix = "") {
+      const keys1 = Object.keys(obj1).sort();
+      const keys2 = Object.keys(obj2).sort();
+      expect(keys1, `Mismatched keys at ${prefix}`).toEqual(keys2);
+      for (const k of keys1) {
+        if (typeof obj1[k] === "object" && obj1[k] !== null && !Array.isArray(obj1[k])) {
+          assertKeys(obj1[k] as Record<string, unknown>, obj2[k] as Record<string, unknown>, `${prefix}.${k}`);
+        }
+      }
+    }
+
+    assertKeys(thControl as unknown as Record<string, unknown>, enControl as unknown as Record<string, unknown>, "projects.control");
   });
 });

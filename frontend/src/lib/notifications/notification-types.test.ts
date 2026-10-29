@@ -16,6 +16,7 @@ describe("notification types", () => {
       "estimate.approval-requested",
       "membership.expiring",
       "mrp-run.approval-requested",
+      "project.budget-overrun",
       "purchase-order.approval-requested",
       "role-assignment.approval-requested",
     ]);

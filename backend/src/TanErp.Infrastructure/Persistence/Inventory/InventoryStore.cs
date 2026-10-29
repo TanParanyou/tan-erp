@@ -5,6 +5,7 @@ using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Inventory;
+using TanErp.Application.Notifications;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Inventory;
@@ -20,12 +21,14 @@ public class InventoryStore : IInventoryStore, IProductionStockPort
     private readonly AppDbContext _db;
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _numbers;
+    private readonly INotificationPublisher _notifications;
 
-    public InventoryStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers)
+    public InventoryStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications)
     {
         _db = db;
         _clock = clock;
         _numbers = numbers;
+        _notifications = notifications;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -410,6 +413,16 @@ public class InventoryStore : IInventoryStore, IProductionStockPort
                 document.AddMovement(Movement(orgId, document, balance, StockMovementKind.Issue, -quantity, CostPerUnit(value, quantity), -value, now, now));
             }
 
+            if (projectId.HasValue)
+            {
+                var issuedValue = decimal.Round(document.Movements.Sum(m => Math.Abs(m.ValueDelta)), 2);
+                if (issuedValue > 0m)
+                {
+                    await RecordProjectMaterialCostAsync(orgId, projectId.Value, ProjectCostSourceType.StockIssue, document.Id, document.Number,
+                        $"Stock issue {document.Number}", issuedValue, false, access.ActorUserId, now, ct);
+                }
+            }
+
             return Result<StockDocument>.Success(document);
         }, "stock-issue.posted", traceId, ct);
 
@@ -657,6 +670,16 @@ public class InventoryStore : IInventoryStore, IProductionStockPort
                 document.AddMovement(Movement(orgId, document, balance, StockMovementKind.Issue, -quantity, CostPerUnit(value, quantity), -value, now, now));
             }
 
+            if (projectId.HasValue)
+            {
+                var issuedValue = decimal.Round(document.Movements.Sum(m => Math.Abs(m.ValueDelta)), 2);
+                if (issuedValue > 0m)
+                {
+                    await RecordProjectMaterialCostAsync(orgId, projectId.Value, ProjectCostSourceType.WorkOrderIssue, document.Id, document.Number,
+                        $"Work order material issue {document.Number}", issuedValue, false, access.ActorUserId, now, ct);
+                }
+            }
+
             return Result<StockDocument>.Success(document);
         }, "stock-issue.posted", traceId, ct);
         return ToPortResult(result);
@@ -687,6 +710,16 @@ public class InventoryStore : IInventoryStore, IProductionStockPort
                 var quantity = decimal.Round(line.Quantity, 4);
                 balance.ReceiveAtValue(quantity, line.Value, now);
                 document.AddMovement(Movement(orgId, document, balance, StockMovementKind.ReturnIn, quantity, CostPerUnit(line.Value, quantity), line.Value, now, now));
+            }
+
+            if (projectId.HasValue)
+            {
+                var returnedValue = decimal.Round(document.Movements.Sum(m => Math.Abs(m.ValueDelta)), 2);
+                if (returnedValue > 0m)
+                {
+                    await RecordProjectMaterialCostAsync(orgId, projectId.Value, ProjectCostSourceType.WorkOrderReturn, document.Id, document.Number,
+                        $"Work order material return {document.Number}", -returnedValue, true, access.ActorUserId, now, ct);
+                }
             }
 
             return Result<StockDocument>.Success(document);
@@ -720,6 +753,54 @@ public class InventoryStore : IInventoryStore, IProductionStockPort
             return Result<StockDocument>.Success(document);
         }, "stock-receipt.posted", traceId, ct);
         return ToPortResult(result);
+    }
+
+    private async Task RecordProjectMaterialCostAsync(
+        Guid orgId, Guid projectId, string sourceType, Guid sourceDocumentId, string sourceDocumentNumber,
+        string description, decimal amount, bool isReversal, Guid actorUserId, DateTimeOffset now, CancellationToken ct)
+    {
+        var entry = new ProjectCostLedgerEntry(
+            Guid.NewGuid(),
+            orgId,
+            projectId,
+            null,
+            ProjectBudgetCategory.Material,
+            ProjectCostEntryType.Actual,
+            sourceType,
+            sourceDocumentId,
+            sourceDocumentNumber,
+            description,
+            amount,
+            isReversal,
+            actorUserId,
+            now);
+        _db.ProjectCostLedgerEntries.Add(entry);
+
+        if (amount > 0m)
+        {
+            var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.OrganizationId == orgId && p.Id == projectId, ct);
+            if (project is not null && project.BaselineBudgetTotal.HasValue)
+            {
+                var approvedDelta = await _db.ProjectChangeOrders.AsNoTracking()
+                    .Where(c => c.OrganizationId == orgId && c.ProjectId == projectId && c.Status == ChangeOrderStatus.Approved)
+                    .SumAsync(c => (decimal?)c.BudgetDelta, ct) ?? 0m;
+                var currentBudget = decimal.Round(project.BaselineBudgetTotal.Value + approvedDelta, 2);
+
+                if (currentBudget > 0m)
+                {
+                    var existingTotal = await _db.ProjectCostLedgerEntries.AsNoTracking()
+                        .Where(e => e.OrganizationId == orgId && e.ProjectId == projectId)
+                        .SumAsync(e => (decimal?)e.Amount, ct) ?? 0m;
+
+                    if (existingTotal + amount > currentBudget)
+                    {
+                        await _notifications.PublishAsync(
+                            NotificationEvents.ProjectBudgetOverrun(orgId, project.BranchId, entry.Id, actorUserId, project.Id, project.Code),
+                            ct);
+                    }
+                }
+            }
+        }
     }
 
     // ===== reads =====================================================================================

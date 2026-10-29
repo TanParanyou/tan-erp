@@ -60,6 +60,42 @@ export function changeOrderStatusVariant(status: string | null | undefined): Pro
   }
 }
 
+export const TIMESHEET_STATUSES = ["draft", "submitted", "approved", "rejected", "cancelled"] as const;
+export type TimesheetStatusValue = (typeof TIMESHEET_STATUSES)[number];
+export function isTimesheetStatus(value: string | null | undefined): value is TimesheetStatusValue {
+  return TIMESHEET_STATUSES.some((status) => status === value);
+}
+export function timesheetStatusVariant(status: string | null | undefined): ProjectBadgeVariant {
+  switch (status) {
+    case "approved":
+      return "success";
+    case "submitted":
+      return "warning";
+    case "rejected":
+    case "cancelled":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+export const PROJECT_COST_ENTRY_TYPES = ["commitment", "actual"] as const;
+export type ProjectCostEntryTypeValue = (typeof PROJECT_COST_ENTRY_TYPES)[number];
+export function isProjectCostEntryType(value: string | null | undefined): value is ProjectCostEntryTypeValue {
+  return PROJECT_COST_ENTRY_TYPES.some((t) => t === value);
+}
+export const PROJECT_COST_SOURCE_TYPES = [
+  "purchase_order",
+  "goods_receipt",
+  "stock_issue",
+  "work_order_issue",
+  "work_order_return",
+  "labor_timesheet",
+] as const;
+export type ProjectCostSourceTypeValue = (typeof PROJECT_COST_SOURCE_TYPES)[number];
+export function isProjectCostSourceType(value: string | null | undefined): value is ProjectCostSourceTypeValue {
+  return PROJECT_COST_SOURCE_TYPES.some((t) => t === value);
+}
+
 /** Mirrors the backend lifecycle so the UI only offers moves the API will accept. */
 export function allowedProjectTransitions(status: string | null | undefined): ProjectStatusValue[] {
   switch (status) {

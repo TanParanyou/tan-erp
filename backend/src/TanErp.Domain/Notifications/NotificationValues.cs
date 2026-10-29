@@ -24,6 +24,7 @@ public static class NotificationTypes
     public const string RoleAssignmentApprovalRequested = "role-assignment.approval-requested";
     /// <summary>System-generated (no actor): a membership is about to expire. See ADR 0022.</summary>
     public const string MembershipExpiring = "membership.expiring";
+    public const string ProjectBudgetOverrun = "project.budget-overrun";
 
     private static readonly HashSet<string> Registered = new(StringComparer.Ordinal)
     {
@@ -33,7 +34,8 @@ public static class NotificationTypes
         ChangeOrderApprovalRequested,
         MrpRunApprovalRequested,
         RoleAssignmentApprovalRequested,
-        MembershipExpiring
+        MembershipExpiring,
+        ProjectBudgetOverrun
     };
 
     public static IReadOnlyCollection<string> All => Registered;

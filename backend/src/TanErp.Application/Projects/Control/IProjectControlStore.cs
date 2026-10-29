@@ -11,6 +11,12 @@ public interface IProjectControlStore
 
     Task<Result<ProjectControlProjection>> ReplaceBudgetAsync(RequestAccessContext access, Guid projectId, Guid expectedVersion, IReadOnlyList<BudgetLineInput> lines, string traceId, CancellationToken ct = default);
 
+    Task<Result<ProjectControlProjection>> AddWbsNodeAsync(RequestAccessContext access, Guid projectId, Guid? parentId, string code, string name, string traceId, CancellationToken ct = default);
+
+    Task<Result<ProjectControlProjection>> UpdateWbsNodeAsync(RequestAccessContext access, Guid projectId, Guid wbsNodeId, Guid expectedVersion, string code, string name, string traceId, CancellationToken ct = default);
+
+    Task<Result<ProjectControlProjection>> DeleteWbsNodeAsync(RequestAccessContext access, Guid projectId, Guid wbsNodeId, Guid expectedVersion, string traceId, CancellationToken ct = default);
+
     Task<Result<ProjectControlProjection>> AddMilestoneAsync(RequestAccessContext access, Guid projectId, string name, DateOnly? plannedDate, int weight, string traceId, CancellationToken ct = default);
 
     Task<Result<ProjectControlProjection>> UpdateMilestoneAsync(RequestAccessContext access, Guid projectId, Guid milestoneId, Guid expectedVersion, string name, DateOnly? plannedDate, int weight, string traceId, CancellationToken ct = default);
@@ -24,9 +30,23 @@ public interface IProjectControlStore
     Task<Result<ProjectControlProjection>> CreateChangeOrderAsync(RequestAccessContext access, Guid projectId, string title, string reason, decimal budgetDelta, decimal contractDelta, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
 
     Task<Result<ProjectControlProjection>> ChangeOrderActionAsync(RequestAccessContext access, Guid projectId, Guid changeOrderId, Guid expectedVersion, ChangeOrderAction action, string? note, string traceId, CancellationToken ct = default);
+
+    Task<Result<ProjectControlProjection>> SetLaborRateAsync(RequestAccessContext access, Guid projectId, Guid workerUserId, decimal hourlyRate, string traceId, CancellationToken ct = default);
+
+    Task<Result<ProjectControlProjection>> CreateTimesheetAsync(RequestAccessContext access, Guid projectId, TimesheetInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
+
+    Task<Result<ProjectControlProjection>> TimesheetActionAsync(RequestAccessContext access, Guid projectId, Guid timesheetId, Guid expectedVersion, TimesheetAction action, string? note, string traceId, CancellationToken ct = default);
 }
 
 public enum ChangeOrderAction
+{
+    Submit,
+    Approve,
+    Reject,
+    Cancel
+}
+
+public enum TimesheetAction
 {
     Submit,
     Approve,

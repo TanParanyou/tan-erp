@@ -24,6 +24,7 @@ public class NotificationEventsTests
         NotificationEvents.MrpRunCreated(Org, Branch, Guid.NewGuid(), Actor, "MRP-2026-0001"),
         NotificationEvents.RoleAssignmentRequested(Org, Guid.NewGuid(), Actor, Subject, "สมหญิง ทดสอบ", "Approver"),
         NotificationEvents.MembershipExpiring(Org, Branch, Guid.NewGuid(), Guid.NewGuid(), Subject, "สมหญิง ทดสอบ", 7),
+        NotificationEvents.ProjectBudgetOverrun(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "PRJ-2026-0001"),
     };
 
     [Theory]

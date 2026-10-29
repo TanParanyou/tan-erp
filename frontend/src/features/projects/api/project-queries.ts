@@ -10,6 +10,11 @@ import {
   type ProjectControlResponse,
   type SetProjectPlanRequest,
   type UpdateProjectMilestoneRequest,
+  type AddProjectWbsNodeRequest,
+  type UpdateProjectWbsNodeRequest,
+  type SetProjectLaborRateRequest,
+  type CreateProjectTimesheetRequest,
+  type ProjectTimesheetAction,
   type ProjectHandoverSourceResponse,
   type ProjectListResponse,
   type ProjectResponse,
@@ -158,7 +163,51 @@ export function useProjectControlMutations(projectId: string) {
       apiClient.projectChangeOrderAction(projectId, input.changeOrderId, input.action, input.expectedVersion, input.note, await options()),
     onSuccess: store,
   });
+  const addWbsNode = useMutation({
+    mutationFn: async (payload: AddProjectWbsNodeRequest) => apiClient.addProjectWbsNode(projectId, payload, await options()),
+    onSuccess: store,
+  });
+  const updateWbsNode = useMutation({
+    mutationFn: async (input: { wbsNodeId: string; payload: UpdateProjectWbsNodeRequest }) =>
+      apiClient.updateProjectWbsNode(projectId, input.wbsNodeId, input.payload, await options()),
+    onSuccess: store,
+  });
+  const deleteWbsNode = useMutation({
+    mutationFn: async (input: { wbsNodeId: string; expectedVersion: string }) =>
+      apiClient.deleteProjectWbsNode(projectId, input.wbsNodeId, input.expectedVersion, await options()),
+    onSuccess: store,
+  });
+  const setLaborRate = useMutation({
+    mutationFn: async (payload: SetProjectLaborRateRequest) => apiClient.setProjectLaborRate(projectId, payload, await options()),
+    onSuccess: store,
+  });
+  const createTimesheet = useMutation({
+    mutationFn: async (input: { payload: CreateProjectTimesheetRequest; idempotencyKey: string }) =>
+      apiClient.createProjectTimesheet(projectId, input.payload, await options(input.idempotencyKey)),
+    onSuccess: store,
+  });
+  const timesheetAction = useMutation({
+    mutationFn: async (input: { timesheetId: string; action: ProjectTimesheetAction; expectedVersion: string; note: string | null }) =>
+      apiClient.projectTimesheetAction(projectId, input.timesheetId, input.action, input.expectedVersion, input.note, await options()),
+    onSuccess: store,
+  });
 
-  return { setPlan, replaceBudget, transition, addMilestone, updateMilestone, completeMilestone, deleteMilestone, createChangeOrder, changeOrderAction };
+  return {
+    setPlan,
+    replaceBudget,
+    transition,
+    addMilestone,
+    updateMilestone,
+    completeMilestone,
+    deleteMilestone,
+    createChangeOrder,
+    changeOrderAction,
+    addWbsNode,
+    updateWbsNode,
+    deleteWbsNode,
+    setLaborRate,
+    createTimesheet,
+    timesheetAction,
+  };
 }
 

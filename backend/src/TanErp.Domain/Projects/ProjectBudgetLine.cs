@@ -6,6 +6,7 @@ public class ProjectBudgetLine : Entity
 {
     public Guid OrganizationId { get; private set; }
     public Guid ProjectId { get; private set; }
+    public Guid? WbsNodeId { get; private set; }
     public string Category { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
     public decimal Amount { get; private set; }
@@ -13,7 +14,7 @@ public class ProjectBudgetLine : Entity
 
     protected ProjectBudgetLine() { }
 
-    public ProjectBudgetLine(Guid id, Guid organizationId, Guid projectId, string category, string description, decimal amount, int sortOrder) : base(id)
+    public ProjectBudgetLine(Guid id, Guid organizationId, Guid projectId, string category, string description, decimal amount, int sortOrder, Guid? wbsNodeId = null) : base(id)
     {
         if (organizationId == Guid.Empty) throw new ArgumentException("Organization ID cannot be empty.", nameof(organizationId));
         if (projectId == Guid.Empty) throw new ArgumentException("Project ID cannot be empty.", nameof(projectId));
@@ -24,6 +25,7 @@ public class ProjectBudgetLine : Entity
 
         OrganizationId = organizationId;
         ProjectId = projectId;
+        WbsNodeId = wbsNodeId;
         Category = category.Trim();
         Description = description.Trim();
         Amount = decimal.Round(amount, 2);

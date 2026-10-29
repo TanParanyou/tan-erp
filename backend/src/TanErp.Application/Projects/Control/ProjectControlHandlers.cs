@@ -66,6 +66,32 @@ public class ProjectControlHandler
         return await _store.ReplaceBudgetAsync(access.Value!, projectId, expectedVersion, lines, caller.TraceId, ct);
     }
 
+    public async Task<Result<ProjectControlProjection>> AddWbsNodeAsync(ProjectCaller caller, Guid projectId, Guid? parentId, string? code, string? name, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, UpdatePermission, ct);
+        if (access.IsFailure) return Result<ProjectControlProjection>.Failure(access.Error);
+
+        return await _store.AddWbsNodeAsync(access.Value!, projectId, parentId, code ?? string.Empty, name ?? string.Empty, caller.TraceId, ct);
+    }
+
+    public async Task<Result<ProjectControlProjection>> UpdateWbsNodeAsync(ProjectCaller caller, Guid projectId, Guid wbsNodeId, Guid expectedVersion, string? code, string? name, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, UpdatePermission, ct);
+        if (access.IsFailure) return Result<ProjectControlProjection>.Failure(access.Error);
+        if (expectedVersion == Guid.Empty) return Fail("PROJECT_FIELD_REQUIRED", "Expected WBS node version is required.");
+
+        return await _store.UpdateWbsNodeAsync(access.Value!, projectId, wbsNodeId, expectedVersion, code ?? string.Empty, name ?? string.Empty, caller.TraceId, ct);
+    }
+
+    public async Task<Result<ProjectControlProjection>> DeleteWbsNodeAsync(ProjectCaller caller, Guid projectId, Guid wbsNodeId, Guid expectedVersion, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, UpdatePermission, ct);
+        if (access.IsFailure) return Result<ProjectControlProjection>.Failure(access.Error);
+        if (expectedVersion == Guid.Empty) return Fail("PROJECT_FIELD_REQUIRED", "Expected WBS node version is required.");
+
+        return await _store.DeleteWbsNodeAsync(access.Value!, projectId, wbsNodeId, expectedVersion, caller.TraceId, ct);
+    }
+
     public async Task<Result<ProjectControlProjection>> AddMilestoneAsync(ProjectCaller caller, Guid projectId, string? name, DateOnly? plannedDate, int weight, CancellationToken ct = default)
     {
         var access = await AccessAsync(caller, UpdatePermission, ct);
@@ -137,5 +163,39 @@ public class ProjectControlHandler
         if (note is { Length: > 500 }) return Fail("PROJECT_FIELD_INVALID", "Note cannot exceed 500 characters.");
 
         return await _store.ChangeOrderActionAsync(access.Value!, projectId, changeOrderId, expectedVersion, action, note, caller.TraceId, ct);
+    }
+
+    public async Task<Result<ProjectControlProjection>> SetLaborRateAsync(
+        ProjectCaller caller, Guid projectId, Guid workerUserId, decimal hourlyRate, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, UpdatePermission, ct);
+        if (access.IsFailure) return Result<ProjectControlProjection>.Failure(access.Error);
+        if (workerUserId == Guid.Empty) return Fail("TIMESHEET_FIELD_INVALID", "Worker user ID is required.");
+
+        return await _store.SetLaborRateAsync(access.Value!, projectId, workerUserId, hourlyRate, caller.TraceId, ct);
+    }
+
+    public async Task<Result<ProjectControlProjection>> CreateTimesheetAsync(
+        ProjectCaller caller, Guid projectId, string idempotencyKey, TimesheetInput input, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, UpdatePermission, ct);
+        if (access.IsFailure) return Result<ProjectControlProjection>.Failure(access.Error);
+        if (input.WorkerUserId == Guid.Empty) return Fail("TIMESHEET_FIELD_INVALID", "Worker user ID is required.");
+
+        var keyHash = Sha256Hex.Compute(idempotencyKey);
+        var payloadHash = Sha256Hex.Compute($"{projectId}|{input.WorkerUserId}|{input.WorkDate:yyyy-MM-dd}|{input.Hours:0.00}|{input.WbsNodeId}|{input.WorkOrderId}|{input.TaskDescription?.Trim()}");
+        return await _store.CreateTimesheetAsync(access.Value!, projectId, input, keyHash, payloadHash, caller.TraceId, ct);
+    }
+
+    public async Task<Result<ProjectControlProjection>> TimesheetActionAsync(
+        ProjectCaller caller, Guid projectId, Guid timesheetId, Guid expectedVersion, TimesheetAction action, string? note, CancellationToken ct = default)
+    {
+        var permission = action is TimesheetAction.Approve or TimesheetAction.Reject ? ChangeOrderApprovePermission : UpdatePermission;
+        var access = await AccessAsync(caller, permission, ct);
+        if (access.IsFailure) return Result<ProjectControlProjection>.Failure(access.Error);
+        if (expectedVersion == Guid.Empty) return Fail("PROJECT_FIELD_REQUIRED", "Expected timesheet version is required.");
+        if (note is { Length: > 500 }) return Fail("PROJECT_FIELD_INVALID", "Note cannot exceed 500 characters.");
+
+        return await _store.TimesheetActionAsync(access.Value!, projectId, timesheetId, expectedVersion, action, note, caller.TraceId, ct);
     }
 }

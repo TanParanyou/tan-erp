@@ -56,3 +56,49 @@ public static class ChangeOrderStatus
         Draft, Submitted, Approved, Rejected, Cancelled
     };
 }
+
+public static class ProjectCostEntryType
+{
+    public const string Commitment = "commitment";
+    public const string Actual = "actual";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
+    {
+        Commitment, Actual
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}
+
+public static class ProjectCostSourceType
+{
+    public const string PurchaseOrder = "purchase_order";
+    public const string GoodsReceipt = "goods_receipt";
+    public const string StockIssue = "stock_issue";
+    public const string WorkOrderIssue = "work_order_issue";
+    public const string WorkOrderReturn = "work_order_return";
+    public const string LaborTimesheet = "labor_timesheet";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
+    {
+        PurchaseOrder, GoodsReceipt, StockIssue, WorkOrderIssue, WorkOrderReturn, LaborTimesheet
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}
+
+public static class TimesheetStatus
+{
+    public const string Draft = "draft";
+    public const string Submitted = "submitted";
+    public const string Approved = "approved";
+    public const string Rejected = "rejected";
+    public const string Cancelled = "cancelled";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
+    {
+        Draft, Submitted, Approved, Rejected, Cancelled
+    };
+
+    public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());
+}

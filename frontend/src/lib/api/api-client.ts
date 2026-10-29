@@ -207,6 +207,18 @@ export type AddProjectMilestoneRequest = components["schemas"]["AddProjectMilest
 export type UpdateProjectMilestoneRequest = components["schemas"]["UpdateProjectMilestoneRequest"];
 export type CreateProjectChangeOrderRequest = components["schemas"]["CreateProjectChangeOrderRequest"];
 export type ProjectChangeOrderAction = "submit" | "approve" | "reject" | "cancel";
+export type ProjectWbsNodeResponse = components["schemas"]["ProjectWbsNodeResponse"];
+export type ProjectWbsCostSummaryResponse = components["schemas"]["ProjectWbsCostSummaryResponse"];
+export type ProjectCostLedgerEntryResponse = components["schemas"]["ProjectCostLedgerEntryResponse"];
+export type LaborRateResponse = components["schemas"]["LaborRateResponse"];
+export type LaborTimesheetResponse = components["schemas"]["LaborTimesheetResponse"];
+export type AddProjectWbsNodeRequest = components["schemas"]["AddProjectWbsNodeRequest"];
+export type UpdateProjectWbsNodeRequest = components["schemas"]["UpdateProjectWbsNodeRequest"];
+export type ProjectWbsNodeVersionRequest = components["schemas"]["ProjectWbsNodeVersionRequest"];
+export type SetProjectLaborRateRequest = components["schemas"]["SetProjectLaborRateRequest"];
+export type CreateProjectTimesheetRequest = components["schemas"]["CreateProjectTimesheetRequest"];
+export type ProjectTimesheetActionRequest = components["schemas"]["ProjectTimesheetActionRequest"];
+export type ProjectTimesheetAction = "submit" | "approve" | "reject" | "cancel";
 export type SupplierRequest = components["schemas"]["SupplierRequest"];
 export type SupplierResponse = components["schemas"]["SupplierResponse"];
 export type SupplierListResponse = components["schemas"]["SupplierListResponse"];
@@ -1896,6 +1908,42 @@ export class ApiClient {
   ): Promise<ProjectControlResponse> {
     return this.request<ProjectControlResponse>(
       `/api/v1/projects/${encodeURIComponent(projectId)}/change-orders/${encodeURIComponent(changeOrderId)}/${action}`,
+      "POST",
+      options,
+      { expectedVersion, note }
+    );
+  }
+
+  async addProjectWbsNode(projectId: string, payload: AddProjectWbsNodeRequest, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/wbs`, "POST", options, payload);
+  }
+
+  async updateProjectWbsNode(projectId: string, wbsNodeId: string, payload: UpdateProjectWbsNodeRequest, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/wbs/${encodeURIComponent(wbsNodeId)}`, "PUT", options, payload);
+  }
+
+  async deleteProjectWbsNode(projectId: string, wbsNodeId: string, expectedVersion: string, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/wbs/${encodeURIComponent(wbsNodeId)}/delete`, "POST", options, { expectedVersion });
+  }
+
+  async setProjectLaborRate(projectId: string, payload: SetProjectLaborRateRequest, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/labor-rates`, "PUT", options, payload);
+  }
+
+  async createProjectTimesheet(projectId: string, payload: CreateProjectTimesheetRequest, options: RequestOptions): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(`/api/v1/projects/${encodeURIComponent(projectId)}/timesheets`, "POST", options, payload);
+  }
+
+  async projectTimesheetAction(
+    projectId: string,
+    timesheetId: string,
+    action: ProjectTimesheetAction,
+    expectedVersion: string,
+    note: string | null,
+    options: RequestOptions
+  ): Promise<ProjectControlResponse> {
+    return this.request<ProjectControlResponse>(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/timesheets/${encodeURIComponent(timesheetId)}/${action}`,
       "POST",
       options,
       { expectedVersion, note }

@@ -66,6 +66,13 @@ public static class NotificationEvents
                 (NotificationFields.DaysRemaining, daysRemaining.ToString(CultureInfo.InvariantCulture))),
             null, []);
 
+    /// <summary>Project committed + actual costs exceeded current budget. Notifies holders of change-order approval authority without leaking figures.</summary>
+    public static NotificationEvent ProjectBudgetOverrun(
+        Guid organizationId, Guid branchId, Guid ledgerEntryId, Guid actorUserId, Guid projectId, string projectCode) =>
+        new(NotificationTypes.ProjectBudgetOverrun, organizationId, branchId, ledgerEntryId, actorUserId,
+            Fields((NotificationFields.ResourceId, Id(projectId)), (NotificationFields.DocumentNumber, projectCode)),
+            null, []);
+
     /// <summary>A display name can be up to 255 characters; a payload value is limited to 200.</summary>
     private static string Clip(string value)
     {

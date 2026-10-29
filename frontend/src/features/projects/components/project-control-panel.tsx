@@ -17,8 +17,11 @@ import { allowedProjectTransitions, isProjectStatus, projectStatusVariant, trans
 import { projectControlErrorCode } from "./project-control-errors";
 import { ProjectPlanCard } from "./project-plan-card";
 import { ProjectBudgetCard } from "./project-budget-card";
+import { ProjectWbsCard } from "./project-wbs-card";
 import { ProjectMilestonesCard } from "./project-milestones-card";
 import { ProjectChangeOrdersCard } from "./project-change-orders-card";
+import { ProjectTimesheetsCard } from "./project-timesheets-card";
+import { ProjectCostLedgerCard } from "./project-cost-ledger-card";
 import { ProjectHistoryCard } from "./project-history-card";
 
 interface ProjectControlPanelProps {
@@ -117,6 +120,7 @@ export function ProjectControlPanel({ projectId }: ProjectControlPanelProps) {
 
       <ProjectPlanCard control={control} canEdit={canUpdate} mutation={mutations.setPlan} describeError={describe} />
       <ProjectBudgetCard control={control} canEdit={canUpdate} mutation={mutations.replaceBudget} describeError={describe} />
+      <ProjectWbsCard control={control} canEdit={canUpdate} mutations={mutations} describeError={describe} />
       <ProjectMilestonesCard control={control} canEdit={canUpdate} mutations={mutations} describeError={describe} />
       <ProjectChangeOrdersCard
         control={control}
@@ -125,6 +129,14 @@ export function ProjectControlPanel({ projectId }: ProjectControlPanelProps) {
         mutations={mutations}
         describeError={describe}
       />
+      <ProjectTimesheetsCard
+        control={control}
+        canEdit={canUpdate}
+        canApprove={canApproveChangeOrders}
+        mutations={mutations}
+        describeError={describe}
+      />
+      <ProjectCostLedgerCard control={control} />
       <ProjectHistoryCard history={control.history ?? []} />
 
       <Modal

@@ -45,7 +45,10 @@ public static partial class NotificationTypeRegistry
         new NotificationTypeDescriptor(
             NotificationTypes.MembershipExpiring, "memberships.manage", "/settings/users/{parentId}", NotificationFields.SubjectDisplayName,
             Fields(NotificationFields.ResourceId, NotificationFields.ParentId, NotificationFields.SubjectDisplayName, NotificationFields.DaysRemaining),
-            SystemGenerated: true)
+            SystemGenerated: true),
+        new NotificationTypeDescriptor(
+            NotificationTypes.ProjectBudgetOverrun, "projects.change-orders.approve", "/projects/{resourceId}", NotificationFields.DocumentNumber,
+            Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName))
     }.ToDictionary(d => d.Type, StringComparer.Ordinal);
 
     public static IReadOnlyCollection<string> Types { get; } = Descriptors.Keys.ToArray();

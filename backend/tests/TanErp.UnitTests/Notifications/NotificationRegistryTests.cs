@@ -71,6 +71,7 @@ public class NotificationRegistryTests
         Assert.Equal("mrp.approve", NotificationTypeRegistry.Find(NotificationTypes.MrpRunApprovalRequested)!.TargetPermission);
         Assert.Equal("roles.assign-approval", NotificationTypeRegistry.Find(NotificationTypes.RoleAssignmentApprovalRequested)!.TargetPermission);
         Assert.Equal("memberships.manage", NotificationTypeRegistry.Find(NotificationTypes.MembershipExpiring)!.TargetPermission);
+        Assert.Equal("projects.change-orders.approve", NotificationTypeRegistry.Find(NotificationTypes.ProjectBudgetOverrun)!.TargetPermission);
     }
 
     [Fact]

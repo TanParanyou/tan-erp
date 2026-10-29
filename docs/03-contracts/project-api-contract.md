@@ -81,3 +81,34 @@ Precedence: Idempotency replay → scope/version → state → duplicate → own
 Errors เพิ่มเติม: `409` `PROJECT_VERSION_CONFLICT`, `PROJECT_INVALID_STATE`, `PROJECT_BUDGET_FROZEN`, `PROJECT_INVALID_TRANSITION`, `PROJECT_NOT_READY`, `PROJECT_MILESTONE_COMPLETED`, `PROJECT_MILESTONE_VERSION_CONFLICT`, `PROJECT_CHANGE_ORDER_INVALID_STATE`, `PROJECT_CHANGE_ORDER_VERSION_CONFLICT`; `422` `PROJECT_PLAN_INVALID`, `PROJECT_BUDGET_INVALID`, `PROJECT_BUDGET_NEGATIVE`, `PROJECT_REASON_REQUIRED`, `PROJECT_MILESTONE_INVALID`, `PROJECT_CHANGE_ORDER_INVALID`; `403` `PROJECT_CHANGE_ORDER_SELF_APPROVAL`.
 
 Data (migration `AddProjectControl`): คอลัมน์ใหม่ใน `projects.projects` (`planned_end_date`, `baseline_budget_total/hash`, `budget_frozen_at_utc`, `activated_at_utc`, `completed_at_utc`, `status_reason`) และตาราง `project_budget_lines`, `project_milestones`, `project_change_orders`, `project_status_history`.
+
+## Project WBS, Cost Ledger & Labor Timesheet (G-10 & G-20, implemented 2026-10-29)
+
+ทุก endpoint อยู่ใต้ `/api/v1/projects/{projectId}` และคืน `ProjectControlResponse` (+ `ETag` = row version ของ Project).
+
+| Action | Method/Path | Permission |
+| --- | --- | --- |
+| เพิ่ม WBS Node | `POST /wbs` `{parentId?, code, name}` | `projects.update` |
+| แก้ไข WBS Node | `PUT /wbs/{wbsNodeId}` `{code, name, expectedVersion}` | `projects.update` |
+| ลบ WBS Node | `POST /wbs/{wbsNodeId}/delete` `{expectedVersion}` | `projects.update` |
+| ตั้งค่าอัตราค่าแรง (`TEST_ONLY`) | `PUT /labor-rates` `{workerUserId, hourlyRate}` | `projects.update` |
+| บันทึกเวลาทำงาน (Timesheet) | `POST /timesheets` (+`Idempotency-Key`) `{workerUserId, workDate, hours, wbsNodeId?, workOrderId?, taskDescription}` | `projects.update` |
+| ส่ง/ยกเลิก Timesheet | `POST /timesheets/{timesheetId}/submit`, `/cancel` `{expectedVersion, note?}` | `projects.update` |
+| อนุมัติ/ปฏิเสธ Timesheet | `POST /timesheets/{timesheetId}/approve`, `/reject` `{expectedVersion, note?}` | `projects.change-orders.approve` |
+
+กฎที่ตัดสินใจ (`TEST_ONLY` defaults):
+
+- **WBS (`ProjectWbsNode`):** ลำดับชั้นลึกสูงสุด 3 ระดับ (`level` 1..3; เกิน → `422 PROJECT_WBS_DEPTH_EXCEEDED`); `code` ไม่ซ้ำภายในโครงการเดียวกัน (`409 PROJECT_WBS_CODE_CONFLICT`); แก้ไขได้เมื่อโครงการอยู่สถานะ `planned|active|on_hold`; ห้ามลบหากมี Node ลูก, มี Budget Line, Cost Ledger หรือ Timesheet ผูกอยู่ (`409 PROJECT_WBS_IN_USE`).
+- **Budget Line + WBS:** `PUT /budget` รองรับ `wbsNodeId` (optional) ต่อรายการงบประมาณ; หากระบุต้องเป็น WBS ของโครงการเดียวกัน.
+- **สมุดบัญชีต้นทุนโครงการ (`ProjectCostLedgerEntry`):** Append-only เสมอ:
+  - `entryType = commitment`: บันทึกเมื่ออนุมัติใบสั่งซื้อ (`purchase_order` +), ยกเลิกใบสั่งซื้อที่อนุมัติแล้ว (`purchase_order` reversal -), และเมื่อรับสินค้า (`goods_receipt` ลดยอดภาระผูกพันตามมูลค่าที่รับ -).
+  - `entryType = actual`: บันทึกเมื่อเบิกของออกจากคลังเข้าโครงการ (`stock_issue` +), เบิก/คืนวัตถุดิบของใบสั่งผลิตที่ผูกโครงการ (`work_order_issue` + / `work_order_return` reversal -), และเมื่ออนุมัติใบบันทึกเวลาทำงาน (`labor_timesheet` +).
+  - **Budget vs Commitment vs Actual Rollup:** `ProjectControlResponse` คืนทั้งยอดรวมระดับโครงการ (`budget.actualAmount`, `budget.varianceAmount`), รายงานสรุปราย WBS Node (`wbsCostSummary`), และรายการ `costLedger`.
+  - **Overrun Notification (`G-02`):** เมื่อการโพสต์รายการต้นทุนทำให้ `CommittedAmount + ActualAmount > CurrentBudget` (เมื่อ `CurrentBudget > 0`) ระบบสร้างการแจ้งเตือน `project.budget-overrun` ไปยังผู้ถือสิทธิ์ `projects.change-orders.approve`.
+- **Labor Timesheet (`G-20`):**
+  - อัตราค่าแรงต่อชั่วโมง (`LaborRate`) กำหนดต่อผู้ใช้ในองค์กร (ค่าเริ่มต้น `TEST_ONLY` = `150.00` THB/ชม. หากยังไม่ตั้งค่า).
+  - บันทึกเวลาทำงานต่อคนต่อวัน (`0.25 .. 24.00` ชม.); รวมทุกใบของคนเดียวกันในวันเดียวกัน (ที่ไม่ใช่ `rejected`/`cancelled`) ต้องไม่เกิน `24.00` ชม. (`422 TIMESHEET_DAILY_HOURS_EXCEEDED`); หากรวมเกิน `8.00` ชม./วัน จะตั้ง `isOvertimeWarning = true`.
+  - สถานะ: `draft → submitted → approved | rejected`, `draft|submitted → cancelled`; เลขที่จาก Document Numbering (`labor-timesheets`, prefix `TS`).
+  - **Maker–checker:** ผู้อนุมัติ/ปฏิเสธต้องไม่ใช่ผู้บันทึกและไม่ใช่ผู้ปฏิบัติงานในใบนั้น (`403 TIMESHEET_SELF_APPROVAL`); รายการที่ `approved` แล้วห้ามแก้ไขหรือยกเลิก (`409 TIMESHEET_IMMUTABLE`) และจะสร้าง `ProjectCostLedgerEntry` หมวด `labor` ทันที.
+
+Errors เพิ่มเติม: `409` `PROJECT_WBS_CODE_CONFLICT`, `PROJECT_WBS_IN_USE`, `PROJECT_WBS_VERSION_CONFLICT`, `TIMESHEET_INVALID_STATE`, `TIMESHEET_IMMUTABLE`, `TIMESHEET_VERSION_CONFLICT`; `422` `PROJECT_WBS_INVALID`, `PROJECT_WBS_DEPTH_EXCEEDED`, `LABOR_RATE_INVALID`, `TIMESHEET_FIELD_INVALID`, `TIMESHEET_HOURS_INVALID`, `TIMESHEET_DAILY_HOURS_EXCEEDED`; `403` `TIMESHEET_SELF_APPROVAL`.

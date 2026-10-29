@@ -7521,6 +7521,189 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Projects.LaborRate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("HourlyRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("hourly_rate");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by_user_id");
+
+                    b.Property<Guid>("WorkerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("worker_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.HasIndex("WorkerUserId");
+
+                    b.HasIndex("OrganizationId", "WorkerUserId")
+                        .IsUnique();
+
+                    b.ToTable("labor_rates", "projects", t =>
+                        {
+                            t.HasCheckConstraint("ck_labor_rates_hourly_rate", "hourly_rate > 0");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Projects.LaborTimesheetEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<decimal>("CostAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("cost_amount");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTimeOffset?>("DecidedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("decided_at_utc");
+
+                    b.Property<Guid?>("DecidedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_by_user_id");
+
+                    b.Property<string>("DecisionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("decision_note");
+
+                    b.Property<decimal>("HourlyRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("hourly_rate");
+
+                    b.Property<decimal>("Hours")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("numeric(6,2)")
+                        .HasColumnName("hours");
+
+                    b.Property<bool>("IsOvertimeWarning")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_overtime_warning");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("number");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset?>("SubmittedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("submitted_at_utc");
+
+                    b.Property<string>("TaskDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("task_description");
+
+                    b.Property<Guid?>("WbsNodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wbs_node_id");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date")
+                        .HasColumnName("work_date");
+
+                    b.Property<Guid?>("WorkOrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("work_order_id");
+
+                    b.Property<Guid>("WorkerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("worker_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("DecidedByUserId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("WbsNodeId");
+
+                    b.HasIndex("WorkOrderId");
+
+                    b.HasIndex("WorkerUserId");
+
+                    b.HasIndex("OrganizationId", "Number")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "ProjectId", "Status");
+
+                    b.HasIndex("OrganizationId", "WorkerUserId", "WorkDate");
+
+                    b.ToTable("labor_timesheet_entries", "projects", t =>
+                        {
+                            t.HasCheckConstraint("ck_labor_timesheet_entries_decider", "decided_by_user_id IS NULL OR (decided_by_user_id <> created_by_user_id AND decided_by_user_id <> worker_user_id)");
+
+                            t.HasCheckConstraint("ck_labor_timesheet_entries_hours", "hours >= 0.25 AND hours <= 24");
+
+                            t.HasCheckConstraint("ck_labor_timesheet_entries_status", "status IN ('draft', 'submitted', 'approved', 'rejected', 'cancelled')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Projects.Project", b =>
                 {
                     b.Property<Guid>("Id")
@@ -7737,9 +7920,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("sort_order");
 
+                    b.Property<Guid?>("WbsNodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wbs_node_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("WbsNodeId");
 
                     b.HasIndex("OrganizationId", "ProjectId", "SortOrder");
 
@@ -7848,6 +8037,98 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_project_change_orders_decider", "decided_by_user_id IS NULL OR decided_by_user_id <> created_by_user_id");
 
                             t.HasCheckConstraint("ck_project_change_orders_status", "status IN ('draft', 'submitted', 'approved', 'rejected', 'cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Projects.ProjectCostLedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("category");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("EntryType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("entry_type");
+
+                    b.Property<bool>("IsReversal")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_reversal");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_id");
+
+                    b.Property<string>("SourceNumber")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("source_number");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("source_type");
+
+                    b.Property<Guid?>("WbsNodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wbs_node_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("WbsNodeId");
+
+                    b.HasIndex("OrganizationId", "ProjectId", "OccurredAtUtc");
+
+                    b.HasIndex("OrganizationId", "SourceType", "SourceId");
+
+                    b.ToTable("project_cost_ledger_entries", "projects", t =>
+                        {
+                            t.HasCheckConstraint("ck_project_cost_ledger_entries_amount", "amount <> 0");
+
+                            t.HasCheckConstraint("ck_project_cost_ledger_entries_category", "category IN ('material', 'labor', 'subcontract', 'service', 'other')");
+
+                            t.HasCheckConstraint("ck_project_cost_ledger_entries_entry_type", "entry_type IN ('commitment', 'actual')");
                         });
                 });
 
@@ -7960,6 +8241,67 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId", "ProjectId", "OccurredAtUtc");
 
                     b.ToTable("project_status_history", "projects");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Projects.ProjectWbsNode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_id");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("OrganizationId", "ProjectId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "ProjectId", "SortOrder");
+
+                    b.ToTable("project_wbs_nodes", "projects", t =>
+                        {
+                            t.HasCheckConstraint("ck_project_wbs_nodes_level", "level BETWEEN 1 AND 3");
+                        });
                 });
 
             modelBuilder.Entity("TanErp.Domain.QuickEstimates.BranchRateOverride", b =>
@@ -11451,6 +11793,75 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Projects.LaborRate", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("WorkerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Projects.LaborTimesheetEntry", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("DecidedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Projects.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Projects.ProjectWbsNode", null)
+                        .WithMany()
+                        .HasForeignKey("WbsNodeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Production.WorkOrder", null)
+                        .WithMany()
+                        .HasForeignKey("WorkOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("WorkerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Projects.Project", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Branch", null)
@@ -11509,6 +11920,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Projects.ProjectWbsNode", null)
+                        .WithMany()
+                        .HasForeignKey("WbsNodeId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("TanErp.Domain.Projects.ProjectChangeOrder", b =>
@@ -11535,6 +11951,32 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Projects.ProjectCostLedgerEntry", b =>
+                {
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Projects.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Projects.ProjectWbsNode", null)
+                        .WithMany()
+                        .HasForeignKey("WbsNodeId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("TanErp.Domain.Projects.ProjectMilestone", b =>
@@ -11575,6 +12017,26 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Projects.ProjectWbsNode", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Projects.ProjectWbsNode", null)
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Projects.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
