@@ -19,7 +19,9 @@ public class NotificationEventsTests
     {
         NotificationEvents.EstimateSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "EST-2026-0001", Reviewer),
         NotificationEvents.CostRecordSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "ITEM-0001", [Creator, Editor]),
+        NotificationEvents.PurchaseRequestSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "PR-2026-0001", Creator),
         NotificationEvents.PurchaseOrderSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "PO-2026-0001", Creator),
+        NotificationEvents.SupplierInvoiceHeldForApproval(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "SINV-2026-0001", Creator),
         NotificationEvents.ChangeOrderSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), Guid.NewGuid(), "CO-2026-0001", Creator),
         NotificationEvents.MrpRunCreated(Org, Branch, Guid.NewGuid(), Actor, "MRP-2026-0001"),
         NotificationEvents.RoleAssignmentRequested(Org, Guid.NewGuid(), Actor, Subject, "สมหญิง ทดสอบ", "Approver"),
@@ -71,9 +73,13 @@ public class NotificationEventsTests
     [Fact]
     public void PurchaseOrder_AndChangeOrder_ExcludeTheirCreator()
     {
+        var pr = NotificationEvents.PurchaseRequestSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "PR-1", Creator);
         var po = NotificationEvents.PurchaseOrderSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "PO-1", Creator);
+        var sinv = NotificationEvents.SupplierInvoiceHeldForApproval(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), "SINV-1", Creator);
         var co = NotificationEvents.ChangeOrderSubmitted(Org, Branch, Guid.NewGuid(), Actor, Guid.NewGuid(), Guid.NewGuid(), "CO-1", Creator);
+        Assert.Contains(Creator, pr.ExcludedUserIds);
         Assert.Contains(Creator, po.ExcludedUserIds);
+        Assert.Contains(Creator, sinv.ExcludedUserIds);
         Assert.Contains(Creator, co.ExcludedUserIds);
     }
 

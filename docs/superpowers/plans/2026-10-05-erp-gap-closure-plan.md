@@ -190,20 +190,20 @@
 **แตะ:** `backend/src/TanErp.Domain/Projects/` (`ProjectBudgetLine.cs`, `ProjectWbsNode.cs`, `ProjectCostLedgerEntry.cs`), `backend/src/TanErp.Infrastructure/Persistence/Projects/ProjectControlStore.cs`
 
 - [x] WBS: `ProjectWbsNode` ลำดับชั้น (ลึกสุด 3 ระดับ TEST_ONLY); budget line ผูก node
-- [x] Commitment = PO approved ที่ยังไม่รับ; Actual = Goods issue (CP-11), WO material cost (CP-12), Labor (G-20) *(Supplier Invoice รอผูกต่อใน G-11)*
+- [x] Commitment = PO approved ที่ยังไม่รับ (คืนยอดเมื่อมี Supplier Return); Actual = Goods issue (CP-11), WO material cost (CP-12), Labor (G-20), และ Supplier Invoice Price Variance (G-11)
 - [x] Cost ledger ต่อโครงการแบบ append-only อ้างเอกสารต้นทาง (ไม่คำนวณสดจากหลายตารางแบบเดา)
 - [x] รายงาน Budget vs Commitment vs Actual ต่อ WBS
 - [x] Tests: ยอดย้อนเอกสารต้นทางได้, void/cancel/return ต้นทาง → reversal entry, เกินงบแจ้งเตือน (`project.budget-overrun`, G-02)
 
 ### G-11 — Procurement completion
 
-**แตะ:** `backend/src/TanErp.Domain/Procurement/`, `PurchaseOrdersController.cs`, `SuppliersController.cs`, `frontend/src/features/procurement/`
+**แตะ:** `backend/src/TanErp.Domain/Procurement/`, `PurchaseOrdersController.cs`, `PurchaseRequestsController.cs`, `SupplierInvoicesController.cs`, `SuppliersController.cs`, `frontend/src/features/procurement/`
 
-- [ ] Purchase Request → อนุมัติ (G-03 วงเงิน) → แปลงเป็น PO (หลาย PR รวม PO ได้)
-- [ ] Supplier Return จาก Goods Receipt (ลด stock ผ่าน Inventory port)
-- [ ] Supplier Invoice + 3-way match (PO/Receipt/Invoice) พร้อม tolerance; ส่งเข้า accounting outbox
-- [ ] เลขเอกสารผ่าน Document Numbering เดิม
-- [ ] Tests: คืนเกินที่รับไม่ได้, invoice เกิน tolerance ถูก hold, PR ซ้ำแปลง PO ไม่ได้
+- [x] Purchase Request → อนุมัติ (G-03 วงเงิน + maker–checker) → แปลงเป็น PO (หลาย PR รวม PO ร่างใบเดียวได้ครั้งเดียว)
+- [x] Supplier Return จาก Goods Receipt (ลด stock อะตอมมิกผ่าน `IProcurementStockPort` + คืนยอด Commitment โครงการ)
+- [x] Supplier Invoice + 3-way match (PO/Receipt/Invoice) พร้อม tolerance (`0%` qty, `2%` unit price; เกิน `2%` พัก `on_hold` รออนุมัติ); ส่งเข้า accounting outbox (`supplier-invoice.posted` / `supplier-invoice.voided`) และบันทึกเฉพาะผลต่างราคาเข้า `ProjectCostLedgerEntries`
+- [x] เลขเอกสารผ่าน Document Numbering เดิม (`PR-{YYYY}-{SEQ:4}`, `SRN-{YYYY}-{SEQ:4}`, `SINV-{YYYY}-{SEQ:4}`)
+- [x] Tests: คืนเกินที่รับไม่ได้, invoice เกิน tolerance ถูก hold, PR ซ้ำแปลง PO ไม่ได้ (ผล: [Procurement Verification](../../05-engineering/procurement-verification.md))
 
 ### G-12 — Inventory completion
 

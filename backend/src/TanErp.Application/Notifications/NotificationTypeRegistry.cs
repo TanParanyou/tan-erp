@@ -31,7 +31,13 @@ public static partial class NotificationTypeRegistry
             NotificationTypes.CostRecordApprovalRequested, "cost-records.approve", "/item-master/cost-reviews", NotificationFields.DocumentNumber,
             Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName)),
         new NotificationTypeDescriptor(
+            NotificationTypes.PurchaseRequestApprovalRequested, "purchase-orders.approve", "/procurement/purchase-requests/{resourceId}", NotificationFields.DocumentNumber,
+            Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName)),
+        new NotificationTypeDescriptor(
             NotificationTypes.PurchaseOrderApprovalRequested, "purchase-orders.approve", "/procurement/purchase-orders/{resourceId}", NotificationFields.DocumentNumber,
+            Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName)),
+        new NotificationTypeDescriptor(
+            NotificationTypes.SupplierInvoiceApprovalRequested, "purchase-orders.approve", "/procurement/supplier-invoices/{resourceId}", NotificationFields.DocumentNumber,
             Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName)),
         new NotificationTypeDescriptor(
             NotificationTypes.ChangeOrderApprovalRequested, "projects.change-orders.approve", "/projects/{parentId}", NotificationFields.DocumentNumber,

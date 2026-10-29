@@ -26,7 +26,9 @@ public class NotificationDomainTests
             "mrp-run.approval-requested",
             "project.budget-overrun",
             "purchase-order.approval-requested",
-            "role-assignment.approval-requested"
+            "purchase-request.approval-requested",
+            "role-assignment.approval-requested",
+            "supplier-invoice.approval-requested"
         };
         Assert.Equal(expected, NotificationTypes.All.OrderBy(t => t, StringComparer.Ordinal).ToArray());
     }

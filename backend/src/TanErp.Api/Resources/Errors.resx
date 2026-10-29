@@ -811,6 +811,34 @@
   <data name="GOODS_RECEIPT_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีรายการรับอย่างน้อย 1 รายการ จำนวนมากกว่า 0 และเป็นรายการของใบสั่งซื้อนี้</value></data>
   <data name="GOODS_RECEIPT_OVER_RECEIVED_TITLE" xml:space="preserve"><value>รับเกินจำนวนที่สั่ง</value></data>
   <data name="GOODS_RECEIPT_OVER_RECEIVED_DETAIL" xml:space="preserve"><value>จำนวนที่รับรวมต้องไม่เกินจำนวนที่สั่งซื้อ</value></data>
+  <data name="PURCHASE_REQUEST_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ใบขอซื้อถูกแก้ไข</value></data>
+  <data name="PURCHASE_REQUEST_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ใบขอซื้อถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="PURCHASE_REQUEST_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบขอซื้อไม่รองรับ</value></data>
+  <data name="PURCHASE_REQUEST_INVALID_STATE_DETAIL" xml:space="preserve"><value>ไม่สามารถดำเนินการนี้ในสถานะปัจจุบันของใบขอซื้อ</value></data>
+  <data name="PURCHASE_REQUEST_CONVERSION_INCOMPATIBLE_TITLE" xml:space="preserve"><value>รวมแปลงใบขอซื้อไม่ได้</value></data>
+  <data name="PURCHASE_REQUEST_CONVERSION_INCOMPATIBLE_DETAIL" xml:space="preserve"><value>ใบขอซื้อที่นำมารวมต้องอยู่สาขาเดียวกันและไม่ข้ามโครงการ</value></data>
+  <data name="PURCHASE_REQUEST_LINE_INVALID_TITLE" xml:space="preserve"><value>รายการขอซื้อไม่ถูกต้อง</value></data>
+  <data name="PURCHASE_REQUEST_LINE_INVALID_DETAIL" xml:space="preserve"><value>ต้องมี 1-200 รายการ สินค้าไม่ซ้ำ จำนวนมากกว่า 0 และราคาประมาณการไม่ติดลบ</value></data>
+  <data name="PURCHASE_REQUEST_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ตัดสินใบขอซื้อของตนเองไม่ได้</value></data>
+  <data name="PURCHASE_REQUEST_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้สร้างใบขอซื้อไม่สามารถอนุมัติหรือปฏิเสธรายการของตนเอง</value></data>
+  <data name="SUPPLIER_RETURN_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลคืนสินค้าผู้ขายไม่ถูกต้อง</value></data>
+  <data name="SUPPLIER_RETURN_INVALID_DETAIL" xml:space="preserve"><value>ต้องระบุใบรับสินค้า เหตุผล และรายการคืนอย่างน้อย 1 รายการที่มีจำนวนมากกว่า 0</value></data>
+  <data name="SUPPLIER_RETURN_OVER_RETURNED_TITLE" xml:space="preserve"><value>คืนเกินจำนวนที่รับ</value></data>
+  <data name="SUPPLIER_RETURN_OVER_RETURNED_DETAIL" xml:space="preserve"><value>จำนวนที่คืนรวมต้องไม่เกินจำนวนที่รับสุทธิของใบรับสินค้า</value></data>
+  <data name="SUPPLIER_RETURN_ALREADY_INVOICED_TITLE" xml:space="preserve"><value>คืนสินค้าที่วางบิลแล้วไม่ได้</value></data>
+  <data name="SUPPLIER_RETURN_ALREADY_INVOICED_DETAIL" xml:space="preserve"><value>ไม่สามารถคืนสินค้าจนทำให้ยอดรับสุทธิต่ำกว่าจำนวนที่ออกใบแจ้งหนี้แล้ว</value></data>
+  <data name="SUPPLIER_INVOICE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ใบแจ้งหนี้ผู้ขายถูกแก้ไข</value></data>
+  <data name="SUPPLIER_INVOICE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ใบแจ้งหนี้ผู้ขายถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
+  <data name="SUPPLIER_INVOICE_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบแจ้งหนี้ผู้ขายไม่รองรับ</value></data>
+  <data name="SUPPLIER_INVOICE_INVALID_STATE_DETAIL" xml:space="preserve"><value>ไม่สามารถดำเนินการนี้ในสถานะปัจจุบันของใบแจ้งหนี้ผู้ขาย</value></data>
+  <data name="SUPPLIER_INVOICE_DUPLICATE_NUMBER_TITLE" xml:space="preserve"><value>เลขที่ใบแจ้งหนี้ผู้ขายซ้ำ</value></data>
+  <data name="SUPPLIER_INVOICE_DUPLICATE_NUMBER_DETAIL" xml:space="preserve"><value>ผู้ขายรายนี้มีใบแจ้งหนี้เลขที่เดียวกันที่ยังใช้งานอยู่แล้ว</value></data>
+  <data name="SUPPLIER_INVOICE_LINE_INVALID_TITLE" xml:space="preserve"><value>รายการใบแจ้งหนี้ผู้ขายไม่ถูกต้อง</value></data>
+  <data name="SUPPLIER_INVOICE_LINE_INVALID_DETAIL" xml:space="preserve"><value>ต้องอ้างอิงบรรทัดใบสั่งซื้อไม่ซ้ำ จำนวนมากกว่า 0 และราคาต่อหน่วยไม่ติดลบ</value></data>
+  <data name="SUPPLIER_INVOICE_OVER_RECEIVED_TITLE" xml:space="preserve"><value>จำนวนวางบิลเกินจำนวนที่รับ</value></data>
+  <data name="SUPPLIER_INVOICE_OVER_RECEIVED_DETAIL" xml:space="preserve"><value>จำนวนในใบแจ้งหนี้ต้องไม่เกินยอดรับสินค้าสุทธิที่ยังไม่วางบิล</value></data>
+  <data name="SUPPLIER_INVOICE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ตัดสินใบแจ้งหนี้ของตนเองไม่ได้</value></data>
+  <data name="SUPPLIER_INVOICE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้สร้างใบแจ้งหนี้ผู้ขายไม่สามารถอนุมัติหรือปฏิเสธรายการของตนเอง</value></data>
   <data name="WAREHOUSE_CODE_CONFLICT_TITLE" xml:space="preserve"><value>รหัสคลังซ้ำ</value></data>
   <data name="WAREHOUSE_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>รหัสคลังนี้มีอยู่แล้ว กรุณาลองใหม่</value></data>
   <data name="WAREHOUSE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลคลังถูกแก้ไข</value></data>

@@ -231,6 +231,33 @@ export type PurchaseOrderListItemResponse = components["schemas"]["PurchaseOrder
 export type GoodsReceiptRequest = components["schemas"]["GoodsReceiptRequest"];
 export type GoodsReceiptLineRequest = components["schemas"]["GoodsReceiptLineRequest"];
 export type PurchaseOrderAction = "submit" | "approve" | "reject" | "cancel";
+
+export type PurchaseRequestRequest = components["schemas"]["PurchaseRequestRequest"];
+export type PurchaseRequestLineRequest = components["schemas"]["PurchaseRequestLineRequest"];
+export type PurchaseRequestResponse = components["schemas"]["PurchaseRequestResponse"];
+export type PurchaseRequestLineResponse = components["schemas"]["PurchaseRequestLineResponse"];
+export type PurchaseRequestListResponse = components["schemas"]["PurchaseRequestListResponse"];
+export type PurchaseRequestListItemResponse = components["schemas"]["PurchaseRequestListItemResponse"];
+export type ConvertPurchaseRequestsRequest = components["schemas"]["ConvertPurchaseRequestsRequest"];
+export type PurchaseRequestUnitPriceOverrideRequest = components["schemas"]["PurchaseRequestUnitPriceOverrideRequest"];
+
+export type SupplierReturnRequest = components["schemas"]["SupplierReturnRequest"];
+export type SupplierReturnLineRequest = components["schemas"]["SupplierReturnLineRequest"];
+export type SupplierReturnResponse = components["schemas"]["SupplierReturnResponse"];
+export type SupplierReturnLineResponse = components["schemas"]["SupplierReturnLineResponse"];
+export type GoodsReceiptLineResponse = components["schemas"]["GoodsReceiptLineResponse"];
+export type PurchaseOrderInvoiceSummaryResponse = components["schemas"]["PurchaseOrderInvoiceSummaryResponse"];
+export type PurchaseOrderSourceRequestResponse = components["schemas"]["PurchaseOrderSourceRequestResponse"];
+
+export type SupplierInvoiceRequest = components["schemas"]["SupplierInvoiceRequest"];
+export type SupplierInvoiceLineRequest = components["schemas"]["SupplierInvoiceLineRequest"];
+export type SupplierInvoiceResponse = components["schemas"]["SupplierInvoiceResponse"];
+export type SupplierInvoiceLineResponse = components["schemas"]["SupplierInvoiceLineResponse"];
+export type SupplierInvoiceListResponse = components["schemas"]["SupplierInvoiceListResponse"];
+export type SupplierInvoiceListItemResponse = components["schemas"]["SupplierInvoiceListItemResponse"];
+
+export type PurchaseRequestAction = "submit" | "approve" | "reject" | "cancel";
+export type SupplierInvoiceAction = "submit" | "approve" | "reject" | "cancel" | "void";
 export type BomRequest = components["schemas"]["BomRequest"];
 export type BomDraftRequest = components["schemas"]["BomDraftRequest"];
 export type BomLineRequest = components["schemas"]["BomLineRequest"];
@@ -452,6 +479,21 @@ export interface ListPurchaseOrdersParams {
   status?: string;
   supplierId?: string;
   projectId?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListPurchaseRequestsParams {
+  search?: string;
+  status?: string;
+  projectId?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListSupplierInvoicesParams {
+  search?: string;
+  status?: string;
+  supplierId?: string;
+  purchaseOrderId?: string;
   page?: number;
   pageSize?: number;
 }
@@ -2004,6 +2046,67 @@ export class ApiClient {
 
   async postGoodsReceipt(id: string, payload: GoodsReceiptRequest, options: RequestOptions): Promise<PurchaseOrderResponse> {
     return this.request<PurchaseOrderResponse>(`/api/v1/purchase-orders/${encodeURIComponent(id)}/receipts`, "POST", options, payload);
+  }
+
+  async postSupplierReturn(id: string, rowVersion: string, payload: SupplierReturnRequest, options: RequestOptions): Promise<PurchaseOrderResponse> {
+    return this.request<PurchaseOrderResponse>(`/api/v1/purchase-orders/${encodeURIComponent(id)}/returns`, "POST", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async listPurchaseRequests(options: RequestOptions, query: ListPurchaseRequestsParams): Promise<PurchaseRequestListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.projectId) params.set("projectId", query.projectId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<PurchaseRequestListResponse>(`/api/v1/purchase-requests?${params.toString()}`, "GET", options);
+  }
+
+  async getPurchaseRequest(id: string, options: RequestOptions): Promise<PurchaseRequestResponse> {
+    return this.request<PurchaseRequestResponse>(`/api/v1/purchase-requests/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createPurchaseRequest(payload: PurchaseRequestRequest, options: RequestOptions): Promise<PurchaseRequestResponse> {
+    return this.request<PurchaseRequestResponse>("/api/v1/purchase-requests", "POST", options, payload);
+  }
+
+  async updatePurchaseRequest(id: string, rowVersion: string, payload: PurchaseRequestRequest, options: RequestOptions): Promise<PurchaseRequestResponse> {
+    return this.request<PurchaseRequestResponse>(`/api/v1/purchase-requests/${encodeURIComponent(id)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async purchaseRequestAction(id: string, action: PurchaseRequestAction, rowVersion: string, note: string | null, options: RequestOptions): Promise<PurchaseRequestResponse> {
+    return this.request<PurchaseRequestResponse>(`/api/v1/purchase-requests/${encodeURIComponent(id)}/${action}`, "POST", { ...options, ifMatch: rowVersion }, { note });
+  }
+
+  async convertPurchaseRequests(payload: ConvertPurchaseRequestsRequest, options: RequestOptions): Promise<PurchaseOrderResponse> {
+    return this.request<PurchaseOrderResponse>("/api/v1/purchase-requests/convert", "POST", options, payload);
+  }
+
+  async listSupplierInvoices(options: RequestOptions, query: ListSupplierInvoicesParams): Promise<SupplierInvoiceListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.supplierId) params.set("supplierId", query.supplierId);
+    if (query.purchaseOrderId) params.set("purchaseOrderId", query.purchaseOrderId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<SupplierInvoiceListResponse>(`/api/v1/supplier-invoices?${params.toString()}`, "GET", options);
+  }
+
+  async getSupplierInvoice(id: string, options: RequestOptions): Promise<SupplierInvoiceResponse> {
+    return this.request<SupplierInvoiceResponse>(`/api/v1/supplier-invoices/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createSupplierInvoice(payload: SupplierInvoiceRequest, options: RequestOptions): Promise<SupplierInvoiceResponse> {
+    return this.request<SupplierInvoiceResponse>("/api/v1/supplier-invoices", "POST", options, payload);
+  }
+
+  async updateSupplierInvoice(id: string, rowVersion: string, payload: SupplierInvoiceRequest, options: RequestOptions): Promise<SupplierInvoiceResponse> {
+    return this.request<SupplierInvoiceResponse>(`/api/v1/supplier-invoices/${encodeURIComponent(id)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async supplierInvoiceAction(id: string, action: SupplierInvoiceAction, rowVersion: string, note: string | null, options: RequestOptions): Promise<SupplierInvoiceResponse> {
+    return this.request<SupplierInvoiceResponse>(`/api/v1/supplier-invoices/${encodeURIComponent(id)}/${action}`, "POST", { ...options, ifMatch: rowVersion }, { note });
   }
 
   async listBoms(options: RequestOptions, query: ListBomsParams): Promise<BomListResponse> {

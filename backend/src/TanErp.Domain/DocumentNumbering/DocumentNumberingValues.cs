@@ -18,8 +18,11 @@ public static class DocumentTypes
     public const string ProjectChangeOrders = "project-change-orders";
     public const string LaborTimesheets = "labor-timesheets";
     public const string Suppliers = "suppliers";
+    public const string PurchaseRequests = "purchase-requests";
     public const string PurchaseOrders = "purchase-orders";
     public const string GoodsReceipts = "goods-receipts";
+    public const string SupplierReturns = "supplier-returns";
+    public const string SupplierInvoices = "supplier-invoices";
     public const string Warehouses = "warehouses";
     public const string StockReceipts = "stock-receipts";
     public const string StockIssues = "stock-issues";
@@ -80,8 +83,11 @@ public static class DocumentTypes
         ProjectChangeOrders,
         LaborTimesheets,
         Suppliers,
+        PurchaseRequests,
         PurchaseOrders,
         GoodsReceipts,
+        SupplierReturns,
+        SupplierInvoices,
         Warehouses,
         StockReceipts,
         StockIssues,
@@ -156,8 +162,11 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.Projects => "PRJ",
             DocumentTypes.ProjectChangeOrders => "PCO",
             DocumentTypes.LaborTimesheets => "TS",
+            DocumentTypes.PurchaseRequests => "PR",
             DocumentTypes.PurchaseOrders => "PO",
             DocumentTypes.GoodsReceipts => "GR",
+            DocumentTypes.SupplierReturns => "SRN",
+            DocumentTypes.SupplierInvoices => "SINV",
             DocumentTypes.StockReceipts => "SR",
             DocumentTypes.StockIssues => "SI",
             DocumentTypes.StockTransfers => "ST",

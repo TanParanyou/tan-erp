@@ -18,7 +18,9 @@ public static class NotificationTypes
 {
     public const string EstimateApprovalRequested = "estimate.approval-requested";
     public const string CostRecordApprovalRequested = "cost-record.approval-requested";
+    public const string PurchaseRequestApprovalRequested = "purchase-request.approval-requested";
     public const string PurchaseOrderApprovalRequested = "purchase-order.approval-requested";
+    public const string SupplierInvoiceApprovalRequested = "supplier-invoice.approval-requested";
     public const string ChangeOrderApprovalRequested = "change-order.approval-requested";
     public const string MrpRunApprovalRequested = "mrp-run.approval-requested";
     public const string RoleAssignmentApprovalRequested = "role-assignment.approval-requested";
@@ -30,7 +32,9 @@ public static class NotificationTypes
     {
         EstimateApprovalRequested,
         CostRecordApprovalRequested,
+        PurchaseRequestApprovalRequested,
         PurchaseOrderApprovalRequested,
+        SupplierInvoiceApprovalRequested,
         ChangeOrderApprovalRequested,
         MrpRunApprovalRequested,
         RoleAssignmentApprovalRequested,

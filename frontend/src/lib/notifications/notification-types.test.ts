@@ -18,7 +18,9 @@ describe("notification types", () => {
       "mrp-run.approval-requested",
       "project.budget-overrun",
       "purchase-order.approval-requested",
+      "purchase-request.approval-requested",
       "role-assignment.approval-requested",
+      "supplier-invoice.approval-requested",
     ]);
   });
 

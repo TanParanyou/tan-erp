@@ -15,6 +15,8 @@ export type NotificationMessageKey =
   | "estimateApprovalRequested"
   | "costRecordApprovalRequested"
   | "purchaseOrderApprovalRequested"
+  | "purchaseRequestApprovalRequested"
+  | "supplierInvoiceApprovalRequested"
   | "changeOrderApprovalRequested"
   | "mrpRunApprovalRequested"
   | "roleAssignmentApprovalRequested"
@@ -38,6 +40,14 @@ export const NOTIFICATION_TYPES = {
   },
   "purchase-order.approval-requested": {
     messageKey: "purchaseOrderApprovalRequested",
+    fields: ["documentNumber", "actorDisplayName"],
+  },
+  "purchase-request.approval-requested": {
+    messageKey: "purchaseRequestApprovalRequested",
+    fields: ["documentNumber", "actorDisplayName"],
+  },
+  "supplier-invoice.approval-requested": {
+    messageKey: "supplierInvoiceApprovalRequested",
     fields: ["documentNumber", "actorDisplayName"],
   },
   "change-order.approval-requested": {

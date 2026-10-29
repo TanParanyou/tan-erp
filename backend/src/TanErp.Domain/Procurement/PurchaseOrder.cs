@@ -115,7 +115,7 @@ public class PurchaseOrder : Entity
 
     public void Cancel(string reason, DateTimeOffset now)
     {
-        if (_lines.Any(l => l.ReceivedQuantity > 0))
+        if (_lines.Any(l => l.ReceivedQuantity > 0 || l.InvoicedQuantity > 0))
         {
             throw new ProcurementDomainException("PURCHASE_ORDER_HAS_RECEIPTS", "A purchase order with receipts cannot be cancelled.");
         }
@@ -151,6 +151,66 @@ public class PurchaseOrder : Entity
         }
 
         Status = _lines.All(l => l.ReceivedQuantity >= l.Quantity) ? PurchaseOrderStatus.Received : PurchaseOrderStatus.PartiallyReceived;
+        Touch(now);
+    }
+
+    /// <summary>Applies a supplier return to the order lines and moves the status back to partially_received or approved when appropriate.</summary>
+    public void ApplyReturn(IReadOnlyCollection<(Guid LineId, decimal Quantity)> quantities, DateTimeOffset now)
+    {
+        if (Status is not (PurchaseOrderStatus.PartiallyReceived or PurchaseOrderStatus.Received))
+        {
+            throw new ProcurementDomainException("PURCHASE_ORDER_INVALID_STATE", $"Goods can only be returned against a received purchase order; current status is '{Status}'.");
+        }
+
+        foreach (var (lineId, quantity) in quantities)
+        {
+            var line = _lines.FirstOrDefault(l => l.Id == lineId)
+                ?? throw new ProcurementDomainException("SUPPLIER_RETURN_INVALID", "A return line does not belong to this purchase order.");
+            line.ReverseReceipt(quantity);
+        }
+
+        if (_lines.All(l => l.ReceivedQuantity == 0m))
+        {
+            Status = PurchaseOrderStatus.Approved;
+        }
+        else if (_lines.All(l => l.ReceivedQuantity >= l.Quantity))
+        {
+            Status = PurchaseOrderStatus.Received;
+        }
+        else
+        {
+            Status = PurchaseOrderStatus.PartiallyReceived;
+        }
+
+        Touch(now);
+    }
+
+    public void ReserveInvoiced(IReadOnlyCollection<(Guid LineId, decimal Quantity)> quantities, DateTimeOffset now)
+    {
+        if (Status is not (PurchaseOrderStatus.Approved or PurchaseOrderStatus.PartiallyReceived or PurchaseOrderStatus.Received))
+        {
+            throw new ProcurementDomainException("PURCHASE_ORDER_INVALID_STATE", $"Supplier invoices cannot be matched against a '{Status}' purchase order.");
+        }
+
+        foreach (var (lineId, quantity) in quantities)
+        {
+            var line = _lines.FirstOrDefault(l => l.Id == lineId)
+                ?? throw new ProcurementDomainException("SUPPLIER_INVOICE_LINE_INVALID", "An invoice line does not belong to this purchase order.");
+            line.ReserveInvoiced(quantity);
+        }
+
+        Touch(now);
+    }
+
+    public void ReleaseInvoiced(IReadOnlyCollection<(Guid LineId, decimal Quantity)> quantities, DateTimeOffset now)
+    {
+        foreach (var (lineId, quantity) in quantities)
+        {
+            var line = _lines.FirstOrDefault(l => l.Id == lineId)
+                ?? throw new ProcurementDomainException("SUPPLIER_INVOICE_LINE_INVALID", "An invoice line does not belong to this purchase order.");
+            line.ReleaseInvoiced(quantity);
+        }
+
         Touch(now);
     }
 

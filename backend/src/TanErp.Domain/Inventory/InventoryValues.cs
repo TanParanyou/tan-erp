@@ -30,6 +30,7 @@ public static class StockDocumentType
 public static class StockSourceType
 {
     public const string GoodsReceipt = "goods_receipt";
+    public const string SupplierReturn = "supplier_return";
     public const string WorkOrderIssue = "work_order_issue";
     public const string WorkOrderReturn = "work_order_return";
     public const string WorkOrderCompletion = "work_order_completion";
@@ -44,10 +45,11 @@ public static class StockMovementKind
     public const string AdjustmentIn = "adjustment_in";
     public const string AdjustmentOut = "adjustment_out";
     public const string ReturnIn = "return_in";
+    public const string ReturnOut = "return_out";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
-        Receipt, Issue, TransferOut, TransferIn, AdjustmentIn, AdjustmentOut, ReturnIn
+        Receipt, Issue, TransferOut, TransferIn, AdjustmentIn, AdjustmentOut, ReturnIn, ReturnOut
     };
 }
 

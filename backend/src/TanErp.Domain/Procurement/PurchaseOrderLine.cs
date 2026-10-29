@@ -17,6 +17,7 @@ public class PurchaseOrderLine : Entity
     public decimal UnitPrice { get; private set; }
     public decimal LineTotal { get; private set; }
     public decimal ReceivedQuantity { get; private set; }
+    public decimal InvoicedQuantity { get; private set; }
 
     protected PurchaseOrderLine() { }
 
@@ -52,6 +53,8 @@ public class PurchaseOrderLine : Entity
 
     public decimal RemainingQuantity => Quantity - ReceivedQuantity;
 
+    public decimal UninvoicedReceivedQuantity => ReceivedQuantity - InvoicedQuantity;
+
     /// <summary>No over-receipt: a receipt may never take the received quantity above the ordered quantity.</summary>
     public void Receive(decimal quantity)
     {
@@ -67,5 +70,53 @@ public class PurchaseOrderLine : Entity
         }
 
         ReceivedQuantity += rounded;
+    }
+
+    public void ReverseReceipt(decimal quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new ProcurementDomainException("SUPPLIER_RETURN_INVALID", "Returned quantity must be greater than zero.");
+        }
+
+        var rounded = decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
+        if (rounded > ReceivedQuantity)
+        {
+            throw new ProcurementDomainException("SUPPLIER_RETURN_OVER_RETURNED", $"Line {LineNo} cannot return more than received.");
+        }
+
+        if (ReceivedQuantity - rounded < InvoicedQuantity)
+        {
+            throw new ProcurementDomainException("SUPPLIER_RETURN_ALREADY_INVOICED", $"Line {LineNo} cannot reduce net received quantity below invoiced quantity.");
+        }
+
+        ReceivedQuantity -= rounded;
+    }
+
+    public void ReserveInvoiced(decimal quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new ProcurementDomainException("SUPPLIER_INVOICE_LINE_INVALID", "Invoice quantity must be greater than zero.");
+        }
+
+        var rounded = decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
+        if (InvoicedQuantity + rounded > ReceivedQuantity)
+        {
+            throw new ProcurementDomainException("SUPPLIER_INVOICE_OVER_RECEIVED", $"Line {LineNo} cannot be invoiced above the uninvoiced received quantity.");
+        }
+
+        InvoicedQuantity += rounded;
+    }
+
+    public void ReleaseInvoiced(decimal quantity)
+    {
+        var rounded = decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
+        if (rounded <= 0 || InvoicedQuantity < rounded)
+        {
+            throw new ProcurementDomainException("SUPPLIER_INVOICE_INVALID_STATE", $"Line {LineNo} invoiced quantity cannot go negative.");
+        }
+
+        InvoicedQuantity -= rounded;
     }
 }

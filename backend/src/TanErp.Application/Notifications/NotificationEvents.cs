@@ -28,10 +28,22 @@ public static class NotificationEvents
             Fields((NotificationFields.ResourceId, Id(costRecordId)), (NotificationFields.DocumentNumber, itemCode)),
             null, makerUserIds);
 
+    public static NotificationEvent PurchaseRequestSubmitted(
+        Guid organizationId, Guid branchId, Guid newRowVersion, Guid actorUserId, Guid purchaseRequestId, string number, Guid creatorUserId) =>
+        new(NotificationTypes.PurchaseRequestApprovalRequested, organizationId, branchId, newRowVersion, actorUserId,
+            Fields((NotificationFields.ResourceId, Id(purchaseRequestId)), (NotificationFields.DocumentNumber, number)),
+            null, [creatorUserId]);
+
     public static NotificationEvent PurchaseOrderSubmitted(
         Guid organizationId, Guid branchId, Guid newRowVersion, Guid actorUserId, Guid purchaseOrderId, string number, Guid creatorUserId) =>
         new(NotificationTypes.PurchaseOrderApprovalRequested, organizationId, branchId, newRowVersion, actorUserId,
             Fields((NotificationFields.ResourceId, Id(purchaseOrderId)), (NotificationFields.DocumentNumber, number)),
+            null, [creatorUserId]);
+
+    public static NotificationEvent SupplierInvoiceHeldForApproval(
+        Guid organizationId, Guid branchId, Guid newRowVersion, Guid actorUserId, Guid supplierInvoiceId, string number, Guid creatorUserId) =>
+        new(NotificationTypes.SupplierInvoiceApprovalRequested, organizationId, branchId, newRowVersion, actorUserId,
+            Fields((NotificationFields.ResourceId, Id(supplierInvoiceId)), (NotificationFields.DocumentNumber, number)),
             null, [creatorUserId]);
 
     public static NotificationEvent ChangeOrderSubmitted(

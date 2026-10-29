@@ -115,7 +115,7 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.ToTable("stock_movements", "inventory", t =>
         {
             t.HasCheckConstraint("ck_stock_movements_quantity", "quantity_delta <> 0");
-            t.HasCheckConstraint("ck_stock_movements_kind", "kind IN ('receipt', 'issue', 'transfer_out', 'transfer_in', 'adjustment_in', 'adjustment_out', 'return_in')");
+            t.HasCheckConstraint("ck_stock_movements_kind", "kind IN ('receipt', 'issue', 'transfer_out', 'transfer_in', 'adjustment_in', 'adjustment_out', 'return_in', 'return_out')");
             t.HasCheckConstraint("ck_stock_movements_on_hand_after", "on_hand_after >= 0");
         });
         builder.HasKey(x => x.Id);

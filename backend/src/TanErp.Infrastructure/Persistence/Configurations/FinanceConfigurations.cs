@@ -93,7 +93,7 @@ public class AccountingOutboxMessageConfiguration : IEntityTypeConfiguration<Acc
         builder.ToTable("accounting_outbox", "finance", t =>
         {
             t.HasCheckConstraint("ck_accounting_outbox_status", "status IN ('pending', 'sent', 'failed', 'dead')");
-            t.HasCheckConstraint("ck_accounting_outbox_kind", "kind IN ('billing.issued', 'billing.voided', 'payment.recorded', 'payment.reversed')");
+            t.HasCheckConstraint("ck_accounting_outbox_kind", "kind IN ('billing.issued', 'billing.voided', 'payment.recorded', 'payment.reversed', 'supplier-invoice.posted', 'supplier-invoice.voided')");
             t.HasCheckConstraint("ck_accounting_outbox_attempts", "attempts >= 0");
         });
         builder.HasKey(x => x.Id);

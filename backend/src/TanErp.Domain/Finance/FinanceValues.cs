@@ -62,4 +62,11 @@ public static class OutboxKind
     public const string BillingVoided = "billing.voided";
     public const string PaymentRecorded = "payment.recorded";
     public const string PaymentReversed = "payment.reversed";
+    public const string SupplierInvoicePosted = "supplier-invoice.posted";
+    public const string SupplierInvoiceVoided = "supplier-invoice.voided";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
+    {
+        BillingIssued, BillingVoided, PaymentRecorded, PaymentReversed, SupplierInvoicePosted, SupplierInvoiceVoided
+    };
 }

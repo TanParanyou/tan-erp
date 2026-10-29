@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
+using TanErp.Api.Contracts.Finance;
+using TanErp.Api.Contracts.Inventory;
 using TanErp.Api.Contracts.Procurement;
 using TanErp.Api.Contracts.Projects;
 using TanErp.Api.ErrorHandling;
@@ -16,6 +18,8 @@ using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Crm.Opportunities;
 using TanErp.Domain.Crm.Sites;
 using TanErp.Domain.Estimates;
+using TanErp.Domain.Finance;
+using TanErp.Domain.Notifications;
 using TanErp.Domain.Projects;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
@@ -569,5 +573,455 @@ public class ProcurementEndpointsTests : IAsyncLifetime
         {
             Assert.Empty((await foreignList.Content.ReadFromJsonAsync<PurchaseOrderListResponse>())!.Items);
         }
+    }
+
+    [Fact]
+    public async Task PurchaseRequest_Lifecycle_MakerChecker_Notification_AndConsolidationToPurchaseOrder()
+    {
+        var supplier = await CreateSupplierAsync("บริษัท วัสดุรวม จำกัด");
+        var projectA = await CreateProjectAsync();
+        await ActivateAsync(projectA, 100_000m);
+        var projectB = await CreateProjectAsync();
+        await ActivateAsync(projectB, 100_000m);
+
+        // Create PR1 on Project A -> draft -> edit draft (keeping overlapping items) -> submit -> Maker!=Checker -> approve
+        var createPr1 = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/purchase-requests",
+            new PurchaseRequestRequest(
+                projectA,
+                new DateOnly(2026, 11, 10),
+                "ขอซื้อรอบแรก",
+                new List<PurchaseRequestLineRequest>
+                {
+                    new(PlywoodId, 4m, 1200m, "แผ่นหลัก"),
+                    new(LaminateId, 2m, 580m, "ปิดผิว")
+                }),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, createPr1.StatusCode);
+        var pr1 = (await createPr1.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        Assert.StartsWith("PR-", pr1.Number);
+        Assert.Equal("draft", pr1.Status);
+
+        var updatePr1 = await SendAsync(
+            HttpMethod.Put,
+            $"/api/v1/purchase-requests/{pr1.Id}",
+            new PurchaseRequestRequest(
+                projectA,
+                new DateOnly(2026, 11, 12),
+                "ขอซื้อรอบแรก (ปรับจำนวน)",
+                new List<PurchaseRequestLineRequest>
+                {
+                    new(PlywoodId, 6m, 1200m, "แผ่นหลัก"),
+                    new(LaminateId, 2m, 580m, "ปิดผิว")
+                }),
+            ifMatch: pr1.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, updatePr1.StatusCode);
+        pr1 = (await updatePr1.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        Assert.Equal(6m * 1200m + 2m * 580m, pr1.TotalEstimatedAmount);
+
+        var submitPr1 = await SendAsync(HttpMethod.Post, $"/api/v1/purchase-requests/{pr1.Id}/submit", ifMatch: pr1.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, submitPr1.StatusCode);
+        pr1 = (await submitPr1.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        Assert.Equal("submitted", pr1.Status);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var rows = await db.Notifications.AsNoTracking()
+                .Where(n => n.OrganizationId == OrgId && n.Type == NotificationTypes.PurchaseRequestApprovalRequested)
+                .Select(n => new { n.RecipientUserId, n.PayloadJson })
+                .ToListAsync();
+            var recipients = rows.Where(n => n.PayloadJson.Contains(pr1.Number, StringComparison.Ordinal))
+                .Select(n => n.RecipientUserId)
+                .ToList();
+            Assert.Contains(ApproverUserId, recipients);
+            Assert.DoesNotContain(UserId, recipients);
+        }
+
+        var selfApprove = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/purchase-requests/{pr1.Id}/approve",
+            new PurchaseRequestActionRequest(null),
+            token: "token-org-a",
+            ifMatch: pr1.RowVersion);
+        Assert.Equal(HttpStatusCode.Forbidden, selfApprove.StatusCode);
+        Assert.Equal("PURCHASE_REQUEST_SELF_APPROVAL", await ErrorCodeAsync(selfApprove));
+
+        var approvePr1 = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/purchase-requests/{pr1.Id}/approve",
+            new PurchaseRequestActionRequest("อนุมัติใบที่ 1"),
+            token: "token-approver",
+            ifMatch: pr1.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, approvePr1.StatusCode);
+        pr1 = (await approvePr1.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        Assert.Equal("approved", pr1.Status);
+
+        // Create & approve PR2 on same Project A with overlapping Plywood @ 1300
+        var pr2Resp = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/purchase-requests",
+            new PurchaseRequestRequest(
+                projectA,
+                new DateOnly(2026, 11, 10),
+                "ขอซื้อเพิ่มเติม",
+                new List<PurchaseRequestLineRequest> { new(PlywoodId, 4m, 1300m, null) }),
+            key: Guid.NewGuid().ToString("N"));
+        var pr2 = (await pr2Resp.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        pr2 = (await (await SendAsync(HttpMethod.Post, $"/api/v1/purchase-requests/{pr2.Id}/submit", ifMatch: pr2.RowVersion)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        pr2 = (await (await SendAsync(HttpMethod.Post, $"/api/v1/purchase-requests/{pr2.Id}/approve", new PurchaseRequestActionRequest("อนุมัติใบที่ 2"), token: "token-approver", ifMatch: pr2.RowVersion)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+
+        // Create & approve PR3 on Project B -> cross-project consolidation must fail with 409 PURCHASE_REQUEST_CONVERSION_INCOMPATIBLE
+        var pr3Resp = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/purchase-requests",
+            new PurchaseRequestRequest(
+                projectB,
+                null,
+                "อีกโครงการ",
+                new List<PurchaseRequestLineRequest> { new(PlywoodId, 2m, 1200m, null) }),
+            key: Guid.NewGuid().ToString("N"));
+        var pr3 = (await pr3Resp.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        pr3 = (await (await SendAsync(HttpMethod.Post, $"/api/v1/purchase-requests/{pr3.Id}/submit", ifMatch: pr3.RowVersion)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        pr3 = (await (await SendAsync(HttpMethod.Post, $"/api/v1/purchase-requests/{pr3.Id}/approve", new PurchaseRequestActionRequest("อนุมัติใบที่ 3"), token: "token-approver", ifMatch: pr3.RowVersion)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+
+        var incompatible = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/purchase-requests/convert",
+            new ConvertPurchaseRequestsRequest(new List<Guid> { pr1.Id, pr3.Id }, supplier.Id, null, null, null),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Conflict, incompatible.StatusCode);
+        Assert.Equal("PURCHASE_REQUEST_CONVERSION_INCOMPATIBLE", await ErrorCodeAsync(incompatible));
+
+        // Consolidate PR1 + PR2 into one draft PO (weighted average Plywood = (6*1200 + 4*1300)/10 = 1240; override Laminate = 600)
+        var convertResp = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/purchase-requests/convert",
+            new ConvertPurchaseRequestsRequest(
+                new List<Guid> { pr1.Id, pr2.Id },
+                supplier.Id,
+                null,
+                "รวมใบขอซื้อ PR1+PR2",
+                new List<PurchaseRequestUnitPriceOverrideRequest> { new(LaminateId, 600m) }),
+            key: Guid.NewGuid().ToString("N"));
+        var po = await OrderResult(convertResp, HttpStatusCode.Created);
+        Assert.Equal("draft", po.Status);
+        Assert.Equal(projectA, po.Project!.Id);
+        Assert.Equal(new DateOnly(2026, 11, 10), po.ExpectedDeliveryDate);
+        Assert.Equal(2, po.SourcePurchaseRequests.Count);
+
+        var poPlywood = po.Lines.Single(l => l.ItemId == PlywoodId);
+        var poLaminate = po.Lines.Single(l => l.ItemId == LaminateId);
+        Assert.Equal(10m, poPlywood.Quantity);
+        Assert.Equal(1240m, poPlywood.UnitPrice);
+        Assert.Equal(2m, poLaminate.Quantity);
+        Assert.Equal(600m, poLaminate.UnitPrice);
+
+        var pr1After = (await (await SendAsync(HttpMethod.Get, $"/api/v1/purchase-requests/{pr1.Id}")).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        Assert.Equal("converted", pr1After.Status);
+        Assert.Equal(po.Id, pr1After.ConvertedPurchaseOrder!.Id);
+
+        // Re-converting an already-converted PR fails with 409 PURCHASE_REQUEST_INVALID_STATE
+        var reconvert = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/purchase-requests/convert",
+            new ConvertPurchaseRequestsRequest(new List<Guid> { pr1.Id }, supplier.Id, null, null, null),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Conflict, reconvert.StatusCode);
+        Assert.Equal("PURCHASE_REQUEST_INVALID_STATE", await ErrorCodeAsync(reconvert));
+    }
+
+    [Fact]
+    public async Task SupplierReturn_DeductsWarehouseStockAtomically_RestoresProjectCommitment_AndGuardsInsufficientStock()
+    {
+        var supplier = await CreateSupplierAsync("บริษัท คลังไม้ จำกัด");
+        var projectId = await CreateProjectAsync();
+        await ActivateAsync(projectId, 50_000m);
+
+        var whResp = await SendAsync(HttpMethod.Post, "/api/v1/warehouses", new WarehouseRequest("คลังคืนสินค้า", "กรุงเทพ"), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, whResp.StatusCode);
+        var warehouse = (await whResp.Content.ReadFromJsonAsync<WarehouseResponse>())!;
+
+        var order = await ApprovedOrderAsync(Order(supplier.Id, projectId, plywoodQty: 10m, plywoodPrice: 1000m, withLaminate: false));
+        var poLine = order.Lines.Single();
+
+        // Receive all 10 units and put into warehouse stock
+        var receivedPo = await OrderResult(await ReceiveAsync(order.Id, Guid.NewGuid().ToString("N"), (poLine.Id, 10m)), HttpStatusCode.Created);
+        var gr = Assert.Single(receivedPo.Receipts);
+        var grLine = Assert.Single(gr.Lines);
+
+        var putResp = await SendAsync(HttpMethod.Post, "/api/v1/inventory/receipts", new ReceiveGoodsReceiptRequest(gr.Id, warehouse.Id), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, putResp.StatusCode);
+
+        // Over-returning 11 > 10 fails with 422 SUPPLIER_RETURN_OVER_RETURNED
+        var overReturn = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/purchase-orders/{order.Id}/returns",
+            new SupplierReturnRequest(gr.Id, null, "คืนเกิน", new List<SupplierReturnLineRequest> { new(grLine.Id, 11m) }),
+            key: Guid.NewGuid().ToString("N"),
+            ifMatch: receivedPo.RowVersion);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, overReturn.StatusCode);
+        Assert.Equal("SUPPLIER_RETURN_OVER_RETURNED", await ErrorCodeAsync(overReturn));
+
+        // Return 3 defective units -> atomic return_out stock deduction + +3,000 commitment restoration
+        var returnResp = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/purchase-orders/{order.Id}/returns",
+            new SupplierReturnRequest(gr.Id, null, "ไม้บิ่นมุมจากการขนส่ง", new List<SupplierReturnLineRequest> { new(grLine.Id, 3m) }),
+            key: Guid.NewGuid().ToString("N"),
+            ifMatch: receivedPo.RowVersion);
+        var afterReturn = await OrderResult(returnResp, HttpStatusCode.Created);
+        Assert.Equal("partially_received", afterReturn.Status);
+        Assert.Equal(7m, afterReturn.Lines.Single().ReceivedQuantity);
+        Assert.Equal(3m, afterReturn.Lines.Single().RemainingQuantity);
+        Assert.Equal(3m, afterReturn.Receipts.Single().Lines.Single().ReturnedQuantity);
+        Assert.Equal(7m, afterReturn.Receipts.Single().Lines.Single().RemainingReturnableQuantity);
+
+        var srn = Assert.Single(afterReturn.Returns);
+        Assert.StartsWith("SRN-", srn.Number);
+        Assert.Equal(3000m, srn.TotalReturnAmount);
+        Assert.False(string.IsNullOrWhiteSpace(srn.StockDocumentNumber));
+
+        var balResp = await SendAsync(HttpMethod.Get, $"/api/v1/inventory/balances?warehouseId={warehouse.Id}&itemId={PlywoodId}");
+        var balance = (await balResp.Content.ReadFromJsonAsync<StockBalanceListResponse>())!.Items.Single();
+        Assert.Equal(7m, balance.OnHand);
+
+        var invRecon = (await (await SendAsync(HttpMethod.Get, "/api/v1/inventory/reconciliation")).Content.ReadFromJsonAsync<ReconciliationResponse>())!;
+        Assert.Equal(0, invRecon.InconsistentCount);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var srnLedger = await db.ProjectCostLedgerEntries.AsNoTracking()
+                .SingleAsync(e => e.OrganizationId == OrgId && e.ProjectId == projectId && e.SourceType == ProjectCostSourceType.SupplierReturn);
+            Assert.Equal(ProjectCostEntryType.Commitment, srnLedger.EntryType);
+            Assert.Equal(3000m, srnLedger.Amount);
+            Assert.True(srnLedger.IsReversal);
+        }
+
+        // Issue 6 units from warehouse so OnHand = 1, then try returning 2 units -> fails with 422 INVENTORY_INSUFFICIENT_STOCK and rolls back cleanly
+        var issueResp = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/inventory/issues",
+            new IssueStockRequest(warehouse.Id, projectId, "เบิกใช้งานหน้างาน", new List<StockLineRequest> { new(PlywoodId, 6m) }),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, issueResp.StatusCode);
+
+        var insufficientReturn = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/purchase-orders/{order.Id}/returns",
+            new SupplierReturnRequest(gr.Id, null, "จะคืนแต่เบิกไปแล้ว", new List<SupplierReturnLineRequest> { new(grLine.Id, 2m) }),
+            key: Guid.NewGuid().ToString("N"),
+            ifMatch: afterReturn.RowVersion);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, insufficientReturn.StatusCode);
+        Assert.Equal("INVENTORY_INSUFFICIENT_STOCK", await ErrorCodeAsync(insufficientReturn));
+
+        var unchangedPo = await GetOrderAsync(order.Id);
+        Assert.Equal(7m, unchangedPo.Lines.Single().ReceivedQuantity);
+        Assert.Single(unchangedPo.Returns);
+    }
+
+    [Fact]
+    public async Task SupplierInvoice_ThreeWayMatch_HoldApproval_Outbox_PriceVarianceLedger_AndVoid()
+    {
+        var supplier = await CreateSupplierAsync("บริษัท วางบิลทดสอบ จำกัด");
+        var projectId = await CreateProjectAsync();
+        await ActivateAsync(projectId, 50_000m);
+
+        var order = await ApprovedOrderAsync(Order(supplier.Id, projectId, plywoodQty: 10m, plywoodPrice: 1000m, withLaminate: false));
+        var poLine = order.Lines.Single();
+
+        // Receive 6 units
+        var receivedPo = await OrderResult(await ReceiveAsync(order.Id, Guid.NewGuid().ToString("N"), (poLine.Id, 6m)), HttpStatusCode.Created);
+        var gr = Assert.Single(receivedPo.Receipts);
+        var grLine = Assert.Single(gr.Lines);
+
+        // Case B: Create SINV1 with 7 units (> 6 received) -> submit -> 422 SUPPLIER_INVOICE_OVER_RECEIVED
+        var createSinv1 = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/supplier-invoices",
+            new SupplierInvoiceRequest(
+                order.Id,
+                "TAX-INV-0001",
+                new DateOnly(2026, 11, 20),
+                new DateOnly(2026, 12, 20),
+                490m,
+                "ใบกำกับใบแรก",
+                new List<SupplierInvoiceLineRequest> { new(poLine.Id, 7m, 1000m) }),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, createSinv1.StatusCode);
+        var sinv1 = (await createSinv1.Content.ReadFromJsonAsync<SupplierInvoiceResponse>())!;
+        Assert.StartsWith("SINV-", sinv1.Number);
+
+        var overSubmit = await SendAsync(HttpMethod.Post, $"/api/v1/supplier-invoices/{sinv1.Id}/submit", ifMatch: sinv1.RowVersion);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, overSubmit.StatusCode);
+        Assert.Equal("SUPPLIER_INVOICE_OVER_RECEIVED", await ErrorCodeAsync(overSubmit));
+
+        // Case A: Edit SINV1 to 4 units @ 1015 (+1.5% <= 2% tolerance) -> submit -> matched + outbox + +60 variance in cost ledger
+        var updateSinv1 = await SendAsync(
+            HttpMethod.Put,
+            $"/api/v1/supplier-invoices/{sinv1.Id}",
+            new SupplierInvoiceRequest(
+                order.Id,
+                "TAX-INV-0001",
+                new DateOnly(2026, 11, 20),
+                new DateOnly(2026, 12, 20),
+                284.20m,
+                "แก้จำนวนตามของรับจริง",
+                new List<SupplierInvoiceLineRequest> { new(poLine.Id, 4m, 1015m) }),
+            ifMatch: sinv1.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, updateSinv1.StatusCode);
+        sinv1 = (await updateSinv1.Content.ReadFromJsonAsync<SupplierInvoiceResponse>())!;
+
+        var matchSubmit = await SendAsync(HttpMethod.Post, $"/api/v1/supplier-invoices/{sinv1.Id}/submit", ifMatch: sinv1.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, matchSubmit.StatusCode);
+        sinv1 = (await matchSubmit.Content.ReadFromJsonAsync<SupplierInvoiceResponse>())!;
+        Assert.Equal("matched", sinv1.Status);
+        Assert.Equal("matched", sinv1.MatchStatus);
+        Assert.Equal(60m, sinv1.TotalVarianceAmount);
+
+        var poAfterSinv1 = await GetOrderAsync(order.Id);
+        Assert.Equal(4m, poAfterSinv1.Lines.Single().InvoicedQuantity);
+        Assert.Equal(2m, poAfterSinv1.Lines.Single().UninvoicedReceivedQuantity);
+
+        // Returning 3 units when 6 received and 4 invoiced (6 - 3 = 3 < 4) must be blocked by SUPPLIER_RETURN_ALREADY_INVOICED
+        var returnInvoiced = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/purchase-orders/{order.Id}/returns",
+            new SupplierReturnRequest(gr.Id, null, "จะคืนของที่วางบิลแล้ว", new List<SupplierReturnLineRequest> { new(grLine.Id, 3m) }),
+            key: Guid.NewGuid().ToString("N"),
+            ifMatch: poAfterSinv1.RowVersion);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, returnInvoiced.StatusCode);
+        Assert.Equal("SUPPLIER_RETURN_ALREADY_INVOICED", await ErrorCodeAsync(returnInvoiced));
+
+        // Duplicate supplierInvoiceNumber for same supplier while active -> 409 SUPPLIER_INVOICE_DUPLICATE_NUMBER
+        var dupInv = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/supplier-invoices",
+            new SupplierInvoiceRequest(
+                order.Id,
+                "tax-inv-0001",
+                new DateOnly(2026, 11, 21),
+                null,
+                0m,
+                null,
+                new List<SupplierInvoiceLineRequest> { new(poLine.Id, 1m, 1000m) }),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Conflict, dupInv.StatusCode);
+        Assert.Equal("SUPPLIER_INVOICE_DUPLICATE_NUMBER", await ErrorCodeAsync(dupInv));
+
+        // Case C: SINV2 for remaining 2 units @ 1050 (+5% > 2%) -> on_hold -> notification -> self-approve 403 -> approve -> outbox + +100 variance -> void -> reversal
+        var createSinv2 = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/supplier-invoices",
+            new SupplierInvoiceRequest(
+                order.Id,
+                "TAX-INV-0002",
+                new DateOnly(2026, 11, 22),
+                new DateOnly(2026, 12, 22),
+                147m,
+                "ราคาขึ้น 5%",
+                new List<SupplierInvoiceLineRequest> { new(poLine.Id, 2m, 1050m) }),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, createSinv2.StatusCode);
+        var sinv2 = (await createSinv2.Content.ReadFromJsonAsync<SupplierInvoiceResponse>())!;
+
+        var holdSubmit = await SendAsync(HttpMethod.Post, $"/api/v1/supplier-invoices/{sinv2.Id}/submit", ifMatch: sinv2.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, holdSubmit.StatusCode);
+        sinv2 = (await holdSubmit.Content.ReadFromJsonAsync<SupplierInvoiceResponse>())!;
+        Assert.Equal("on_hold", sinv2.Status);
+        Assert.Equal("price_variance", sinv2.MatchStatus);
+        Assert.Equal(100m, sinv2.TotalVarianceAmount);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var rows = await db.Notifications.AsNoTracking()
+                .Where(n => n.OrganizationId == OrgId && n.Type == NotificationTypes.SupplierInvoiceApprovalRequested)
+                .Select(n => new { n.RecipientUserId, n.PayloadJson })
+                .ToListAsync();
+            var holdNotifRecipients = rows.Where(n => n.PayloadJson.Contains(sinv2.Number, StringComparison.Ordinal))
+                .Select(n => n.RecipientUserId)
+                .ToList();
+            Assert.Contains(ApproverUserId, holdNotifRecipients);
+            Assert.DoesNotContain(UserId, holdNotifRecipients);
+
+            // While on_hold, no AP outbox message has been queued for SINV2 yet
+            Assert.False(await db.AccountingOutbox.AsNoTracking()
+                .AnyAsync(o => o.OrganizationId == OrgId && o.ResourceId == sinv2.Id));
+        }
+
+        var selfApproveHold = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/supplier-invoices/{sinv2.Id}/approve",
+            new SupplierInvoiceActionRequest(null),
+            token: "token-org-a",
+            ifMatch: sinv2.RowVersion);
+        Assert.Equal(HttpStatusCode.Forbidden, selfApproveHold.StatusCode);
+        Assert.Equal("SUPPLIER_INVOICE_SELF_APPROVAL", await ErrorCodeAsync(selfApproveHold));
+
+        var approveHold = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/supplier-invoices/{sinv2.Id}/approve",
+            new SupplierInvoiceActionRequest("อนุมัติรับราคาใหม่"),
+            token: "token-approver",
+            ifMatch: sinv2.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, approveHold.StatusCode);
+        sinv2 = (await approveHold.Content.ReadFromJsonAsync<SupplierInvoiceResponse>())!;
+        Assert.Equal("approved", sinv2.Status);
+
+        // Void SINV2 -> queues supplier-invoice.voided, releases 2 invoiced units, reverses -100m variance, and frees TAX-INV-0002
+        var voidResp = await SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/supplier-invoices/{sinv2.Id}/void",
+            new SupplierInvoiceActionRequest("ผู้ขายออกใบใหม่แทน"),
+            ifMatch: sinv2.RowVersion);
+        Assert.Equal(HttpStatusCode.OK, voidResp.StatusCode);
+        sinv2 = (await voidResp.Content.ReadFromJsonAsync<SupplierInvoiceResponse>())!;
+        Assert.Equal("voided", sinv2.Status);
+
+        var poAfterVoid = await GetOrderAsync(order.Id);
+        Assert.Equal(4m, poAfterVoid.Lines.Single().InvoicedQuantity);
+        Assert.Equal(2m, poAfterVoid.Lines.Single().UninvoicedReceivedQuantity);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var outboxKinds = await db.AccountingOutbox.AsNoTracking()
+                .Where(o => o.OrganizationId == OrgId && (o.ResourceId == sinv1.Id || o.ResourceId == sinv2.Id))
+                .OrderBy(o => o.CreatedAtUtc)
+                .Select(o => new { o.ResourceId, o.Kind })
+                .ToListAsync();
+            Assert.Contains(outboxKinds, x => x.ResourceId == sinv1.Id && x.Kind == OutboxKind.SupplierInvoicePosted);
+            Assert.Contains(outboxKinds, x => x.ResourceId == sinv2.Id && x.Kind == OutboxKind.SupplierInvoicePosted);
+            Assert.Contains(outboxKinds, x => x.ResourceId == sinv2.Id && x.Kind == OutboxKind.SupplierInvoiceVoided);
+
+            var sinvLedger = await db.ProjectCostLedgerEntries.AsNoTracking()
+                .Where(e => e.OrganizationId == OrgId && e.ProjectId == projectId && e.SourceType == ProjectCostSourceType.SupplierInvoice)
+                .ToListAsync();
+            Assert.Equal(3, sinvLedger.Count);
+            Assert.Equal(60m, sinvLedger.Sum(e => e.Amount)); // +60 (SINV1) + 100 (SINV2) - 100 (SINV2 void) = +60 net
+        }
+
+        var finReconResp = await SendAsync(HttpMethod.Get, "/api/v1/finance/reconciliation");
+        Assert.Equal(HttpStatusCode.OK, finReconResp.StatusCode);
+        var finRecon = (await finReconResp.Content.ReadFromJsonAsync<FinanceReconciliationResponse>())!;
+        Assert.DoesNotContain(finRecon.Rows, r => r.Issue == "missing_message");
+
+        // Reusing TAX-INV-0002 after void is now allowed
+        var reuseVoidedNo = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/supplier-invoices",
+            new SupplierInvoiceRequest(
+                order.Id,
+                "TAX-INV-0002",
+                new DateOnly(2026, 11, 23),
+                null,
+                140m,
+                "ออกใบใหม่แทนใบที่ Void",
+                new List<SupplierInvoiceLineRequest> { new(poLine.Id, 2m, 1000m) }),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, reuseVoidedNo.StatusCode);
     }
 }

@@ -85,6 +85,27 @@ public class PurchaseOrdersController : ProcurementControllerBase
         return StatusCode(StatusCodes.Status201Created, ToResponse(result.Value));
     }
 
+    [HttpPost("{id:guid}/returns")]
+    [ProducesResponseType<PurchaseOrderResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status428PreconditionRequired)]
+    public async Task<IActionResult> PostReturn([FromRoute] Guid id, [FromBody] SupplierReturnRequest request, CancellationToken ct)
+    {
+        var caller = ReadConditionalIdempotent(out var key, out var version, out var failure);
+        if (caller is null) return failure!;
+        var input = new SupplierReturnInput(
+            request.GoodsReceiptId,
+            request.ReturnedAtUtc,
+            request.Reason,
+            request.Lines?.Select(l => new SupplierReturnLineInput(l.GoodsReceiptLineId, l.Quantity)).ToList() ?? new List<SupplierReturnLineInput>());
+        var result = await _handler.PostSupplierReturnAsync(caller, id, version, key, input, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return StatusCode(StatusCodes.Status201Created, ToResponse(result.Value));
+    }
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType<PurchaseOrderResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
@@ -130,13 +151,28 @@ public class PurchaseOrdersController : ProcurementControllerBase
         r.SupplierId, r.ProjectId, r.ExpectedDeliveryDate, r.Note,
         r.Lines?.Select(l => new PurchaseOrderLineInput(l.ItemId, l.Quantity, l.UnitPrice)).ToList() ?? new List<PurchaseOrderLineInput>());
 
-    private static ProcurementPersonResponse? ToPerson(ProcurementPerson? p) => p is null ? null : new ProcurementPersonResponse(p.Id, p.DisplayName, p.Email);
+    internal static ProcurementPersonResponse? ToPerson(ProcurementPerson? p) => p is null ? null : new ProcurementPersonResponse(p.Id, p.DisplayName, p.Email);
 
-    private static PurchaseOrderResponse ToResponse(PurchaseOrderProjection o) => new(
+    internal static PurchaseOrderResponse ToResponse(PurchaseOrderProjection o) => new(
         o.Id, o.BranchId, o.Number, o.Status, o.Currency, o.TotalAmount, o.ExpectedDeliveryDate, o.Note,
         new PurchaseOrderSupplierResponse(o.Supplier.Id, o.Supplier.Code, o.Supplier.NameTh, o.Supplier.NameEn),
         o.Project is null ? null : new PurchaseOrderProjectResponse(o.Project.Id, o.Project.Code, o.Project.Name),
         ToPerson(o.CreatedBy)!, o.CreatedAtUtc, o.SubmittedAtUtc, ToPerson(o.DecidedBy), o.DecidedAtUtc, o.DecisionNote, o.CancelReason, o.RowVersion,
-        o.Lines.Select(l => new PurchaseOrderLineResponse(l.Id, l.LineNo, l.ItemId, l.ItemCode, l.ItemNameTh, l.UnitId, l.UnitCode, l.Quantity, l.UnitPrice, l.LineTotal, l.ReceivedQuantity, l.RemainingQuantity)).ToList(),
-        o.Receipts.Select(r => new GoodsReceiptSummaryResponse(r.Id, r.Number, r.ReceivedAtUtc, r.Note, ToPerson(r.ReceivedBy)!, r.LineCount, r.TotalQuantity, r.StockDocumentNumber)).ToList());
+        o.Lines.Select(l => new PurchaseOrderLineResponse(
+            l.Id, l.LineNo, l.ItemId, l.ItemCode, l.ItemNameTh, l.UnitId, l.UnitCode,
+            l.Quantity, l.UnitPrice, l.LineTotal, l.ReceivedQuantity, l.RemainingQuantity, l.InvoicedQuantity, l.UninvoicedReceivedQuantity)).ToList(),
+        o.Receipts.Select(r => new GoodsReceiptSummaryResponse(
+            r.Id, r.Number, r.ReceivedAtUtc, r.Note, ToPerson(r.ReceivedBy)!, r.LineCount, r.TotalQuantity, r.StockDocumentNumber,
+            r.Lines.Select(gl => new GoodsReceiptLineResponse(
+                gl.Id, gl.PurchaseOrderLineId, gl.ItemId, gl.ItemCode, gl.ItemNameTh, gl.UnitCode,
+                gl.Quantity, gl.UnitPrice, gl.ReturnedQuantity, gl.RemainingReturnableQuantity)).ToList())).ToList(),
+        o.Returns.Select(sr => new SupplierReturnResponse(
+            sr.Id, sr.Number, sr.GoodsReceiptId, sr.GoodsReceiptNumber, sr.ReturnedAtUtc, sr.Reason, sr.TotalReturnAmount, sr.StockDocumentNumber, ToPerson(sr.ReturnedBy)!,
+            sr.Lines.Select(sl => new SupplierReturnLineResponse(
+                sl.Id, sl.GoodsReceiptLineId, sl.PurchaseOrderLineId, sl.ItemId, sl.ItemCode, sl.ItemNameTh, sl.UnitCode,
+                sl.Quantity, sl.UnitPrice, sl.LineReturnAmount)).ToList())).ToList(),
+        o.Invoices.Select(inv => new PurchaseOrderInvoiceSummaryResponse(
+            inv.Id, inv.Number, inv.SupplierInvoiceNumber, inv.Status, inv.MatchStatus, inv.InvoiceDate,
+            inv.SubtotalAmount, inv.TaxAmount, inv.TotalAmount, inv.TotalVarianceAmount, inv.CreatedAtUtc)).ToList(),
+        o.SourcePurchaseRequests.Select(pr => new PurchaseOrderSourceRequestResponse(pr.Id, pr.Number, pr.ConvertedAtUtc)).ToList());
 }

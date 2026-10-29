@@ -74,6 +74,8 @@ public static class ProjectCostSourceType
 {
     public const string PurchaseOrder = "purchase_order";
     public const string GoodsReceipt = "goods_receipt";
+    public const string SupplierReturn = "supplier_return";
+    public const string SupplierInvoice = "supplier_invoice";
     public const string StockIssue = "stock_issue";
     public const string WorkOrderIssue = "work_order_issue";
     public const string WorkOrderReturn = "work_order_return";
@@ -81,7 +83,7 @@ public static class ProjectCostSourceType
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
-        PurchaseOrder, GoodsReceipt, StockIssue, WorkOrderIssue, WorkOrderReturn, LaborTimesheet
+        PurchaseOrder, GoodsReceipt, SupplierReturn, SupplierInvoice, StockIssue, WorkOrderIssue, WorkOrderReturn, LaborTimesheet
     };
 
     public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && All.Contains(value.Trim());

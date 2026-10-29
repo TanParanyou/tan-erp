@@ -45,10 +45,16 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Surveys.SurveyDesignStyle> SurveyDesignStyles => Set<TanErp.Domain.Surveys.SurveyDesignStyle>();
     public DbSet<TanErp.Domain.Surveys.SurveyMoodTone> SurveyMoodTones => Set<TanErp.Domain.Surveys.SurveyMoodTone>();
     public DbSet<TanErp.Domain.Procurement.Supplier> Suppliers => Set<TanErp.Domain.Procurement.Supplier>();
+    public DbSet<TanErp.Domain.Procurement.PurchaseRequest> PurchaseRequests => Set<TanErp.Domain.Procurement.PurchaseRequest>();
+    public DbSet<TanErp.Domain.Procurement.PurchaseRequestLine> PurchaseRequestLines => Set<TanErp.Domain.Procurement.PurchaseRequestLine>();
     public DbSet<TanErp.Domain.Procurement.PurchaseOrder> PurchaseOrders => Set<TanErp.Domain.Procurement.PurchaseOrder>();
     public DbSet<TanErp.Domain.Procurement.PurchaseOrderLine> PurchaseOrderLines => Set<TanErp.Domain.Procurement.PurchaseOrderLine>();
     public DbSet<TanErp.Domain.Procurement.GoodsReceipt> GoodsReceipts => Set<TanErp.Domain.Procurement.GoodsReceipt>();
     public DbSet<TanErp.Domain.Procurement.GoodsReceiptLine> GoodsReceiptLines => Set<TanErp.Domain.Procurement.GoodsReceiptLine>();
+    public DbSet<TanErp.Domain.Procurement.SupplierReturn> SupplierReturns => Set<TanErp.Domain.Procurement.SupplierReturn>();
+    public DbSet<TanErp.Domain.Procurement.SupplierReturnLine> SupplierReturnLines => Set<TanErp.Domain.Procurement.SupplierReturnLine>();
+    public DbSet<TanErp.Domain.Procurement.SupplierInvoice> SupplierInvoices => Set<TanErp.Domain.Procurement.SupplierInvoice>();
+    public DbSet<TanErp.Domain.Procurement.SupplierInvoiceLine> SupplierInvoiceLines => Set<TanErp.Domain.Procurement.SupplierInvoiceLine>();
     public DbSet<TanErp.Domain.Inventory.Warehouse> Warehouses => Set<TanErp.Domain.Inventory.Warehouse>();
     public DbSet<TanErp.Domain.Production.Bom> Boms => Set<TanErp.Domain.Production.Bom>();
     public DbSet<TanErp.Domain.Production.BomRevision> BomRevisions => Set<TanErp.Domain.Production.BomRevision>();

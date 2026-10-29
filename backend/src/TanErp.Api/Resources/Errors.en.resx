@@ -643,6 +643,34 @@
   <data name="GOODS_RECEIPT_INVALID_DETAIL" xml:space="preserve"><value>A receipt needs at least one line of this order with a quantity above zero.</value></data>
   <data name="GOODS_RECEIPT_OVER_RECEIVED_TITLE" xml:space="preserve"><value>Over-receipt</value></data>
   <data name="GOODS_RECEIPT_OVER_RECEIVED_DETAIL" xml:space="preserve"><value>The received quantity cannot exceed the ordered quantity.</value></data>
+  <data name="PURCHASE_REQUEST_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Purchase Request Changed</value></data>
+  <data name="PURCHASE_REQUEST_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The purchase request was modified by someone else. Reload and try again.</value></data>
+  <data name="PURCHASE_REQUEST_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Purchase Request Status</value></data>
+  <data name="PURCHASE_REQUEST_INVALID_STATE_DETAIL" xml:space="preserve"><value>This action is not allowed in the purchase request's current status.</value></data>
+  <data name="PURCHASE_REQUEST_CONVERSION_INCOMPATIBLE_TITLE" xml:space="preserve"><value>Incompatible Purchase Requests</value></data>
+  <data name="PURCHASE_REQUEST_CONVERSION_INCOMPATIBLE_DETAIL" xml:space="preserve"><value>Consolidated purchase requests must belong to the same branch and must not span multiple projects.</value></data>
+  <data name="PURCHASE_REQUEST_LINE_INVALID_TITLE" xml:space="preserve"><value>Invalid Purchase Request Lines</value></data>
+  <data name="PURCHASE_REQUEST_LINE_INVALID_DETAIL" xml:space="preserve"><value>1-200 lines, unique items, quantity above zero and a non-negative estimated price are required.</value></data>
+  <data name="PURCHASE_REQUEST_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Self-approval Not Allowed</value></data>
+  <data name="PURCHASE_REQUEST_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>A purchase request cannot be decided by its creator.</value></data>
+  <data name="SUPPLIER_RETURN_INVALID_TITLE" xml:space="preserve"><value>Invalid Supplier Return</value></data>
+  <data name="SUPPLIER_RETURN_INVALID_DETAIL" xml:space="preserve"><value>A supplier return requires a goods receipt, a reason, and at least one positive-quantity line.</value></data>
+  <data name="SUPPLIER_RETURN_OVER_RETURNED_TITLE" xml:space="preserve"><value>Over-return</value></data>
+  <data name="SUPPLIER_RETURN_OVER_RETURNED_DETAIL" xml:space="preserve"><value>Returned quantity cannot exceed the remaining net received quantity on the goods receipt.</value></data>
+  <data name="SUPPLIER_RETURN_ALREADY_INVOICED_TITLE" xml:space="preserve"><value>Goods Already Invoiced</value></data>
+  <data name="SUPPLIER_RETURN_ALREADY_INVOICED_DETAIL" xml:space="preserve"><value>Goods cannot be returned below the quantity already reserved or billed on supplier invoices.</value></data>
+  <data name="SUPPLIER_INVOICE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Supplier Invoice Changed</value></data>
+  <data name="SUPPLIER_INVOICE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The supplier invoice was modified by someone else. Reload and try again.</value></data>
+  <data name="SUPPLIER_INVOICE_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Supplier Invoice Status</value></data>
+  <data name="SUPPLIER_INVOICE_INVALID_STATE_DETAIL" xml:space="preserve"><value>This action is not allowed in the supplier invoice's current status.</value></data>
+  <data name="SUPPLIER_INVOICE_DUPLICATE_NUMBER_TITLE" xml:space="preserve"><value>Duplicate Supplier Invoice Number</value></data>
+  <data name="SUPPLIER_INVOICE_DUPLICATE_NUMBER_DETAIL" xml:space="preserve"><value>An active supplier invoice with this number already exists for this supplier.</value></data>
+  <data name="SUPPLIER_INVOICE_LINE_INVALID_TITLE" xml:space="preserve"><value>Invalid Supplier Invoice Lines</value></data>
+  <data name="SUPPLIER_INVOICE_LINE_INVALID_DETAIL" xml:space="preserve"><value>Unique purchase order lines, positive quantities, and non-negative unit prices are required.</value></data>
+  <data name="SUPPLIER_INVOICE_OVER_RECEIVED_TITLE" xml:space="preserve"><value>Invoiced Above Net Received Quantity</value></data>
+  <data name="SUPPLIER_INVOICE_OVER_RECEIVED_DETAIL" xml:space="preserve"><value>Invoiced quantity cannot exceed the uninvoiced net received quantity on the purchase order.</value></data>
+  <data name="SUPPLIER_INVOICE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Self-approval Not Allowed</value></data>
+  <data name="SUPPLIER_INVOICE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>A supplier invoice cannot be decided by its creator.</value></data>
   <data name="WAREHOUSE_CODE_CONFLICT_TITLE" xml:space="preserve"><value>Duplicate Warehouse Code</value></data>
   <data name="WAREHOUSE_CODE_CONFLICT_DETAIL" xml:space="preserve"><value>This warehouse code already exists. Try again.</value></data>
   <data name="WAREHOUSE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Warehouse Changed</value></data>

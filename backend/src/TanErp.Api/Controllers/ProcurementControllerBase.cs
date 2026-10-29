@@ -53,5 +53,23 @@ public abstract class ProcurementControllerBase : ControllerBase
         return new ProcurementCaller(auth.FirebaseUid, auth.MembershipId, HttpContext.TraceIdentifier);
     }
 
+    protected ProcurementCaller? ReadConditionalIdempotent(out string idempotencyKey, out Guid expectedVersion, out IActionResult? failure)
+    {
+        var contextResult = RequestContextReader.ReadConditionalIdempotentRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            idempotencyKey = string.Empty;
+            expectedVersion = Guid.Empty;
+            failure = ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+            return null;
+        }
+
+        failure = null;
+        var auth = contextResult.Value!;
+        idempotencyKey = auth.IdempotencyKey;
+        expectedVersion = auth.IfMatchRowVersion;
+        return new ProcurementCaller(auth.FirebaseUid, auth.MembershipId, HttpContext.TraceIdentifier);
+    }
+
     protected IActionResult Problem(string code) => ProblemDetailsMapper.CreateProblemResult(code, HttpContext);
 }

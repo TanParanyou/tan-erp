@@ -226,11 +226,27 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     }
     if (hasPurchaseOrdersRead) {
       items.push({
+        id: "purchase-requests",
+        href: `/${locale}/procurement/purchase-requests`,
+        label: tShell("purchaseRequests"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/procurement/purchase-requests`),
+        permission: hasPurchaseOrdersRead,
+      });
+      items.push({
         id: "purchase-orders",
         href: `/${locale}/procurement/purchase-orders`,
         label: tShell("purchaseOrders"),
         icon: <IconFileText size={20} />,
         isActive: pathname.startsWith(`/${locale}/procurement/purchase-orders`),
+        permission: hasPurchaseOrdersRead,
+      });
+      items.push({
+        id: "supplier-invoices",
+        href: `/${locale}/procurement/supplier-invoices`,
+        label: tShell("supplierInvoices"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/procurement/supplier-invoices`),
         permission: hasPurchaseOrdersRead,
       });
     }

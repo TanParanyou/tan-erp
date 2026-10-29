@@ -8,6 +8,7 @@ using TanErp.Application.Finance;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Finance;
+using TanErp.Domain.Procurement;
 using TanErp.Domain.Projects;
 
 namespace TanErp.Infrastructure.Persistence.Finance;
@@ -428,6 +429,16 @@ public class FinanceStore : IFinanceStore
                 if (!queued.Contains($"payment.recorded:{p.Id}")) rows.Add(new ReconciliationRow("missing_message", OutboxKind.PaymentRecorded, p.Number, null, p.Amount, null));
                 if (p.Status == PaymentStatus.Reversed && !queued.Contains($"payment.reversed:{p.Id}")) rows.Add(new ReconciliationRow("missing_message", OutboxKind.PaymentReversed, p.Number, null, p.Amount, null));
             }
+        }
+
+        var postedInvoices = await _db.SupplierInvoices.AsNoTracking()
+            .Where(i => i.OrganizationId == organizationId
+                && (i.Status == SupplierInvoiceStatus.Matched || i.Status == SupplierInvoiceStatus.Approved || i.Status == SupplierInvoiceStatus.Voided))
+            .ToListAsync(ct);
+        foreach (var inv in postedInvoices)
+        {
+            if (!queued.Contains($"supplier-invoice.posted:{inv.Id}")) rows.Add(new ReconciliationRow("missing_message", OutboxKind.SupplierInvoicePosted, inv.Number, null, inv.TotalAmount, null));
+            if (inv.Status == SupplierInvoiceStatus.Voided && !queued.Contains($"supplier-invoice.voided:{inv.Id}")) rows.Add(new ReconciliationRow("missing_message", OutboxKind.SupplierInvoiceVoided, inv.Number, null, inv.TotalAmount, null));
         }
 
         return new ReconciliationProjection(

@@ -16,7 +16,7 @@ using TanErp.Infrastructure.Persistence.DocumentNumbering;
 
 namespace TanErp.Infrastructure.Persistence.Inventory;
 
-public class InventoryStore : IInventoryStore, IProductionStockPort
+public class InventoryStore : IInventoryStore, IProductionStockPort, IProcurementStockPort
 {
     private readonly AppDbContext _db;
     private readonly IClock _clock;
@@ -753,6 +753,53 @@ public class InventoryStore : IInventoryStore, IProductionStockPort
             return Result<StockDocument>.Success(document);
         }, "stock-receipt.posted", traceId, ct);
         return ToPortResult(result);
+    }
+
+    public async Task<Result<ProcurementStockResult>> ReturnToSupplierAsync(
+        RequestAccessContext access,
+        Guid warehouseId,
+        Guid? projectId,
+        Guid supplierReturnId,
+        string reason,
+        DateTimeOffset occurredAtUtc,
+        IReadOnlyList<ProcurementReturnStockLine> lines,
+        string traceId,
+        CancellationToken ct = default)
+    {
+        const string operation = "inventory.supplier-return.post";
+        var result = await PostAsync(access, operation, SourceKey(operation, supplierReturnId), SourceKey(operation + ":payload", supplierReturnId), async now =>
+        {
+            var orgId = access.OrganizationId;
+            var warehouse = await ResolveActiveWarehouseAsync(orgId, warehouseId, ct);
+            if (warehouse.IsFailure) return Result<StockDocument>.Failure(warehouse.Error);
+
+            var grouped = lines
+                .GroupBy(l => l.ItemId)
+                .Select(g => (ItemId: g.Key, Quantity: decimal.Round(g.Sum(x => x.Quantity), 4)))
+                .ToList();
+
+            var items = await ResolveItemsAsync(orgId, grouped.Select(l => l.ItemId), ct);
+            if (items.IsFailure) return Result<StockDocument>.Failure(items.Error);
+
+            var number = await NextNumberAsync(orgId, DocumentTypes.StockReturns, warehouse.Value!.BranchId, now, ct);
+            var document = new StockDocument(
+                Guid.NewGuid(), orgId, warehouse.Value.BranchId, StockDocumentType.Return, number, warehouseId, null, projectId,
+                StockSourceType.SupplierReturn, supplierReturnId, reason, occurredAtUtc, access.ActorUserId, now);
+
+            var balances = await LockBalancesAsync(orgId, grouped.Select(l => (warehouseId, l.ItemId, items.Value![l.ItemId].UnitId)), now, ct);
+            foreach (var line in grouped)
+            {
+                var balance = balances[(warehouseId, line.ItemId)];
+                var value = balance.Issue(line.Quantity, 0m, now);
+                document.AddMovement(Movement(orgId, document, balance, StockMovementKind.ReturnOut, -line.Quantity, CostPerUnit(value, line.Quantity), -value, occurredAtUtc, now));
+            }
+
+            return Result<StockDocument>.Success(document);
+        }, "stock-return.posted", traceId, ct);
+
+        return result.IsFailure
+            ? Result<ProcurementStockResult>.Failure(result.Error)
+            : Result<ProcurementStockResult>.Success(new ProcurementStockResult(result.Value!.Id, result.Value.Number));
     }
 
     private async Task RecordProjectMaterialCostAsync(
