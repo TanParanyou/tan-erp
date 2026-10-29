@@ -16,7 +16,9 @@ import {
   IconClose,
   IconSparkles,
   IconPalette,
+  IconFileText,
 } from "@/components/common/Icons";
+import { SurveyTemplateManager } from "./survey-template-manager";
 import { useToast } from "@/hooks/useToast";
 import {
   useSurveyDesignStyles,
@@ -31,7 +33,7 @@ import type {
   SurveyMoodToneResponse,
 } from "@/lib/api/api-client";
 
-type MasterDataTab = "design-styles" | "mood-tones";
+type MasterDataTab = "design-styles" | "mood-tones" | "templates";
 
 interface ItemEditorState {
   id?: string;
@@ -440,27 +442,29 @@ export function SurveyMasterDataManager() {
             {t("description")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => (activeTab === "design-styles" ? refetchStyles() : refetchTones())}
-            title={tCommon("actions.refresh")}
-          >
-            <IconRefresh size={16} />
-            <span>{tCommon("actions.refresh")}</span>
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleAddNew}
-            icon={<IconPlus size={16} />}
-          >
-            <span>
-              {activeTab === "design-styles" ? t("actions.addStyle") : t("actions.addMoodTone")}
-            </span>
-          </Button>
-        </div>
+        {activeTab !== "templates" && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => (activeTab === "design-styles" ? refetchStyles() : refetchTones())}
+              title={tCommon("actions.refresh")}
+            >
+              <IconRefresh size={16} />
+              <span>{tCommon("actions.refresh")}</span>
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleAddNew}
+              icon={<IconPlus size={16} />}
+            >
+              <span>
+                {activeTab === "design-styles" ? t("actions.addStyle") : t("actions.addMoodTone")}
+              </span>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -500,11 +504,25 @@ export function SurveyMasterDataManager() {
               </span>
             )}
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("templates")}
+            className={`flex items-center gap-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === "templates"
+                ? "border-erp-navy text-erp-navy font-semibold"
+                : "border-transparent text-erp-text-muted hover:text-erp-text-main hover:border-erp-border"
+            }`}
+          >
+            <IconFileText size={16} />
+            <span>{t("tabs.templates")}</span>
+          </button>
         </nav>
       </div>
 
-      {/* Table Preserved Layout */}
-      {activeTab === "design-styles" ? (
+      {/* Content */}
+      {activeTab === "templates" ? (
+        <SurveyTemplateManager />
+      ) : activeTab === "design-styles" ? (
         <DataTable<SurveyDesignStyleResponse>
           columns={styleColumns}
           data={designStyles ?? []}

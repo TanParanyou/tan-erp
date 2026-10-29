@@ -14630,6 +14630,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RegisterPushDeviceRequest"];
+                    "text/json": components["schemas"]["RegisterPushDeviceRequest"];
+                    "application/*+json": components["schemas"]["RegisterPushDeviceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PushDeviceResponse"];
+                        "application/json": components["schemas"]["PushDeviceResponse"];
+                        "text/json": components["schemas"]["PushDeviceResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/devices/unregister": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UnregisterPushDeviceRequest"];
+                    "text/json": components["schemas"]["UnregisterPushDeviceRequest"];
+                    "application/*+json": components["schemas"]["UnregisterPushDeviceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UnregisterPushDeviceResponse"];
+                        "application/json": components["schemas"]["UnregisterPushDeviceResponse"];
+                        "text/json": components["schemas"]["UnregisterPushDeviceResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/opportunities": {
         parameters: {
             query?: never;
@@ -20271,6 +20401,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/surveys/assigned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    updatedSinceUtc?: string;
+                    onlyMine?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AssignedSurveySyncListResponse"];
+                        "application/json": components["schemas"]["AssignedSurveySyncListResponse"];
+                        "text/json": components["schemas"]["AssignedSurveySyncListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/opportunities/{opportunityId}/surveys": {
         parameters: {
             query?: never;
@@ -23186,6 +23389,23 @@ export interface components {
         AssignAdminRoleRequest: {
             /** Format: uuid */
             roleId?: string;
+        };
+        AssignedSurveySyncItemResponse: {
+            /** Format: uuid */
+            opportunityId?: string;
+            opportunityCode?: string | null;
+            opportunityTitle?: string | null;
+            opportunityStage?: string | null;
+            /** Format: uuid */
+            opportunityRowVersion?: string;
+            customerDisplayName?: string | null;
+            site?: components["schemas"]["SiteSummaryResponse"];
+            survey?: components["schemas"]["SiteSurveyResponse"];
+        };
+        AssignedSurveySyncListResponse: {
+            items?: components["schemas"]["AssignedSurveySyncItemResponse"][] | null;
+            /** Format: date-time */
+            serverTimeUtc?: string;
         };
         AttachFilesRequest: {
             purpose?: string | null;
@@ -26401,6 +26621,12 @@ export interface components {
             nameTh?: string | null;
             nameEn?: string | null;
         };
+        PushDeviceResponse: {
+            token?: string | null;
+            platform?: string | null;
+            /** Format: date-time */
+            registeredAtUtc?: string;
+        };
         QePersonResponse: {
             /** Format: uuid */
             id?: string;
@@ -26665,6 +26891,10 @@ export interface components {
             /** Format: double */
             ledgerValue?: number;
             isConsistent?: boolean;
+        };
+        RegisterPushDeviceRequest: {
+            token?: string | null;
+            platform?: string | null;
         };
         ReleaseReservationRequest: {
             /** Format: uuid */
@@ -27404,6 +27634,12 @@ export interface components {
         UnreadCountResponse: {
             /** Format: int32 */
             unreadCount?: number;
+        };
+        UnregisterPushDeviceRequest: {
+            token?: string | null;
+        };
+        UnregisterPushDeviceResponse: {
+            removed?: boolean;
         };
         UpdateAdminMembershipRequest: {
             /** Format: uuid */

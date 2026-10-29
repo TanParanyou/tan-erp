@@ -1,6 +1,6 @@
 # Mobile Architecture (สถาปัตยกรรมแอปภาคสนาม)
 
-> สถานะ: Proposed — ยังไม่มีโค้ด (2026-10-26). เหตุผลการตัดสินใจ: [ADR 0030](../adr/0030-flutter-field-companion-app.md), [ADR 0031](../adr/0031-cross-platform-design-tokens-and-theming.md). แผนเริ่มต้น: [Mobile Foundation Phase 0](../superpowers/plans/2026-10-26-mobile-foundation-phase-0.md)
+> สถานะ: Implemented (2026-10-29) — โครงสร้างหลัก, Offline Outbox/Conflict Diff, Survey (Manual/Laser BLE/Photo/ARCore/RoomPlan LiDAR), Quick Estimate, Barcode Scan, Push & In-App Notifications พร้อม Quick Approval และ Backend Companion APIs เสร็จสมบูรณ์. เหตุผลการตัดสินใจ: [ADR 0030](../adr/0030-flutter-field-companion-app.md), [ADR 0031](../adr/0031-cross-platform-design-tokens-and-theming.md). แผนเริ่มต้น: [Mobile Foundation Phase 0](../superpowers/plans/2026-10-26-mobile-foundation-phase-0.md)
 
 แอป Flutter สำหรับงานภาคสนามบน iOS/Android ทั้งมือถือและแท็บเล็ต ใช้ Backend และ API เดียวกับเว็บ ([Frontend Architecture](frontend-architecture.md), [Backend Architecture](backend-architecture.md)).
 
@@ -138,13 +138,13 @@ presentation (screens/widgets) → providers (Riverpod) → repository (interfac
 
 ## สิ่งที่ Backend ต้องเพิ่ม
 
-| รายการ | เฟส |
-|---|---|
-| User preferences (โหมดธีม, ความแน่น, ขนาดตัวอักษร) ต่อจาก `PreferredLocale` | 0 |
-| ตรวจเวอร์ชันแอปขั้นต่ำ (`GET /api/v1/app/version-policy`) | 0 |
-| ลงทะเบียนอุปกรณ์สำหรับ push (token ต่อ user/membership/platform) + ส่ง push จาก notification module ([ADR 0018](../adr/0018-in-app-notification-foundation.md)) | 1 |
-| สีแบรนด์/โลโก้องค์กร + validation contrast | 1 |
-| Delta/sync endpoint ของงานที่ได้รับมอบหมาย | 2 |
+| รายการ | เฟส | สถานะ |
+|---|---|---|
+| User preferences (โหมดธีม, ความแน่น, ขนาดตัวอักษร) ต่อจาก `PreferredLocale` (`PUT /api/v1/me/preferences`) | 0 | Implemented |
+| ตรวจเวอร์ชันแอปขั้นต่ำ (`GET /api/v1/app/version-policy`) | 0 | Implemented |
+| ลงทะเบียนอุปกรณ์สำหรับ push (token ต่อ user/membership/platform: `POST /api/v1/notifications/devices`) + ส่ง push จาก notification module (`IPushNotificationSender`) ([ADR 0018](../adr/0018-in-app-notification-foundation.md)) | 1 | Implemented |
+| สีแบรนด์/โลโก้องค์กร + validation contrast | 1 | Implemented |
+| Delta/sync endpoint ของงานที่ได้รับมอบหมาย (`GET /api/v1/surveys/assigned`) | 2 | Implemented |
 
 ## Release
 

@@ -26,7 +26,7 @@ public sealed partial class QuotationDocumentWriter(
     public async Task<Result<QuotationDocumentSummary>> StageAsync(Quotation quotation, Guid actorUserId, string traceId, CancellationToken cancellationToken = default)
     {
         var (organizationId, quotationId) = (quotation.OrganizationId, quotation.Id);
-        var model = await QuotationPdfModelBuilder.BuildAsync(db, quotation, cancellationToken);
+        var model = await QuotationPdfModelBuilder.BuildAsync(db, quotation, cancellationToken, storage);
         if (model.IsFailure) return Result<QuotationDocumentSummary>.Failure(model.Error);
 
         byte[] bytes;

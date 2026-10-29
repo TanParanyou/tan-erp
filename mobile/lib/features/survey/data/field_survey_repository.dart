@@ -27,47 +27,37 @@ class FieldSurveyRepository {
     final client = _ref.read(apiClientProvider);
 
     try {
-      final oppsResp = await client.call(
-        () => client.api.getOpportunitiesApi().apiV1OpportunitiesGet(),
+      final assignedResp = await client.call(
+        () => client.api.getSiteSurveysApi().apiV1SurveysAssignedGet(),
       );
-      final opps = oppsResp.items?.toList() ?? const <OpportunityResponse>[];
-      final targetStages = {'qualified', 'surveying', 'estimating'};
+      final items = assignedResp.items?.toList() ??
+          const <AssignedSurveySyncItemResponse>[];
       final records = <FieldSurveyRecord>[];
 
-      for (final opp in opps) {
-        final oppId = opp.id;
-        final stage = (opp.stage ?? '').toLowerCase();
-        if (oppId == null || !targetStages.contains(stage)) continue;
+      for (final item in items) {
+        final oppId = item.opportunityId;
+        if (oppId == null || oppId.isEmpty) continue;
 
         final existingLocal = cached
             .where((r) => r.opportunityId == oppId)
             .firstOrNull;
 
-        try {
-          final surveyResp = await client.call(
-            () => client.api
-                .getSiteSurveysApi()
-                .apiV1OpportunitiesOpportunityIdSurveysGet(
-                  opportunityId: oppId,
-                ),
-          );
-          records.add(_mapRemoteSurvey(opp, surveyResp, existingLocal));
-        } on NotFoundFailure {
-          records.add(existingLocal ?? _buildDraftFromOpportunity(opp));
-        } on ApiFailure {
-          records.add(existingLocal ?? _buildDraftFromOpportunity(opp));
+        if (item.survey != null) {
+          records.add(_mapAssignedSurvey(item, item.survey!, existingLocal));
+        } else {
+          records.add(existingLocal ?? _buildDraftFromAssignedItem(item));
         }
       }
 
-      if (records.isEmpty) {
-        if (cached.isNotEmpty) return cached;
-        final samples = _seedSampleRecords();
-        await _writeCache(samples);
-        return samples;
+      if (records.isNotEmpty) {
+        await _writeCache(records);
+        return records;
       }
 
-      await _writeCache(records);
-      return records;
+      if (cached.isNotEmpty) return cached;
+      final samples = _seedSampleRecords();
+      await _writeCache(samples);
+      return samples;
     } on NetworkFailure {
       return await _fallbackOrSeed(cached);
     } on UnauthorizedFailure {
@@ -201,8 +191,8 @@ class FieldSurveyRepository {
     );
   }
 
-  FieldSurveyRecord _mapRemoteSurvey(
-    OpportunityResponse opp,
+  FieldSurveyRecord _mapAssignedSurvey(
+    AssignedSurveySyncItemResponse item,
     SiteSurveyResponse survey,
     FieldSurveyRecord? existingLocal,
   ) {
@@ -232,23 +222,20 @@ class FieldSurveyRepository {
         ),
     ];
 
-    final customerName =
-        opp.customer?.displayNameTh ??
-        opp.customer?.displayNameEn ??
+    final customerName = item.customerDisplayName ??
         existingLocal?.customerName ??
         '-';
-    final siteName =
-        survey.site?.label ??
-        opp.primarySite?.label ??
+    final siteName = survey.site?.label ??
+        item.site?.label ??
         existingLocal?.siteName ??
         '';
     final rawStatus = (rev?.status ?? survey.status ?? 'draft').toLowerCase();
 
     return FieldSurveyRecord(
       surveyId: survey.id ?? existingLocal?.surveyId ?? _uuid.v4(),
-      opportunityId: opp.id ?? '',
-      opportunityCode: opp.code ?? 'OPP-0001',
-      opportunityTitle: opp.title ?? '',
+      opportunityId: item.opportunityId ?? '',
+      opportunityCode: item.opportunityCode ?? 'OPP-0001',
+      opportunityTitle: item.opportunityTitle ?? '',
       customerName: customerName,
       siteName: siteName,
       surveyNumber:
@@ -256,40 +243,41 @@ class FieldSurveyRepository {
       status: rawStatus,
       revisionId: rev?.id ?? existingLocal?.revisionId ?? _uuid.v4(),
       revisionNumber: rev?.revisionNumber ?? 1,
-      rowVersion: rev?.rowVersion ?? survey.rowVersion ?? '1',
+      rowVersion: rev?.rowVersion ??
+          survey.rowVersion ??
+          item.opportunityRowVersion ??
+          '1',
       scopeSummary:
-          rev?.scopeSummary ??
-          opp.scopeSummary ??
-          existingLocal?.scopeSummary ??
-          '',
-      scheduledAtUtc: survey.scheduledStartUtc ?? opp.nextActionAtUtc,
+          rev?.scopeSummary ?? existingLocal?.scopeSummary ?? '',
+      scheduledAtUtc: survey.scheduledStartUtc,
       areas: areas.isNotEmpty ? areas : (existingLocal?.areas ?? const []),
     );
   }
 
-  FieldSurveyRecord _buildDraftFromOpportunity(OpportunityResponse opp) {
-    final code = opp.code ?? 'OPP-0001';
+  FieldSurveyRecord _buildDraftFromAssignedItem(
+    AssignedSurveySyncItemResponse item,
+  ) {
+    final code = item.opportunityCode ?? 'OPP-0001';
     final suffix = code.split('-').last;
-    final customerName =
-        opp.customer?.displayNameTh ?? opp.customer?.displayNameEn ?? '-';
-    final siteName = opp.primarySite?.label ?? '';
-    final stage = (opp.stage ?? 'qualified').toLowerCase();
+    final customerName = item.customerDisplayName ?? '-';
+    final siteName = item.site?.label ?? '';
+    final stage = (item.opportunityStage ?? 'qualified').toLowerCase();
     final status = stage == 'qualified' ? 'scheduled' : 'draft';
 
     return FieldSurveyRecord(
-      surveyId: 'srv-${opp.id ?? _uuid.v4()}',
-      opportunityId: opp.id ?? _uuid.v4(),
+      surveyId: 'srv-${item.opportunityId ?? _uuid.v4()}',
+      opportunityId: item.opportunityId ?? _uuid.v4(),
       opportunityCode: code,
-      opportunityTitle: opp.title ?? '',
+      opportunityTitle: item.opportunityTitle ?? '',
       customerName: customerName,
       siteName: siteName,
       surveyNumber: 'SRV-$suffix',
       status: status,
-      revisionId: 'rev-${opp.id ?? _uuid.v4()}',
+      revisionId: 'rev-${item.opportunityId ?? _uuid.v4()}',
       revisionNumber: 1,
-      rowVersion: opp.rowVersion ?? '1',
-      scopeSummary: opp.scopeSummary ?? '',
-      scheduledAtUtc: opp.nextActionAtUtc ?? DateTime.now().toUtc(),
+      rowVersion: item.opportunityRowVersion ?? '1',
+      scopeSummary: '',
+      scheduledAtUtc: DateTime.now().toUtc(),
     );
   }
 

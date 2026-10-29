@@ -29,3 +29,19 @@ public interface INotificationStore
 
     Task<int> MarkAllReadAsync(Guid organizationId, Guid userId, CancellationToken ct = default);
 }
+
+/// <summary>Stores mobile/web push device tokens scoped by (organization, user).</summary>
+public interface IPushDeviceStore
+{
+    Task<PushDeviceRegistration> UpsertAsync(Guid organizationId, Guid userId, string token, string platform, CancellationToken ct = default);
+
+    Task<bool> RemoveAsync(Guid organizationId, Guid userId, string token, CancellationToken ct = default);
+
+    Task<IReadOnlyList<PushDeviceRegistration>> ListByUsersAsync(Guid organizationId, IReadOnlyCollection<Guid> userIds, CancellationToken ct = default);
+}
+
+/// <summary>Dispatches push notifications to registered mobile devices for an event's recipients.</summary>
+public interface IPushNotificationSender
+{
+    Task DispatchAsync(Guid organizationId, IReadOnlyCollection<PlannedNotification> notifications, CancellationToken ct = default);
+}

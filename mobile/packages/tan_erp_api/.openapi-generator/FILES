@@ -102,6 +102,8 @@ lib/src/model/approval_limit_list_response.dart
 lib/src/model/approval_limit_options_response.dart
 lib/src/model/approval_limit_response.dart
 lib/src/model/assign_admin_role_request.dart
+lib/src/model/assigned_survey_sync_item_response.dart
+lib/src/model/assigned_survey_sync_list_response.dart
 lib/src/model/attach_files_request.dart
 lib/src/model/attach_item_image_request.dart
 lib/src/model/attach_work_image_item_request.dart
@@ -400,6 +402,7 @@ lib/src/model/purchase_order_project_response.dart
 lib/src/model/purchase_order_request.dart
 lib/src/model/purchase_order_response.dart
 lib/src/model/purchase_order_supplier_response.dart
+lib/src/model/push_device_response.dart
 lib/src/model/qe_person_response.dart
 lib/src/model/quick_estimate_draft_request.dart
 lib/src/model/quick_estimate_list_item_response.dart
@@ -424,6 +427,7 @@ lib/src/model/reassign_opportunity_owner_request.dart
 lib/src/model/receive_goods_receipt_request.dart
 lib/src/model/reconciliation_response.dart
 lib/src/model/reconciliation_row_response.dart
+lib/src/model/register_push_device_request.dart
 lib/src/model/release_reservation_request.dart
 lib/src/model/rename_admin_user_request.dart
 lib/src/model/reorder_item_images_request.dart
@@ -502,6 +506,8 @@ lib/src/model/unit_conversion_response.dart
 lib/src/model/unit_of_measure_detail_response.dart
 lib/src/model/unit_summary_response.dart
 lib/src/model/unread_count_response.dart
+lib/src/model/unregister_push_device_request.dart
+lib/src/model/unregister_push_device_response.dart
 lib/src/model/update_admin_membership_request.dart
 lib/src/model/update_admin_user_profile_request.dart
 lib/src/model/update_approval_limit_request.dart

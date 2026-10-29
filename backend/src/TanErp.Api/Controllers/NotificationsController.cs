@@ -87,4 +87,30 @@ public class NotificationsController : ControllerBase
         var result = await _handler.MarkAllReadAsync(caller, ct);
         return result.IsFailure ? Problem(result.Error.Code) : Ok(new MarkAllReadResponse(result.Value));
     }
+
+    [HttpPost("devices")]
+    [ProducesResponseType<PushDeviceResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> RegisterDevice([FromBody] RegisterPushDeviceRequest request, CancellationToken ct)
+    {
+        var caller = ReadCaller(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.RegisterDeviceAsync(caller, request.Token, request.Platform, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        var d = result.Value!;
+        return Ok(new PushDeviceResponse(d.Token, d.Platform, d.RegisteredAtUtc));
+    }
+
+    [HttpPost("devices/unregister")]
+    [ProducesResponseType<UnregisterPushDeviceResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UnregisterDevice([FromBody] UnregisterPushDeviceRequest request, CancellationToken ct)
+    {
+        var caller = ReadCaller(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.UnregisterDeviceAsync(caller, request.Token, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(new UnregisterPushDeviceResponse(result.Value));
+    }
 }

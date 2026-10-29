@@ -128,6 +128,49 @@ public class SiteSurveysController : ControllerBase
         return Ok(new SurveyReferenceDataResponse(categories, photoTags, measurementTypes, designStyles, moodTones));
     }
 
+    [HttpGet("/api/v1/surveys/assigned")]
+    [ProducesResponseType<AssignedSurveySyncListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListAssigned(
+        [FromQuery] DateTimeOffset? updatedSinceUtc = null,
+        [FromQuery] bool onlyMine = false,
+        CancellationToken cancellationToken = default)
+    {
+        var contextResult = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (contextResult.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(contextResult.Error.Code, HttpContext);
+        }
+
+        var auth = contextResult.Value!;
+        var result = await _getHandler.ListAssignedAsync(
+            auth.FirebaseUid,
+            auth.MembershipId,
+            updatedSinceUtc,
+            onlyMine,
+            cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext);
+        }
+
+        var list = result.Value!;
+        var items = list.Items.Select(i => new AssignedSurveySyncItemResponse(
+            i.OpportunityId,
+            i.OpportunityCode,
+            i.OpportunityTitle,
+            i.OpportunityStage,
+            i.OpportunityRowVersion,
+            i.CustomerDisplayName,
+            i.Site != null ? new SiteSummaryResponse(i.Site.Id, i.Site.Label, i.Site.AddressLine1) : null,
+            i.Survey != null ? ToResponse(i.Survey) : null)).ToList();
+
+        return Ok(new AssignedSurveySyncListResponse(items, list.ServerTimeUtc));
+    }
+
     [HttpPost]
     [ProducesResponseType<SiteSurveyResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]

@@ -37,6 +37,34 @@ public class QuestPdfQuotationRendererTests
     }
 
     [Fact]
+    public void Render_WithOrganizationLogo_ProducesValidPdf()
+    {
+        // 1x1 transparent PNG image
+        var dummyPng = new byte[]
+        {
+            137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
+            0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137,
+            0, 0, 0, 10, 73, 68, 65, 84, 120, 156, 99, 0, 1, 0, 0, 5,
+            0, 1, 13, 10, 45, 180, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66,
+            96, 130
+        };
+
+        var model = new QuotationPdfModel(
+            "QT-2026-LOGO", new DateTimeOffset(2026, 10, 12, 3, 0, 0, TimeSpan.Zero), "THB", null,
+            new QuotationPdfIssuer("บริษัท โลโก้ จำกัด", "Logo Co., Ltd.", "สำนักงานใหญ่", "Head office", "0105536000001", "00000", "99 ถนนสุขุมวิท กรุงเทพมหานคร", "99 Sukhumvit Rd, Bangkok", "02-000-0000", dummyPng),
+            new QuotationPdfCustomer("ลูกค้าทดสอบ", "Test Customer", "บริษัท ลูกค้า จำกัด", "0105536000002", "00000", new QuotationPdfAddress("1 ถนนหนึ่ง", "แขวงหนึ่ง", "เขตหนึ่ง", "กรุงเทพมหานคร", "10110")),
+            Enumerable.Range(1, 1).Select(s => new QuotationPdfSection($"S{s}", "งานติดตั้ง", null, 1000m,
+                Enumerable.Range(1, 1).Select(i => new QuotationPdfWorkItem($"W{s}{i:000}", "รายละเอียดงาน", null, 1m, "งาน", 1000m, 1000m)).ToList())).ToList(),
+            new QuotationPdfTotals(1000m, 0m, 1000m, 70m, 1070m));
+
+        var renderer = new QuestPdfQuotationRenderer(new ConfigurationBuilder().Build(), NullLogger<QuestPdfQuotationRenderer>.Instance);
+        var pdf = renderer.Render(model);
+
+        Assert.StartsWith("%PDF-", Encoding.ASCII.GetString(pdf, 0, 5));
+        Assert.Equal(1, Pages(pdf));
+    }
+
+    [Fact]
     public void Version_AndLicenseAndEmbeddedFonts_AreWhatTheAdrSays()
     {
         Assert.Matches(@"^questpdf-\d+\.\d+\.\d+/quotation-v1$", new QuestPdfQuotationRenderer(new ConfigurationBuilder().Build(), NullLogger<QuestPdfQuotationRenderer>.Instance).Version);

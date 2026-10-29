@@ -10,7 +10,7 @@ public class QuotationPdfModelAllowlistTests
     private static readonly IReadOnlyDictionary<string, string[]> Allowed = new Dictionary<string, string[]>
     {
         [nameof(QuotationPdfModel)] = ["Number", "IssuedAtUtc", "Currency", "SupersedesNumber", "Issuer", "Customer", "Sections", "Totals"],
-        [nameof(QuotationPdfIssuer)] = ["NameTh", "NameEn", "BranchNameTh", "BranchNameEn", "TaxIdentifier", "TaxBranchCode", "AddressTh", "AddressEn", "Phone"],
+        [nameof(QuotationPdfIssuer)] = ["NameTh", "NameEn", "BranchNameTh", "BranchNameEn", "TaxIdentifier", "TaxBranchCode", "AddressTh", "AddressEn", "Phone", "LogoBytes"],
         [nameof(QuotationPdfCustomer)] = ["DisplayNameTh", "DisplayNameEn", "LegalName", "TaxIdentifier", "BranchCode", "Address"],
         [nameof(QuotationPdfAddress)] = ["AddressLine1", "Subdistrict", "District", "Province", "PostalCode"],
         [nameof(QuotationPdfSection)] = ["Code", "NameTh", "NameEn", "Subtotal", "WorkItems"],

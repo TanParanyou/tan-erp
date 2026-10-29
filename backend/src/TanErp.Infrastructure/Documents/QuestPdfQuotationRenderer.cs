@@ -75,6 +75,9 @@ public sealed class QuestPdfQuotationRenderer : IQuotationDocumentRenderer
         var issued = model.IssuedAtUtc.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy", Invariant); // Thailand has no DST
         var issuer = model.Issuer;
         var docTitle = layoutConfig?.Header?.DocumentTitle ?? "ใบเสนอราคา / Quotation";
+        var showLogo = layoutConfig?.Header?.ShowLogo ?? true;
+        var hasLogo = showLogo && issuer.LogoBytes is { Length: > 0 };
+        var logoPosition = (layoutConfig?.Header?.LogoPosition ?? "left").ToLowerInvariant();
 
         container.Column(column =>
         {
@@ -83,6 +86,10 @@ public sealed class QuestPdfQuotationRenderer : IQuotationDocumentRenderer
             {
                 row.RelativeItem().Column(left =>
                 {
+                    if (hasLogo && logoPosition != "right")
+                    {
+                        left.Item().PaddingBottom(4).MaxHeight(44).MaxWidth(140).Image(issuer.LogoBytes!);
+                    }
                     left.Item().Text(issuer.NameTh).Bold().FontSize(12);
                     Lines(left, issuer.NameEn, Join(" / ", issuer.BranchNameTh, issuer.BranchNameEn),
                         Join("  ", issuer.TaxIdentifier is null ? null : $"เลขประจำตัวผู้เสียภาษี / Tax ID {issuer.TaxIdentifier}",
@@ -91,6 +98,10 @@ public sealed class QuestPdfQuotationRenderer : IQuotationDocumentRenderer
                 });
                 row.ConstantItem(210).Column(right =>
                 {
+                    if (hasLogo && logoPosition == "right")
+                    {
+                        right.Item().AlignRight().PaddingBottom(4).MaxHeight(44).MaxWidth(140).Image(issuer.LogoBytes!);
+                    }
                     right.Item().AlignRight().Text(docTitle).Bold().FontSize(14).FontColor(Navy);
                     right.Item().AlignRight().Text($"เลขที่ / No. {model.Number}");
                     right.Item().AlignRight().Text($"วันที่ / Date {issued}");

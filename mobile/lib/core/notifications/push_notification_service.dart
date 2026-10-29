@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tan_erp_api/tan_erp_api.dart';
+import 'package:tan_erp_field/core/network/api_client.dart';
 
 enum PushPermissionStatus {
   unavailable,
@@ -55,6 +57,9 @@ class PushNotificationController extends Notifier<PushNotificationState> {
         // FCM getToken is still the cross-platform token accessor in v16.
         // ignore: deprecated_member_use
         final token = await messaging.getToken();
+        if (token != null && token.isNotEmpty) {
+          await _registerTokenOnBackend(token);
+        }
         state = state.copyWith(
           status: PushPermissionStatus.enabled,
           fcmToken: token,
@@ -79,6 +84,9 @@ class PushNotificationController extends Notifier<PushNotificationState> {
         // FCM getToken is still the cross-platform token accessor in v16.
         // ignore: deprecated_member_use
         final token = await messaging.getToken();
+        if (token != null && token.isNotEmpty) {
+          await _registerTokenOnBackend(token);
+        }
         state = state.copyWith(
           status: PushPermissionStatus.enabled,
           fcmToken: token,
@@ -96,6 +104,51 @@ class PushNotificationController extends Notifier<PushNotificationState> {
         isRequesting: false,
       );
     }
+  }
+
+  Future<void> _registerTokenOnBackend(String token) async {
+    try {
+      final client = ref.read(apiClientProvider);
+      final platform = defaultTargetPlatform == TargetPlatform.iOS
+          ? 'ios'
+          : 'android';
+      final req = RegisterPushDeviceRequest(
+        (b) => b
+          ..token = token
+          ..platform = platform,
+      );
+      await client.call(
+        () => client.api.getNotificationsApi().apiV1NotificationsDevicesPost(
+          registerPushDeviceRequest: req,
+        ),
+      );
+    } on Object {
+      // Best-effort registration; ignored when offline or unauthenticated.
+    }
+  }
+
+  Future<void> unregisterDevice() async {
+    final token = state.fcmToken;
+    if (token != null && token.isNotEmpty) {
+      try {
+        final client = ref.read(apiClientProvider);
+        final req = UnregisterPushDeviceRequest(
+          (b) => b..token = token,
+        );
+        await client.call(
+          () => client.api
+              .getNotificationsApi()
+              .apiV1NotificationsDevicesUnregisterPost(
+                unregisterPushDeviceRequest: req,
+              ),
+        );
+      } on Object {
+        // Best-effort unregister; ignore network failures.
+      }
+    }
+    state = const PushNotificationState(
+      status: PushPermissionStatus.disabled,
+    );
   }
 }
 

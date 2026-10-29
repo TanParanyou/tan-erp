@@ -185,6 +185,8 @@ builder.Services.AddScoped<TanErp.Application.Surveys.ISurveyTemplateStore, TanE
 builder.Services.AddScoped<TanErp.Application.Surveys.ListSurveyTemplateVersions.ListSurveyTemplateVersionsHandler>();
 builder.Services.AddScoped<TanErp.Application.Surveys.ListSurveyTemplateVersions.ManageSurveyTemplateVersionsHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.IEstimateStore, TanErp.Infrastructure.Persistence.Estimates.EstimateStore>();
+builder.Services.AddScoped<TanErp.Application.Estimates.CalculationPolicies.ICalculationPolicyStore, TanErp.Infrastructure.Persistence.Estimates.CalculationPolicyStore>();
+builder.Services.AddScoped<TanErp.Application.Estimates.CalculationPolicies.ManageCalculationPoliciesHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.CreateEstimateDraft.CreateEstimateDraftHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.GetEstimate.GetEstimateHandler>();
 builder.Services.AddScoped<TanErp.Application.Estimates.UpdateEstimateDraft.UpdateEstimateDraftHandler>();
@@ -238,6 +240,8 @@ builder.Services.AddScoped<TanErp.Application.Mrp.IMrpStore, TanErp.Infrastructu
 builder.Services.AddScoped<TanErp.Application.Mrp.MrpHandler>();
 builder.Services.AddScoped<TanErp.Application.Attachments.IAttachmentOwnerScopeReader, TanErp.Infrastructure.Persistence.Attachments.AttachmentOwnerScopeReader>();
 builder.Services.AddScoped<TanErp.Application.Attachments.IAttachmentStore, TanErp.Infrastructure.Persistence.Attachments.AttachmentStore>();
+builder.Services.AddSingleton<TanErp.Application.Notifications.IPushDeviceStore, TanErp.Infrastructure.Persistence.Notifications.InMemoryPushDeviceStore>();
+builder.Services.AddSingleton<TanErp.Application.Notifications.IPushNotificationSender, TanErp.Infrastructure.Persistence.Notifications.LoggingPushNotificationSender>();
 builder.Services.AddScoped<TanErp.Application.Notifications.INotificationRecipientResolver, TanErp.Infrastructure.Persistence.Notifications.NotificationRecipientResolver>();
 builder.Services.AddScoped<TanErp.Application.Notifications.INotificationPublisher, TanErp.Infrastructure.Persistence.Notifications.NotificationPublisher>();
 builder.Services.AddScoped<TanErp.Application.Notifications.INotificationStore, TanErp.Infrastructure.Persistence.Notifications.NotificationStore>();

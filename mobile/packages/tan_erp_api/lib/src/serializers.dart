@@ -48,6 +48,8 @@ import 'package:tan_erp_api/src/model/approval_limit_list_response.dart';
 import 'package:tan_erp_api/src/model/approval_limit_options_response.dart';
 import 'package:tan_erp_api/src/model/approval_limit_response.dart';
 import 'package:tan_erp_api/src/model/assign_admin_role_request.dart';
+import 'package:tan_erp_api/src/model/assigned_survey_sync_item_response.dart';
+import 'package:tan_erp_api/src/model/assigned_survey_sync_list_response.dart';
 import 'package:tan_erp_api/src/model/attach_files_request.dart';
 import 'package:tan_erp_api/src/model/attach_item_image_request.dart';
 import 'package:tan_erp_api/src/model/attach_work_image_item_request.dart';
@@ -345,6 +347,7 @@ import 'package:tan_erp_api/src/model/purchase_order_project_response.dart';
 import 'package:tan_erp_api/src/model/purchase_order_request.dart';
 import 'package:tan_erp_api/src/model/purchase_order_response.dart';
 import 'package:tan_erp_api/src/model/purchase_order_supplier_response.dart';
+import 'package:tan_erp_api/src/model/push_device_response.dart';
 import 'package:tan_erp_api/src/model/qe_person_response.dart';
 import 'package:tan_erp_api/src/model/quick_estimate_draft_request.dart';
 import 'package:tan_erp_api/src/model/quick_estimate_list_item_response.dart';
@@ -369,6 +372,7 @@ import 'package:tan_erp_api/src/model/reassign_opportunity_owner_request.dart';
 import 'package:tan_erp_api/src/model/receive_goods_receipt_request.dart';
 import 'package:tan_erp_api/src/model/reconciliation_response.dart';
 import 'package:tan_erp_api/src/model/reconciliation_row_response.dart';
+import 'package:tan_erp_api/src/model/register_push_device_request.dart';
 import 'package:tan_erp_api/src/model/release_reservation_request.dart';
 import 'package:tan_erp_api/src/model/rename_admin_user_request.dart';
 import 'package:tan_erp_api/src/model/reorder_item_images_request.dart';
@@ -447,6 +451,8 @@ import 'package:tan_erp_api/src/model/unit_conversion_response.dart';
 import 'package:tan_erp_api/src/model/unit_of_measure_detail_response.dart';
 import 'package:tan_erp_api/src/model/unit_summary_response.dart';
 import 'package:tan_erp_api/src/model/unread_count_response.dart';
+import 'package:tan_erp_api/src/model/unregister_push_device_request.dart';
+import 'package:tan_erp_api/src/model/unregister_push_device_response.dart';
 import 'package:tan_erp_api/src/model/update_admin_membership_request.dart';
 import 'package:tan_erp_api/src/model/update_admin_user_profile_request.dart';
 import 'package:tan_erp_api/src/model/update_approval_limit_request.dart';
@@ -544,6 +550,8 @@ part 'serializers.g.dart';
   ApprovalLimitOptionsResponse,
   ApprovalLimitResponse,
   AssignAdminRoleRequest,
+  AssignedSurveySyncItemResponse,
+  AssignedSurveySyncListResponse,
   AttachFilesRequest,
   AttachItemImageRequest,
   AttachWorkImageItemRequest,
@@ -841,6 +849,7 @@ part 'serializers.g.dart';
   PurchaseOrderRequest,
   PurchaseOrderResponse,
   PurchaseOrderSupplierResponse,
+  PushDeviceResponse,
   QePersonResponse,
   QuickEstimateDraftRequest,
   QuickEstimateListItemResponse,
@@ -865,6 +874,7 @@ part 'serializers.g.dart';
   ReceiveGoodsReceiptRequest,
   ReconciliationResponse,
   ReconciliationRowResponse,
+  RegisterPushDeviceRequest,
   ReleaseReservationRequest,
   RenameAdminUserRequest,
   ReorderItemImagesRequest,
@@ -943,6 +953,8 @@ part 'serializers.g.dart';
   UnitOfMeasureDetailResponse,
   UnitSummaryResponse,
   UnreadCountResponse,
+  UnregisterPushDeviceRequest,
+  UnregisterPushDeviceResponse,
   UpdateAdminMembershipRequest,
   UpdateAdminUserProfileRequest,
   UpdateApprovalLimitRequest,
@@ -1243,6 +1255,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(SurveyMeasurementTypeOptionResponse)]),
         () => ListBuilder<SurveyMeasurementTypeOptionResponse>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(AssignedSurveySyncItemResponse)]),
+        () => ListBuilder<AssignedSurveySyncItemResponse>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AdminMembershipResponse)]),

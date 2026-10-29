@@ -15,12 +15,18 @@ public class NotificationPublisher : INotificationPublisher
     private readonly AppDbContext _db;
     private readonly INotificationRecipientResolver _recipients;
     private readonly IClock _clock;
+    private readonly IPushNotificationSender? _pushSender;
 
-    public NotificationPublisher(AppDbContext db, INotificationRecipientResolver recipients, IClock clock)
+    public NotificationPublisher(
+        AppDbContext db,
+        INotificationRecipientResolver recipients,
+        IClock clock,
+        IPushNotificationSender? pushSender = null)
     {
         _db = db;
         _recipients = recipients;
         _clock = clock;
+        _pushSender = pushSender;
     }
 
     public async Task PublishAsync(NotificationEvent evt, CancellationToken ct = default)
@@ -61,9 +67,15 @@ public class NotificationPublisher : INotificationPublisher
             .Select(e => e.Entity.RecipientUserId);
         var skip = new HashSet<Guid>(stored.Concat(staged));
 
-        foreach (var item in plan.Value.Where(p => !skip.Contains(p.RecipientUserId)))
+        var newlyStaged = plan.Value.Where(p => !skip.Contains(p.RecipientUserId)).ToList();
+        foreach (var item in newlyStaged)
         {
             _db.Notifications.Add(new Notification(Guid.NewGuid(), evt.OrganizationId, item.RecipientUserId, item.Type, item.PayloadJson, item.DedupeKey, now));
+        }
+
+        if (_pushSender is not null && newlyStaged.Count > 0)
+        {
+            await _pushSender.DispatchAsync(evt.OrganizationId, newlyStaged, ct);
         }
     }
 

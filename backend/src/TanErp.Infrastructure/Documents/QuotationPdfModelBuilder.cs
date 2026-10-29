@@ -16,7 +16,11 @@ internal static class QuotationPdfModelBuilder
 {
     private static Result<QuotationPdfModel> Fail(string code, string message) => Result<QuotationPdfModel>.Failure(new Error(code, message));
 
-    public static async Task<Result<QuotationPdfModel>> BuildAsync(AppDbContext db, Quotation quotation, CancellationToken ct)
+    public static async Task<Result<QuotationPdfModel>> BuildAsync(
+        AppDbContext db,
+        Quotation quotation,
+        CancellationToken ct,
+        TanErp.Application.Files.IFileStorageProvider? storage = null)
     {
         var organizationId = quotation.OrganizationId;
         var revision = await db.EstimateRevisions.AsNoTracking().Include(r => r.Sections).ThenInclude(s => s.WorkItems)
@@ -43,13 +47,37 @@ internal static class QuotationPdfModelBuilder
         if (quotation.SupersedesQuotationId is { } supersededId)
             supersedesNumber = await db.Quotations.AsNoTracking().Where(q => q.OrganizationId == organizationId && q.Id == supersededId).Select(q => q.Number).FirstOrDefaultAsync(ct);
 
+        byte[]? logoBytes = null;
+        if (organization.BrandLogoFileId is { } logoFileId && storage is not null)
+        {
+            var logoFile = await db.UploadedFiles.AsNoTracking().FirstOrDefaultAsync(f => f.OrganizationId == organizationId && f.Id == logoFileId, ct);
+            if (logoFile is not null)
+            {
+                try
+                {
+                    using var stream = await storage.OpenReadStreamAsync(logoFile.StoragePath, ct);
+                    if (stream is not null)
+                    {
+                        using var ms = new MemoryStream();
+                        await stream.CopyToAsync(ms, ct);
+                        logoBytes = ms.ToArray();
+                    }
+                }
+                catch
+                {
+                    // File storage read error should not prevent quotation rendering; logo is omitted.
+                }
+            }
+        }
+
         // Business rule (ADR 0023): a branch with its own address (Thai or English) uses that address pair and phone as a whole;
         // otherwise the organization's pair is used. The two are never mixed line by line.
         var branchOwnsAddress = !string.IsNullOrWhiteSpace(branch.AddressTh) || !string.IsNullOrWhiteSpace(branch.AddressEn);
         var issuer = new QuotationPdfIssuer(
             organization.Name, organization.NameEn, branch.Name, branch.NameEn, organization.TaxIdentifier, branch.TaxBranchCode,
             branchOwnsAddress ? branch.AddressTh : organization.AddressTh, branchOwnsAddress ? branch.AddressEn : organization.AddressEn,
-            branchOwnsAddress ? branch.Phone : organization.Phone);
+            branchOwnsAddress ? branch.Phone : organization.Phone,
+            logoBytes);
         var customer = new QuotationPdfCustomer(
             snapshot.DisplayNameTh, snapshot.DisplayNameEn, snapshot.LegalName, snapshot.TaxIdentifier, snapshot.BranchCode,
             snapshot.Address is null ? null : new QuotationPdfAddress(snapshot.Address.AddressLine1, snapshot.Address.Subdistrict, snapshot.Address.District, snapshot.Address.Province, snapshot.Address.PostalCode));

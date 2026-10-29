@@ -283,6 +283,8 @@ Class | Method | HTTP request | Description
 [*MrpRunsApi*](doc/MrpRunsApi.md) | [**apiV1MrpRunsIdRecommendationsRecommendationIdConvertPost**](doc/MrpRunsApi.md#apiv1mrprunsidrecommendationsrecommendationidconvertpost) | **POST** /api/v1/mrp/runs/{id}/recommendations/{recommendationId}/convert | 
 [*MrpRunsApi*](doc/MrpRunsApi.md) | [**apiV1MrpRunsIdRecommendationsRecommendationIdRejectPost**](doc/MrpRunsApi.md#apiv1mrprunsidrecommendationsrecommendationidrejectpost) | **POST** /api/v1/mrp/runs/{id}/recommendations/{recommendationId}/reject | 
 [*MrpRunsApi*](doc/MrpRunsApi.md) | [**apiV1MrpRunsPost**](doc/MrpRunsApi.md#apiv1mrprunspost) | **POST** /api/v1/mrp/runs | 
+[*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsDevicesPost**](doc/NotificationsApi.md#apiv1notificationsdevicespost) | **POST** /api/v1/notifications/devices | 
+[*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsDevicesUnregisterPost**](doc/NotificationsApi.md#apiv1notificationsdevicesunregisterpost) | **POST** /api/v1/notifications/devices/unregister | 
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsGet**](doc/NotificationsApi.md#apiv1notificationsget) | **GET** /api/v1/notifications | 
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsIdReadPost**](doc/NotificationsApi.md#apiv1notificationsidreadpost) | **POST** /api/v1/notifications/{id}/read | 
 [*NotificationsApi*](doc/NotificationsApi.md) | [**apiV1NotificationsReadAllPost**](doc/NotificationsApi.md#apiv1notificationsreadallpost) | **POST** /api/v1/notifications/read-all | 
@@ -372,6 +374,7 @@ Class | Method | HTTP request | Description
 [*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1OpportunitiesOpportunityIdSurveysSurveyIdRevisionsRevisionIdDraftPut**](doc/SiteSurveysApi.md#apiv1opportunitiesopportunityidsurveyssurveyidrevisionsrevisioniddraftput) | **PUT** /api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions/{revisionId}/draft | 
 [*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1OpportunitiesOpportunityIdSurveysSurveyIdRevisionsRevisionIdMarkReadyPost**](doc/SiteSurveysApi.md#apiv1opportunitiesopportunityidsurveyssurveyidrevisionsrevisionidmarkreadypost) | **POST** /api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions/{revisionId}/mark-ready | 
 [*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1OpportunitiesOpportunityIdSurveysSurveyIdRevisionsRevisionIdVoidPost**](doc/SiteSurveysApi.md#apiv1opportunitiesopportunityidsurveyssurveyidrevisionsrevisionidvoidpost) | **POST** /api/v1/opportunities/{opportunityId}/surveys/{surveyId}/revisions/{revisionId}/void | 
+[*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1SurveysAssignedGet**](doc/SiteSurveysApi.md#apiv1surveysassignedget) | **GET** /api/v1/surveys/assigned | 
 [*SiteSurveysApi*](doc/SiteSurveysApi.md) | [**apiV1SurveysReferenceDataGet**](doc/SiteSurveysApi.md#apiv1surveysreferencedataget) | **GET** /api/v1/surveys/reference-data | 
 [*SitesApi*](doc/SitesApi.md) | [**apiV1CustomersCustomerIdSitesGet**](doc/SitesApi.md#apiv1customerscustomeridsitesget) | **GET** /api/v1/customers/{customerId}/sites | 
 [*SitesApi*](doc/SitesApi.md) | [**apiV1CustomersCustomerIdSitesPost**](doc/SitesApi.md#apiv1customerscustomeridsitespost) | **POST** /api/v1/customers/{customerId}/sites | 
@@ -449,6 +452,8 @@ Class | Method | HTTP request | Description
  - [ApprovalLimitOptionsResponse](doc/ApprovalLimitOptionsResponse.md)
  - [ApprovalLimitResponse](doc/ApprovalLimitResponse.md)
  - [AssignAdminRoleRequest](doc/AssignAdminRoleRequest.md)
+ - [AssignedSurveySyncItemResponse](doc/AssignedSurveySyncItemResponse.md)
+ - [AssignedSurveySyncListResponse](doc/AssignedSurveySyncListResponse.md)
  - [AttachFilesRequest](doc/AttachFilesRequest.md)
  - [AttachItemImageRequest](doc/AttachItemImageRequest.md)
  - [AttachWorkImageItemRequest](doc/AttachWorkImageItemRequest.md)
@@ -746,6 +751,7 @@ Class | Method | HTTP request | Description
  - [PurchaseOrderRequest](doc/PurchaseOrderRequest.md)
  - [PurchaseOrderResponse](doc/PurchaseOrderResponse.md)
  - [PurchaseOrderSupplierResponse](doc/PurchaseOrderSupplierResponse.md)
+ - [PushDeviceResponse](doc/PushDeviceResponse.md)
  - [QePersonResponse](doc/QePersonResponse.md)
  - [QuickEstimateDraftRequest](doc/QuickEstimateDraftRequest.md)
  - [QuickEstimateListItemResponse](doc/QuickEstimateListItemResponse.md)
@@ -770,6 +776,7 @@ Class | Method | HTTP request | Description
  - [ReceiveGoodsReceiptRequest](doc/ReceiveGoodsReceiptRequest.md)
  - [ReconciliationResponse](doc/ReconciliationResponse.md)
  - [ReconciliationRowResponse](doc/ReconciliationRowResponse.md)
+ - [RegisterPushDeviceRequest](doc/RegisterPushDeviceRequest.md)
  - [ReleaseReservationRequest](doc/ReleaseReservationRequest.md)
  - [RenameAdminUserRequest](doc/RenameAdminUserRequest.md)
  - [ReorderItemImagesRequest](doc/ReorderItemImagesRequest.md)
@@ -848,6 +855,8 @@ Class | Method | HTTP request | Description
  - [UnitOfMeasureDetailResponse](doc/UnitOfMeasureDetailResponse.md)
  - [UnitSummaryResponse](doc/UnitSummaryResponse.md)
  - [UnreadCountResponse](doc/UnreadCountResponse.md)
+ - [UnregisterPushDeviceRequest](doc/UnregisterPushDeviceRequest.md)
+ - [UnregisterPushDeviceResponse](doc/UnregisterPushDeviceResponse.md)
  - [UpdateAdminMembershipRequest](doc/UpdateAdminMembershipRequest.md)
  - [UpdateAdminUserProfileRequest](doc/UpdateAdminUserProfileRequest.md)
  - [UpdateApprovalLimitRequest](doc/UpdateApprovalLimitRequest.md)

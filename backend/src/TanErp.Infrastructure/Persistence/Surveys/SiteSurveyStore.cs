@@ -308,6 +308,119 @@ public class SiteSurveyStore : ISiteSurveyStore
         return ToProjection(survey, currentRevision, surveyor, site);
     }
 
+    public async Task<AssignedSurveySyncListProjection> ListAssignedSurveysAsync(
+        RequestAccessContext access,
+        DateTimeOffset? updatedSinceUtc,
+        bool onlyMine,
+        CancellationToken cancellationToken = default)
+    {
+        var orgId = access.OrganizationId;
+        var branchId = access.BranchId;
+        var now = _clock.UtcNow;
+
+        var targetStages = new[] { OpportunityStage.Qualified, OpportunityStage.Surveying, OpportunityStage.Estimating };
+        var oppsQuery = _db.Opportunities
+            .AsNoTracking()
+            .Where(o => o.OrganizationId == orgId && o.BranchId == branchId && targetStages.Contains(o.Stage));
+
+        var opps = await oppsQuery
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        if (opps.Count == 0)
+        {
+            return new AssignedSurveySyncListProjection(Array.Empty<AssignedSurveySyncItemProjection>(), now);
+        }
+
+        var oppIds = opps.Select(o => o.Id).ToArray();
+        var customerIds = opps.Select(o => o.CustomerId).Distinct().ToArray();
+
+        var surveys = await _db.SiteSurveys
+            .AsNoTracking()
+            .Include(s => s.Revisions)
+                .ThenInclude(r => r.Areas)
+                    .ThenInclude(a => a.Measurements)
+            .Include(s => s.Revisions)
+                .ThenInclude(r => r.ChecklistResults)
+            .Include(s => s.Revisions)
+                .ThenInclude(r => r.Evidence)
+            .Where(s => s.OrganizationId == orgId && oppIds.Contains(s.OpportunityId))
+            .ToListAsync(cancellationToken);
+
+        var surveyByOpp = surveys.ToDictionary(s => s.OpportunityId);
+
+        var customers = await _db.Customers
+            .AsNoTracking()
+            .Where(c => c.OrganizationId == orgId && customerIds.Contains(c.Id))
+            .ToDictionaryAsync(c => c.Id, c => c.DisplayNameTh, cancellationToken);
+
+        var siteIds = opps.Where(o => o.PrimarySiteId.HasValue).Select(o => o.PrimarySiteId!.Value)
+            .Concat(surveys.Select(s => s.SiteId))
+            .Distinct()
+            .ToArray();
+
+        var sites = await _db.Sites
+            .AsNoTracking()
+            .Where(s => s.OrganizationId == orgId && siteIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, s => new SiteSummaryProjection(s.Id, s.Label, s.AddressLine1), cancellationToken);
+
+        var surveyorIds = surveys.Select(s => s.AssignedSurveyorId).Distinct().ToArray();
+        var surveyors = await _db.Users
+            .AsNoTracking()
+            .Where(u => surveyorIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => new SurveyorSummaryProjection(u.Id, u.DisplayName, u.Email), cancellationToken);
+
+        var items = new List<AssignedSurveySyncItemProjection>(opps.Count);
+        foreach (var opp in opps)
+        {
+            surveyByOpp.TryGetValue(opp.Id, out var survey);
+            if (onlyMine)
+            {
+                var isAssignedToMe = survey != null && survey.AssignedSurveyorId == access.ActorUserId;
+                var isOwnedByMe = opp.OwnerUserId == access.ActorUserId;
+                if (!isAssignedToMe && !isOwnedByMe) continue;
+            }
+
+            var currentRevision = survey?.Revisions.OrderByDescending(r => r.RevisionNumber).FirstOrDefault();
+            if (updatedSinceUtc.HasValue)
+            {
+                var latestTouch = currentRevision?.CreatedAtUtc ?? survey?.CreatedAtUtc ?? opp.CreatedAtUtc;
+                if (latestTouch < updatedSinceUtc.Value) continue;
+            }
+
+            SiteSummaryProjection? siteProj = null;
+            if (survey != null && sites.TryGetValue(survey.SiteId, out var sSite))
+            {
+                siteProj = sSite;
+            }
+            else if (opp.PrimarySiteId.HasValue && sites.TryGetValue(opp.PrimarySiteId.Value, out var oSite))
+            {
+                siteProj = oSite;
+            }
+
+            SiteSurveyProjection? surveyProj = null;
+            if (survey != null)
+            {
+                surveyors.TryGetValue(survey.AssignedSurveyorId, out var surveyorProj);
+                surveyProj = ToProjection(survey, currentRevision, surveyorProj, siteProj);
+            }
+
+            customers.TryGetValue(opp.CustomerId, out var customerName);
+            items.Add(new AssignedSurveySyncItemProjection(
+                opp.Id,
+                opp.Code,
+                opp.Title,
+                opp.Stage,
+                opp.RowVersion,
+                customerName ?? string.Empty,
+                siteProj,
+                surveyProj));
+        }
+
+        return new AssignedSurveySyncListProjection(items, now);
+    }
+
     public async Task<Result<SiteSurveyRevisionProjection>> UpdateDraftAsync(
         RequestAccessContext access,
         UpdateSurveyDraftCommand command,

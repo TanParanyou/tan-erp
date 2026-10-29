@@ -65,6 +65,7 @@ export type UpdateSurveyChecklistRequest = components["schemas"]["UpdateSurveyCh
 export type UpdateSurveyEvidenceRequest = components["schemas"]["UpdateSurveyEvidenceRequest"];
 export type SurveyTemplateVersionResponse = components["schemas"]["SurveyTemplateVersionResponse"];
 export type SurveyTemplateVersionListResponse = components["schemas"]["SurveyTemplateVersionListResponse"];
+export type PublishSurveyTemplateVersionRequest = components["schemas"]["PublishSurveyTemplateVersionRequest"];
 export type SurveyReferenceDataResponse = components["schemas"]["SurveyReferenceDataResponse"];
 export type SurveyCategoryOptionResponse = components["schemas"]["SurveyCategoryOptionResponse"];
 export type SurveyPhotoTagOptionResponse = components["schemas"]["SurveyPhotoTagOptionResponse"];
@@ -984,6 +985,29 @@ export class ApiClient {
     return this.request<SurveyTemplateVersionListResponse>(
       "/api/v1/survey-template-versions",
       "GET",
+      options
+    );
+  }
+
+  async publishSurveyTemplateVersion(
+    payload: PublishSurveyTemplateVersionRequest,
+    options: RequestOptions
+  ): Promise<SurveyTemplateVersionResponse> {
+    return this.request<SurveyTemplateVersionResponse>(
+      "/api/v1/survey-template-versions",
+      "POST",
+      options,
+      payload
+    );
+  }
+
+  async retireSurveyTemplateVersion(
+    code: string,
+    options: RequestOptions
+  ): Promise<SurveyTemplateVersionResponse> {
+    return this.request<SurveyTemplateVersionResponse>(
+      `/api/v1/survey-template-versions/${encodeURIComponent(code)}/retire`,
+      "POST",
       options
     );
   }

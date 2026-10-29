@@ -24,6 +24,7 @@
 | ลำดับการพัฒนา | [Implementation Roadmap](00-overview/implementation-roadmap.md) |
 | แผนรวมปิดช่องว่างและขยาย ERP | [ERP Completion Master Plan](superpowers/plans/2026-09-29-erp-completion-master-plan.md) |
 | รายการ Requirement | [Requirements Catalog](00-overview/requirements-catalog.md) |
+| คำถามและสมมติฐานทางธุรกิจที่รอการยืนยัน | [Open Business Validation Questions](01-business/open-validation-questions.md) |
 | ราคาประเมินเบื้องต้นหน้างาน | [Quick Estimate Flow](01-business/quick-estimate-flow.md) |
 | สูตร Quick Estimate และ Pricing Template | [Quick Estimate Pricing Rules](01-business/quick-estimate-pricing-rules.md) |
 | Field, ตัวอย่าง และ Test Case ของ Quick Estimate | [Quick Estimate Template Catalog](01-business/quick-estimate-template-catalog.md) |

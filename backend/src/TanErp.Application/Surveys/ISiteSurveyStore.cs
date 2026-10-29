@@ -18,6 +18,13 @@ public interface ISiteSurveyStore
         Guid opportunityId,
         CancellationToken cancellationToken = default);
 
+    Task<AssignedSurveySyncListProjection> ListAssignedSurveysAsync(
+        RequestAccessContext access,
+        DateTimeOffset? updatedSinceUtc,
+        bool onlyMine,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(new AssignedSurveySyncListProjection(Array.Empty<AssignedSurveySyncItemProjection>(), DateTimeOffset.UtcNow));
+
     Task<Result<SiteSurveyRevisionProjection>> UpdateDraftAsync(
         RequestAccessContext access,
         UpdateSurveyDraft.UpdateSurveyDraftCommand command,

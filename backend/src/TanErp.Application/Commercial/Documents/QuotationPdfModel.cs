@@ -7,7 +7,8 @@ public sealed record QuotationPdfAddress(string AddressLine1, string? Subdistric
 
 public sealed record QuotationPdfIssuer(
     string NameTh, string? NameEn, string? BranchNameTh, string? BranchNameEn,
-    string? TaxIdentifier, string? TaxBranchCode, string? AddressTh, string? AddressEn, string? Phone);
+    string? TaxIdentifier, string? TaxBranchCode, string? AddressTh, string? AddressEn, string? Phone,
+    byte[]? LogoBytes = null);
 
 public sealed record QuotationPdfCustomer(
     string DisplayNameTh, string? DisplayNameEn, string? LegalName, string? TaxIdentifier, string? BranchCode, QuotationPdfAddress? Address);

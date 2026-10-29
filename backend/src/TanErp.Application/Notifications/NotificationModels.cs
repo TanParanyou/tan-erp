@@ -50,3 +50,15 @@ public sealed record NotificationProjection(
     Guid Id, string Type, IReadOnlyDictionary<string, string> Payload, string? DeepLink, DateTimeOffset CreatedAtUtc, DateTimeOffset? ReadAtUtc);
 
 public sealed record NotificationPage(IReadOnlyList<NotificationProjection> Items, int Page, int PageSize, int TotalCount, int TotalPages);
+
+public sealed record PushDeviceRegistration(
+    Guid OrganizationId,
+    Guid UserId,
+    string Token,
+    string Platform,
+    DateTimeOffset RegisteredAtUtc);
+
+public sealed record PushDeviceProjection(
+    string Token,
+    string Platform,
+    DateTimeOffset RegisteredAtUtc);

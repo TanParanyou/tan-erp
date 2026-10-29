@@ -85,3 +85,17 @@ public sealed record SiteSurveyResponse(
     SurveyorSummaryResponse? AssignedSurveyor = null,
     SiteSummaryResponse? Site = null,
     SiteSurveyReadyRevisionResponse? LatestReadyRevision = null);
+
+public sealed record AssignedSurveySyncItemResponse(
+    Guid OpportunityId,
+    string OpportunityCode,
+    string OpportunityTitle,
+    string OpportunityStage,
+    Guid OpportunityRowVersion,
+    string CustomerDisplayName,
+    SiteSummaryResponse? Site,
+    SiteSurveyResponse? Survey);
+
+public sealed record AssignedSurveySyncListResponse(
+    IReadOnlyList<AssignedSurveySyncItemResponse> Items,
+    DateTimeOffset ServerTimeUtc);

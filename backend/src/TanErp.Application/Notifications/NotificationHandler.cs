@@ -11,13 +11,17 @@ namespace TanErp.Application.Notifications;
 /// </summary>
 public class NotificationHandler
 {
+    private static readonly HashSet<string> AllowedPlatforms = new(StringComparer.OrdinalIgnoreCase) { "ios", "android", "web" };
+
     private readonly IRequestAccessResolver _access;
     private readonly INotificationStore _store;
+    private readonly IPushDeviceStore? _pushDevices;
 
-    public NotificationHandler(IRequestAccessResolver access, INotificationStore store)
+    public NotificationHandler(IRequestAccessResolver access, INotificationStore store, IPushDeviceStore? pushDevices = null)
     {
         _access = access;
         _store = store;
+        _pushDevices = pushDevices;
     }
 
     private Task<Result<RequestAccessContext>> OwnerAsync(NotificationCaller caller, CancellationToken ct) =>
@@ -62,6 +66,52 @@ public class NotificationHandler
         var owner = await OwnerAsync(caller, ct);
         if (owner.IsFailure) return Result<int>.Failure(owner.Error);
         return Result<int>.Success(await _store.MarkAllReadAsync(owner.Value!.OrganizationId, owner.Value.ActorUserId, ct));
+    }
+
+    public async Task<Result<PushDeviceProjection>> RegisterDeviceAsync(NotificationCaller caller, string? token, string? platform, CancellationToken ct = default)
+    {
+        var owner = await OwnerAsync(caller, ct);
+        if (owner.IsFailure) return Result<PushDeviceProjection>.Failure(owner.Error);
+
+        var trimmedToken = token?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(trimmedToken) || trimmedToken.Length > 512)
+        {
+            return Result<PushDeviceProjection>.Failure(new Error("REQUEST_VALIDATION_FAILED", "Push device token must be between 1 and 512 characters."));
+        }
+
+        var normalizedPlatform = platform?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (!AllowedPlatforms.Contains(normalizedPlatform))
+        {
+            return Result<PushDeviceProjection>.Failure(new Error("APP_PLATFORM_INVALID", "Platform must be ios, android, or web."));
+        }
+
+        if (_pushDevices is null)
+        {
+            return Result<PushDeviceProjection>.Success(new PushDeviceProjection(trimmedToken, normalizedPlatform, DateTimeOffset.UtcNow));
+        }
+
+        var saved = await _pushDevices.UpsertAsync(owner.Value!.OrganizationId, owner.Value.ActorUserId, trimmedToken, normalizedPlatform, ct);
+        return Result<PushDeviceProjection>.Success(new PushDeviceProjection(saved.Token, saved.Platform, saved.RegisteredAtUtc));
+    }
+
+    public async Task<Result<bool>> UnregisterDeviceAsync(NotificationCaller caller, string? token, CancellationToken ct = default)
+    {
+        var owner = await OwnerAsync(caller, ct);
+        if (owner.IsFailure) return Result<bool>.Failure(owner.Error);
+
+        var trimmedToken = token?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(trimmedToken) || trimmedToken.Length > 512)
+        {
+            return Result<bool>.Failure(new Error("REQUEST_VALIDATION_FAILED", "Push device token must be between 1 and 512 characters."));
+        }
+
+        if (_pushDevices is null)
+        {
+            return Result<bool>.Success(false);
+        }
+
+        var removed = await _pushDevices.RemoveAsync(owner.Value!.OrganizationId, owner.Value.ActorUserId, trimmedToken, ct);
+        return Result<bool>.Success(removed);
     }
 
     private async Task<NotificationProjection> ProjectAsync(NotificationCaller caller, NotificationRow row, Dictionary<string, bool> granted, CancellationToken ct)

@@ -16,3 +16,11 @@ public sealed record NotificationListResponse(IReadOnlyList<NotificationResponse
 public sealed record UnreadCountResponse(int UnreadCount);
 
 public sealed record MarkAllReadResponse(int UpdatedCount);
+
+public sealed record RegisterPushDeviceRequest(string Token, string Platform);
+
+public sealed record UnregisterPushDeviceRequest(string Token);
+
+public sealed record PushDeviceResponse(string Token, string Platform, DateTimeOffset RegisteredAtUtc);
+
+public sealed record UnregisterPushDeviceResponse(bool Removed);

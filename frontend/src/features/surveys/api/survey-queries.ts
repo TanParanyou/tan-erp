@@ -9,6 +9,8 @@ import {
   type CloneSurveyRevisionRequest,
   type VoidSurveyRevisionRequest,
   type SurveyTemplateVersionListResponse,
+  type SurveyTemplateVersionResponse,
+  type PublishSurveyTemplateVersionRequest,
   type SurveyReferenceDataResponse,
   type SurveyDesignStyleResponse,
   type CreateSurveyDesignStyleRequest,
@@ -520,6 +522,68 @@ export function useUpdateSurveyMoodTone(): UseMutationResult<
       });
       queryClient.invalidateQueries({
         queryKey: surveyReferenceDataQueryKey(membershipId, normalizedLocale),
+      });
+    },
+  });
+}
+
+export function usePublishSurveyTemplateVersion(): UseMutationResult<
+  SurveyTemplateVersionResponse,
+  Error,
+  PublishSurveyTemplateVersionRequest
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: PublishSurveyTemplateVersionRequest) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.publishSurveyTemplateVersion(payload, {
+        token,
+        membershipId,
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: surveyTemplateVersionsQueryKey(membershipId, normalizedLocale),
+      });
+    },
+  });
+}
+
+export function useRetireSurveyTemplateVersion(): UseMutationResult<
+  SurveyTemplateVersionResponse,
+  Error,
+  string
+> {
+  const locale = useSafeLocale();
+  const normalizedLocale = locale === "en" ? "en" : "th";
+  const { selectedMembership } = useSelectedMembership();
+  const membershipId = selectedMembership?.id;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (code: string) => {
+      const token = await getAuthToken();
+      if (!token) throw new AuthenticationRequiredError();
+      if (!membershipId) throw new MembershipRequiredError();
+
+      return apiClient.retireSurveyTemplateVersion(code, {
+        token,
+        membershipId,
+        locale: normalizedLocale,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: surveyTemplateVersionsQueryKey(membershipId, normalizedLocale),
       });
     },
   });

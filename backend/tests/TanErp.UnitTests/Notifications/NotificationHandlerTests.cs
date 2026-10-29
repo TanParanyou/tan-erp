@@ -181,4 +181,26 @@ public class NotificationHandlerTests
         Assert.Equal(7, (await handler.MarkAllReadAsync(Caller)).Value);
         Assert.Equal((Org, User), store.LastOwner);
     }
+
+    [Fact]
+    public async Task RegisterDevice_ValidatesTokenAndPlatform_AndUnregisterSucceeds()
+    {
+        var (handler, _, _) = Build();
+
+        var invalidPlatform = await handler.RegisterDeviceAsync(Caller, "fcm-token-1", "windows");
+        Assert.True(invalidPlatform.IsFailure);
+        Assert.Equal("APP_PLATFORM_INVALID", invalidPlatform.Error.Code);
+
+        var blankToken = await handler.RegisterDeviceAsync(Caller, "   ", "android");
+        Assert.True(blankToken.IsFailure);
+        Assert.Equal("REQUEST_VALIDATION_FAILED", blankToken.Error.Code);
+
+        var ok = await handler.RegisterDeviceAsync(Caller, " fcm-token-123 ", "IOS");
+        Assert.True(ok.IsSuccess);
+        Assert.Equal("fcm-token-123", ok.Value!.Token);
+        Assert.Equal("ios", ok.Value.Platform);
+
+        var unreg = await handler.UnregisterDeviceAsync(Caller, "fcm-token-123");
+        Assert.True(unreg.IsSuccess);
+    }
 }

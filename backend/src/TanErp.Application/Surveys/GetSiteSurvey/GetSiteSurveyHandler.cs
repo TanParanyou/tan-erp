@@ -35,4 +35,27 @@ public class GetSiteSurveyHandler
         var survey = await _store.GetByOpportunityIdAsync(access.OrganizationId, query.OpportunityId, cancellationToken);
         return Result<SiteSurveyProjection?>.Success(survey);
     }
+
+    public async Task<Result<AssignedSurveySyncListProjection>> ListAssignedAsync(
+        string firebaseUid,
+        Guid membershipId,
+        DateTimeOffset? updatedSinceUtc,
+        bool onlyMine,
+        CancellationToken cancellationToken = default)
+    {
+        var accessResult = await _accessResolver.ResolveAsync(
+            firebaseUid,
+            membershipId,
+            "surveys.read",
+            cancellationToken);
+
+        if (accessResult.IsFailure)
+        {
+            return Result<AssignedSurveySyncListProjection>.Failure(accessResult.Error);
+        }
+
+        var access = accessResult.Value!;
+        var list = await _store.ListAssignedSurveysAsync(access, updatedSinceUtc, onlyMine, cancellationToken);
+        return Result<AssignedSurveySyncListProjection>.Success(list);
+    }
 }

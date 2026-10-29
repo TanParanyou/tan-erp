@@ -88,3 +88,17 @@ public sealed record SiteSurveyProjection(
     SurveyorSummaryProjection? AssignedSurveyor = null,
     SiteSummaryProjection? Site = null,
     SiteSurveyReadyRevisionProjection? LatestReadyRevision = null);
+
+public sealed record AssignedSurveySyncItemProjection(
+    Guid OpportunityId,
+    string OpportunityCode,
+    string OpportunityTitle,
+    string OpportunityStage,
+    Guid OpportunityRowVersion,
+    string CustomerDisplayName,
+    SiteSummaryProjection? Site,
+    SiteSurveyProjection? Survey);
+
+public sealed record AssignedSurveySyncListProjection(
+    IReadOnlyList<AssignedSurveySyncItemProjection> Items,
+    DateTimeOffset ServerTimeUtc);

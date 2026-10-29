@@ -1804,7 +1804,8 @@
     "loadError": "Failed to load master data. Please try again.",
     "tabs": {
       "designStyles": "Design Styles",
-      "moodTones": "Mood & Tones"
+      "moodTones": "Mood & Tones",
+      "templates": "Survey Templates"
     },
     "actions": {
       "addStyle": "Add Design Style",
@@ -1850,6 +1851,73 @@
       "nameRequired": "Thai name is required",
       "saveFailed": "Failed to save. Please try again.",
       "noData": "No items found"
+    }
+  },
+  "surveyTemplates": {
+    "sectionTitle": "Survey Template Versions",
+    "sectionDescription": "Control survey template versions, required checklists, minimum evidence thresholds, and hash algorithms",
+    "status": {
+      "active": "Active",
+      "retired": "Retired",
+      "current": "Current"
+    },
+    "actions": {
+      "publishNew": "Publish New Template",
+      "publishConfirm": "Confirm Publication",
+      "retire": "Retire",
+      "retireConfirm": "Confirm Retire"
+    },
+    "table": {
+      "code": "Template Code",
+      "hashVersion": "Hash Version",
+      "evidenceRequirements": "Evidence Requirements",
+      "checklistItems": "Required Checklists",
+      "effectivePeriod": "Effective Period",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "labels": {
+      "minTotalEvidence": "Min Total Evidence",
+      "minAreaEvidence": "Min Area Evidence",
+      "items": "items",
+      "moreItems": "more items",
+      "indefinite": "Indefinite",
+      "retired": "Retired"
+    },
+    "fields": {
+      "code": "Template Code",
+      "hashVersion": "Snapshot Hash Version",
+      "minEvidence": "Min Total Evidence (photos)",
+      "minAreaEvidence": "Min Area Evidence (photos)",
+      "effectiveFromUtc": "Effective From (UTC)",
+      "checklistItems": "Required Checklist Items"
+    },
+    "placeholders": {
+      "code": "e.g., ST-2026-V3",
+      "checklistItem": "Enter checklist item then press Enter or click Add..."
+    },
+    "hints": {
+      "code": "Code must be uppercase and unique across template versions",
+      "effectiveFrom": "Leave blank to become effective immediately upon publication"
+    },
+    "drawer": {
+      "title": "Publish New Survey Template",
+      "description": "Published templates are immutable. Future adjustments require a new version."
+    },
+    "retireModal": {
+      "title": "Confirm Survey Template Retirement",
+      "description": "Do you want to end the effective period of template {code}?",
+      "warning": "Retiring prevents newly created surveys from picking this template. Existing surveys using it remain intact."
+    },
+    "messages": {
+      "publishSuccess": "New survey template version published successfully",
+      "publishError": "Failed to publish template. Please try again.",
+      "retireSuccess": "Survey template version retired successfully",
+      "retireError": "Failed to retire template. Please try again.",
+      "codeRequired": "Template code is required",
+      "checklistRequired": "At least one required checklist item is required",
+      "loadError": "Failed to load survey template versions",
+      "noTemplates": "No survey template history found"
     }
   },
   "signatures": {
