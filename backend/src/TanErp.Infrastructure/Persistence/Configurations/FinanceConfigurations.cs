@@ -190,7 +190,7 @@ public class AccountingOutboxMessageConfiguration : IEntityTypeConfiguration<Acc
     {
         builder.ToTable("accounting_outbox", "finance", t =>
         {
-            t.HasCheckConstraint("ck_accounting_outbox_status", "status IN ('pending', 'sent', 'failed', 'dead')");
+            t.HasCheckConstraint("ck_accounting_outbox_status", "status IN ('pending', 'sent', 'exported', 'failed', 'dead')");
             t.HasCheckConstraint("ck_accounting_outbox_kind", "kind IN ('billing.issued', 'billing.voided', 'billing-note.approved', 'payment.recorded', 'payment.reversed', 'supplier-invoice.posted', 'supplier-invoice.voided')");
             t.HasCheckConstraint("ck_accounting_outbox_attempts", "attempts >= 0");
         });
@@ -253,3 +253,27 @@ public class CreditLimitOverrideRequestConfiguration : IEntityTypeConfiguration<
         builder.HasOne<User>().WithMany().HasForeignKey(x => x.DecidedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+public class AccountMappingConfiguration : IEntityTypeConfiguration<AccountMapping>
+{
+    public void Configure(EntityTypeBuilder<AccountMapping> builder)
+    {
+        builder.ToTable("account_mappings", "finance");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.Kind).HasColumnName("kind").HasMaxLength(32).IsRequired();
+        builder.Property(x => x.DebitAccountCode).HasColumnName("debit_account_code").HasMaxLength(32).IsRequired();
+        builder.Property(x => x.DebitAccountName).HasColumnName("debit_account_name").HasMaxLength(200).IsRequired();
+        builder.Property(x => x.CreditAccountCode).HasColumnName("credit_account_code").HasMaxLength(32).IsRequired();
+        builder.Property(x => x.CreditAccountName).HasColumnName("credit_account_name").HasMaxLength(200).IsRequired();
+        builder.Property(x => x.UpdatedByUserId).HasColumnName("updated_by_user_id").IsRequired();
+        builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+
+        builder.HasIndex(x => new { x.OrganizationId, x.Kind }).IsUnique();
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.UpdatedByUserId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+

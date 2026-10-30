@@ -230,3 +230,43 @@ public sealed record CreditOverrideProjection(
     Guid RowVersion);
 
 public sealed record CreditOverrideListQuery(Guid? CustomerId, string? Status);
+
+public sealed record AccountMappingProjection(
+    Guid Id,
+    string Kind,
+    string DebitAccountCode,
+    string DebitAccountName,
+    string CreditAccountCode,
+    string CreditAccountName,
+    FinancePerson UpdatedBy,
+    DateTimeOffset UpdatedAtUtc,
+    Guid RowVersion);
+
+public sealed record AccountMappingInput(
+    string Kind,
+    string DebitAccountCode,
+    string DebitAccountName,
+    string CreditAccountCode,
+    string CreditAccountName);
+
+public sealed record JournalExportLineProjection(
+    string BatchRef,
+    Guid MessageId,
+    string DedupeKey,
+    string Kind,
+    string ResourceNumber,
+    string DebitAccountCode,
+    string DebitAccountName,
+    string CreditAccountCode,
+    string CreditAccountName,
+    decimal Amount,
+    string Currency,
+    DateTimeOffset CreatedAtUtc);
+
+public sealed record JournalExportResult(
+    string BatchRef,
+    int ExportedCount,
+    int DeadCount,
+    IReadOnlyList<JournalExportLineProjection> Lines,
+    string CsvContent);
+

@@ -452,6 +452,11 @@ export type OutboxListResponse = components["schemas"]["OutboxListResponse"];
 export type OutboxMessageResponse = components["schemas"]["OutboxMessageResponse"];
 export type DispatchResultResponse = components["schemas"]["DispatchResultResponse"];
 export type FinanceReconciliationResponse = components["schemas"]["FinanceReconciliationResponse"];
+export type AccountMappingResponse = components["schemas"]["AccountMappingResponse"];
+export type AccountMappingRequest = components["schemas"]["AccountMappingRequest"];
+export type AccountMappingListResponse = components["schemas"]["AccountMappingListResponse"];
+export type JournalExportLineResponse = components["schemas"]["JournalExportLineResponse"];
+export type JournalExportResultResponse = components["schemas"]["JournalExportResultResponse"];
 export interface ListBillingsParams {
   search?: string;
   status?: string;
@@ -2598,6 +2603,19 @@ export class ApiClient {
 
   async getFinanceReconciliation(options: RequestOptions): Promise<FinanceReconciliationResponse> {
     return this.request<FinanceReconciliationResponse>("/api/v1/finance/reconciliation", "GET", options);
+  }
+
+  async listAccountMappings(options: RequestOptions): Promise<AccountMappingListResponse> {
+    return this.request<AccountMappingListResponse>("/api/v1/finance/account-mappings", "GET", options);
+  }
+
+  async upsertAccountMapping(payload: AccountMappingRequest, options: RequestOptions): Promise<AccountMappingResponse> {
+    return this.request<AccountMappingResponse>("/api/v1/finance/account-mappings", "PUT", options, payload);
+  }
+
+  async exportAccountingJournal(options: RequestOptions, batchSize?: number): Promise<JournalExportResultResponse> {
+    const q = batchSize !== undefined ? `?batchSize=${encodeURIComponent(String(batchSize))}` : "";
+    return this.request<JournalExportResultResponse>(`/api/v1/finance/outbox/export-journal${q}`, "POST", options, { batchSize });
   }
 
   async listPricingTemplates(options: RequestOptions, query: ListPricingTemplatesParams): Promise<PricingTemplateListResponse> {

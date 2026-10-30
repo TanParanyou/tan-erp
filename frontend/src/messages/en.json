@@ -4466,6 +4466,7 @@
       "CREDIT_OVERRIDE_SELF_APPROVAL": "The requester of the credit limit override cannot approve their own request (Maker-Checker required).",
       "CREDIT_OVERRIDE_INVALID_STATE": "The credit override status does not allow this action.",
       "CREDIT_OVERRIDE_FIELD_INVALID": "Invalid credit override request. Ceiling amount must be greater than zero and reason is required.",
+      "ACCOUNT_MAPPING_FIELD_INVALID": "Chart of accounts mapping data is invalid or incomplete.",
       "OUTBOX_INVALID_STATE": "The message status does not allow this action.",
       "OUTBOX_CONFIRMATION_CONFLICT": "The message was already confirmed with other data.",
       "OUTBOX_FIELD_INVALID": "A value is invalid."
@@ -4627,6 +4628,11 @@
       "notConfigured": "No accounting system is connected yet. Messages wait in the queue and are retried; nothing counts as posted until accounting confirms.",
       "dispatch": "Send due messages",
       "dispatched": "Processed {processed}: {sent} sent, {failed} failed, {dead} stopped.",
+      "exportJournal": "Export Journal CSV",
+      "journalExported": "Exported journal batch {batchRef}: {exported} exported, {dead} missing mappings.",
+      "lastExportTitle": "Latest Journal Export Result",
+      "lastExportSubtitle": "Batch {batchRef} ({exported} exported, {dead} missing mappings)",
+      "downloadCsv": "Download CSV ({batchRef})",
       "requeue": "Requeue",
       "requeued": "Message requeued.",
       "loadError": "Could not load the data.",
@@ -4649,6 +4655,7 @@
       "statuses": {
         "pending": "Pending",
         "sent": "Sent",
+        "exported": "Exported",
         "failed": "Failed (will retry)",
         "dead": "Stopped"
       },
@@ -4664,6 +4671,28 @@
         "billing-note": {
           "approved": "Credit/debit note approved"
         }
+      },
+      "coa": {
+        "title": "Chart of Accounts Mapping",
+        "subtitle": "Configure debit and credit account codes for each transaction kind for journal export",
+        "kind": "Transaction Kind",
+        "selectKindPlaceholder": "Select transaction kind",
+        "debitAccount": "Debit Account (Dr.)",
+        "debitAccountCode": "Debit Account Code",
+        "debitAccountCodePlaceholder": "e.g. 1130",
+        "debitAccountName": "Debit Account Name",
+        "debitAccountNamePlaceholder": "e.g. Accounts Receivable",
+        "creditAccount": "Credit Account (Cr.)",
+        "creditAccountCode": "Credit Account Code",
+        "creditAccountCodePlaceholder": "e.g. 4100",
+        "creditAccountName": "Credit Account Name",
+        "creditAccountNamePlaceholder": "e.g. Service Revenue",
+        "saveMapping": "Save Mapping",
+        "mappingSaved": "Account mapping saved successfully.",
+        "emptyMappings": "No account mappings configured yet (items will become dead upon journal export).",
+        "invalidForm": "Please provide transaction kind, codes, and names for both debit and credit accounts.",
+        "updatedAt": "Last Updated",
+        "updatedBy": "Updated By"
       },
       "kind": "Kind",
       "document": "Document",

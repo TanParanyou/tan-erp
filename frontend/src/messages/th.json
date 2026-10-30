@@ -4466,6 +4466,7 @@
       "CREDIT_OVERRIDE_SELF_APPROVAL": "ผู้ขออนุมัติขยายวงเงินเครดิตไม่สามารถอนุมัติคำขอของตนเองได้ (ต้องใช้ Maker-Checker)",
       "CREDIT_OVERRIDE_INVALID_STATE": "สถานะของคำขอขยายวงเงินเครดิตไม่อนุญาตให้ดำเนินการนี้",
       "CREDIT_OVERRIDE_FIELD_INVALID": "ข้อมูลคำขอขยายวงเงินเครดิตไม่ถูกต้อง ยอดวงเงินต้องมากกว่า 0 และระบุเหตุผล",
+      "ACCOUNT_MAPPING_FIELD_INVALID": "ข้อมูลการตั้งค่าผังบัญชีไม่ถูกต้องหรือไม่ครบถ้วน",
       "OUTBOX_INVALID_STATE": "สถานะรายการส่งบัญชีไม่อนุญาตให้ทำรายการนี้",
       "OUTBOX_CONFIRMATION_CONFLICT": "รายการนี้ยืนยันแล้วด้วยข้อมูลอื่น",
       "OUTBOX_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง"
@@ -4627,6 +4628,11 @@
       "notConfigured": "ยังไม่ได้เชื่อมต่อระบบบัญชีจริง ข้อมูลจะค้างในคิวและส่งซ้ำตามกำหนด ไม่ถือว่าบันทึกบัญชีแล้วจนกว่าระบบบัญชียืนยัน",
       "dispatch": "ส่งรายการที่ครบกำหนด",
       "dispatched": "ประมวลผล {processed} สำเร็จ {sent} ล้มเหลว {failed} หยุดส่ง {dead}",
+      "exportJournal": "ส่งออกสมุดรายวัน CSV",
+      "journalExported": "ส่งออกสมุดรายวันชุด {batchRef} สำเร็จ {exported} รายการ, ขาดผังบัญชี {dead} รายการ",
+      "lastExportTitle": "ผลการส่งออกสมุดรายวันล่าสุด",
+      "lastExportSubtitle": "ชุด {batchRef} (ส่งออก {exported} รายการ, ขาดผังบัญชี {dead} รายการ)",
+      "downloadCsv": "ดาวน์โหลดไฟล์ CSV ({batchRef})",
       "requeue": "ส่งใหม่",
       "requeued": "ส่งกลับเข้าคิวแล้ว",
       "loadError": "โหลดข้อมูลไม่สำเร็จ",
@@ -4649,6 +4655,7 @@
       "statuses": {
         "pending": "รอส่ง",
         "sent": "ส่งแล้ว",
+        "exported": "ส่งออกแล้ว",
         "failed": "ล้มเหลว (รอลองใหม่)",
         "dead": "หยุดส่ง"
       },
@@ -4664,6 +4671,28 @@
         "billing-note": {
           "approved": "อนุมัติใบลดหนี้/ใบเพิ่มหนี้"
         }
+      },
+      "coa": {
+        "title": "การตั้งค่าผังบัญชีเชื่อมโยง (Chart of Accounts Mapping)",
+        "subtitle": "กำหนดรหัสบัญชีเดบิตและเครดิตสำหรับแต่ละประเภทธุรกรรมเพื่อใช้ในการส่งออกสมุดรายวัน",
+        "kind": "ประเภทธุรกรรม",
+        "selectKindPlaceholder": "เลือกประเภทธุรกรรม",
+        "debitAccount": "บัญชีเดบิต (Dr.)",
+        "debitAccountCode": "รหัสบัญชีเดบิต",
+        "debitAccountCodePlaceholder": "เช่น 1130",
+        "debitAccountName": "ชื่อบัญชีเดบิต",
+        "debitAccountNamePlaceholder": "เช่น ลูกหนี้การค้า",
+        "creditAccount": "บัญชีเครดิต (Cr.)",
+        "creditAccountCode": "รหัสบัญชีเครดิต",
+        "creditAccountCodePlaceholder": "เช่น 4100",
+        "creditAccountName": "ชื่อบัญชีเครดิต",
+        "creditAccountNamePlaceholder": "เช่น รายได้ค่าบริการ",
+        "saveMapping": "บันทึกผังบัญชี",
+        "mappingSaved": "บันทึกการตั้งค่าผังบัญชีเรียบร้อยแล้ว",
+        "emptyMappings": "ยังไม่มีการตั้งค่าผังบัญชี (หากส่งออกสมุดรายวัน รายการจะเปลี่ยนเป็นสถานะ dead)",
+        "invalidForm": "กรุณาระบุประเภทธุรกรรม รหัส และชื่อบัญชีเดบิต/เครดิตให้ครบถ้วน",
+        "updatedAt": "แก้ไขล่าสุด",
+        "updatedBy": "ผู้แก้ไข"
       },
       "kind": "ประเภท",
       "document": "เอกสาร",

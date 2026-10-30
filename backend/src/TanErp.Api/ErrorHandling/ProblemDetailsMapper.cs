@@ -296,6 +296,7 @@ public static class ProblemDetailsMapper
         "OUTBOX_INVALID_STATE" => StatusCodes.Status409Conflict,
         "OUTBOX_CONFIRMATION_CONFLICT" => StatusCodes.Status409Conflict,
         "OUTBOX_FIELD_INVALID" => StatusCodes.Status422UnprocessableEntity,
+        "ACCOUNT_MAPPING_FIELD_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "PRICING_TEMPLATE_INVALID" => StatusCodes.Status422UnprocessableEntity,
         "PRICING_TEMPLATE_CODE_EXISTS" => StatusCodes.Status409Conflict,
         "PRICING_TEMPLATE_DRAFT_EXISTS" => StatusCodes.Status409Conflict,

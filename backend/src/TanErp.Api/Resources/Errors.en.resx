@@ -1089,6 +1089,8 @@
   <data name="OUTBOX_CONFIRMATION_CONFLICT_DETAIL" xml:space="preserve"><value>The message was already confirmed with a different reference or amount.</value></data>
   <data name="OUTBOX_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Field</value></data>
   <data name="OUTBOX_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A value is invalid: an external reference and a non-negative amount are required.</value></data>
+  <data name="ACCOUNT_MAPPING_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Account Mapping</value></data>
+  <data name="ACCOUNT_MAPPING_FIELD_INVALID_DETAIL" xml:space="preserve"><value>All account codes (1-32 characters) and account names (1-200 characters) for both debit and credit must be specified.</value></data>
   <data name="PRICING_TEMPLATE_INVALID_TITLE" xml:space="preserve"><value>Invalid Pricing Template</value></data>
   <data name="PRICING_TEMPLATE_INVALID_DETAIL" xml:space="preserve"><value>The pricing template is invalid: check rates, factors, range rates and rounding.</value></data>
   <data name="PRICING_TEMPLATE_CODE_EXISTS_TITLE" xml:space="preserve"><value>Template Code Exists</value></data>

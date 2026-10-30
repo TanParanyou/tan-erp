@@ -86,10 +86,11 @@ public static class OutboxStatus
 {
     public const string Pending = "pending";
     public const string Sent = "sent";
+    public const string Exported = "exported";
     public const string Failed = "failed";
     public const string Dead = "dead";
 
-    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { Pending, Sent, Failed, Dead };
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { Pending, Sent, Exported, Failed, Dead };
 }
 
 public static class OutboxKind

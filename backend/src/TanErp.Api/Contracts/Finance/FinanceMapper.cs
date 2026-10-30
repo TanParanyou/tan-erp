@@ -49,4 +49,16 @@ internal static class FinanceMapper
     public static ArAgingReportResponse To(ArAgingReportProjection x) => new(
         x.AsOfDate, x.TotalCurrent, x.TotalBucket1To30, x.TotalBucket31To60, x.TotalBucket61To90, x.TotalBucketOver90, x.GrandTotalOutstanding,
         x.Customers.Select(To).ToList());
+
+    // Wave D G-17 Journal Export & COA Mapping
+    public static AccountMappingResponse To(AccountMappingProjection x) => new(
+        x.Id, x.Kind, x.DebitAccountCode, x.DebitAccountName, x.CreditAccountCode, x.CreditAccountName,
+        To(x.UpdatedBy), x.UpdatedAtUtc, x.RowVersion);
+
+    public static JournalExportLineResponse To(JournalExportLineProjection x) => new(
+        x.BatchRef, x.MessageId, x.DedupeKey, x.Kind, x.ResourceNumber, x.DebitAccountCode, x.DebitAccountName,
+        x.CreditAccountCode, x.CreditAccountName, x.Amount, x.Currency, x.CreatedAtUtc);
+
+    public static JournalExportResultResponse To(JournalExportResult x) => new(
+        x.BatchRef, x.ExportedCount, x.DeadCount, x.Lines.Select(To).ToList(), x.CsvContent);
 }

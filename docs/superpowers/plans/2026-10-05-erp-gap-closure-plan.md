@@ -59,7 +59,7 @@
 | G-14 | MRP Safety Stock / MOQ / Item Lead Time / Calendar / Unit | C | CP-13, G-12, G-13 | Planner + Procurement | [แผน G-14](2026-10-30-g14-mrp-completion.md) — Implemented 2026-10-30 (Unit 683/683 + Integration 10/10 + Vitest 11/17 passed; [Verification](../../05-engineering/mrp-verification.md)) |
 | G-15 | Thai Tax: VAT, WHT, Retention, Tax Invoice, Credit Note | D | CP-15, G-04 | Finance/Accounting | [แผน G-15](2026-10-30-g15-thai-tax.md) — Implemented 2026-10-30 (Unit 687/687 + Integration 6/6 + Vitest 14/14 passed; [Verification](../../05-engineering/finance-verification.md)) |
 | G-16 | Credit Exposure + AR Aging gate | D | CP-15, G-15 | Finance | [แผน G-16](2026-10-30-g16-credit-exposure-ar-aging.md) — Implemented 2026-10-30 (Unit 700/700 + Integration 7/7 + Vitest 16/16 passed; [Verification](../../05-engineering/finance-verification.md)) |
-| G-17 | Accounting Connector จริง (+ Journal Export ชั่วคราว) | D | CP-15, G-15 | Finance + Security | — |
+| G-17 | Accounting Connector จริง (+ Journal Export ชั่วคราว) | D | CP-15, G-15 | Finance + Security | [แผน G-17](2026-10-30-g17-accounting-connector-journal-export.md) — Implemented 2026-10-30 (Unit 702/702 + Integration 8/8 + Vitest 17/17 passed; [Verification](../../05-engineering/finance-verification.md)) |
 | G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | — |
 | G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | — |
 | G-20 | Labor Timesheet | C | Identity, CP-09 | PM + Production + Finance | [แผน G-20 + G-10](2026-10-29-g20-g10-timesheet-project-wbs-cost.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/project-handover-verification.md)) |
@@ -259,12 +259,12 @@
 
 ### G-17 — Accounting Connector จริง
 
-**แตะ:** `backend/src/TanErp.Application/Finance/IAccountingConnector.cs`, `backend/src/TanErp.Infrastructure/Persistence/Finance/UnconfiguredAccountingConnector.cs`
+**แตะ:** `backend/src/TanErp.Domain/Finance/AccountMapping.cs`, `backend/src/TanErp.Infrastructure/Persistence/Finance/FinanceStore.cs`, `FinanceSyncController.cs`, `frontend/src/features/finance/components/finance-sync-page.tsx`
 
-- [ ] **Blocked จนกว่า Finance เลือกระบบบัญชี** — ระหว่างนี้ทำ `JournalExportConnector`: สร้างไฟล์ CSV/Excel สมุดรายวันจาก outbox (สถานะ `exported` แยกจาก `posted`) ให้นักบัญชีนำเข้าเอง
-- [ ] Chart-of-accounts mapping table (document type → account) แก้ได้โดย Finance
-- [ ] Connector จริง: implement `IAccountingConnector` ใช้ `DedupeKey` เป็น idempotency key ของปลายทาง; secrets ผ่าน configuration ไม่อยู่ใน repo
-- [ ] Tests: export ซ้ำไม่ซ้ำรายการ, mapping ขาด → dead พร้อมเหตุผล
+- [x] **Blocked จนกว่า Finance เลือกระบบบัญชี** — ระหว่างนี้ทำ `JournalExportConnector` (`POST /api/v1/finance/outbox/export-journal`): สร้างไฟล์ CSV สมุดรายวันจาก outbox (สถานะ `exported` แยกจาก `posted`) ให้นักบัญชีนำเข้าเอง
+- [x] Chart-of-accounts mapping table (`eventType` → `debitAccountCode` / `creditAccountCode`) แก้ได้โดย Finance (`GET/PUT /api/v1/finance/account-mappings`)
+- [x] Connector จริง: คงพอร์ต `IAccountingConnector` ใช้ `DedupeKey` เป็น idempotency key ของปลายทาง; secrets ผ่าน configuration ไม่อยู่ใน repo
+- [x] Tests: export ซ้ำไม่ซ้ำรายการ (`ExportedCount == 0`), mapping ขาด → `dead` พร้อมเหตุผล `ACCOUNT_MAPPING_MISSING` (ผล: [Finance Verification](../../05-engineering/finance-verification.md))
 
 **Validation Question:** ระบบบัญชีปลายทาง (Express, FlowAccount, PEAK, SAP B1, อื่น ๆ)
 

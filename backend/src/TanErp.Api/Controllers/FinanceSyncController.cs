@@ -74,4 +74,43 @@ public class FinanceSyncController : FinanceControllerBase
         var result = await _handler.ReconcileAsync(caller, ct);
         return result.IsFailure ? Problem(result.Error.Code) : Ok(FinanceMapper.To(result.Value!));
     }
+
+    [HttpGet("account-mappings")]
+    [ProducesResponseType<AccountMappingListResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListAccountMappings(CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListAccountMappingsAsync(caller, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(new AccountMappingListResponse(result.Value!.Select(FinanceMapper.To).ToList()));
+    }
+
+    [HttpPut("account-mappings")]
+    [ProducesResponseType<AccountMappingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpsertAccountMapping([FromBody] AccountMappingRequest request, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var input = new AccountMappingInput(
+            request.Kind ?? string.Empty,
+            request.DebitAccountCode ?? string.Empty,
+            request.DebitAccountName ?? string.Empty,
+            request.CreditAccountCode ?? string.Empty,
+            request.CreditAccountName ?? string.Empty);
+        var result = await _handler.UpsertAccountMappingAsync(caller, input, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(FinanceMapper.To(result.Value!));
+    }
+
+    [HttpPost("outbox/export-journal")]
+    [ProducesResponseType<JournalExportResultResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ExportJournal([FromBody] JournalExportRequest? request, [FromQuery] int? batchSize, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var effectiveBatch = request?.BatchSize ?? batchSize;
+        var result = await _handler.ExportJournalAsync(caller, effectiveBatch, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(FinanceMapper.To(result.Value!));
+    }
 }

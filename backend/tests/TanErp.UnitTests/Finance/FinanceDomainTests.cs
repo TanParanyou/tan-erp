@@ -397,4 +397,78 @@ public class FinanceDomainTests
         // 5. Expired override falls back to customer limit
         Assert.Equal(200_000m, ArAgingCalculator.ComputeEffectiveCeiling(limit, new[] { approved }, today.AddDays(6)));
     }
+
+    // ===== Wave D G-17 Journal Export & Account Mapping Tests =========================================
+
+    [Fact]
+    public void AccountMapping_ValidatesFields_AndUpdatesCorrectly()
+    {
+        // 1. Invalid kind rejected
+        Assert.Equal("ACCOUNT_MAPPING_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new AccountMapping(Guid.NewGuid(), Org, "invalid.kind", "1130", "AR", "4100", "Sales", User, Now)).Code);
+
+        // 2. Empty code/name rejected
+        Assert.Equal("ACCOUNT_MAPPING_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new AccountMapping(Guid.NewGuid(), Org, OutboxKind.BillingIssued, "", "AR", "4100", "Sales", User, Now)).Code);
+        Assert.Equal("ACCOUNT_MAPPING_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new AccountMapping(Guid.NewGuid(), Org, OutboxKind.BillingIssued, "1130", "", "4100", "Sales", User, Now)).Code);
+        Assert.Equal("ACCOUNT_MAPPING_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new AccountMapping(Guid.NewGuid(), Org, OutboxKind.BillingIssued, "1130", "AR", "", "Sales", User, Now)).Code);
+        Assert.Equal("ACCOUNT_MAPPING_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new AccountMapping(Guid.NewGuid(), Org, OutboxKind.BillingIssued, "1130", "AR", "4100", "", User, Now)).Code);
+
+        // 3. Valid creation
+        var mapping = new AccountMapping(
+            Guid.NewGuid(), Org, OutboxKind.BillingIssued, "1130", "Accounts Receivable", "4100", "Service Revenue", User, Now);
+        Assert.Equal(OutboxKind.BillingIssued, mapping.Kind);
+        Assert.Equal("1130", mapping.DebitAccountCode);
+        Assert.Equal("Accounts Receivable", mapping.DebitAccountName);
+        Assert.Equal("4100", mapping.CreditAccountCode);
+        Assert.Equal("Service Revenue", mapping.CreditAccountName);
+
+        // 4. Update
+        var updatedActor = Guid.NewGuid();
+        var updateTime = Now.AddHours(2);
+        mapping.Update("1131", "AR Branch", "4101", "Revenue Branch", updatedActor, updateTime);
+        Assert.Equal("1131", mapping.DebitAccountCode);
+        Assert.Equal("AR Branch", mapping.DebitAccountName);
+        Assert.Equal("4101", mapping.CreditAccountCode);
+        Assert.Equal("Revenue Branch", mapping.CreditAccountName);
+        Assert.Equal(updatedActor, mapping.UpdatedByUserId);
+        Assert.Equal(updateTime.ToUniversalTime(), mapping.UpdatedAtUtc);
+    }
+
+    [Fact]
+    public void AccountingOutboxMessage_MarkExported_AndMarkDeadMissingMapping()
+    {
+        var message = Message();
+        Assert.True(message.IsDue(Now));
+
+        // 1. MarkExported transitions status to exported, externalRef = batchRef, not due
+        message.MarkExported("JRN-20261030-ABC123", Now);
+        Assert.Equal(OutboxStatus.Exported, message.Status);
+        Assert.Equal("JRN-20261030-ABC123", message.ExternalRef);
+        Assert.Equal(1, message.Attempts);
+        Assert.False(message.IsDue(Now)); // Not due, so won't be exported again!
+        Assert.False(message.IsDue(Now.AddDays(30)));
+
+        // 2. Confirmation of an exported message updates status to sent
+        message.Confirm("ACC-EXT-01", 1000m, Now.AddMinutes(10));
+        Assert.Equal(OutboxStatus.Sent, message.Status);
+        Assert.Equal("ACC-EXT-01", message.ExternalRef);
+
+        // 3. Missing mapping marks as dead immediately
+        var msg2 = Message();
+        msg2.MarkDeadMissingMapping(OutboxKind.PaymentRecorded, Now);
+        Assert.Equal(OutboxStatus.Dead, msg2.Status);
+        Assert.Equal("ACCOUNT_MAPPING_MISSING:payment.recorded", msg2.LastError);
+        Assert.Equal(AccountingOutboxMessage.MaxAttempts, msg2.Attempts);
+        Assert.False(msg2.IsDue(Now));
+
+        // 4. Can be requeued once mapping is configured
+        msg2.Requeue(Now.AddMinutes(5));
+        Assert.Equal(OutboxStatus.Pending, msg2.Status);
+        Assert.Equal(0, msg2.Attempts);
+        Assert.True(msg2.IsDue(Now.AddMinutes(5)));
+    }
 }

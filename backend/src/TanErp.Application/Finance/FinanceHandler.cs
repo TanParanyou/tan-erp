@@ -241,4 +241,38 @@ public class FinanceHandler
 
         return await _store.ApproveCreditOverrideAsync(access.Value!, overrideId, expectedVersion, caller.TraceId, ct);
     }
+
+    // Wave D G-17 Journal Export & COA Mapping
+    public async Task<Result<IReadOnlyList<AccountMappingProjection>>> ListAccountMappingsAsync(FinanceCaller caller, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "finance-sync.read", ct);
+        if (access.IsFailure) return Result<IReadOnlyList<AccountMappingProjection>>.Failure(access.Error);
+        return Result<IReadOnlyList<AccountMappingProjection>>.Success(await _store.ListAccountMappingsAsync(access.Value!.OrganizationId, ct));
+    }
+
+    public async Task<Result<AccountMappingProjection>> UpsertAccountMappingAsync(FinanceCaller caller, AccountMappingInput? input, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "finance-sync.run", ct);
+        if (access.IsFailure) return Result<AccountMappingProjection>.Failure(access.Error);
+        if (input is null) return Fail<AccountMappingProjection>("ACCOUNT_MAPPING_FIELD_INVALID", "Input is required.");
+        if (string.IsNullOrWhiteSpace(input.Kind) || !OutboxKind.All.Contains(input.Kind.Trim()))
+            return Fail<AccountMappingProjection>("ACCOUNT_MAPPING_FIELD_INVALID", "Invalid outbox kind.");
+        if (string.IsNullOrWhiteSpace(input.DebitAccountCode) || input.DebitAccountCode.Trim().Length > 32 ||
+            string.IsNullOrWhiteSpace(input.DebitAccountName) || input.DebitAccountName.Trim().Length > 200 ||
+            string.IsNullOrWhiteSpace(input.CreditAccountCode) || input.CreditAccountCode.Trim().Length > 32 ||
+            string.IsNullOrWhiteSpace(input.CreditAccountName) || input.CreditAccountName.Trim().Length > 200)
+        {
+            return Fail<AccountMappingProjection>("ACCOUNT_MAPPING_FIELD_INVALID", "All account codes (1-32 chars) and account names (1-200 chars) are required.");
+        }
+
+        return await _store.UpsertAccountMappingAsync(access.Value!, input, caller.TraceId, ct);
+    }
+
+    public async Task<Result<JournalExportResult>> ExportJournalAsync(FinanceCaller caller, int? batchSize, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "finance-sync.run", ct);
+        if (access.IsFailure) return Result<JournalExportResult>.Failure(access.Error);
+        var size = batchSize is null or <= 0 ? 50 : Math.Clamp(batchSize.Value, 1, 100);
+        return await _store.ExportJournalAsync(access.Value!, size, caller.TraceId, ct);
+    }
 }

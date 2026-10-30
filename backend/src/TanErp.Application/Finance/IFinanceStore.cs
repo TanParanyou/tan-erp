@@ -29,4 +29,9 @@ public interface IFinanceStore
     Task<IReadOnlyList<CreditOverrideProjection>> ListCreditOverridesAsync(Guid organizationId, CreditOverrideListQuery query, CancellationToken ct = default);
     Task<Result<CreditOverrideProjection>> CreateCreditOverrideAsync(RequestAccessContext access, CreditOverrideInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
     Task<Result<CreditOverrideProjection>> ApproveCreditOverrideAsync(RequestAccessContext access, Guid overrideId, Guid expectedVersion, string traceId, CancellationToken ct = default);
+
+    // Wave D G-17 Journal Export & COA Mapping
+    Task<IReadOnlyList<AccountMappingProjection>> ListAccountMappingsAsync(Guid organizationId, CancellationToken ct = default);
+    Task<Result<AccountMappingProjection>> UpsertAccountMappingAsync(RequestAccessContext access, AccountMappingInput input, string traceId, CancellationToken ct = default);
+    Task<Result<JournalExportResult>> ExportJournalAsync(RequestAccessContext access, int batchSize, string traceId, CancellationToken ct = default);
 }

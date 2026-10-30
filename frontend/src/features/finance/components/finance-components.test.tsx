@@ -255,6 +255,8 @@ function renderArAging(granted: string[] = ALL) {
 
 const dispatch = vi.fn();
 const requeue = vi.fn();
+const exportJournal = vi.fn();
+const upsertMapping = vi.fn();
 
 function renderSync(granted: string[] = ALL) {
   permissions.granted = granted;
@@ -278,9 +280,28 @@ function renderSync(granted: string[] = ALL) {
       rows: [{ issue: "amount_mismatch", kind: "payment.recorded", resourceNumber: "PAY-1", erpAmount: 10000, externalAmount: 9000 }],
     },
   } as unknown as ReturnType<typeof financeQueries.useReconciliation>);
+  vi.spyOn(financeQueries, "useAccountMappings").mockReturnValue({
+    isLoading: false,
+    isError: false,
+    data: {
+      items: [
+        {
+          id: "map-1",
+          kind: "billing.issued",
+          debitAccountCode: "1130",
+          debitAccountName: "ลูกหนี้การค้า",
+          creditAccountCode: "4100",
+          creditAccountName: "รายได้ค่าบริการ",
+          updatedAtUtc: "2026-10-30T10:00:00Z",
+        },
+      ],
+    },
+  } as unknown as ReturnType<typeof financeQueries.useAccountMappings>);
   vi.spyOn(financeQueries, "useSyncMutations").mockReturnValue({
     dispatch: { mutateAsync: dispatch, isPending: false },
     requeue: { mutateAsync: requeue, isPending: false },
+    exportJournal: { mutateAsync: exportJournal, isPending: false },
+    upsertMapping: { mutateAsync: upsertMapping, isPending: false },
   } as unknown as ReturnType<typeof financeQueries.useSyncMutations>);
   render(
     <QueryClientProvider client={client}>
@@ -297,6 +318,7 @@ describe("finance status helpers and translations", () => {
     expect(billingStatusVariant("voided")).toBe("danger");
     expect(outboxStatusVariant("dead")).toBe("danger");
     expect(outboxStatusVariant("sent")).toBe("success");
+    expect(outboxStatusVariant("exported")).toBe("info");
     expect(retentionStatusVariant("held")).toBe("warning");
     expect(retentionStatusVariant("released")).toBe("success");
     expect(billingNoteStatusVariant("pending_approval")).toBe("warning");
@@ -313,6 +335,7 @@ describe("finance status helpers and translations", () => {
     expect(financeErrorCode("CREDIT_OVERRIDE_SELF_APPROVAL")).toBe("CREDIT_OVERRIDE_SELF_APPROVAL");
     expect(financeErrorCode("CREDIT_OVERRIDE_INVALID_STATE")).toBe("CREDIT_OVERRIDE_INVALID_STATE");
     expect(financeErrorCode("CREDIT_OVERRIDE_FIELD_INVALID")).toBe("CREDIT_OVERRIDE_FIELD_INVALID");
+    expect(financeErrorCode("ACCOUNT_MAPPING_FIELD_INVALID")).toBe("ACCOUNT_MAPPING_FIELD_INVALID");
     expect(financeErrorCode("NOPE")).toBeNull();
   });
 
@@ -342,6 +365,7 @@ describe("finance status helpers and translations", () => {
         "CREDIT_OVERRIDE_SELF_APPROVAL",
         "CREDIT_OVERRIDE_INVALID_STATE",
         "CREDIT_OVERRIDE_FIELD_INVALID",
+        "ACCOUNT_MAPPING_FIELD_INVALID",
       ] as const) {
         expect(messages.finance.errors[code]).toBeTruthy();
       }
@@ -352,6 +376,8 @@ describe("finance status helpers and translations", () => {
       expect(messages.finance.arAging.title).toBeTruthy();
       expect(messages.finance.arAging.totalCurrent).toBeTruthy();
       expect(messages.finance.arAging.overridesTitle).toBeTruthy();
+      expect(messages.finance.sync.exportJournal).toBeTruthy();
+      expect(messages.finance.sync.coa.title).toBeTruthy();
       expect(messages.shell.financeSubgroup).toBeTruthy();
     }
   });
@@ -612,9 +638,76 @@ describe("FinanceSyncPage", () => {
     await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(1));
   });
 
+  it("displays existing COA mappings, submits a new COA mapping, and exports journal CSV", async () => {
+    upsertMapping.mockResolvedValue({ id: "map-new", kind: "payment.recorded" });
+    exportJournal.mockResolvedValue({
+      batchRef: "BAT-2026-0001",
+      exportedCount: 1,
+      deadCount: 0,
+      lines: [
+        {
+          messageId: "m-1",
+          resourceNumber: "BIL-1",
+          kind: "billing.issued",
+          debitAccountCode: "1130",
+          debitAccountName: "ลูกหนี้การค้า",
+          creditAccountCode: "4100",
+          creditAccountName: "รายได้ค่าบริการ",
+          amount: 30000,
+          currency: "THB",
+        },
+      ],
+      csvContent: "BatchRef,MessageId,Kind\nBAT-2026-0001,m-1,billing.issued",
+    });
+
+    renderSync();
+
+    // Verify existing COA mapping is displayed
+    expect(screen.getByText("1130")).toBeDefined();
+    expect(screen.getByText("4100")).toBeDefined();
+
+    // Fill COA upsert form
+    fireEvent.change(screen.getByRole("combobox", { name: new RegExp(`^${s.coa.kind}`) }), {
+      target: { value: "payment.recorded" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(s.coa.debitAccountCodePlaceholder), {
+      target: { value: "1110" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(s.coa.debitAccountNamePlaceholder), {
+      target: { value: "เงินฝากธนาคาร" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(s.coa.creditAccountCodePlaceholder), {
+      target: { value: "1130" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(s.coa.creditAccountNamePlaceholder), {
+      target: { value: "ลูกหนี้การค้า" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: s.coa.saveMapping }));
+
+    await waitFor(() => expect(upsertMapping).toHaveBeenCalledWith({
+      kind: "payment.recorded",
+      debitAccountCode: "1110",
+      debitAccountName: "เงินฝากธนาคาร",
+      creditAccountCode: "1130",
+      creditAccountName: "ลูกหนี้การค้า",
+    }));
+
+    // Trigger journal export
+    fireEvent.click(screen.getByRole("button", { name: s.exportJournal }));
+
+    await waitFor(() => expect(exportJournal).toHaveBeenCalledTimes(1));
+
+    // Verify export result card shows batch ref and lines
+    expect(screen.getByText(s.lastExportTitle)).toBeDefined();
+    expect(screen.getAllByText(/BAT-2026-0001/).length).toBeGreaterThanOrEqual(1);
+  });
+
   it("hides dispatch and requeue from read-only users", () => {
     renderSync(["finance-sync.read"]);
     expect(screen.queryByRole("button", { name: s.dispatch })).toBeNull();
+    expect(screen.queryByRole("button", { name: s.exportJournal })).toBeNull();
     expect(screen.queryByRole("button", { name: s.requeue })).toBeNull();
+    expect(screen.queryByRole("button", { name: s.coa.saveMapping })).toBeNull();
   });
 });

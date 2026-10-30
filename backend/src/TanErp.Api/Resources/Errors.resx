@@ -1251,6 +1251,8 @@
   <data name="OUTBOX_CONFIRMATION_CONFLICT_DETAIL" xml:space="preserve"><value>รายการนี้ยืนยันแล้วด้วยข้อมูลอื่น</value></data>
   <data name="OUTBOX_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
   <data name="OUTBOX_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
+  <data name="ACCOUNT_MAPPING_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลผังบัญชีไม่ถูกต้อง</value></data>
+  <data name="ACCOUNT_MAPPING_FIELD_INVALID_DETAIL" xml:space="preserve"><value>กรุณาระบุประเภทรายการ รหัสบัญชี (1-32 ตัวอักษร) และชื่อบัญชี (1-200 ตัวอักษร) ทั้งเดบิตและเครดิตให้ครบถ้วนถูกต้อง</value></data>
   <data name="PRICING_TEMPLATE_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลเทมเพลตราคาไม่ถูกต้อง</value></data>
   <data name="PRICING_TEMPLATE_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลเทมเพลตราคาไม่ถูกต้อง</value></data>
   <data name="PRICING_TEMPLATE_CODE_EXISTS_TITLE" xml:space="preserve"><value>รหัสเทมเพลตนี้มีอยู่แล้ว</value></data>

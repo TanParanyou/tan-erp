@@ -198,3 +198,48 @@ public sealed record ArAgingReportResponse(
     decimal TotalBucketOver90,
     decimal GrandTotalOutstanding,
     IReadOnlyList<ArAgingCustomerBucketResponse> Customers);
+
+// Wave D G-17 Journal Export & COA Mapping
+public sealed record AccountMappingResponse(
+    Guid Id,
+    string Kind,
+    string DebitAccountCode,
+    string DebitAccountName,
+    string CreditAccountCode,
+    string CreditAccountName,
+    FinancePersonResponse UpdatedBy,
+    DateTimeOffset UpdatedAtUtc,
+    Guid RowVersion);
+
+public sealed record AccountMappingRequest(
+    string? Kind,
+    string? DebitAccountCode,
+    string? DebitAccountName,
+    string? CreditAccountCode,
+    string? CreditAccountName);
+
+public sealed record AccountMappingListResponse(IReadOnlyList<AccountMappingResponse> Items);
+
+public sealed record JournalExportLineResponse(
+    string BatchRef,
+    Guid MessageId,
+    string DedupeKey,
+    string Kind,
+    string ResourceNumber,
+    string DebitAccountCode,
+    string DebitAccountName,
+    string CreditAccountCode,
+    string CreditAccountName,
+    decimal Amount,
+    string Currency,
+    DateTimeOffset CreatedAtUtc);
+
+public sealed record JournalExportResultResponse(
+    string BatchRef,
+    int ExportedCount,
+    int DeadCount,
+    IReadOnlyList<JournalExportLineResponse> Lines,
+    string CsvContent);
+
+public sealed record JournalExportRequest(int? BatchSize);
+

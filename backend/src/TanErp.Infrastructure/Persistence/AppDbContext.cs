@@ -86,6 +86,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Finance.Payment> Payments => Set<TanErp.Domain.Finance.Payment>();
     public DbSet<TanErp.Domain.Finance.AccountingOutboxMessage> AccountingOutbox => Set<TanErp.Domain.Finance.AccountingOutboxMessage>();
     public DbSet<TanErp.Domain.Finance.CreditLimitOverrideRequest> CreditLimitOverrides => Set<TanErp.Domain.Finance.CreditLimitOverrideRequest>();
+    public DbSet<TanErp.Domain.Finance.AccountMapping> AccountMappings => Set<TanErp.Domain.Finance.AccountMapping>();
     public DbSet<TanErp.Domain.Service.InstallationJob> InstallationJobs => Set<TanErp.Domain.Service.InstallationJob>();
     public DbSet<TanErp.Domain.Service.InstallationChecklistItem> InstallationChecklistItems => Set<TanErp.Domain.Service.InstallationChecklistItem>();
     public DbSet<TanErp.Domain.Service.InstallationDefect> InstallationDefects => Set<TanErp.Domain.Service.InstallationDefect>();

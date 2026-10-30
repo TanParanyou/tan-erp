@@ -18,9 +18,9 @@
 | Idempotency | สร้างใบแจ้งหนี้/บันทึกรับชำระ/ออกใบลดหนี้-เพิ่มหนี้ต้องมี `Idempotency-Key` (replay คืนผลเดิม, payload ต่าง → 409); void/reverse/release-retention/approve-note ใช้ `If-Match` |
 | Accounting outbox | ทุกเหตุการณ์ (`billing.issued\|billing.voided\|payment.recorded\|payment.reversed\|billing-note.approved\|supplier-invoice.posted\|supplier-invoice.voided`) เข้าคิวใน **Transaction เดียวกับธุรกรรมธุรกิจ** พร้อม snapshot ตรึง และ `dedupeKey` unique (`kind:id`) กันซ้ำ |
 | การส่ง/ลองใหม่ | `POST /finance/outbox/dispatch` ดึงรายการที่ครบกำหนด (`FOR UPDATE SKIP LOCKED` จึงไม่ซ้ำเมื่อรันพร้อมกัน) ส่งผ่าน `IAccountingConnector`; ล้มเหลว → `failed` ลองใหม่ด้วย backoff 2, 4, 8, 16 นาที และ `dead` เมื่อครบ 5 ครั้ง; เก็บ error แบบสั้น (≤500) และกรณี exception เก็บเฉพาะชื่อชนิด (กันข้อมูลลูกค้ารั่ว); `requeue` นำ failed/dead กลับเข้าคิวหลังแก้สาเหตุ |
-| Connector | **ยังไม่มีระบบบัญชีจริง** — ค่าเริ่มต้น `UnconfiguredAccountingConnector` ไม่เคยรายงานสำเร็จ (`CONNECTOR_NOT_CONFIGURED`) ข้อมูลจึงค้างในคิวและไม่ถูกอ้างว่าบันทึกบัญชีแล้ว; connector จริงต้อง idempotent ด้วย `dedupeKey` |
+| Connector & Journal Export (`G-17`) | ค่าเริ่มต้น `UnconfiguredAccountingConnector` ไม่เคยรายงานสำเร็จ (`CONNECTOR_NOT_CONFIGURED`); ระหว่างรอเลือกระบบบัญชีจริง รองรับการตั้งค่าผังบัญชี `AccountMapping` (`GET/PUT /api/v1/finance/account-mappings`: ผูก `OutboxKind` เข้ากับรหัสและชื่อบัญชีเดบิต/เครดิต) และการส่งออกสมุดรายวัน CSV (`POST /api/v1/finance/outbox/export-journal`) ซึ่งเปลี่ยนสถานะรายการเป็น `exported` (แยกจาก `sent` และไม่ถูกส่งออกซ้ำ) หรือหากขาดการผูกผังบัญชีจะเปลี่ยนสถานะเป็น `dead` พร้อม `LastError = "ACCOUNT_MAPPING_MISSING:<kind>"` |
 | Callback ยืนยัน | `POST /finance/outbox/{id}/confirm {externalRef, externalAmount}` ซ้ำด้วยข้อมูลเดิม → 200 ไม่เปลี่ยน/ไม่ audit ซ้ำ; ข้อมูลต่าง → `OUTBOX_CONFIRMATION_CONFLICT` 409; ยืนยันแล้วถือว่า sent |
-| การกระทบยอด | `GET /finance/reconciliation`: ยอดวางบิล/รับชำระใน ERP เทียบกับยอดที่บัญชียืนยัน; รายการผิดปกติ `unsynced` (pending/failed/dead), `awaiting_confirmation` (ส่งแล้วยังไม่ยืนยัน), `amount_mismatch` (ยอดที่บัญชียืนยันต่างจากยอดที่ส่ง), `missing_message` (มีใบแจ้งหนี้/รับชำระที่ไม่มีรายการในคิว) |
+| การกระทบยอด | `GET /finance/reconciliation`: ยอดวางบิล/รับชำระใน ERP เทียบกับยอดที่บัญชียืนยัน; รายการผิดปกติ `unsynced` (pending/failed/dead), `awaiting_confirmation` (ส่งหรือ exported แล้วยังไม่ยืนยัน), `amount_mismatch` (ยอดที่บัญชียืนยันต่างจากยอดที่ส่ง), `missing_message` (มีใบแจ้งหนี้/รับชำระที่ไม่มีรายการในคิว) |
 | วงเงินเครดิต & อายุหนี้ลูกหนี้ (`G-16`) | `TotalExposure = OutstandingReceivables + UnbilledAcceptedAmount`; รายงานอายุหนี้ลูกหนี้ `GET /api/v1/finance/ar-aging` แบ่งเป็น 5 ช่วง (`Current <= 0`, `1–30`, `31–60`, `61–90`, `> 90` วันเกินกำหนด); เมื่อ `Customer.CreditLimit` มีค่าและภาระเครดิตหลังออกใบแจ้งหนี้เกินเพดาน (`max(CreditLimit, ApprovedOverrideCeiling)`) จะถูกบล็อกด้วย `409 CREDIT_LIMIT_EXCEEDED` จนกว่าจะขออนุมัติขยายเพดานเครดิต (`POST /api/v1/finance/credit-overrides`) และอนุมัติโดยผู้อื่น (`POST /api/v1/finance/credit-overrides/{id}/approve`, Maker ≠ Checker → `409 CREDIT_OVERRIDE_SELF_APPROVAL` + `IApprovalAuthority`) |
 | ไม่อยู่ในขอบเขต | e-Tax Invoice XML (ETDA — แยกเป็น G-15b หลังรู้ provider), อัตราแลกเปลี่ยนหลายสกุลเงิน |
 
@@ -39,8 +39,8 @@
 | รายงานอายุหนี้ & วงเงินเครดิต | `GET /api/v1/finance/ar-aging?asOfDate=&customerId=` · `GET /api/v1/customers/{customerId}/credit-exposure` | `billings.read` |
 | ขอ/อนุมัติขยายเพดานเครดิต | `GET /api/v1/finance/credit-overrides?customerId=&status=` (`billings.read`) · `POST /api/v1/finance/credit-overrides` + `Idempotency-Key` · `POST /api/v1/finance/credit-overrides/{id}/approve` + `If-Match` | `billings.manage` |
 | อ่าน | `GET /api/v1/billings[/{id}]?search=&status=&projectId=` · `GET /api/v1/projects/{id}/billing-summary` | `billings.read` |
-| คิวส่งบัญชี | `GET /api/v1/finance/outbox?status=&kind=` · `GET /api/v1/finance/reconciliation` | `finance-sync.read` |
-| ส่ง/ยืนยัน/ส่งใหม่ | `POST /api/v1/finance/outbox/dispatch?batchSize=` · `/{id}/confirm` · `/{id}/requeue` | `finance-sync.run` |
+| คิวส่งบัญชี & ผังบัญชี | `GET /api/v1/finance/outbox?status=&kind=` · `GET /api/v1/finance/reconciliation` · `GET /api/v1/finance/account-mappings` | `finance-sync.read` |
+| ส่ง/ส่งออกสมุดรายวัน/ตั้งค่าผังบัญชี | `POST /api/v1/finance/outbox/dispatch?batchSize=` · `POST /api/v1/finance/outbox/export-journal` · `PUT /api/v1/finance/account-mappings` · `POST /api/v1/finance/outbox/{id}/confirm` · `/{id}/requeue` | `finance-sync.run` |
 
 ## Errors
 

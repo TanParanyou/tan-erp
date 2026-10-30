@@ -9975,6 +9975,137 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/finance/account-mappings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AccountMappingListResponse"];
+                        "application/json": components["schemas"]["AccountMappingListResponse"];
+                        "text/json": components["schemas"]["AccountMappingListResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AccountMappingRequest"];
+                    "text/json": components["schemas"]["AccountMappingRequest"];
+                    "application/*+json": components["schemas"]["AccountMappingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AccountMappingResponse"];
+                        "application/json": components["schemas"]["AccountMappingResponse"];
+                        "text/json": components["schemas"]["AccountMappingResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/outbox/export-journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    batchSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["JournalExportRequest"];
+                    "text/json": components["schemas"]["JournalExportRequest"];
+                    "application/*+json": components["schemas"]["JournalExportRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["JournalExportResultResponse"];
+                        "application/json": components["schemas"]["JournalExportResultResponse"];
+                        "text/json": components["schemas"]["JournalExportResultResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/installations": {
         parameters: {
             query?: never;
@@ -27307,6 +27438,30 @@ export interface components {
             acceptedAtUtc?: string | null;
             evidence?: components["schemas"]["AcceptanceEvidenceResponse"];
         };
+        AccountMappingListResponse: {
+            items?: components["schemas"]["AccountMappingResponse"][] | null;
+        };
+        AccountMappingRequest: {
+            kind?: string | null;
+            debitAccountCode?: string | null;
+            debitAccountName?: string | null;
+            creditAccountCode?: string | null;
+            creditAccountName?: string | null;
+        };
+        AccountMappingResponse: {
+            /** Format: uuid */
+            id?: string;
+            kind?: string | null;
+            debitAccountCode?: string | null;
+            debitAccountName?: string | null;
+            creditAccountCode?: string | null;
+            creditAccountName?: string | null;
+            updatedBy?: components["schemas"]["FinancePersonResponse"];
+            /** Format: date-time */
+            updatedAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
         ActorSummaryResponse: {
             /** Format: uuid */
             id?: string;
@@ -30133,6 +30288,36 @@ export interface components {
             name?: string | null;
             nameEn?: string | null;
             isActive?: boolean;
+        };
+        JournalExportLineResponse: {
+            batchRef?: string | null;
+            /** Format: uuid */
+            messageId?: string;
+            dedupeKey?: string | null;
+            kind?: string | null;
+            resourceNumber?: string | null;
+            debitAccountCode?: string | null;
+            debitAccountName?: string | null;
+            creditAccountCode?: string | null;
+            creditAccountName?: string | null;
+            /** Format: double */
+            amount?: number;
+            currency?: string | null;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        JournalExportRequest: {
+            /** Format: int32 */
+            batchSize?: number | null;
+        };
+        JournalExportResultResponse: {
+            batchRef?: string | null;
+            /** Format: int32 */
+            exportedCount?: number;
+            /** Format: int32 */
+            deadCount?: number;
+            lines?: components["schemas"]["JournalExportLineResponse"][] | null;
+            csvContent?: string | null;
         };
         LaborRateResponse: {
             /** Format: uuid */

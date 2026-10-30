@@ -16,7 +16,7 @@ export function isPaymentMethod(value: string | null | undefined): value is Paym
   return PAYMENT_METHODS.some((method) => method === value);
 }
 
-export const OUTBOX_STATUSES = ["pending", "sent", "failed", "dead"] as const;
+export const OUTBOX_STATUSES = ["pending", "sent", "exported", "failed", "dead"] as const;
 export type OutboxStatusValue = (typeof OUTBOX_STATUSES)[number];
 export function isOutboxStatus(value: string | null | undefined): value is OutboxStatusValue {
   return OUTBOX_STATUSES.some((status) => status === value);
@@ -55,6 +55,8 @@ export function outboxStatusVariant(status: string | null | undefined): FinanceB
   switch (status) {
     case "sent":
       return "success";
+    case "exported":
+      return "info";
     case "pending":
       return "warning";
     case "failed":
@@ -124,6 +126,7 @@ const KNOWN_ERROR_CODES = [
   "CREDIT_OVERRIDE_SELF_APPROVAL",
   "CREDIT_OVERRIDE_INVALID_STATE",
   "CREDIT_OVERRIDE_FIELD_INVALID",
+  "ACCOUNT_MAPPING_FIELD_INVALID",
   "OUTBOX_INVALID_STATE",
   "OUTBOX_CONFIRMATION_CONFLICT",
   "OUTBOX_FIELD_INVALID",

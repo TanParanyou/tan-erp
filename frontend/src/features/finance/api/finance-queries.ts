@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import {
   apiClient,
+  type AccountMappingListResponse,
+  type AccountMappingRequest,
+  type AccountMappingResponse,
   type ArAgingReportResponse,
   type BillingListResponse,
   type BillingNoteRequest,
@@ -12,6 +15,7 @@ import {
   type CustomerCreditExposureResponse,
   type DispatchResultResponse,
   type FinanceReconciliationResponse,
+  type JournalExportResultResponse,
   type ListBillingsParams,
   type ListOutboxParams,
   type OutboxListResponse,
@@ -140,6 +144,15 @@ export function useReconciliation(): UseQueryResult<FinanceReconciliationRespons
   });
 }
 
+export function useAccountMappings(): UseQueryResult<AccountMappingListResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...financeKey(membershipId, locale), "sync", "account-mappings"],
+    enabled: Boolean(membershipId),
+    queryFn: async ({ signal }) => apiClient.listAccountMappings(await options(undefined, signal)),
+  });
+}
+
 export function useSyncMutations() {
   const { locale, membershipId, options } = useRequestContext();
   const queryClient = useQueryClient();
@@ -154,7 +167,15 @@ export function useSyncMutations() {
     mutationFn: async (input: { id: string }) => apiClient.requeueAccountingMessage(input.id, await options()),
     onSuccess: refresh,
   });
-  return { dispatch, requeue };
+  const exportJournal = useMutation<JournalExportResultResponse, Error, { batchSize?: number } | void>({
+    mutationFn: async (input) => apiClient.exportAccountingJournal(await options(), input ? input.batchSize : undefined),
+    onSuccess: refresh,
+  });
+  const upsertMapping = useMutation<AccountMappingResponse, Error, AccountMappingRequest>({
+    mutationFn: async (payload) => apiClient.upsertAccountMapping(payload, await options()),
+    onSuccess: refresh,
+  });
+  return { dispatch, requeue, exportJournal, upsertMapping };
 }
 
 export function useArAgingReport(params?: { asOfDate?: string; customerId?: string }): UseQueryResult<ArAgingReportResponse, Error> {

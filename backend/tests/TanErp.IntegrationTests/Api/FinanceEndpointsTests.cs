@@ -747,6 +747,102 @@ public class FinanceEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task JournalExportAndCoaMappingG17_ParksUnmappedAsDead_ExportsMappedOnce_AndNeverDuplicates()
+    {
+        // 1. Initial State: List COA mappings
+        var initialMappingsResp = await SendAsync(HttpMethod.Get, "/api/v1/finance/account-mappings");
+        var initialMappings = await Ok<AccountMappingListResponse>(initialMappingsResp);
+        Assert.DoesNotContain(initialMappings.Items, m => m.Kind == "billing.issued");
+
+        // Create a new project and issue billing
+        var projectId = await NewProjectAsync();
+        var billing = await CreateBillingAsync(projectId, 25_000m);
+        var billingMsg = Assert.Single((await OutboxAsync("pending")).Items, m => m.ResourceNumber == billing.Number);
+        Assert.Equal("billing.issued", billingMsg.Kind);
+        Assert.Equal("pending", billingMsg.Status);
+
+        // 2. Export without mapping: Expect message to be marked DEAD with ACCOUNT_MAPPING_MISSING
+        var exportWithoutMappingResp = await SendAsync(HttpMethod.Post, "/api/v1/finance/outbox/export-journal?batchSize=10");
+        var exportWithoutMapping = await Ok<JournalExportResultResponse>(exportWithoutMappingResp);
+        Assert.True(exportWithoutMapping.DeadCount >= 1);
+        Assert.DoesNotContain(exportWithoutMapping.Lines, l => l.MessageId == billingMsg.Id);
+
+        // Check that outbox message is now dead
+        var deadMsg = Assert.Single((await OutboxAsync("dead")).Items, m => m.Id == billingMsg.Id);
+        Assert.Equal("dead", deadMsg.Status);
+        Assert.Equal("ACCOUNT_MAPPING_MISSING:billing.issued", deadMsg.LastError);
+
+        // 3. Upsert COA Mapping
+        // 3.1 Invalid mapping (empty debit code) -> 422 ACCOUNT_MAPPING_FIELD_INVALID
+        var invalidReq = new AccountMappingRequest("billing.issued", "", "ลูกหนี้", "411101", "รายได้");
+        var invalidResp = await SendAsync(HttpMethod.Put, "/api/v1/finance/account-mappings", invalidReq);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, invalidResp.StatusCode);
+        Assert.Equal("ACCOUNT_MAPPING_FIELD_INVALID", await ErrorCodeAsync(invalidResp));
+
+        // 3.2 Valid mapping
+        var validReq = new AccountMappingRequest(
+            "billing.issued",
+            "113101",
+            "ลูกหนี้การค้า",
+            "411101",
+            "รายได้ค่าบริการติดตั้ง");
+        var upsertResp = await SendAsync(HttpMethod.Put, "/api/v1/finance/account-mappings", validReq);
+        var mappingResult = await Ok<AccountMappingResponse>(upsertResp);
+        Assert.Equal("billing.issued", mappingResult.Kind);
+        Assert.Equal("113101", mappingResult.DebitAccountCode);
+        Assert.Equal("ลูกหนี้การค้า", mappingResult.DebitAccountName);
+        Assert.Equal("411101", mappingResult.CreditAccountCode);
+        Assert.Equal("รายได้ค่าบริการติดตั้ง", mappingResult.CreditAccountName);
+
+        // Verify listed mappings contains it
+        var listedMappings = await Ok<AccountMappingListResponse>(await SendAsync(HttpMethod.Get, "/api/v1/finance/account-mappings"));
+        var fetchedMapping = Assert.Single(listedMappings.Items, m => m.Kind == "billing.issued");
+        Assert.Equal("113101", fetchedMapping.DebitAccountCode);
+
+        // 4. Requeue the dead message and Export with mapping
+        var requeueResp = await SendAsync(HttpMethod.Post, $"/api/v1/finance/outbox/{billingMsg.Id}/requeue");
+        var requeuedMsg = await Ok<OutboxMessageResponse>(requeueResp);
+        Assert.Equal("pending", requeuedMsg.Status);
+        Assert.Equal(0, requeuedMsg.Attempts);
+
+        var exportWithMappingResp = await SendAsync(HttpMethod.Post, "/api/v1/finance/outbox/export-journal?batchSize=10");
+        var exportResult = await Ok<JournalExportResultResponse>(exportWithMappingResp);
+        Assert.True(exportResult.ExportedCount >= 1);
+        Assert.StartsWith("JRN-", exportResult.BatchRef);
+
+        var line = Assert.Single(exportResult.Lines, l => l.MessageId == billingMsg.Id);
+        Assert.Equal("billing.issued", line.Kind);
+        Assert.Equal(billing.Number, line.ResourceNumber);
+        Assert.Equal("113101", line.DebitAccountCode);
+        Assert.Equal("ลูกหนี้การค้า", line.DebitAccountName);
+        Assert.Equal("411101", line.CreditAccountCode);
+        Assert.Equal("รายได้ค่าบริการติดตั้ง", line.CreditAccountName);
+        Assert.Equal(25_000m, line.Amount);
+        Assert.Equal("THB", line.Currency);
+
+        // Verify CSV content
+        Assert.Contains("BatchRef,DateUtc,DedupeKey,Kind,DocumentNumber,DebitAccountCode,DebitAccountName,CreditAccountCode,CreditAccountName,Amount,Currency", exportResult.CsvContent);
+        Assert.Contains(exportResult.BatchRef, exportResult.CsvContent);
+        Assert.Contains(billing.Number, exportResult.CsvContent);
+        Assert.Contains("113101", exportResult.CsvContent);
+        Assert.Contains("411101", exportResult.CsvContent);
+        Assert.Contains("25000.00", exportResult.CsvContent);
+
+        // Check outbox message status is now 'exported'
+        var exportedMsg = Assert.Single((await OutboxAsync("exported")).Items, m => m.Id == billingMsg.Id);
+        Assert.Equal("exported", exportedMsg.Status);
+        Assert.Equal(exportResult.BatchRef, exportedMsg.ExternalRef);
+
+        // 5. Repeat Export: Never duplicates
+        var repeatExportResp = await SendAsync(HttpMethod.Post, "/api/v1/finance/outbox/export-journal?batchSize=10");
+        var repeatExport = await Ok<JournalExportResultResponse>(repeatExportResp);
+        Assert.DoesNotContain(repeatExport.Lines, l => l.MessageId == billingMsg.Id);
+
+        // And the message in outbox is still exported
+        Assert.Single((await OutboxAsync("exported")).Items, m => m.Id == billingMsg.Id);
+    }
+
+    [Fact]
     public async Task AccountingOutbox_DefaultConnectorNeverClaimsSuccess()
     {
         using var scope = _factory.Services.CreateScope();

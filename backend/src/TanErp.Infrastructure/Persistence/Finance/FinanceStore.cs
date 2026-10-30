@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -1101,5 +1103,182 @@ public class FinanceStore : IFinanceStore
                 return Fail<CreditOverrideProjection>(ex);
             }
         });
+    }
+
+    // ===== Wave D G-17 Journal Export & COA Mapping ===================================================
+
+    public async Task<IReadOnlyList<AccountMappingProjection>> ListAccountMappingsAsync(Guid organizationId, CancellationToken ct = default)
+    {
+        var mappings = await _db.AccountMappings.AsNoTracking()
+            .Where(m => m.OrganizationId == organizationId)
+            .OrderBy(m => m.Kind)
+            .ToListAsync(ct);
+
+        var people = await PeopleAsync(mappings.Select(m => m.UpdatedByUserId), ct);
+        return mappings.Select(m => new AccountMappingProjection(
+            m.Id,
+            m.Kind,
+            m.DebitAccountCode,
+            m.DebitAccountName,
+            m.CreditAccountCode,
+            m.CreditAccountName,
+            people.TryGetValue(m.UpdatedByUserId, out var p) ? p : new FinancePerson(m.UpdatedByUserId, string.Empty),
+            m.UpdatedAtUtc,
+            m.RowVersion)).ToList();
+    }
+
+    public async Task<Result<AccountMappingProjection>> UpsertAccountMappingAsync(
+        RequestAccessContext access, AccountMappingInput input, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            var kind = input.Kind.Trim();
+            await _db.Database.SqlQuery<Guid>($"SELECT id AS \"Value\" FROM finance.account_mappings WHERE organization_id = {orgId} AND kind = {kind} FOR UPDATE").ToListAsync(ct);
+
+            var mapping = await _db.AccountMappings.FirstOrDefaultAsync(m => m.OrganizationId == orgId && m.Kind == kind, ct);
+            var now = _clock.UtcNow;
+
+            try
+            {
+                if (mapping is null)
+                {
+                    mapping = new AccountMapping(
+                        Guid.NewGuid(),
+                        orgId,
+                        kind,
+                        input.DebitAccountCode,
+                        input.DebitAccountName,
+                        input.CreditAccountCode,
+                        input.CreditAccountName,
+                        access.ActorUserId,
+                        now);
+                    _db.AccountMappings.Add(mapping);
+                }
+                else
+                {
+                    mapping.Update(
+                        input.DebitAccountCode,
+                        input.DebitAccountName,
+                        input.CreditAccountCode,
+                        input.CreditAccountName,
+                        access.ActorUserId,
+                        now);
+                }
+
+                Audit(access, "finance.account_mapping.upserted", "AccountMapping", mapping.Id, traceId,
+                    new { kind = mapping.Kind, debit = mapping.DebitAccountCode, credit = mapping.CreditAccountCode },
+                    mapping.RowVersion, now);
+
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+
+                var people = await PeopleAsync(new[] { access.ActorUserId }, ct);
+                var person = people.TryGetValue(access.ActorUserId, out var p) ? p : new FinancePerson(access.ActorUserId, string.Empty);
+
+                return Result<AccountMappingProjection>.Success(new AccountMappingProjection(
+                    mapping.Id,
+                    mapping.Kind,
+                    mapping.DebitAccountCode,
+                    mapping.DebitAccountName,
+                    mapping.CreditAccountCode,
+                    mapping.CreditAccountName,
+                    person,
+                    mapping.UpdatedAtUtc,
+                    mapping.RowVersion));
+            }
+            catch (FinanceDomainException ex)
+            {
+                return Fail<AccountMappingProjection>(ex);
+            }
+        });
+    }
+
+    public async Task<Result<JournalExportResult>> ExportJournalAsync(
+        RequestAccessContext access, int batchSize, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            var now = _clock.UtcNow;
+
+            var batch = await _db.AccountingOutbox
+                .FromSqlInterpolated($@"SELECT * FROM finance.accounting_outbox WHERE organization_id = {orgId} AND status IN ('pending', 'failed') ORDER BY created_at_utc, id LIMIT {batchSize} FOR UPDATE SKIP LOCKED")
+                .ToListAsync(ct);
+
+            var mappings = await _db.AccountMappings.AsNoTracking()
+                .Where(m => m.OrganizationId == orgId)
+                .ToDictionaryAsync(m => m.Kind, ct);
+
+            var batchRef = $"JRN-{now.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}-{Guid.NewGuid():N}"[..20].ToUpperInvariant();
+            var lines = new List<JournalExportLineProjection>();
+            int exportedCount = 0;
+            int deadCount = 0;
+
+            foreach (var message in batch)
+            {
+                if (mappings.TryGetValue(message.Kind, out var mapping))
+                {
+                    message.MarkExported(batchRef, now);
+                    exportedCount++;
+                    lines.Add(new JournalExportLineProjection(
+                        batchRef,
+                        message.Id,
+                        message.DedupeKey,
+                        message.Kind,
+                        message.ResourceNumber,
+                        mapping.DebitAccountCode,
+                        mapping.DebitAccountName,
+                        mapping.CreditAccountCode,
+                        mapping.CreditAccountName,
+                        message.Amount,
+                        "THB",
+                        message.CreatedAtUtc));
+                }
+                else
+                {
+                    message.MarkDeadMissingMapping(message.Kind, now);
+                    deadCount++;
+                }
+            }
+
+            var csvBuilder = new StringBuilder();
+            csvBuilder.AppendLine("BatchRef,DateUtc,DedupeKey,Kind,DocumentNumber,DebitAccountCode,DebitAccountName,CreditAccountCode,CreditAccountName,Amount,Currency");
+            foreach (var l in lines)
+            {
+                csvBuilder.AppendLine(
+                    $"{EscapeCsv(l.BatchRef)},{l.CreatedAtUtc.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)},{EscapeCsv(l.DedupeKey)},{EscapeCsv(l.Kind)},{EscapeCsv(l.ResourceNumber)},{EscapeCsv(l.DebitAccountCode)},{EscapeCsv(l.DebitAccountName)},{EscapeCsv(l.CreditAccountCode)},{EscapeCsv(l.CreditAccountName)},{l.Amount.ToString("F2", CultureInfo.InvariantCulture)},{l.Currency}");
+            }
+
+            if (batch.Count > 0)
+            {
+                Audit(access, "finance.outbox.journal-exported", "AccountingOutbox", Guid.Empty, traceId,
+                    new { batchRef, exportedCount, deadCount }, null, now);
+            }
+
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+
+            return Result<JournalExportResult>.Success(new JournalExportResult(
+                batchRef,
+                exportedCount,
+                deadCount,
+                lines,
+                csvBuilder.ToString()));
+        });
+    }
+
+    private static string EscapeCsv(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+        {
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        }
+        return value;
     }
 }

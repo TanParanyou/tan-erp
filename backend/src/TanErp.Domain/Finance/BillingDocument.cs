@@ -462,6 +462,26 @@ public class AccountingOutboxMessage : Entity
         RowVersion = Guid.NewGuid();
     }
 
+    /// <summary>Exported via CSV batch; externalRef holds the export batch ID.</summary>
+    public void MarkExported(string batchRef, DateTimeOffset now)
+    {
+        Attempts++;
+        Status = OutboxStatus.Exported;
+        ExternalRef = batchRef.Trim();
+        SentAtUtc = now.ToUniversalTime();
+        LastError = null;
+        RowVersion = Guid.NewGuid();
+    }
+
+    /// <summary>Parked as dead because required Chart of Accounts mapping is missing for this kind.</summary>
+    public void MarkDeadMissingMapping(string kind, DateTimeOffset now)
+    {
+        Attempts = MaxAttempts;
+        Status = OutboxStatus.Dead;
+        LastError = $"ACCOUNT_MAPPING_MISSING:{kind}";
+        RowVersion = Guid.NewGuid();
+    }
+
     /// <summary>Delivery failed. Retried with growing delays (2, 4, 8, 16 minutes) and parked as dead after the last attempt.</summary>
     public void MarkFailed(string error, DateTimeOffset now)
     {
