@@ -25460,6 +25460,395 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/work-centers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                    status?: string;
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkCenterListResponse"];
+                        "application/json": components["schemas"]["WorkCenterListResponse"];
+                        "text/json": components["schemas"]["WorkCenterListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateWorkCenterRequest"];
+                    "text/json": components["schemas"]["CreateWorkCenterRequest"];
+                    "application/*+json": components["schemas"]["CreateWorkCenterRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkCenterResponse"];
+                        "application/json": components["schemas"]["WorkCenterResponse"];
+                        "text/json": components["schemas"]["WorkCenterResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-centers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkCenterResponse"];
+                        "application/json": components["schemas"]["WorkCenterResponse"];
+                        "text/json": components["schemas"]["WorkCenterResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateWorkCenterRequest"];
+                    "text/json": components["schemas"]["UpdateWorkCenterRequest"];
+                    "application/*+json": components["schemas"]["UpdateWorkCenterRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkCenterResponse"];
+                        "application/json": components["schemas"]["WorkCenterResponse"];
+                        "text/json": components["schemas"]["WorkCenterResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-centers/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkCenterResponse"];
+                        "application/json": components["schemas"]["WorkCenterResponse"];
+                        "text/json": components["schemas"]["WorkCenterResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-centers/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkCenterResponse"];
+                        "application/json": components["schemas"]["WorkCenterResponse"];
+                        "text/json": components["schemas"]["WorkCenterResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-centers/capacity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                    fromDate?: string;
+                    toDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkCenterCapacityViewResponse"];
+                        "application/json": components["schemas"]["WorkCenterCapacityViewResponse"];
+                        "text/json": components["schemas"]["WorkCenterCapacityViewResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/work-orders": {
         parameters: {
             query?: never;
@@ -25782,6 +26171,164 @@ export interface paths {
                         "text/plain": components["schemas"]["WorkOrderResponse"];
                         "application/json": components["schemas"]["WorkOrderResponse"];
                         "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-orders/{id}/operations/{operationId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    operationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkOrderCompleteOperationRequest"];
+                    "text/json": components["schemas"]["WorkOrderCompleteOperationRequest"];
+                    "application/*+json": components["schemas"]["WorkOrderCompleteOperationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-orders/{id}/operations/{operationId}/subcontract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    operationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkOrderSubcontractOperationRequest"];
+                    "text/json": components["schemas"]["WorkOrderSubcontractOperationRequest"];
+                    "application/*+json": components["schemas"]["WorkOrderSubcontractOperationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkOrderResponse"];
+                        "application/json": components["schemas"]["WorkOrderResponse"];
+                        "text/json": components["schemas"]["WorkOrderResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
                     };
                 };
                 /** @description Conflict */
@@ -26373,6 +26920,7 @@ export interface components {
             outputQuantity?: number;
             note?: string | null;
             lines?: components["schemas"]["BomLineRequest"][] | null;
+            routingSteps?: components["schemas"]["BomRoutingStepRequest"][] | null;
         };
         BomLineRequest: {
             /** Format: uuid */
@@ -26417,6 +26965,7 @@ export interface components {
             outputQuantity?: number;
             note?: string | null;
             lines?: components["schemas"]["BomLineRequest"][] | null;
+            routingSteps?: components["schemas"]["BomRoutingStepRequest"][] | null;
         };
         BomResponse: {
             /** Format: uuid */
@@ -26445,6 +26994,40 @@ export interface components {
             /** Format: uuid */
             rowVersion?: string;
             lines?: components["schemas"]["BomLineResponse"][] | null;
+            routingSteps?: components["schemas"]["BomRoutingStepResponse"][] | null;
+        };
+        BomRoutingStepRequest: {
+            /** Format: int32 */
+            sequence?: number;
+            operationCode?: string | null;
+            operationName?: string | null;
+            /** Format: uuid */
+            workCenterId?: string | null;
+            /** Format: double */
+            setupHours?: number;
+            /** Format: double */
+            runHours?: number;
+            isSubcontracted?: boolean;
+            /** Format: double */
+            stdSubcontractCost?: number;
+            note?: string | null;
+        };
+        BomRoutingStepResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            sequence?: number;
+            operationCode?: string | null;
+            operationName?: string | null;
+            workCenter?: components["schemas"]["WorkCenterRefResponse"];
+            /** Format: double */
+            setupHours?: number;
+            /** Format: double */
+            runHours?: number;
+            isSubcontracted?: boolean;
+            /** Format: double */
+            stdSubcontractCost?: number;
+            note?: string | null;
         };
         BranchBlockerResponse: {
             type?: string | null;
@@ -27307,6 +27890,16 @@ export interface components {
         CreateWarehouseLocationRequest: {
             code?: string | null;
             name?: string | null;
+        };
+        CreateWorkCenterRequest: {
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            dailyCapacityHours?: number | null;
+            /** Format: double */
+            hourlyRate?: number | null;
+            /** Format: uuid */
+            branchId?: string | null;
         };
         CreatedAcceptanceLinkResponse: {
             link?: components["schemas"]["AcceptanceLinkResponse"];
@@ -31530,6 +32123,13 @@ export interface components {
             name?: string | null;
             active?: boolean | null;
         };
+        UpdateWorkCenterRequest: {
+            name?: string | null;
+            /** Format: double */
+            dailyCapacityHours?: number;
+            /** Format: double */
+            hourlyRate?: number;
+        };
         UploadSlotResponse: {
             /** Format: uuid */
             slotId?: string;
@@ -31645,6 +32245,79 @@ export interface components {
             /** Format: int32 */
             serviceRequestCount?: number;
         };
+        WorkCenterCapacityRowResponse: {
+            /** Format: uuid */
+            workCenterId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            dailyCapacityHours?: number;
+            /** Format: double */
+            hourlyRate?: number;
+            /** Format: double */
+            totalCapacityHours?: number;
+            /** Format: double */
+            totalPlannedHours?: number;
+            /** Format: double */
+            utilizationPercent?: number;
+            isOverloaded?: boolean;
+            days?: components["schemas"]["WorkCenterDailyCapacityPointResponse"][] | null;
+        };
+        WorkCenterCapacityViewResponse: {
+            /** Format: date */
+            fromDate?: string;
+            /** Format: date */
+            toDate?: string;
+            workCenters?: components["schemas"]["WorkCenterCapacityRowResponse"][] | null;
+        };
+        WorkCenterDailyCapacityPointResponse: {
+            /** Format: date */
+            date?: string;
+            /** Format: double */
+            capacityHours?: number;
+            /** Format: double */
+            plannedHours?: number;
+            /** Format: double */
+            remainingHours?: number;
+            /** Format: double */
+            utilizationPercent?: number;
+            isOverloaded?: boolean;
+        };
+        WorkCenterListResponse: {
+            items?: components["schemas"]["WorkCenterResponse"][] | null;
+            pagination?: components["schemas"]["ProductionPaginationResponse"];
+        };
+        WorkCenterRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            dailyCapacityHours?: number;
+            /** Format: double */
+            hourlyRate?: number;
+        };
+        WorkCenterResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string;
+            code?: string | null;
+            name?: string | null;
+            /** Format: double */
+            dailyCapacityHours?: number;
+            /** Format: double */
+            hourlyRate?: number;
+            status?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+        };
         WorkImageUserSummaryResponse: {
             /** Format: uuid */
             id?: string;
@@ -31653,9 +32326,31 @@ export interface components {
         WorkOrderActionRequest: {
             reason?: string | null;
         };
+        WorkOrderCompleteOperationRequest: {
+            /** Format: double */
+            actualHours?: number;
+            note?: string | null;
+        };
         WorkOrderCompleteRequest: {
             /** Format: double */
             quantity?: number;
+        };
+        WorkOrderLaborEntryResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            worker?: components["schemas"]["ProductionPersonResponse"];
+            /** Format: date */
+            workDate?: string;
+            /** Format: double */
+            hours?: number;
+            /** Format: double */
+            hourlyRate?: number;
+            /** Format: double */
+            costAmount?: number;
+            taskDescription?: string | null;
+            /** Format: date-time */
+            decidedAtUtc?: string | null;
         };
         WorkOrderListItemResponse: {
             /** Format: uuid */
@@ -31668,6 +32363,12 @@ export interface components {
             plannedQuantity?: number;
             /** Format: double */
             completedQuantity?: number;
+            /** Format: date */
+            plannedStartDate?: string;
+            /** Format: date */
+            plannedEndDate?: string;
+            /** Format: double */
+            totalManufacturingCost?: number;
             projectCode?: string | null;
             /** Format: date-time */
             createdAtUtc?: string;
@@ -31704,6 +32405,29 @@ export interface components {
         WorkOrderMaterialsRequest: {
             lines?: components["schemas"]["WorkOrderMaterialLineRequest"][] | null;
         };
+        WorkOrderOperationResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            sequence?: number;
+            operationCode?: string | null;
+            operationName?: string | null;
+            workCenter?: components["schemas"]["WorkCenterRefResponse"];
+            /** Format: double */
+            plannedSetupHours?: number;
+            /** Format: double */
+            plannedRunHours?: number;
+            /** Format: double */
+            actualHours?: number;
+            isSubcontracted?: boolean;
+            subcontractPurchaseOrder?: components["schemas"]["WorkOrderRefResponse"];
+            /** Format: double */
+            subcontractCost?: number;
+            status?: string | null;
+            note?: string | null;
+            /** Format: date-time */
+            completedAtUtc?: string | null;
+        };
         WorkOrderRefResponse: {
             /** Format: uuid */
             id?: string;
@@ -31720,6 +32444,10 @@ export interface components {
             /** Format: double */
             plannedQuantity?: number;
             note?: string | null;
+            /** Format: date */
+            plannedStartDate?: string | null;
+            /** Format: date */
+            plannedEndDate?: string | null;
         };
         WorkOrderResponse: {
             /** Format: uuid */
@@ -31740,6 +32468,20 @@ export interface components {
             plannedQuantity?: number;
             /** Format: double */
             completedQuantity?: number;
+            /** Format: date */
+            plannedStartDate?: string;
+            /** Format: date */
+            plannedEndDate?: string;
+            /** Format: double */
+            netMaterialValue?: number;
+            /** Format: double */
+            laborHours?: number;
+            /** Format: double */
+            laborCost?: number;
+            /** Format: double */
+            subcontractCost?: number;
+            /** Format: double */
+            totalManufacturingCost?: number;
             /** Format: double */
             costAllocated?: number;
             note?: string | null;
@@ -31750,7 +32492,16 @@ export interface components {
             /** Format: uuid */
             rowVersion?: string;
             materials?: components["schemas"]["WorkOrderMaterialResponse"][] | null;
+            operations?: components["schemas"]["WorkOrderOperationResponse"][] | null;
+            laborEntries?: components["schemas"]["WorkOrderLaborEntryResponse"][] | null;
             transactions?: components["schemas"]["WorkOrderTransactionResponse"][] | null;
+        };
+        WorkOrderSubcontractOperationRequest: {
+            /** Format: uuid */
+            purchaseOrderId?: string;
+            /** Format: double */
+            costAmount?: number;
+            note?: string | null;
         };
         WorkOrderTransactionResponse: {
             /** Format: uuid */

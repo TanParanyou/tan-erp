@@ -38,6 +38,8 @@ export function WorkOrderEditor() {
   const [warehouseId, setWarehouseId] = useState("");
   const [projectId, setProjectId] = useState("");
   const [quantity, setQuantity] = useState("1");
+  const [plannedStartDate, setPlannedStartDate] = useState("");
+  const [plannedEndDate, setPlannedEndDate] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   // One key per form session so a retried create replays instead of creating a second order.
@@ -52,9 +54,22 @@ export function WorkOrderEditor() {
       return;
     }
 
+    if (plannedStartDate && plannedEndDate && plannedEndDate < plannedStartDate) {
+      setError(t("dateRangeInvalid"));
+      return;
+    }
+
     try {
       const saved = await mutations.create.mutateAsync({
-        payload: { itemId, warehouseId, projectId: projectId || null, plannedQuantity: planned, note: note.trim() || null },
+        payload: {
+          itemId,
+          warehouseId,
+          projectId: projectId || null,
+          plannedQuantity: planned,
+          plannedStartDate: plannedStartDate || null,
+          plannedEndDate: plannedEndDate || null,
+          note: note.trim() || null,
+        },
         idempotencyKey: createKeyRef.current,
       });
       toast.success(t("created"));
@@ -95,6 +110,22 @@ export function WorkOrderEditor() {
           />
         )}
         <Input type="number" min={0} step="0.0001" label={t("plannedQuantity")} value={quantity} disabled={isBusy} placeholder={t("plannedQuantityPlaceholder")} onChange={(event) => setQuantity(event.target.value)} />
+        <Input
+          type="date"
+          label={t("plannedStartDate")}
+          value={plannedStartDate}
+          disabled={isBusy}
+          placeholder="YYYY-MM-DD"
+          onChange={(event) => setPlannedStartDate(event.target.value)}
+        />
+        <Input
+          type="date"
+          label={t("plannedEndDate")}
+          value={plannedEndDate}
+          disabled={isBusy}
+          placeholder="YYYY-MM-DD"
+          onChange={(event) => setPlannedEndDate(event.target.value)}
+        />
         <Input label={t("note")} value={note} maxLength={500} disabled={isBusy} placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
       </div>
       <div className="flex justify-end gap-3">

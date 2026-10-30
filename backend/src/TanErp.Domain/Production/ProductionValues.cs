@@ -37,3 +37,25 @@ public static class WorkOrderTransactionKind
     public const string Return = "return";
     public const string Completion = "completion";
 }
+
+public static class WorkCenterStatus
+{
+    public const string Active = "active";
+    public const string Inactive = "inactive";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
+    {
+        Active, Inactive
+    };
+}
+
+public static class WorkOrderOperationStatus
+{
+    public const string Pending = "pending";
+    public const string Completed = "completed";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
+    {
+        Pending, Completed
+    };
+}

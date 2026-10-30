@@ -5,6 +5,7 @@ namespace TanErp.Domain.Production;
 public class WorkOrder : Entity
 {
     private readonly List<WorkOrderMaterial> _materials = new();
+    private readonly List<WorkOrderOperation> _operations = new();
 
     public Guid OrganizationId { get; private set; }
     public Guid BranchId { get; private set; }
@@ -15,6 +16,11 @@ public class WorkOrder : Entity
     public Guid? ProjectId { get; private set; }
     public decimal PlannedQuantity { get; private set; }
     public decimal CompletedQuantity { get; private set; }
+    public DateOnly PlannedStartDate { get; private set; }
+    public DateOnly PlannedEndDate { get; private set; }
+    public decimal LaborHours { get; private set; }
+    public decimal LaborCost { get; private set; }
+    public decimal SubcontractCost { get; private set; }
     public decimal CostAllocated { get; private set; }
     public string Status { get; private set; } = WorkOrderStatus.Draft;
     public string? Note { get; private set; }
@@ -25,12 +31,14 @@ public class WorkOrder : Entity
     public Guid RowVersion { get; private set; }
 
     public IReadOnlyCollection<WorkOrderMaterial> Materials => _materials.AsReadOnly();
+    public IReadOnlyCollection<WorkOrderOperation> Operations => _operations.AsReadOnly();
 
     protected WorkOrder() { }
 
     public WorkOrder(
         Guid id, Guid organizationId, Guid branchId, string number, Guid itemId, Guid bomRevisionId, Guid warehouseId, Guid? projectId,
-        decimal plannedQuantity, string? note, Guid createdByUserId, DateTimeOffset now) : base(id)
+        decimal plannedQuantity, string? note, Guid createdByUserId, DateTimeOffset now,
+        DateOnly? plannedStartDate = null, DateOnly? plannedEndDate = null) : base(id)
     {
         if (organizationId == Guid.Empty || branchId == Guid.Empty || itemId == Guid.Empty || bomRevisionId == Guid.Empty || warehouseId == Guid.Empty || createdByUserId == Guid.Empty)
         {
@@ -41,6 +49,14 @@ public class WorkOrder : Entity
         if (plannedQuantity <= 0 || plannedQuantity > 999_999m)
         {
             throw new ProductionDomainException("PRODUCTION_QUANTITY_INVALID", "Planned quantity must be greater than zero.");
+        }
+
+        var defaultDate = DateOnly.FromDateTime(now.UtcDateTime);
+        var start = plannedStartDate ?? defaultDate;
+        var end = plannedEndDate ?? start;
+        if (end < start)
+        {
+            throw new ProductionDomainException("PRODUCTION_FIELD_INVALID", "Planned end date cannot be earlier than planned start date.");
         }
 
         var trimmed = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
@@ -54,6 +70,8 @@ public class WorkOrder : Entity
         WarehouseId = warehouseId;
         ProjectId = projectId;
         PlannedQuantity = decimal.Round(plannedQuantity, 4);
+        PlannedStartDate = start;
+        PlannedEndDate = end;
         Note = trimmed;
         Status = WorkOrderStatus.Draft;
         CreatedByUserId = createdByUserId;
@@ -68,7 +86,77 @@ public class WorkOrder : Entity
         _materials.Add(material);
     }
 
+    public void AddOperation(WorkOrderOperation operation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (_operations.Any(o => o.Sequence == operation.Sequence))
+        {
+            throw new ProductionDomainException("PRODUCTION_OPERATION_INVALID", "Operation sequence numbers must be unique within a work order.");
+        }
+
+        _operations.Add(operation);
+    }
+
     public decimal NetIssuedValue => _materials.Sum(m => m.IssuedValue - m.ReturnedValue);
+
+    public decimal TotalManufacturingCost => NetIssuedValue + LaborCost + SubcontractCost;
+
+    public void RecordLabor(decimal hours, decimal costAmount, DateTimeOffset now)
+    {
+        if (Status is WorkOrderStatus.Completed or WorkOrderStatus.Cancelled)
+        {
+            throw new ProductionDomainException("PRODUCTION_INVALID_STATE", $"Labor cannot be recorded on a {Status} work order.");
+        }
+
+        if (hours <= 0m || costAmount < 0m)
+        {
+            throw new ProductionDomainException("PRODUCTION_QUANTITY_INVALID", "Labor hours must be greater than zero and cost cannot be negative.");
+        }
+
+        LaborHours += decimal.Round(hours, 4);
+        LaborCost += decimal.Round(costAmount, 2);
+        if (Status == WorkOrderStatus.Released)
+        {
+            Status = WorkOrderStatus.InProgress;
+        }
+
+        Touch(now);
+    }
+
+    public void CompleteOperation(Guid operationId, decimal actualHours, string? note, DateTimeOffset now)
+    {
+        if (Status is not (WorkOrderStatus.Released or WorkOrderStatus.InProgress))
+        {
+            throw new ProductionDomainException("PRODUCTION_INVALID_STATE", $"Operations can only be completed on a released or in-progress work order; current status is '{Status}'.");
+        }
+
+        var operation = FindOperation(operationId);
+        operation.CompleteInternal(actualHours, note, now);
+        if (Status == WorkOrderStatus.Released)
+        {
+            Status = WorkOrderStatus.InProgress;
+        }
+
+        Touch(now);
+    }
+
+    public void RecordSubcontract(Guid operationId, Guid purchaseOrderId, decimal costAmount, string? note, DateTimeOffset now)
+    {
+        if (Status is not (WorkOrderStatus.Released or WorkOrderStatus.InProgress))
+        {
+            throw new ProductionDomainException("PRODUCTION_INVALID_STATE", $"Subcontract operations can only be recorded on a released or in-progress work order; current status is '{Status}'.");
+        }
+
+        var operation = FindOperation(operationId);
+        operation.CompleteSubcontract(purchaseOrderId, costAmount, note, now);
+        SubcontractCost += decimal.Round(costAmount, 2);
+        if (Status == WorkOrderStatus.Released)
+        {
+            Status = WorkOrderStatus.InProgress;
+        }
+
+        Touch(now);
+    }
 
     public void Release(DateTimeOffset now)
     {
@@ -91,6 +179,11 @@ public class WorkOrder : Entity
         if (_materials.Any(m => m.NetIssuedQuantity > 0))
         {
             throw new ProductionDomainException("PRODUCTION_HAS_ISSUED_MATERIALS", "Return all issued materials before cancelling.");
+        }
+
+        if (LaborCost > 0m || SubcontractCost > 0m || _operations.Any(o => o.Status == WorkOrderOperationStatus.Completed))
+        {
+            throw new ProductionDomainException("PRODUCTION_HAS_ACTUAL_COSTS", "Cannot cancel a work order that already has actual labor, subcontract cost, or completed operations.");
         }
 
         if (string.IsNullOrWhiteSpace(reason))
@@ -211,10 +304,10 @@ public class WorkOrder : Entity
             }
         }
 
-        var net = NetIssuedValue;
+        var totalCost = TotalManufacturingCost;
         var value = newCompleted == PlannedQuantity
-            ? Math.Max(0m, net - CostAllocated)
-            : decimal.Round(net * rounded / PlannedQuantity, 2);
+            ? Math.Max(0m, totalCost - CostAllocated)
+            : decimal.Round(totalCost * rounded / PlannedQuantity, 2);
 
         CompletedQuantity = newCompleted;
         CostAllocated += value;
@@ -226,6 +319,10 @@ public class WorkOrder : Entity
     private WorkOrderMaterial FindMaterial(Guid itemId) =>
         _materials.FirstOrDefault(m => m.ItemId == itemId)
         ?? throw new ProductionDomainException("PRODUCTION_MATERIAL_INVALID", "The item is not a material of this work order.");
+
+    private WorkOrderOperation FindOperation(Guid operationId) =>
+        _operations.FirstOrDefault(o => o.Id == operationId)
+        ?? throw new ProductionDomainException("RESOURCE_NOT_FOUND", "Work order operation not found.");
 
     private void Touch(DateTimeOffset now)
     {

@@ -4,10 +4,43 @@ using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Inventory;
 using TanErp.Domain.Items;
 using TanErp.Domain.Organization;
+using TanErp.Domain.Procurement;
 using TanErp.Domain.Production;
 using TanErp.Domain.Projects;
 
 namespace TanErp.Infrastructure.Persistence.Configurations;
+
+public class WorkCenterConfiguration : IEntityTypeConfiguration<WorkCenter>
+{
+    public void Configure(EntityTypeBuilder<WorkCenter> builder)
+    {
+        builder.ToTable("work_centers", "production", t =>
+        {
+            t.HasCheckConstraint("ck_work_centers_capacity", "daily_capacity_hours > 0 AND daily_capacity_hours <= 24");
+            t.HasCheckConstraint("ck_work_centers_hourly_rate", "hourly_rate >= 0");
+            t.HasCheckConstraint("ck_work_centers_status", "status IN ('active', 'inactive')");
+        });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.BranchId).HasColumnName("branch_id").IsRequired();
+        builder.Property(x => x.Code).HasColumnName("code").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.NormalizedCode).HasColumnName("normalized_code").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+        builder.Property(x => x.DailyCapacityHours).HasColumnName("daily_capacity_hours").HasPrecision(6, 2).IsRequired();
+        builder.Property(x => x.HourlyRate).HasColumnName("hourly_rate").HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(16).IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+        builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
+        builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.HasIndex(x => new { x.OrganizationId, x.NormalizedCode }).IsUnique();
+        builder.HasIndex(x => new { x.OrganizationId, x.BranchId, x.Status });
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
 
 public class BomConfiguration : IEntityTypeConfiguration<Bom>
 {
@@ -62,6 +95,35 @@ public class BomRevisionConfiguration : IEntityTypeConfiguration<BomRevision>
         builder.HasOne<User>().WithMany().HasForeignKey(x => x.ApprovedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(x => x.Lines).WithOne().HasForeignKey(l => l.BomRevisionId).OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(x => x.Lines).HasField("_lines").UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.HasMany(x => x.RoutingSteps).WithOne().HasForeignKey(s => s.BomRevisionId).OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(x => x.RoutingSteps).HasField("_routingSteps").UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+public class BomRoutingStepConfiguration : IEntityTypeConfiguration<BomRoutingStep>
+{
+    public void Configure(EntityTypeBuilder<BomRoutingStep> builder)
+    {
+        builder.ToTable("bom_routing_steps", "production", t =>
+        {
+            t.HasCheckConstraint("ck_bom_routing_steps_values", "sequence > 0 AND setup_hours >= 0 AND run_hours >= 0 AND std_subcontract_cost >= 0");
+        });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.BomRevisionId).HasColumnName("bom_revision_id").IsRequired();
+        builder.Property(x => x.Sequence).HasColumnName("sequence").IsRequired();
+        builder.Property(x => x.OperationCode).HasColumnName("operation_code").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.OperationName).HasColumnName("operation_name").HasMaxLength(200).IsRequired();
+        builder.Property(x => x.WorkCenterId).HasColumnName("work_center_id");
+        builder.Property(x => x.SetupHours).HasColumnName("setup_hours").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.RunHours).HasColumnName("run_hours").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.IsSubcontracted).HasColumnName("is_subcontracted").IsRequired();
+        builder.Property(x => x.StdSubcontractCost).HasColumnName("std_subcontract_cost").HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.Note).HasColumnName("note").HasMaxLength(500);
+        builder.HasIndex(x => new { x.BomRevisionId, x.Sequence }).IsUnique();
+        builder.HasIndex(x => x.WorkCenterId);
+        builder.HasOne<WorkCenter>().WithMany().HasForeignKey(x => x.WorkCenterId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -96,7 +158,8 @@ public class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrder>
         {
             t.HasCheckConstraint("ck_work_orders_status", "status IN ('draft', 'released', 'in_progress', 'completed', 'cancelled')");
             t.HasCheckConstraint("ck_work_orders_quantities", "planned_quantity > 0 AND completed_quantity >= 0 AND completed_quantity <= planned_quantity");
-            t.HasCheckConstraint("ck_work_orders_cost_allocated", "cost_allocated >= 0");
+            t.HasCheckConstraint("ck_work_orders_cost_allocated", "cost_allocated >= 0 AND labor_hours >= 0 AND labor_cost >= 0 AND subcontract_cost >= 0");
+            t.HasCheckConstraint("ck_work_orders_dates", "planned_end_date >= planned_start_date");
         });
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
@@ -109,6 +172,11 @@ public class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrder>
         builder.Property(x => x.ProjectId).HasColumnName("project_id");
         builder.Property(x => x.PlannedQuantity).HasColumnName("planned_quantity").HasPrecision(18, 4).IsRequired();
         builder.Property(x => x.CompletedQuantity).HasColumnName("completed_quantity").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.PlannedStartDate).HasColumnName("planned_start_date").HasColumnType("date").IsRequired();
+        builder.Property(x => x.PlannedEndDate).HasColumnName("planned_end_date").HasColumnType("date").IsRequired();
+        builder.Property(x => x.LaborHours).HasColumnName("labor_hours").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.LaborCost).HasColumnName("labor_cost").HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.SubcontractCost).HasColumnName("subcontract_cost").HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.CostAllocated).HasColumnName("cost_allocated").HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(16).IsRequired();
         builder.Property(x => x.Note).HasColumnName("note").HasMaxLength(500);
@@ -129,6 +197,40 @@ public class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrder>
         builder.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(x => x.Materials).WithOne().HasForeignKey(m => m.WorkOrderId).OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(x => x.Materials).HasField("_materials").UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.HasMany(x => x.Operations).WithOne().HasForeignKey(o => o.WorkOrderId).OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(x => x.Operations).HasField("_operations").UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+public class WorkOrderOperationConfiguration : IEntityTypeConfiguration<WorkOrderOperation>
+{
+    public void Configure(EntityTypeBuilder<WorkOrderOperation> builder)
+    {
+        builder.ToTable("work_order_operations", "production", t =>
+        {
+            t.HasCheckConstraint("ck_work_order_operations_values", "sequence > 0 AND planned_setup_hours >= 0 AND planned_run_hours >= 0 AND actual_hours >= 0 AND subcontract_cost >= 0 AND status IN ('pending', 'completed')");
+        });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.WorkOrderId).HasColumnName("work_order_id").IsRequired();
+        builder.Property(x => x.Sequence).HasColumnName("sequence").IsRequired();
+        builder.Property(x => x.OperationCode).HasColumnName("operation_code").HasMaxLength(64).IsRequired();
+        builder.Property(x => x.OperationName).HasColumnName("operation_name").HasMaxLength(200).IsRequired();
+        builder.Property(x => x.WorkCenterId).HasColumnName("work_center_id");
+        builder.Property(x => x.PlannedSetupHours).HasColumnName("planned_setup_hours").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.PlannedRunHours).HasColumnName("planned_run_hours").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.ActualHours).HasColumnName("actual_hours").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.IsSubcontracted).HasColumnName("is_subcontracted").IsRequired();
+        builder.Property(x => x.SubcontractPurchaseOrderId).HasColumnName("subcontract_purchase_order_id");
+        builder.Property(x => x.SubcontractCost).HasColumnName("subcontract_cost").HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(16).IsRequired();
+        builder.Property(x => x.Note).HasColumnName("note").HasMaxLength(500);
+        builder.Property(x => x.CompletedAtUtc).HasColumnName("completed_at_utc").HasColumnType("timestamptz");
+        builder.HasIndex(x => new { x.WorkOrderId, x.Sequence }).IsUnique();
+        builder.HasIndex(x => x.WorkCenterId);
+        builder.HasOne<WorkCenter>().WithMany().HasForeignKey(x => x.WorkCenterId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<PurchaseOrder>().WithMany().HasForeignKey(x => x.SubcontractPurchaseOrderId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

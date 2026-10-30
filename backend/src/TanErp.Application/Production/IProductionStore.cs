@@ -5,6 +5,13 @@ namespace TanErp.Application.Production;
 
 public interface IProductionStore
 {
+    Task<Result<WorkCenterProjection>> CreateWorkCenterAsync(RequestAccessContext access, WorkCenterInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
+    Task<Result<WorkCenterProjection>> UpdateWorkCenterAsync(RequestAccessContext access, Guid workCenterId, Guid expectedVersion, WorkCenterUpdateInput input, string traceId, CancellationToken ct = default);
+    Task<Result<WorkCenterProjection>> SetWorkCenterActiveAsync(RequestAccessContext access, Guid workCenterId, Guid expectedVersion, bool active, string traceId, CancellationToken ct = default);
+    Task<WorkCenterProjection?> GetWorkCenterAsync(Guid organizationId, Guid workCenterId, CancellationToken ct = default);
+    Task<PagedWorkCenters> ListWorkCentersAsync(Guid organizationId, WorkCenterListQuery query, CancellationToken ct = default);
+    Task<Result<WorkCenterCapacityViewProjection>> GetCapacityViewAsync(Guid organizationId, Guid? branchId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default);
+
     Task<Result<BomProjection>> CreateBomAsync(RequestAccessContext access, BomInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
     Task<Result<BomProjection>> CreateBomRevisionAsync(RequestAccessContext access, Guid bomId, BomDraftInput input, string traceId, CancellationToken ct = default);
     Task<Result<BomProjection>> UpdateBomDraftAsync(RequestAccessContext access, Guid bomId, Guid revisionId, Guid expectedVersion, BomDraftInput input, string traceId, CancellationToken ct = default);
@@ -16,6 +23,8 @@ public interface IProductionStore
     Task<Result<WorkOrderProjection>> WorkOrderActionAsync(RequestAccessContext access, Guid workOrderId, Guid expectedVersion, WorkOrderAction action, string? reason, string traceId, CancellationToken ct = default);
     Task<Result<WorkOrderProjection>> IssueMaterialsAsync(RequestAccessContext access, Guid workOrderId, IReadOnlyList<WorkOrderMaterialQuantityInput> lines, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
     Task<Result<WorkOrderProjection>> ReturnMaterialsAsync(RequestAccessContext access, Guid workOrderId, IReadOnlyList<WorkOrderMaterialQuantityInput> lines, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
+    Task<Result<WorkOrderProjection>> CompleteOperationAsync(RequestAccessContext access, Guid workOrderId, Guid operationId, CompleteOperationInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
+    Task<Result<WorkOrderProjection>> RecordSubcontractAsync(RequestAccessContext access, Guid workOrderId, Guid operationId, RecordSubcontractInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
     Task<Result<WorkOrderProjection>> CompleteAsync(RequestAccessContext access, Guid workOrderId, decimal quantity, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
     Task<WorkOrderProjection?> GetWorkOrderAsync(Guid organizationId, Guid workOrderId, CancellationToken ct = default);
     Task<PagedWorkOrders> ListWorkOrdersAsync(Guid organizationId, WorkOrderListQuery query, CancellationToken ct = default);

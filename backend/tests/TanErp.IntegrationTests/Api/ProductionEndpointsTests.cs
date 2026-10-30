@@ -8,12 +8,21 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TanErp.Api;
 using TanErp.Api.Contracts.Inventory;
+using TanErp.Api.Contracts.Procurement;
 using TanErp.Api.Contracts.Production;
+using TanErp.Api.Contracts.Projects;
 using TanErp.Api.ErrorHandling;
+using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
+using TanErp.Domain.Crm.Customers;
+using TanErp.Domain.Crm.Opportunities;
+using TanErp.Domain.Crm.Sites;
+using TanErp.Domain.Estimates;
 using TanErp.Domain.Items;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
+using TanErp.Domain.Procurement;
+using TanErp.Domain.Projects;
 using TanErp.Infrastructure.Identity;
 using TanErp.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
@@ -352,6 +361,228 @@ public class ProductionEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.UnprocessableEntity, (await SendAsync(HttpMethod.Get, "/api/v1/work-orders?status=bogus")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await SendAsync(HttpMethod.Get, "/api/v1/work-orders", token: "token-no-perm", membership: MembershipNoPermId)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await SendAsync(HttpMethod.Post, "/api/v1/work-orders", new WorkOrderRequest(fg, warehouse.Id, null, 1m, null), token: "token-no-perm", membership: MembershipNoPermId, key: Key())).StatusCode);
+        await AssertLedgerConsistentAsync();
+    }
+
+    [Fact]
+    public async Task WorkCenter_RoutingSnapshot_Immutability_AndDailyCapacityView()
+    {
+        var fg = await CreateProducibleItemAsync("FG-RT");
+        var warehouse = await CreateWarehouseAsync();
+
+        // 1. Create Work Center and verify validation / conflict rules
+        Assert.Equal("PRODUCTION_WORK_CENTER_INVALID", await ErrorCodeAsync(
+            await SendAsync(HttpMethod.Post, "/api/v1/work-centers", new CreateWorkCenterRequest("WC-BAD", "สถานีผิด", 30m, 0m), key: Key())));
+
+        var wc = await Ok<WorkCenterResponse>(
+            await SendAsync(HttpMethod.Post, "/api/v1/work-centers", new CreateWorkCenterRequest("WC-SAW", "เครื่องเลื่อย CNC", 8m, 250m), key: Key()),
+            HttpStatusCode.Created);
+        Assert.Equal("WC-SAW", wc.Code);
+        Assert.Equal(8m, wc.DailyCapacityHours);
+        Assert.Equal("active", wc.Status);
+
+        Assert.Equal("PRODUCTION_WORK_CENTER_CODE_CONFLICT", await ErrorCodeAsync(
+            await SendAsync(HttpMethod.Post, "/api/v1/work-centers", new CreateWorkCenterRequest("wc-saw", "ซ้ำ", 8m, 100m), key: Key())));
+
+        // 2. Create BOM with Routing Steps (1 internal on WC-SAW, 1 subcontracted)
+        var routing = new List<BomRoutingStepRequest>
+        {
+            new(10, "CUT", "ตัดแผ่นไม้", wc.Id, SetupHours: 1m, RunHours: 2m, IsSubcontracted: false, StdSubcontractCost: 0m, Note: "ตัดตามแบบ"),
+            new(20, "COAT", "พ่นสีภายนอก", null, SetupHours: 0m, RunHours: 0m, IsSubcontracted: true, StdSubcontractCost: 500m, Note: "ส่งโรงพ่น")
+        };
+        var bom = await Ok<BomResponse>(
+            await SendAsync(HttpMethod.Post, "/api/v1/boms", new BomRequest(fg, 1m, "BOM พร้อม Routing", Lines(), routing), key: Key()),
+            HttpStatusCode.Created);
+        Assert.Equal(2, bom.Revisions.Single().RoutingSteps.Count);
+        bom = await ApproveAsync(bom, 1);
+
+        // Cannot deactivate Work Center while referenced by an approved BOM
+        Assert.Equal("PRODUCTION_WORK_CENTER_IN_USE", await ErrorCodeAsync(
+            await SendAsync(HttpMethod.Post, $"/api/v1/work-centers/{wc.Id}/deactivate", ifMatch: wc.RowVersion)));
+
+        // 3. Create Work Order (plannedQuantity = 4, single-day window) -> Routing is snapshotted
+        var day = new DateOnly(2026, 10, 30);
+        var wo = await Ok<WorkOrderResponse>(
+            await SendAsync(HttpMethod.Post, "/api/v1/work-orders", new WorkOrderRequest(fg, warehouse.Id, null, 4m, "ทดสอบ Snapshot", day, day), key: Key()),
+            HttpStatusCode.Created);
+        Assert.Equal(2, wo.Operations.Count);
+        var cutOp = wo.Operations.Single(o => o.Sequence == 10);
+        Assert.Equal(1m, cutOp.PlannedSetupHours);
+        Assert.Equal(8m, cutOp.PlannedRunHours); // 2m runHours * 4 planned / 1 output = 8m
+
+        // 4. Create & approve BOM Revision 2 with changed RunHours (5m) -> existing WO snapshot must NOT change
+        var routingRev2 = new List<BomRoutingStepRequest>
+        {
+            new(10, "CUT", "ตัดแผ่นไม้ปรับใหม่", wc.Id, SetupHours: 2m, RunHours: 5m, IsSubcontracted: false, StdSubcontractCost: 0m)
+        };
+        var rev2 = await Ok<BomResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/boms/{bom.Id}/revisions", new BomDraftRequest(1m, "rev2", Lines(), routingRev2)),
+            HttpStatusCode.Created);
+        await ApproveAsync(rev2, 2);
+
+        var reloadedWo = await GetWorkOrderAsync(wo.Id);
+        Assert.Equal(2, reloadedWo.Operations.Count);
+        Assert.Equal(8m, reloadedWo.Operations.Single(o => o.Sequence == 10).PlannedRunHours);
+
+        // 5. Release WO and verify Daily Capacity View reflects 9.0 planned hours on 8.0 capacity (112.5% overloaded)
+        wo = await ReleaseAsync(wo);
+        var dayIso = day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        var capView = await Ok<WorkCenterCapacityViewResponse>(
+            await SendAsync(HttpMethod.Get, $"/api/v1/work-centers/capacity?fromDate={dayIso}&toDate={dayIso}"));
+        var wcRow = capView.WorkCenters.Single(w => w.WorkCenterId == wc.Id);
+        var dayPoint = wcRow.Days.Single(d => d.Date == day);
+        Assert.Equal(8m, dayPoint.CapacityHours);
+        Assert.Equal(9m, dayPoint.PlannedHours);
+        Assert.True(dayPoint.IsOverloaded);
+        Assert.Equal(112.5m, dayPoint.UtilizationPercent);
+    }
+
+    [Fact]
+    public async Task WorkOrder_TotalManufacturingCost_CombinesMaterial_TimesheetLabor_AndSubcontractPo()
+    {
+        var fg = await CreateProducibleItemAsync("FG-COST");
+        var warehouse = await CreateWarehouseAsync();
+        await StockAsync(warehouse.Id, PlywoodId, 20m, 1000m);
+        await StockAsync(warehouse.Id, LaminateId, 10m, 500m);
+
+        // Seed an active Project and an approved subcontract PurchaseOrder
+        Guid projectId;
+        Guid poId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var now = DateTimeOffset.UtcNow;
+
+            var customer = Customer.CreateDraft(
+                Guid.NewGuid(), OrgId, UserId, CustomerType.Person, "ลูกค้าผลิต G-13", null, "th",
+                new PrimaryContactInput("คุณสมศรี", null, "0899999999", null, "phone"), now);
+            customer.Activate(customer.RowVersion);
+            db.Customers.Add(customer);
+
+            var site = Site.CreateActive(
+                Guid.NewGuid(), OrgId, customer.Id, UserId, "ไซต์งาน G-13",
+                new SiteAddressInput("99 สุขุมวิท", "คลองเตย", "คลองเตย", "กรุงเทพมหานคร", "10110", "TH"), 13.7m, 100.5m, null, now);
+            db.Sites.Add(site);
+
+            var opp = Opportunity.CreateDraft(
+                Guid.NewGuid(), OrgId, BranchId, customer.Id, site.Id, UserId, UserId,
+                "งานผลิตเฟอร์นิเจอร์", "ขอบเขต", new[] { "built-in" }, null, 200000m, "THB",
+                new DateOnly(2026, 12, 31), now.AddDays(1), "นัดวัด", now);
+            opp.Qualify(opp.RowVersion);
+            opp.EnterSurveying(opp.RowVersion, site.Id);
+            opp.EnterEstimating(opp.RowVersion);
+            opp.EnterProposed(opp.RowVersion);
+            opp.MarkWon(opp.RowVersion);
+            db.Opportunities.Add(opp);
+
+            var estimate = Estimate.CreateDraft(Guid.NewGuid(), OrgId, BranchId, customer.Id, opp.Id, "EST-G13-01", null, null);
+            db.Estimates.Add(estimate);
+
+            var quotation = new Quotation(Guid.NewGuid(), OrgId, BranchId, customer.Id, opp.Id, estimate.Id, estimate.CurrentRevision!.Id, "QT-G13-01", 200000m, "hash-g13", now);
+            quotation.Accept(now);
+            db.Quotations.Add(quotation);
+
+            var project = Project.CreateFromHandover(
+                Guid.NewGuid(), OrgId, BranchId, customer.Id, site.Id, opp.Id, quotation.Id, estimate.Id, estimate.CurrentRevision.Id,
+                null, "PRJ-G13-01", "โครงการทดสอบต้นทุนการผลิต", UserId, new DateOnly(2026, 10, 1), "QT-G13-01", 200000m, "hash-g13", null, "base-g13", UserId, now);
+            project.SetPlan(new DateOnly(2026, 10, 1), new DateOnly(2026, 12, 31), now);
+            var budgetLine = new ProjectBudgetLine(Guid.NewGuid(), OrgId, project.Id, ProjectBudgetCategory.Labor, "งบแรงงานและผลิต", 100000m, 1);
+            db.ProjectBudgetLines.Add(budgetLine);
+            project.SetBaselineBudget(100000m, "budget-hash", now);
+            project.TransitionTo(ProjectStatus.Active, null, 1, now);
+            db.Projects.Add(project);
+            projectId = project.Id;
+
+            var plywoodItem = await db.Items.AsNoTracking().Include(i => i.BaseUnit).SingleAsync(i => i.Id == PlywoodId);
+            var supplier = new Supplier(Guid.NewGuid(), OrgId, "SUP-SUB-01", "ผู้รับจ้างพ่นสี", "คุณช่าง", "0812223333", "sub@example.com", "1234567890123", "กรุงเทพ", 30, UserId, now);
+            db.Suppliers.Add(supplier);
+
+            var po = new PurchaseOrder(Guid.NewGuid(), OrgId, BranchId, supplier.Id, project.Id, "PO-SUB-0001", new DateOnly(2026, 10, 30), "จ้างพ่นสี", UserId, now);
+            po.AddLine(new PurchaseOrderLine(
+                Guid.NewGuid(), OrgId, po.Id, 1, plywoodItem.Id, plywoodItem.Code, "งานจ้างพ่นสีไฮกลอส",
+                plywoodItem.BaseUnitId, plywoodItem.BaseUnit?.Code ?? "PCS", 2m, 600m));
+            po.Submit(now);
+            po.Decide(true, ApproverUserId, "อนุมัติ PO จ้างผลิต", now);
+            db.PurchaseOrders.Add(po);
+            poId = po.Id;
+
+            await db.SaveChangesAsync();
+        }
+
+        var wc = await Ok<WorkCenterResponse>(
+            await SendAsync(HttpMethod.Post, "/api/v1/work-centers", new CreateWorkCenterRequest(null, "ห้องประกอบ", 8m, 200m), key: Key()),
+            HttpStatusCode.Created);
+        Assert.StartsWith("WC-", wc.Code);
+
+        var routing = new List<BomRoutingStepRequest>
+        {
+            new(10, "ASSY", "ประกอบโครง", wc.Id, SetupHours: 0.5m, RunHours: 1.5m, IsSubcontracted: false, StdSubcontractCost: 0m),
+            new(20, "PAINT", "จ้างพ่นสีภายนอก", null, SetupHours: 0m, RunHours: 0m, IsSubcontracted: true, StdSubcontractCost: 600m)
+        };
+        var bom = await ApproveAsync(await Ok<BomResponse>(
+            await SendAsync(HttpMethod.Post, "/api/v1/boms", new BomRequest(fg, 1m, "BOM ต้นทุนรวม", Lines(), routing), key: Key()),
+            HttpStatusCode.Created), 1);
+
+        var wo = await Ok<WorkOrderResponse>(
+            await SendAsync(HttpMethod.Post, "/api/v1/work-orders", new WorkOrderRequest(fg, warehouse.Id, projectId, 2m, "WO ต้นทุนครบ"), key: Key()),
+            HttpStatusCode.Created);
+        wo = await ReleaseAsync(wo);
+
+        // 1. Issue materials: 4 Plywood @ 1000 (4000) + 2.2 Laminate @ 500 (1100) = 5100 THB
+        wo = await Ok<WorkOrderResponse>(await IssueAsync(wo.Id, 4m, 2.2m), HttpStatusCode.Created);
+        Assert.Equal(5100m, wo.NetMaterialValue);
+
+        // 2. Log, submit, and approve a G-20 Labor Timesheet linked to this WorkOrder (4h @ 150 default rate = 600 THB)
+        var projectCtrl = await Ok<ProjectControlResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/timesheets",
+                new CreateProjectTimesheetRequest(UserId, new DateOnly(2026, 10, 30), 4m, null, wo.Id, "ประกอบโครงไม้ตาม WO"), key: Key()),
+            HttpStatusCode.Created);
+        var ts = projectCtrl.Timesheets.Single();
+        projectCtrl = await Ok<ProjectControlResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/timesheets/{ts.Id}/submit",
+                new ProjectTimesheetActionRequest(ts.RowVersion, null)));
+        ts = projectCtrl.Timesheets.Single();
+        await Ok<ProjectControlResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/projects/{projectId}/timesheets/{ts.Id}/approve",
+                new ProjectTimesheetActionRequest(ts.RowVersion, "อนุมัติชั่วโมงประกอบ"), token: "token-approver"));
+
+        // 3. Complete internal operation & record subcontract PO operation (1200 THB)
+        var internalOp = wo.Operations.Single(o => !o.IsSubcontracted);
+        var subOp = wo.Operations.Single(o => o.IsSubcontracted);
+
+        Assert.Equal("PRODUCTION_OPERATION_NOT_SUBCONTRACTED", await ErrorCodeAsync(
+            await SendAsync(HttpMethod.Post, $"/api/v1/work-orders/{wo.Id}/operations/{internalOp.Id}/subcontract",
+                new WorkOrderSubcontractOperationRequest(poId, 500m), key: Key())));
+
+        wo = await Ok<WorkOrderResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/work-orders/{wo.Id}/operations/{internalOp.Id}/complete",
+                new WorkOrderCompleteOperationRequest(4m, "ประกอบเสร็จ"), key: Key()));
+        Assert.Equal("completed", wo.Operations.Single(o => o.Id == internalOp.Id).Status);
+
+        Assert.Equal("PRODUCTION_SUBCONTRACT_COST_EXCEEDS_PO", await ErrorCodeAsync(
+            await SendAsync(HttpMethod.Post, $"/api/v1/work-orders/{wo.Id}/operations/{subOp.Id}/subcontract",
+                new WorkOrderSubcontractOperationRequest(poId, 1500m), key: Key())));
+
+        wo = await Ok<WorkOrderResponse>(
+            await SendAsync(HttpMethod.Post, $"/api/v1/work-orders/{wo.Id}/operations/{subOp.Id}/subcontract",
+                new WorkOrderSubcontractOperationRequest(poId, 1200m, "รับงานพ่นสีตาม PO"), key: Key()));
+
+        Assert.Equal(5100m, wo.NetMaterialValue);
+        Assert.Equal(4m, wo.LaborHours);
+        Assert.Equal(600m, wo.LaborCost);
+        Assert.Single(wo.LaborEntries);
+        Assert.Equal(1200m, wo.SubcontractCost);
+        Assert.Equal(6900m, wo.TotalManufacturingCost);
+
+        // 4. Complete WorkOrder (2 units) -> Finished goods stock receives full 6900 THB (3450 THB/unit)
+        wo = await Ok<WorkOrderResponse>(await CompleteAsync(wo.Id, 2m), HttpStatusCode.Created);
+        Assert.Equal("completed", wo.Status);
+        Assert.Equal(6900m, wo.CostAllocated);
+
+        var fgBalance = (await BalanceAsync(warehouse.Id, fg))!;
+        Assert.Equal(2m, fgBalance.OnHand);
+        Assert.Equal(6900m, fgBalance.TotalValue);
+        Assert.Equal(3450m, fgBalance.AverageCost);
         await AssertLedgerConsistentAsync();
     }
 }

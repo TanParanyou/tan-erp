@@ -1457,4 +1457,76 @@
   <data name="INVENTORY_PERIOD_ALREADY_CLOSED_DETAIL" xml:space="preserve">
     <value>The specified inventory period has already been closed and snapshotted.</value>
   </data>
+  <data name="BOM_ROUTING_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid BOM routing steps</value>
+  </data>
+  <data name="BOM_ROUTING_INVALID_DETAIL" xml:space="preserve">
+    <value>Routing steps must have unique positive sequences, valid work centers for internal steps, and positive setup/run hours or subcontracting enabled.</value>
+  </data>
+  <data name="PRODUCTION_HAS_ACTUAL_COSTS_TITLE" xml:space="preserve">
+    <value>Work order has actual costs or completed operations</value>
+  </data>
+  <data name="PRODUCTION_HAS_ACTUAL_COSTS_DETAIL" xml:space="preserve">
+    <value>Cannot cancel a work order that already has recorded labor cost, subcontract cost, or completed operations.</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_CODE_CONFLICT_TITLE" xml:space="preserve">
+    <value>Duplicate work center code</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_CODE_CONFLICT_DETAIL" xml:space="preserve">
+    <value>A work center with this code already exists in the organization.</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Work center version conflict</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The work center was modified by another user. Reload and retry.</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_IN_USE_TITLE" xml:space="preserve">
+    <value>Work center is in use</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_IN_USE_DETAIL" xml:space="preserve">
+    <value>Cannot deactivate a work center that is referenced by an approved BOM or an open work order.</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_INACTIVE_TITLE" xml:space="preserve">
+    <value>Work center is inactive</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_INACTIVE_DETAIL" xml:space="preserve">
+    <value>An inactive work center cannot be assigned to a BOM routing step.</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid work center data</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_INVALID_DETAIL" xml:space="preserve">
+    <value>Provide a valid name, daily capacity hours between 0.25 and 24.00, and a non-negative hourly rate.</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid work order operation</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_INVALID_DETAIL" xml:space="preserve">
+    <value>The requested action is not valid for this work order operation.</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_ALREADY_COMPLETED_TITLE" xml:space="preserve">
+    <value>Operation already completed</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_ALREADY_COMPLETED_DETAIL" xml:space="preserve">
+    <value>This work order operation has already been marked as completed.</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_NOT_SUBCONTRACTED_TITLE" xml:space="preserve">
+    <value>Operation is not subcontracted</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_NOT_SUBCONTRACTED_DETAIL" xml:space="preserve">
+    <value>Only operations marked as subcontracted can be linked to a subcontract purchase order.</value>
+  </data>
+  <data name="PRODUCTION_SUBCONTRACT_PO_NOT_APPROVED_TITLE" xml:space="preserve">
+    <value>Subcontract purchase order is not approved</value>
+  </data>
+  <data name="PRODUCTION_SUBCONTRACT_PO_NOT_APPROVED_DETAIL" xml:space="preserve">
+    <value>The referenced purchase order must be in approved or received status.</value>
+  </data>
+  <data name="PRODUCTION_SUBCONTRACT_COST_EXCEEDS_PO_TITLE" xml:space="preserve">
+    <value>Subcontract cost exceeds purchase order amount</value>
+  </data>
+  <data name="PRODUCTION_SUBCONTRACT_COST_EXCEEDS_PO_DETAIL" xml:space="preserve">
+    <value>The subcontract cost amount cannot exceed the total amount of the referenced purchase order.</value>
+  </data>
 </root>

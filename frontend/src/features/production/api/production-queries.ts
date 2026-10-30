@@ -6,13 +6,22 @@ import {
   type BomRequest,
   type BomResponse,
   type BomRevisionAction,
+  type CreateWorkCenterRequest,
+  type GetWorkCenterCapacityParams,
   type ListBomsParams,
+  type ListWorkCentersParams,
   type ListWorkOrdersParams,
+  type UpdateWorkCenterRequest,
+  type WorkCenterCapacityViewResponse,
+  type WorkCenterListResponse,
+  type WorkCenterResponse,
+  type WorkOrderCompleteOperationRequest,
   type WorkOrderListResponse,
   type WorkOrderMaterialsRequest,
   type WorkOrderRequest,
   type WorkOrderResponse,
   type WorkOrderStockOperation,
+  type WorkOrderSubcontractOperationRequest,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -36,6 +45,57 @@ function useRequestContext() {
     return { token, membershipId, locale, idempotencyKey, signal };
   };
   return { locale, membershipId, options };
+}
+
+export function useWorkCenterList(params: ListWorkCentersParams, enabled = true): UseQueryResult<WorkCenterListResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...productionKey(membershipId, locale), "work-centers", "list", params],
+    enabled: Boolean(membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.listWorkCenters(await options(undefined, signal), params),
+  });
+}
+
+export function useWorkCenter(id: string | undefined): UseQueryResult<WorkCenterResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...productionKey(membershipId, locale), "work-centers", "detail", id],
+    enabled: Boolean(membershipId && id),
+    queryFn: async ({ signal }) => apiClient.getWorkCenter(id ?? "", await options(undefined, signal)),
+  });
+}
+
+export function useWorkCenterCapacity(params: GetWorkCenterCapacityParams, enabled = true): UseQueryResult<WorkCenterCapacityViewResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...productionKey(membershipId, locale), "work-centers", "capacity", params],
+    enabled: Boolean(membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.getWorkCenterCapacity(await options(undefined, signal), params),
+  });
+}
+
+export function useWorkCenterMutations() {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+  const refresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: [...productionKey(membershipId, locale), "work-centers"] });
+  };
+  const create = useMutation({
+    mutationFn: async (input: { payload: CreateWorkCenterRequest; idempotencyKey: string }) =>
+      apiClient.createWorkCenter(input.payload, await options(input.idempotencyKey)),
+    onSuccess: refresh,
+  });
+  const update = useMutation({
+    mutationFn: async (input: { id: string; rowVersion: string; payload: UpdateWorkCenterRequest }) =>
+      apiClient.updateWorkCenter(input.id, input.rowVersion, input.payload, await options()),
+    onSuccess: refresh,
+  });
+  const setActive = useMutation({
+    mutationFn: async (input: { id: string; rowVersion: string; active: boolean }) =>
+      apiClient.setWorkCenterActive(input.id, input.rowVersion, input.active, await options()),
+    onSuccess: refresh,
+  });
+  return { create, update, setActive };
 }
 
 export function useBomList(params: ListBomsParams): UseQueryResult<BomListResponse, Error> {
@@ -113,6 +173,7 @@ export function useWorkOrderMutations() {
     queryClient.setQueryData([...productionKey(membershipId, locale), "work-orders", "detail", order.id], order);
     await queryClient.invalidateQueries({ queryKey: [...productionKey(membershipId, locale), "work-orders", "list"] });
     await queryClient.invalidateQueries({ queryKey: ["business", membershipId, locale, "inventory"] });
+    await queryClient.invalidateQueries({ queryKey: [...productionKey(membershipId, locale), "work-centers", "capacity"] });
   };
   const create = useMutation({
     mutationFn: async (input: { payload: WorkOrderRequest; idempotencyKey: string }) =>
@@ -138,5 +199,15 @@ export function useWorkOrderMutations() {
       apiClient.completeWorkOrder(input.id, input.quantity, await options(input.idempotencyKey)),
     onSuccess: store,
   });
-  return { create, release, cancel, materials, complete };
+  const completeOperation = useMutation({
+    mutationFn: async (input: { id: string; operationId: string; payload: WorkOrderCompleteOperationRequest; idempotencyKey: string }) =>
+      apiClient.completeWorkOrderOperation(input.id, input.operationId, input.payload, await options(input.idempotencyKey)),
+    onSuccess: store,
+  });
+  const subcontractOperation = useMutation({
+    mutationFn: async (input: { id: string; operationId: string; payload: WorkOrderSubcontractOperationRequest; idempotencyKey: string }) =>
+      apiClient.subcontractWorkOrderOperation(input.id, input.operationId, input.payload, await options(input.idempotencyKey)),
+    onSuccess: store,
+  });
+  return { create, release, cancel, materials, complete, completeOperation, subcontractOperation };
 }

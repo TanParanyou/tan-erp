@@ -8350,6 +8350,165 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Production.BomRoutingStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BomRevisionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bom_revision_id");
+
+                    b.Property<bool>("IsSubcontracted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_subcontracted");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("OperationCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("operation_code");
+
+                    b.Property<string>("OperationName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("operation_name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<decimal>("RunHours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("run_hours");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
+                    b.Property<decimal>("SetupHours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("setup_hours");
+
+                    b.Property<decimal>("StdSubcontractCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("std_subcontract_cost");
+
+                    b.Property<Guid?>("WorkCenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("work_center_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkCenterId");
+
+                    b.HasIndex("BomRevisionId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("bom_routing_steps", "production", t =>
+                        {
+                            t.HasCheckConstraint("ck_bom_routing_steps_values", "sequence > 0 AND setup_hours >= 0 AND run_hours >= 0 AND std_subcontract_cost >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Production.WorkCenter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<decimal>("DailyCapacityHours")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("numeric(6,2)")
+                        .HasColumnName("daily_capacity_hours");
+
+                    b.Property<decimal>("HourlyRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("hourly_rate");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("normalized_code");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("OrganizationId", "NormalizedCode")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "BranchId", "Status");
+
+                    b.ToTable("work_centers", "production", t =>
+                        {
+                            t.HasCheckConstraint("ck_work_centers_capacity", "daily_capacity_hours > 0 AND daily_capacity_hours <= 24");
+
+                            t.HasCheckConstraint("ck_work_centers_hourly_rate", "hourly_rate >= 0");
+
+                            t.HasCheckConstraint("ck_work_centers_status", "status IN ('active', 'inactive')");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Production.WorkOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -8392,6 +8551,16 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("item_id");
 
+                    b.Property<decimal>("LaborCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("labor_cost");
+
+                    b.Property<decimal>("LaborHours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("labor_hours");
+
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
@@ -8407,10 +8576,18 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
+                    b.Property<DateOnly>("PlannedEndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("planned_end_date");
+
                     b.Property<decimal>("PlannedQuantity")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("planned_quantity");
+
+                    b.Property<DateOnly>("PlannedStartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("planned_start_date");
 
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid")
@@ -8426,6 +8603,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("status");
+
+                    b.Property<decimal>("SubcontractCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("subcontract_cost");
 
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("timestamptz")
@@ -8458,7 +8640,9 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("work_orders", "production", t =>
                         {
-                            t.HasCheckConstraint("ck_work_orders_cost_allocated", "cost_allocated >= 0");
+                            t.HasCheckConstraint("ck_work_orders_cost_allocated", "cost_allocated >= 0 AND labor_hours >= 0 AND labor_cost >= 0 AND subcontract_cost >= 0");
+
+                            t.HasCheckConstraint("ck_work_orders_dates", "planned_end_date >= planned_start_date");
 
                             t.HasCheckConstraint("ck_work_orders_quantities", "planned_quantity > 0 AND completed_quantity >= 0 AND completed_quantity <= planned_quantity");
 
@@ -8526,6 +8710,99 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_work_order_materials_quantities", "required_quantity > 0 AND issued_quantity >= 0 AND returned_quantity >= 0 AND returned_quantity <= issued_quantity");
 
                             t.HasCheckConstraint("ck_work_order_materials_values", "issued_value >= 0 AND returned_value >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Production.WorkOrderOperation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("ActualHours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("actual_hours");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("completed_at_utc");
+
+                    b.Property<bool>("IsSubcontracted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_subcontracted");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("OperationCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("operation_code");
+
+                    b.Property<string>("OperationName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("operation_name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<decimal>("PlannedRunHours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("planned_run_hours");
+
+                    b.Property<decimal>("PlannedSetupHours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("planned_setup_hours");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("SubcontractCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("subcontract_cost");
+
+                    b.Property<Guid?>("SubcontractPurchaseOrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subcontract_purchase_order_id");
+
+                    b.Property<Guid?>("WorkCenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("work_center_id");
+
+                    b.Property<Guid>("WorkOrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("work_order_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubcontractPurchaseOrderId");
+
+                    b.HasIndex("WorkCenterId");
+
+                    b.HasIndex("WorkOrderId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("work_order_operations", "production", t =>
+                        {
+                            t.HasCheckConstraint("ck_work_order_operations_values", "sequence > 0 AND planned_setup_hours >= 0 AND planned_run_hours >= 0 AND actual_hours >= 0 AND subcontract_cost >= 0 AND status IN ('pending', 'completed')");
                         });
                 });
 
@@ -13128,6 +13405,41 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Production.BomRoutingStep", b =>
+                {
+                    b.HasOne("TanErp.Domain.Production.BomRevision", null)
+                        .WithMany("RoutingSteps")
+                        .HasForeignKey("BomRevisionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Production.WorkCenter", null)
+                        .WithMany()
+                        .HasForeignKey("WorkCenterId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Production.WorkCenter", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Production.WorkOrder", b =>
                 {
                     b.HasOne("TanErp.Domain.Production.BomRevision", null)
@@ -13182,6 +13494,25 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.HasOne("TanErp.Domain.Production.WorkOrder", null)
                         .WithMany("Materials")
+                        .HasForeignKey("WorkOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Production.WorkOrderOperation", b =>
+                {
+                    b.HasOne("TanErp.Domain.Procurement.PurchaseOrder", null)
+                        .WithMany()
+                        .HasForeignKey("SubcontractPurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Production.WorkCenter", null)
+                        .WithMany()
+                        .HasForeignKey("WorkCenterId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Production.WorkOrder", null)
+                        .WithMany("Operations")
                         .HasForeignKey("WorkOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -14019,11 +14350,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TanErp.Domain.Production.BomRevision", b =>
                 {
                     b.Navigation("Lines");
+
+                    b.Navigation("RoutingSteps");
                 });
 
             modelBuilder.Entity("TanErp.Domain.Production.WorkOrder", b =>
                 {
                     b.Navigation("Materials");
+
+                    b.Navigation("Operations");
                 });
 
             modelBuilder.Entity("TanErp.Domain.Service.InstallationJob", b =>

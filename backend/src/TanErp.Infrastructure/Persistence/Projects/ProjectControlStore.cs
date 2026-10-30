@@ -869,6 +869,11 @@ public class ProjectControlStore : IProjectControlStore
                 {
                     return Fail("TIMESHEET_FIELD_INVALID", "Work order does not belong to this project.");
                 }
+
+                if (workOrder.Status is TanErp.Domain.Production.WorkOrderStatus.Completed or TanErp.Domain.Production.WorkOrderStatus.Cancelled)
+                {
+                    return Fail("PRODUCTION_INVALID_STATE", "Timesheets cannot be logged against a completed or cancelled work order.");
+                }
             }
 
             var rateRow = await _db.LaborRates.AsNoTracking()
@@ -958,6 +963,19 @@ public class ProjectControlStore : IProjectControlStore
                         entry.Decide(action == TimesheetAction.Approve, access.ActorUserId, note, now);
                         if (action == TimesheetAction.Approve)
                         {
+                            if (entry.WorkOrderId.HasValue)
+                            {
+                                var workOrder = await _db.WorkOrders.FirstOrDefaultAsync(
+                                    w => w.Id == entry.WorkOrderId.Value && w.OrganizationId == orgId, ct);
+                                if (workOrder is null) return Fail("RESOURCE_NOT_FOUND", "Work order not found.");
+                                if (workOrder.Status is TanErp.Domain.Production.WorkOrderStatus.Completed or TanErp.Domain.Production.WorkOrderStatus.Cancelled)
+                                {
+                                    return Fail("PRODUCTION_INVALID_STATE", "Cannot approve a timesheet linked to a completed or cancelled work order.");
+                                }
+
+                                workOrder.RecordLabor(entry.Hours, entry.CostAmount, now);
+                            }
+
                             costLedgerEntry = new ProjectCostLedgerEntry(
                                 Guid.NewGuid(),
                                 orgId,
@@ -981,6 +999,10 @@ public class ProjectControlStore : IProjectControlStore
             catch (ProjectDomainException ex)
             {
                 return Fail(ex);
+            }
+            catch (TanErp.Domain.Production.ProductionDomainException ex)
+            {
+                return Fail(ex.Code, ex.Message);
             }
 
             Audit(access, $"project.timesheet-{action.ToString().ToLowerInvariant()}", projectId, traceId,

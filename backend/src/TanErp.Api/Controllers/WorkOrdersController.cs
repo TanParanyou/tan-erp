@@ -27,7 +27,10 @@ public class WorkOrdersController : ProductionControllerBase
     {
         var caller = ReadIdempotent(out var key, out var failure);
         if (caller is null) return failure!;
-        var result = await _handler.CreateWorkOrderAsync(caller, key, new WorkOrderInput(request.ItemId, request.WarehouseId, request.ProjectId, request.PlannedQuantity, request.Note), ct);
+        var result = await _handler.CreateWorkOrderAsync(
+            caller, key,
+            new WorkOrderInput(request.ItemId, request.WarehouseId, request.ProjectId, request.PlannedQuantity, request.Note, request.PlannedStartDate, request.PlannedEndDate),
+            ct);
         if (result.IsFailure) return Problem(result.Error.Code);
         Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
         return CreatedAtAction(nameof(Get), new { id = result.Value.Id }, ToResponse(result.Value));
@@ -66,6 +69,32 @@ public class WorkOrdersController : ProductionControllerBase
         return Created(await _handler.ReturnAsync(caller, id, key, ToLines(request.Lines), ct));
     }
 
+    [HttpPost("{id:guid}/operations/{operationId:guid}/complete")]
+    [ProducesResponseType<WorkOrderResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CompleteOperation(
+        [FromRoute] Guid id, [FromRoute] Guid operationId, [FromBody] WorkOrderCompleteOperationRequest request, CancellationToken ct)
+    {
+        var caller = ReadIdempotent(out var key, out var failure);
+        if (caller is null) return failure!;
+        return Respond(await _handler.CompleteOperationAsync(caller, id, operationId, key, new CompleteOperationInput(request.ActualHours, request.Note), ct));
+    }
+
+    [HttpPost("{id:guid}/operations/{operationId:guid}/subcontract")]
+    [ProducesResponseType<WorkOrderResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> RecordSubcontract(
+        [FromRoute] Guid id, [FromRoute] Guid operationId, [FromBody] WorkOrderSubcontractOperationRequest request, CancellationToken ct)
+    {
+        var caller = ReadIdempotent(out var key, out var failure);
+        if (caller is null) return failure!;
+        return Respond(await _handler.RecordSubcontractAsync(caller, id, operationId, key, new RecordSubcontractInput(request.PurchaseOrderId, request.CostAmount, request.Note), ct));
+    }
+
     [HttpPost("{id:guid}/completions")]
     [ProducesResponseType<WorkOrderResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
@@ -100,7 +129,9 @@ public class WorkOrdersController : ProductionControllerBase
         if (result.IsFailure) return Problem(result.Error.Code);
         var paged = result.Value!;
         return Ok(new WorkOrderListResponse(
-            paged.Items.Select(o => new WorkOrderListItemResponse(o.Id, o.Number, o.Status, o.ItemCode, o.ItemNameTh, o.PlannedQuantity, o.CompletedQuantity, o.ProjectCode, o.CreatedAtUtc)).ToList(),
+            paged.Items.Select(o => new WorkOrderListItemResponse(
+                o.Id, o.Number, o.Status, o.ItemCode, o.ItemNameTh, o.PlannedQuantity, o.CompletedQuantity,
+                o.PlannedStartDate, o.PlannedEndDate, o.TotalManufacturingCost, o.ProjectCode, o.CreatedAtUtc)).ToList(),
             new ProductionPaginationResponse(paged.Page, paged.PageSize, paged.TotalCount, (int)Math.Ceiling(paged.TotalCount / (double)paged.PageSize))));
     }
 
@@ -132,8 +163,18 @@ public class WorkOrdersController : ProductionControllerBase
         o.Id, o.BranchId, o.Number, o.Status, BomsController.ToItem(o.Item), o.BomRevisionId, o.BomCode, o.BomRevisionNo,
         new WorkOrderRefResponse(o.Warehouse.Id, o.Warehouse.Code, o.Warehouse.Name),
         o.Project is null ? null : new WorkOrderRefResponse(o.Project.Id, o.Project.Code, o.Project.Name),
-        o.PlannedQuantity, o.CompletedQuantity, o.CostAllocated, o.Note, o.CancelReason,
+        o.PlannedQuantity, o.CompletedQuantity, o.PlannedStartDate, o.PlannedEndDate,
+        o.NetMaterialValue, o.LaborHours, o.LaborCost, o.SubcontractCost, o.TotalManufacturingCost, o.CostAllocated,
+        o.Note, o.CancelReason,
         new ProductionPersonResponse(o.CreatedBy.Id, o.CreatedBy.DisplayName, o.CreatedBy.Email), o.CreatedAtUtc, o.RowVersion,
         o.Materials.Select(m => new WorkOrderMaterialResponse(m.Id, BomsController.ToItem(m.Item), m.RequiredQuantity, m.IssuedQuantity, m.ReturnedQuantity, m.NetIssuedQuantity, m.RemainingQuantity, m.IssuedValue, m.ReturnedValue)).ToList(),
+        o.Operations.Select(op => new WorkOrderOperationResponse(
+            op.Id, op.Sequence, op.OperationCode, op.OperationName, BomsController.ToWorkCenterRef(op.WorkCenter),
+            op.PlannedSetupHours, op.PlannedRunHours, op.ActualHours, op.IsSubcontracted,
+            op.SubcontractPurchaseOrder is null ? null : new WorkOrderRefResponse(op.SubcontractPurchaseOrder.Id, op.SubcontractPurchaseOrder.Code, op.SubcontractPurchaseOrder.Name),
+            op.SubcontractCost, op.Status, op.Note, op.CompletedAtUtc)).ToList(),
+        o.LaborEntries.Select(l => new WorkOrderLaborEntryResponse(
+            l.Id, l.Number, new ProductionPersonResponse(l.Worker.Id, l.Worker.DisplayName, l.Worker.Email),
+            l.WorkDate, l.Hours, l.HourlyRate, l.CostAmount, l.TaskDescription, l.DecidedAtUtc)).ToList(),
         o.Transactions.Select(t => new WorkOrderTransactionResponse(t.Id, t.Kind, t.StockDocumentId, t.StockDocumentNumber, t.Quantity, t.Value, new ProductionPersonResponse(t.Actor.Id, t.Actor.DisplayName, t.Actor.Email), t.CreatedAtUtc)).ToList());
 }

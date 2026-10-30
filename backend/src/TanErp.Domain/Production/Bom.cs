@@ -41,6 +41,7 @@ public class Bom : Entity
 public class BomRevision : Entity
 {
     private readonly List<BomLine> _lines = new();
+    private readonly List<BomRoutingStep> _routingSteps = new();
 
     public Guid OrganizationId { get; private set; }
     public Guid BomId { get; private set; }
@@ -55,6 +56,7 @@ public class BomRevision : Entity
     public Guid RowVersion { get; private set; }
 
     public IReadOnlyCollection<BomLine> Lines => _lines.AsReadOnly();
+    public IReadOnlyCollection<BomRoutingStep> RoutingSteps => _routingSteps.AsReadOnly();
 
     protected BomRevision() { }
 
@@ -92,6 +94,31 @@ public class BomRevision : Entity
     {
         ArgumentNullException.ThrowIfNull(line);
         _lines.Add(line);
+    }
+
+    public void AddRoutingStep(BomRoutingStep step)
+    {
+        ArgumentNullException.ThrowIfNull(step);
+        if (_routingSteps.Any(s => s.Sequence == step.Sequence))
+        {
+            throw new ProductionDomainException("BOM_ROUTING_INVALID", "Routing step sequence numbers must be unique within a revision.");
+        }
+
+        _routingSteps.Add(step);
+    }
+
+    public void ReplaceRoutingSteps(IEnumerable<BomRoutingStep> steps)
+    {
+        EnsureDraft();
+        var list = steps?.ToList() ?? new List<BomRoutingStep>();
+        if (list.GroupBy(s => s.Sequence).Any(g => g.Count() > 1))
+        {
+            throw new ProductionDomainException("BOM_ROUTING_INVALID", "Routing step sequence numbers must be unique within a revision.");
+        }
+
+        _routingSteps.Clear();
+        _routingSteps.AddRange(list);
+        RowVersion = Guid.NewGuid();
     }
 
     /// <summary>Maker–checker: the approver cannot be the author. A revision needs at least one component.</summary>

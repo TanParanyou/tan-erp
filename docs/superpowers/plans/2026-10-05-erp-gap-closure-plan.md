@@ -53,9 +53,9 @@
 | G-08 | Estimate Unit Conversion Snapshot | B | FR-ITEM-005 | Cost Owner + Estimator | G-08 Implemented 2026-10-15 (verified 2026-10-23: Unit + Integration + Vitest passed; browser not checked; feature OFF until a snapshot-mode calculation policy is published, which has no API yet) — [แผน G-08](2026-10-15-g08-estimate-unit-conversion.md); [ADR 0024](../../adr/0024-estimate-unit-conversion-snapshot.md); [Verification](../../05-engineering/estimate-unit-conversion-verification.md) |
 | G-09 | Quick Estimate: conversion พร้อมรายการ, Branch override, หลักฐาน | B | CP-16, G-01, G-08 | Sales + Cost Owner | G-09 Implemented 2026-10-15 (verified 2026-10-23: Unit + Integration + Vitest passed; browser not checked; migration apply เฉพาะ local dev DB; ยังไม่ผ่าน UAT; ร่างที่แปลงมีรายการขอบเขตแต่ยังไม่มีต้นทุน) — [แผน G-09](2026-10-15-g09-quick-estimate-completion.md); [ADR 0025](../../adr/0025-quick-estimate-branch-override-and-scope-line-conversion.md); [Verification](../../05-engineering/quick-estimate-completion-verification.md) |
 | G-10 | Project Actual Cost / Commitment / WBS | C | CP-09, CP-10, CP-11, CP-12 | PM + Finance | [แผน G-20 + G-10](2026-10-29-g20-g10-timesheet-project-wbs-cost.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/project-handover-verification.md)) |
-| G-11 | Purchase Request, Supplier Return, Supplier Invoice (3-way match) | C | CP-10, G-03 | Procurement + Finance | — |
-| G-12 | Inventory Location/Lot/Serial, Period Close, Returns | C | CP-11 | Warehouse + Finance | — |
-| G-13 | Production Routing/Work Center/Capacity, Labor, Subcontracting | C | CP-12, G-20 | Production | — |
+| G-11 | Purchase Request, Supplier Return, Supplier Invoice (3-way match) | C | CP-10, G-03 | Procurement + Finance | [แผน G-11](2026-10-29-g11-procurement-completion.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/procurement-verification.md)) |
+| G-12 | Inventory Location/Lot/Serial, Period Close, Returns | C | CP-11 | Warehouse + Finance | [แผน G-12](2026-10-29-g12-inventory-completion.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/inventory-verification.md)) |
+| G-13 | Production Routing/Work Center/Capacity, Labor, Subcontracting | C | CP-12, G-20 | Production | [แผน G-13](2026-10-30-g13-production-completion.md) — Implemented 2026-10-30 (Unit 679/679 + Integration 6/6 + Vitest 17/17 passed; [Verification](../../05-engineering/production-verification.md)) |
 | G-14 | MRP Safety Stock / MOQ / Item Lead Time / Calendar / Unit | C | CP-13, G-12, G-13 | Planner + Procurement | — |
 | G-15 | Thai Tax: VAT, WHT, Retention, Tax Invoice, Credit Note | D | CP-15, G-04 | Finance/Accounting | — |
 | G-16 | Credit Exposure + AR Aging gate | D | CP-15, G-15 | Finance | — |
@@ -218,13 +218,13 @@
 
 ### G-13 — Production completion
 
-**แตะ:** `backend/src/TanErp.Domain/Production/` (`Bom.cs`, `WorkOrder.cs`), `WorkOrdersController.cs`, `BomsController.cs`
+**แตะ:** `backend/src/TanErp.Domain/Production/` (`Bom.cs`, `BomRoutingStep.cs`, `WorkCenter.cs`, `WorkOrder.cs`, `WorkOrderOperation.cs`), `WorkCentersController.cs`, `WorkOrdersController.cs`, `BomsController.cs`, `frontend/src/features/production/`
 
-- [ ] Work Center + Routing (ลำดับ operation, เวลา setup/run) ผูก BOM revision
-- [ ] Capacity view ต่อ Work Center ต่อวัน (ใช้ calendar ร่วมกับ G-14)
-- [ ] Labor cost จาก Timesheet (G-20) เข้าต้นทุน WO
-- [ ] Subcontracting: operation ภายนอก → PO บริการ (G-11) + ส่ง/รับวัตถุดิบ
-- [ ] Tests: ต้นทุน WO = วัตถุดิบ + แรงงาน + subcontract ย้อนได้, routing ใน WO เป็น snapshot
+- [x] Work Center + Routing (ลำดับ operation, เวลา setup/run) ผูก BOM revision
+- [x] Capacity view ต่อ Work Center ต่อวัน (`/api/v1/work-centers/capacity`; พร้อมเชื่อมต่อ calendar ใน G-14)
+- [x] Labor cost จาก Timesheet (G-20) เข้าต้นทุน WO
+- [x] Subcontracting: operation ภายนอก → PO บริการ (G-11) + บันทึกต้นทุนจ้างผลิตเข้า WO
+- [x] Tests: ต้นทุน WO = วัตถุดิบ + แรงงาน + subcontract ย้อนได้, routing ใน WO เป็น snapshot (ผล: [Production Verification](../../05-engineering/production-verification.md))
 
 ### G-14 — MRP completion
 

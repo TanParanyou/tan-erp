@@ -30,6 +30,7 @@ public static class DocumentTypes
     public const string StockAdjustments = "stock-adjustments";
     public const string StockReturns = "stock-returns";
     public const string Boms = "boms";
+    public const string WorkCenters = "work-centers";
     public const string WorkOrders = "work-orders";
     public const string MrpRuns = "mrp-runs";
     public const string InstallationJobs = "installation-jobs";
@@ -57,7 +58,8 @@ public static class DocumentTypes
         CostSources,
         Suppliers,
         Warehouses,
-        Boms
+        Boms,
+        WorkCenters
     };
 
     public static readonly IReadOnlyCollection<string> GeneratedMasterData = new[]
@@ -70,7 +72,8 @@ public static class DocumentTypes
         CostSources,
         Suppliers,
         Warehouses,
-        Boms
+        Boms,
+        WorkCenters
     };
 
     public static readonly IReadOnlyCollection<string> All = new[]
@@ -95,6 +98,7 @@ public static class DocumentTypes
         StockAdjustments,
         StockReturns,
         Boms,
+        WorkCenters,
         WorkOrders,
         MrpRuns,
         InstallationJobs,
@@ -145,6 +149,7 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.Suppliers => "SUP-",
             DocumentTypes.Warehouses => "WH-",
             DocumentTypes.Boms => "BOM-",
+            DocumentTypes.WorkCenters => "WC-",
             _ => null
         };
 

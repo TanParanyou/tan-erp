@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -14,13 +14,14 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { IconPlus } from "@/components/common/Icons";
 import { useListState, type ListFilterRecord, type ListPageSize } from "@/hooks/useListState";
-import { formatDateTime, formatNumber } from "@/lib/formatters/formatters";
+import { formatCurrency, formatDateTime, formatNumber } from "@/lib/formatters/formatters";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { WorkOrderListItemResponse } from "@/lib/api/api-client";
 import { useWorkOrderList } from "../api/production-queries";
 import { isWorkOrderStatus, WORK_ORDER_STATUSES, workOrderStatusVariant } from "../production-status";
+import { WorkCenterDrawer } from "./work-center-drawer";
 
 interface OrderFilters extends ListFilterRecord {
   status?: string;
@@ -32,6 +33,7 @@ export function WorkOrderList() {
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
   const canManage = can(selectedMembership, PERMISSIONS.WORK_ORDERS_MANAGE);
+  const [workCenterDrawerOpen, setWorkCenterDrawerOpen] = useState(false);
   const state = useListState<OrderFilters>({
     schema: { single: ["status"], defaultSort: "createdAt", defaultOrder: "desc", allowedSorts: ["createdAt"] },
     debounceMs: 300,
@@ -64,6 +66,12 @@ export function WorkOrderList() {
     { id: "project", header: t("project"), cell: (_v, row) => row.projectCode ?? "-" },
     { id: "status", header: t("status"), cell: (_v, row) => <StatusBadge label={isWorkOrderStatus(row.status) ? t(`statuses.${row.status}`) : "-"} variant={workOrderStatusVariant(row.status)} /> },
     { id: "progress", header: t("progress"), className: "text-right font-mono", cell: (_v, row) => `${formatNumber(row.completedQuantity)} / ${formatNumber(row.plannedQuantity)}` },
+    {
+      id: "totalCost",
+      header: t("totalManufacturingCost"),
+      className: "text-right font-mono",
+      cell: (_v, row) => formatCurrency(row.totalManufacturingCost, "THB", locale),
+    },
     { id: "created", header: t("createdAt"), cell: (_v, row) => (row.createdAtUtc ? formatDateTime(row.createdAtUtc, locale) : "-") },
   ];
 
@@ -73,7 +81,18 @@ export function WorkOrderList() {
         title={t("title")}
         subtitle={t("subtitle")}
         breadcrumbs={[{ label: t("title") }]}
-        actions={canManage ? <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/production/work-orders/create`}>{t("create")}</Button> : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" className="min-h-11" onClick={() => setWorkCenterDrawerOpen(true)}>
+              {t("workCentersButton")}
+            </Button>
+            {canManage ? (
+              <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/production/work-orders/create`}>
+                {t("create")}
+              </Button>
+            ) : null}
+          </div>
+        }
       />
       <ListToolbar activeFilters={<ActiveFilterChips filters={activeFilters} onRemove={() => state.actions.setFilter("status", undefined)} onClear={state.actions.clearFilters} />}>
         <div className="flex w-full flex-wrap items-end gap-3">
@@ -114,6 +133,11 @@ export function WorkOrderList() {
           onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
         />
       )}
+      <WorkCenterDrawer
+        isOpen={workCenterDrawerOpen}
+        onClose={() => setWorkCenterDrawerOpen(false)}
+        canManage={canManage}
+      />
     </section>
   );
 }

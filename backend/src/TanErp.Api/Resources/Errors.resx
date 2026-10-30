@@ -1619,4 +1619,76 @@
   <data name="INVENTORY_PERIOD_ALREADY_CLOSED_DETAIL" xml:space="preserve">
     <value>งวดคลังสินค้าของเดือนและปีที่ระบุได้รับการปิดงวดและบันทึกยอดคงเหลือสิ้นงวดเรียบร้อยแล้ว</value>
   </data>
+  <data name="BOM_ROUTING_INVALID_TITLE" xml:space="preserve">
+    <value>ขั้นตอนการผลิต (Routing) ใน BOM ไม่ถูกต้อง</value>
+  </data>
+  <data name="BOM_ROUTING_INVALID_DETAIL" xml:space="preserve">
+    <value>กรุณาตรวจสอบลำดับขั้นตอนไม่ให้ซ้ำ ระบุสถานีงานสำหรับงานภายใน และกำหนดชั่วโมงตั้งเครื่องหรือชั่วโมงผลิตให้ถูกต้อง</value>
+  </data>
+  <data name="PRODUCTION_HAS_ACTUAL_COSTS_TITLE" xml:space="preserve">
+    <value>ไม่สามารถยกเลิกใบสั่งผลิตที่มีต้นทุนหรือบันทึกขั้นตอนแล้ว</value>
+  </data>
+  <data name="PRODUCTION_HAS_ACTUAL_COSTS_DETAIL" xml:space="preserve">
+    <value>ใบสั่งผลิตนี้มีการบันทึกต้นทุนแรงงาน ต้นทุนจ้างผลิตภายนอก หรือขั้นตอนการผลิตที่เสร็จแล้ว จึงไม่สามารถยกเลิกได้</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_CODE_CONFLICT_TITLE" xml:space="preserve">
+    <value>รหัสสถานีงาน (Work Center) ซ้ำ</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_CODE_CONFLICT_DETAIL" xml:space="preserve">
+    <value>รหัสสถานีงานที่ระบุมีอยู่ในองค์กรแล้ว กรุณาใช้รหัสอื่น</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลสถานีงานถูกแก้ไขโดยผู้อื่น</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ข้อมูลสถานีงานมีการเปลี่ยนแปลง กรุณาโหลดข้อมูลใหม่แล้วลองอีกครั้ง</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_IN_USE_TITLE" xml:space="preserve">
+    <value>ไม่สามารถปิดใช้งานสถานีงานที่กำลังถูกใช้งาน</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_IN_USE_DETAIL" xml:space="preserve">
+    <value>สถานีงานนี้ถูกอ้างอิงอยู่ใน BOM ที่อนุมัติแล้ว หรือในใบสั่งผลิตที่ยังเปิดอยู่</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_INACTIVE_TITLE" xml:space="preserve">
+    <value>สถานีงานถูกปิดใช้งาน</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_INACTIVE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถเลือกสถานีงานที่อยู่ในสถานะปิดใช้งานในขั้นตอนการผลิตได้</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลสถานีงานไม่ถูกต้อง</value>
+  </data>
+  <data name="PRODUCTION_WORK_CENTER_INVALID_DETAIL" xml:space="preserve">
+    <value>กรุณาระบุชื่อสถานีงาน ความจุชั่วโมงต่อวัน (0.25 ถึง 24.00 ชม.) และอัตราต้นทุนต่อชั่วโมงให้ถูกต้อง</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลขั้นตอนการผลิตไม่ถูกต้อง</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_INVALID_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถดำเนินการกับขั้นตอนการผลิตนี้ได้ กรุณาตรวจสอบประเภทขั้นตอน</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_ALREADY_COMPLETED_TITLE" xml:space="preserve">
+    <value>ขั้นตอนการผลิตนี้ถูกบันทึกเสร็จสิ้นแล้ว</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_ALREADY_COMPLETED_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถบันทึกผลซ้ำในขั้นตอนการผลิตที่เสร็จสมบูรณ์แล้ว</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_NOT_SUBCONTRACTED_TITLE" xml:space="preserve">
+    <value>ขั้นตอนนี้ไม่ใช่ขั้นตอนจ้างผลิตภายนอก</value>
+  </data>
+  <data name="PRODUCTION_OPERATION_NOT_SUBCONTRACTED_DETAIL" xml:space="preserve">
+    <value>สามารถผูกใบสั่งซื้อจ้างผลิตภายนอกได้เฉพาะขั้นตอนที่กำหนดเป็นงานจ้างผลิตภายนอก (Subcontracted) เท่านั้น</value>
+  </data>
+  <data name="PRODUCTION_SUBCONTRACT_PO_NOT_APPROVED_TITLE" xml:space="preserve">
+    <value>ใบสั่งซื้อจ้างผลิตภายนอกยังไม่ได้รับอนุมัติ</value>
+  </data>
+  <data name="PRODUCTION_SUBCONTRACT_PO_NOT_APPROVED_DETAIL" xml:space="preserve">
+    <value>ใบสั่งซื้อที่นำมาผูกกับขั้นตอนจ้างผลิตภายนอกต้องอยู่ในสถานะอนุมัติแล้วหรือรับของแล้วเท่านั้น</value>
+  </data>
+  <data name="PRODUCTION_SUBCONTRACT_COST_EXCEEDS_PO_TITLE" xml:space="preserve">
+    <value>ต้นทุนจ้างผลิตภายนอกเกินมูลค่าใบสั่งซื้อ</value>
+  </data>
+  <data name="PRODUCTION_SUBCONTRACT_COST_EXCEEDS_PO_DETAIL" xml:space="preserve">
+    <value>จำนวนเงินต้นทุนจ้างผลิตภายนอกที่ระบุเกินกว่ามูลค่ารวมของใบสั่งซื้อที่อ้างอิง</value>
+  </data>
 </root>

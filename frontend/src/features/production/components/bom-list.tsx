@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -17,6 +18,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { BomListItemResponse } from "@/lib/api/api-client";
 import { useBomList } from "../api/production-queries";
 import { bomRevisionStatusVariant, isBomRevisionStatus } from "../production-status";
+import { WorkCenterDrawer } from "./work-center-drawer";
 
 export function BomList() {
   const t = useTranslations("production.boms");
@@ -24,6 +26,7 @@ export function BomList() {
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
   const canManage = can(selectedMembership, PERMISSIONS.BOMS_MANAGE);
+  const [workCenterDrawerOpen, setWorkCenterDrawerOpen] = useState(false);
   const state = useListState<ListFilterRecord>({
     schema: { defaultSort: "code", defaultOrder: "asc", allowedSorts: ["code"] },
     debounceMs: 300,
@@ -58,7 +61,18 @@ export function BomList() {
         title={t("title")}
         subtitle={t("subtitle")}
         breadcrumbs={[{ label: t("title") }]}
-        actions={canManage ? <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/production/boms/create`}>{t("create")}</Button> : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" className="min-h-11" onClick={() => setWorkCenterDrawerOpen(true)}>
+              {t("workCentersButton")}
+            </Button>
+            {canManage ? (
+              <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/production/boms/create`}>
+                {t("create")}
+              </Button>
+            ) : null}
+          </div>
+        }
       />
       <ListToolbar>
         <div className="flex w-full flex-wrap items-end gap-3">
@@ -92,6 +106,11 @@ export function BomList() {
           onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
         />
       )}
+      <WorkCenterDrawer
+        isOpen={workCenterDrawerOpen}
+        onClose={() => setWorkCenterDrawerOpen(false)}
+        canManage={canManage}
+      />
     </section>
   );
 }

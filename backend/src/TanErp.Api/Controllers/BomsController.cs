@@ -27,7 +27,7 @@ public class BomsController : ProductionControllerBase
     {
         var caller = ReadIdempotent(out var key, out var failure);
         if (caller is null) return failure!;
-        var input = new BomInput(request.ItemId, request.OutputQuantity, request.Note, ToLines(request.Lines));
+        var input = new BomInput(request.ItemId, request.OutputQuantity, request.Note, ToLines(request.Lines), ToRoutingSteps(request.RoutingSteps));
         var result = await _handler.CreateBomAsync(caller, key, input, ct);
         if (result.IsFailure) return Problem(result.Error.Code);
         return CreatedAtAction(nameof(Get), new { id = result.Value!.Id }, ToResponse(result.Value));
@@ -41,7 +41,7 @@ public class BomsController : ProductionControllerBase
     {
         var caller = ReadAuthenticated(out var failure);
         if (caller is null) return failure!;
-        var result = await _handler.CreateRevisionAsync(caller, id, new BomDraftInput(request.OutputQuantity, request.Note, ToLines(request.Lines)), ct);
+        var result = await _handler.CreateRevisionAsync(caller, id, new BomDraftInput(request.OutputQuantity, request.Note, ToLines(request.Lines), ToRoutingSteps(request.RoutingSteps)), ct);
         if (result.IsFailure) return Problem(result.Error.Code);
         return StatusCode(StatusCodes.Status201Created, ToResponse(result.Value!));
     }
@@ -54,7 +54,7 @@ public class BomsController : ProductionControllerBase
     {
         var caller = ReadConditional(out var version, out var failure);
         if (caller is null) return failure!;
-        return Respond(await _handler.UpdateDraftAsync(caller, id, revisionId, version, new BomDraftInput(request.OutputQuantity, request.Note, ToLines(request.Lines)), ct));
+        return Respond(await _handler.UpdateDraftAsync(caller, id, revisionId, version, new BomDraftInput(request.OutputQuantity, request.Note, ToLines(request.Lines), ToRoutingSteps(request.RoutingSteps)), ct));
     }
 
     [HttpPost("{id:guid}/revisions/{revisionId:guid}/approve")]
@@ -106,7 +106,14 @@ public class BomsController : ProductionControllerBase
     private static List<BomLineInput> ToLines(List<BomLineRequest>? lines) =>
         lines?.Select(l => new BomLineInput(l.ComponentItemId, l.Quantity, l.ScrapPercent)).ToList() ?? new List<BomLineInput>();
 
+    private static List<BomRoutingStepInput>? ToRoutingSteps(List<BomRoutingStepRequest>? steps) =>
+        steps?.Select(s => new BomRoutingStepInput(
+            s.Sequence, s.OperationCode, s.OperationName, s.WorkCenterId, s.SetupHours, s.RunHours, s.IsSubcontracted, s.StdSubcontractCost, s.Note)).ToList();
+
     internal static ProductionItemResponse ToItem(ProductionItemRef i) => new(i.Id, i.Code, i.NameTh, i.UnitCode);
+
+    internal static WorkCenterRefResponse? ToWorkCenterRef(WorkCenterRef? wc) =>
+        wc is null ? null : new WorkCenterRefResponse(wc.Id, wc.Code, wc.Name, wc.DailyCapacityHours, wc.HourlyRate);
 
     private static ProductionPersonResponse? ToPerson(ProductionPerson? p) => p is null ? null : new ProductionPersonResponse(p.Id, p.DisplayName, p.Email);
 
@@ -114,5 +121,8 @@ public class BomsController : ProductionControllerBase
         b.Id, b.Code, ToItem(b.Item), b.CreatedAtUtc,
         b.Revisions.Select(r => new BomRevisionResponse(
             r.Id, r.RevisionNo, r.Status, r.OutputQuantity, r.Note, ToPerson(r.CreatedBy)!, r.CreatedAtUtc, ToPerson(r.ApprovedBy), r.ApprovedAtUtc, r.RowVersion,
-            r.Lines.Select(l => new BomLineResponse(l.Id, ToItem(l.Component), l.Quantity, l.ScrapPercent, l.GrossQuantity)).ToList())).ToList());
+            r.Lines.Select(l => new BomLineResponse(l.Id, ToItem(l.Component), l.Quantity, l.ScrapPercent, l.GrossQuantity)).ToList(),
+            r.RoutingSteps.Select(s => new BomRoutingStepResponse(
+                s.Id, s.Sequence, s.OperationCode, s.OperationName, ToWorkCenterRef(s.WorkCenter),
+                s.SetupHours, s.RunHours, s.IsSubcontracted, s.StdSubcontractCost, s.Note)).ToList())).ToList());
 }

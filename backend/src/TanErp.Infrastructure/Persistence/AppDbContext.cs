@@ -61,11 +61,14 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Inventory.StockSerial> StockSerials => Set<TanErp.Domain.Inventory.StockSerial>();
     public DbSet<TanErp.Domain.Inventory.InventoryPeriodClose> InventoryPeriodCloses => Set<TanErp.Domain.Inventory.InventoryPeriodClose>();
     public DbSet<TanErp.Domain.Inventory.InventoryPeriodCloseLine> InventoryPeriodCloseLines => Set<TanErp.Domain.Inventory.InventoryPeriodCloseLine>();
+    public DbSet<TanErp.Domain.Production.WorkCenter> WorkCenters => Set<TanErp.Domain.Production.WorkCenter>();
     public DbSet<TanErp.Domain.Production.Bom> Boms => Set<TanErp.Domain.Production.Bom>();
     public DbSet<TanErp.Domain.Production.BomRevision> BomRevisions => Set<TanErp.Domain.Production.BomRevision>();
     public DbSet<TanErp.Domain.Production.BomLine> BomLines => Set<TanErp.Domain.Production.BomLine>();
+    public DbSet<TanErp.Domain.Production.BomRoutingStep> BomRoutingSteps => Set<TanErp.Domain.Production.BomRoutingStep>();
     public DbSet<TanErp.Domain.Production.WorkOrder> WorkOrders => Set<TanErp.Domain.Production.WorkOrder>();
     public DbSet<TanErp.Domain.Production.WorkOrderMaterial> WorkOrderMaterials => Set<TanErp.Domain.Production.WorkOrderMaterial>();
+    public DbSet<TanErp.Domain.Production.WorkOrderOperation> WorkOrderOperations => Set<TanErp.Domain.Production.WorkOrderOperation>();
     public DbSet<TanErp.Domain.Production.WorkOrderTransaction> WorkOrderTransactions => Set<TanErp.Domain.Production.WorkOrderTransaction>();
     public DbSet<TanErp.Domain.Mrp.MrpRun> MrpRuns => Set<TanErp.Domain.Mrp.MrpRun>();
     public DbSet<TanErp.Domain.QuickEstimates.PricingTemplate> PricingTemplates => Set<TanErp.Domain.QuickEstimates.PricingTemplate>();

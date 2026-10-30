@@ -4,10 +4,12 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
+import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/hooks/useToast";
@@ -16,9 +18,20 @@ import { formatCurrency, formatDateTime, formatNumber } from "@/lib/formatters/f
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import type { WorkOrderResponse, WorkOrderStockOperation } from "@/lib/api/api-client";
+import { usePurchaseOrderList } from "@/features/procurement/api/procurement-queries";
+import type {
+  WorkOrderOperationResponse,
+  WorkOrderResponse,
+  WorkOrderStockOperation,
+} from "@/lib/api/api-client";
 import { useWorkOrder, useWorkOrderMutations } from "../api/production-queries";
-import { isWorkOrderStatus, isWorkOrderTransactionKind, productionErrorCode, workOrderStatusVariant } from "../production-status";
+import {
+  isOperationStatus,
+  isWorkOrderStatus,
+  isWorkOrderTransactionKind,
+  productionErrorCode,
+  workOrderStatusVariant,
+} from "../production-status";
 
 interface WorkOrderDetailProps {
   workOrderId: string;
@@ -39,6 +52,7 @@ export function WorkOrderDetail({ workOrderId }: WorkOrderDetailProps) {
 
 function DetailView({ order }: { order: WorkOrderResponse }) {
   const t = useTranslations("production.workOrders");
+  const tBom = useTranslations("production.boms");
   const tErrors = useTranslations("production.errors");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -50,7 +64,10 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
 
   const status = order.status ?? "";
   const materials = order.materials ?? [];
+  const operations = order.operations ?? [];
+  const laborEntries = order.laborEntries ?? [];
   const stockOpen = STOCK_STATUSES.includes(status);
+
   const [message, setMessage] = useState<string | null>(null);
   const [issueQty, setIssueQty] = useState<Record<string, string>>({});
   const [returnQty, setReturnQty] = useState<Record<string, string>>({});
@@ -58,12 +75,39 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState(false);
-  // One key per operation session, regenerated after each success so a retry replays but a new action does not.
+
+  // Complete Operation Modal state
+  const [completeOpOpen, setCompleteOpOpen] = useState(false);
+  const [selectedOp, setSelectedOp] = useState<WorkOrderOperationResponse | null>(null);
+  const [actualHours, setActualHours] = useState("");
+  const [opNote, setOpNote] = useState("");
+  const [opError, setOpError] = useState<string | null>(null);
+
+  // Link Subcontract PO Modal state
+  const [subcontractOpen, setSubcontractOpen] = useState(false);
+  const [subcontractPoId, setSubcontractPoId] = useState("");
+  const [subcontractCost, setSubcontractCost] = useState("");
+  const [subcontractNote, setSubcontractNote] = useState("");
+  const [subcontractError, setSubcontractError] = useState<string | null>(null);
+
+  const purchaseOrdersQuery = usePurchaseOrderList(
+    { status: "approved", page: 1, pageSize: 100 },
+  );
+
+  // Idempotency keys
   const issueKeyRef = useRef(crypto.randomUUID());
   const returnKeyRef = useRef(crypto.randomUUID());
   const completeKeyRef = useRef(crypto.randomUUID());
+  const completeOpKeyRef = useRef(crypto.randomUUID());
+  const subcontractKeyRef = useRef(crypto.randomUUID());
 
-  const busy = mutations.release.isPending || mutations.cancel.isPending || mutations.materials.isPending || mutations.complete.isPending;
+  const busy =
+    mutations.release.isPending ||
+    mutations.cancel.isPending ||
+    mutations.materials.isPending ||
+    mutations.complete.isPending ||
+    mutations.completeOperation.isPending ||
+    mutations.subcontractOperation.isPending;
 
   function describe(err: unknown): string {
     const code = err instanceof ApiError ? productionErrorCode(err.code) : null;
@@ -135,6 +179,85 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
     }
   }
 
+  function openCompleteOperation(op: WorkOrderOperationResponse): void {
+    setSelectedOp(op);
+    const planned = (op.plannedSetupHours ?? 0) + (op.plannedRunHours ?? 0);
+    setActualHours(op.actualHours != null ? String(op.actualHours) : (planned > 0 ? String(planned) : ""));
+    setOpNote(op.note ?? "");
+    setOpError(null);
+    setCompleteOpOpen(true);
+  }
+
+  function openSubcontractOperation(op: WorkOrderOperationResponse): void {
+    setSelectedOp(op);
+    setSubcontractPoId(op.subcontractPurchaseOrder?.id ?? "");
+    setSubcontractCost(op.subcontractCost ? String(op.subcontractCost) : "");
+    setSubcontractNote(op.note ?? "");
+    setSubcontractError(null);
+    setSubcontractOpen(true);
+  }
+
+  async function submitCompleteOperation(): Promise<void> {
+    if (!selectedOp?.id) return;
+    const hours = Number(actualHours);
+    if (!(hours > 0) || !Number.isFinite(hours)) {
+      setOpError(t("actualHoursRequired"));
+      return;
+    }
+
+    setOpError(null);
+    try {
+      await mutations.completeOperation.mutateAsync({
+        id: order.id ?? "",
+        operationId: selectedOp.id,
+        payload: {
+          actualHours: hours,
+          note: opNote.trim() || null,
+        },
+        idempotencyKey: completeOpKeyRef.current,
+      });
+      completeOpKeyRef.current = crypto.randomUUID();
+      toast.success(t("operationCompletedDone"));
+      setCompleteOpOpen(false);
+      setSelectedOp(null);
+    } catch (err: unknown) {
+      setOpError(describe(err));
+    }
+  }
+
+  async function submitSubcontractOperation(): Promise<void> {
+    if (!selectedOp?.id) return;
+    if (!subcontractPoId) {
+      setSubcontractError(t("purchaseOrderRequired"));
+      return;
+    }
+    const cost = Number(subcontractCost);
+    if (!(cost > 0) || !Number.isFinite(cost)) {
+      setSubcontractError(t("costAmountRequired"));
+      return;
+    }
+
+    setSubcontractError(null);
+    try {
+      await mutations.subcontractOperation.mutateAsync({
+        id: order.id ?? "",
+        operationId: selectedOp.id,
+        payload: {
+          purchaseOrderId: subcontractPoId,
+          costAmount: cost,
+          note: subcontractNote.trim() || null,
+        },
+        idempotencyKey: subcontractKeyRef.current,
+      });
+      subcontractKeyRef.current = crypto.randomUUID();
+      toast.success(t("operationSubcontractedDone"));
+      setSubcontractOpen(false);
+      setSelectedOp(null);
+    } catch (err: unknown) {
+      setSubcontractError(describe(err));
+    }
+  }
+
   const remainingToComplete = (order.plannedQuantity ?? 0) - (order.completedQuantity ?? 0);
 
   return (
@@ -157,6 +280,24 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
             <dd className="font-medium">{order.project?.id ? <Link href={`/${locale}/projects/${order.project.id}`} className="font-mono text-erp-navy underline">{order.project.code}</Link> : "-"}</dd>
           </div>
           <div><dt className="text-xs text-erp-text-muted">{t("progress")}</dt><dd className="font-mono font-semibold">{formatNumber(order.completedQuantity)} / {formatNumber(order.plannedQuantity)}</dd></div>
+          <div>
+            <dt className="text-xs text-erp-text-muted">{t("plannedDates")}</dt>
+            <dd className="font-medium">
+              {order.plannedStartDate || order.plannedEndDate
+                ? `${order.plannedStartDate ?? "-"} ~ ${order.plannedEndDate ?? "-"}`
+                : "-"}
+            </dd>
+          </div>
+          <div><dt className="text-xs text-erp-text-muted">{t("netMaterialValue")}</dt><dd className="font-mono font-semibold">{formatCurrency(order.netMaterialValue, "THB", locale)}</dd></div>
+          <div>
+            <dt className="text-xs text-erp-text-muted">{t("laborCost")}</dt>
+            <dd className="font-mono font-semibold">
+              {formatCurrency(order.laborCost, "THB", locale)}
+              {order.laborHours ? <span className="text-xs font-normal text-erp-text-muted ml-1">({formatNumber(order.laborHours)} {t("hoursAbbr")})</span> : null}
+            </dd>
+          </div>
+          <div><dt className="text-xs text-erp-text-muted">{t("subcontractCost")}</dt><dd className="font-mono font-semibold">{formatCurrency(order.subcontractCost, "THB", locale)}</dd></div>
+          <div><dt className="text-xs text-erp-text-muted">{t("totalManufacturingCost")}</dt><dd className="font-mono font-bold text-erp-navy">{formatCurrency(order.totalManufacturingCost, "THB", locale)}</dd></div>
           <div><dt className="text-xs text-erp-text-muted">{t("costAllocated")}</dt><dd className="font-mono font-semibold">{formatCurrency(order.costAllocated, "THB", locale)}</dd></div>
           <div><dt className="text-xs text-erp-text-muted">{t("createdBy")}</dt><dd className="font-medium">{order.createdBy?.displayName ?? "-"}</dd></div>
         </dl>
@@ -221,6 +362,141 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
         )}
       </div>
 
+      <div className="erp-card p-5 space-y-3" role="region" aria-label={t("operationsTitle")}>
+        <h3 className="text-sm font-bold text-erp-navy">{t("operationsTitle")}</h3>
+        {operations.length === 0 ? (
+          <p className="text-xs text-erp-text-muted">{t("operationsEmpty")}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-erp-border">
+                  <th className="py-2 pr-2 w-16">{tBom("routing.sequence")}</th>
+                  <th className="py-2 pr-2 w-24">{tBom("routing.operationCode")}</th>
+                  <th className="py-2 pr-2">{tBom("routing.operationName")}</th>
+                  <th className="py-2 pr-2">{tBom("routing.workCenter")}</th>
+                  <th className="py-2 pr-2 text-right">{t("plannedHours")}</th>
+                  <th className="py-2 pr-2 text-right">{t("actualHours")}</th>
+                  <th className="py-2 pr-2">{t("subcontractPoAndCost")}</th>
+                  <th className="py-2 pr-2">{t("status")}</th>
+                  {canOperate && ["released", "in_progress"].includes(status) && <th className="py-2 text-right">{t("actions")}</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {operations.map((op) => {
+                  const plannedHours = (op.plannedSetupHours ?? 0) + (op.plannedRunHours ?? 0);
+                  const isCompleted = op.status === "completed";
+                  return (
+                    <tr key={op.id ?? op.sequence} className="border-b border-erp-border/60 align-middle">
+                      <td className="py-2 pr-2 font-mono font-medium">{op.sequence}</td>
+                      <td className="py-2 pr-2 font-mono">{op.operationCode ?? "-"}</td>
+                      <td className="py-2 pr-2 font-medium">{op.operationName ?? "-"}</td>
+                      <td className="py-2 pr-2">
+                        {op.isSubcontracted ? (
+                          <Badge variant="warning">{tBom("routing.subcontractBadge")}</Badge>
+                        ) : (
+                          <span>{op.workCenter?.code ? `${op.workCenter.code} · ${op.workCenter.name ?? ""}` : "-"}</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-2 text-right font-mono">{formatNumber(plannedHours)}</td>
+                      <td className="py-2 pr-2 text-right font-mono">{op.actualHours != null ? formatNumber(op.actualHours) : "-"}</td>
+                      <td className="py-2 pr-2">
+                        {op.isSubcontracted ? (
+                          <div>
+                            {op.subcontractPurchaseOrder?.code ? (
+                              <span className="font-mono font-medium">{op.subcontractPurchaseOrder.code}</span>
+                            ) : (
+                              <span className="text-erp-text-muted">-</span>
+                            )}
+                            {op.subcontractCost != null && op.subcontractCost > 0 ? (
+                              <div className="font-mono text-xs">{formatCurrency(op.subcontractCost, "THB", locale)}</div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <span className="text-erp-text-muted">-</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-2">
+                        <StatusBadge
+                          label={isOperationStatus(op.status) ? t(`operationStatuses.${op.status}`) : "-"}
+                          variant={op.status === "completed" ? "success" : "neutral"}
+                        />
+                      </td>
+                      {canOperate && ["released", "in_progress"].includes(status) && (
+                        <td className="py-2 text-right">
+                          {!isCompleted && !op.isSubcontracted && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="min-h-11"
+                              disabled={busy}
+                              onClick={() => openCompleteOperation(op)}
+                            >
+                              {t("completeOperation")}
+                            </Button>
+                          )}
+                          {!isCompleted && op.isSubcontracted && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="min-h-11"
+                              disabled={busy}
+                              onClick={() => openSubcontractOperation(op)}
+                            >
+                              {t("linkSubcontractPo")}
+                            </Button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="erp-card p-5 space-y-3" role="region" aria-label={t("laborEntriesTitle")}>
+        <h3 className="text-sm font-bold text-erp-navy">{t("laborEntriesTitle")}</h3>
+        {laborEntries.length === 0 ? (
+          <p className="text-xs text-erp-text-muted">{t("laborEntriesEmpty")}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-erp-border">
+                  <th className="py-2 pr-2">{t("laborNumber")}</th>
+                  <th className="py-2 pr-2">{t("worker")}</th>
+                  <th className="py-2 pr-2">{t("workDate")}</th>
+                  <th className="py-2 pr-2 text-right">{t("hours")}</th>
+                  <th className="py-2 pr-2 text-right">{t("hourlyRate")}</th>
+                  <th className="py-2 pr-2 text-right">{t("costAmountHeader")}</th>
+                  <th className="py-2 pr-2">{t("taskDescription")}</th>
+                  <th className="py-2">{t("decidedAt")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {laborEntries.map((entry) => (
+                  <tr key={entry.id ?? entry.number} className="border-b border-erp-border/60 align-middle">
+                    <td className="py-2 pr-2 font-mono font-medium">{entry.number ?? "-"}</td>
+                    <td className="py-2 pr-2">{entry.worker?.displayName ?? "-"}</td>
+                    <td className="py-2 pr-2 font-mono">{entry.workDate ?? "-"}</td>
+                    <td className="py-2 pr-2 text-right font-mono">{formatNumber(entry.hours)}</td>
+                    <td className="py-2 pr-2 text-right font-mono">{formatCurrency(entry.hourlyRate, "THB", locale)}</td>
+                    <td className="py-2 pr-2 text-right font-mono font-semibold">{formatCurrency(entry.costAmount, "THB", locale)}</td>
+                    <td className="py-2 pr-2 text-erp-text-muted">{entry.taskDescription ?? "-"}</td>
+                    <td className="py-2 text-erp-text-muted font-mono">{entry.decidedAtUtc ? formatDateTime(entry.decidedAtUtc, locale) : "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {status === "in_progress" && canOperate && (
         <div className="erp-card p-5 space-y-3" role="region" aria-label={t("completeTitle")}>
           <h3 className="text-sm font-bold text-erp-navy">{t("completeTitle")}</h3>
@@ -252,6 +528,7 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
         )}
       </div>
 
+      {/* Cancel Order Confirmation Modal */}
       <Modal
         isOpen={cancelOpen}
         onClose={() => { if (!busy) setCancelOpen(false); }}
@@ -278,6 +555,112 @@ function DetailView({ order }: { order: WorkOrderResponse }) {
           error={reasonError ? t("reasonRequired") : undefined}
           onChange={(event) => { setReason(event.target.value); if (event.target.value.trim()) setReasonError(false); }}
         />
+      </Modal>
+
+      {/* Complete Operation Modal */}
+      <Modal
+        isOpen={completeOpOpen}
+        onClose={() => { if (!busy) setCompleteOpOpen(false); }}
+        title={t("completeOperationTitle")}
+        description={t("completeOperationDescription")}
+        size="sm"
+        closeDisabled={busy}
+        closeOnOverlayClick={!busy}
+        closeOnEscape={!busy}
+        footer={(
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => setCompleteOpOpen(false)}>{tCommon("actions.cancel")}</Button>
+            <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.completeOperation.isPending} disabled={busy} onClick={() => void submitCompleteOperation()}>{tCommon("actions.save")}</Button>
+          </div>
+        )}
+      >
+        <div className="space-y-3">
+          {opError && <Alert variant="danger" onClose={() => setOpError(null)}>{opError}</Alert>}
+          <div className="text-xs text-erp-text-muted">
+            {selectedOp?.sequence} · {selectedOp?.operationCode} · {selectedOp?.operationName}
+          </div>
+          <Input
+            type="number"
+            min={0.01}
+            step="0.01"
+            label={t("actualHours")}
+            required
+            value={actualHours}
+            disabled={busy}
+            placeholder={t("actualHoursPlaceholder")}
+            onChange={(e) => setActualHours(e.target.value)}
+          />
+          <Input
+            label={t("note")}
+            value={opNote}
+            maxLength={500}
+            disabled={busy}
+            placeholder={t("operationNotePlaceholder")}
+            onChange={(e) => setOpNote(e.target.value)}
+          />
+        </div>
+      </Modal>
+
+      {/* Link Subcontract PO Modal */}
+      <Modal
+        isOpen={subcontractOpen}
+        onClose={() => { if (!busy) setSubcontractOpen(false); }}
+        title={t("linkSubcontractPoTitle")}
+        description={t("linkSubcontractPoDescription")}
+        size="sm"
+        closeDisabled={busy}
+        closeOnOverlayClick={!busy}
+        closeOnEscape={!busy}
+        footer={(
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => setSubcontractOpen(false)}>{tCommon("actions.cancel")}</Button>
+            <Button type="button" variant="primary" className="min-h-11" isLoading={mutations.subcontractOperation.isPending} disabled={busy} onClick={() => void submitSubcontractOperation()}>{tCommon("actions.save")}</Button>
+          </div>
+        )}
+      >
+        <div className="space-y-3">
+          {subcontractError && <Alert variant="danger" onClose={() => setSubcontractError(null)}>{subcontractError}</Alert>}
+          <div className="text-xs text-erp-text-muted">
+            {selectedOp?.sequence} · {selectedOp?.operationCode} · {selectedOp?.operationName}
+          </div>
+          <Select
+            label={t("purchaseOrder")}
+            required
+            value={subcontractPoId}
+            placeholder={t("selectPurchaseOrder")}
+            disabled={busy}
+            options={(purchaseOrdersQuery.data?.items ?? []).map((po) => ({
+              value: po.id ?? "",
+              label: `${po.number ?? "-"} · ${po.supplierNameTh ?? po.supplierCode ?? "-"} (${formatCurrency(po.totalAmount, "THB", locale)})`,
+            }))}
+            onChange={(e) => {
+              setSubcontractPoId(e.target.value);
+              setSubcontractError(null);
+            }}
+          />
+          <Input
+            type="number"
+            min={0.01}
+            step="0.01"
+            label={t("costAmount")}
+            required
+            value={subcontractCost}
+            disabled={busy}
+            placeholder={t("costAmountPlaceholder")}
+            onChange={(e) => {
+              setSubcontractCost(e.target.value);
+              setSubcontractError(null);
+            }}
+          />
+          <Input
+            label={t("note")}
+            value={subcontractNote}
+            maxLength={500}
+            disabled={busy}
+            placeholder={t("subcontractNotePlaceholder")}
+            onChange={(e) => setSubcontractNote(e.target.value)}
+          />
+        </div>
       </Modal>
     </section>
   );

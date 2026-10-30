@@ -49,6 +49,22 @@ export function isWorkOrderTransactionKind(value: string | null | undefined): va
   return WORK_ORDER_TRANSACTION_KINDS.some((kind) => kind === value);
 }
 
+export const WORK_CENTER_STATUSES = ["active", "inactive"] as const;
+
+export type WorkCenterStatusValue = (typeof WORK_CENTER_STATUSES)[number];
+
+export function isWorkCenterStatus(value: string | null | undefined): value is WorkCenterStatusValue {
+  return WORK_CENTER_STATUSES.some((status) => status === value);
+}
+
+export const OPERATION_STATUSES = ["pending", "completed"] as const;
+
+export type OperationStatusValue = (typeof OPERATION_STATUSES)[number];
+
+export function isOperationStatus(value: string | null | undefined): value is OperationStatusValue {
+  return OPERATION_STATUSES.some((status) => status === value);
+}
+
 const KNOWN_ERROR_CODES = [
   "BOM_CODE_CONFLICT",
   "BOM_ALREADY_EXISTS",
@@ -56,10 +72,22 @@ const KNOWN_ERROR_CODES = [
   "BOM_INVALID_STATE",
   "BOM_SELF_APPROVAL",
   "BOM_LINE_INVALID",
+  "BOM_ROUTING_INVALID",
   "BOM_CYCLE",
   "BOM_ITEM_NOT_PRODUCIBLE",
   "BOM_COMPONENT_NOT_STOCKABLE",
   "PRODUCTION_BOM_NOT_APPROVED",
+  "PRODUCTION_WORK_CENTER_CODE_CONFLICT",
+  "PRODUCTION_WORK_CENTER_VERSION_CONFLICT",
+  "PRODUCTION_WORK_CENTER_IN_USE",
+  "PRODUCTION_WORK_CENTER_INACTIVE",
+  "PRODUCTION_WORK_CENTER_INVALID",
+  "PRODUCTION_OPERATION_NOT_SUBCONTRACTED",
+  "PRODUCTION_OPERATION_ALREADY_COMPLETED",
+  "PRODUCTION_OPERATION_INVALID",
+  "PRODUCTION_SUBCONTRACT_PO_NOT_APPROVED",
+  "PRODUCTION_SUBCONTRACT_COST_EXCEEDS_PO",
+  "PRODUCTION_HAS_ACTUAL_COSTS",
   "PRODUCTION_VERSION_CONFLICT",
   "PRODUCTION_INVALID_STATE",
   "PRODUCTION_PROJECT_NOT_ACTIVE",

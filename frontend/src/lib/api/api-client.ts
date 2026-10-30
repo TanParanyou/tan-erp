@@ -276,6 +276,35 @@ export type WorkOrderListItemResponse = components["schemas"]["WorkOrderListItem
 export type BomRevisionAction = "approve" | "obsolete";
 export type WorkOrderAction = "release" | "cancel";
 export type WorkOrderStockOperation = "issues" | "returns";
+
+export type WorkCenterRequest = components["schemas"]["CreateWorkCenterRequest"];
+export type CreateWorkCenterRequest = components["schemas"]["CreateWorkCenterRequest"];
+export type UpdateWorkCenterRequest = components["schemas"]["UpdateWorkCenterRequest"];
+export type WorkCenterResponse = components["schemas"]["WorkCenterResponse"];
+export type WorkCenterListResponse = components["schemas"]["WorkCenterListResponse"];
+export type WorkCenterCapacityViewResponse = components["schemas"]["WorkCenterCapacityViewResponse"];
+export type WorkCenterCapacityRowResponse = components["schemas"]["WorkCenterCapacityRowResponse"];
+export type WorkCenterDailyCapacityPointResponse = components["schemas"]["WorkCenterDailyCapacityPointResponse"];
+export type BomRoutingStepRequest = components["schemas"]["BomRoutingStepRequest"];
+export type BomRoutingStepResponse = components["schemas"]["BomRoutingStepResponse"];
+export type WorkOrderOperationResponse = components["schemas"]["WorkOrderOperationResponse"];
+export type WorkOrderLaborEntryResponse = components["schemas"]["WorkOrderLaborEntryResponse"];
+export type WorkOrderCompleteOperationRequest = components["schemas"]["WorkOrderCompleteOperationRequest"];
+export type WorkOrderSubcontractOperationRequest = components["schemas"]["WorkOrderSubcontractOperationRequest"];
+
+export interface ListWorkCentersParams {
+  search?: string;
+  status?: string;
+  branchId?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface GetWorkCenterCapacityParams {
+  fromDate?: string;
+  toDate?: string;
+  branchId?: string;
+}
+
 export interface ListBomsParams {
   search?: string;
   page?: number;
@@ -2208,6 +2237,48 @@ export class ApiClient {
 
   async completeWorkOrder(id: string, quantity: number, options: RequestOptions): Promise<WorkOrderResponse> {
     return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}/completions`, "POST", options, { quantity });
+  }
+
+  async completeWorkOrderOperation(id: string, operationId: string, payload: WorkOrderCompleteOperationRequest, options: RequestOptions): Promise<WorkOrderResponse> {
+    return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}/operations/${encodeURIComponent(operationId)}/complete`, "POST", options, payload);
+  }
+
+  async subcontractWorkOrderOperation(id: string, operationId: string, payload: WorkOrderSubcontractOperationRequest, options: RequestOptions): Promise<WorkOrderResponse> {
+    return this.request<WorkOrderResponse>(`/api/v1/work-orders/${encodeURIComponent(id)}/operations/${encodeURIComponent(operationId)}/subcontract`, "POST", options, payload);
+  }
+
+  async listWorkCenters(options: RequestOptions, query: ListWorkCentersParams): Promise<WorkCenterListResponse> {
+    const params = new URLSearchParams();
+    if (query.search) params.set("search", query.search);
+    if (query.status) params.set("status", query.status);
+    if (query.branchId) params.set("branchId", query.branchId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<WorkCenterListResponse>(`/api/v1/work-centers?${params.toString()}`, "GET", options);
+  }
+
+  async getWorkCenter(id: string, options: RequestOptions): Promise<WorkCenterResponse> {
+    return this.request<WorkCenterResponse>(`/api/v1/work-centers/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async createWorkCenter(payload: CreateWorkCenterRequest, options: RequestOptions): Promise<WorkCenterResponse> {
+    return this.request<WorkCenterResponse>("/api/v1/work-centers", "POST", options, payload);
+  }
+
+  async updateWorkCenter(id: string, rowVersion: string, payload: UpdateWorkCenterRequest, options: RequestOptions): Promise<WorkCenterResponse> {
+    return this.request<WorkCenterResponse>(`/api/v1/work-centers/${encodeURIComponent(id)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async setWorkCenterActive(id: string, rowVersion: string, active: boolean, options: RequestOptions): Promise<WorkCenterResponse> {
+    return this.request<WorkCenterResponse>(`/api/v1/work-centers/${encodeURIComponent(id)}/${active ? "activate" : "deactivate"}`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async getWorkCenterCapacity(options: RequestOptions, query: GetWorkCenterCapacityParams): Promise<WorkCenterCapacityViewResponse> {
+    const params = new URLSearchParams();
+    if (query.fromDate) params.set("fromDate", query.fromDate);
+    if (query.toDate) params.set("toDate", query.toDate);
+    if (query.branchId) params.set("branchId", query.branchId);
+    return this.request<WorkCenterCapacityViewResponse>(`/api/v1/work-centers/capacity?${params.toString()}`, "GET", options);
   }
 
   async listMrpRuns(options: RequestOptions, query: ListMrpRunsParams): Promise<MrpRunListResponse> {

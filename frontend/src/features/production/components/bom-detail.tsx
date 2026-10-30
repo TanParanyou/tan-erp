@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { MonoSpinner } from "@/components/ui/MonoSpinner";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
-import { formatDateTime, formatNumber } from "@/lib/formatters/formatters";
+import { formatCurrency, formatDateTime, formatNumber } from "@/lib/formatters/formatters";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -74,6 +75,17 @@ function DetailView({ bom }: { bom: BomResponse }) {
           outputQuantity: latest.outputQuantity ?? 1,
           note: latest.note ?? null,
           lines: (latest.lines ?? []).map((line) => ({ componentItemId: line.component?.id ?? "", quantity: line.quantity ?? 1, scrapPercent: line.scrapPercent ?? 0 })),
+          routingSteps: (latest.routingSteps ?? []).map((step) => ({
+            sequence: step.sequence ?? 1,
+            operationCode: step.operationCode ?? "",
+            operationName: step.operationName ?? "",
+            workCenterId: step.workCenter?.id ?? null,
+            setupHours: step.setupHours ?? 0,
+            runHours: step.runHours ?? 0,
+            isSubcontracted: step.isSubcontracted ?? false,
+            stdSubcontractCost: step.stdSubcontractCost ?? 0,
+            note: step.note ?? null,
+          })),
         },
       });
       const draft = (saved.revisions ?? []).find((r) => r.status === "draft");
@@ -94,7 +106,7 @@ function DetailView({ bom }: { bom: BomResponse }) {
       {message && <Alert variant="danger" onClose={() => setMessage(null)}>{message}</Alert>}
 
       {revisions.map((revision) => (
-        <div key={revision.id} className="erp-card p-5 space-y-3" role="region" aria-label={t("revisionTitle", { revision: revision.revisionNo ?? 0 })}>
+        <div key={revision.id} className="erp-card p-5 space-y-4" role="region" aria-label={t("revisionTitle", { revision: revision.revisionNo ?? 0 })}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-sm font-bold text-erp-navy">
               {t("revisionTitle", { revision: revision.revisionNo ?? 0 })}{" "}
@@ -118,28 +130,73 @@ function DetailView({ bom }: { bom: BomResponse }) {
             <div><dt className="text-xs text-erp-text-muted">{t("approvedBy")}</dt><dd className="font-medium">{revision.approvedBy?.displayName ?? "-"}{revision.approvedAtUtc ? ` · ${formatDateTime(revision.approvedAtUtc, locale)}` : ""}</dd></div>
             <div><dt className="text-xs text-erp-text-muted">{t("note")}</dt><dd className="font-medium">{revision.note ?? "-"}</dd></div>
           </dl>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-erp-border">
-                  <th className="py-2 pr-2">{t("component")}</th>
-                  <th className="py-2 pr-2 text-right">{t("quantity")}</th>
-                  <th className="py-2 pr-2 text-right">{t("scrapPercent")}</th>
-                  <th className="py-2 text-right">{t("grossQuantity")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(revision.lines ?? []).map((line) => (
-                  <tr key={line.id} className="border-b border-erp-border/60">
-                    <td className="py-2 pr-2">{line.component?.code ?? "-"} · {line.component?.nameTh ?? "-"} ({line.component?.unitCode ?? "-"})</td>
-                    <td className="py-2 pr-2 text-right font-mono">{formatNumber(line.quantity)}</td>
-                    <td className="py-2 pr-2 text-right font-mono">{formatNumber(line.scrapPercent)}</td>
-                    <td className="py-2 text-right font-mono">{formatNumber(line.grossQuantity)}</td>
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-erp-navy uppercase tracking-wider">{t("componentsTitle")}</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-erp-border">
+                    <th className="py-2 pr-2">{t("component")}</th>
+                    <th className="py-2 pr-2 text-right">{t("quantity")}</th>
+                    <th className="py-2 pr-2 text-right">{t("scrapPercent")}</th>
+                    <th className="py-2 text-right">{t("grossQuantity")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(revision.lines ?? []).map((line) => (
+                    <tr key={line.id} className="border-b border-erp-border/60">
+                      <td className="py-2 pr-2">{line.component?.code ?? "-"} · {line.component?.nameTh ?? "-"} ({line.component?.unitCode ?? "-"})</td>
+                      <td className="py-2 pr-2 text-right font-mono">{formatNumber(line.quantity)}</td>
+                      <td className="py-2 pr-2 text-right font-mono">{formatNumber(line.scrapPercent)}</td>
+                      <td className="py-2 text-right font-mono">{formatNumber(line.grossQuantity)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {(revision.routingSteps ?? []).length > 0 && (
+            <div className="space-y-2 pt-2">
+              <h4 className="text-xs font-bold text-erp-navy uppercase tracking-wider">{t("routing.title")}</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-erp-border">
+                      <th className="py-2 pr-2 w-16">{t("routing.sequence")}</th>
+                      <th className="py-2 pr-2 w-24">{t("routing.operationCode")}</th>
+                      <th className="py-2 pr-2">{t("routing.operationName")}</th>
+                      <th className="py-2 pr-2">{t("routing.workCenter")}</th>
+                      <th className="py-2 pr-2 text-right">{t("routing.setupHours")}</th>
+                      <th className="py-2 pr-2 text-right">{t("routing.runHours")}</th>
+                      <th className="py-2 pr-2 text-right">{t("routing.stdSubcontractCost")}</th>
+                      <th className="py-2">{t("routing.note")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(revision.routingSteps ?? []).map((step) => (
+                      <tr key={step.id ?? `${step.sequence}-${step.operationCode}`} className="border-b border-erp-border/60">
+                        <td className="py-2 pr-2 font-mono font-medium">{step.sequence}</td>
+                        <td className="py-2 pr-2 font-mono">{step.operationCode ?? "-"}</td>
+                        <td className="py-2 pr-2 font-medium">{step.operationName ?? "-"}</td>
+                        <td className="py-2 pr-2">
+                          {step.isSubcontracted ? (
+                            <Badge variant="warning">{t("routing.subcontractBadge")}</Badge>
+                          ) : (
+                            <span>{step.workCenter?.code ? `${step.workCenter.code} · ${step.workCenter.name ?? ""}` : "-"}</span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-2 text-right font-mono">{step.isSubcontracted ? "-" : formatNumber(step.setupHours)}</td>
+                        <td className="py-2 pr-2 text-right font-mono">{step.isSubcontracted ? "-" : formatNumber(step.runHours)}</td>
+                        <td className="py-2 pr-2 text-right font-mono">{step.isSubcontracted ? formatCurrency(step.stdSubcontractCost, "THB", locale) : "-"}</td>
+                        <td className="py-2 text-erp-text-muted">{step.note ?? "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </section>
