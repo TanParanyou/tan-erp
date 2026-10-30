@@ -81,6 +81,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateConversion> QuickEstimateConversions => Set<TanErp.Domain.QuickEstimates.QuickEstimateConversion>();
     public DbSet<TanErp.Domain.QuickEstimates.BranchRateOverride> BranchRateOverrides => Set<TanErp.Domain.QuickEstimates.BranchRateOverride>();
     public DbSet<TanErp.Domain.Finance.BillingDocument> BillingDocuments => Set<TanErp.Domain.Finance.BillingDocument>();
+    public DbSet<TanErp.Domain.Finance.BillingLine> BillingLines => Set<TanErp.Domain.Finance.BillingLine>();
+    public DbSet<TanErp.Domain.Finance.BillingAdjustmentNote> BillingAdjustmentNotes => Set<TanErp.Domain.Finance.BillingAdjustmentNote>();
     public DbSet<TanErp.Domain.Finance.Payment> Payments => Set<TanErp.Domain.Finance.Payment>();
     public DbSet<TanErp.Domain.Finance.AccountingOutboxMessage> AccountingOutbox => Set<TanErp.Domain.Finance.AccountingOutboxMessage>();
     public DbSet<TanErp.Domain.Service.InstallationJob> InstallationJobs => Set<TanErp.Domain.Service.InstallationJob>();

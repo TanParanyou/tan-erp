@@ -56,8 +56,8 @@
 | G-11 | Purchase Request, Supplier Return, Supplier Invoice (3-way match) | C | CP-10, G-03 | Procurement + Finance | [แผน G-11](2026-10-29-g11-procurement-completion.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/procurement-verification.md)) |
 | G-12 | Inventory Location/Lot/Serial, Period Close, Returns | C | CP-11 | Warehouse + Finance | [แผน G-12](2026-10-29-g12-inventory-completion.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/inventory-verification.md)) |
 | G-13 | Production Routing/Work Center/Capacity, Labor, Subcontracting | C | CP-12, G-20 | Production | [แผน G-13](2026-10-30-g13-production-completion.md) — Implemented 2026-10-30 (Unit 679/679 + Integration 6/6 + Vitest 17/17 passed; [Verification](../../05-engineering/production-verification.md)) |
-| G-14 | MRP Safety Stock / MOQ / Item Lead Time / Calendar / Unit | C | CP-13, G-12, G-13 | Planner + Procurement | [แผน G-14](2026-10-30-g14-mrp-completion.md) — Implemented 2026-10-30 (Unit 683/683 + Integration 10/10 + Vitest 11/11 passed; [Verification](../../05-engineering/mrp-verification.md)) |
-| G-15 | Thai Tax: VAT, WHT, Retention, Tax Invoice, Credit Note | D | CP-15, G-04 | Finance/Accounting | — |
+| G-14 | MRP Safety Stock / MOQ / Item Lead Time / Calendar / Unit | C | CP-13, G-12, G-13 | Planner + Procurement | [แผน G-14](2026-10-30-g14-mrp-completion.md) — Implemented 2026-10-30 (Unit 683/683 + Integration 10/10 + Vitest 11/17 passed; [Verification](../../05-engineering/mrp-verification.md)) |
+| G-15 | Thai Tax: VAT, WHT, Retention, Tax Invoice, Credit Note | D | CP-15, G-04 | Finance/Accounting | [แผน G-15](2026-10-30-g15-thai-tax.md) — Implemented 2026-10-30 (Unit 687/687 + Integration 6/6 + Vitest 14/14 passed; [Verification](../../05-engineering/finance-verification.md)) |
 | G-16 | Credit Exposure + AR Aging gate | D | CP-15, G-15 | Finance | — |
 | G-17 | Accounting Connector จริง (+ Journal Export ชั่วคราว) | D | CP-15, G-15 | Finance + Security | — |
 | G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | — |
@@ -238,14 +238,14 @@
 
 ### G-15 — Thai Tax
 
-**แตะ:** `backend/src/TanErp.Domain/Finance/` (`BillingDocument.cs`), Item Tax category เดิม, `BillingsController.cs`
+**แตะ:** `backend/src/TanErp.Domain/Finance/` (`BillingDocument.cs`, `FinanceValues.cs`), `BillingsController.cs`, `QuestPdfTaxDocumentRenderer.cs`, `frontend/src/features/finance/`
 
-- [ ] VAT 7% (rate versioned, ไม่ hardcode ในโค้ดคำนวณ) แยก tax base ต่อบรรทัด
-- [ ] WHT: บันทึกตอนรับชำระ (อัตราตามประเภทเงินได้) + ออกเลข 50 ทวิ reference
-- [ ] Retention: % ต่อสัญญา หักตอนวางบิล ปล่อยตอนหมดประกัน (ผูก CP-14)
-- [ ] Tax Invoice / Receipt เต็มรูป (PDF ผ่าน renderer G-04) + Credit Note / Debit Note อ้างฉบับเดิม
+- [x] VAT 7% (rate versioned จาก `TaxPolicyVersion`, ไม่ hardcode ในโค้ดคำนวณ) แยก tax base ต่อบรรทัด พร้อมเลขใบกำกับภาษี `TIV-{YYYY}-{SEQ:4}`
+- [x] WHT: บันทึกตอนรับชำระ (อัตราตามประเภทเงินได้) + ออกเลข 50 ทวิ reference พร้อมเลขใบเสร็จ `RCT-{YYYY}-{SEQ:4}`
+- [x] Retention: % ต่อสัญญา หักตอนวางบิล ปล่อยตอนหมดประกัน (ผูก `CP-14` `Warranty.EndDate < Today`)
+- [x] Tax Invoice / Receipt เต็มรูป (PDF ผ่าน renderer `G-04` QuestPDF) + Credit Note (`CN`) / Debit Note (`DN`) อ้างฉบับเดิม พร้อม Maker–Checker และวงเงินอนุมัติ (`G-03c`)
 - [ ] e-Tax Invoice (XML ETDA) — แยกเป็น G-15b หลังรู้ provider
-- [ ] Tests: ปัดเศษภาษีตาม policy, credit note เกินยอดเดิมไม่ได้, retention ไม่ทำให้ยอดรับเกินสัญญา
+- [x] Tests: ปัดเศษภาษีตาม policy, credit note เกินยอดเดิมไม่ได้, retention ไม่ทำให้ยอดรับเกินสัญญา (ผล: [Finance Verification](../../05-engineering/finance-verification.md))
 
 **Validation Question:** ปัดเศษ VAT ต่อบรรทัดหรือต่อเอกสาร, ออกใบกำกับเมื่อวางบิลหรือเมื่อรับเงิน (บริการ vs สินค้า), e-Tax provider
 

@@ -4453,10 +4453,15 @@
       "BILLING_REASON_REQUIRED": "A reason is required.",
       "BILLING_FIELD_REQUIRED": "A required field is missing.",
       "BILLING_FIELD_INVALID": "A value is invalid. The amount must be above zero with at most two decimals.",
+      "RETENTION_WARRANTY_NOT_EXPIRED": "Cannot release retention yet because warranty has not expired or does not exist.",
+      "BILLING_NOTE_SELF_APPROVAL": "The creator of the credit/debit note cannot approve their own note (Maker-Checker required).",
+      "BILLING_NOTE_INVALID_STATE": "The credit/debit note status does not allow this action.",
+      "BILLING_NOTE_EXCEEDS_ORIGINAL": "The credit note amount exceeds the remaining tax base or reduces the net receivable below the paid amount.",
       "PAYMENT_DUPLICATE_REFERENCE": "This payment reference was already recorded (including reversed payments).",
       "PAYMENT_EXCEEDS_OUTSTANDING": "The payment exceeds the outstanding amount.",
       "PAYMENT_INVALID_STATE": "The payment status does not allow this action.",
       "PAYMENT_FIELD_INVALID": "The payment is invalid. The received date cannot be in the future.",
+      "PAYMENT_WHT_CERTIFICATE_REQUIRED": "Withholding tax certificate number (50 Bis) is required when WHT is deducted.",
       "OUTBOX_INVALID_STATE": "The message status does not allow this action.",
       "OUTBOX_CONFIRMATION_CONFLICT": "The message was already confirmed with other data.",
       "OUTBOX_FIELD_INVALID": "A value is invalid."
@@ -4540,7 +4545,77 @@
       "reasonPlaceholder": "Enter reason...",
       "descriptionPlaceholder": "e.g. Milestone 1 - 30% Advance Deposit",
       "amountPlaceholder": "0.00",
-      "datePlaceholder": "dd/mm/yyyy"
+      "datePlaceholder": "dd/mm/yyyy",
+      "applyVat": "Apply VAT (7%)",
+      "vatRate": "VAT rate",
+      "vatAmount": "VAT amount",
+      "taxBase": "Tax base",
+      "grossTotal": "Gross total (inc. VAT)",
+      "taxInvoiceNumber": "Tax invoice number",
+      "downloadTaxPdf": "Download Tax Invoice / Receipt PDF",
+      "pdfDownloaded": "Document downloaded successfully.",
+      "retentionRatePercent": "Retention rate (%)",
+      "retentionRatePlaceholder": "0.0 - 30.0",
+      "retentionInvalid": "Retention rate must be between 0% and 30%.",
+      "retentionAmount": "Retention held",
+      "retentionStatus": "Retention status",
+      "retentionStatuses": {
+        "none": "None",
+        "held": "Held",
+        "released": "Released"
+      },
+      "releaseRetention": "Release retention",
+      "releaseRetentionTitle": "Confirm Release Retention",
+      "releaseRetentionDescription": "Release retention held after the warranty period has expired. The amount will become receivable.",
+      "retentionReleased": "Retention released successfully.",
+      "effectiveReceivable": "Effective receivable now",
+      "netReceivableNow": "Net receivable now",
+      "whtRate": "Withholding tax (WHT)",
+      "whtRates": {
+        "rate_0": "None (0%)",
+        "rate_1": "1% Transport",
+        "rate_2": "2% Advertising",
+        "rate_3": "3% Service / Contract",
+        "rate_5": "5% Rent"
+      },
+      "whtType": "WHT type",
+      "whtTypes": {
+        "service_3": "Service (3%)",
+        "transport_1": "Transport (1%)",
+        "advertising_2": "Advertising (2%)",
+        "rent_5": "Rent (5%)"
+      },
+      "whtCertificateNumber": "50 Bis certificate number",
+      "whtCertificateNumberPlaceholder": "e.g. 50BIS-2026/001",
+      "whtAmount": "WHT amount",
+      "netCashReceived": "Net cash received",
+      "receiptNumber": "Receipt number",
+      "whtCertificateRequired": "50 Bis certificate number is required when WHT is deducted.",
+      "notesTitle": "Credit & Debit Notes",
+      "notesEmpty": "No credit or debit notes issued.",
+      "createNote": "Issue Credit / Debit Note",
+      "noteType": "Note type",
+      "noteTypes": {
+        "credit": "Credit Note",
+        "debit": "Debit Note"
+      },
+      "taxBaseDelta": "Tax base adjustment",
+      "taxBaseDeltaPlaceholder": "0.00",
+      "vatDelta": "VAT adjustment",
+      "totalDelta": "Total adjustment",
+      "noteReason": "Reason for adjustment",
+      "noteReasonPlaceholder": "e.g. Price reduction due to defects, or scope expansion",
+      "noteStatus": "Note status",
+      "noteStatuses": {
+        "pending_approval": "Pending approval",
+        "approved": "Approved"
+      },
+      "approveNote": "Approve",
+      "approveNoteTitle": "Confirm Approval",
+      "approveNoteDescription": "Approve {number} ({type}) for {amount}. This will take effect on the receivable immediately.",
+      "noteCreated": "Credit/debit note issued.",
+      "noteApproved": "Credit/debit note approved.",
+      "noteInvalid": "Please enter an adjustment amount above 0 and a reason."
     },
     "sync": {
       "title": "Accounting sync",
@@ -4581,6 +4656,9 @@
         "payment": {
           "recorded": "Payment recorded",
           "reversed": "Payment reversed"
+        },
+        "billing-note": {
+          "approved": "Credit/debit note approved"
         }
       },
       "kind": "Kind",

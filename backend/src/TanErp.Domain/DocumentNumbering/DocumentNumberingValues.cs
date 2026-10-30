@@ -38,6 +38,10 @@ public static class DocumentTypes
     public const string ServiceRequests = "service-requests";
     public const string BillingDocuments = "billing-documents";
     public const string Payments = "payments";
+    public const string TaxInvoices = "tax-invoices";
+    public const string Receipts = "receipts";
+    public const string CreditNotes = "credit-notes";
+    public const string DebitNotes = "debit-notes";
     public const string QuickEstimates = "quick-estimates";
     public const string Customers = "customers";
     public const string Items = "items";
@@ -106,6 +110,10 @@ public static class DocumentTypes
         ServiceRequests,
         BillingDocuments,
         Payments,
+        TaxInvoices,
+        Receipts,
+        CreditNotes,
+        DebitNotes,
         QuickEstimates,
         Customers,
         Items,
@@ -184,6 +192,10 @@ public sealed record DocumentSequenceDefaults(
             DocumentTypes.ServiceRequests => "SRV",
             DocumentTypes.BillingDocuments => "BIL",
             DocumentTypes.Payments => "PAY",
+            DocumentTypes.TaxInvoices => "TIV",
+            DocumentTypes.Receipts => "RCT",
+            DocumentTypes.CreditNotes => "CN",
+            DocumentTypes.DebitNotes => "DN",
             DocumentTypes.QuickEstimates => "QE",
             _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Unknown document type.")
         };

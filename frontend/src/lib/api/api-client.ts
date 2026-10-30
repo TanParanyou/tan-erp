@@ -435,6 +435,10 @@ export type BillingRequest = components["schemas"]["BillingRequest"];
 export type BillingResponse = components["schemas"]["BillingResponse"];
 export type BillingListResponse = components["schemas"]["BillingListResponse"];
 export type BillingListItemResponse = components["schemas"]["BillingListItemResponse"];
+export type BillingLineRequest = components["schemas"]["BillingLineRequest"];
+export type BillingLineResponse = components["schemas"]["BillingLineResponse"];
+export type BillingNoteRequest = components["schemas"]["BillingNoteRequest"];
+export type BillingAdjustmentNoteResponse = components["schemas"]["BillingAdjustmentNoteResponse"];
 export type PaymentRequest = components["schemas"]["PaymentRequest"];
 export type PaymentResponse = components["schemas"]["PaymentResponse"];
 export type ProjectBillingSummaryResponse = components["schemas"]["ProjectBillingSummaryResponse"];
@@ -2523,6 +2527,22 @@ export class ApiClient {
 
   async reversePayment(billingId: string, paymentId: string, rowVersion: string, reason: string, options: RequestOptions): Promise<BillingResponse> {
     return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(billingId)}/payments/${encodeURIComponent(paymentId)}/reverse`, "POST", { ...options, ifMatch: rowVersion }, { reason });
+  }
+
+  async releaseBillingRetention(id: string, rowVersion: string, options: RequestOptions): Promise<BillingResponse> {
+    return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(id)}/release-retention`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async createBillingNote(id: string, payload: BillingNoteRequest, options: RequestOptions & { idempotencyKey?: string }): Promise<BillingResponse> {
+    return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(id)}/notes`, "POST", options, payload);
+  }
+
+  async approveBillingNote(id: string, noteId: string, rowVersion: string, options: RequestOptions): Promise<BillingResponse> {
+    return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(id)}/notes/${encodeURIComponent(noteId)}/approve`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async downloadBillingTaxDocumentPdf(id: string, options: RequestOptions): Promise<Blob> {
+    return this.requestBlob(`/api/v1/billings/${encodeURIComponent(id)}/tax-document/pdf`, options);
   }
 
   async listAccountingOutbox(options: RequestOptions, query: ListOutboxParams): Promise<OutboxListResponse> {

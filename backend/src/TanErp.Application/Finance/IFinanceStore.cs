@@ -7,11 +7,15 @@ public interface IFinanceStore
 {
     Task<Result<BillingProjection>> CreateBillingAsync(RequestAccessContext access, BillingInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
     Task<Result<BillingProjection>> VoidBillingAsync(RequestAccessContext access, Guid billingId, Guid expectedVersion, string reason, string traceId, CancellationToken ct = default);
+    Task<Result<BillingProjection>> ReleaseRetentionAsync(RequestAccessContext access, Guid billingId, Guid expectedVersion, string traceId, CancellationToken ct = default);
+    Task<Result<BillingProjection>> CreateBillingNoteAsync(RequestAccessContext access, Guid billingId, BillingNoteInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
+    Task<Result<BillingProjection>> ApproveBillingNoteAsync(RequestAccessContext access, Guid billingId, Guid noteId, Guid expectedVersion, string traceId, CancellationToken ct = default);
     Task<Result<BillingProjection>> RecordPaymentAsync(RequestAccessContext access, Guid billingId, PaymentInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
     Task<Result<BillingProjection>> ReversePaymentAsync(RequestAccessContext access, Guid billingId, Guid paymentId, Guid expectedVersion, string reason, string traceId, CancellationToken ct = default);
     Task<BillingProjection?> GetBillingAsync(Guid organizationId, Guid billingId, CancellationToken ct = default);
     Task<PagedBillings> ListBillingsAsync(Guid organizationId, BillingListQuery query, CancellationToken ct = default);
     Task<ProjectBillingSummary?> GetProjectSummaryAsync(Guid organizationId, Guid projectId, CancellationToken ct = default);
+    Task<byte[]?> RenderTaxDocumentPdfAsync(Guid organizationId, Guid billingId, CancellationToken ct = default);
 
     Task<PagedOutbox> ListOutboxAsync(Guid organizationId, OutboxListQuery query, CancellationToken ct = default);
     Task<Result<DispatchResult>> DispatchAsync(RequestAccessContext access, int batchSize, string traceId, CancellationToken ct = default);

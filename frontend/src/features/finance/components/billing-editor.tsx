@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -16,6 +17,10 @@ import { useBillingMutations, useProjectBillingSummary } from "../api/finance-qu
 import { BILLING_KINDS, financeErrorCode } from "../finance-status";
 
 const PAGE_LIMIT = 100;
+
+function round2(val: number): number {
+  return Math.round(val * 100) / 100;
+}
 
 export function BillingEditor() {
   const t = useTranslations("finance.billings");
@@ -32,11 +37,25 @@ export function BillingEditor() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [applyVat, setApplyVat] = useState(false);
+  const [retentionRatePercent, setRetentionRatePercent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const summary = useProjectBillingSummary(projectId || undefined);
   // One key per form session so a retried create replays instead of issuing a second billing.
   const createKeyRef = useRef(crypto.randomUUID());
   const isBusy = mutations.create.isPending;
+
+  // Live tax and retention calculations
+  const liveCalc = useMemo(() => {
+    const taxBase = Number(amount) > 0 ? Number(amount) : 0;
+    const vat = applyVat ? round2(taxBase * 0.07) : 0;
+    const grossTotal = round2(taxBase + vat);
+    const retPct = Number(retentionRatePercent) > 0 ? Number(retentionRatePercent) : 0;
+    const retRate = round2(retPct / 100);
+    const retentionHeld = round2(taxBase * retRate);
+    const netReceivableNow = round2(grossTotal - retentionHeld);
+    return { taxBase, vat, grossTotal, retRate, retentionHeld, netReceivableNow };
+  }, [amount, applyVat, retentionRatePercent]);
 
   async function save(): Promise<void> {
     setError(null);
@@ -46,9 +65,24 @@ export function BillingEditor() {
       return;
     }
 
+    const retPct = retentionRatePercent ? Number(retentionRatePercent) : 0;
+    if (Number.isNaN(retPct) || retPct < 0 || retPct > 30) {
+      setError(t("retentionInvalid"));
+      return;
+    }
+
     try {
       const saved = await mutations.create.mutateAsync({
-        payload: { projectId, kind, description: description.trim(), amount: value, dueDate: dueDate || null },
+        payload: {
+          projectId,
+          kind,
+          description: description.trim(),
+          amount: value,
+          dueDate: dueDate || null,
+          applyVat,
+          vatRate: applyVat ? 0.07 : 0,
+          retentionRate: round2(retPct / 100),
+        },
         idempotencyKey: createKeyRef.current,
       });
       toast.success(t("created"));
@@ -77,6 +111,55 @@ export function BillingEditor() {
         <Input label={t("description")} placeholder={t("descriptionPlaceholder")} required value={description} maxLength={200} disabled={isBusy} onChange={(event) => setDescription(event.target.value)} />
         <Input type="number" min={0} step="0.01" label={t("amount")} placeholder={t("amountPlaceholder")} required value={amount} disabled={isBusy} onChange={(event) => setAmount(event.target.value)} />
         <Input type="date" label={t("dueDate")} placeholder={t("datePlaceholder")} value={dueDate} disabled={isBusy} onChange={(event) => setDueDate(event.target.value)} />
+        <Input
+          type="number"
+          min={0}
+          max={30}
+          step="0.1"
+          label={t("retentionRatePercent")}
+          placeholder={t("retentionRatePlaceholder")}
+          value={retentionRatePercent}
+          disabled={isBusy}
+          onChange={(event) => setRetentionRatePercent(event.target.value)}
+        />
+        <div className="flex items-center md:col-span-2 pt-2">
+          <Checkbox
+            checked={applyVat}
+            disabled={isBusy}
+            onCheckedChange={(checked) => setApplyVat(checked === true)}
+            label={t("applyVat")}
+          />
+        </div>
+
+        {/* Live Tax & Retention Preview */}
+        {liveCalc.taxBase > 0 && (
+          <div className="border border-erp-border bg-erp-surface-subtle p-4 md:col-span-2 space-y-2">
+            <h4 className="text-xs font-bold text-erp-navy uppercase tracking-wider">{t("summaryTitle")}</h4>
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5 text-xs">
+              <div>
+                <dt className="text-erp-text-muted">{t("taxBase")}</dt>
+                <dd className="font-mono font-semibold">{formatCurrency(liveCalc.taxBase, "THB", locale)}</dd>
+              </div>
+              <div>
+                <dt className="text-erp-text-muted">{t("vatAmount")}</dt>
+                <dd className="font-mono font-semibold">{formatCurrency(liveCalc.vat, "THB", locale)}</dd>
+              </div>
+              <div>
+                <dt className="text-erp-text-muted">{t("grossTotal")}</dt>
+                <dd className="font-mono font-semibold">{formatCurrency(liveCalc.grossTotal, "THB", locale)}</dd>
+              </div>
+              <div>
+                <dt className="text-erp-text-muted">{t("retentionAmount")}</dt>
+                <dd className="font-mono font-semibold text-erp-warning">{formatCurrency(liveCalc.retentionHeld, "THB", locale)}</dd>
+              </div>
+              <div>
+                <dt className="text-erp-text-muted">{t("netReceivableNow")}</dt>
+                <dd className="font-mono font-bold text-erp-navy">{formatCurrency(liveCalc.netReceivableNow, "THB", locale)}</dd>
+              </div>
+            </dl>
+          </div>
+        )}
+
         {summary.data && (
           <dl className="grid grid-cols-3 gap-3 text-xs md:col-span-2" aria-label={t("summaryTitle")}>
             <div><dt className="text-erp-text-muted">{t("contractAmount")}</dt><dd className="font-mono font-semibold">{formatCurrency(summary.data.contractAmount, "THB", locale)}</dd></div>

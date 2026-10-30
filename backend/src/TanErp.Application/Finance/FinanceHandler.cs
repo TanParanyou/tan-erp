@@ -9,7 +9,7 @@ namespace TanErp.Application.Finance;
 
 public sealed record FinanceCaller(string FirebaseUid, Guid MembershipId, string TraceId);
 
-/// <summary>Billing, payment and accounting-sync use cases. Permission is resolved from PostgreSQL per call.</summary>
+/// <summary>Billing, payment, tax/notes and accounting-sync use cases. Permission is resolved from PostgreSQL per call.</summary>
 public class FinanceHandler
 {
     public const int MaxPageSize = 100;
@@ -49,7 +49,10 @@ public class FinanceHandler
             return Fail<BillingProjection>("BILLING_FIELD_INVALID", "A valid kind, a description and an amount above zero are required.");
         }
 
-        var payloadHash = Sha256Hex.Compute($"{input.ProjectId}|{input.Kind}|{input.Description.Trim()}|{Num(input.Amount)}|{input.DueDate:O}");
+        var linesHash = input.Lines == null || input.Lines.Count == 0
+            ? string.Empty
+            : string.Join(";", input.Lines.Select(l => $"{l.Description.Trim()}:{Num(l.TaxBaseAmount)}:{l.VatRate?.ToString(CultureInfo.InvariantCulture) ?? ""}"));
+        var payloadHash = Sha256Hex.Compute($"{input.ProjectId}|{input.Kind}|{input.Description.Trim()}|{Num(input.Amount)}|{input.DueDate:O}|{input.ApplyVat}|{input.VatRate?.ToString(CultureInfo.InvariantCulture) ?? ""}|{Num(input.RetentionRate)}|{linesHash}");
         return await _store.CreateBillingAsync(access.Value!, input, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
     }
 
@@ -62,6 +65,43 @@ public class FinanceHandler
         return await _store.VoidBillingAsync(access.Value!, billingId, expectedVersion, reason.Trim(), caller.TraceId, ct);
     }
 
+    public async Task<Result<BillingProjection>> ReleaseRetentionAsync(FinanceCaller caller, Guid billingId, Guid expectedVersion, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.manage", ct);
+        if (access.IsFailure) return Result<BillingProjection>.Failure(access.Error);
+        if (expectedVersion == Guid.Empty) return Fail<BillingProjection>("BILLING_FIELD_REQUIRED", "Expected version is required.");
+        return await _store.ReleaseRetentionAsync(access.Value!, billingId, expectedVersion, caller.TraceId, ct);
+    }
+
+    public async Task<Result<BillingProjection>> CreateBillingNoteAsync(FinanceCaller caller, Guid billingId, string idempotencyKey, BillingNoteInput? input, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.manage", ct);
+        if (access.IsFailure) return Result<BillingProjection>.Failure(access.Error);
+        if (input is null || !BillingNoteType.All.Contains(input.NoteType ?? string.Empty) || string.IsNullOrWhiteSpace(input.Reason) || input.TaxBaseDelta <= 0)
+        {
+            return Fail<BillingProjection>("BILLING_FIELD_INVALID", "A valid note type, a reason and a tax base delta above zero are required.");
+        }
+
+        var payloadHash = Sha256Hex.Compute($"{billingId}|{input.NoteType}|{input.Reason.Trim()}|{Num(input.TaxBaseDelta)}");
+        return await _store.CreateBillingNoteAsync(access.Value!, billingId, input, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
+    }
+
+    public async Task<Result<BillingProjection>> ApproveBillingNoteAsync(FinanceCaller caller, Guid billingId, Guid noteId, Guid expectedVersion, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.manage", ct);
+        if (access.IsFailure) return Result<BillingProjection>.Failure(access.Error);
+        if (expectedVersion == Guid.Empty) return Fail<BillingProjection>("BILLING_FIELD_REQUIRED", "Expected version is required.");
+        return await _store.ApproveBillingNoteAsync(access.Value!, billingId, noteId, expectedVersion, caller.TraceId, ct);
+    }
+
+    public async Task<Result<byte[]>> RenderTaxDocumentPdfAsync(FinanceCaller caller, Guid billingId, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.read", ct);
+        if (access.IsFailure) return Result<byte[]>.Failure(access.Error);
+        var bytes = await _store.RenderTaxDocumentPdfAsync(access.Value!.OrganizationId, billingId, ct);
+        return bytes is null ? Fail<byte[]>("RESOURCE_NOT_FOUND", "Tax document not found.") : Result<byte[]>.Success(bytes);
+    }
+
     public async Task<Result<BillingProjection>> RecordPaymentAsync(FinanceCaller caller, Guid billingId, string idempotencyKey, PaymentInput? input, CancellationToken ct = default)
     {
         var access = await AccessAsync(caller, "payments.manage", ct);
@@ -71,7 +111,7 @@ public class FinanceHandler
             return Fail<BillingProjection>("PAYMENT_FIELD_INVALID", "An amount above zero, a valid method and a reference are required.");
         }
 
-        var payloadHash = Sha256Hex.Compute($"{billingId}|{Num(input.Amount)}|{input.Method}|{input.Reference.Trim()}|{input.ReceivedDate:O}");
+        var payloadHash = Sha256Hex.Compute($"{billingId}|{Num(input.Amount)}|{input.Method}|{input.Reference.Trim()}|{input.ReceivedDate:O}|{Num(input.WhtRate)}|{input.WhtType ?? ""}|{input.WhtCertificateNumber?.Trim() ?? ""}");
         return await _store.RecordPaymentAsync(access.Value!, billingId, input, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
     }
 

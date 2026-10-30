@@ -22,7 +22,7 @@ export function isOutboxStatus(value: string | null | undefined): value is Outbo
   return OUTBOX_STATUSES.some((status) => status === value);
 }
 
-export const OUTBOX_KINDS = ["billing.issued", "billing.voided", "payment.recorded", "payment.reversed"] as const;
+export const OUTBOX_KINDS = ["billing.issued", "billing.voided", "payment.recorded", "payment.reversed", "billing-note.approved"] as const;
 export type OutboxKindValue = (typeof OUTBOX_KINDS)[number];
 export function isOutboxKind(value: string | null | undefined): value is OutboxKindValue {
   return OUTBOX_KINDS.some((kind) => kind === value);
@@ -65,6 +65,29 @@ export function outboxStatusVariant(status: string | null | undefined): FinanceB
   }
 }
 
+export function retentionStatusVariant(status: string | null | undefined): FinanceBadgeVariant {
+  switch (status) {
+    case "released":
+      return "success";
+    case "held":
+      return "warning";
+    case "none":
+    default:
+      return "neutral";
+  }
+}
+
+export function billingNoteStatusVariant(status: string | null | undefined): FinanceBadgeVariant {
+  switch (status) {
+    case "approved":
+      return "success";
+    case "pending_approval":
+      return "warning";
+    default:
+      return "neutral";
+  }
+}
+
 const KNOWN_ERROR_CODES = [
   "BILLING_VERSION_CONFLICT",
   "BILLING_INVALID_STATE",
@@ -74,10 +97,15 @@ const KNOWN_ERROR_CODES = [
   "BILLING_REASON_REQUIRED",
   "BILLING_FIELD_REQUIRED",
   "BILLING_FIELD_INVALID",
+  "RETENTION_WARRANTY_NOT_EXPIRED",
+  "BILLING_NOTE_SELF_APPROVAL",
+  "BILLING_NOTE_INVALID_STATE",
+  "BILLING_NOTE_EXCEEDS_ORIGINAL",
   "PAYMENT_DUPLICATE_REFERENCE",
   "PAYMENT_EXCEEDS_OUTSTANDING",
   "PAYMENT_INVALID_STATE",
   "PAYMENT_FIELD_INVALID",
+  "PAYMENT_WHT_CERTIFICATE_REQUIRED",
   "OUTBOX_INVALID_STATE",
   "OUTBOX_CONFIRMATION_CONFLICT",
   "OUTBOX_FIELD_INVALID",

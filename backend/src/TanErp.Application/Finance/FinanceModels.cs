@@ -4,9 +4,29 @@ public sealed record FinancePerson(Guid Id, string DisplayName);
 
 public sealed record FinanceProjectRef(Guid Id, string Code, string Name);
 
-public sealed record BillingInput(Guid ProjectId, string Kind, string Description, decimal Amount, DateOnly? DueDate);
+public sealed record BillingLineInput(string Description, decimal TaxBaseAmount, decimal? VatRate = null);
 
-public sealed record PaymentInput(decimal Amount, string Method, string Reference, DateOnly ReceivedDate);
+public sealed record BillingInput(
+    Guid ProjectId,
+    string Kind,
+    string Description,
+    decimal Amount,
+    DateOnly? DueDate,
+    bool ApplyVat = false,
+    decimal? VatRate = null,
+    decimal RetentionRate = 0m,
+    IReadOnlyList<BillingLineInput>? Lines = null);
+
+public sealed record PaymentInput(
+    decimal Amount,
+    string Method,
+    string Reference,
+    DateOnly ReceivedDate,
+    decimal WhtRate = 0m,
+    string? WhtType = null,
+    string? WhtCertificateNumber = null);
+
+public sealed record BillingNoteInput(string NoteType, string Reason, decimal TaxBaseDelta);
 
 public sealed record PaymentProjection(
     Guid Id,
@@ -19,7 +39,37 @@ public sealed record PaymentProjection(
     string? ReversalReason,
     DateTimeOffset? ReversedAtUtc,
     FinancePerson RecordedBy,
-    DateTimeOffset RecordedAtUtc);
+    DateTimeOffset RecordedAtUtc,
+    string? ReceiptNumber = null,
+    decimal WhtRate = 0m,
+    decimal WhtAmount = 0m,
+    decimal NetCashReceived = 0m,
+    string? WhtType = null,
+    string? WhtCertificateNumber = null);
+
+public sealed record BillingLineProjection(
+    Guid Id,
+    int LineNumber,
+    string Description,
+    decimal TaxBaseAmount,
+    decimal VatRate,
+    decimal VatAmount,
+    decimal TotalAmount);
+
+public sealed record BillingAdjustmentNoteProjection(
+    Guid Id,
+    string Number,
+    string NoteType,
+    string Reason,
+    decimal TaxBaseDelta,
+    decimal VatRate,
+    decimal VatDelta,
+    decimal TotalDelta,
+    string Status,
+    FinancePerson CreatedBy,
+    FinancePerson? DecidedBy,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? DecidedAtUtc);
 
 public sealed record BillingProjection(
     Guid Id,
@@ -40,7 +90,23 @@ public sealed record BillingProjection(
     FinancePerson CreatedBy,
     DateTimeOffset IssuedAtUtc,
     Guid RowVersion,
-    IReadOnlyList<PaymentProjection> Payments);
+    IReadOnlyList<PaymentProjection> Payments,
+    string? TaxInvoiceNumber = null,
+    decimal VatRate = 0m,
+    decimal VatAmount = 0m,
+    decimal GrossTotal = 0m,
+    decimal EffectiveReceivable = 0m,
+    decimal RetentionRate = 0m,
+    decimal RetentionAmount = 0m,
+    string RetentionStatus = "none",
+    DateTimeOffset? ReleasedRetentionAtUtc = null,
+    FinancePerson? ReleasedRetentionBy = null,
+    decimal CreditNoteBaseAmount = 0m,
+    decimal CreditNoteVatAmount = 0m,
+    decimal DebitNoteBaseAmount = 0m,
+    decimal DebitNoteVatAmount = 0m,
+    IReadOnlyList<BillingLineProjection>? Lines = null,
+    IReadOnlyList<BillingAdjustmentNoteProjection>? Notes = null);
 
 public sealed record BillingListItemProjection(
     Guid Id,

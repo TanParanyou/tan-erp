@@ -1,12 +1,15 @@
 import React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import thMessages from "@/messages/th.json";
 import enMessages from "@/messages/en.json";
 import { BillingDetail } from "./billing-detail";
+import { BillingEditor } from "./billing-editor";
 import { FinanceSyncPage } from "./finance-sync-page";
 import * as financeQueries from "../api/finance-queries";
+import * as projectQueries from "@/features/projects/api/project-queries";
 import { ApiError } from "@/lib/api/api-error";
 import type { BillingResponse } from "@/lib/api/api-client";
 import {
@@ -15,9 +18,11 @@ import {
   OUTBOX_STATUSES,
   PAYMENT_METHODS,
   RECONCILIATION_ISSUES,
+  billingNoteStatusVariant,
   billingStatusVariant,
   financeErrorCode,
   outboxStatusVariant,
+  retentionStatusVariant,
 } from "../finance-status";
 
 const toastMocks = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -32,7 +37,10 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/lib/membership/selected-membership-context", () => ({
-  useSelectedMembership: () => ({ selectedMembership: { id: "membership-1" } }),
+  useSelectedMembership: () => ({
+    currentUser: { user: { id: "u-current", displayName: "ผู้ตรวจสอบ" } },
+    selectedMembership: { id: "membership-1" },
+  }),
 }));
 vi.mock("@/lib/permissions/can", () => ({
   can: (_membership: unknown, permission: string) => permissions.granted.includes(permission),
@@ -41,6 +49,15 @@ vi.mock("@/lib/permissions/can", () => ({
 const b = thMessages.finance.billings;
 const s = thMessages.finance.sync;
 const ALL = ["billings.manage", "payments.manage", "finance-sync.run", "finance-sync.read"];
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+}
 
 function billing(status: string, overrides: Partial<BillingResponse> = {}): BillingResponse {
   return {
@@ -56,28 +73,101 @@ function billing(status: string, overrides: Partial<BillingResponse> = {}): Bill
     project: { id: "p-1", code: "PRJ-1", name: "บ้าน" },
     createdBy: { id: "u-1", displayName: "ผู้ออก" },
     rowVersion: "00000000-0000-0000-0000-0000000000a1",
-    payments: status === "issued" ? [] : [{ id: "pay-1", number: "PAY-2026-0001", amount: 10000, method: "transfer", reference: "SLIP-1", receivedDate: "2026-10-04", status: "recorded", recordedBy: { id: "u-1", displayName: "ผู้บันทึก" } }],
+    taxInvoiceNumber: null,
+    vatRate: 0,
+    vatAmount: 0,
+    grossTotal: 30000,
+    effectiveReceivable: 30000,
+    retentionRate: 0,
+    retentionAmount: 0,
+    retentionStatus: "none",
+    notes: [],
+    lines: [],
+    payments:
+      status === "issued"
+        ? []
+        : [
+            {
+              id: "pay-1",
+              number: "PAY-2026-0001",
+              receiptNumber: "RCT-2026-0001",
+              amount: 10000,
+              method: "transfer",
+              reference: "SLIP-1",
+              receivedDate: "2026-10-04",
+              status: "recorded",
+              whtRate: 0,
+              whtAmount: 0,
+              netCashReceived: 10000,
+              recordedBy: { id: "u-1", displayName: "ผู้บันทึก" },
+            },
+          ],
     ...overrides,
-  } as BillingResponse;
+  };
 }
 
 const pay = vi.fn();
 const voidBilling = vi.fn();
 const reverse = vi.fn();
+const releaseRetention = vi.fn();
+const createNote = vi.fn();
+const approveNote = vi.fn();
+const downloadTaxPdf = vi.fn();
+const createBilling = vi.fn();
 
 function renderBilling(data: BillingResponse, granted: string[] = ALL) {
   permissions.granted = granted;
+  const client = createTestQueryClient();
   vi.spyOn(financeQueries, "useBilling").mockReturnValue({ data, isLoading: false, isError: false } as unknown as ReturnType<typeof financeQueries.useBilling>);
   vi.spyOn(financeQueries, "useBillingMutations").mockReturnValue({
     pay: { mutateAsync: pay, isPending: false },
     voidBilling: { mutateAsync: voidBilling, isPending: false },
     reverse: { mutateAsync: reverse, isPending: false },
-    create: { mutateAsync: vi.fn(), isPending: false },
+    releaseRetention: { mutateAsync: releaseRetention, isPending: false },
+    createNote: { mutateAsync: createNote, isPending: false },
+    approveNote: { mutateAsync: approveNote, isPending: false },
+    downloadTaxPdf: { mutateAsync: downloadTaxPdf, isPending: false },
+    create: { mutateAsync: createBilling, isPending: false },
   } as unknown as ReturnType<typeof financeQueries.useBillingMutations>);
   render(
-    <NextIntlClientProvider locale="th" messages={thMessages}>
-      <BillingDetail billingId="bill-1" />
-    </NextIntlClientProvider>
+    <QueryClientProvider client={client}>
+      <NextIntlClientProvider locale="th" messages={thMessages}>
+        <BillingDetail billingId="bill-1" />
+      </NextIntlClientProvider>
+    </QueryClientProvider>
+  );
+}
+
+function renderEditor(granted: string[] = ALL) {
+  permissions.granted = granted;
+  const client = createTestQueryClient();
+  vi.spyOn(projectQueries, "useProjectList").mockReturnValue({
+    data: { items: [{ id: "p-1", code: "PRJ-1", name: "โครงการทดสอบ" }] },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof projectQueries.useProjectList>);
+  vi.spyOn(financeQueries, "useProjectBillingSummary").mockReturnValue({
+    data: { contractAmount: 100000, billed: 30000, unbilled: 70000 },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof financeQueries.useProjectBillingSummary>);
+  vi.spyOn(financeQueries, "useBillingMutations").mockReturnValue({
+    pay: { mutateAsync: pay, isPending: false },
+    voidBilling: { mutateAsync: voidBilling, isPending: false },
+    reverse: { mutateAsync: reverse, isPending: false },
+    releaseRetention: { mutateAsync: releaseRetention, isPending: false },
+    createNote: { mutateAsync: createNote, isPending: false },
+    approveNote: { mutateAsync: approveNote, isPending: false },
+    downloadTaxPdf: { mutateAsync: downloadTaxPdf, isPending: false },
+    create: { mutateAsync: createBilling, isPending: false },
+  } as unknown as ReturnType<typeof financeQueries.useBillingMutations>);
+
+  return render(
+    <QueryClientProvider client={client}>
+      <NextIntlClientProvider locale="th" messages={thMessages}>
+        <BillingEditor />
+      </NextIntlClientProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -86,6 +176,7 @@ const requeue = vi.fn();
 
 function renderSync(granted: string[] = ALL) {
   permissions.granted = granted;
+  const client = createTestQueryClient();
   vi.spyOn(financeQueries, "useOutboxList").mockReturnValue({
     isLoading: false,
     data: {
@@ -110,9 +201,11 @@ function renderSync(granted: string[] = ALL) {
     requeue: { mutateAsync: requeue, isPending: false },
   } as unknown as ReturnType<typeof financeQueries.useSyncMutations>);
   render(
-    <NextIntlClientProvider locale="th" messages={thMessages}>
-      <FinanceSyncPage />
-    </NextIntlClientProvider>
+    <QueryClientProvider client={client}>
+      <NextIntlClientProvider locale="th" messages={thMessages}>
+        <FinanceSyncPage />
+      </NextIntlClientProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -122,7 +215,16 @@ describe("finance status helpers and translations", () => {
     expect(billingStatusVariant("voided")).toBe("danger");
     expect(outboxStatusVariant("dead")).toBe("danger");
     expect(outboxStatusVariant("sent")).toBe("success");
+    expect(retentionStatusVariant("held")).toBe("warning");
+    expect(retentionStatusVariant("released")).toBe("success");
+    expect(billingNoteStatusVariant("pending_approval")).toBe("warning");
+    expect(billingNoteStatusVariant("approved")).toBe("success");
     expect(financeErrorCode("PAYMENT_DUPLICATE_REFERENCE")).toBe("PAYMENT_DUPLICATE_REFERENCE");
+    expect(financeErrorCode("RETENTION_WARRANTY_NOT_EXPIRED")).toBe("RETENTION_WARRANTY_NOT_EXPIRED");
+    expect(financeErrorCode("BILLING_NOTE_SELF_APPROVAL")).toBe("BILLING_NOTE_SELF_APPROVAL");
+    expect(financeErrorCode("BILLING_NOTE_INVALID_STATE")).toBe("BILLING_NOTE_INVALID_STATE");
+    expect(financeErrorCode("BILLING_NOTE_EXCEEDS_ORIGINAL")).toBe("BILLING_NOTE_EXCEEDS_ORIGINAL");
+    expect(financeErrorCode("PAYMENT_WHT_CERTIFICATE_REQUIRED")).toBe("PAYMENT_WHT_CERTIFICATE_REQUIRED");
     expect(financeErrorCode("NOPE")).toBeNull();
   });
 
@@ -136,19 +238,70 @@ describe("finance status helpers and translations", () => {
         const text = kind.split(".").reduce<unknown>((node, segment) => (typeof node === "object" && node !== null ? (node as Record<string, unknown>)[segment] : undefined), messages.finance.sync.kinds);
         expect(typeof text === "string" && text.length > 0).toBe(true);
       }
+      expect(OUTBOX_KINDS).toContain("billing-note.approved");
       for (const issue of RECONCILIATION_ISSUES) expect(messages.finance.sync.issues[issue]).toBeTruthy();
-      for (const code of ["BILLING_EXCEEDS_CONTRACT", "PAYMENT_EXCEEDS_OUTSTANDING", "PAYMENT_DUPLICATE_REFERENCE", "OUTBOX_CONFIRMATION_CONFLICT"] as const) {
+      for (const code of [
+        "BILLING_EXCEEDS_CONTRACT",
+        "PAYMENT_EXCEEDS_OUTSTANDING",
+        "PAYMENT_DUPLICATE_REFERENCE",
+        "OUTBOX_CONFIRMATION_CONFLICT",
+        "RETENTION_WARRANTY_NOT_EXPIRED",
+        "BILLING_NOTE_SELF_APPROVAL",
+        "BILLING_NOTE_INVALID_STATE",
+        "BILLING_NOTE_EXCEEDS_ORIGINAL",
+        "PAYMENT_WHT_CERTIFICATE_REQUIRED",
+      ] as const) {
         expect(messages.finance.errors[code]).toBeTruthy();
       }
+      expect(messages.finance.billings.applyVat).toBeTruthy();
+      expect(messages.finance.billings.retentionRatePercent).toBeTruthy();
+      expect(messages.finance.billings.releaseRetention).toBeTruthy();
+      expect(messages.finance.billings.notesTitle).toBeTruthy();
       expect(messages.shell.financeSubgroup).toBeTruthy();
     }
+  });
+});
+
+describe("BillingEditor (G-15 Thai Tax)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("creates a billing with VAT and Retention percent and shows live summary calculation", async () => {
+    createBilling.mockResolvedValue({ id: "bill-new" });
+    renderEditor();
+
+    // Select project and description
+    fireEvent.change(screen.getByRole("combobox", { name: /^โครงการ/ }), { target: { value: "p-1" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(b.description)), { target: { value: "งวดที่ 1 มัดจำ" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(b.amount)), { target: { value: "100000" } });
+
+    // Enable VAT 7%
+    const vatCheckbox = screen.getByLabelText(b.applyVat);
+    fireEvent.click(vatCheckbox);
+
+    // Set Retention 5%
+    const retentionInput = screen.getByLabelText(b.retentionRatePercent);
+    fireEvent.change(retentionInput, { target: { value: "5" } });
+
+    // Submit form
+    fireEvent.click(screen.getByRole("button", { name: b.issue }));
+
+    await waitFor(() => expect(createBilling).toHaveBeenCalledTimes(1));
+    const payload = createBilling.mock.calls[0][0].payload;
+    expect(payload).toMatchObject({
+      projectId: "p-1",
+      description: "งวดที่ 1 มัดจำ",
+      amount: 100000,
+      applyVat: true,
+      vatRate: 0.07,
+      retentionRate: 0.05,
+    });
   });
 });
 
 describe("BillingDetail", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("posts a payment with only valid input and an idempotency key", async () => {
+  it("posts a payment with valid input and optional WHT fields", async () => {
     pay.mockResolvedValue(billing("partially_paid"));
     renderBilling(billing("issued"));
     fireEvent.click(screen.getByRole("button", { name: b.savePayment }));
@@ -157,11 +310,91 @@ describe("BillingDetail", () => {
 
     fireEvent.change(screen.getByLabelText(new RegExp(b.paymentAmount)), { target: { value: "10000" } });
     fireEvent.change(screen.getByLabelText(new RegExp("เลขอ้างอิง")), { target: { value: "SLIP-1" } });
+
+    // Select WHT 3%
+    fireEvent.change(screen.getByLabelText(b.whtRate), { target: { value: "0.03" } });
+
+    // Attempt save without certificate number -> should fail validation
     fireEvent.click(screen.getByRole("button", { name: b.savePayment }));
+    expect(await screen.findByText(b.whtCertificateRequired)).toBeDefined();
+    expect(pay).not.toHaveBeenCalled();
+
+    // Enter certificate number and save
+    fireEvent.change(screen.getByPlaceholderText(b.whtCertificateNumberPlaceholder), { target: { value: "50BIS-001" } });
+    fireEvent.click(screen.getByRole("button", { name: b.savePayment }));
+
     await waitFor(() => expect(pay).toHaveBeenCalledTimes(1));
-    const call = pay.mock.calls[0][0] as { id: string; payload: { amount: number; method: string; reference: string }; idempotencyKey: string };
-    expect(call.payload).toMatchObject({ amount: 10000, method: "transfer", reference: "SLIP-1" });
+    const call = pay.mock.calls[0][0] as { id: string; payload: { amount: number; method: string; reference: string; whtRate: number; whtCertificateNumber: string }; idempotencyKey: string };
+    expect(call.payload).toMatchObject({
+      amount: 10000,
+      method: "transfer",
+      reference: "SLIP-1",
+      whtRate: 0.03,
+      whtCertificateNumber: "50BIS-001",
+    });
     expect(call.idempotencyKey.length).toBeGreaterThanOrEqual(16);
+  });
+
+  it("releases retention when status is held and user confirms", async () => {
+    releaseRetention.mockResolvedValue(billing("issued", { retentionStatus: "released" }));
+    renderBilling(billing("issued", { retentionAmount: 1500, retentionRate: 0.05, retentionStatus: "held" }));
+
+    const releaseBtn = screen.getByRole("button", { name: b.releaseRetention });
+    expect(releaseBtn).toBeDefined();
+
+    fireEvent.click(releaseBtn);
+    // Confirm in modal
+    const confirmButtons = screen.getAllByRole("button", { name: b.releaseRetention });
+    // Click the confirm button in the modal
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(releaseRetention).toHaveBeenCalledWith({
+      id: "bill-1",
+      rowVersion: "00000000-0000-0000-0000-0000000000a1",
+    }));
+  });
+
+  it("creates a credit note and lets another user approve it", async () => {
+    createNote.mockResolvedValue(billing("issued"));
+    approveNote.mockResolvedValue(billing("issued"));
+
+    const testBill = billing("issued", {
+      vatRate: 0.07,
+      notes: [
+        {
+          id: "note-1",
+          number: "CN-2026-0001",
+          noteType: "credit",
+          reason: "ลดราคาสินค้ามีตำหนิ",
+          taxBaseDelta: 2000,
+          vatDelta: 140,
+          totalDelta: 2140,
+          status: "pending_approval",
+          createdBy: { id: "u-maker", displayName: "นาย ก (Maker)" },
+        },
+      ],
+    });
+
+    renderBilling(testBill);
+
+    // Verify existing note is displayed
+    expect(screen.getByText("CN-2026-0001")).toBeDefined();
+    expect(screen.getByText("ลดราคาสินค้ามีตำหนิ")).toBeDefined();
+
+    // Current user is "u-current" which is != "u-maker" -> Approve button is visible!
+    const approveBtn = screen.getByRole("button", { name: b.approveNote });
+    expect(approveBtn).toBeDefined();
+    fireEvent.click(approveBtn);
+
+    // Confirm in modal
+    const confirmApprove = screen.getAllByRole("button", { name: b.approveNote });
+    fireEvent.click(confirmApprove[confirmApprove.length - 1]);
+
+    await waitFor(() => expect(approveNote).toHaveBeenCalledWith({
+      id: "bill-1",
+      noteId: "note-1",
+      rowVersion: "00000000-0000-0000-0000-0000000000a1",
+    }));
   });
 
   it("shows the translated error when the payment exceeds the outstanding amount", async () => {
@@ -187,7 +420,7 @@ describe("BillingDetail", () => {
     expect(await screen.findByText(b.reasonRequired)).toBeDefined();
     expect(reverse).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText(new RegExp(b.reason)), { target: { value: "เช็คเด้ง" } });
+    fireEvent.change(screen.getByPlaceholderText(b.reasonPlaceholder), { target: { value: "เช็คเด้ง" } });
     fireEvent.click(screen.getByRole("button", { name: b.confirm }));
     await waitFor(() => expect(reverse).toHaveBeenCalledWith({ id: "bill-1", paymentId: "pay-1", rowVersion: "00000000-0000-0000-0000-0000000000a1", reason: "เช็คเด้ง" }));
   });

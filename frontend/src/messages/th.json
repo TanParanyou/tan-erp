@@ -4453,10 +4453,15 @@
       "BILLING_REASON_REQUIRED": "ต้องระบุเหตุผล",
       "BILLING_FIELD_REQUIRED": "ข้อมูลไม่ครบถ้วน",
       "BILLING_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง ยอดต้องมากกว่า 0 และไม่เกิน 2 ตำแหน่งทศนิยม",
+      "RETENTION_WARRANTY_NOT_EXPIRED": "ยังไม่สามารถปลดเงินประกันผลงานได้ เนื่องจากยังไม่มีใบรับประกันหรือยังไม่สิ้นสุดระยะเวลารับประกัน",
+      "BILLING_NOTE_SELF_APPROVAL": "ผู้ออกใบลดหนี้/ใบเพิ่มหนี้ไม่สามารถอนุมัติรายการของตนเองได้ (ต้องใช้ Maker-Checker)",
+      "BILLING_NOTE_INVALID_STATE": "สถานะของใบลดหนี้/ใบเพิ่มหนี้ไม่อนุญาตให้ดำเนินการนี้",
+      "BILLING_NOTE_EXCEEDS_ORIGINAL": "ยอดลดหนี้เกินฐานภาษีคงเหลือของใบแจ้งหนี้ หรือทำให้ยอดสุทธิต่ำกว่ายอดที่รับชำระแล้ว",
       "PAYMENT_DUPLICATE_REFERENCE": "เลขอ้างอิงการรับชำระนี้ถูกบันทึกแล้ว (รวมรายการที่กลับรายการ)",
       "PAYMENT_EXCEEDS_OUTSTANDING": "ยอดรับชำระเกินยอดค้างชำระ",
       "PAYMENT_INVALID_STATE": "สถานะการรับชำระไม่อนุญาตให้ทำรายการนี้",
       "PAYMENT_FIELD_INVALID": "ข้อมูลการรับชำระไม่ถูกต้อง วันที่รับต้องไม่เป็นอนาคต",
+      "PAYMENT_WHT_CERTIFICATE_REQUIRED": "กรุณาระบุเลขที่หนังสือรับรองการหักภาษี ณ ที่จ่าย (50 ทวิ) เมื่อมีการหักภาษี ณ ที่จ่าย",
       "OUTBOX_INVALID_STATE": "สถานะรายการส่งบัญชีไม่อนุญาตให้ทำรายการนี้",
       "OUTBOX_CONFIRMATION_CONFLICT": "รายการนี้ยืนยันแล้วด้วยข้อมูลอื่น",
       "OUTBOX_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง"
@@ -4540,7 +4545,77 @@
       "reasonPlaceholder": "ระบุเหตุผล...",
       "descriptionPlaceholder": "เช่น งวดที่ 1 มัดจำ 30% เมื่องานเริ่ม",
       "amountPlaceholder": "0.00",
-      "datePlaceholder": "วว/ดด/ปปปป"
+      "datePlaceholder": "วว/ดด/ปปปป",
+      "applyVat": "คิดภาษีมูลค่าเพิ่ม (VAT 7%)",
+      "vatRate": "อัตราภาษีมูลค่าเพิ่ม",
+      "vatAmount": "ภาษีมูลค่าเพิ่ม (VAT)",
+      "taxBase": "ฐานภาษี (ยอดก่อน VAT)",
+      "grossTotal": "ยอดรวมรวมภาษี",
+      "taxInvoiceNumber": "เลขที่ใบกำกับภาษี",
+      "downloadTaxPdf": "ดาวน์โหลดใบกำกับภาษี/ใบเสร็จ PDF",
+      "pdfDownloaded": "ดาวน์โหลดเอกสารสำเร็จ",
+      "retentionRatePercent": "เงินประกันผลงาน (Retention %)",
+      "retentionRatePlaceholder": "0.0 - 30.0",
+      "retentionInvalid": "อัตราเงินประกันผลงานต้องอยู่ระหว่าง 0% ถึง 30%",
+      "retentionAmount": "เงินประกันผลงานที่หักไว้",
+      "retentionStatus": "สถานะเงินประกันผลงาน",
+      "retentionStatuses": {
+        "none": "ไม่มี",
+        "held": "หักประกันไว้",
+        "released": "ปลดแล้ว"
+      },
+      "releaseRetention": "ปลดเงินประกันผลงาน",
+      "releaseRetentionTitle": "ยืนยันการปลดเงินประกันผลงาน",
+      "releaseRetentionDescription": "ปลดเงินประกันผลงานเมื่อโครงการสิ้นสุดระยะเวลารับประกันแล้ว โดยยอดเงินจะพร้อมให้เรียกเก็บ",
+      "retentionReleased": "ปลดเงินประกันผลงานสำเร็จ",
+      "effectiveReceivable": "ยอดเรียกเก็บสุทธิปัจจุบัน",
+      "netReceivableNow": "ยอดเรียกเก็บสุทธิตอนนี้",
+      "whtRate": "ภาษีหัก ณ ที่จ่าย (WHT)",
+      "whtRates": {
+        "rate_0": "ไม่หัก (0%)",
+        "rate_1": "1% ขนส่ง",
+        "rate_2": "2% โฆษณา",
+        "rate_3": "3% บริการ / จ้างทำของ",
+        "rate_5": "5% ค่าเช่า"
+      },
+      "whtType": "ประเภทการหักภาษี ณ ที่จ่าย",
+      "whtTypes": {
+        "service_3": "บริการ (3%)",
+        "transport_1": "ขนส่ง (1%)",
+        "advertising_2": "โฆษณา (2%)",
+        "rent_5": "ค่าเช่า (5%)"
+      },
+      "whtCertificateNumber": "เลขที่หนังสือรับรอง 50 ทวิ",
+      "whtCertificateNumberPlaceholder": "เช่น 50ทวิ-2569/001",
+      "whtAmount": "ยอดภาษีหัก ณ ที่จ่าย",
+      "netCashReceived": "เงินสดที่ได้รับสุทธิ",
+      "receiptNumber": "เลขที่ใบเสร็จรับเงิน",
+      "whtCertificateRequired": "ต้องระบุเลขที่หนังสือรับรอง 50 ทวิ เมื่อมีภาษีหัก ณ ที่จ่าย",
+      "notesTitle": "ใบลดหนี้ / ใบเพิ่มหนี้",
+      "notesEmpty": "ยังไม่มีใบลดหนี้หรือใบเพิ่มหนี้",
+      "createNote": "ออกใบลดหนี้ / ใบเพิ่มหนี้",
+      "noteType": "ประเภทเอกสาร",
+      "noteTypes": {
+        "credit": "ใบลดหนี้ (Credit Note)",
+        "debit": "ใบเพิ่มหนี้ (Debit Note)"
+      },
+      "taxBaseDelta": "ยอดปรับปรุงฐานภาษี",
+      "taxBaseDeltaPlaceholder": "0.00",
+      "vatDelta": "ภาษีมูลค่าเพิ่มปรับปรุง",
+      "totalDelta": "ยอดรวมปรับปรุง",
+      "noteReason": "เหตุผลในการปรับปรุง",
+      "noteReasonPlaceholder": "เช่น ลดราคาเนื่องจากสินค้ามีตำหนิ หรือ เพิ่มปริมาณงาน",
+      "noteStatus": "สถานะเอกสาร",
+      "noteStatuses": {
+        "pending_approval": "รออนุมัติ",
+        "approved": "อนุมัติแล้ว"
+      },
+      "approveNote": "อนุมัติ",
+      "approveNoteTitle": "ยืนยันการอนุมัติใบลดหนี้/ใบเพิ่มหนี้",
+      "approveNoteDescription": "อนุมัติ {number} ({type}) ยอด {amount} การอนุมัติจะมีผลต่อยอดเรียกเก็บทันที",
+      "noteCreated": "ออกใบลดหนี้/ใบเพิ่มหนี้สำเร็จ",
+      "noteApproved": "อนุมัติใบลดหนี้/ใบเพิ่มหนี้สำเร็จ",
+      "noteInvalid": "กรุณาระบุยอดปรับปรุงมากกว่า 0 และระบุเหตุผล"
     },
     "sync": {
       "title": "ส่งข้อมูลให้ระบบบัญชี",
@@ -4581,6 +4656,9 @@
         "payment": {
           "recorded": "รับชำระ",
           "reversed": "กลับรายการรับชำระ"
+        },
+        "billing-note": {
+          "approved": "อนุมัติใบลดหนี้/ใบเพิ่มหนี้"
         }
       },
       "kind": "ประเภท",

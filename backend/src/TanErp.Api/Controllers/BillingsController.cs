@@ -26,7 +26,11 @@ public class BillingsController : FinanceControllerBase
     {
         var caller = ReadIdempotent(out var key, out var failure);
         if (caller is null) return failure!;
-        var result = await _handler.CreateBillingAsync(caller, key, new BillingInput(request.ProjectId, request.Kind ?? string.Empty, request.Description ?? string.Empty, request.Amount, request.DueDate), ct);
+        var lines = request.Lines?.Select(l => new BillingLineInput(l.Description, l.TaxBaseAmount, l.VatRate)).ToList();
+        var result = await _handler.CreateBillingAsync(
+            caller, key,
+            new BillingInput(request.ProjectId, request.Kind ?? string.Empty, request.Description ?? string.Empty, request.Amount, request.DueDate, request.ApplyVat, request.VatRate, request.RetentionRate, lines),
+            ct);
         if (result.IsFailure) return Problem(result.Error.Code);
         Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
         return CreatedAtAction(nameof(Get), new { id = result.Value.Id }, FinanceMapper.To(result.Value));
@@ -79,6 +83,57 @@ public class BillingsController : FinanceControllerBase
         return Respond(await _handler.VoidBillingAsync(caller, id, version, request.Reason, ct));
     }
 
+    [HttpPost("api/v1/billings/{id:guid}/release-retention")]
+    [ProducesResponseType<BillingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ReleaseRetention([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadConditional(out var version, out var failure);
+        if (caller is null) return failure!;
+        return Respond(await _handler.ReleaseRetentionAsync(caller, id, version, ct));
+    }
+
+    [HttpPost("api/v1/billings/{id:guid}/notes")]
+    [ProducesResponseType<BillingResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CreateNote([FromRoute] Guid id, [FromBody] BillingNoteRequest request, CancellationToken ct)
+    {
+        var caller = ReadIdempotent(out var key, out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.CreateBillingNoteAsync(caller, id, key, new BillingNoteInput(request.NoteType ?? string.Empty, request.Reason ?? string.Empty, request.TaxBaseDelta), ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return StatusCode(StatusCodes.Status201Created, FinanceMapper.To(result.Value));
+    }
+
+    [HttpPost("api/v1/billings/{id:guid}/notes/{noteId:guid}/approve")]
+    [ProducesResponseType<BillingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ApproveNote([FromRoute] Guid id, [FromRoute] Guid noteId, CancellationToken ct)
+    {
+        var caller = ReadConditional(out var version, out var failure);
+        if (caller is null) return failure!;
+        return Respond(await _handler.ApproveBillingNoteAsync(caller, id, noteId, version, ct));
+    }
+
+    [HttpGet("api/v1/billings/{id:guid}/tax-document/pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileContentResult))]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadTaxPdf([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var billingResult = await _handler.GetBillingAsync(caller, id, ct);
+        if (billingResult.IsFailure) return Problem(billingResult.Error.Code);
+        var pdfResult = await _handler.RenderTaxDocumentPdfAsync(caller, id, ct);
+        if (pdfResult.IsFailure) return Problem(pdfResult.Error.Code);
+        return File(pdfResult.Value!, "application/pdf", $"{billingResult.Value!.Number}.pdf");
+    }
+
     [HttpPost("api/v1/billings/{id:guid}/payments")]
     [ProducesResponseType<BillingResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
@@ -87,7 +142,10 @@ public class BillingsController : FinanceControllerBase
     {
         var caller = ReadIdempotent(out var key, out var failure);
         if (caller is null) return failure!;
-        var result = await _handler.RecordPaymentAsync(caller, id, key, new PaymentInput(request.Amount, request.Method ?? string.Empty, request.Reference ?? string.Empty, request.ReceivedDate), ct);
+        var result = await _handler.RecordPaymentAsync(
+            caller, id, key,
+            new PaymentInput(request.Amount, request.Method ?? string.Empty, request.Reference ?? string.Empty, request.ReceivedDate, request.WhtRate, request.WhtType, request.WhtCertificateNumber),
+            ct);
         if (result.IsFailure) return Problem(result.Error.Code);
         Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
         return StatusCode(StatusCodes.Status201Created, FinanceMapper.To(result.Value));

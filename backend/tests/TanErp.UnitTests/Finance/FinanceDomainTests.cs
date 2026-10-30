@@ -115,4 +115,185 @@ public class FinanceDomainTests
         message.MarkFailed(new string('x', 900), Now);
         Assert.Equal(500, message.LastError!.Length);
     }
+
+    [Fact]
+    public void VatAndLines_CalculatesAndRoundsAwayFromZero_AndReferenceHashIncludesTax()
+    {
+        var branchId = Guid.NewGuid();
+        var projectId = Guid.NewGuid();
+        var billingId = Guid.NewGuid();
+
+        // 1. Direct VAT without lines
+        var billingVatOnly = new BillingDocument(
+            billingId, Org, branchId, projectId, "BIL-100", BillingKind.Milestone, "Direct VAT",
+            100m, null, User, Now, vatRate: 0.07m, retentionRate: 0m, taxInvoiceNumber: "TIV-2026-0001");
+        Assert.Equal(7.00m, billingVatOnly.VatAmount);
+        Assert.Equal(107.00m, billingVatOnly.GrossTotal);
+        Assert.Equal("TIV-2026-0001", billingVatOnly.TaxInvoiceNumber);
+
+        // 2. VAT with lines
+        var line1 = new BillingLine(Guid.NewGuid(), Org, billingId, 1, "Line 1", 33.33m, 0.07m);
+        // 33.33 * 0.07 = 2.3331 => AwayFromZero => 2.33
+        Assert.Equal(2.33m, line1.VatAmount);
+        Assert.Equal(35.66m, line1.TotalAmount);
+
+        var line2 = new BillingLine(Guid.NewGuid(), Org, billingId, 2, "Line 2", 66.67m, 0.07m);
+        // 66.67 * 0.07 = 4.6669 => AwayFromZero => 4.67
+        Assert.Equal(4.67m, line2.VatAmount);
+        Assert.Equal(71.34m, line2.TotalAmount);
+
+        var billingWithLines = new BillingDocument(
+            billingId, Org, branchId, projectId, "BIL-101", BillingKind.Milestone, "With Lines",
+            100m, null, User, Now, vatRate: 0.07m, retentionRate: 0m, taxInvoiceNumber: "TIV-2026-0002",
+            lines: new[] { line1, line2 });
+        Assert.Equal(7.00m, billingWithLines.VatAmount);
+        Assert.Equal(107.00m, billingWithLines.GrossTotal);
+        Assert.Equal(2, billingWithLines.Lines.Count);
+
+        // Line total mismatch
+        var badLines = new[] { line1 };
+        Assert.Equal("BILLING_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new BillingDocument(billingId, Org, branchId, projectId, "BIL-BAD", BillingKind.Milestone, "Mismatch",
+                100m, null, User, Now, vatRate: 0.07m, lines: badLines)).Code);
+
+        // Legacy reference hash stability
+        var legacy = Billing(1000m);
+        var expectedLegacyHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes($"{Org}|{legacy.ProjectId}|BIL-1|milestone|1000.00|THB|{Now:O}"))).ToLowerInvariant();
+        Assert.Equal(expectedLegacyHash, legacy.ReferenceHash);
+        Assert.Equal(legacy.ReferenceHash, legacy.ComputeReferenceHash());
+
+        // Tax-enabled reference hash
+        var expectedTaxHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes($"{Org}|{projectId}|BIL-100|milestone|100.00|THB|{Now:O}|0.0700|7.00|0.0000|0.00|TIV-2026-0001"))).ToLowerInvariant();
+        Assert.Equal(expectedTaxHash, billingVatOnly.ReferenceHash);
+    }
+
+    [Fact]
+    public void Payment_WhtCalculation_Requires50BisCertificate_WhenWhtApplied()
+    {
+        var today = new DateOnly(2026, 10, 4);
+        var billingId = Guid.NewGuid();
+
+        // WHT > 0 without certificate throws
+        Assert.Equal("PAYMENT_WHT_CERTIFICATE_REQUIRED", Assert.Throws<FinanceDomainException>(() =>
+            new Payment(Guid.NewGuid(), Org, billingId, "PAY-1", 1000m, PaymentMethod.Transfer, "REF-1",
+                today, today, User, Now, whtRate: 0.03m, whtType: "service_3", whtCertificateNumber: null)).Code);
+
+        Assert.Equal("PAYMENT_WHT_CERTIFICATE_REQUIRED", Assert.Throws<FinanceDomainException>(() =>
+            new Payment(Guid.NewGuid(), Org, billingId, "PAY-1", 1000m, PaymentMethod.Transfer, "REF-1",
+                today, today, User, Now, whtRate: 0.03m, whtType: "service_3", whtCertificateNumber: "   ")).Code);
+
+        // Valid WHT payment
+        var payment = new Payment(Guid.NewGuid(), Org, billingId, "PAY-1", 1000m, PaymentMethod.Transfer, "REF-1",
+            today, today, User, Now, whtRate: 0.03m, whtType: "service_3", whtCertificateNumber: "50BIS-2026-0001", receiptNumber: "RCT-2026-0001");
+        Assert.Equal(30.00m, payment.WhtAmount);
+        Assert.Equal(970.00m, payment.NetCashReceived);
+        Assert.Equal("50BIS-2026-0001", payment.WhtCertificateNumber);
+        Assert.Equal("RCT-2026-0001", payment.ReceiptNumber);
+
+        // Invalid WHT rate
+        Assert.Equal("PAYMENT_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new Payment(Guid.NewGuid(), Org, billingId, "PAY-1", 1000m, PaymentMethod.Transfer, "REF-1",
+                today, today, User, Now, whtRate: 0.35m, whtCertificateNumber: "50BIS-1")).Code);
+    }
+
+    [Fact]
+    public void Retention_Held_ReducesOutstanding_AndOpensWhenReleased()
+    {
+        var billing = new BillingDocument(
+            Guid.NewGuid(), Org, Guid.NewGuid(), Guid.NewGuid(), "BIL-RET", BillingKind.Milestone, "Retention Test",
+            1000m, null, User, Now, vatRate: 0.07m, retentionRate: 0.10m);
+
+        Assert.Equal(1070m, billing.GrossTotal);
+        Assert.Equal(100m, billing.RetentionAmount);
+        Assert.Equal(RetentionHoldingStatus.Held, billing.RetentionStatus);
+        Assert.Equal(970m, billing.EffectiveReceivable);
+        Assert.Equal(970m, billing.Outstanding);
+
+        // Overpaying before retention release is rejected
+        Assert.Equal("PAYMENT_EXCEEDS_OUTSTANDING", Assert.Throws<FinanceDomainException>(() =>
+            billing.ApplyPayment(970.01m, Now)).Code);
+
+        // Pay exactly the effective receivable
+        billing.ApplyPayment(970m, Now);
+        Assert.Equal(BillingStatus.PartiallyPaid, billing.Status);
+        Assert.Equal(0m, billing.Outstanding);
+
+        // Release retention
+        billing.ReleaseRetention(User, Now);
+        Assert.Equal(RetentionHoldingStatus.Released, billing.RetentionStatus);
+        Assert.Equal(1070m, billing.EffectiveReceivable);
+        Assert.Equal(100m, billing.Outstanding);
+
+        // Pay remaining retention
+        billing.ApplyPayment(100m, Now);
+        Assert.Equal(1070m, billing.PaidAmount);
+        Assert.Equal(BillingStatus.Paid, billing.Status);
+        Assert.Equal(0m, billing.Outstanding);
+
+        // Releasing again throws
+        Assert.Equal("BILLING_INVALID_STATE", Assert.Throws<FinanceDomainException>(() =>
+            billing.ReleaseRetention(User, Now)).Code);
+    }
+
+    [Fact]
+    public void CreditAndDebitNotes_MakerChecker_AndInvariantEnforcement()
+    {
+        var branchId = Guid.NewGuid();
+        var billing = new BillingDocument(
+            Guid.NewGuid(), Org, branchId, Guid.NewGuid(), "BIL-NOTES", BillingKind.Milestone, "Notes Test",
+            1000m, null, User, Now, vatRate: 0.07m);
+        Assert.Equal(1070m, billing.GrossTotal);
+
+        var approver = Guid.NewGuid();
+
+        // 1. Credit Note with Maker-Checker
+        var cn = new BillingAdjustmentNote(
+            Guid.NewGuid(), Org, branchId, billing.Id, "CN-2026-0001",
+            BillingNoteType.Credit, "Discount agreed", 100m, 0.07m, User, Now);
+        Assert.Equal(7m, cn.VatDelta);
+        Assert.Equal(107m, cn.TotalDelta);
+        Assert.Equal(BillingNoteStatus.PendingApproval, cn.Status);
+
+        // Self-approval rejected
+        Assert.Equal("BILLING_NOTE_SELF_APPROVAL", Assert.Throws<FinanceDomainException>(() =>
+            cn.Approve(User, Now)).Code);
+
+        // Independent checker approves
+        cn.Approve(approver, Now);
+        Assert.Equal(BillingNoteStatus.Approved, cn.Status);
+        Assert.Equal(approver, cn.DecidedByUserId);
+
+        billing.ApplyApprovedNote(cn, Now);
+        Assert.Equal(100m, billing.CreditNoteBaseAmount);
+        Assert.Equal(7m, billing.CreditNoteVatAmount);
+        Assert.Equal(963m, billing.GrossTotal);
+        Assert.Equal(963m, billing.Outstanding);
+
+        // 2. Pay 900m
+        billing.ApplyPayment(900m, Now);
+        Assert.Equal(63m, billing.Outstanding);
+
+        // Credit note that would reduce gross total below paid amount (900m) is rejected
+        // remaining gross is 963, if credit note total is 107 (tax base 100), new gross would be 856 < 900
+        var excessiveCn = new BillingAdjustmentNote(
+            Guid.NewGuid(), Org, branchId, billing.Id, "CN-2026-0002",
+            BillingNoteType.Credit, "Too big", 100m, 0.07m, User, Now);
+        excessiveCn.Approve(approver, Now);
+        Assert.Equal("BILLING_NOTE_EXCEEDS_ORIGINAL", Assert.Throws<FinanceDomainException>(() =>
+            billing.ApplyApprovedNote(excessiveCn, Now)).Code);
+
+        // 3. Debit note increases amount
+        var dn = new BillingAdjustmentNote(
+            Guid.NewGuid(), Org, branchId, billing.Id, "DN-2026-0001",
+            BillingNoteType.Debit, "Additional work", 200m, 0.07m, User, Now);
+        dn.Approve(approver, Now);
+        billing.ApplyApprovedNote(dn, Now);
+
+        Assert.Equal(200m, billing.DebitNoteBaseAmount);
+        Assert.Equal(14m, billing.DebitNoteVatAmount);
+        Assert.Equal(963m + 214m, billing.GrossTotal); // 1177m
+        Assert.Equal(1177m - 900m, billing.Outstanding); // 277m
+    }
 }

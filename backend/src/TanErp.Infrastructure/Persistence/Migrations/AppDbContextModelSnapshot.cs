@@ -3303,9 +3303,116 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_accounting_outbox_attempts", "attempts >= 0");
 
-                            t.HasCheckConstraint("ck_accounting_outbox_kind", "kind IN ('billing.issued', 'billing.voided', 'payment.recorded', 'payment.reversed', 'supplier-invoice.posted', 'supplier-invoice.voided')");
+                            t.HasCheckConstraint("ck_accounting_outbox_kind", "kind IN ('billing.issued', 'billing.voided', 'billing-note.approved', 'payment.recorded', 'payment.reversed', 'supplier-invoice.posted', 'supplier-invoice.voided')");
 
                             t.HasCheckConstraint("ck_accounting_outbox_status", "status IN ('pending', 'sent', 'failed', 'dead')");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Finance.BillingAdjustmentNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BillingDocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("billing_document_id");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTimeOffset?>("DecidedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("decided_at_utc");
+
+                    b.Property<Guid?>("DecidedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_by_user_id");
+
+                    b.Property<string>("NoteType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("note_type");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("number");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("TaxBaseDelta")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("tax_base_delta");
+
+                    b.Property<decimal>("TotalDelta")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_delta");
+
+                    b.Property<decimal>("VatDelta")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("vat_delta");
+
+                    b.Property<decimal>("VatRate")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)")
+                        .HasColumnName("vat_rate");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BillingDocumentId");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("DecidedByUserId");
+
+                    b.HasIndex("OrganizationId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("billing_adjustment_notes", "finance", t =>
+                        {
+                            t.HasCheckConstraint("ck_billing_adjustment_notes_amounts", "tax_base_delta > 0 AND vat_rate >= 0 AND vat_delta >= 0 AND total_delta >= tax_base_delta");
+
+                            t.HasCheckConstraint("ck_billing_adjustment_notes_status", "status IN ('pending_approval', 'approved', 'rejected', 'voided')");
+
+                            t.HasCheckConstraint("ck_billing_adjustment_notes_type", "note_type IN ('credit', 'debit')");
                         });
                 });
 
@@ -3329,11 +3436,31 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_user_id");
 
+                    b.Property<decimal>("CreditNoteBaseAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("credit_note_base_amount");
+
+                    b.Property<decimal>("CreditNoteVatAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("credit_note_vat_amount");
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)")
                         .HasColumnName("currency");
+
+                    b.Property<decimal>("DebitNoteBaseAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("debit_note_base_amount");
+
+                    b.Property<decimal>("DebitNoteVatAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("debit_note_vat_amount");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -3380,6 +3507,30 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("reference_hash");
 
+                    b.Property<DateTimeOffset?>("ReleasedRetentionAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("released_retention_at_utc");
+
+                    b.Property<Guid?>("ReleasedRetentionByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("released_retention_by_user_id");
+
+                    b.Property<decimal>("RetentionAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("retention_amount");
+
+                    b.Property<decimal>("RetentionRate")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)")
+                        .HasColumnName("retention_rate");
+
+                    b.Property<string>("RetentionStatus")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("retention_status");
+
                     b.Property<Guid>("RowVersion")
                         .IsConcurrencyToken()
                         .HasColumnType("uuid")
@@ -3391,9 +3542,24 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("status");
 
+                    b.Property<string>("TaxInvoiceNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("tax_invoice_number");
+
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
                         .HasColumnType("timestamptz")
                         .HasColumnName("updated_at_utc");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<decimal>("VatRate")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)")
+                        .HasColumnName("vat_rate");
 
                     b.Property<string>("VoidReason")
                         .HasMaxLength(500)
@@ -3416,6 +3582,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("ReleasedRetentionByUserId");
+
                     b.HasIndex("VoidedByUserId");
 
                     b.HasIndex("OrganizationId", "Number")
@@ -3425,13 +3593,75 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("billing_documents", "finance", t =>
                         {
-                            t.HasCheckConstraint("ck_billing_documents_amounts", "amount > 0 AND paid_amount >= 0 AND paid_amount <= amount");
+                            t.HasCheckConstraint("ck_billing_documents_amounts", "amount > 0 AND vat_amount >= 0 AND retention_amount >= 0 AND credit_note_base_amount >= 0 AND debit_note_base_amount >= 0 AND paid_amount >= 0 AND paid_amount <= (amount + vat_amount + debit_note_base_amount + debit_note_vat_amount - credit_note_base_amount - credit_note_vat_amount)");
 
                             t.HasCheckConstraint("ck_billing_documents_kind", "kind IN ('deposit', 'milestone', 'final', 'other')");
+
+                            t.HasCheckConstraint("ck_billing_documents_retention_status", "retention_status IN ('none', 'held', 'released')");
 
                             t.HasCheckConstraint("ck_billing_documents_status", "status IN ('issued', 'partially_paid', 'paid', 'voided')");
 
                             t.HasCheckConstraint("ck_billing_documents_void", "(status = 'voided') = (void_reason IS NOT NULL) AND (status <> 'voided' OR paid_amount = 0)");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Finance.BillingLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BillingDocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("billing_document_id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("line_number");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<decimal>("TaxBaseAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("tax_base_amount");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_amount");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<decimal>("VatRate")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)")
+                        .HasColumnName("vat_rate");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("BillingDocumentId", "LineNumber")
+                        .IsUnique();
+
+                    b.ToTable("billing_lines", "finance", t =>
+                        {
+                            t.HasCheckConstraint("ck_billing_lines_amounts", "tax_base_amount > 0 AND vat_rate >= 0 AND vat_amount >= 0 AND total_amount >= tax_base_amount");
+
+                            t.HasCheckConstraint("ck_billing_lines_line_number", "line_number >= 1");
                         });
                 });
 
@@ -3457,6 +3687,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("method");
 
+                    b.Property<decimal>("NetCashReceived")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("net_cash_received");
+
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -3466,6 +3701,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
+
+                    b.Property<string>("ReceiptNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("receipt_number");
 
                     b.Property<DateOnly>("ReceivedDate")
                         .HasColumnType("date")
@@ -3503,6 +3743,26 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("status");
+
+                    b.Property<decimal>("WhtAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("wht_amount");
+
+                    b.Property<string>("WhtCertificateNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("wht_certificate_number");
+
+                    b.Property<decimal>("WhtRate")
+                        .HasPrecision(6, 4)
+                        .HasColumnType("numeric(6,4)")
+                        .HasColumnName("wht_rate");
+
+                    b.Property<string>("WhtType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("wht_type");
 
                     b.HasKey("Id");
 
@@ -12203,6 +12463,38 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Finance.BillingAdjustmentNote", b =>
+                {
+                    b.HasOne("TanErp.Domain.Finance.BillingDocument", null)
+                        .WithMany("AdjustmentNotes")
+                        .HasForeignKey("BillingDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("DecidedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("TanErp.Domain.Finance.BillingDocument", b =>
                 {
                     b.HasOne("TanErp.Domain.Organization.Branch", null)
@@ -12231,8 +12523,28 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.HasOne("TanErp.Domain.IdentityAccess.User", null)
                         .WithMany()
+                        .HasForeignKey("ReleasedRetentionByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
                         .HasForeignKey("VoidedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Finance.BillingLine", b =>
+                {
+                    b.HasOne("TanErp.Domain.Finance.BillingDocument", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("BillingDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TanErp.Domain.Finance.Payment", b =>
@@ -14410,6 +14722,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TanErp.Domain.Finance.BillingDocument", b =>
                 {
+                    b.Navigation("AdjustmentNotes");
+
+                    b.Navigation("Lines");
+
                     b.Navigation("Payments");
                 });
 

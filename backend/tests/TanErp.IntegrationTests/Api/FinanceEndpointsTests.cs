@@ -461,6 +461,174 @@ public class FinanceEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ThaiTaxG15_VatWhtRetentionNotesAndPdf_FullLifecycle()
+    {
+        var projectId = await NewProjectAsync();
+
+        // 1. Issue billing with VAT 7%, lines, and 10% retention
+        var line1 = new BillingLineRequest("ค่าบริการติดตั้ง", 4000m, 0.07m);
+        var line2 = new BillingLineRequest("ค่าวัสดุอุปกรณ์", 6000m, 0.07m);
+        var createRequest = new BillingRequest(
+            projectId, "milestone", "งวดงานระบบพร้อมภาษีและเงินประกัน", 10000m, Today.AddDays(30),
+            ApplyVat: true, VatRate: 0.07m, RetentionRate: 0.10m, Lines: new[] { line1, line2 });
+
+        var createResponse = await SendAsync(HttpMethod.Post, "/api/v1/billings", createRequest, key: Key());
+        var billing = await Ok<BillingResponse>(createResponse, HttpStatusCode.Created);
+
+        Assert.StartsWith("BIL-", billing.Number);
+        Assert.NotNull(billing.TaxInvoiceNumber);
+        Assert.StartsWith("TIV-", billing.TaxInvoiceNumber);
+        Assert.Equal(0.07m, billing.VatRate);
+        Assert.Equal(700m, billing.VatAmount);
+        Assert.Equal(10000m, billing.Amount);
+        Assert.Equal(10700m, billing.GrossTotal);
+        Assert.Equal(0.10m, billing.RetentionRate);
+        Assert.Equal(1000m, billing.RetentionAmount);
+        Assert.Equal("held", billing.RetentionStatus);
+        Assert.Equal(9700m, billing.EffectiveReceivable);
+        Assert.Equal(9700m, billing.Outstanding);
+        Assert.Equal(2, billing.Lines.Count);
+
+        // 2. Retention release before warranty expired must fail with 409 RETENTION_WARRANTY_NOT_EXPIRED
+        var failReleaseResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/release-retention",
+            ifMatch: billing.RowVersion);
+        Assert.Equal(HttpStatusCode.Conflict, failReleaseResponse.StatusCode);
+        Assert.Equal("RETENTION_WARRANTY_NOT_EXPIRED", await ErrorCodeAsync(failReleaseResponse));
+
+        // Add active warranty (unexpired) -> still fails
+        var installJobId = Guid.NewGuid();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var job = new TanErp.Domain.Service.InstallationJob(
+                installJobId, OrgId, BranchId, projectId, $"INS-{Guid.NewGuid():N}"[..10],
+                Today, Today.AddDays(1), "Crew 1", "Note", UserId, DateTimeOffset.UtcNow);
+            db.InstallationJobs.Add(job);
+
+            var activeWarranty = new TanErp.Domain.Service.Warranty(
+                Guid.NewGuid(), OrgId, projectId, job.Id, "WAR-ACTIVE", Today, 12, DateTimeOffset.UtcNow);
+            db.Warranties.Add(activeWarranty);
+            await db.SaveChangesAsync();
+        }
+
+        var stillFailResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/release-retention",
+            ifMatch: billing.RowVersion);
+        Assert.Equal(HttpStatusCode.Conflict, stillFailResponse.StatusCode);
+        Assert.Equal("RETENTION_WARRANTY_NOT_EXPIRED", await ErrorCodeAsync(stillFailResponse));
+
+        // Expire the warranty
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var w = await db.Warranties.FirstAsync(w => w.ProjectId == projectId);
+            db.Warranties.Remove(w);
+            var expiredWarranty = new TanErp.Domain.Service.Warranty(
+                Guid.NewGuid(), OrgId, projectId, installJobId, "WAR-EXPIRED", Today.AddYears(-2), 12, DateTimeOffset.UtcNow);
+            db.Warranties.Add(expiredWarranty);
+            await db.SaveChangesAsync();
+        }
+
+        // Now release retention succeeds
+        var releaseResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/release-retention",
+            ifMatch: billing.RowVersion);
+        billing = await Ok<BillingResponse>(releaseResponse, HttpStatusCode.OK);
+
+        Assert.Equal("released", billing.RetentionStatus);
+        Assert.NotNull(billing.ReleasedRetentionAtUtc);
+        Assert.Equal(10700m, billing.EffectiveReceivable);
+        Assert.Equal(10700m, billing.Outstanding);
+
+        // Verify project summary: Billed is still 10,000 (not increased!)
+        var summary = await Ok<ProjectBillingSummaryResponse>(await SendAsync(HttpMethod.Get, $"/api/v1/projects/{projectId}/billing-summary"));
+        Assert.Equal(10000m, summary.Billed);
+
+        // 3. Record Payment with WHT 3%
+        // Missing 50-Bis certificate fails with 422 PAYMENT_WHT_CERTIFICATE_REQUIRED
+        var missingCertRequest = new PaymentRequest(
+            5000m, "transfer", $"REF-NO-CERT-{Guid.NewGuid():N}"[..20], Today,
+            WhtRate: 0.03m, WhtType: "service_3", WhtCertificateNumber: null);
+        var missingCertResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/payments", missingCertRequest, key: Key());
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, missingCertResponse.StatusCode);
+        Assert.Equal("PAYMENT_WHT_CERTIFICATE_REQUIRED", await ErrorCodeAsync(missingCertResponse));
+
+        // Valid WHT payment
+        var validPaymentRequest = new PaymentRequest(
+            5000m, "transfer", $"REF-WHT-OK-{Guid.NewGuid():N}"[..20], Today,
+            WhtRate: 0.03m, WhtType: "service_3", WhtCertificateNumber: "50BIS-2026-0001");
+        var payResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/payments", validPaymentRequest, key: Key());
+        billing = await Ok<BillingResponse>(payResponse, HttpStatusCode.Created);
+
+        Assert.Equal(5000m, billing.PaidAmount);
+        Assert.Equal(5700m, billing.Outstanding);
+        var payment = Assert.Single(billing.Payments);
+        Assert.NotNull(payment.ReceiptNumber);
+        Assert.StartsWith("RCT-", payment.ReceiptNumber);
+        Assert.Equal(0.03m, payment.WhtRate);
+        Assert.Equal(150m, payment.WhtAmount); // 5000 * 0.03 = 150
+        Assert.Equal(4850m, payment.NetCashReceived); // 5000 - 150 = 4850
+        Assert.Equal("50BIS-2026-0001", payment.WhtCertificateNumber);
+
+        // 4. Credit Note & Debit Note
+        // Excessive Credit Note (would reduce gross total to 10700 - 6420 = 4280 < 5000 paid)
+        var excessiveNote = new BillingNoteRequest("credit", "Excessive discount", 6000m);
+        var excessiveNoteResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/notes", excessiveNote, key: Key());
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, excessiveNoteResponse.StatusCode);
+        Assert.Equal("BILLING_NOTE_EXCEEDS_ORIGINAL", await ErrorCodeAsync(excessiveNoteResponse));
+
+        // Valid Credit Note (1000 tax base + 70 VAT = 1070 total delta)
+        var validNoteRequest = new BillingNoteRequest("credit", "Special client discount", 1000m);
+        var noteResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/notes", validNoteRequest, key: Key());
+        billing = await Ok<BillingResponse>(noteResponse, HttpStatusCode.Created);
+
+        var note = Assert.Single(billing.Notes);
+        Assert.StartsWith("CN-", note.Number);
+        Assert.Equal("pending_approval", note.Status);
+        Assert.Equal(1000m, note.TaxBaseDelta);
+        Assert.Equal(70m, note.VatDelta);
+        Assert.Equal(1070m, note.TotalDelta);
+
+        // Self-approval rejected
+        var selfApproveResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/notes/{note.Id}/approve",
+            token: "token-org-a", ifMatch: billing.RowVersion);
+        Assert.Equal(HttpStatusCode.Conflict, selfApproveResponse.StatusCode);
+        Assert.Equal("BILLING_NOTE_SELF_APPROVAL", await ErrorCodeAsync(selfApproveResponse));
+
+        // Independent checker approves note
+        var approveResponse = await SendAsync(
+            HttpMethod.Post, $"/api/v1/billings/{billing.Id}/notes/{note.Id}/approve",
+            token: "token-approver", ifMatch: billing.RowVersion);
+        billing = await Ok<BillingResponse>(approveResponse, HttpStatusCode.OK);
+
+        var approvedNote = Assert.Single(billing.Notes);
+        Assert.Equal("approved", approvedNote.Status);
+        Assert.Equal(1000m, billing.CreditNoteBaseAmount);
+        Assert.Equal(70m, billing.CreditNoteVatAmount);
+        Assert.Equal(9630m, billing.GrossTotal);
+        Assert.Equal(4630m, billing.Outstanding);
+
+        // Verify outbox message for billing-note.approved
+        var outbox = await OutboxAsync();
+        Assert.Contains(outbox.Items, m => m.Kind == "billing-note.approved" && m.ResourceNumber == approvedNote.Number);
+
+        // 5. Download Tax Document PDF
+        var pdfResponse = await SendAsync(HttpMethod.Get, $"/api/v1/billings/{billing.Id}/tax-document/pdf");
+        Assert.Equal(HttpStatusCode.OK, pdfResponse.StatusCode);
+        Assert.Equal("application/pdf", pdfResponse.Content.Headers.ContentType?.MediaType);
+        var pdfBytes = await pdfResponse.Content.ReadAsByteArrayAsync();
+        Assert.True(pdfBytes.Length > 1000);
+        var pdfHeader = System.Text.Encoding.ASCII.GetString(pdfBytes.Take(5).ToArray());
+        Assert.Equal("%PDF-", pdfHeader);
+    }
+
+    [Fact]
     public async Task AccountingOutbox_DefaultConnectorNeverClaimsSuccess()
     {
         using var scope = _factory.Services.CreateScope();

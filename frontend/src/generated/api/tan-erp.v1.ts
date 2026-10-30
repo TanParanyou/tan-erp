@@ -2847,6 +2847,257 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billings/{id}/release-retention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingResponse"];
+                        "application/json": components["schemas"]["BillingResponse"];
+                        "text/json": components["schemas"]["BillingResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billings/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BillingNoteRequest"];
+                    "text/json": components["schemas"]["BillingNoteRequest"];
+                    "application/*+json": components["schemas"]["BillingNoteRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingResponse"];
+                        "application/json": components["schemas"]["BillingResponse"];
+                        "text/json": components["schemas"]["BillingResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billings/{id}/notes/{noteId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    noteId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["BillingResponse"];
+                        "application/json": components["schemas"]["BillingResponse"];
+                        "text/json": components["schemas"]["BillingResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billings/{id}/tax-document/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": string;
+                        "application/json": string;
+                        "text/json": string;
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billings/{id}/payments": {
         parameters: {
             query?: never;
@@ -27140,6 +27391,50 @@ export interface components {
             reason?: string | null;
             changesJson?: string | null;
         };
+        BillingAdjustmentNoteResponse: {
+            /** Format: uuid */
+            id?: string;
+            number?: string | null;
+            noteType?: string | null;
+            reason?: string | null;
+            /** Format: double */
+            taxBaseDelta?: number;
+            /** Format: double */
+            vatRate?: number;
+            /** Format: double */
+            vatDelta?: number;
+            /** Format: double */
+            totalDelta?: number;
+            status?: string | null;
+            createdBy?: components["schemas"]["FinancePersonResponse"];
+            decidedBy?: components["schemas"]["FinancePersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            decidedAtUtc?: string | null;
+        };
+        BillingLineRequest: {
+            description?: string | null;
+            /** Format: double */
+            taxBaseAmount?: number;
+            /** Format: double */
+            vatRate?: number | null;
+        };
+        BillingLineResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            lineNumber?: number;
+            description?: string | null;
+            /** Format: double */
+            taxBaseAmount?: number;
+            /** Format: double */
+            vatRate?: number;
+            /** Format: double */
+            vatAmount?: number;
+            /** Format: double */
+            totalAmount?: number;
+        };
         BillingListItemResponse: {
             /** Format: uuid */
             id?: string;
@@ -27160,6 +27455,12 @@ export interface components {
             items?: components["schemas"]["BillingListItemResponse"][] | null;
             pagination?: components["schemas"]["FinancePaginationResponse"];
         };
+        BillingNoteRequest: {
+            noteType?: string | null;
+            reason?: string | null;
+            /** Format: double */
+            taxBaseDelta?: number;
+        };
         BillingRequest: {
             /** Format: uuid */
             projectId?: string;
@@ -27169,6 +27470,12 @@ export interface components {
             amount?: number;
             /** Format: date */
             dueDate?: string | null;
+            applyVat?: boolean;
+            /** Format: double */
+            vatRate?: number | null;
+            /** Format: double */
+            retentionRate?: number;
+            lines?: components["schemas"]["BillingLineRequest"][] | null;
         };
         BillingResponse: {
             /** Format: uuid */
@@ -27199,6 +27506,33 @@ export interface components {
             /** Format: uuid */
             rowVersion?: string;
             payments?: components["schemas"]["PaymentResponse"][] | null;
+            taxInvoiceNumber?: string | null;
+            /** Format: double */
+            vatRate?: number;
+            /** Format: double */
+            vatAmount?: number;
+            /** Format: double */
+            grossTotal?: number;
+            /** Format: double */
+            effectiveReceivable?: number;
+            /** Format: double */
+            retentionRate?: number;
+            /** Format: double */
+            retentionAmount?: number;
+            retentionStatus?: string | null;
+            /** Format: date-time */
+            releasedRetentionAtUtc?: string | null;
+            releasedRetentionBy?: components["schemas"]["FinancePersonResponse"];
+            /** Format: double */
+            creditNoteBaseAmount?: number;
+            /** Format: double */
+            creditNoteVatAmount?: number;
+            /** Format: double */
+            debitNoteBaseAmount?: number;
+            /** Format: double */
+            debitNoteVatAmount?: number;
+            lines?: components["schemas"]["BillingLineResponse"][] | null;
+            notes?: components["schemas"]["BillingAdjustmentNoteResponse"][] | null;
         };
         BomDraftRequest: {
             /** Format: double */
@@ -29950,6 +30284,10 @@ export interface components {
             reference?: string | null;
             /** Format: date */
             receivedDate?: string;
+            /** Format: double */
+            whtRate?: number;
+            whtType?: string | null;
+            whtCertificateNumber?: string | null;
         };
         PaymentResponse: {
             /** Format: uuid */
@@ -29968,6 +30306,15 @@ export interface components {
             recordedBy?: components["schemas"]["FinancePersonResponse"];
             /** Format: date-time */
             recordedAtUtc?: string;
+            receiptNumber?: string | null;
+            /** Format: double */
+            whtRate?: number;
+            /** Format: double */
+            whtAmount?: number;
+            /** Format: double */
+            netCashReceived?: number;
+            whtType?: string | null;
+            whtCertificateNumber?: string | null;
         };
         PermissionCatalogEntryResponse: {
             key?: string | null;

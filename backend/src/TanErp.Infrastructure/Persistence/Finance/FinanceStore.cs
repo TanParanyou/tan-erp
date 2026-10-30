@@ -5,11 +5,13 @@ using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Finance;
+using TanErp.Application.IdentityAccess.ApprovalLimits;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Finance;
 using TanErp.Domain.Procurement;
 using TanErp.Domain.Projects;
+using TanErp.Infrastructure.Documents;
 
 namespace TanErp.Infrastructure.Persistence.Finance;
 
@@ -19,13 +21,15 @@ public class FinanceStore : IFinanceStore
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _numbers;
     private readonly IAccountingConnector _connector;
+    private readonly IApprovalAuthority _approvalAuthority;
 
-    public FinanceStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, IAccountingConnector connector)
+    public FinanceStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, IAccountingConnector connector, IApprovalAuthority approvalAuthority)
     {
         _db = db;
         _clock = clock;
         _numbers = numbers;
         _connector = connector;
+        _approvalAuthority = approvalAuthority;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -103,12 +107,65 @@ public class FinanceStore : IFinanceStore
                 return Fail<BillingProjection>("DOCUMENT_NUMBER_ALLOCATION_FAILED", "Failed to allocate billing document number.");
             }
 
+            decimal vatRate = 0m;
+            string? taxInvoiceNumber = null;
+            if (input.ApplyVat || (input.VatRate.HasValue && input.VatRate.Value > 0))
+            {
+                if (input.VatRate.HasValue)
+                {
+                    vatRate = input.VatRate.Value;
+                }
+                else
+                {
+                    var publishedPolicies = await _db.TaxPolicyVersions.AsNoTracking()
+                        .Where(row => row.OrganizationId == orgId && row.Status == "published" &&
+                            row.EffectiveFromUtc <= now && (row.EffectiveToUtc == null || row.EffectiveToUtc > now) &&
+                            (row.BranchId == project.BranchId || row.BranchId == null))
+                        .ToListAsync(ct);
+                    var branchPolicy = publishedPolicies.FirstOrDefault(p => p.BranchId == project.BranchId);
+                    var orgPolicy = publishedPolicies.FirstOrDefault(p => p.BranchId == null);
+                    vatRate = (branchPolicy ?? orgPolicy)?.TaxRate ?? 0.07m;
+                }
+
+                try
+                {
+                    taxInvoiceNumber = await _numbers.GenerateAsync(orgId, DocumentTypes.TaxInvoices, project.BranchId, now, ct);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    return Fail<BillingProjection>("DOCUMENT_NUMBER_ALLOCATION_FAILED", "Failed to allocate tax invoice document number.");
+                }
+            }
+
             try
             {
-                var billing = new BillingDocument(Guid.NewGuid(), orgId, project.BranchId, project.Id, number, input.Kind, input.Description, input.Amount, input.DueDate, access.ActorUserId, now);
+                var billingId = Guid.NewGuid();
+                List<BillingLine>? lines = null;
+                if (input.Lines != null && input.Lines.Count > 0)
+                {
+                    lines = input.Lines.Select((l, idx) => new BillingLine(Guid.NewGuid(), orgId, billingId, idx + 1, l.Description, l.TaxBaseAmount, l.VatRate ?? vatRate)).ToList();
+                }
+
+                var billing = new BillingDocument(billingId, orgId, project.BranchId, project.Id, number, input.Kind, input.Description, input.Amount, input.DueDate, access.ActorUserId, now, vatRate, input.RetentionRate, taxInvoiceNumber, lines);
                 _db.BillingDocuments.Add(billing);
                 Enqueue(orgId, $"billing.issued:{billing.Id}", OutboxKind.BillingIssued, billing.Id, number, billing.Amount,
-                    new { kind = OutboxKind.BillingIssued, number, project = project.Code, billingKind = billing.Kind, billing.Amount, billing.Currency, billing.ReferenceHash, issuedAtUtc = billing.IssuedAtUtc }, now);
+                    new
+                    {
+                        kind = OutboxKind.BillingIssued,
+                        number,
+                        project = project.Code,
+                        billingKind = billing.Kind,
+                        billing.Amount,
+                        billing.Currency,
+                        billing.ReferenceHash,
+                        issuedAtUtc = billing.IssuedAtUtc,
+                        taxInvoiceNumber = billing.TaxInvoiceNumber,
+                        vatRate = billing.VatRate,
+                        vatAmount = billing.VatAmount,
+                        retentionRate = billing.RetentionRate,
+                        retentionAmount = billing.RetentionAmount,
+                        grossTotal = billing.GrossTotal
+                    }, now);
                 Audit(access, "billing.issued", "BillingDocument", billing.Id, traceId, new { number, amount = billing.Amount, project = project.Code }, billing.RowVersion, now);
                 _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, billing.Id.ToString(), now));
                 await _db.SaveChangesAsync(ct);
@@ -131,7 +188,11 @@ public class FinanceStore : IFinanceStore
         {
             await using var tx = await _db.Database.BeginTransactionAsync(ct);
             await _db.Database.SqlQuery<Guid>($"SELECT id AS \"Value\" FROM finance.billing_documents WHERE id = {billingId} AND organization_id = {orgId} FOR UPDATE").ToListAsync(ct);
-            var billing = await _db.BillingDocuments.Include(b => b.Payments).FirstOrDefaultAsync(b => b.Id == billingId && b.OrganizationId == orgId, ct);
+            var billing = await _db.BillingDocuments
+                .Include(b => b.Payments)
+                .Include(b => b.Lines)
+                .Include(b => b.AdjustmentNotes)
+                .FirstOrDefaultAsync(b => b.Id == billingId && b.OrganizationId == orgId, ct);
             if (billing is null) return Fail<BillingProjection>("RESOURCE_NOT_FOUND", "Billing not found.");
             if (billing.RowVersion != expectedVersion) return Fail<BillingProjection>("BILLING_VERSION_CONFLICT", "Billing version conflict.");
 
@@ -170,6 +231,147 @@ public class FinanceStore : IFinanceStore
             Audit(access, "billing.voided", "BillingDocument", billing.Id, traceId, new { number = billing.Number }, billing.RowVersion, now);
             return Task.FromResult<Result<BillingProjection>?>(null);
         }, ct);
+
+    public Task<Result<BillingProjection>> ReleaseRetentionAsync(RequestAccessContext access, Guid billingId, Guid expectedVersion, string traceId, CancellationToken ct = default) =>
+        MutateBillingAsync(access, billingId, expectedVersion, async (billing, now) =>
+        {
+            var warranties = await _db.Warranties.AsNoTracking()
+                .Where(w => w.OrganizationId == access.OrganizationId && w.ProjectId == billing.ProjectId)
+                .ToListAsync(ct);
+            if (warranties.Count == 0 || warranties.Any(w => w.EndDate >= Today))
+            {
+                return Fail<BillingProjection>("RETENTION_WARRANTY_NOT_EXPIRED", "Retention can only be released after the project warranty has expired.");
+            }
+
+            billing.ReleaseRetention(access.ActorUserId, now);
+            Audit(access, "billing.retention-released", "BillingDocument", billing.Id, traceId, new { number = billing.Number, retentionAmount = billing.RetentionAmount }, billing.RowVersion, now);
+            return null;
+        }, ct);
+
+    public async Task<Result<BillingProjection>> CreateBillingNoteAsync(
+        RequestAccessContext access, Guid billingId, BillingNoteInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default)
+    {
+        const string operation = "finance.billing-note.create";
+        var orgId = access.OrganizationId;
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+            var replay = await FindReplayAsync(orgId, operation, keyHash, ct);
+            if (replay is not null)
+            {
+                if (replay.PayloadHash != payloadHash) return Fail<BillingProjection>("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload.");
+                var replayed = await GetBillingAsync(orgId, billingId, ct);
+                if (replayed is not null) return Result<BillingProjection>.Success(replayed);
+            }
+
+            await _db.Database.SqlQuery<Guid>($"SELECT id AS \"Value\" FROM finance.billing_documents WHERE id = {billingId} AND organization_id = {orgId} FOR UPDATE").ToListAsync(ct);
+            var billing = await _db.BillingDocuments.Include(b => b.Payments).Include(b => b.AdjustmentNotes).FirstOrDefaultAsync(b => b.Id == billingId && b.OrganizationId == orgId, ct);
+            if (billing is null) return Fail<BillingProjection>("RESOURCE_NOT_FOUND", "Billing not found.");
+            if (billing.Status == BillingStatus.Voided) return Fail<BillingProjection>("BILLING_INVALID_STATE", "A voided billing cannot receive adjustment notes.");
+
+            if (!BillingNoteType.All.Contains(input.NoteType)) return Fail<BillingProjection>("BILLING_FIELD_INVALID", "The note type is invalid.");
+            var reason = input.Reason?.Trim() ?? string.Empty;
+            if (reason.Length is 0 or > 500) return Fail<BillingProjection>("BILLING_FIELD_INVALID", "A reason of 1-500 characters is required.");
+            if (input.TaxBaseDelta <= 0 || decimal.Round(input.TaxBaseDelta, 2) != input.TaxBaseDelta) return Fail<BillingProjection>("BILLING_FIELD_INVALID", "The tax base delta must be above zero with at most two decimals.");
+
+            var now = _clock.UtcNow;
+            if (input.NoteType == BillingNoteType.Credit)
+            {
+                var vatDelta = decimal.Round(input.TaxBaseDelta * billing.VatRate, 2, MidpointRounding.AwayFromZero);
+                var totalDelta = input.TaxBaseDelta + vatDelta;
+                if (input.TaxBaseDelta > (billing.Amount + billing.DebitNoteBaseAmount - billing.CreditNoteBaseAmount) ||
+                    (billing.GrossTotal - totalDelta) < billing.PaidAmount)
+                {
+                    return Fail<BillingProjection>("BILLING_NOTE_EXCEEDS_ORIGINAL", "Credit note exceeds remaining billing amount.");
+                }
+            }
+
+            var docType = input.NoteType == BillingNoteType.Credit ? DocumentTypes.CreditNotes : DocumentTypes.DebitNotes;
+            string number;
+            try
+            {
+                number = await _numbers.GenerateAsync(orgId, docType, billing.BranchId, now, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return Fail<BillingProjection>("DOCUMENT_NUMBER_ALLOCATION_FAILED", "Failed to allocate billing note document number.");
+            }
+
+            try
+            {
+                var note = new BillingAdjustmentNote(Guid.NewGuid(), orgId, billing.BranchId, billing.Id, number, input.NoteType, reason, input.TaxBaseDelta, billing.VatRate, access.ActorUserId, now);
+                _db.BillingAdjustmentNotes.Add(note);
+                billing.AddAdjustmentNoteRecord(note);
+                Audit(access, "billing-note.created", "BillingAdjustmentNote", note.Id, traceId, new { number = note.Number, noteType = note.NoteType, billing = billing.Number, totalDelta = note.TotalDelta }, billing.RowVersion, now);
+                _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, billing.Id.ToString(), now));
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+                return Result<BillingProjection>.Success((await GetBillingAsync(orgId, billing.Id, ct))!);
+            }
+            catch (FinanceDomainException ex)
+            {
+                return Fail<BillingProjection>(ex);
+            }
+        });
+    }
+
+    public async Task<Result<BillingProjection>> ApproveBillingNoteAsync(
+        RequestAccessContext access, Guid billingId, Guid noteId, Guid expectedVersion, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            await _db.Database.SqlQuery<Guid>($"SELECT id AS \"Value\" FROM finance.billing_documents WHERE id = {billingId} AND organization_id = {orgId} FOR UPDATE").ToListAsync(ct);
+            var billing = await _db.BillingDocuments
+                .Include(b => b.Payments)
+                .Include(b => b.AdjustmentNotes)
+                .FirstOrDefaultAsync(b => b.Id == billingId && b.OrganizationId == orgId, ct);
+            if (billing is null) return Fail<BillingProjection>("RESOURCE_NOT_FOUND", "Billing not found.");
+            if (billing.RowVersion != expectedVersion) return Fail<BillingProjection>("BILLING_VERSION_CONFLICT", "Billing version conflict.");
+
+            var note = billing.AdjustmentNotes.FirstOrDefault(n => n.Id == noteId);
+            if (note is null) return Fail<BillingProjection>("RESOURCE_NOT_FOUND", "Billing note not found.");
+            if (note.Status != BillingNoteStatus.PendingApproval) return Fail<BillingProjection>("BILLING_NOTE_INVALID_STATE", "Only pending notes can be approved.");
+            if (note.CreatedByUserId == access.ActorUserId) return Fail<BillingProjection>("BILLING_NOTE_SELF_APPROVAL", "The creator cannot approve their own note.");
+
+            var check = new ApprovalAuthorityCheck(orgId, access.MembershipId, TanErp.Domain.IdentityAccess.ApprovalDocumentType.ChangeOrder, billing.BranchId, note.TotalDelta, billing.Currency);
+            var authError = await _approvalAuthority.EnsureAsync(check, ct);
+            if (authError is not null) return Fail<BillingProjection>(authError.Code, authError.Message);
+
+            var now = _clock.UtcNow;
+            try
+            {
+                note.Approve(access.ActorUserId, now);
+                billing.ApplyApprovedNote(note, now);
+                Enqueue(orgId, $"billing-note.approved:{note.Id}", OutboxKind.BillingNoteApproved, note.Id, note.Number, note.TotalDelta,
+                    new
+                    {
+                        kind = OutboxKind.BillingNoteApproved,
+                        number = note.Number,
+                        billing = billing.Number,
+                        noteType = note.NoteType,
+                        taxBaseDelta = note.TaxBaseDelta,
+                        vatRate = note.VatRate,
+                        vatDelta = note.VatDelta,
+                        totalDelta = note.TotalDelta,
+                        reason = note.Reason,
+                        decidedAtUtc = note.DecidedAtUtc
+                    }, now);
+                Audit(access, "billing-note.approved", "BillingAdjustmentNote", note.Id, traceId, new { number = note.Number, billing = billing.Number, totalDelta = note.TotalDelta }, billing.RowVersion, now);
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+                return Result<BillingProjection>.Success((await GetBillingAsync(orgId, billing.Id, ct))!);
+            }
+            catch (FinanceDomainException ex)
+            {
+                return Fail<BillingProjection>(ex);
+            }
+        });
+    }
 
     public async Task<Result<BillingProjection>> RecordPaymentAsync(
         RequestAccessContext access, Guid billingId, PaymentInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default)
@@ -210,13 +412,39 @@ public class FinanceStore : IFinanceStore
                 return Fail<BillingProjection>("DOCUMENT_NUMBER_ALLOCATION_FAILED", "Failed to allocate payment document number.");
             }
 
+            string receiptNumber;
             try
             {
-                var payment = new Payment(Guid.NewGuid(), orgId, billing.Id, number, input.Amount, input.Method, reference, input.ReceivedDate, Today, access.ActorUserId, now);
+                receiptNumber = await _numbers.GenerateAsync(orgId, DocumentTypes.Receipts, billing.BranchId, now, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return Fail<BillingProjection>("DOCUMENT_NUMBER_ALLOCATION_FAILED", "Failed to allocate receipt document number.");
+            }
+
+            try
+            {
+                var payment = new Payment(Guid.NewGuid(), orgId, billing.Id, number, input.Amount, input.Method, reference, input.ReceivedDate, Today, access.ActorUserId, now, input.WhtRate, input.WhtType, input.WhtCertificateNumber, receiptNumber);
                 billing.ApplyPayment(input.Amount, now);
                 _db.Payments.Add(payment);
                 Enqueue(orgId, $"payment.recorded:{payment.Id}", OutboxKind.PaymentRecorded, payment.Id, number, payment.Amount,
-                    new { kind = OutboxKind.PaymentRecorded, number, billing = billing.Number, payment.Amount, billing.Currency, payment.Method, payment.Reference, receivedDate = payment.ReceivedDate }, now);
+                    new
+                    {
+                        kind = OutboxKind.PaymentRecorded,
+                        number,
+                        billing = billing.Number,
+                        payment.Amount,
+                        billing.Currency,
+                        payment.Method,
+                        payment.Reference,
+                        receivedDate = payment.ReceivedDate,
+                        receiptNumber = payment.ReceiptNumber,
+                        whtRate = payment.WhtRate,
+                        whtAmount = payment.WhtAmount,
+                        netCashReceived = payment.NetCashReceived,
+                        whtType = payment.WhtType,
+                        whtCertificateNumber = payment.WhtCertificateNumber
+                    }, now);
                 Audit(access, "payment.recorded", "Payment", payment.Id, traceId, new { number, billing = billing.Number, amount = payment.Amount }, billing.RowVersion, now);
                 _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, billing.Id.ToString(), now));
                 await _db.SaveChangesAsync(ct);
@@ -250,16 +478,60 @@ public class FinanceStore : IFinanceStore
 
     public async Task<BillingProjection?> GetBillingAsync(Guid organizationId, Guid billingId, CancellationToken ct = default)
     {
-        var b = await _db.BillingDocuments.AsNoTracking().Include(x => x.Payments).FirstOrDefaultAsync(x => x.Id == billingId && x.OrganizationId == organizationId, ct);
+        var b = await _db.BillingDocuments.AsNoTracking()
+            .Include(x => x.Payments)
+            .Include(x => x.Lines)
+            .Include(x => x.AdjustmentNotes)
+            .FirstOrDefaultAsync(x => x.Id == billingId && x.OrganizationId == organizationId, ct);
         if (b is null) return null;
         var project = await _db.Projects.AsNoTracking().Where(p => p.Id == b.ProjectId).Select(p => new FinanceProjectRef(p.Id, p.Code, p.Name)).FirstAsync(ct);
-        var people = await PeopleAsync(b.Payments.Select(p => p.RecordedByUserId).Append(b.CreatedByUserId), ct);
+        var userIds = b.Payments.Select(p => p.RecordedByUserId)
+            .Append(b.CreatedByUserId)
+            .Concat(b.AdjustmentNotes.Select(n => n.CreatedByUserId))
+            .Concat(b.AdjustmentNotes.Where(n => n.DecidedByUserId.HasValue).Select(n => n.DecidedByUserId!.Value));
+        if (b.ReleasedRetentionByUserId.HasValue) userIds = userIds.Append(b.ReleasedRetentionByUserId.Value);
+        var people = await PeopleAsync(userIds, ct);
         FinancePerson Person(Guid id) => people.TryGetValue(id, out var p) ? p : new FinancePerson(id, string.Empty);
+
         return new BillingProjection(
             b.Id, b.BranchId, b.Number, project, b.Kind, b.Description, b.Amount, b.PaidAmount, b.Outstanding, b.Currency, b.DueDate, b.Status, b.ReferenceHash,
             b.VoidReason, b.VoidedAtUtc, Person(b.CreatedByUserId), b.IssuedAtUtc, b.RowVersion,
             b.Payments.OrderBy(p => p.RecordedAtUtc).ThenBy(p => p.Id).Select(p => new PaymentProjection(
-                p.Id, p.Number, p.Amount, p.Method, p.Reference, p.ReceivedDate, p.Status, p.ReversalReason, p.ReversedAtUtc, Person(p.RecordedByUserId), p.RecordedAtUtc)).ToList());
+                p.Id, p.Number, p.Amount, p.Method, p.Reference, p.ReceivedDate, p.Status, p.ReversalReason, p.ReversedAtUtc, Person(p.RecordedByUserId), p.RecordedAtUtc,
+                p.ReceiptNumber, p.WhtRate, p.WhtAmount, p.NetCashReceived, p.WhtType, p.WhtCertificateNumber)).ToList(),
+            b.TaxInvoiceNumber, b.VatRate, b.VatAmount, b.GrossTotal, b.EffectiveReceivable, b.RetentionRate, b.RetentionAmount, b.RetentionStatus,
+            b.ReleasedRetentionAtUtc, b.ReleasedRetentionByUserId.HasValue ? Person(b.ReleasedRetentionByUserId.Value) : null,
+            b.CreditNoteBaseAmount, b.CreditNoteVatAmount, b.DebitNoteBaseAmount, b.DebitNoteVatAmount,
+            b.Lines.OrderBy(l => l.LineNumber).Select(l => new BillingLineProjection(l.Id, l.LineNumber, l.Description, l.TaxBaseAmount, l.VatRate, l.VatAmount, l.TotalAmount)).ToList(),
+            b.AdjustmentNotes.OrderBy(n => n.CreatedAtUtc).Select(n => new BillingAdjustmentNoteProjection(
+                n.Id, n.Number, n.NoteType, n.Reason, n.TaxBaseDelta, n.VatRate, n.VatDelta, n.TotalDelta, n.Status,
+                Person(n.CreatedByUserId), n.DecidedByUserId.HasValue ? Person(n.DecidedByUserId.Value) : null,
+                n.CreatedAtUtc, n.DecidedAtUtc)).ToList());
+    }
+
+    public async Task<byte[]?> RenderTaxDocumentPdfAsync(Guid organizationId, Guid billingId, CancellationToken ct = default)
+    {
+        var b = await _db.BillingDocuments.AsNoTracking()
+            .Include(x => x.Payments)
+            .Include(x => x.Lines)
+            .Include(x => x.AdjustmentNotes)
+            .FirstOrDefaultAsync(x => x.Id == billingId && x.OrganizationId == organizationId, ct);
+        if (b is null) return null;
+
+        var org = await _db.Organizations.AsNoTracking().FirstOrDefaultAsync(o => o.Id == organizationId, ct);
+        var branch = await _db.Branches.AsNoTracking().FirstOrDefaultAsync(br => br.Id == b.BranchId && br.OrganizationId == organizationId, ct);
+        var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == b.ProjectId && p.OrganizationId == organizationId, ct);
+        if (org is null || branch is null || project is null) return null;
+
+        var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == project.CustomerId && c.OrganizationId == organizationId, ct);
+
+        var model = new TaxDocumentPdfModel(
+            org, branch, project, customer, b,
+            b.Lines.OrderBy(l => l.LineNumber).ToList(),
+            b.AdjustmentNotes.OrderBy(n => n.CreatedAtUtc).ToList(),
+            b.Payments.OrderBy(p => p.RecordedAtUtc).ToList());
+
+        return QuestPdfTaxDocumentRenderer.Render(model);
     }
 
     public async Task<PagedBillings> ListBillingsAsync(Guid organizationId, BillingListQuery query, CancellationToken ct = default)
@@ -419,11 +691,22 @@ public class FinanceStore : IFinanceStore
 
         // Every billing and payment event must have been queued; a gap means something bypassed the outbox.
         var queued = messages.Select(m => m.DedupeKey).ToHashSet(StringComparer.Ordinal);
-        var allBillings = await _db.BillingDocuments.AsNoTracking().Include(b => b.Payments).Where(b => b.OrganizationId == organizationId).ToListAsync(ct);
+        var allBillings = await _db.BillingDocuments.AsNoTracking()
+            .Include(b => b.Payments)
+            .Include(b => b.AdjustmentNotes)
+            .Where(b => b.OrganizationId == organizationId)
+            .ToListAsync(ct);
         foreach (var b in allBillings)
         {
             if (!queued.Contains($"billing.issued:{b.Id}")) rows.Add(new ReconciliationRow("missing_message", OutboxKind.BillingIssued, b.Number, null, b.Amount, null));
             if (b.Status == BillingStatus.Voided && !queued.Contains($"billing.voided:{b.Id}")) rows.Add(new ReconciliationRow("missing_message", OutboxKind.BillingVoided, b.Number, null, b.Amount, null));
+            foreach (var note in b.AdjustmentNotes)
+            {
+                if (note.Status == BillingNoteStatus.Approved && !queued.Contains($"billing-note.approved:{note.Id}"))
+                {
+                    rows.Add(new ReconciliationRow("missing_message", OutboxKind.BillingNoteApproved, note.Number, null, note.TotalDelta, null));
+                }
+            }
             foreach (var p in b.Payments)
             {
                 if (!queued.Contains($"payment.recorded:{p.Id}")) rows.Add(new ReconciliationRow("missing_message", OutboxKind.PaymentRecorded, p.Number, null, p.Amount, null));

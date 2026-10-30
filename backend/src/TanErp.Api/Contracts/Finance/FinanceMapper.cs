@@ -6,8 +6,27 @@ internal static class FinanceMapper
 {
     public static FinancePersonResponse To(FinancePerson x) => new(x.Id, x.DisplayName);
     public static FinanceProjectRefResponse To(FinanceProjectRef x) => new(x.Id, x.Code, x.Name);
-    public static PaymentResponse To(PaymentProjection x) => new(x.Id, x.Number, x.Amount, x.Method, x.Reference, x.ReceivedDate, x.Status, x.ReversalReason, x.ReversedAtUtc, To(x.RecordedBy), x.RecordedAtUtc);
-    public static BillingResponse To(BillingProjection x) => new(x.Id, x.BranchId, x.Number, To(x.Project), x.Kind, x.Description, x.Amount, x.PaidAmount, x.Outstanding, x.Currency, x.DueDate, x.Status, x.ReferenceHash, x.VoidReason, x.VoidedAtUtc, To(x.CreatedBy), x.IssuedAtUtc, x.RowVersion, x.Payments.Select(To).ToList());
+    public static PaymentResponse To(PaymentProjection x) => new(
+        x.Id, x.Number, x.Amount, x.Method, x.Reference, x.ReceivedDate, x.Status, x.ReversalReason, x.ReversedAtUtc,
+        To(x.RecordedBy), x.RecordedAtUtc, x.ReceiptNumber, x.WhtRate, x.WhtAmount, x.NetCashReceived, x.WhtType, x.WhtCertificateNumber);
+
+    public static BillingLineResponse To(BillingLineProjection x) => new(
+        x.Id, x.LineNumber, x.Description, x.TaxBaseAmount, x.VatRate, x.VatAmount, x.TotalAmount);
+
+    public static BillingAdjustmentNoteResponse To(BillingAdjustmentNoteProjection x) => new(
+        x.Id, x.Number, x.NoteType, x.Reason, x.TaxBaseDelta, x.VatRate, x.VatDelta, x.TotalDelta, x.Status,
+        To(x.CreatedBy), x.DecidedBy is null ? null : To(x.DecidedBy), x.CreatedAtUtc, x.DecidedAtUtc);
+
+    public static BillingResponse To(BillingProjection x) => new(
+        x.Id, x.BranchId, x.Number, To(x.Project), x.Kind, x.Description, x.Amount, x.PaidAmount, x.Outstanding,
+        x.Currency, x.DueDate, x.Status, x.ReferenceHash, x.VoidReason, x.VoidedAtUtc, To(x.CreatedBy), x.IssuedAtUtc,
+        x.RowVersion, x.Payments.Select(To).ToList(),
+        x.TaxInvoiceNumber, x.VatRate, x.VatAmount, x.GrossTotal, x.EffectiveReceivable, x.RetentionRate, x.RetentionAmount,
+        x.RetentionStatus, x.ReleasedRetentionAtUtc, x.ReleasedRetentionBy is null ? null : To(x.ReleasedRetentionBy),
+        x.CreditNoteBaseAmount, x.CreditNoteVatAmount, x.DebitNoteBaseAmount, x.DebitNoteVatAmount,
+        (x.Lines ?? Array.Empty<BillingLineProjection>()).Select(To).ToList(),
+        (x.Notes ?? Array.Empty<BillingAdjustmentNoteProjection>()).Select(To).ToList());
+
     public static BillingListItemResponse To(BillingListItemProjection x) => new(x.Id, x.Number, x.ProjectCode, x.Kind, x.Amount, x.PaidAmount, x.Status, x.DueDate, x.IssuedAtUtc);
     public static OutboxMessageResponse To(OutboxMessageProjection x) => new(x.Id, x.Kind, x.ResourceNumber, x.Amount, x.Status, x.Attempts, x.NextAttemptAtUtc, x.LastError, x.ExternalRef, x.ExternalAmount, x.ConfirmedAtUtc, x.CreatedAtUtc, x.SentAtUtc, x.RowVersion);
     public static DispatchResultResponse To(DispatchResult x) => new(x.Processed, x.Sent, x.Failed, x.Dead);

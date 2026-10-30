@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tan
 import {
   apiClient,
   type BillingListResponse,
+  type BillingNoteRequest,
   type BillingRequest,
   type BillingResponse,
   type DispatchResultResponse,
@@ -94,7 +95,26 @@ export function useBillingMutations() {
       apiClient.reversePayment(input.id, input.paymentId, input.rowVersion, input.reason, await options()),
     onSuccess: store,
   });
-  return { create, voidBilling, pay, reverse };
+  const releaseRetention = useMutation({
+    mutationFn: async (input: { id: string; rowVersion: string }) =>
+      apiClient.releaseBillingRetention(input.id, input.rowVersion, await options()),
+    onSuccess: store,
+  });
+  const createNote = useMutation({
+    mutationFn: async (input: { id: string; payload: BillingNoteRequest; idempotencyKey?: string }) =>
+      apiClient.createBillingNote(input.id, input.payload, await options(input.idempotencyKey)),
+    onSuccess: store,
+  });
+  const approveNote = useMutation({
+    mutationFn: async (input: { id: string; noteId: string; rowVersion: string }) =>
+      apiClient.approveBillingNote(input.id, input.noteId, input.rowVersion, await options()),
+    onSuccess: store,
+  });
+  const downloadTaxPdf = useMutation({
+    mutationFn: async (input: { id: string }) =>
+      apiClient.downloadBillingTaxDocumentPdf(input.id, await options()),
+  });
+  return { create, voidBilling, pay, reverse, releaseRetention, createNote, approveNote, downloadTaxPdf };
 }
 
 export function useOutboxList(params: ListOutboxParams): UseQueryResult<OutboxListResponse, Error> {
