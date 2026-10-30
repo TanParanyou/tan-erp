@@ -57,6 +57,15 @@ public static class BillingNoteStatus
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { PendingApproval, Approved, Rejected, Voided };
 }
 
+public static class CreditOverrideStatus
+{
+    public const string PendingApproval = "pending_approval";
+    public const string Approved = "approved";
+    public const string Rejected = "rejected";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { PendingApproval, Approved, Rejected };
+}
+
 public static class PaymentMethod
 {
     public const string Transfer = "transfer";

@@ -169,3 +169,64 @@ public sealed record ReconciliationProjection(
 public sealed record AccountingEnvelope(Guid MessageId, string DedupeKey, string Kind, string ResourceNumber, decimal Amount, string PayloadJson, int Attempt);
 
 public sealed record ConnectorResult(bool Success, string? ExternalRef, string? Error);
+
+// ----- Wave D G-16 Credit Exposure & AR Aging ----------------------------------------------------
+
+public sealed record CustomerCreditExposureProjection(
+    Guid CustomerId,
+    string CustomerName,
+    decimal? CreditLimit,
+    int CreditTermDays,
+    decimal OutstandingReceivables,
+    decimal UnbilledAcceptedAmount,
+    decimal TotalExposure,
+    decimal? EffectiveCreditCeiling,
+    decimal? AvailableCredit,
+    bool IsOverLimit,
+    IReadOnlyList<CreditOverrideProjection> ActiveOverrides);
+
+public sealed record ArAgingCustomerBucketProjection(
+    Guid CustomerId,
+    string CustomerCode,
+    string CustomerName,
+    decimal Current,
+    decimal Bucket1To30,
+    decimal Bucket31To60,
+    decimal Bucket61To90,
+    decimal BucketOver90,
+    decimal TotalOutstanding);
+
+public sealed record ArAgingReportProjection(
+    DateOnly AsOfDate,
+    decimal TotalCurrent,
+    decimal TotalBucket1To30,
+    decimal TotalBucket31To60,
+    decimal TotalBucket61To90,
+    decimal TotalBucketOver90,
+    decimal GrandTotalOutstanding,
+    IReadOnlyList<ArAgingCustomerBucketProjection> Customers);
+
+public sealed record CreditOverrideInput(
+    Guid CustomerId,
+    decimal RequestedCeilingAmount,
+    string Reason,
+    DateOnly? ExpiresOn = null);
+
+public sealed record CreditOverrideProjection(
+    Guid Id,
+    Guid OrganizationId,
+    Guid BranchId,
+    Guid CustomerId,
+    string CustomerName,
+    decimal RequestedCeilingAmount,
+    string Reason,
+    DateOnly? ExpiresOn,
+    string Status,
+    FinancePerson CreatedBy,
+    DateTimeOffset CreatedAtUtc,
+    FinancePerson? DecidedBy,
+    DateTimeOffset? DecidedAtUtc,
+    string? DecisionNote,
+    Guid RowVersion);
+
+public sealed record CreditOverrideListQuery(Guid? CustomerId, string? Status);

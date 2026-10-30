@@ -21,6 +21,7 @@
 | Connector | **ยังไม่มีระบบบัญชีจริง** — ค่าเริ่มต้น `UnconfiguredAccountingConnector` ไม่เคยรายงานสำเร็จ (`CONNECTOR_NOT_CONFIGURED`) ข้อมูลจึงค้างในคิวและไม่ถูกอ้างว่าบันทึกบัญชีแล้ว; connector จริงต้อง idempotent ด้วย `dedupeKey` |
 | Callback ยืนยัน | `POST /finance/outbox/{id}/confirm {externalRef, externalAmount}` ซ้ำด้วยข้อมูลเดิม → 200 ไม่เปลี่ยน/ไม่ audit ซ้ำ; ข้อมูลต่าง → `OUTBOX_CONFIRMATION_CONFLICT` 409; ยืนยันแล้วถือว่า sent |
 | การกระทบยอด | `GET /finance/reconciliation`: ยอดวางบิล/รับชำระใน ERP เทียบกับยอดที่บัญชียืนยัน; รายการผิดปกติ `unsynced` (pending/failed/dead), `awaiting_confirmation` (ส่งแล้วยังไม่ยืนยัน), `amount_mismatch` (ยอดที่บัญชียืนยันต่างจากยอดที่ส่ง), `missing_message` (มีใบแจ้งหนี้/รับชำระที่ไม่มีรายการในคิว) |
+| วงเงินเครดิต & อายุหนี้ลูกหนี้ (`G-16`) | `TotalExposure = OutstandingReceivables + UnbilledAcceptedAmount`; รายงานอายุหนี้ลูกหนี้ `GET /api/v1/finance/ar-aging` แบ่งเป็น 5 ช่วง (`Current <= 0`, `1–30`, `31–60`, `61–90`, `> 90` วันเกินกำหนด); เมื่อ `Customer.CreditLimit` มีค่าและภาระเครดิตหลังออกใบแจ้งหนี้เกินเพดาน (`max(CreditLimit, ApprovedOverrideCeiling)`) จะถูกบล็อกด้วย `409 CREDIT_LIMIT_EXCEEDED` จนกว่าจะขออนุมัติขยายเพดานเครดิต (`POST /api/v1/finance/credit-overrides`) และอนุมัติโดยผู้อื่น (`POST /api/v1/finance/credit-overrides/{id}/approve`, Maker ≠ Checker → `409 CREDIT_OVERRIDE_SELF_APPROVAL` + `IApprovalAuthority`) |
 | ไม่อยู่ในขอบเขต | e-Tax Invoice XML (ETDA — แยกเป็น G-15b หลังรู้ provider), อัตราแลกเปลี่ยนหลายสกุลเงิน |
 
 ## Endpoints
@@ -35,13 +36,15 @@
 | รับชำระ (พร้อม WHT) | `POST /api/v1/billings/{id}/payments {amount, method, reference, receivedDate, whtRate?, whtType?, whtCertificateNumber?}` + `Idempotency-Key` | `payments.manage` |
 | กลับรายการรับชำระ | `POST /api/v1/billings/{id}/payments/{paymentId}/reverse {reason}` + `If-Match` | `payments.manage` |
 | ดาวน์โหลด PDF ใบกำกับภาษี/ใบเสร็จ | `GET /api/v1/billings/{id}/tax-document/pdf` | `billings.read` |
+| รายงานอายุหนี้ & วงเงินเครดิต | `GET /api/v1/finance/ar-aging?asOfDate=&customerId=` · `GET /api/v1/customers/{customerId}/credit-exposure` | `billings.read` |
+| ขอ/อนุมัติขยายเพดานเครดิต | `GET /api/v1/finance/credit-overrides?customerId=&status=` (`billings.read`) · `POST /api/v1/finance/credit-overrides` + `Idempotency-Key` · `POST /api/v1/finance/credit-overrides/{id}/approve` + `If-Match` | `billings.manage` |
 | อ่าน | `GET /api/v1/billings[/{id}]?search=&status=&projectId=` · `GET /api/v1/projects/{id}/billing-summary` | `billings.read` |
 | คิวส่งบัญชี | `GET /api/v1/finance/outbox?status=&kind=` · `GET /api/v1/finance/reconciliation` | `finance-sync.read` |
 | ส่ง/ยืนยัน/ส่งใหม่ | `POST /api/v1/finance/outbox/dispatch?batchSize=` · `/{id}/confirm` · `/{id}/requeue` | `finance-sync.run` |
 
 ## Errors
 
-`409`: `BILLING_VERSION_CONFLICT`, `BILLING_INVALID_STATE`, `BILLING_HAS_PAYMENTS`, `BILLING_PROJECT_NOT_BILLABLE`, `RETENTION_WARRANTY_NOT_EXPIRED`, `BILLING_NOTE_SELF_APPROVAL`, `BILLING_NOTE_INVALID_STATE`, `PAYMENT_DUPLICATE_REFERENCE`, `PAYMENT_INVALID_STATE`, `OUTBOX_INVALID_STATE`, `OUTBOX_CONFIRMATION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`. `422`: `BILLING_EXCEEDS_CONTRACT`, `BILLING_REASON_REQUIRED`, `BILLING_FIELD_REQUIRED/INVALID`, `BILLING_NOTE_EXCEEDS_ORIGINAL`, `PAYMENT_EXCEEDS_OUTSTANDING`, `PAYMENT_WHT_CERTIFICATE_REQUIRED`, `PAYMENT_FIELD_INVALID`, `OUTBOX_FIELD_INVALID`. `403`: `APPROVAL_AUTHORITY_NOT_CONFIGURED`, `APPROVAL_LIMIT_EXCEEDED`. `404` นอก Organization.
+`409`: `BILLING_VERSION_CONFLICT`, `BILLING_INVALID_STATE`, `BILLING_HAS_PAYMENTS`, `BILLING_PROJECT_NOT_BILLABLE`, `RETENTION_WARRANTY_NOT_EXPIRED`, `BILLING_NOTE_SELF_APPROVAL`, `BILLING_NOTE_INVALID_STATE`, `CREDIT_LIMIT_EXCEEDED`, `CREDIT_OVERRIDE_SELF_APPROVAL`, `CREDIT_OVERRIDE_INVALID_STATE`, `PAYMENT_DUPLICATE_REFERENCE`, `PAYMENT_INVALID_STATE`, `OUTBOX_INVALID_STATE`, `OUTBOX_CONFIRMATION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED`. `422`: `BILLING_EXCEEDS_CONTRACT`, `BILLING_REASON_REQUIRED`, `BILLING_FIELD_REQUIRED/INVALID`, `BILLING_NOTE_EXCEEDS_ORIGINAL`, `CREDIT_OVERRIDE_FIELD_INVALID`, `PAYMENT_EXCEEDS_OUTSTANDING`, `PAYMENT_WHT_CERTIFICATE_REQUIRED`, `PAYMENT_FIELD_INVALID`, `OUTBOX_FIELD_INVALID`. `403`: `APPROVAL_AUTHORITY_NOT_CONFIGURED`, `APPROVAL_LIMIT_EXCEEDED`. `404` นอก Organization.
 
 ## Data (migration `AddFinance`, schema `finance`)
 

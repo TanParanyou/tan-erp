@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -21,6 +21,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { BillingListItemResponse } from "@/lib/api/api-client";
 import { useBillingList } from "../api/finance-queries";
 import { BILLING_STATUSES, billingStatusVariant, isBillingKind, isBillingStatus } from "../finance-status";
+import { ArAgingPanel } from "./ar-aging-panel";
 
 interface Filters extends ListFilterRecord {
   status?: string;
@@ -28,10 +29,13 @@ interface Filters extends ListFilterRecord {
 
 export function BillingList() {
   const t = useTranslations("finance.billings");
+  const tAging = useTranslations("finance.arAging");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
   const canManage = can(selectedMembership, PERMISSIONS.BILLINGS_MANAGE);
+  const [activeView, setActiveView] = useState<"billings" | "aging">("billings");
+
   const state = useListState<Filters>({
     schema: { single: ["status"], defaultSort: "issuedAt", defaultOrder: "desc", allowedSorts: ["issuedAt"] },
     debounceMs: 300,
@@ -66,43 +70,66 @@ export function BillingList() {
   return (
     <section className="space-y-5" aria-busy={result.isLoading}>
       <PageHeader
-        title={t("title")}
-        subtitle={t("subtitle")}
+        title={activeView === "billings" ? t("title") : tAging("title")}
+        subtitle={activeView === "billings" ? t("subtitle") : tAging("subtitle")}
         breadcrumbs={[{ label: t("title") }]}
-        actions={canManage ? <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/finance/billings/create`}>{t("create")}</Button> : undefined}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              onClick={() => setActiveView(activeView === "billings" ? "aging" : "billings")}
+            >
+              {activeView === "billings" ? tAging("toggleButton") : tAging("backToBillings")}
+            </Button>
+            {canManage && activeView === "billings" && (
+              <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/finance/billings/create`}>
+                {t("create")}
+              </Button>
+            )}
+          </div>
+        }
       />
-      <ListToolbar activeFilters={<ActiveFilterChips filters={activeFilters} onRemove={() => state.actions.setFilter("status", undefined)} onClear={state.actions.clearFilters} />}>
-        <div className="flex w-full flex-wrap items-end gap-3">
-          <ListSearchInput
-            id="billing-search"
-            label={tCommon("actions.search")}
-            value={state.draftSearch}
-            isDebouncing={state.isDebouncing}
-            onChange={(value) => state.actions.setSearch(value)}
-            onClear={() => state.actions.setSearch("", true)}
-            onSubmit={(value) => state.actions.setSearch(value, true)}
-            placeholder={t("search")}
-            widthClassName="w-full max-w-xl"
-          />
-          <ListFilterSelect id="billing-status-filter" label={t("status")} value={state.params.filters.status ?? ""} onChange={(value) => state.actions.setFilter("status", value || undefined)} options={BILLING_STATUSES.map((value) => ({ value, label: t(`statuses.${value}`) }))} />
-        </div>
-      </ListToolbar>
-      {isZero ? (
-        <EmptyState icon="empty" title={t("empty")} description={t("emptyDetail")} />
+
+      {activeView === "aging" ? (
+        <ArAgingPanel />
       ) : (
-        <DataTable<BillingListItemResponse>
-          columns={columns}
-          data={rows}
-          isLoading={result.isLoading}
-          isError={result.isError}
-          error={result.error}
-          onRetry={() => { void result.refetch(); }}
-          emptyTitle={t("noResults")}
-          emptyDescription={t("search")}
-          pagination={{ page: state.params.page, limit: state.params.limit, totalPages: pagination?.totalPages ?? 0, total: totalCount }}
-          onPageChange={state.actions.setPage}
-          onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
-        />
+        <>
+          <ListToolbar activeFilters={<ActiveFilterChips filters={activeFilters} onRemove={() => state.actions.setFilter("status", undefined)} onClear={state.actions.clearFilters} />}>
+            <div className="flex w-full flex-wrap items-end gap-3">
+              <ListSearchInput
+                id="billing-search"
+                label={tCommon("actions.search")}
+                value={state.draftSearch}
+                isDebouncing={state.isDebouncing}
+                onChange={(value) => state.actions.setSearch(value)}
+                onClear={() => state.actions.setSearch("", true)}
+                onSubmit={(value) => state.actions.setSearch(value, true)}
+                placeholder={t("search")}
+                widthClassName="w-full max-w-xl"
+              />
+              <ListFilterSelect id="billing-status-filter" label={t("status")} value={state.params.filters.status ?? ""} onChange={(value) => state.actions.setFilter("status", value || undefined)} options={BILLING_STATUSES.map((value) => ({ value, label: t(`statuses.${value}`) }))} />
+            </div>
+          </ListToolbar>
+          {isZero ? (
+            <EmptyState icon="empty" title={t("empty")} description={t("emptyDetail")} />
+          ) : (
+            <DataTable<BillingListItemResponse>
+              columns={columns}
+              data={rows}
+              isLoading={result.isLoading}
+              isError={result.isError}
+              error={result.error}
+              onRetry={() => { void result.refetch(); }}
+              emptyTitle={t("noResults")}
+              emptyDescription={t("search")}
+              pagination={{ page: state.params.page, limit: state.params.limit, totalPages: pagination?.totalPages ?? 0, total: totalCount }}
+              onPageChange={state.actions.setPage}
+              onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
+            />
+          )}
+        </>
       )}
     </section>
   );

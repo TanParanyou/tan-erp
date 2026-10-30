@@ -88,6 +88,20 @@ export function billingNoteStatusVariant(status: string | null | undefined): Fin
   }
 }
 
+export function creditOverrideStatusVariant(status: string | null | undefined): FinanceBadgeVariant {
+  switch (status) {
+    case "approved":
+      return "success";
+    case "pending_approval":
+      return "warning";
+    case "rejected":
+    case "expired":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+
 const KNOWN_ERROR_CODES = [
   "BILLING_VERSION_CONFLICT",
   "BILLING_INVALID_STATE",
@@ -106,6 +120,10 @@ const KNOWN_ERROR_CODES = [
   "PAYMENT_INVALID_STATE",
   "PAYMENT_FIELD_INVALID",
   "PAYMENT_WHT_CERTIFICATE_REQUIRED",
+  "CREDIT_LIMIT_EXCEEDED",
+  "CREDIT_OVERRIDE_SELF_APPROVAL",
+  "CREDIT_OVERRIDE_INVALID_STATE",
+  "CREDIT_OVERRIDE_FIELD_INVALID",
   "OUTBOX_INVALID_STATE",
   "OUTBOX_CONFIRMATION_CONFLICT",
   "OUTBOX_FIELD_INVALID",

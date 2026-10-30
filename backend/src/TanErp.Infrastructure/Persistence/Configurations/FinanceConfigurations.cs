@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.Finance;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
@@ -216,5 +217,39 @@ public class AccountingOutboxMessageConfiguration : IEntityTypeConfiguration<Acc
         builder.HasIndex(x => new { x.OrganizationId, x.DedupeKey }).IsUnique();
         builder.HasIndex(x => new { x.OrganizationId, x.Status, x.NextAttemptAtUtc });
         builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class CreditLimitOverrideRequestConfiguration : IEntityTypeConfiguration<CreditLimitOverrideRequest>
+{
+    public void Configure(EntityTypeBuilder<CreditLimitOverrideRequest> builder)
+    {
+        builder.ToTable("credit_limit_overrides", "finance", t =>
+        {
+            t.HasCheckConstraint("ck_credit_limit_overrides_status", "status IN ('pending_approval', 'approved', 'rejected')");
+            t.HasCheckConstraint("ck_credit_limit_overrides_requested_ceiling", "requested_ceiling_amount > 0");
+        });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.BranchId).HasColumnName("branch_id").IsRequired();
+        builder.Property(x => x.CustomerId).HasColumnName("customer_id").IsRequired();
+        builder.Property(x => x.RequestedCeilingAmount).HasColumnName("requested_ceiling_amount").HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.Reason).HasColumnName("reason").HasMaxLength(500).IsRequired();
+        builder.Property(x => x.ExpiresOn).HasColumnName("expires_on");
+        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(24).IsRequired();
+        builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
+        builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.DecidedByUserId).HasColumnName("decided_by_user_id");
+        builder.Property(x => x.DecidedAtUtc).HasColumnName("decided_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.DecisionNote).HasColumnName("decision_note").HasMaxLength(500);
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+
+        builder.HasIndex(x => new { x.OrganizationId, x.CustomerId, x.Status });
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Customer>().WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.DecidedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }

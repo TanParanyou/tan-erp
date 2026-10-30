@@ -1049,6 +1049,16 @@
   <data name="BILLING_PROJECT_NOT_BILLABLE_DETAIL" xml:space="preserve"><value>A cancelled project cannot be billed.</value></data>
   <data name="RETENTION_WARRANTY_NOT_EXPIRED_TITLE" xml:space="preserve"><value>Warranty Not Expired</value></data>
   <data name="RETENTION_WARRANTY_NOT_EXPIRED_DETAIL" xml:space="preserve"><value>Retention can only be released after the project warranty has expired.</value></data>
+  <data name="CREDIT_LIMIT_EXCEEDED_TITLE" xml:space="preserve"><value>Customer Credit Limit Exceeded</value></data>
+  <data name="CREDIT_LIMIT_EXCEEDED_DETAIL" xml:space="preserve"><value>Customer total credit exposure exceeds the effective credit ceiling. Please request a credit limit override.</value></data>
+  <data name="CREDIT_OVERRIDE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Self-Approval Not Allowed</value></data>
+  <data name="CREDIT_OVERRIDE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>The creator of the credit override request cannot approve their own request (Maker-Checker).</value></data>
+  <data name="CREDIT_OVERRIDE_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Credit Override State</value></data>
+  <data name="CREDIT_OVERRIDE_INVALID_STATE_DETAIL" xml:space="preserve"><value>Only pending credit override requests can be approved.</value></data>
+  <data name="CREDIT_OVERRIDE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Required Credit Override Field Missing</value></data>
+  <data name="CREDIT_OVERRIDE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>Customer and requested ceiling amount are required.</value></data>
+  <data name="CREDIT_OVERRIDE_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Credit Override Field</value></data>
+  <data name="CREDIT_OVERRIDE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>Requested ceiling amount must be above zero and a reason up to 500 characters is required.</value></data>
   <data name="BILLING_NOTE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>Self-Approval Forbidden</value></data>
   <data name="BILLING_NOTE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>The creator cannot approve their own note.</value></data>
   <data name="BILLING_NOTE_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Note State</value></data>

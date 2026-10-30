@@ -3233,6 +3233,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/finance/ar-aging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    asOfDate?: string;
+                    customerId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ArAgingReportResponse"];
+                        "application/json": components["schemas"]["ArAgingReportResponse"];
+                        "text/json": components["schemas"]["ArAgingReportResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customers/{customerId}/credit-exposure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CustomerCreditExposureResponse"];
+                        "application/json": components["schemas"]["CustomerCreditExposureResponse"];
+                        "text/json": components["schemas"]["CustomerCreditExposureResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/credit-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    customerId?: string;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreditOverrideListResponse"];
+                        "application/json": components["schemas"]["CreditOverrideListResponse"];
+                        "text/json": components["schemas"]["CreditOverrideListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreditOverrideRequest"];
+                    "text/json": components["schemas"]["CreditOverrideRequest"];
+                    "application/*+json": components["schemas"]["CreditOverrideRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreditOverrideResponse"];
+                        "application/json": components["schemas"]["CreditOverrideResponse"];
+                        "text/json": components["schemas"]["CreditOverrideResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/credit-overrides/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreditOverrideResponse"];
+                        "application/json": components["schemas"]["CreditOverrideResponse"];
+                        "text/json": components["schemas"]["CreditOverrideResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/boms": {
         parameters: {
             query?: never;
@@ -27295,6 +27535,41 @@ export interface components {
             /** Format: date-time */
             updatedAtUtc?: string;
         };
+        ArAgingCustomerBucketResponse: {
+            /** Format: uuid */
+            customerId?: string;
+            customerCode?: string | null;
+            customerName?: string | null;
+            /** Format: double */
+            current?: number;
+            /** Format: double */
+            bucket1To30?: number;
+            /** Format: double */
+            bucket31To60?: number;
+            /** Format: double */
+            bucket61To90?: number;
+            /** Format: double */
+            bucketOver90?: number;
+            /** Format: double */
+            totalOutstanding?: number;
+        };
+        ArAgingReportResponse: {
+            /** Format: date */
+            asOfDate?: string;
+            /** Format: double */
+            totalCurrent?: number;
+            /** Format: double */
+            totalBucket1To30?: number;
+            /** Format: double */
+            totalBucket31To60?: number;
+            /** Format: double */
+            totalBucket61To90?: number;
+            /** Format: double */
+            totalBucketOver90?: number;
+            /** Format: double */
+            grandTotalOutstanding?: number;
+            customers?: components["schemas"]["ArAgingCustomerBucketResponse"][] | null;
+        };
         AssignAdminRoleRequest: {
             /** Format: uuid */
             roleId?: string;
@@ -28525,6 +28800,44 @@ export interface components {
             token?: string | null;
             publicPath?: string | null;
         };
+        CreditOverrideListResponse: {
+            items?: components["schemas"]["CreditOverrideResponse"][] | null;
+        };
+        CreditOverrideRequest: {
+            /** Format: uuid */
+            customerId?: string;
+            /** Format: double */
+            requestedCeilingAmount?: number;
+            reason?: string | null;
+            /** Format: date */
+            expiresOn?: string | null;
+        };
+        CreditOverrideResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            /** Format: uuid */
+            customerId?: string;
+            customerName?: string | null;
+            /** Format: double */
+            requestedCeilingAmount?: number;
+            reason?: string | null;
+            /** Format: date */
+            expiresOn?: string | null;
+            status?: string | null;
+            createdBy?: components["schemas"]["FinancePersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            decidedBy?: components["schemas"]["FinancePersonResponse"];
+            /** Format: date-time */
+            decidedAtUtc?: string | null;
+            decisionNote?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
         CurrentUserResponse: {
             user?: components["schemas"]["UserDto"];
             memberships?: components["schemas"]["MembershipDto"][] | null;
@@ -28577,6 +28890,27 @@ export interface components {
             preferredChannel?: string | null;
             isMasked?: boolean;
             lineId?: string | null;
+        };
+        CustomerCreditExposureResponse: {
+            /** Format: uuid */
+            customerId?: string;
+            customerName?: string | null;
+            /** Format: double */
+            creditLimit?: number | null;
+            /** Format: int32 */
+            creditTermDays?: number;
+            /** Format: double */
+            outstandingReceivables?: number;
+            /** Format: double */
+            unbilledAcceptedAmount?: number;
+            /** Format: double */
+            totalExposure?: number;
+            /** Format: double */
+            effectiveCreditCeiling?: number | null;
+            /** Format: double */
+            availableCredit?: number | null;
+            isOverLimit?: boolean;
+            activeOverrides?: components["schemas"]["CreditOverrideResponse"][] | null;
         };
         CustomerListItemResponse: {
             /** Format: uuid */

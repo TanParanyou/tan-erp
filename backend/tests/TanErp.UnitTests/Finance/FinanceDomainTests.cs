@@ -296,4 +296,105 @@ public class FinanceDomainTests
         Assert.Equal(963m + 214m, billing.GrossTotal); // 1177m
         Assert.Equal(1177m - 900m, billing.Outstanding); // 277m
     }
+
+    [Theory]
+    [InlineData(-5, ArAgingBucket.Current)]
+    [InlineData(0, ArAgingBucket.Current)]
+    [InlineData(1, ArAgingBucket.Bucket1To30)]
+    [InlineData(30, ArAgingBucket.Bucket1To30)]
+    [InlineData(31, ArAgingBucket.Bucket31To60)]
+    [InlineData(60, ArAgingBucket.Bucket31To60)]
+    [InlineData(61, ArAgingBucket.Bucket61To90)]
+    [InlineData(90, ArAgingBucket.Bucket61To90)]
+    [InlineData(91, ArAgingBucket.BucketOver90)]
+    [InlineData(150, ArAgingBucket.BucketOver90)]
+    public void ArAgingCalculator_ClassifiesBucketsCorrectly(int daysOverdue, string expectedBucket)
+    {
+        Assert.Equal(expectedBucket, ArAgingCalculator.ClassifyAgingBucket(daysOverdue));
+    }
+
+    [Fact]
+    public void ArAgingCalculator_CalculatesDaysOverdue_WithOrWithoutDueDate()
+    {
+        var asOf = new DateOnly(2026, 10, 30);
+        var issued = new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero);
+
+        // Case 1: explicit DueDate
+        var withDueDate = ArAgingCalculator.CalculateDaysOverdue(new DateOnly(2026, 10, 20), issued, 30, asOf);
+        Assert.Equal(10, withDueDate); // 30 - 20 = 10 days overdue
+
+        // Case 2: fallback to credit terms: issued 2026-10-01 + 30 days = 2026-10-31
+        var fallbackTerm = ArAgingCalculator.CalculateDaysOverdue(null, issued, 30, asOf);
+        Assert.Equal(-1, fallbackTerm); // 30 - 31 = -1 (current / not yet due)
+    }
+
+    [Fact]
+    public void CreditLimitOverride_MakerChecker_AndExpiration()
+    {
+        var branchId = Guid.NewGuid();
+        var customerId = Guid.NewGuid();
+        var creator = Guid.NewGuid();
+        var approver = Guid.NewGuid();
+        var today = new DateOnly(2026, 10, 30);
+
+        // Invalid fields rejected
+        Assert.Equal("CREDIT_OVERRIDE_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new CreditLimitOverrideRequest(Guid.NewGuid(), Org, branchId, customerId, -100m, "Reason", null, creator, Now)).Code);
+        Assert.Equal("CREDIT_OVERRIDE_FIELD_INVALID", Assert.Throws<FinanceDomainException>(() =>
+            new CreditLimitOverrideRequest(Guid.NewGuid(), Org, branchId, customerId, 500_000m, " ", null, creator, Now)).Code);
+
+        // Valid request created
+        var req = new CreditLimitOverrideRequest(
+            Guid.NewGuid(), Org, branchId, customerId, 500_000m, "Special project credit", today.AddDays(7), creator, Now);
+        Assert.Equal(CreditOverrideStatus.PendingApproval, req.Status);
+        Assert.False(req.IsEffectiveOn(today));
+
+        // Self approval rejected
+        Assert.Equal("CREDIT_OVERRIDE_SELF_APPROVAL", Assert.Throws<FinanceDomainException>(() =>
+            req.Approve(creator, Now)).Code);
+
+        // Independent checker approves
+        req.Approve(approver, Now, "Approved by CFO");
+        Assert.Equal(CreditOverrideStatus.Approved, req.Status);
+        Assert.Equal(approver, req.DecidedByUserId);
+        Assert.Equal("Approved by CFO", req.DecisionNote);
+
+        // Effective during valid window
+        Assert.True(req.IsEffectiveOn(today));
+        Assert.True(req.IsEffectiveOn(today.AddDays(7)));
+        Assert.False(req.IsEffectiveOn(today.AddDays(8))); // expired
+
+        // Cannot approve again
+        Assert.Equal("CREDIT_OVERRIDE_INVALID_STATE", Assert.Throws<FinanceDomainException>(() =>
+            req.Approve(approver, Now)).Code);
+    }
+
+    [Fact]
+    public void ComputeEffectiveCeiling_RespectsActiveOverrides_AndCustomerLimit()
+    {
+        var branchId = Guid.NewGuid();
+        var customerId = Guid.NewGuid();
+        var creator = Guid.NewGuid();
+        var approver = Guid.NewGuid();
+        var today = new DateOnly(2026, 10, 30);
+
+        // 1. Customer has no credit limit
+        Assert.Null(ArAgingCalculator.ComputeEffectiveCeiling(null, Array.Empty<CreditLimitOverrideRequest>(), today));
+
+        // 2. Customer has limit 200,000, no active overrides
+        var limit = 200_000m;
+        Assert.Equal(200_000m, ArAgingCalculator.ComputeEffectiveCeiling(limit, Array.Empty<CreditLimitOverrideRequest>(), today));
+
+        // 3. Pending override does not increase ceiling
+        var pending = new CreditLimitOverrideRequest(Guid.NewGuid(), Org, branchId, customerId, 600_000m, "Pending", null, creator, Now);
+        Assert.Equal(200_000m, ArAgingCalculator.ComputeEffectiveCeiling(limit, new[] { pending }, today));
+
+        // 4. Approved active override increases ceiling
+        var approved = new CreditLimitOverrideRequest(Guid.NewGuid(), Org, branchId, customerId, 600_000m, "Approved", today.AddDays(5), creator, Now);
+        approved.Approve(approver, Now);
+        Assert.Equal(600_000m, ArAgingCalculator.ComputeEffectiveCeiling(limit, new[] { approved }, today));
+
+        // 5. Expired override falls back to customer limit
+        Assert.Equal(200_000m, ArAgingCalculator.ComputeEffectiveCeiling(limit, new[] { approved }, today.AddDays(6)));
+    }
 }

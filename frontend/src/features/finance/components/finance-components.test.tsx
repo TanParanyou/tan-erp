@@ -5,11 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import thMessages from "@/messages/th.json";
 import enMessages from "@/messages/en.json";
+import { ArAgingPanel } from "./ar-aging-panel";
 import { BillingDetail } from "./billing-detail";
 import { BillingEditor } from "./billing-editor";
 import { FinanceSyncPage } from "./finance-sync-page";
 import * as financeQueries from "../api/finance-queries";
 import * as projectQueries from "@/features/projects/api/project-queries";
+import * as customerQueries from "@/features/customers/api/customer-queries";
 import { ApiError } from "@/lib/api/api-error";
 import type { BillingResponse } from "@/lib/api/api-client";
 import {
@@ -20,6 +22,7 @@ import {
   RECONCILIATION_ISSUES,
   billingNoteStatusVariant,
   billingStatusVariant,
+  creditOverrideStatusVariant,
   financeErrorCode,
   outboxStatusVariant,
   retentionStatusVariant,
@@ -47,6 +50,7 @@ vi.mock("@/lib/permissions/can", () => ({
 }));
 
 const b = thMessages.finance.billings;
+const a = thMessages.finance.arAging;
 const s = thMessages.finance.sync;
 const ALL = ["billings.manage", "payments.manage", "finance-sync.run", "finance-sync.read"];
 
@@ -114,6 +118,8 @@ const createNote = vi.fn();
 const approveNote = vi.fn();
 const downloadTaxPdf = vi.fn();
 const createBilling = vi.fn();
+const createOverride = vi.fn();
+const approveOverride = vi.fn();
 
 function renderBilling(data: BillingResponse, granted: string[] = ALL) {
   permissions.granted = granted;
@@ -171,6 +177,82 @@ function renderEditor(granted: string[] = ALL) {
   );
 }
 
+function renderArAging(granted: string[] = ALL) {
+  permissions.granted = granted;
+  const client = createTestQueryClient();
+  vi.spyOn(financeQueries, "useArAgingReport").mockReturnValue({
+    data: {
+      asOfDate: "2026-10-30",
+      totalCurrent: 50000,
+      totalBucket1To30: 20000,
+      totalBucket31To60: 10000,
+      totalBucket61To90: 5000,
+      totalBucketOver90: 2000,
+      grandTotalOutstanding: 87000,
+      customers: [
+        {
+          customerId: "cust-1",
+          customerCode: "CUST-001",
+          customerName: "บริษัท สยามพาณิชย์ จำกัด",
+          current: 50000,
+          bucket1To30: 20000,
+          bucket31To60: 10000,
+          bucket61To90: 5000,
+          bucketOver90: 2000,
+          totalOutstanding: 87000,
+        },
+      ],
+    },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof financeQueries.useArAgingReport>);
+
+  vi.spyOn(financeQueries, "useCreditOverrides").mockReturnValue({
+    data: {
+      items: [
+        {
+          id: "ovr-1",
+          customerId: "cust-1",
+          customerName: "บริษัท สยามพาณิชย์ จำกัด",
+          requestedCeilingAmount: 500000,
+          reason: "โครงการขยายสาขาต่อเนื่อง",
+          expiresOn: "2026-12-31",
+          status: "pending_approval",
+          rowVersion: "00000000-0000-0000-0000-0000000000b1",
+          createdBy: { id: "u-maker", displayName: "นาย ก (Maker)" },
+        },
+      ],
+    },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof financeQueries.useCreditOverrides>);
+
+  vi.spyOn(customerQueries, "useCustomerList").mockReturnValue({
+    data: {
+      items: [
+        { id: "cust-1", code: "CUST-001", displayNameTh: "บริษัท สยามพาณิชย์ จำกัด", displayNameEn: "Siam Commercial Co., Ltd." },
+      ],
+      pagination: { totalCount: 1, page: 1, limit: 100, totalPages: 1 },
+    },
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<typeof customerQueries.useCustomerList>);
+
+  vi.spyOn(financeQueries, "useCreditOverrideMutations").mockReturnValue({
+    createOverride: { mutateAsync: createOverride, isPending: false },
+    approveOverride: { mutateAsync: approveOverride, isPending: false },
+  } as unknown as ReturnType<typeof financeQueries.useCreditOverrideMutations>);
+
+  return render(
+    <QueryClientProvider client={client}>
+      <NextIntlClientProvider locale="th" messages={thMessages}>
+        <ArAgingPanel />
+      </NextIntlClientProvider>
+    </QueryClientProvider>
+  );
+}
+
 const dispatch = vi.fn();
 const requeue = vi.fn();
 
@@ -219,12 +301,18 @@ describe("finance status helpers and translations", () => {
     expect(retentionStatusVariant("released")).toBe("success");
     expect(billingNoteStatusVariant("pending_approval")).toBe("warning");
     expect(billingNoteStatusVariant("approved")).toBe("success");
+    expect(creditOverrideStatusVariant("pending_approval")).toBe("warning");
+    expect(creditOverrideStatusVariant("approved")).toBe("success");
     expect(financeErrorCode("PAYMENT_DUPLICATE_REFERENCE")).toBe("PAYMENT_DUPLICATE_REFERENCE");
     expect(financeErrorCode("RETENTION_WARRANTY_NOT_EXPIRED")).toBe("RETENTION_WARRANTY_NOT_EXPIRED");
     expect(financeErrorCode("BILLING_NOTE_SELF_APPROVAL")).toBe("BILLING_NOTE_SELF_APPROVAL");
     expect(financeErrorCode("BILLING_NOTE_INVALID_STATE")).toBe("BILLING_NOTE_INVALID_STATE");
     expect(financeErrorCode("BILLING_NOTE_EXCEEDS_ORIGINAL")).toBe("BILLING_NOTE_EXCEEDS_ORIGINAL");
     expect(financeErrorCode("PAYMENT_WHT_CERTIFICATE_REQUIRED")).toBe("PAYMENT_WHT_CERTIFICATE_REQUIRED");
+    expect(financeErrorCode("CREDIT_LIMIT_EXCEEDED")).toBe("CREDIT_LIMIT_EXCEEDED");
+    expect(financeErrorCode("CREDIT_OVERRIDE_SELF_APPROVAL")).toBe("CREDIT_OVERRIDE_SELF_APPROVAL");
+    expect(financeErrorCode("CREDIT_OVERRIDE_INVALID_STATE")).toBe("CREDIT_OVERRIDE_INVALID_STATE");
+    expect(financeErrorCode("CREDIT_OVERRIDE_FIELD_INVALID")).toBe("CREDIT_OVERRIDE_FIELD_INVALID");
     expect(financeErrorCode("NOPE")).toBeNull();
   });
 
@@ -250,6 +338,10 @@ describe("finance status helpers and translations", () => {
         "BILLING_NOTE_INVALID_STATE",
         "BILLING_NOTE_EXCEEDS_ORIGINAL",
         "PAYMENT_WHT_CERTIFICATE_REQUIRED",
+        "CREDIT_LIMIT_EXCEEDED",
+        "CREDIT_OVERRIDE_SELF_APPROVAL",
+        "CREDIT_OVERRIDE_INVALID_STATE",
+        "CREDIT_OVERRIDE_FIELD_INVALID",
       ] as const) {
         expect(messages.finance.errors[code]).toBeTruthy();
       }
@@ -257,6 +349,9 @@ describe("finance status helpers and translations", () => {
       expect(messages.finance.billings.retentionRatePercent).toBeTruthy();
       expect(messages.finance.billings.releaseRetention).toBeTruthy();
       expect(messages.finance.billings.notesTitle).toBeTruthy();
+      expect(messages.finance.arAging.title).toBeTruthy();
+      expect(messages.finance.arAging.totalCurrent).toBeTruthy();
+      expect(messages.finance.arAging.overridesTitle).toBeTruthy();
       expect(messages.shell.financeSubgroup).toBeTruthy();
     }
   });
@@ -428,6 +523,69 @@ describe("BillingDetail", () => {
   it("hides payment actions from users without the payments permission", () => {
     renderBilling(billing("issued"), ["billings.manage"]);
     expect(screen.queryByRole("button", { name: b.savePayment })).toBeNull();
+  });
+});
+
+describe("ArAgingPanel (G-16 Credit Exposure & AR Aging)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("displays AR Aging summary KPI cards and customer rows", () => {
+    renderArAging();
+
+    // Verify title and KPI summaries
+    expect(screen.getByText(a.title)).toBeDefined();
+    expect(screen.getByText(a.totalCurrent)).toBeDefined();
+    expect(screen.getByText(a.totalBucket1To30)).toBeDefined();
+    expect(screen.getByText(a.grandTotalOutstanding)).toBeDefined();
+
+    // Verify customer row
+    expect(screen.getByText("CUST-001")).toBeDefined();
+    expect(screen.getAllByText("บริษัท สยามพาณิชย์ จำกัด").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("creates a credit override request and allows Maker-Checker approval", async () => {
+    createOverride.mockResolvedValue({ id: "ovr-new" });
+    approveOverride.mockResolvedValue({ id: "ovr-1" });
+
+    renderArAging();
+
+    // Verify existing override row
+    expect(screen.getByText("โครงการขยายสาขาต่อเนื่อง")).toBeDefined();
+
+    // Approve existing override (Maker != Checker: u-current != u-maker)
+    const approveBtn = screen.getByRole("button", { name: a.approve });
+    expect(approveBtn).toBeDefined();
+    fireEvent.click(approveBtn);
+
+    // Confirm in modal
+    const confirmButtons = screen.getAllByRole("button", { name: a.approve });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(approveOverride).toHaveBeenCalledWith({
+      id: "ovr-1",
+      rowVersion: "00000000-0000-0000-0000-0000000000b1",
+    }));
+
+    // Fill request override form
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${a.customer}\\s*\\*`)), {
+      target: { value: "cust-1" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(a.requestedCeilingAmountPlaceholder), {
+      target: { value: "800000" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(a.reasonPlaceholder), {
+      target: { value: "ขยายโครงการเฟส 2" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: a.submitRequest }));
+
+    await waitFor(() => expect(createOverride).toHaveBeenCalledTimes(1));
+    const payload = createOverride.mock.calls[0][0].payload;
+    expect(payload).toMatchObject({
+      customerId: "cust-1",
+      requestedCeilingAmount: 800000,
+      reason: "ขยายโครงการเฟส 2",
+    });
   });
 });
 

@@ -58,7 +58,7 @@
 | G-13 | Production Routing/Work Center/Capacity, Labor, Subcontracting | C | CP-12, G-20 | Production | [แผน G-13](2026-10-30-g13-production-completion.md) — Implemented 2026-10-30 (Unit 679/679 + Integration 6/6 + Vitest 17/17 passed; [Verification](../../05-engineering/production-verification.md)) |
 | G-14 | MRP Safety Stock / MOQ / Item Lead Time / Calendar / Unit | C | CP-13, G-12, G-13 | Planner + Procurement | [แผน G-14](2026-10-30-g14-mrp-completion.md) — Implemented 2026-10-30 (Unit 683/683 + Integration 10/10 + Vitest 11/17 passed; [Verification](../../05-engineering/mrp-verification.md)) |
 | G-15 | Thai Tax: VAT, WHT, Retention, Tax Invoice, Credit Note | D | CP-15, G-04 | Finance/Accounting | [แผน G-15](2026-10-30-g15-thai-tax.md) — Implemented 2026-10-30 (Unit 687/687 + Integration 6/6 + Vitest 14/14 passed; [Verification](../../05-engineering/finance-verification.md)) |
-| G-16 | Credit Exposure + AR Aging gate | D | CP-15, G-15 | Finance | — |
+| G-16 | Credit Exposure + AR Aging gate | D | CP-15, G-15 | Finance | [แผน G-16](2026-10-30-g16-credit-exposure-ar-aging.md) — Implemented 2026-10-30 (Unit 700/700 + Integration 7/7 + Vitest 16/16 passed; [Verification](../../05-engineering/finance-verification.md)) |
 | G-17 | Accounting Connector จริง (+ Journal Export ชั่วคราว) | D | CP-15, G-15 | Finance + Security | — |
 | G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | — |
 | G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | — |
@@ -251,9 +251,11 @@
 
 ### G-16 — Credit Exposure + AR Aging
 
-- [ ] Exposure = ยอดค้างชำระ + quotation accepted ที่ยังไม่วางบิล; aging bucket 0/30/60/90+
-- [ ] Gate: ออก Quotation/Billing เกินวงเงินเครดิตใน Customer master → ต้อง override โดยผู้มีอำนาจ (G-03) พร้อมเหตุผล
-- [ ] Tests: override ต้องคนละคน, exposure ลดเมื่อรับชำระ
+**แตะ:** `backend/src/TanErp.Domain/Finance/CreditLimitOverrideRequest.cs`, `FinanceStore.cs`, `BillingsController.cs`, `frontend/src/features/finance/components/ar-aging-panel.tsx`
+
+- [x] Exposure = ยอดค้างชำระ + quotation accepted ที่ยังไม่วางบิล; aging bucket 0/30/60/90+ (`GET /api/v1/finance/ar-aging` และ `GET /api/v1/customers/{customerId}/credit-exposure`)
+- [x] Gate: ออก Billing เกินวงเงินเครดิตใน Customer master → บล็อกด้วย `409 CREDIT_LIMIT_EXCEEDED` ต้องขอและอนุมัติ override โดยผู้มีอำนาจ (`G-03c` + Maker ≠ Checker) พร้อมเหตุผล (`/api/v1/finance/credit-overrides`)
+- [x] Tests: override ต้องคนละคน (`409 CREDIT_OVERRIDE_SELF_APPROVAL`), exposure ลดเมื่อรับชำระ (ผล: [Finance Verification](../../05-engineering/finance-verification.md))
 
 ### G-17 — Accounting Connector จริง
 

@@ -1,10 +1,15 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import {
   apiClient,
+  type ArAgingReportResponse,
   type BillingListResponse,
   type BillingNoteRequest,
   type BillingRequest,
   type BillingResponse,
+  type CreditOverrideListResponse,
+  type CreditOverrideRequest,
+  type CreditOverrideResponse,
+  type CustomerCreditExposureResponse,
   type DispatchResultResponse,
   type FinanceReconciliationResponse,
   type ListBillingsParams,
@@ -150,4 +155,52 @@ export function useSyncMutations() {
     onSuccess: refresh,
   });
   return { dispatch, requeue };
+}
+
+export function useArAgingReport(params?: { asOfDate?: string; customerId?: string }): UseQueryResult<ArAgingReportResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...financeKey(membershipId, locale), "ar-aging", params],
+    enabled: Boolean(membershipId),
+    queryFn: async ({ signal }) => apiClient.getArAgingReport(await options(undefined, signal), params),
+  });
+}
+
+export function useCustomerCreditExposure(customerId: string | undefined): UseQueryResult<CustomerCreditExposureResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...financeKey(membershipId, locale), "customers", customerId, "credit-exposure"],
+    enabled: Boolean(membershipId && customerId),
+    queryFn: async ({ signal }) => apiClient.getCustomerCreditExposure(customerId ?? "", await options(undefined, signal)),
+  });
+}
+
+export function useCreditOverrides(params?: { customerId?: string; status?: string }): UseQueryResult<CreditOverrideListResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...financeKey(membershipId, locale), "credit-overrides", params],
+    enabled: Boolean(membershipId),
+    queryFn: async ({ signal }) => apiClient.listCreditOverrides(await options(undefined, signal), params),
+  });
+}
+
+export function useCreditOverrideMutations() {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+  const refresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: [...financeKey(membershipId, locale), "credit-overrides"] });
+    await queryClient.invalidateQueries({ queryKey: [...financeKey(membershipId, locale), "customers"] });
+    await queryClient.invalidateQueries({ queryKey: [...financeKey(membershipId, locale), "ar-aging"] });
+  };
+  const createOverride = useMutation({
+    mutationFn: async (input: { payload: CreditOverrideRequest; idempotencyKey?: string }) =>
+      apiClient.createCreditOverride(input.payload, await options(input.idempotencyKey)),
+    onSuccess: refresh,
+  });
+  const approveOverride = useMutation({
+    mutationFn: async (input: { id: string; rowVersion: string }) =>
+      apiClient.approveCreditOverride(input.id, input.rowVersion, await options()),
+    onSuccess: refresh,
+  });
+  return { createOverride, approveOverride };
 }

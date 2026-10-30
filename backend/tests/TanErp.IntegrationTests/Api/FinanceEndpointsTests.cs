@@ -629,6 +629,124 @@ public class FinanceEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CreditExposureAndArAgingG16_EnforcesLimit_RequiresIndependentOverride_AndReducesExposureOnPayment()
+    {
+        // 1. Seed customer with 500,000 THB credit limit, 30 days term
+        var seeded = await SeedAcceptedQuotationAsync(total: 600_000m);
+        Guid customerId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var quotation = await db.Quotations.FirstAsync(q => q.Id == seeded.QuotationId);
+            customerId = quotation.CustomerId;
+            var customer = await db.Customers.FirstAsync(c => c.Id == customerId);
+            customer.UpdateCommercialProfile(
+                "Acme Legal", null, null,
+                creditTermDays: 30,
+                creditLimit: 500_000m,
+                currencyCode: "THB",
+                billingCycle: null,
+                billingDay: null,
+                paymentConditionNote: null);
+            await db.SaveChangesAsync();
+        }
+
+        // Check exposure before project creation:
+        // unbilled accepted quotation = 600,000, credit limit = 500,000 -> isOverLimit = true!
+        var exposureResp = await SendAsync(HttpMethod.Get, $"/api/v1/customers/{customerId}/credit-exposure");
+        var exposure = await Ok<CustomerCreditExposureResponse>(exposureResp);
+        Assert.Equal(500_000m, exposure.CreditLimit);
+        Assert.Equal(30, exposure.CreditTermDays);
+        Assert.Equal(0m, exposure.OutstandingReceivables);
+        Assert.Equal(600_000m, exposure.UnbilledAcceptedAmount);
+        Assert.Equal(600_000m, exposure.TotalExposure);
+        Assert.True(exposure.IsOverLimit);
+
+        // 2. Create Project from quotation (baseline = 600,000m)
+        var createProjectResp = await SendAsync(HttpMethod.Post, "/api/v1/projects",
+            new CreateProjectFromHandoverRequest(seeded.QuotationId, seeded.QuotationVersion, UserId, null, null),
+            key: Key());
+        var projectId = (await Ok<ProjectResponse>(createProjectResp, HttpStatusCode.Created)).Id;
+
+        // 3. Attempt to issue billing for 100,000 THB -> blocked by CREDIT_LIMIT_EXCEEDED!
+        var billFailResp = await SendAsync(HttpMethod.Post, "/api/v1/billings",
+            new BillingRequest(projectId, "milestone", "งวด 1", 100_000m, Today.AddDays(-10)), key: Key());
+        Assert.Equal(HttpStatusCode.Conflict, billFailResp.StatusCode);
+        Assert.Equal("CREDIT_LIMIT_EXCEEDED", await ErrorCodeAsync(billFailResp));
+
+        // 4. Request Credit Limit Override to 700,000 THB
+        var overrideReq = new CreditOverrideRequest(customerId, 700_000m, "Special credit expansion for large project", Today.AddDays(14));
+        var overrideCreateResp = await SendAsync(HttpMethod.Post, "/api/v1/finance/credit-overrides", overrideReq, key: Key());
+        var overrideObj = await Ok<CreditOverrideResponse>(overrideCreateResp, HttpStatusCode.Created);
+        Assert.Equal(700_000m, overrideObj.RequestedCeilingAmount);
+        Assert.Equal("pending_approval", overrideObj.Status);
+
+        // Self-approval by requester rejected
+        var selfApproveResp = await SendAsync(
+            HttpMethod.Post, $"/api/v1/finance/credit-overrides/{overrideObj.Id}/approve",
+            token: "token-org-a", ifMatch: overrideObj.RowVersion);
+        Assert.Equal(HttpStatusCode.Conflict, selfApproveResp.StatusCode);
+        Assert.Equal("CREDIT_OVERRIDE_SELF_APPROVAL", await ErrorCodeAsync(selfApproveResp));
+
+        // Independent approver approves
+        var approveResp = await SendAsync(
+            HttpMethod.Post, $"/api/v1/finance/credit-overrides/{overrideObj.Id}/approve",
+            token: "token-approver", ifMatch: overrideObj.RowVersion);
+        var approvedOverride = await Ok<CreditOverrideResponse>(approveResp, HttpStatusCode.OK);
+        Assert.Equal("approved", approvedOverride.Status);
+
+        // Verify credit exposure reflects new effective ceiling of 700,000 THB
+        exposure = await Ok<CustomerCreditExposureResponse>(await SendAsync(HttpMethod.Get, $"/api/v1/customers/{customerId}/credit-exposure"));
+        Assert.Equal(700_000m, exposure.EffectiveCreditCeiling);
+        Assert.False(exposure.IsOverLimit);
+        Assert.Equal(100_000m, exposure.AvailableCredit); // 700k - 600k = 100k
+
+        // 5. Now issue billing for 100,000 THB (with DueDate in past: 15 days ago -> Bucket 1_30)
+        var billSuccessResp = await SendAsync(HttpMethod.Post, "/api/v1/billings",
+            new BillingRequest(projectId, "milestone", "งวด 1", 100_000m, Today.AddDays(-15)), key: Key());
+        var billing = await Ok<BillingResponse>(billSuccessResp, HttpStatusCode.Created);
+        Assert.Equal(100_000m, billing.Amount);
+        Assert.Equal(100_000m, billing.Outstanding);
+        Assert.Equal(Today.AddDays(-15), billing.DueDate);
+
+        // Check AR Aging report
+        var agingResp = await SendAsync(HttpMethod.Get, $"/api/v1/finance/ar-aging?asOfDate={Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}&customerId={customerId}");
+        var aging = await Ok<ArAgingReportResponse>(agingResp);
+        Assert.Equal(100_000m, aging.GrandTotalOutstanding);
+        Assert.Equal(100_000m, aging.TotalBucket1To30);
+        Assert.Equal(0m, aging.TotalCurrent);
+        var customerAging = Assert.Single(aging.Customers);
+        Assert.Equal(customerId, customerAging.CustomerId);
+        Assert.Equal(100_000m, customerAging.Bucket1To30);
+
+        // 6. Pay the billing partially (60,000 THB)
+        var payResp = await SendAsync(HttpMethod.Post, $"/api/v1/billings/{billing.Id}/payments",
+            new PaymentRequest(60_000m, "transfer", $"REF-G16-{Guid.NewGuid():N}"[..20], Today), key: Key());
+        billing = await Ok<BillingResponse>(payResp, HttpStatusCode.Created);
+        Assert.Equal(40_000m, billing.Outstanding);
+
+        // Verify exposure decreases on payment:
+        // Outstanding = 40,000, Unbilled = 500,000 -> TotalExposure = 540,000 (was 600,000)
+        exposure = await Ok<CustomerCreditExposureResponse>(await SendAsync(HttpMethod.Get, $"/api/v1/customers/{customerId}/credit-exposure"));
+        Assert.Equal(40_000m, exposure.OutstandingReceivables);
+        Assert.Equal(500_000m, exposure.UnbilledAcceptedAmount);
+        Assert.Equal(540_000m, exposure.TotalExposure);
+        Assert.Equal(160_000m, exposure.AvailableCredit); // 700k - 540k = 160k
+
+        // Verify AR Aging decreases accordingly (40,000 in Bucket 1_30)
+        aging = await Ok<ArAgingReportResponse>(await SendAsync(HttpMethod.Get, $"/api/v1/finance/ar-aging?customerId={customerId}"));
+        Assert.Equal(40_000m, aging.GrandTotalOutstanding);
+        Assert.Equal(40_000m, aging.TotalBucket1To30);
+
+        // 7. Test listing credit overrides
+        var listOverridesResp = await SendAsync(HttpMethod.Get, $"/api/v1/finance/credit-overrides?customerId={customerId}");
+        var overrideList = await Ok<CreditOverrideListResponse>(listOverridesResp);
+        var item = Assert.Single(overrideList.Items);
+        Assert.Equal(approvedOverride.Id, item.Id);
+        Assert.Equal("approved", item.Status);
+    }
+
+    [Fact]
     public async Task AccountingOutbox_DefaultConnectorNeverClaimsSuccess()
     {
         using var scope = _factory.Services.CreateScope();

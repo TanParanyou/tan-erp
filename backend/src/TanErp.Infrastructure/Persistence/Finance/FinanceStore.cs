@@ -6,7 +6,9 @@ using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
 using TanErp.Application.Finance;
 using TanErp.Application.IdentityAccess.ApprovalLimits;
+using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
+using TanErp.Domain.Crm.Customers;
 using TanErp.Domain.DocumentNumbering;
 using TanErp.Domain.Finance;
 using TanErp.Domain.Procurement;
@@ -134,6 +136,40 @@ public class FinanceStore : IFinanceStore
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
                     return Fail<BillingProjection>("DOCUMENT_NUMBER_ALLOCATION_FAILED", "Failed to allocate tax invoice document number.");
+                }
+            }
+
+            // Wave D G-16 Credit Limit Gate
+            var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == project.CustomerId && c.OrganizationId == orgId, ct);
+            if (customer is not null && customer.CreditLimit.HasValue)
+            {
+                var overrides = await _db.CreditLimitOverrides.AsNoTracking()
+                    .Where(o => o.OrganizationId == orgId && o.CustomerId == customer.Id && o.Status == CreditOverrideStatus.Approved)
+                    .ToListAsync(ct);
+
+                var effectiveCeiling = ArAgingCalculator.ComputeEffectiveCeiling(customer.CreditLimit, overrides, Today);
+
+                var (_, _, currentTotalExposure) = await ComputeCustomerExposureAsync(orgId, customer.Id, ct);
+                var currentUnbilledOnProject = Math.Max(0m, project.BaselineContractAmount - billed);
+                var newUnbilledOnProject = Math.Max(0m, project.BaselineContractAmount - (billed + input.Amount));
+                decimal estimatedGross;
+                if (input.Lines != null && input.Lines.Count > 0)
+                {
+                    var linesVat = input.Lines.Sum(l => decimal.Round(l.TaxBaseAmount * (l.VatRate ?? vatRate), 2, MidpointRounding.AwayFromZero));
+                    estimatedGross = input.Lines.Sum(l => l.TaxBaseAmount) + linesVat;
+                }
+                else
+                {
+                    var estimatedVat = vatRate > 0m ? decimal.Round(input.Amount * vatRate, 2, MidpointRounding.AwayFromZero) : 0m;
+                    estimatedGross = input.Amount + estimatedVat;
+                }
+
+                var projectedExposure = currentTotalExposure - (currentUnbilledOnProject - newUnbilledOnProject) + estimatedGross;
+
+                if (effectiveCeiling.HasValue && projectedExposure > effectiveCeiling.Value)
+                {
+                    return Fail<BillingProjection>("CREDIT_LIMIT_EXCEEDED",
+                        $"Projected exposure of {projectedExposure:N2} THB exceeds effective credit ceiling of {effectiveCeiling.Value:N2} THB.");
                 }
             }
 
@@ -729,5 +765,341 @@ public class FinanceStore : IFinanceStore
             Confirmed(OutboxKind.BillingIssued, OutboxKind.BillingVoided), Confirmed(OutboxKind.PaymentRecorded, OutboxKind.PaymentReversed),
             messages.Count(m => m.Status == OutboxStatus.Pending), messages.Count(m => m.Status == OutboxStatus.Failed), messages.Count(m => m.Status == OutboxStatus.Dead),
             rows.Take(200).ToList());
+    }
+
+    // ===== Wave D G-16 Credit Exposure & AR Aging ====================================================
+
+    private async Task<(decimal OutstandingReceivables, decimal UnbilledAcceptedAmount, decimal TotalExposure)> ComputeCustomerExposureAsync(
+        Guid organizationId, Guid customerId, CancellationToken ct)
+    {
+        var projects = await _db.Projects.AsNoTracking()
+            .Where(p => p.OrganizationId == organizationId && p.CustomerId == customerId && p.Status != ProjectStatus.Cancelled)
+            .ToListAsync(ct);
+
+        var projectIds = projects.Select(p => p.Id).ToList();
+
+        var billings = await _db.BillingDocuments.AsNoTracking()
+            .Where(b => b.OrganizationId == organizationId && projectIds.Contains(b.ProjectId) && b.Status != BillingStatus.Voided)
+            .ToListAsync(ct);
+
+        var outstandingReceivables = billings.Sum(b => b.Outstanding);
+
+        var billingsByProject = billings.GroupBy(b => b.ProjectId).ToDictionary(g => g.Key, g => g.Sum(b => b.Amount));
+        var unbilledOnProjects = projects.Sum(p =>
+        {
+            var billedAmount = billingsByProject.TryGetValue(p.Id, out var sum) ? sum : 0m;
+            return Math.Max(0m, p.BaselineContractAmount - billedAmount);
+        });
+
+        var projectQuotationIds = projects.Select(p => p.QuotationId).ToHashSet();
+        var acceptedQuotations = await _db.Quotations.AsNoTracking()
+            .Where(q => q.OrganizationId == organizationId && q.CustomerId == customerId && q.Status == QuotationStatus.Accepted)
+            .ToListAsync(ct);
+
+        var unbilledAcceptedQuotations = acceptedQuotations
+            .Where(q => !projectQuotationIds.Contains(q.Id))
+            .Sum(q => q.TotalAmount);
+
+        var unbilledAcceptedAmount = unbilledOnProjects + unbilledAcceptedQuotations;
+        var totalExposure = outstandingReceivables + unbilledAcceptedAmount;
+
+        return (outstandingReceivables, unbilledAcceptedAmount, totalExposure);
+    }
+
+    private static CreditOverrideProjection ToOverrideProjection(
+        CreditLimitOverrideRequest o, string customerName, IReadOnlyDictionary<Guid, FinancePerson> people)
+    {
+        var createdBy = people.TryGetValue(o.CreatedByUserId, out var c) ? c : new FinancePerson(o.CreatedByUserId, string.Empty);
+        FinancePerson? decidedBy = o.DecidedByUserId.HasValue && people.TryGetValue(o.DecidedByUserId.Value, out var d) ? d : null;
+        return new CreditOverrideProjection(
+            o.Id,
+            o.OrganizationId,
+            o.BranchId,
+            o.CustomerId,
+            customerName,
+            o.RequestedCeilingAmount,
+            o.Reason,
+            o.ExpiresOn,
+            o.Status,
+            createdBy,
+            o.CreatedAtUtc,
+            decidedBy,
+            o.DecidedAtUtc,
+            o.DecisionNote,
+            o.RowVersion);
+    }
+
+    public async Task<CustomerCreditExposureProjection?> GetCustomerCreditExposureAsync(Guid organizationId, Guid customerId, CancellationToken ct = default)
+    {
+        var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == customerId && c.OrganizationId == organizationId, ct);
+        if (customer is null) return null;
+
+        var (outstandingReceivables, unbilledAcceptedAmount, totalExposure) = await ComputeCustomerExposureAsync(organizationId, customerId, ct);
+
+        var overrides = await _db.CreditLimitOverrides.AsNoTracking()
+            .Where(o => o.OrganizationId == organizationId && o.CustomerId == customerId)
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .ToListAsync(ct);
+
+        var userIds = overrides.Select(o => o.CreatedByUserId)
+            .Concat(overrides.Where(o => o.DecidedByUserId.HasValue).Select(o => o.DecidedByUserId!.Value))
+            .Distinct();
+        var people = await PeopleAsync(userIds, ct);
+
+        var overrideProjections = overrides.Select(o => ToOverrideProjection(o, customer.DisplayNameTh, people)).ToList();
+        var activeOverrides = overrides.Where(o => o.IsEffectiveOn(Today)).ToList();
+
+        var effectiveCeiling = ArAgingCalculator.ComputeEffectiveCeiling(customer.CreditLimit, activeOverrides, Today);
+        decimal? availableCredit = effectiveCeiling.HasValue ? Math.Max(0m, effectiveCeiling.Value - totalExposure) : null;
+        var isOverLimit = effectiveCeiling.HasValue && totalExposure > effectiveCeiling.Value;
+
+        return new CustomerCreditExposureProjection(
+            customer.Id,
+            customer.DisplayNameTh,
+            customer.CreditLimit,
+            customer.CreditTermDays,
+            outstandingReceivables,
+            unbilledAcceptedAmount,
+            totalExposure,
+            effectiveCeiling,
+            availableCredit,
+            isOverLimit,
+            overrideProjections.Where(o => o.Status == CreditOverrideStatus.Approved && (o.ExpiresOn == null || o.ExpiresOn >= Today)).ToList()
+        );
+    }
+
+    public async Task<ArAgingReportProjection> GetArAgingAsync(Guid organizationId, DateOnly? asOfDate, Guid? customerId, CancellationToken ct = default)
+    {
+        var asOf = asOfDate ?? Today;
+
+        var projectsQuery = _db.Projects.AsNoTracking().Where(p => p.OrganizationId == organizationId);
+        if (customerId.HasValue)
+        {
+            projectsQuery = projectsQuery.Where(p => p.CustomerId == customerId.Value);
+        }
+        var projects = await projectsQuery.ToListAsync(ct);
+        var projectIds = projects.Select(p => p.Id).ToList();
+        var projectMap = projects.ToDictionary(p => p.Id);
+
+        var customersQuery = _db.Customers.AsNoTracking().Where(c => c.OrganizationId == organizationId);
+        if (customerId.HasValue)
+        {
+            customersQuery = customersQuery.Where(c => c.Id == customerId.Value);
+        }
+        var customers = await customersQuery.ToDictionaryAsync(c => c.Id, ct);
+
+        var billings = await _db.BillingDocuments.AsNoTracking()
+            .Where(b => b.OrganizationId == organizationId && projectIds.Contains(b.ProjectId) && b.Status != BillingStatus.Voided)
+            .ToListAsync(ct);
+
+        var customerBuckets = new Dictionary<Guid, (decimal Current, decimal B1_30, decimal B31_60, decimal B61_90, decimal BOver90, decimal Total)>();
+
+        foreach (var b in billings)
+        {
+            if (b.Outstanding <= 0m) continue;
+            if (!projectMap.TryGetValue(b.ProjectId, out var project)) continue;
+            if (!customers.TryGetValue(project.CustomerId, out var customer)) continue;
+
+            var daysOverdue = ArAgingCalculator.CalculateDaysOverdue(b.DueDate, b.IssuedAtUtc, customer.CreditTermDays, asOf);
+            var bucket = ArAgingCalculator.ClassifyAgingBucket(daysOverdue);
+
+            if (!customerBuckets.TryGetValue(customer.Id, out var acc))
+            {
+                acc = (0m, 0m, 0m, 0m, 0m, 0m);
+            }
+
+            acc.Total += b.Outstanding;
+            switch (bucket)
+            {
+                case ArAgingBucket.Current:
+                    acc.Current += b.Outstanding;
+                    break;
+                case ArAgingBucket.Bucket1To30:
+                    acc.B1_30 += b.Outstanding;
+                    break;
+                case ArAgingBucket.Bucket31To60:
+                    acc.B31_60 += b.Outstanding;
+                    break;
+                case ArAgingBucket.Bucket61To90:
+                    acc.B61_90 += b.Outstanding;
+                    break;
+                case ArAgingBucket.BucketOver90:
+                    acc.BOver90 += b.Outstanding;
+                    break;
+            }
+            customerBuckets[customer.Id] = acc;
+        }
+
+        var customerRows = customerBuckets.Select(kv =>
+        {
+            var cust = customers[kv.Key];
+            var val = kv.Value;
+            return new ArAgingCustomerBucketProjection(
+                cust.Id,
+                cust.Code,
+                cust.DisplayNameTh,
+                val.Current,
+                val.B1_30,
+                val.B31_60,
+                val.B61_90,
+                val.BOver90,
+                val.Total
+            );
+        }).OrderByDescending(r => r.TotalOutstanding).ThenBy(r => r.CustomerCode).ToList();
+
+        var totalCurrent = customerRows.Sum(r => r.Current);
+        var total1_30 = customerRows.Sum(r => r.Bucket1To30);
+        var total31_60 = customerRows.Sum(r => r.Bucket31To60);
+        var total61_90 = customerRows.Sum(r => r.Bucket61To90);
+        var totalOver90 = customerRows.Sum(r => r.BucketOver90);
+        var grandTotal = customerRows.Sum(r => r.TotalOutstanding);
+
+        return new ArAgingReportProjection(
+            asOf,
+            totalCurrent,
+            total1_30,
+            total31_60,
+            total61_90,
+            totalOver90,
+            grandTotal,
+            customerRows
+        );
+    }
+
+    public async Task<IReadOnlyList<CreditOverrideProjection>> ListCreditOverridesAsync(Guid organizationId, CreditOverrideListQuery query, CancellationToken ct = default)
+    {
+        var q = _db.CreditLimitOverrides.AsNoTracking().Where(o => o.OrganizationId == organizationId);
+        if (query.CustomerId.HasValue) q = q.Where(o => o.CustomerId == query.CustomerId.Value);
+        if (!string.IsNullOrWhiteSpace(query.Status)) q = q.Where(o => o.Status == query.Status);
+
+        var rows = await q.OrderByDescending(o => o.CreatedAtUtc).ToListAsync(ct);
+        if (rows.Count == 0) return Array.Empty<CreditOverrideProjection>();
+
+        var custIds = rows.Select(r => r.CustomerId).Distinct().ToList();
+        var customers = await _db.Customers.AsNoTracking().Where(c => custIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.DisplayNameTh, ct);
+
+        var userIds = rows.Select(r => r.CreatedByUserId)
+            .Concat(rows.Where(r => r.DecidedByUserId.HasValue).Select(r => r.DecidedByUserId!.Value))
+            .Distinct();
+        var people = await PeopleAsync(userIds, ct);
+
+        return rows.Select(r => ToOverrideProjection(r, customers.TryGetValue(r.CustomerId, out var name) ? name : string.Empty, people)).ToList();
+    }
+
+    public async Task<Result<CreditOverrideProjection>> CreateCreditOverrideAsync(
+        RequestAccessContext access, CreditOverrideInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default)
+    {
+        const string operation = "finance.credit_override.create";
+        var orgId = access.OrganizationId;
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+            var replay = await FindReplayAsync(orgId, operation, keyHash, ct);
+            if (replay is not null)
+            {
+                if (replay.PayloadHash != payloadHash)
+                    return Fail<CreditOverrideProjection>("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload.");
+                if (Guid.TryParse(replay.ResourceId, out var replayedId))
+                {
+                    var existing = await _db.CreditLimitOverrides.AsNoTracking().FirstOrDefaultAsync(o => o.Id == replayedId && o.OrganizationId == orgId, ct);
+                    if (existing is not null)
+                    {
+                        var cust = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == existing.CustomerId, ct);
+                        var ppl = await PeopleAsync(new[] { existing.CreatedByUserId }, ct);
+                        return Result<CreditOverrideProjection>.Success(ToOverrideProjection(existing, cust?.DisplayNameTh ?? string.Empty, ppl));
+                    }
+                }
+            }
+
+            var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == input.CustomerId && c.OrganizationId == orgId, ct);
+            if (customer is null) return Fail<CreditOverrideProjection>("RESOURCE_NOT_FOUND", "Customer not found.");
+
+            var branchId = access.BranchId ?? await _db.Branches.AsNoTracking()
+                .Where(b => b.OrganizationId == orgId && b.IsActive)
+                .Select(b => b.Id)
+                .FirstOrDefaultAsync(ct);
+            if (branchId == Guid.Empty)
+            {
+                return Fail<CreditOverrideProjection>("ACTIVE_BRANCH_REQUIRED", "An active branch is required.");
+            }
+
+            var now = _clock.UtcNow;
+            try
+            {
+                var overrideReq = new CreditLimitOverrideRequest(
+                    Guid.NewGuid(),
+                    orgId,
+                    branchId,
+                    input.CustomerId,
+                    input.RequestedCeilingAmount,
+                    input.Reason,
+                    input.ExpiresOn,
+                    access.ActorUserId,
+                    now);
+
+                _db.CreditLimitOverrides.Add(overrideReq);
+                Audit(access, "credit_override.requested", "CreditLimitOverrideRequest", overrideReq.Id, traceId,
+                    new { customerId = input.CustomerId, requestedCeiling = input.RequestedCeilingAmount, reason = input.Reason },
+                    overrideReq.RowVersion, now);
+                _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, overrideReq.Id.ToString(), now));
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+
+                var ppl = await PeopleAsync(new[] { access.ActorUserId }, ct);
+                return Result<CreditOverrideProjection>.Success(ToOverrideProjection(overrideReq, customer.DisplayNameTh, ppl));
+            }
+            catch (FinanceDomainException ex)
+            {
+                return Fail<CreditOverrideProjection>(ex);
+            }
+        });
+    }
+
+    public async Task<Result<CreditOverrideProjection>> ApproveCreditOverrideAsync(
+        RequestAccessContext access, Guid overrideId, Guid expectedVersion, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            await _db.Database.SqlQuery<Guid>($"SELECT id AS \"Value\" FROM finance.credit_limit_overrides WHERE id = {overrideId} AND organization_id = {orgId} FOR UPDATE").ToListAsync(ct);
+
+            var overrideReq = await _db.CreditLimitOverrides.FirstOrDefaultAsync(o => o.Id == overrideId && o.OrganizationId == orgId, ct);
+            if (overrideReq is null) return Fail<CreditOverrideProjection>("RESOURCE_NOT_FOUND", "Credit override request not found.");
+            if (overrideReq.RowVersion != expectedVersion) return Fail<CreditOverrideProjection>("CONCURRENCY_CONFLICT", "Credit override version conflict.");
+
+            if (overrideReq.Status != CreditOverrideStatus.PendingApproval)
+                return Fail<CreditOverrideProjection>("CREDIT_OVERRIDE_INVALID_STATE", "Only pending credit override requests can be approved.");
+            if (overrideReq.CreatedByUserId == access.ActorUserId)
+                return Fail<CreditOverrideProjection>("CREDIT_OVERRIDE_SELF_APPROVAL", "Creator cannot approve their own credit override request.");
+
+            var check = new ApprovalAuthorityCheck(
+                orgId, access.MembershipId, TanErp.Domain.IdentityAccess.ApprovalDocumentType.ChangeOrder,
+                overrideReq.BranchId, overrideReq.RequestedCeilingAmount, "THB");
+            var authError = await _approvalAuthority.EnsureAsync(check, ct);
+            if (authError is not null) return Fail<CreditOverrideProjection>(authError.Code, authError.Message);
+
+            var now = _clock.UtcNow;
+            try
+            {
+                overrideReq.Approve(access.ActorUserId, now);
+                Audit(access, "credit_override.approved", "CreditLimitOverrideRequest", overrideReq.Id, traceId,
+                    new { customerId = overrideReq.CustomerId, requestedCeiling = overrideReq.RequestedCeilingAmount },
+                    overrideReq.RowVersion, now);
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+
+                var customer = await _db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == overrideReq.CustomerId, ct);
+                var people = await PeopleAsync(new[] { overrideReq.CreatedByUserId, access.ActorUserId }, ct);
+                return Result<CreditOverrideProjection>.Success(ToOverrideProjection(overrideReq, customer?.DisplayNameTh ?? string.Empty, people));
+            }
+            catch (FinanceDomainException ex)
+            {
+                return Fail<CreditOverrideProjection>(ex);
+            }
+        });
     }
 }

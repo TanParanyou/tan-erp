@@ -1211,6 +1211,16 @@
   <data name="BILLING_PROJECT_NOT_BILLABLE_DETAIL" xml:space="preserve"><value>โครงการที่ยกเลิกแล้วออกใบแจ้งหนี้ไม่ได้</value></data>
   <data name="RETENTION_WARRANTY_NOT_EXPIRED_TITLE" xml:space="preserve"><value>การรับประกันยังไม่หมดอายุ</value></data>
   <data name="RETENTION_WARRANTY_NOT_EXPIRED_DETAIL" xml:space="preserve"><value>ปลดเงินประกันผลงานได้หลังจากระยะเวลารับประกันของโครงการสิ้นสุดแล้วเท่านั้น</value></data>
+  <data name="CREDIT_LIMIT_EXCEEDED_TITLE" xml:space="preserve"><value>วงเงินเครดิตลูกค้าเกินเพดาน</value></data>
+  <data name="CREDIT_LIMIT_EXCEEDED_DETAIL" xml:space="preserve"><value>ภาระเครดิตของลูกค้าเกินเพดานวงเงินที่กำหนด กรุณาขออนุมัติขยายเพดานเครดิต</value></data>
+  <data name="CREDIT_OVERRIDE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ไม่อนุญาตให้อนุมัติรายการตนเอง</value></data>
+  <data name="CREDIT_OVERRIDE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้ขอขยายเพดานเครดิตไม่สามารถอนุมัติรายการของตนเองได้ (Maker-Checker)</value></data>
+  <data name="CREDIT_OVERRIDE_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะคำขอไม่อนุญาตให้ทำรายการ</value></data>
+  <data name="CREDIT_OVERRIDE_INVALID_STATE_DETAIL" xml:space="preserve"><value>เฉพาะคำขอขยายเพดานเครดิตที่รออนุมัติเท่านั้นที่สามารถอนุมัติได้</value></data>
+  <data name="CREDIT_OVERRIDE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลคำขอไม่ครบถ้วน</value></data>
+  <data name="CREDIT_OVERRIDE_FIELD_REQUIRED_DETAIL" xml:space="preserve"><value>กรุณาระบุข้อมูลลูกค้าและเพดานวงเงินที่ต้องการให้ครบถ้วน</value></data>
+  <data name="CREDIT_OVERRIDE_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลคำขอไม่ถูกต้อง</value></data>
+  <data name="CREDIT_OVERRIDE_FIELD_INVALID_DETAIL" xml:space="preserve"><value>เพดานวงเงินต้องมากกว่า 0 และระบุเหตุผลไม่เกิน 500 ตัวอักษร</value></data>
   <data name="BILLING_NOTE_SELF_APPROVAL_TITLE" xml:space="preserve"><value>ไม่อนุญาตให้อนุมัติรายการตนเอง</value></data>
   <data name="BILLING_NOTE_SELF_APPROVAL_DETAIL" xml:space="preserve"><value>ผู้สร้างใบลดหนี้/เพิ่มหนี้ไม่สามารถอนุมัติรายการของตนเองได้ (Maker-Checker)</value></data>
   <data name="BILLING_NOTE_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบลดหนี้/เพิ่มหนี้ไม่อนุญาตให้ทำรายการ</value></data>

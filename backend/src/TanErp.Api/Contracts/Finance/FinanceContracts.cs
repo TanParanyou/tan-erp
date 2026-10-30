@@ -138,3 +138,63 @@ public sealed record BillingNoteRequest(string? NoteType, string? Reason, decima
 public sealed record FinanceReasonRequest(string? Reason);
 
 public sealed record ConfirmRequest(string? ExternalRef, decimal ExternalAmount);
+
+// Wave D G-16 Credit Exposure & AR Aging
+public sealed record CreditOverrideResponse(
+    Guid Id,
+    Guid OrganizationId,
+    Guid BranchId,
+    Guid CustomerId,
+    string CustomerName,
+    decimal RequestedCeilingAmount,
+    string Reason,
+    DateOnly? ExpiresOn,
+    string Status,
+    FinancePersonResponse CreatedBy,
+    DateTimeOffset CreatedAtUtc,
+    FinancePersonResponse? DecidedBy,
+    DateTimeOffset? DecidedAtUtc,
+    string? DecisionNote,
+    Guid RowVersion);
+
+public sealed record CreditOverrideRequest(
+    Guid CustomerId,
+    decimal RequestedCeilingAmount,
+    string? Reason,
+    DateOnly? ExpiresOn = null);
+
+public sealed record CreditOverrideListResponse(IReadOnlyList<CreditOverrideResponse> Items);
+
+public sealed record CustomerCreditExposureResponse(
+    Guid CustomerId,
+    string CustomerName,
+    decimal? CreditLimit,
+    int CreditTermDays,
+    decimal OutstandingReceivables,
+    decimal UnbilledAcceptedAmount,
+    decimal TotalExposure,
+    decimal? EffectiveCreditCeiling,
+    decimal? AvailableCredit,
+    bool IsOverLimit,
+    IReadOnlyList<CreditOverrideResponse> ActiveOverrides);
+
+public sealed record ArAgingCustomerBucketResponse(
+    Guid CustomerId,
+    string CustomerCode,
+    string CustomerName,
+    decimal Current,
+    decimal Bucket1To30,
+    decimal Bucket31To60,
+    decimal Bucket61To90,
+    decimal BucketOver90,
+    decimal TotalOutstanding);
+
+public sealed record ArAgingReportResponse(
+    DateOnly AsOfDate,
+    decimal TotalCurrent,
+    decimal TotalBucket1To30,
+    decimal TotalBucket31To60,
+    decimal TotalBucket61To90,
+    decimal TotalBucketOver90,
+    decimal GrandTotalOutstanding,
+    IReadOnlyList<ArAgingCustomerBucketResponse> Customers);

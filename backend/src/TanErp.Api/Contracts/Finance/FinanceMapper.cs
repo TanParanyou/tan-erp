@@ -34,4 +34,19 @@ internal static class FinanceMapper
     public static FinanceReconciliationResponse To(ReconciliationProjection x) => new(x.ErpBilled, x.ErpPaid, x.ConfirmedBilled, x.ConfirmedPaid, x.PendingCount, x.FailedCount, x.DeadCount, x.Rows.Select(To).ToList());
     public static ProjectBillingSummaryResponse To(ProjectBillingSummary x) => new(To(x.Project), x.ContractAmount, x.Billed, x.Paid, x.Outstanding, x.Unbilled);
     public static FinancePaginationResponse Pagination(int page, int pageSize, int total) => new(page, pageSize, total, (int)Math.Ceiling(total / (double)pageSize));
+
+    public static CreditOverrideResponse To(CreditOverrideProjection x) => new(
+        x.Id, x.OrganizationId, x.BranchId, x.CustomerId, x.CustomerName, x.RequestedCeilingAmount, x.Reason, x.ExpiresOn,
+        x.Status, To(x.CreatedBy), x.CreatedAtUtc, x.DecidedBy is null ? null : To(x.DecidedBy), x.DecidedAtUtc, x.DecisionNote, x.RowVersion);
+
+    public static CustomerCreditExposureResponse To(CustomerCreditExposureProjection x) => new(
+        x.CustomerId, x.CustomerName, x.CreditLimit, x.CreditTermDays, x.OutstandingReceivables, x.UnbilledAcceptedAmount,
+        x.TotalExposure, x.EffectiveCreditCeiling, x.AvailableCredit, x.IsOverLimit, x.ActiveOverrides.Select(To).ToList());
+
+    public static ArAgingCustomerBucketResponse To(ArAgingCustomerBucketProjection x) => new(
+        x.CustomerId, x.CustomerCode, x.CustomerName, x.Current, x.Bucket1To30, x.Bucket31To60, x.Bucket61To90, x.BucketOver90, x.TotalOutstanding);
+
+    public static ArAgingReportResponse To(ArAgingReportProjection x) => new(
+        x.AsOfDate, x.TotalCurrent, x.TotalBucket1To30, x.TotalBucket31To60, x.TotalBucket61To90, x.TotalBucketOver90, x.GrandTotalOutstanding,
+        x.Customers.Select(To).ToList());
 }

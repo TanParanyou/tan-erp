@@ -189,4 +189,56 @@ public class FinanceHandler
         if (access.IsFailure) return Result<ReconciliationProjection>.Failure(access.Error);
         return Result<ReconciliationProjection>.Success(await _store.ReconcileAsync(access.Value!.OrganizationId, ct));
     }
+
+    // ----- Wave D G-16 Credit Exposure & AR Aging ----------------------------------------------------
+
+    public async Task<Result<ArAgingReportProjection>> GetArAgingAsync(FinanceCaller caller, DateOnly? asOfDate, Guid? customerId, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.read", ct);
+        if (access.IsFailure) return Result<ArAgingReportProjection>.Failure(access.Error);
+        var report = await _store.GetArAgingAsync(access.Value!.OrganizationId, asOfDate, customerId, ct);
+        return Result<ArAgingReportProjection>.Success(report);
+    }
+
+    public async Task<Result<CustomerCreditExposureProjection>> GetCustomerCreditExposureAsync(FinanceCaller caller, Guid customerId, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.read", ct);
+        if (access.IsFailure) return Result<CustomerCreditExposureProjection>.Failure(access.Error);
+        if (customerId == Guid.Empty) return Fail<CustomerCreditExposureProjection>("CUSTOMER_FIELD_INVALID", "Customer ID is required.");
+        var exposure = await _store.GetCustomerCreditExposureAsync(access.Value!.OrganizationId, customerId, ct);
+        if (exposure is null) return Fail<CustomerCreditExposureProjection>("CUSTOMER_NOT_FOUND", "Customer was not found.");
+        return Result<CustomerCreditExposureProjection>.Success(exposure);
+    }
+
+    public async Task<Result<IReadOnlyList<CreditOverrideProjection>>> ListCreditOverridesAsync(FinanceCaller caller, Guid? customerId, string? status, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.read", ct);
+        if (access.IsFailure) return Result<IReadOnlyList<CreditOverrideProjection>>.Failure(access.Error);
+        var list = await _store.ListCreditOverridesAsync(access.Value!.OrganizationId, new CreditOverrideListQuery(customerId, Clean(status)), ct);
+        return Result<IReadOnlyList<CreditOverrideProjection>>.Success(list);
+    }
+
+    public async Task<Result<CreditOverrideProjection>> CreateCreditOverrideAsync(FinanceCaller caller, string idempotencyKey, CreditOverrideInput? input, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.manage", ct);
+        if (access.IsFailure) return Result<CreditOverrideProjection>.Failure(access.Error);
+        if (input is null || input.CustomerId == Guid.Empty) return Fail<CreditOverrideProjection>("CREDIT_OVERRIDE_FIELD_REQUIRED", "Customer is required.");
+        if (input.RequestedCeilingAmount <= 0m || string.IsNullOrWhiteSpace(input.Reason))
+        {
+            return Fail<CreditOverrideProjection>("CREDIT_OVERRIDE_FIELD_INVALID", "A requested ceiling amount above zero and a reason are required.");
+        }
+
+        var payloadHash = Sha256Hex.Compute($"{input.CustomerId}|{Num(input.RequestedCeilingAmount)}|{input.Reason.Trim()}|{input.ExpiresOn:O}");
+        return await _store.CreateCreditOverrideAsync(access.Value!, input, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
+    }
+
+    public async Task<Result<CreditOverrideProjection>> ApproveCreditOverrideAsync(FinanceCaller caller, Guid overrideId, Guid expectedVersion, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "billings.manage", ct);
+        if (access.IsFailure) return Result<CreditOverrideProjection>.Failure(access.Error);
+        if (overrideId == Guid.Empty) return Fail<CreditOverrideProjection>("CREDIT_OVERRIDE_FIELD_REQUIRED", "Credit override ID is required.");
+        if (expectedVersion == Guid.Empty) return Fail<CreditOverrideProjection>("CONCURRENCY_CONFLICT", "If-Match header is required.");
+
+        return await _store.ApproveCreditOverrideAsync(access.Value!, overrideId, expectedVersion, caller.TraceId, ct);
+    }
 }

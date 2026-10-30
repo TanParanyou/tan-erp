@@ -162,6 +162,76 @@ public class BillingsController : FinanceControllerBase
         return Respond(await _handler.ReversePaymentAsync(caller, id, paymentId, version, request.Reason, ct));
     }
 
+    // ----- Wave D G-16 Credit Exposure & AR Aging ----------------------------------------------------
+
+    [HttpGet("api/v1/finance/ar-aging")]
+    [ProducesResponseType<ArAgingReportResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetArAging([FromQuery] DateOnly? asOfDate, [FromQuery] Guid? customerId, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var normalizedAsOf = asOfDate.HasValue && asOfDate.Value.Year > 2400
+            ? asOfDate.Value.AddYears(-543)
+            : asOfDate;
+        var result = await _handler.GetArAgingAsync(caller, normalizedAsOf, customerId, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return Ok(FinanceMapper.To(result.Value!));
+    }
+
+    [HttpGet("api/v1/customers/{customerId:guid}/credit-exposure")]
+    [ProducesResponseType<CustomerCreditExposureResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCustomerCreditExposure([FromRoute] Guid customerId, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.GetCustomerCreditExposureAsync(caller, customerId, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return Ok(FinanceMapper.To(result.Value!));
+    }
+
+    [HttpGet("api/v1/finance/credit-overrides")]
+    [ProducesResponseType<CreditOverrideListResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListCreditOverrides([FromQuery] Guid? customerId, [FromQuery] string? status, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListCreditOverridesAsync(caller, customerId, status, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return Ok(new CreditOverrideListResponse(result.Value!.Select(FinanceMapper.To).ToList()));
+    }
+
+    [HttpPost("api/v1/finance/credit-overrides")]
+    [ProducesResponseType<CreditOverrideResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CreateCreditOverride([FromBody] CreditOverrideRequest request, CancellationToken ct)
+    {
+        var caller = ReadIdempotent(out var key, out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.CreateCreditOverrideAsync(
+            caller, key,
+            new CreditOverrideInput(request.CustomerId, request.RequestedCeilingAmount, request.Reason ?? string.Empty, request.ExpiresOn),
+            ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return StatusCode(StatusCodes.Status201Created, FinanceMapper.To(result.Value));
+    }
+
+    [HttpPost("api/v1/finance/credit-overrides/{id:guid}/approve")]
+    [ProducesResponseType<CreditOverrideResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ApproveCreditOverride([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadConditional(out var version, out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ApproveCreditOverrideAsync(caller, id, version, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Ok(FinanceMapper.To(result.Value));
+    }
+
     private IActionResult Respond(Result<BillingProjection> result)
     {
         if (result.IsFailure) return Problem(result.Error.Code);

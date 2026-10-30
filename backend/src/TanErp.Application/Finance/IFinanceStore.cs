@@ -22,4 +22,11 @@ public interface IFinanceStore
     Task<Result<OutboxMessageProjection>> ConfirmAsync(RequestAccessContext access, Guid messageId, string externalRef, decimal externalAmount, string traceId, CancellationToken ct = default);
     Task<Result<OutboxMessageProjection>> RequeueAsync(RequestAccessContext access, Guid messageId, string traceId, CancellationToken ct = default);
     Task<ReconciliationProjection> ReconcileAsync(Guid organizationId, CancellationToken ct = default);
+
+    // Wave D G-16 Credit Exposure & AR Aging
+    Task<ArAgingReportProjection> GetArAgingAsync(Guid organizationId, DateOnly? asOfDate, Guid? customerId, CancellationToken ct = default);
+    Task<CustomerCreditExposureProjection?> GetCustomerCreditExposureAsync(Guid organizationId, Guid customerId, CancellationToken ct = default);
+    Task<IReadOnlyList<CreditOverrideProjection>> ListCreditOverridesAsync(Guid organizationId, CreditOverrideListQuery query, CancellationToken ct = default);
+    Task<Result<CreditOverrideProjection>> CreateCreditOverrideAsync(RequestAccessContext access, CreditOverrideInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
+    Task<Result<CreditOverrideProjection>> ApproveCreditOverrideAsync(RequestAccessContext access, Guid overrideId, Guid expectedVersion, string traceId, CancellationToken ct = default);
 }

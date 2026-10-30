@@ -439,6 +439,12 @@ export type BillingLineRequest = components["schemas"]["BillingLineRequest"];
 export type BillingLineResponse = components["schemas"]["BillingLineResponse"];
 export type BillingNoteRequest = components["schemas"]["BillingNoteRequest"];
 export type BillingAdjustmentNoteResponse = components["schemas"]["BillingAdjustmentNoteResponse"];
+export type CreditOverrideResponse = components["schemas"]["CreditOverrideResponse"];
+export type CreditOverrideRequest = components["schemas"]["CreditOverrideRequest"];
+export type CreditOverrideListResponse = components["schemas"]["CreditOverrideListResponse"];
+export type CustomerCreditExposureResponse = components["schemas"]["CustomerCreditExposureResponse"];
+export type ArAgingCustomerBucketResponse = components["schemas"]["ArAgingCustomerBucketResponse"];
+export type ArAgingReportResponse = components["schemas"]["ArAgingReportResponse"];
 export type PaymentRequest = components["schemas"]["PaymentRequest"];
 export type PaymentResponse = components["schemas"]["PaymentResponse"];
 export type ProjectBillingSummaryResponse = components["schemas"]["ProjectBillingSummaryResponse"];
@@ -2543,6 +2549,34 @@ export class ApiClient {
 
   async downloadBillingTaxDocumentPdf(id: string, options: RequestOptions): Promise<Blob> {
     return this.requestBlob(`/api/v1/billings/${encodeURIComponent(id)}/tax-document/pdf`, options);
+  }
+
+  async getArAgingReport(options: RequestOptions, params?: { asOfDate?: string; customerId?: string }): Promise<ArAgingReportResponse> {
+    const q = new URLSearchParams();
+    if (params?.asOfDate) q.set("asOfDate", params.asOfDate);
+    if (params?.customerId) q.set("customerId", params.customerId);
+    const qs = q.toString();
+    return this.request<ArAgingReportResponse>(`/api/v1/finance/ar-aging${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async getCustomerCreditExposure(customerId: string, options: RequestOptions): Promise<CustomerCreditExposureResponse> {
+    return this.request<CustomerCreditExposureResponse>(`/api/v1/customers/${encodeURIComponent(customerId)}/credit-exposure`, "GET", options);
+  }
+
+  async listCreditOverrides(options: RequestOptions, params?: { customerId?: string; status?: string }): Promise<CreditOverrideListResponse> {
+    const q = new URLSearchParams();
+    if (params?.customerId) q.set("customerId", params.customerId);
+    if (params?.status) q.set("status", params.status);
+    const qs = q.toString();
+    return this.request<CreditOverrideListResponse>(`/api/v1/finance/credit-overrides${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async createCreditOverride(payload: CreditOverrideRequest, options: RequestOptions & { idempotencyKey?: string }): Promise<CreditOverrideResponse> {
+    return this.request<CreditOverrideResponse>("/api/v1/finance/credit-overrides", "POST", options, payload);
+  }
+
+  async approveCreditOverride(id: string, rowVersion: string, options: RequestOptions): Promise<CreditOverrideResponse> {
+    return this.request<CreditOverrideResponse>(`/api/v1/finance/credit-overrides/${encodeURIComponent(id)}/approve`, "POST", { ...options, ifMatch: rowVersion });
   }
 
   async listAccountingOutbox(options: RequestOptions, query: ListOutboxParams): Promise<OutboxListResponse> {
