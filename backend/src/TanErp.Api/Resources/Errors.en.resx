@@ -1373,4 +1373,88 @@
   <data name="TIMESHEET_SELF_APPROVAL_DETAIL" xml:space="preserve">
     <value>The creator or worker of a labor timesheet cannot approve or reject their own timesheet.</value>
   </data>
+  <data name="LOCATION_CODE_CONFLICT_TITLE" xml:space="preserve">
+    <value>Warehouse location code already exists</value>
+  </data>
+  <data name="LOCATION_CODE_CONFLICT_DETAIL" xml:space="preserve">
+    <value>A location with this code already exists in the selected warehouse.</value>
+  </data>
+  <data name="LOCATION_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>Warehouse location was modified concurrently</value>
+  </data>
+  <data name="LOCATION_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>The warehouse location has been updated by another user. Reload and try again.</value>
+  </data>
+  <data name="LOCATION_IS_DEFAULT_TITLE" xml:space="preserve">
+    <value>Default warehouse location cannot be deactivated</value>
+  </data>
+  <data name="LOCATION_IS_DEFAULT_DETAIL" xml:space="preserve">
+    <value>The default location (DEFAULT) of a warehouse must remain active at all times.</value>
+  </data>
+  <data name="LOCATION_HAS_STOCK_TITLE" xml:space="preserve">
+    <value>Warehouse location still holds stock</value>
+  </data>
+  <data name="LOCATION_HAS_STOCK_DETAIL" xml:space="preserve">
+    <value>Transfer or issue all remaining stock out of this location before deactivating it.</value>
+  </data>
+  <data name="LOCATION_FIELD_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid warehouse location fields</value>
+  </data>
+  <data name="LOCATION_FIELD_INVALID_DETAIL" xml:space="preserve">
+    <value>Provide a valid location code (up to 32 characters) and name (up to 120 characters).</value>
+  </data>
+  <data name="INVENTORY_LOCATION_INACTIVE_TITLE" xml:space="preserve">
+    <value>Warehouse location is inactive</value>
+  </data>
+  <data name="INVENTORY_LOCATION_INACTIVE_DETAIL" xml:space="preserve">
+    <value>Stock movements cannot be posted to an inactive warehouse location.</value>
+  </data>
+  <data name="INVENTORY_LOT_REQUIRED_TITLE" xml:space="preserve">
+    <value>Lot number is required</value>
+  </data>
+  <data name="INVENTORY_LOT_REQUIRED_DETAIL" xml:space="preserve">
+    <value>This item has lot tracking enabled; a lot number must be specified for every stock movement.</value>
+  </data>
+  <data name="INVENTORY_SERIAL_COUNT_MISMATCH_TITLE" xml:space="preserve">
+    <value>Serial number count does not match quantity</value>
+  </data>
+  <data name="INVENTORY_SERIAL_COUNT_MISMATCH_DETAIL" xml:space="preserve">
+    <value>This item has serial tracking enabled; quantity must be a positive whole number matching the number of distinct serial numbers provided.</value>
+  </data>
+  <data name="INVENTORY_SERIAL_DUPLICATE_TITLE" xml:space="preserve">
+    <value>Duplicate serial number</value>
+  </data>
+  <data name="INVENTORY_SERIAL_DUPLICATE_DETAIL" xml:space="preserve">
+    <value>One or more serial numbers are already registered for this item in the organization.</value>
+  </data>
+  <data name="INVENTORY_SERIAL_NOT_AVAILABLE_TITLE" xml:space="preserve">
+    <value>Serial number is not available</value>
+  </data>
+  <data name="INVENTORY_SERIAL_NOT_AVAILABLE_DETAIL" xml:space="preserve">
+    <value>One or more serial numbers are not currently available in the specified warehouse, location, and lot, or cannot be returned.</value>
+  </data>
+  <data name="INVENTORY_RETURN_EXCEEDS_ISSUED_TITLE" xml:space="preserve">
+    <value>Return quantity exceeds issued quantity</value>
+  </data>
+  <data name="INVENTORY_RETURN_EXCEEDS_ISSUED_DETAIL" xml:space="preserve">
+    <value>The cumulative returned quantity exceeds the net quantity issued to the project or source issue document.</value>
+  </data>
+  <data name="INVENTORY_PERIOD_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid inventory period</value>
+  </data>
+  <data name="INVENTORY_PERIOD_INVALID_DETAIL" xml:space="preserve">
+    <value>Period year must be between 2000 and 2100 and period month must be between 1 and 12.</value>
+  </data>
+  <data name="INVENTORY_PERIOD_CLOSED_TITLE" xml:space="preserve">
+    <value>Inventory period is closed</value>
+  </data>
+  <data name="INVENTORY_PERIOD_CLOSED_DETAIL" xml:space="preserve">
+    <value>Cannot post backdated stock movements on or before the end date of a closed inventory period.</value>
+  </data>
+  <data name="INVENTORY_PERIOD_ALREADY_CLOSED_TITLE" xml:space="preserve">
+    <value>Inventory period already closed</value>
+  </data>
+  <data name="INVENTORY_PERIOD_ALREADY_CLOSED_DETAIL" xml:space="preserve">
+    <value>The specified inventory period has already been closed and snapshotted.</value>
+  </data>
 </root>

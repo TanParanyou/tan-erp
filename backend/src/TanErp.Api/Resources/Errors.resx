@@ -1535,4 +1535,88 @@
   <data name="TIMESHEET_SELF_APPROVAL_DETAIL" xml:space="preserve">
     <value>ผู้บันทึกหรือผู้ปฏิบัติงานไม่สามารถอนุมัติหรือปฏิเสธใบบันทึกเวลาทำงานของตนเองได้ ต้องให้หัวหน้างานหรือผู้มีสิทธิ์ท่านอื่นดำเนินการ</value>
   </data>
+  <data name="LOCATION_CODE_CONFLICT_TITLE" xml:space="preserve">
+    <value>รหัสตำแหน่งจัดเก็บ (Bin/Location) ซ้ำ</value>
+  </data>
+  <data name="LOCATION_CODE_CONFLICT_DETAIL" xml:space="preserve">
+    <value>รหัสตำแหน่งจัดเก็บนี้ถูกใช้งานแล้วในคลังสินค้านี้ กรุณาระบุรหัสที่ไม่ซ้ำ</value>
+  </data>
+  <data name="LOCATION_VERSION_CONFLICT_TITLE" xml:space="preserve">
+    <value>ข้อมูลตำแหน่งจัดเก็บมีการเปลี่ยนแปลง</value>
+  </data>
+  <data name="LOCATION_VERSION_CONFLICT_DETAIL" xml:space="preserve">
+    <value>ข้อมูลตำแหน่งจัดเก็บถูกอัปเดตโดยผู้ใช้อื่น กรุณาโหลดข้อมูลล่าสุดแล้วลองใหม่อีกครั้ง</value>
+  </data>
+  <data name="LOCATION_IS_DEFAULT_TITLE" xml:space="preserve">
+    <value>ไม่สามารถปิดใช้งานตำแหน่งจัดเก็บหลัก (DEFAULT) ได้</value>
+  </data>
+  <data name="LOCATION_IS_DEFAULT_DETAIL" xml:space="preserve">
+    <value>ตำแหน่งจัดเก็บมาตรฐาน (DEFAULT) ของคลังสินค้าจำเป็นต้องเปิดใช้งานอยู่เสมอ</value>
+  </data>
+  <data name="LOCATION_HAS_STOCK_TITLE" xml:space="preserve">
+    <value>ไม่สามารถปิดใช้งานตำแหน่งจัดเก็บที่ยังมีสต็อกคงเหลือได้</value>
+  </data>
+  <data name="LOCATION_HAS_STOCK_DETAIL" xml:space="preserve">
+    <value>กรุณาโอนย้ายหรือเบิกสต็อกออกจากตำแหน่งจัดเก็บนี้ให้หมดก่อนปิดใช้งาน</value>
+  </data>
+  <data name="LOCATION_FIELD_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลตำแหน่งจัดเก็บไม่ถูกต้อง</value>
+  </data>
+  <data name="LOCATION_FIELD_INVALID_DETAIL" xml:space="preserve">
+    <value>กรุณาระบุรหัส (ไม่เกิน 32 ตัวอักษร) และชื่อตำแหน่งจัดเก็บ (ไม่เกิน 120 ตัวอักษร) ให้ถูกต้อง</value>
+  </data>
+  <data name="INVENTORY_LOCATION_INACTIVE_TITLE" xml:space="preserve">
+    <value>ตำแหน่งจัดเก็บถูกปิดใช้งาน</value>
+  </data>
+  <data name="INVENTORY_LOCATION_INACTIVE_DETAIL" xml:space="preserve">
+    <value>ไม่สามารถลงรายการเคลื่อนไหวสต็อกในตำแหน่งจัดเก็บที่ปิดใช้งานแล้ว</value>
+  </data>
+  <data name="INVENTORY_LOT_REQUIRED_TITLE" xml:space="preserve">
+    <value>ต้องระบุหมายเลข Lot</value>
+  </data>
+  <data name="INVENTORY_LOT_REQUIRED_DETAIL" xml:space="preserve">
+    <value>สินค้ารายการนี้กำหนดให้ควบคุม Lot (Track Lot) กรุณาระบุหมายเลข Lot ทุกครั้งที่รับเข้า เบิก โอน ปรับยอด หรือรับคืน</value>
+  </data>
+  <data name="INVENTORY_SERIAL_COUNT_MISMATCH_TITLE" xml:space="preserve">
+    <value>จำนวนหมายเลข Serial ไม่ตรงกับจำนวนสินค้า</value>
+  </data>
+  <data name="INVENTORY_SERIAL_COUNT_MISMATCH_DETAIL" xml:space="preserve">
+    <value>สินค้ารายการนี้กำหนดให้ควบคุมหมายเลขเครื่อง/Serial (Track Serial) จำนวนต้องเป็นจำนวนเต็มบวกและต้องระบุ Serial Number ไม่ซ้ำกันครบตามจำนวน</value>
+  </data>
+  <data name="INVENTORY_SERIAL_DUPLICATE_TITLE" xml:space="preserve">
+    <value>หมายเลข Serial ซ้ำในระบบ</value>
+  </data>
+  <data name="INVENTORY_SERIAL_DUPLICATE_DETAIL" xml:space="preserve">
+    <value>หมายเลข Serial ที่ระบุมีอยู่ในระบบสำหรับสินค้ารายการนี้แล้ว ห้ามรับเข้าซ้ำ</value>
+  </data>
+  <data name="INVENTORY_SERIAL_NOT_AVAILABLE_TITLE" xml:space="preserve">
+    <value>หมายเลข Serial ไม่พร้อมใช้งานในตำแหน่งหรือ Lot ที่ระบุ</value>
+  </data>
+  <data name="INVENTORY_SERIAL_NOT_AVAILABLE_DETAIL" xml:space="preserve">
+    <value>ไม่พบหมายเลข Serial ที่ระบุในสถานะพร้อมเบิก ณ คลัง ตำแหน่งจัดเก็บ และ Lot ต้นทาง หรือไม่อยู่ในสถานะที่รับคืนได้</value>
+  </data>
+  <data name="INVENTORY_RETURN_EXCEEDS_ISSUED_TITLE" xml:space="preserve">
+    <value>จำนวนรับคืนเกินกว่ายอดที่เบิกให้โครงการ</value>
+  </data>
+  <data name="INVENTORY_RETURN_EXCEEDS_ISSUED_DETAIL" xml:space="preserve">
+    <value>ปริมาณที่รับคืนเข้าคลังรวมเกินกว่าปริมาณสุทธิที่เคยเบิกจ่ายให้กับโครงการหรือใบเบิกต้นทาง</value>
+  </data>
+  <data name="INVENTORY_PERIOD_INVALID_TITLE" xml:space="preserve">
+    <value>งวดบัญชีคลังสินค้าไม่ถูกต้อง</value>
+  </data>
+  <data name="INVENTORY_PERIOD_INVALID_DETAIL" xml:space="preserve">
+    <value>กรุณาระบุปี (ค.ศ. 2000-2100) และเดือน (1-12) ของงวดคลังสินค้าให้ถูกต้อง</value>
+  </data>
+  <data name="INVENTORY_PERIOD_CLOSED_TITLE" xml:space="preserve">
+    <value>งวดคลังสินค้าปิดแล้ว ห้ามลงรายการย้อนหลัง</value>
+  </data>
+  <data name="INVENTORY_PERIOD_CLOSED_DETAIL" xml:space="preserve">
+    <value>วันที่เกิดรายการอยู่ในหรือก่อนงวดคลังสินค้าที่ปิดบัญชีแล้ว ไม่สามารถบันทึกรายการย้อนหลังได้</value>
+  </data>
+  <data name="INVENTORY_PERIOD_ALREADY_CLOSED_TITLE" xml:space="preserve">
+    <value>งวดคลังสินค้านี้ถูกปิดแล้ว</value>
+  </data>
+  <data name="INVENTORY_PERIOD_ALREADY_CLOSED_DETAIL" xml:space="preserve">
+    <value>งวดคลังสินค้าของเดือนและปีที่ระบุได้รับการปิดงวดและบันทึกยอดคงเหลือสิ้นงวดเรียบร้อยแล้ว</value>
+  </data>
 </root>

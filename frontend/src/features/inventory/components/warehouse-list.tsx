@@ -24,6 +24,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { WarehouseResponse } from "@/lib/api/api-client";
 import { useWarehouseList, useWarehouseMutations } from "../api/inventory-queries";
 import { inventoryErrorCode, isWarehouseStatus, WAREHOUSE_STATUSES } from "../inventory-status";
+import { WarehouseLocationsDrawer } from "./warehouse-locations-drawer";
 
 interface WarehouseFilters extends ListFilterRecord {
   status?: string;
@@ -49,6 +50,7 @@ export function WarehouseList() {
   const { create, update, setActive } = useWarehouseMutations();
 
   const [editing, setEditing] = useState<WarehouseResponse | "new" | null>(null);
+  const [locationsWarehouse, setLocationsWarehouse] = useState<WarehouseResponse | null>(null);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -125,14 +127,27 @@ export function WarehouseList() {
       id: "actions",
       header: t("actions"),
       isAction: true,
-      cell: (_v, row) => canManage ? (
+      cell: (_v, row) => (
         <div className="flex gap-2">
-          <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => openEdit(row)}>{t("edit")}</Button>
-          <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={setActive.isPending} onClick={() => void toggle(row)}>
-            {row.status === "active" ? t("deactivate") : t("activate")}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            onClick={() => setLocationsWarehouse(row)}
+          >
+            {t("locationsButton")}
           </Button>
+          {canManage && (
+            <>
+              <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={() => openEdit(row)}>{t("edit")}</Button>
+              <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={setActive.isPending} onClick={() => void toggle(row)}>
+                {row.status === "active" ? t("deactivate") : t("activate")}
+              </Button>
+            </>
+          )}
         </div>
-      ) : null,
+      ),
     },
   ];
 
@@ -220,6 +235,13 @@ export function WarehouseList() {
           <Input label={t("address")} placeholder={t("addressPlaceholder")} maxLength={500} value={address} disabled={isBusy} onChange={(event) => setAddress(event.target.value)} />
         </div>
       </Drawer>
+
+      <WarehouseLocationsDrawer
+        warehouse={locationsWarehouse}
+        isOpen={locationsWarehouse !== null}
+        onClose={() => setLocationsWarehouse(null)}
+        canManage={canManage}
+      />
     </section>
   );
 }

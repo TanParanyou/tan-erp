@@ -447,6 +447,27 @@ export type IssueStockRequest = components["schemas"]["IssueStockRequest"];
 export type TransferStockRequest = components["schemas"]["TransferStockRequest"];
 export type AdjustStockRequest = components["schemas"]["AdjustStockRequest"];
 export type ReserveStockRequest = components["schemas"]["ReserveStockRequest"];
+
+export type CreateWarehouseLocationRequest = components["schemas"]["CreateWarehouseLocationRequest"];
+export type UpdateWarehouseLocationRequest = components["schemas"]["UpdateWarehouseLocationRequest"];
+export type WarehouseLocationResponse = components["schemas"]["WarehouseLocationResponse"];
+export type WarehouseLocationListResponse = components["schemas"]["WarehouseLocationListResponse"];
+
+export type StockLocationBalanceResponse = components["schemas"]["StockLocationBalanceResponse"];
+export type StockLocationBalanceListResponse = components["schemas"]["StockLocationBalanceListResponse"];
+export type StockSerialResponse = components["schemas"]["StockSerialResponse"];
+export type StockSerialListResponse = components["schemas"]["StockSerialListResponse"];
+
+export type ReturnStockRequest = components["schemas"]["ReturnStockRequest"];
+export type ReturnStockLineRequest = components["schemas"]["ReturnStockLineRequest"];
+export type ReceiveGoodsReceiptRequest = components["schemas"]["ReceiveGoodsReceiptRequest"];
+export type ReceiveGoodsReceiptLineRequest = components["schemas"]["ReceiveGoodsReceiptLineRequest"];
+
+export type CloseInventoryPeriodRequest = components["schemas"]["CloseInventoryPeriodRequest"];
+export type InventoryPeriodCloseResponse = components["schemas"]["InventoryPeriodCloseResponse"];
+export type InventoryPeriodCloseLineResponse = components["schemas"]["InventoryPeriodCloseLineResponse"];
+export type InventoryPeriodCloseListResponse = components["schemas"]["InventoryPeriodCloseListResponse"];
+
 export interface ListWarehousesParams {
   search?: string;
   status?: string;
@@ -465,6 +486,24 @@ export interface ListStockMovementsParams {
   warehouseId?: string;
   itemId?: string;
   kind?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListStockLocationBalancesParams {
+  warehouseId?: string;
+  locationId?: string;
+  itemId?: string;
+  lotNumber?: string;
+  inStockOnly?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListStockSerialsParams {
+  warehouseId?: string;
+  locationId?: string;
+  itemId?: string;
+  status?: string;
+  search?: string;
   page?: number;
   pageSize?: number;
 }
@@ -2497,6 +2536,18 @@ export class ApiClient {
     return this.request<WarehouseResponse>(`/api/v1/warehouses/${encodeURIComponent(id)}/${active ? "activate" : "deactivate"}`, "POST", { ...options, ifMatch: rowVersion });
   }
 
+  async listWarehouseLocations(warehouseId: string, options: RequestOptions): Promise<WarehouseLocationListResponse> {
+    return this.request<WarehouseLocationListResponse>(`/api/v1/warehouses/${encodeURIComponent(warehouseId)}/locations`, "GET", options);
+  }
+
+  async createWarehouseLocation(warehouseId: string, payload: CreateWarehouseLocationRequest, options: RequestOptions): Promise<WarehouseLocationResponse> {
+    return this.request<WarehouseLocationResponse>(`/api/v1/warehouses/${encodeURIComponent(warehouseId)}/locations`, "POST", options, payload);
+  }
+
+  async updateWarehouseLocation(warehouseId: string, locationId: string, rowVersion: string, payload: UpdateWarehouseLocationRequest, options: RequestOptions): Promise<WarehouseLocationResponse> {
+    return this.request<WarehouseLocationResponse>(`/api/v1/warehouses/${encodeURIComponent(warehouseId)}/locations/${encodeURIComponent(locationId)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
   async listStockBalances(options: RequestOptions, query: ListStockBalancesParams): Promise<StockBalanceListResponse> {
     const params = new URLSearchParams();
     if (query.warehouseId) params.set("warehouseId", query.warehouseId);
@@ -2518,12 +2569,45 @@ export class ApiClient {
     return this.request<StockMovementListResponse>(`/api/v1/inventory/movements?${params.toString()}`, "GET", options);
   }
 
+  async listStockLocationBalances(options: RequestOptions, query: ListStockLocationBalancesParams): Promise<StockLocationBalanceListResponse> {
+    const params = new URLSearchParams();
+    if (query.warehouseId) params.set("warehouseId", query.warehouseId);
+    if (query.locationId) params.set("locationId", query.locationId);
+    if (query.itemId) params.set("itemId", query.itemId);
+    if (query.lotNumber) params.set("lotNumber", query.lotNumber);
+    if (query.inStockOnly) params.set("inStockOnly", "true");
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<StockLocationBalanceListResponse>(`/api/v1/inventory/location-balances?${params.toString()}`, "GET", options);
+  }
+
+  async listStockSerials(options: RequestOptions, query: ListStockSerialsParams): Promise<StockSerialListResponse> {
+    const params = new URLSearchParams();
+    if (query.warehouseId) params.set("warehouseId", query.warehouseId);
+    if (query.locationId) params.set("locationId", query.locationId);
+    if (query.itemId) params.set("itemId", query.itemId);
+    if (query.status) params.set("status", query.status);
+    if (query.search) params.set("search", query.search);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<StockSerialListResponse>(`/api/v1/inventory/serials?${params.toString()}`, "GET", options);
+  }
+
   async getStockReconciliation(options: RequestOptions): Promise<ReconciliationResponse> {
     return this.request<ReconciliationResponse>("/api/v1/inventory/reconciliation", "GET", options);
   }
 
-  async receiveGoodsReceiptIntoStock(goodsReceiptId: string, warehouseId: string, options: RequestOptions): Promise<StockDocumentResponse> {
-    return this.request<StockDocumentResponse>("/api/v1/inventory/receipts", "POST", options, { goodsReceiptId, warehouseId });
+  async receiveGoodsReceiptIntoStock(
+    goodsReceiptId: string,
+    warehouseId: string,
+    options: RequestOptions,
+    extra?: { locationId?: string | null; lines?: ReceiveGoodsReceiptLineRequest[] }
+  ): Promise<StockDocumentResponse> {
+    return this.request<StockDocumentResponse>("/api/v1/inventory/receipts", "POST", options, {
+      goodsReceiptId,
+      warehouseId,
+      ...extra,
+    });
   }
 
   async issueStock(payload: IssueStockRequest, options: RequestOptions): Promise<StockDocumentResponse> {
@@ -2538,8 +2622,24 @@ export class ApiClient {
     return this.request<StockDocumentResponse>("/api/v1/inventory/adjustments", "POST", options, payload);
   }
 
+  async returnStock(payload: ReturnStockRequest, options: RequestOptions): Promise<StockDocumentResponse> {
+    return this.request<StockDocumentResponse>("/api/v1/inventory/returns", "POST", options, payload);
+  }
+
   async reserveStock(payload: ReserveStockRequest, options: RequestOptions): Promise<ReservationResponse> {
     return this.request<ReservationResponse>("/api/v1/inventory/reservations", "POST", options, payload);
+  }
+
+  async listInventoryPeriodCloses(options: RequestOptions): Promise<InventoryPeriodCloseListResponse> {
+    return this.request<InventoryPeriodCloseListResponse>("/api/v1/inventory/period-closes", "GET", options);
+  }
+
+  async getInventoryPeriodClose(id: string, options: RequestOptions): Promise<InventoryPeriodCloseResponse> {
+    return this.request<InventoryPeriodCloseResponse>(`/api/v1/inventory/period-closes/${encodeURIComponent(id)}`, "GET", options);
+  }
+
+  async closeInventoryPeriod(payload: CloseInventoryPeriodRequest, options: RequestOptions): Promise<InventoryPeriodCloseResponse> {
+    return this.request<InventoryPeriodCloseResponse>("/api/v1/inventory/period-closes", "POST", options, payload);
   }
 
   async listOrganizationBranches(options: RequestOptions): Promise<OrganizationBranchResponse[]> {

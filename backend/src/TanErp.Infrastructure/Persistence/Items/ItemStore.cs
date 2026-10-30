@@ -91,7 +91,9 @@ public class ItemStore : IItemStore
             data.Capabilities.CanCost,
             data.Capabilities.CanPurchase,
             data.Capabilities.CanStock,
-            data.Capabilities.CanProduce);
+            data.Capabilities.CanProduce,
+            data.Capabilities.TrackLot,
+            data.Capabilities.TrackSerial);
 
         Item item;
         try
@@ -345,7 +347,9 @@ public class ItemStore : IItemStore
             data.Capabilities.CanCost,
             data.Capabilities.CanPurchase,
             data.Capabilities.CanStock,
-            data.Capabilities.CanProduce);
+            data.Capabilities.CanProduce,
+            data.Capabilities.TrackLot,
+            data.Capabilities.TrackSerial);
 
         try
         {
@@ -1836,7 +1840,9 @@ public class ItemStore : IItemStore
                 item.Capabilities.CanCost,
                 item.Capabilities.CanPurchase,
                 item.Capabilities.CanStock,
-                item.Capabilities.CanProduce),
+                item.Capabilities.CanProduce,
+                item.Capabilities.TrackLot,
+                item.Capabilities.TrackSerial),
             item.Attributes,
             item.AttributesSchemaVersion,
             item.Status,

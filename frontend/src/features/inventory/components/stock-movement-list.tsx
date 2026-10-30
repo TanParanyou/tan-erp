@@ -51,8 +51,29 @@ export function StockMovementList() {
     { id: "postedAt", header: t("postedAt"), cell: (_v, row) => (row.postedAtUtc ? formatDateTime(row.postedAtUtc, locale) : "-"), className: "min-w-40" },
     { id: "document", header: t("document"), className: "font-mono", cell: (_v, row) => row.documentNumber ?? "-" },
     { id: "kind", header: t("kind"), cell: (_v, row) => <StatusBadge label={isMovementKind(row.kind) ? t(`kinds.${row.kind}`) : "-"} variant={(row.quantityDelta ?? 0) >= 0 ? "success" : "warning"} /> },
-    { id: "warehouse", header: t("warehouse"), cell: (_v, row) => `${row.warehouse?.code ?? "-"}` },
+    {
+      id: "warehouse",
+      header: t("warehouse"),
+      cell: (_v, row) =>
+        row.location?.code
+          ? `${row.warehouse?.code ?? "-"} / ${row.location.code}`
+          : row.warehouse?.code ?? "-",
+    },
     { id: "item", header: t("item"), cell: (_v, row) => `${row.item?.code ?? "-"} · ${row.item?.nameTh ?? "-"}`, className: "min-w-48" },
+    {
+      id: "lotSerial",
+      header: t("lotSerial"),
+      className: "min-w-32 text-xs font-mono",
+      cell: (_v, row) => (
+        <div className="space-y-0.5">
+          {row.lotNumber && <div>Lot: {row.lotNumber}</div>}
+          {row.serialNumbers && row.serialNumbers.length > 0 && (
+            <div className="text-erp-text-muted">SN: {row.serialNumbers.join(", ")}</div>
+          )}
+          {!row.lotNumber && (!row.serialNumbers || row.serialNumbers.length === 0) && "-"}
+        </div>
+      ),
+    },
     { id: "quantity", header: t("quantity"), className: "text-right font-mono", cell: (_v, row) => formatNumber(row.quantityDelta) },
     { id: "unitCost", header: t("unitCost"), className: "text-right font-mono", cell: (_v, row) => formatCurrency(row.unitCost, "THB", locale) },
     { id: "value", header: t("value"), className: "text-right font-mono", cell: (_v, row) => formatCurrency(row.valueDelta, "THB", locale) },

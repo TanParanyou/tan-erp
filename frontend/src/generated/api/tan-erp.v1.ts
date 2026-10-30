@@ -10475,6 +10475,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inventory/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReturnStockRequest"];
+                    "text/json": components["schemas"]["ReturnStockRequest"];
+                    "application/*+json": components["schemas"]["ReturnStockRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockDocumentResponse"];
+                        "application/json": components["schemas"]["StockDocumentResponse"];
+                        "text/json": components["schemas"]["StockDocumentResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/inventory/reservations": {
         parameters: {
             query?: never;
@@ -10623,6 +10699,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inventory/period-closes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InventoryPeriodCloseListResponse"];
+                        "application/json": components["schemas"]["InventoryPeriodCloseListResponse"];
+                        "text/json": components["schemas"]["InventoryPeriodCloseListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CloseInventoryPeriodRequest"];
+                    "text/json": components["schemas"]["CloseInventoryPeriodRequest"];
+                    "application/*+json": components["schemas"]["CloseInventoryPeriodRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InventoryPeriodCloseResponse"];
+                        "application/json": components["schemas"]["InventoryPeriodCloseResponse"];
+                        "text/json": components["schemas"]["InventoryPeriodCloseResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/period-closes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InventoryPeriodCloseResponse"];
+                        "application/json": components["schemas"]["InventoryPeriodCloseResponse"];
+                        "text/json": components["schemas"]["InventoryPeriodCloseResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/inventory/documents/{id}": {
         parameters: {
             query?: never;
@@ -10705,6 +10917,107 @@ export interface paths {
                         "text/plain": components["schemas"]["StockBalanceListResponse"];
                         "application/json": components["schemas"]["StockBalanceListResponse"];
                         "text/json": components["schemas"]["StockBalanceListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/location-balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    warehouseId?: string;
+                    locationId?: string;
+                    itemId?: string;
+                    lotNumber?: string;
+                    inStockOnly?: boolean;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockLocationBalanceListResponse"];
+                        "application/json": components["schemas"]["StockLocationBalanceListResponse"];
+                        "text/json": components["schemas"]["StockLocationBalanceListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/serials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    warehouseId?: string;
+                    locationId?: string;
+                    itemId?: string;
+                    status?: string;
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockSerialListResponse"];
+                        "application/json": components["schemas"]["StockSerialListResponse"];
+                        "text/json": components["schemas"]["StockSerialListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
                     };
                 };
             };
@@ -24852,6 +25165,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/warehouses/{id}/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseLocationListResponse"];
+                        "application/json": components["schemas"]["WarehouseLocationListResponse"];
+                        "text/json": components["schemas"]["WarehouseLocationListResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateWarehouseLocationRequest"];
+                    "text/json": components["schemas"]["CreateWarehouseLocationRequest"];
+                    "application/*+json": components["schemas"]["CreateWarehouseLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseLocationResponse"];
+                        "application/json": components["schemas"]["WarehouseLocationResponse"];
+                        "text/json": components["schemas"]["WarehouseLocationResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/warehouses/{id}/locations/{locationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    locationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateWarehouseLocationRequest"];
+                    "text/json": components["schemas"]["UpdateWarehouseLocationRequest"];
+                    "application/*+json": components["schemas"]["UpdateWarehouseLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WarehouseLocationResponse"];
+                        "application/json": components["schemas"]["WarehouseLocationResponse"];
+                        "text/json": components["schemas"]["WarehouseLocationResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/warranties/{id}": {
         parameters: {
             query?: never;
@@ -25536,6 +26040,10 @@ export interface components {
             warehouseId?: string;
             reason?: string | null;
             lines?: components["schemas"]["AdjustmentLineRequest"][] | null;
+            /** Format: uuid */
+            locationId?: string | null;
+            /** Format: date-time */
+            occurredAtUtc?: string | null;
         };
         AdjustmentLineRequest: {
             /** Format: uuid */
@@ -25544,6 +26052,10 @@ export interface components {
             countedQuantity?: number;
             /** Format: double */
             unitCost?: number | null;
+            /** Format: uuid */
+            locationId?: string | null;
+            lotNumber?: string | null;
+            serialNumbers?: string[] | null;
         };
         AdminAssignRoleResponse: {
             user?: components["schemas"]["AdminUserResponse"];
@@ -26243,6 +26755,13 @@ export interface components {
             sourceRevisionId?: string;
             reason?: string | null;
         };
+        CloseInventoryPeriodRequest: {
+            /** Format: int32 */
+            periodYear?: number;
+            /** Format: int32 */
+            periodMonth?: number;
+            note?: string | null;
+        };
         CommitItemImportRequest: {
             content?: string | null;
             expectedContentSha256?: string | null;
@@ -26784,6 +27303,10 @@ export interface components {
             /** Format: date-time */
             expiresAtUtc?: string;
             slots?: components["schemas"]["UploadSlotResponse"][] | null;
+        };
+        CreateWarehouseLocationRequest: {
+            code?: string | null;
+            name?: string | null;
         };
         CreatedAcceptanceLinkResponse: {
             link?: components["schemas"]["AcceptanceLinkResponse"];
@@ -27649,6 +28172,13 @@ export interface components {
             nameTh?: string | null;
             unitCode?: string | null;
         };
+        InventoryLocationRefResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
+            isDefault?: boolean;
+        };
         InventoryPaginationResponse: {
             /** Format: int32 */
             page?: number;
@@ -27658,6 +28188,42 @@ export interface components {
             totalCount?: number;
             /** Format: int32 */
             totalPages?: number;
+        };
+        InventoryPeriodCloseLineResponse: {
+            /** Format: uuid */
+            id?: string;
+            warehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            item?: components["schemas"]["InventoryItemRefResponse"];
+            /** Format: double */
+            onHandQuantity?: number;
+            /** Format: double */
+            averageCost?: number;
+            /** Format: double */
+            totalValue?: number;
+        };
+        InventoryPeriodCloseListResponse: {
+            items?: components["schemas"]["InventoryPeriodCloseResponse"][] | null;
+        };
+        InventoryPeriodCloseResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            periodYear?: number;
+            /** Format: int32 */
+            periodMonth?: number;
+            /** Format: date */
+            periodEndDate?: string;
+            note?: string | null;
+            /** Format: int32 */
+            lineCount?: number;
+            /** Format: double */
+            totalOnHandQuantity?: number;
+            /** Format: double */
+            totalValuationAmount?: number;
+            closedBy?: components["schemas"]["InventoryPersonResponse"];
+            /** Format: date-time */
+            closedAtUtc?: string;
+            lines?: components["schemas"]["InventoryPeriodCloseLineResponse"][] | null;
         };
         InventoryPersonResponse: {
             /** Format: uuid */
@@ -27684,6 +28250,10 @@ export interface components {
             projectId?: string | null;
             reason?: string | null;
             lines?: components["schemas"]["StockLineRequest"][] | null;
+            /** Format: uuid */
+            locationId?: string | null;
+            /** Format: date-time */
+            occurredAtUtc?: string | null;
         };
         ItemAliasResponse: {
             /** Format: uuid */
@@ -27758,6 +28328,8 @@ export interface components {
             canPurchase?: boolean;
             canStock?: boolean;
             canProduce?: boolean;
+            trackLot?: boolean;
+            trackSerial?: boolean;
         };
         ItemCapabilitiesResponse: {
             canSell?: boolean;
@@ -27765,6 +28337,8 @@ export interface components {
             canPurchase?: boolean;
             canStock?: boolean;
             canProduce?: boolean;
+            trackLot?: boolean;
+            trackSerial?: boolean;
         };
         ItemCategoryDetailResponse: {
             /** Format: uuid */
@@ -29528,11 +30102,24 @@ export interface components {
             /** Format: uuid */
             expectedVersion?: string;
         };
+        ReceiveGoodsReceiptLineRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: double */
+            quantity?: number | null;
+            /** Format: uuid */
+            locationId?: string | null;
+            lotNumber?: string | null;
+            serialNumbers?: string[] | null;
+        };
         ReceiveGoodsReceiptRequest: {
             /** Format: uuid */
             goodsReceiptId?: string;
             /** Format: uuid */
             warehouseId?: string;
+            /** Format: uuid */
+            locationId?: string | null;
+            lines?: components["schemas"]["ReceiveGoodsReceiptLineRequest"][] | null;
         };
         ReconciliationResponse: {
             /** Format: int32 */
@@ -29605,6 +30192,32 @@ export interface components {
         };
         ReturnCostRecordRequest: {
             reason: string;
+        };
+        ReturnStockLineRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: double */
+            quantity?: number;
+            /** Format: double */
+            unitCost?: number | null;
+            /** Format: uuid */
+            locationId?: string | null;
+            lotNumber?: string | null;
+            serialNumbers?: string[] | null;
+        };
+        ReturnStockRequest: {
+            /** Format: uuid */
+            warehouseId?: string;
+            /** Format: uuid */
+            projectId?: string | null;
+            reason?: string | null;
+            lines?: components["schemas"]["ReturnStockLineRequest"][] | null;
+            /** Format: uuid */
+            locationId?: string | null;
+            /** Format: uuid */
+            sourceIssueDocumentId?: string | null;
+            /** Format: date-time */
+            occurredAtUtc?: string | null;
         };
         ReviewDecisionRequest: {
             /** Format: int32 */
@@ -30059,6 +30672,28 @@ export interface components {
             itemId?: string;
             /** Format: double */
             quantity?: number;
+            /** Format: uuid */
+            locationId?: string | null;
+            /** Format: uuid */
+            toLocationId?: string | null;
+            lotNumber?: string | null;
+            serialNumbers?: string[] | null;
+        };
+        StockLocationBalanceListResponse: {
+            items?: components["schemas"]["StockLocationBalanceResponse"][] | null;
+            pagination?: components["schemas"]["InventoryPaginationResponse"];
+        };
+        StockLocationBalanceResponse: {
+            /** Format: uuid */
+            id?: string;
+            warehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            location?: components["schemas"]["InventoryLocationRefResponse"];
+            item?: components["schemas"]["InventoryItemRefResponse"];
+            lotNumber?: string | null;
+            /** Format: double */
+            onHand?: number;
+            /** Format: date-time */
+            updatedAtUtc?: string;
         };
         StockMovementListResponse: {
             items?: components["schemas"]["StockMovementResponse"][] | null;
@@ -30086,6 +30721,27 @@ export interface components {
             occurredAtUtc?: string;
             /** Format: date-time */
             postedAtUtc?: string;
+            location?: components["schemas"]["InventoryLocationRefResponse"];
+            lotNumber?: string | null;
+            serialNumbers?: string[] | null;
+        };
+        StockSerialListResponse: {
+            items?: components["schemas"]["StockSerialResponse"][] | null;
+            pagination?: components["schemas"]["InventoryPaginationResponse"];
+        };
+        StockSerialResponse: {
+            /** Format: uuid */
+            id?: string;
+            item?: components["schemas"]["InventoryItemRefResponse"];
+            serialNumber?: string | null;
+            warehouse?: components["schemas"]["InventoryWarehouseRefResponse"];
+            location?: components["schemas"]["InventoryLocationRefResponse"];
+            lotNumber?: string | null;
+            status?: string | null;
+            /** Format: uuid */
+            lastStockDocumentId?: string;
+            /** Format: date-time */
+            updatedAtUtc?: string;
         };
         SubmitEstimateRequest: {
             /** Format: int32 */
@@ -30428,6 +31084,12 @@ export interface components {
             toWarehouseId?: string;
             reason?: string | null;
             lines?: components["schemas"]["StockLineRequest"][] | null;
+            /** Format: uuid */
+            fromLocationId?: string | null;
+            /** Format: uuid */
+            toLocationId?: string | null;
+            /** Format: date-time */
+            occurredAtUtc?: string | null;
         };
         TransitionOpportunityStageRequest: {
             targetStage?: string | null;
@@ -30864,6 +31526,10 @@ export interface components {
             decimalScale?: number;
             roundingMode?: string | null;
         };
+        UpdateWarehouseLocationRequest: {
+            name?: string | null;
+            active?: boolean | null;
+        };
         UploadSlotResponse: {
             /** Format: uuid */
             slotId?: string;
@@ -30910,6 +31576,25 @@ export interface components {
         WarehouseListResponse: {
             items?: components["schemas"]["WarehouseResponse"][] | null;
             pagination?: components["schemas"]["InventoryPaginationResponse"];
+        };
+        WarehouseLocationListResponse: {
+            items?: components["schemas"]["WarehouseLocationResponse"][] | null;
+        };
+        WarehouseLocationResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            warehouseId?: string;
+            code?: string | null;
+            name?: string | null;
+            isDefault?: boolean;
+            status?: string | null;
+            /** Format: uuid */
+            rowVersion?: string;
+            /** Format: date-time */
+            createdAtUtc?: string;
+            /** Format: date-time */
+            updatedAtUtc?: string;
         };
         WarehouseRequest: {
             name?: string | null;

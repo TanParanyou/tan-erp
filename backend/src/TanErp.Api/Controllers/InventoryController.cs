@@ -28,7 +28,8 @@ public class InventoryController : InventoryControllerBase
     {
         var caller = ReadIdempotent(out var key, out var failure);
         if (caller is null) return failure!;
-        return Created(await _handler.ReceiveGoodsReceiptAsync(caller, key, request.GoodsReceiptId, request.WarehouseId, ct));
+        var lines = request.Lines?.Select(l => new ReceiveGoodsReceiptLineInput(l.ItemId, l.Quantity, l.LocationId, l.LotNumber, l.SerialNumbers)).ToList();
+        return Created(await _handler.ReceiveGoodsReceiptAsync(caller, key, request.GoodsReceiptId, request.WarehouseId, request.LocationId, lines, ct));
     }
 
     [HttpPost("issues")]
@@ -39,8 +40,8 @@ public class InventoryController : InventoryControllerBase
     {
         var caller = ReadIdempotent(out var key, out var failure);
         if (caller is null) return failure!;
-        var lines = request.Lines?.Select(l => new StockLineInput(l.ItemId, l.Quantity)).ToList();
-        return Created(await _handler.IssueAsync(caller, key, request.WarehouseId, request.ProjectId, request.Reason, lines, ct));
+        var lines = request.Lines?.Select(l => new StockLineInput(l.ItemId, l.Quantity, l.LocationId, l.ToLocationId, l.LotNumber, l.SerialNumbers)).ToList();
+        return Created(await _handler.IssueAsync(caller, key, request.WarehouseId, request.ProjectId, request.Reason, lines, request.LocationId, request.OccurredAtUtc, ct));
     }
 
     [HttpPost("transfers")]
@@ -51,8 +52,8 @@ public class InventoryController : InventoryControllerBase
     {
         var caller = ReadIdempotent(out var key, out var failure);
         if (caller is null) return failure!;
-        var lines = request.Lines?.Select(l => new StockLineInput(l.ItemId, l.Quantity)).ToList();
-        return Created(await _handler.TransferAsync(caller, key, request.FromWarehouseId, request.ToWarehouseId, request.Reason, lines, ct));
+        var lines = request.Lines?.Select(l => new StockLineInput(l.ItemId, l.Quantity, l.LocationId, l.ToLocationId, l.LotNumber, l.SerialNumbers)).ToList();
+        return Created(await _handler.TransferAsync(caller, key, request.FromWarehouseId, request.ToWarehouseId, request.Reason, lines, request.FromLocationId, request.ToLocationId, request.OccurredAtUtc, ct));
     }
 
     [HttpPost("adjustments")]
@@ -63,8 +64,21 @@ public class InventoryController : InventoryControllerBase
     {
         var caller = ReadIdempotent(out var key, out var failure);
         if (caller is null) return failure!;
-        var lines = request.Lines?.Select(l => new AdjustmentLineInput(l.ItemId, l.CountedQuantity, l.UnitCost)).ToList();
-        return Created(await _handler.AdjustAsync(caller, key, request.WarehouseId, request.Reason, lines, ct));
+        var lines = request.Lines?.Select(l => new AdjustmentLineInput(l.ItemId, l.CountedQuantity, l.UnitCost, l.LocationId, l.LotNumber, l.SerialNumbers)).ToList();
+        return Created(await _handler.AdjustAsync(caller, key, request.WarehouseId, request.Reason, lines, request.LocationId, request.OccurredAtUtc, ct));
+    }
+
+    [HttpPost("returns")]
+    [ProducesResponseType<StockDocumentResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Return([FromBody] ReturnStockRequest request, CancellationToken ct)
+    {
+        var caller = ReadIdempotent(out var key, out var failure);
+        if (caller is null) return failure!;
+        var lines = request.Lines?.Select(l => new ReturnLineInput(l.ItemId, l.Quantity, l.UnitCost, l.LocationId, l.LotNumber, l.SerialNumbers)).ToList();
+        return Created(await _handler.ReturnAsync(caller, key, request.WarehouseId, request.LocationId, request.ProjectId, request.SourceIssueDocumentId, request.OccurredAtUtc, request.Reason, lines, ct));
     }
 
     [HttpPost("reservations")]
@@ -94,6 +108,39 @@ public class InventoryController : InventoryControllerBase
         return Ok(ToResponse(result.Value));
     }
 
+    [HttpPost("period-closes")]
+    [ProducesResponseType<InventoryPeriodCloseResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ClosePeriod([FromBody] CloseInventoryPeriodRequest request, CancellationToken ct)
+    {
+        var caller = ReadIdempotent(out var key, out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ClosePeriodAsync(caller, key, request.PeriodYear, request.PeriodMonth, request.Note, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : StatusCode(StatusCodes.Status201Created, ToResponse(result.Value!));
+    }
+
+    [HttpGet("period-closes")]
+    [ProducesResponseType<InventoryPeriodCloseListResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListPeriodCloses(CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListPeriodClosesAsync(caller, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(new InventoryPeriodCloseListResponse(result.Value!.Select(ToResponse).ToList()));
+    }
+
+    [HttpGet("period-closes/{id:guid}")]
+    [ProducesResponseType<InventoryPeriodCloseResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPeriodClose([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.GetPeriodCloseAsync(caller, id, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(ToResponse(result.Value!));
+    }
+
     [HttpGet("documents/{id:guid}")]
     [ProducesResponseType<StockDocumentResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
@@ -119,6 +166,48 @@ public class InventoryController : InventoryControllerBase
         return Ok(new StockBalanceListResponse(
             paged.Items.Select(b => new StockBalanceResponse(b.Id, ToResponse(b.Warehouse), ToResponse(b.Item), b.OnHand, b.Reserved, b.Available, b.AverageCost, b.TotalValue, b.UpdatedAtUtc)).ToList(),
             Pagination(paged.Page, paged.PageSize, paged.TotalCount), paged.TotalValue));
+    }
+
+    [HttpGet("location-balances")]
+    [ProducesResponseType<StockLocationBalanceListResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> LocationBalances(
+        [FromQuery] Guid? warehouseId, [FromQuery] Guid? locationId, [FromQuery] Guid? itemId, [FromQuery] string? lotNumber, [FromQuery] bool inStockOnly = false,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = InventoryHandler.DefaultPageSize, CancellationToken ct = default)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListLocationBalancesAsync(caller, warehouseId, locationId, itemId, lotNumber, inStockOnly, page, pageSize, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        var paged = result.Value!;
+        return Ok(new StockLocationBalanceListResponse(
+            paged.Items.Select(b => new StockLocationBalanceResponse(b.Id, ToResponse(b.Warehouse), ToResponse(b.Location), ToResponse(b.Item), b.LotNumber, b.OnHand, b.UpdatedAtUtc)).ToList(),
+            Pagination(paged.Page, paged.PageSize, paged.TotalCount)));
+    }
+
+    [HttpGet("serials")]
+    [ProducesResponseType<StockSerialListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Serials(
+        [FromQuery] Guid? warehouseId, [FromQuery] Guid? locationId, [FromQuery] Guid? itemId, [FromQuery] string? status, [FromQuery] string? search,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = InventoryHandler.DefaultPageSize, CancellationToken ct = default)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListSerialsAsync(caller, warehouseId, locationId, itemId, status, search, page, pageSize, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        var paged = result.Value!;
+        return Ok(new StockSerialListResponse(
+            paged.Items.Select(s => new StockSerialResponse(
+                s.Id,
+                ToResponse(s.Item),
+                s.SerialNumber,
+                s.Warehouse is null ? null : ToResponse(s.Warehouse),
+                s.Location is null ? null : ToResponse(s.Location),
+                s.LotNumber,
+                s.Status,
+                s.LastStockDocumentId,
+                s.UpdatedAtUtc)).ToList(),
+            Pagination(paged.Page, paged.PageSize, paged.TotalCount)));
     }
 
     [HttpGet("movements")]

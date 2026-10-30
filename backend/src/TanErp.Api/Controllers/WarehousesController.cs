@@ -88,6 +88,48 @@ public class WarehousesController : InventoryControllerBase
         return Ok(new WarehouseListResponse(paged.Items.Select(ToResponse).ToList(), Pagination(paged.Page, paged.PageSize, paged.TotalCount)));
     }
 
+    [HttpGet("{id:guid}/locations")]
+    [ProducesResponseType<WarehouseLocationListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ListLocations([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListWarehouseLocationsAsync(caller, id, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return Ok(new WarehouseLocationListResponse(result.Value!.Select(ToResponse).ToList()));
+    }
+
+    [HttpPost("{id:guid}/locations")]
+    [ProducesResponseType<WarehouseLocationResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CreateLocation([FromRoute] Guid id, [FromBody] CreateWarehouseLocationRequest request, CancellationToken ct)
+    {
+        var caller = ReadIdempotent(out var key, out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.CreateWarehouseLocationAsync(caller, key, id, new WarehouseLocationCreateInput(request.Code, request.Name), ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return StatusCode(StatusCodes.Status201Created, ToResponse(result.Value));
+    }
+
+    [HttpPut("{id:guid}/locations/{locationId:guid}")]
+    [ProducesResponseType<WarehouseLocationResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpdateLocation([FromRoute] Guid id, [FromRoute] Guid locationId, [FromBody] UpdateWarehouseLocationRequest request, CancellationToken ct)
+    {
+        var caller = ReadConditional(out var version, out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.UpdateWarehouseLocationAsync(caller, id, locationId, version, new WarehouseLocationUpdateInput(request.Name, request.Active), ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        Response.Headers.ETag = $"\"{result.Value!.RowVersion}\"";
+        return Ok(ToResponse(result.Value));
+    }
+
     private IActionResult Respond(Result<WarehouseProjection> result)
     {
         if (result.IsFailure) return Problem(result.Error.Code);
@@ -96,4 +138,7 @@ public class WarehousesController : InventoryControllerBase
     }
 
     private static WarehouseResponse ToResponse(WarehouseProjection w) => new(w.Id, w.BranchId, w.Code, w.Name, w.Address, w.Status, w.RowVersion, w.CreatedAtUtc);
+
+    private static WarehouseLocationResponse ToResponse(WarehouseLocationProjection l) =>
+        new(l.Id, l.WarehouseId, l.Code, l.Name, l.IsDefault, l.Status, l.RowVersion, l.CreatedAtUtc, l.UpdatedAtUtc);
 }

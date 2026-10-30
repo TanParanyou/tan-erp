@@ -2097,6 +2097,8 @@
     "canPurchase": "Can be purchased",
     "canStock": "Track inventory",
     "canProduce": "Can be produced",
+    "trackLot": "Track Lot",
+    "trackSerial": "Track Serial",
     "attributes": "Specifications & Additional Attributes",
     "attributesInvalid": "Please check the attribute names and values",
     "addAttribute": "Add Specification",
@@ -3319,11 +3321,25 @@
       "WAREHOUSE_INVALID_STATE": "The warehouse is already in this status.",
       "WAREHOUSE_HAS_STOCK": "A warehouse that still holds stock or reservations cannot be deactivated.",
       "WAREHOUSE_FIELD_INVALID": "The warehouse data is invalid.",
+      "LOCATION_CODE_CONFLICT": "A location with this code already exists in the warehouse.",
+      "LOCATION_VERSION_CONFLICT": "Warehouse location was updated by another user.",
+      "LOCATION_IS_DEFAULT": "Cannot deactivate the default warehouse location.",
+      "LOCATION_HAS_STOCK": "Cannot deactivate a warehouse location that currently holds stock.",
+      "LOCATION_FIELD_INVALID": "Invalid warehouse location field.",
       "INVENTORY_WAREHOUSE_INACTIVE": "The warehouse is not active.",
       "INVENTORY_WAREHOUSE_BRANCH_MISMATCH": "The warehouse must belong to the branch that received the goods.",
+      "INVENTORY_LOCATION_INACTIVE": "Warehouse location is inactive.",
       "INVENTORY_RECEIPT_ALREADY_POSTED": "This goods receipt has already been put into stock.",
       "INVENTORY_ITEM_NOT_STOCKABLE": "This item is not stockable.",
       "INVENTORY_INSUFFICIENT_STOCK": "Not enough available stock (negative stock is not allowed).",
+      "INVENTORY_LOT_REQUIRED": "Item requires a lot number for stock transactions.",
+      "INVENTORY_SERIAL_COUNT_MISMATCH": "Serial count does not match the transaction quantity.",
+      "INVENTORY_SERIAL_DUPLICATE": "Duplicate serial number specified or already exists.",
+      "INVENTORY_SERIAL_NOT_AVAILABLE": "Specified serial number is not available in stock.",
+      "INVENTORY_RETURN_EXCEEDS_ISSUED": "Return quantity exceeds quantity previously issued.",
+      "INVENTORY_PERIOD_INVALID": "Invalid inventory period specified.",
+      "INVENTORY_PERIOD_CLOSED": "Inventory period is closed for the specified date.",
+      "INVENTORY_PERIOD_ALREADY_CLOSED": "This inventory period has already been closed.",
       "INVENTORY_QUANTITY_INVALID": "Quantity must be greater than zero.",
       "INVENTORY_COST_INVALID": "Cost cannot be negative.",
       "INVENTORY_COST_REQUIRED": "A unit cost is required when adding stock to an empty balance.",
@@ -3364,7 +3380,31 @@
       "activated": "Warehouse activated.",
       "deactivated": "Warehouse deactivated.",
       "namePlaceholder": "e.g. Main Bangna Warehouse",
-      "addressPlaceholder": "Enter warehouse address..."
+      "addressPlaceholder": "Enter warehouse address...",
+      "locationsButton": "Locations/Bins",
+      "locations": {
+        "title": "Warehouse Locations / Bins",
+        "subtitle": "Manage storage locations and bins for this warehouse",
+        "createTitle": "Add New Location / Bin",
+        "code": "Location Code",
+        "codePlaceholder": "e.g. A-01-01 or ZONE-A",
+        "name": "Location Name / Description",
+        "namePlaceholder": "e.g. Zone A Rack 1 Shelf 1",
+        "createButton": "Add Location",
+        "validationRequired": "Location code and name are required",
+        "created": "Location created successfully",
+        "activated": "Location activated successfully",
+        "deactivated": "Location deactivated successfully",
+        "status": "Status",
+        "statusActive": "Active",
+        "statusInactive": "Inactive",
+        "actions": "Actions",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "defaultBadge": "Default",
+        "emptyTitle": "No locations found",
+        "emptyDescription": "Add the first location to specify inventory bins"
+      }
     },
     "stock": {
       "title": "Stock balances",
@@ -3386,9 +3426,26 @@
       "issue": "Issue stock",
       "transfer": "Transfer between warehouses",
       "adjust": "Adjust from count",
+      "return": "Return Stock",
+      "periodClose": "Period Close",
       "stockFilter": "Stock",
       "inStockOnly": "Only with stock on hand",
-      "totalValueLine": "Total value for the current filters: {amount}"
+      "totalValueLine": "Total value for the current filters: {amount}",
+      "views": {
+        "warehouseBalances": "Warehouse Balances",
+        "locationBalances": "Location & Lot Balances",
+        "serials": "Serial Numbers Inventory"
+      },
+      "location": "Location",
+      "lotNumber": "Lot Number",
+      "serialNumber": "Serial Number",
+      "status": "Status",
+      "updatedAt": "Last Updated",
+      "serialStatuses": {
+        "in_stock": "In Stock",
+        "issued": "Issued",
+        "returned_out": "Returned Out"
+      }
     },
     "movements": {
       "title": "Stock movements",
@@ -3401,6 +3458,8 @@
       "kind": "Type",
       "warehouse": "Warehouse",
       "item": "Item",
+      "location": "Location",
+      "lotSerial": "Lot / Serial",
       "quantity": "Quantity",
       "unitCost": "Cost/unit",
       "value": "Value",
@@ -3414,7 +3473,8 @@
         "transfer_in": "Transfer in",
         "adjustment_in": "Adjustment up",
         "adjustment_out": "Adjustment down",
-        "return_in": "Production return"
+        "return_in": "Production return",
+        "return_out": "Return Out"
       }
     },
     "documents": {
@@ -3422,6 +3482,17 @@
       "warehouse": "Warehouse",
       "fromWarehouse": "From warehouse",
       "toWarehouse": "To warehouse",
+      "location": "Location",
+      "fromLocation": "From location",
+      "toLocation": "To location",
+      "selectLocation": "Select a location",
+      "defaultLocation": "Default location",
+      "defaultBadge": "Default",
+      "lotNumber": "Lot number",
+      "lotNumberPlaceholder": "e.g. LOT-202610-01",
+      "serialNumbers": "Serial numbers",
+      "serialNumbersPlaceholder": "e.g. SN001, SN002 (comma-separated)",
+      "linesTitle": "Items to process",
       "selectWarehouse": "Select a warehouse",
       "warehouseRequired": "Select a warehouse.",
       "project": "Project (its own reservation is used first)",
@@ -3439,19 +3510,61 @@
       "titles": {
         "issue": "Issue stock",
         "transfer": "Transfer stock between warehouses",
-        "adjustment": "Adjust stock from a count"
+        "adjustment": "Adjust stock from a count",
+        "return": "Return stock"
       },
       "descriptions": {
         "issue": "Issued at the average cost. Stock cannot go negative and stock reserved for another project cannot be issued.",
         "transfer": "Both legs post together; the value moves at the source's average cost.",
-        "adjustment": "Use when a physical count differs from the system. A reason is required."
+        "adjustment": "Use when a physical count differs from the system. A reason is required.",
+        "return": "Record stock returned from project or usage into warehouse"
       },
       "posted": {
         "issue": "Stock issued.",
         "transfer": "Stock transferred.",
-        "adjustment": "Stock adjusted."
+        "adjustment": "Stock adjusted.",
+        "return": "Stock returned."
       },
       "reasonPlaceholder": "Enter inventory adjustment reason..."
+    },
+    "periodClose": {
+      "title": "Inventory Period Close",
+      "subtitle": "Snapshot on-hand quantities and stock valuations for periodic accounting closure",
+      "formTitle": "Close Inventory Period",
+      "formDescription": "Summarizes on-hand quantities and valuations as of period end date and locks movements in that period",
+      "periodYear": "Year",
+      "periodYearPlaceholder": "e.g. 2026",
+      "periodMonth": "Month",
+      "selectMonth": "Select month",
+      "months": {
+        "1": "January",
+        "2": "February",
+        "3": "March",
+        "4": "April",
+        "5": "May",
+        "6": "June",
+        "7": "July",
+        "8": "August",
+        "9": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December"
+      },
+      "note": "Closing note",
+      "notePlaceholder": "Optional notes about this period close...",
+      "closePeriodButton": "Close Period",
+      "validationRequired": "Please specify a valid period year and month.",
+      "closeSuccess": "Inventory period closed successfully.",
+      "historyTitle": "Period Close History",
+      "emptyHistoryTitle": "No closed periods",
+      "emptyHistoryDescription": "Closed inventory period snapshots will appear here.",
+      "period": "Period",
+      "periodEndDate": "Period end date",
+      "lineCount": "Item lines",
+      "totalOnHandQuantity": "Total on-hand qty",
+      "totalValuationAmount": "Total valuation",
+      "closedBy": "Closed by",
+      "closedAt": "Closed at"
     },
     "reserve": {
       "title": "Reserve stock for a project",

@@ -57,7 +57,9 @@ public static class ItemResponseMapper
             CanCost = p.Capabilities.CanCost,
             CanPurchase = p.Capabilities.CanPurchase,
             CanStock = p.Capabilities.CanStock,
-            CanProduce = p.Capabilities.CanProduce
+            CanProduce = p.Capabilities.CanProduce,
+            TrackLot = p.Capabilities.TrackLot,
+            TrackSerial = p.Capabilities.TrackSerial
         },
         Attributes = p.Attributes,
         AttributesSchemaVersion = p.AttributesSchemaVersion,

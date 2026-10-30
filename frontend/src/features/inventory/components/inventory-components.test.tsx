@@ -4,10 +4,13 @@ import { render, screen, fireEvent, waitFor, within } from "@testing-library/rea
 import { NextIntlClientProvider } from "next-intl";
 import thMessages from "@/messages/th.json";
 import enMessages from "@/messages/en.json";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StockDocumentModal } from "./stock-document-modal";
 import { StockReserveModal } from "./stock-reserve-modal";
 import { PutIntoStockButton } from "./put-into-stock-button";
 import { StockBalanceList } from "./stock-balance-list";
+import { WarehouseLocationsDrawer } from "./warehouse-locations-drawer";
+import { InventoryPeriodCloseModal } from "./inventory-period-close-modal";
 import * as inventoryQueries from "../api/inventory-queries";
 import * as projectQueries from "@/features/projects/api/project-queries";
 import { ApiError } from "@/lib/api/api-error";
@@ -50,15 +53,23 @@ const warehouses = { items: [
 const issue = vi.fn();
 const transfer = vi.fn();
 const adjust = vi.fn();
+const returnStock = vi.fn();
 const reserve = vi.fn();
 const receive = vi.fn();
+const closePeriod = vi.fn();
 
 function mockHooks() {
   vi.spyOn(inventoryQueries, "useWarehouseList").mockReturnValue({ data: warehouses, isLoading: false, isError: false } as unknown as ReturnType<typeof inventoryQueries.useWarehouseList>);
+  vi.spyOn(inventoryQueries, "useWarehouseLocations").mockReturnValue({ data: { items: [], pagination: { totalCount: 0 } }, isLoading: false, isError: false } as unknown as ReturnType<typeof inventoryQueries.useWarehouseLocations>);
+  vi.spyOn(inventoryQueries, "useStockLocationBalances").mockReturnValue({ data: { items: [], pagination: { totalCount: 0 } }, isLoading: false, isError: false } as unknown as ReturnType<typeof inventoryQueries.useStockLocationBalances>);
+  vi.spyOn(inventoryQueries, "useStockSerials").mockReturnValue({ data: { items: [], pagination: { totalCount: 0 } }, isLoading: false, isError: false } as unknown as ReturnType<typeof inventoryQueries.useStockSerials>);
+  vi.spyOn(inventoryQueries, "useInventoryPeriodCloses").mockReturnValue({ data: { items: [], pagination: { totalCount: 0 } }, isLoading: false, isError: false } as unknown as ReturnType<typeof inventoryQueries.useInventoryPeriodCloses>);
+  vi.spyOn(inventoryQueries, "useCloseInventoryPeriod").mockReturnValue({ mutateAsync: closePeriod, isPending: false } as unknown as ReturnType<typeof inventoryQueries.useCloseInventoryPeriod>);
   vi.spyOn(inventoryQueries, "useStockMutations").mockReturnValue({
     issue: { mutateAsync: issue, isPending: false },
     transfer: { mutateAsync: transfer, isPending: false },
     adjust: { mutateAsync: adjust, isPending: false },
+    returnStock: { mutateAsync: returnStock, isPending: false },
     reserve: { mutateAsync: reserve, isPending: false },
     receive: { mutateAsync: receive, isPending: false },
   } as unknown as ReturnType<typeof inventoryQueries.useStockMutations>);
@@ -68,7 +79,12 @@ function mockHooks() {
 }
 
 function wrap(node: React.ReactNode) {
-  return render(<NextIntlClientProvider locale="th" messages={thMessages}>{node}</NextIntlClientProvider>);
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="th" messages={thMessages}>{node}</NextIntlClientProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe("inventory status helpers and translations", () => {
@@ -167,6 +183,38 @@ describe("StockDocumentModal", () => {
     expect(await within(dialog).findByText(thMessages.inventory.errors.INVENTORY_INSUFFICIENT_STOCK)).toBeDefined();
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it("submits return stock with lot, serials, and reason calling returnStock mutation", async () => {
+    returnStock.mockResolvedValue({});
+    const onClose = vi.fn();
+    wrap(<StockDocumentModal kind="return" onClose={onClose} defaultWarehouseId="w-1" />);
+    const dialog = await screen.findByRole("dialog");
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "pick-item" }));
+    fireEvent.change(within(dialog).getByLabelText(d.quantity), { target: { value: "2" } });
+    fireEvent.change(within(dialog).getByLabelText(d.lotNumber), { target: { value: "LOT-99" } });
+    fireEvent.change(within(dialog).getByLabelText(d.serialNumbers), { target: { value: "SN-001, SN-002" } });
+    fireEvent.change(within(dialog).getByLabelText(new RegExp(d.reason)), { target: { value: "คืนเหลือจากการใช้งาน" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: d.post }));
+
+    await waitFor(() => expect(returnStock).toHaveBeenCalledTimes(1));
+    const call = returnStock.mock.calls[0][0];
+    expect(call.payload).toEqual({
+      warehouseId: "w-1",
+      projectId: null,
+      reason: "คืนเหลือจากการใช้งาน",
+      lines: [
+        {
+          itemId: "item-1",
+          quantity: 2,
+          lotNumber: "LOT-99",
+          serialNumbers: ["SN-001", "SN-002"],
+        },
+      ],
+    });
+    expect(toastMocks.success).toHaveBeenCalledWith(d.posted.return);
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
 });
 
 describe("StockReserveModal and PutIntoStockButton", () => {
@@ -248,5 +296,163 @@ describe("StockBalanceList", () => {
 
     expect(screen.queryByRole("button", { name: st.issue })).toBeNull();
     expect(screen.queryByRole("button", { name: st.reserve })).toBeNull();
+  });
+
+  it("switches views between warehouse, location balances and serials", async () => {
+    permissions.granted = ["inventory.read", "inventory.receive", "warehouses.manage"];
+    vi.spyOn(inventoryQueries, "useStockLocationBalances").mockReturnValue({
+      data: {
+        items: [
+          {
+            id: "loc-b-1",
+            warehouse: { code: "WH-1", name: "คลังหลัก" },
+            location: { code: "A-01", name: "ชั้น 1" },
+            item: { code: "PLY", nameTh: "ไม้อัด" },
+            lotNumber: "LOT-01",
+            onHand: 5,
+          },
+        ],
+        pagination: { totalCount: 1, totalPages: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof inventoryQueries.useStockLocationBalances>);
+
+    vi.spyOn(inventoryQueries, "useStockSerials").mockReturnValue({
+      data: {
+        items: [
+          {
+            id: "ser-1",
+            item: { code: "PLY", nameTh: "ไม้อัด" },
+            serialNumber: "SN-9999",
+            warehouse: { code: "WH-1" },
+            location: { code: "A-01" },
+            lotNumber: "LOT-01",
+            status: "in_stock",
+          },
+        ],
+        pagination: { totalCount: 1, totalPages: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof inventoryQueries.useStockSerials>);
+
+    wrap(<StockBalanceList />);
+
+    expect(screen.getByRole("button", { name: st.return })).toBeDefined();
+    expect(screen.getByRole("button", { name: st.periodClose })).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: st.views.locationBalances }));
+    expect(screen.getByText("A-01 · ชั้น 1")).toBeDefined();
+    expect(screen.getByText("LOT-01")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: st.views.serials }));
+    expect(screen.getByText("SN-9999")).toBeDefined();
+    expect(screen.getByText(st.serialStatuses.in_stock)).toBeDefined();
+  });
+});
+
+describe("WarehouseLocationsDrawer", () => {
+  const warehouse = { id: "w-1", code: "WH-1", name: "คลังหลัก" };
+  const createLocation = vi.fn();
+  const updateLocation = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockHooks();
+    vi.spyOn(inventoryQueries, "useWarehouseLocations").mockReturnValue({
+      data: {
+        items: [
+          { id: "loc-1", warehouseId: "w-1", code: "LOC-DEF", name: "ตำแหน่งเริ่มต้น", isDefault: true, status: "active" },
+          { id: "loc-2", warehouseId: "w-1", code: "LOC-A1", name: "โซน A ชั้น 1", isDefault: false, status: "active" },
+        ],
+        pagination: { totalCount: 2 },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof inventoryQueries.useWarehouseLocations>);
+
+    vi.spyOn(inventoryQueries, "useWarehouseLocationMutations").mockReturnValue({
+      create: { mutateAsync: createLocation, isPending: false },
+      update: { mutateAsync: updateLocation, isPending: false },
+    } as unknown as ReturnType<typeof inventoryQueries.useWarehouseLocationMutations>);
+  });
+
+  it("renders location rows and creates a new location", async () => {
+    createLocation.mockResolvedValue({});
+    wrap(<WarehouseLocationsDrawer warehouse={warehouse} isOpen={true} onClose={vi.fn()} canManage={true} />);
+
+    expect(screen.getByText("LOC-DEF")).toBeDefined();
+    expect(screen.getByText("LOC-A1")).toBeDefined();
+
+    const tLoc = thMessages.inventory.warehouses.locations;
+    fireEvent.change(screen.getByLabelText(new RegExp(tLoc.code)), { target: { value: "LOC-B1" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(tLoc.name)), { target: { value: "โซน B" } });
+    fireEvent.click(screen.getByRole("button", { name: tLoc.createButton }));
+
+    await waitFor(() => expect(createLocation).toHaveBeenCalledTimes(1));
+    expect(createLocation.mock.calls[0][0].payload).toEqual({ code: "LOC-B1", name: "โซน B" });
+    expect(toastMocks.success).toHaveBeenCalledWith(tLoc.created);
+  });
+});
+
+describe("InventoryPeriodCloseModal", () => {
+  const closePeriodMock = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockHooks();
+    vi.spyOn(inventoryQueries, "useInventoryPeriodCloses").mockReturnValue({
+      data: {
+        items: [
+          {
+            id: "pc-1",
+            periodYear: 2026,
+            periodMonth: 9,
+            periodEndDate: "2026-09-30",
+            lineCount: 15,
+            totalOnHandQuantity: 120,
+            totalValuationAmount: 250000,
+            closedBy: { displayName: "Admin User" },
+            closedAtUtc: "2026-10-01T00:00:00Z",
+          },
+        ],
+        pagination: { totalCount: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof inventoryQueries.useInventoryPeriodCloses>);
+
+    vi.spyOn(inventoryQueries, "useCloseInventoryPeriod").mockReturnValue({
+      mutateAsync: closePeriodMock,
+      isPending: false,
+    } as unknown as ReturnType<typeof inventoryQueries.useCloseInventoryPeriod>);
+  });
+
+  it("renders closed period history and submits closing a new period", async () => {
+    closePeriodMock.mockResolvedValue({});
+    const onClose = vi.fn();
+    wrap(<InventoryPeriodCloseModal isOpen={true} onClose={onClose} />);
+
+    expect(screen.getByText("2026-09")).toBeDefined();
+    expect(screen.getByText("2026-09-30")).toBeDefined();
+
+    const tClose = thMessages.inventory.periodClose;
+    fireEvent.change(screen.getByLabelText(new RegExp(tClose.periodYear.replace(/[()]/g, "\\$&"))), { target: { value: "2026" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(tClose.periodMonth)), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(tClose.note)), { target: { value: "ปิดงวดสิ้นเดือน ต.ค." } });
+    fireEvent.click(screen.getByRole("button", { name: tClose.closePeriodButton }));
+
+    await waitFor(() => expect(closePeriodMock).toHaveBeenCalledTimes(1));
+    expect(closePeriodMock.mock.calls[0][0].payload).toEqual({
+      periodYear: 2026,
+      periodMonth: 10,
+      note: "ปิดงวดสิ้นเดือน ต.ค.",
+    });
+    expect(toastMocks.success).toHaveBeenCalledWith(tClose.closeSuccess);
   });
 });

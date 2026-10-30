@@ -82,7 +82,7 @@ export function ItemEditor({ id }: ItemEditorProps) {
       code: "", codeMode: "generated", itemType: "material", categoryId: "", brandId: "", baseUnitId: "", taxCategoryCode: "",
       name: { th: "", en: "" }, description: { th: "", en: "" },
       availabilityMode: "all_branches", selectedBranchIds: [],
-      capabilities: { canSell: false, canCost: true, canPurchase: true, canStock: false, canProduce: false },
+      capabilities: { canSell: false, canCost: true, canPurchase: true, canStock: false, canProduce: false, trackLot: false, trackSerial: false },
       attributes: [], aliases: [], imageFile: null, imageAltText: "",
     },
   });
@@ -119,6 +119,8 @@ export function ItemEditor({ id }: ItemEditorProps) {
           canPurchase: item.data.capabilities?.canPurchase ?? false,
           canStock: item.data.capabilities?.canStock ?? false,
           canProduce: item.data.capabilities?.canProduce ?? false,
+          trackLot: item.data.capabilities?.trackLot ?? false,
+          trackSerial: item.data.capabilities?.trackSerial ?? false,
         },
         attributes: recordToAttributePairs(item.data.attributes),
         aliases: [], imageFile: null, imageAltText: "",
@@ -394,11 +396,19 @@ export function ItemEditor({ id }: ItemEditorProps) {
           )}
           <fieldset className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <legend className="erp-label mb-2">{t("capabilities")}</legend>
-            {([ ["canSell", "canSell"], ["canCost", "canCost"], ["canPurchase", "canPurchase"], ["canStock", "canStock"], ["canProduce", "canProduce"] ] as const).map(([key, label]) => (
+            {([
+              ["canSell", "canSell"],
+              ["canCost", "canCost"],
+              ["canPurchase", "canPurchase"],
+              ["canStock", "canStock"],
+              ["canProduce", "canProduce"],
+              ["trackLot", "trackLot"],
+              ["trackSerial", "trackSerial"],
+            ] as const).map(([key, label]) => (
               <div key={key} className="flex min-h-11 items-center border border-erp-border bg-erp-surface px-3 has-[:checked]:border-erp-navy has-[:checked]:bg-erp-surface-subtle">
                 <Checkbox
                   label={t(label)}
-                  disabled={!canSave || fieldsLocked}
+                  disabled={!canSave || fieldsLocked || ((key === "trackLot" || key === "trackSerial") && !form.watch("capabilities.canStock"))}
                   wrapperClassName="mb-0"
                   {...form.register(`capabilities.${key}`)}
                 />

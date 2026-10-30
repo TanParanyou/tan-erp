@@ -207,14 +207,14 @@
 
 ### G-12 — Inventory completion
 
-**แตะ:** `backend/src/TanErp.Domain/Inventory/` (`StockBalance.cs`, `StockDocument.cs`), `InventoryController.cs`
+**แตะ:** `backend/src/TanErp.Domain/Inventory/` (`StockBalance.cs`, `StockLocationBalance.cs`, `StockSerial.cs`, `WarehouseLocation.cs`, `InventoryPeriodClose.cs`, `StockDocument.cs`), `InventoryController.cs`, `WarehousesController.cs`, `frontend/src/features/inventory/`
 
-- [ ] Location/Bin ใต้ Warehouse; balance ต่อ (item, warehouse, location, lot)
-- [ ] Lot/Serial tracking เปิดต่อ Item (flag ใน Item Master); serial unique ต่อ item
-- [ ] Customer/Project return เข้าสต็อก
-- [ ] Period close: ล็อกเอกสารย้อนหลัง + snapshot มูลค่าสิ้นงวด
-- [ ] Migration: balance เดิม → location `DEFAULT`, lot ว่าง
-- [ ] Tests: ห้ามติดลบต่อ lot, serial ซ้ำ, ลงเอกสารในงวดที่ปิดถูกปฏิเสธ, concurrency ไม่ oversell (ใช้ pattern เดิม)
+- [x] Location/Bin ใต้ Warehouse; balance ต่อ (item, warehouse, location, lot)
+- [x] Lot/Serial tracking เปิดต่อ Item (flag `TrackLot` / `TrackSerial` ใน `ItemCapabilities`); serial unique ต่อ item
+- [x] Customer/Project return เข้าสต็อก (`POST /api/v1/inventory/returns` พร้อมกลับรายการ `actual` ใน `ProjectCostLedgerEntries`)
+- [x] Period close: ล็อกเอกสารย้อนหลัง (`INVENTORY_PERIOD_CLOSED`) + snapshot มูลค่าสิ้นงวด (`inventory.period_closes` & `inventory.period_close_lines`)
+- [x] Migration: balance เดิม → location `DEFAULT`, lot ว่าง (`20261029164903_AddInventoryCompletionG12`)
+- [x] Tests: ห้ามติดลบต่อ lot, serial ซ้ำ, ลงเอกสารในงวดที่ปิดถูกปฏิเสธ, concurrency ไม่ oversell (ใช้ pattern เดิม) (ผล: [Inventory Verification](../../05-engineering/inventory-verification.md))
 
 ### G-13 — Production completion
 

@@ -56,6 +56,11 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Procurement.SupplierInvoice> SupplierInvoices => Set<TanErp.Domain.Procurement.SupplierInvoice>();
     public DbSet<TanErp.Domain.Procurement.SupplierInvoiceLine> SupplierInvoiceLines => Set<TanErp.Domain.Procurement.SupplierInvoiceLine>();
     public DbSet<TanErp.Domain.Inventory.Warehouse> Warehouses => Set<TanErp.Domain.Inventory.Warehouse>();
+    public DbSet<TanErp.Domain.Inventory.WarehouseLocation> WarehouseLocations => Set<TanErp.Domain.Inventory.WarehouseLocation>();
+    public DbSet<TanErp.Domain.Inventory.StockLocationBalance> StockLocationBalances => Set<TanErp.Domain.Inventory.StockLocationBalance>();
+    public DbSet<TanErp.Domain.Inventory.StockSerial> StockSerials => Set<TanErp.Domain.Inventory.StockSerial>();
+    public DbSet<TanErp.Domain.Inventory.InventoryPeriodClose> InventoryPeriodCloses => Set<TanErp.Domain.Inventory.InventoryPeriodClose>();
+    public DbSet<TanErp.Domain.Inventory.InventoryPeriodCloseLine> InventoryPeriodCloseLines => Set<TanErp.Domain.Inventory.InventoryPeriodCloseLine>();
     public DbSet<TanErp.Domain.Production.Bom> Boms => Set<TanErp.Domain.Production.Bom>();
     public DbSet<TanErp.Domain.Production.BomRevision> BomRevisions => Set<TanErp.Domain.Production.BomRevision>();
     public DbSet<TanErp.Domain.Production.BomLine> BomLines => Set<TanErp.Domain.Production.BomLine>();

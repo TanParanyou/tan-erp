@@ -19,6 +19,8 @@ public sealed class ItemCapabilitiesInput
     public bool CanPurchase { get; set; } = true;
     public bool CanStock { get; set; } = true;
     public bool CanProduce { get; set; } = false;
+    public bool TrackLot { get; set; } = false;
+    public bool TrackSerial { get; set; } = false;
 }
 
 public sealed class CreateItemRequest
@@ -161,6 +163,8 @@ public sealed class ItemCapabilitiesResponse
     public bool CanPurchase { get; set; }
     public bool CanStock { get; set; }
     public bool CanProduce { get; set; }
+    public bool TrackLot { get; set; }
+    public bool TrackSerial { get; set; }
 }
 
 public sealed class ItemAliasResponse

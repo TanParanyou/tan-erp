@@ -5,7 +5,9 @@ public sealed record ItemCapabilities(
     bool CanCost,
     bool CanPurchase,
     bool CanStock,
-    bool CanProduce)
+    bool CanProduce,
+    bool TrackLot = false,
+    bool TrackSerial = false)
 {
     public bool HasAnyActive() => CanSell || CanCost || CanPurchase || CanStock || CanProduce;
 

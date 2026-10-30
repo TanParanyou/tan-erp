@@ -58,6 +58,8 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
             cb.Property(c => c.CanPurchase).HasColumnName("can_purchase").IsRequired();
             cb.Property(c => c.CanStock).HasColumnName("can_stock").IsRequired();
             cb.Property(c => c.CanProduce).HasColumnName("can_produce").IsRequired();
+            cb.Property(c => c.TrackLot).HasColumnName("track_lot").HasDefaultValue(false).IsRequired();
+            cb.Property(c => c.TrackSerial).HasColumnName("track_serial").HasDefaultValue(false).IsRequired();
         });
 
         // JSONB Converters

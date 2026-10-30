@@ -620,4 +620,275 @@ public class InventoryEndpointsTests : IAsyncLifetime
         Assert.Equal(600m, inStock.TotalValue);
         Assert.Equal(HttpStatusCode.Forbidden, (await SendAsync(HttpMethod.Get, "/api/v1/inventory/balances", token: "token-no-perm", membership: MembershipNoPermId)).StatusCode);
     }
+
+    [Fact]
+    public async Task WarehouseLocations_AutoProvisionDefault_ManageCustomBins_AndTransferBetweenBins()
+    {
+        var warehouse = await CreateWarehouseAsync("คลังแยกโซน");
+
+        var listResp = await SendAsync(HttpMethod.Get, $"/api/v1/warehouses/{warehouse.Id}/locations");
+        Assert.Equal(HttpStatusCode.OK, listResp.StatusCode);
+        var locations = (await listResp.Content.ReadFromJsonAsync<WarehouseLocationListResponse>())!;
+        var defaultLoc = Assert.Single(locations.Items);
+        Assert.Equal("DEFAULT", defaultLoc.Code);
+        Assert.True(defaultLoc.IsDefault);
+        Assert.Equal("active", defaultLoc.Status);
+
+        // Cannot deactivate DEFAULT location
+        var deactivateDefault = await SendAsync(HttpMethod.Put, $"/api/v1/warehouses/{warehouse.Id}/locations/{defaultLoc.Id}",
+            new UpdateWarehouseLocationRequest("Default Location", false), ifMatch: defaultLoc.RowVersion);
+        Assert.Equal(HttpStatusCode.Conflict, deactivateDefault.StatusCode);
+        Assert.Equal("LOCATION_IS_DEFAULT", await ErrorCodeAsync(deactivateDefault));
+
+        // Create two custom bins
+        var binA = (await (await SendAsync(HttpMethod.Post, $"/api/v1/warehouses/{warehouse.Id}/locations",
+            new CreateWarehouseLocationRequest("BIN-A1", "ชั้นวาง A1"), key: "location-create-key-a1")).Content.ReadFromJsonAsync<WarehouseLocationResponse>())!;
+        Assert.Equal("BIN-A1", binA.Code);
+        Assert.False(binA.IsDefault);
+
+        var binB = (await (await SendAsync(HttpMethod.Post, $"/api/v1/warehouses/{warehouse.Id}/locations",
+            new CreateWarehouseLocationRequest("BIN-B1", "ชั้นวาง B1"), key: "location-create-key-b1")).Content.ReadFromJsonAsync<WarehouseLocationResponse>())!;
+
+        // Duplicate code rejected
+        var dup = await SendAsync(HttpMethod.Post, $"/api/v1/warehouses/{warehouse.Id}/locations",
+            new CreateWarehouseLocationRequest("bin-a1", "ซ้ำ"), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Conflict, dup.StatusCode);
+        Assert.Equal("LOCATION_CODE_CONFLICT", await ErrorCodeAsync(dup));
+
+        // Receive stock into BIN-A1
+        var receiptId = await ReceivedGoodsReceiptAsync(10m, 500m);
+        var receiveDoc = await Doc(await SendAsync(HttpMethod.Post, "/api/v1/inventory/receipts",
+            new ReceiveGoodsReceiptRequest(receiptId, warehouse.Id, binA.Id), key: Guid.NewGuid().ToString("N")));
+        Assert.Equal(binA.Id, receiveDoc.Movements.Single().Location!.Id);
+
+        // Cannot deactivate BIN-A1 while holding stock
+        var deactivateWithStock = await SendAsync(HttpMethod.Put, $"/api/v1/warehouses/{warehouse.Id}/locations/{binA.Id}",
+            new UpdateWarehouseLocationRequest(binA.Name, false), ifMatch: binA.RowVersion);
+        Assert.Equal(HttpStatusCode.Conflict, deactivateWithStock.StatusCode);
+        Assert.Equal("LOCATION_HAS_STOCK", await ErrorCodeAsync(deactivateWithStock));
+
+        // Intra-warehouse transfer from BIN-A1 to BIN-B1
+        var transferDoc = await Doc(await SendAsync(HttpMethod.Post, "/api/v1/inventory/transfers",
+            new TransferStockRequest(warehouse.Id, warehouse.Id, "ย้ายช่องจัดเก็บ",
+                new List<StockLineRequest> { new(PlywoodId, 4m) },
+                FromLocationId: binA.Id, ToLocationId: binB.Id),
+            key: Guid.NewGuid().ToString("N")));
+        Assert.Equal(2, transferDoc.Movements.Count);
+
+        var locBalances = (await (await SendAsync(HttpMethod.Get, $"/api/v1/inventory/location-balances?warehouseId={warehouse.Id}&inStockOnly=true"))
+            .Content.ReadFromJsonAsync<StockLocationBalanceListResponse>())!;
+        Assert.Equal(2, locBalances.Items.Count);
+        Assert.Equal(6m, locBalances.Items.Single(x => x.Location.Id == binA.Id).OnHand);
+        Assert.Equal(4m, locBalances.Items.Single(x => x.Location.Id == binB.Id).OnHand);
+
+        await AssertLedgerConsistentAsync();
+    }
+
+    [Fact]
+    public async Task LotAndSerialTracking_EnforcesLotAndSerialInvariants_AcrossReceiptsIssuesTransfersAndReturns()
+    {
+        // Enable TrackLot and TrackSerial on LaminateId for this test
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var item = await db.Items.SingleAsync(i => i.Id == LaminateId);
+            item.UpdateDetails(
+                item.Code, item.ItemType, item.CategoryId, item.BrandId, item.Name, item.Description,
+                item.BaseUnitId, item.AvailabilityMode,
+                new TanErp.Domain.Items.ItemCapabilities(true, true, true, true, false, TrackLot: true, TrackSerial: true),
+                item.Attributes, item.AttributesSchemaVersion, UserId, DateTimeOffset.UtcNow, item.TaxCategoryCode);
+            await db.SaveChangesAsync();
+        }
+
+        var warehouse = await CreateWarehouseAsync("คลังคุม Serial");
+        var supplier = await CreateSupplierAsync("ซัพพลายเออร์ Serial");
+        var po = await ApprovedOrderAsync(new PurchaseOrderRequest(
+            supplier.Id, null, new DateOnly(2026, 11, 15), "PO Serial",
+            new List<PurchaseOrderLineRequest> { new(LaminateId, 3m, 1000m) }));
+        var receivedPo = await OrderResult(await ReceiveAsync(po.Id, Guid.NewGuid().ToString("N"), (po.Lines[0].Id, 3m)), HttpStatusCode.Created);
+        var grId = receivedPo.Receipts.Single().Id;
+
+        // 1. Receiving without lotNumber fails with INVENTORY_LOT_REQUIRED
+        var noLot = await SendAsync(HttpMethod.Post, "/api/v1/inventory/receipts",
+            new ReceiveGoodsReceiptRequest(grId, warehouse.Id), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, noLot.StatusCode);
+        Assert.Equal("INVENTORY_LOT_REQUIRED", await ErrorCodeAsync(noLot));
+
+        // 2. Receiving with wrong serial count fails with INVENTORY_SERIAL_COUNT_MISMATCH
+        var wrongSerials = await SendAsync(HttpMethod.Post, "/api/v1/inventory/receipts",
+            new ReceiveGoodsReceiptRequest(grId, warehouse.Id, null, new List<ReceiveGoodsReceiptLineRequest>
+            {
+                new(LaminateId, 3m, null, "LOT-2026-01", new List<string> { "SN-001", "SN-002" })
+            }), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, wrongSerials.StatusCode);
+        Assert.Equal("INVENTORY_SERIAL_COUNT_MISMATCH", await ErrorCodeAsync(wrongSerials));
+
+        // 3. Valid receipt with lot and 3 serials succeeds
+        var receiptDoc = await Doc(await SendAsync(HttpMethod.Post, "/api/v1/inventory/receipts",
+            new ReceiveGoodsReceiptRequest(grId, warehouse.Id, null, new List<ReceiveGoodsReceiptLineRequest>
+            {
+                new(LaminateId, 3m, null, "lot-2026-01", new List<string> { "SN-001", "SN-002", "SN-003" })
+            }), key: Guid.NewGuid().ToString("N")));
+        var recMov = Assert.Single(receiptDoc.Movements);
+        Assert.Equal("LOT-2026-01", recMov.LotNumber);
+        Assert.Equal(new[] { "SN-001", "SN-002", "SN-003" }, recMov.SerialNumbers);
+
+        // 4. Duplicate serial on adjustment in fails with INVENTORY_SERIAL_DUPLICATE
+        var dupSerial = await SendAsync(HttpMethod.Post, "/api/v1/inventory/adjustments",
+            new AdjustStockRequest(warehouse.Id, "พบเพิ่ม", new List<AdjustmentLineRequest>
+            {
+                new(LaminateId, 4m, 1000m, null, "LOT-2026-01", new List<string> { "sn-001" })
+            }), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Conflict, dupSerial.StatusCode);
+        Assert.Equal("INVENTORY_SERIAL_DUPLICATE", await ErrorCodeAsync(dupSerial));
+
+        // 5. Issuing from wrong lot fails with INVENTORY_INSUFFICIENT_STOCK
+        var wrongLotIssue = await SendAsync(HttpMethod.Post, "/api/v1/inventory/issues",
+            new IssueStockRequest(warehouse.Id, null, "เบิกผิด Lot", new List<StockLineRequest>
+            {
+                new(LaminateId, 1m, LotNumber: "LOT-OTHER", SerialNumbers: new List<string> { "SN-001" })
+            }), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, wrongLotIssue.StatusCode);
+        Assert.Equal("INVENTORY_INSUFFICIENT_STOCK", await ErrorCodeAsync(wrongLotIssue));
+
+        // 6. Issuing unknown serial fails with INVENTORY_SERIAL_NOT_AVAILABLE
+        var unknownSerialIssue = await SendAsync(HttpMethod.Post, "/api/v1/inventory/issues",
+            new IssueStockRequest(warehouse.Id, null, "เบิกผิด Serial", new List<StockLineRequest>
+            {
+                new(LaminateId, 1m, LotNumber: "LOT-2026-01", SerialNumbers: new List<string> { "SN-999" })
+            }), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, unknownSerialIssue.StatusCode);
+        Assert.Equal("INVENTORY_SERIAL_NOT_AVAILABLE", await ErrorCodeAsync(unknownSerialIssue));
+
+        // 7. Valid issue of 2 serials succeeds and marks them issued
+        await Doc(await SendAsync(HttpMethod.Post, "/api/v1/inventory/issues",
+            new IssueStockRequest(warehouse.Id, null, "เบิกจริง", new List<StockLineRequest>
+            {
+                new(LaminateId, 2m, LotNumber: "LOT-2026-01", SerialNumbers: new List<string> { "SN-001", "SN-002" })
+            }), key: Guid.NewGuid().ToString("N")));
+
+        var inStockSerials = (await (await SendAsync(HttpMethod.Get, $"/api/v1/inventory/serials?itemId={LaminateId}&status=in_stock"))
+            .Content.ReadFromJsonAsync<StockSerialListResponse>())!;
+        Assert.Single(inStockSerials.Items);
+        Assert.Equal("SN-003", inStockSerials.Items[0].SerialNumber);
+
+        var issuedSerials = (await (await SendAsync(HttpMethod.Get, $"/api/v1/inventory/serials?itemId={LaminateId}&status=issued"))
+            .Content.ReadFromJsonAsync<StockSerialListResponse>())!;
+        Assert.Equal(2, issuedSerials.Items.Count);
+
+        await AssertLedgerConsistentAsync();
+    }
+
+    [Fact]
+    public async Task ProjectStockReturn_ReversesProjectMaterialCost_AndRejectsExcessReturn()
+    {
+        var warehouse = await CreateWarehouseAsync("คลังรับคืนโครงการ");
+        await PutIntoStockAsync(await ReceivedGoodsReceiptAsync(10m, 1000m), warehouse.Id);
+
+        var projectId = await CreateProjectAsync();
+        await ActivateAsync(projectId, 50000m);
+
+        // Issue 6 units (@ 1,000 = 6,000 THB) to the project
+        var issueDoc = await Doc(await IssueAsync(warehouse.Id, 6m, projectId));
+        var controlAfterIssue = await GetControlAsync(projectId);
+        Assert.Equal(6000m, controlAfterIssue.Budget.ActualAmount);
+
+        // Return 2 units from the project back into stock
+        var returnDoc = await Doc(await SendAsync(HttpMethod.Post, "/api/v1/inventory/returns",
+            new ReturnStockRequest(
+                warehouse.Id,
+                projectId,
+                "ของเหลือจากหน้างาน",
+                new List<ReturnStockLineRequest> { new(PlywoodId, 2m) },
+                SourceIssueDocumentId: issueDoc.Id),
+            key: "project-return-key-0001"));
+
+        Assert.StartsWith("SRT", returnDoc.Number);
+        Assert.Equal("return", returnDoc.DocumentType);
+        Assert.Equal("project_return", returnDoc.SourceType);
+        Assert.Equal(issueDoc.Id, returnDoc.SourceId);
+        var mov = Assert.Single(returnDoc.Movements);
+        Assert.Equal("return_in", mov.Kind);
+        Assert.Equal(2m, mov.QuantityDelta);
+        Assert.Equal(1000m, mov.UnitCost);
+        Assert.Equal(2000m, mov.ValueDelta);
+        Assert.Equal(6m, mov.OnHandAfter);
+
+        // Project actual material cost reduced from 6,000 to 4,000 via reversal entry
+        var controlAfterReturn = await GetControlAsync(projectId);
+        Assert.Equal(4000m, controlAfterReturn.Budget.ActualAmount);
+        Assert.Contains(controlAfterReturn.CostLedger, e => e.SourceType == "stock_return" && e.IsReversal && e.Amount == -2000m);
+
+        // Returning 5 more when only 4 net remain issued fails with INVENTORY_RETURN_EXCEEDS_ISSUED
+        var excessReturn = await SendAsync(HttpMethod.Post, "/api/v1/inventory/returns",
+            new ReturnStockRequest(
+                warehouse.Id,
+                projectId,
+                "คืนเกินยอดเบิก",
+                new List<ReturnStockLineRequest> { new(PlywoodId, 5m) },
+                SourceIssueDocumentId: issueDoc.Id),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, excessReturn.StatusCode);
+        Assert.Equal("INVENTORY_RETURN_EXCEEDS_ISSUED", await ErrorCodeAsync(excessReturn));
+
+        await AssertLedgerConsistentAsync();
+    }
+
+    [Fact]
+    public async Task PeriodClose_SnapshotsValuation_AndBlocksBackdatedMovements()
+    {
+        var warehouse = await CreateWarehouseAsync("คลังปิดงวด");
+        await PutIntoStockAsync(await ReceivedGoodsReceiptAsync(8m, 500m), warehouse.Id);
+
+        // Close period 2025-12
+        var closeResp = await SendAsync(HttpMethod.Post, "/api/v1/inventory/period-closes",
+            new CloseInventoryPeriodRequest(2025, 12, "ปิดงวดสิ้นปี 2025"), key: "period-close-2025-12");
+        Assert.Equal(HttpStatusCode.Created, closeResp.StatusCode);
+        var closed = (await closeResp.Content.ReadFromJsonAsync<InventoryPeriodCloseResponse>())!;
+        Assert.Equal(2025, closed.PeriodYear);
+        Assert.Equal(12, closed.PeriodMonth);
+        Assert.Equal(new DateOnly(2025, 12, 31), closed.PeriodEndDate);
+        Assert.True(closed.LineCount >= 1);
+        Assert.Contains(closed.Lines, l => l.Warehouse.Id == warehouse.Id && l.Item.Id == PlywoodId && l.OnHandQuantity == 8m && l.TotalValue == 4000m);
+
+        // Closing the same period again with a new key fails with 409 INVENTORY_PERIOD_ALREADY_CLOSED
+        var duplicateClose = await SendAsync(HttpMethod.Post, "/api/v1/inventory/period-closes",
+            new CloseInventoryPeriodRequest(2025, 12, "ปิดซ้ำ"), key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Conflict, duplicateClose.StatusCode);
+        Assert.Equal("INVENTORY_PERIOD_ALREADY_CLOSED", await ErrorCodeAsync(duplicateClose));
+
+        // Backdated issue on 2025-12-31 is blocked with 409 INVENTORY_PERIOD_CLOSED
+        var backdatedIssue = await SendAsync(HttpMethod.Post, "/api/v1/inventory/issues",
+            new IssueStockRequest(
+                warehouse.Id,
+                null,
+                "เบิกย้อนหลัง",
+                new List<StockLineRequest> { new(PlywoodId, 1m) },
+                OccurredAtUtc: new DateTimeOffset(2025, 12, 31, 12, 0, 0, TimeSpan.Zero)),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Conflict, backdatedIssue.StatusCode);
+        Assert.Equal("INVENTORY_PERIOD_CLOSED", await ErrorCodeAsync(backdatedIssue));
+
+        // Issue in open period (2026-01-02) succeeds
+        var openPeriodIssue = await SendAsync(HttpMethod.Post, "/api/v1/inventory/issues",
+            new IssueStockRequest(
+                warehouse.Id,
+                null,
+                "เบิกในงวดเปิด",
+                new List<StockLineRequest> { new(PlywoodId, 2m) },
+                OccurredAtUtc: new DateTimeOffset(2026, 1, 2, 9, 0, 0, TimeSpan.Zero)),
+            key: Guid.NewGuid().ToString("N"));
+        Assert.Equal(HttpStatusCode.Created, openPeriodIssue.StatusCode);
+
+        var listCloses = (await (await SendAsync(HttpMethod.Get, "/api/v1/inventory/period-closes"))
+            .Content.ReadFromJsonAsync<InventoryPeriodCloseListResponse>())!;
+        Assert.Contains(listCloses.Items, c => c.Id == closed.Id);
+
+        var detailClose = (await (await SendAsync(HttpMethod.Get, $"/api/v1/inventory/period-closes/{closed.Id}"))
+            .Content.ReadFromJsonAsync<InventoryPeriodCloseResponse>())!;
+        Assert.Equal(closed.Id, detailClose.Id);
+        Assert.NotEmpty(detailClose.Lines);
+
+        await AssertLedgerConsistentAsync();
+    }
 }

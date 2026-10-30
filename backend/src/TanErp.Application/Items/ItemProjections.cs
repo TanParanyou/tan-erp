@@ -8,7 +8,7 @@ public sealed record BrandSummaryDto(Guid Id, string Code, LocalizedTextDto Name
 
 public sealed record UnitSummaryDto(Guid Id, string Code, string Symbol, LocalizedTextDto Name);
 
-public sealed record ItemCapabilitiesDto(bool CanSell, bool CanCost, bool CanPurchase, bool CanStock, bool CanProduce);
+public sealed record ItemCapabilitiesDto(bool CanSell, bool CanCost, bool CanPurchase, bool CanStock, bool CanProduce, bool TrackLot = false, bool TrackSerial = false);
 
 public sealed record ItemAliasDto(Guid Id, LocalizedTextDto Alias, string Status);
 

@@ -13,7 +13,15 @@ export const itemFormSchema = z.object({
   description: z.object({ th: z.string().optional(), en: z.string().optional() }),
   availabilityMode: z.enum(["all_branches", "selected_branches"]),
   selectedBranchIds: z.array(z.string().uuid()),
-  capabilities: z.object({ canSell: z.boolean(), canCost: z.boolean(), canPurchase: z.boolean(), canStock: z.boolean(), canProduce: z.boolean() }),
+  capabilities: z.object({
+    canSell: z.boolean(),
+    canCost: z.boolean(),
+    canPurchase: z.boolean(),
+    canStock: z.boolean(),
+    canProduce: z.boolean(),
+    trackLot: z.boolean().optional(),
+    trackSerial: z.boolean().optional(),
+  }),
   attributes: z.array(
     z.object({
       key: z.string().trim(),

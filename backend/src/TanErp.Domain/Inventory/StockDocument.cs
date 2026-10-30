@@ -71,6 +71,7 @@ public class StockMovement : Entity
     public Guid OrganizationId { get; private set; }
     public Guid StockDocumentId { get; private set; }
     public Guid WarehouseId { get; private set; }
+    public Guid? LocationId { get; private set; }
     public Guid ItemId { get; private set; }
     public Guid UnitId { get; private set; }
     public string Kind { get; private set; } = string.Empty;
@@ -78,6 +79,8 @@ public class StockMovement : Entity
     public decimal UnitCost { get; private set; }
     public decimal ValueDelta { get; private set; }
     public decimal OnHandAfter { get; private set; }
+    public string LotNumber { get; private set; } = string.Empty;
+    public string? SerialNumbersJson { get; private set; }
     public DateTimeOffset OccurredAtUtc { get; private set; }
     public DateTimeOffset PostedAtUtc { get; private set; }
 
@@ -85,7 +88,8 @@ public class StockMovement : Entity
 
     public StockMovement(
         Guid id, Guid organizationId, Guid stockDocumentId, Guid warehouseId, Guid itemId, Guid unitId, string kind,
-        decimal quantityDelta, decimal unitCost, decimal valueDelta, decimal onHandAfter, DateTimeOffset occurredAtUtc, DateTimeOffset postedAtUtc) : base(id)
+        decimal quantityDelta, decimal unitCost, decimal valueDelta, decimal onHandAfter, DateTimeOffset occurredAtUtc, DateTimeOffset postedAtUtc,
+        Guid? locationId = null, string? lotNumber = null, string? serialNumbersJson = null) : base(id)
     {
         if (!StockMovementKind.All.Contains(kind)) throw new ArgumentException("Unknown movement kind.", nameof(kind));
         if (quantityDelta == 0) throw new InventoryDomainException("INVENTORY_QUANTITY_INVALID", "A movement cannot be zero.");
@@ -93,6 +97,7 @@ public class StockMovement : Entity
         OrganizationId = organizationId;
         StockDocumentId = stockDocumentId;
         WarehouseId = warehouseId;
+        LocationId = locationId;
         ItemId = itemId;
         UnitId = unitId;
         Kind = kind;
@@ -100,6 +105,8 @@ public class StockMovement : Entity
         UnitCost = unitCost;
         ValueDelta = valueDelta;
         OnHandAfter = onHandAfter;
+        LotNumber = string.IsNullOrWhiteSpace(lotNumber) ? string.Empty : lotNumber.Trim().ToUpperInvariant();
+        SerialNumbersJson = string.IsNullOrWhiteSpace(serialNumbersJson) ? null : serialNumbersJson;
         OccurredAtUtc = occurredAtUtc.ToUniversalTime();
         PostedAtUtc = postedAtUtc.ToUniversalTime();
     }

@@ -16,6 +16,23 @@ public static class WarehouseStatus
     public const string Inactive = "inactive";
 }
 
+public static class WarehouseLocationStatus
+{
+    public const string Active = "active";
+    public const string Inactive = "inactive";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { Active, Inactive };
+}
+
+public static class StockSerialStatus
+{
+    public const string InStock = "in_stock";
+    public const string Issued = "issued";
+    public const string ReturnedOut = "returned_out";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { InStock, Issued, ReturnedOut };
+}
+
 public static class StockDocumentType
 {
     public const string Receipt = "receipt";
@@ -34,6 +51,7 @@ public static class StockSourceType
     public const string WorkOrderIssue = "work_order_issue";
     public const string WorkOrderReturn = "work_order_return";
     public const string WorkOrderCompletion = "work_order_completion";
+    public const string ProjectReturn = "project_return";
 }
 
 public static class StockMovementKind

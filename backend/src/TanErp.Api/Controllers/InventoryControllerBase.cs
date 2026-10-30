@@ -61,11 +61,14 @@ public abstract class InventoryControllerBase : ControllerBase
 
     protected static InventoryWarehouseRefResponse ToResponse(InventoryWarehouseRef w) => new(w.Id, w.Code, w.Name);
 
+    protected static InventoryLocationRefResponse ToResponse(InventoryLocationRef l) => new(l.Id, l.Code, l.Name, l.IsDefault);
+
     protected static InventoryItemRefResponse ToResponse(InventoryItemRef i) => new(i.Id, i.Code, i.NameTh, i.UnitCode);
 
     protected static StockMovementResponse ToResponse(StockMovementProjection m) => new(
         m.Id, m.StockDocumentId, m.DocumentType, m.DocumentNumber, ToResponse(m.Warehouse), ToResponse(m.Item), m.Kind,
-        m.QuantityDelta, m.UnitCost, m.ValueDelta, m.OnHandAfter, m.OccurredAtUtc, m.PostedAtUtc);
+        m.QuantityDelta, m.UnitCost, m.ValueDelta, m.OnHandAfter, m.OccurredAtUtc, m.PostedAtUtc,
+        m.Location is null ? null : ToResponse(m.Location), m.LotNumber, m.SerialNumbers);
 
     protected static StockDocumentResponse ToResponse(StockDocumentProjection d) => new(
         d.Id, d.DocumentType, d.Number, ToResponse(d.Warehouse), d.ToWarehouse is null ? null : ToResponse(d.ToWarehouse),
@@ -74,4 +77,17 @@ public abstract class InventoryControllerBase : ControllerBase
 
     protected static ReservationResponse ToResponse(ReservationProjection r) => new(
         r.Id, ToResponse(r.Warehouse), ToResponse(r.Item), r.ProjectId, r.ProjectCode, r.Quantity, r.Status, r.Note, r.RowVersion, r.CreatedAtUtc);
+
+    protected static InventoryPeriodCloseResponse ToResponse(InventoryPeriodCloseProjection p) => new(
+        p.Id,
+        p.PeriodYear,
+        p.PeriodMonth,
+        p.PeriodEndDate,
+        p.Note,
+        p.LineCount,
+        p.TotalOnHandQuantity,
+        p.TotalValuationAmount,
+        new InventoryPersonResponse(p.ClosedBy.Id, p.ClosedBy.DisplayName, p.ClosedBy.Email),
+        p.ClosedAtUtc,
+        p.Lines.Select(l => new InventoryPeriodCloseLineResponse(l.Id, ToResponse(l.Warehouse), ToResponse(l.Item), l.OnHandQuantity, l.AverageCost, l.TotalValue)).ToList());
 }
