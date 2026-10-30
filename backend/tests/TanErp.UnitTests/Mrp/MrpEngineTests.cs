@@ -146,4 +146,129 @@ public class MrpEngineTests
         shortage.Decide(false, Guid.NewGuid(), maker, DateTimeOffset.UtcNow);
         Assert.Equal("rejected", shortage.Status);
     }
+
+    [Fact]
+    public void SafetyStock_ReservesBufferAndAddsSafetyStockDeficitToFirstNeedDate()
+    {
+        // Case 1: Available stock (80) > SafetyStock (50) -> only 30 is usable above safety stock.
+        // Demand of 40 uses 30 from stock and orders 10.
+        var itemsWithBuffer = new[]
+        {
+            new MrpItemInput(Screw, "SCR", CanPurchase: true, SafetyStock: 50m)
+        };
+        var snapBuffer = new MrpSnapshot(
+            Parameters(),
+            itemsWithBuffer,
+            Array.Empty<MrpBomInput>(),
+            new[] { new MrpDemandInput(Screw, 40m, Due, MrpDemandSource.Manual, "SO-BUF") },
+            Array.Empty<MrpSupplyInput>(),
+            new[] { new MrpStockInput(Screw, 80m) });
+
+        var planBuffer = MrpEngine.Plan(snapBuffer);
+        var orderBuffer = Assert.Single(planBuffer.Orders);
+        Assert.Equal(40m, orderBuffer.GrossRequirement);
+        Assert.Equal(30m, orderBuffer.StockUsed);
+        Assert.Equal(10m, orderBuffer.Quantity);
+
+        // Case 2: Available stock (30) < SafetyStock (50) -> deficit of 20 is added to first need date with reason "safety_stock".
+        var snapDeficit = new MrpSnapshot(
+            Parameters(),
+            itemsWithBuffer,
+            Array.Empty<MrpBomInput>(),
+            new[] { new MrpDemandInput(Screw, 40m, Due, MrpDemandSource.Manual, "SO-DEF") },
+            Array.Empty<MrpSupplyInput>(),
+            new[] { new MrpStockInput(Screw, 30m) });
+
+        var planDeficit = MrpEngine.Plan(snapDeficit);
+        var orderDeficit = Assert.Single(planDeficit.Orders);
+        Assert.Equal(60m, orderDeficit.GrossRequirement);
+        Assert.Equal(0m, orderDeficit.StockUsed);
+        Assert.Equal(60m, orderDeficit.Quantity);
+        Assert.Contains(orderDeficit.Reasons, r => r.SourceType == MrpDemandSource.SafetyStock && r.Quantity == 20m);
+    }
+
+    [Fact]
+    public void MinOrderQuantityAndLotMultiple_RoundUpOrderAndCarryExcessToLaterDemands()
+    {
+        // Screw has MOQ = 50, LotMultiple = 25.
+        // Day 1 demand = 30 -> shortage 30 -> raised to MOQ 50 (already multiple of 25) -> excess 20 carried to Day 2.
+        // Day 2 demand = 50 -> nets 20 excess -> shortage 30 -> raised to MOQ 50 -> orders 50.
+        // Day 3 demand = 80 -> nets 20 excess -> shortage 60 -> above MOQ 50, rounded up to LotMultiple 25 -> orders 75.
+        var items = new[]
+        {
+            new MrpItemInput(Screw, "SCR", CanPurchase: true, SafetyStock: 0m, MinOrderQuantity: 50m, LotMultiple: 25m)
+        };
+        var demands = new[]
+        {
+            new MrpDemandInput(Screw, 30m, Due, MrpDemandSource.Manual, "D1"),
+            new MrpDemandInput(Screw, 50m, Due.AddDays(5), MrpDemandSource.Manual, "D2"),
+            new MrpDemandInput(Screw, 80m, Due.AddDays(10), MrpDemandSource.Manual, "D3"),
+        };
+
+        var plan = MrpEngine.Plan(new MrpSnapshot(Parameters(), items, Array.Empty<MrpBomInput>(), demands, Array.Empty<MrpSupplyInput>(), Array.Empty<MrpStockInput>()));
+        Assert.Equal(3, plan.Orders.Count);
+
+        Assert.Equal(50m, plan.Orders[0].Quantity);
+        Assert.Equal(0m, plan.Orders[0].StockUsed);
+
+        Assert.Equal(50m, plan.Orders[1].Quantity);
+        Assert.Equal(20m, plan.Orders[1].StockUsed);
+
+        Assert.Equal(75m, plan.Orders[2].Quantity);
+        Assert.Equal(20m, plan.Orders[2].StockUsed);
+    }
+
+    [Fact]
+    public void ItemSpecificLeadTimeAndWorkingCalendarHolidays_SkipNonWorkingDaysOnOrderBy()
+    {
+        // Screw has item-specific LeadTimeDays = 2 (overriding run's PurchaseLeadTimeDays = 7).
+        // Due = 2026-10-20. Holidays = 2026-10-19 and 2026-10-18.
+        // Counting back 2 working days from 2026-10-20 skips 10-19 and 10-18, landing on 2026-10-16.
+        var items = new[]
+        {
+            new MrpItemInput(Screw, "SCR", CanPurchase: true, LeadTimeDays: 2)
+        };
+        var holidays = new[] { new DateOnly(2026, 10, 18), new DateOnly(2026, 10, 19) };
+        var snap = new MrpSnapshot(
+            Parameters(purchase: 7, production: 3),
+            items,
+            Array.Empty<MrpBomInput>(),
+            new[] { new MrpDemandInput(Screw, 10m, Due, MrpDemandSource.Manual, "SO-CAL") },
+            Array.Empty<MrpSupplyInput>(),
+            Array.Empty<MrpStockInput>(),
+            holidays);
+
+        var plan = MrpEngine.Plan(snap);
+        var order = Assert.Single(plan.Orders);
+        Assert.Equal(new DateOnly(2026, 10, 16), order.OrderBy);
+    }
+
+    [Fact]
+    public void InputHash_PreservesLegacyHashWhenDefault_AndChangesWhenPlanningParametersOrHolidaysChange()
+    {
+        var baseSnap = Snapshot();
+        var explicitDefaultSnap = new MrpSnapshot(
+            Parameters(),
+            Items.Select(i => new MrpItemInput(i.ItemId, i.Code, i.CanPurchase, 0m, 0m, 0m, null)).ToList(),
+            Boms,
+            baseSnap.Demands,
+            baseSnap.Supplies,
+            baseSnap.Stock,
+            Array.Empty<DateOnly>());
+
+        var baseHash = MrpEngine.HashOf(baseSnap);
+        Assert.Equal(baseHash, MrpEngine.HashOf(explicitDefaultSnap));
+
+        var withSafetyStock = explicitDefaultSnap with
+        {
+            Items = Items.Select(i => i.ItemId == Screw ? i with { SafetyStock = 10m } : i).ToList()
+        };
+        Assert.NotEqual(baseHash, MrpEngine.HashOf(withSafetyStock));
+
+        var withHoliday = explicitDefaultSnap with
+        {
+            Holidays = new[] { new DateOnly(2026, 10, 15) }
+        };
+        Assert.NotEqual(baseHash, MrpEngine.HashOf(withHoliday));
+    }
 }

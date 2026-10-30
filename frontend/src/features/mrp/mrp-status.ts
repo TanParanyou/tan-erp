@@ -14,7 +14,15 @@ export function isMrpRecommendationStatus(value: string | null | undefined): val
   return MRP_RECOMMENDATION_STATUSES.some((status) => status === value);
 }
 
-export const MRP_REASON_SOURCES = ["manual", "work_order", "dependent"] as const;
+export const MRP_DEMAND_SOURCES = ["manual", "work_order", "dependent", "safety_stock"] as const;
+
+export type MrpDemandSourceValue = (typeof MRP_DEMAND_SOURCES)[number];
+
+export function isMrpDemandSource(value: string | null | undefined): value is MrpDemandSourceValue {
+  return MRP_DEMAND_SOURCES.some((source) => source === value);
+}
+
+export const MRP_REASON_SOURCES = ["manual", "work_order", "dependent", "safety_stock"] as const;
 
 export type MrpReasonSourceValue = (typeof MRP_REASON_SOURCES)[number];
 
@@ -49,6 +57,10 @@ const KNOWN_ERROR_CODES = [
   "MRP_FIELD_INVALID",
   "MRP_DEMAND_INVALID",
   "MRP_CONVERT_INPUT_REQUIRED",
+  "MRP_PLANNING_PARAMETER_INVALID",
+  "MRP_HOLIDAY_ALREADY_EXISTS",
+  "MRP_HOLIDAY_INVALID",
+  "MRP_UNIT_CONVERSION_NOT_FOUND",
   "PURCHASE_ORDER_ITEM_NOT_PURCHASABLE",
   "PURCHASE_ORDER_SUPPLIER_INACTIVE",
   "PRODUCTION_BOM_NOT_APPROVED",

@@ -1529,4 +1529,28 @@
   <data name="PRODUCTION_SUBCONTRACT_COST_EXCEEDS_PO_DETAIL" xml:space="preserve">
     <value>The subcontract cost amount cannot exceed the total amount of the referenced purchase order.</value>
   </data>
+  <data name="MRP_PLANNING_PARAMETER_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid planning parameters</value>
+  </data>
+  <data name="MRP_PLANNING_PARAMETER_INVALID_DETAIL" xml:space="preserve">
+    <value>Safety stock, minimum order quantity, and lot multiple must be non-negative, and lead time days must be between 0 and 365.</value>
+  </data>
+  <data name="MRP_HOLIDAY_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>Holiday already exists</value>
+  </data>
+  <data name="MRP_HOLIDAY_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>A working calendar holiday already exists on this date.</value>
+  </data>
+  <data name="MRP_HOLIDAY_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid holiday data</value>
+  </data>
+  <data name="MRP_HOLIDAY_INVALID_DETAIL" xml:space="preserve">
+    <value>Provide a valid holiday date and name (up to 200 characters).</value>
+  </data>
+  <data name="MRP_UNIT_CONVERSION_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>Unit conversion not found</value>
+  </data>
+  <data name="MRP_UNIT_CONVERSION_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>No active unit conversion to the item's base unit was found for the specified demand unit.</value>
+  </data>
 </root>

@@ -56,7 +56,7 @@
 | G-11 | Purchase Request, Supplier Return, Supplier Invoice (3-way match) | C | CP-10, G-03 | Procurement + Finance | [แผน G-11](2026-10-29-g11-procurement-completion.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/procurement-verification.md)) |
 | G-12 | Inventory Location/Lot/Serial, Period Close, Returns | C | CP-11 | Warehouse + Finance | [แผน G-12](2026-10-29-g12-inventory-completion.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/inventory-verification.md)) |
 | G-13 | Production Routing/Work Center/Capacity, Labor, Subcontracting | C | CP-12, G-20 | Production | [แผน G-13](2026-10-30-g13-production-completion.md) — Implemented 2026-10-30 (Unit 679/679 + Integration 6/6 + Vitest 17/17 passed; [Verification](../../05-engineering/production-verification.md)) |
-| G-14 | MRP Safety Stock / MOQ / Item Lead Time / Calendar / Unit | C | CP-13, G-12, G-13 | Planner + Procurement | — |
+| G-14 | MRP Safety Stock / MOQ / Item Lead Time / Calendar / Unit | C | CP-13, G-12, G-13 | Planner + Procurement | [แผน G-14](2026-10-30-g14-mrp-completion.md) — Implemented 2026-10-30 (Unit 683/683 + Integration 10/10 + Vitest 11/11 passed; [Verification](../../05-engineering/mrp-verification.md)) |
 | G-15 | Thai Tax: VAT, WHT, Retention, Tax Invoice, Credit Note | D | CP-15, G-04 | Finance/Accounting | — |
 | G-16 | Credit Exposure + AR Aging gate | D | CP-15, G-15 | Finance | — |
 | G-17 | Accounting Connector จริง (+ Journal Export ชั่วคราว) | D | CP-15, G-15 | Finance + Security | — |
@@ -228,13 +228,13 @@
 
 ### G-14 — MRP completion
 
-**แตะ:** `backend/src/TanErp.Domain/Mrp/MrpEngine.cs`, `MrpValues.cs`
+**แตะ:** `backend/src/TanErp.Domain/Mrp/` (`MrpEngine.cs`, `MrpValues.cs`, `MrpItemPlanningParameter.cs`, `WorkingCalendarHoliday.cs`), `MrpRunsController.cs`, `ProductionStore.cs`, `frontend/src/features/mrp/`
 
-- [ ] Planning parameter ต่อ Item/Warehouse: safety stock, MOQ, lot multiple, lead time (แทน lead time ระดับ supplier อย่างเดียว)
-- [ ] Working calendar (วันหยุด) สำหรับ offset
-- [ ] แปลงหน่วยด้วย conversion ของ Item Master
-- [ ] เพิ่ม parameter เข้า input hash; run เก่าคง reproducible
-- [ ] Unit tests ของ engine (pure): safety stock, MOQ ปัดขึ้น, lot multiple, ข้ามวันหยุด — เขียนก่อน implementation
+- [x] Planning parameter ต่อ Item/Warehouse: safety stock, MOQ, lot multiple, lead time (แทน lead time ระดับ supplier อย่างเดียว)
+- [x] Working calendar (วันหยุด) สำหรับ offset และเชื่อมต่อ `G-13` Daily Capacity View (`CapacityHours = 0` ในวันหยุด)
+- [x] แปลงหน่วยด้วย conversion ของ Item Master (`422 MRP_UNIT_CONVERSION_NOT_FOUND` เมื่อไม่พบตัวคูณ)
+- [x] เพิ่ม parameter เข้า input hash; run เก่าคง reproducible
+- [x] Unit tests ของ engine (pure): safety stock, MOQ ปัดขึ้น, lot multiple, ข้ามวันหยุด — เขียนก่อน implementation (ผล: [MRP Verification](../../05-engineering/mrp-verification.md))
 
 ### G-15 — Thai Tax
 

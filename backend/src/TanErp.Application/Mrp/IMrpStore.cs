@@ -11,4 +11,12 @@ public interface IMrpStore
     Task<Result<MrpRunProjection>> DecideAsync(RequestAccessContext access, Guid runId, Guid recommendationId, Guid expectedVersion, bool approve, string traceId, CancellationToken ct = default);
     Task<MrpConvertTarget?> GetConvertTargetAsync(Guid organizationId, Guid runId, Guid recommendationId, CancellationToken ct = default);
     Task<Result<MrpRunProjection>> MarkConvertedAsync(RequestAccessContext access, Guid runId, Guid recommendationId, Guid expectedVersion, string type, Guid targetId, string targetNumber, string traceId, CancellationToken ct = default);
+
+    Task<PagedMrpPlanningParameters> ListPlanningParametersAsync(Guid organizationId, MrpPlanningParameterListQuery query, CancellationToken ct = default);
+    Task<Result<MrpPlanningParameterProjection>> UpsertPlanningParameterAsync(RequestAccessContext access, MrpPlanningParameterInput input, string traceId, CancellationToken ct = default);
+    Task<Result<bool>> DeletePlanningParameterAsync(RequestAccessContext access, Guid id, string traceId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<WorkingCalendarHolidayProjection>> ListHolidaysAsync(Guid organizationId, Guid? branchId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default);
+    Task<Result<WorkingCalendarHolidayProjection>> CreateHolidayAsync(RequestAccessContext access, WorkingCalendarHolidayInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default);
+    Task<Result<bool>> DeleteHolidayAsync(RequestAccessContext access, Guid id, string traceId, CancellationToken ct = default);
 }

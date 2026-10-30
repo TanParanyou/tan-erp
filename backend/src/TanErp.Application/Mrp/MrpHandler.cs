@@ -63,7 +63,7 @@ public class MrpHandler
             return Fail<MrpRunProjection>("MRP_DEMAND_INVALID", "Add at least one demand or include open work orders.");
         }
 
-        var lines = string.Join(";", demands.OrderBy(d => d.ItemId).ThenBy(d => d.NeedBy).Select(d => $"{d.ItemId}:{Num(d.Quantity)}:{d.NeedBy:O}:{d.Reference?.Trim()}"));
+        var lines = string.Join(";", demands.OrderBy(d => d.ItemId).ThenBy(d => d.NeedBy).Select(d => $"{d.ItemId}:{d.UnitId}:{Num(d.Quantity)}:{d.NeedBy:O}:{d.Reference?.Trim()}"));
         var payloadHash = Sha256Hex.Compute($"{input.AsOfDate:O}|{input.PurchaseLeadTimeDays}|{input.ProductionLeadTimeDays}|{input.IncludeOpenWorkOrders}|{lines}");
         return await _store.CreateRunAsync(access.Value!, input with { Demands = demands }, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
     }
@@ -142,5 +142,75 @@ public class MrpHandler
         }
 
         return Fail<MrpRunProjection>("MRP_NOT_CONVERTIBLE", "This recommendation has no sourcing route and cannot be converted.");
+    }
+
+    public async Task<Result<PagedMrpPlanningParameters>> ListPlanningParametersAsync(
+        MrpCaller caller, Guid? itemId, Guid? warehouseId, string? search, int page, int pageSize, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "mrp.read", ct);
+        if (access.IsFailure) return Result<PagedMrpPlanningParameters>.Failure(access.Error);
+        var size = pageSize <= 0 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+        var query = new MrpPlanningParameterListQuery(
+            itemId,
+            warehouseId,
+            string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+            Math.Max(1, page),
+            size);
+        return Result<PagedMrpPlanningParameters>.Success(await _store.ListPlanningParametersAsync(access.Value!.OrganizationId, query, ct));
+    }
+
+    public async Task<Result<MrpPlanningParameterProjection>> UpsertPlanningParameterAsync(
+        MrpCaller caller, MrpPlanningParameterInput? input, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "mrp.run", ct);
+        if (access.IsFailure) return Result<MrpPlanningParameterProjection>.Failure(access.Error);
+        if (input is null || input.ItemId == Guid.Empty)
+        {
+            return Fail<MrpPlanningParameterProjection>("MRP_FIELD_REQUIRED", "An item is required for planning parameters.");
+        }
+
+        return await _store.UpsertPlanningParameterAsync(access.Value!, input, caller.TraceId, ct);
+    }
+
+    public async Task<Result<bool>> DeletePlanningParameterAsync(MrpCaller caller, Guid id, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "mrp.run", ct);
+        if (access.IsFailure) return Result<bool>.Failure(access.Error);
+        return await _store.DeletePlanningParameterAsync(access.Value!, id, caller.TraceId, ct);
+    }
+
+    public async Task<Result<IReadOnlyList<WorkingCalendarHolidayProjection>>> ListHolidaysAsync(
+        MrpCaller caller, Guid? branchId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "mrp.read", ct);
+        if (access.IsFailure) return Result<IReadOnlyList<WorkingCalendarHolidayProjection>>.Failure(access.Error);
+        if (fromDate.HasValue && toDate.HasValue && toDate.Value < fromDate.Value)
+        {
+            return Fail<IReadOnlyList<WorkingCalendarHolidayProjection>>("MRP_FIELD_INVALID", "To date cannot be earlier than from date.");
+        }
+
+        return Result<IReadOnlyList<WorkingCalendarHolidayProjection>>.Success(
+            await _store.ListHolidaysAsync(access.Value!.OrganizationId, branchId, fromDate, toDate, ct));
+    }
+
+    public async Task<Result<WorkingCalendarHolidayProjection>> CreateHolidayAsync(
+        MrpCaller caller, string idempotencyKey, WorkingCalendarHolidayInput? input, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "mrp.run", ct);
+        if (access.IsFailure) return Result<WorkingCalendarHolidayProjection>.Failure(access.Error);
+        if (input is null || string.IsNullOrWhiteSpace(input.Name))
+        {
+            return Fail<WorkingCalendarHolidayProjection>("MRP_HOLIDAY_INVALID", "Holiday date and name are required.");
+        }
+
+        var payloadHash = Sha256Hex.Compute($"{input.BranchId}|{input.HolidayDate:O}|{input.Name.Trim()}");
+        return await _store.CreateHolidayAsync(access.Value!, input, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
+    }
+
+    public async Task<Result<bool>> DeleteHolidayAsync(MrpCaller caller, Guid id, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "mrp.run", ct);
+        if (access.IsFailure) return Result<bool>.Failure(access.Error);
+        return await _store.DeleteHolidayAsync(access.Value!, id, caller.TraceId, ct);
     }
 }

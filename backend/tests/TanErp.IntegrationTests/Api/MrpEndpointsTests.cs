@@ -356,4 +356,130 @@ public class MrpEndpointsTests : IAsyncLifetime
         var foreign = await SendAsync(HttpMethod.Get, $"/api/v1/mrp/runs/{run.Id}", token: "token-org-b");
         Assert.True(foreign.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden);
     }
+
+    [Fact]
+    public async Task PlanningParameters_WorkingCalendarHolidays_AndUnitConversion_WorkEndToEnd()
+    {
+        var fg = await ApprovedFinishedGoodAsync("FG-MRP-G14");
+        var warehouse = await CreateWarehouseAsync();
+
+        // Seed an alternate unit ("SET4" = 4 base units) and an unmapped unit ("BOX99")
+        Guid setUnitId;
+        Guid unmappedUnitId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            var fgItem = await db.Items.AsNoTracking().SingleAsync(i => i.Id == fg);
+
+            var setUnit = new UnitOfMeasure(
+                Guid.NewGuid(), OrgId, "SET4", LocalizedText.Create("ชุด 4 ชิ้น", "Set of 4"),
+                "set", "count", 2, UnitRoundingMode.Default, UserId, now);
+            var unmappedUnit = new UnitOfMeasure(
+                Guid.NewGuid(), OrgId, "BOX99", LocalizedText.Create("ลัง 99", "Box 99"),
+                "box", "count", 2, UnitRoundingMode.Default, UserId, now);
+            db.Units.AddRange(setUnit, unmappedUnit);
+
+            var itemConv = new ItemUnitConversion(
+                Guid.NewGuid(), OrgId, fg, setUnit.Id, fgItem.BaseUnitId,
+                4m, Today.AddDays(-30), null, "1 ชุด = 4 ชิ้น", UserId, now);
+            db.ItemUnitConversions.Add(itemConv);
+            await db.SaveChangesAsync();
+
+            setUnitId = setUnit.Id;
+            unmappedUnitId = unmappedUnit.Id;
+        }
+
+        // 1. Upsert planning parameters for Plywood: SafetyStock = 10, MOQ = 20, LotMultiple = 15, LeadTimeDays = 2
+        var invalidParam = await SendAsync(
+            HttpMethod.Put,
+            "/api/v1/mrp/planning-parameters",
+            new MrpPlanningParameterRequest(PlywoodId, warehouse.Id, -1m, 0m, 0m, null));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, invalidParam.StatusCode);
+        Assert.Equal("MRP_PLANNING_PARAMETER_INVALID", await ErrorCodeAsync(invalidParam));
+
+        var paramResp = await Ok<MrpPlanningParameterResponse>(await SendAsync(
+            HttpMethod.Put,
+            "/api/v1/mrp/planning-parameters",
+            new MrpPlanningParameterRequest(PlywoodId, warehouse.Id, SafetyStock: 10m, MinOrderQuantity: 20m, LotMultiple: 15m, LeadTimeDays: 2)));
+        Assert.Equal(PlywoodId, paramResp.Item.Id);
+        Assert.Equal(warehouse.Id, paramResp.Warehouse!.Id);
+        Assert.Equal((10m, 20m, 15m, 2), (paramResp.SafetyStock, paramResp.MinOrderQuantity, paramResp.LotMultiple, paramResp.LeadTimeDays));
+
+        var paramList = await Ok<MrpPlanningParameterListResponse>(await SendAsync(
+            HttpMethod.Get,
+            $"/api/v1/mrp/planning-parameters?itemId={PlywoodId}"));
+        Assert.Single(paramList.Items);
+
+        // 2. Create working calendar holidays on Due.AddDays(-4) and Due.AddDays(-5)
+        // FG make order has productionLeadTimeDays = 3 -> OrderBy = Due.AddDays(-3).
+        // Plywood dependent demand is needed on Due.AddDays(-3). With LeadTimeDays = 2 and holidays on Due.AddDays(-4) & Due.AddDays(-5),
+        // Plywood OrderBy skips both holidays and lands on Due.AddDays(-7)!
+        var h1Date = Due.AddDays(-4);
+        var h2Date = Due.AddDays(-5);
+        var h1 = await Ok<WorkingCalendarHolidayResponse>(await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/mrp/calendar-holidays",
+            new WorkingCalendarHolidayRequest(h1Date, "วันหยุดพิเศษโรงงาน 1", BranchId),
+            key: Key()), HttpStatusCode.Created);
+        var h2 = await Ok<WorkingCalendarHolidayResponse>(await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/calendar-holidays" is var _ ? "/api/v1/mrp/calendar-holidays" : "",
+            new WorkingCalendarHolidayRequest(h2Date, "วันหยุดพิเศษโรงงาน 2", null),
+            key: Key()), HttpStatusCode.Created);
+
+        // Duplicate holiday on same branch & date -> 409 MRP_HOLIDAY_ALREADY_EXISTS
+        var dupHoliday = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/mrp/calendar-holidays",
+            new WorkingCalendarHolidayRequest(h1Date, "ซ้ำ", BranchId),
+            key: Key());
+        Assert.Equal(HttpStatusCode.Conflict, dupHoliday.StatusCode);
+        Assert.Equal("MRP_HOLIDAY_ALREADY_EXISTS", await ErrorCodeAsync(dupHoliday));
+
+        var holidaysList = await Ok<WorkingCalendarHolidayListResponse>(await SendAsync(
+            HttpMethod.Get,
+            $"/api/v1/mrp/calendar-holidays?branchId={BranchId}&fromDate={Today:O}&toDate={Due:O}"));
+        Assert.Equal(2, holidaysList.Items.Count);
+
+        // 3. Unmapped demand unit -> 422 MRP_UNIT_CONVERSION_NOT_FOUND
+        var badUnitRun = await SendAsync(
+            HttpMethod.Post,
+            "/api/v1/mrp/runs",
+            new MrpRunRequest(Today, 7, 3, false, new List<MrpDemandRequest> { new(fg, 1m, Due, "SO-BAD-UNIT", unmappedUnitId) }),
+            key: Key());
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, badUnitRun.StatusCode);
+        Assert.Equal("MRP_UNIT_CONVERSION_NOT_FOUND", await ErrorCodeAsync(badUnitRun));
+
+        // 4. Stock 6 units of Plywood (below SafetyStock 10 -> deficit 4).
+        // Demand 1 SET4 of FG (= 4 base units of FG).
+        // FG Make order = 4 units -> dependent demand on Plywood = 4 * 2 = 8 units on Due.AddDays(-3).
+        // Plus SafetyStock deficit (10 - 6 = 4) -> total gross = 12, stock used = 0, shortage = 12.
+        // Raised to MOQ 20, then rounded up to LotMultiple 15 -> 30 units!
+        await StockAsync(warehouse.Id, PlywoodId, 6m, 1000m);
+
+        var run = await RunAsync(new MrpRunRequest(
+            Today,
+            PurchaseLeadTimeDays: 7,
+            ProductionLeadTimeDays: 3,
+            IncludeOpenWorkOrders: false,
+            Demands: new List<MrpDemandRequest> { new(fg, 1m, Due, "SO-SET4", setUnitId) }));
+
+        var makeRec = run.Recommendations.Single(r => r.Item.Id == fg);
+        Assert.Equal(4m, makeRec.Quantity);
+        Assert.Equal(Due.AddDays(-3), makeRec.OrderBy);
+
+        var plyRec = run.Recommendations.Single(r => r.Item.Id == PlywoodId);
+        Assert.Equal(12m, plyRec.GrossRequirement);
+        Assert.Equal(0m, plyRec.StockUsed);
+        Assert.Equal(30m, plyRec.Quantity);
+        Assert.Equal(Due.AddDays(-3), plyRec.NeedBy);
+        Assert.Equal(Due.AddDays(-7), plyRec.OrderBy);
+        Assert.Contains(plyRec.Reasons, r => r.SourceType == "safety_stock" && r.Quantity == 4m);
+
+        // 5. Delete holiday and planning parameter
+        Assert.Equal(HttpStatusCode.NoContent, (await SendAsync(HttpMethod.Delete, $"/api/v1/mrp/calendar-holidays/{h1.Id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await SendAsync(HttpMethod.Delete, $"/api/v1/mrp/calendar-holidays/{h2.Id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await SendAsync(HttpMethod.Delete, $"/api/v1/mrp/planning-parameters/{paramResp.Id}")).StatusCode);
+    }
 }

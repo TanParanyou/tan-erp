@@ -305,10 +305,19 @@ public class ProductionStore : IProductionStore
               .ToList();
 
         var dayCount = endDate.DayNumber - startDate.DayNumber + 1;
+        var holidays = await _db.WorkingCalendarHolidays.AsNoTracking()
+            .Where(h => h.OrganizationId == organizationId && h.HolidayDate >= startDate && h.HolidayDate <= endDate)
+            .Select(h => new { h.BranchId, h.HolidayDate })
+            .ToListAsync(ct);
         var rows = new List<WorkCenterCapacityRowProjection>(workCenters.Count);
 
         foreach (var wc in workCenters)
         {
+            var wcHolidays = holidays
+                .Where(h => !h.BranchId.HasValue || h.BranchId.Value == wc.BranchId)
+                .Select(h => h.HolidayDate)
+                .ToHashSet();
+
             var dayBuckets = new Dictionary<DateOnly, decimal>(dayCount);
             for (var i = 0; i < dayCount; i++)
             {
@@ -332,15 +341,15 @@ public class ProductionStore : IProductionStore
             {
                 var d = startDate.AddDays(i);
                 var planned = decimal.Round(dayBuckets[d], 2);
-                var cap = wc.DailyCapacityHours;
+                var cap = wcHolidays.Contains(d) ? 0m : wc.DailyCapacityHours;
                 var remaining = Math.Max(0m, cap - planned);
-                var util = cap > 0m ? decimal.Round(planned * 100m / cap, 2) : 0m;
+                var util = cap > 0m ? decimal.Round(planned * 100m / cap, 2) : (planned > 0m ? 100m : 0m);
                 days.Add(new WorkCenterDailyCapacityPointProjection(d, cap, planned, remaining, util, planned > cap));
             }
 
-            var totalCap = decimal.Round(wc.DailyCapacityHours * dayCount, 2);
+            var totalCap = decimal.Round(days.Sum(x => x.CapacityHours), 2);
             var totalPlanned = decimal.Round(days.Sum(x => x.PlannedHours), 2);
-            var totalUtil = totalCap > 0m ? decimal.Round(totalPlanned * 100m / totalCap, 2) : 0m;
+            var totalUtil = totalCap > 0m ? decimal.Round(totalPlanned * 100m / totalCap, 2) : (totalPlanned > 0m ? 100m : 0m);
             var isOverloaded = days.Any(x => x.IsOverloaded) || totalPlanned > totalCap;
 
             rows.Add(new WorkCenterCapacityRowProjection(

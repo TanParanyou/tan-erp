@@ -6483,6 +6483,81 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.ToTable("subdistricts", "master_data");
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Mrp.MrpItemPlanningParameter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<int?>("LeadTimeDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("lead_time_days");
+
+                    b.Property<decimal>("LotMultiple")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("lot_multiple");
+
+                    b.Property<decimal>("MinOrderQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("min_order_quantity");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<decimal>("SafetyStock")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("safety_stock");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by_user_id");
+
+                    b.Property<Guid?>("WarehouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.HasIndex("OrganizationId", "ItemId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_mrp_item_planning_parameters_org_item_default")
+                        .HasFilter("warehouse_id IS NULL");
+
+                    b.HasIndex("OrganizationId", "ItemId", "WarehouseId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_mrp_item_planning_parameters_org_item_warehouse")
+                        .HasFilter("warehouse_id IS NOT NULL");
+
+                    b.ToTable("item_planning_parameters", "mrp", t =>
+                        {
+                            t.HasCheckConstraint("ck_item_planning_parameters_values", "safety_stock >= 0 AND min_order_quantity >= 0 AND lot_multiple >= 0 AND (lead_time_days IS NULL OR (lead_time_days >= 0 AND lead_time_days <= 365))");
+                        });
+                });
+
             modelBuilder.Entity("TanErp.Domain.Mrp.MrpRecommendation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -6672,6 +6747,58 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_mrp_runs_lead_times", "purchase_lead_time_days BETWEEN 0 AND 365 AND production_lead_time_days BETWEEN 0 AND 365");
                         });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Mrp.WorkingCalendarHoliday", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateOnly>("HolidayDate")
+                        .HasColumnType("date")
+                        .HasColumnName("holiday_date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("OrganizationId", "HolidayDate")
+                        .IsUnique()
+                        .HasDatabaseName("ux_mrp_working_calendar_holidays_org_date")
+                        .HasFilter("branch_id IS NULL");
+
+                    b.HasIndex("OrganizationId", "BranchId", "HolidayDate")
+                        .IsUnique()
+                        .HasDatabaseName("ux_mrp_working_calendar_holidays_org_branch_date")
+                        .HasFilter("branch_id IS NOT NULL");
+
+                    b.ToTable("working_calendar_holidays", "mrp");
                 });
 
             modelBuilder.Entity("TanErp.Domain.Notifications.Notification", b =>
@@ -12871,6 +12998,32 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TanErp.Domain.Mrp.MrpItemPlanningParameter", b =>
+                {
+                    b.HasOne("TanErp.Domain.Items.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Inventory.Warehouse", null)
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("TanErp.Domain.Mrp.MrpRecommendation", b =>
                 {
                     b.HasOne("TanErp.Domain.IdentityAccess.User", null)
@@ -12898,6 +13051,26 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("BranchId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Mrp.WorkingCalendarHoliday", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("TanErp.Domain.IdentityAccess.User", null)
                         .WithMany()

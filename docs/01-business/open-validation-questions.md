@@ -120,7 +120,17 @@
 
 ---
 
-## 12. ตารางสรุปลำดับความสำคัญและการดำเนินการ (Action Plan & Priority Matrix)
+## 12. หมวดการวางแผนความต้องการวัสดุ พารามิเตอร์สต็อกปลอดภัย และปฏิทินวันทำงาน (MRP Completion — Wave C `G-14`)
+
+| Ref ID | ประเด็น / ข้อสงสัยทางธุรกิจ | สมมติฐานปัจจุบันในระบบ (TEST_ONLY) | ผลกระทบหากไม่สรุป | ผู้มีอำนาจตัดสินใจ |
+| :--- | :--- | :--- | :--- | :--- |
+| **VQ-MRP-01** | **ระดับการตั้งค่าพารามิเตอร์วางแผน (Warehouse-Specific vs Organization Default Planning Parameters):** พารามิเตอร์ `SafetyStock`, `MinOrderQuantity`, `LotMultiple` และ `LeadTimeDays` ควรบังคับแยกทุกคลัง หรือรวมยอดที่ระดับองค์กรเมื่อคำนวณ MRP ทั้งองค์กร? | รองรับทั้งค่าเฉพาะคลัง (`WarehouseId != null`) และค่าเริ่มต้นระดับองค์กร (`WarehouseId == null`); เมื่อคำนวณ MRP (ซึ่งรวมสต็อกทุกคลังที่ Active ขององค์กร) ระบบใช้แถวระดับองค์กรก่อน และหากไม่มีจะใช้แถวแรกของคลังในองค์กรตามลำดับ Deterministic | หากต้องการคำนวณ MRP แยกรายคลังอิสระ (Multi-Warehouse Independent MRP) จะต้องเพิ่มตัวกรอง `WarehouseId` ตอนสั่งรัน MRP | Supply Chain / Production Planner |
+| **VQ-MRP-02** | **ปฏิทินวันทำงานและวันหยุดประจำสัปดาห์ (Working Calendar Holidays vs Weekend Policy):** การถอยวันสั่งซื้อ/สั่งผลิต (`OrderBy = NeedBy - LeadTimeDays`) ควรข้ามเฉพาะวันหยุดที่ลงทะเบียนไว้ในปฏิทิน หรือข้ามวันเสาร์-อาทิตย์โดยอัตโนมัติด้วย? | ข้ามเฉพาะวันที่ลงทะเบียนใน `mrp.working_calendar_holidays` (ทั้งตอนถอย `OrderBy` ใน MRP และตอนปรับ `CapacityHours = 0` ใน `G-13` Daily Capacity View) เพื่อให้โรงงานที่เปิดกะวันเสาร์หรืออาทิตย์บริหารวันหยุดเองได้เต็มที่ | หากต้องการให้วันอาทิตย์เป็นวันหยุดอัตโนมัติทุกสัปดาห์โดยไม่ต้องเพิ่มในตาราง ผู้ดูแลสามารถนำเข้าวันอาทิตย์ประจำปีหรือเพิ่มตั้งค่า `WeekendDays` ระดับองค์กร | Production Manager / HR |
+| **VQ-MRP-03** | **นโยบายการปัดยอดสั่งซื้อ/สั่งผลิตตาม MOQ และ Lot Multiple (Order Sizing & Excess Carry-Over):** เมื่อปัดยอดสั่งขึ้นตาม `MinOrderQuantity` และ `LotMultiple` แล้ว ยอดส่วนเกินที่สั่งเกินความต้องการของวันนั้นควรนำไปหักความต้องการของวันถัดไปอัตโนมัติหรือไม่? | ปัดยอดเป็น `max(NetShortage, MinOrderQuantity)` แล้วปัดขึ้นเป็นทวีคูณของ `LotMultiple` (`ceil(qty / LotMultiple) * LotMultiple`) และนำส่วนเกิน (`OrderQty - NetShortage`) ไปบวกเข้า `projectedAvailable` เพื่อหักความต้องการใน Bucket วันถัดไปโดยอัตโนมัติ | หากวัตถุดิบบางชนิดมีอายุสั้น (Perishable) และไม่ต้องการนำส่วนเกินข้ามงวดเวลา จะต้องเพิ่มตั้งค่า `MaxShelfLifeDays` ต่อ Item | Production Planner / Procurement Manager |
+
+---
+
+## 13. ตารางสรุปลำดับความสำคัญและการดำเนินการ (Action Plan & Priority Matrix)
 
 ```mermaid
 flowchart TD

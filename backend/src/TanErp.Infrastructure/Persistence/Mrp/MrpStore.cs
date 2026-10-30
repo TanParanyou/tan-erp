@@ -55,16 +55,70 @@ public class MrpStore : IMrpStore
     /// Reads every planning input once. Called inside a REPEATABLE READ transaction so stock, orders and BOMs all come from
     /// the same point in time even if the warehouse keeps posting while the run is being built.
     /// </summary>
-    private async Task<Result<MrpSnapshot>> BuildSnapshotAsync(Guid orgId, MrpRunInput input, CancellationToken ct)
+    private async Task<Result<MrpSnapshot>> BuildSnapshotAsync(Guid orgId, Guid? branchId, MrpRunInput input, CancellationToken ct)
     {
         var asOf = input.AsOfDate;
         var parameters = new MrpParameters(asOf, input.PurchaseLeadTimeDays, input.ProductionLeadTimeDays);
         var demands = new List<MrpDemandInput>();
         var supplies = new List<MrpSupplyInput>();
 
+        var demandedItemIds = input.Demands.Select(d => d.ItemId).Distinct().ToList();
+        var demandedItems = demandedItemIds.Count == 0
+            ? new Dictionary<Guid, Item>()
+            : await _db.Items.AsNoTracking()
+                .Where(i => i.OrganizationId == orgId && demandedItemIds.Contains(i.Id))
+                .ToDictionaryAsync(i => i.Id, ct);
+
+        var missing = demandedItemIds.FirstOrDefault(id => !demandedItems.ContainsKey(id));
+        if (missing != Guid.Empty) return Fail<MrpSnapshot>("RESOURCE_NOT_FOUND", $"Item '{missing}' not found.");
+        var inactive = demandedItems.Values.FirstOrDefault(i => i.Status != ItemStatus.Active);
+        if (inactive is not null) return Fail<MrpSnapshot>("MRP_DEMAND_INVALID", $"Item '{inactive.Code}' is not active.");
+
         foreach (var d in input.Demands)
         {
-            demands.Add(new MrpDemandInput(d.ItemId, d.Quantity, d.NeedBy, MrpDemandSource.Manual, string.IsNullOrWhiteSpace(d.Reference) ? "manual" : d.Reference.Trim()));
+            var item = demandedItems[d.ItemId];
+            var qty = d.Quantity;
+
+            if (d.UnitId.HasValue && d.UnitId.Value != Guid.Empty && d.UnitId.Value != item.BaseUnitId)
+            {
+                var fromUnitId = d.UnitId.Value;
+                var toUnitId = item.BaseUnitId;
+
+                var itemConv = await _db.ItemUnitConversions.AsNoTracking()
+                    .Where(c => c.OrganizationId == orgId
+                        && c.ItemId == item.Id
+                        && c.FromUnitId == fromUnitId
+                        && c.ToUnitId == toUnitId
+                        && c.Status == ItemStatus.Active
+                        && c.EffectiveFrom <= asOf
+                        && (!c.EffectiveTo.HasValue || c.EffectiveTo.Value >= asOf))
+                    .OrderByDescending(c => c.EffectiveFrom)
+                    .FirstOrDefaultAsync(ct);
+
+                decimal? factor = itemConv?.Factor;
+                if (!factor.HasValue)
+                {
+                    var globalConv = await _db.UnitConversions.AsNoTracking()
+                        .Where(c => c.OrganizationId == orgId
+                            && c.FromUnitId == fromUnitId
+                            && c.ToUnitId == toUnitId
+                            && c.Status == ItemStatus.Active
+                            && c.EffectiveFrom <= asOf
+                            && (!c.EffectiveTo.HasValue || c.EffectiveTo.Value >= asOf))
+                        .OrderByDescending(c => c.EffectiveFrom)
+                        .FirstOrDefaultAsync(ct);
+                    factor = globalConv?.Factor;
+                }
+
+                if (!factor.HasValue)
+                {
+                    return Fail<MrpSnapshot>("MRP_UNIT_CONVERSION_NOT_FOUND", "No active unit conversion to base unit was found for the demand item.");
+                }
+
+                qty = decimal.Round(d.Quantity * factor.Value, 4, MidpointRounding.AwayFromZero);
+            }
+
+            demands.Add(new MrpDemandInput(d.ItemId, qty, d.NeedBy, MrpDemandSource.Manual, string.IsNullOrWhiteSpace(d.Reference) ? "manual" : d.Reference.Trim()));
         }
 
         var openOrders = await _db.WorkOrders.AsNoTracking().Include(o => o.Materials)
@@ -113,16 +167,50 @@ public class MrpStore : IMrpStore
         var itemIds = new HashSet<Guid>(demands.Select(d => d.ItemId));
         foreach (var bom in bomInputs) { itemIds.Add(bom.ItemId); foreach (var c in bom.Components) itemIds.Add(c.ItemId); }
         foreach (var s in supplies) itemIds.Add(s.ItemId);
+
+        var planningParams = await _db.MrpItemPlanningParameters.AsNoTracking()
+            .Where(p => p.OrganizationId == orgId && itemIds.Contains(p.ItemId))
+            .ToListAsync(ct);
+        var paramsByItem = planningParams.GroupBy(p => p.ItemId).ToDictionary(g => g.Key, g => g.ToList());
+
         var items = await _db.Items.AsNoTracking().Where(i => i.OrganizationId == orgId && itemIds.Contains(i.Id)).ToListAsync(ct);
-        var missing = input.Demands.Select(d => d.ItemId).FirstOrDefault(id => items.All(i => i.Id != id));
-        if (missing != Guid.Empty) return Fail<MrpSnapshot>("RESOURCE_NOT_FOUND", $"Item '{missing}' not found.");
-        var inactive = items.FirstOrDefault(i => input.Demands.Any(d => d.ItemId == i.Id) && i.Status != ItemStatus.Active);
-        if (inactive is not null) return Fail<MrpSnapshot>("MRP_DEMAND_INVALID", $"Item '{inactive.Code}' is not active.");
+        var itemInputs = items.OrderBy(i => i.Id).Select(i =>
+        {
+            if (!paramsByItem.TryGetValue(i.Id, out var rows) || rows.Count == 0)
+            {
+                return new MrpItemInput(i.Id, i.Code, i.Capabilities.CanPurchase);
+            }
+
+            var orgRow = rows.FirstOrDefault(r => !r.WarehouseId.HasValue);
+            var whRows = rows.Where(r => r.WarehouseId.HasValue).ToList();
+            var safetyStock = whRows.Count > 0 ? whRows.Sum(r => r.SafetyStock) : (orgRow?.SafetyStock ?? 0m);
+            var primary = orgRow ?? whRows.OrderBy(r => r.WarehouseId).FirstOrDefault();
+
+            return new MrpItemInput(
+                i.Id,
+                i.Code,
+                i.Capabilities.CanPurchase,
+                safetyStock,
+                primary?.MinOrderQuantity ?? 0m,
+                primary?.LotMultiple ?? 0m,
+                primary?.LeadTimeDays);
+        }).ToList();
+
+        var holidays = await _db.WorkingCalendarHolidays.AsNoTracking()
+            .Where(h => h.OrganizationId == orgId && (!h.BranchId.HasValue || h.BranchId == branchId))
+            .Select(h => h.HolidayDate)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToListAsync(ct);
 
         return Result<MrpSnapshot>.Success(new MrpSnapshot(
             parameters,
-            items.OrderBy(i => i.Id).Select(i => new MrpItemInput(i.Id, i.Code, i.Capabilities.CanPurchase)).ToList(),
-            bomInputs, demands, supplies, stock));
+            itemInputs,
+            bomInputs,
+            demands,
+            supplies,
+            stock,
+            holidays.Count > 0 ? holidays : null));
     }
 
     public async Task<Result<MrpRunProjection>> CreateRunAsync(
@@ -145,7 +233,7 @@ public class MrpStore : IMrpStore
                 if (replayed is not null) return Result<MrpRunProjection>.Success(replayed);
             }
 
-            var snapshot = await BuildSnapshotAsync(orgId, input, ct);
+            var snapshot = await BuildSnapshotAsync(orgId, access.BranchId, input, ct);
             if (snapshot.IsFailure) return Result<MrpRunProjection>.Failure(snapshot.Error);
 
             MrpPlan plan;
@@ -304,5 +392,231 @@ public class MrpStore : IMrpStore
         }
 
         return Result<MrpRunProjection>.Success((await GetRunAsync(orgId, runId, ct))!);
+    }
+
+    // ===== Planning Parameters & Working Calendar Holidays (G-14) ======================================
+
+    public async Task<PagedMrpPlanningParameters> ListPlanningParametersAsync(
+        Guid organizationId, MrpPlanningParameterListQuery query, CancellationToken ct = default)
+    {
+        var baseQuery = from p in _db.MrpItemPlanningParameters.AsNoTracking()
+                        join i in _db.Items.AsNoTracking().Include(x => x.BaseUnit) on p.ItemId equals i.Id
+                        join w in _db.Warehouses.AsNoTracking() on p.WarehouseId equals w.Id into whJoin
+                        from wh in whJoin.DefaultIfEmpty()
+                        where p.OrganizationId == organizationId
+                        select new { Parameter = p, Item = i, Warehouse = wh };
+
+        if (query.ItemId.HasValue)
+        {
+            baseQuery = baseQuery.Where(x => x.Parameter.ItemId == query.ItemId.Value);
+        }
+
+        if (query.WarehouseId.HasValue)
+        {
+            baseQuery = baseQuery.Where(x => x.Parameter.WarehouseId == query.WarehouseId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var needle = query.Search.ToUpperInvariant();
+            baseQuery = baseQuery.Where(x => x.Item.Code.ToUpper().Contains(needle) || x.Item.Name.Thai.ToUpper().Contains(needle));
+        }
+
+        var total = await baseQuery.CountAsync(ct);
+        var rows = await baseQuery
+            .OrderBy(x => x.Item.Code)
+            .ThenBy(x => x.Parameter.WarehouseId)
+            .ThenBy(x => x.Parameter.Id)
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(ct);
+
+        var items = rows.Select(x => new MrpPlanningParameterProjection(
+            x.Parameter.Id,
+            new MrpItemRef(x.Item.Id, x.Item.Code, x.Item.Name.Thai, x.Item.BaseUnit != null ? x.Item.BaseUnit.Code : string.Empty),
+            x.Warehouse is null ? null : new MrpWarehouseRef(x.Warehouse.Id, x.Warehouse.Code, x.Warehouse.Name),
+            x.Parameter.SafetyStock,
+            x.Parameter.MinOrderQuantity,
+            x.Parameter.LotMultiple,
+            x.Parameter.LeadTimeDays,
+            x.Parameter.UpdatedAtUtc,
+            x.Parameter.RowVersion)).ToList();
+
+        return new PagedMrpPlanningParameters(items, total, query.Page, query.PageSize);
+    }
+
+    public async Task<Result<MrpPlanningParameterProjection>> UpsertPlanningParameterAsync(
+        RequestAccessContext access, MrpPlanningParameterInput input, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var item = await _db.Items.AsNoTracking().Include(x => x.BaseUnit)
+            .FirstOrDefaultAsync(i => i.Id == input.ItemId && i.OrganizationId == orgId, ct);
+        if (item is null) return Fail<MrpPlanningParameterProjection>("RESOURCE_NOT_FOUND", "Item not found.");
+
+        var warehouseId = input.WarehouseId.HasValue && input.WarehouseId.Value != Guid.Empty ? input.WarehouseId : null;
+        TanErp.Domain.Inventory.Warehouse? warehouse = null;
+        if (warehouseId.HasValue)
+        {
+            warehouse = await _db.Warehouses.AsNoTracking()
+                .FirstOrDefaultAsync(w => w.Id == warehouseId.Value && w.OrganizationId == orgId, ct);
+            if (warehouse is null) return Fail<MrpPlanningParameterProjection>("RESOURCE_NOT_FOUND", "Warehouse not found.");
+        }
+
+        var existing = await _db.MrpItemPlanningParameters
+            .FirstOrDefaultAsync(p => p.OrganizationId == orgId && p.ItemId == input.ItemId && p.WarehouseId == warehouseId, ct);
+
+        var now = _clock.UtcNow;
+        MrpItemPlanningParameter entity;
+        try
+        {
+            if (existing is null)
+            {
+                entity = new MrpItemPlanningParameter(
+                    Guid.NewGuid(),
+                    orgId,
+                    input.ItemId,
+                    warehouseId,
+                    input.SafetyStock,
+                    input.MinOrderQuantity,
+                    input.LotMultiple,
+                    input.LeadTimeDays,
+                    access.ActorUserId,
+                    now);
+                _db.MrpItemPlanningParameters.Add(entity);
+            }
+            else
+            {
+                existing.Update(input.SafetyStock, input.MinOrderQuantity, input.LotMultiple, input.LeadTimeDays, access.ActorUserId, now);
+                entity = existing;
+            }
+        }
+        catch (MrpDomainException ex)
+        {
+            return Fail<MrpPlanningParameterProjection>(ex.Code, ex.Message);
+        }
+
+        Audit(access, "mrp.planning_parameter.upserted", entity.Id, traceId,
+            new { itemId = entity.ItemId, warehouseId = entity.WarehouseId, safetyStock = entity.SafetyStock, minOrderQuantity = entity.MinOrderQuantity, lotMultiple = entity.LotMultiple, leadTimeDays = entity.LeadTimeDays }, now);
+        await _db.SaveChangesAsync(ct);
+
+        return Result<MrpPlanningParameterProjection>.Success(new MrpPlanningParameterProjection(
+            entity.Id,
+            new MrpItemRef(item.Id, item.Code, item.Name.Thai, item.BaseUnit != null ? item.BaseUnit.Code : string.Empty),
+            warehouse is null ? null : new MrpWarehouseRef(warehouse.Id, warehouse.Code, warehouse.Name),
+            entity.SafetyStock,
+            entity.MinOrderQuantity,
+            entity.LotMultiple,
+            entity.LeadTimeDays,
+            entity.UpdatedAtUtc,
+            entity.RowVersion));
+    }
+
+    public async Task<Result<bool>> DeletePlanningParameterAsync(
+        RequestAccessContext access, Guid id, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var entity = await _db.MrpItemPlanningParameters.FirstOrDefaultAsync(p => p.Id == id && p.OrganizationId == orgId, ct);
+        if (entity is null) return Fail<bool>("RESOURCE_NOT_FOUND", "Planning parameter not found.");
+
+        _db.MrpItemPlanningParameters.Remove(entity);
+        Audit(access, "mrp.planning_parameter.deleted", entity.Id, traceId, new { itemId = entity.ItemId, warehouseId = entity.WarehouseId }, _clock.UtcNow);
+        await _db.SaveChangesAsync(ct);
+        return Result<bool>.Success(true);
+    }
+
+    public async Task<IReadOnlyList<WorkingCalendarHolidayProjection>> ListHolidaysAsync(
+        Guid organizationId, Guid? branchId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
+    {
+        var query = _db.WorkingCalendarHolidays.AsNoTracking().Where(h => h.OrganizationId == organizationId);
+        if (branchId.HasValue)
+        {
+            query = query.Where(h => !h.BranchId.HasValue || h.BranchId == branchId.Value);
+        }
+        if (fromDate.HasValue)
+        {
+            query = query.Where(h => h.HolidayDate >= fromDate.Value);
+        }
+        if (toDate.HasValue)
+        {
+            query = query.Where(h => h.HolidayDate <= toDate.Value);
+        }
+
+        var rows = await query.OrderBy(h => h.HolidayDate).ThenBy(h => h.Id).ToListAsync(ct);
+        return rows.Select(h => new WorkingCalendarHolidayProjection(h.Id, h.BranchId, h.HolidayDate, h.Name, h.CreatedAtUtc)).ToList();
+    }
+
+    public async Task<Result<WorkingCalendarHolidayProjection>> CreateHolidayAsync(
+        RequestAccessContext access, WorkingCalendarHolidayInput input, string keyHash, string payloadHash, string traceId, CancellationToken ct = default)
+    {
+        const string operation = "mrp.holiday.create";
+        var orgId = access.OrganizationId;
+
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, ct);
+
+            var replay = await FindReplayAsync(orgId, operation, keyHash, ct);
+            if (replay is not null)
+            {
+                if (replay.PayloadHash != payloadHash) return Fail<WorkingCalendarHolidayProjection>("IDEMPOTENCY_KEY_REUSED", "The idempotency key has already been used with a different payload.");
+                if (Guid.TryParse(replay.ResourceId, out var replayId))
+                {
+                    var replayed = await _db.WorkingCalendarHolidays.AsNoTracking().FirstOrDefaultAsync(h => h.Id == replayId && h.OrganizationId == orgId, ct);
+                    if (replayed is not null)
+                    {
+                        return Result<WorkingCalendarHolidayProjection>.Success(
+                            new WorkingCalendarHolidayProjection(replayed.Id, replayed.BranchId, replayed.HolidayDate, replayed.Name, replayed.CreatedAtUtc));
+                    }
+                }
+            }
+
+            var branchId = input.BranchId.HasValue && input.BranchId.Value != Guid.Empty ? input.BranchId : null;
+            if (branchId.HasValue)
+            {
+                var branchExists = await _db.Branches.AsNoTracking().AnyAsync(b => b.Id == branchId.Value && b.OrganizationId == orgId, ct);
+                if (!branchExists) return Fail<WorkingCalendarHolidayProjection>("RESOURCE_NOT_FOUND", "Branch not found.");
+            }
+
+            var duplicate = await _db.WorkingCalendarHolidays.AsNoTracking()
+                .AnyAsync(h => h.OrganizationId == orgId && h.BranchId == branchId && h.HolidayDate == input.HolidayDate, ct);
+            if (duplicate)
+            {
+                return Fail<WorkingCalendarHolidayProjection>("MRP_HOLIDAY_ALREADY_EXISTS", "A working calendar holiday already exists on this date.");
+            }
+
+            var now = _clock.UtcNow;
+            WorkingCalendarHoliday holiday;
+            try
+            {
+                holiday = new WorkingCalendarHoliday(Guid.NewGuid(), orgId, branchId, input.HolidayDate, input.Name, access.ActorUserId, now);
+            }
+            catch (MrpDomainException ex)
+            {
+                return Fail<WorkingCalendarHolidayProjection>(ex.Code, ex.Message);
+            }
+
+            _db.WorkingCalendarHolidays.Add(holiday);
+            _db.IdempotencyRecords.Add(new IdempotencyRecord(Guid.NewGuid(), orgId, operation, keyHash, payloadHash, holiday.Id.ToString(), now));
+            Audit(access, "mrp.holiday.created", holiday.Id, traceId, new { branchId = holiday.BranchId, holidayDate = holiday.HolidayDate, name = holiday.Name }, now);
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+
+            return Result<WorkingCalendarHolidayProjection>.Success(
+                new WorkingCalendarHolidayProjection(holiday.Id, holiday.BranchId, holiday.HolidayDate, holiday.Name, holiday.CreatedAtUtc));
+        });
+    }
+
+    public async Task<Result<bool>> DeleteHolidayAsync(
+        RequestAccessContext access, Guid id, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var entity = await _db.WorkingCalendarHolidays.FirstOrDefaultAsync(h => h.Id == id && h.OrganizationId == orgId, ct);
+        if (entity is null) return Fail<bool>("RESOURCE_NOT_FOUND", "Holiday not found.");
+
+        _db.WorkingCalendarHolidays.Remove(entity);
+        Audit(access, "mrp.holiday.deleted", entity.Id, traceId, new { holidayDate = entity.HolidayDate, name = entity.Name }, _clock.UtcNow);
+        await _db.SaveChangesAsync(ct);
+        return Result<bool>.Success(true);
     }
 }

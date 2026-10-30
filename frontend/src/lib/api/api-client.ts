@@ -330,6 +330,26 @@ export interface ListMrpRunsParams {
   page?: number;
   pageSize?: number;
 }
+export type MrpPlanningParameterRequest = components["schemas"]["MrpPlanningParameterRequest"];
+export type MrpPlanningParameterResponse = components["schemas"]["MrpPlanningParameterResponse"];
+export type MrpPlanningParameterListResponse = components["schemas"]["MrpPlanningParameterListResponse"];
+export type WorkingCalendarHolidayRequest = components["schemas"]["WorkingCalendarHolidayRequest"];
+export type WorkingCalendarHolidayResponse = components["schemas"]["WorkingCalendarHolidayResponse"];
+export type WorkingCalendarHolidayListResponse = components["schemas"]["WorkingCalendarHolidayListResponse"];
+
+export interface ListMrpPlanningParametersParams {
+  itemId?: string;
+  warehouseId?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ListMrpCalendarHolidaysParams {
+  branchId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
 export type QuotationHistoryResponse = components["schemas"]["QuotationHistoryResponse"];
 export type QuotationHistoryItemResponse = components["schemas"]["QuotationHistoryItemResponse"];
 export type QuotationLifecycleAction = "void" | "amend";
@@ -2303,6 +2323,41 @@ export class ApiClient {
 
   async convertMrpRecommendation(runId: string, recommendationId: string, rowVersion: string, payload: MrpConvertRequest, options: RequestOptions): Promise<MrpRunResponse> {
     return this.request<MrpRunResponse>(`/api/v1/mrp/runs/${encodeURIComponent(runId)}/recommendations/${encodeURIComponent(recommendationId)}/convert`, "POST", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async listMrpPlanningParameters(options: RequestOptions, query: ListMrpPlanningParametersParams): Promise<MrpPlanningParameterListResponse> {
+    const params = new URLSearchParams();
+    if (query.itemId) params.set("itemId", query.itemId);
+    if (query.warehouseId) params.set("warehouseId", query.warehouseId);
+    if (query.search) params.set("search", query.search);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 50));
+    return this.request<MrpPlanningParameterListResponse>(`/api/v1/mrp/planning-parameters?${params.toString()}`, "GET", options);
+  }
+
+  async upsertMrpPlanningParameter(payload: MrpPlanningParameterRequest, options: RequestOptions): Promise<MrpPlanningParameterResponse> {
+    return this.request<MrpPlanningParameterResponse>("/api/v1/mrp/planning-parameters", "PUT", options, payload);
+  }
+
+  async deleteMrpPlanningParameter(id: string, options: RequestOptions): Promise<void> {
+    return this.request<void>(`/api/v1/mrp/planning-parameters/${encodeURIComponent(id)}`, "DELETE", options);
+  }
+
+  async listMrpCalendarHolidays(options: RequestOptions, query?: ListMrpCalendarHolidaysParams): Promise<WorkingCalendarHolidayListResponse> {
+    const params = new URLSearchParams();
+    if (query?.branchId) params.set("branchId", query.branchId);
+    if (query?.fromDate) params.set("fromDate", query.fromDate);
+    if (query?.toDate) params.set("toDate", query.toDate);
+    const qs = params.toString();
+    return this.request<WorkingCalendarHolidayListResponse>(`/api/v1/mrp/calendar-holidays${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async createMrpCalendarHoliday(payload: WorkingCalendarHolidayRequest, options: RequestOptions): Promise<WorkingCalendarHolidayResponse> {
+    return this.request<WorkingCalendarHolidayResponse>("/api/v1/mrp/calendar-holidays", "POST", options, payload);
+  }
+
+  async deleteMrpCalendarHoliday(id: string, options: RequestOptions): Promise<void> {
+    return this.request<void>(`/api/v1/mrp/calendar-holidays/${encodeURIComponent(id)}`, "DELETE", options);
   }
 
   async listInstallations(options: RequestOptions, query: ListInstallationsParams): Promise<InstallationsListResponse> {

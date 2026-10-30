@@ -1691,4 +1691,28 @@
   <data name="PRODUCTION_SUBCONTRACT_COST_EXCEEDS_PO_DETAIL" xml:space="preserve">
     <value>จำนวนเงินต้นทุนจ้างผลิตภายนอกที่ระบุเกินกว่ามูลค่ารวมของใบสั่งซื้อที่อ้างอิง</value>
   </data>
+  <data name="MRP_PLANNING_PARAMETER_INVALID_TITLE" xml:space="preserve">
+    <value>พารามิเตอร์การวางแผนไม่ถูกต้อง</value>
+  </data>
+  <data name="MRP_PLANNING_PARAMETER_INVALID_DETAIL" xml:space="preserve">
+    <value>สต็อกปลอดภัย จำนวนสั่งขั้นต่ำ (MOQ) และตัวคูณขนาดรุ่นต้องไม่ติดลบ และระยะเวลานำส่งต้องอยู่ระหว่าง 0 ถึง 365 วัน</value>
+  </data>
+  <data name="MRP_HOLIDAY_ALREADY_EXISTS_TITLE" xml:space="preserve">
+    <value>วันหยุดทำการซ้ำ</value>
+  </data>
+  <data name="MRP_HOLIDAY_ALREADY_EXISTS_DETAIL" xml:space="preserve">
+    <value>มีรายการวันหยุดทำการในวันที่เลือกอยู่แล้วในปฏิทินนี้</value>
+  </data>
+  <data name="MRP_HOLIDAY_INVALID_TITLE" xml:space="preserve">
+    <value>ข้อมูลวันหยุดทำการไม่ถูกต้อง</value>
+  </data>
+  <data name="MRP_HOLIDAY_INVALID_DETAIL" xml:space="preserve">
+    <value>กรุณาระบุวันที่และชื่อวันหยุดทำการให้ถูกต้อง (ความยาวไม่เกิน 200 ตัวอักษร)</value>
+  </data>
+  <data name="MRP_UNIT_CONVERSION_NOT_FOUND_TITLE" xml:space="preserve">
+    <value>ไม่พบอัตราแปลงหน่วยนับ</value>
+  </data>
+  <data name="MRP_UNIT_CONVERSION_NOT_FOUND_DETAIL" xml:space="preserve">
+    <value>ไม่พบอัตราแปลงหน่วยที่เปิดใช้งานสำหรับแปลงหน่วยความต้องการไปยังหน่วยฐานของสินค้านี้</value>
+  </data>
 </root>

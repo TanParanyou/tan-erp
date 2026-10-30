@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TanErp.Domain.IdentityAccess;
+using TanErp.Domain.Inventory;
 using TanErp.Domain.Items;
 using TanErp.Domain.Mrp;
 using TanErp.Domain.Organization;
@@ -74,5 +75,73 @@ public class MrpRecommendationConfiguration : IEntityTypeConfiguration<MrpRecomm
         builder.HasIndex(x => new { x.OrganizationId, x.Status });
         builder.HasOne<Item>().WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<User>().WithMany().HasForeignKey(x => x.DecidedByUserId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class MrpItemPlanningParameterConfiguration : IEntityTypeConfiguration<MrpItemPlanningParameter>
+{
+    public void Configure(EntityTypeBuilder<MrpItemPlanningParameter> builder)
+    {
+        builder.ToTable("item_planning_parameters", "mrp", t =>
+        {
+            t.HasCheckConstraint(
+                "ck_item_planning_parameters_values",
+                "safety_stock >= 0 AND min_order_quantity >= 0 AND lot_multiple >= 0 AND (lead_time_days IS NULL OR (lead_time_days >= 0 AND lead_time_days <= 365))");
+        });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.ItemId).HasColumnName("item_id").IsRequired();
+        builder.Property(x => x.WarehouseId).HasColumnName("warehouse_id");
+        builder.Property(x => x.SafetyStock).HasColumnName("safety_stock").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.MinOrderQuantity).HasColumnName("min_order_quantity").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.LotMultiple).HasColumnName("lot_multiple").HasPrecision(18, 4).IsRequired();
+        builder.Property(x => x.LeadTimeDays).HasColumnName("lead_time_days");
+        builder.Property(x => x.UpdatedByUserId).HasColumnName("updated_by_user_id").IsRequired();
+        builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").HasColumnType("timestamptz").IsRequired();
+        builder.Property(x => x.RowVersion).HasColumnName("row_version").IsConcurrencyToken().IsRequired();
+
+        builder.HasIndex(x => new { x.OrganizationId, x.ItemId })
+            .HasDatabaseName("ux_mrp_item_planning_parameters_org_item_default")
+            .HasFilter("warehouse_id IS NULL")
+            .IsUnique();
+        builder.HasIndex(x => new { x.OrganizationId, x.ItemId, x.WarehouseId })
+            .HasDatabaseName("ux_mrp_item_planning_parameters_org_item_warehouse")
+            .HasFilter("warehouse_id IS NOT NULL")
+            .IsUnique();
+
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Item>().WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Warehouse>().WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.UpdatedByUserId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class WorkingCalendarHolidayConfiguration : IEntityTypeConfiguration<WorkingCalendarHoliday>
+{
+    public void Configure(EntityTypeBuilder<WorkingCalendarHoliday> builder)
+    {
+        builder.ToTable("working_calendar_holidays", "mrp");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.BranchId).HasColumnName("branch_id");
+        builder.Property(x => x.HolidayDate).HasColumnName("holiday_date").HasColumnType("date").IsRequired();
+        builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+        builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
+        builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+
+        builder.HasIndex(x => new { x.OrganizationId, x.HolidayDate })
+            .HasDatabaseName("ux_mrp_working_calendar_holidays_org_date")
+            .HasFilter("branch_id IS NULL")
+            .IsUnique();
+        builder.HasIndex(x => new { x.OrganizationId, x.BranchId, x.HolidayDate })
+            .HasDatabaseName("ux_mrp_working_calendar_holidays_org_branch_date")
+            .HasFilter("branch_id IS NOT NULL")
+            .IsUnique();
+
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }

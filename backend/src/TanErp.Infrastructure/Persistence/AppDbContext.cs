@@ -71,6 +71,8 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Production.WorkOrderOperation> WorkOrderOperations => Set<TanErp.Domain.Production.WorkOrderOperation>();
     public DbSet<TanErp.Domain.Production.WorkOrderTransaction> WorkOrderTransactions => Set<TanErp.Domain.Production.WorkOrderTransaction>();
     public DbSet<TanErp.Domain.Mrp.MrpRun> MrpRuns => Set<TanErp.Domain.Mrp.MrpRun>();
+    public DbSet<TanErp.Domain.Mrp.MrpItemPlanningParameter> MrpItemPlanningParameters => Set<TanErp.Domain.Mrp.MrpItemPlanningParameter>();
+    public DbSet<TanErp.Domain.Mrp.WorkingCalendarHoliday> WorkingCalendarHolidays => Set<TanErp.Domain.Mrp.WorkingCalendarHoliday>();
     public DbSet<TanErp.Domain.QuickEstimates.PricingTemplate> PricingTemplates => Set<TanErp.Domain.QuickEstimates.PricingTemplate>();
     public DbSet<TanErp.Domain.QuickEstimates.QuickEstimate> QuickEstimates => Set<TanErp.Domain.QuickEstimates.QuickEstimate>();
     public DbSet<TanErp.Domain.QuickEstimates.QuickEstimateCalculation> QuickEstimateCalculations => Set<TanErp.Domain.QuickEstimates.QuickEstimateCalculation>();

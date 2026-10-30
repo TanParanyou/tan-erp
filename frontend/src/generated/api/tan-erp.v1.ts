@@ -14982,6 +14982,291 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mrp/planning-parameters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    itemId?: string;
+                    warehouseId?: string;
+                    search?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MrpPlanningParameterListResponse"];
+                        "application/json": components["schemas"]["MrpPlanningParameterListResponse"];
+                        "text/json": components["schemas"]["MrpPlanningParameterListResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["MrpPlanningParameterRequest"];
+                    "text/json": components["schemas"]["MrpPlanningParameterRequest"];
+                    "application/*+json": components["schemas"]["MrpPlanningParameterRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MrpPlanningParameterResponse"];
+                        "application/json": components["schemas"]["MrpPlanningParameterResponse"];
+                        "text/json": components["schemas"]["MrpPlanningParameterResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mrp/planning-parameters/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mrp/calendar-holidays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                    fromDate?: string;
+                    toDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkingCalendarHolidayListResponse"];
+                        "application/json": components["schemas"]["WorkingCalendarHolidayListResponse"];
+                        "text/json": components["schemas"]["WorkingCalendarHolidayListResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkingCalendarHolidayRequest"];
+                    "text/json": components["schemas"]["WorkingCalendarHolidayRequest"];
+                    "application/*+json": components["schemas"]["WorkingCalendarHolidayRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WorkingCalendarHolidayResponse"];
+                        "application/json": components["schemas"]["WorkingCalendarHolidayResponse"];
+                        "text/json": components["schemas"]["WorkingCalendarHolidayResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mrp/calendar-holidays/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications": {
         parameters: {
             query?: never;
@@ -29303,6 +29588,8 @@ export interface components {
             /** Format: date */
             needBy?: string;
             reference?: string | null;
+            /** Format: uuid */
+            unitId?: string | null;
         };
         MrpItemResponse: {
             /** Format: uuid */
@@ -29326,6 +29613,42 @@ export interface components {
             id?: string;
             displayName?: string | null;
             email?: string | null;
+        };
+        MrpPlanningParameterListResponse: {
+            items?: components["schemas"]["MrpPlanningParameterResponse"][] | null;
+            pagination?: components["schemas"]["MrpPaginationResponse"];
+        };
+        MrpPlanningParameterRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: uuid */
+            warehouseId?: string | null;
+            /** Format: double */
+            safetyStock?: number;
+            /** Format: double */
+            minOrderQuantity?: number;
+            /** Format: double */
+            lotMultiple?: number;
+            /** Format: int32 */
+            leadTimeDays?: number | null;
+        };
+        MrpPlanningParameterResponse: {
+            /** Format: uuid */
+            id?: string;
+            item?: components["schemas"]["MrpItemResponse"];
+            warehouse?: components["schemas"]["MrpWarehouseResponse"];
+            /** Format: double */
+            safetyStock?: number;
+            /** Format: double */
+            minOrderQuantity?: number;
+            /** Format: double */
+            lotMultiple?: number;
+            /** Format: int32 */
+            leadTimeDays?: number | null;
+            /** Format: date-time */
+            updatedAtUtc?: string;
+            /** Format: uuid */
+            rowVersion?: string;
         };
         MrpReasonResponse: {
             sourceType?: string | null;
@@ -29420,6 +29743,12 @@ export interface components {
             bomCount?: number;
             /** Format: int32 */
             stockItemCount?: number;
+        };
+        MrpWarehouseResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string | null;
+            name?: string | null;
         };
         NoteRequest: {
             note?: string | null;
@@ -32515,6 +32844,27 @@ export interface components {
             /** Format: double */
             value?: number;
             actor?: components["schemas"]["ProductionPersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
+        WorkingCalendarHolidayListResponse: {
+            items?: components["schemas"]["WorkingCalendarHolidayResponse"][] | null;
+        };
+        WorkingCalendarHolidayRequest: {
+            /** Format: date */
+            holidayDate?: string;
+            name?: string | null;
+            /** Format: uuid */
+            branchId?: string | null;
+        };
+        WorkingCalendarHolidayResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string | null;
+            /** Format: date */
+            holidayDate?: string;
+            name?: string | null;
             /** Format: date-time */
             createdAtUtc?: string;
         };

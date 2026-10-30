@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -16,6 +17,7 @@ import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { MrpRunListItemResponse } from "@/lib/api/api-client";
 import { useMrpRunList } from "../api/mrp-queries";
+import { MrpSettingsDrawer } from "./mrp-settings-drawer";
 
 export function MrpRunList() {
   const t = useTranslations("mrp.runs");
@@ -23,6 +25,8 @@ export function MrpRunList() {
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
   const canRun = can(selectedMembership, PERMISSIONS.MRP_RUN);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const state = useListState<ListFilterRecord>({
     schema: { defaultSort: "createdAt", defaultOrder: "desc", allowedSorts: ["createdAt"] },
     debounceMs: 300,
@@ -54,7 +58,24 @@ export function MrpRunList() {
         title={t("title")}
         subtitle={t("subtitle")}
         breadcrumbs={[{ label: t("title") }]}
-        actions={canRun ? <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/production/mrp/create`}>{t("create")}</Button> : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              className="min-h-11"
+              onClick={() => setSettingsOpen(true)}
+            >
+              {t("settingsButton")}
+            </Button>
+            {canRun && (
+              <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/production/mrp/create`}>
+                {t("create")}
+              </Button>
+            )}
+          </div>
+        }
       />
       <ListToolbar>
         <div className="flex w-full flex-wrap items-end gap-3">
@@ -88,6 +109,8 @@ export function MrpRunList() {
           onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
         />
       )}
+
+      <MrpSettingsDrawer isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </section>
   );
 }

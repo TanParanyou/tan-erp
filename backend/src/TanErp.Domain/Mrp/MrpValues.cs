@@ -33,4 +33,5 @@ public static class MrpDemandSource
     public const string Manual = "manual";
     public const string WorkOrder = "work_order";
     public const string Dependent = "dependent";
+    public const string SafetyStock = "safety_stock";
 }

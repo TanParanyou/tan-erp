@@ -1,12 +1,20 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import {
   apiClient,
+  type ListMrpCalendarHolidaysParams,
+  type ListMrpPlanningParametersParams,
   type ListMrpRunsParams,
   type MrpConvertRequest,
+  type MrpPlanningParameterListResponse,
+  type MrpPlanningParameterRequest,
+  type MrpPlanningParameterResponse,
   type MrpRecommendationDecision,
   type MrpRunListResponse,
   type MrpRunRequest,
   type MrpRunResponse,
+  type WorkingCalendarHolidayListResponse,
+  type WorkingCalendarHolidayRequest,
+  type WorkingCalendarHolidayResponse,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
 import { getAuthToken } from "@/lib/auth/auth-session";
@@ -50,6 +58,30 @@ export function useMrpRun(id: string | undefined): UseQueryResult<MrpRunResponse
   });
 }
 
+export function useMrpPlanningParameters(
+  params: ListMrpPlanningParametersParams,
+  enabled = true
+): UseQueryResult<MrpPlanningParameterListResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...mrpKey(membershipId, locale), "planning-parameters", "list", params],
+    enabled: Boolean(membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.listMrpPlanningParameters(await options(undefined, signal), params),
+  });
+}
+
+export function useMrpCalendarHolidays(
+  params?: ListMrpCalendarHolidaysParams,
+  enabled = true
+): UseQueryResult<WorkingCalendarHolidayListResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...mrpKey(membershipId, locale), "calendar-holidays", "list", params],
+    enabled: Boolean(membershipId) && enabled,
+    queryFn: async ({ signal }) => apiClient.listMrpCalendarHolidays(await options(undefined, signal), params),
+  });
+}
+
 /** Planning run writes. Each call returns the fresh run, which is cached so the page shows the new recommendation versions immediately. */
 export function useMrpMutations() {
   const { locale, membershipId, options } = useRequestContext();
@@ -79,4 +111,42 @@ export function useMrpMutations() {
     },
   });
   return { create, decide, convert };
+}
+
+/** Planning parameter and holiday mutations. */
+export function useMrpSettingsMutations() {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+
+  const invalidateParameters = async () => {
+    await queryClient.invalidateQueries({ queryKey: [...mrpKey(membershipId, locale), "planning-parameters"] });
+  };
+
+  const invalidateHolidays = async () => {
+    await queryClient.invalidateQueries({ queryKey: [...mrpKey(membershipId, locale), "calendar-holidays"] });
+  };
+
+  const upsertParameter = useMutation({
+    mutationFn: async (input: { payload: MrpPlanningParameterRequest }) =>
+      apiClient.upsertMrpPlanningParameter(input.payload, await options()),
+    onSuccess: invalidateParameters,
+  });
+
+  const deleteParameter = useMutation({
+    mutationFn: async (id: string) => apiClient.deleteMrpPlanningParameter(id, await options()),
+    onSuccess: invalidateParameters,
+  });
+
+  const createHoliday = useMutation({
+    mutationFn: async (input: { payload: WorkingCalendarHolidayRequest; idempotencyKey?: string }) =>
+      apiClient.createMrpCalendarHoliday(input.payload, await options(input.idempotencyKey ?? crypto.randomUUID())),
+    onSuccess: invalidateHolidays,
+  });
+
+  const deleteHoliday = useMutation({
+    mutationFn: async (id: string) => apiClient.deleteMrpCalendarHoliday(id, await options()),
+    onSuccess: invalidateHolidays,
+  });
+
+  return { upsertParameter, deleteParameter, createHoliday, deleteHoliday };
 }

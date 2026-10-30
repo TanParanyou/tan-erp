@@ -29,7 +29,7 @@ public class MrpRunsController : MrpControllerBase
         if (caller is null) return failure!;
         var input = new MrpRunInput(
             request.AsOfDate, request.PurchaseLeadTimeDays, request.ProductionLeadTimeDays, request.IncludeOpenWorkOrders,
-            request.Demands?.Select(d => new MrpDemandRequestInput(d.ItemId, d.Quantity, d.NeedBy, d.Reference)).ToList() ?? new List<MrpDemandRequestInput>());
+            request.Demands?.Select(d => new MrpDemandRequestInput(d.ItemId, d.Quantity, d.NeedBy, d.Reference, d.UnitId)).ToList() ?? new List<MrpDemandRequestInput>());
         var result = await _handler.CreateRunAsync(caller, key, input, ct);
         if (result.IsFailure) return Problem(result.Error.Code);
         return CreatedAtAction(nameof(Get), new { id = result.Value!.Id }, ToResponse(result.Value));
@@ -84,6 +84,99 @@ public class MrpRunsController : MrpControllerBase
         return Respond(await _handler.ConvertAsync(caller, id, recommendationId, version, input, ct));
     }
 
+    [HttpGet("/api/v1/mrp/planning-parameters")]
+    [ProducesResponseType<MrpPlanningParameterListResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListPlanningParameters(
+        [FromQuery] Guid? itemId,
+        [FromQuery] Guid? warehouseId,
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = MrpHandler.DefaultPageSize,
+        CancellationToken ct = default)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListPlanningParametersAsync(caller, itemId, warehouseId, search, page, pageSize, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        var paged = result.Value!;
+        return Ok(new MrpPlanningParameterListResponse(
+            paged.Items.Select(ToPlanningParameterResponse).ToList(),
+            new MrpPaginationResponse(paged.Page, paged.PageSize, paged.TotalCount, (int)Math.Ceiling(paged.TotalCount / (double)paged.PageSize))));
+    }
+
+    [HttpPut("/api/v1/mrp/planning-parameters")]
+    [ProducesResponseType<MrpPlanningParameterResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> UpsertPlanningParameter([FromBody] MrpPlanningParameterRequest? request, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var input = request is null
+            ? null
+            : new MrpPlanningParameterInput(
+                request.ItemId,
+                request.WarehouseId,
+                request.SafetyStock,
+                request.MinOrderQuantity,
+                request.LotMultiple,
+                request.LeadTimeDays);
+        var result = await _handler.UpsertPlanningParameterAsync(caller, input, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : Ok(ToPlanningParameterResponse(result.Value!));
+    }
+
+    [HttpDelete("/api/v1/mrp/planning-parameters/{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeletePlanningParameter([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.DeletePlanningParameterAsync(caller, id, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : NoContent();
+    }
+
+    [HttpGet("/api/v1/mrp/calendar-holidays")]
+    [ProducesResponseType<WorkingCalendarHolidayListResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> ListHolidays(
+        [FromQuery] Guid? branchId,
+        [FromQuery] DateOnly? fromDate,
+        [FromQuery] DateOnly? toDate,
+        CancellationToken ct = default)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.ListHolidaysAsync(caller, branchId, fromDate, toDate, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return Ok(new WorkingCalendarHolidayListResponse(result.Value!.Select(ToHolidayResponse).ToList()));
+    }
+
+    [HttpPost("/api/v1/mrp/calendar-holidays")]
+    [ProducesResponseType<WorkingCalendarHolidayResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CreateHoliday([FromBody] WorkingCalendarHolidayRequest? request, CancellationToken ct)
+    {
+        var caller = ReadIdempotent(out var key, out var failure);
+        if (caller is null) return failure!;
+        var input = request is null ? null : new WorkingCalendarHolidayInput(request.HolidayDate, request.Name, request.BranchId);
+        var result = await _handler.CreateHolidayAsync(caller, key, input, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return StatusCode(StatusCodes.Status201Created, ToHolidayResponse(result.Value!));
+    }
+
+    [HttpDelete("/api/v1/mrp/calendar-holidays/{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteHoliday([FromRoute] Guid id, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.DeleteHolidayAsync(caller, id, ct);
+        return result.IsFailure ? Problem(result.Error.Code) : NoContent();
+    }
+
     private async Task<IActionResult> DecideAsync(Guid id, Guid recommendationId, bool approve, CancellationToken ct)
     {
         var caller = ReadConditional(out var version, out var failure);
@@ -105,4 +198,22 @@ public class MrpRunsController : MrpControllerBase
             x.GrossRequirement, x.StockUsed, x.ScheduledReceiptsUsed,
             x.Reasons.Select(re => new MrpReasonResponse(re.SourceType, re.SourceRef, re.Quantity, re.NeedBy)).ToList(), x.Status,
             ToPerson(x.DecidedBy), x.DecidedAtUtc, x.Converted is null ? null : new MrpConvertedResponse(x.Converted.Type, x.Converted.Id, x.Converted.Number), x.RowVersion)).ToList());
+
+    private static MrpPlanningParameterResponse ToPlanningParameterResponse(MrpPlanningParameterProjection p) => new(
+        p.Id,
+        new MrpItemResponse(p.Item.Id, p.Item.Code, p.Item.NameTh, p.Item.UnitCode),
+        p.Warehouse is null ? null : new MrpWarehouseResponse(p.Warehouse.Id, p.Warehouse.Code, p.Warehouse.Name),
+        p.SafetyStock,
+        p.MinOrderQuantity,
+        p.LotMultiple,
+        p.LeadTimeDays,
+        p.UpdatedAtUtc,
+        p.RowVersion);
+
+    private static WorkingCalendarHolidayResponse ToHolidayResponse(WorkingCalendarHolidayProjection h) => new(
+        h.Id,
+        h.BranchId,
+        h.HolidayDate,
+        h.Name,
+        h.CreatedAtUtc);
 }

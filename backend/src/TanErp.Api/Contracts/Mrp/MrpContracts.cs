@@ -1,6 +1,6 @@
 namespace TanErp.Api.Contracts.Mrp;
 
-public sealed record MrpDemandRequest(Guid ItemId, decimal Quantity, DateOnly NeedBy, string? Reference);
+public sealed record MrpDemandRequest(Guid ItemId, decimal Quantity, DateOnly NeedBy, string? Reference, Guid? UnitId = null);
 
 public sealed record MrpRunRequest(
     DateOnly AsOfDate,
@@ -57,3 +57,45 @@ public sealed record MrpRunResponse(
 public sealed record MrpRunListItemResponse(Guid Id, string Number, DateOnly AsOfDate, int RecommendationCount, int ShortageCount, int OpenCount, DateTimeOffset CreatedAtUtc);
 
 public sealed record MrpRunListResponse(IReadOnlyList<MrpRunListItemResponse> Items, MrpPaginationResponse Pagination);
+
+// ===== Planning Parameters & Working Calendar Holidays (G-14) ======================================
+
+public sealed record MrpWarehouseResponse(Guid Id, string Code, string Name);
+
+public sealed record MrpPlanningParameterRequest(
+    Guid ItemId,
+    Guid? WarehouseId,
+    decimal SafetyStock,
+    decimal MinOrderQuantity,
+    decimal LotMultiple,
+    int? LeadTimeDays);
+
+public sealed record MrpPlanningParameterResponse(
+    Guid Id,
+    MrpItemResponse Item,
+    MrpWarehouseResponse? Warehouse,
+    decimal SafetyStock,
+    decimal MinOrderQuantity,
+    decimal LotMultiple,
+    int? LeadTimeDays,
+    DateTimeOffset UpdatedAtUtc,
+    Guid RowVersion);
+
+public sealed record MrpPlanningParameterListResponse(
+    IReadOnlyList<MrpPlanningParameterResponse> Items,
+    MrpPaginationResponse Pagination);
+
+public sealed record WorkingCalendarHolidayRequest(
+    DateOnly HolidayDate,
+    string Name,
+    Guid? BranchId = null);
+
+public sealed record WorkingCalendarHolidayResponse(
+    Guid Id,
+    Guid? BranchId,
+    DateOnly HolidayDate,
+    string Name,
+    DateTimeOffset CreatedAtUtc);
+
+public sealed record WorkingCalendarHolidayListResponse(
+    IReadOnlyList<WorkingCalendarHolidayResponse> Items);

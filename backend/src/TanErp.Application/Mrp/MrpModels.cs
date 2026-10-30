@@ -4,7 +4,9 @@ public sealed record MrpPerson(Guid Id, string DisplayName, string? Email);
 
 public sealed record MrpItemRef(Guid Id, string Code, string NameTh, string UnitCode);
 
-public sealed record MrpDemandRequestInput(Guid ItemId, decimal Quantity, DateOnly NeedBy, string? Reference);
+public sealed record MrpWarehouseRef(Guid Id, string Code, string Name);
+
+public sealed record MrpDemandRequestInput(Guid ItemId, decimal Quantity, DateOnly NeedBy, string? Reference, Guid? UnitId = null);
 
 public sealed record MrpRunInput(
     DateOnly AsOfDate,
@@ -67,3 +69,44 @@ public sealed record MrpConvertInput(Guid? SupplierId, decimal? UnitPrice, Guid?
 
 /// <summary>What the handler needs to convert an approved recommendation, without exposing persistence types.</summary>
 public sealed record MrpConvertTarget(Guid RecommendationId, Guid RunId, string RunNumber, int LineNo, Guid ItemId, string Action, decimal Quantity, DateOnly NeedBy, string Status, Guid RowVersion);
+
+public sealed record MrpPlanningParameterInput(
+    Guid ItemId,
+    Guid? WarehouseId,
+    decimal SafetyStock,
+    decimal MinOrderQuantity,
+    decimal LotMultiple,
+    int? LeadTimeDays);
+
+public sealed record MrpPlanningParameterProjection(
+    Guid Id,
+    MrpItemRef Item,
+    MrpWarehouseRef? Warehouse,
+    decimal SafetyStock,
+    decimal MinOrderQuantity,
+    decimal LotMultiple,
+    int? LeadTimeDays,
+    DateTimeOffset UpdatedAtUtc,
+    Guid RowVersion);
+
+public sealed record MrpPlanningParameterListQuery(
+    Guid? ItemId,
+    Guid? WarehouseId,
+    string? Search,
+    int Page,
+    int PageSize);
+
+public sealed record PagedMrpPlanningParameters(
+    IReadOnlyList<MrpPlanningParameterProjection> Items,
+    int TotalCount,
+    int Page,
+    int PageSize);
+
+public sealed record WorkingCalendarHolidayInput(DateOnly HolidayDate, string Name, Guid? BranchId);
+
+public sealed record WorkingCalendarHolidayProjection(
+    Guid Id,
+    Guid? BranchId,
+    DateOnly HolidayDate,
+    string Name,
+    DateTimeOffset CreatedAtUtc);
