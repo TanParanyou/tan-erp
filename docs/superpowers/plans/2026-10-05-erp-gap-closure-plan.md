@@ -61,7 +61,7 @@
 | G-16 | Credit Exposure + AR Aging gate | D | CP-15, G-15 | Finance | [แผน G-16](2026-10-30-g16-credit-exposure-ar-aging.md) — Implemented 2026-10-30 (Unit 700/700 + Integration 7/7 + Vitest 16/16 passed; [Verification](../../05-engineering/finance-verification.md)) |
 | G-17 | Accounting Connector จริง (+ Journal Export ชั่วคราว) | D | CP-15, G-15 | Finance + Security | [แผน G-17](2026-10-30-g17-accounting-connector-journal-export.md) — Implemented 2026-10-30 (Unit 702/702 + Integration 8/8 + Vitest 17/17 passed; [Verification](../../05-engineering/finance-verification.md)) |
 | G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | [แผน G-18](2026-10-30-g18-service-completion.md) — Implemented 2026-10-30 (Unit 708/708 + Integration 5/5 + Vitest 39/39 passed; [Verification](../../05-engineering/service-verification.md)) |
-| G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | — |
+| G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | [แผน G-19](2026-10-31-g19-dashboard-reporting.md) — Implemented 2026-10-31 (Unit 716/716 + Architecture 5/5 + Integration 4/4 + Vitest 27/27 passed; [Verification](../../05-engineering/reporting-verification.md)) |
 | G-20 | Labor Timesheet | C | Identity, CP-09 | PM + Production + Finance | [แผน G-20 + G-10](2026-10-29-g20-g10-timesheet-project-wbs-cost.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/project-handover-verification.md)) |
 | G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | G-21 ข้อ 1 Implemented 2026-10-12 (verified 2026-10-23: Unit + Integration 11/11 passed; browser not checked); ข้อ 2–3 ตัดสิน 2026-10-17 โดย owner delegation (A1, B1+B3, B2 เลื่อน; Legal ต้องยืนยัน retention) และ Implemented 2026-10-17 (verified 2026-10-23: Unit 6/6, Integration 1/1, Vitest 5/5 passed; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md); [แผน G-21](2026-10-12-g21-membership-expiry.md); [Open Decisions](2026-10-12-g21-open-decisions.md); [Verification](../../05-engineering/membership-expiry-verification.md) |
 
@@ -280,12 +280,12 @@
 
 ### G-19 — Dashboard & Reporting
 
-**แตะ:** ใหม่ `backend/src/TanErp.Application/Reporting/` (Dapper read-only), `frontend/src/features/dashboard/`; reuse `useCsvExport`, `useDataExport`, `useAnalyticsData` ที่มีใน `frontend/src/hooks/`
+**แตะ:** ใหม่ `backend/src/TanErp.Application/Reporting/` + `backend/src/TanErp.Infrastructure/Persistence/Reporting/` (Dapper read-only), `frontend/src/features/dashboard/`; reuse `useCsvExport`, `useDataExport`, `useAnalyticsData` ที่มีใน `frontend/src/hooks/`
 
-- [ ] KPI รอบแรก: Pipeline/Win rate, Quotation value, Project budget vs actual (G-10), Stock value, AR aging (G-16), งานบริการค้าง/เกิน SLA
-- [ ] ทุก query กรอง Organization/Branch scope ใน SQL; permission ต่อรายงาน
-- [ ] Export CSV ผ่าน hook เดิม
-- [ ] Tests: cross-branch ไม่รั่ว, ตัวเลขตรงกับ fixture ที่คำนวณมือ
+- [x] KPI รอบแรก: Pipeline/Win rate, Quotation value, Project budget vs actual (G-10), Stock value, AR aging (G-16), งานบริการค้าง/เกิน SLA
+- [x] ทุก query กรอง Organization/Branch scope ใน SQL; permission ต่อรายงาน (`opportunities.read`, `quotations.read`, `projects.read`, `inventory.read`, `billings.read`, `service-requests.read`) + graceful section redaction บน `/api/v1/reports/dashboard-summary`
+- [x] Export CSV ผ่าน hook เดิม (`useCsvExport` / `useDataExport`) และเชื่อม `useAnalyticsData`
+- [x] Tests: cross-branch ไม่รั่ว (`Branch Clamping` + `403 PERMISSION_DENIED`), ตัวเลขตรงกับ fixture ที่คำนวณมือครบทั้ง 6 รายงาน (ผล: [Reporting Verification](../../05-engineering/reporting-verification.md))
 
 ### G-20 — Labor Timesheet
 

@@ -2,6 +2,9 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/api-client";
+import { getAuthToken } from "@/lib/auth/auth-session";
+import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 
 export type AnalyticsTimeRange = "7d" | "30d" | "90d" | "custom";
 
@@ -13,6 +16,9 @@ export interface UseAnalyticsOptions {
   resourceId?: string;
   topLimit?: number;
   enabled?: boolean;
+  idToken?: string;
+  membershipId?: string;
+  branchId?: string;
 }
 
 export interface AnalyticsOverview {
@@ -55,7 +61,14 @@ export function useAnalyticsData(options: UseAnalyticsOptions = {}) {
     resourceId,
     topLimit = 5,
     enabled = true,
+    idToken,
+    membershipId: optMembershipId,
+    branchId,
   } = options;
+
+  const membershipContext = useSelectedMembership();
+  const contextMembershipId = membershipContext?.selectedMembership?.id;
+  const effectiveMembershipId = optMembershipId || contextMembershipId;
 
   const dateParams = useMemo(() => {
     if (timeRange === "custom") {
@@ -76,8 +89,28 @@ export function useAnalyticsData(options: UseAnalyticsOptions = {}) {
   }, [timeRange, customFrom, customTo]);
 
   const overviewQuery = useQuery({
-    queryKey: ["analytics", "overview", dateParams],
+    queryKey: ["analytics", "overview", effectiveMembershipId, branchId, dateParams],
     queryFn: async (): Promise<AnalyticsOverview> => {
+      try {
+        const token = idToken || (await getAuthToken());
+        if (token && effectiveMembershipId) {
+          const summary = await apiClient.getDashboardSummary(
+            { branchId, asOfDate: dateParams.to },
+            { token, membershipId: effectiveMembershipId, locale: "th" }
+          );
+          const acceptedAmount = summary.quotations?.summary?.acceptedAmount ?? 0;
+          const actualCost = summary.projectsBudget?.summary?.totalActualAmount ?? 0;
+          return {
+            totalViews: 0,
+            uniqueVisitors: 0,
+            boqCost: actualCost,
+            grossProfit: acceptedAmount - actualCost,
+            quotationTotal: acceptedAmount,
+          };
+        }
+      } catch {
+        // Fallback to default metrics on unauthenticated or error
+      }
       return {
         totalViews: 0,
         uniqueVisitors: 0,

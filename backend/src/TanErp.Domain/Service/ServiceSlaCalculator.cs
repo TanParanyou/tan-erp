@@ -18,20 +18,28 @@ public static class ServiceSlaCalculator
         _ => (8, 48)
     };
 
-    public static ServiceSlaEvaluation Evaluate(ServiceRequest request, DateTimeOffset nowUtc, IReadOnlySet<DateOnly> holidays)
+    public static ServiceSlaEvaluation Evaluate(
+        string priority,
+        string status,
+        DateTimeOffset createdAtUtc,
+        DateTimeOffset? resolvedAtUtc,
+        DateTimeOffset? pausedAtUtc,
+        long pausedSeconds,
+        DateTimeOffset nowUtc,
+        IReadOnlySet<DateOnly> holidays)
     {
-        var (responseHours, resolveHours) = GetPolicyHours(request.Priority);
-        var endUtc = (request.Status is ServiceRequestStatus.Resolved or ServiceRequestStatus.Closed && request.ResolvedAtUtc.HasValue)
-            ? request.ResolvedAtUtc.Value
+        var (responseHours, resolveHours) = GetPolicyHours(priority);
+        var endUtc = (status is ServiceRequestStatus.Resolved or ServiceRequestStatus.Closed && resolvedAtUtc.HasValue)
+            ? resolvedAtUtc.Value
             : nowUtc;
 
-        if (endUtc < request.CreatedAtUtc)
+        if (endUtc < createdAtUtc)
         {
-            endUtc = request.CreatedAtUtc;
+            endUtc = createdAtUtc;
         }
 
         // Subtract holiday hours falling within the period
-        var startDay = DateOnly.FromDateTime(request.CreatedAtUtc.UtcDateTime);
+        var startDay = DateOnly.FromDateTime(createdAtUtc.UtcDateTime);
         var endDay = DateOnly.FromDateTime(endUtc.UtcDateTime);
         var holidaySeconds = 0.0;
 
@@ -40,7 +48,7 @@ public static class ServiceSlaCalculator
             if (!holidays.Contains(d)) continue;
             var holidayStartUtc = new DateTimeOffset(d.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
             var holidayEndUtc = holidayStartUtc.AddDays(1);
-            var overlapStart = request.CreatedAtUtc > holidayStartUtc ? request.CreatedAtUtc : holidayStartUtc;
+            var overlapStart = createdAtUtc > holidayStartUtc ? createdAtUtc : holidayStartUtc;
             var overlapEnd = endUtc < holidayEndUtc ? endUtc : holidayEndUtc;
             if (overlapEnd > overlapStart)
             {
@@ -48,23 +56,23 @@ public static class ServiceSlaCalculator
             }
         }
 
-        var totalSeconds = (endUtc - request.CreatedAtUtc).TotalSeconds;
+        var totalSeconds = (endUtc - createdAtUtc).TotalSeconds;
         var activeSeconds = Math.Max(0.0, totalSeconds - holidaySeconds);
 
-        var currentWaitSeconds = (request.Status == ServiceRequestStatus.WaitingCustomer && request.PausedAtUtc.HasValue)
-            ? (long)Math.Max(0, (nowUtc - request.PausedAtUtc.Value).TotalSeconds)
+        var currentWaitSeconds = (status == ServiceRequestStatus.WaitingCustomer && pausedAtUtc.HasValue)
+            ? (long)Math.Max(0, (nowUtc - pausedAtUtc.Value).TotalSeconds)
             : 0L;
-        var totalPausedSeconds = request.PausedSeconds + currentWaitSeconds;
+        var totalPausedSeconds = pausedSeconds + currentWaitSeconds;
 
         var elapsedSeconds = Math.Max(0.0, activeSeconds - totalPausedSeconds);
         var elapsedHours = Math.Max(0m, decimal.Round((decimal)elapsedSeconds / 3600m, 2, MidpointRounding.AwayFromZero));
 
         string slaStatus;
-        if (request.Status == ServiceRequestStatus.WaitingCustomer)
+        if (status == ServiceRequestStatus.WaitingCustomer)
         {
             slaStatus = SlaStatus.Paused;
         }
-        else if (request.Status is ServiceRequestStatus.Resolved or ServiceRequestStatus.Closed)
+        else if (status is ServiceRequestStatus.Resolved or ServiceRequestStatus.Closed)
         {
             slaStatus = elapsedHours <= resolveHours ? SlaStatus.Met : SlaStatus.Breached;
         }
@@ -83,4 +91,15 @@ public static class ServiceSlaCalculator
 
         return new ServiceSlaEvaluation(responseHours, resolveHours, elapsedHours, totalPausedSeconds, slaStatus);
     }
+
+    public static ServiceSlaEvaluation Evaluate(ServiceRequest request, DateTimeOffset nowUtc, IReadOnlySet<DateOnly> holidays)
+        => Evaluate(
+            request.Priority,
+            request.Status,
+            request.CreatedAtUtc,
+            request.ResolvedAtUtc,
+            request.PausedAtUtc,
+            request.PausedSeconds,
+            nowUtc,
+            holidays);
 }

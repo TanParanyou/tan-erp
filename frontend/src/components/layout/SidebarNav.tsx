@@ -21,6 +21,7 @@ import {
   IconCheckCircle,
   IconPalette,
   IconPrinter,
+  IconTable,
 } from "@/components/common/Icons";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { CurrentUserResponse } from "@/lib/api/api-client";
@@ -73,6 +74,14 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const hasWarrantiesRead = can(activeMembership, "warranties.read");
   const hasServiceRequestsRead = can(activeMembership, "service-requests.read");
   const hasOpportunitiesRead = can(activeMembership, "opportunities.read");
+  const hasQuotationsRead = can(activeMembership, "quotations.read");
+  const hasReportsRead =
+    hasOpportunitiesRead ||
+    hasQuotationsRead ||
+    hasProjectsRead ||
+    hasInventoryRead ||
+    hasBillingsRead ||
+    hasServiceRequestsRead;
   const hasFieldSurveysRead =
     hasOpportunitiesRead ||
     can(activeMembership, "surveys.create") ||
@@ -94,6 +103,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const [searchQuery, setSearchQuery] = useState("");
 
   const isHomeActive = pathname === `/${locale}` || pathname === `/${locale}/`;
+  const isReportsActive = pathname.startsWith(`/${locale}/reports`);
   const isCustomersActive = pathname.startsWith(`/${locale}/customers`);
   const isOpportunitiesActive = pathname.startsWith(`/${locale}/opportunities`);
   const isFieldSurveysActive = pathname.startsWith(`/${locale}/surveys`);
@@ -525,6 +535,8 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const trimmedSearch = searchQuery.trim().toLowerCase();
 
   const isHomeVisible = !trimmedSearch || tShell("home").toLowerCase().includes(trimmedSearch);
+  const isReportsVisible =
+    hasReportsRead && (!trimmedSearch || tShell("reports").toLowerCase().includes(trimmedSearch));
   const isDocNumberingVisible =
     hasSettingsRead &&
     (!trimmedSearch || tShell("documentNumbering").toLowerCase().includes(trimmedSearch));
@@ -567,6 +579,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
 
   const hasAnyResults =
     isHomeVisible ||
+    isReportsVisible ||
     isDocNumberingVisible ||
     isDocTemplatesVisible ||
     isSurveySettingsVisible ||
@@ -661,6 +674,19 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
                 label: tShell("home"),
                 icon: <IconHome size={20} />,
                 isActive: isHomeActive,
+              })}
+            </li>
+          )}
+
+          {/* Reports Link */}
+          {isReportsVisible && (
+            <li>
+              {renderLink({
+                id: "reports",
+                href: `/${locale}/reports`,
+                label: tShell("reports"),
+                icon: <IconTable size={20} />,
+                isActive: isReportsActive,
               })}
             </li>
           )}

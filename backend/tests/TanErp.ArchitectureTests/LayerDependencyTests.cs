@@ -58,4 +58,14 @@ public class LayerDependencyTests
 
         rule.Check(Architecture);
     }
+
+    [Fact]
+    public void ReportsController_ShouldStayThin()
+    {
+        var rule = Classes().That().HaveFullName("TanErp.Api.Controllers.ReportsController")
+            .Should().NotDependOnAny(Types().That().ResideInAssembly(InfrastructureAssembly))
+            .AndShould().NotDependOnAny(Types().That().HaveFullName("TanErp.Application.Reporting.IReportingStore"));
+
+        rule.Check(Architecture);
+    }
 }

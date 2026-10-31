@@ -261,6 +261,8 @@ builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infr
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
 builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();
 builder.Services.AddScoped<TanErp.Application.Finance.FinanceHandler>();
+builder.Services.AddScoped<TanErp.Application.Reporting.IReportingStore, TanErp.Infrastructure.Persistence.Reporting.ReportingStore>();
+builder.Services.AddScoped<TanErp.Application.Reporting.ReportingHandler>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.IQuickEstimateStore, TanErp.Infrastructure.Persistence.QuickEstimates.QuickEstimateStore>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.QuickEstimateHandler>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.IBranchRateOverrideStore, TanErp.Infrastructure.Persistence.QuickEstimates.BranchRateOverrideStore>();

@@ -42,6 +42,7 @@
     "noBranch": "ไม่ระบุสาขา (ระดับองค์กร)",
     "switchLanguage": "English",
     "home": "หน้าหลัก",
+    "reports": "แดชบอร์ดและรายงาน",
     "scope": "ขอบเขต",
     "toggleMenu": "เปิด/ปิดเมนู",
     "closeMenu": "ปิดเมนู",
@@ -6308,5 +6309,143 @@
       "save": "บันทึกการแสดงผล",
       "saveSuccess": "บันทึกการแสดงผลเรียบร้อยแล้ว"
     }
+  },
+  "reporting": {
+    "title": "แดชบอร์ดและรายงานภาพรวม",
+    "subtitle": "ภาพรวมตัวชี้วัดสำคัญและรายงานการดำเนินงานรายสาขา",
+    "refresh": "รีเฟรชข้อมูล",
+    "exportCsv": "ส่งออก CSV",
+    "exportingCsv": "กำลังส่งออก...",
+    "generatedAt": "ข้อมูล ณ วันที่ {date}",
+    "noPermittedReports": "คุณไม่มีสิทธิ์เข้าถึงรายงานในระบบ",
+    "filters": {
+      "branchFilterLabel": "สาขา",
+      "allBranches": "ทุกสาขา (ภาพรวมองค์กร)",
+      "asOfDateLabel": "ข้อมูล ณ วันที่",
+      "asOfDatePlaceholder": "วว/ดด/ปปปป",
+      "searchPlaceholder": "ค้นหารายการในตาราง..."
+    },
+    "kpi": {
+      "pipelineTitle": "มูลค่าโอกาสการขายทั้งหมด",
+      "winRate": "อัตราปิดการขาย (Win Rate)",
+      "openPipeline": "โอกาสขายที่เปิดอยู่",
+      "quotationsTitle": "มูลค่าใบเสนอราคาตอบรับ",
+      "acceptedValue": "มูลค่าที่ตอบรับ",
+      "acceptanceRate": "อัตราการตอบรับ",
+      "projectsBudgetTitle": "งบประมาณโครงการรวม",
+      "currentBudget": "งบประมาณปัจจุบัน",
+      "overBudgetCount": "โครงการเกินงบประมาณ",
+      "stockValueTitle": "มูลค่าสินค้าคงคลังรวม",
+      "warehousesAndSkus": "คลังและรายการสินค้า",
+      "arAgingTitle": "ลูกหนี้ค้างชำระเกิน 30 วัน",
+      "overdueOver30": "เกินกำหนด > 30 วัน",
+      "serviceSlaTitle": "บริการหลังการขายตาม SLA",
+      "slaBreachedAndWarning": "เกินกำหนด / ใกล้ถึงกำหนด",
+      "waitingCustomer": "พักรอลูกค้า",
+      "notPermitted": "ไม่มีสิทธิ์ดูข้อมูล"
+    },
+    "tabs": {
+      "pipeline": "โอกาสทางการขาย",
+      "quotations": "ใบเสนอราคา",
+      "projectsBudget": "งบประมาณโครงการ",
+      "stockValue": "มูลค่าสินค้าคงคลัง",
+      "arAging": "อายุหนี้ลูกหนี้การค้า (AR Aging)",
+      "serviceSla": "การบริการและ SLA"
+    },
+    "columns": {
+      "opportunityNumber": "เลขที่โอกาสขาย",
+      "title": "ชื่องาน / รายละเอียด",
+      "customer": "ลูกค้า",
+      "branch": "สาขา",
+      "stage": "ขั้นตอน (Stage)",
+      "estimatedValue": "มูลค่าประเมิน",
+      "createdAt": "วันที่เปิดโอกาสขาย",
+      "quotationNumber": "เลขที่ใบเสนอราคา",
+      "status": "สถานะ",
+      "totalAmount": "ยอดรวมสุทธิ",
+      "issuedAt": "วันที่ออกเอกสาร",
+      "validUntil": "ใช้ได้ถึงวันที่",
+      "projectCode": "รหัสโครงการ",
+      "projectName": "ชื่อโครงการ",
+      "contractAmount": "มูลค่าสัญญา",
+      "currentBudget": "งบประมาณควบคุม",
+      "actualCost": "ต้นทุนจริงสะสม",
+      "variance": "ส่วนต่างงบประมาณ",
+      "budgetStatus": "สถานะงบประมาณ",
+      "warehouseCode": "รหัสคลัง",
+      "warehouseName": "ชื่อคลังสินค้า",
+      "itemCode": "รหัสสินค้า",
+      "itemName": "ชื่อสินค้า",
+      "onHandQty": "จำนวนคงเหลือ",
+      "unitCost": "ต้นทุนต่อหน่วย",
+      "totalValue": "มูลค่ารวม",
+      "billingNumber": "เลขที่ใบแจ้งหนี้",
+      "dueDate": "วันครบกำหนดชำระ",
+      "remainingAmount": "ยอดคงค้าง",
+      "agingBucket": "ช่วงอายุหนี้",
+      "overdueDays": "จำนวนวันเกินกำหนด",
+      "serviceRequestNumber": "เลขที่คำขอบริการ",
+      "project": "โครงการ",
+      "priority": "ความสำคัญ",
+      "slaStatus": "สถานะ SLA",
+      "elapsedHours": "เวลาที่ใช้ (ชม.)",
+      "targetHours": "เป้าหมาย SLA (ชม.)",
+      "warranty": "การรับประกัน"
+    },
+    "stages": {
+      "draft": "ร่าง",
+      "qualified": "ผ่านคัดกรอง",
+      "surveying": "สำรวจหน้างาน",
+      "estimating": "จัดทำราคา",
+      "proposed": "เสนอราคา",
+      "won": "ปิดการขายสำเร็จ",
+      "lost": "ปิดการขายไม่สำเร็จ",
+      "cancelled": "ยกเลิก"
+    },
+    "quotationStatuses": {
+      "draft": "ฉบับร่าง",
+      "issued": "ออกเอกสารแล้ว",
+      "accepted": "ลูกค้ายอมรับ",
+      "rejected": "ลูกค้าปฏิเสธ",
+      "superseded": "ถูกแทนที่",
+      "cancelled": "ยกเลิกแล้ว"
+    },
+    "projectStatuses": {
+      "draft": "ฉบับร่าง",
+      "planned": "วางแผน",
+      "in_progress": "กำลังดำเนินการ",
+      "completed": "เสร็จสมบูรณ์",
+      "cancelled": "ยกเลิกแล้ว"
+    },
+    "budgetStatus": {
+      "withinBudget": "ตามงบประมาณ",
+      "overBudget": "เกินงบประมาณ"
+    },
+    "agingBuckets": {
+      "current": "ยังไม่ถึงกำหนด (Current)",
+      "1_30": "1-30 วัน",
+      "31_60": "31-60 วัน",
+      "61_90": "61-90 วัน",
+      "over_90": "มากกว่า 90 วัน"
+    },
+    "servicePriorities": {
+      "low": "ต่ำ",
+      "normal": "ปกติ",
+      "high": "สูง",
+      "urgent": "เร่งด่วน"
+    },
+    "slaStatuses": {
+      "on_track": "ตามกำหนด",
+      "warning": "ใกล้ถึงกำหนด",
+      "breached": "เกินกำหนด",
+      "paused": "หยุดพัก",
+      "met": "สำเร็จตาม SLA"
+    },
+    "warranty": {
+      "inWarranty": "ในประกัน",
+      "outOfWarranty": "นอกประกัน"
+    },
+    "emptyRows": "ไม่พบข้อมูลตามเงื่อนไขที่เลือก",
+    "slaElapsedOfTarget": "{elapsed} / {target} ชม."
   }
 }

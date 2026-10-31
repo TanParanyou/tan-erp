@@ -465,6 +465,25 @@ export type AccountMappingRequest = components["schemas"]["AccountMappingRequest
 export type AccountMappingListResponse = components["schemas"]["AccountMappingListResponse"];
 export type JournalExportLineResponse = components["schemas"]["JournalExportLineResponse"];
 export type JournalExportResultResponse = components["schemas"]["JournalExportResultResponse"];
+export type DashboardSummaryResponse = components["schemas"]["DashboardSummaryResponse"];
+export type PipelineReportResponse = components["schemas"]["PipelineReportResponse"];
+export type PipelineSummaryMetricsResponse = components["schemas"]["PipelineSummaryMetricsResponse"];
+export type PipelineStageMetricsResponse = components["schemas"]["PipelineStageMetricsResponse"];
+export type QuotationReportResponse = components["schemas"]["QuotationReportResponse"];
+export type QuotationSummaryMetricsResponse = components["schemas"]["QuotationSummaryMetricsResponse"];
+export type QuotationReportRowResponse = components["schemas"]["QuotationReportRowResponse"];
+export type ProjectBudgetReportResponse = components["schemas"]["ProjectBudgetReportResponse"];
+export type ProjectBudgetSummaryMetricsResponse = components["schemas"]["ProjectBudgetSummaryMetricsResponse"];
+export type ProjectBudgetReportRowResponse = components["schemas"]["ProjectBudgetReportRowResponse"];
+export type StockValueReportResponse = components["schemas"]["StockValueReportResponse"];
+export type StockValueSummaryMetricsResponse = components["schemas"]["StockValueSummaryMetricsResponse"];
+export type StockValueReportRowResponse = components["schemas"]["StockValueReportRowResponse"];
+export type ReportingArAgingResponse = components["schemas"]["ReportingArAgingResponse"];
+export type ArAgingSummaryMetricsResponse = components["schemas"]["ArAgingSummaryMetricsResponse"];
+export type ArAgingReportRowResponse = components["schemas"]["ArAgingReportRowResponse"];
+export type ServiceSlaReportResponse = components["schemas"]["ServiceSlaReportResponse"];
+export type ServiceSlaSummaryMetricsResponse = components["schemas"]["ServiceSlaSummaryMetricsResponse"];
+export type ServiceSlaReportRowResponse = components["schemas"]["ServiceSlaReportRowResponse"];
 export interface ListBillingsParams {
   search?: string;
   status?: string;
@@ -3069,6 +3088,57 @@ export class ApiClient {
 
   async submitCostRecord(itemId: string, costId: string, rowVersion: string, options: RequestOptions): Promise<CostRecordResponse> {
     return this.request<CostRecordResponse>(`/api/v1/items/${encodeURIComponent(itemId)}/costs/${encodeURIComponent(costId)}/submit`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async getDashboardSummary(query: { branchId?: string; asOfDate?: string } = {}, options: RequestOptions): Promise<DashboardSummaryResponse> {
+    const params = new URLSearchParams();
+    if (query.branchId) params.set("branchId", query.branchId);
+    if (query.asOfDate) params.set("asOfDate", query.asOfDate);
+    const qs = params.toString();
+    return this.request<DashboardSummaryResponse>(`/api/v1/reports/dashboard-summary${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async getPipelineReport(query: { branchId?: string } = {}, options: RequestOptions): Promise<PipelineReportResponse> {
+    const params = new URLSearchParams();
+    if (query.branchId) params.set("branchId", query.branchId);
+    const qs = params.toString();
+    return this.request<PipelineReportResponse>(`/api/v1/reports/pipeline${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async getQuotationReport(query: { branchId?: string } = {}, options: RequestOptions): Promise<QuotationReportResponse> {
+    const params = new URLSearchParams();
+    if (query.branchId) params.set("branchId", query.branchId);
+    const qs = params.toString();
+    return this.request<QuotationReportResponse>(`/api/v1/reports/quotations${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async getProjectBudgetReport(query: { branchId?: string } = {}, options: RequestOptions): Promise<ProjectBudgetReportResponse> {
+    const params = new URLSearchParams();
+    if (query.branchId) params.set("branchId", query.branchId);
+    const qs = params.toString();
+    return this.request<ProjectBudgetReportResponse>(`/api/v1/reports/projects-budget${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async getStockValueReport(query: { branchId?: string } = {}, options: RequestOptions): Promise<StockValueReportResponse> {
+    const params = new URLSearchParams();
+    if (query.branchId) params.set("branchId", query.branchId);
+    const qs = params.toString();
+    return this.request<StockValueReportResponse>(`/api/v1/reports/stock-value${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async getReportingArAging(query: { branchId?: string; asOfDate?: string } = {}, options: RequestOptions): Promise<ReportingArAgingResponse> {
+    const params = new URLSearchParams();
+    if (query.branchId) params.set("branchId", query.branchId);
+    if (query.asOfDate) params.set("asOfDate", query.asOfDate);
+    const qs = params.toString();
+    return this.request<ReportingArAgingResponse>(`/api/v1/reports/ar-aging${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async getServiceSlaReport(query: { branchId?: string } = {}, options: RequestOptions): Promise<ServiceSlaReportResponse> {
+    const params = new URLSearchParams();
+    if (query.branchId) params.set("branchId", query.branchId);
+    const qs = params.toString();
+    return this.request<ServiceSlaReportResponse>(`/api/v1/reports/service-sla${qs ? `?${qs}` : ""}`, "GET", options);
   }
 }
 

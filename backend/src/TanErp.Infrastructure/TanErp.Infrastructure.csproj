@@ -13,6 +13,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="FirebaseAdmin" />
     <PackageReference Include="QuestPDF" />
+    <PackageReference Include="Dapper" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MasterData\Seed\thailand_addresses.json.gz" />

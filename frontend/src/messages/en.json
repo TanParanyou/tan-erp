@@ -42,6 +42,7 @@
     "noBranch": "No branch specified (Org level)",
     "switchLanguage": "ภาษาไทย",
     "home": "Home",
+    "reports": "Dashboard & Reports",
     "scope": "Scope",
     "toggleMenu": "Toggle menu",
     "closeMenu": "Close menu",
@@ -6308,5 +6309,143 @@
       "save": "Save appearance",
       "saveSuccess": "Appearance saved"
     }
+  },
+  "reporting": {
+    "title": "Dashboard & Executive Reports",
+    "subtitle": "Key business metrics and branch performance reporting",
+    "refresh": "Refresh",
+    "exportCsv": "Export CSV",
+    "exportingCsv": "Exporting...",
+    "generatedAt": "Generated as of {date}",
+    "noPermittedReports": "You do not have permission to view any reports",
+    "filters": {
+      "branchFilterLabel": "Branch",
+      "allBranches": "All Branches (Organization-wide)",
+      "asOfDateLabel": "As of Date",
+      "asOfDatePlaceholder": "YYYY-MM-DD",
+      "searchPlaceholder": "Search records..."
+    },
+    "kpi": {
+      "pipelineTitle": "Total Pipeline Value",
+      "winRate": "Win Rate",
+      "openPipeline": "Open Opportunities",
+      "quotationsTitle": "Accepted Quotations Value",
+      "acceptedValue": "Accepted Value",
+      "acceptanceRate": "Acceptance Rate",
+      "projectsBudgetTitle": "Total Projects Budget",
+      "currentBudget": "Current Budget",
+      "overBudgetCount": "Over Budget Projects",
+      "stockValueTitle": "Total Stock Value",
+      "warehousesAndSkus": "Warehouses & SKUs",
+      "arAgingTitle": "Overdue AR > 30 Days",
+      "overdueOver30": "Overdue > 30 Days",
+      "serviceSlaTitle": "Service Requests On-Track SLA",
+      "slaBreachedAndWarning": "Breached / Warning",
+      "waitingCustomer": "Waiting for Customer",
+      "notPermitted": "No Permission"
+    },
+    "tabs": {
+      "pipeline": "Sales Pipeline",
+      "quotations": "Commercial Quotations",
+      "projectsBudget": "Projects & Budgets",
+      "stockValue": "Stock Valuation",
+      "arAging": "Accounts Receivable (AR Aging)",
+      "serviceSla": "Service & SLA Performance"
+    },
+    "columns": {
+      "opportunityNumber": "Opportunity No.",
+      "title": "Title",
+      "customer": "Customer",
+      "branch": "Branch",
+      "stage": "Stage",
+      "estimatedValue": "Estimated Value",
+      "createdAt": "Created Date",
+      "quotationNumber": "Quotation No.",
+      "status": "Status",
+      "totalAmount": "Total Amount",
+      "issuedAt": "Issue Date",
+      "validUntil": "Valid Until",
+      "projectCode": "Project Code",
+      "projectName": "Project Name",
+      "contractAmount": "Contract Amount",
+      "currentBudget": "Current Budget",
+      "actualCost": "Actual Cost",
+      "variance": "Budget Variance",
+      "budgetStatus": "Budget Status",
+      "warehouseCode": "Warehouse Code",
+      "warehouseName": "Warehouse Name",
+      "itemCode": "Item Code",
+      "itemName": "Item Name",
+      "onHandQty": "On-hand Qty",
+      "unitCost": "Unit Cost",
+      "totalValue": "Total Value",
+      "billingNumber": "Invoice No.",
+      "dueDate": "Due Date",
+      "remainingAmount": "Outstanding Amount",
+      "agingBucket": "Aging Period",
+      "overdueDays": "Days Overdue",
+      "serviceRequestNumber": "Service Request No.",
+      "project": "Project",
+      "priority": "Priority",
+      "slaStatus": "SLA Status",
+      "elapsedHours": "Elapsed (hrs)",
+      "targetHours": "Target (hrs)",
+      "warranty": "Warranty"
+    },
+    "stages": {
+      "draft": "Draft",
+      "qualified": "Qualified",
+      "surveying": "Surveying",
+      "estimating": "Estimating",
+      "proposed": "Proposed",
+      "won": "Won",
+      "lost": "Lost",
+      "cancelled": "Cancelled"
+    },
+    "quotationStatuses": {
+      "draft": "Draft",
+      "issued": "Issued",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "superseded": "Superseded",
+      "cancelled": "Cancelled"
+    },
+    "projectStatuses": {
+      "draft": "Draft",
+      "planned": "Planned",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "budgetStatus": {
+      "withinBudget": "Within Budget",
+      "overBudget": "Over Budget"
+    },
+    "agingBuckets": {
+      "current": "Current (Not Due)",
+      "1_30": "1-30 Days",
+      "31_60": "31-60 Days",
+      "61_90": "61-90 Days",
+      "over_90": "> 90 Days"
+    },
+    "servicePriorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "slaStatuses": {
+      "on_track": "On Track",
+      "warning": "Warning",
+      "breached": "Breached",
+      "paused": "Paused",
+      "met": "Met"
+    },
+    "warranty": {
+      "inWarranty": "In Warranty",
+      "outOfWarranty": "Out of Warranty"
+    },
+    "emptyRows": "No data found for the selected criteria",
+    "slaElapsedOfTarget": "{elapsed} / {target} h"
   }
 }

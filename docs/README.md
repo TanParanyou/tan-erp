@@ -71,6 +71,8 @@
 | API ไฟล์แนบและลายเซ็นกลาง (Shared Attachment & Signature) | [Attachment API Contract](03-contracts/attachment-api-contract.md) |
 | API การแจ้งเตือนในระบบ (Notification) | [Notification API Contract](03-contracts/notification-api-contract.md) |
 | API การวางบิล รับชำระ และส่งข้อมูลให้ระบบบัญชี | [Finance API Contract](03-contracts/finance-api-contract.md) |
+| API รายงานผู้บริหารและ KPI ประจำโมดูล (Reporting) | [Reporting API Contract](03-contracts/reporting-api-contract.md) |
+| ผลตรวจแดชบอร์ดและรายงาน KPI (G-19) | [Reporting Verification](05-engineering/reporting-verification.md) |
 | ผลตรวจ Quick Estimate (CP-16) | [Quick Estimate Verification](05-engineering/quick-estimate-verification.md) |
 | API ของ Item/Unit/Cost | [Item Master API Contract](03-contracts/item-master-api-contract.md) |
 | API ของ Customer/Opportunity/Site Survey | [CRM and Site Survey API Contract](03-contracts/crm-site-survey-api-contract.md) |

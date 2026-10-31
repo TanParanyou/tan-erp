@@ -34081,6 +34081,573 @@
         }
       }
     },
+    "/api/v1/reports/dashboard-summary": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/pipeline": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineReportResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineReportResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineReportResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/quotations": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotationReportResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotationReportResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotationReportResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/projects-budget": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBudgetReportResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBudgetReportResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBudgetReportResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/stock-value": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockValueReportResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockValueReportResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockValueReportResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/ar-aging": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportingArAgingResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportingArAgingResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportingArAgingResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/service-sla": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceSlaReportResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceSlaReportResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceSlaReportResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/service-requests": {
       "post": {
         "tags": [
@@ -43220,6 +43787,111 @@
         },
         "additionalProperties": false
       },
+      "ArAgingReportRowResponse": {
+        "type": "object",
+        "properties": {
+          "billingDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "branchCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "daysOverdue": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "agingBucket": {
+            "type": "string",
+            "nullable": true
+          },
+          "grossTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "paidAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "outstandingAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ArAgingSummaryMetricsResponse": {
+        "type": "object",
+        "properties": {
+          "asOfDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "invoiceCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "current": {
+            "type": "number",
+            "format": "double"
+          },
+          "bucket1To30": {
+            "type": "number",
+            "format": "double"
+          },
+          "bucket31To60": {
+            "type": "number",
+            "format": "double"
+          },
+          "bucket61To90": {
+            "type": "number",
+            "format": "double"
+          },
+          "bucketOver90": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalOutstanding": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ArAgingSummaryMetricsResponseReportSectionResponse": {
+        "type": "object",
+        "properties": {
+          "permitted": {
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ArAgingSummaryMetricsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
       "AssignAdminRoleRequest": {
         "type": "object",
         "properties": {
@@ -47465,6 +48137,39 @@
           "status": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DashboardSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "generatedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "effectiveBranchId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "pipeline": {
+            "$ref": "#/components/schemas/PipelineSummaryMetricsResponseReportSectionResponse"
+          },
+          "quotations": {
+            "$ref": "#/components/schemas/QuotationSummaryMetricsResponseReportSectionResponse"
+          },
+          "projectsBudget": {
+            "$ref": "#/components/schemas/ProjectBudgetSummaryMetricsResponseReportSectionResponse"
+          },
+          "stockValue": {
+            "$ref": "#/components/schemas/StockValueSummaryMetricsResponseReportSectionResponse"
+          },
+          "arAging": {
+            "$ref": "#/components/schemas/ArAgingSummaryMetricsResponseReportSectionResponse"
+          },
+          "serviceSla": {
+            "$ref": "#/components/schemas/ServiceSlaSummaryMetricsResponseReportSectionResponse"
           }
         },
         "additionalProperties": false
@@ -52359,6 +53064,90 @@
         },
         "additionalProperties": false
       },
+      "PipelineReportResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/PipelineSummaryMetricsResponse"
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PipelineStageMetricsResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PipelineStageMetricsResponse": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string",
+            "nullable": true
+          },
+          "opportunityCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expectedBudgetTotal": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PipelineSummaryMetricsResponse": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalExpectedBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "openCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "openExpectedBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "wonCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wonBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "lostCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winRatePercent": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PipelineSummaryMetricsResponseReportSectionResponse": {
+        "type": "object",
+        "properties": {
+          "permitted": {
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/PipelineSummaryMetricsResponse"
+          }
+        },
+        "additionalProperties": false
+      },
       "PreviewDocumentSequenceRequest": {
         "type": "object",
         "properties": {
@@ -52967,6 +53756,79 @@
         },
         "additionalProperties": false
       },
+      "ProjectBudgetReportResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/ProjectBudgetSummaryMetricsResponse"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectBudgetReportRowResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectBudgetReportRowResponse": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectName": {
+            "type": "string",
+            "nullable": true
+          },
+          "branchCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "baselineContractAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "baselineBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "approvedChangeOrderBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "committedAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "actualAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "varianceAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "isOverBudget": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "ProjectBudgetResponse": {
         "type": "object",
         "properties": {
@@ -53020,6 +53882,56 @@
               "$ref": "#/components/schemas/ProjectBudgetLineResponse"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectBudgetSummaryMetricsResponse": {
+        "type": "object",
+        "properties": {
+          "projectCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overBudgetCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalBaselineBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalApprovedChangeOrderBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalCurrentBudget": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalCommittedAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalActualAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalVarianceAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectBudgetSummaryMetricsResponseReportSectionResponse": {
+        "type": "object",
+        "properties": {
+          "permitted": {
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ProjectBudgetSummaryMetricsResponse"
           }
         },
         "additionalProperties": false
@@ -55181,6 +56093,66 @@
         },
         "additionalProperties": false
       },
+      "QuotationReportResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/QuotationSummaryMetricsResponse"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuotationReportRowResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuotationReportRowResponse": {
+        "type": "object",
+        "properties": {
+          "quotationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "branchCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "issuedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "acceptedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "QuotationResponse": {
         "type": "object",
         "properties": {
@@ -55264,6 +56236,48 @@
               "$ref": "#/components/schemas/QuotationWorkItemResponse"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuotationSummaryMetricsResponse": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "issuedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "issuedAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "acceptedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "acceptedAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "acceptanceRatePercent": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QuotationSummaryMetricsResponseReportSectionResponse": {
+        "type": "object",
+        "properties": {
+          "permitted": {
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/QuotationSummaryMetricsResponse"
           }
         },
         "additionalProperties": false
@@ -55530,6 +56544,22 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProjectBudgetLineRequest"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReportingArAgingResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/ArAgingSummaryMetricsResponse"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArAgingReportRowResponse"
             },
             "nullable": true
           }
@@ -56306,6 +57336,79 @@
         },
         "additionalProperties": false
       },
+      "ServiceSlaReportResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/ServiceSlaSummaryMetricsResponse"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceSlaReportRowResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceSlaReportRowResponse": {
+        "type": "object",
+        "properties": {
+          "serviceRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "branchCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "inWarranty": {
+            "type": "boolean"
+          },
+          "slaStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "elapsedHours": {
+            "type": "number",
+            "format": "double"
+          },
+          "resolveTargetHours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "serviceChargeAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "ServiceSlaResponse": {
         "type": "object",
         "properties": {
@@ -56328,6 +57431,48 @@
           "status": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceSlaSummaryMetricsResponse": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "openBacklogCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "waitingCustomerCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "slaWarningCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "slaBreachedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "outOfWarrantyChargedTotal": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceSlaSummaryMetricsResponseReportSectionResponse": {
+        "type": "object",
+        "properties": {
+          "permitted": {
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ServiceSlaSummaryMetricsResponse"
           }
         },
         "additionalProperties": false
@@ -57333,6 +58478,114 @@
           "updatedAtUtc": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockValueReportResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/StockValueSummaryMetricsResponse"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockValueReportRowResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockValueReportRowResponse": {
+        "type": "object",
+        "properties": {
+          "warehouseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "warehouseCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "warehouseName": {
+            "type": "string",
+            "nullable": true
+          },
+          "branchCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "itemCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemNameTh": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemNameEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "onHand": {
+            "type": "number",
+            "format": "double"
+          },
+          "reserved": {
+            "type": "number",
+            "format": "double"
+          },
+          "available": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockValueSummaryMetricsResponse": {
+        "type": "object",
+        "properties": {
+          "warehouseCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skuCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalOnHand": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalReserved": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockValueSummaryMetricsResponseReportSectionResponse": {
+        "type": "object",
+        "properties": {
+          "permitted": {
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/StockValueSummaryMetricsResponse"
           }
         },
         "additionalProperties": false
@@ -61151,6 +62404,9 @@
     },
     {
       "name": "QuotationLifecycle"
+    },
+    {
+      "name": "Reports"
     },
     {
       "name": "ServiceRequests"

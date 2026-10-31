@@ -22419,6 +22419,435 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/dashboard-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                    asOfDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DashboardSummaryResponse"];
+                        "application/json": components["schemas"]["DashboardSummaryResponse"];
+                        "text/json": components["schemas"]["DashboardSummaryResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/pipeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PipelineReportResponse"];
+                        "application/json": components["schemas"]["PipelineReportResponse"];
+                        "text/json": components["schemas"]["PipelineReportResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/quotations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["QuotationReportResponse"];
+                        "application/json": components["schemas"]["QuotationReportResponse"];
+                        "text/json": components["schemas"]["QuotationReportResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/projects-budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectBudgetReportResponse"];
+                        "application/json": components["schemas"]["ProjectBudgetReportResponse"];
+                        "text/json": components["schemas"]["ProjectBudgetReportResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/stock-value": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["StockValueReportResponse"];
+                        "application/json": components["schemas"]["StockValueReportResponse"];
+                        "text/json": components["schemas"]["StockValueReportResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/ar-aging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                    asOfDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ReportingArAgingResponse"];
+                        "application/json": components["schemas"]["ReportingArAgingResponse"];
+                        "text/json": components["schemas"]["ReportingArAgingResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/service-sla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    branchId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceSlaReportResponse"];
+                        "application/json": components["schemas"]["ServiceSlaReportResponse"];
+                        "text/json": components["schemas"]["ServiceSlaReportResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/service-requests": {
         parameters: {
             query?: never;
@@ -28045,6 +28474,48 @@ export interface components {
             grandTotalOutstanding?: number;
             customers?: components["schemas"]["ArAgingCustomerBucketResponse"][] | null;
         };
+        ArAgingReportRowResponse: {
+            /** Format: uuid */
+            billingDocumentId?: string;
+            number?: string | null;
+            projectCode?: string | null;
+            customerCode?: string | null;
+            customerName?: string | null;
+            branchCode?: string | null;
+            /** Format: date */
+            dueDate?: string | null;
+            /** Format: int32 */
+            daysOverdue?: number;
+            agingBucket?: string | null;
+            /** Format: double */
+            grossTotal?: number;
+            /** Format: double */
+            paidAmount?: number;
+            /** Format: double */
+            outstandingAmount?: number;
+        };
+        ArAgingSummaryMetricsResponse: {
+            /** Format: date */
+            asOfDate?: string;
+            /** Format: int32 */
+            invoiceCount?: number;
+            /** Format: double */
+            current?: number;
+            /** Format: double */
+            bucket1To30?: number;
+            /** Format: double */
+            bucket31To60?: number;
+            /** Format: double */
+            bucket61To90?: number;
+            /** Format: double */
+            bucketOver90?: number;
+            /** Format: double */
+            totalOutstanding?: number;
+        };
+        ArAgingSummaryMetricsResponseReportSectionResponse: {
+            permitted?: boolean;
+            summary?: components["schemas"]["ArAgingSummaryMetricsResponse"];
+        };
         AssignAdminRoleRequest: {
             /** Format: uuid */
             roleId?: string;
@@ -29461,6 +29932,18 @@ export interface components {
             displayNameTh?: string | null;
             displayNameEn?: string | null;
             status?: string | null;
+        };
+        DashboardSummaryResponse: {
+            /** Format: date-time */
+            generatedAtUtc?: string;
+            /** Format: uuid */
+            effectiveBranchId?: string | null;
+            pipeline?: components["schemas"]["PipelineSummaryMetricsResponseReportSectionResponse"];
+            quotations?: components["schemas"]["QuotationSummaryMetricsResponseReportSectionResponse"];
+            projectsBudget?: components["schemas"]["ProjectBudgetSummaryMetricsResponseReportSectionResponse"];
+            stockValue?: components["schemas"]["StockValueSummaryMetricsResponseReportSectionResponse"];
+            arAging?: components["schemas"]["ArAgingSummaryMetricsResponseReportSectionResponse"];
+            serviceSla?: components["schemas"]["ServiceSlaSummaryMetricsResponseReportSectionResponse"];
         };
         DeactivateBranchRequest: {
             reason?: string | null;
@@ -31190,6 +31673,39 @@ export interface components {
             /** Format: uuid */
             scopeId?: string | null;
         };
+        PipelineReportResponse: {
+            summary?: components["schemas"]["PipelineSummaryMetricsResponse"];
+            stages?: components["schemas"]["PipelineStageMetricsResponse"][] | null;
+        };
+        PipelineStageMetricsResponse: {
+            stage?: string | null;
+            /** Format: int32 */
+            opportunityCount?: number;
+            /** Format: double */
+            expectedBudgetTotal?: number;
+        };
+        PipelineSummaryMetricsResponse: {
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: double */
+            totalExpectedBudget?: number;
+            /** Format: int32 */
+            openCount?: number;
+            /** Format: double */
+            openExpectedBudget?: number;
+            /** Format: int32 */
+            wonCount?: number;
+            /** Format: double */
+            wonBudget?: number;
+            /** Format: int32 */
+            lostCount?: number;
+            /** Format: double */
+            winRatePercent?: number;
+        };
+        PipelineSummaryMetricsResponseReportSectionResponse: {
+            permitted?: boolean;
+            summary?: components["schemas"]["PipelineSummaryMetricsResponse"];
+        };
         PreviewDocumentSequenceRequest: {
             prefix?: string | null;
             formatPattern?: string | null;
@@ -31403,6 +31919,33 @@ export interface components {
             wbsCode?: string | null;
             wbsName?: string | null;
         };
+        ProjectBudgetReportResponse: {
+            summary?: components["schemas"]["ProjectBudgetSummaryMetricsResponse"];
+            rows?: components["schemas"]["ProjectBudgetReportRowResponse"][] | null;
+        };
+        ProjectBudgetReportRowResponse: {
+            /** Format: uuid */
+            projectId?: string;
+            projectCode?: string | null;
+            projectName?: string | null;
+            branchCode?: string | null;
+            status?: string | null;
+            /** Format: double */
+            baselineContractAmount?: number;
+            /** Format: double */
+            baselineBudget?: number;
+            /** Format: double */
+            approvedChangeOrderBudget?: number;
+            /** Format: double */
+            currentBudget?: number;
+            /** Format: double */
+            committedAmount?: number;
+            /** Format: double */
+            actualAmount?: number;
+            /** Format: double */
+            varianceAmount?: number;
+            isOverBudget?: boolean;
+        };
         ProjectBudgetResponse: {
             /** Format: double */
             baselineTotal?: number | null;
@@ -31423,6 +31966,28 @@ export interface components {
             /** Format: double */
             varianceAmount?: number | null;
             lines?: components["schemas"]["ProjectBudgetLineResponse"][] | null;
+        };
+        ProjectBudgetSummaryMetricsResponse: {
+            /** Format: int32 */
+            projectCount?: number;
+            /** Format: int32 */
+            overBudgetCount?: number;
+            /** Format: double */
+            totalBaselineBudget?: number;
+            /** Format: double */
+            totalApprovedChangeOrderBudget?: number;
+            /** Format: double */
+            totalCurrentBudget?: number;
+            /** Format: double */
+            totalCommittedAmount?: number;
+            /** Format: double */
+            totalActualAmount?: number;
+            /** Format: double */
+            totalVarianceAmount?: number;
+        };
+        ProjectBudgetSummaryMetricsResponseReportSectionResponse: {
+            permitted?: boolean;
+            summary?: components["schemas"]["ProjectBudgetSummaryMetricsResponse"];
         };
         ProjectChangeOrderActionRequest: {
             /** Format: uuid */
@@ -32159,6 +32724,25 @@ export interface components {
         QuotationReasonRequest: {
             reason?: string | null;
         };
+        QuotationReportResponse: {
+            summary?: components["schemas"]["QuotationSummaryMetricsResponse"];
+            rows?: components["schemas"]["QuotationReportRowResponse"][] | null;
+        };
+        QuotationReportRowResponse: {
+            /** Format: uuid */
+            quotationId?: string;
+            number?: string | null;
+            customerCode?: string | null;
+            customerName?: string | null;
+            branchCode?: string | null;
+            status?: string | null;
+            /** Format: double */
+            totalAmount?: number;
+            /** Format: date-time */
+            issuedAtUtc?: string | null;
+            /** Format: date-time */
+            acceptedAtUtc?: string | null;
+        };
         QuotationResponse: {
             /** Format: uuid */
             quotationId?: string;
@@ -32190,6 +32774,24 @@ export interface components {
             /** Format: double */
             subtotal?: number;
             workItems?: components["schemas"]["QuotationWorkItemResponse"][] | null;
+        };
+        QuotationSummaryMetricsResponse: {
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            issuedCount?: number;
+            /** Format: double */
+            issuedAmount?: number;
+            /** Format: int32 */
+            acceptedCount?: number;
+            /** Format: double */
+            acceptedAmount?: number;
+            /** Format: double */
+            acceptanceRatePercent?: number;
+        };
+        QuotationSummaryMetricsResponseReportSectionResponse: {
+            permitted?: boolean;
+            summary?: components["schemas"]["QuotationSummaryMetricsResponse"];
         };
         QuotationTotalsResponse: {
             /** Format: double */
@@ -32283,6 +32885,10 @@ export interface components {
         };
         ReplaceProjectBudgetRequest: {
             lines?: components["schemas"]["ProjectBudgetLineRequest"][] | null;
+        };
+        ReportingArAgingResponse: {
+            summary?: components["schemas"]["ArAgingSummaryMetricsResponse"];
+            rows?: components["schemas"]["ArAgingReportRowResponse"][] | null;
         };
         ReservationListResponse: {
             items?: components["schemas"]["ReservationResponse"][] | null;
@@ -32542,6 +33148,30 @@ export interface components {
             items?: components["schemas"]["ServiceRequestListItemResponse"][] | null;
             pagination?: components["schemas"]["ServicePaginationResponse"];
         };
+        ServiceSlaReportResponse: {
+            summary?: components["schemas"]["ServiceSlaSummaryMetricsResponse"];
+            rows?: components["schemas"]["ServiceSlaReportRowResponse"][] | null;
+        };
+        ServiceSlaReportRowResponse: {
+            /** Format: uuid */
+            serviceRequestId?: string;
+            number?: string | null;
+            title?: string | null;
+            projectCode?: string | null;
+            branchCode?: string | null;
+            priority?: string | null;
+            status?: string | null;
+            inWarranty?: boolean;
+            slaStatus?: string | null;
+            /** Format: double */
+            elapsedHours?: number;
+            /** Format: int32 */
+            resolveTargetHours?: number;
+            /** Format: double */
+            serviceChargeAmount?: number;
+            /** Format: date-time */
+            createdAtUtc?: string;
+        };
         ServiceSlaResponse: {
             /** Format: int32 */
             responseHours?: number;
@@ -32552,6 +33182,24 @@ export interface components {
             /** Format: int64 */
             pausedSeconds?: number;
             status?: string | null;
+        };
+        ServiceSlaSummaryMetricsResponse: {
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            openBacklogCount?: number;
+            /** Format: int32 */
+            waitingCustomerCount?: number;
+            /** Format: int32 */
+            slaWarningCount?: number;
+            /** Format: int32 */
+            slaBreachedCount?: number;
+            /** Format: double */
+            outOfWarrantyChargedTotal?: number;
+        };
+        ServiceSlaSummaryMetricsResponseReportSectionResponse: {
+            permitted?: boolean;
+            summary?: components["schemas"]["ServiceSlaSummaryMetricsResponse"];
         };
         SetBranchAvailabilityRequest: {
             mode: string;
@@ -32892,6 +33540,46 @@ export interface components {
             lastStockDocumentId?: string;
             /** Format: date-time */
             updatedAtUtc?: string;
+        };
+        StockValueReportResponse: {
+            summary?: components["schemas"]["StockValueSummaryMetricsResponse"];
+            rows?: components["schemas"]["StockValueReportRowResponse"][] | null;
+        };
+        StockValueReportRowResponse: {
+            /** Format: uuid */
+            warehouseId?: string;
+            warehouseCode?: string | null;
+            warehouseName?: string | null;
+            branchCode?: string | null;
+            /** Format: uuid */
+            itemId?: string;
+            itemCode?: string | null;
+            itemNameTh?: string | null;
+            itemNameEn?: string | null;
+            /** Format: double */
+            onHand?: number;
+            /** Format: double */
+            reserved?: number;
+            /** Format: double */
+            available?: number;
+            /** Format: double */
+            totalValue?: number;
+        };
+        StockValueSummaryMetricsResponse: {
+            /** Format: int32 */
+            warehouseCount?: number;
+            /** Format: int32 */
+            skuCount?: number;
+            /** Format: double */
+            totalOnHand?: number;
+            /** Format: double */
+            totalReserved?: number;
+            /** Format: double */
+            totalValue?: number;
+        };
+        StockValueSummaryMetricsResponseReportSectionResponse: {
+            permitted?: boolean;
+            summary?: components["schemas"]["StockValueSummaryMetricsResponse"];
         };
         SubmitEstimateRequest: {
             /** Format: int32 */

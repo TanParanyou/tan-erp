@@ -64,6 +64,7 @@ describe("SidebarNav Component", () => {
     expect(screen.getByPlaceholderText("ค้นหาเมนู...")).toBeDefined();
     expect(screen.getByRole("button", { name: "ยุบทั้งหมด" })).toBeDefined();
     expect(screen.getByRole("link", { name: "หน้าหลัก" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "แดชบอร์ดและรายงาน" })).toBeDefined();
     expect(screen.getByText("ลูกค้าและโอกาสขาย")).toBeDefined();
     expect(screen.getByText("สินค้า")).toBeDefined();
     expect(screen.getByRole("link", { name: "ข้อมูลลูกค้า" })).toBeDefined();
@@ -95,12 +96,14 @@ describe("SidebarNav Component", () => {
     // Items not matching should be filtered out
     expect(screen.queryByRole("link", { name: "ข้อมูลหลักสินค้า" })).toBeNull();
     expect(screen.queryByRole("link", { name: "รูปแบบเลขที่เอกสาร" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "แดชบอร์ดและรายงาน" })).toBeNull();
 
     // Clear search button should appear and reset when clicked
     const clearButton = screen.getByRole("button", { name: "ล้างการค้นหา" });
     fireEvent.click(clearButton);
 
     expect(screen.getByRole("link", { name: "ข้อมูลหลักสินค้า" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "แดชบอร์ดและรายงาน" })).toBeDefined();
   });
 
   it("shows empty state message when search query does not match any menu", () => {
@@ -235,5 +238,29 @@ describe("SidebarNav Component", () => {
 
     render(<SidebarNav currentUser={manager} isCollapsed={false} />);
     expect(screen.getByRole("link", { name: "วงเงินอนุมัติ" })).toHaveAttribute("href", "/th/settings/approval-limits");
+  });
+
+  it("shows dashboard & reports link when user has any report permission and hides when none", () => {
+    // mockUser has opportunities.read -> sees reports
+    const { unmount } = render(<SidebarNav currentUser={mockUser} isCollapsed={false} />);
+    const reportsLink = screen.getByRole("link", { name: "แดชบอร์ดและรายงาน" });
+    expect(reportsLink).toBeDefined();
+    expect(reportsLink).toHaveAttribute("href", "/th/reports");
+    unmount();
+
+    // User with zero reporting permissions
+    const userWithoutReports: CurrentUserResponse = {
+      ...mockUser,
+      memberships: mockUser.memberships?.map((membership) => ({
+        ...membership,
+        permissions: [
+          { key: "document-sequences.read", scope: "organization" },
+          { key: "items.read", scope: "organization" },
+        ],
+      })),
+    };
+
+    render(<SidebarNav currentUser={userWithoutReports} isCollapsed={false} />);
+    expect(screen.queryByRole("link", { name: "แดชบอร์ดและรายงาน" })).toBeNull();
   });
 });
