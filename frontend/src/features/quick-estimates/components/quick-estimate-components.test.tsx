@@ -1,6 +1,7 @@
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import thMessages from "@/messages/th.json";
 import enMessages from "@/messages/en.json";
@@ -81,10 +82,15 @@ function renderWorkspace(data: QuickEstimateResponse, granted: string[] = ALL) {
   vi.spyOn(queries, "useQuickEstimateMutations").mockReturnValue(
     Object.fromEntries(Object.entries(mutate).map(([key, fn]) => [key, { mutateAsync: fn, isPending: false }])) as unknown as ReturnType<typeof queries.useQuickEstimateMutations>,
   );
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   render(
-    <NextIntlClientProvider locale="th" messages={thMessages}>
-      <QuickEstimateWorkspace estimateId="qe-1" />
-    </NextIntlClientProvider>,
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="th" messages={thMessages}>
+        <QuickEstimateWorkspace estimateId="qe-1" />
+      </NextIntlClientProvider>
+    </QueryClientProvider>,
   );
 }
 

@@ -53,7 +53,19 @@ public static class SurveyTemplates
         MinimumEvidenceCount: 1,
         SnapshotHashVersion: "v3");
 
-    public static IReadOnlyList<SurveyTemplateVersion> All { get; } = new[] { BaselineV1, BaselineV2 };
+    public static readonly SurveyTemplateVersion BaselineV3 = new(
+        SurveyDefaults.AreaEvidenceTemplateVersion,
+        new[]
+        {
+            SurveyChecklistItems.SiteAccessConfirmed,
+            SurveyChecklistItems.UtilitiesChecked,
+            SurveyChecklistItems.ExistingConditionsInspected,
+            SurveyChecklistItems.CustomerRequirementsConfirmed
+        },
+        MinimumEvidenceCount: 1,
+        SnapshotHashVersion: "v4");
+
+    public static IReadOnlyList<SurveyTemplateVersion> All { get; } = new[] { BaselineV1, BaselineV2, BaselineV3 };
 
     public static SurveyTemplateVersion? Find(string? code) =>
         All.FirstOrDefault(t => string.Equals(t.Code, code?.Trim(), StringComparison.Ordinal));

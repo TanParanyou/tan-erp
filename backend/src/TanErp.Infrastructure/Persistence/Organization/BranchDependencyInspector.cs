@@ -3,6 +3,7 @@ using TanErp.Application.Organization.Administration;
 using TanErp.Domain.Commercial;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
+using TanErp.Domain.DocumentTemplates;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Items;
 using TanErp.Domain.Crm.Opportunities;
@@ -60,6 +61,16 @@ public sealed class BranchDependencyInspector
         [typeof(AuditEvent)] = "Append-only audit log entry, not an open document.",
         [typeof(ApprovalLimit)] = "Approval limit configuration row; a limit tied to a deactivated branch is simply inert, so it is not an open document.",
         [typeof(BranchRateOverride)] = "Labor rate override configuration per branch, not an open document.",
+        [typeof(BillingAdjustmentNote)] = "Billing adjustment debit/credit note attached to parent billing document, covered by billing lifecycle.",
+        [typeof(CreditLimitOverrideRequest)] = "Credit limit override request workflow tied to quotation and customer, not an independent open document.",
+        [typeof(DocumentTemplate)] = "Document template configuration per branch, not an open document.",
+        [typeof(LaborTimesheetEntry)] = "Historical labor timesheet ledger log, not an open document.",
+        [typeof(PurchaseRequest)] = "Purchase requisition workflow document; procurement commitments tracked via purchase orders.",
+        [typeof(SupplierInvoice)] = "Supplier invoice 3-way matching document tied to purchase order, covered by purchase order lifecycle.",
+        [typeof(SupplierReturn)] = "Supplier return debit note transaction linked to purchase order/goods receipt, covered by procurement lifecycle.",
+        [typeof(TechnicianAssignment)] = "Technician assignment schedule entry linked to service request, covered by service request lifecycle.",
+        [typeof(WorkCenter)] = "Production work center master data per branch, not an open document.",
+        [typeof(WorkingCalendarHoliday)] = "Working calendar holiday configuration per branch, not an open document.",
     };
 
     private readonly AppDbContext _db;

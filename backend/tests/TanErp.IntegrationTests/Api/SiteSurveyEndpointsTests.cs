@@ -315,7 +315,7 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
             Assert.Equal(SurveyRevisionStatus.Ready, readyRev.Status);
             Assert.Equal(SurveyReadiness.Ready, readyRev.Readiness);
             Assert.NotNull(readyRev.SnapshotHash);
-            Assert.StartsWith("v3:", readyRev.SnapshotHash);
+            Assert.StartsWith("v4:", readyRev.SnapshotHash);
 
             // Verify Opportunity transitioned to Estimating
             var finalOpp = await db.Opportunities.AsNoTracking().SingleAsync(o => o.Id == oppId);
@@ -607,7 +607,7 @@ public class SiteSurveyEndpointsTests : IAsyncLifetime
     public async Task CloneRevision_CopiesChecklistAndEvidence_AndTemplateEndpointListsCurrentVersion()
     {
         var (oppId, surveyId, ready) = await CreateReadySurveyAsync("rev-copy");
-        Assert.StartsWith("v3:", ready.SnapshotHash);
+        Assert.StartsWith("v4:", ready.SnapshotHash);
 
         var cloneResp = await PostAsync(
             $"/api/v1/opportunities/{oppId}/surveys/{surveyId}/revisions",

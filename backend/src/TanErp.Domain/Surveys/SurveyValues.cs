@@ -56,7 +56,8 @@ public static class SurveyDefaults
 {
     public const string BaselineTemplateVersion = "SURVEY-BASELINE-v1";
     public const string ChecklistTemplateVersion = "SURVEY-BASELINE-v2";
-    public const string CurrentTemplateVersion = ChecklistTemplateVersion;
+    public const string AreaEvidenceTemplateVersion = "SURVEY-BASELINE-v3";
+    public const string CurrentTemplateVersion = AreaEvidenceTemplateVersion;
 }
 
 public static class ChecklistResultValue
