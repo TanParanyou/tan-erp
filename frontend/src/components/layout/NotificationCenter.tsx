@@ -88,7 +88,7 @@ export function NotificationCenter({
         aria-controls={isOpen ? panelId : undefined}
         aria-label={t("title")}
         title={t("title")}
-        className="relative flex h-11 w-11 items-center justify-center border border-erp-border bg-erp-surface text-erp-text-main hover:bg-erp-surface-subtle rounded-none"
+        className="relative flex h-11 w-11 items-center justify-center border border-erp-border bg-erp-surface text-erp-text-main hover:bg-erp-surface-subtle active:scale-95 transition-all duration-150 cursor-pointer rounded-none"
       >
         <IconBell size={18} />
         {unread > 0 && (
@@ -118,7 +118,7 @@ export function NotificationCenter({
               <button
                 type="button"
                 onClick={onMarkAllRead}
-                className="min-h-11 px-2 text-[11px] text-erp-navy hover:underline font-medium"
+                className="min-h-11 px-2 text-[11px] text-erp-navy hover:underline active:opacity-70 font-medium cursor-pointer"
               >
                 {t("markAllRead")}
               </button>
@@ -142,7 +142,7 @@ export function NotificationCenter({
                     onItemClick?.(n);
                   }}
                   className={cn(
-                    "block min-h-11 w-full p-3 text-left transition-colors rounded-none",
+                    "block min-h-11 w-full p-3 text-left transition-colors cursor-pointer rounded-none",
                     n.isRead ? "hover:bg-erp-surface-subtle/30" : "bg-erp-surface-subtle/50 hover:bg-erp-surface-subtle",
                   )}
                 >
@@ -177,7 +177,7 @@ export function NotificationCenter({
                   setOpen(false);
                   onViewAll();
                 }}
-                className="min-h-11 w-full px-3 text-center text-[11px] font-medium text-erp-navy hover:underline"
+                className="min-h-11 w-full px-3 text-center text-[11px] font-medium text-erp-navy hover:underline active:opacity-70 cursor-pointer"
               >
                 {t("viewAll")}
               </button>

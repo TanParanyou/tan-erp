@@ -681,3 +681,13 @@ export function IconSparkles({ size = 18, strokeWidth = 2, ...props }: IconProps
     </svg>
   );
 }
+
+export function IconMonitor({ size = 18, strokeWidth = 2, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} strokeWidth={strokeWidth} {...baseProps} {...props}>
+      <rect x="2" y="3" width="20" height="14" rx="0" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  );
+}

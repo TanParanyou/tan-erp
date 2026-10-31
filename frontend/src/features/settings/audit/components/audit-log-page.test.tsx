@@ -77,6 +77,36 @@ describe("AuditEventList (G-21 Audit Log)", () => {
     expect(screen.getByText("อนุมัติเสนอราคา")).toBeDefined();
   });
 
+  it("opens forensic inspector drawer when inspect button is clicked", () => {
+    const item = makeAuditEvent({
+      id: "event-inspect",
+      action: "update",
+      resourceType: "Customer",
+      resourceId: "CUST-009",
+      traceId: "trace-inspect-123",
+      changesJson: JSON.stringify({ name: "บริษัท ทดสอบ จำกัด" }),
+    });
+
+    vi.spyOn(auditQueries, "useAuditEvents").mockReturnValue({
+      data: {
+        items: [item],
+        pagination: { page: 1, pageSize: 25, totalPages: 1, totalCount: 1 },
+      } as AuditEventListResponse,
+      isLoading: false,
+      isError: false,
+      refetch: mockRefetch,
+    } as unknown as ReturnType<typeof auditQueries.useAuditEvents>);
+
+    renderList();
+
+    const inspectBtn = screen.getByRole("button", { name: `${thMessages.auditLog.list.inspect} CUST-009` });
+    fireEvent.click(inspectBtn);
+
+    expect(screen.getByText(thMessages.auditLog.inspector.title)).toBeDefined();
+    expect(screen.getByText("trace-inspect-123")).toBeDefined();
+    expect(screen.getByText(/"name": "บริษัท ทดสอบ จำกัด"/)).toBeDefined();
+  });
+
   it("handles redacted audit information gracefully", () => {
     const redactedItem = makeAuditEvent({
       id: "event-redacted",
@@ -131,7 +161,7 @@ describe("AuditEventList (G-21 Audit Log)", () => {
     expect(dashes.length).toBeGreaterThanOrEqual(4);
   });
 
-  it("passes date range filter parameters to query and updates url", () => {
+  it("passes search and filter parameters to query and updates url", () => {
     let capturedParams: AuditEventListParams | undefined;
     vi.spyOn(auditQueries, "useAuditEvents").mockImplementation((params) => {
       capturedParams = params;
@@ -143,11 +173,40 @@ describe("AuditEventList (G-21 Audit Log)", () => {
       } as unknown as ReturnType<typeof auditQueries.useAuditEvents>;
     });
 
-    navState.search = "from=2026-10-01&to=2026-10-20";
+    navState.search = "from=2026-10-01&to=2026-10-20&action=create&resourceType=Customer&search=EST-101";
     renderList();
 
     expect(capturedParams?.from).toBe("2026-10-01T00:00:00Z");
     expect(capturedParams?.to).toBe("2026-10-20T23:59:59Z");
+    expect(capturedParams?.action).toBe("create");
+    expect(capturedParams?.resourceType).toBe("Customer");
+    expect(capturedParams?.resourceId).toBe("EST-101");
+  });
+
+  it("removes active filter chips atomically without race conditions", () => {
+    vi.spyOn(auditQueries, "useAuditEvents").mockReturnValue({
+      data: { items: [], pagination: { page: 1, pageSize: 25, totalPages: 0, totalCount: 0 } },
+      isLoading: false,
+      isError: false,
+      refetch: mockRefetch,
+    } as unknown as ReturnType<typeof auditQueries.useAuditEvents>);
+
+    navState.search = "from=2026-10-01&to=2026-10-20&action=create";
+    renderList();
+
+    const removeActionChip = screen.getByRole("button", {
+      name: `${thMessages.common.filters.removeFilter} ${thMessages.auditLog.list.actionFilter}: create`,
+    });
+    fireEvent.click(removeActionChip);
+
+    expect(navState.replace).toHaveBeenCalledWith(
+      expect.stringContaining("from=2026-10-01"),
+      expect.objectContaining({ scroll: false })
+    );
+    expect(navState.replace).toHaveBeenCalledWith(
+      expect.not.stringContaining("action=create"),
+      expect.objectContaining({ scroll: false })
+    );
   });
 
   it("shows empty state when there are no audit logs and no filters active", () => {

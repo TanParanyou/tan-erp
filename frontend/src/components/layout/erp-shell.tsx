@@ -12,19 +12,25 @@ import {
   IconMenu,
   IconHome,
   IconUsers,
+  IconUser,
   IconChevronLeft,
   IconChevronRight,
+  IconChevronDown,
   IconLogOut,
   IconGlobe,
   IconBriefcase,
   IconBuilding,
   IconGitBranch,
   IconFileText,
+  IconSun,
+  IconMoon,
+  IconMonitor,
 } from "@/components/common/Icons";
 import { LogoIcon } from "@/components/common/Logo";
 import { AuthenticatedFileImage } from "@/components/common/AuthenticatedFileImage";
 import { Button } from "@/components/ui/Button";
-import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { DropdownMenu, type DropdownMenuItem } from "@/components/ui/DropdownMenu";
+import { useTheme, type ThemeMode } from "@/providers/theme-provider";
 import { can } from "@/lib/permissions/can";
 import { useSelectedMembership } from "@/lib/membership/selected-membership-context";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
@@ -32,6 +38,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { SidebarNav } from "./SidebarNav";
 import { useSaveThemePreferences } from "@/features/profile/api/profile-queries";
 import { NotificationBell } from "./NotificationBell";
+import { cn } from "@/lib/utils/cn";
 
 interface ErpShellProps {
   currentUser: CurrentUserResponse;
@@ -48,6 +55,7 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
   const tAuth = useTranslations("auth");
   const tApp = useTranslations("app");
   const tProfile = useTranslations("myProfile");
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const { save: saveThemePreferences, isPending: isSavingTheme } = useSaveThemePreferences();
   const locale = useLocale();
   const router = useRouter();
@@ -72,12 +80,15 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
 
   const targetLocale = locale === "th" ? "en" : "th";
 
-  // Save the locale first, then navigate. A failed save shows its toast and still navigates.
-  const handleLocaleSwitch = async (event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    if (isSavingTheme) return;
-    await saveThemePreferences({ preferredLocale: targetLocale });
-    router.push(`/${targetLocale}`);
+  const handleSelectLocale = async (newLocale: "th" | "en") => {
+    if (newLocale === locale || isSavingTheme) return;
+    await saveThemePreferences({ preferredLocale: newLocale });
+    router.push(`/${newLocale}`);
+  };
+
+  const handleSelectTheme = (mode: ThemeMode) => {
+    setTheme(mode);
+    void saveThemePreferences({ themeMode: mode });
   };
 
   const handleSignOut = async () => {
@@ -147,73 +158,205 @@ export function ErpShell({ currentUser, children }: ErpShellProps) {
         </div>
 
         <div className="erp-header-right">
-          {/* User information (desktop/tablet only) */}
-          <Link
-            href={`/${locale}/profile`}
-            className="erp-header-user-info"
-            aria-label={tProfile("openProfile")}
-            title={tProfile("openProfile")}
-            style={{ textDecoration: "none", minHeight: "44px" }}
-          >
-            <div className="flex flex-col items-end text-right min-w-0">
-              <span style={{ fontWeight: 600, color: "var(--erp-text-on-navy)", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {user?.displayName || user?.email || tShell("user")}
-              </span>
-              {user?.displayName && user?.email && (
-                // eslint-disable-next-line no-restricted-syntax -- token-exempt: no semantic token for gray-300 header text
-                <span style={{ color: "#D1D5DB", fontSize: "0.75rem", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {user.email}
-                </span>
-              )}
-            </div>
-            <Avatar
-              size="sm"
-              fileId={user?.avatarFileId}
-              initial={user?.displayName || user?.email || undefined}
-              alt={user?.displayName || user?.email || tShell("user")}
-              variant="outline"
-              className="border-white/25 bg-white/10 text-white shrink-0"
-            />
-          </Link>
-
           {/* In-app notifications (renders nothing without a selected membership) */}
           <NotificationBell />
 
-          {/* Theme switcher toggle */}
-          <ThemeToggle onThemeChange={(themeMode) => void saveThemePreferences({ themeMode })} disabled={isSavingTheme} />
+          {/* Language Selection Dropdown */}
+          <DropdownMenu
+            align="right"
+            menuClassName="w-56 shadow-xl border-erp-border bg-erp-surface"
+            trigger={
+              <button
+                type="button"
+                className="erp-header-lang-btn"
+                style={{ minHeight: "44px" }}
+                aria-label={tShell("language")}
+                title={tShell("language")}
+              >
+                <IconGlobe size={16} />
+                <span className="erp-lang-full font-medium">{locale === "th" ? "ไทย" : "EN"}</span>
+                <span className="erp-lang-short font-medium">{locale.toUpperCase()}</span>
+                <IconChevronDown size={12} className="opacity-70 shrink-0" />
+              </button>
+            }
+            items={[
+              {
+                key: "lang-th",
+                label: "ภาษาไทย (TH)",
+                description: "ไทย",
+                badge: locale === "th" ? (
+                  <span className="text-[10px] text-erp-navy font-bold uppercase bg-erp-navy/10 px-1 py-0.5">
+                    ✓
+                  </span>
+                ) : undefined,
+                onClick: () => void handleSelectLocale("th"),
+                disabled: isSavingTheme,
+              },
+              {
+                key: "lang-en",
+                label: "English (EN)",
+                description: "English",
+                badge: locale === "en" ? (
+                  <span className="text-[10px] text-erp-navy font-bold uppercase bg-erp-navy/10 px-1 py-0.5">
+                    ✓
+                  </span>
+                ) : undefined,
+                onClick: () => void handleSelectLocale("en"),
+                disabled: isSavingTheme,
+              },
+              {
+                key: "lang-my",
+                label: "မြန်မာ (Myanmar)",
+                description: "မြန်မာဘာသာ",
+                badge: (
+                  <span className="text-[10px] text-erp-text-muted border border-erp-border-subtle bg-erp-surface-subtle px-1.5 py-0.5">
+                    {tShell("comingSoon")}
+                  </span>
+                ),
+                onClick: () => {},
+                disabled: true,
+              },
+              {
+                key: "lang-km",
+                label: "ភាសាខ្មែរ (Khmer)",
+                description: "ភាសាខ្មែរ",
+                badge: (
+                  <span className="text-[10px] text-erp-text-muted border border-erp-border-subtle bg-erp-surface-subtle px-1.5 py-0.5">
+                    {tShell("comingSoon")}
+                  </span>
+                ),
+                onClick: () => {},
+                disabled: true,
+              },
+            ]}
+          />
 
-          {/* Locale switcher link */}
-          <Link
-            href={`/${targetLocale}`}
-            onClick={handleLocaleSwitch}
-            className="erp-header-lang-btn"
-            style={{
-              minHeight: "44px",
-            }}
-            aria-label={`Switch to ${targetLocale === "th" ? "Thai" : "English"}`}
-            title={`Switch to ${targetLocale === "th" ? "Thai" : "English"}`}
-          >
-            <IconGlobe size={16} />
-            <span className="erp-lang-full">{tShell("switchLanguage")}</span>
-            <span className="erp-lang-short">{targetLocale.toUpperCase()}</span>
-          </Link>
+          {/* User Account Dropdown Menu */}
+          <DropdownMenu
+            align="right"
+            menuClassName="w-80 shadow-xl border-erp-border bg-erp-surface"
+            headerContent={({ close }) => (
+              <div className="flex flex-col gap-3">
+                <Link
+                  href={`/${locale}/profile`}
+                  onClick={close}
+                  className="flex items-center gap-3 p-1.5 -m-1.5 hover:bg-erp-navy/5 transition-colors cursor-pointer group"
+                  aria-label={tProfile("openProfile")}
+                  title={tProfile("openProfile")}
+                >
+                  <Avatar
+                    size="md"
+                    fileId={user?.avatarFileId}
+                    initial={user?.displayName || user?.email || undefined}
+                    alt={user?.displayName || user?.email || tShell("user")}
+                    variant="outline"
+                    className="border-erp-border shrink-0 group-hover:border-erp-navy transition-colors"
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-semibold text-erp-text-main group-hover:text-erp-navy transition-colors truncate">
+                      {user?.displayName || user?.email || tShell("user")}
+                    </span>
+                    {user?.displayName && user?.email && (
+                      <span className="text-[11px] text-erp-text-muted truncate">
+                        {user.email}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-erp-navy font-semibold uppercase tracking-wider mt-0.5">
+                      {branchName}
+                    </span>
+                  </div>
+                </Link>
 
-          {/* Sign out button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
-            onClick={handleSignOut}
-            className="erp-header-logout-btn"
-            style={{
-              minHeight: "44px",
-            }}
-            aria-label={tAuth("logout")}
-            title={tAuth("logout")}
-          >
-            <IconLogOut size={16} />
-            <span className="erp-header-btn-text">{tAuth("logout")}</span>
-          </Button>
+                {/* Theme Mode Segmented Toggle (Light / Dark / System) */}
+                <div className="pt-2 border-t border-erp-border-subtle">
+                  <div className="text-[11px] font-medium text-erp-text-muted mb-1.5 flex items-center justify-between">
+                    <span>{tShell("theme")}</span>
+                  </div>
+                  <div className="erp-header-theme-segment">
+                    <button
+                      type="button"
+                      disabled={isSavingTheme}
+                      onClick={() => handleSelectTheme("light")}
+                      className={cn(
+                        "erp-header-theme-tab flex-1",
+                        theme === "light" && "active"
+                      )}
+                      title={tShell("lightMode")}
+                    >
+                      <IconSun size={14} className={cn(theme === "light" ? "text-amber-300" : "text-erp-text-muted")} />
+                      <span>{tShell("lightMode")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingTheme}
+                      onClick={() => handleSelectTheme("dark")}
+                      className={cn(
+                        "erp-header-theme-tab flex-1",
+                        theme === "dark" && "active"
+                      )}
+                      title={tShell("darkMode")}
+                    >
+                      <IconMoon size={14} className={cn(theme === "dark" ? "text-amber-300" : "text-erp-text-muted")} />
+                      <span>{tShell("darkMode")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingTheme}
+                      onClick={() => handleSelectTheme("system")}
+                      className={cn(
+                        "erp-header-theme-tab flex-1",
+                        theme === "system" && "active"
+                      )}
+                      title={tShell("systemMode")}
+                    >
+                      <IconMonitor size={14} className={cn(theme === "system" ? "text-white" : "text-erp-text-muted")} />
+                      <span>{tShell("systemMode")}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            trigger={
+              <button
+                type="button"
+                className="erp-header-user-btn"
+                aria-label={tProfile("openProfile")}
+                title={tProfile("openProfile")}
+              >
+                <div className="erp-header-user-info">
+                  <div className="flex flex-col items-end text-right min-w-0">
+                    <span style={{ fontWeight: 600, color: "var(--erp-text-on-navy)", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {user?.displayName || user?.email || tShell("user")}
+                    </span>
+                    {user?.displayName && user?.email && (
+                      // eslint-disable-next-line no-restricted-syntax -- token-exempt: no semantic token for gray-300 header text
+                      <span style={{ color: "#D1D5DB", fontSize: "0.75rem", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {user.email}
+                      </span>
+                    )}
+                  </div>
+                  <Avatar
+                    size="sm"
+                    fileId={user?.avatarFileId}
+                    initial={user?.displayName || user?.email || undefined}
+                    alt={user?.displayName || user?.email || tShell("user")}
+                    variant="outline"
+                    className="border-white/25 bg-white/10 text-white shrink-0"
+                  />
+                </div>
+                <IconChevronDown size={14} className="text-white/70 shrink-0" />
+              </button>
+            }
+            items={[
+              {
+                key: "logout",
+                label: tAuth("logout"),
+                icon: <IconLogOut size={16} />,
+                variant: "danger",
+                onClick: handleSignOut,
+              },
+            ]}
+          />
         </div>
       </header>
 

@@ -7,6 +7,14 @@ public static class AuditPermissions
     public const string Read = "audit.read";
 }
 
+public sealed record RecordExportAuditCommand(
+    string ResourceType,
+    int RowCount,
+    string Format,
+    string? Filename,
+    string? FilterSummary,
+    string TraceId);
+
 public sealed record AuditEventListQuery(
     string? ResourceType, string? ResourceId, string? Action, Guid? ActorUserId, DateTimeOffset? From, DateTimeOffset? To, int Page, int Limit);
 

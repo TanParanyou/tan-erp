@@ -1,11 +1,33 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useDataExport } from "./useDataExport";
 import * as csvExportUtils from "@/lib/export/export-csv";
 import * as excelExportUtils from "@/lib/export/export-excel";
 import type { ExportColumn } from "@/lib/export/export-types";
+import { apiClient } from "@/lib/api/api-client";
+
+vi.mock("@/lib/api/use-api-request-context", () => ({
+  useApiRequestContext: () => ({
+    membershipId: "mem-1",
+    locale: "th",
+    buildOptions: async () => ({ token: "mock-token", membershipId: "mem-1", locale: "th" }),
+  }),
+}));
+
+vi.mock("@/lib/api/api-client", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/api/api-client")>();
+  return {
+    ...original,
+    apiClient: {
+      recordExportAudit: vi.fn().mockResolvedValue(undefined),
+    },
+  };
+});
 
 describe("useDataExport hook", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   interface Item {
     id: number;
     name: string;
@@ -40,6 +62,14 @@ describe("useDataExport hook", () => {
 
     expect(csvSpy).toHaveBeenCalledTimes(1);
     expect(excelSpy).not.toHaveBeenCalled();
+    expect(apiClient.recordExportAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        format: "csv",
+        rowCount: 2,
+        resourceType: "test_export",
+      }),
+      expect.anything()
+    );
 
     csvSpy.mockRestore();
     excelSpy.mockRestore();

@@ -18,3 +18,10 @@ public record AuditEventListResponse(IReadOnlyList<AuditEventResponse> Items, Ad
         page.Items.Select(AuditEventResponse.From).ToList(),
         new AdminPaginationResponse(page.Page, page.PageSize, page.TotalCount, (int)Math.Ceiling(page.TotalCount / (double)page.PageSize)));
 }
+
+public record RecordExportAuditRequest(
+    string ResourceType,
+    int RowCount,
+    string Format,
+    string? Filename,
+    string? FilterSummary);

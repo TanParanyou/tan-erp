@@ -77,6 +77,18 @@ const config: Config = {
         "3xl": "var(--erp-radius)",
         full: "var(--erp-radius)",
       },
+      height: {
+        "erp-control": "var(--erp-control-height)",
+        "erp-control-compact": "var(--erp-control-height-compact)",
+        "erp-control-comfortable": "var(--erp-control-height-comfortable)",
+        "erp-control-spacious": "var(--erp-control-height-spacious)",
+      },
+      minHeight: {
+        "erp-control": "var(--erp-control-height)",
+        "erp-control-compact": "var(--erp-control-height-compact)",
+        "erp-control-comfortable": "var(--erp-control-height-comfortable)",
+        "erp-control-spacious": "var(--erp-control-height-spacious)",
+      },
     },
   },
   plugins: [],

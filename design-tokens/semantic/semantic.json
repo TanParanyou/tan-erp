@@ -354,6 +354,36 @@
             "css": "erp-control-height"
           }
         }
+      },
+      "height-compact": {
+        "$type": "dimension",
+        "$value": "36px",
+        "$description": "Compact density control height (36px / h-9)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-control-height-compact"
+          }
+        }
+      },
+      "height-comfortable": {
+        "$type": "dimension",
+        "$value": "40px",
+        "$description": "Comfortable density control height (40px / h-10)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-control-height-comfortable"
+          }
+        }
+      },
+      "height-spacious": {
+        "$type": "dimension",
+        "$value": "44px",
+        "$description": "Spacious density control height (44px / h-11)",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-control-height-spacious"
+          }
+        }
       }
     },
     "app": {

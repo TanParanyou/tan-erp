@@ -11,5 +11,19 @@
         }
       }
     }
+  },
+  "size": {
+    "control": {
+      "height": {
+        "$type": "dimension",
+        "$value": "36px",
+        "$description": "Compact control height override",
+        "$extensions": {
+          "tanerp": {
+            "css": "erp-control-height"
+          }
+        }
+      }
+    }
   }
 }

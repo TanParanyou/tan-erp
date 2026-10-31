@@ -12,6 +12,11 @@
       "sourceType": "project",
       "skillPath": ".agents/skills/building-erp-forms/SKILL.md"
     },
+    "scaffold-enterprise-core": {
+      "source": "local",
+      "sourceType": "project",
+      "skillPath": ".agents/skills/scaffold-enterprise-core/SKILL.md"
+    },
     "code-review": {
       "source": "mattpocock/skills",
       "sourceType": "github",

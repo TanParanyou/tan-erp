@@ -8,6 +8,8 @@ export interface DropdownMenuItem {
   key: string;
   label: string;
   icon?: React.ReactNode;
+  badge?: React.ReactNode;
+  description?: string;
   onClick: () => void;
   variant?: "default" | "danger";
   disabled?: boolean;
@@ -17,17 +19,21 @@ export interface DropdownMenuItem {
 export interface DropdownMenuProps {
   trigger?: React.ReactNode;
   triggerLabel?: string;
+  headerContent?: React.ReactNode | ((helpers: { close: () => void }) => React.ReactNode);
   items: DropdownMenuItem[];
   align?: "left" | "right";
   className?: string;
+  menuClassName?: string;
 }
 
 export function DropdownMenu({
   trigger,
   triggerLabel = "Actions",
+  headerContent,
   items,
   align = "right",
   className,
+  menuClassName,
 }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [computedAlign, setComputedAlign] = useState<"left" | "right">(align);
@@ -114,7 +120,7 @@ export function DropdownMenu({
   return (
     <div ref={containerRef} className={cn("relative inline-block text-left", className)}>
       {trigger ? (
-        <div onClick={toggle} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && toggle()}>
+        <div onClick={toggle} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && toggle()} className="cursor-pointer">
           {trigger}
         </div>
       ) : (
@@ -123,7 +129,7 @@ export function DropdownMenu({
           onClick={toggle}
           aria-expanded={isOpen}
           aria-haspopup="menu"
-          className="erp-btn erp-btn-outline erp-btn-md inline-flex items-center gap-1.5 font-semibold"
+          className="erp-btn erp-btn-outline erp-btn-md inline-flex items-center gap-1.5 font-semibold cursor-pointer active:scale-95 transition-all duration-150"
           style={{ borderRadius: "var(--erp-radius)" }}
         >
           <span>{triggerLabel}</span>
@@ -140,11 +146,17 @@ export function DropdownMenu({
           role="menu"
           aria-orientation="vertical"
           className={cn(
-            "absolute z-50 mt-1 min-w-[200px] max-w-[calc(100vw-2rem)] whitespace-nowrap border border-erp-border bg-erp-surface py-1 shadow-lg focus:outline-none",
-            computedAlign === "right" ? "right-0" : "left-0"
+            "absolute z-50 mt-1 min-w-[220px] max-w-[calc(100vw-2rem)] border border-erp-border bg-erp-surface py-1 shadow-lg focus:outline-none",
+            computedAlign === "right" ? "right-0" : "left-0",
+            menuClassName
           )}
           style={{ borderRadius: "var(--erp-radius)" }}
         >
+          {headerContent && (
+            <div className="border-b border-erp-border-subtle px-3.5 py-2.5">
+              {typeof headerContent === "function" ? headerContent({ close }) : headerContent}
+            </div>
+          )}
           {visibleItems.map((item) => (
             <React.Fragment key={item.key}>
               {item.dividerAbove && (
@@ -159,15 +171,25 @@ export function DropdownMenu({
                   item.onClick();
                 }}
                 className={cn(
-                  "w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs font-medium transition-colors outline-none",
+                  "w-full flex items-center justify-between gap-3 px-3.5 py-2 text-left text-xs font-medium transition-all duration-150 outline-none cursor-pointer select-none",
                   item.variant === "danger"
                     ? "text-erp-danger hover:bg-erp-danger/10 focus:bg-erp-danger/10"
                     : "text-erp-text-main hover:bg-erp-navy/5 focus:bg-erp-navy/5",
-                  item.disabled && "pointer-events-none opacity-40"
+                  item.disabled && "pointer-events-none opacity-40 cursor-not-allowed"
                 )}
               >
-                {item.icon && <span className="shrink-0">{item.icon}</span>}
-                <span className="truncate">{item.label}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {item.icon && <span className="shrink-0">{item.icon}</span>}
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate">{item.label}</span>
+                    {item.description && (
+                      <span className="text-[11px] text-erp-text-muted truncate font-normal">
+                        {item.description}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {item.badge && <span className="shrink-0">{item.badge}</span>}
               </button>
             </React.Fragment>
           ))}

@@ -15,6 +15,7 @@ export interface DateRangePickerProps {
   label?: string;
   error?: string;
   className?: string;
+  labelClassName?: string;
   disabled?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function DateRangePicker({
   label,
   error,
   className,
+  labelClassName,
   disabled,
 }: DateRangePickerProps) {
   const handleStartChange = (startDate: string) => {
@@ -37,9 +39,9 @@ export function DateRangePicker({
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
-        <span className="text-xs font-semibold uppercase tracking-wider text-erp-text-main">
+        <label className={cn("text-sm font-semibold text-erp-navy min-h-[20px] flex items-center", labelClassName)}>
           {label}
-        </span>
+        </label>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <DatePicker
@@ -48,6 +50,7 @@ export function DateRangePicker({
           disabled={disabled}
           placeholder="เริ่ม (YYYY-MM-DD)"
           aria-label="Start date"
+          wrapperClassName="!mb-0"
         />
         <DatePicker
           value={value.endDate}
@@ -55,6 +58,7 @@ export function DateRangePicker({
           disabled={disabled}
           placeholder="สิ้นสุด (YYYY-MM-DD)"
           aria-label="End date"
+          wrapperClassName="!mb-0"
         />
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}

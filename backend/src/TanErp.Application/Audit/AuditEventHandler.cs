@@ -32,5 +32,16 @@ public sealed class AuditEventHandler
         return Result<AuditEventPage>.Success(await _store.ListAsync(access.Value!.OrganizationId, query, ct));
     }
 
+    public async Task<Result<bool>> RecordExportAsync(
+        AdminCaller caller, RecordExportAuditCommand command, CancellationToken ct)
+    {
+        var access = await _access.ResolveMembershipAsync(caller.FirebaseUid, caller.MembershipId, ct);
+        if (access.IsFailure) return Result<bool>.Failure(access.Error);
+
+        await _store.RecordExportAsync(
+            access.Value!.OrganizationId, access.Value.ActorUserId, access.Value.BranchId, access.Value.MembershipId, command, ct);
+        return Result<bool>.Success(true);
+    }
+
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

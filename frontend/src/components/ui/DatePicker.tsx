@@ -18,6 +18,8 @@ export interface DatePickerProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  wrapperClassName?: string;
+  inputClassName?: string;
   id?: string;
 }
 
@@ -38,6 +40,8 @@ export function DatePicker({
   required,
   disabled = false,
   className,
+  wrapperClassName,
+  inputClassName,
   id: customId,
 }: DatePickerProps) {
   const generatedId = useId();
@@ -68,7 +72,7 @@ export function DatePicker({
   const defaultPlaceholder = placeholder || t("chooseDate");
 
   return (
-    <div className={cn("erp-form-group flex flex-col gap-1.5 text-left w-full", className)}>
+    <div className={cn("erp-form-group flex flex-col gap-1.5 text-left w-full", wrapperClassName, className)}>
       {label && (
         <label htmlFor={inputId} className="erp-label">
           {label}
@@ -95,7 +99,8 @@ export function DatePicker({
             "erp-input w-full min-h-[44px] px-3 py-2 text-sm text-erp-text-main bg-erp-surface border border-erp-border rounded-none outline-none transition-colors",
             "focus:border-erp-navy focus:ring-1 focus:ring-erp-navy",
             "disabled:cursor-not-allowed disabled:bg-erp-surface-subtle disabled:opacity-60",
-            error ? "border-red-600 focus:border-red-600 focus:ring-red-600" : ""
+            error ? "border-red-600 focus:border-red-600 focus:ring-red-600" : "",
+            inputClassName
           )}
           wrapperClassName="w-full"
           aria-invalid={error ? "true" : "false"}

@@ -170,7 +170,7 @@
 ### 4.3.2 มาตรฐานความสูงของช่องกรอกข้อมูลและปุ่ม Action มุมขวาบน (Input Height Harmony & Top-Right Label Actions)
 
 เพื่อให้การวางช่องข้อมูลใน Grid แนวนอนมีระเบียบวินัยและความสมดุลทางสายตาสูงสุด:
-- **Strict Input Height Invariant (`h-11 min-h-[44px]`):** ช่องกรอกข้อมูลทุกประเภท ทั้ง `<input>`, `<select>`, `<textarea>`, `<EntityAutocomplete>` และ Selected Summary Cards ต้องมีความสูง $44\text{px}$ (`h-11 min-h-[44px]`) และขนาดตัวอักษรมาตรฐาน `text-sm` สม่ำเสมอเท่ากันในทุกเบราว์เซอร์
+- **Strict Input Height Invariant & Density Scale:** ช่องกรอกข้อมูลทุกประเภท ทั้ง `<input>`, `<select>`, `<textarea>`, `<EntityAutocomplete>` และ Selected Summary Cards ในระดับกริดเดียวกันต้องมีความสูงสม่ำเสมอเท่ากันในทุกเบราว์เซอร์ โดยอ้างอิงตาม Control Height Token (`var(--erp-control-height)` / `size.control.height` ซึ่งในโหมดเริ่มต้น Spacious คือ $44\text{px}$ (`h-11 min-h-[44px]`), โหมด Comfortable คือ $40\text{px}$ (`h-10 min-h-[40px]`), และโหมด Compact คือ $36\text{px}$ (`h-9 min-h-[36px]`)) พร้อมขนาดตัวอักษรมาตรฐาน `text-sm`
 - **Top-Right Field Actions (ปุ่ม Action ประจำฟิลด์):** ลิงก์หรือปุ่มสร้างข้อมูลใหม่/ช่วยเหลือประจำฟิลด์ (เช่น `[+ สร้างโอกาสทางการขายใหม่]`, `[เลือกจากลิสต์]`) ต้องจัดวางอยู่ที่ **มุมขวาบนของ Input ในระนาบเดียวกับ Label เสมอ** (`flex items-center justify-between min-h-[20px] mb-1.5`) ห้ามปล่อยให้ห้อยอยู่ใต้ Input ให้เสียสมดุลแนวตั้งของ Grid ในแถวเดียวกัน
 - **Icon-First Adjacent Field Actions with Tooltip (`size="icon"` + `<Tooltip />`):** ปุ่ม Action ที่อยู่ระนาบเดียวกับ Input/Select (เช่น ปุ่ม Quick-Add Master Data `+`, ปุ่มสุ่มรหัส, ปุ่มค้นหา):
   1. ต้องใช้ **Icon-only Button (`size="icon"` ขนาด $44\text{px} \times 44\text{px}$)** เสมอ ห้ามเขียนข้อความยาวๆ เช่น `[+ เพิ่ม]` เพื่อประหยัดพื้นที่แนวนอนและป้องกันข้อความตกบรรทัด

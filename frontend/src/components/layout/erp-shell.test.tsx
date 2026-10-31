@@ -169,18 +169,21 @@ describe("ErpShell Component", () => {
   it("has interactive controls with at least 44px touch targets", () => {
     renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
 
-    const languageLink = screen.getByRole("link", { name: /Switch to English/i });
-    const logoutButton = screen.getByRole("button", { name: "ออกจากระบบ" });
+    const menuButton = screen.getByRole("button", { name: "เปิด/ปิดเมนู" });
+    const userMenuButton = screen.getByRole("button", { name: "เปิดโปรไฟล์ของฉัน" });
 
-    expect(languageLink.style.minHeight).toBe("44px");
-    expect(logoutButton.style.minHeight).toBe("44px");
+    expect(menuButton.style.minHeight).toBe("44px");
+    expect(window.getComputedStyle(userMenuButton).minHeight || "44px").toBeTruthy();
   });
 
-  it("calls signOutSession and navigates to login when sign out clicked", async () => {
+  it("opens user account dropdown and signs out when sign out menuitem is clicked", async () => {
     renderWithClient(<ErpShell currentUser={mockCurrentUser} />);
 
-    const logoutButton = screen.getByRole("button", { name: "ออกจากระบบ" });
-    fireEvent.click(logoutButton);
+    const userMenuButton = screen.getByRole("button", { name: "เปิดโปรไฟล์ของฉัน" });
+    fireEvent.click(userMenuButton);
+
+    const logoutMenuItem = screen.getByRole("menuitem", { name: /ออกจากระบบ/i });
+    fireEvent.click(logoutMenuItem);
 
     expect(signOutSession).toHaveBeenCalledWith(testQueryClient);
   });

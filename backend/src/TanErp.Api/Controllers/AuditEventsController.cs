@@ -37,4 +37,33 @@ public sealed class AuditEventsController : ControllerBase
             ? ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext)
             : Ok(AuditEventListResponse.From(result.Value!));
     }
+
+    [HttpPost("exports")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RecordExport(
+        [FromBody] RecordExportAuditRequest request, CancellationToken cancellationToken)
+    {
+        var auth = RequestContextReader.ReadAuthenticatedRequest(HttpContext);
+        if (auth.IsFailure) return ProblemDetailsMapper.CreateProblemResult(auth.Error.Code, HttpContext);
+
+        if (string.IsNullOrWhiteSpace(request.ResourceType))
+            return ProblemDetailsMapper.CreateProblemResult("REQUEST_VALIDATION_FAILED", HttpContext);
+
+        var command = new RecordExportAuditCommand(
+            request.ResourceType,
+            Math.Max(request.RowCount, 0),
+            string.IsNullOrWhiteSpace(request.Format) ? "csv" : request.Format.Trim().ToLowerInvariant(),
+            request.Filename,
+            request.FilterSummary,
+            HttpContext.TraceIdentifier);
+
+        var result = await _handler.RecordExportAsync(
+            new AdminCaller(auth.Value!.FirebaseUid, auth.Value.MembershipId), command, cancellationToken);
+
+        return result.IsFailure
+            ? ProblemDetailsMapper.CreateProblemResult(result.Error.Code, HttpContext)
+            : NoContent();
+    }
 }

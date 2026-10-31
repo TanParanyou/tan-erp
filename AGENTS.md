@@ -87,9 +87,9 @@ This repository is in **Application Implementation**. ก่อนประเ�
 
 > ศึกษาคู่มือละเอียดเพิ่มเติมได้ที่ `.agents/skills/building-erp-forms/SKILL.md` (ฟอร์มบันทึกข้อมูล), `.agents/skills/building-erp-lists/SKILL.md` (ตารางรายการข้อมูลและ Table-Preserved Architecture) และข้อกำหนดด้านการออกแบบที่ `design.md`
 
-- **Visual Theme:** ยึดมั่นตาม **Atelier Architectural Navy Sharp**
-  - รูปทรงคม 0px (คม เหลี่ยม ปราศจากความโค้งมน) เป็นค่าเริ่มต้นของ radius token — ห้ามเขียน `border-radius`/`!important` หรือ hex ตรงใน component ให้ใช้ Design Tokens ตาม `design.md` หมวด 7 (ADR 0031)
-  - Solid Navy `#0B3056` เป็นสีหลักเริ่มต้นของระบบ (ผ่าน token `color.action.primary`)
+- **Visual Theme & Design Tokens:** ยึดมั่นตามระบบ Token-Driven Architecture (ADR 0031 และ `design-tokens/`) โดยมี Preset เริ่มต้นคือ **Atelier Architectural Navy Sharp**
+  - รูปทรงมุมควบคุมผ่าน Token `radius.control` (`var(--erp-radius)`) โดยมี 0px เป็นค่าเริ่มต้นของโปรเจกต์นี้ — ห้ามเขียน `border-radius`/`!important` หรือตัวเลข pixel ตรงใน component ให้ใช้ Design Tokens ตาม `design.md` หมวด 7 เสมอ
+  - สีหลักควบคุมผ่าน Semantic Token `color.action.primary` (`var(--erp-navy)` / `bg-erp-navy`) โดยมี Navy `#0B3056` เป็นค่าเริ่มต้น — ห้ามใส่ Hex code ตรงๆ ใน Component
   - Pure SVG Stroke Icons (ห้ามพึ่งพา CDN หรือ Icon Pack ภายนอก)
 - **Single Dynamic Route `[id]`:** ใช้หน้าเดียวรองรับทั้ง Create (`id="create"` หรือ `"add"`) และ Edit (`id` จริง)
 - **Deferred File Upload:** เมื่อเลือกไฟล์แนบ/รูปภาพ ให้อัปโหลดจริงในฟังก์ชัน `onSubmit` เท่านั้น ห้ามยิง API อัปโหลดทันทีที่เลือก เพื่อป้องกันไฟล์ขยะค้างในระบบ และ**ต้องใช้ Custom Hook กลาง `useDeferredFileUpload` เสมอ** (ห้ามยิง `fileClient` ดิบใน Form Components)
@@ -97,17 +97,17 @@ This repository is in **Application Implementation**. ก่อนประเ�
 - **Safety Confirmation Modal:** การลบ (Delete), การยกเลิก (Void/Cancel) หรือการกระทำที่มีความเสี่ยงสูง ต้องมี Confirmation Modal ยืนยันเสมอ พร้อมทั้งปุ่มยืนยันใน Modal ต้องมี `isLoading` ล็อกปุ่มไว้ขณะยิง API
 - **Minimal Mono Loading:** ขณะดึงข้อมูล Edit ให้ใช้ Minimal Loading Component ในคอนเทนเนอร์ (ห้ามใช้ Skeleton Loader)
 - **Tabbed Form Architecture (`FormTabs` & `useFormTabErrors`):** สำหรับฟอร์มที่มีข้อมูลหลายกลุ่มเพื่อลดการ scroll ให้ใช้ `<FormTabs />` กลาง พร้อม Red Dot Error Indicator บนหัวแท็บ, Auto-Switch ไปแท็บแรกที่มี Error เมื่อ submit ไม่ผ่าน, อิสระในการคลิกสลับแท็บ (Unrestricted) และซ่อนด้วย CSS `hidden` เพื่อรักษา DOM input registration
-- **Strict Input Height Harmony (`h-11 min-h-[44px]`):** ช่องกรอกข้อมูลทุกประเภท ทั้ง `<input>`, `<select>`, `<EntityAutocomplete>` ในระดับกริดเดียวกันต้องมีความสูงเท่ากันอย่างเข้มงวด `h-11 min-h-[44px]` พร้อมขนาดฟอนต์ `text-sm` สม่ำเสมอ
+- **Strict Input Height Harmony & Density Tokens:** ช่องกรอกข้อมูลทุกประเภท ทั้ง `<input>`, `<select>`, `<EntityAutocomplete>` ในระดับกริดเดียวกันต้องมีความสูงสม่ำเสมอเท่ากันอย่างเข้มงวด โดยอ้างอิงตาม Control Height Token (`var(--erp-control-height)` / `size.control.height` ซึ่งในโหมดเริ่มต้น Spacious คือ `h-11 min-h-[44px]` และโหมด Compact คือ `h-9 min-h-[36px]`) พร้อมขนาดฟอนต์ `text-sm` สม่ำเสมอ
 - **Top-Right Field Actions:** ปุ่มหรือลิงก์สร้างข้อมูลใหม่/ช่วยเหลือประจำฟิลด์ (เช่น `[+ สร้างใหม่]`, `[เลือกจากลิสต์]`) ต้องจัดวางที่มุมขวาบนของ Input ในระนาบเดียวกับ Label เสมอ (`min-h-[20px] mb-1.5`) ห้ามปล่อยให้ห้อยอยู่ใต้ Input
 - **Icon-First Adjacent Field Actions with Tooltip (`size="icon"` + `<Tooltip />`):** ปุ่ม Action ที่อยู่ระนาบเดียวกับ Input/Select (เช่น ปุ่ม Quick-Add Master Data `+`, ปุ่มสุ่มรหัส, ปุ่มค้นหา):
-  1. ต้องใช้ **Icon-only Button (`size="icon"` ขนาด `h-[44px] w-[44px]`)** เสมอ ห้ามเขียนข้อความยาวๆ เช่น `[+ เพิ่ม]` เพื่อประหยัดพื้นที่แนวนอนและป้องกันข้อความตกบรรทัด
+  1. ต้องใช้ **Icon-only Button (`size="icon"` ล็อกความสูงเท่ากับช่องกรอกตาม Density Token เช่น `h-[44px] w-[44px]` ในโหมดเริ่มต้น หรือ `h-[36px] w-[36px]` ในโหมดกะทัดรัด)** เสมอ ห้ามเขียนข้อความยาวๆ เช่น `[+ เพิ่ม]` เพื่อประหยัดพื้นที่แนวนอนและป้องกันข้อความตกบรรทัด
   2. ต้องครอบด้วย `<Tooltip content="..." position="top">` พร้อมใส่ `aria-label` ทุกครั้ง เพื่อคงความสามารถในการเข้าถึง (Accessibility)
   3. คอนเทนเนอร์ Input/Select ต้องใส่ `wrapperClassName="!mb-0"` และจัดแนวแถวด้วย `flex items-center gap-2` เพื่อล็อกขอบบนและล่างให้ขนานกับช่องกรอกพอดีเป๊ะ
 - **Name-First Dropdown Hierarchy:** การแสดงผลใน Autocomplete / Combobox ต้องแสดงชื่อรายการเป็นหลัก (Name-First) ตัวหนาชัดเจน ควบคู่กับรหัส Code ห้ามแสดงเฉพาะรหัสตัวเลขเดี่ยวๆ
 - **Table-Preserved Form Input Balance & Primary Action Prominence:**
-  1. ในฟอร์มแบบตารางรายการ (Dynamic Array / Table Rows) ช่อง Input ทุกคอลัมน์ต้องระบุ `h-11 min-h-[44px]` (หรือ `h-9 min-h-[36px]` ในโหมดตารางกะทัดรัด) พร้อม `wrapperClassName="!mb-0"` และจัดแนวแถวตารางเป็น `align-middle`
+  1. ในฟอร์มแบบตารางรายการ (Dynamic Array / Table Rows) ช่อง Input ทุกคอลัมน์ต้องระบุความสูงสม่ำเสมอตาม Density Token (`h-11 min-h-[44px]` ในโหมด Spacious หรือ `h-9 min-h-[36px]` ในโหมด Compact) พร้อม `wrapperClassName="!mb-0"` และจัดแนวแถวตารางเป็น `align-middle`
   2. หากคอลัมน์ใดมี Sub-label ด้านล่าง (เช่น ข้อความระบุหน่วย `หน่วย: ...` หรือ Badge กำกับ) ให้ใส่ Spacer ล่องหน (`invisible select-none` พร้อม `aria-hidden="true"`) ในคอลัมน์ข้างเคียง เพื่อรักษาสมดุลความสูงกล่อง ให้ทุก Input และปุ่ม Action ขนานในระนาบแนวนอนเดียวกันพอดีเป๊ะ
-  3. ปุ่ม Action หลักสำหรับเพิ่มรายการเข้าตาราง (เช่น `+ เพิ่มคุณสมบัติ`, `+ เพิ่มแถว`) ต้องใช้ `variant="primary"` (Solid Navy `#0B3056`) เสมอ ห้ามใช้ `variant="outline"` หรือ `variant="ghost"` เพื่อให้โดดเด่นและมองเห็นชัดเจน
+  3. ปุ่ม Action หลักสำหรับเพิ่มรายการเข้าตาราง (เช่น `+ เพิ่มคุณสมบัติ`, `+ เพิ่มแถว`) ต้องใช้ `variant="primary"` (สีหลักประจำโปรเจกต์ `color.action.primary` / `bg-erp-navy`) เสมอ ห้ามใช้ `variant="outline"` หรือ `variant="ghost"` เพื่อให้โดดเด่นและมองเห็นชัดเจน
 - **Single-Row Architectural Card Header (Zero-Void Standard):** สำหรับการ์ดข้อมูลหรือ Array รายการที่สามารถเปิด-ปิดย่อ/ขยายได้ (Collapsible Cards):
   1. หัวการ์ดต้องจัดอยู่ในแถวเดียวแบบกะทัดรัด (Single Compact Row) ประกอบด้วย: ปุ่มเปิด-ปิด `[ v ]`, รหัสข้อมูลหลัก, ช่องกรอกชื่อข้อมูลหลัก (หรือชื่อแสดงผลที่สำคัญ), เมนูตัวช่วย/Preset, Badge สรุปจำนวน และปุ่มลบ
   2. ชื่อข้อมูลหลัก (Primary Name/Title) ต้องมองเห็นและแก้ไขได้เสมอแม้จะอยู่ในสถานะย่อ (Collapsed) ห้ามนำไปซ่อนไว้ด้านในการ์ด

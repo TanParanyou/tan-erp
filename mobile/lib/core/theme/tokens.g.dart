@@ -121,6 +121,9 @@ abstract final class ErpTokensScale {
   static const double radius = 0;
   static const double minTouch = 44;
   static const double controlHeight = 44;
+  static const double controlHeightCompact = 36;
+  static const double controlHeightComfortable = 40;
+  static const double controlHeightSpacious = 44;
   static const double appActionPrimary = 52;
   static const double appTapTarget = 48;
   static const double appKeypadKey = 56;

@@ -39,4 +39,33 @@ public sealed class AuditEventStore : IAuditEventStore
             r.BranchId, r.TraceId, r.RequestId, r.Reason, AuditRedactor.Redact(r.ChangesJson))).ToList();
         return new AuditEventPage(items, total, q.Page, q.Limit);
     }
+
+    public async Task RecordExportAsync(
+        Guid organizationId, Guid actorUserId, Guid? branchId, Guid? membershipId, RecordExportAuditCommand command, CancellationToken ct)
+    {
+        var changes = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            rowCount = command.RowCount,
+            format = command.Format,
+            filename = command.Filename,
+            filterSummary = command.FilterSummary
+        });
+
+        var auditEvent = new AuditEvent(
+            Guid.NewGuid(),
+            organizationId,
+            actorUserId,
+            "data.exported",
+            string.IsNullOrWhiteSpace(command.ResourceType) ? "DataExport" : command.ResourceType.Trim(),
+            command.Filename ?? command.ResourceType ?? "export",
+            DateTimeOffset.UtcNow,
+            command.TraceId ?? string.Empty,
+            changes,
+            branchId: branchId,
+            actorMembershipId: membershipId,
+            reason: $"Exported {command.RowCount} rows ({command.Format})");
+
+        _db.AuditEvents.Add(auditEvent);
+        await _db.SaveChangesAsync(ct);
+    }
 }

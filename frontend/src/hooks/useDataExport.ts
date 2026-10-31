@@ -4,10 +4,13 @@ import { useState, useCallback } from "react";
 import { exportToCsv } from "@/lib/export/export-csv";
 import { exportToExcel } from "@/lib/export/export-excel";
 import type { ExportColumn, ExportFormat } from "@/lib/export/export-types";
+import { apiClient } from "@/lib/api/api-client";
+import { useApiRequestContext } from "@/lib/api/use-api-request-context";
 
 export interface UseDataExportOptions<T, TId = string | number> {
   filename: string;
   sheetName?: string;
+  resourceType?: string;
   columns: readonly ExportColumn<T>[];
   data?: readonly T[];
   selectedIds?: ReadonlySet<TId>;
@@ -24,6 +27,7 @@ export interface UseDataExportResult {
 export function useDataExport<T, TId = string | number>({
   filename,
   sheetName,
+  resourceType,
   columns,
   data = [],
   selectedIds,
@@ -31,6 +35,29 @@ export function useDataExport<T, TId = string | number>({
   fetchAll,
 }: UseDataExportOptions<T, TId>): UseDataExportResult {
   const [isExporting, setIsExporting] = useState(false);
+  const context = useApiRequestContext();
+
+  const recordAudit = useCallback(
+    async (rowCount: number, format: ExportFormat, actualFilename: string) => {
+      if (!context.membershipId) return;
+      try {
+        const options = await context.buildOptions();
+        await apiClient.recordExportAudit(
+          {
+            resourceType: resourceType || filename,
+            rowCount,
+            format,
+            filename: actualFilename,
+          },
+          options
+        );
+      } catch (err) {
+        // Logging failure does not disrupt the user download
+        console.warn("Audit recording for data export failed", err);
+      }
+    },
+    [context, filename, resourceType]
+  );
 
   const getDatedFilename = useCallback(
     (suffix: string) => {
@@ -68,11 +95,12 @@ export function useDataExport<T, TId = string | number>({
             data: exportData,
           });
         }
+        void recordAudit(exportData.length, format, datedName);
       } finally {
         setIsExporting(false);
       }
     },
-    [columns, data, fetchAll, getDatedFilename, isExporting, sheetName]
+    [columns, data, fetchAll, getDatedFilename, isExporting, recordAudit, sheetName]
   );
 
   const exportSelected = useCallback(
@@ -101,8 +129,9 @@ export function useDataExport<T, TId = string | number>({
           data: selectedData,
         });
       }
+      void recordAudit(selectedData.length, format, datedName);
     },
-    [columns, data, getDatedFilename, getId, selectedIds, sheetName]
+    [columns, data, getDatedFilename, getId, recordAudit, selectedIds, sheetName]
   );
 
   return {

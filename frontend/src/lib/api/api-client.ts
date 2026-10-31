@@ -150,6 +150,14 @@ export type UpdateApprovalLimitRequest = components["schemas"]["UpdateApprovalLi
 export type AuditEventResponse = components["schemas"]["AuditEventResponse"];
 export type AuditEventListResponse = components["schemas"]["AuditEventListResponse"];
 export type AuditEventListParams = NonNullable<paths["/api/v1/audit-events"]["get"]["parameters"]["query"]>;
+
+export interface RecordExportAuditRequest {
+  resourceType: string;
+  rowCount: number;
+  format: string;
+  filename?: string;
+  filterSummary?: string;
+}
 export type ApprovalLimitListParams = NonNullable<paths["/api/v1/admin/approval-limits"]["get"]["parameters"]["query"]>;
 
 export type AdminUserListParams = NonNullable<paths["/api/v1/admin/users"]["get"]["parameters"]["query"]>;
@@ -1817,6 +1825,10 @@ export class ApiClient {
     if (params.limit) query.set("limit", String(params.limit));
     const suffix = query.toString();
     return this.request<AuditEventListResponse>(`/api/v1/audit-events${suffix ? `?${suffix}` : ""}`, "GET", options);
+  }
+
+  async recordExportAudit(payload: RecordExportAuditRequest, options: RequestOptions): Promise<void> {
+    await this.request<void>("/api/v1/audit-events/exports", "POST", options, payload);
   }
 
   async listApprovalLimits(params: ApprovalLimitListParams, options: RequestOptions): Promise<ApprovalLimitListResponse> {
