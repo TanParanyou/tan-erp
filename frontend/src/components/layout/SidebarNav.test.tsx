@@ -263,4 +263,38 @@ describe("SidebarNav Component", () => {
     render(<SidebarNav currentUser={userWithoutReports} isCollapsed={false} />);
     expect(screen.queryByRole("link", { name: "แดชบอร์ดและรายงาน" })).toBeNull();
   });
+
+  it("renders settings inside an accordion group and allows collapsing it", () => {
+    render(<SidebarNav currentUser={mockUser} isCollapsed={false} />);
+
+    const settingsHeader = screen.getByRole("button", { name: "ตั้งค่าระบบ" });
+    expect(settingsHeader).toBeDefined();
+    expect(screen.getByRole("link", { name: "รูปแบบเลขที่เอกสาร" })).toBeDefined();
+
+    // Collapse settings
+    fireEvent.click(settingsHeader);
+    expect(screen.queryByRole("link", { name: "รูปแบบเลขที่เอกสาร" })).toBeNull();
+
+    // Expand settings again
+    fireEvent.click(settingsHeader);
+    expect(screen.getByRole("link", { name: "รูปแบบเลขที่เอกสาร" })).toBeDefined();
+  });
+
+  it("renders quick estimates inside CRM & Sales subgroup when authorized", () => {
+    const userWithQuickEstimates: CurrentUserResponse = {
+      ...mockUser,
+      memberships: mockUser.memberships?.map((membership) => ({
+        ...membership,
+        permissions: [
+          ...(membership.permissions ?? []),
+          { key: "quick-estimates.read", scope: "organization" },
+          { key: "pricing-templates.read", scope: "organization" },
+        ],
+      })),
+    };
+
+    render(<SidebarNav currentUser={userWithQuickEstimates} isCollapsed={false} />);
+    expect(screen.getByRole("link", { name: "ประเมินราคาเบื้องต้น" })).toHaveAttribute("href", "/th/quick-estimates");
+    expect(screen.getByRole("link", { name: "แม่แบบราคา" })).toHaveAttribute("href", "/th/pricing-templates");
+  });
 });

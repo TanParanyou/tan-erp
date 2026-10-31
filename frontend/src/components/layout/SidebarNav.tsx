@@ -159,6 +159,36 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         permission: hasFieldSurveysRead,
       });
     }
+    if (hasQuickEstimatesRead) {
+      items.push({
+        id: "quick-estimates",
+        href: `/${locale}/quick-estimates`,
+        label: tShell("quickEstimates"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/quick-estimates`),
+        permission: hasQuickEstimatesRead,
+      });
+    }
+    if (hasPricingTemplatesRead) {
+      items.push({
+        id: "pricing-templates",
+        href: `/${locale}/pricing-templates`,
+        label: tShell("pricingTemplates"),
+        icon: <IconFileText size={20} />,
+        isActive: pathname.startsWith(`/${locale}/pricing-templates`),
+        permission: hasPricingTemplatesRead,
+      });
+    }
+    if (hasEstimateApproval) {
+      items.push({
+        id: "estimate-reviews",
+        href: `/${locale}/estimates/review-queue`,
+        label: tShell("estimateReviews"),
+        icon: <IconFileText size={20} />,
+        isActive: isEstimateReviewActive,
+        permission: hasEstimateApproval,
+      });
+    }
     if (hasProjectsRead) {
       items.push({
         id: "projects",
@@ -169,11 +199,24 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         permission: hasProjectsRead,
       });
     }
-    if (hasEstimateApproval) {
-      items.push({ id: "estimate-reviews", href: `/${locale}/estimates/review-queue`, label: tShell("estimateReviews"), icon: <IconFileText size={20} />, isActive: isEstimateReviewActive, permission: hasEstimateApproval });
-    }
     return items;
-  }, [hasCustomersRead, hasOpportunitiesRead, hasFieldSurveysRead, hasProjectsRead, hasEstimateApproval, locale, tShell, isCustomersActive, isOpportunitiesActive, isFieldSurveysActive, isProjectsActive, isEstimateReviewActive]);
+  }, [
+    hasCustomersRead,
+    hasOpportunitiesRead,
+    hasFieldSurveysRead,
+    hasQuickEstimatesRead,
+    hasPricingTemplatesRead,
+    hasEstimateApproval,
+    hasProjectsRead,
+    locale,
+    pathname,
+    tShell,
+    isCustomersActive,
+    isOpportunitiesActive,
+    isFieldSurveysActive,
+    isEstimateReviewActive,
+    isProjectsActive,
+  ]);
 
   const productItems: NavItemDef[] = useMemo(() => {
     const items: NavItemDef[] = [];
@@ -391,30 +434,142 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
     return items;
   }, [hasBillingsRead, hasFinanceSyncRead, locale, pathname, tShell]);
 
-  const quickEstimateItems: NavItemDef[] = useMemo(() => {
+  const isSettingsActive =
+    isOrganizationSettingsActive ||
+    isBranchSettingsActive ||
+    isUserAdminActive ||
+    isRoleRequestsActive ||
+    isRoleSettingsActive ||
+    isApprovalLimitSettingsActive ||
+    isDocumentNumberingActive ||
+    isDocumentTemplatesActive ||
+    isSurveySettingsActive ||
+    isAuditSettingsActive;
+
+  const settingsItems: NavItemDef[] = useMemo(() => {
     const items: NavItemDef[] = [];
-    if (hasQuickEstimatesRead) {
+    if (hasOrganizationsManage) {
       items.push({
-        id: "quick-estimates",
-        href: `/${locale}/quick-estimates`,
-        label: tShell("quickEstimates"),
-        icon: <IconFileText size={20} />,
-        isActive: pathname.startsWith(`/${locale}/quick-estimates`),
-        permission: hasQuickEstimatesRead,
+        id: "organization-settings",
+        href: `/${locale}/settings/organization`,
+        label: tShell("organizationSettings"),
+        icon: <IconBuilding size={20} />,
+        isActive: isOrganizationSettingsActive,
+        permission: hasOrganizationsManage,
       });
     }
-    if (hasPricingTemplatesRead) {
+    if (hasBranchesManage) {
       items.push({
-        id: "pricing-templates",
-        href: `/${locale}/pricing-templates`,
-        label: tShell("pricingTemplates"),
+        id: "branch-settings",
+        href: `/${locale}/settings/branches`,
+        label: tShell("branchSettings"),
+        icon: <IconMapPin size={20} />,
+        isActive: isBranchSettingsActive,
+        permission: hasBranchesManage,
+      });
+    }
+    if (hasUsersRead) {
+      items.push({
+        id: "user-admin",
+        href: `/${locale}/settings/users`,
+        label: tShell("userAdmin"),
+        icon: <IconUsers size={20} />,
+        isActive: isUserAdminActive,
+        permission: hasUsersRead,
+      });
+    }
+    if (hasRoleRequestApproval) {
+      items.push({
+        id: "role-requests",
+        href: `/${locale}/settings/role-requests`,
+        label: tShell("roleRequests"),
         icon: <IconFileText size={20} />,
-        isActive: pathname.startsWith(`/${locale}/pricing-templates`),
-        permission: hasPricingTemplatesRead,
+        isActive: isRoleRequestsActive,
+        permission: hasRoleRequestApproval,
+      });
+    }
+    if (hasRolesManage) {
+      items.push({
+        id: "role-settings",
+        href: `/${locale}/settings/roles`,
+        label: tShell("roleSettings"),
+        icon: <IconLock size={20} />,
+        isActive: isRoleSettingsActive,
+        permission: hasRolesManage,
+      });
+    }
+    if (hasApprovalLimitsManage) {
+      items.push({
+        id: "approval-limit-settings",
+        href: `/${locale}/settings/approval-limits`,
+        label: tShell("approvalLimitSettings"),
+        icon: <IconCheckCircle size={20} />,
+        isActive: isApprovalLimitSettingsActive,
+        permission: hasApprovalLimitsManage,
+      });
+    }
+    if (hasSettingsRead) {
+      items.push({
+        id: "doc-numbering",
+        href: `/${locale}/settings/document-numbering`,
+        label: tShell("documentNumbering"),
+        icon: <IconFileText size={20} />,
+        isActive: isDocumentNumberingActive,
+        permission: hasSettingsRead,
+      });
+      items.push({
+        id: "doc-templates",
+        href: `/${locale}/settings/document-templates`,
+        label: tShell("documentTemplates"),
+        icon: <IconPrinter size={20} />,
+        isActive: isDocumentTemplatesActive,
+        permission: hasSettingsRead,
+      });
+    }
+    if (hasSettingsRead || hasFieldSurveysRead) {
+      items.push({
+        id: "survey-settings",
+        href: `/${locale}/settings/surveys`,
+        label: tShell("surveySettings"),
+        icon: <IconPalette size={20} />,
+        isActive: isSurveySettingsActive,
+        permission: hasSettingsRead || hasFieldSurveysRead,
+      });
+    }
+    if (hasAuditRead) {
+      items.push({
+        id: "audit-settings",
+        href: `/${locale}/settings/audit`,
+        label: tShell("auditSettings"),
+        icon: <IconLock size={20} />,
+        isActive: isAuditSettingsActive,
+        permission: hasAuditRead,
       });
     }
     return items;
-  }, [hasQuickEstimatesRead, hasPricingTemplatesRead, locale, pathname, tShell]);
+  }, [
+    hasOrganizationsManage,
+    hasBranchesManage,
+    hasUsersRead,
+    hasRoleRequestApproval,
+    hasRolesManage,
+    hasApprovalLimitsManage,
+    hasSettingsRead,
+    hasFieldSurveysRead,
+    hasAuditRead,
+    locale,
+    tShell,
+    isOrganizationSettingsActive,
+    isBranchSettingsActive,
+    isUserAdminActive,
+    isRoleRequestsActive,
+    isRoleSettingsActive,
+    isApprovalLimitSettingsActive,
+    isDocumentNumberingActive,
+    isDocumentTemplatesActive,
+    isSurveySettingsActive,
+    isAuditSettingsActive,
+  ]);
 
   const subgroups: NavSubgroupDef[] = useMemo(() => {
     const groups: NavSubgroupDef[] = [];
@@ -423,6 +578,13 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         id: "crm",
         label: tShell("crmSubgroup"),
         items: crmItems,
+      });
+    }
+    if (productItems.length > 0) {
+      groups.push({
+        id: "products",
+        label: tShell("productSubgroup"),
+        items: productItems,
       });
     }
     if (procurementItems.length > 0) {
@@ -460,44 +622,57 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
         items: financeItems,
       });
     }
-    if (quickEstimateItems.length > 0) {
+    if (settingsItems.length > 0) {
       groups.push({
-        id: "quick-estimate",
-        label: tShell("quickEstimateSubgroup"),
-        items: quickEstimateItems,
-      });
-    }
-    if (productItems.length > 0) {
-      groups.push({
-        id: "products",
-        label: tShell("productSubgroup"),
-        items: productItems,
+        id: "settings",
+        label: tShell("settingsGroup"),
+        items: settingsItems,
       });
     }
     return groups;
-  }, [crmItems, procurementItems, inventoryItems, productionItems, serviceItems, financeItems, quickEstimateItems, productItems, tShell]);
+  }, [
+    crmItems,
+    productItems,
+    procurementItems,
+    inventoryItems,
+    productionItems,
+    serviceItems,
+    financeItems,
+    settingsItems,
+    tShell,
+  ]);
 
   // Accordion open/close state tracking
   const [openSubgroups, setOpenSubgroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    if (isCustomersActive || isOpportunitiesActive || isProjectsActive) initial["crm"] = true;
+    if (
+      isCustomersActive ||
+      isOpportunitiesActive ||
+      isFieldSurveysActive ||
+      isQuickEstimateActive ||
+      isEstimateReviewActive ||
+      isProjectsActive
+    ) {
+      initial["crm"] = true;
+    }
+    if (isItemMasterActive) initial["products"] = true;
     if (isProcurementActive) initial["procurement"] = true;
     if (isInventoryActive) initial["inventory"] = true;
     if (isProductionActive) initial["production"] = true;
     if (isServiceActive) initial["service"] = true;
     if (isFinanceActive) initial["finance"] = true;
-    if (isQuickEstimateActive) initial["quick-estimate"] = true;
-    if (isItemMasterActive) initial["products"] = true;
+    if (isSettingsActive) initial["settings"] = true;
+
     // Default open all if none active
     if (Object.keys(initial).length === 0) {
       initial["crm"] = true;
+      initial["products"] = true;
       initial["procurement"] = true;
       initial["inventory"] = true;
       initial["production"] = true;
       initial["service"] = true;
       initial["finance"] = true;
-      initial["quick-estimate"] = true;
-      initial["products"] = true;
+      initial["settings"] = true;
     }
     return initial;
   });
@@ -537,30 +712,6 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   const isHomeVisible = !trimmedSearch || tShell("home").toLowerCase().includes(trimmedSearch);
   const isReportsVisible =
     hasReportsRead && (!trimmedSearch || tShell("reports").toLowerCase().includes(trimmedSearch));
-  const isDocNumberingVisible =
-    hasSettingsRead &&
-    (!trimmedSearch || tShell("documentNumbering").toLowerCase().includes(trimmedSearch));
-  const isDocTemplatesVisible =
-    hasSettingsRead &&
-    (!trimmedSearch || tShell("documentTemplates").toLowerCase().includes(trimmedSearch));
-  const isSurveySettingsVisible =
-    (hasSettingsRead || hasFieldSurveysRead) &&
-    (!trimmedSearch || tShell("surveySettings").toLowerCase().includes(trimmedSearch));
-
-  const isUserAdminVisible =
-    hasUsersRead && (!trimmedSearch || tShell("userAdmin").toLowerCase().includes(trimmedSearch));
-  const isRoleRequestsVisible =
-    hasRoleRequestApproval && (!trimmedSearch || tShell("roleRequests").toLowerCase().includes(trimmedSearch));
-  const isOrganizationSettingsVisible =
-    hasOrganizationsManage && (!trimmedSearch || tShell("organizationSettings").toLowerCase().includes(trimmedSearch));
-  const isBranchSettingsVisible =
-    hasBranchesManage && (!trimmedSearch || tShell("branchSettings").toLowerCase().includes(trimmedSearch));
-  const isRoleSettingsVisible =
-    hasRolesManage && (!trimmedSearch || tShell("roleSettings").toLowerCase().includes(trimmedSearch));
-  const isAuditSettingsVisible =
-    hasAuditRead && (!trimmedSearch || tShell("auditSettings").toLowerCase().includes(trimmedSearch));
-  const isApprovalLimitSettingsVisible =
-    hasApprovalLimitsManage && (!trimmedSearch || tShell("approvalLimitSettings").toLowerCase().includes(trimmedSearch));
 
   const filteredSubgroups = useMemo(() => {
     if (!trimmedSearch) return subgroups;
@@ -578,19 +729,7 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
   }, [subgroups, trimmedSearch]);
 
   const hasAnyResults =
-    isHomeVisible ||
-    isReportsVisible ||
-    isDocNumberingVisible ||
-    isDocTemplatesVisible ||
-    isSurveySettingsVisible ||
-    isUserAdminVisible ||
-    isRoleRequestsVisible ||
-    isOrganizationSettingsVisible ||
-    isBranchSettingsVisible ||
-    isRoleSettingsVisible ||
-    isApprovalLimitSettingsVisible ||
-    isAuditSettingsVisible ||
-    filteredSubgroups.some((g) => g.items.length > 0);
+    isHomeVisible || isReportsVisible || filteredSubgroups.some((g) => g.items.length > 0);
 
   const renderLink = (item: NavItemDef) => {
     const linkContent = (
@@ -731,126 +870,6 @@ export function SidebarNav({ currentUser, isCollapsed, onLinkClick }: SidebarNav
               </li>
             );
           })}
-
-          {/* Document Numbering (Settings) */}
-          {isDocNumberingVisible && (
-            <li>
-              <div className="erp-nav-divider" />
-              {renderLink({
-                id: "doc-numbering",
-                href: `/${locale}/settings/document-numbering`,
-                label: tShell("documentNumbering"),
-                icon: <IconFileText size={20} />,
-                isActive: isDocumentNumberingActive,
-              })}
-            </li>
-          )}
-
-          {/* Document Templates (Settings) */}
-          {isDocTemplatesVisible && (
-            <li>
-              {renderLink({
-                id: "doc-templates",
-                href: `/${locale}/settings/document-templates`,
-                label: tShell("documentTemplates"),
-                icon: <IconPrinter size={20} />,
-                isActive: isDocumentTemplatesActive,
-              })}
-            </li>
-          )}
-
-          {/* Survey Master Data (Settings) */}
-          {isSurveySettingsVisible && (
-            <li>
-              <div className="erp-nav-divider" />
-              {renderLink({
-                id: "survey-settings",
-                href: `/${locale}/settings/surveys`,
-                label: tShell("surveySettings"),
-                icon: <IconPalette size={20} />,
-                isActive: isSurveySettingsActive,
-              })}
-            </li>
-          )}
-
-          {/* User and role administration (Settings) */}
-          {isUserAdminVisible && (
-            <li>
-              {renderLink({
-                id: "user-admin",
-                href: `/${locale}/settings/users`,
-                label: tShell("userAdmin"),
-                icon: <IconUsers size={20} />,
-                isActive: isUserAdminActive,
-              })}
-            </li>
-          )}
-          {isRoleRequestsVisible && (
-            <li>
-              {renderLink({
-                id: "role-requests",
-                href: `/${locale}/settings/role-requests`,
-                label: tShell("roleRequests"),
-                icon: <IconFileText size={20} />,
-                isActive: isRoleRequestsActive,
-              })}
-            </li>
-          )}
-          {isOrganizationSettingsVisible && (
-            <li>
-              {renderLink({
-                id: "organization-settings",
-                href: `/${locale}/settings/organization`,
-                label: tShell("organizationSettings"),
-                icon: <IconBuilding size={20} />,
-                isActive: isOrganizationSettingsActive,
-              })}
-            </li>
-          )}
-          {isBranchSettingsVisible && (
-            <li>
-              {renderLink({
-                id: "branch-settings",
-                href: `/${locale}/settings/branches`,
-                label: tShell("branchSettings"),
-                icon: <IconMapPin size={20} />,
-                isActive: isBranchSettingsActive,
-              })}
-            </li>
-          )}
-          {isRoleSettingsVisible && (
-            <li>
-              {renderLink({
-                id: "role-settings",
-                href: `/${locale}/settings/roles`,
-                label: tShell("roleSettings"),
-                icon: <IconLock size={20} />,
-                isActive: isRoleSettingsActive,
-              })}
-            </li>
-          )}
-          {isApprovalLimitSettingsVisible && (
-            <li>
-              {renderLink({
-                id: "approval-limit-settings",
-                href: `/${locale}/settings/approval-limits`,
-                label: tShell("approvalLimitSettings"),
-                icon: <IconCheckCircle size={20} />,
-                isActive: isApprovalLimitSettingsActive,
-              })}
-            </li>
-          )}
-          {isAuditSettingsVisible && (
-            <li>
-              {renderLink({
-                id: "audit-settings",
-                href: `/${locale}/settings/audit`,
-                label: tShell("auditSettings"),
-                icon: <IconLock size={20} />,
-                isActive: isAuditSettingsActive,
-              })}
-            </li>
-          )}
 
           {/* Empty search feedback */}
           {trimmedSearch && !hasAnyResults && (
