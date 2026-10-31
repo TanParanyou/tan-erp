@@ -392,6 +392,11 @@ export type ServiceRequestRequest = components["schemas"]["ServiceRequestRequest
 export type ServiceRequestResponse = components["schemas"]["ServiceRequestResponse"];
 export type ServiceRequestsListResponse = components["schemas"]["ServiceRequestsListResponse"];
 export type ServiceRequestListItemResponse = components["schemas"]["ServiceRequestListItemResponse"];
+export type ServiceSlaResponse = components["schemas"]["ServiceSlaResponse"];
+export type ChargeServiceRequestRequest = components["schemas"]["ChargeServiceRequestRequest"];
+export type CreateTechnicianAssignmentRequest = components["schemas"]["CreateTechnicianAssignmentRequest"];
+export type TechnicianAssignmentResponse = components["schemas"]["TechnicianAssignmentResponse"];
+export type TechnicianSchedulesListResponse = components["schemas"]["TechnicianSchedulesListResponse"];
 /** One step on an installation; `path` is the endpoint segment after the installation id. */
 export type InstallationStep =
   | { kind: "start" }
@@ -406,6 +411,9 @@ export type InstallationStep =
 export type ServiceRequestStep =
   | { kind: "schedule"; date: string }
   | { kind: "start" }
+  | { kind: "wait-customer"; reason: string }
+  | { kind: "resume" }
+  | { kind: "charge"; amount: number; note: string }
   | { kind: "resolve"; note: string }
   | { kind: "close" }
   | { kind: "reopen"; reason: string };
@@ -2496,14 +2504,36 @@ export class ApiClient {
     switch (step.kind) {
       case "schedule":
         return this.request<ServiceRequestResponse>(url, "POST", conditional, { date: step.date });
+      case "wait-customer":
+        return this.request<ServiceRequestResponse>(url, "POST", conditional, { reason: step.reason });
+      case "charge":
+        return this.request<ServiceRequestResponse>(url, "POST", conditional, { amount: step.amount, note: step.note });
       case "resolve":
         return this.request<ServiceRequestResponse>(url, "POST", conditional, { note: step.note });
       case "reopen":
         return this.request<ServiceRequestResponse>(url, "POST", conditional, { reason: step.reason });
       case "start":
+      case "resume":
       case "close":
         return this.request<ServiceRequestResponse>(url, "POST", conditional);
     }
+  }
+
+  async listTechnicianSchedules(options: RequestOptions, params?: { fromDate?: string; toDate?: string; technicianUserId?: string }): Promise<TechnicianSchedulesListResponse> {
+    const q = new URLSearchParams();
+    if (params?.fromDate) q.set("fromDate", params.fromDate);
+    if (params?.toDate) q.set("toDate", params.toDate);
+    if (params?.technicianUserId) q.set("technicianUserId", params.technicianUserId);
+    const qs = q.toString();
+    return this.request<TechnicianSchedulesListResponse>(`/api/v1/service-requests/technician-schedules${qs ? `?${qs}` : ""}`, "GET", options);
+  }
+
+  async createTechnicianSchedule(body: CreateTechnicianAssignmentRequest, options: RequestOptions): Promise<TechnicianAssignmentResponse> {
+    return this.request<TechnicianAssignmentResponse>("/api/v1/service-requests/technician-schedules", "POST", options, body);
+  }
+
+  async deleteTechnicianSchedule(assignmentId: string, options: RequestOptions): Promise<void> {
+    return this.request<void>(`/api/v1/service-requests/technician-schedules/${encodeURIComponent(assignmentId)}`, "DELETE", options);
   }
 
   async listBillings(options: RequestOptions, query: ListBillingsParams): Promise<BillingListResponse> {

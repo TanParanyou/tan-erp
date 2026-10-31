@@ -20,6 +20,7 @@ describe("notification types", () => {
       "purchase-order.approval-requested",
       "purchase-request.approval-requested",
       "role-assignment.approval-requested",
+      "service-request.sla-warning",
       "supplier-invoice.approval-requested",
     ]);
   });

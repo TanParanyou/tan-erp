@@ -13,8 +13,18 @@ internal static class ServiceMapper
     public static InstallationResponse To(InstallationProjection x) => new(x.Id, x.BranchId, x.Number, x.Status, To(x.Project), x.ScheduledStart, x.ScheduledEnd, x.CrewName, x.Note, x.CancelReason, x.ReadyAtUtc, x.Handover is null ? null : To(x.Handover), x.DisputeCount, x.LastDisputeNote, x.Warranty is null ? null : To(x.Warranty), To(x.CreatedBy), x.CreatedAtUtc, x.RowVersion, x.Checklist.Select(To).ToList(), x.Defects.Select(To).ToList());
     public static InstallationListItemResponse To(InstallationListItemProjection x) => new(x.Id, x.Number, x.Status, x.ProjectCode, x.ProjectName, x.ScheduledStart, x.ScheduledEnd, x.ChecklistDone, x.ChecklistTotal, x.OpenDefects, x.CreatedAtUtc);
     public static ServiceRequestEventResponse To(ServiceRequestEventProjection x) => new(x.FromStatus, x.ToStatus, x.Note, To(x.Actor), x.OccurredAtUtc);
-    public static ServiceRequestResponse To(ServiceRequestProjection x) => new(x.Id, x.BranchId, x.Number, x.Title, x.Description, x.Priority, x.Status, x.InWarranty, x.Warranty is null ? null : To(x.Warranty), To(x.Project), x.ScheduledDate, x.ResolutionNote, x.ReopenCount, To(x.CreatedBy), x.CreatedAtUtc, x.RowVersion, x.Events.Select(To).ToList());
-    public static ServiceRequestListItemResponse To(ServiceRequestListItemProjection x) => new(x.Id, x.Number, x.Title, x.Priority, x.Status, x.InWarranty, x.ProjectCode, x.CreatedAtUtc);
+    public static ServiceSlaResponse To(ServiceSlaProjection x) => new(x.ResponseHours, x.ResolveHours, x.ElapsedHours, x.PausedSeconds, x.Status);
+    public static ServiceRequestResponse To(ServiceRequestProjection x) => new(
+        x.Id, x.BranchId, x.Number, x.Title, x.Description, x.Priority, x.Status, x.InWarranty,
+        x.Warranty is null ? null : To(x.Warranty), To(x.Project), x.ScheduledDate, x.ResolutionNote, x.ReopenCount,
+        To(x.Sla), x.ServiceChargeAmount, x.ServiceChargeNote, x.BillingDocumentId, x.BillingDocumentNumber,
+        To(x.CreatedBy), x.CreatedAtUtc, x.RowVersion, x.Events.Select(To).ToList());
+    public static ServiceRequestListItemResponse To(ServiceRequestListItemProjection x) => new(
+        x.Id, x.Number, x.Title, x.Priority, x.Status, x.InWarranty, x.ProjectCode,
+        To(x.Sla), x.ServiceChargeAmount, x.BillingDocumentId, x.BillingDocumentNumber, x.CreatedAtUtc);
     public static WarrantyResponse To(WarrantyProjection x) => new(x.Id, x.Number, To(x.Project), x.InstallationJobId, x.InstallationNumber, x.StartDate, x.EndDate, x.Months, x.IsActive, x.ServiceRequestCount);
     public static ServicePaginationResponse Pagination(int page, int pageSize, int total) => new(page, pageSize, total, (int)Math.Ceiling(total / (double)pageSize));
+    public static TechnicianAssignmentResponse To(TechnicianAssignmentProjection x) => new(
+        x.Id, x.BranchId, To(x.Technician), x.WorkDate, x.AssignmentKind, x.InstallationJobId, x.InstallationJobNumber,
+        x.ServiceRequestId, x.ServiceRequestNumber, x.Note, To(x.CreatedBy), x.CreatedAtUtc, x.HasConflict);
 }

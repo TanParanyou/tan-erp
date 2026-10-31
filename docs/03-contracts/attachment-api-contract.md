@@ -24,6 +24,7 @@
 | Owner type | อ่าน (list/serve) | จัดการไฟล์แนบ (attach/unlink/upload) | เซ็น (capture signature / upload ภาพลายเซ็น) | สถานะ owner ที่แก้ไฟล์แนบได้ | สถานะที่เซ็นได้ |
 | --- | --- | --- | --- | --- | --- |
 | `installation-job` | `installations.read` | `installations.operate` | `installations.handover` | `planned`, `in_progress`, `ready_for_handover` | `ready_for_handover` |
+| `service-request` | `service-requests.read` | `service-requests.manage` | `service-requests.manage` | `open`, `scheduled`, `in_progress`, `waiting_customer`, `resolved` | `resolved` |
 | `quick-estimate` | `quick-estimates.read` | `quick-estimates.update` | — (ไม่มีลายเซ็น) | `draft`, `calculated`, `returned` | — |
 
 ## Endpoints (ต้อง `Authorization` + `X-Membership-Id`)

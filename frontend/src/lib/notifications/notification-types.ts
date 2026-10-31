@@ -21,7 +21,8 @@ export type NotificationMessageKey =
   | "mrpRunApprovalRequested"
   | "roleAssignmentApprovalRequested"
   | "membershipExpiring"
-  | "projectBudgetOverrun";
+  | "projectBudgetOverrun"
+  | "serviceRequestSlaWarning";
 
 export interface NotificationTypeDescriptor {
   messageKey: NotificationMessageKey;
@@ -68,6 +69,10 @@ export const NOTIFICATION_TYPES = {
   },
   "project.budget-overrun": {
     messageKey: "projectBudgetOverrun",
+    fields: ["documentNumber", "actorDisplayName"],
+  },
+  "service-request.sla-warning": {
+    messageKey: "serviceRequestSlaWarning",
     fields: ["documentNumber", "actorDisplayName"],
   },
 } as const satisfies Record<string, NotificationTypeDescriptor>;

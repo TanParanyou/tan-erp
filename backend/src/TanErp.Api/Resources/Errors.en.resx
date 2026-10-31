@@ -1031,6 +1031,10 @@
   <data name="SERVICE_INVALID_STATE_DETAIL" xml:space="preserve"><value>The service request status does not allow this action.</value></data>
   <data name="SERVICE_PROJECT_INVALID_TITLE" xml:space="preserve"><value>Project Invalid</value></data>
   <data name="SERVICE_PROJECT_INVALID_DETAIL" xml:space="preserve"><value>Service requests cannot be raised for a cancelled project.</value></data>
+  <data name="SERVICE_CHARGE_IN_WARRANTY_TITLE" xml:space="preserve"><value>Service In Warranty</value></data>
+  <data name="SERVICE_CHARGE_IN_WARRANTY_DETAIL" xml:space="preserve"><value>In-warranty service requests cannot be charged.</value></data>
+  <data name="TECHNICIAN_SCHEDULE_CONFLICT_TITLE" xml:space="preserve"><value>Technician Schedule Conflict</value></data>
+  <data name="TECHNICIAN_SCHEDULE_CONFLICT_DETAIL" xml:space="preserve"><value>Technician already has an assignment on this date.</value></data>
   <data name="SERVICE_REASON_REQUIRED_TITLE" xml:space="preserve"><value>Note Required</value></data>
   <data name="SERVICE_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>A note is required.</value></data>
   <data name="SERVICE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>Field Required</value></data>

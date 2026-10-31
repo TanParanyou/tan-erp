@@ -11,7 +11,7 @@ namespace TanErp.Infrastructure.Persistence.Attachments;
 /// </summary>
 public class AttachmentOwnerScopeReader : IAttachmentOwnerScopeReader
 {
-    public static readonly IReadOnlySet<string> SupportedOwnerTypes = new HashSet<string>(StringComparer.Ordinal) { AttachmentOwnerTypes.InstallationJob, AttachmentOwnerTypes.SurveyArea, AttachmentOwnerTypes.QuickEstimate };
+    public static readonly IReadOnlySet<string> SupportedOwnerTypes = new HashSet<string>(StringComparer.Ordinal) { AttachmentOwnerTypes.InstallationJob, AttachmentOwnerTypes.SurveyArea, AttachmentOwnerTypes.QuickEstimate, AttachmentOwnerTypes.ServiceRequest };
 
     private readonly AppDbContext _db;
 
@@ -47,6 +47,11 @@ public class AttachmentOwnerScopeReader : IAttachmentOwnerScopeReader
                 return await _db.QuickEstimates.AsNoTracking()
                     .Where(q => q.Id == ownerId && q.OrganizationId == organizationId)
                     .Select(q => new AttachmentOwnerScope(q.OrganizationId, q.BranchId, q.Status))
+                    .FirstOrDefaultAsync(ct);
+            case AttachmentOwnerTypes.ServiceRequest:
+                return await _db.ServiceRequests.AsNoTracking()
+                    .Where(r => r.Id == ownerId && r.OrganizationId == organizationId)
+                    .Select(r => new AttachmentOwnerScope(r.OrganizationId, r.BranchId, r.Status))
                     .FirstOrDefaultAsync(ct);
             default:
                 return null;

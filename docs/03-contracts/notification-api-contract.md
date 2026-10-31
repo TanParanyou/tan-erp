@@ -27,6 +27,7 @@
 | `change-order.approval-requested` | `projects.change-orders.approve` | `/projects/{parentId}` | `resourceId`, `parentId` (projectId), `documentNumber`, `actorDisplayName` | ส่ง Change Order |
 | `mrp-run.approval-requested` | `mrp.approve` | `/production/mrp/{resourceId}` | `resourceId`, `documentNumber`, `actorDisplayName` | สร้าง MRP run ที่มีข้อเสนอแนะ |
 | `role-assignment.approval-requested` | `roles.assign-approval` | `/settings/role-requests` | `resourceId`, `subjectDisplayName`, `roleName`, `actorDisplayName` | คำขอมอบ Role ที่ต้อง maker–checker |
+| `service-request.sla-warning` | `service-requests.manage` | `/service/requests/{resourceId}` | `resourceId`, `documentNumber`, `actorDisplayName` | งานบริการหลังการขายใกล้เกินหรือเกิน SLA (`G-18`) |
 
 Future (ไม่อยู่ใน G-02): `warranty.expiring`, `service-request.sla-overdue`, `membership.expiring` (ต้องมี scheduler); ช่องทางอีเมล (ต้องเลือก provider, ภาษา, และประเมิน outbox ใหม่).
 

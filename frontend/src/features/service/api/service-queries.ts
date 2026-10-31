@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import {
   apiClient,
+  type CreateTechnicianAssignmentRequest,
   type InstallationRequest,
   type InstallationResponse,
   type InstallationStep,
@@ -12,6 +13,8 @@ import {
   type ServiceRequestResponse,
   type ServiceRequestStep,
   type ServiceRequestsListResponse,
+  type TechnicianAssignmentResponse,
+  type TechnicianSchedulesListResponse,
   type WarrantiesListResponse,
 } from "@/lib/api/api-client";
 import { AuthenticationRequiredError, MembershipRequiredError } from "@/lib/api/api-error";
@@ -114,6 +117,7 @@ export function useServiceRequestMutations() {
     queryClient.setQueryData([...serviceKey(membershipId, locale), "requests", "detail", request.id], request);
     await queryClient.invalidateQueries({ queryKey: [...serviceKey(membershipId, locale), "requests", "list"] });
     await queryClient.invalidateQueries({ queryKey: [...serviceKey(membershipId, locale), "warranties"] });
+    await queryClient.invalidateQueries({ queryKey: ["business", membershipId, locale, "finance"] });
   };
   const create = useMutation({
     mutationFn: async (input: { payload: ServiceRequestRequest; idempotencyKey: string }) =>
@@ -126,4 +130,38 @@ export function useServiceRequestMutations() {
     onSuccess: store,
   });
   return { create, step };
+}
+
+export function useTechnicianSchedules(params?: {
+  fromDate?: string;
+  toDate?: string;
+  technicianUserId?: string;
+}): UseQueryResult<TechnicianSchedulesListResponse, Error> {
+  const { locale, membershipId, options } = useRequestContext();
+  return useQuery({
+    queryKey: [...serviceKey(membershipId, locale), "technician-schedules", params],
+    enabled: Boolean(membershipId),
+    queryFn: async ({ signal }) => apiClient.listTechnicianSchedules(await options(undefined, signal), params),
+  });
+}
+
+export function useTechnicianScheduleMutations() {
+  const { locale, membershipId, options } = useRequestContext();
+  const queryClient = useQueryClient();
+  const refresh = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: [...serviceKey(membershipId, locale), "technician-schedules"],
+    });
+  };
+  const create = useMutation({
+    mutationFn: async (payload: CreateTechnicianAssignmentRequest) =>
+      apiClient.createTechnicianSchedule(payload, await options()),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: async (assignmentId: string) =>
+      apiClient.deleteTechnicianSchedule(assignmentId, await options()),
+    onSuccess: refresh,
+  });
+  return { create, remove };
 }

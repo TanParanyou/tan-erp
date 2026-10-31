@@ -18,9 +18,45 @@ public sealed record InstallationListItemResponse(Guid Id, string Number, string
 
 public sealed record ServiceRequestEventResponse(string? FromStatus, string ToStatus, string? Note, ServicePersonResponse Actor, DateTimeOffset OccurredAtUtc);
 
-public sealed record ServiceRequestResponse(Guid Id, Guid BranchId, string Number, string Title, string Description, string Priority, string Status, bool InWarranty, WarrantyRefResponse? Warranty, ServiceProjectRefResponse Project, DateOnly? ScheduledDate, string? ResolutionNote, int ReopenCount, ServicePersonResponse CreatedBy, DateTimeOffset CreatedAtUtc, Guid RowVersion, IReadOnlyList<ServiceRequestEventResponse> Events);
+public sealed record ServiceSlaResponse(int ResponseHours, int ResolveHours, decimal ElapsedHours, long PausedSeconds, string Status);
 
-public sealed record ServiceRequestListItemResponse(Guid Id, string Number, string Title, string Priority, string Status, bool InWarranty, string ProjectCode, DateTimeOffset CreatedAtUtc);
+public sealed record ServiceRequestResponse(
+    Guid Id,
+    Guid BranchId,
+    string Number,
+    string Title,
+    string Description,
+    string Priority,
+    string Status,
+    bool InWarranty,
+    WarrantyRefResponse? Warranty,
+    ServiceProjectRefResponse Project,
+    DateOnly? ScheduledDate,
+    string? ResolutionNote,
+    int ReopenCount,
+    ServiceSlaResponse Sla,
+    decimal ServiceChargeAmount,
+    string? ServiceChargeNote,
+    Guid? BillingDocumentId,
+    string? BillingDocumentNumber,
+    ServicePersonResponse CreatedBy,
+    DateTimeOffset CreatedAtUtc,
+    Guid RowVersion,
+    IReadOnlyList<ServiceRequestEventResponse> Events);
+
+public sealed record ServiceRequestListItemResponse(
+    Guid Id,
+    string Number,
+    string Title,
+    string Priority,
+    string Status,
+    bool InWarranty,
+    string ProjectCode,
+    ServiceSlaResponse Sla,
+    decimal ServiceChargeAmount,
+    Guid? BillingDocumentId,
+    string? BillingDocumentNumber,
+    DateTimeOffset CreatedAtUtc);
 
 public sealed record WarrantyResponse(Guid Id, string Number, ServiceProjectRefResponse Project, Guid InstallationJobId, string InstallationNumber, DateOnly StartDate, DateOnly EndDate, int Months, bool IsActive, int ServiceRequestCount);
 
@@ -49,3 +85,32 @@ public sealed record HandoverRequest(string? Outcome, string? SignerName, string
 public sealed record ServiceRequestRequest(Guid ProjectId, string? Title, string? Description, string? Priority);
 
 public sealed record ScheduleRequest(DateOnly Date);
+
+public sealed record ChargeServiceRequestRequest(decimal Amount, string? Note);
+
+public sealed record CreateTechnicianAssignmentRequest(
+    Guid TechnicianUserId,
+    DateOnly WorkDate,
+    string? AssignmentKind,
+    Guid? InstallationJobId,
+    Guid? ServiceRequestId,
+    string? Note,
+    bool AllowConflict = false);
+
+public sealed record TechnicianAssignmentResponse(
+    Guid Id,
+    Guid BranchId,
+    ServicePersonResponse Technician,
+    DateOnly WorkDate,
+    string AssignmentKind,
+    Guid? InstallationJobId,
+    string? InstallationJobNumber,
+    Guid? ServiceRequestId,
+    string? ServiceRequestNumber,
+    string? Note,
+    ServicePersonResponse CreatedBy,
+    DateTimeOffset CreatedAtUtc,
+    bool HasConflict);
+
+public sealed record TechnicianSchedulesListResponse(IReadOnlyList<TechnicianAssignmentResponse> Items);
+

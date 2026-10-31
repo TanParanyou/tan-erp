@@ -93,6 +93,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
     public DbSet<TanErp.Domain.Service.Warranty> Warranties => Set<TanErp.Domain.Service.Warranty>();
     public DbSet<TanErp.Domain.Service.ServiceRequest> ServiceRequests => Set<TanErp.Domain.Service.ServiceRequest>();
     public DbSet<TanErp.Domain.Service.ServiceRequestEvent> ServiceRequestEvents => Set<TanErp.Domain.Service.ServiceRequestEvent>();
+    public DbSet<TanErp.Domain.Service.TechnicianAssignment> TechnicianAssignments => Set<TanErp.Domain.Service.TechnicianAssignment>();
     public DbSet<TanErp.Domain.Commercial.QuotationAcceptanceLink> QuotationAcceptanceLinks => Set<TanErp.Domain.Commercial.QuotationAcceptanceLink>();
     public DbSet<TanErp.Domain.Commercial.QuotationAcceptanceEvidence> QuotationAcceptanceEvidences => Set<TanErp.Domain.Commercial.QuotationAcceptanceEvidence>();
     public DbSet<TanErp.Domain.Commercial.AcceptanceOtpChallenge> AcceptanceOtpChallenges => Set<TanErp.Domain.Commercial.AcceptanceOtpChallenge>();

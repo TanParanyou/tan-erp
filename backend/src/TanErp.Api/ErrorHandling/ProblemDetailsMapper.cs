@@ -265,6 +265,8 @@ public static class ProblemDetailsMapper
         "SERVICE_VERSION_CONFLICT" => StatusCodes.Status409Conflict,
         "SERVICE_INVALID_STATE" => StatusCodes.Status409Conflict,
         "SERVICE_PROJECT_INVALID" => StatusCodes.Status409Conflict,
+        "SERVICE_CHARGE_IN_WARRANTY" => StatusCodes.Status409Conflict,
+        "TECHNICIAN_SCHEDULE_CONFLICT" => StatusCodes.Status409Conflict,
         "SERVICE_REASON_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "SERVICE_FIELD_REQUIRED" => StatusCodes.Status422UnprocessableEntity,
         "SERVICE_FIELD_INVALID" => StatusCodes.Status422UnprocessableEntity,

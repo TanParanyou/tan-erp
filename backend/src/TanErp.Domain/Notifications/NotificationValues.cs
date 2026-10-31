@@ -27,6 +27,7 @@ public static class NotificationTypes
     /// <summary>System-generated (no actor): a membership is about to expire. See ADR 0022.</summary>
     public const string MembershipExpiring = "membership.expiring";
     public const string ProjectBudgetOverrun = "project.budget-overrun";
+    public const string ServiceRequestSlaWarning = "service-request.sla-warning";
 
     private static readonly HashSet<string> Registered = new(StringComparer.Ordinal)
     {
@@ -39,7 +40,8 @@ public static class NotificationTypes
         MrpRunApprovalRequested,
         RoleAssignmentApprovalRequested,
         MembershipExpiring,
-        ProjectBudgetOverrun
+        ProjectBudgetOverrun,
+        ServiceRequestSlaWarning
     };
 
     public static IReadOnlyCollection<string> All => Registered;

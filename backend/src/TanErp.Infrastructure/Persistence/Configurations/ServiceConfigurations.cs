@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TanErp.Domain.Finance;
 using TanErp.Domain.IdentityAccess;
 using TanErp.Domain.Organization;
 using TanErp.Domain.Projects;
@@ -141,7 +142,7 @@ public class ServiceRequestConfiguration : IEntityTypeConfiguration<ServiceReque
     {
         builder.ToTable("service_requests", "service", t =>
         {
-            t.HasCheckConstraint("ck_service_requests_status", "status IN ('open', 'scheduled', 'in_progress', 'resolved', 'closed')");
+            t.HasCheckConstraint("ck_service_requests_status", "status IN ('open', 'scheduled', 'in_progress', 'waiting_customer', 'resolved', 'closed')");
             t.HasCheckConstraint("ck_service_requests_priority", "priority IN ('low', 'normal', 'high', 'urgent')");
             t.HasCheckConstraint("ck_service_requests_warranty", "in_warranty = (warranty_id IS NOT NULL)");
         });
@@ -155,11 +156,18 @@ public class ServiceRequestConfiguration : IEntityTypeConfiguration<ServiceReque
         builder.Property(x => x.Title).HasColumnName("title").HasMaxLength(200).IsRequired();
         builder.Property(x => x.Description).HasColumnName("description").HasMaxLength(1000).IsRequired();
         builder.Property(x => x.Priority).HasColumnName("priority").HasMaxLength(16).IsRequired();
-        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(16).IsRequired();
+        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(24).IsRequired();
         builder.Property(x => x.InWarranty).HasColumnName("in_warranty").IsRequired();
         builder.Property(x => x.ScheduledDate).HasColumnName("scheduled_date");
         builder.Property(x => x.ResolutionNote).HasColumnName("resolution_note").HasMaxLength(500);
         builder.Property(x => x.ReopenCount).HasColumnName("reopen_count").IsRequired();
+        builder.Property(x => x.PausedAtUtc).HasColumnName("paused_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.PausedSeconds).HasColumnName("paused_seconds").IsRequired();
+        builder.Property(x => x.ResolvedAtUtc).HasColumnName("resolved_at_utc").HasColumnType("timestamptz");
+        builder.Property(x => x.ServiceChargeAmount).HasColumnName("service_charge_amount").HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.ServiceChargeNote).HasColumnName("service_charge_note").HasMaxLength(500);
+        builder.Property(x => x.BillingDocumentId).HasColumnName("billing_document_id");
+        builder.Property(x => x.BillingDocumentNumber).HasColumnName("billing_document_number").HasMaxLength(64);
         builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
         builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc").HasColumnType("timestamptz").IsRequired();
@@ -167,11 +175,13 @@ public class ServiceRequestConfiguration : IEntityTypeConfiguration<ServiceReque
         builder.HasIndex(x => new { x.OrganizationId, x.Number }).IsUnique();
         builder.HasIndex(x => new { x.OrganizationId, x.Status, x.CreatedAtUtc });
         builder.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+        builder.HasIndex(x => x.BillingDocumentId);
         builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Project>().WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Warranty>().WithMany().HasForeignKey(x => x.WarrantyId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<BillingDocument>().WithMany().HasForeignKey(x => x.BillingDocumentId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(x => x.Events).WithOne().HasForeignKey(e => e.ServiceRequestId).OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(x => x.Events).HasField("_events").UsePropertyAccessMode(PropertyAccessMode.Field);
     }
@@ -186,8 +196,8 @@ public class ServiceRequestEventConfiguration : IEntityTypeConfiguration<Service
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
         builder.Property(x => x.ServiceRequestId).HasColumnName("service_request_id").IsRequired();
-        builder.Property(x => x.FromStatus).HasColumnName("from_status").HasMaxLength(16);
-        builder.Property(x => x.ToStatus).HasColumnName("to_status").HasMaxLength(16).IsRequired();
+        builder.Property(x => x.FromStatus).HasColumnName("from_status").HasMaxLength(24);
+        builder.Property(x => x.ToStatus).HasColumnName("to_status").HasMaxLength(24).IsRequired();
         builder.Property(x => x.Note).HasColumnName("note").HasMaxLength(500);
         builder.Property(x => x.ActorUserId).HasColumnName("actor_user_id").IsRequired();
         builder.Property(x => x.OccurredAtUtc).HasColumnName("occurred_at_utc").HasColumnType("timestamptz").IsRequired();
@@ -195,3 +205,37 @@ public class ServiceRequestEventConfiguration : IEntityTypeConfiguration<Service
         builder.HasOne<User>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+public class TechnicianAssignmentConfiguration : IEntityTypeConfiguration<TechnicianAssignment>
+{
+    public void Configure(EntityTypeBuilder<TechnicianAssignment> builder)
+    {
+        builder.ToTable("technician_assignments", "service", t =>
+        {
+            t.HasCheckConstraint("ck_technician_assignments_kind", "assignment_kind IN ('installation', 'service_request')");
+            t.HasCheckConstraint("ck_technician_assignments_target", "(assignment_kind = 'installation' AND installation_job_id IS NOT NULL AND service_request_id IS NULL) OR (assignment_kind = 'service_request' AND service_request_id IS NOT NULL AND installation_job_id IS NULL)");
+        });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+        builder.Property(x => x.BranchId).HasColumnName("branch_id").IsRequired();
+        builder.Property(x => x.TechnicianUserId).HasColumnName("technician_user_id").IsRequired();
+        builder.Property(x => x.WorkDate).HasColumnName("work_date").IsRequired();
+        builder.Property(x => x.AssignmentKind).HasColumnName("assignment_kind").HasMaxLength(24).IsRequired();
+        builder.Property(x => x.InstallationJobId).HasColumnName("installation_job_id");
+        builder.Property(x => x.ServiceRequestId).HasColumnName("service_request_id");
+        builder.Property(x => x.Note).HasColumnName("note").HasMaxLength(500);
+        builder.Property(x => x.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
+        builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc").HasColumnType("timestamptz").IsRequired();
+
+        builder.HasIndex(x => new { x.OrganizationId, x.TechnicianUserId, x.WorkDate });
+        builder.HasIndex(x => new { x.OrganizationId, x.WorkDate });
+        builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.TechnicianUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<InstallationJob>().WithMany().HasForeignKey(x => x.InstallationJobId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<ServiceRequest>().WithMany().HasForeignKey(x => x.ServiceRequestId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+

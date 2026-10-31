@@ -309,6 +309,7 @@
       "coordinatePairRequired": "Both latitude and longitude must be provided together"
     },
     "table": {
+      "status": "Status",
       "rowsPerPage": "Rows per page",
       "page": "Page",
       "of": "of",
@@ -4223,7 +4224,9 @@
       "SERVICE_PROJECT_INVALID": "Service requests cannot be raised for a cancelled project.",
       "SERVICE_REASON_REQUIRED": "A note is required.",
       "SERVICE_FIELD_REQUIRED": "A required field is missing.",
-      "SERVICE_FIELD_INVALID": "A value is invalid. The visit date cannot be in the past."
+      "SERVICE_FIELD_INVALID": "A value is invalid. The visit date cannot be in the past.",
+      "SERVICE_CHARGE_IN_WARRANTY": "Cannot charge service fee for a request under active warranty.",
+      "TECHNICIAN_SCHEDULE_CONFLICT": "Technician has another assignment on this date (check allow conflict to force assign)."
     },
     "installations": {
       "title": "Installations",
@@ -4394,6 +4397,7 @@
         "open": "Open",
         "scheduled": "Scheduled",
         "in_progress": "In progress",
+        "waiting_customer": "Waiting on Customer",
         "resolved": "Resolved",
         "closed": "Closed"
       },
@@ -4407,22 +4411,57 @@
       "resolutionLine": "Resolution: {note}",
       "schedule": "Schedule",
       "start": "Start work",
+      "waitCustomer": "Wait on Customer",
+      "resume": "Resume Work",
+      "charge": "Charge Service Fee",
+      "chargesTitle": "Out-of-Warranty Service Charge",
+      "serviceChargeAmount": "Service Charge Amount",
+      "serviceChargeNote": "Charge Note",
+      "billingDocument": "Billing Document",
+      "slaTitle": "Service Level Agreement (SLA)",
+      "sla": "SLA",
+      "slaElapsed": "Elapsed Time",
+      "slaResolve": "Resolution Target",
+      "slaPaused": "Paused Duration",
+      "slaHoursValue": "{hours} h",
+      "slaMinutesValue": "{minutes} min",
+      "slaProgress": "{elapsed} / {resolve} h",
       "resolve": "Mark resolved",
       "close": "Close",
       "reopen": "Reopen",
       "visitDate": "Visit date",
       "resolutionNote": "Resolution",
       "reopenReason": "Reason to reopen",
+      "waitReason": "Reason for waiting",
+      "chargeAmount": "Amount (THB)",
+      "chargeNote": "Charge Note",
       "dateRequired": "Choose a date.",
       "textRequired": "Enter the details.",
       "confirm": "Confirm",
       "saved": "Saved.",
       "created": "Service request created.",
+      "viewRequests": "Service Requests",
+      "viewSchedules": "Technician Schedules",
       "historyTitle": "Status history",
+      "slaStatuses": {
+        "on_track": "On Track",
+        "warning": "Warning",
+        "breached": "Breached",
+        "paused": "Paused",
+        "met": "Met"
+      },
       "dialogs": {
         "schedule": {
           "title": "Schedule a visit",
           "description": "Choose the visit date (not in the past)."
+        },
+        "wait-customer": {
+          "title": "Wait on Customer",
+          "description": "Specify reason for waiting. SLA timer will be paused."
+        },
+        "charge": {
+          "title": "Charge Out-of-Warranty Service Fee",
+          "description": "Specify amount and note to generate an official billing invoice."
         },
         "resolve": {
           "title": "Record the resolution",
@@ -4433,10 +4472,44 @@
           "description": "Enter why it must be reopened."
         }
       },
+      "waitReasonPlaceholder": "e.g. Waiting for customer availability or parts...",
+      "chargeAmountPlaceholder": "0.00",
+      "chargeNotePlaceholder": "e.g. Labor and replacement hinge parts out of warranty...",
       "reopenReasonPlaceholder": "Enter rework / reopening reason...",
       "resolutionNotePlaceholder": "Enter troubleshooting and resolution details...",
       "titleFieldPlaceholder": "e.g. Wardrobe door does not close properly",
       "descriptionPlaceholder": "Describe issue symptoms in detail...",
+      "datePlaceholder": "dd/mm/yyyy"
+    },
+    "schedules": {
+      "title": "Technician Schedules",
+      "subtitle": "Monitor technician schedules, assignments, and detect schedule conflicts",
+      "technician": "Technician",
+      "selectTechnician": "Select Technician",
+      "workDate": "Work Date",
+      "assignmentKind": "Assignment Kind",
+      "kindService": "Service Request",
+      "kindInstallation": "Installation Job",
+      "document": "Document Number",
+      "documentPlaceholder": "Document ref",
+      "serviceRequestId": "Service Request ID",
+      "serviceRequestIdPlaceholder": "Specify Service Request UUID",
+      "installationJobId": "Installation Job ID",
+      "installationJobIdPlaceholder": "Specify Installation Job UUID",
+      "note": "Note",
+      "notePlaceholder": "e.g. Morning service run or accessory fitting",
+      "allowConflict": "Allow conflict (force assign even if schedule conflicts)",
+      "hasConflict": "Conflict",
+      "noConflict": "OK",
+      "conflictWarning": "Technician already has an assignment on this date",
+      "create": "Assign Technician",
+      "createSuccess": "Technician assignment created successfully.",
+      "delete": "Remove Assignment",
+      "deleteSuccess": "Assignment removed successfully.",
+      "deleteTitle": "Confirm Remove Assignment",
+      "deleteDescription": "Are you sure you want to remove this technician assignment?",
+      "empty": "No technician assignments found",
+      "emptyDetail": "Assign a technician and work date using the form below",
       "datePlaceholder": "dd/mm/yyyy"
     }
   },
@@ -5205,7 +5278,8 @@
       "mrpRunApprovalRequested": "{actorDisplayName} created planning run {documentNumber} awaiting approval",
       "roleAssignmentApprovalRequested": "{actorDisplayName} requested role {roleName} for {subjectDisplayName}",
       "membershipExpiring": "Access for {subjectDisplayName} expires within {daysRemaining} day(s)",
-      "projectBudgetOverrun": "Project {documentNumber} exceeded its budget (latest entry by {actorDisplayName})"
+      "projectBudgetOverrun": "Project {documentNumber} exceeded its budget (latest entry by {actorDisplayName})",
+      "serviceRequestSlaWarning": "Service request {documentNumber} reached SLA warning or breach threshold (assigned to {actorDisplayName})"
     },
     "list": {
       "title": "Notifications",

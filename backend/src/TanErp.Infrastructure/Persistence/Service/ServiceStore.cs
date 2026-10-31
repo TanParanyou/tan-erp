@@ -3,9 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using TanErp.Application.Common.Abstractions;
 using TanErp.Application.Common.Models;
 using TanErp.Application.Common.Results;
+using TanErp.Application.Notifications;
 using TanErp.Application.Service;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
+using TanErp.Domain.Finance;
+using TanErp.Domain.Notifications;
 using TanErp.Domain.Projects;
 using TanErp.Domain.Service;
 
@@ -16,12 +19,14 @@ public class ServiceStore : IServiceStore
     private readonly AppDbContext _db;
     private readonly IClock _clock;
     private readonly IDocumentNumberGenerator _numbers;
+    private readonly INotificationPublisher _notifications;
 
-    public ServiceStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers)
+    public ServiceStore(AppDbContext db, IClock clock, IDocumentNumberGenerator numbers, INotificationPublisher notifications)
     {
         _db = db;
         _clock = clock;
         _numbers = numbers;
+        _notifications = notifications;
     }
 
     private static Result<T> Fail<T>(string code, string message) => Result<T>.Failure(new Error(code, message));
@@ -55,6 +60,14 @@ public class ServiceStore : IServiceStore
 
     private async Task<ServiceProjectRef?> ProjectRefAsync(Guid orgId, Guid projectId, CancellationToken ct) =>
         await _db.Projects.AsNoTracking().Where(p => p.Id == projectId && p.OrganizationId == orgId).Select(p => new ServiceProjectRef(p.Id, p.Code, p.Name)).FirstOrDefaultAsync(ct);
+
+    private async Task<HashSet<DateOnly>> HolidaysAsync(Guid orgId, Guid? branchId, CancellationToken ct)
+    {
+        var query = _db.WorkingCalendarHolidays.AsNoTracking()
+            .Where(h => h.OrganizationId == orgId && (h.BranchId == null || h.BranchId == branchId));
+        var dates = await query.Select(h => h.HolidayDate).ToListAsync(ct);
+        return dates.ToHashSet();
+    }
 
     // ===== installation ==============================================================================
 
@@ -379,9 +392,60 @@ public class ServiceStore : IServiceStore
                 {
                     case ScheduleServiceRequest s: request.Schedule(s.Date, Today, access.ActorUserId, now); break;
                     case StartServiceRequest: request.Start(access.ActorUserId, now); break;
+                    case WaitCustomerServiceRequest w: request.WaitCustomer(w.Reason, access.ActorUserId, now); break;
+                    case ResumeServiceRequest: request.ResumeFromWaitCustomer(access.ActorUserId, now); break;
                     case ResolveServiceRequest r: request.Resolve(r.Note, access.ActorUserId, now); break;
                     case CloseServiceRequest: request.Close(access.ActorUserId, now); break;
                     case ReopenServiceRequest o: request.Reopen(o.Reason, access.ActorUserId, now); break;
+                    case ChargeServiceRequest c:
+                    {
+                        if (request.InWarranty) return Fail<ServiceRequestProjection>("SERVICE_CHARGE_IN_WARRANTY", "In-warranty service requests cannot be charged.");
+                        if (request.BillingDocumentId.HasValue) return Fail<ServiceRequestProjection>("SERVICE_INVALID_STATE", "Service charge has already been billed.");
+                        if (c.Amount <= 0m || c.Amount > 999_999_999m || decimal.Round(c.Amount, 2) != c.Amount)
+                            return Fail<ServiceRequestProjection>("SERVICE_FIELD_INVALID", "Service charge amount must be positive with at most 2 decimals.");
+                        if (string.IsNullOrWhiteSpace(c.Note) || c.Note.Trim().Length > 500)
+                            return Fail<ServiceRequestProjection>("SERVICE_REASON_REQUIRED", "A note of 1-500 characters is required.");
+
+                        string billingNumber;
+                        try
+                        {
+                            billingNumber = await _numbers.GenerateAsync(orgId, DocumentTypes.BillingDocuments, request.BranchId, now, ct);
+                        }
+                        catch (Exception ex) when (ex is not OperationCanceledException)
+                        {
+                            return Fail<ServiceRequestProjection>("DOCUMENT_NUMBER_ALLOCATION_FAILED", "Failed to allocate billing document number.");
+                        }
+
+                        var desc = $"Service Charge {request.Number}: {c.Note.Trim()}";
+                        if (desc.Length > 200) desc = desc[..200];
+                        var billing = new BillingDocument(
+                            Guid.NewGuid(),
+                            orgId,
+                            request.BranchId,
+                            request.ProjectId,
+                            billingNumber,
+                            BillingKind.Other,
+                            desc,
+                            c.Amount,
+                            Today,
+                            access.ActorUserId,
+                            now);
+                        _db.BillingDocuments.Add(billing);
+
+                        _db.AccountingOutbox.Add(new AccountingOutboxMessage(
+                            Guid.NewGuid(),
+                            orgId,
+                            $"billing.issued:{billing.Id}",
+                            OutboxKind.BillingIssued,
+                            billing.Id,
+                            billing.Number,
+                            billing.Amount,
+                            JsonSerializer.Serialize(new { billingId = billing.Id, number = billing.Number, amount = billing.Amount, serviceRequestId = request.Id }),
+                            now));
+
+                        request.RecordServiceCharge(c.Amount, c.Note, billing.Id, billing.Number, access.ActorUserId, now);
+                        break;
+                    }
                     default: return Fail<ServiceRequestProjection>("SERVICE_FIELD_INVALID", "Unknown command.");
                 }
             }
@@ -394,6 +458,15 @@ public class ServiceStore : IServiceStore
             foreach (var added in request.Events.Skip(before)) _db.Entry(added).State = EntityState.Added;
 
             Audit(access, "service-request.status-changed", "ServiceRequest", request.Id, traceId, new { number = request.Number, status = request.Status }, request.RowVersion, now);
+
+            // Publish SLA Warning notification if SLA threshold reached
+            var holidays = await HolidaysAsync(orgId, request.BranchId, ct);
+            var sla = ServiceSlaCalculator.Evaluate(request, now, holidays);
+            if (sla.SlaStatus is SlaStatus.Warning or SlaStatus.Breached)
+            {
+                await _notifications.PublishAsync(NotificationEvents.ServiceRequestSlaWarning(orgId, request.BranchId, request.RowVersion, access.ActorUserId, request.Id, request.Number), ct);
+            }
+
             try
             {
                 await _db.SaveChangesAsync(ct);
@@ -419,8 +492,13 @@ public class ServiceStore : IServiceStore
         var people = await PeopleAsync(r.Events.Select(e => (Guid?)e.ActorUserId).Append(r.CreatedByUserId), ct);
         ServicePerson Person(Guid id) => people.TryGetValue(id, out var p) ? p : new ServicePerson(id, string.Empty);
 
+        var holidays = await HolidaysAsync(organizationId, r.BranchId, ct);
+        var slaEval = ServiceSlaCalculator.Evaluate(r, _clock.UtcNow, holidays);
+        var sla = new ServiceSlaProjection(slaEval.ResponseHours, slaEval.ResolveHours, slaEval.ElapsedHours, slaEval.TotalPausedSeconds, slaEval.SlaStatus);
+
         return new ServiceRequestProjection(
             r.Id, r.BranchId, r.Number, r.Title, r.Description, r.Priority, r.Status, r.InWarranty, warranty, project!, r.ScheduledDate, r.ResolutionNote, r.ReopenCount,
+            sla, r.ServiceChargeAmount, r.ServiceChargeNote, r.BillingDocumentId, r.BillingDocumentNumber,
             Person(r.CreatedByUserId), r.CreatedAtUtc, r.RowVersion,
             r.Events.OrderBy(e => e.OccurredAtUtc).ThenBy(e => e.Id).Select(e => new ServiceRequestEventProjection(e.FromStatus, e.ToStatus, e.Note, Person(e.ActorUserId), e.OccurredAtUtc)).ToList());
     }
@@ -441,6 +519,153 @@ public class ServiceStore : IServiceStore
         var rows = await requests.OrderByDescending(r => r.CreatedAtUtc).ThenBy(r => r.Id).Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToListAsync(ct);
         var projectIds = rows.Select(r => r.ProjectId).Distinct().ToList();
         var projects = await _db.Projects.AsNoTracking().Where(p => projectIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id, p => p.Code, ct);
-        return new PagedServiceRequests(rows.Select(r => new ServiceRequestListItemProjection(r.Id, r.Number, r.Title, r.Priority, r.Status, r.InWarranty, projects[r.ProjectId], r.CreatedAtUtc)).ToList(), total, query.Page, query.PageSize);
+
+        var holidays = await HolidaysAsync(organizationId, null, ct);
+        var now = _clock.UtcNow;
+
+        return new PagedServiceRequests(rows.Select(r =>
+        {
+            var slaEval = ServiceSlaCalculator.Evaluate(r, now, holidays);
+            var sla = new ServiceSlaProjection(slaEval.ResponseHours, slaEval.ResolveHours, slaEval.ElapsedHours, slaEval.TotalPausedSeconds, slaEval.SlaStatus);
+            return new ServiceRequestListItemProjection(
+                r.Id, r.Number, r.Title, r.Priority, r.Status, r.InWarranty, projects[r.ProjectId],
+                sla, r.ServiceChargeAmount, r.BillingDocumentId, r.BillingDocumentNumber, r.CreatedAtUtc);
+        }).ToList(), total, query.Page, query.PageSize);
+    }
+
+    // ===== technician schedules ====================================================================
+
+    public async Task<IReadOnlyList<TechnicianAssignmentProjection>> ListTechnicianSchedulesAsync(Guid organizationId, TechnicianScheduleQuery query, CancellationToken ct = default)
+    {
+        var assignments = _db.TechnicianAssignments.AsNoTracking().Where(a => a.OrganizationId == organizationId);
+        if (query.FromDate.HasValue) assignments = assignments.Where(a => a.WorkDate >= query.FromDate.Value);
+        if (query.ToDate.HasValue) assignments = assignments.Where(a => a.WorkDate <= query.ToDate.Value);
+        if (query.TechnicianUserId.HasValue) assignments = assignments.Where(a => a.TechnicianUserId == query.TechnicianUserId.Value);
+
+        var rows = await assignments.OrderBy(a => a.WorkDate).ThenBy(a => a.CreatedAtUtc).ToListAsync(ct);
+        var people = await PeopleAsync(rows.Select(r => (Guid?)r.TechnicianUserId).Concat(rows.Select(r => (Guid?)r.CreatedByUserId)), ct);
+        ServicePerson Person(Guid id) => people.TryGetValue(id, out var p) ? p : new ServicePerson(id, string.Empty);
+
+        var installIds = rows.Where(r => r.InstallationJobId.HasValue).Select(r => r.InstallationJobId!.Value).Distinct().ToList();
+        var installNumbers = await _db.InstallationJobs.AsNoTracking().Where(j => installIds.Contains(j.Id)).ToDictionaryAsync(j => j.Id, j => j.Number, ct);
+
+        var serviceReqIds = rows.Where(r => r.ServiceRequestId.HasValue).Select(r => r.ServiceRequestId!.Value).Distinct().ToList();
+        var serviceReqNumbers = await _db.ServiceRequests.AsNoTracking().Where(s => serviceReqIds.Contains(s.Id)).ToDictionaryAsync(s => s.Id, s => s.Number, ct);
+
+        var counts = rows.GroupBy(r => (r.TechnicianUserId, r.WorkDate)).ToDictionary(g => g.Key, g => g.Count());
+
+        return rows.Select(r => new TechnicianAssignmentProjection(
+            r.Id,
+            r.BranchId,
+            Person(r.TechnicianUserId),
+            r.WorkDate,
+            r.AssignmentKind,
+            r.InstallationJobId,
+            r.InstallationJobId.HasValue && installNumbers.TryGetValue(r.InstallationJobId.Value, out var inum) ? inum : null,
+            r.ServiceRequestId,
+            r.ServiceRequestId.HasValue && serviceReqNumbers.TryGetValue(r.ServiceRequestId.Value, out var snum) ? snum : null,
+            r.Note,
+            Person(r.CreatedByUserId),
+            r.CreatedAtUtc,
+            counts[(r.TechnicianUserId, r.WorkDate)] > 1)).ToList();
+    }
+
+    public async Task<Result<TechnicianAssignmentProjection>> CreateTechnicianAssignmentAsync(
+        RequestAccessContext access, CreateTechnicianAssignmentInput input, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var branchId = access.BranchId ?? Guid.Empty;
+        if (branchId == Guid.Empty)
+        {
+            var userBranch = await _db.Branches.AsNoTracking().Where(b => b.OrganizationId == orgId && b.IsActive).OrderBy(b => b.Code).Select(b => b.Id).FirstOrDefaultAsync(ct);
+            if (userBranch == Guid.Empty) return Fail<TechnicianAssignmentProjection>("ACTIVE_BRANCH_REQUIRED", "An active branch is required.");
+            branchId = userBranch;
+        }
+
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            var existingCount = await _db.TechnicianAssignments
+                .Where(a => a.OrganizationId == orgId && a.TechnicianUserId == input.TechnicianUserId && a.WorkDate == input.WorkDate)
+                .CountAsync(ct);
+
+            if (existingCount > 0 && !input.AllowConflict)
+            {
+                return Fail<TechnicianAssignmentProjection>("TECHNICIAN_SCHEDULE_CONFLICT", "Technician already has an assignment on this date.");
+            }
+
+            var now = _clock.UtcNow;
+            try
+            {
+                var assignment = new TechnicianAssignment(
+                    Guid.NewGuid(),
+                    orgId,
+                    branchId,
+                    input.TechnicianUserId,
+                    input.WorkDate,
+                    input.AssignmentKind,
+                    input.InstallationJobId,
+                    input.ServiceRequestId,
+                    input.Note,
+                    access.ActorUserId,
+                    now);
+
+                _db.TechnicianAssignments.Add(assignment);
+                Audit(access, "technician_assignment.created", "TechnicianAssignment", assignment.Id, traceId,
+                    new { technicianUserId = input.TechnicianUserId, workDate = input.WorkDate, kind = input.AssignmentKind }, null, now);
+
+                await _db.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+
+                var people = await PeopleAsync(new[] { (Guid?)input.TechnicianUserId, access.ActorUserId }, ct);
+                ServicePerson Person(Guid id) => people.TryGetValue(id, out var p) ? p : new ServicePerson(id, string.Empty);
+
+                string? installNum = null;
+                if (input.InstallationJobId.HasValue)
+                {
+                    installNum = await _db.InstallationJobs.AsNoTracking().Where(j => j.Id == input.InstallationJobId.Value).Select(j => j.Number).FirstOrDefaultAsync(ct);
+                }
+
+                string? serviceReqNum = null;
+                if (input.ServiceRequestId.HasValue)
+                {
+                    serviceReqNum = await _db.ServiceRequests.AsNoTracking().Where(s => s.Id == input.ServiceRequestId.Value).Select(s => s.Number).FirstOrDefaultAsync(ct);
+                }
+
+                return Result<TechnicianAssignmentProjection>.Success(new TechnicianAssignmentProjection(
+                    assignment.Id,
+                    assignment.BranchId,
+                    Person(assignment.TechnicianUserId),
+                    assignment.WorkDate,
+                    assignment.AssignmentKind,
+                    assignment.InstallationJobId,
+                    installNum,
+                    assignment.ServiceRequestId,
+                    serviceReqNum,
+                    assignment.Note,
+                    Person(assignment.CreatedByUserId),
+                    assignment.CreatedAtUtc,
+                    existingCount > 0));
+            }
+            catch (ServiceDomainException ex)
+            {
+                return Fail<TechnicianAssignmentProjection>(ex);
+            }
+        });
+    }
+
+    public async Task<Result<bool>> DeleteTechnicianAssignmentAsync(RequestAccessContext access, Guid assignmentId, string traceId, CancellationToken ct = default)
+    {
+        var orgId = access.OrganizationId;
+        var assignment = await _db.TechnicianAssignments.FirstOrDefaultAsync(a => a.Id == assignmentId && a.OrganizationId == orgId, ct);
+        if (assignment is null) return Fail<bool>("RESOURCE_NOT_FOUND", "Technician assignment not found.");
+
+        _db.TechnicianAssignments.Remove(assignment);
+        var now = _clock.UtcNow;
+        Audit(access, "technician_assignment.deleted", "TechnicianAssignment", assignmentId, traceId,
+            new { technicianUserId = assignment.TechnicianUserId, workDate = assignment.WorkDate }, null, now);
+        await _db.SaveChangesAsync(ct);
+        return Result<bool>.Success(true);
     }
 }

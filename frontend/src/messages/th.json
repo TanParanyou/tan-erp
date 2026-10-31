@@ -309,6 +309,7 @@
       "coordinatePairRequired": "หากระบุพิกัด ต้องระบุทั้งละติจูดและลองจิจูดคู่กัน"
     },
     "table": {
+      "status": "สถานะ",
       "rowsPerPage": "จำนวนแถวต่อหน้า",
       "page": "หน้า",
       "of": "จาก",
@@ -4223,7 +4224,9 @@
       "SERVICE_PROJECT_INVALID": "โครงการที่ยกเลิกแล้วรับงานบริการไม่ได้",
       "SERVICE_REASON_REQUIRED": "ต้องระบุหมายเหตุ",
       "SERVICE_FIELD_REQUIRED": "ข้อมูลไม่ครบถ้วน",
-      "SERVICE_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง วันนัดต้องไม่เป็นอดีต"
+      "SERVICE_FIELD_INVALID": "ข้อมูลไม่ถูกต้อง วันนัดต้องไม่เป็นอดีต",
+      "SERVICE_CHARGE_IN_WARRANTY": "งานบริการที่ยังอยู่ในประกันไม่สามารถคิดค่าบริการเพิ่มเติมได้",
+      "TECHNICIAN_SCHEDULE_CONFLICT": "ช่างมีงานอื่นที่ได้รับมอบหมายในวันดังกล่าวแล้ว (เลือกอนุญาตงานชนหากต้องการบันทึก)"
     },
     "installations": {
       "title": "งานติดตั้ง",
@@ -4394,6 +4397,7 @@
         "open": "รับเรื่อง",
         "scheduled": "นัดหมายแล้ว",
         "in_progress": "กำลังดำเนินการ",
+        "waiting_customer": "รอลูกค้า",
         "resolved": "แก้ไขแล้ว",
         "closed": "ปิดงาน"
       },
@@ -4407,22 +4411,57 @@
       "resolutionLine": "วิธีแก้ไข: {note}",
       "schedule": "นัดหมาย",
       "start": "เริ่มดำเนินการ",
+      "waitCustomer": "รอลูกค้า",
+      "resume": "กลับมาทำต่อ",
+      "charge": "บันทึกค่าบริการ",
+      "chargesTitle": "ค่าบริการนอกประกัน",
+      "serviceChargeAmount": "ยอดค่าบริการ",
+      "serviceChargeNote": "รายละเอียดค่าบริการ",
+      "billingDocument": "ใบแจ้งหนี้",
+      "slaTitle": "ข้อตกลงระดับบริการ (SLA)",
+      "sla": "SLA",
+      "slaElapsed": "เวลาที่ใช้",
+      "slaResolve": "เป้าหมายปิดงาน",
+      "slaPaused": "เวลาหยุดพักรอลูกค้า",
+      "slaHoursValue": "{hours} ชม.",
+      "slaMinutesValue": "{minutes} นาที",
+      "slaProgress": "{elapsed} / {resolve} ชม.",
       "resolve": "บันทึกการแก้ไข",
       "close": "ปิดงาน",
       "reopen": "เปิดซ้ำ",
       "visitDate": "วันที่นัดเข้าบริการ",
       "resolutionNote": "วิธีแก้ไข",
       "reopenReason": "เหตุผลที่เปิดซ้ำ",
+      "waitReason": "เหตุผลที่พักรอลูกค้า",
+      "chargeAmount": "จำนวนเงิน (บาท)",
+      "chargeNote": "รายละเอียดค่าบริการ",
       "dateRequired": "เลือกวันที่",
       "textRequired": "กรอกรายละเอียด",
       "confirm": "ยืนยัน",
       "saved": "บันทึกแล้ว",
       "created": "รับเรื่องบริการแล้ว",
+      "viewRequests": "รายการคำขอบริการ",
+      "viewSchedules": "ตารางงานช่าง",
       "historyTitle": "ประวัติสถานะ",
+      "slaStatuses": {
+        "on_track": "ตามกำหนด",
+        "warning": "ใกล้ถึงกำหนด",
+        "breached": "เกินกำหนด",
+        "paused": "หยุดพัก",
+        "met": "สำเร็จตาม SLA"
+      },
       "dialogs": {
         "schedule": {
           "title": "นัดหมายเข้าบริการ",
           "description": "เลือกวันที่นัด (ไม่ย้อนหลัง)"
+        },
+        "wait-customer": {
+          "title": "พักงานรอลูกค้า",
+          "description": "ระบุเหตุผลในการพักงาน เวลา SLA จะหยุดนับชั่วคราว"
+        },
+        "charge": {
+          "title": "บันทึกค่าบริการนอกประกัน",
+          "description": "ระบุจำนวนเงินและรายละเอียดเพื่อออกใบแจ้งหนี้ทางการ"
         },
         "resolve": {
           "title": "บันทึกการแก้ไข",
@@ -4433,10 +4472,44 @@
           "description": "ระบุเหตุผลที่ต้องเปิดซ้ำ"
         }
       },
+      "waitReasonPlaceholder": "เช่น รอลูกค้าสะดวกนัดหมาย หรือรอชิ้นส่วนจากลูกค้า...",
+      "chargeAmountPlaceholder": "0.00",
+      "chargeNotePlaceholder": "เช่น ค่าแรงและอะไหล่นอกประกันชุดบานพับ...",
       "reopenReasonPlaceholder": "ระบุเหตุผลที่ต้องเปิดงานซ่อมซ้ำ...",
       "resolutionNotePlaceholder": "ระบุแนวทางและผลการแก้ไขปัญหา...",
       "titleFieldPlaceholder": "เช่น หน้าบานตู้เสื้อผ้าปิดไม่สนิท",
       "descriptionPlaceholder": "อธิบายอาการหรือปัญหาที่พบอย่างละเอียด...",
+      "datePlaceholder": "วว/ดด/ปปปป"
+    },
+    "schedules": {
+      "title": "ตารางมอบหมายงานช่าง (Technician Schedules)",
+      "subtitle": "ตรวจสอบตารางงานช่าง จัดการการมอบหมาย และเตือนเมื่อตารางงานชนกัน",
+      "technician": "ช่างผู้ปฏิบัติงาน",
+      "selectTechnician": "เลือกช่าง",
+      "workDate": "วันที่ปฏิบัติงาน",
+      "assignmentKind": "ประเภทงาน",
+      "kindService": "งานบริการ (Service Request)",
+      "kindInstallation": "งานติดตั้ง (Installation)",
+      "document": "เลขที่เอกสาร",
+      "documentPlaceholder": "เลขที่งานบริการหรือติดตั้ง",
+      "serviceRequestId": "รหัสงานบริการ (Service Request ID)",
+      "serviceRequestIdPlaceholder": "ระบุ UUID งานบริการ (ถ้ามี)",
+      "installationJobId": "รหัสงานติดตั้ง (Installation Job ID)",
+      "installationJobIdPlaceholder": "ระบุ UUID งานติดตั้ง (ถ้ามี)",
+      "note": "หมายเหตุ",
+      "notePlaceholder": "เช่น งานเข้าซ่อมรอบเช้า หรือเข้าติดอุปกรณ์เสริม",
+      "allowConflict": "ยินยอมให้มอบหมายแม้งานชนกันในวันเดียวกัน",
+      "hasConflict": "งานชนกัน",
+      "noConflict": "ปกติ",
+      "conflictWarning": "ช่างมีงานที่มอบหมายแล้วในวันนี้",
+      "create": "มอบหมายงานช่าง",
+      "createSuccess": "มอบหมายงานช่างเรียบร้อยแล้ว",
+      "delete": "ยกเลิกการมอบหมาย",
+      "deleteSuccess": "ยกเลิกการมอบหมายงานเรียบร้อยแล้ว",
+      "deleteTitle": "ยืนยันยกเลิกการมอบหมายงานช่าง",
+      "deleteDescription": "คุณต้องการยกเลิกการมอบหมายงานช่างนี้ใช่หรือไม่?",
+      "empty": "ยังไม่มีตารางงานช่าง",
+      "emptyDetail": "มอบหมายงานช่างโดยเลือกช่างและวันที่ด้านล่าง",
       "datePlaceholder": "วว/ดด/ปปปป"
     }
   },
@@ -5205,7 +5278,8 @@
       "mrpRunApprovalRequested": "{actorDisplayName} สร้างรอบวางแผนวัสดุ {documentNumber} ที่รออนุมัติ",
       "roleAssignmentApprovalRequested": "{actorDisplayName} ขอมอบบทบาท {roleName} ให้ {subjectDisplayName}",
       "membershipExpiring": "สิทธิ์เข้าใช้งานของ {subjectDisplayName} จะหมดอายุภายใน {daysRemaining} วัน",
-      "projectBudgetOverrun": "โครงการ {documentNumber} มีต้นทุนและภาระผูกพันเกินงบประมาณ (รายการล่าสุดโดย {actorDisplayName})"
+      "projectBudgetOverrun": "โครงการ {documentNumber} มีต้นทุนและภาระผูกพันเกินงบประมาณ (รายการล่าสุดโดย {actorDisplayName})",
+      "serviceRequestSlaWarning": "คำขอบริการ {documentNumber} ใกล้ถึงหรือเกินกำหนดเวลาข้อตกลงระดับบริการ (SLA) (รับเรื่องโดย {actorDisplayName})"
     },
     "list": {
       "title": "การแจ้งเตือน",

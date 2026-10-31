@@ -54,6 +54,9 @@ public static partial class NotificationTypeRegistry
             SystemGenerated: true),
         new NotificationTypeDescriptor(
             NotificationTypes.ProjectBudgetOverrun, "projects.change-orders.approve", "/projects/{resourceId}", NotificationFields.DocumentNumber,
+            Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName)),
+        new NotificationTypeDescriptor(
+            NotificationTypes.ServiceRequestSlaWarning, "service-requests.manage", "/service/requests/{resourceId}", NotificationFields.DocumentNumber,
             Fields(NotificationFields.ResourceId, NotificationFields.DocumentNumber, NotificationFields.ActorDisplayName))
     }.ToDictionary(d => d.Type, StringComparer.Ordinal);
 

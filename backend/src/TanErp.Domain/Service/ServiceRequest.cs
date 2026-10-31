@@ -20,6 +20,13 @@ public class ServiceRequest : Entity
     public DateOnly? ScheduledDate { get; private set; }
     public string? ResolutionNote { get; private set; }
     public int ReopenCount { get; private set; }
+    public DateTimeOffset? PausedAtUtc { get; private set; }
+    public long PausedSeconds { get; private set; }
+    public DateTimeOffset? ResolvedAtUtc { get; private set; }
+    public decimal ServiceChargeAmount { get; private set; }
+    public string? ServiceChargeNote { get; private set; }
+    public Guid? BillingDocumentId { get; private set; }
+    public string? BillingDocumentNumber { get; private set; }
     public Guid CreatedByUserId { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset UpdatedAtUtc { get; private set; }
@@ -86,9 +93,34 @@ public class ServiceRequest : Entity
         Move(ServiceRequestStatus.InProgress, null, actor, now);
     }
 
+    public void WaitCustomer(string reason, Guid actor, DateTimeOffset now)
+    {
+        Require("wait-customer", ServiceRequestStatus.Open, ServiceRequestStatus.Scheduled, ServiceRequestStatus.InProgress);
+        var text = RequireNote(reason);
+        PausedAtUtc = now.ToUniversalTime();
+        Move(ServiceRequestStatus.WaitingCustomer, text, actor, now);
+    }
+
+    public void ResumeFromWaitCustomer(Guid actor, DateTimeOffset now)
+    {
+        Require("resume", ServiceRequestStatus.WaitingCustomer);
+        if (PausedAtUtc.HasValue)
+        {
+            PausedSeconds += (long)Math.Max(0, (now.ToUniversalTime() - PausedAtUtc.Value).TotalSeconds);
+            PausedAtUtc = null;
+        }
+        Move(ServiceRequestStatus.InProgress, null, actor, now);
+    }
+
     public void Resolve(string note, Guid actor, DateTimeOffset now)
     {
-        Require("resolve", ServiceRequestStatus.InProgress);
+        Require("resolve", ServiceRequestStatus.InProgress, ServiceRequestStatus.WaitingCustomer);
+        if (PausedAtUtc.HasValue)
+        {
+            PausedSeconds += (long)Math.Max(0, (now.ToUniversalTime() - PausedAtUtc.Value).TotalSeconds);
+            PausedAtUtc = null;
+        }
+        ResolvedAtUtc = now.ToUniversalTime();
         ResolutionNote = RequireNote(note);
         Move(ServiceRequestStatus.Resolved, ResolutionNote, actor, now);
     }
@@ -103,8 +135,24 @@ public class ServiceRequest : Entity
     {
         Require("reopen", ServiceRequestStatus.Resolved, ServiceRequestStatus.Closed);
         var text = RequireNote(reason);
+        ResolvedAtUtc = null;
         ReopenCount++;
         Move(ServiceRequestStatus.InProgress, text, actor, now);
+    }
+
+    public void RecordServiceCharge(decimal amount, string? note, Guid billingDocumentId, string billingDocumentNumber, Guid actor, DateTimeOffset now)
+    {
+        if (InWarranty) throw new ServiceDomainException("SERVICE_CHARGE_IN_WARRANTY", "In-warranty service requests cannot be charged.");
+        if (BillingDocumentId.HasValue) throw new ServiceDomainException("SERVICE_INVALID_STATE", "Service charge has already been billed.");
+        if (amount <= 0m || amount > 999_999_999m || decimal.Round(amount, 2) != amount) throw new ServiceDomainException("SERVICE_FIELD_INVALID", "Service charge amount must be positive with at most 2 decimals.");
+
+        var text = RequireNote(note);
+        ServiceChargeAmount = amount;
+        ServiceChargeNote = text;
+        BillingDocumentId = billingDocumentId;
+        BillingDocumentNumber = billingDocumentNumber.Trim();
+        RowVersion = Guid.NewGuid();
+        UpdatedAtUtc = now.ToUniversalTime();
     }
 }
 

@@ -145,4 +145,32 @@ public class ServiceHandler
         var (p, size) = Paging(page, pageSize);
         return Result<PagedServiceRequests>.Success(await _store.ListServiceRequestsAsync(access.Value!.OrganizationId, new ServiceRequestListQuery(Clean(search), Clean(status), projectId, inWarranty, p, size), ct));
     }
+
+    // ----- technician schedules --------------------------------------------------------------------
+
+    public async Task<Result<IReadOnlyList<TechnicianAssignmentProjection>>> ListTechnicianSchedulesAsync(ServiceCaller caller, DateOnly? fromDate, DateOnly? toDate, Guid? technicianUserId, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "service-requests.read", ct);
+        if (access.IsFailure) return Result<IReadOnlyList<TechnicianAssignmentProjection>>.Failure(access.Error);
+        return Result<IReadOnlyList<TechnicianAssignmentProjection>>.Success(await _store.ListTechnicianSchedulesAsync(access.Value!.OrganizationId, new TechnicianScheduleQuery(fromDate, toDate, technicianUserId), ct));
+    }
+
+    public async Task<Result<TechnicianAssignmentProjection>> CreateTechnicianAssignmentAsync(ServiceCaller caller, CreateTechnicianAssignmentInput? input, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "service-requests.manage", ct);
+        if (access.IsFailure) return Result<TechnicianAssignmentProjection>.Failure(access.Error);
+        if (input is null || input.TechnicianUserId == Guid.Empty) return Fail<TechnicianAssignmentProjection>("SERVICE_FIELD_REQUIRED", "Technician user is required.");
+        if (string.IsNullOrWhiteSpace(input.AssignmentKind) || !TanErp.Domain.Service.TechnicianAssignmentKind.All.Contains(input.AssignmentKind.Trim()))
+            return Fail<TechnicianAssignmentProjection>("SERVICE_FIELD_INVALID", "Assignment kind is invalid.");
+
+        return await _store.CreateTechnicianAssignmentAsync(access.Value!, input, caller.TraceId, ct);
+    }
+
+    public async Task<Result<bool>> DeleteTechnicianAssignmentAsync(ServiceCaller caller, Guid assignmentId, CancellationToken ct = default)
+    {
+        var access = await AccessAsync(caller, "service-requests.manage", ct);
+        if (access.IsFailure) return Result<bool>.Failure(access.Error);
+        if (assignmentId == Guid.Empty) return Fail<bool>("SERVICE_FIELD_REQUIRED", "Assignment ID is required.");
+        return await _store.DeleteTechnicianAssignmentAsync(access.Value!, assignmentId, caller.TraceId, ct);
+    }
 }

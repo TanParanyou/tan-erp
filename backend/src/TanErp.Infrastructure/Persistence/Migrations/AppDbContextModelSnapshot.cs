@@ -11171,6 +11171,15 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("BillingDocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("billing_document_id");
+
+                    b.Property<string>("BillingDocumentNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("billing_document_number");
+
                     b.Property<Guid>("BranchId")
                         .HasColumnType("uuid")
                         .HasColumnName("branch_id");
@@ -11203,6 +11212,14 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
+                    b.Property<DateTimeOffset?>("PausedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("paused_at_utc");
+
+                    b.Property<long>("PausedSeconds")
+                        .HasColumnType("bigint")
+                        .HasColumnName("paused_seconds");
+
                     b.Property<string>("Priority")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -11222,6 +11239,10 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("resolution_note");
 
+                    b.Property<DateTimeOffset?>("ResolvedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("resolved_at_utc");
+
                     b.Property<Guid>("RowVersion")
                         .IsConcurrencyToken()
                         .HasColumnType("uuid")
@@ -11231,10 +11252,20 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("scheduled_date");
 
+                    b.Property<decimal>("ServiceChargeAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("service_charge_amount");
+
+                    b.Property<string>("ServiceChargeNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("service_charge_note");
+
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)")
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
                         .HasColumnName("status");
 
                     b.Property<string>("Title")
@@ -11252,6 +11283,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnName("warranty_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BillingDocumentId");
 
                     b.HasIndex("BranchId");
 
@@ -11272,7 +11305,7 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_service_requests_priority", "priority IN ('low', 'normal', 'high', 'urgent')");
 
-                            t.HasCheckConstraint("ck_service_requests_status", "status IN ('open', 'scheduled', 'in_progress', 'resolved', 'closed')");
+                            t.HasCheckConstraint("ck_service_requests_status", "status IN ('open', 'scheduled', 'in_progress', 'waiting_customer', 'resolved', 'closed')");
 
                             t.HasCheckConstraint("ck_service_requests_warranty", "in_warranty = (warranty_id IS NOT NULL)");
                         });
@@ -11290,8 +11323,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnName("actor_user_id");
 
                     b.Property<string>("FromStatus")
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)")
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
                         .HasColumnName("from_status");
 
                     b.Property<string>("Note")
@@ -11313,8 +11346,8 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("ToStatus")
                         .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)")
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
                         .HasColumnName("to_status");
 
                     b.HasKey("Id");
@@ -11324,6 +11357,80 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasIndex("ServiceRequestId", "OccurredAtUtc");
 
                     b.ToTable("service_request_events", "service");
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Service.TechnicianAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AssignmentKind")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("assignment_kind");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<Guid?>("InstallationJobId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("installation_job_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid?>("ServiceRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("service_request_id");
+
+                    b.Property<Guid>("TechnicianUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("technician_user_id");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date")
+                        .HasColumnName("work_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("InstallationJobId");
+
+                    b.HasIndex("ServiceRequestId");
+
+                    b.HasIndex("TechnicianUserId");
+
+                    b.HasIndex("OrganizationId", "WorkDate");
+
+                    b.HasIndex("OrganizationId", "TechnicianUserId", "WorkDate");
+
+                    b.ToTable("technician_assignments", "service", t =>
+                        {
+                            t.HasCheckConstraint("ck_technician_assignments_kind", "assignment_kind IN ('installation', 'service_request')");
+
+                            t.HasCheckConstraint("ck_technician_assignments_target", "(assignment_kind = 'installation' AND installation_job_id IS NOT NULL AND service_request_id IS NULL) OR (assignment_kind = 'service_request' AND service_request_id IS NOT NULL AND installation_job_id IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("TanErp.Domain.Service.Warranty", b =>
@@ -14684,6 +14791,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TanErp.Domain.Service.ServiceRequest", b =>
                 {
+                    b.HasOne("TanErp.Domain.Finance.BillingDocument", null)
+                        .WithMany()
+                        .HasForeignKey("BillingDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("TanErp.Domain.Organization.Branch", null)
                         .WithMany()
                         .HasForeignKey("BranchId")
@@ -14726,6 +14838,43 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .WithMany("Events")
                         .HasForeignKey("ServiceRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Service.TechnicianAssignment", b =>
+                {
+                    b.HasOne("TanErp.Domain.Organization.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Service.InstallationJob", null)
+                        .WithMany()
+                        .HasForeignKey("InstallationJobId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Service.ServiceRequest", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceRequestId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("TechnicianUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

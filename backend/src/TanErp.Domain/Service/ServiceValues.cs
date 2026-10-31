@@ -51,11 +51,32 @@ public static class ServiceRequestStatus
     public const string Open = "open";
     public const string Scheduled = "scheduled";
     public const string InProgress = "in_progress";
+    public const string WaitingCustomer = "waiting_customer";
     public const string Resolved = "resolved";
     public const string Closed = "closed";
 
-    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { Open, Scheduled, InProgress, Resolved, Closed };
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { Open, Scheduled, InProgress, WaitingCustomer, Resolved, Closed };
 }
+
+public static class SlaStatus
+{
+    public const string OnTrack = "on_track";
+    public const string Warning = "warning";
+    public const string Breached = "breached";
+    public const string Paused = "paused";
+    public const string Met = "met";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { OnTrack, Warning, Breached, Paused, Met };
+}
+
+public static class TechnicianAssignmentKind
+{
+    public const string Installation = "installation";
+    public const string ServiceRequest = "service_request";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal) { Installation, ServiceRequest };
+}
+
 
 public static class ServicePriority
 {

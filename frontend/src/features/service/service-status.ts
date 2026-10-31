@@ -16,10 +16,16 @@ export function isDefectStatus(value: string | null | undefined): value is Defec
   return DEFECT_STATUSES.some((status) => status === value);
 }
 
-export const SERVICE_REQUEST_STATUSES = ["open", "scheduled", "in_progress", "resolved", "closed"] as const;
+export const SERVICE_REQUEST_STATUSES = ["open", "scheduled", "in_progress", "waiting_customer", "resolved", "closed"] as const;
 export type ServiceRequestStatusValue = (typeof SERVICE_REQUEST_STATUSES)[number];
 export function isServiceRequestStatus(value: string | null | undefined): value is ServiceRequestStatusValue {
   return SERVICE_REQUEST_STATUSES.some((status) => status === value);
+}
+
+export const SLA_STATUSES = ["on_track", "warning", "breached", "paused", "met"] as const;
+export type SlaStatusValue = (typeof SLA_STATUSES)[number];
+export function isSlaStatus(value: string | null | undefined): value is SlaStatusValue {
+  return SLA_STATUSES.some((status) => status === value);
 }
 
 export const SERVICE_PRIORITIES = ["low", "normal", "high", "urgent"] as const;
@@ -67,7 +73,23 @@ export function serviceRequestStatusVariant(status: string | null | undefined): 
     case "scheduled":
       return "info";
     case "open":
+    case "waiting_customer":
       return "warning";
+    default:
+      return "neutral";
+  }
+}
+
+export function slaStatusVariant(status: string | null | undefined): ServiceBadgeVariant {
+  switch (status) {
+    case "on_track":
+    case "met":
+      return "success";
+    case "warning":
+    case "paused":
+      return "warning";
+    case "breached":
+      return "danger";
     default:
       return "neutral";
   }
@@ -91,6 +113,8 @@ const KNOWN_ERROR_CODES = [
   "SERVICE_REASON_REQUIRED",
   "SERVICE_FIELD_REQUIRED",
   "SERVICE_FIELD_INVALID",
+  "SERVICE_CHARGE_IN_WARRANTY",
+  "TECHNICIAN_SCHEDULE_CONFLICT",
 ] as const;
 
 export type ServiceErrorCode = (typeof KNOWN_ERROR_CODES)[number];

@@ -85,6 +85,14 @@ public static class NotificationEvents
             Fields((NotificationFields.ResourceId, Id(projectId)), (NotificationFields.DocumentNumber, projectCode)),
             null, []);
 
+    /// <summary>Service request SLA threshold reached (warning at 80% or breached). Notifies service managers.</summary>
+    public static NotificationEvent ServiceRequestSlaWarning(
+        Guid organizationId, Guid branchId, Guid transitionId, Guid actorUserId, Guid serviceRequestId, string number) =>
+        new(NotificationTypes.ServiceRequestSlaWarning, organizationId, branchId, transitionId, actorUserId,
+            Fields((NotificationFields.ResourceId, Id(serviceRequestId)), (NotificationFields.DocumentNumber, number)),
+            null, []);
+
+
     /// <summary>A display name can be up to 255 characters; a payload value is limited to 200.</summary>
     private static string Clip(string value)
     {

@@ -19,8 +19,9 @@ public static class AttachmentOwnerTypes
     public const string InstallationJob = "installation-job";
     public const string SurveyArea = "survey-area";
     public const string QuickEstimate = "quick-estimate";
+    public const string ServiceRequest = "service-request";
 
-    private static readonly HashSet<string> Registered = new(StringComparer.Ordinal) { InstallationJob, SurveyArea, QuickEstimate };
+    private static readonly HashSet<string> Registered = new(StringComparer.Ordinal) { InstallationJob, SurveyArea, QuickEstimate, ServiceRequest };
 
     public static IReadOnlyCollection<string> All => Registered;
 

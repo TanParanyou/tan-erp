@@ -13,8 +13,10 @@
 | ส่งมอบ | ผู้รับมอบแทนลูกค้า (ชื่อ) เลือก `accepted` หรือ `disputed`: **disputed** ต้องมีเหตุผล → งานกลับ `in_progress` (นับจำนวนครั้งและเก็บเหตุผลล่าสุด) ต้องทำให้พร้อมส่งมอบใหม่; **accepted** ต้องระบุ `warrantyMonths` 0–120 ชัดเจน, วันส่งมอบไม่ใช่อนาคต (ว่าง = วันนี้) → `handed_over` |
 | ประกัน | `warrantyMonths > 0` สร้าง Warranty หนึ่งใบต่อการส่งมอบ (`WAR-{YYYY}-{SEQ:4}`, unique ต่องานติดตั้ง): เริ่มวันส่งมอบ, สิ้นสุด = วันก่อนครบรอบเดือน (ถ้าวันเริ่มไม่มีในเดือนสุดท้าย เช่น 31 ม.ค. +1 เดือน → 28/29 ก.พ.); สถานะ active/expired คำนวณจากวันนี้ ไม่เก็บซ้ำ; ไม่มีการต่อ/ยกเลิก/แก้ประกันในรอบนี้ |
 | ปิดโครงการ | ย้าย Project เป็น `completed` ไม่ได้ถ้ามีงานติดตั้งที่ไม่ใช่ `handed_over`/`cancelled` (`PROJECT_OPEN_INSTALLATION`); โครงการที่ไม่มีงานติดตั้งไม่ถูกกำกับ |
-| งานบริการหลังการขาย | ต่อ Project (ไม่ใช่ cancelled): `open → scheduled → in_progress → resolved → closed`, เปิดซ้ำได้จาก resolved/closed (ต้องมีเหตุผล); เลข `SRV-{YYYY}-{SEQ:4}`; ทุกการเปลี่ยนสถานะเก็บ event (ใคร/เมื่อไร/หมายเหตุ); วันนัดห้ามเป็นอดีต |
-| การตรวจประกัน | ตอนรับเรื่อง ระบบหาประกันของโครงการที่ **ครอบคลุมวันที่แจ้ง** → `inWarranty` + ผูกใบประกัน; **ไม่ปฏิเสธ** คำขอนอกประกัน (ธงไว้ให้ธุรกิจตัดสินเรื่องค่าบริการ); ค่าบริการ/การชดเชยไม่อยู่ในรอบนี้ |
+| งานบริการหลังการขาย | ต่อ Project (ไม่ใช่ cancelled): `open → scheduled → in_progress ↔ waiting_customer → resolved → closed`, เปิดซ้ำได้จาก resolved/closed (ต้องมีเหตุผล); เลข `SRV-{YYYY}-{SEQ:4}`; ทุกการเปลี่ยนสถานะเก็บ event (ใคร/เมื่อไร/หมายเหตุ); วันนัดห้ามเป็นอดีต; แนบไฟล์และลายเซ็นลูกค้าใช้ [Attachment API](attachment-api-contract.md) (`ownerType = "service-request"`, `G-01`) |
+| การตรวจประกันและค่าบริการ (`G-18`) | ตอนรับเรื่อง ระบบหาประกันของโครงการที่ **ครอบคลุมวันที่แจ้ง** → `inWarranty` + ผูกใบประกัน; งานในประกันห้ามคิดค่าบริการ (`409 SERVICE_CHARGE_IN_WARRANTY`); งานนอกประกัน (`!inWarranty`) สามารถบันทึกค่าบริการ (`POST /api/v1/service-requests/{id}/charge`) เพื่อสร้าง `BillingDocument` (`BIL-{YYYY}-{SEQ:4}`) และส่งเข้า `AccountingOutbox` อัตโนมัติ |
+| SLA Policy (`G-18`) | กำหนด `responseHours` / `resolveHours` ตาม `priority` (`urgent`: 2/8 ชม., `high`: 4/24 ชม., `normal`: 8/48 ชม., `low`: 24/72 ชม. — `TEST_ONLY`); หักวันหยุดตามปฏิทินวันทำงาน (`G-14`) และหยุดนับเวลาขณะอยู่ในสถานะ `waiting_customer`; แจ้งเตือน `service-request.sla-warning` (`G-02`) เมื่อเวลาใช้งาน >= 80% หรือเกินกำหนด |
+| ตารางช่าง (`G-18`) | มอบหมายงานติดตั้งหรืองานบริการต่อช่างต่อวัน (`service.technician_assignments`); หากช่างมีงานอื่นในวันเดียวกันและ `allowConflict = false` จะถูกปฏิเสธด้วย `409 TECHNICIAN_SCHEDULE_CONFLICT` หรือหาก `allowConflict = true` จะบันทึกพร้อมติดธง `hasConflict = true` |
 | Concurrency/Idempotency | ทุกคำสั่งเปลี่ยนสถานะต้อง `If-Match` (`INSTALLATION_VERSION_CONFLICT`/`SERVICE_VERSION_CONFLICT`); สร้างงานติดตั้ง/งานบริการต้องมี `Idempotency-Key` (replay คืนผลเดิม, payload ต่าง 409) |
 | Audit | `installation.*`, `service-request.*` บันทึกเลขเอกสาร/สถานะ **ไม่บันทึกชื่อผู้รับมอบ/เหตุผล/หมายเหตุ** (อยู่ในเรคอร์ดเอง) |
 
@@ -27,9 +29,10 @@
 | ส่งมอบ | `POST /api/v1/installations/{id}/handover {outcome, signerName, note?, warrantyMonths?, handoverDate?}` | `installations.handover` |
 | อ่านงานติดตั้ง | `GET /api/v1/installations[/{id}]?search=&status=&projectId=&page=&pageSize=` | `installations.read` |
 | ประกัน | `GET /api/v1/warranties[/{id}]?search=&state=active|expired&projectId=` | `warranties.read` |
-| งานบริการ | `POST /api/v1/service-requests` · `POST /{id}/schedule {date}|start|resolve {note}|close|reopen {reason}` | `service-requests.manage` |
+| งานบริการ | `POST /api/v1/service-requests` · `POST /{id}/schedule {date}|start|wait-customer {reason}|resume|resolve {note}|close|reopen {reason}|charge {amount, note}` | `service-requests.manage` |
 | อ่านงานบริการ | `GET /api/v1/service-requests[/{id}]?search=&status=&projectId=&inWarranty=` | `service-requests.read` |
-| ไฟล์แนบ/ลายเซ็น | ดู [Attachment API](attachment-api-contract.md) | installations.read / operate / handover |
+| ตารางมอบหมายงานช่าง (`G-18`) | `GET /api/v1/service-requests/technician-schedules?fromDate=&toDate=&technicianUserId=` (`service-requests.read`) · `POST /api/v1/service-requests/technician-schedules` · `DELETE /api/v1/service-requests/technician-schedules/{assignmentId}` (`service-requests.manage`) | `service-requests.read` / `service-requests.manage` |
+| ไฟล์แนบ/ลายเซ็น | ดู [Attachment API](attachment-api-contract.md) (`installation-job` และ `service-request`) | installations.read / operate / handover / service-requests.read / manage |
 
 ## Errors
 

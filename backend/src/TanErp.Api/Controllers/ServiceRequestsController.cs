@@ -69,6 +69,26 @@ public class ServiceRequestsController : ServiceControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     public Task<IActionResult> Start([FromRoute] Guid id, CancellationToken ct) => CommandAsync(id, new StartServiceRequest(), ct);
 
+    [HttpPost("{id:guid}/wait-customer")]
+    [ProducesResponseType<ServiceRequestResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public Task<IActionResult> WaitCustomer([FromRoute] Guid id, [FromBody] ReasonRequest request, CancellationToken ct) =>
+        CommandAsync(id, new WaitCustomerServiceRequest(request.Reason ?? string.Empty), ct);
+
+    [HttpPost("{id:guid}/resume")]
+    [ProducesResponseType<ServiceRequestResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> Resume([FromRoute] Guid id, CancellationToken ct) =>
+        CommandAsync(id, new ResumeServiceRequest(), ct);
+
+    [HttpPost("{id:guid}/charge")]
+    [ProducesResponseType<ServiceRequestResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public Task<IActionResult> Charge([FromRoute] Guid id, [FromBody] ChargeServiceRequestRequest request, CancellationToken ct) =>
+        CommandAsync(id, new ChargeServiceRequest(request.Amount, request.Note ?? string.Empty), ct);
+
     [HttpPost("{id:guid}/resolve")]
     [ProducesResponseType<ServiceRequestResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
@@ -85,6 +105,61 @@ public class ServiceRequestsController : ServiceControllerBase
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     public Task<IActionResult> Reopen([FromRoute] Guid id, [FromBody] ReasonRequest request, CancellationToken ct) => CommandAsync(id, new ReopenServiceRequest(request.Reason ?? string.Empty), ct);
+
+    // ----- technician schedules --------------------------------------------------------------------
+
+    [HttpGet("technician-schedules")]
+    [ProducesResponseType<TechnicianSchedulesListResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListTechnicianSchedules(
+        [FromQuery] DateOnly? fromDate, [FromQuery] DateOnly? toDate, [FromQuery] Guid? technicianUserId, CancellationToken ct = default)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+
+        var normalizedFrom = fromDate.HasValue && fromDate.Value.Year > 2400
+            ? fromDate.Value.AddYears(-543)
+            : fromDate;
+        var normalizedTo = toDate.HasValue && toDate.Value.Year > 2400
+            ? toDate.Value.AddYears(-543)
+            : toDate;
+
+        var result = await _handler.ListTechnicianSchedulesAsync(caller, normalizedFrom, normalizedTo, technicianUserId, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return Ok(new TechnicianSchedulesListResponse(result.Value!.Select(ServiceMapper.To).ToList()));
+    }
+
+    [HttpPost("technician-schedules")]
+    [ProducesResponseType<TechnicianAssignmentResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> CreateTechnicianSchedule([FromBody] CreateTechnicianAssignmentRequest request, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var input = new CreateTechnicianAssignmentInput(
+            request.TechnicianUserId,
+            request.WorkDate,
+            request.AssignmentKind ?? string.Empty,
+            request.InstallationJobId,
+            request.ServiceRequestId,
+            request.Note,
+            request.AllowConflict);
+        var result = await _handler.CreateTechnicianAssignmentAsync(caller, input, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return StatusCode(StatusCodes.Status201Created, ServiceMapper.To(result.Value!));
+    }
+
+    [HttpDelete("technician-schedules/{assignmentId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteTechnicianSchedule([FromRoute] Guid assignmentId, CancellationToken ct)
+    {
+        var caller = ReadAuthenticated(out var failure);
+        if (caller is null) return failure!;
+        var result = await _handler.DeleteTechnicianAssignmentAsync(caller, assignmentId, ct);
+        if (result.IsFailure) return Problem(result.Error.Code);
+        return NoContent();
+    }
 
     private async Task<IActionResult> CommandAsync(Guid id, ServiceRequestCommand command, CancellationToken ct)
     {

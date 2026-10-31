@@ -112,6 +112,13 @@ public sealed record PagedWarranties(IReadOnlyList<WarrantyProjection> Items, in
 
 // ----- service requests ------------------------------------------------------------------------
 
+public sealed record ServiceSlaProjection(
+    int ResponseHours,
+    int ResolveHours,
+    decimal ElapsedHours,
+    long PausedSeconds,
+    string Status);
+
 public sealed record ServiceRequestInput(Guid ProjectId, string Title, string Description, string Priority);
 
 public sealed record ServiceRequestEventProjection(string? FromStatus, string ToStatus, string? Note, ServicePerson Actor, DateTimeOffset OccurredAtUtc);
@@ -130,6 +137,11 @@ public sealed record ServiceRequestProjection(
     DateOnly? ScheduledDate,
     string? ResolutionNote,
     int ReopenCount,
+    ServiceSlaProjection Sla,
+    decimal ServiceChargeAmount,
+    string? ServiceChargeNote,
+    Guid? BillingDocumentId,
+    string? BillingDocumentNumber,
     ServicePerson CreatedBy,
     DateTimeOffset CreatedAtUtc,
     Guid RowVersion,
@@ -143,6 +155,10 @@ public sealed record ServiceRequestListItemProjection(
     string Status,
     bool InWarranty,
     string ProjectCode,
+    ServiceSlaProjection Sla,
+    decimal ServiceChargeAmount,
+    Guid? BillingDocumentId,
+    string? BillingDocumentNumber,
     DateTimeOffset CreatedAtUtc);
 
 public sealed record ServiceRequestListQuery(string? Search, string? Status, Guid? ProjectId, bool? InWarranty, int Page, int PageSize);
@@ -155,8 +171,46 @@ public sealed record ScheduleServiceRequest(DateOnly Date) : ServiceRequestComma
 
 public sealed record StartServiceRequest : ServiceRequestCommand;
 
+public sealed record WaitCustomerServiceRequest(string Reason) : ServiceRequestCommand;
+
+public sealed record ResumeServiceRequest : ServiceRequestCommand;
+
 public sealed record ResolveServiceRequest(string Note) : ServiceRequestCommand;
 
 public sealed record CloseServiceRequest : ServiceRequestCommand;
 
 public sealed record ReopenServiceRequest(string Reason) : ServiceRequestCommand;
+
+public sealed record ChargeServiceRequest(decimal Amount, string Note) : ServiceRequestCommand;
+
+// ----- technician schedule ---------------------------------------------------------------------
+
+public sealed record CreateTechnicianAssignmentInput(
+    Guid TechnicianUserId,
+    DateOnly WorkDate,
+    string AssignmentKind,
+    Guid? InstallationJobId,
+    Guid? ServiceRequestId,
+    string? Note,
+    bool AllowConflict = false);
+
+public sealed record TechnicianAssignmentProjection(
+    Guid Id,
+    Guid BranchId,
+    ServicePerson Technician,
+    DateOnly WorkDate,
+    string AssignmentKind,
+    Guid? InstallationJobId,
+    string? InstallationJobNumber,
+    Guid? ServiceRequestId,
+    string? ServiceRequestNumber,
+    string? Note,
+    ServicePerson CreatedBy,
+    DateTimeOffset CreatedAtUtc,
+    bool HasConflict);
+
+public sealed record TechnicianScheduleQuery(
+    DateOnly? FromDate,
+    DateOnly? ToDate,
+    Guid? TechnicianUserId);
+

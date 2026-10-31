@@ -22690,6 +22690,190 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/service-requests/{id}/wait-customer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReasonRequest"];
+                    "text/json": components["schemas"]["ReasonRequest"];
+                    "application/*+json": components["schemas"]["ReasonRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/{id}/charge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChargeServiceRequestRequest"];
+                    "text/json": components["schemas"]["ChargeServiceRequestRequest"];
+                    "application/*+json": components["schemas"]["ChargeServiceRequestRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ServiceRequestResponse"];
+                        "application/json": components["schemas"]["ServiceRequestResponse"];
+                        "text/json": components["schemas"]["ServiceRequestResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/service-requests/{id}/resolve": {
         parameters: {
             query?: never;
@@ -22869,6 +23053,142 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/technician-schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fromDate?: string;
+                    toDate?: string;
+                    technicianUserId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TechnicianSchedulesListResponse"];
+                        "application/json": components["schemas"]["TechnicianSchedulesListResponse"];
+                        "text/json": components["schemas"]["TechnicianSchedulesListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateTechnicianAssignmentRequest"];
+                    "text/json": components["schemas"]["CreateTechnicianAssignmentRequest"];
+                    "application/*+json": components["schemas"]["CreateTechnicianAssignmentRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TechnicianAssignmentResponse"];
+                        "application/json": components["schemas"]["TechnicianAssignmentResponse"];
+                        "text/json": components["schemas"]["TechnicianAssignmentResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-requests/technician-schedules/{assignmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    assignmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -28363,6 +28683,11 @@ export interface components {
             /** Format: uuid */
             imageFileId?: string | null;
         };
+        ChargeServiceRequestRequest: {
+            /** Format: double */
+            amount?: number;
+            note?: string | null;
+        };
         ChecklistDoneRequest: {
             done?: boolean;
         };
@@ -28911,6 +29236,19 @@ export interface components {
             colorPalette?: string[] | null;
             /** Format: int32 */
             sortOrder?: number;
+        };
+        CreateTechnicianAssignmentRequest: {
+            /** Format: uuid */
+            technicianUserId?: string;
+            /** Format: date */
+            workDate?: string;
+            assignmentKind?: string | null;
+            /** Format: uuid */
+            installationJobId?: string | null;
+            /** Format: uuid */
+            serviceRequestId?: string | null;
+            note?: string | null;
+            allowConflict?: boolean;
         };
         CreateUnitOfMeasureRequest: {
             code?: string | null;
@@ -32152,6 +32490,12 @@ export interface components {
             status?: string | null;
             inWarranty?: boolean;
             projectCode?: string | null;
+            sla?: components["schemas"]["ServiceSlaResponse"];
+            /** Format: double */
+            serviceChargeAmount?: number;
+            /** Format: uuid */
+            billingDocumentId?: string | null;
+            billingDocumentNumber?: string | null;
             /** Format: date-time */
             createdAtUtc?: string;
         };
@@ -32180,6 +32524,13 @@ export interface components {
             resolutionNote?: string | null;
             /** Format: int32 */
             reopenCount?: number;
+            sla?: components["schemas"]["ServiceSlaResponse"];
+            /** Format: double */
+            serviceChargeAmount?: number;
+            serviceChargeNote?: string | null;
+            /** Format: uuid */
+            billingDocumentId?: string | null;
+            billingDocumentNumber?: string | null;
             createdBy?: components["schemas"]["ServicePersonResponse"];
             /** Format: date-time */
             createdAtUtc?: string;
@@ -32190,6 +32541,17 @@ export interface components {
         ServiceRequestsListResponse: {
             items?: components["schemas"]["ServiceRequestListItemResponse"][] | null;
             pagination?: components["schemas"]["ServicePaginationResponse"];
+        };
+        ServiceSlaResponse: {
+            /** Format: int32 */
+            responseHours?: number;
+            /** Format: int32 */
+            resolveHours?: number;
+            /** Format: double */
+            elapsedHours?: number;
+            /** Format: int64 */
+            pausedSeconds?: number;
+            status?: string | null;
         };
         SetBranchAvailabilityRequest: {
             mode: string;
@@ -32860,6 +33222,30 @@ export interface components {
             id?: string;
             displayName?: string | null;
             email?: string | null;
+        };
+        TechnicianAssignmentResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            branchId?: string;
+            technician?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date */
+            workDate?: string;
+            assignmentKind?: string | null;
+            /** Format: uuid */
+            installationJobId?: string | null;
+            installationJobNumber?: string | null;
+            /** Format: uuid */
+            serviceRequestId?: string | null;
+            serviceRequestNumber?: string | null;
+            note?: string | null;
+            createdBy?: components["schemas"]["ServicePersonResponse"];
+            /** Format: date-time */
+            createdAtUtc?: string;
+            hasConflict?: boolean;
+        };
+        TechnicianSchedulesListResponse: {
+            items?: components["schemas"]["TechnicianAssignmentResponse"][] | null;
         };
         TemplateDecisionRequest: {
             decision?: string | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -20,7 +20,14 @@ import { can } from "@/lib/permissions/can";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { ServiceRequestListItemResponse } from "@/lib/api/api-client";
 import { useServiceRequestList } from "../api/service-queries";
-import { SERVICE_REQUEST_STATUSES, isServicePriority, isServiceRequestStatus, serviceRequestStatusVariant } from "../service-status";
+import {
+  SERVICE_REQUEST_STATUSES,
+  isServicePriority,
+  isServiceRequestStatus,
+  serviceRequestStatusVariant,
+  slaStatusVariant,
+} from "../service-status";
+import { TechnicianSchedulePanel } from "./technician-schedule-panel";
 
 interface Filters extends ListFilterRecord {
   status?: string;
@@ -32,6 +39,8 @@ export function ServiceRequestList() {
   const locale = useLocale();
   const { selectedMembership } = useSelectedMembership();
   const canManage = can(selectedMembership, PERMISSIONS.SERVICE_REQUESTS_MANAGE);
+  const [activeView, setActiveView] = useState<"requests" | "schedules">("requests");
+
   const state = useListState<Filters>({
     schema: { single: ["status"], defaultSort: "createdAt", defaultOrder: "desc", allowedSorts: ["createdAt"] },
     debounceMs: 300,
@@ -54,55 +63,126 @@ export function ServiceRequestList() {
   }, [state.params.filters.status, t]);
 
   const columns: Column<ServiceRequestListItemResponse>[] = [
-    { id: "number", header: t("number"), className: "min-w-32 font-mono", cell: (_v, row) => <Link href={`/${locale}/service/requests/${row.id}`} className="font-mono font-semibold text-erp-navy underline">{row.number ?? "-"}</Link> },
+    {
+      id: "number",
+      header: t("number"),
+      className: "min-w-32 font-mono",
+      cell: (_v, row) => (
+        <Link href={`/${locale}/service/requests/${row.id}`} className="font-mono font-semibold text-erp-navy underline">
+          {row.number ?? "-"}
+        </Link>
+      ),
+    },
     { id: "title", header: t("titleField"), className: "min-w-48", cell: (_v, row) => row.title ?? "-" },
     { id: "project", header: t("project"), cell: (_v, row) => row.projectCode ?? "-" },
     { id: "priority", header: t("priority"), cell: (_v, row) => (isServicePriority(row.priority) ? t(`priorities.${row.priority}`) : "-") },
-    { id: "status", header: t("status"), cell: (_v, row) => <StatusBadge label={isServiceRequestStatus(row.status) ? t(`statuses.${row.status}`) : "-"} variant={serviceRequestStatusVariant(row.status)} /> },
-    { id: "warranty", header: t("warranty"), cell: (_v, row) => <StatusBadge label={t(row.inWarranty ? "inWarranty" : "outOfWarranty")} variant={row.inWarranty ? "success" : "neutral"} /> },
+    {
+      id: "status",
+      header: t("status"),
+      cell: (_v, row) => (
+        <StatusBadge label={isServiceRequestStatus(row.status) ? t(`statuses.${row.status}`) : "-"} variant={serviceRequestStatusVariant(row.status)} />
+      ),
+    },
+    {
+      id: "sla",
+      header: t("sla"),
+      cell: (_v, row) => (
+        <div>
+          <StatusBadge
+            label={row.sla?.status ? t(`slaStatuses.${row.sla.status}`) : "-"}
+            variant={slaStatusVariant(row.sla?.status)}
+          />
+          {row.sla && (
+            <div className="text-[11px] font-mono text-erp-text-muted mt-0.5">
+              {t("slaProgress", {
+                elapsed: row.sla.elapsedHours !== undefined ? row.sla.elapsedHours.toFixed(1) : "0",
+                resolve: String(row.sla.resolveHours ?? "-"),
+              })}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "warranty",
+      header: t("warranty"),
+      cell: (_v, row) => (
+        <StatusBadge label={t(row.inWarranty ? "inWarranty" : "outOfWarranty")} variant={row.inWarranty ? "success" : "neutral"} />
+      ),
+    },
     { id: "created", header: t("createdAt"), cell: (_v, row) => (row.createdAtUtc ? formatDateTime(row.createdAtUtc, locale) : "-") },
   ];
 
   return (
     <section className="space-y-5" aria-busy={result.isLoading}>
       <PageHeader
-        title={t("title")}
+        title={activeView === "requests" ? t("title") : t("viewSchedules")}
         subtitle={t("subtitle")}
         breadcrumbs={[{ label: t("title") }]}
-        actions={canManage ? <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/service/requests/create`}>{t("create")}</Button> : undefined}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              className="min-h-11"
+              onClick={() => setActiveView(activeView === "requests" ? "schedules" : "requests")}
+            >
+              {activeView === "requests" ? t("viewSchedules") : t("viewRequests")}
+            </Button>
+            {canManage && activeView === "requests" && (
+              <Button size="md" icon={<IconPlus size={16} />} href={`/${locale}/service/requests/create`}>
+                {t("create")}
+              </Button>
+            )}
+          </div>
+        }
       />
-      <ListToolbar activeFilters={<ActiveFilterChips filters={activeFilters} onRemove={() => state.actions.setFilter("status", undefined)} onClear={state.actions.clearFilters} />}>
-        <div className="flex w-full flex-wrap items-end gap-3">
-          <ListSearchInput
-            id="service-request-search"
-            label={tCommon("actions.search")}
-            value={state.draftSearch}
-            isDebouncing={state.isDebouncing}
-            onChange={(value) => state.actions.setSearch(value)}
-            onClear={() => state.actions.setSearch("", true)}
-            onSubmit={(value) => state.actions.setSearch(value, true)}
-            placeholder={t("search")}
-            widthClassName="w-full max-w-xl"
-          />
-          <ListFilterSelect id="service-request-status-filter" label={t("status")} value={state.params.filters.status ?? ""} onChange={(value) => state.actions.setFilter("status", value || undefined)} options={SERVICE_REQUEST_STATUSES.map((value) => ({ value, label: t(`statuses.${value}`) }))} />
-        </div>
-      </ListToolbar>
-      {isZero ? (
-        <EmptyState icon="empty" title={t("empty")} description={t("emptyDetail")} />
+
+      {activeView === "schedules" ? (
+        <TechnicianSchedulePanel />
       ) : (
-        <DataTable<ServiceRequestListItemResponse>
-          columns={columns}
-          data={rows}
-          isLoading={result.isLoading}
-          isError={result.isError}
-          error={result.error}
-          onRetry={() => { void result.refetch(); }}
-          emptyTitle={t("noResults")}
-          emptyDescription={t("search")}
-          pagination={{ page: state.params.page, limit: state.params.limit, totalPages: pagination?.totalPages ?? 0, total: totalCount }}
-          onPageChange={state.actions.setPage}
-          onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
-        />
+        <>
+          <ListToolbar activeFilters={<ActiveFilterChips filters={activeFilters} onRemove={() => state.actions.setFilter("status", undefined)} onClear={state.actions.clearFilters} />}>
+            <div className="flex w-full flex-wrap items-end gap-3">
+              <ListSearchInput
+                id="service-request-search"
+                label={tCommon("actions.search")}
+                value={state.draftSearch}
+                isDebouncing={state.isDebouncing}
+                onChange={(value) => state.actions.setSearch(value)}
+                onClear={() => state.actions.setSearch("", true)}
+                onSubmit={(value) => state.actions.setSearch(value, true)}
+                placeholder={t("search")}
+                widthClassName="w-full max-w-xl"
+              />
+              <ListFilterSelect
+                id="service-request-status-filter"
+                label={t("status")}
+                value={state.params.filters.status ?? ""}
+                onChange={(value) => state.actions.setFilter("status", value || undefined)}
+                options={SERVICE_REQUEST_STATUSES.map((value) => ({ value, label: t(`statuses.${value}`) }))}
+              />
+            </div>
+          </ListToolbar>
+          {isZero ? (
+            <EmptyState icon="empty" title={t("empty")} description={t("emptyDetail")} />
+          ) : (
+            <DataTable<ServiceRequestListItemResponse>
+              columns={columns}
+              data={rows}
+              isLoading={result.isLoading}
+              isError={result.isError}
+              error={result.error}
+              onRetry={() => { void result.refetch(); }}
+              emptyTitle={t("noResults")}
+              emptyDescription={t("search")}
+              pagination={{ page: state.params.page, limit: state.params.limit, totalPages: pagination?.totalPages ?? 0, total: totalCount }}
+              onPageChange={state.actions.setPage}
+              onLimitChange={(limit) => state.actions.setLimit(limit as ListPageSize)}
+            />
+          )}
+        </>
       )}
     </section>
   );

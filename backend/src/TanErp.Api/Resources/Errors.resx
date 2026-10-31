@@ -1193,6 +1193,10 @@
   <data name="SERVICE_INVALID_STATE_DETAIL" xml:space="preserve"><value>สถานะงานบริการไม่อนุญาตให้ทำรายการนี้</value></data>
   <data name="SERVICE_PROJECT_INVALID_TITLE" xml:space="preserve"><value>โครงการที่ยกเลิกแล้วรับงานบริการไม่ได้</value></data>
   <data name="SERVICE_PROJECT_INVALID_DETAIL" xml:space="preserve"><value>โครงการที่ยกเลิกแล้วรับงานบริการไม่ได้</value></data>
+  <data name="SERVICE_CHARGE_IN_WARRANTY_TITLE" xml:space="preserve"><value>งานอยู่ในระยะเวลารับประกัน</value></data>
+  <data name="SERVICE_CHARGE_IN_WARRANTY_DETAIL" xml:space="preserve"><value>งานบริการที่อยู่ในประกันไม่สามารถคิดค่าบริการได้</value></data>
+  <data name="TECHNICIAN_SCHEDULE_CONFLICT_TITLE" xml:space="preserve"><value>ตารางงานช่างซ้ำซ้อน</value></data>
+  <data name="TECHNICIAN_SCHEDULE_CONFLICT_DETAIL" xml:space="preserve"><value>ช่างได้รับมอบหมายงานในวันดังกล่าวแล้ว กรุณายืนยันหากต้องการให้มีงานซ้ำซ้อน</value></data>
   <data name="SERVICE_REASON_REQUIRED_TITLE" xml:space="preserve"><value>ต้องระบุหมายเหตุ</value></data>
   <data name="SERVICE_REASON_REQUIRED_DETAIL" xml:space="preserve"><value>ต้องระบุหมายเหตุ</value></data>
   <data name="SERVICE_FIELD_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลไม่ครบ</value></data>

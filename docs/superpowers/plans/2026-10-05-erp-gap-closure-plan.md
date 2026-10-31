@@ -60,7 +60,7 @@
 | G-15 | Thai Tax: VAT, WHT, Retention, Tax Invoice, Credit Note | D | CP-15, G-04 | Finance/Accounting | [แผน G-15](2026-10-30-g15-thai-tax.md) — Implemented 2026-10-30 (Unit 687/687 + Integration 6/6 + Vitest 14/14 passed; [Verification](../../05-engineering/finance-verification.md)) |
 | G-16 | Credit Exposure + AR Aging gate | D | CP-15, G-15 | Finance | [แผน G-16](2026-10-30-g16-credit-exposure-ar-aging.md) — Implemented 2026-10-30 (Unit 700/700 + Integration 7/7 + Vitest 16/16 passed; [Verification](../../05-engineering/finance-verification.md)) |
 | G-17 | Accounting Connector จริง (+ Journal Export ชั่วคราว) | D | CP-15, G-15 | Finance + Security | [แผน G-17](2026-10-30-g17-accounting-connector-journal-export.md) — Implemented 2026-10-30 (Unit 702/702 + Integration 8/8 + Vitest 17/17 passed; [Verification](../../05-engineering/finance-verification.md)) |
-| G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | — |
+| G-18 | Service SLA, Service Charge, Technician Schedule | D | CP-14, G-01, G-02, G-15 | Customer Service | [แผน G-18](2026-10-30-g18-service-completion.md) — Implemented 2026-10-30 (Unit 708/708 + Integration 5/5 + Vitest 39/39 passed; [Verification](../../05-engineering/service-verification.md)) |
 | G-19 | Dashboard & Reporting | E | ข้อมูลจาก Wave B–D | Business owner ทุกฝ่าย | — |
 | G-20 | Labor Timesheet | C | Identity, CP-09 | PM + Production + Finance | [แผน G-20 + G-10](2026-10-29-g20-g10-timesheet-project-wbs-cost.md) — Implemented 2026-10-29 (Unit + Integration + Vitest passed; [Verification](../../05-engineering/project-handover-verification.md)) |
 | G-21 | Membership expiry และ policy ค้างของ CP-02 | A | G-02, G-03 | System Admin | G-21 ข้อ 1 Implemented 2026-10-12 (verified 2026-10-23: Unit + Integration 11/11 passed; browser not checked); ข้อ 2–3 ตัดสิน 2026-10-17 โดย owner delegation (A1, B1+B3, B2 เลื่อน; Legal ต้องยืนยัน retention) และ Implemented 2026-10-17 (verified 2026-10-23: Unit 6/6, Integration 1/1, Vitest 5/5 passed; browser not checked) — [ADR 0027](../../adr/0027-wave-a-closure-decisions.md); [แผน G-21](2026-10-12-g21-membership-expiry.md); [Open Decisions](2026-10-12-g21-open-decisions.md); [Verification](../../05-engineering/membership-expiry-verification.md) |
@@ -270,13 +270,13 @@
 
 ### G-18 — Service completion
 
-**แตะ:** `backend/src/TanErp.Domain/Service/` (`ServiceRequest.cs`, `InstallationJob.cs`, `Warranty.cs`), `frontend/src/features/service/`
+**แตะ:** `backend/src/TanErp.Domain/Service/` (`ServiceRequest.cs`, `ServiceSlaCalculator.cs`, `TechnicianAssignment.cs`, `InstallationJob.cs`, `Warranty.cs`), `ServiceRequestsController.cs`, `frontend/src/features/service/`
 
-- [ ] แนบไฟล์ + ลายเซ็นลูกค้าตอนส่งมอบ/ปิดงาน (G-01)
-- [ ] SLA policy ต่อ priority (response/resolve hours), เวลานับตาม calendar (G-14), แจ้งเตือนใกล้เกิน (G-02)
-- [ ] Service charge: นอกประกัน → รายการคิดเงินส่งเข้า Billing (CP-15/G-15)
-- [ ] ตารางช่าง: มอบหมายงานติดตั้ง/บริการต่อช่างต่อวัน + ตรวจชน
-- [ ] Tests: งานในประกันไม่สร้างค่าบริการ, SLA หยุดนับขณะรอลูกค้า, มอบงานชนถูกเตือน
+- [x] แนบไฟล์ + ลายเซ็นลูกค้าตอนส่งมอบ/ปิดงาน (`G-01` owner `installation-job` และ `service-request`)
+- [x] SLA policy ต่อ priority (`response/resolve hours`), เวลานับตาม calendar (`G-14`), หยุดนับขณะรอลูกค้า (`waiting_customer`), แจ้งเตือนใกล้เกิน/เกิน (`service-request.sla-warning`, `G-02`)
+- [x] Service charge: นอกประกัน (`!InWarranty`) → รายการคิดเงินส่งเข้าสร้าง `BillingDocument` (`CP-15`/`G-15`)
+- [x] ตารางช่าง: มอบหมายงานติดตั้ง/บริการต่อช่างต่อวัน (`service.technician_assignments`) + ตรวจชน (`409 TECHNICIAN_SCHEDULE_CONFLICT` / `allowConflict`)
+- [x] Tests: งานในประกันไม่สร้างค่าบริการ (`409 SERVICE_CHARGE_IN_WARRANTY`), SLA หยุดนับขณะรอลูกค้า, มอบงานชนถูกปฏิเสธหรือติดป้ายเตือน (ผล: [Service Verification](../../05-engineering/service-verification.md))
 
 ### G-19 — Dashboard & Reporting
 

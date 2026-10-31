@@ -43,7 +43,14 @@ public static class AttachmentOwnerRegistry
             ManagePermission: "quick-estimates.update",
             SignPermission: "quick-estimates.update",
             ManageStates: new HashSet<string>(StringComparer.Ordinal) { QuickEstimateStatus.Draft, QuickEstimateStatus.Calculated, QuickEstimateStatus.Returned },
-            SignStates: new HashSet<string>(StringComparer.Ordinal))
+            SignStates: new HashSet<string>(StringComparer.Ordinal)),
+        new AttachmentOwnerDescriptor(
+            AttachmentOwnerTypes.ServiceRequest,
+            ReadPermission: "service-requests.read",
+            ManagePermission: "service-requests.manage",
+            SignPermission: "service-requests.manage",
+            ManageStates: new HashSet<string>(StringComparer.Ordinal) { ServiceRequestStatus.Open, ServiceRequestStatus.Scheduled, ServiceRequestStatus.InProgress, ServiceRequestStatus.WaitingCustomer, ServiceRequestStatus.Resolved },
+            SignStates: new HashSet<string>(StringComparer.Ordinal) { ServiceRequestStatus.Resolved })
     }.ToDictionary(d => d.OwnerType, StringComparer.Ordinal);
 
     public static IReadOnlyCollection<string> OwnerTypes { get; } = Descriptors.Keys.ToArray();

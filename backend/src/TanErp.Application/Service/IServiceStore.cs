@@ -17,4 +17,8 @@ public interface IServiceStore
     Task<Result<ServiceRequestProjection>> ServiceRequestCommandAsync(RequestAccessContext access, Guid requestId, Guid expectedVersion, ServiceRequestCommand command, string traceId, CancellationToken ct = default);
     Task<ServiceRequestProjection?> GetServiceRequestAsync(Guid organizationId, Guid requestId, CancellationToken ct = default);
     Task<PagedServiceRequests> ListServiceRequestsAsync(Guid organizationId, ServiceRequestListQuery query, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TechnicianAssignmentProjection>> ListTechnicianSchedulesAsync(Guid organizationId, TechnicianScheduleQuery query, CancellationToken ct = default);
+    Task<Result<TechnicianAssignmentProjection>> CreateTechnicianAssignmentAsync(RequestAccessContext access, CreateTechnicianAssignmentInput input, string traceId, CancellationToken ct = default);
+    Task<Result<bool>> DeleteTechnicianAssignmentAsync(RequestAccessContext access, Guid assignmentId, string traceId, CancellationToken ct = default);
 }

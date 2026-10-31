@@ -400,4 +400,124 @@ public class ServiceEndpointsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, (await SendAsync(HttpMethod.Get, "/api/v1/service-requests", token: "token-no-perm", membership: MembershipNoPermId)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await SendAsync(HttpMethod.Get, $"/api/v1/warranties/{job.Warranty.Id}", token: "token-no-perm", membership: MembershipNoPermId)).StatusCode);
     }
+
+    [Fact]
+    public async Task ServiceCompletionG18_SlaPauseOnWaitingCustomer_ServiceChargeCreatesBillingOnlyOutOfWarranty_AndTechnicianConflictCheck()
+    {
+        var projectId = await CreateProjectAsync();
+        await ActivateAsync(projectId, 100000m);
+
+        // 1. In-warranty service request cannot be charged
+        var job = await CreateInstallationAsync(projectId);
+        job = await Step(job, "start");
+        foreach (var item in job.Checklist.Where(i => i.Required)) job = await SetDoneAsync(job, item.Id);
+        job = await Step(job, "ready");
+        job = await Step(job, "handover", new HandoverRequest("accepted", "คุณสมชาย", null, 12, null));
+
+        var inWarrantyReq = await Ok<ServiceRequestResponse>(await SendAsync(HttpMethod.Post, "/api/v1/service-requests",
+            new ServiceRequestRequest(projectId, "งานในประกัน", "ประตูหลุด", "high"), key: Key()), HttpStatusCode.Created);
+        Assert.True(inWarrantyReq.InWarranty);
+
+        var chargeInWarrantyResp = await SendAsync(HttpMethod.Post, $"/api/v1/service-requests/{inWarrantyReq.Id}/charge",
+            new ChargeServiceRequestRequest(1500m, "ค่าตรวจซ่อม"), ifMatch: inWarrantyReq.RowVersion);
+        Assert.Equal(HttpStatusCode.Conflict, chargeInWarrantyResp.StatusCode);
+        Assert.Equal("SERVICE_CHARGE_IN_WARRANTY", await ErrorCodeAsync(chargeInWarrantyResp));
+
+        // 2. Out-of-warranty service request
+        var projectOutOfWarranty = await CreateProjectAsync();
+        await ActivateAsync(projectOutOfWarranty, 100000m);
+
+        var outWarrantyReq = await Ok<ServiceRequestResponse>(await SendAsync(HttpMethod.Post, "/api/v1/service-requests",
+            new ServiceRequestRequest(projectOutOfWarranty, "งานนอกประกัน", "ท่อน้ำรั่ว", "normal"), key: Key()), HttpStatusCode.Created);
+        Assert.False(outWarrantyReq.InWarranty);
+        Assert.Equal("on_track", outWarrantyReq.Sla.Status);
+
+        // Start -> InProgress
+        var startedReq = await Ok<ServiceRequestResponse>(await SendAsync(HttpMethod.Post, $"/api/v1/service-requests/{outWarrantyReq.Id}/start", ifMatch: outWarrantyReq.RowVersion));
+        Assert.Equal("in_progress", startedReq.Status);
+
+        // Wait Customer -> WaitingCustomer (SLA is paused)
+        var waitResp = await SendAsync(HttpMethod.Post, $"/api/v1/service-requests/{startedReq.Id}/wait-customer",
+            new ReasonRequest("รอลูกค้าส่งเอกสารเพิ่มเติม"), ifMatch: startedReq.RowVersion);
+        var pausedReq = await Ok<ServiceRequestResponse>(waitResp);
+        Assert.Equal("waiting_customer", pausedReq.Status);
+        Assert.Equal("paused", pausedReq.Sla.Status);
+
+        // Resume -> InProgress
+        var resumeResp = await SendAsync(HttpMethod.Post, $"/api/v1/service-requests/{pausedReq.Id}/resume", ifMatch: pausedReq.RowVersion);
+        var resumedReq = await Ok<ServiceRequestResponse>(resumeResp);
+        Assert.Equal("in_progress", resumedReq.Status);
+        Assert.True(resumedReq.Sla.PausedSeconds >= 0);
+
+        // Charge 2,500 THB -> Creates BillingDocument and records charge
+        var chargeResp = await SendAsync(HttpMethod.Post, $"/api/v1/service-requests/{resumedReq.Id}/charge",
+            new ChargeServiceRequestRequest(2500m, "ค่าบริการเปลี่ยนชุดสายไฟ"), ifMatch: resumedReq.RowVersion);
+        var chargedReq = await Ok<ServiceRequestResponse>(chargeResp);
+        Assert.Equal(2500m, chargedReq.ServiceChargeAmount);
+        Assert.Equal("ค่าบริการเปลี่ยนชุดสายไฟ", chargedReq.ServiceChargeNote);
+        Assert.NotNull(chargedReq.BillingDocumentId);
+        Assert.StartsWith("BIL", chargedReq.BillingDocumentNumber);
+
+        // Verify BillingDocument and Outbox in database
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var billing = await db.BillingDocuments.FirstOrDefaultAsync(b => b.Id == chargedReq.BillingDocumentId);
+            Assert.NotNull(billing);
+            Assert.Equal(2500m, billing.Amount);
+            Assert.Equal(chargedReq.BillingDocumentNumber, billing.Number);
+
+            var outbox = await db.AccountingOutbox.FirstOrDefaultAsync(m => m.ResourceId == billing.Id);
+            Assert.NotNull(outbox);
+            Assert.Equal("billing.issued", outbox.Kind);
+            Assert.Equal(2500m, outbox.Amount);
+        }
+
+        // Duplicate charge rejected
+        var duplicateChargeResp = await SendAsync(HttpMethod.Post, $"/api/v1/service-requests/{chargedReq.Id}/charge",
+            new ChargeServiceRequestRequest(1000m, "ค่าบริการซ้ำ"), ifMatch: chargedReq.RowVersion);
+        Assert.Equal(HttpStatusCode.Conflict, duplicateChargeResp.StatusCode);
+        Assert.Equal("SERVICE_INVALID_STATE", await ErrorCodeAsync(duplicateChargeResp));
+
+        // 3. Technician schedule and conflict detection
+        var workDate = Today.AddDays(5);
+        var assign1Req = new CreateTechnicianAssignmentRequest(UserId, workDate, "service_request", null, outWarrantyReq.Id, "ตรวจงานครั้งที่ 1", false);
+        var assign1Resp = await SendAsync(HttpMethod.Post, "/api/v1/service-requests/technician-schedules", assign1Req);
+        Assert.Equal(HttpStatusCode.Created, assign1Resp.StatusCode);
+        var assign1 = await Ok<TechnicianAssignmentResponse>(assign1Resp, HttpStatusCode.Created);
+        Assert.Equal(UserId, assign1.Technician.Id);
+        Assert.Equal(workDate, assign1.WorkDate);
+        Assert.Equal("service_request", assign1.AssignmentKind);
+        Assert.Equal(outWarrantyReq.Id, assign1.ServiceRequestId);
+        Assert.False(assign1.HasConflict);
+
+        // Assign same technician on same date with AllowConflict = false -> 409 Conflict
+        var assignConflictReq = new CreateTechnicianAssignmentRequest(UserId, workDate, "service_request", null, inWarrantyReq.Id, "ตรวจงานครั้งที่ 2", false);
+        var assignConflictResp = await SendAsync(HttpMethod.Post, "/api/v1/service-requests/technician-schedules", assignConflictReq);
+        Assert.Equal(HttpStatusCode.Conflict, assignConflictResp.StatusCode);
+        Assert.Equal("TECHNICIAN_SCHEDULE_CONFLICT", await ErrorCodeAsync(assignConflictResp));
+
+        // Assign same technician on same date with AllowConflict = true -> 201 Created with HasConflict = true
+        var assignAllowedConflictReq = new CreateTechnicianAssignmentRequest(UserId, workDate, "service_request", null, inWarrantyReq.Id, "ตรวจงานครั้งที่ 2", true);
+        var assign2Resp = await SendAsync(HttpMethod.Post, "/api/v1/service-requests/technician-schedules", assignAllowedConflictReq);
+        Assert.Equal(HttpStatusCode.Created, assign2Resp.StatusCode);
+        var assign2 = await Ok<TechnicianAssignmentResponse>(assign2Resp, HttpStatusCode.Created);
+        Assert.True(assign2.HasConflict);
+
+        // List schedules for this technician
+        var dateStr = workDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        var listSchedulesResp = await SendAsync(HttpMethod.Get, $"/api/v1/service-requests/technician-schedules?technicianUserId={UserId}&fromDate={dateStr}&toDate={dateStr}");
+        var scheduleList = await Ok<TechnicianSchedulesListResponse>(listSchedulesResp);
+        Assert.Equal(2, scheduleList.Items.Count);
+        Assert.All(scheduleList.Items, item => Assert.True(item.HasConflict));
+
+        // Delete assignment
+        var deleteResp = await SendAsync(HttpMethod.Delete, $"/api/v1/service-requests/technician-schedules/{assign2.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteResp.StatusCode);
+
+        // After deletion, 1 item remains
+        var listAfterDeleteResp = await SendAsync(HttpMethod.Get, $"/api/v1/service-requests/technician-schedules?technicianUserId={UserId}&fromDate={dateStr}&toDate={dateStr}");
+        var scheduleListAfter = await Ok<TechnicianSchedulesListResponse>(listAfterDeleteResp);
+        Assert.Single(scheduleListAfter.Items);
+    }
 }
