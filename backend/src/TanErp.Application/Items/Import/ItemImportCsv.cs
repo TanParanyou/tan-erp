@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using TanErp.Application.Common.Results;
 
@@ -14,6 +15,9 @@ public static class ItemImportCsv
         "code", "itemType", "categoryCode", "brandCode", "baseUnitCode", "nameTh", "nameEn",
         "descriptionTh", "descriptionEn", "taxCategoryCode", "canSell", "canCost", "canPurchase", "canStock", "canProduce"
     };
+
+    /// <summary>Trailing columns a file may add after <see cref="Columns"/>; all five or none.</summary>
+    public static readonly IReadOnlyList<string> OptionalColumns = new[] { "weightKg", "lengthMm", "widthMm", "heightMm", "attributes" };
 
     private const int MaxCodeLength = 50;
     private const int MaxNameLength = 200;
@@ -46,10 +50,11 @@ public static class ItemImportCsv
         }
 
         var header = records[0].Select(h => h.Trim()).ToList();
-        if (header.Count != Columns.Count
-            || !header.Zip(Columns, (actual, expected) => string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)).All(match => match))
+        var expectedColumns = header.Count == Columns.Count + OptionalColumns.Count ? Columns.Concat(OptionalColumns).ToList() : Columns.ToList();
+        if (header.Count != expectedColumns.Count
+            || !header.Zip(expectedColumns, (actual, expected) => string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)).All(match => match))
         {
-            return Fail($"The header row must be exactly: {string.Join(",", Columns)}.");
+            return Fail($"The header row must be exactly: {string.Join(",", Columns)}, optionally followed by: {string.Join(",", OptionalColumns)}.");
         }
 
         var dataRecords = records.Skip(1).ToList();
@@ -67,18 +72,19 @@ public static class ItemImportCsv
         for (var i = 0; i < dataRecords.Count; i++)
         {
             var cells = dataRecords[i];
-            if (cells.Count != Columns.Count)
+            if (cells.Count != header.Count)
             {
-                return Fail($"Row {i + 2} has {cells.Count} columns; expected {Columns.Count}.");
+                return Fail($"Row {i + 2} has {cells.Count} columns; expected {header.Count}.");
             }
 
-            string? Cell(int index) => string.IsNullOrWhiteSpace(cells[index]) ? null : cells[index].Trim();
+            string? Cell(int index) => index >= cells.Count || string.IsNullOrWhiteSpace(cells[index]) ? null : cells[index].Trim();
 
             rows.Add(new ItemImportRowDraft(
                 RowNumber: i + 2,
                 Code: Cell(0), ItemType: Cell(1), CategoryCode: Cell(2), BrandCode: Cell(3), BaseUnitCode: Cell(4),
                 NameTh: Cell(5), NameEn: Cell(6), DescriptionTh: Cell(7), DescriptionEn: Cell(8), TaxCategoryCode: Cell(9),
-                CanSell: Cell(10), CanCost: Cell(11), CanPurchase: Cell(12), CanStock: Cell(13), CanProduce: Cell(14)));
+                CanSell: Cell(10), CanCost: Cell(11), CanPurchase: Cell(12), CanStock: Cell(13), CanProduce: Cell(14),
+                WeightKg: Cell(15), LengthMm: Cell(16), WidthMm: Cell(17), HeightMm: Cell(18), Attributes: Cell(19)));
         }
 
         return Result<IReadOnlyList<ItemImportRowDraft>>.Success(rows);
@@ -141,6 +147,58 @@ public static class ItemImportCsv
             errors.Add(new ItemImportRowError("capabilities", ItemImportErrorCodes.Required));
         }
 
+        var cleared = new HashSet<string>(StringComparer.Ordinal);
+
+        decimal? ParseMeasure(string field, string? value)
+        {
+            if (value is null) return null;
+            if (value == ItemImportUpsertPolicy.ClearToken)
+            {
+                cleared.Add(field);
+                return null;
+            }
+
+            if (decimal.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsed)
+                && parsed > 0 && parsed <= Domain.Items.Item.MaxPhysicalValue)
+            {
+                return parsed;
+            }
+
+            errors.Add(new ItemImportRowError(field, ItemImportErrorCodes.Invalid));
+            return null;
+        }
+
+        IReadOnlyDictionary<string, string>? ParseAttributes(string? value)
+        {
+            if (value is null) return null;
+            if (value == ItemImportUpsertPolicy.ClearToken)
+            {
+                cleared.Add("attributes");
+                return null;
+            }
+
+            var pairs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var part in value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                var separator = part.IndexOf('=');
+                var key = separator > 0 ? part[..separator].Trim() : string.Empty;
+                var text = separator > 0 ? part[(separator + 1)..].Trim() : string.Empty;
+                if (key.Length == 0 || text.Length == 0 || Domain.Items.Item.IsReservedAttributeKey(key) || !pairs.TryAdd(key, text))
+                {
+                    errors.Add(new ItemImportRowError("attributes", ItemImportErrorCodes.Invalid));
+                    return null;
+                }
+            }
+
+            return pairs.Count == 0 ? null : new Dictionary<string, string>(pairs);
+        }
+
+        var weightKg = ParseMeasure("weightKg", draft.WeightKg);
+        var lengthMm = ParseMeasure("lengthMm", draft.LengthMm);
+        var widthMm = ParseMeasure("widthMm", draft.WidthMm);
+        var heightMm = ParseMeasure("heightMm", draft.HeightMm);
+        var attributes = ParseAttributes(draft.Attributes);
+
         if (errors.Count > 0)
         {
             return (null, errors);
@@ -149,7 +207,8 @@ public static class ItemImportCsv
         return (new ItemImportRow(
             draft.RowNumber, draft.Code, draft.ItemType!.ToLowerInvariant(), draft.CategoryCode!, draft.BrandCode,
             draft.BaseUnitCode!, draft.NameTh!, draft.NameEn, draft.DescriptionTh, draft.DescriptionEn, draft.TaxCategoryCode,
-            canSell, canCost, canPurchase, canStock, canProduce), errors);
+            canSell, canCost, canPurchase, canStock, canProduce,
+            weightKg, lengthMm, widthMm, heightMm, attributes, cleared), errors);
     }
 
     /// <summary>Row numbers whose Item Code already appeared on an earlier row of the same file (case-insensitive).</summary>

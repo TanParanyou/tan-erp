@@ -283,7 +283,7 @@ describe("ItemImportModal", () => {
 describe("item import constants and translations", () => {
   it("template header lists every column in order", () => {
     expect(buildItemImportTemplate()).toBe(`${ITEM_IMPORT_COLUMNS.join(",")}\n`);
-    expect(ITEM_IMPORT_COLUMNS).toHaveLength(15);
+    expect(ITEM_IMPORT_COLUMNS).toHaveLength(20);
   });
 
   it("builds cost import template with exact expected columns", () => {

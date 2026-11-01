@@ -1,4 +1,4 @@
-/** Column order of the Item import CSV; must match the backend header check exactly. */
+/** Column order of the Item import CSV; the backend also accepts the first 15 columns alone. */
 export const ITEM_IMPORT_COLUMNS = [
   "code",
   "itemType",
@@ -15,9 +15,17 @@ export const ITEM_IMPORT_COLUMNS = [
   "canPurchase",
   "canStock",
   "canProduce",
+  "weightKg",
+  "lengthMm",
+  "widthMm",
+  "heightMm",
+  "attributes",
 ] as const;
 
 export type ItemImportColumn = (typeof ITEM_IMPORT_COLUMNS)[number];
+
+/** Columns every item row must fill (mirrors the backend ItemImportCsv.Validate; code is also required in update mode). */
+export const ITEM_IMPORT_REQUIRED_COLUMNS: readonly ItemImportColumn[] = ["itemType", "categoryCode", "baseUnitCode", "nameTh"];
 
 /** Cost import CSV columns; must match the backend header check (CostImportCsv.Columns) exactly. */
 export const COST_IMPORT_COLUMNS = [

@@ -48,15 +48,19 @@ public static class ItemImportOutcomes
 /// <summary>
 /// The only Item fields an upsert may overwrite on an existing Item. Item Code is the key. itemType and baseUnitCode are
 /// identity-like and must equal the stored value (otherwise the row fails). Lifecycle state (status, activation,
-/// availability, attributes, images, barcodes) is never touched by import.
+/// availability, images, barcodes) is never touched by import. Weight/dimensions/attributes are overwritten only by a non-empty cell.
 /// </summary>
 public static class ItemImportUpsertPolicy
 {
     public static readonly IReadOnlyList<string> OverwritableFields = new[]
     {
         "nameTh", "nameEn", "descriptionTh", "descriptionEn", "categoryCode", "brandCode", "taxCategoryCode",
-        "canSell", "canCost", "canPurchase", "canStock", "canProduce"
+        "canSell", "canCost", "canPurchase", "canStock", "canProduce",
+        "weightKg", "lengthMm", "widthMm", "heightMm", "attributes"
     };
+
+    /// <summary>Optional trailing columns: an empty cell keeps the stored value; this token clears it.</summary>
+    public const string ClearToken = "__CLEAR__";
 
     public static readonly IReadOnlyList<string> MustMatchFields = new[] { "itemType", "baseUnitCode" };
 }
@@ -78,7 +82,12 @@ public sealed record ItemImportRowDraft(
     string? CanCost,
     string? CanPurchase,
     string? CanStock,
-    string? CanProduce);
+    string? CanProduce,
+    string? WeightKg = null,
+    string? LengthMm = null,
+    string? WidthMm = null,
+    string? HeightMm = null,
+    string? Attributes = null);
 
 /// <summary>A row whose syntax passed validation; lookups (category/brand/unit/tax) are still unresolved codes.</summary>
 public sealed record ItemImportRow(
@@ -97,7 +106,13 @@ public sealed record ItemImportRow(
     bool CanCost,
     bool CanPurchase,
     bool CanStock,
-    bool CanProduce);
+    bool CanProduce,
+    decimal? WeightKg = null,
+    decimal? LengthMm = null,
+    decimal? WidthMm = null,
+    decimal? HeightMm = null,
+    IReadOnlyDictionary<string, string>? Attributes = null,
+    IReadOnlySet<string>? ClearedFields = null);
 
 public static class ItemImportErrorCodes
 {

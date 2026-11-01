@@ -1,0 +1,26 @@
+﻿code,itemType,categoryCode,brandCode,baseUnitCode,nameTh,nameEn,descriptionTh,descriptionEn,taxCategoryCode,canSell,canCost,canPurchase,canStock,canProduce,weightKg,lengthMm,widthMm,heightMm,attributes
+IMP-MAT-001,material,TEST-MAT-BOARD,TEST-MATERIALS,TEST-SHEET,ไม้อัดยางพารา 4 มม.,Rubberwood plywood 4 mm,ไม้อัดสำหรับงานตกแต่งภายใน ขนาด 1.22x2.44 ม.,"Plywood for interior finishing, 1.22x2.44 m",TEST-MATERIAL,false,true,true,true,false,11.5,2440,1220,4,วัสดุ=ไม้ยางพารา;ความหนา=4 มม.;เกรด=AA
+IMP-MAT-002,material,TEST-MAT-BOARD,TEST-FILTER-BRAND-A,TEST-SHEET,ไม้อัดยางพารา 10 มม.,Rubberwood plywood 10 mm,,,TEST-MATERIAL,false,true,true,true,false,28.5,2440,1220,10,วัสดุ=ไม้ยางพารา;ความหนา=10 มม.;เกรด=AA
+IMP-MAT-003,material,TEST-CAT-MAT,TEST-FILTER-BRAND-B,TEST-METER,สายไฟ VAF 2x2.5,VAF cable 2x2.5,"สายไฟแบบแบน, มีฉนวนสองชั้น","Flat cable, double insulated",TEST-MATERIAL,false,true,true,true,false,0.12,100000,6,3,ขนาดสาย=2x2.5 ตร.มม.;ความยาวม้วน=100 ม.;สี=ขาว
+IMP-MAT-004,material,TEST-CAT-MAT,TEST-FILTER-BRAND-C,TEST-EACH,สกรูเกลียวปล่อย 1 นิ้ว (กล่อง),Self-tapping screw 1 in (box),,,TEST-MATERIAL,false,true,true,true,false,1.2,180,120,60,ขนาด=1 นิ้ว;จำนวนต่อกล่อง=500;ชนิดหัว=แฉก
+IMP-MAT-005,material,TEST-CAT-MAT,,TEST-EACH,ซิลิโคนยาแนว,Silicone sealant,ใช้ยาแนวรอยต่อกระจกและกระเบื้อง,,,false,true,true,true,false,0.32,300,50,50,สี=ใส;ปริมาตร=300 มล.;ชนิด=อะซิติก
+IMP-MAT-006,material,TEST-CAT-MAT,TEST-MATERIALS,TEST-EACH,สีน้ำอะคริลิกภายใน 5 แกลลอน,Interior acrylic paint 5 gal,,,TEST-MATERIAL,true,true,true,true,false,22,300,300,350,สี=ขาว;ปริมาตร=5 แกลลอน;ชนิดสี=อะคริลิก
+IMP-MAT-007,material,TEST-MAT-BOARD,TEST-FILTER-BRAND-A,TEST-SHEET,แผ่นยิปซัม 9 มม.,Gypsum board 9 mm,,Standard gypsum board,TEST-MATERIAL,false,true,true,true,false,17.5,2400,1200,9,ความหนา=9 มม.;ชนิด=ธรรมดา
+IMP-MAT-008,material,TEST-CAT-MAT,,TEST-METER,ท่อ PVC 1/2 นิ้ว,PVC pipe 1/2 in,,,,false,true,true,false,false,0.45,4000,21,21,ขนาด=1/2 นิ้ว;ชั้นคุณภาพ=13.5
+IMP-LAB-001,labor,TEST-CAT-LAB,,TEST-DAY,ค่าแรงช่างไม้,Carpenter labor,ค่าแรงช่างไม้ต่อวัน,Carpenter daily wage,TEST-SERVICE,true,true,false,false,false,,,,,ระดับฝีมือ=ช่างชำนาญ;หน่วยงาน=ต่อวัน
+IMP-LAB-002,labor,TEST-CAT-LAB,,TEST-DAY,ค่าแรงช่างไฟฟ้า,Electrician labor,,,TEST-SERVICE,true,true,false,false,false,,,,,ระดับฝีมือ=ช่างชำนาญ;ใบอนุญาต=ภส.
+IMP-LAB-003,labor,TEST-CAT-LAB,,TEST-HOUR,ค่าแรงช่างสี (รายชั่วโมง),Painter labor (hourly),,,TEST-SERVICE,true,true,false,false,false,,,,,ระดับฝีมือ=ช่างทั่วไป;หน่วยงาน=ต่อชั่วโมง
+IMP-LAB-004,labor,TEST-CAT-LAB,,TEST-DAY,ค่าแรงหัวหน้าช่าง,Foreman labor,,,,true,true,false,false,false,,,,,ระดับฝีมือ=หัวหน้าช่าง
+IMP-SVC-001,service,TEST-CAT-SVC,,TEST-JOB,ค่าออกแบบและเขียนแบบ,Design and drafting fee,รวมแบบสถาปัตย์และแบบวิศวกรรมเบื้องต้น,Includes architectural and basic engineering drawings,TEST-SERVICE,true,true,false,false,false,,,,,ขอบเขต=แบบสถาปัตย์และวิศวกรรมเบื้องต้น;จำนวนแก้แบบ=2 ครั้ง
+IMP-SVC-002,service,TEST-CAT-SVC,,TEST-JOB,ค่าสำรวจหน้างาน,Site survey fee,,,TEST-SERVICE,true,true,false,false,false,,,,,ขอบเขต=วัดหน้างานและถ่ายภาพ
+IMP-SVC-003,service,TEST-CAT-SVC,,TEST-JOB,ค่าบริหารโครงการ,Project management fee,,,TEST-SERVICE,true,true,false,false,false,,,,,ขอบเขต=ควบคุมงานและรายงานความคืบหน้า
+IMP-SVC-004,service,TEST-CAT-SVC,,TEST-JOB,ค่าขนส่งและยกวัสดุ,Delivery and lifting,,,,true,true,true,false,false,,,,,ขอบเขต=ขนส่งและยกขึ้นอาคาร
+IMP-SUB-001,subcontract,TEST-CAT-SUB,,TEST-JOB,งานผู้รับเหมาช่วง ระบบไฟฟ้า,Electrical subcontract works,,,TEST-SERVICE,true,true,true,false,false,,,,,สาขางาน=ไฟฟ้า;รวมวัสดุ=ไม่
+IMP-SUB-002,subcontract,TEST-CAT-SUB,,TEST-JOB,งานผู้รับเหมาช่วง ระบบปรับอากาศ,HVAC subcontract works,,,TEST-SERVICE,true,true,true,false,false,,,,,สาขางาน=ปรับอากาศ;รวมวัสดุ=ไม่
+IMP-SUB-003,subcontract,TEST-CAT-SUB,,TEST-JOB,งานผู้รับเหมาช่วง งานสี,Painting subcontract works,,,,true,true,true,false,false,,,,,สาขางาน=สี;รวมวัสดุ=ใช่
+IMP-OTH-001,other,TEST-CAT-OTH,,TEST-EACH,ค่าธรรมเนียมขออนุญาตก่อสร้าง,Construction permit fee,,,,false,true,false,false,false,,,,,ประเภท=ค่าธรรมเนียมราชการ
+IMP-OTH-002,other,TEST-CAT-OTH,,TEST-EACH,ค่าเบ็ดเตล็ดหน้างาน,Site miscellaneous,,,,true,true,false,false,false,,,,,ประเภท=ค่าใช้จ่ายหน้างาน
+IMP-PRD-001,product,TEST-CAT-PRD,TEST-MATERIALS,TEST-EACH,ตู้เสื้อผ้าบิลท์อิน 2.4 ม.,Built-in wardrobe 2.4 m,ตู้เสื้อผ้าบานเปิด ผลิตตามแบบ,Hinged-door wardrobe made to drawing,TEST-MATERIAL,true,true,false,true,true,185,2400,600,2400,วัสดุ=ไม้เมลามีน;สี=โอ๊คอ่อน;จำนวนบาน=4;มือจับ=ฝัง
+IMP-PRD-002,product,TEST-CAT-PRD,TEST-FILTER-BRAND-A,TEST-EACH,ชุดครัวบิลท์อิน ตัวแอล,Built-in L-shape kitchen,,,TEST-MATERIAL,true,true,false,true,true,260,3200,2400,850,วัสดุ=ไม้เมลามีน;ท็อป=หินสังเคราะห์;รูปแบบ=ตัวแอล
+IMP-PRD-003,product,TEST-CAT-PRD,,TEST-EACH,โต๊ะทำงานสั่งผลิต,Custom work desk,,,TEST-MATERIAL,true,true,false,true,true,32,1400,700,750,วัสดุ=ไม้ยางพารา;สี=ธรรมชาติ
+IMP-PRD-004,product,TEST-CAT-PRD,TEST-FILTER-BRAND-B,TEST-EACH,ประตูไม้บานเรียบ,Flush wooden door,,,TEST-MATERIAL,true,true,true,true,false,22,2000,800,35,วัสดุ=ไม้ยางพารา;ชนิด=บานเรียบ

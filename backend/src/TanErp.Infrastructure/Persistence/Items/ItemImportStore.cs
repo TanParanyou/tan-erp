@@ -182,7 +182,7 @@ public class ItemImportStore : IItemImportStore
             var lookup = entry.Lookup!;
             var name = LocalizedText.Create(row.NameTh, row.NameEn);
             var description = ResolveDescription(entry.Existing, row);
-            var capabilities = new ItemCapabilities(row.CanSell, row.CanCost, row.CanPurchase, row.CanStock, row.CanProduce);
+            var capabilities = ImportCapabilities(row, entry.Existing);
 
             if (entry.Existing is { } existing)
             {
@@ -196,10 +196,12 @@ public class ItemImportStore : IItemImportStore
                 try
                 {
                     // Only the overwritable fields come from the file; code, type, base unit, availability and attributes keep their stored value.
+                    var optional = ResolveOptional(row, existing);
                     existing.UpdateDetails(
                         existing.Code, existing.ItemType, lookup.CategoryId, lookup.BrandId, name, description, existing.BaseUnitId,
-                        existing.AvailabilityMode, capabilities, existing.Attributes, existing.AttributesSchemaVersion,
+                        existing.AvailabilityMode, capabilities, optional.Attributes, optional.AttributesSchemaVersion,
                         access.ActorUserId, now, lookup.TaxCategoryCode);
+                    existing.SetPhysicalSpec(optional.WeightKg, optional.LengthMm, optional.WidthMm, optional.HeightMm);
                 }
                 catch (ItemDomainException ex)
                 {
@@ -228,10 +230,12 @@ public class ItemImportStore : IItemImportStore
             Item item;
             try
             {
+                var optional = ResolveOptional(row, null);
                 item = Item.CreateDraft(
                     Guid.NewGuid(), orgId, resolvedCode.Value!, row.ItemType, lookup.CategoryId, lookup.BrandId, name, description,
-                    lookup.BaseUnitId, ItemAvailabilityMode.AllBranches, capabilities, null, null, access.ActorUserId, now,
-                    lookup.TaxCategoryCode);
+                    lookup.BaseUnitId, ItemAvailabilityMode.AllBranches, capabilities, optional.Attributes, optional.AttributesSchemaVersion,
+                    access.ActorUserId, now, lookup.TaxCategoryCode);
+                item.SetPhysicalSpec(optional.WeightKg, optional.LengthMm, optional.WidthMm, optional.HeightMm);
             }
             catch (ItemDomainException ex)
             {
@@ -362,6 +366,44 @@ public class ItemImportStore : IItemImportStore
             ? existing.Description
             : LocalizedText.CreateOptional(row.DescriptionTh, row.DescriptionEn);
 
+    private sealed record OptionalValues(
+        Dictionary<string, string>? Attributes, int? AttributesSchemaVersion, decimal? WeightKg, decimal? LengthMm, decimal? WidthMm, decimal? HeightMm);
+
+    /// <summary>Optional columns: an empty cell keeps the stored value, the clear token empties it, any other value overwrites it.</summary>
+    private static OptionalValues ResolveOptional(ItemImportRow row, Item? existing)
+    {
+        bool Cleared(string field) => row.ClearedFields?.Contains(field) == true;
+        decimal? Pick(string field, decimal? cell, decimal? stored) => Cleared(field) ? null : cell ?? stored;
+
+        var attributes = Cleared("attributes") ? null
+            : row.Attributes is { } cell ? new Dictionary<string, string>(cell)
+            : existing?.Attributes;
+        return new OptionalValues(
+            attributes,
+            attributes is null ? null : existing?.AttributesSchemaVersion ?? 1,
+            Pick("weightKg", row.WeightKg, existing?.WeightKg),
+            Pick("lengthMm", row.LengthMm, existing?.LengthMm),
+            Pick("widthMm", row.WidthMm, existing?.WidthMm),
+            Pick("heightMm", row.HeightMm, existing?.HeightMm));
+    }
+
+    private static bool SameOptional(OptionalValues next, Item existing)
+    {
+        var sameAttributes = next.Attributes is null || existing.Attributes is null
+            ? next.Attributes is null && existing.Attributes is null
+            : next.Attributes.Count == existing.Attributes.Count
+                && next.Attributes.All(pair => existing.Attributes.TryGetValue(pair.Key, out var stored) && stored == pair.Value);
+        return sameAttributes
+            && next.WeightKg == existing.WeightKg && next.LengthMm == existing.LengthMm
+            && next.WidthMm == existing.WidthMm && next.HeightMm == existing.HeightMm;
+    }
+
+    /// <summary>The file has no tracking columns, so an existing Item keeps its lot/serial tracking unless the file turns stocking off.</summary>
+    private static ItemCapabilities ImportCapabilities(ItemImportRow row, Item? existing) => new(
+        row.CanSell, row.CanCost, row.CanPurchase, row.CanStock, row.CanProduce,
+        TrackLot: row.CanStock && existing?.Capabilities.TrackLot == true,
+        TrackSerial: row.CanStock && existing?.Capabilities.TrackSerial == true);
+
     /// <summary>Upsert of an existing Item: the identity-like cells must match, lifecycle locks win, and an identical row is "unchanged".</summary>
     private static string? CompareToExisting(Item existing, ItemImportRow row, Lookup lookup, List<ItemImportRowError> errors)
     {
@@ -372,7 +414,7 @@ public class ItemImportStore : IItemImportStore
 
         var name = LocalizedText.Create(row.NameTh, row.NameEn);
         var description = ResolveDescription(existing, row);
-        var capabilities = new ItemCapabilities(row.CanSell, row.CanCost, row.CanPurchase, row.CanStock, row.CanProduce);
+        var capabilities = ImportCapabilities(row, existing);
         var taxCode = lookup.TaxCategoryCode?.Trim().ToUpperInvariant();
 
         var same = existing.CategoryId == lookup.CategoryId
@@ -380,7 +422,8 @@ public class ItemImportStore : IItemImportStore
             && existing.Name == name
             && existing.Description == description
             && existing.Capabilities == capabilities
-            && existing.TaxCategoryCode == taxCode;
+            && existing.TaxCategoryCode == taxCode
+            && SameOptional(ResolveOptional(row, existing), existing);
         return same ? ItemImportOutcomes.Unchanged : ItemImportOutcomes.Updated;
     }
 
