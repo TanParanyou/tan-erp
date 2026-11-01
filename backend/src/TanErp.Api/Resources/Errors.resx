@@ -615,6 +615,18 @@
   <data name="ITEM_CAPABILITY_REQUIRED_DETAIL" xml:space="preserve">
     <value>สินค้าต้องมีความสามารถอย่างน้อยหนึ่งอย่างในการเปิดใช้งาน</value>
   </data>
+  <data name="ITEM_TRACKING_REQUIRES_STOCK_TITLE" xml:space="preserve">
+    <value>ติดตามล็อตหรือซีเรียลต้องเปิดการเก็บสต็อก</value>
+  </data>
+  <data name="ITEM_TRACKING_REQUIRES_STOCK_DETAIL" xml:space="preserve">
+    <value>การติดตามล็อตหรือซีเรียลใช้ได้เฉพาะสินค้าที่เปิดการเก็บสต็อก</value>
+  </data>
+  <data name="ITEM_PHYSICAL_SPEC_INVALID_TITLE" xml:space="preserve">
+    <value>น้ำหนักหรือขนาดไม่ถูกต้อง</value>
+  </data>
+  <data name="ITEM_PHYSICAL_SPEC_INVALID_DETAIL" xml:space="preserve">
+    <value>น้ำหนักและขนาดต้องมากกว่า 0 และไม่เกิน 1,000,000</value>
+  </data>
   <data name="ITEM_ATTRIBUTE_RESERVED_TITLE" xml:space="preserve">
     <value>คีย์คุณลักษณะสงวนสิทธิ์</value>
   </data>
@@ -783,6 +795,14 @@
   <data name="SUPPLIER_INVALID_STATE_DETAIL" xml:space="preserve"><value>ผู้ขายอยู่ในสถานะนี้อยู่แล้ว</value></data>
   <data name="SUPPLIER_FIELD_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลผู้ขายไม่ถูกต้อง</value></data>
   <data name="SUPPLIER_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ต้องมีชื่อไทย (≤200) เงื่อนไขชำระเงิน 0-365 วัน และข้อมูลติดต่อไม่ยาวเกินกำหนด</value></data>
+  <data name="SUPPLIER_PRICE_INVALID_TITLE" xml:space="preserve"><value>ข้อมูลราคาผู้ขายไม่ถูกต้อง</value></data>
+  <data name="SUPPLIER_PRICE_INVALID_DETAIL" xml:space="preserve"><value>ราคาและจำนวนสั่งขั้นต่ำต้องไม่ติดลบ lead time ต้องอยู่ระหว่าง 0-365 วัน และวันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น</value></data>
+  <data name="SUPPLIER_PRICE_NOT_FOUND_TITLE" xml:space="preserve"><value>ไม่พบราคาผู้ขาย</value></data>
+  <data name="SUPPLIER_PRICE_NOT_FOUND_DETAIL" xml:space="preserve"><value>ไม่มีราคาผู้ขายที่มีผลของสินค้านี้ในวันที่ระบุ</value></data>
+  <data name="SUPPLIER_PRICE_PERIOD_OVERLAP_TITLE" xml:space="preserve"><value>ช่วงวันที่ราคาทับซ้อน</value></data>
+  <data name="SUPPLIER_PRICE_PERIOD_OVERLAP_DETAIL" xml:space="preserve"><value>ผู้ขายรายนี้มีราคาของสินค้านี้ที่ช่วงวันที่ทับซ้อนกันอยู่แล้ว</value></data>
+  <data name="SUPPLIER_PRICE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ข้อมูลราคาผู้ขายถูกแก้ไข</value></data>
+  <data name="SUPPLIER_PRICE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ราคาผู้ขายถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
   <data name="PURCHASE_ORDER_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>ใบสั่งซื้อถูกแก้ไข</value></data>
   <data name="PURCHASE_ORDER_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>ใบสั่งซื้อถูกเปลี่ยนแปลงโดยผู้อื่น กรุณาโหลดข้อมูลใหม่</value></data>
   <data name="PURCHASE_ORDER_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบสั่งซื้อไม่รองรับ</value></data>
@@ -1125,6 +1145,10 @@
   <data name="MRP_FIELD_INVALID_DETAIL" xml:space="preserve"><value>ข้อมูลไม่ถูกต้อง</value></data>
   <data name="MRP_DEMAND_INVALID_TITLE" xml:space="preserve"><value>ความต้องการไม่ถูกต้อง</value></data>
   <data name="MRP_DEMAND_INVALID_DETAIL" xml:space="preserve"><value>ความต้องการไม่ถูกต้อง</value></data>
+  <data name="ETAX_XML_NOT_AVAILABLE_TITLE" xml:space="preserve"><value>สร้าง e-Tax XML ไม่ได้</value></data>
+  <data name="ETAX_XML_NOT_AVAILABLE_DETAIL" xml:space="preserve"><value>ใบแจ้งหนี้ต้องมีเลขที่ใบกำกับภาษี มีรายการ ไม่ถูกยกเลิก และต้องมีเลขผู้เสียภาษีของผู้ขาย</value></data>
+  <data name="MRP_PROJECT_DEMAND_INVALID_TITLE" xml:space="preserve"><value>โครงการสำหรับ MRP ไม่ถูกต้อง</value></data>
+  <data name="MRP_PROJECT_DEMAND_INVALID_DETAIL" xml:space="preserve"><value>เลือกโครงการที่อยู่ในสถานะวางแผนหรือดำเนินการ (สูงสุด 20 โครงการ) และหน่วยใน BOQ ต้องตรงกับหน่วยฐานของสินค้า</value></data>
   <data name="MRP_CONVERT_INPUT_REQUIRED_TITLE" xml:space="preserve"><value>ข้อมูลสำหรับแปลงเอกสารไม่ครบ</value></data>
   <data name="MRP_CONVERT_INPUT_REQUIRED_DETAIL" xml:space="preserve"><value>ข้อมูลสำหรับแปลงเอกสารไม่ครบ</value></data>
   <data name="QUOTATION_INVALID_STATE_TITLE" xml:space="preserve"><value>สถานะใบเสนอราคาไม่อนุญาตให้ทำรายการนี้</value></data>

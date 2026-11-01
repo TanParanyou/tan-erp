@@ -238,9 +238,15 @@ export type SetProjectLaborRateRequest = components["schemas"]["SetProjectLaborR
 export type CreateProjectTimesheetRequest = components["schemas"]["CreateProjectTimesheetRequest"];
 export type ProjectTimesheetActionRequest = components["schemas"]["ProjectTimesheetActionRequest"];
 export type ProjectTimesheetAction = "submit" | "approve" | "reject" | "cancel";
+export type CalculationPolicyVersionResponse = components["schemas"]["CalculationPolicyVersionResponse"];
+export type CalculationPolicyListResponse = components["schemas"]["CalculationPolicyListResponse"];
+export type CreateCalculationPolicyRequest = components["schemas"]["CreateCalculationPolicyRequest"];
 export type SupplierRequest = components["schemas"]["SupplierRequest"];
 export type SupplierResponse = components["schemas"]["SupplierResponse"];
 export type SupplierListResponse = components["schemas"]["SupplierListResponse"];
+export type SupplierItemPriceRequest = components["schemas"]["SupplierItemPriceRequest"];
+export type SupplierItemPriceResponse = components["schemas"]["SupplierItemPriceResponse"];
+export type SupplierItemPriceListResponse = components["schemas"]["SupplierItemPriceListResponse"];
 export type PurchaseOrderRequest = components["schemas"]["PurchaseOrderRequest"];
 export type PurchaseOrderLineRequest = components["schemas"]["PurchaseOrderLineRequest"];
 export type PurchaseOrderResponse = components["schemas"]["PurchaseOrderResponse"];
@@ -614,6 +620,11 @@ export interface ListStockSerialsParams {
   itemId?: string;
   status?: string;
   search?: string;
+  page?: number;
+  pageSize?: number;
+}
+export interface ListSupplierItemPricesParams {
+  itemId?: string;
   page?: number;
   pageSize?: number;
 }
@@ -2214,6 +2225,46 @@ export class ApiClient {
     return this.request<SupplierResponse>(`/api/v1/suppliers/${encodeURIComponent(id)}/${active ? "activate" : "deactivate"}`, "POST", { ...options, ifMatch: rowVersion });
   }
 
+  async listCalculationPolicies(options: RequestOptions, branchId?: string): Promise<CalculationPolicyListResponse> {
+    const params = new URLSearchParams();
+    if (branchId) params.set("branchId", branchId);
+    const query = params.toString();
+    return this.request<CalculationPolicyListResponse>(`/api/v1/calculation-policies${query ? `?${query}` : ""}`, "GET", options);
+  }
+
+  async createCalculationPolicy(payload: CreateCalculationPolicyRequest, options: RequestOptions): Promise<CalculationPolicyVersionResponse> {
+    return this.request<CalculationPolicyVersionResponse>("/api/v1/calculation-policies", "POST", options, payload);
+  }
+
+  async publishCalculationPolicy(id: string, options: RequestOptions): Promise<CalculationPolicyVersionResponse> {
+    return this.request<CalculationPolicyVersionResponse>(`/api/v1/calculation-policies/${encodeURIComponent(id)}/publish`, "POST", options);
+  }
+
+  async listSupplierItemPrices(supplierId: string, options: RequestOptions, query: ListSupplierItemPricesParams): Promise<SupplierItemPriceListResponse> {
+    const params = new URLSearchParams();
+    if (query.itemId) params.set("itemId", query.itemId);
+    params.set("page", String(query.page ?? 1));
+    params.set("pageSize", String(query.pageSize ?? 25));
+    return this.request<SupplierItemPriceListResponse>(`/api/v1/suppliers/${encodeURIComponent(supplierId)}/item-prices?${params.toString()}`, "GET", options);
+  }
+
+  async getEffectiveSupplierItemPrice(supplierId: string, itemId: string, options: RequestOptions): Promise<SupplierItemPriceResponse> {
+    const params = new URLSearchParams({ itemId });
+    return this.request<SupplierItemPriceResponse>(`/api/v1/suppliers/${encodeURIComponent(supplierId)}/item-prices/effective?${params.toString()}`, "GET", options);
+  }
+
+  async createSupplierItemPrice(supplierId: string, payload: SupplierItemPriceRequest, options: RequestOptions): Promise<SupplierItemPriceResponse> {
+    return this.request<SupplierItemPriceResponse>(`/api/v1/suppliers/${encodeURIComponent(supplierId)}/item-prices`, "POST", options, payload);
+  }
+
+  async updateSupplierItemPrice(supplierId: string, priceId: string, rowVersion: string, payload: SupplierItemPriceRequest, options: RequestOptions): Promise<SupplierItemPriceResponse> {
+    return this.request<SupplierItemPriceResponse>(`/api/v1/suppliers/${encodeURIComponent(supplierId)}/item-prices/${encodeURIComponent(priceId)}`, "PUT", { ...options, ifMatch: rowVersion }, payload);
+  }
+
+  async deleteSupplierItemPrice(supplierId: string, priceId: string, rowVersion: string, options: RequestOptions): Promise<void> {
+    return this.request<void>(`/api/v1/suppliers/${encodeURIComponent(supplierId)}/item-prices/${encodeURIComponent(priceId)}`, "DELETE", { ...options, ifMatch: rowVersion });
+  }
+
   async listPurchaseOrders(options: RequestOptions, query: ListPurchaseOrdersParams): Promise<PurchaseOrderListResponse> {
     const params = new URLSearchParams();
     if (query.search) params.set("search", query.search);
@@ -2666,6 +2717,10 @@ export class ApiClient {
 
   async approveBillingNote(id: string, noteId: string, rowVersion: string, options: RequestOptions): Promise<BillingResponse> {
     return this.request<BillingResponse>(`/api/v1/billings/${encodeURIComponent(id)}/notes/${encodeURIComponent(noteId)}/approve`, "POST", { ...options, ifMatch: rowVersion });
+  }
+
+  async downloadBillingETaxXmlDraft(id: string, options: RequestOptions): Promise<Blob> {
+    return this.requestBlob(`/api/v1/billings/${encodeURIComponent(id)}/tax-document/etax-xml`, options);
   }
 
   async downloadBillingTaxDocumentPdf(id: string, options: RequestOptions): Promise<Blob> {

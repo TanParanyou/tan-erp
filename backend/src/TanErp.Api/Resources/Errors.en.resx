@@ -549,6 +549,18 @@
   <data name="ITEM_CAPABILITY_REQUIRED_DETAIL" xml:space="preserve">
     <value>At least one capability must be enabled for activation.</value>
   </data>
+  <data name="ITEM_TRACKING_REQUIRES_STOCK_TITLE" xml:space="preserve">
+    <value>Tracking Requires Stock</value>
+  </data>
+  <data name="ITEM_TRACKING_REQUIRES_STOCK_DETAIL" xml:space="preserve">
+    <value>Lot or serial tracking requires the item to be stockable.</value>
+  </data>
+  <data name="ITEM_PHYSICAL_SPEC_INVALID_TITLE" xml:space="preserve">
+    <value>Invalid Weight or Dimensions</value>
+  </data>
+  <data name="ITEM_PHYSICAL_SPEC_INVALID_DETAIL" xml:space="preserve">
+    <value>Weight and dimensions must be greater than 0 and not exceed 1,000,000.</value>
+  </data>
   <data name="ITEM_ATTRIBUTE_RESERVED_TITLE" xml:space="preserve">
     <value>Item Attribute Reserved</value>
   </data>
@@ -615,6 +627,14 @@
   <data name="SUPPLIER_INVALID_STATE_DETAIL" xml:space="preserve"><value>The supplier is already in this status.</value></data>
   <data name="SUPPLIER_FIELD_INVALID_TITLE" xml:space="preserve"><value>Invalid Supplier Data</value></data>
   <data name="SUPPLIER_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A Thai name (≤200) and a payment term of 0-365 days are required; other fields must fit their limits.</value></data>
+  <data name="SUPPLIER_PRICE_INVALID_TITLE" xml:space="preserve"><value>Invalid Supplier Price</value></data>
+  <data name="SUPPLIER_PRICE_INVALID_DETAIL" xml:space="preserve"><value>Price and minimum order quantity must be non-negative, lead time must be 0-365 days, and the end date cannot precede the start date.</value></data>
+  <data name="SUPPLIER_PRICE_NOT_FOUND_TITLE" xml:space="preserve"><value>Supplier Price Not Found</value></data>
+  <data name="SUPPLIER_PRICE_NOT_FOUND_DETAIL" xml:space="preserve"><value>No supplier price is effective for this item on the requested date.</value></data>
+  <data name="SUPPLIER_PRICE_PERIOD_OVERLAP_TITLE" xml:space="preserve"><value>Price Period Overlaps</value></data>
+  <data name="SUPPLIER_PRICE_PERIOD_OVERLAP_DETAIL" xml:space="preserve"><value>This supplier already has a price for this item with an overlapping period.</value></data>
+  <data name="SUPPLIER_PRICE_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Supplier Price Changed</value></data>
+  <data name="SUPPLIER_PRICE_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The supplier price was modified by someone else. Reload and try again.</value></data>
   <data name="PURCHASE_ORDER_VERSION_CONFLICT_TITLE" xml:space="preserve"><value>Purchase Order Changed</value></data>
   <data name="PURCHASE_ORDER_VERSION_CONFLICT_DETAIL" xml:space="preserve"><value>The purchase order was modified by someone else. Reload and try again.</value></data>
   <data name="PURCHASE_ORDER_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Purchase Order Status</value></data>
@@ -963,6 +983,10 @@
   <data name="MRP_FIELD_INVALID_DETAIL" xml:space="preserve"><value>A field value is invalid.</value></data>
   <data name="MRP_DEMAND_INVALID_TITLE" xml:space="preserve"><value>Invalid Demand</value></data>
   <data name="MRP_DEMAND_INVALID_DETAIL" xml:space="preserve"><value>Demands need an active item, a quantity above zero and a need date on or after the as-of date; at least one demand or open work orders is required.</value></data>
+  <data name="ETAX_XML_NOT_AVAILABLE_TITLE" xml:space="preserve"><value>e-Tax XML Unavailable</value></data>
+  <data name="ETAX_XML_NOT_AVAILABLE_DETAIL" xml:space="preserve"><value>The billing needs a tax invoice number and lines, must not be voided, and the seller needs a tax identifier.</value></data>
+  <data name="MRP_PROJECT_DEMAND_INVALID_TITLE" xml:space="preserve"><value>Invalid MRP Project</value></data>
+  <data name="MRP_PROJECT_DEMAND_INVALID_DETAIL" xml:space="preserve"><value>Select planned or active projects (up to 20); BOQ units must match each item base unit.</value></data>
   <data name="MRP_CONVERT_INPUT_REQUIRED_TITLE" xml:space="preserve"><value>Convert Input Required</value></data>
   <data name="MRP_CONVERT_INPUT_REQUIRED_DETAIL" xml:space="preserve"><value>A work order needs a warehouse; a purchase order needs a supplier and a unit price.</value></data>
   <data name="QUOTATION_INVALID_STATE_TITLE" xml:space="preserve"><value>Invalid Quotation State</value></data>

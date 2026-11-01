@@ -3697,6 +3697,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billings/{id}/tax-document/etax-xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": string;
+                        "application/json": string;
+                        "text/json": string;
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billings/{id}/payments": {
         parameters: {
             query?: never;
@@ -26608,6 +26669,252 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/suppliers/{supplierId}/item-prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    itemId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    supplierId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierItemPriceListResponse"];
+                        "application/json": components["schemas"]["SupplierItemPriceListResponse"];
+                        "text/json": components["schemas"]["SupplierItemPriceListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    supplierId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SupplierItemPriceRequest"];
+                    "text/json": components["schemas"]["SupplierItemPriceRequest"];
+                    "application/*+json": components["schemas"]["SupplierItemPriceRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierItemPriceResponse"];
+                        "application/json": components["schemas"]["SupplierItemPriceResponse"];
+                        "text/json": components["schemas"]["SupplierItemPriceResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/suppliers/{supplierId}/item-prices/{priceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    supplierId: string;
+                    priceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SupplierItemPriceRequest"];
+                    "text/json": components["schemas"]["SupplierItemPriceRequest"];
+                    "application/*+json": components["schemas"]["SupplierItemPriceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierItemPriceResponse"];
+                        "application/json": components["schemas"]["SupplierItemPriceResponse"];
+                        "text/json": components["schemas"]["SupplierItemPriceResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    supplierId: string;
+                    priceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/suppliers/{supplierId}/item-prices/effective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    itemId?: string;
+                    onDate?: string;
+                };
+                header?: never;
+                path: {
+                    supplierId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SupplierItemPriceResponse"];
+                        "application/json": components["schemas"]["SupplierItemPriceResponse"];
+                        "text/json": components["schemas"]["SupplierItemPriceResponse"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/suppliers": {
         parameters: {
             query?: never;
@@ -30827,6 +31134,14 @@ export interface components {
             /** Format: int32 */
             attributesSchemaVersion?: number | null;
             taxCategoryCode?: string | null;
+            /** Format: double */
+            weightKg?: number | null;
+            /** Format: double */
+            lengthMm?: number | null;
+            /** Format: double */
+            widthMm?: number | null;
+            /** Format: double */
+            heightMm?: number | null;
         };
         CreateItemTaxCategoryRequest: {
             code?: string | null;
@@ -32299,6 +32614,14 @@ export interface components {
             name?: components["schemas"]["LocalizedTextResponse"];
             description?: components["schemas"]["LocalizedTextResponse"];
             taxCategoryCode?: string | null;
+            /** Format: double */
+            weightKg?: number | null;
+            /** Format: double */
+            lengthMm?: number | null;
+            /** Format: double */
+            widthMm?: number | null;
+            /** Format: double */
+            heightMm?: number | null;
             availabilityMode?: string | null;
             capabilities?: components["schemas"]["ItemCapabilitiesResponse"];
             attributes?: {
@@ -32669,6 +32992,7 @@ export interface components {
             productionLeadTimeDays?: number;
             includeOpenWorkOrders?: boolean;
             demands?: components["schemas"]["MrpDemandRequest"][] | null;
+            projectIds?: string[] | null;
         };
         MrpRunResponse: {
             /** Format: uuid */
@@ -35044,6 +35368,48 @@ export interface components {
             rowVersion?: string;
             lines?: components["schemas"]["SupplierInvoiceLineResponse"][] | null;
         };
+        SupplierItemPriceListResponse: {
+            items?: components["schemas"]["SupplierItemPriceResponse"][] | null;
+            pagination?: components["schemas"]["ProcurementPaginationResponse"];
+        };
+        SupplierItemPriceRequest: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: double */
+            unitPrice?: number;
+            /** Format: double */
+            minOrderQuantity?: number;
+            /** Format: int32 */
+            leadTimeDays?: number;
+            /** Format: date */
+            effectiveFrom?: string;
+            /** Format: date */
+            effectiveTo?: string | null;
+            isPreferred?: boolean;
+        };
+        SupplierItemPriceResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            supplierId?: string;
+            /** Format: uuid */
+            itemId?: string;
+            itemCode?: string | null;
+            itemNameTh?: string | null;
+            /** Format: double */
+            unitPrice?: number;
+            /** Format: double */
+            minOrderQuantity?: number;
+            /** Format: int32 */
+            leadTimeDays?: number;
+            /** Format: date */
+            effectiveFrom?: string;
+            /** Format: date */
+            effectiveTo?: string | null;
+            isPreferred?: boolean;
+            /** Format: uuid */
+            rowVersion?: string;
+        };
         SupplierListResponse: {
             items?: components["schemas"]["SupplierResponse"][] | null;
             pagination?: components["schemas"]["ProcurementPaginationResponse"];
@@ -35562,6 +35928,14 @@ export interface components {
             /** Format: int32 */
             attributesSchemaVersion?: number | null;
             taxCategoryCode?: string | null;
+            /** Format: double */
+            weightKg?: number | null;
+            /** Format: double */
+            lengthMm?: number | null;
+            /** Format: double */
+            widthMm?: number | null;
+            /** Format: double */
+            heightMm?: number | null;
         };
         UpdateItemTaxCategoryRequest: {
             code: string;

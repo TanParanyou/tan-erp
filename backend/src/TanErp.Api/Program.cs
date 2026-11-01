@@ -97,11 +97,11 @@ builder.Services.AddSingleton<SelfHostedTokenVerifier>();
 builder.Services.AddSingleton<IFirebaseTokenVerifier>(sp => sp.GetRequiredService<SelfHostedTokenVerifier>());
 if (builder.Configuration.GetValue<bool>("Authentication:DevelopmentTokens:Enabled"))
 {
-    // Fail closed: mock "dev-uid:" tokens bypass JWT verification, so they may exist only in Development.
-    if (!builder.Environment.IsDevelopment())
+    // Fail closed: mock "dev-uid:" tokens bypass JWT verification, so they may exist only in Development or Test environments.
+    if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Test"))
     {
         throw new InvalidOperationException(
-            "Authentication:DevelopmentTokens:Enabled must not be true outside the Development environment.");
+            "Authentication:DevelopmentTokens:Enabled must not be true outside Development or Test environments.");
     }
 
     builder.Services.AddSingleton<IFirebaseTokenVerifier>(sp =>
@@ -234,6 +234,8 @@ builder.Services.AddScoped<TanErp.Application.Projects.Control.IProjectControlSt
 builder.Services.AddScoped<TanErp.Application.Projects.Control.ProjectControlHandler>();
 builder.Services.AddScoped<TanErp.Application.Procurement.IProcurementStore, TanErp.Infrastructure.Persistence.Procurement.ProcurementStore>();
 builder.Services.AddScoped<TanErp.Application.Procurement.ProcurementHandler>();
+builder.Services.AddScoped<TanErp.Application.Procurement.ISupplierItemPriceStore, TanErp.Infrastructure.Persistence.Procurement.SupplierItemPriceStore>();
+builder.Services.AddScoped<TanErp.Application.Procurement.SupplierItemPriceHandler>();
 builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationLifecycleStore, TanErp.Infrastructure.Persistence.Commercial.QuotationLifecycleStore>();
 builder.Services.AddScoped<TanErp.Application.Commercial.QuotationLifecycleHandler>();
 builder.Services.AddScoped<TanErp.Application.Commercial.IQuotationAcceptanceStore, TanErp.Infrastructure.Persistence.Commercial.QuotationAcceptanceStore>();
@@ -283,6 +285,17 @@ builder.Services.AddScoped<TanErp.Application.Service.IServiceStore, TanErp.Infr
 builder.Services.AddScoped<TanErp.Application.Service.ServiceHandler>();
 builder.Services.AddScoped<TanErp.Application.Finance.IFinanceStore, TanErp.Infrastructure.Persistence.Finance.FinanceStore>();
 builder.Services.AddScoped<TanErp.Application.Finance.FinanceHandler>();
+var reportingMvOptions = builder.Configuration
+    .GetSection(TanErp.Application.Reporting.ReportingMaterializedViewOptions.SectionName)
+    .Get<TanErp.Application.Reporting.ReportingMaterializedViewOptions>()
+    ?? new TanErp.Application.Reporting.ReportingMaterializedViewOptions();
+builder.Services.AddSingleton(reportingMvOptions);
+builder.Services.AddScoped<TanErp.Infrastructure.Persistence.Reporting.ReportingMaterializedViewRefresher>();
+// Second scheduler next to the membership reminder (ADR 0022 amendment): opt-in, never in Test.
+if (!builder.Environment.IsEnvironment("Test") && reportingMvOptions.Enabled)
+{
+    builder.Services.AddHostedService<TanErp.Api.Background.ReportingMaterializedViewRefreshWorker>();
+}
 builder.Services.AddScoped<TanErp.Application.Reporting.IReportingStore, TanErp.Infrastructure.Persistence.Reporting.ReportingStore>();
 builder.Services.AddScoped<TanErp.Application.Reporting.ReportingHandler>();
 builder.Services.AddScoped<TanErp.Application.QuickEstimates.IQuickEstimateStore, TanErp.Infrastructure.Persistence.QuickEstimates.QuickEstimateStore>();

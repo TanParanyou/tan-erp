@@ -5738,6 +5738,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("description");
 
+                    b.Property<decimal?>("HeightMm")
+                        .HasPrecision(14, 4)
+                        .HasColumnType("numeric(14,4)")
+                        .HasColumnName("height_mm");
+
                     b.Property<DateTimeOffset?>("InactiveAtUtc")
                         .HasColumnType("timestamptz")
                         .HasColumnName("inactive_at_utc");
@@ -5761,6 +5766,11 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)")
                         .HasColumnName("item_type");
+
+                    b.Property<decimal?>("LengthMm")
+                        .HasPrecision(14, 4)
+                        .HasColumnType("numeric(14,4)")
+                        .HasColumnName("length_mm");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -5800,6 +5810,16 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("UpdatedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_user_id");
+
+                    b.Property<decimal?>("WeightKg")
+                        .HasPrecision(14, 4)
+                        .HasColumnType("numeric(14,4)")
+                        .HasColumnName("weight_kg");
+
+                    b.Property<decimal?>("WidthMm")
+                        .HasPrecision(14, 4)
+                        .HasColumnType("numeric(14,4)")
+                        .HasColumnName("width_mm");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Capabilities", "TanErp.Domain.Items.Item.Capabilities#ItemCapabilities", b1 =>
                         {
@@ -8716,6 +8736,91 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_supplier_invoice_lines_prices", "unit_price >= 0 AND po_unit_price >= 0");
 
                             t.HasCheckConstraint("ck_supplier_invoice_lines_quantity", "quantity > 0");
+                        });
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Procurement.SupplierItemPrice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateOnly?>("EffectiveTo")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_to");
+
+                    b.Property<bool>("IsPreferred")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_preferred");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<int>("LeadTimeDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("lead_time_days");
+
+                    b.Property<decimal>("MinOrderQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("min_order_quantity");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("row_version");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unit_price");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.HasIndex("OrganizationId", "ItemId", "EffectiveFrom");
+
+                    b.HasIndex("OrganizationId", "SupplierId", "ItemId", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("supplier_item_prices", "procurement", t =>
+                        {
+                            t.HasCheckConstraint("ck_supplier_item_prices_amounts", "unit_price >= 0 AND min_order_quantity >= 0");
+
+                            t.HasCheckConstraint("ck_supplier_item_prices_lead_time", "lead_time_days BETWEEN 0 AND 365");
+
+                            t.HasCheckConstraint("ck_supplier_item_prices_period", "effective_to IS NULL OR effective_to >= effective_from");
                         });
                 });
 
@@ -14259,6 +14364,33 @@ namespace TanErp.Infrastructure.Persistence.Migrations
                     b.HasOne("TanErp.Domain.Items.UnitOfMeasure", null)
                         .WithMany()
                         .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TanErp.Domain.Procurement.SupplierItemPrice", b =>
+                {
+                    b.HasOne("TanErp.Domain.Items.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.Procurement.Supplier", null)
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TanErp.Domain.IdentityAccess.User", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
