@@ -23,3 +23,9 @@
 ## ข้อจำกัด
 
 ค่าเริ่มต้น `TEST_ONLY` รอ Production/Procurement ยืนยัน ([Open Validation Questions หมวด 12](../01-business/open-validation-questions.md)): ลำดับความสำคัญของพารามิเตอร์เฉพาะคลังเทียบค่าเริ่มต้นองค์กร (`VQ-MRP-01`), การใช้เฉพาะรายการวันหยุดที่บันทึกไว้โดยยังไม่บังคับเสาร์-อาทิตย์อัตโนมัติ (`VQ-MRP-02`), และการปัดยอดสั่งตาม MOQ/Lot Multiple พร้อมยกยอดส่วนเกินไป Bucket ถัดไป (`VQ-MRP-03`); ยังไม่ดึงความต้องการจาก Sales Order/Project อัตโนมัติ; การแปลงเอกสารไม่ atomic ข้ามโมดูล (สร้างเอกสารแล้วจึงบันทึกลิงก์; retry ใช้ key เดิมจึงได้เอกสารเดิม); ต้องมอบ 4 สิทธิ์ (`mrp.*`) ให้ Role จริง และ Production ต้องยืนยันกับเคสจริงก่อนใช้ตัดสินใจซื้อ.
+
+## G-23 Project demand (2026-11-01)
+
+- Backend: `BuildProjectDemandsAsync` ใน `MrpStore`, `MrpRunInput.ProjectIds`, error `MRP_PROJECT_DEMAND_INVALID`; ตัวเลือกโครงการในหน้าสร้างรอบ MRP.
+- ตรวจแล้ว: `dotnet build` 0 warnings/errors, `OpenApiContractTests` 1/1 หลังอัปเดต snapshot, `tsc`/`eslint` ผ่าน.
+- **ไม่ได้ตรวจ:** ไม่มี test ใหม่, query ยังไม่เคยรันกับ PostgreSQL จริง, ไม่ได้ตรวจในเบราว์เซอร์, ยังไม่ผ่าน UAT; กฎ `TEST_ONLY` รอยืนยัน; ไม่รองรับการแปลงหน่วย BOQ→หน่วยฐาน.

@@ -20,6 +20,7 @@ public class MrpHandler
     public const int MaxPageSize = 100;
     public const int DefaultPageSize = 25;
     public const int MaxDemands = 200;
+    public const int MaxProjects = 20;
     public const int MaxLeadTimeDays = 365;
 
     private readonly IRequestAccessResolver _accessResolver;
@@ -58,14 +59,20 @@ public class MrpHandler
             return Fail<MrpRunProjection>("MRP_DEMAND_INVALID", "Demands need an item, a quantity above zero and a need date on or after the as-of date.");
         }
 
-        if (demands.Count == 0 && !input.IncludeOpenWorkOrders)
+        var projectIds = (input.ProjectIds ?? Array.Empty<Guid>()).Distinct().OrderBy(id => id).ToList();
+        if (projectIds.Count > MaxProjects || projectIds.Any(id => id == Guid.Empty))
         {
-            return Fail<MrpRunProjection>("MRP_DEMAND_INVALID", "Add at least one demand or include open work orders.");
+            return Fail<MrpRunProjection>("MRP_PROJECT_DEMAND_INVALID", $"Select up to {MaxProjects} valid projects.");
+        }
+
+        if (demands.Count == 0 && projectIds.Count == 0 && !input.IncludeOpenWorkOrders)
+        {
+            return Fail<MrpRunProjection>("MRP_DEMAND_INVALID", "Add at least one demand, select a project or include open work orders.");
         }
 
         var lines = string.Join(";", demands.OrderBy(d => d.ItemId).ThenBy(d => d.NeedBy).Select(d => $"{d.ItemId}:{d.UnitId}:{Num(d.Quantity)}:{d.NeedBy:O}:{d.Reference?.Trim()}"));
-        var payloadHash = Sha256Hex.Compute($"{input.AsOfDate:O}|{input.PurchaseLeadTimeDays}|{input.ProductionLeadTimeDays}|{input.IncludeOpenWorkOrders}|{lines}");
-        return await _store.CreateRunAsync(access.Value!, input with { Demands = demands }, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
+        var payloadHash = Sha256Hex.Compute($"{input.AsOfDate:O}|{input.PurchaseLeadTimeDays}|{input.ProductionLeadTimeDays}|{input.IncludeOpenWorkOrders}|{lines}" + (projectIds.Count == 0 ? string.Empty : $"|projects:{string.Join(",", projectIds)}"));
+        return await _store.CreateRunAsync(access.Value!, input with { Demands = demands, ProjectIds = projectIds }, Sha256Hex.Compute(idempotencyKey), payloadHash, caller.TraceId, ct);
     }
 
     public async Task<Result<MrpRunProjection>> GetRunAsync(MrpCaller caller, Guid runId, CancellationToken ct = default)

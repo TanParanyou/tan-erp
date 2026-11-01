@@ -8,10 +8,12 @@ using TanErp.Application.Mrp;
 using TanErp.Application.Notifications;
 using TanErp.Domain.Common;
 using TanErp.Domain.DocumentNumbering;
+using TanErp.Domain.Inventory;
 using TanErp.Domain.Items;
 using TanErp.Domain.Mrp;
 using TanErp.Domain.Procurement;
 using TanErp.Domain.Production;
+using TanErp.Domain.Projects;
 
 namespace TanErp.Infrastructure.Persistence.Mrp;
 
@@ -49,6 +51,67 @@ public class MrpStore : IMrpStore
         await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", ct);
         return await _db.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(
             r => r.OrganizationId == orgId && r.Operation == operation && r.KeyHash == keyHash, ct);
+    }
+
+    /// <summary>
+    /// TEST_ONLY rule (G-23): demand of a planned/active project is its Estimate BOQ quantity per Item,
+    /// minus stock already issued (net of returns) to the project and stock actively reserved for it. Needed on the planned start date.
+    /// </summary>
+    private async Task<Result<List<MrpDemandInput>>> BuildProjectDemandsAsync(Guid orgId, IReadOnlyList<Guid>? projectIds, DateOnly asOf, CancellationToken ct)
+    {
+        var result = new List<MrpDemandInput>();
+        if (projectIds is null || projectIds.Count == 0) return Result<List<MrpDemandInput>>.Success(result);
+
+        var projects = await _db.Projects.AsNoTracking()
+            .Where(p => p.OrganizationId == orgId && projectIds.Contains(p.Id))
+            .OrderBy(p => p.Id).ToListAsync(ct);
+        var invalid = projectIds.FirstOrDefault(id => projects.All(p => p.Id != id));
+        if (invalid != Guid.Empty) return Fail<List<MrpDemandInput>>("MRP_PROJECT_DEMAND_INVALID", $"Project '{invalid}' not found.");
+        var notOpen = projects.FirstOrDefault(p => p.Status != ProjectStatus.Planned && p.Status != ProjectStatus.Active);
+        if (notOpen is not null) return Fail<List<MrpDemandInput>>("MRP_PROJECT_DEMAND_INVALID", $"Project '{notOpen.Code}' is not planned or active.");
+
+        foreach (var project in projects)
+        {
+            var boq = await (from w in _db.EstimateWorkItems.AsNoTracking()
+                             join sec in _db.EstimateSections.AsNoTracking() on w.EstimateSectionId equals sec.Id
+                             where sec.OrganizationId == orgId && sec.EstimateRevisionId == project.EstimateRevisionId && w.ItemId != null
+                             select new { ItemId = w.ItemId!.Value, w.Quantity, w.UnitCode })
+                .ToListAsync(ct);
+            if (boq.Count == 0) continue;
+
+            var itemIds = boq.Select(b => b.ItemId).Distinct().ToList();
+            var items = await _db.Items.AsNoTracking().Where(i => i.OrganizationId == orgId && itemIds.Contains(i.Id)).ToDictionaryAsync(i => i.Id, ct);
+            var unitIds = items.Values.Select(i => i.BaseUnitId).Distinct().ToList();
+            var unitCodes = await _db.Units.AsNoTracking().Where(u => unitIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u.Code, ct);
+
+            var issuedNet = (await (from m in _db.StockMovements.AsNoTracking()
+                                    join d in _db.StockDocuments.AsNoTracking() on m.StockDocumentId equals d.Id
+                                    where m.OrganizationId == orgId && d.ProjectId == project.Id && itemIds.Contains(m.ItemId)
+                                          && (m.Kind == StockMovementKind.Issue || m.Kind == StockMovementKind.ReturnIn)
+                                    select new { m.ItemId, m.QuantityDelta }).ToListAsync(ct))
+                .GroupBy(x => x.ItemId).ToDictionary(g => g.Key, g => -g.Sum(x => x.QuantityDelta));
+            var reserved = (await _db.StockReservations.AsNoTracking()
+                    .Where(r => r.OrganizationId == orgId && r.ProjectId == project.Id && r.Status == ReservationStatus.Active && itemIds.Contains(r.ItemId))
+                    .Select(r => new { r.ItemId, r.Quantity }).ToListAsync(ct))
+                .GroupBy(x => x.ItemId).ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
+
+            var needBy = project.PlannedStartDate is { } start && start > asOf ? start : asOf;
+            foreach (var group in boq.GroupBy(b => b.ItemId).OrderBy(g => g.Key))
+            {
+                var item = items[group.Key];
+                if (item.Status != ItemStatus.Active) return Fail<List<MrpDemandInput>>("MRP_PROJECT_DEMAND_INVALID", $"Item '{item.Code}' of project '{project.Code}' is not active.");
+                // No guessing across units: the BOQ unit must already be the item's base unit.
+                if (group.Any(b => !string.Equals(b.UnitCode, unitCodes.GetValueOrDefault(item.BaseUnitId), StringComparison.OrdinalIgnoreCase)))
+                {
+                    return Fail<List<MrpDemandInput>>("MRP_PROJECT_DEMAND_INVALID", $"BOQ unit of item '{item.Code}' in project '{project.Code}' differs from its base unit.");
+                }
+
+                var net = group.Sum(b => b.Quantity) - issuedNet.GetValueOrDefault(group.Key) - reserved.GetValueOrDefault(group.Key);
+                if (net > 0) result.Add(new MrpDemandInput(group.Key, decimal.Round(net, 4), needBy, MrpDemandSource.Project, project.Code));
+            }
+        }
+
+        return Result<List<MrpDemandInput>>.Success(result);
     }
 
     /// <summary>
@@ -121,6 +184,10 @@ public class MrpStore : IMrpStore
             demands.Add(new MrpDemandInput(d.ItemId, qty, d.NeedBy, MrpDemandSource.Manual, string.IsNullOrWhiteSpace(d.Reference) ? "manual" : d.Reference.Trim()));
         }
 
+        var projectDemands = await BuildProjectDemandsAsync(orgId, input.ProjectIds, asOf, ct);
+        if (projectDemands.IsFailure) return Result<MrpSnapshot>.Failure(projectDemands.Error);
+        demands.AddRange(projectDemands.Value!);
+
         var openOrders = await _db.WorkOrders.AsNoTracking().Include(o => o.Materials)
             .Where(o => o.OrganizationId == orgId && (o.Status == WorkOrderStatus.Released || o.Status == WorkOrderStatus.InProgress))
             .OrderBy(o => o.Number).ToListAsync(ct);
@@ -173,12 +240,22 @@ public class MrpStore : IMrpStore
             .ToListAsync(ct);
         var paramsByItem = planningParams.GroupBy(p => p.ItemId).ToDictionary(g => g.Key, g => g.ToList());
 
+        // Lead time precedence: preferred supplier price list > planning parameter > run default.
+        var preferredLeadTimes = (await _db.SupplierItemPrices.AsNoTracking()
+                .Where(p => p.OrganizationId == orgId && p.IsPreferred && itemIds.Contains(p.ItemId)
+                    && p.EffectiveFrom <= asOf && (p.EffectiveTo == null || p.EffectiveTo >= asOf))
+                .Select(p => new { p.ItemId, p.LeadTimeDays })
+                .ToListAsync(ct))
+            .GroupBy(p => p.ItemId)
+            .ToDictionary(g => g.Key, g => g.Min(p => p.LeadTimeDays));
+
         var items = await _db.Items.AsNoTracking().Where(i => i.OrganizationId == orgId && itemIds.Contains(i.Id)).ToListAsync(ct);
         var itemInputs = items.OrderBy(i => i.Id).Select(i =>
         {
+            int? supplierLeadTime = preferredLeadTimes.TryGetValue(i.Id, out var supplierDays) ? supplierDays : null;
             if (!paramsByItem.TryGetValue(i.Id, out var rows) || rows.Count == 0)
             {
-                return new MrpItemInput(i.Id, i.Code, i.Capabilities.CanPurchase);
+                return new MrpItemInput(i.Id, i.Code, i.Capabilities.CanPurchase, LeadTimeDays: supplierLeadTime);
             }
 
             var orgRow = rows.FirstOrDefault(r => !r.WarehouseId.HasValue);
@@ -193,7 +270,7 @@ public class MrpStore : IMrpStore
                 safetyStock,
                 primary?.MinOrderQuantity ?? 0m,
                 primary?.LotMultiple ?? 0m,
-                primary?.LeadTimeDays);
+                supplierLeadTime ?? primary?.LeadTimeDays);
         }).ToList();
 
         var holidays = await _db.WorkingCalendarHolidays.AsNoTracking()

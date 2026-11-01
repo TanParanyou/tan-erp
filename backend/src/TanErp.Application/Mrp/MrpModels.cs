@@ -13,7 +13,8 @@ public sealed record MrpRunInput(
     int PurchaseLeadTimeDays,
     int ProductionLeadTimeDays,
     bool IncludeOpenWorkOrders,
-    IReadOnlyList<MrpDemandRequestInput> Demands);
+    IReadOnlyList<MrpDemandRequestInput> Demands,
+    IReadOnlyList<Guid>? ProjectIds = null);
 
 public sealed record MrpReasonProjection(string SourceType, string SourceRef, decimal Quantity, DateOnly NeedBy);
 

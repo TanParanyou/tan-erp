@@ -38,3 +38,7 @@ Headers: `Authorization`, `X-Membership-Id`; `POST /runs` และ `POST /calen
 ## Data (migration `AddMrp`, schema `mrp`)
 
 `runs` (unique `(org, number)`, `snapshot` jsonb, `input_hash`; ไม่มี endpoint แก้/ลบ), `recommendations` (checks action/status/quantity, `status='converted' ⇔ converted_id IS NOT NULL`, `row_version`). Audit: `mrp.run.created`, `mrp.recommendation.approved|rejected|converted`.
+
+## Project demand (G-23, 2026-11-01)
+
+`POST /api/v1/mrp/runs` รับ `projectIds` (ไม่บังคับ, สูงสุด 20). กฎ `TEST_ONLY` รอ Production/Procurement ยืนยัน: โครงการต้อง `planned`/`active`; demand ต่อ Item = ผลรวม BOQ (Estimate Revision ของโครงการ, เฉพาะแถวที่ผูก Item) − ที่เบิกสุทธิ์ให้โครงการ (issue − return_in) − ที่จอง `active` ให้โครงการ; need-by = `PlannedStartDate` (ถ้าไม่มีหรือผ่านแล้วใช้ `asOfDate`); source `project`, reference = รหัสโครงการ. หน่วย BOQ ต้องตรงกับหน่วยฐานของ Item ไม่ตรง → `422 MRP_PROJECT_DEMAND_INVALID` (ไม่เดาแปลงหน่วย). `payloadHash` ของ idempotency เพิ่ม `projects:` เฉพาะเมื่อส่ง `projectIds`.

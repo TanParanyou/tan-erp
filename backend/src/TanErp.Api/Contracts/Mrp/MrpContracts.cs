@@ -7,7 +7,8 @@ public sealed record MrpRunRequest(
     int PurchaseLeadTimeDays,
     int ProductionLeadTimeDays,
     bool IncludeOpenWorkOrders,
-    List<MrpDemandRequest>? Demands);
+    List<MrpDemandRequest>? Demands,
+    List<Guid>? ProjectIds = null);
 
 public sealed record MrpConvertRequest(Guid? SupplierId, decimal? UnitPrice, Guid? WarehouseId);
 

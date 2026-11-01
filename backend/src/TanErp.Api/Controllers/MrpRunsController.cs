@@ -29,7 +29,8 @@ public class MrpRunsController : MrpControllerBase
         if (caller is null) return failure!;
         var input = new MrpRunInput(
             request.AsOfDate, request.PurchaseLeadTimeDays, request.ProductionLeadTimeDays, request.IncludeOpenWorkOrders,
-            request.Demands?.Select(d => new MrpDemandRequestInput(d.ItemId, d.Quantity, d.NeedBy, d.Reference, d.UnitId)).ToList() ?? new List<MrpDemandRequestInput>());
+            request.Demands?.Select(d => new MrpDemandRequestInput(d.ItemId, d.Quantity, d.NeedBy, d.Reference, d.UnitId)).ToList() ?? new List<MrpDemandRequestInput>(),
+            request.ProjectIds);
         var result = await _handler.CreateRunAsync(caller, key, input, ct);
         if (result.IsFailure) return Problem(result.Error.Code);
         return CreatedAtAction(nameof(Get), new { id = result.Value!.Id }, ToResponse(result.Value));

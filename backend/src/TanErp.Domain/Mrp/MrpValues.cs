@@ -31,6 +31,8 @@ public static class MrpRecommendationStatus
 public static class MrpDemandSource
 {
     public const string Manual = "manual";
+    /// <summary>Net BOQ requirement of a planned/active project (TEST_ONLY rule, G-23).</summary>
+    public const string Project = "project";
     public const string WorkOrder = "work_order";
     public const string Dependent = "dependent";
     public const string SafetyStock = "safety_stock";
