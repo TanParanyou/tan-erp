@@ -64,6 +64,15 @@ textarea,
   scroll-margin-bottom: 72px;
 }
 
+/* Prevent iOS Safari auto-zoom on focus: text controls must be >= 16px on touch devices */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]):not([type="range"]):not([type="hidden"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
