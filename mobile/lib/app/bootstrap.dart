@@ -7,14 +7,18 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker/talker.dart';
 import 'package:tan_erp_field/app/app.dart';
+import 'package:tan_erp_field/core/auth/session_storage.dart';
 import 'package:tan_erp_field/core/config/app_config.dart';
 
 /// Shared entry for every flavor: Firebase (if configured), Crashlytics (dev),
-/// then the app. Logging records codes and flavors only, never tokens or PII.
+/// secure session hydration, then the app.
 Future<void> bootstrap(Flavor flavor) async {
   WidgetsFlutterBinding.ensureInitialized();
   final talker = Talker();
   var config = AppConfig.fromEnvironment(flavor);
+
+  final sessionStorage = SessionStorage();
+  await sessionStorage.init();
 
   if (config.firebase.isConfigured) {
     try {
@@ -50,7 +54,10 @@ Future<void> bootstrap(Flavor flavor) async {
 
   runApp(
     ProviderScope(
-      overrides: [appConfigProvider.overrideWithValue(config)],
+      overrides: [
+        appConfigProvider.overrideWithValue(config),
+        sessionStorageProvider.overrideWithValue(sessionStorage),
+      ],
       child: const App(),
     ),
   );

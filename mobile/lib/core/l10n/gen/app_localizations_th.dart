@@ -55,6 +55,68 @@ class AppLocalizationsTh extends AppLocalizations {
   String get loginSubmit => 'เข้าสู่ระบบ';
 
   @override
+  String get loginTwoFactorTitle => 'ยืนยันตัวตนสองขั้นตอน (2FA)';
+
+  @override
+  String get loginTwoFactorVerifyDesc =>
+      'กรอกรหัส 6 หลักจากแอป Authenticator หรือรหัสสำรอง 8 ตัวอักษร';
+
+  @override
+  String get loginTwoFactorCodeLabel => 'รหัสยืนยันตัวตน';
+
+  @override
+  String get loginTwoFactorCodePlaceholder => 'เช่น 123456 หรือ a1b2c3d4';
+
+  @override
+  String get loginTwoFactorVerifyAction => 'ยืนยันรหัส';
+
+  @override
+  String get loginTwoFactorBackToLogin => 'กลับไปหน้าลงชื่อเข้าใช้';
+
+  @override
+  String get loginTwoFactorSetupTitle =>
+      'ตั้งค่าการยืนยันตัวตนสองขั้นตอน (2FA)';
+
+  @override
+  String get loginTwoFactorSetupDesc =>
+      'ระบบบังคับใช้ 2FA เพื่อความปลอดภัย กรุณานำคีย์ด้านล่างไปเพิ่มในแอป Authenticator';
+
+  @override
+  String get loginTwoFactorSecretKeyLabel =>
+      'คีย์สำหรับตั้งค่าด้วยตนเอง (Secret Key)';
+
+  @override
+  String get loginTwoFactorCopySecret => 'คัดลอกคีย์';
+
+  @override
+  String get loginTwoFactorCopiedSecret => 'คัดลอกคีย์แล้ว';
+
+  @override
+  String get loginTwoFactorSetupCodeLabel => 'รหัสยืนยันจากแอป (6 หลัก)';
+
+  @override
+  String get loginTwoFactorSetupCodePlaceholder => 'เช่น 123456';
+
+  @override
+  String get loginTwoFactorCompleteSetupAction => 'ยืนยันและเปิดใช้งาน 2FA';
+
+  @override
+  String get loginBackupCodesTitle => 'รหัสสำรองฉุกเฉิน (Backup Codes)';
+
+  @override
+  String get loginBackupCodesWarning =>
+      'บันทึกรหัสเหล่านี้ไว้ในที่ปลอดภัย รหัสจะแสดงเพียงครั้งเดียวเท่านั้น และใช้เข้าสู่ระบบได้เมื่อไม่มีแอป Authenticator';
+
+  @override
+  String get loginBackupCodesCopyAll => 'คัดลอกรหัสทั้งหมด';
+
+  @override
+  String get loginBackupCodesCopied => 'คัดลอกรหัสสำรองแล้ว';
+
+  @override
+  String get loginBackupCodesContinueAction => 'ฉันบันทึกรหัสแล้ว เข้าใช้งาน';
+
+  @override
   String get notConfiguredTitle => 'ยังไม่ได้ตั้งค่า Firebase';
 
   @override
@@ -194,7 +256,22 @@ class AppLocalizationsTh extends AppLocalizations {
   String get errorInvalidCredentials => 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
 
   @override
+  String get errorAccountLockedOut =>
+      'บัญชีถูกระงับชั่วคราวเนื่องจากเข้าสู่ระบบไม่สำเร็จหลายครั้ง';
+
+  @override
+  String get errorUserNotInvited => 'ผู้ใช้นี้ยังไม่ได้รับเชิญเข้าสู่ระบบ';
+
+  @override
   String get errorAccountDisabled => 'บัญชีนี้ถูกปิดการใช้งาน';
+
+  @override
+  String get errorTwoFactorCodeInvalid =>
+      'รหัสยืนยัน 2FA หรือรหัสสำรองไม่ถูกต้อง';
+
+  @override
+  String get errorTwoFactorChallengeInvalid =>
+      'คำขอยืนยัน 2FA หมดอายุหรือไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่';
 
   @override
   String get errorNoMembership => 'บัญชีนี้ยังไม่มีสิทธิ์เข้าใช้งานสาขาใด';

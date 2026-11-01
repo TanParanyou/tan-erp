@@ -5,7 +5,6 @@ import 'package:tan_erp_field/core/auth/auth_repository.dart';
 import 'package:tan_erp_field/core/auth/biometric_gate.dart';
 import 'package:tan_erp_field/core/auth/current_user.dart';
 import 'package:tan_erp_field/core/auth/session_storage.dart';
-import 'package:tan_erp_field/core/config/app_config.dart';
 import 'package:tan_erp_field/core/l10n/locale_provider.dart';
 import 'package:tan_erp_field/core/network/api_failure.dart';
 import 'package:tan_erp_field/core/theme/theme_settings.dart';
@@ -15,7 +14,7 @@ sealed class Session {
   const Session();
 }
 
-/// Firebase is not configured for this flavor.
+/// Kept for router guard exhaustiveness.
 class SessionUnavailable extends Session {
   const SessionUnavailable();
 }
@@ -45,20 +44,45 @@ class SessionActive extends Session {
 class SessionController extends Notifier<Session> {
   @override
   Session build() {
-    final config = ref.watch(appConfigProvider);
-    if (!config.firebase.isConfigured && !config.isMockAuth) {
-      return const SessionUnavailable();
-    }
     return ref.read(authRepositoryProvider).hasSession
         ? const SessionLocked()
         : const SessionSignedOut();
   }
 
-  /// Throws [AuthFailure] or [ApiFailure]; the session stays signed out then.
-  Future<void> signIn({required String email, required String password}) async {
-    await ref
+  /// Initiates sign-in. Returns [SignInOutcome].
+  /// If completed, automatically loads the user session.
+  /// Throws [AuthFailure] or [ApiFailure]; session remains signed out on error.
+  Future<SignInOutcome> signIn({
+    required String email,
+    required String password,
+  }) async {
+    final outcome = await ref
         .read(authRepositoryProvider)
         .signIn(email: email, password: password);
+    if (outcome is SignInCompleted) {
+      await _loadOrSignOut();
+    }
+    return outcome;
+  }
+
+  /// Verifies two-factor login challenge.
+  /// Returns backup codes (non-empty when completing mandatory setup).
+  /// If no backup codes are returned, automatically enters the session.
+  Future<List<String>> verifyTwoFactor({
+    required String challengeToken,
+    required String code,
+  }) async {
+    final backupCodes = await ref
+        .read(authRepositoryProvider)
+        .verifyTwoFactor(challengeToken: challengeToken, code: code);
+    if (backupCodes.isEmpty) {
+      await _loadOrSignOut();
+    }
+    return backupCodes;
+  }
+
+  /// Enters the session after user acknowledges 2FA setup backup codes.
+  Future<void> completeAuthenticatedSession() async {
     await _loadOrSignOut();
   }
 

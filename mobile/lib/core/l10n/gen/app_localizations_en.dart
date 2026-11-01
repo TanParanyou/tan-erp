@@ -55,6 +55,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSubmit => 'Sign in';
 
   @override
+  String get loginTwoFactorTitle => 'Two-Factor Authentication (2FA)';
+
+  @override
+  String get loginTwoFactorVerifyDesc =>
+      'Enter the 6-digit code from your authenticator app or an 8-character backup code';
+
+  @override
+  String get loginTwoFactorCodeLabel => 'Verification Code';
+
+  @override
+  String get loginTwoFactorCodePlaceholder => 'e.g. 123456 or a1b2c3d4';
+
+  @override
+  String get loginTwoFactorVerifyAction => 'Verify Code';
+
+  @override
+  String get loginTwoFactorBackToLogin => 'Back to sign in';
+
+  @override
+  String get loginTwoFactorSetupTitle =>
+      'Set Up Two-Factor Authentication (2FA)';
+
+  @override
+  String get loginTwoFactorSetupDesc =>
+      '2FA is required for your account. Add this secret key to your authenticator app';
+
+  @override
+  String get loginTwoFactorSecretKeyLabel => 'Manual Setup Secret Key';
+
+  @override
+  String get loginTwoFactorCopySecret => 'Copy key';
+
+  @override
+  String get loginTwoFactorCopiedSecret => 'Key copied to clipboard';
+
+  @override
+  String get loginTwoFactorSetupCodeLabel => '6-digit code from app';
+
+  @override
+  String get loginTwoFactorSetupCodePlaceholder => 'e.g. 123456';
+
+  @override
+  String get loginTwoFactorCompleteSetupAction => 'Verify and enable 2FA';
+
+  @override
+  String get loginBackupCodesTitle => 'Emergency Backup Codes';
+
+  @override
+  String get loginBackupCodesWarning =>
+      'Save these codes in a secure place. They will only be displayed once and can be used to sign in if you lose your authenticator app.';
+
+  @override
+  String get loginBackupCodesCopyAll => 'Copy all codes';
+
+  @override
+  String get loginBackupCodesCopied => 'Backup codes copied to clipboard';
+
+  @override
+  String get loginBackupCodesContinueAction => 'I\'ve saved my codes, continue';
+
+  @override
   String get notConfiguredTitle => 'Firebase is not configured';
 
   @override
@@ -195,7 +256,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorInvalidCredentials => 'Incorrect email or password';
 
   @override
+  String get errorAccountLockedOut =>
+      'Account is temporarily locked due to failed sign-in attempts';
+
+  @override
+  String get errorUserNotInvited =>
+      'User has not been invited to this workspace';
+
+  @override
   String get errorAccountDisabled => 'This account has been disabled';
+
+  @override
+  String get errorTwoFactorCodeInvalid =>
+      'Invalid two-factor code or backup code';
+
+  @override
+  String get errorTwoFactorChallengeInvalid =>
+      'Two-factor challenge has expired or is invalid. Please sign in again';
 
   @override
   String get errorNoMembership =>

@@ -188,6 +188,120 @@ abstract class AppLocalizations {
   /// **'เข้าสู่ระบบ'**
   String get loginSubmit;
 
+  /// No description provided for @loginTwoFactorTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ยืนยันตัวตนสองขั้นตอน (2FA)'**
+  String get loginTwoFactorTitle;
+
+  /// No description provided for @loginTwoFactorVerifyDesc.
+  ///
+  /// In th, this message translates to:
+  /// **'กรอกรหัส 6 หลักจากแอป Authenticator หรือรหัสสำรอง 8 ตัวอักษร'**
+  String get loginTwoFactorVerifyDesc;
+
+  /// No description provided for @loginTwoFactorCodeLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสยืนยันตัวตน'**
+  String get loginTwoFactorCodeLabel;
+
+  /// No description provided for @loginTwoFactorCodePlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เช่น 123456 หรือ a1b2c3d4'**
+  String get loginTwoFactorCodePlaceholder;
+
+  /// No description provided for @loginTwoFactorVerifyAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ยืนยันรหัส'**
+  String get loginTwoFactorVerifyAction;
+
+  /// No description provided for @loginTwoFactorBackToLogin.
+  ///
+  /// In th, this message translates to:
+  /// **'กลับไปหน้าลงชื่อเข้าใช้'**
+  String get loginTwoFactorBackToLogin;
+
+  /// No description provided for @loginTwoFactorSetupTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'ตั้งค่าการยืนยันตัวตนสองขั้นตอน (2FA)'**
+  String get loginTwoFactorSetupTitle;
+
+  /// No description provided for @loginTwoFactorSetupDesc.
+  ///
+  /// In th, this message translates to:
+  /// **'ระบบบังคับใช้ 2FA เพื่อความปลอดภัย กรุณานำคีย์ด้านล่างไปเพิ่มในแอป Authenticator'**
+  String get loginTwoFactorSetupDesc;
+
+  /// No description provided for @loginTwoFactorSecretKeyLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'คีย์สำหรับตั้งค่าด้วยตนเอง (Secret Key)'**
+  String get loginTwoFactorSecretKeyLabel;
+
+  /// No description provided for @loginTwoFactorCopySecret.
+  ///
+  /// In th, this message translates to:
+  /// **'คัดลอกคีย์'**
+  String get loginTwoFactorCopySecret;
+
+  /// No description provided for @loginTwoFactorCopiedSecret.
+  ///
+  /// In th, this message translates to:
+  /// **'คัดลอกคีย์แล้ว'**
+  String get loginTwoFactorCopiedSecret;
+
+  /// No description provided for @loginTwoFactorSetupCodeLabel.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสยืนยันจากแอป (6 หลัก)'**
+  String get loginTwoFactorSetupCodeLabel;
+
+  /// No description provided for @loginTwoFactorSetupCodePlaceholder.
+  ///
+  /// In th, this message translates to:
+  /// **'เช่น 123456'**
+  String get loginTwoFactorSetupCodePlaceholder;
+
+  /// No description provided for @loginTwoFactorCompleteSetupAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ยืนยันและเปิดใช้งาน 2FA'**
+  String get loginTwoFactorCompleteSetupAction;
+
+  /// No description provided for @loginBackupCodesTitle.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสสำรองฉุกเฉิน (Backup Codes)'**
+  String get loginBackupCodesTitle;
+
+  /// No description provided for @loginBackupCodesWarning.
+  ///
+  /// In th, this message translates to:
+  /// **'บันทึกรหัสเหล่านี้ไว้ในที่ปลอดภัย รหัสจะแสดงเพียงครั้งเดียวเท่านั้น และใช้เข้าสู่ระบบได้เมื่อไม่มีแอป Authenticator'**
+  String get loginBackupCodesWarning;
+
+  /// No description provided for @loginBackupCodesCopyAll.
+  ///
+  /// In th, this message translates to:
+  /// **'คัดลอกรหัสทั้งหมด'**
+  String get loginBackupCodesCopyAll;
+
+  /// No description provided for @loginBackupCodesCopied.
+  ///
+  /// In th, this message translates to:
+  /// **'คัดลอกรหัสสำรองแล้ว'**
+  String get loginBackupCodesCopied;
+
+  /// No description provided for @loginBackupCodesContinueAction.
+  ///
+  /// In th, this message translates to:
+  /// **'ฉันบันทึกรหัสแล้ว เข้าใช้งาน'**
+  String get loginBackupCodesContinueAction;
+
   /// No description provided for @notConfiguredTitle.
   ///
   /// In th, this message translates to:
@@ -452,11 +566,35 @@ abstract class AppLocalizations {
   /// **'อีเมลหรือรหัสผ่านไม่ถูกต้อง'**
   String get errorInvalidCredentials;
 
+  /// No description provided for @errorAccountLockedOut.
+  ///
+  /// In th, this message translates to:
+  /// **'บัญชีถูกระงับชั่วคราวเนื่องจากเข้าสู่ระบบไม่สำเร็จหลายครั้ง'**
+  String get errorAccountLockedOut;
+
+  /// No description provided for @errorUserNotInvited.
+  ///
+  /// In th, this message translates to:
+  /// **'ผู้ใช้นี้ยังไม่ได้รับเชิญเข้าสู่ระบบ'**
+  String get errorUserNotInvited;
+
   /// No description provided for @errorAccountDisabled.
   ///
   /// In th, this message translates to:
   /// **'บัญชีนี้ถูกปิดการใช้งาน'**
   String get errorAccountDisabled;
+
+  /// No description provided for @errorTwoFactorCodeInvalid.
+  ///
+  /// In th, this message translates to:
+  /// **'รหัสยืนยัน 2FA หรือรหัสสำรองไม่ถูกต้อง'**
+  String get errorTwoFactorCodeInvalid;
+
+  /// No description provided for @errorTwoFactorChallengeInvalid.
+  ///
+  /// In th, this message translates to:
+  /// **'คำขอยืนยัน 2FA หมดอายุหรือไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่'**
+  String get errorTwoFactorChallengeInvalid;
 
   /// No description provided for @errorNoMembership.
   ///

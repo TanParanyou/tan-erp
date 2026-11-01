@@ -10,9 +10,20 @@ class MockAuthRepository implements AuthRepository {
   bool get hasSession => _uid != null;
 
   @override
-  Future<void> signIn({required String email, required String password}) async {
+  Future<SignInOutcome> signIn({
+    required String email,
+    required String password,
+  }) async {
     _uid = email.trim();
+    return const SignInCompleted();
   }
+
+  @override
+  Future<List<String>> verifyTwoFactor({
+    required String challengeToken,
+    required String code,
+  }) async =>
+      const <String>[];
 
   @override
   Future<String?> idToken({bool forceRefresh = false}) async =>
