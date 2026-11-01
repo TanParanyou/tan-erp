@@ -15,13 +15,22 @@ class _$CreateSurveyDesignStyleRequest extends CreateSurveyDesignStyleRequest {
   final SurveyLocalizedNameContract? description;
   @override
   final int? sortOrder;
+  @override
+  final String? imageFileId;
+  @override
+  final BuiltList<String>? imageFileIds;
 
   factory _$CreateSurveyDesignStyleRequest(
           [void Function(CreateSurveyDesignStyleRequestBuilder)? updates]) =>
       (CreateSurveyDesignStyleRequestBuilder()..update(updates))._build();
 
   _$CreateSurveyDesignStyleRequest._(
-      {this.code, this.name, this.description, this.sortOrder})
+      {this.code,
+      this.name,
+      this.description,
+      this.sortOrder,
+      this.imageFileId,
+      this.imageFileIds})
       : super._();
   @override
   CreateSurveyDesignStyleRequest rebuild(
@@ -39,7 +48,9 @@ class _$CreateSurveyDesignStyleRequest extends CreateSurveyDesignStyleRequest {
         code == other.code &&
         name == other.name &&
         description == other.description &&
-        sortOrder == other.sortOrder;
+        sortOrder == other.sortOrder &&
+        imageFileId == other.imageFileId &&
+        imageFileIds == other.imageFileIds;
   }
 
   @override
@@ -49,6 +60,8 @@ class _$CreateSurveyDesignStyleRequest extends CreateSurveyDesignStyleRequest {
     _$hash = $jc(_$hash, name.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, sortOrder.hashCode);
+    _$hash = $jc(_$hash, imageFileId.hashCode);
+    _$hash = $jc(_$hash, imageFileIds.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -59,7 +72,9 @@ class _$CreateSurveyDesignStyleRequest extends CreateSurveyDesignStyleRequest {
           ..add('code', code)
           ..add('name', name)
           ..add('description', description)
-          ..add('sortOrder', sortOrder))
+          ..add('sortOrder', sortOrder)
+          ..add('imageFileId', imageFileId)
+          ..add('imageFileIds', imageFileIds))
         .toString();
   }
 }
@@ -89,6 +104,16 @@ class CreateSurveyDesignStyleRequestBuilder
   int? get sortOrder => _$this._sortOrder;
   set sortOrder(int? sortOrder) => _$this._sortOrder = sortOrder;
 
+  String? _imageFileId;
+  String? get imageFileId => _$this._imageFileId;
+  set imageFileId(String? imageFileId) => _$this._imageFileId = imageFileId;
+
+  ListBuilder<String>? _imageFileIds;
+  ListBuilder<String> get imageFileIds =>
+      _$this._imageFileIds ??= ListBuilder<String>();
+  set imageFileIds(ListBuilder<String>? imageFileIds) =>
+      _$this._imageFileIds = imageFileIds;
+
   CreateSurveyDesignStyleRequestBuilder() {
     CreateSurveyDesignStyleRequest._defaults(this);
   }
@@ -100,6 +125,8 @@ class CreateSurveyDesignStyleRequestBuilder
       _name = $v.name?.toBuilder();
       _description = $v.description?.toBuilder();
       _sortOrder = $v.sortOrder;
+      _imageFileId = $v.imageFileId;
+      _imageFileIds = $v.imageFileIds?.toBuilder();
       _$v = null;
     }
     return this;
@@ -127,6 +154,8 @@ class CreateSurveyDesignStyleRequestBuilder
             name: _name?.build(),
             description: _description?.build(),
             sortOrder: sortOrder,
+            imageFileId: imageFileId,
+            imageFileIds: _imageFileIds?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -135,6 +164,9 @@ class CreateSurveyDesignStyleRequestBuilder
         _name?.build();
         _$failedField = 'description';
         _description?.build();
+
+        _$failedField = 'imageFileIds';
+        _imageFileIds?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'CreateSurveyDesignStyleRequest', _$failedField, e.toString());

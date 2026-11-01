@@ -29,6 +29,8 @@ class _$BomRevisionResponse extends BomRevisionResponse {
   final String? rowVersion;
   @override
   final BuiltList<BomLineResponse>? lines;
+  @override
+  final BuiltList<BomRoutingStepResponse>? routingSteps;
 
   factory _$BomRevisionResponse(
           [void Function(BomRevisionResponseBuilder)? updates]) =>
@@ -45,7 +47,8 @@ class _$BomRevisionResponse extends BomRevisionResponse {
       this.approvedBy,
       this.approvedAtUtc,
       this.rowVersion,
-      this.lines})
+      this.lines,
+      this.routingSteps})
       : super._();
   @override
   BomRevisionResponse rebuild(
@@ -70,7 +73,8 @@ class _$BomRevisionResponse extends BomRevisionResponse {
         approvedBy == other.approvedBy &&
         approvedAtUtc == other.approvedAtUtc &&
         rowVersion == other.rowVersion &&
-        lines == other.lines;
+        lines == other.lines &&
+        routingSteps == other.routingSteps;
   }
 
   @override
@@ -87,6 +91,7 @@ class _$BomRevisionResponse extends BomRevisionResponse {
     _$hash = $jc(_$hash, approvedAtUtc.hashCode);
     _$hash = $jc(_$hash, rowVersion.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
+    _$hash = $jc(_$hash, routingSteps.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -104,7 +109,8 @@ class _$BomRevisionResponse extends BomRevisionResponse {
           ..add('approvedBy', approvedBy)
           ..add('approvedAtUtc', approvedAtUtc)
           ..add('rowVersion', rowVersion)
-          ..add('lines', lines))
+          ..add('lines', lines)
+          ..add('routingSteps', routingSteps))
         .toString();
   }
 }
@@ -165,6 +171,12 @@ class BomRevisionResponseBuilder
       _$this._lines ??= ListBuilder<BomLineResponse>();
   set lines(ListBuilder<BomLineResponse>? lines) => _$this._lines = lines;
 
+  ListBuilder<BomRoutingStepResponse>? _routingSteps;
+  ListBuilder<BomRoutingStepResponse> get routingSteps =>
+      _$this._routingSteps ??= ListBuilder<BomRoutingStepResponse>();
+  set routingSteps(ListBuilder<BomRoutingStepResponse>? routingSteps) =>
+      _$this._routingSteps = routingSteps;
+
   BomRevisionResponseBuilder() {
     BomRevisionResponse._defaults(this);
   }
@@ -183,6 +195,7 @@ class BomRevisionResponseBuilder
       _approvedAtUtc = $v.approvedAtUtc;
       _rowVersion = $v.rowVersion;
       _lines = $v.lines?.toBuilder();
+      _routingSteps = $v.routingSteps?.toBuilder();
       _$v = null;
     }
     return this;
@@ -217,6 +230,7 @@ class BomRevisionResponseBuilder
             approvedAtUtc: approvedAtUtc,
             rowVersion: rowVersion,
             lines: _lines?.build(),
+            routingSteps: _routingSteps?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -229,6 +243,8 @@ class BomRevisionResponseBuilder
 
         _$failedField = 'lines';
         _lines?.build();
+        _$failedField = 'routingSteps';
+        _routingSteps?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'BomRevisionResponse', _$failedField, e.toString());

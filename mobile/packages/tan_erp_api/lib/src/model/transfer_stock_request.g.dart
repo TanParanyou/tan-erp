@@ -15,13 +15,25 @@ class _$TransferStockRequest extends TransferStockRequest {
   final String? reason;
   @override
   final BuiltList<StockLineRequest>? lines;
+  @override
+  final String? fromLocationId;
+  @override
+  final String? toLocationId;
+  @override
+  final DateTime? occurredAtUtc;
 
   factory _$TransferStockRequest(
           [void Function(TransferStockRequestBuilder)? updates]) =>
       (TransferStockRequestBuilder()..update(updates))._build();
 
   _$TransferStockRequest._(
-      {this.fromWarehouseId, this.toWarehouseId, this.reason, this.lines})
+      {this.fromWarehouseId,
+      this.toWarehouseId,
+      this.reason,
+      this.lines,
+      this.fromLocationId,
+      this.toLocationId,
+      this.occurredAtUtc})
       : super._();
   @override
   TransferStockRequest rebuild(
@@ -39,7 +51,10 @@ class _$TransferStockRequest extends TransferStockRequest {
         fromWarehouseId == other.fromWarehouseId &&
         toWarehouseId == other.toWarehouseId &&
         reason == other.reason &&
-        lines == other.lines;
+        lines == other.lines &&
+        fromLocationId == other.fromLocationId &&
+        toLocationId == other.toLocationId &&
+        occurredAtUtc == other.occurredAtUtc;
   }
 
   @override
@@ -49,6 +64,9 @@ class _$TransferStockRequest extends TransferStockRequest {
     _$hash = $jc(_$hash, toWarehouseId.hashCode);
     _$hash = $jc(_$hash, reason.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
+    _$hash = $jc(_$hash, fromLocationId.hashCode);
+    _$hash = $jc(_$hash, toLocationId.hashCode);
+    _$hash = $jc(_$hash, occurredAtUtc.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -59,7 +77,10 @@ class _$TransferStockRequest extends TransferStockRequest {
           ..add('fromWarehouseId', fromWarehouseId)
           ..add('toWarehouseId', toWarehouseId)
           ..add('reason', reason)
-          ..add('lines', lines))
+          ..add('lines', lines)
+          ..add('fromLocationId', fromLocationId)
+          ..add('toLocationId', toLocationId)
+          ..add('occurredAtUtc', occurredAtUtc))
         .toString();
   }
 }
@@ -87,6 +108,20 @@ class TransferStockRequestBuilder
       _$this._lines ??= ListBuilder<StockLineRequest>();
   set lines(ListBuilder<StockLineRequest>? lines) => _$this._lines = lines;
 
+  String? _fromLocationId;
+  String? get fromLocationId => _$this._fromLocationId;
+  set fromLocationId(String? fromLocationId) =>
+      _$this._fromLocationId = fromLocationId;
+
+  String? _toLocationId;
+  String? get toLocationId => _$this._toLocationId;
+  set toLocationId(String? toLocationId) => _$this._toLocationId = toLocationId;
+
+  DateTime? _occurredAtUtc;
+  DateTime? get occurredAtUtc => _$this._occurredAtUtc;
+  set occurredAtUtc(DateTime? occurredAtUtc) =>
+      _$this._occurredAtUtc = occurredAtUtc;
+
   TransferStockRequestBuilder() {
     TransferStockRequest._defaults(this);
   }
@@ -98,6 +133,9 @@ class TransferStockRequestBuilder
       _toWarehouseId = $v.toWarehouseId;
       _reason = $v.reason;
       _lines = $v.lines?.toBuilder();
+      _fromLocationId = $v.fromLocationId;
+      _toLocationId = $v.toLocationId;
+      _occurredAtUtc = $v.occurredAtUtc;
       _$v = null;
     }
     return this;
@@ -125,6 +163,9 @@ class TransferStockRequestBuilder
             toWarehouseId: toWarehouseId,
             reason: reason,
             lines: _lines?.build(),
+            fromLocationId: fromLocationId,
+            toLocationId: toLocationId,
+            occurredAtUtc: occurredAtUtc,
           );
     } catch (_) {
       late String _$failedField;

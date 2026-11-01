@@ -31,6 +31,10 @@ class _$CreateAdminUserRequest extends CreateAdminUserRequest {
   final DateTime? startsAtUtc;
   @override
   final DateTime? expiresAtUtc;
+  @override
+  final String? initialPassword;
+  @override
+  final bool? requireTwoFactor;
 
   factory _$CreateAdminUserRequest(
           [void Function(CreateAdminUserRequestBuilder)? updates]) =>
@@ -48,7 +52,9 @@ class _$CreateAdminUserRequest extends CreateAdminUserRequest {
       this.avatarFileId,
       this.notes,
       this.startsAtUtc,
-      this.expiresAtUtc})
+      this.expiresAtUtc,
+      this.initialPassword,
+      this.requireTwoFactor})
       : super._();
   @override
   CreateAdminUserRequest rebuild(
@@ -74,7 +80,9 @@ class _$CreateAdminUserRequest extends CreateAdminUserRequest {
         avatarFileId == other.avatarFileId &&
         notes == other.notes &&
         startsAtUtc == other.startsAtUtc &&
-        expiresAtUtc == other.expiresAtUtc;
+        expiresAtUtc == other.expiresAtUtc &&
+        initialPassword == other.initialPassword &&
+        requireTwoFactor == other.requireTwoFactor;
   }
 
   @override
@@ -92,6 +100,8 @@ class _$CreateAdminUserRequest extends CreateAdminUserRequest {
     _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jc(_$hash, startsAtUtc.hashCode);
     _$hash = $jc(_$hash, expiresAtUtc.hashCode);
+    _$hash = $jc(_$hash, initialPassword.hashCode);
+    _$hash = $jc(_$hash, requireTwoFactor.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -110,7 +120,9 @@ class _$CreateAdminUserRequest extends CreateAdminUserRequest {
           ..add('avatarFileId', avatarFileId)
           ..add('notes', notes)
           ..add('startsAtUtc', startsAtUtc)
-          ..add('expiresAtUtc', expiresAtUtc))
+          ..add('expiresAtUtc', expiresAtUtc)
+          ..add('initialPassword', initialPassword)
+          ..add('requireTwoFactor', requireTwoFactor))
         .toString();
   }
 }
@@ -168,6 +180,16 @@ class CreateAdminUserRequestBuilder
   set expiresAtUtc(DateTime? expiresAtUtc) =>
       _$this._expiresAtUtc = expiresAtUtc;
 
+  String? _initialPassword;
+  String? get initialPassword => _$this._initialPassword;
+  set initialPassword(String? initialPassword) =>
+      _$this._initialPassword = initialPassword;
+
+  bool? _requireTwoFactor;
+  bool? get requireTwoFactor => _$this._requireTwoFactor;
+  set requireTwoFactor(bool? requireTwoFactor) =>
+      _$this._requireTwoFactor = requireTwoFactor;
+
   CreateAdminUserRequestBuilder() {
     CreateAdminUserRequest._defaults(this);
   }
@@ -187,6 +209,8 @@ class CreateAdminUserRequestBuilder
       _notes = $v.notes;
       _startsAtUtc = $v.startsAtUtc;
       _expiresAtUtc = $v.expiresAtUtc;
+      _initialPassword = $v.initialPassword;
+      _requireTwoFactor = $v.requireTwoFactor;
       _$v = null;
     }
     return this;
@@ -222,6 +246,8 @@ class CreateAdminUserRequestBuilder
             notes: notes,
             startsAtUtc: startsAtUtc,
             expiresAtUtc: expiresAtUtc,
+            initialPassword: initialPassword,
+            requireTwoFactor: requireTwoFactor,
           );
     } catch (_) {
       late String _$failedField;

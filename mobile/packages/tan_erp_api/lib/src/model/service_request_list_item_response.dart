@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/service_sla_response.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -18,6 +19,10 @@ part 'service_request_list_item_response.g.dart';
 /// * [status] 
 /// * [inWarranty] 
 /// * [projectCode] 
+/// * [sla] 
+/// * [serviceChargeAmount] 
+/// * [billingDocumentId] 
+/// * [billingDocumentNumber] 
 /// * [createdAtUtc] 
 @BuiltValue()
 abstract class ServiceRequestListItemResponse implements Built<ServiceRequestListItemResponse, ServiceRequestListItemResponseBuilder> {
@@ -41,6 +46,18 @@ abstract class ServiceRequestListItemResponse implements Built<ServiceRequestLis
 
   @BuiltValueField(wireName: r'projectCode')
   String? get projectCode;
+
+  @BuiltValueField(wireName: r'sla')
+  ServiceSlaResponse? get sla;
+
+  @BuiltValueField(wireName: r'serviceChargeAmount')
+  double? get serviceChargeAmount;
+
+  @BuiltValueField(wireName: r'billingDocumentId')
+  String? get billingDocumentId;
+
+  @BuiltValueField(wireName: r'billingDocumentNumber')
+  String? get billingDocumentNumber;
 
   @BuiltValueField(wireName: r'createdAtUtc')
   DateTime? get createdAtUtc;
@@ -114,6 +131,34 @@ class _$ServiceRequestListItemResponseSerializer implements PrimitiveSerializer<
       yield r'projectCode';
       yield serializers.serialize(
         object.projectCode,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.sla != null) {
+      yield r'sla';
+      yield serializers.serialize(
+        object.sla,
+        specifiedType: const FullType(ServiceSlaResponse),
+      );
+    }
+    if (object.serviceChargeAmount != null) {
+      yield r'serviceChargeAmount';
+      yield serializers.serialize(
+        object.serviceChargeAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.billingDocumentId != null) {
+      yield r'billingDocumentId';
+      yield serializers.serialize(
+        object.billingDocumentId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.billingDocumentNumber != null) {
+      yield r'billingDocumentNumber';
+      yield serializers.serialize(
+        object.billingDocumentNumber,
         specifiedType: const FullType.nullable(String),
       );
     }
@@ -202,6 +247,38 @@ class _$ServiceRequestListItemResponseSerializer implements PrimitiveSerializer<
           ) as String?;
           if (valueDes == null) continue;
           result.projectCode = valueDes;
+          break;
+        case r'sla':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(ServiceSlaResponse),
+          ) as ServiceSlaResponse?;
+          if (valueDes == null) continue;
+          result.sla.replace(valueDes);
+          break;
+        case r'serviceChargeAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.serviceChargeAmount = valueDes;
+          break;
+        case r'billingDocumentId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.billingDocumentId = valueDes;
+          break;
+        case r'billingDocumentNumber':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.billingDocumentNumber = valueDes;
           break;
         case r'createdAtUtc':
           final valueDes = serializers.deserialize(

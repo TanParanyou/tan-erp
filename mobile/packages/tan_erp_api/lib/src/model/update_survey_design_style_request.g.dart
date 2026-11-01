@@ -15,13 +15,22 @@ class _$UpdateSurveyDesignStyleRequest extends UpdateSurveyDesignStyleRequest {
   final int? sortOrder;
   @override
   final bool? isActive;
+  @override
+  final String? imageFileId;
+  @override
+  final BuiltList<String>? imageFileIds;
 
   factory _$UpdateSurveyDesignStyleRequest(
           [void Function(UpdateSurveyDesignStyleRequestBuilder)? updates]) =>
       (UpdateSurveyDesignStyleRequestBuilder()..update(updates))._build();
 
   _$UpdateSurveyDesignStyleRequest._(
-      {this.name, this.description, this.sortOrder, this.isActive})
+      {this.name,
+      this.description,
+      this.sortOrder,
+      this.isActive,
+      this.imageFileId,
+      this.imageFileIds})
       : super._();
   @override
   UpdateSurveyDesignStyleRequest rebuild(
@@ -39,7 +48,9 @@ class _$UpdateSurveyDesignStyleRequest extends UpdateSurveyDesignStyleRequest {
         name == other.name &&
         description == other.description &&
         sortOrder == other.sortOrder &&
-        isActive == other.isActive;
+        isActive == other.isActive &&
+        imageFileId == other.imageFileId &&
+        imageFileIds == other.imageFileIds;
   }
 
   @override
@@ -49,6 +60,8 @@ class _$UpdateSurveyDesignStyleRequest extends UpdateSurveyDesignStyleRequest {
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, sortOrder.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
+    _$hash = $jc(_$hash, imageFileId.hashCode);
+    _$hash = $jc(_$hash, imageFileIds.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -59,7 +72,9 @@ class _$UpdateSurveyDesignStyleRequest extends UpdateSurveyDesignStyleRequest {
           ..add('name', name)
           ..add('description', description)
           ..add('sortOrder', sortOrder)
-          ..add('isActive', isActive))
+          ..add('isActive', isActive)
+          ..add('imageFileId', imageFileId)
+          ..add('imageFileIds', imageFileIds))
         .toString();
   }
 }
@@ -89,6 +104,16 @@ class UpdateSurveyDesignStyleRequestBuilder
   bool? get isActive => _$this._isActive;
   set isActive(bool? isActive) => _$this._isActive = isActive;
 
+  String? _imageFileId;
+  String? get imageFileId => _$this._imageFileId;
+  set imageFileId(String? imageFileId) => _$this._imageFileId = imageFileId;
+
+  ListBuilder<String>? _imageFileIds;
+  ListBuilder<String> get imageFileIds =>
+      _$this._imageFileIds ??= ListBuilder<String>();
+  set imageFileIds(ListBuilder<String>? imageFileIds) =>
+      _$this._imageFileIds = imageFileIds;
+
   UpdateSurveyDesignStyleRequestBuilder() {
     UpdateSurveyDesignStyleRequest._defaults(this);
   }
@@ -100,6 +125,8 @@ class UpdateSurveyDesignStyleRequestBuilder
       _description = $v.description?.toBuilder();
       _sortOrder = $v.sortOrder;
       _isActive = $v.isActive;
+      _imageFileId = $v.imageFileId;
+      _imageFileIds = $v.imageFileIds?.toBuilder();
       _$v = null;
     }
     return this;
@@ -127,6 +154,8 @@ class UpdateSurveyDesignStyleRequestBuilder
             description: _description?.build(),
             sortOrder: sortOrder,
             isActive: isActive,
+            imageFileId: imageFileId,
+            imageFileIds: _imageFileIds?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -135,6 +164,9 @@ class UpdateSurveyDesignStyleRequestBuilder
         _name?.build();
         _$failedField = 'description';
         _description?.build();
+
+        _$failedField = 'imageFileIds';
+        _imageFileIds?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'UpdateSurveyDesignStyleRequest', _$failedField, e.toString());

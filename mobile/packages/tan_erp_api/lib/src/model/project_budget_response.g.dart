@@ -22,7 +22,11 @@ class _$ProjectBudgetResponse extends ProjectBudgetResponse {
   @override
   final double? committedAmount;
   @override
+  final double? actualAmount;
+  @override
   final double? availableBudget;
+  @override
+  final double? varianceAmount;
   @override
   final BuiltList<ProjectBudgetLineResponse>? lines;
 
@@ -38,7 +42,9 @@ class _$ProjectBudgetResponse extends ProjectBudgetResponse {
       this.approvedBudgetDelta,
       this.currentTotal,
       this.committedAmount,
+      this.actualAmount,
       this.availableBudget,
+      this.varianceAmount,
       this.lines})
       : super._();
   @override
@@ -61,7 +67,9 @@ class _$ProjectBudgetResponse extends ProjectBudgetResponse {
         approvedBudgetDelta == other.approvedBudgetDelta &&
         currentTotal == other.currentTotal &&
         committedAmount == other.committedAmount &&
+        actualAmount == other.actualAmount &&
         availableBudget == other.availableBudget &&
+        varianceAmount == other.varianceAmount &&
         lines == other.lines;
   }
 
@@ -75,7 +83,9 @@ class _$ProjectBudgetResponse extends ProjectBudgetResponse {
     _$hash = $jc(_$hash, approvedBudgetDelta.hashCode);
     _$hash = $jc(_$hash, currentTotal.hashCode);
     _$hash = $jc(_$hash, committedAmount.hashCode);
+    _$hash = $jc(_$hash, actualAmount.hashCode);
     _$hash = $jc(_$hash, availableBudget.hashCode);
+    _$hash = $jc(_$hash, varianceAmount.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -91,7 +101,9 @@ class _$ProjectBudgetResponse extends ProjectBudgetResponse {
           ..add('approvedBudgetDelta', approvedBudgetDelta)
           ..add('currentTotal', currentTotal)
           ..add('committedAmount', committedAmount)
+          ..add('actualAmount', actualAmount)
           ..add('availableBudget', availableBudget)
+          ..add('varianceAmount', varianceAmount)
           ..add('lines', lines))
         .toString();
   }
@@ -132,10 +144,19 @@ class ProjectBudgetResponseBuilder
   set committedAmount(double? committedAmount) =>
       _$this._committedAmount = committedAmount;
 
+  double? _actualAmount;
+  double? get actualAmount => _$this._actualAmount;
+  set actualAmount(double? actualAmount) => _$this._actualAmount = actualAmount;
+
   double? _availableBudget;
   double? get availableBudget => _$this._availableBudget;
   set availableBudget(double? availableBudget) =>
       _$this._availableBudget = availableBudget;
+
+  double? _varianceAmount;
+  double? get varianceAmount => _$this._varianceAmount;
+  set varianceAmount(double? varianceAmount) =>
+      _$this._varianceAmount = varianceAmount;
 
   ListBuilder<ProjectBudgetLineResponse>? _lines;
   ListBuilder<ProjectBudgetLineResponse> get lines =>
@@ -157,7 +178,9 @@ class ProjectBudgetResponseBuilder
       _approvedBudgetDelta = $v.approvedBudgetDelta;
       _currentTotal = $v.currentTotal;
       _committedAmount = $v.committedAmount;
+      _actualAmount = $v.actualAmount;
       _availableBudget = $v.availableBudget;
+      _varianceAmount = $v.varianceAmount;
       _lines = $v.lines?.toBuilder();
       _$v = null;
     }
@@ -189,7 +212,9 @@ class ProjectBudgetResponseBuilder
             approvedBudgetDelta: approvedBudgetDelta,
             currentTotal: currentTotal,
             committedAmount: committedAmount,
+            actualAmount: actualAmount,
             availableBudget: availableBudget,
+            varianceAmount: varianceAmount,
             lines: _lines?.build(),
           );
     } catch (_) {

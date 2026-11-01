@@ -22,6 +22,12 @@ class _$WorkOrderListItemResponse extends WorkOrderListItemResponse {
   @override
   final double? completedQuantity;
   @override
+  final Date? plannedStartDate;
+  @override
+  final Date? plannedEndDate;
+  @override
+  final double? totalManufacturingCost;
+  @override
   final String? projectCode;
   @override
   final DateTime? createdAtUtc;
@@ -38,6 +44,9 @@ class _$WorkOrderListItemResponse extends WorkOrderListItemResponse {
       this.itemNameTh,
       this.plannedQuantity,
       this.completedQuantity,
+      this.plannedStartDate,
+      this.plannedEndDate,
+      this.totalManufacturingCost,
       this.projectCode,
       this.createdAtUtc})
       : super._();
@@ -61,6 +70,9 @@ class _$WorkOrderListItemResponse extends WorkOrderListItemResponse {
         itemNameTh == other.itemNameTh &&
         plannedQuantity == other.plannedQuantity &&
         completedQuantity == other.completedQuantity &&
+        plannedStartDate == other.plannedStartDate &&
+        plannedEndDate == other.plannedEndDate &&
+        totalManufacturingCost == other.totalManufacturingCost &&
         projectCode == other.projectCode &&
         createdAtUtc == other.createdAtUtc;
   }
@@ -75,6 +87,9 @@ class _$WorkOrderListItemResponse extends WorkOrderListItemResponse {
     _$hash = $jc(_$hash, itemNameTh.hashCode);
     _$hash = $jc(_$hash, plannedQuantity.hashCode);
     _$hash = $jc(_$hash, completedQuantity.hashCode);
+    _$hash = $jc(_$hash, plannedStartDate.hashCode);
+    _$hash = $jc(_$hash, plannedEndDate.hashCode);
+    _$hash = $jc(_$hash, totalManufacturingCost.hashCode);
     _$hash = $jc(_$hash, projectCode.hashCode);
     _$hash = $jc(_$hash, createdAtUtc.hashCode);
     _$hash = $jf(_$hash);
@@ -91,6 +106,9 @@ class _$WorkOrderListItemResponse extends WorkOrderListItemResponse {
           ..add('itemNameTh', itemNameTh)
           ..add('plannedQuantity', plannedQuantity)
           ..add('completedQuantity', completedQuantity)
+          ..add('plannedStartDate', plannedStartDate)
+          ..add('plannedEndDate', plannedEndDate)
+          ..add('totalManufacturingCost', totalManufacturingCost)
           ..add('projectCode', projectCode)
           ..add('createdAtUtc', createdAtUtc))
         .toString();
@@ -132,6 +150,21 @@ class WorkOrderListItemResponseBuilder
   set completedQuantity(double? completedQuantity) =>
       _$this._completedQuantity = completedQuantity;
 
+  Date? _plannedStartDate;
+  Date? get plannedStartDate => _$this._plannedStartDate;
+  set plannedStartDate(Date? plannedStartDate) =>
+      _$this._plannedStartDate = plannedStartDate;
+
+  Date? _plannedEndDate;
+  Date? get plannedEndDate => _$this._plannedEndDate;
+  set plannedEndDate(Date? plannedEndDate) =>
+      _$this._plannedEndDate = plannedEndDate;
+
+  double? _totalManufacturingCost;
+  double? get totalManufacturingCost => _$this._totalManufacturingCost;
+  set totalManufacturingCost(double? totalManufacturingCost) =>
+      _$this._totalManufacturingCost = totalManufacturingCost;
+
   String? _projectCode;
   String? get projectCode => _$this._projectCode;
   set projectCode(String? projectCode) => _$this._projectCode = projectCode;
@@ -155,6 +188,9 @@ class WorkOrderListItemResponseBuilder
       _itemNameTh = $v.itemNameTh;
       _plannedQuantity = $v.plannedQuantity;
       _completedQuantity = $v.completedQuantity;
+      _plannedStartDate = $v.plannedStartDate;
+      _plannedEndDate = $v.plannedEndDate;
+      _totalManufacturingCost = $v.totalManufacturingCost;
       _projectCode = $v.projectCode;
       _createdAtUtc = $v.createdAtUtc;
       _$v = null;
@@ -185,6 +221,9 @@ class WorkOrderListItemResponseBuilder
           itemNameTh: itemNameTh,
           plannedQuantity: plannedQuantity,
           completedQuantity: completedQuantity,
+          plannedStartDate: plannedStartDate,
+          plannedEndDate: plannedEndDate,
+          totalManufacturingCost: totalManufacturingCost,
           projectCode: projectCode,
           createdAtUtc: createdAtUtc,
         );

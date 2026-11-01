@@ -17,6 +17,10 @@ class _$WorkOrderRequest extends WorkOrderRequest {
   final double? plannedQuantity;
   @override
   final String? note;
+  @override
+  final Date? plannedStartDate;
+  @override
+  final Date? plannedEndDate;
 
   factory _$WorkOrderRequest(
           [void Function(WorkOrderRequestBuilder)? updates]) =>
@@ -27,7 +31,9 @@ class _$WorkOrderRequest extends WorkOrderRequest {
       this.warehouseId,
       this.projectId,
       this.plannedQuantity,
-      this.note})
+      this.note,
+      this.plannedStartDate,
+      this.plannedEndDate})
       : super._();
   @override
   WorkOrderRequest rebuild(void Function(WorkOrderRequestBuilder) updates) =>
@@ -45,7 +51,9 @@ class _$WorkOrderRequest extends WorkOrderRequest {
         warehouseId == other.warehouseId &&
         projectId == other.projectId &&
         plannedQuantity == other.plannedQuantity &&
-        note == other.note;
+        note == other.note &&
+        plannedStartDate == other.plannedStartDate &&
+        plannedEndDate == other.plannedEndDate;
   }
 
   @override
@@ -56,6 +64,8 @@ class _$WorkOrderRequest extends WorkOrderRequest {
     _$hash = $jc(_$hash, projectId.hashCode);
     _$hash = $jc(_$hash, plannedQuantity.hashCode);
     _$hash = $jc(_$hash, note.hashCode);
+    _$hash = $jc(_$hash, plannedStartDate.hashCode);
+    _$hash = $jc(_$hash, plannedEndDate.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -67,7 +77,9 @@ class _$WorkOrderRequest extends WorkOrderRequest {
           ..add('warehouseId', warehouseId)
           ..add('projectId', projectId)
           ..add('plannedQuantity', plannedQuantity)
-          ..add('note', note))
+          ..add('note', note)
+          ..add('plannedStartDate', plannedStartDate)
+          ..add('plannedEndDate', plannedEndDate))
         .toString();
   }
 }
@@ -97,6 +109,16 @@ class WorkOrderRequestBuilder
   String? get note => _$this._note;
   set note(String? note) => _$this._note = note;
 
+  Date? _plannedStartDate;
+  Date? get plannedStartDate => _$this._plannedStartDate;
+  set plannedStartDate(Date? plannedStartDate) =>
+      _$this._plannedStartDate = plannedStartDate;
+
+  Date? _plannedEndDate;
+  Date? get plannedEndDate => _$this._plannedEndDate;
+  set plannedEndDate(Date? plannedEndDate) =>
+      _$this._plannedEndDate = plannedEndDate;
+
   WorkOrderRequestBuilder() {
     WorkOrderRequest._defaults(this);
   }
@@ -109,6 +131,8 @@ class WorkOrderRequestBuilder
       _projectId = $v.projectId;
       _plannedQuantity = $v.plannedQuantity;
       _note = $v.note;
+      _plannedStartDate = $v.plannedStartDate;
+      _plannedEndDate = $v.plannedEndDate;
       _$v = null;
     }
     return this;
@@ -135,6 +159,8 @@ class WorkOrderRequestBuilder
           projectId: projectId,
           plannedQuantity: plannedQuantity,
           note: note,
+          plannedStartDate: plannedStartDate,
+          plannedEndDate: plannedEndDate,
         );
     replace(_$result);
     return _$result;

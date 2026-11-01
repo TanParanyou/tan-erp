@@ -32,6 +32,20 @@ class _$WorkOrderResponse extends WorkOrderResponse {
   @override
   final double? completedQuantity;
   @override
+  final Date? plannedStartDate;
+  @override
+  final Date? plannedEndDate;
+  @override
+  final double? netMaterialValue;
+  @override
+  final double? laborHours;
+  @override
+  final double? laborCost;
+  @override
+  final double? subcontractCost;
+  @override
+  final double? totalManufacturingCost;
+  @override
   final double? costAllocated;
   @override
   final String? note;
@@ -45,6 +59,10 @@ class _$WorkOrderResponse extends WorkOrderResponse {
   final String? rowVersion;
   @override
   final BuiltList<WorkOrderMaterialResponse>? materials;
+  @override
+  final BuiltList<WorkOrderOperationResponse>? operations;
+  @override
+  final BuiltList<WorkOrderLaborEntryResponse>? laborEntries;
   @override
   final BuiltList<WorkOrderTransactionResponse>? transactions;
 
@@ -65,6 +83,13 @@ class _$WorkOrderResponse extends WorkOrderResponse {
       this.project,
       this.plannedQuantity,
       this.completedQuantity,
+      this.plannedStartDate,
+      this.plannedEndDate,
+      this.netMaterialValue,
+      this.laborHours,
+      this.laborCost,
+      this.subcontractCost,
+      this.totalManufacturingCost,
       this.costAllocated,
       this.note,
       this.cancelReason,
@@ -72,6 +97,8 @@ class _$WorkOrderResponse extends WorkOrderResponse {
       this.createdAtUtc,
       this.rowVersion,
       this.materials,
+      this.operations,
+      this.laborEntries,
       this.transactions})
       : super._();
   @override
@@ -98,6 +125,13 @@ class _$WorkOrderResponse extends WorkOrderResponse {
         project == other.project &&
         plannedQuantity == other.plannedQuantity &&
         completedQuantity == other.completedQuantity &&
+        plannedStartDate == other.plannedStartDate &&
+        plannedEndDate == other.plannedEndDate &&
+        netMaterialValue == other.netMaterialValue &&
+        laborHours == other.laborHours &&
+        laborCost == other.laborCost &&
+        subcontractCost == other.subcontractCost &&
+        totalManufacturingCost == other.totalManufacturingCost &&
         costAllocated == other.costAllocated &&
         note == other.note &&
         cancelReason == other.cancelReason &&
@@ -105,6 +139,8 @@ class _$WorkOrderResponse extends WorkOrderResponse {
         createdAtUtc == other.createdAtUtc &&
         rowVersion == other.rowVersion &&
         materials == other.materials &&
+        operations == other.operations &&
+        laborEntries == other.laborEntries &&
         transactions == other.transactions;
   }
 
@@ -123,6 +159,13 @@ class _$WorkOrderResponse extends WorkOrderResponse {
     _$hash = $jc(_$hash, project.hashCode);
     _$hash = $jc(_$hash, plannedQuantity.hashCode);
     _$hash = $jc(_$hash, completedQuantity.hashCode);
+    _$hash = $jc(_$hash, plannedStartDate.hashCode);
+    _$hash = $jc(_$hash, plannedEndDate.hashCode);
+    _$hash = $jc(_$hash, netMaterialValue.hashCode);
+    _$hash = $jc(_$hash, laborHours.hashCode);
+    _$hash = $jc(_$hash, laborCost.hashCode);
+    _$hash = $jc(_$hash, subcontractCost.hashCode);
+    _$hash = $jc(_$hash, totalManufacturingCost.hashCode);
     _$hash = $jc(_$hash, costAllocated.hashCode);
     _$hash = $jc(_$hash, note.hashCode);
     _$hash = $jc(_$hash, cancelReason.hashCode);
@@ -130,6 +173,8 @@ class _$WorkOrderResponse extends WorkOrderResponse {
     _$hash = $jc(_$hash, createdAtUtc.hashCode);
     _$hash = $jc(_$hash, rowVersion.hashCode);
     _$hash = $jc(_$hash, materials.hashCode);
+    _$hash = $jc(_$hash, operations.hashCode);
+    _$hash = $jc(_$hash, laborEntries.hashCode);
     _$hash = $jc(_$hash, transactions.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -150,6 +195,13 @@ class _$WorkOrderResponse extends WorkOrderResponse {
           ..add('project', project)
           ..add('plannedQuantity', plannedQuantity)
           ..add('completedQuantity', completedQuantity)
+          ..add('plannedStartDate', plannedStartDate)
+          ..add('plannedEndDate', plannedEndDate)
+          ..add('netMaterialValue', netMaterialValue)
+          ..add('laborHours', laborHours)
+          ..add('laborCost', laborCost)
+          ..add('subcontractCost', subcontractCost)
+          ..add('totalManufacturingCost', totalManufacturingCost)
           ..add('costAllocated', costAllocated)
           ..add('note', note)
           ..add('cancelReason', cancelReason)
@@ -157,6 +209,8 @@ class _$WorkOrderResponse extends WorkOrderResponse {
           ..add('createdAtUtc', createdAtUtc)
           ..add('rowVersion', rowVersion)
           ..add('materials', materials)
+          ..add('operations', operations)
+          ..add('laborEntries', laborEntries)
           ..add('transactions', transactions))
         .toString();
   }
@@ -223,6 +277,39 @@ class WorkOrderResponseBuilder
   set completedQuantity(double? completedQuantity) =>
       _$this._completedQuantity = completedQuantity;
 
+  Date? _plannedStartDate;
+  Date? get plannedStartDate => _$this._plannedStartDate;
+  set plannedStartDate(Date? plannedStartDate) =>
+      _$this._plannedStartDate = plannedStartDate;
+
+  Date? _plannedEndDate;
+  Date? get plannedEndDate => _$this._plannedEndDate;
+  set plannedEndDate(Date? plannedEndDate) =>
+      _$this._plannedEndDate = plannedEndDate;
+
+  double? _netMaterialValue;
+  double? get netMaterialValue => _$this._netMaterialValue;
+  set netMaterialValue(double? netMaterialValue) =>
+      _$this._netMaterialValue = netMaterialValue;
+
+  double? _laborHours;
+  double? get laborHours => _$this._laborHours;
+  set laborHours(double? laborHours) => _$this._laborHours = laborHours;
+
+  double? _laborCost;
+  double? get laborCost => _$this._laborCost;
+  set laborCost(double? laborCost) => _$this._laborCost = laborCost;
+
+  double? _subcontractCost;
+  double? get subcontractCost => _$this._subcontractCost;
+  set subcontractCost(double? subcontractCost) =>
+      _$this._subcontractCost = subcontractCost;
+
+  double? _totalManufacturingCost;
+  double? get totalManufacturingCost => _$this._totalManufacturingCost;
+  set totalManufacturingCost(double? totalManufacturingCost) =>
+      _$this._totalManufacturingCost = totalManufacturingCost;
+
   double? _costAllocated;
   double? get costAllocated => _$this._costAllocated;
   set costAllocated(double? costAllocated) =>
@@ -257,6 +344,18 @@ class WorkOrderResponseBuilder
   set materials(ListBuilder<WorkOrderMaterialResponse>? materials) =>
       _$this._materials = materials;
 
+  ListBuilder<WorkOrderOperationResponse>? _operations;
+  ListBuilder<WorkOrderOperationResponse> get operations =>
+      _$this._operations ??= ListBuilder<WorkOrderOperationResponse>();
+  set operations(ListBuilder<WorkOrderOperationResponse>? operations) =>
+      _$this._operations = operations;
+
+  ListBuilder<WorkOrderLaborEntryResponse>? _laborEntries;
+  ListBuilder<WorkOrderLaborEntryResponse> get laborEntries =>
+      _$this._laborEntries ??= ListBuilder<WorkOrderLaborEntryResponse>();
+  set laborEntries(ListBuilder<WorkOrderLaborEntryResponse>? laborEntries) =>
+      _$this._laborEntries = laborEntries;
+
   ListBuilder<WorkOrderTransactionResponse>? _transactions;
   ListBuilder<WorkOrderTransactionResponse> get transactions =>
       _$this._transactions ??= ListBuilder<WorkOrderTransactionResponse>();
@@ -282,6 +381,13 @@ class WorkOrderResponseBuilder
       _project = $v.project?.toBuilder();
       _plannedQuantity = $v.plannedQuantity;
       _completedQuantity = $v.completedQuantity;
+      _plannedStartDate = $v.plannedStartDate;
+      _plannedEndDate = $v.plannedEndDate;
+      _netMaterialValue = $v.netMaterialValue;
+      _laborHours = $v.laborHours;
+      _laborCost = $v.laborCost;
+      _subcontractCost = $v.subcontractCost;
+      _totalManufacturingCost = $v.totalManufacturingCost;
       _costAllocated = $v.costAllocated;
       _note = $v.note;
       _cancelReason = $v.cancelReason;
@@ -289,6 +395,8 @@ class WorkOrderResponseBuilder
       _createdAtUtc = $v.createdAtUtc;
       _rowVersion = $v.rowVersion;
       _materials = $v.materials?.toBuilder();
+      _operations = $v.operations?.toBuilder();
+      _laborEntries = $v.laborEntries?.toBuilder();
       _transactions = $v.transactions?.toBuilder();
       _$v = null;
     }
@@ -325,6 +433,13 @@ class WorkOrderResponseBuilder
             project: _project?.build(),
             plannedQuantity: plannedQuantity,
             completedQuantity: completedQuantity,
+            plannedStartDate: plannedStartDate,
+            plannedEndDate: plannedEndDate,
+            netMaterialValue: netMaterialValue,
+            laborHours: laborHours,
+            laborCost: laborCost,
+            subcontractCost: subcontractCost,
+            totalManufacturingCost: totalManufacturingCost,
             costAllocated: costAllocated,
             note: note,
             cancelReason: cancelReason,
@@ -332,6 +447,8 @@ class WorkOrderResponseBuilder
             createdAtUtc: createdAtUtc,
             rowVersion: rowVersion,
             materials: _materials?.build(),
+            operations: _operations?.build(),
+            laborEntries: _laborEntries?.build(),
             transactions: _transactions?.build(),
           );
     } catch (_) {
@@ -350,6 +467,10 @@ class WorkOrderResponseBuilder
 
         _$failedField = 'materials';
         _materials?.build();
+        _$failedField = 'operations';
+        _operations?.build();
+        _$failedField = 'laborEntries';
+        _laborEntries?.build();
         _$failedField = 'transactions';
         _transactions?.build();
       } catch (e) {

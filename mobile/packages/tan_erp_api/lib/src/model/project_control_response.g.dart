@@ -30,6 +30,16 @@ class _$ProjectControlResponse extends ProjectControlResponse {
   @override
   final ProjectProgressResponse? progress;
   @override
+  final BuiltList<ProjectWbsNodeResponse>? wbsNodes;
+  @override
+  final BuiltList<ProjectWbsCostSummaryResponse>? wbsCostSummary;
+  @override
+  final BuiltList<ProjectCostLedgerEntryResponse>? costLedger;
+  @override
+  final BuiltList<LaborRateResponse>? laborRates;
+  @override
+  final BuiltList<LaborTimesheetResponse>? timesheets;
+  @override
   final BuiltList<ProjectMilestoneResponse>? milestones;
   @override
   final BuiltList<ProjectChangeOrderResponse>? changeOrders;
@@ -52,6 +62,11 @@ class _$ProjectControlResponse extends ProjectControlResponse {
       this.budget,
       this.contract,
       this.progress,
+      this.wbsNodes,
+      this.wbsCostSummary,
+      this.costLedger,
+      this.laborRates,
+      this.timesheets,
       this.milestones,
       this.changeOrders,
       this.history})
@@ -80,6 +95,11 @@ class _$ProjectControlResponse extends ProjectControlResponse {
         budget == other.budget &&
         contract == other.contract &&
         progress == other.progress &&
+        wbsNodes == other.wbsNodes &&
+        wbsCostSummary == other.wbsCostSummary &&
+        costLedger == other.costLedger &&
+        laborRates == other.laborRates &&
+        timesheets == other.timesheets &&
         milestones == other.milestones &&
         changeOrders == other.changeOrders &&
         history == other.history;
@@ -99,6 +119,11 @@ class _$ProjectControlResponse extends ProjectControlResponse {
     _$hash = $jc(_$hash, budget.hashCode);
     _$hash = $jc(_$hash, contract.hashCode);
     _$hash = $jc(_$hash, progress.hashCode);
+    _$hash = $jc(_$hash, wbsNodes.hashCode);
+    _$hash = $jc(_$hash, wbsCostSummary.hashCode);
+    _$hash = $jc(_$hash, costLedger.hashCode);
+    _$hash = $jc(_$hash, laborRates.hashCode);
+    _$hash = $jc(_$hash, timesheets.hashCode);
     _$hash = $jc(_$hash, milestones.hashCode);
     _$hash = $jc(_$hash, changeOrders.hashCode);
     _$hash = $jc(_$hash, history.hashCode);
@@ -120,6 +145,11 @@ class _$ProjectControlResponse extends ProjectControlResponse {
           ..add('budget', budget)
           ..add('contract', contract)
           ..add('progress', progress)
+          ..add('wbsNodes', wbsNodes)
+          ..add('wbsCostSummary', wbsCostSummary)
+          ..add('costLedger', costLedger)
+          ..add('laborRates', laborRates)
+          ..add('timesheets', timesheets)
           ..add('milestones', milestones)
           ..add('changeOrders', changeOrders)
           ..add('history', history))
@@ -184,6 +214,37 @@ class ProjectControlResponseBuilder
   set progress(ProjectProgressResponseBuilder? progress) =>
       _$this._progress = progress;
 
+  ListBuilder<ProjectWbsNodeResponse>? _wbsNodes;
+  ListBuilder<ProjectWbsNodeResponse> get wbsNodes =>
+      _$this._wbsNodes ??= ListBuilder<ProjectWbsNodeResponse>();
+  set wbsNodes(ListBuilder<ProjectWbsNodeResponse>? wbsNodes) =>
+      _$this._wbsNodes = wbsNodes;
+
+  ListBuilder<ProjectWbsCostSummaryResponse>? _wbsCostSummary;
+  ListBuilder<ProjectWbsCostSummaryResponse> get wbsCostSummary =>
+      _$this._wbsCostSummary ??= ListBuilder<ProjectWbsCostSummaryResponse>();
+  set wbsCostSummary(
+          ListBuilder<ProjectWbsCostSummaryResponse>? wbsCostSummary) =>
+      _$this._wbsCostSummary = wbsCostSummary;
+
+  ListBuilder<ProjectCostLedgerEntryResponse>? _costLedger;
+  ListBuilder<ProjectCostLedgerEntryResponse> get costLedger =>
+      _$this._costLedger ??= ListBuilder<ProjectCostLedgerEntryResponse>();
+  set costLedger(ListBuilder<ProjectCostLedgerEntryResponse>? costLedger) =>
+      _$this._costLedger = costLedger;
+
+  ListBuilder<LaborRateResponse>? _laborRates;
+  ListBuilder<LaborRateResponse> get laborRates =>
+      _$this._laborRates ??= ListBuilder<LaborRateResponse>();
+  set laborRates(ListBuilder<LaborRateResponse>? laborRates) =>
+      _$this._laborRates = laborRates;
+
+  ListBuilder<LaborTimesheetResponse>? _timesheets;
+  ListBuilder<LaborTimesheetResponse> get timesheets =>
+      _$this._timesheets ??= ListBuilder<LaborTimesheetResponse>();
+  set timesheets(ListBuilder<LaborTimesheetResponse>? timesheets) =>
+      _$this._timesheets = timesheets;
+
   ListBuilder<ProjectMilestoneResponse>? _milestones;
   ListBuilder<ProjectMilestoneResponse> get milestones =>
       _$this._milestones ??= ListBuilder<ProjectMilestoneResponse>();
@@ -220,6 +281,11 @@ class ProjectControlResponseBuilder
       _budget = $v.budget?.toBuilder();
       _contract = $v.contract?.toBuilder();
       _progress = $v.progress?.toBuilder();
+      _wbsNodes = $v.wbsNodes?.toBuilder();
+      _wbsCostSummary = $v.wbsCostSummary?.toBuilder();
+      _costLedger = $v.costLedger?.toBuilder();
+      _laborRates = $v.laborRates?.toBuilder();
+      _timesheets = $v.timesheets?.toBuilder();
       _milestones = $v.milestones?.toBuilder();
       _changeOrders = $v.changeOrders?.toBuilder();
       _history = $v.history?.toBuilder();
@@ -257,6 +323,11 @@ class ProjectControlResponseBuilder
             budget: _budget?.build(),
             contract: _contract?.build(),
             progress: _progress?.build(),
+            wbsNodes: _wbsNodes?.build(),
+            wbsCostSummary: _wbsCostSummary?.build(),
+            costLedger: _costLedger?.build(),
+            laborRates: _laborRates?.build(),
+            timesheets: _timesheets?.build(),
             milestones: _milestones?.build(),
             changeOrders: _changeOrders?.build(),
             history: _history?.build(),
@@ -270,6 +341,16 @@ class ProjectControlResponseBuilder
         _contract?.build();
         _$failedField = 'progress';
         _progress?.build();
+        _$failedField = 'wbsNodes';
+        _wbsNodes?.build();
+        _$failedField = 'wbsCostSummary';
+        _wbsCostSummary?.build();
+        _$failedField = 'costLedger';
+        _costLedger?.build();
+        _$failedField = 'laborRates';
+        _laborRates?.build();
+        _$failedField = 'timesheets';
+        _timesheets?.build();
         _$failedField = 'milestones';
         _milestones?.build();
         _$failedField = 'changeOrders';

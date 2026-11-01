@@ -16,6 +16,8 @@ part 'item_capabilities_response.g.dart';
 /// * [canPurchase] 
 /// * [canStock] 
 /// * [canProduce] 
+/// * [trackLot] 
+/// * [trackSerial] 
 @BuiltValue()
 abstract class ItemCapabilitiesResponse implements Built<ItemCapabilitiesResponse, ItemCapabilitiesResponseBuilder> {
   @BuiltValueField(wireName: r'canSell')
@@ -32,6 +34,12 @@ abstract class ItemCapabilitiesResponse implements Built<ItemCapabilitiesRespons
 
   @BuiltValueField(wireName: r'canProduce')
   bool? get canProduce;
+
+  @BuiltValueField(wireName: r'trackLot')
+  bool? get trackLot;
+
+  @BuiltValueField(wireName: r'trackSerial')
+  bool? get trackSerial;
 
   ItemCapabilitiesResponse._();
 
@@ -88,6 +96,20 @@ class _$ItemCapabilitiesResponseSerializer implements PrimitiveSerializer<ItemCa
       yield r'canProduce';
       yield serializers.serialize(
         object.canProduce,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.trackLot != null) {
+      yield r'trackLot';
+      yield serializers.serialize(
+        object.trackLot,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.trackSerial != null) {
+      yield r'trackSerial';
+      yield serializers.serialize(
+        object.trackSerial,
         specifiedType: const FullType(bool),
       );
     }
@@ -153,6 +175,22 @@ class _$ItemCapabilitiesResponseSerializer implements PrimitiveSerializer<ItemCa
           ) as bool?;
           if (valueDes == null) continue;
           result.canProduce = valueDes;
+          break;
+        case r'trackLot':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.trackLot = valueDes;
+          break;
+        case r'trackSerial':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.trackSerial = valueDes;
           break;
         default:
           unhandled.add(key);

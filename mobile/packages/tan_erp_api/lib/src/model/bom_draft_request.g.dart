@@ -13,11 +13,15 @@ class _$BomDraftRequest extends BomDraftRequest {
   final String? note;
   @override
   final BuiltList<BomLineRequest>? lines;
+  @override
+  final BuiltList<BomRoutingStepRequest>? routingSteps;
 
   factory _$BomDraftRequest([void Function(BomDraftRequestBuilder)? updates]) =>
       (BomDraftRequestBuilder()..update(updates))._build();
 
-  _$BomDraftRequest._({this.outputQuantity, this.note, this.lines}) : super._();
+  _$BomDraftRequest._(
+      {this.outputQuantity, this.note, this.lines, this.routingSteps})
+      : super._();
   @override
   BomDraftRequest rebuild(void Function(BomDraftRequestBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -31,7 +35,8 @@ class _$BomDraftRequest extends BomDraftRequest {
     return other is BomDraftRequest &&
         outputQuantity == other.outputQuantity &&
         note == other.note &&
-        lines == other.lines;
+        lines == other.lines &&
+        routingSteps == other.routingSteps;
   }
 
   @override
@@ -40,6 +45,7 @@ class _$BomDraftRequest extends BomDraftRequest {
     _$hash = $jc(_$hash, outputQuantity.hashCode);
     _$hash = $jc(_$hash, note.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
+    _$hash = $jc(_$hash, routingSteps.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -49,7 +55,8 @@ class _$BomDraftRequest extends BomDraftRequest {
     return (newBuiltValueToStringHelper(r'BomDraftRequest')
           ..add('outputQuantity', outputQuantity)
           ..add('note', note)
-          ..add('lines', lines))
+          ..add('lines', lines)
+          ..add('routingSteps', routingSteps))
         .toString();
   }
 }
@@ -72,6 +79,12 @@ class BomDraftRequestBuilder
       _$this._lines ??= ListBuilder<BomLineRequest>();
   set lines(ListBuilder<BomLineRequest>? lines) => _$this._lines = lines;
 
+  ListBuilder<BomRoutingStepRequest>? _routingSteps;
+  ListBuilder<BomRoutingStepRequest> get routingSteps =>
+      _$this._routingSteps ??= ListBuilder<BomRoutingStepRequest>();
+  set routingSteps(ListBuilder<BomRoutingStepRequest>? routingSteps) =>
+      _$this._routingSteps = routingSteps;
+
   BomDraftRequestBuilder() {
     BomDraftRequest._defaults(this);
   }
@@ -82,6 +95,7 @@ class BomDraftRequestBuilder
       _outputQuantity = $v.outputQuantity;
       _note = $v.note;
       _lines = $v.lines?.toBuilder();
+      _routingSteps = $v.routingSteps?.toBuilder();
       _$v = null;
     }
     return this;
@@ -108,12 +122,15 @@ class BomDraftRequestBuilder
             outputQuantity: outputQuantity,
             note: note,
             lines: _lines?.build(),
+            routingSteps: _routingSteps?.build(),
           );
     } catch (_) {
       late String _$failedField;
       try {
         _$failedField = 'lines';
         _lines?.build();
+        _$failedField = 'routingSteps';
+        _routingSteps?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'BomDraftRequest', _$failedField, e.toString());

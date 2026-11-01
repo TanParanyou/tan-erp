@@ -6,7 +6,10 @@
 import 'package:tan_erp_api/src/model/work_order_transaction_response.dart';
 import 'package:tan_erp_api/src/model/work_order_material_response.dart';
 import 'package:tan_erp_api/src/model/production_item_response.dart';
+import 'package:tan_erp_api/src/model/work_order_labor_entry_response.dart';
 import 'package:built_collection/built_collection.dart';
+import 'package:tan_erp_api/src/model/work_order_operation_response.dart';
+import 'package:tan_erp_api/src/model/date.dart';
 import 'package:tan_erp_api/src/model/production_person_response.dart';
 import 'package:tan_erp_api/src/model/work_order_ref_response.dart';
 import 'package:built_value/built_value.dart';
@@ -29,6 +32,13 @@ part 'work_order_response.g.dart';
 /// * [project] 
 /// * [plannedQuantity] 
 /// * [completedQuantity] 
+/// * [plannedStartDate] 
+/// * [plannedEndDate] 
+/// * [netMaterialValue] 
+/// * [laborHours] 
+/// * [laborCost] 
+/// * [subcontractCost] 
+/// * [totalManufacturingCost] 
 /// * [costAllocated] 
 /// * [note] 
 /// * [cancelReason] 
@@ -36,6 +46,8 @@ part 'work_order_response.g.dart';
 /// * [createdAtUtc] 
 /// * [rowVersion] 
 /// * [materials] 
+/// * [operations] 
+/// * [laborEntries] 
 /// * [transactions] 
 @BuiltValue()
 abstract class WorkOrderResponse implements Built<WorkOrderResponse, WorkOrderResponseBuilder> {
@@ -75,6 +87,27 @@ abstract class WorkOrderResponse implements Built<WorkOrderResponse, WorkOrderRe
   @BuiltValueField(wireName: r'completedQuantity')
   double? get completedQuantity;
 
+  @BuiltValueField(wireName: r'plannedStartDate')
+  Date? get plannedStartDate;
+
+  @BuiltValueField(wireName: r'plannedEndDate')
+  Date? get plannedEndDate;
+
+  @BuiltValueField(wireName: r'netMaterialValue')
+  double? get netMaterialValue;
+
+  @BuiltValueField(wireName: r'laborHours')
+  double? get laborHours;
+
+  @BuiltValueField(wireName: r'laborCost')
+  double? get laborCost;
+
+  @BuiltValueField(wireName: r'subcontractCost')
+  double? get subcontractCost;
+
+  @BuiltValueField(wireName: r'totalManufacturingCost')
+  double? get totalManufacturingCost;
+
   @BuiltValueField(wireName: r'costAllocated')
   double? get costAllocated;
 
@@ -95,6 +128,12 @@ abstract class WorkOrderResponse implements Built<WorkOrderResponse, WorkOrderRe
 
   @BuiltValueField(wireName: r'materials')
   BuiltList<WorkOrderMaterialResponse>? get materials;
+
+  @BuiltValueField(wireName: r'operations')
+  BuiltList<WorkOrderOperationResponse>? get operations;
+
+  @BuiltValueField(wireName: r'laborEntries')
+  BuiltList<WorkOrderLaborEntryResponse>? get laborEntries;
 
   @BuiltValueField(wireName: r'transactions')
   BuiltList<WorkOrderTransactionResponse>? get transactions;
@@ -206,6 +245,55 @@ class _$WorkOrderResponseSerializer implements PrimitiveSerializer<WorkOrderResp
         specifiedType: const FullType(double),
       );
     }
+    if (object.plannedStartDate != null) {
+      yield r'plannedStartDate';
+      yield serializers.serialize(
+        object.plannedStartDate,
+        specifiedType: const FullType(Date),
+      );
+    }
+    if (object.plannedEndDate != null) {
+      yield r'plannedEndDate';
+      yield serializers.serialize(
+        object.plannedEndDate,
+        specifiedType: const FullType(Date),
+      );
+    }
+    if (object.netMaterialValue != null) {
+      yield r'netMaterialValue';
+      yield serializers.serialize(
+        object.netMaterialValue,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.laborHours != null) {
+      yield r'laborHours';
+      yield serializers.serialize(
+        object.laborHours,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.laborCost != null) {
+      yield r'laborCost';
+      yield serializers.serialize(
+        object.laborCost,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.subcontractCost != null) {
+      yield r'subcontractCost';
+      yield serializers.serialize(
+        object.subcontractCost,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.totalManufacturingCost != null) {
+      yield r'totalManufacturingCost';
+      yield serializers.serialize(
+        object.totalManufacturingCost,
+        specifiedType: const FullType(double),
+      );
+    }
     if (object.costAllocated != null) {
       yield r'costAllocated';
       yield serializers.serialize(
@@ -253,6 +341,20 @@ class _$WorkOrderResponseSerializer implements PrimitiveSerializer<WorkOrderResp
       yield serializers.serialize(
         object.materials,
         specifiedType: const FullType.nullable(BuiltList, [FullType(WorkOrderMaterialResponse)]),
+      );
+    }
+    if (object.operations != null) {
+      yield r'operations';
+      yield serializers.serialize(
+        object.operations,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(WorkOrderOperationResponse)]),
+      );
+    }
+    if (object.laborEntries != null) {
+      yield r'laborEntries';
+      yield serializers.serialize(
+        object.laborEntries,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(WorkOrderLaborEntryResponse)]),
       );
     }
     if (object.transactions != null) {
@@ -381,6 +483,62 @@ class _$WorkOrderResponseSerializer implements PrimitiveSerializer<WorkOrderResp
           if (valueDes == null) continue;
           result.completedQuantity = valueDes;
           break;
+        case r'plannedStartDate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.plannedStartDate = valueDes;
+          break;
+        case r'plannedEndDate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.plannedEndDate = valueDes;
+          break;
+        case r'netMaterialValue':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.netMaterialValue = valueDes;
+          break;
+        case r'laborHours':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.laborHours = valueDes;
+          break;
+        case r'laborCost':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.laborCost = valueDes;
+          break;
+        case r'subcontractCost':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.subcontractCost = valueDes;
+          break;
+        case r'totalManufacturingCost':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.totalManufacturingCost = valueDes;
+          break;
         case r'costAllocated':
           final valueDes = serializers.deserialize(
             value,
@@ -436,6 +594,22 @@ class _$WorkOrderResponseSerializer implements PrimitiveSerializer<WorkOrderResp
           ) as BuiltList<WorkOrderMaterialResponse>?;
           if (valueDes == null) continue;
           result.materials.replace(valueDes);
+          break;
+        case r'operations':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(WorkOrderOperationResponse)]),
+          ) as BuiltList<WorkOrderOperationResponse>?;
+          if (valueDes == null) continue;
+          result.operations.replace(valueDes);
+          break;
+        case r'laborEntries':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(WorkOrderLaborEntryResponse)]),
+          ) as BuiltList<WorkOrderLaborEntryResponse>?;
+          if (valueDes == null) continue;
+          result.laborEntries.replace(valueDes);
           break;
         case r'transactions':
           final valueDes = serializers.deserialize(

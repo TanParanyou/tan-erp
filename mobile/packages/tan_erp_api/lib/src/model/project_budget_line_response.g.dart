@@ -17,13 +17,26 @@ class _$ProjectBudgetLineResponse extends ProjectBudgetLineResponse {
   final double? amount;
   @override
   final int? sortOrder;
+  @override
+  final String? wbsNodeId;
+  @override
+  final String? wbsCode;
+  @override
+  final String? wbsName;
 
   factory _$ProjectBudgetLineResponse(
           [void Function(ProjectBudgetLineResponseBuilder)? updates]) =>
       (ProjectBudgetLineResponseBuilder()..update(updates))._build();
 
   _$ProjectBudgetLineResponse._(
-      {this.id, this.category, this.description, this.amount, this.sortOrder})
+      {this.id,
+      this.category,
+      this.description,
+      this.amount,
+      this.sortOrder,
+      this.wbsNodeId,
+      this.wbsCode,
+      this.wbsName})
       : super._();
   @override
   ProjectBudgetLineResponse rebuild(
@@ -42,7 +55,10 @@ class _$ProjectBudgetLineResponse extends ProjectBudgetLineResponse {
         category == other.category &&
         description == other.description &&
         amount == other.amount &&
-        sortOrder == other.sortOrder;
+        sortOrder == other.sortOrder &&
+        wbsNodeId == other.wbsNodeId &&
+        wbsCode == other.wbsCode &&
+        wbsName == other.wbsName;
   }
 
   @override
@@ -53,6 +69,9 @@ class _$ProjectBudgetLineResponse extends ProjectBudgetLineResponse {
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, amount.hashCode);
     _$hash = $jc(_$hash, sortOrder.hashCode);
+    _$hash = $jc(_$hash, wbsNodeId.hashCode);
+    _$hash = $jc(_$hash, wbsCode.hashCode);
+    _$hash = $jc(_$hash, wbsName.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -64,7 +83,10 @@ class _$ProjectBudgetLineResponse extends ProjectBudgetLineResponse {
           ..add('category', category)
           ..add('description', description)
           ..add('amount', amount)
-          ..add('sortOrder', sortOrder))
+          ..add('sortOrder', sortOrder)
+          ..add('wbsNodeId', wbsNodeId)
+          ..add('wbsCode', wbsCode)
+          ..add('wbsName', wbsName))
         .toString();
   }
 }
@@ -94,6 +116,18 @@ class ProjectBudgetLineResponseBuilder
   int? get sortOrder => _$this._sortOrder;
   set sortOrder(int? sortOrder) => _$this._sortOrder = sortOrder;
 
+  String? _wbsNodeId;
+  String? get wbsNodeId => _$this._wbsNodeId;
+  set wbsNodeId(String? wbsNodeId) => _$this._wbsNodeId = wbsNodeId;
+
+  String? _wbsCode;
+  String? get wbsCode => _$this._wbsCode;
+  set wbsCode(String? wbsCode) => _$this._wbsCode = wbsCode;
+
+  String? _wbsName;
+  String? get wbsName => _$this._wbsName;
+  set wbsName(String? wbsName) => _$this._wbsName = wbsName;
+
   ProjectBudgetLineResponseBuilder() {
     ProjectBudgetLineResponse._defaults(this);
   }
@@ -106,6 +140,9 @@ class ProjectBudgetLineResponseBuilder
       _description = $v.description;
       _amount = $v.amount;
       _sortOrder = $v.sortOrder;
+      _wbsNodeId = $v.wbsNodeId;
+      _wbsCode = $v.wbsCode;
+      _wbsName = $v.wbsName;
       _$v = null;
     }
     return this;
@@ -132,6 +169,9 @@ class ProjectBudgetLineResponseBuilder
           description: description,
           amount: amount,
           sortOrder: sortOrder,
+          wbsNodeId: wbsNodeId,
+          wbsCode: wbsCode,
+          wbsName: wbsName,
         );
     replace(_$result);
     return _$result;

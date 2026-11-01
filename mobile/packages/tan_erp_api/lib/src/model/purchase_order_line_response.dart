@@ -23,6 +23,8 @@ part 'purchase_order_line_response.g.dart';
 /// * [lineTotal] 
 /// * [receivedQuantity] 
 /// * [remainingQuantity] 
+/// * [invoicedQuantity] 
+/// * [uninvoicedReceivedQuantity] 
 @BuiltValue()
 abstract class PurchaseOrderLineResponse implements Built<PurchaseOrderLineResponse, PurchaseOrderLineResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -60,6 +62,12 @@ abstract class PurchaseOrderLineResponse implements Built<PurchaseOrderLineRespo
 
   @BuiltValueField(wireName: r'remainingQuantity')
   double? get remainingQuantity;
+
+  @BuiltValueField(wireName: r'invoicedQuantity')
+  double? get invoicedQuantity;
+
+  @BuiltValueField(wireName: r'uninvoicedReceivedQuantity')
+  double? get uninvoicedReceivedQuantity;
 
   PurchaseOrderLineResponse._();
 
@@ -165,6 +173,20 @@ class _$PurchaseOrderLineResponseSerializer implements PrimitiveSerializer<Purch
       yield r'remainingQuantity';
       yield serializers.serialize(
         object.remainingQuantity,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.invoicedQuantity != null) {
+      yield r'invoicedQuantity';
+      yield serializers.serialize(
+        object.invoicedQuantity,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.uninvoicedReceivedQuantity != null) {
+      yield r'uninvoicedReceivedQuantity';
+      yield serializers.serialize(
+        object.uninvoicedReceivedQuantity,
         specifiedType: const FullType(double),
       );
     }
@@ -286,6 +308,22 @@ class _$PurchaseOrderLineResponseSerializer implements PrimitiveSerializer<Purch
           ) as double?;
           if (valueDes == null) continue;
           result.remainingQuantity = valueDes;
+          break;
+        case r'invoicedQuantity':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.invoicedQuantity = valueDes;
+          break;
+        case r'uninvoicedReceivedQuantity':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.uninvoicedReceivedQuantity = valueDes;
           break;
         default:
           unhandled.add(key);

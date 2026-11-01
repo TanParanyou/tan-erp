@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/service_sla_response.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:tan_erp_api/src/model/warranty_ref_response.dart';
 import 'package:tan_erp_api/src/model/date.dart';
@@ -30,6 +31,11 @@ part 'service_request_response.g.dart';
 /// * [scheduledDate] 
 /// * [resolutionNote] 
 /// * [reopenCount] 
+/// * [sla] 
+/// * [serviceChargeAmount] 
+/// * [serviceChargeNote] 
+/// * [billingDocumentId] 
+/// * [billingDocumentNumber] 
 /// * [createdBy] 
 /// * [createdAtUtc] 
 /// * [rowVersion] 
@@ -74,6 +80,21 @@ abstract class ServiceRequestResponse implements Built<ServiceRequestResponse, S
 
   @BuiltValueField(wireName: r'reopenCount')
   int? get reopenCount;
+
+  @BuiltValueField(wireName: r'sla')
+  ServiceSlaResponse? get sla;
+
+  @BuiltValueField(wireName: r'serviceChargeAmount')
+  double? get serviceChargeAmount;
+
+  @BuiltValueField(wireName: r'serviceChargeNote')
+  String? get serviceChargeNote;
+
+  @BuiltValueField(wireName: r'billingDocumentId')
+  String? get billingDocumentId;
+
+  @BuiltValueField(wireName: r'billingDocumentNumber')
+  String? get billingDocumentNumber;
 
   @BuiltValueField(wireName: r'createdBy')
   ServicePersonResponse? get createdBy;
@@ -199,6 +220,41 @@ class _$ServiceRequestResponseSerializer implements PrimitiveSerializer<ServiceR
       yield serializers.serialize(
         object.reopenCount,
         specifiedType: const FullType(int),
+      );
+    }
+    if (object.sla != null) {
+      yield r'sla';
+      yield serializers.serialize(
+        object.sla,
+        specifiedType: const FullType(ServiceSlaResponse),
+      );
+    }
+    if (object.serviceChargeAmount != null) {
+      yield r'serviceChargeAmount';
+      yield serializers.serialize(
+        object.serviceChargeAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.serviceChargeNote != null) {
+      yield r'serviceChargeNote';
+      yield serializers.serialize(
+        object.serviceChargeNote,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.billingDocumentId != null) {
+      yield r'billingDocumentId';
+      yield serializers.serialize(
+        object.billingDocumentId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.billingDocumentNumber != null) {
+      yield r'billingDocumentNumber';
+      yield serializers.serialize(
+        object.billingDocumentNumber,
+        specifiedType: const FullType.nullable(String),
       );
     }
     if (object.createdBy != null) {
@@ -355,6 +411,46 @@ class _$ServiceRequestResponseSerializer implements PrimitiveSerializer<ServiceR
           ) as int?;
           if (valueDes == null) continue;
           result.reopenCount = valueDes;
+          break;
+        case r'sla':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(ServiceSlaResponse),
+          ) as ServiceSlaResponse?;
+          if (valueDes == null) continue;
+          result.sla.replace(valueDes);
+          break;
+        case r'serviceChargeAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.serviceChargeAmount = valueDes;
+          break;
+        case r'serviceChargeNote':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.serviceChargeNote = valueDes;
+          break;
+        case r'billingDocumentId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.billingDocumentId = valueDes;
+          break;
+        case r'billingDocumentNumber':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.billingDocumentNumber = valueDes;
           break;
         case r'createdBy':
           final valueDes = serializers.deserialize(

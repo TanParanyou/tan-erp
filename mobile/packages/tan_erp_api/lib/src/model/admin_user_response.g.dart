@@ -33,6 +33,14 @@ class _$AdminUserResponse extends AdminUserResponse {
   final String? notes;
   @override
   final DateTime? createdAtUtc;
+  @override
+  final bool? hasPassword;
+  @override
+  final bool? hasGoogleLinked;
+  @override
+  final bool? isTotpEnabled;
+  @override
+  final bool? requireTwoFactor;
 
   factory _$AdminUserResponse(
           [void Function(AdminUserResponseBuilder)? updates]) =>
@@ -51,7 +59,11 @@ class _$AdminUserResponse extends AdminUserResponse {
       this.jobTitle,
       this.avatar,
       this.notes,
-      this.createdAtUtc})
+      this.createdAtUtc,
+      this.hasPassword,
+      this.hasGoogleLinked,
+      this.isTotpEnabled,
+      this.requireTwoFactor})
       : super._();
   @override
   AdminUserResponse rebuild(void Function(AdminUserResponseBuilder) updates) =>
@@ -77,7 +89,11 @@ class _$AdminUserResponse extends AdminUserResponse {
         jobTitle == other.jobTitle &&
         avatar == other.avatar &&
         notes == other.notes &&
-        createdAtUtc == other.createdAtUtc;
+        createdAtUtc == other.createdAtUtc &&
+        hasPassword == other.hasPassword &&
+        hasGoogleLinked == other.hasGoogleLinked &&
+        isTotpEnabled == other.isTotpEnabled &&
+        requireTwoFactor == other.requireTwoFactor;
   }
 
   @override
@@ -96,6 +112,10 @@ class _$AdminUserResponse extends AdminUserResponse {
     _$hash = $jc(_$hash, avatar.hashCode);
     _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jc(_$hash, createdAtUtc.hashCode);
+    _$hash = $jc(_$hash, hasPassword.hashCode);
+    _$hash = $jc(_$hash, hasGoogleLinked.hashCode);
+    _$hash = $jc(_$hash, isTotpEnabled.hashCode);
+    _$hash = $jc(_$hash, requireTwoFactor.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -115,7 +135,11 @@ class _$AdminUserResponse extends AdminUserResponse {
           ..add('jobTitle', jobTitle)
           ..add('avatar', avatar)
           ..add('notes', notes)
-          ..add('createdAtUtc', createdAtUtc))
+          ..add('createdAtUtc', createdAtUtc)
+          ..add('hasPassword', hasPassword)
+          ..add('hasGoogleLinked', hasGoogleLinked)
+          ..add('isTotpEnabled', isTotpEnabled)
+          ..add('requireTwoFactor', requireTwoFactor))
         .toString();
   }
 }
@@ -184,6 +208,25 @@ class AdminUserResponseBuilder
   set createdAtUtc(DateTime? createdAtUtc) =>
       _$this._createdAtUtc = createdAtUtc;
 
+  bool? _hasPassword;
+  bool? get hasPassword => _$this._hasPassword;
+  set hasPassword(bool? hasPassword) => _$this._hasPassword = hasPassword;
+
+  bool? _hasGoogleLinked;
+  bool? get hasGoogleLinked => _$this._hasGoogleLinked;
+  set hasGoogleLinked(bool? hasGoogleLinked) =>
+      _$this._hasGoogleLinked = hasGoogleLinked;
+
+  bool? _isTotpEnabled;
+  bool? get isTotpEnabled => _$this._isTotpEnabled;
+  set isTotpEnabled(bool? isTotpEnabled) =>
+      _$this._isTotpEnabled = isTotpEnabled;
+
+  bool? _requireTwoFactor;
+  bool? get requireTwoFactor => _$this._requireTwoFactor;
+  set requireTwoFactor(bool? requireTwoFactor) =>
+      _$this._requireTwoFactor = requireTwoFactor;
+
   AdminUserResponseBuilder() {
     AdminUserResponse._defaults(this);
   }
@@ -204,6 +247,10 @@ class AdminUserResponseBuilder
       _avatar = $v.avatar?.toBuilder();
       _notes = $v.notes;
       _createdAtUtc = $v.createdAtUtc;
+      _hasPassword = $v.hasPassword;
+      _hasGoogleLinked = $v.hasGoogleLinked;
+      _isTotpEnabled = $v.isTotpEnabled;
+      _requireTwoFactor = $v.requireTwoFactor;
       _$v = null;
     }
     return this;
@@ -240,6 +287,10 @@ class AdminUserResponseBuilder
             avatar: _avatar?.build(),
             notes: notes,
             createdAtUtc: createdAtUtc,
+            hasPassword: hasPassword,
+            hasGoogleLinked: hasGoogleLinked,
+            isTotpEnabled: isTotpEnabled,
+            requireTwoFactor: requireTwoFactor,
           );
     } catch (_) {
       late String _$failedField;

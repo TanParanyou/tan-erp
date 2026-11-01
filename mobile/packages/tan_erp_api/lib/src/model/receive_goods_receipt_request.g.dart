@@ -11,12 +11,17 @@ class _$ReceiveGoodsReceiptRequest extends ReceiveGoodsReceiptRequest {
   final String? goodsReceiptId;
   @override
   final String? warehouseId;
+  @override
+  final String? locationId;
+  @override
+  final BuiltList<ReceiveGoodsReceiptLineRequest>? lines;
 
   factory _$ReceiveGoodsReceiptRequest(
           [void Function(ReceiveGoodsReceiptRequestBuilder)? updates]) =>
       (ReceiveGoodsReceiptRequestBuilder()..update(updates))._build();
 
-  _$ReceiveGoodsReceiptRequest._({this.goodsReceiptId, this.warehouseId})
+  _$ReceiveGoodsReceiptRequest._(
+      {this.goodsReceiptId, this.warehouseId, this.locationId, this.lines})
       : super._();
   @override
   ReceiveGoodsReceiptRequest rebuild(
@@ -32,7 +37,9 @@ class _$ReceiveGoodsReceiptRequest extends ReceiveGoodsReceiptRequest {
     if (identical(other, this)) return true;
     return other is ReceiveGoodsReceiptRequest &&
         goodsReceiptId == other.goodsReceiptId &&
-        warehouseId == other.warehouseId;
+        warehouseId == other.warehouseId &&
+        locationId == other.locationId &&
+        lines == other.lines;
   }
 
   @override
@@ -40,6 +47,8 @@ class _$ReceiveGoodsReceiptRequest extends ReceiveGoodsReceiptRequest {
     var _$hash = 0;
     _$hash = $jc(_$hash, goodsReceiptId.hashCode);
     _$hash = $jc(_$hash, warehouseId.hashCode);
+    _$hash = $jc(_$hash, locationId.hashCode);
+    _$hash = $jc(_$hash, lines.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -48,7 +57,9 @@ class _$ReceiveGoodsReceiptRequest extends ReceiveGoodsReceiptRequest {
   String toString() {
     return (newBuiltValueToStringHelper(r'ReceiveGoodsReceiptRequest')
           ..add('goodsReceiptId', goodsReceiptId)
-          ..add('warehouseId', warehouseId))
+          ..add('warehouseId', warehouseId)
+          ..add('locationId', locationId)
+          ..add('lines', lines))
         .toString();
   }
 }
@@ -67,6 +78,16 @@ class ReceiveGoodsReceiptRequestBuilder
   String? get warehouseId => _$this._warehouseId;
   set warehouseId(String? warehouseId) => _$this._warehouseId = warehouseId;
 
+  String? _locationId;
+  String? get locationId => _$this._locationId;
+  set locationId(String? locationId) => _$this._locationId = locationId;
+
+  ListBuilder<ReceiveGoodsReceiptLineRequest>? _lines;
+  ListBuilder<ReceiveGoodsReceiptLineRequest> get lines =>
+      _$this._lines ??= ListBuilder<ReceiveGoodsReceiptLineRequest>();
+  set lines(ListBuilder<ReceiveGoodsReceiptLineRequest>? lines) =>
+      _$this._lines = lines;
+
   ReceiveGoodsReceiptRequestBuilder() {
     ReceiveGoodsReceiptRequest._defaults(this);
   }
@@ -76,6 +97,8 @@ class ReceiveGoodsReceiptRequestBuilder
     if ($v != null) {
       _goodsReceiptId = $v.goodsReceiptId;
       _warehouseId = $v.warehouseId;
+      _locationId = $v.locationId;
+      _lines = $v.lines?.toBuilder();
       _$v = null;
     }
     return this;
@@ -95,11 +118,26 @@ class ReceiveGoodsReceiptRequestBuilder
   ReceiveGoodsReceiptRequest build() => _build();
 
   _$ReceiveGoodsReceiptRequest _build() {
-    final _$result = _$v ??
-        _$ReceiveGoodsReceiptRequest._(
-          goodsReceiptId: goodsReceiptId,
-          warehouseId: warehouseId,
-        );
+    _$ReceiveGoodsReceiptRequest _$result;
+    try {
+      _$result = _$v ??
+          _$ReceiveGoodsReceiptRequest._(
+            goodsReceiptId: goodsReceiptId,
+            warehouseId: warehouseId,
+            locationId: locationId,
+            lines: _lines?.build(),
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'lines';
+        _lines?.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(
+            r'ReceiveGoodsReceiptRequest', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }

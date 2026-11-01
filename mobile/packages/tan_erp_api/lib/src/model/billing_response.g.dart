@@ -45,6 +45,38 @@ class _$BillingResponse extends BillingResponse {
   final String? rowVersion;
   @override
   final BuiltList<PaymentResponse>? payments;
+  @override
+  final String? taxInvoiceNumber;
+  @override
+  final double? vatRate;
+  @override
+  final double? vatAmount;
+  @override
+  final double? grossTotal;
+  @override
+  final double? effectiveReceivable;
+  @override
+  final double? retentionRate;
+  @override
+  final double? retentionAmount;
+  @override
+  final String? retentionStatus;
+  @override
+  final DateTime? releasedRetentionAtUtc;
+  @override
+  final FinancePersonResponse? releasedRetentionBy;
+  @override
+  final double? creditNoteBaseAmount;
+  @override
+  final double? creditNoteVatAmount;
+  @override
+  final double? debitNoteBaseAmount;
+  @override
+  final double? debitNoteVatAmount;
+  @override
+  final BuiltList<BillingLineResponse>? lines;
+  @override
+  final BuiltList<BillingAdjustmentNoteResponse>? notes;
 
   factory _$BillingResponse([void Function(BillingResponseBuilder)? updates]) =>
       (BillingResponseBuilder()..update(updates))._build();
@@ -68,7 +100,23 @@ class _$BillingResponse extends BillingResponse {
       this.createdBy,
       this.issuedAtUtc,
       this.rowVersion,
-      this.payments})
+      this.payments,
+      this.taxInvoiceNumber,
+      this.vatRate,
+      this.vatAmount,
+      this.grossTotal,
+      this.effectiveReceivable,
+      this.retentionRate,
+      this.retentionAmount,
+      this.retentionStatus,
+      this.releasedRetentionAtUtc,
+      this.releasedRetentionBy,
+      this.creditNoteBaseAmount,
+      this.creditNoteVatAmount,
+      this.debitNoteBaseAmount,
+      this.debitNoteVatAmount,
+      this.lines,
+      this.notes})
       : super._();
   @override
   BillingResponse rebuild(void Function(BillingResponseBuilder) updates) =>
@@ -99,7 +147,23 @@ class _$BillingResponse extends BillingResponse {
         createdBy == other.createdBy &&
         issuedAtUtc == other.issuedAtUtc &&
         rowVersion == other.rowVersion &&
-        payments == other.payments;
+        payments == other.payments &&
+        taxInvoiceNumber == other.taxInvoiceNumber &&
+        vatRate == other.vatRate &&
+        vatAmount == other.vatAmount &&
+        grossTotal == other.grossTotal &&
+        effectiveReceivable == other.effectiveReceivable &&
+        retentionRate == other.retentionRate &&
+        retentionAmount == other.retentionAmount &&
+        retentionStatus == other.retentionStatus &&
+        releasedRetentionAtUtc == other.releasedRetentionAtUtc &&
+        releasedRetentionBy == other.releasedRetentionBy &&
+        creditNoteBaseAmount == other.creditNoteBaseAmount &&
+        creditNoteVatAmount == other.creditNoteVatAmount &&
+        debitNoteBaseAmount == other.debitNoteBaseAmount &&
+        debitNoteVatAmount == other.debitNoteVatAmount &&
+        lines == other.lines &&
+        notes == other.notes;
   }
 
   @override
@@ -124,6 +188,22 @@ class _$BillingResponse extends BillingResponse {
     _$hash = $jc(_$hash, issuedAtUtc.hashCode);
     _$hash = $jc(_$hash, rowVersion.hashCode);
     _$hash = $jc(_$hash, payments.hashCode);
+    _$hash = $jc(_$hash, taxInvoiceNumber.hashCode);
+    _$hash = $jc(_$hash, vatRate.hashCode);
+    _$hash = $jc(_$hash, vatAmount.hashCode);
+    _$hash = $jc(_$hash, grossTotal.hashCode);
+    _$hash = $jc(_$hash, effectiveReceivable.hashCode);
+    _$hash = $jc(_$hash, retentionRate.hashCode);
+    _$hash = $jc(_$hash, retentionAmount.hashCode);
+    _$hash = $jc(_$hash, retentionStatus.hashCode);
+    _$hash = $jc(_$hash, releasedRetentionAtUtc.hashCode);
+    _$hash = $jc(_$hash, releasedRetentionBy.hashCode);
+    _$hash = $jc(_$hash, creditNoteBaseAmount.hashCode);
+    _$hash = $jc(_$hash, creditNoteVatAmount.hashCode);
+    _$hash = $jc(_$hash, debitNoteBaseAmount.hashCode);
+    _$hash = $jc(_$hash, debitNoteVatAmount.hashCode);
+    _$hash = $jc(_$hash, lines.hashCode);
+    _$hash = $jc(_$hash, notes.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -149,7 +229,23 @@ class _$BillingResponse extends BillingResponse {
           ..add('createdBy', createdBy)
           ..add('issuedAtUtc', issuedAtUtc)
           ..add('rowVersion', rowVersion)
-          ..add('payments', payments))
+          ..add('payments', payments)
+          ..add('taxInvoiceNumber', taxInvoiceNumber)
+          ..add('vatRate', vatRate)
+          ..add('vatAmount', vatAmount)
+          ..add('grossTotal', grossTotal)
+          ..add('effectiveReceivable', effectiveReceivable)
+          ..add('retentionRate', retentionRate)
+          ..add('retentionAmount', retentionAmount)
+          ..add('retentionStatus', retentionStatus)
+          ..add('releasedRetentionAtUtc', releasedRetentionAtUtc)
+          ..add('releasedRetentionBy', releasedRetentionBy)
+          ..add('creditNoteBaseAmount', creditNoteBaseAmount)
+          ..add('creditNoteVatAmount', creditNoteVatAmount)
+          ..add('debitNoteBaseAmount', debitNoteBaseAmount)
+          ..add('debitNoteVatAmount', debitNoteVatAmount)
+          ..add('lines', lines)
+          ..add('notes', notes))
         .toString();
   }
 }
@@ -241,6 +337,85 @@ class BillingResponseBuilder
   set payments(ListBuilder<PaymentResponse>? payments) =>
       _$this._payments = payments;
 
+  String? _taxInvoiceNumber;
+  String? get taxInvoiceNumber => _$this._taxInvoiceNumber;
+  set taxInvoiceNumber(String? taxInvoiceNumber) =>
+      _$this._taxInvoiceNumber = taxInvoiceNumber;
+
+  double? _vatRate;
+  double? get vatRate => _$this._vatRate;
+  set vatRate(double? vatRate) => _$this._vatRate = vatRate;
+
+  double? _vatAmount;
+  double? get vatAmount => _$this._vatAmount;
+  set vatAmount(double? vatAmount) => _$this._vatAmount = vatAmount;
+
+  double? _grossTotal;
+  double? get grossTotal => _$this._grossTotal;
+  set grossTotal(double? grossTotal) => _$this._grossTotal = grossTotal;
+
+  double? _effectiveReceivable;
+  double? get effectiveReceivable => _$this._effectiveReceivable;
+  set effectiveReceivable(double? effectiveReceivable) =>
+      _$this._effectiveReceivable = effectiveReceivable;
+
+  double? _retentionRate;
+  double? get retentionRate => _$this._retentionRate;
+  set retentionRate(double? retentionRate) =>
+      _$this._retentionRate = retentionRate;
+
+  double? _retentionAmount;
+  double? get retentionAmount => _$this._retentionAmount;
+  set retentionAmount(double? retentionAmount) =>
+      _$this._retentionAmount = retentionAmount;
+
+  String? _retentionStatus;
+  String? get retentionStatus => _$this._retentionStatus;
+  set retentionStatus(String? retentionStatus) =>
+      _$this._retentionStatus = retentionStatus;
+
+  DateTime? _releasedRetentionAtUtc;
+  DateTime? get releasedRetentionAtUtc => _$this._releasedRetentionAtUtc;
+  set releasedRetentionAtUtc(DateTime? releasedRetentionAtUtc) =>
+      _$this._releasedRetentionAtUtc = releasedRetentionAtUtc;
+
+  FinancePersonResponseBuilder? _releasedRetentionBy;
+  FinancePersonResponseBuilder get releasedRetentionBy =>
+      _$this._releasedRetentionBy ??= FinancePersonResponseBuilder();
+  set releasedRetentionBy(FinancePersonResponseBuilder? releasedRetentionBy) =>
+      _$this._releasedRetentionBy = releasedRetentionBy;
+
+  double? _creditNoteBaseAmount;
+  double? get creditNoteBaseAmount => _$this._creditNoteBaseAmount;
+  set creditNoteBaseAmount(double? creditNoteBaseAmount) =>
+      _$this._creditNoteBaseAmount = creditNoteBaseAmount;
+
+  double? _creditNoteVatAmount;
+  double? get creditNoteVatAmount => _$this._creditNoteVatAmount;
+  set creditNoteVatAmount(double? creditNoteVatAmount) =>
+      _$this._creditNoteVatAmount = creditNoteVatAmount;
+
+  double? _debitNoteBaseAmount;
+  double? get debitNoteBaseAmount => _$this._debitNoteBaseAmount;
+  set debitNoteBaseAmount(double? debitNoteBaseAmount) =>
+      _$this._debitNoteBaseAmount = debitNoteBaseAmount;
+
+  double? _debitNoteVatAmount;
+  double? get debitNoteVatAmount => _$this._debitNoteVatAmount;
+  set debitNoteVatAmount(double? debitNoteVatAmount) =>
+      _$this._debitNoteVatAmount = debitNoteVatAmount;
+
+  ListBuilder<BillingLineResponse>? _lines;
+  ListBuilder<BillingLineResponse> get lines =>
+      _$this._lines ??= ListBuilder<BillingLineResponse>();
+  set lines(ListBuilder<BillingLineResponse>? lines) => _$this._lines = lines;
+
+  ListBuilder<BillingAdjustmentNoteResponse>? _notes;
+  ListBuilder<BillingAdjustmentNoteResponse> get notes =>
+      _$this._notes ??= ListBuilder<BillingAdjustmentNoteResponse>();
+  set notes(ListBuilder<BillingAdjustmentNoteResponse>? notes) =>
+      _$this._notes = notes;
+
   BillingResponseBuilder() {
     BillingResponse._defaults(this);
   }
@@ -267,6 +442,22 @@ class BillingResponseBuilder
       _issuedAtUtc = $v.issuedAtUtc;
       _rowVersion = $v.rowVersion;
       _payments = $v.payments?.toBuilder();
+      _taxInvoiceNumber = $v.taxInvoiceNumber;
+      _vatRate = $v.vatRate;
+      _vatAmount = $v.vatAmount;
+      _grossTotal = $v.grossTotal;
+      _effectiveReceivable = $v.effectiveReceivable;
+      _retentionRate = $v.retentionRate;
+      _retentionAmount = $v.retentionAmount;
+      _retentionStatus = $v.retentionStatus;
+      _releasedRetentionAtUtc = $v.releasedRetentionAtUtc;
+      _releasedRetentionBy = $v.releasedRetentionBy?.toBuilder();
+      _creditNoteBaseAmount = $v.creditNoteBaseAmount;
+      _creditNoteVatAmount = $v.creditNoteVatAmount;
+      _debitNoteBaseAmount = $v.debitNoteBaseAmount;
+      _debitNoteVatAmount = $v.debitNoteVatAmount;
+      _lines = $v.lines?.toBuilder();
+      _notes = $v.notes?.toBuilder();
       _$v = null;
     }
     return this;
@@ -309,6 +500,22 @@ class BillingResponseBuilder
             issuedAtUtc: issuedAtUtc,
             rowVersion: rowVersion,
             payments: _payments?.build(),
+            taxInvoiceNumber: taxInvoiceNumber,
+            vatRate: vatRate,
+            vatAmount: vatAmount,
+            grossTotal: grossTotal,
+            effectiveReceivable: effectiveReceivable,
+            retentionRate: retentionRate,
+            retentionAmount: retentionAmount,
+            retentionStatus: retentionStatus,
+            releasedRetentionAtUtc: releasedRetentionAtUtc,
+            releasedRetentionBy: _releasedRetentionBy?.build(),
+            creditNoteBaseAmount: creditNoteBaseAmount,
+            creditNoteVatAmount: creditNoteVatAmount,
+            debitNoteBaseAmount: debitNoteBaseAmount,
+            debitNoteVatAmount: debitNoteVatAmount,
+            lines: _lines?.build(),
+            notes: _notes?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -321,6 +528,14 @@ class BillingResponseBuilder
 
         _$failedField = 'payments';
         _payments?.build();
+
+        _$failedField = 'releasedRetentionBy';
+        _releasedRetentionBy?.build();
+
+        _$failedField = 'lines';
+        _lines?.build();
+        _$failedField = 'notes';
+        _notes?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'BillingResponse', _$failedField, e.toString());

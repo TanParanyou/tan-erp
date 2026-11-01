@@ -24,6 +24,8 @@ part 'create_admin_user_request.g.dart';
 /// * [notes] 
 /// * [startsAtUtc] 
 /// * [expiresAtUtc] 
+/// * [initialPassword] 
+/// * [requireTwoFactor] 
 @BuiltValue()
 abstract class CreateAdminUserRequest implements Built<CreateAdminUserRequest, CreateAdminUserRequestBuilder> {
   @BuiltValueField(wireName: r'displayName')
@@ -61,6 +63,12 @@ abstract class CreateAdminUserRequest implements Built<CreateAdminUserRequest, C
 
   @BuiltValueField(wireName: r'expiresAtUtc')
   DateTime? get expiresAtUtc;
+
+  @BuiltValueField(wireName: r'initialPassword')
+  String? get initialPassword;
+
+  @BuiltValueField(wireName: r'requireTwoFactor')
+  bool? get requireTwoFactor;
 
   CreateAdminUserRequest._();
 
@@ -167,6 +175,20 @@ class _$CreateAdminUserRequestSerializer implements PrimitiveSerializer<CreateAd
       yield serializers.serialize(
         object.expiresAtUtc,
         specifiedType: const FullType.nullable(DateTime),
+      );
+    }
+    if (object.initialPassword != null) {
+      yield r'initialPassword';
+      yield serializers.serialize(
+        object.initialPassword,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.requireTwoFactor != null) {
+      yield r'requireTwoFactor';
+      yield serializers.serialize(
+        object.requireTwoFactor,
+        specifiedType: const FullType(bool),
       );
     }
   }
@@ -287,6 +309,22 @@ class _$CreateAdminUserRequestSerializer implements PrimitiveSerializer<CreateAd
           ) as DateTime?;
           if (valueDes == null) continue;
           result.expiresAtUtc = valueDes;
+          break;
+        case r'initialPassword':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.initialPassword = valueDes;
+          break;
+        case r'requireTwoFactor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.requireTwoFactor = valueDes;
           break;
         default:
           unhandled.add(key);

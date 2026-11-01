@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -13,6 +14,10 @@ part 'stock_line_request.g.dart';
 /// Properties:
 /// * [itemId] 
 /// * [quantity] 
+/// * [locationId] 
+/// * [toLocationId] 
+/// * [lotNumber] 
+/// * [serialNumbers] 
 @BuiltValue()
 abstract class StockLineRequest implements Built<StockLineRequest, StockLineRequestBuilder> {
   @BuiltValueField(wireName: r'itemId')
@@ -20,6 +25,18 @@ abstract class StockLineRequest implements Built<StockLineRequest, StockLineRequ
 
   @BuiltValueField(wireName: r'quantity')
   double? get quantity;
+
+  @BuiltValueField(wireName: r'locationId')
+  String? get locationId;
+
+  @BuiltValueField(wireName: r'toLocationId')
+  String? get toLocationId;
+
+  @BuiltValueField(wireName: r'lotNumber')
+  String? get lotNumber;
+
+  @BuiltValueField(wireName: r'serialNumbers')
+  BuiltList<String>? get serialNumbers;
 
   StockLineRequest._();
 
@@ -56,6 +73,34 @@ class _$StockLineRequestSerializer implements PrimitiveSerializer<StockLineReque
       yield serializers.serialize(
         object.quantity,
         specifiedType: const FullType(double),
+      );
+    }
+    if (object.locationId != null) {
+      yield r'locationId';
+      yield serializers.serialize(
+        object.locationId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.toLocationId != null) {
+      yield r'toLocationId';
+      yield serializers.serialize(
+        object.toLocationId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.lotNumber != null) {
+      yield r'lotNumber';
+      yield serializers.serialize(
+        object.lotNumber,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.serialNumbers != null) {
+      yield r'serialNumbers';
+      yield serializers.serialize(
+        object.serialNumbers,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
       );
     }
   }
@@ -96,6 +141,38 @@ class _$StockLineRequestSerializer implements PrimitiveSerializer<StockLineReque
           ) as double?;
           if (valueDes == null) continue;
           result.quantity = valueDes;
+          break;
+        case r'locationId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.locationId = valueDes;
+          break;
+        case r'toLocationId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.toLocationId = valueDes;
+          break;
+        case r'lotNumber':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.lotNumber = valueDes;
+          break;
+        case r'serialNumbers':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
+          ) as BuiltList<String>?;
+          if (valueDes == null) continue;
+          result.serialNumbers.replace(valueDes);
           break;
         default:
           unhandled.add(key);

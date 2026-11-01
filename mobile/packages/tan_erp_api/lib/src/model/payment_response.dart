@@ -24,6 +24,12 @@ part 'payment_response.g.dart';
 /// * [reversedAtUtc] 
 /// * [recordedBy] 
 /// * [recordedAtUtc] 
+/// * [receiptNumber] 
+/// * [whtRate] 
+/// * [whtAmount] 
+/// * [netCashReceived] 
+/// * [whtType] 
+/// * [whtCertificateNumber] 
 @BuiltValue()
 abstract class PaymentResponse implements Built<PaymentResponse, PaymentResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -58,6 +64,24 @@ abstract class PaymentResponse implements Built<PaymentResponse, PaymentResponse
 
   @BuiltValueField(wireName: r'recordedAtUtc')
   DateTime? get recordedAtUtc;
+
+  @BuiltValueField(wireName: r'receiptNumber')
+  String? get receiptNumber;
+
+  @BuiltValueField(wireName: r'whtRate')
+  double? get whtRate;
+
+  @BuiltValueField(wireName: r'whtAmount')
+  double? get whtAmount;
+
+  @BuiltValueField(wireName: r'netCashReceived')
+  double? get netCashReceived;
+
+  @BuiltValueField(wireName: r'whtType')
+  String? get whtType;
+
+  @BuiltValueField(wireName: r'whtCertificateNumber')
+  String? get whtCertificateNumber;
 
   PaymentResponse._();
 
@@ -157,6 +181,48 @@ class _$PaymentResponseSerializer implements PrimitiveSerializer<PaymentResponse
       yield serializers.serialize(
         object.recordedAtUtc,
         specifiedType: const FullType(DateTime),
+      );
+    }
+    if (object.receiptNumber != null) {
+      yield r'receiptNumber';
+      yield serializers.serialize(
+        object.receiptNumber,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.whtRate != null) {
+      yield r'whtRate';
+      yield serializers.serialize(
+        object.whtRate,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.whtAmount != null) {
+      yield r'whtAmount';
+      yield serializers.serialize(
+        object.whtAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.netCashReceived != null) {
+      yield r'netCashReceived';
+      yield serializers.serialize(
+        object.netCashReceived,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.whtType != null) {
+      yield r'whtType';
+      yield serializers.serialize(
+        object.whtType,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.whtCertificateNumber != null) {
+      yield r'whtCertificateNumber';
+      yield serializers.serialize(
+        object.whtCertificateNumber,
+        specifiedType: const FullType.nullable(String),
       );
     }
   }
@@ -269,6 +335,54 @@ class _$PaymentResponseSerializer implements PrimitiveSerializer<PaymentResponse
           ) as DateTime?;
           if (valueDes == null) continue;
           result.recordedAtUtc = valueDes;
+          break;
+        case r'receiptNumber':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.receiptNumber = valueDes;
+          break;
+        case r'whtRate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.whtRate = valueDes;
+          break;
+        case r'whtAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.whtAmount = valueDes;
+          break;
+        case r'netCashReceived':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.netCashReceived = valueDes;
+          break;
+        case r'whtType':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.whtType = valueDes;
+          break;
+        case r'whtCertificateNumber':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.whtCertificateNumber = valueDes;
           break;
         default:
           unhandled.add(key);

@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -18,6 +19,9 @@ part 'work_order_list_item_response.g.dart';
 /// * [itemNameTh] 
 /// * [plannedQuantity] 
 /// * [completedQuantity] 
+/// * [plannedStartDate] 
+/// * [plannedEndDate] 
+/// * [totalManufacturingCost] 
 /// * [projectCode] 
 /// * [createdAtUtc] 
 @BuiltValue()
@@ -42,6 +46,15 @@ abstract class WorkOrderListItemResponse implements Built<WorkOrderListItemRespo
 
   @BuiltValueField(wireName: r'completedQuantity')
   double? get completedQuantity;
+
+  @BuiltValueField(wireName: r'plannedStartDate')
+  Date? get plannedStartDate;
+
+  @BuiltValueField(wireName: r'plannedEndDate')
+  Date? get plannedEndDate;
+
+  @BuiltValueField(wireName: r'totalManufacturingCost')
+  double? get totalManufacturingCost;
 
   @BuiltValueField(wireName: r'projectCode')
   String? get projectCode;
@@ -118,6 +131,27 @@ class _$WorkOrderListItemResponseSerializer implements PrimitiveSerializer<WorkO
       yield r'completedQuantity';
       yield serializers.serialize(
         object.completedQuantity,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.plannedStartDate != null) {
+      yield r'plannedStartDate';
+      yield serializers.serialize(
+        object.plannedStartDate,
+        specifiedType: const FullType(Date),
+      );
+    }
+    if (object.plannedEndDate != null) {
+      yield r'plannedEndDate';
+      yield serializers.serialize(
+        object.plannedEndDate,
+        specifiedType: const FullType(Date),
+      );
+    }
+    if (object.totalManufacturingCost != null) {
+      yield r'totalManufacturingCost';
+      yield serializers.serialize(
+        object.totalManufacturingCost,
         specifiedType: const FullType(double),
       );
     }
@@ -213,6 +247,30 @@ class _$WorkOrderListItemResponseSerializer implements PrimitiveSerializer<WorkO
           ) as double?;
           if (valueDes == null) continue;
           result.completedQuantity = valueDes;
+          break;
+        case r'plannedStartDate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.plannedStartDate = valueDes;
+          break;
+        case r'plannedEndDate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.plannedEndDate = valueDes;
+          break;
+        case r'totalManufacturingCost':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.totalManufacturingCost = valueDes;
           break;
         case r'projectCode':
           final valueDes = serializers.deserialize(

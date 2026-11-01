@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:built_collection/built_collection.dart';
 import 'package:tan_erp_api/src/model/survey_localized_name_contract.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -19,6 +20,8 @@ part 'survey_design_style_response.g.dart';
 /// * [sortOrder] 
 /// * [isActive] 
 /// * [createdAtUtc] 
+/// * [imageFileId] 
+/// * [imageFileIds] 
 @BuiltValue()
 abstract class SurveyDesignStyleResponse implements Built<SurveyDesignStyleResponse, SurveyDesignStyleResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -41,6 +44,12 @@ abstract class SurveyDesignStyleResponse implements Built<SurveyDesignStyleRespo
 
   @BuiltValueField(wireName: r'createdAtUtc')
   DateTime? get createdAtUtc;
+
+  @BuiltValueField(wireName: r'imageFileId')
+  String? get imageFileId;
+
+  @BuiltValueField(wireName: r'imageFileIds')
+  BuiltList<String>? get imageFileIds;
 
   SurveyDesignStyleResponse._();
 
@@ -112,6 +121,20 @@ class _$SurveyDesignStyleResponseSerializer implements PrimitiveSerializer<Surve
       yield serializers.serialize(
         object.createdAtUtc,
         specifiedType: const FullType(DateTime),
+      );
+    }
+    if (object.imageFileId != null) {
+      yield r'imageFileId';
+      yield serializers.serialize(
+        object.imageFileId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.imageFileIds != null) {
+      yield r'imageFileIds';
+      yield serializers.serialize(
+        object.imageFileIds,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
       );
     }
   }
@@ -192,6 +215,22 @@ class _$SurveyDesignStyleResponseSerializer implements PrimitiveSerializer<Surve
           ) as DateTime?;
           if (valueDes == null) continue;
           result.createdAtUtc = valueDes;
+          break;
+        case r'imageFileId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.imageFileId = valueDes;
+          break;
+        case r'imageFileIds':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
+          ) as BuiltList<String>?;
+          if (valueDes == null) continue;
+          result.imageFileIds.replace(valueDes);
           break;
         default:
           unhandled.add(key);

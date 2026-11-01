@@ -34,6 +34,16 @@ class _$ServiceRequestResponse extends ServiceRequestResponse {
   @override
   final int? reopenCount;
   @override
+  final ServiceSlaResponse? sla;
+  @override
+  final double? serviceChargeAmount;
+  @override
+  final String? serviceChargeNote;
+  @override
+  final String? billingDocumentId;
+  @override
+  final String? billingDocumentNumber;
+  @override
   final ServicePersonResponse? createdBy;
   @override
   final DateTime? createdAtUtc;
@@ -60,6 +70,11 @@ class _$ServiceRequestResponse extends ServiceRequestResponse {
       this.scheduledDate,
       this.resolutionNote,
       this.reopenCount,
+      this.sla,
+      this.serviceChargeAmount,
+      this.serviceChargeNote,
+      this.billingDocumentId,
+      this.billingDocumentNumber,
       this.createdBy,
       this.createdAtUtc,
       this.rowVersion,
@@ -91,6 +106,11 @@ class _$ServiceRequestResponse extends ServiceRequestResponse {
         scheduledDate == other.scheduledDate &&
         resolutionNote == other.resolutionNote &&
         reopenCount == other.reopenCount &&
+        sla == other.sla &&
+        serviceChargeAmount == other.serviceChargeAmount &&
+        serviceChargeNote == other.serviceChargeNote &&
+        billingDocumentId == other.billingDocumentId &&
+        billingDocumentNumber == other.billingDocumentNumber &&
         createdBy == other.createdBy &&
         createdAtUtc == other.createdAtUtc &&
         rowVersion == other.rowVersion &&
@@ -113,6 +133,11 @@ class _$ServiceRequestResponse extends ServiceRequestResponse {
     _$hash = $jc(_$hash, scheduledDate.hashCode);
     _$hash = $jc(_$hash, resolutionNote.hashCode);
     _$hash = $jc(_$hash, reopenCount.hashCode);
+    _$hash = $jc(_$hash, sla.hashCode);
+    _$hash = $jc(_$hash, serviceChargeAmount.hashCode);
+    _$hash = $jc(_$hash, serviceChargeNote.hashCode);
+    _$hash = $jc(_$hash, billingDocumentId.hashCode);
+    _$hash = $jc(_$hash, billingDocumentNumber.hashCode);
     _$hash = $jc(_$hash, createdBy.hashCode);
     _$hash = $jc(_$hash, createdAtUtc.hashCode);
     _$hash = $jc(_$hash, rowVersion.hashCode);
@@ -137,6 +162,11 @@ class _$ServiceRequestResponse extends ServiceRequestResponse {
           ..add('scheduledDate', scheduledDate)
           ..add('resolutionNote', resolutionNote)
           ..add('reopenCount', reopenCount)
+          ..add('sla', sla)
+          ..add('serviceChargeAmount', serviceChargeAmount)
+          ..add('serviceChargeNote', serviceChargeNote)
+          ..add('billingDocumentId', billingDocumentId)
+          ..add('billingDocumentNumber', billingDocumentNumber)
           ..add('createdBy', createdBy)
           ..add('createdAtUtc', createdAtUtc)
           ..add('rowVersion', rowVersion)
@@ -207,6 +237,31 @@ class ServiceRequestResponseBuilder
   int? get reopenCount => _$this._reopenCount;
   set reopenCount(int? reopenCount) => _$this._reopenCount = reopenCount;
 
+  ServiceSlaResponseBuilder? _sla;
+  ServiceSlaResponseBuilder get sla =>
+      _$this._sla ??= ServiceSlaResponseBuilder();
+  set sla(ServiceSlaResponseBuilder? sla) => _$this._sla = sla;
+
+  double? _serviceChargeAmount;
+  double? get serviceChargeAmount => _$this._serviceChargeAmount;
+  set serviceChargeAmount(double? serviceChargeAmount) =>
+      _$this._serviceChargeAmount = serviceChargeAmount;
+
+  String? _serviceChargeNote;
+  String? get serviceChargeNote => _$this._serviceChargeNote;
+  set serviceChargeNote(String? serviceChargeNote) =>
+      _$this._serviceChargeNote = serviceChargeNote;
+
+  String? _billingDocumentId;
+  String? get billingDocumentId => _$this._billingDocumentId;
+  set billingDocumentId(String? billingDocumentId) =>
+      _$this._billingDocumentId = billingDocumentId;
+
+  String? _billingDocumentNumber;
+  String? get billingDocumentNumber => _$this._billingDocumentNumber;
+  set billingDocumentNumber(String? billingDocumentNumber) =>
+      _$this._billingDocumentNumber = billingDocumentNumber;
+
   ServicePersonResponseBuilder? _createdBy;
   ServicePersonResponseBuilder get createdBy =>
       _$this._createdBy ??= ServicePersonResponseBuilder();
@@ -248,6 +303,11 @@ class ServiceRequestResponseBuilder
       _scheduledDate = $v.scheduledDate;
       _resolutionNote = $v.resolutionNote;
       _reopenCount = $v.reopenCount;
+      _sla = $v.sla?.toBuilder();
+      _serviceChargeAmount = $v.serviceChargeAmount;
+      _serviceChargeNote = $v.serviceChargeNote;
+      _billingDocumentId = $v.billingDocumentId;
+      _billingDocumentNumber = $v.billingDocumentNumber;
       _createdBy = $v.createdBy?.toBuilder();
       _createdAtUtc = $v.createdAtUtc;
       _rowVersion = $v.rowVersion;
@@ -288,6 +348,11 @@ class ServiceRequestResponseBuilder
             scheduledDate: scheduledDate,
             resolutionNote: resolutionNote,
             reopenCount: reopenCount,
+            sla: _sla?.build(),
+            serviceChargeAmount: serviceChargeAmount,
+            serviceChargeNote: serviceChargeNote,
+            billingDocumentId: billingDocumentId,
+            billingDocumentNumber: billingDocumentNumber,
             createdBy: _createdBy?.build(),
             createdAtUtc: createdAtUtc,
             rowVersion: rowVersion,
@@ -300,6 +365,9 @@ class ServiceRequestResponseBuilder
         _warranty?.build();
         _$failedField = 'project';
         _project?.build();
+
+        _$failedField = 'sla';
+        _sla?.build();
 
         _$failedField = 'createdBy';
         _createdBy?.build();

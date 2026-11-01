@@ -15,11 +15,18 @@ class _$BomRequest extends BomRequest {
   final String? note;
   @override
   final BuiltList<BomLineRequest>? lines;
+  @override
+  final BuiltList<BomRoutingStepRequest>? routingSteps;
 
   factory _$BomRequest([void Function(BomRequestBuilder)? updates]) =>
       (BomRequestBuilder()..update(updates))._build();
 
-  _$BomRequest._({this.itemId, this.outputQuantity, this.note, this.lines})
+  _$BomRequest._(
+      {this.itemId,
+      this.outputQuantity,
+      this.note,
+      this.lines,
+      this.routingSteps})
       : super._();
   @override
   BomRequest rebuild(void Function(BomRequestBuilder) updates) =>
@@ -35,7 +42,8 @@ class _$BomRequest extends BomRequest {
         itemId == other.itemId &&
         outputQuantity == other.outputQuantity &&
         note == other.note &&
-        lines == other.lines;
+        lines == other.lines &&
+        routingSteps == other.routingSteps;
   }
 
   @override
@@ -45,6 +53,7 @@ class _$BomRequest extends BomRequest {
     _$hash = $jc(_$hash, outputQuantity.hashCode);
     _$hash = $jc(_$hash, note.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
+    _$hash = $jc(_$hash, routingSteps.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -55,7 +64,8 @@ class _$BomRequest extends BomRequest {
           ..add('itemId', itemId)
           ..add('outputQuantity', outputQuantity)
           ..add('note', note)
-          ..add('lines', lines))
+          ..add('lines', lines)
+          ..add('routingSteps', routingSteps))
         .toString();
   }
 }
@@ -81,6 +91,12 @@ class BomRequestBuilder implements Builder<BomRequest, BomRequestBuilder> {
       _$this._lines ??= ListBuilder<BomLineRequest>();
   set lines(ListBuilder<BomLineRequest>? lines) => _$this._lines = lines;
 
+  ListBuilder<BomRoutingStepRequest>? _routingSteps;
+  ListBuilder<BomRoutingStepRequest> get routingSteps =>
+      _$this._routingSteps ??= ListBuilder<BomRoutingStepRequest>();
+  set routingSteps(ListBuilder<BomRoutingStepRequest>? routingSteps) =>
+      _$this._routingSteps = routingSteps;
+
   BomRequestBuilder() {
     BomRequest._defaults(this);
   }
@@ -92,6 +108,7 @@ class BomRequestBuilder implements Builder<BomRequest, BomRequestBuilder> {
       _outputQuantity = $v.outputQuantity;
       _note = $v.note;
       _lines = $v.lines?.toBuilder();
+      _routingSteps = $v.routingSteps?.toBuilder();
       _$v = null;
     }
     return this;
@@ -119,12 +136,15 @@ class BomRequestBuilder implements Builder<BomRequest, BomRequestBuilder> {
             outputQuantity: outputQuantity,
             note: note,
             lines: _lines?.build(),
+            routingSteps: _routingSteps?.build(),
           );
     } catch (_) {
       late String _$failedField;
       try {
         _$failedField = 'lines';
         _lines?.build();
+        _$failedField = 'routingSteps';
+        _routingSteps?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'BomRequest', _$failedField, e.toString());

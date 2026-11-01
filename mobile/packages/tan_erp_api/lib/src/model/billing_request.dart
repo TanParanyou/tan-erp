@@ -3,6 +3,8 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:built_collection/built_collection.dart';
+import 'package:tan_erp_api/src/model/billing_line_request.dart';
 import 'package:tan_erp_api/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -17,6 +19,10 @@ part 'billing_request.g.dart';
 /// * [description] 
 /// * [amount] 
 /// * [dueDate] 
+/// * [applyVat] 
+/// * [vatRate] 
+/// * [retentionRate] 
+/// * [lines] 
 @BuiltValue()
 abstract class BillingRequest implements Built<BillingRequest, BillingRequestBuilder> {
   @BuiltValueField(wireName: r'projectId')
@@ -33,6 +39,18 @@ abstract class BillingRequest implements Built<BillingRequest, BillingRequestBui
 
   @BuiltValueField(wireName: r'dueDate')
   Date? get dueDate;
+
+  @BuiltValueField(wireName: r'applyVat')
+  bool? get applyVat;
+
+  @BuiltValueField(wireName: r'vatRate')
+  double? get vatRate;
+
+  @BuiltValueField(wireName: r'retentionRate')
+  double? get retentionRate;
+
+  @BuiltValueField(wireName: r'lines')
+  BuiltList<BillingLineRequest>? get lines;
 
   BillingRequest._();
 
@@ -90,6 +108,34 @@ class _$BillingRequestSerializer implements PrimitiveSerializer<BillingRequest> 
       yield serializers.serialize(
         object.dueDate,
         specifiedType: const FullType.nullable(Date),
+      );
+    }
+    if (object.applyVat != null) {
+      yield r'applyVat';
+      yield serializers.serialize(
+        object.applyVat,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.vatRate != null) {
+      yield r'vatRate';
+      yield serializers.serialize(
+        object.vatRate,
+        specifiedType: const FullType.nullable(double),
+      );
+    }
+    if (object.retentionRate != null) {
+      yield r'retentionRate';
+      yield serializers.serialize(
+        object.retentionRate,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.lines != null) {
+      yield r'lines';
+      yield serializers.serialize(
+        object.lines,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(BillingLineRequest)]),
       );
     }
   }
@@ -154,6 +200,38 @@ class _$BillingRequestSerializer implements PrimitiveSerializer<BillingRequest> 
           ) as Date?;
           if (valueDes == null) continue;
           result.dueDate = valueDes;
+          break;
+        case r'applyVat':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.applyVat = valueDes;
+          break;
+        case r'vatRate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.vatRate = valueDes;
+          break;
+        case r'retentionRate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.retentionRate = valueDes;
+          break;
+        case r'lines':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(BillingLineRequest)]),
+          ) as BuiltList<BillingLineRequest>?;
+          if (valueDes == null) continue;
+          result.lines.replace(valueDes);
           break;
         default:
           unhandled.add(key);

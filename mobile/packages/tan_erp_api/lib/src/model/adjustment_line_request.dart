@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -14,6 +15,9 @@ part 'adjustment_line_request.g.dart';
 /// * [itemId] 
 /// * [countedQuantity] 
 /// * [unitCost] 
+/// * [locationId] 
+/// * [lotNumber] 
+/// * [serialNumbers] 
 @BuiltValue()
 abstract class AdjustmentLineRequest implements Built<AdjustmentLineRequest, AdjustmentLineRequestBuilder> {
   @BuiltValueField(wireName: r'itemId')
@@ -24,6 +28,15 @@ abstract class AdjustmentLineRequest implements Built<AdjustmentLineRequest, Adj
 
   @BuiltValueField(wireName: r'unitCost')
   double? get unitCost;
+
+  @BuiltValueField(wireName: r'locationId')
+  String? get locationId;
+
+  @BuiltValueField(wireName: r'lotNumber')
+  String? get lotNumber;
+
+  @BuiltValueField(wireName: r'serialNumbers')
+  BuiltList<String>? get serialNumbers;
 
   AdjustmentLineRequest._();
 
@@ -67,6 +80,27 @@ class _$AdjustmentLineRequestSerializer implements PrimitiveSerializer<Adjustmen
       yield serializers.serialize(
         object.unitCost,
         specifiedType: const FullType.nullable(double),
+      );
+    }
+    if (object.locationId != null) {
+      yield r'locationId';
+      yield serializers.serialize(
+        object.locationId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.lotNumber != null) {
+      yield r'lotNumber';
+      yield serializers.serialize(
+        object.lotNumber,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.serialNumbers != null) {
+      yield r'serialNumbers';
+      yield serializers.serialize(
+        object.serialNumbers,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
       );
     }
   }
@@ -115,6 +149,30 @@ class _$AdjustmentLineRequestSerializer implements PrimitiveSerializer<Adjustmen
           ) as double?;
           if (valueDes == null) continue;
           result.unitCost = valueDes;
+          break;
+        case r'locationId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.locationId = valueDes;
+          break;
+        case r'lotNumber':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.lotNumber = valueDes;
+          break;
+        case r'serialNumbers':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
+          ) as BuiltList<String>?;
+          if (valueDes == null) continue;
+          result.serialNumbers.replace(valueDes);
           break;
         default:
           unhandled.add(key);

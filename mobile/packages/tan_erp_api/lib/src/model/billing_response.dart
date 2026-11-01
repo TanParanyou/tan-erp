@@ -7,7 +7,9 @@ import 'package:tan_erp_api/src/model/finance_project_ref_response.dart';
 import 'package:tan_erp_api/src/model/payment_response.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:tan_erp_api/src/model/date.dart';
+import 'package:tan_erp_api/src/model/billing_line_response.dart';
 import 'package:tan_erp_api/src/model/finance_person_response.dart';
+import 'package:tan_erp_api/src/model/billing_adjustment_note_response.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -35,6 +37,22 @@ part 'billing_response.g.dart';
 /// * [issuedAtUtc] 
 /// * [rowVersion] 
 /// * [payments] 
+/// * [taxInvoiceNumber] 
+/// * [vatRate] 
+/// * [vatAmount] 
+/// * [grossTotal] 
+/// * [effectiveReceivable] 
+/// * [retentionRate] 
+/// * [retentionAmount] 
+/// * [retentionStatus] 
+/// * [releasedRetentionAtUtc] 
+/// * [releasedRetentionBy] 
+/// * [creditNoteBaseAmount] 
+/// * [creditNoteVatAmount] 
+/// * [debitNoteBaseAmount] 
+/// * [debitNoteVatAmount] 
+/// * [lines] 
+/// * [notes] 
 @BuiltValue()
 abstract class BillingResponse implements Built<BillingResponse, BillingResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -93,6 +111,54 @@ abstract class BillingResponse implements Built<BillingResponse, BillingResponse
 
   @BuiltValueField(wireName: r'payments')
   BuiltList<PaymentResponse>? get payments;
+
+  @BuiltValueField(wireName: r'taxInvoiceNumber')
+  String? get taxInvoiceNumber;
+
+  @BuiltValueField(wireName: r'vatRate')
+  double? get vatRate;
+
+  @BuiltValueField(wireName: r'vatAmount')
+  double? get vatAmount;
+
+  @BuiltValueField(wireName: r'grossTotal')
+  double? get grossTotal;
+
+  @BuiltValueField(wireName: r'effectiveReceivable')
+  double? get effectiveReceivable;
+
+  @BuiltValueField(wireName: r'retentionRate')
+  double? get retentionRate;
+
+  @BuiltValueField(wireName: r'retentionAmount')
+  double? get retentionAmount;
+
+  @BuiltValueField(wireName: r'retentionStatus')
+  String? get retentionStatus;
+
+  @BuiltValueField(wireName: r'releasedRetentionAtUtc')
+  DateTime? get releasedRetentionAtUtc;
+
+  @BuiltValueField(wireName: r'releasedRetentionBy')
+  FinancePersonResponse? get releasedRetentionBy;
+
+  @BuiltValueField(wireName: r'creditNoteBaseAmount')
+  double? get creditNoteBaseAmount;
+
+  @BuiltValueField(wireName: r'creditNoteVatAmount')
+  double? get creditNoteVatAmount;
+
+  @BuiltValueField(wireName: r'debitNoteBaseAmount')
+  double? get debitNoteBaseAmount;
+
+  @BuiltValueField(wireName: r'debitNoteVatAmount')
+  double? get debitNoteVatAmount;
+
+  @BuiltValueField(wireName: r'lines')
+  BuiltList<BillingLineResponse>? get lines;
+
+  @BuiltValueField(wireName: r'notes')
+  BuiltList<BillingAdjustmentNoteResponse>? get notes;
 
   BillingResponse._();
 
@@ -248,6 +314,118 @@ class _$BillingResponseSerializer implements PrimitiveSerializer<BillingResponse
       yield serializers.serialize(
         object.payments,
         specifiedType: const FullType.nullable(BuiltList, [FullType(PaymentResponse)]),
+      );
+    }
+    if (object.taxInvoiceNumber != null) {
+      yield r'taxInvoiceNumber';
+      yield serializers.serialize(
+        object.taxInvoiceNumber,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.vatRate != null) {
+      yield r'vatRate';
+      yield serializers.serialize(
+        object.vatRate,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.vatAmount != null) {
+      yield r'vatAmount';
+      yield serializers.serialize(
+        object.vatAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.grossTotal != null) {
+      yield r'grossTotal';
+      yield serializers.serialize(
+        object.grossTotal,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.effectiveReceivable != null) {
+      yield r'effectiveReceivable';
+      yield serializers.serialize(
+        object.effectiveReceivable,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.retentionRate != null) {
+      yield r'retentionRate';
+      yield serializers.serialize(
+        object.retentionRate,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.retentionAmount != null) {
+      yield r'retentionAmount';
+      yield serializers.serialize(
+        object.retentionAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.retentionStatus != null) {
+      yield r'retentionStatus';
+      yield serializers.serialize(
+        object.retentionStatus,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.releasedRetentionAtUtc != null) {
+      yield r'releasedRetentionAtUtc';
+      yield serializers.serialize(
+        object.releasedRetentionAtUtc,
+        specifiedType: const FullType.nullable(DateTime),
+      );
+    }
+    if (object.releasedRetentionBy != null) {
+      yield r'releasedRetentionBy';
+      yield serializers.serialize(
+        object.releasedRetentionBy,
+        specifiedType: const FullType(FinancePersonResponse),
+      );
+    }
+    if (object.creditNoteBaseAmount != null) {
+      yield r'creditNoteBaseAmount';
+      yield serializers.serialize(
+        object.creditNoteBaseAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.creditNoteVatAmount != null) {
+      yield r'creditNoteVatAmount';
+      yield serializers.serialize(
+        object.creditNoteVatAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.debitNoteBaseAmount != null) {
+      yield r'debitNoteBaseAmount';
+      yield serializers.serialize(
+        object.debitNoteBaseAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.debitNoteVatAmount != null) {
+      yield r'debitNoteVatAmount';
+      yield serializers.serialize(
+        object.debitNoteVatAmount,
+        specifiedType: const FullType(double),
+      );
+    }
+    if (object.lines != null) {
+      yield r'lines';
+      yield serializers.serialize(
+        object.lines,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(BillingLineResponse)]),
+      );
+    }
+    if (object.notes != null) {
+      yield r'notes';
+      yield serializers.serialize(
+        object.notes,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(BillingAdjustmentNoteResponse)]),
       );
     }
   }
@@ -424,6 +602,134 @@ class _$BillingResponseSerializer implements PrimitiveSerializer<BillingResponse
           ) as BuiltList<PaymentResponse>?;
           if (valueDes == null) continue;
           result.payments.replace(valueDes);
+          break;
+        case r'taxInvoiceNumber':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.taxInvoiceNumber = valueDes;
+          break;
+        case r'vatRate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.vatRate = valueDes;
+          break;
+        case r'vatAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.vatAmount = valueDes;
+          break;
+        case r'grossTotal':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.grossTotal = valueDes;
+          break;
+        case r'effectiveReceivable':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.effectiveReceivable = valueDes;
+          break;
+        case r'retentionRate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.retentionRate = valueDes;
+          break;
+        case r'retentionAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.retentionAmount = valueDes;
+          break;
+        case r'retentionStatus':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.retentionStatus = valueDes;
+          break;
+        case r'releasedRetentionAtUtc':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
+          result.releasedRetentionAtUtc = valueDes;
+          break;
+        case r'releasedRetentionBy':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(FinancePersonResponse),
+          ) as FinancePersonResponse?;
+          if (valueDes == null) continue;
+          result.releasedRetentionBy.replace(valueDes);
+          break;
+        case r'creditNoteBaseAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.creditNoteBaseAmount = valueDes;
+          break;
+        case r'creditNoteVatAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.creditNoteVatAmount = valueDes;
+          break;
+        case r'debitNoteBaseAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.debitNoteBaseAmount = valueDes;
+          break;
+        case r'debitNoteVatAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.debitNoteVatAmount = valueDes;
+          break;
+        case r'lines':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(BillingLineResponse)]),
+          ) as BuiltList<BillingLineResponse>?;
+          if (valueDes == null) continue;
+          result.lines.replace(valueDes);
+          break;
+        case r'notes':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(BillingAdjustmentNoteResponse)]),
+          ) as BuiltList<BillingAdjustmentNoteResponse>?;
+          if (valueDes == null) continue;
+          result.notes.replace(valueDes);
           break;
         default:
           unhandled.add(key);

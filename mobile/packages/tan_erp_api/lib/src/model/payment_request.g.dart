@@ -15,12 +15,24 @@ class _$PaymentRequest extends PaymentRequest {
   final String? reference;
   @override
   final Date? receivedDate;
+  @override
+  final double? whtRate;
+  @override
+  final String? whtType;
+  @override
+  final String? whtCertificateNumber;
 
   factory _$PaymentRequest([void Function(PaymentRequestBuilder)? updates]) =>
       (PaymentRequestBuilder()..update(updates))._build();
 
   _$PaymentRequest._(
-      {this.amount, this.method, this.reference, this.receivedDate})
+      {this.amount,
+      this.method,
+      this.reference,
+      this.receivedDate,
+      this.whtRate,
+      this.whtType,
+      this.whtCertificateNumber})
       : super._();
   @override
   PaymentRequest rebuild(void Function(PaymentRequestBuilder) updates) =>
@@ -36,7 +48,10 @@ class _$PaymentRequest extends PaymentRequest {
         amount == other.amount &&
         method == other.method &&
         reference == other.reference &&
-        receivedDate == other.receivedDate;
+        receivedDate == other.receivedDate &&
+        whtRate == other.whtRate &&
+        whtType == other.whtType &&
+        whtCertificateNumber == other.whtCertificateNumber;
   }
 
   @override
@@ -46,6 +61,9 @@ class _$PaymentRequest extends PaymentRequest {
     _$hash = $jc(_$hash, method.hashCode);
     _$hash = $jc(_$hash, reference.hashCode);
     _$hash = $jc(_$hash, receivedDate.hashCode);
+    _$hash = $jc(_$hash, whtRate.hashCode);
+    _$hash = $jc(_$hash, whtType.hashCode);
+    _$hash = $jc(_$hash, whtCertificateNumber.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -56,7 +74,10 @@ class _$PaymentRequest extends PaymentRequest {
           ..add('amount', amount)
           ..add('method', method)
           ..add('reference', reference)
-          ..add('receivedDate', receivedDate))
+          ..add('receivedDate', receivedDate)
+          ..add('whtRate', whtRate)
+          ..add('whtType', whtType)
+          ..add('whtCertificateNumber', whtCertificateNumber))
         .toString();
   }
 }
@@ -81,6 +102,19 @@ class PaymentRequestBuilder
   Date? get receivedDate => _$this._receivedDate;
   set receivedDate(Date? receivedDate) => _$this._receivedDate = receivedDate;
 
+  double? _whtRate;
+  double? get whtRate => _$this._whtRate;
+  set whtRate(double? whtRate) => _$this._whtRate = whtRate;
+
+  String? _whtType;
+  String? get whtType => _$this._whtType;
+  set whtType(String? whtType) => _$this._whtType = whtType;
+
+  String? _whtCertificateNumber;
+  String? get whtCertificateNumber => _$this._whtCertificateNumber;
+  set whtCertificateNumber(String? whtCertificateNumber) =>
+      _$this._whtCertificateNumber = whtCertificateNumber;
+
   PaymentRequestBuilder() {
     PaymentRequest._defaults(this);
   }
@@ -92,6 +126,9 @@ class PaymentRequestBuilder
       _method = $v.method;
       _reference = $v.reference;
       _receivedDate = $v.receivedDate;
+      _whtRate = $v.whtRate;
+      _whtType = $v.whtType;
+      _whtCertificateNumber = $v.whtCertificateNumber;
       _$v = null;
     }
     return this;
@@ -117,6 +154,9 @@ class PaymentRequestBuilder
           method: method,
           reference: reference,
           receivedDate: receivedDate,
+          whtRate: whtRate,
+          whtType: whtType,
+          whtCertificateNumber: whtCertificateNumber,
         );
     replace(_$result);
     return _$result;

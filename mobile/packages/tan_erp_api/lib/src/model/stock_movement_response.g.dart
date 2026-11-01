@@ -33,6 +33,12 @@ class _$StockMovementResponse extends StockMovementResponse {
   final DateTime? occurredAtUtc;
   @override
   final DateTime? postedAtUtc;
+  @override
+  final InventoryLocationRefResponse? location;
+  @override
+  final String? lotNumber;
+  @override
+  final BuiltList<String>? serialNumbers;
 
   factory _$StockMovementResponse(
           [void Function(StockMovementResponseBuilder)? updates]) =>
@@ -51,7 +57,10 @@ class _$StockMovementResponse extends StockMovementResponse {
       this.valueDelta,
       this.onHandAfter,
       this.occurredAtUtc,
-      this.postedAtUtc})
+      this.postedAtUtc,
+      this.location,
+      this.lotNumber,
+      this.serialNumbers})
       : super._();
   @override
   StockMovementResponse rebuild(
@@ -78,7 +87,10 @@ class _$StockMovementResponse extends StockMovementResponse {
         valueDelta == other.valueDelta &&
         onHandAfter == other.onHandAfter &&
         occurredAtUtc == other.occurredAtUtc &&
-        postedAtUtc == other.postedAtUtc;
+        postedAtUtc == other.postedAtUtc &&
+        location == other.location &&
+        lotNumber == other.lotNumber &&
+        serialNumbers == other.serialNumbers;
   }
 
   @override
@@ -97,6 +109,9 @@ class _$StockMovementResponse extends StockMovementResponse {
     _$hash = $jc(_$hash, onHandAfter.hashCode);
     _$hash = $jc(_$hash, occurredAtUtc.hashCode);
     _$hash = $jc(_$hash, postedAtUtc.hashCode);
+    _$hash = $jc(_$hash, location.hashCode);
+    _$hash = $jc(_$hash, lotNumber.hashCode);
+    _$hash = $jc(_$hash, serialNumbers.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -116,7 +131,10 @@ class _$StockMovementResponse extends StockMovementResponse {
           ..add('valueDelta', valueDelta)
           ..add('onHandAfter', onHandAfter)
           ..add('occurredAtUtc', occurredAtUtc)
-          ..add('postedAtUtc', postedAtUtc))
+          ..add('postedAtUtc', postedAtUtc)
+          ..add('location', location)
+          ..add('lotNumber', lotNumber)
+          ..add('serialNumbers', serialNumbers))
         .toString();
   }
 }
@@ -184,6 +202,22 @@ class StockMovementResponseBuilder
   DateTime? get postedAtUtc => _$this._postedAtUtc;
   set postedAtUtc(DateTime? postedAtUtc) => _$this._postedAtUtc = postedAtUtc;
 
+  InventoryLocationRefResponseBuilder? _location;
+  InventoryLocationRefResponseBuilder get location =>
+      _$this._location ??= InventoryLocationRefResponseBuilder();
+  set location(InventoryLocationRefResponseBuilder? location) =>
+      _$this._location = location;
+
+  String? _lotNumber;
+  String? get lotNumber => _$this._lotNumber;
+  set lotNumber(String? lotNumber) => _$this._lotNumber = lotNumber;
+
+  ListBuilder<String>? _serialNumbers;
+  ListBuilder<String> get serialNumbers =>
+      _$this._serialNumbers ??= ListBuilder<String>();
+  set serialNumbers(ListBuilder<String>? serialNumbers) =>
+      _$this._serialNumbers = serialNumbers;
+
   StockMovementResponseBuilder() {
     StockMovementResponse._defaults(this);
   }
@@ -204,6 +238,9 @@ class StockMovementResponseBuilder
       _onHandAfter = $v.onHandAfter;
       _occurredAtUtc = $v.occurredAtUtc;
       _postedAtUtc = $v.postedAtUtc;
+      _location = $v.location?.toBuilder();
+      _lotNumber = $v.lotNumber;
+      _serialNumbers = $v.serialNumbers?.toBuilder();
       _$v = null;
     }
     return this;
@@ -240,6 +277,9 @@ class StockMovementResponseBuilder
             onHandAfter: onHandAfter,
             occurredAtUtc: occurredAtUtc,
             postedAtUtc: postedAtUtc,
+            location: _location?.build(),
+            lotNumber: lotNumber,
+            serialNumbers: _serialNumbers?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -248,6 +288,12 @@ class StockMovementResponseBuilder
         _warehouse?.build();
         _$failedField = 'item';
         _item?.build();
+
+        _$failedField = 'location';
+        _location?.build();
+
+        _$failedField = 'serialNumbers';
+        _serialNumbers?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'StockMovementResponse', _$failedField, e.toString());

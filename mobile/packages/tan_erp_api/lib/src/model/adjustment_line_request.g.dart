@@ -13,12 +13,24 @@ class _$AdjustmentLineRequest extends AdjustmentLineRequest {
   final double? countedQuantity;
   @override
   final double? unitCost;
+  @override
+  final String? locationId;
+  @override
+  final String? lotNumber;
+  @override
+  final BuiltList<String>? serialNumbers;
 
   factory _$AdjustmentLineRequest(
           [void Function(AdjustmentLineRequestBuilder)? updates]) =>
       (AdjustmentLineRequestBuilder()..update(updates))._build();
 
-  _$AdjustmentLineRequest._({this.itemId, this.countedQuantity, this.unitCost})
+  _$AdjustmentLineRequest._(
+      {this.itemId,
+      this.countedQuantity,
+      this.unitCost,
+      this.locationId,
+      this.lotNumber,
+      this.serialNumbers})
       : super._();
   @override
   AdjustmentLineRequest rebuild(
@@ -35,7 +47,10 @@ class _$AdjustmentLineRequest extends AdjustmentLineRequest {
     return other is AdjustmentLineRequest &&
         itemId == other.itemId &&
         countedQuantity == other.countedQuantity &&
-        unitCost == other.unitCost;
+        unitCost == other.unitCost &&
+        locationId == other.locationId &&
+        lotNumber == other.lotNumber &&
+        serialNumbers == other.serialNumbers;
   }
 
   @override
@@ -44,6 +59,9 @@ class _$AdjustmentLineRequest extends AdjustmentLineRequest {
     _$hash = $jc(_$hash, itemId.hashCode);
     _$hash = $jc(_$hash, countedQuantity.hashCode);
     _$hash = $jc(_$hash, unitCost.hashCode);
+    _$hash = $jc(_$hash, locationId.hashCode);
+    _$hash = $jc(_$hash, lotNumber.hashCode);
+    _$hash = $jc(_$hash, serialNumbers.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -53,7 +71,10 @@ class _$AdjustmentLineRequest extends AdjustmentLineRequest {
     return (newBuiltValueToStringHelper(r'AdjustmentLineRequest')
           ..add('itemId', itemId)
           ..add('countedQuantity', countedQuantity)
-          ..add('unitCost', unitCost))
+          ..add('unitCost', unitCost)
+          ..add('locationId', locationId)
+          ..add('lotNumber', lotNumber)
+          ..add('serialNumbers', serialNumbers))
         .toString();
   }
 }
@@ -75,6 +96,20 @@ class AdjustmentLineRequestBuilder
   double? get unitCost => _$this._unitCost;
   set unitCost(double? unitCost) => _$this._unitCost = unitCost;
 
+  String? _locationId;
+  String? get locationId => _$this._locationId;
+  set locationId(String? locationId) => _$this._locationId = locationId;
+
+  String? _lotNumber;
+  String? get lotNumber => _$this._lotNumber;
+  set lotNumber(String? lotNumber) => _$this._lotNumber = lotNumber;
+
+  ListBuilder<String>? _serialNumbers;
+  ListBuilder<String> get serialNumbers =>
+      _$this._serialNumbers ??= ListBuilder<String>();
+  set serialNumbers(ListBuilder<String>? serialNumbers) =>
+      _$this._serialNumbers = serialNumbers;
+
   AdjustmentLineRequestBuilder() {
     AdjustmentLineRequest._defaults(this);
   }
@@ -85,6 +120,9 @@ class AdjustmentLineRequestBuilder
       _itemId = $v.itemId;
       _countedQuantity = $v.countedQuantity;
       _unitCost = $v.unitCost;
+      _locationId = $v.locationId;
+      _lotNumber = $v.lotNumber;
+      _serialNumbers = $v.serialNumbers?.toBuilder();
       _$v = null;
     }
     return this;
@@ -104,12 +142,28 @@ class AdjustmentLineRequestBuilder
   AdjustmentLineRequest build() => _build();
 
   _$AdjustmentLineRequest _build() {
-    final _$result = _$v ??
-        _$AdjustmentLineRequest._(
-          itemId: itemId,
-          countedQuantity: countedQuantity,
-          unitCost: unitCost,
-        );
+    _$AdjustmentLineRequest _$result;
+    try {
+      _$result = _$v ??
+          _$AdjustmentLineRequest._(
+            itemId: itemId,
+            countedQuantity: countedQuantity,
+            unitCost: unitCost,
+            locationId: locationId,
+            lotNumber: lotNumber,
+            serialNumbers: _serialNumbers?.build(),
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'serialNumbers';
+        _serialNumbers?.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(
+            r'AdjustmentLineRequest', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }

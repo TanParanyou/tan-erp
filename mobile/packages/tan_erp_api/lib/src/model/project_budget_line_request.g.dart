@@ -13,12 +13,15 @@ class _$ProjectBudgetLineRequest extends ProjectBudgetLineRequest {
   final String? description;
   @override
   final double? amount;
+  @override
+  final String? wbsNodeId;
 
   factory _$ProjectBudgetLineRequest(
           [void Function(ProjectBudgetLineRequestBuilder)? updates]) =>
       (ProjectBudgetLineRequestBuilder()..update(updates))._build();
 
-  _$ProjectBudgetLineRequest._({this.category, this.description, this.amount})
+  _$ProjectBudgetLineRequest._(
+      {this.category, this.description, this.amount, this.wbsNodeId})
       : super._();
   @override
   ProjectBudgetLineRequest rebuild(
@@ -35,7 +38,8 @@ class _$ProjectBudgetLineRequest extends ProjectBudgetLineRequest {
     return other is ProjectBudgetLineRequest &&
         category == other.category &&
         description == other.description &&
-        amount == other.amount;
+        amount == other.amount &&
+        wbsNodeId == other.wbsNodeId;
   }
 
   @override
@@ -44,6 +48,7 @@ class _$ProjectBudgetLineRequest extends ProjectBudgetLineRequest {
     _$hash = $jc(_$hash, category.hashCode);
     _$hash = $jc(_$hash, description.hashCode);
     _$hash = $jc(_$hash, amount.hashCode);
+    _$hash = $jc(_$hash, wbsNodeId.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -53,7 +58,8 @@ class _$ProjectBudgetLineRequest extends ProjectBudgetLineRequest {
     return (newBuiltValueToStringHelper(r'ProjectBudgetLineRequest')
           ..add('category', category)
           ..add('description', description)
-          ..add('amount', amount))
+          ..add('amount', amount)
+          ..add('wbsNodeId', wbsNodeId))
         .toString();
   }
 }
@@ -75,6 +81,10 @@ class ProjectBudgetLineRequestBuilder
   double? get amount => _$this._amount;
   set amount(double? amount) => _$this._amount = amount;
 
+  String? _wbsNodeId;
+  String? get wbsNodeId => _$this._wbsNodeId;
+  set wbsNodeId(String? wbsNodeId) => _$this._wbsNodeId = wbsNodeId;
+
   ProjectBudgetLineRequestBuilder() {
     ProjectBudgetLineRequest._defaults(this);
   }
@@ -85,6 +95,7 @@ class ProjectBudgetLineRequestBuilder
       _category = $v.category;
       _description = $v.description;
       _amount = $v.amount;
+      _wbsNodeId = $v.wbsNodeId;
       _$v = null;
     }
     return this;
@@ -109,6 +120,7 @@ class ProjectBudgetLineRequestBuilder
           category: category,
           description: description,
           amount: amount,
+          wbsNodeId: wbsNodeId,
         );
     replace(_$result);
     return _$result;

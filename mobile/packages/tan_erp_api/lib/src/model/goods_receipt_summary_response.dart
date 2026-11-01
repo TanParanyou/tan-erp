@@ -3,7 +3,9 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/goods_receipt_line_response.dart';
 import 'package:tan_erp_api/src/model/procurement_person_response.dart';
+import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -20,6 +22,7 @@ part 'goods_receipt_summary_response.g.dart';
 /// * [lineCount] 
 /// * [totalQuantity] 
 /// * [stockDocumentNumber] 
+/// * [lines] 
 @BuiltValue()
 abstract class GoodsReceiptSummaryResponse implements Built<GoodsReceiptSummaryResponse, GoodsReceiptSummaryResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -45,6 +48,9 @@ abstract class GoodsReceiptSummaryResponse implements Built<GoodsReceiptSummaryR
 
   @BuiltValueField(wireName: r'stockDocumentNumber')
   String? get stockDocumentNumber;
+
+  @BuiltValueField(wireName: r'lines')
+  BuiltList<GoodsReceiptLineResponse>? get lines;
 
   GoodsReceiptSummaryResponse._();
 
@@ -123,6 +129,13 @@ class _$GoodsReceiptSummaryResponseSerializer implements PrimitiveSerializer<Goo
       yield serializers.serialize(
         object.stockDocumentNumber,
         specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.lines != null) {
+      yield r'lines';
+      yield serializers.serialize(
+        object.lines,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(GoodsReceiptLineResponse)]),
       );
     }
   }
@@ -211,6 +224,14 @@ class _$GoodsReceiptSummaryResponseSerializer implements PrimitiveSerializer<Goo
           ) as String?;
           if (valueDes == null) continue;
           result.stockDocumentNumber = valueDes;
+          break;
+        case r'lines':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(GoodsReceiptLineResponse)]),
+          ) as BuiltList<GoodsReceiptLineResponse>?;
+          if (valueDes == null) continue;
+          result.lines.replace(valueDes);
           break;
         default:
           unhandled.add(key);

@@ -15,13 +15,15 @@ class _$MrpDemandRequest extends MrpDemandRequest {
   final Date? needBy;
   @override
   final String? reference;
+  @override
+  final String? unitId;
 
   factory _$MrpDemandRequest(
           [void Function(MrpDemandRequestBuilder)? updates]) =>
       (MrpDemandRequestBuilder()..update(updates))._build();
 
   _$MrpDemandRequest._(
-      {this.itemId, this.quantity, this.needBy, this.reference})
+      {this.itemId, this.quantity, this.needBy, this.reference, this.unitId})
       : super._();
   @override
   MrpDemandRequest rebuild(void Function(MrpDemandRequestBuilder) updates) =>
@@ -38,7 +40,8 @@ class _$MrpDemandRequest extends MrpDemandRequest {
         itemId == other.itemId &&
         quantity == other.quantity &&
         needBy == other.needBy &&
-        reference == other.reference;
+        reference == other.reference &&
+        unitId == other.unitId;
   }
 
   @override
@@ -48,6 +51,7 @@ class _$MrpDemandRequest extends MrpDemandRequest {
     _$hash = $jc(_$hash, quantity.hashCode);
     _$hash = $jc(_$hash, needBy.hashCode);
     _$hash = $jc(_$hash, reference.hashCode);
+    _$hash = $jc(_$hash, unitId.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -58,7 +62,8 @@ class _$MrpDemandRequest extends MrpDemandRequest {
           ..add('itemId', itemId)
           ..add('quantity', quantity)
           ..add('needBy', needBy)
-          ..add('reference', reference))
+          ..add('reference', reference)
+          ..add('unitId', unitId))
         .toString();
   }
 }
@@ -83,6 +88,10 @@ class MrpDemandRequestBuilder
   String? get reference => _$this._reference;
   set reference(String? reference) => _$this._reference = reference;
 
+  String? _unitId;
+  String? get unitId => _$this._unitId;
+  set unitId(String? unitId) => _$this._unitId = unitId;
+
   MrpDemandRequestBuilder() {
     MrpDemandRequest._defaults(this);
   }
@@ -94,6 +103,7 @@ class MrpDemandRequestBuilder
       _quantity = $v.quantity;
       _needBy = $v.needBy;
       _reference = $v.reference;
+      _unitId = $v.unitId;
       _$v = null;
     }
     return this;
@@ -119,6 +129,7 @@ class MrpDemandRequestBuilder
           quantity: quantity,
           needBy: needBy,
           reference: reference,
+          unitId: unitId,
         );
     replace(_$result);
     return _$result;

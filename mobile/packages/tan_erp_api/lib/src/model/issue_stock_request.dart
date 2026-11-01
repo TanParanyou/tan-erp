@@ -17,6 +17,8 @@ part 'issue_stock_request.g.dart';
 /// * [projectId] 
 /// * [reason] 
 /// * [lines] 
+/// * [locationId] 
+/// * [occurredAtUtc] 
 @BuiltValue()
 abstract class IssueStockRequest implements Built<IssueStockRequest, IssueStockRequestBuilder> {
   @BuiltValueField(wireName: r'warehouseId')
@@ -30,6 +32,12 @@ abstract class IssueStockRequest implements Built<IssueStockRequest, IssueStockR
 
   @BuiltValueField(wireName: r'lines')
   BuiltList<StockLineRequest>? get lines;
+
+  @BuiltValueField(wireName: r'locationId')
+  String? get locationId;
+
+  @BuiltValueField(wireName: r'occurredAtUtc')
+  DateTime? get occurredAtUtc;
 
   IssueStockRequest._();
 
@@ -80,6 +88,20 @@ class _$IssueStockRequestSerializer implements PrimitiveSerializer<IssueStockReq
       yield serializers.serialize(
         object.lines,
         specifiedType: const FullType.nullable(BuiltList, [FullType(StockLineRequest)]),
+      );
+    }
+    if (object.locationId != null) {
+      yield r'locationId';
+      yield serializers.serialize(
+        object.locationId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.occurredAtUtc != null) {
+      yield r'occurredAtUtc';
+      yield serializers.serialize(
+        object.occurredAtUtc,
+        specifiedType: const FullType.nullable(DateTime),
       );
     }
   }
@@ -136,6 +158,22 @@ class _$IssueStockRequestSerializer implements PrimitiveSerializer<IssueStockReq
           ) as BuiltList<StockLineRequest>?;
           if (valueDes == null) continue;
           result.lines.replace(valueDes);
+          break;
+        case r'locationId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.locationId = valueDes;
+          break;
+        case r'occurredAtUtc':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
+          result.occurredAtUtc = valueDes;
           break;
         default:
           unhandled.add(key);

@@ -13,12 +13,21 @@ class _$AdjustStockRequest extends AdjustStockRequest {
   final String? reason;
   @override
   final BuiltList<AdjustmentLineRequest>? lines;
+  @override
+  final String? locationId;
+  @override
+  final DateTime? occurredAtUtc;
 
   factory _$AdjustStockRequest(
           [void Function(AdjustStockRequestBuilder)? updates]) =>
       (AdjustStockRequestBuilder()..update(updates))._build();
 
-  _$AdjustStockRequest._({this.warehouseId, this.reason, this.lines})
+  _$AdjustStockRequest._(
+      {this.warehouseId,
+      this.reason,
+      this.lines,
+      this.locationId,
+      this.occurredAtUtc})
       : super._();
   @override
   AdjustStockRequest rebuild(
@@ -35,7 +44,9 @@ class _$AdjustStockRequest extends AdjustStockRequest {
     return other is AdjustStockRequest &&
         warehouseId == other.warehouseId &&
         reason == other.reason &&
-        lines == other.lines;
+        lines == other.lines &&
+        locationId == other.locationId &&
+        occurredAtUtc == other.occurredAtUtc;
   }
 
   @override
@@ -44,6 +55,8 @@ class _$AdjustStockRequest extends AdjustStockRequest {
     _$hash = $jc(_$hash, warehouseId.hashCode);
     _$hash = $jc(_$hash, reason.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
+    _$hash = $jc(_$hash, locationId.hashCode);
+    _$hash = $jc(_$hash, occurredAtUtc.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -53,7 +66,9 @@ class _$AdjustStockRequest extends AdjustStockRequest {
     return (newBuiltValueToStringHelper(r'AdjustStockRequest')
           ..add('warehouseId', warehouseId)
           ..add('reason', reason)
-          ..add('lines', lines))
+          ..add('lines', lines)
+          ..add('locationId', locationId)
+          ..add('occurredAtUtc', occurredAtUtc))
         .toString();
   }
 }
@@ -75,6 +90,15 @@ class AdjustStockRequestBuilder
       _$this._lines ??= ListBuilder<AdjustmentLineRequest>();
   set lines(ListBuilder<AdjustmentLineRequest>? lines) => _$this._lines = lines;
 
+  String? _locationId;
+  String? get locationId => _$this._locationId;
+  set locationId(String? locationId) => _$this._locationId = locationId;
+
+  DateTime? _occurredAtUtc;
+  DateTime? get occurredAtUtc => _$this._occurredAtUtc;
+  set occurredAtUtc(DateTime? occurredAtUtc) =>
+      _$this._occurredAtUtc = occurredAtUtc;
+
   AdjustStockRequestBuilder() {
     AdjustStockRequest._defaults(this);
   }
@@ -85,6 +109,8 @@ class AdjustStockRequestBuilder
       _warehouseId = $v.warehouseId;
       _reason = $v.reason;
       _lines = $v.lines?.toBuilder();
+      _locationId = $v.locationId;
+      _occurredAtUtc = $v.occurredAtUtc;
       _$v = null;
     }
     return this;
@@ -111,6 +137,8 @@ class AdjustStockRequestBuilder
             warehouseId: warehouseId,
             reason: reason,
             lines: _lines?.build(),
+            locationId: locationId,
+            occurredAtUtc: occurredAtUtc,
           );
     } catch (_) {
       late String _$failedField;

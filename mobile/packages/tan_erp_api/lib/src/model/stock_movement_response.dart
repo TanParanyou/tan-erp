@@ -4,6 +4,8 @@
 
 // ignore_for_file: unused_element
 import 'package:tan_erp_api/src/model/inventory_item_ref_response.dart';
+import 'package:built_collection/built_collection.dart';
+import 'package:tan_erp_api/src/model/inventory_location_ref_response.dart';
 import 'package:tan_erp_api/src/model/inventory_warehouse_ref_response.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -26,6 +28,9 @@ part 'stock_movement_response.g.dart';
 /// * [onHandAfter] 
 /// * [occurredAtUtc] 
 /// * [postedAtUtc] 
+/// * [location] 
+/// * [lotNumber] 
+/// * [serialNumbers] 
 @BuiltValue()
 abstract class StockMovementResponse implements Built<StockMovementResponse, StockMovementResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -66,6 +71,15 @@ abstract class StockMovementResponse implements Built<StockMovementResponse, Sto
 
   @BuiltValueField(wireName: r'postedAtUtc')
   DateTime? get postedAtUtc;
+
+  @BuiltValueField(wireName: r'location')
+  InventoryLocationRefResponse? get location;
+
+  @BuiltValueField(wireName: r'lotNumber')
+  String? get lotNumber;
+
+  @BuiltValueField(wireName: r'serialNumbers')
+  BuiltList<String>? get serialNumbers;
 
   StockMovementResponse._();
 
@@ -179,6 +193,27 @@ class _$StockMovementResponseSerializer implements PrimitiveSerializer<StockMove
       yield serializers.serialize(
         object.postedAtUtc,
         specifiedType: const FullType(DateTime),
+      );
+    }
+    if (object.location != null) {
+      yield r'location';
+      yield serializers.serialize(
+        object.location,
+        specifiedType: const FullType(InventoryLocationRefResponse),
+      );
+    }
+    if (object.lotNumber != null) {
+      yield r'lotNumber';
+      yield serializers.serialize(
+        object.lotNumber,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.serialNumbers != null) {
+      yield r'serialNumbers';
+      yield serializers.serialize(
+        object.serialNumbers,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
       );
     }
   }
@@ -307,6 +342,30 @@ class _$StockMovementResponseSerializer implements PrimitiveSerializer<StockMove
           ) as DateTime?;
           if (valueDes == null) continue;
           result.postedAtUtc = valueDes;
+          break;
+        case r'location':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(InventoryLocationRefResponse),
+          ) as InventoryLocationRefResponse?;
+          if (valueDes == null) continue;
+          result.location.replace(valueDes);
+          break;
+        case r'lotNumber':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.lotNumber = valueDes;
+          break;
+        case r'serialNumbers':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(String)]),
+          ) as BuiltList<String>?;
+          if (valueDes == null) continue;
+          result.serialNumbers.replace(valueDes);
           break;
         default:
           unhandled.add(key);

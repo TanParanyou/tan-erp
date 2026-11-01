@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/bom_routing_step_response.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:tan_erp_api/src/model/bom_line_response.dart';
 import 'package:tan_erp_api/src/model/production_person_response.dart';
@@ -25,6 +26,7 @@ part 'bom_revision_response.g.dart';
 /// * [approvedAtUtc] 
 /// * [rowVersion] 
 /// * [lines] 
+/// * [routingSteps] 
 @BuiltValue()
 abstract class BomRevisionResponse implements Built<BomRevisionResponse, BomRevisionResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -59,6 +61,9 @@ abstract class BomRevisionResponse implements Built<BomRevisionResponse, BomRevi
 
   @BuiltValueField(wireName: r'lines')
   BuiltList<BomLineResponse>? get lines;
+
+  @BuiltValueField(wireName: r'routingSteps')
+  BuiltList<BomRoutingStepResponse>? get routingSteps;
 
   BomRevisionResponse._();
 
@@ -158,6 +163,13 @@ class _$BomRevisionResponseSerializer implements PrimitiveSerializer<BomRevision
       yield serializers.serialize(
         object.lines,
         specifiedType: const FullType.nullable(BuiltList, [FullType(BomLineResponse)]),
+      );
+    }
+    if (object.routingSteps != null) {
+      yield r'routingSteps';
+      yield serializers.serialize(
+        object.routingSteps,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(BomRoutingStepResponse)]),
       );
     }
   }
@@ -270,6 +282,14 @@ class _$BomRevisionResponseSerializer implements PrimitiveSerializer<BomRevision
           ) as BuiltList<BomLineResponse>?;
           if (valueDes == null) continue;
           result.lines.replace(valueDes);
+          break;
+        case r'routingSteps':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(BomRoutingStepResponse)]),
+          ) as BuiltList<BomRoutingStepResponse>?;
+          if (valueDes == null) continue;
+          result.routingSteps.replace(valueDes);
           break;
         default:
           unhandled.add(key);

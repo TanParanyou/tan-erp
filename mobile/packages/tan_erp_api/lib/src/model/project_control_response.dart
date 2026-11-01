@@ -4,13 +4,18 @@
 
 // ignore_for_file: unused_element
 import 'package:tan_erp_api/src/model/project_contract_response.dart';
+import 'package:tan_erp_api/src/model/labor_timesheet_response.dart';
 import 'package:tan_erp_api/src/model/project_change_order_response.dart';
 import 'package:tan_erp_api/src/model/project_status_history_response.dart';
-import 'package:built_collection/built_collection.dart';
-import 'package:tan_erp_api/src/model/project_milestone_response.dart';
 import 'package:tan_erp_api/src/model/project_progress_response.dart';
 import 'package:tan_erp_api/src/model/date.dart';
 import 'package:tan_erp_api/src/model/project_budget_response.dart';
+import 'package:tan_erp_api/src/model/project_wbs_cost_summary_response.dart';
+import 'package:tan_erp_api/src/model/project_wbs_node_response.dart';
+import 'package:built_collection/built_collection.dart';
+import 'package:tan_erp_api/src/model/project_milestone_response.dart';
+import 'package:tan_erp_api/src/model/labor_rate_response.dart';
+import 'package:tan_erp_api/src/model/project_cost_ledger_entry_response.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -30,6 +35,11 @@ part 'project_control_response.g.dart';
 /// * [budget] 
 /// * [contract] 
 /// * [progress] 
+/// * [wbsNodes] 
+/// * [wbsCostSummary] 
+/// * [costLedger] 
+/// * [laborRates] 
+/// * [timesheets] 
 /// * [milestones] 
 /// * [changeOrders] 
 /// * [history] 
@@ -67,6 +77,21 @@ abstract class ProjectControlResponse implements Built<ProjectControlResponse, P
 
   @BuiltValueField(wireName: r'progress')
   ProjectProgressResponse? get progress;
+
+  @BuiltValueField(wireName: r'wbsNodes')
+  BuiltList<ProjectWbsNodeResponse>? get wbsNodes;
+
+  @BuiltValueField(wireName: r'wbsCostSummary')
+  BuiltList<ProjectWbsCostSummaryResponse>? get wbsCostSummary;
+
+  @BuiltValueField(wireName: r'costLedger')
+  BuiltList<ProjectCostLedgerEntryResponse>? get costLedger;
+
+  @BuiltValueField(wireName: r'laborRates')
+  BuiltList<LaborRateResponse>? get laborRates;
+
+  @BuiltValueField(wireName: r'timesheets')
+  BuiltList<LaborTimesheetResponse>? get timesheets;
 
   @BuiltValueField(wireName: r'milestones')
   BuiltList<ProjectMilestoneResponse>? get milestones;
@@ -175,6 +200,41 @@ class _$ProjectControlResponseSerializer implements PrimitiveSerializer<ProjectC
       yield serializers.serialize(
         object.progress,
         specifiedType: const FullType(ProjectProgressResponse),
+      );
+    }
+    if (object.wbsNodes != null) {
+      yield r'wbsNodes';
+      yield serializers.serialize(
+        object.wbsNodes,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(ProjectWbsNodeResponse)]),
+      );
+    }
+    if (object.wbsCostSummary != null) {
+      yield r'wbsCostSummary';
+      yield serializers.serialize(
+        object.wbsCostSummary,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(ProjectWbsCostSummaryResponse)]),
+      );
+    }
+    if (object.costLedger != null) {
+      yield r'costLedger';
+      yield serializers.serialize(
+        object.costLedger,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(ProjectCostLedgerEntryResponse)]),
+      );
+    }
+    if (object.laborRates != null) {
+      yield r'laborRates';
+      yield serializers.serialize(
+        object.laborRates,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(LaborRateResponse)]),
+      );
+    }
+    if (object.timesheets != null) {
+      yield r'timesheets';
+      yield serializers.serialize(
+        object.timesheets,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(LaborTimesheetResponse)]),
       );
     }
     if (object.milestones != null) {
@@ -308,6 +368,46 @@ class _$ProjectControlResponseSerializer implements PrimitiveSerializer<ProjectC
           ) as ProjectProgressResponse?;
           if (valueDes == null) continue;
           result.progress.replace(valueDes);
+          break;
+        case r'wbsNodes':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(ProjectWbsNodeResponse)]),
+          ) as BuiltList<ProjectWbsNodeResponse>?;
+          if (valueDes == null) continue;
+          result.wbsNodes.replace(valueDes);
+          break;
+        case r'wbsCostSummary':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(ProjectWbsCostSummaryResponse)]),
+          ) as BuiltList<ProjectWbsCostSummaryResponse>?;
+          if (valueDes == null) continue;
+          result.wbsCostSummary.replace(valueDes);
+          break;
+        case r'costLedger':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(ProjectCostLedgerEntryResponse)]),
+          ) as BuiltList<ProjectCostLedgerEntryResponse>?;
+          if (valueDes == null) continue;
+          result.costLedger.replace(valueDes);
+          break;
+        case r'laborRates':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(LaborRateResponse)]),
+          ) as BuiltList<LaborRateResponse>?;
+          if (valueDes == null) continue;
+          result.laborRates.replace(valueDes);
+          break;
+        case r'timesheets':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(LaborTimesheetResponse)]),
+          ) as BuiltList<LaborTimesheetResponse>?;
+          if (valueDes == null) continue;
+          result.timesheets.replace(valueDes);
           break;
         case r'milestones':
           final valueDes = serializers.deserialize(

@@ -20,7 +20,9 @@ part 'project_budget_response.g.dart';
 /// * [approvedBudgetDelta] 
 /// * [currentTotal] 
 /// * [committedAmount] 
+/// * [actualAmount] 
 /// * [availableBudget] 
+/// * [varianceAmount] 
 /// * [lines] 
 @BuiltValue()
 abstract class ProjectBudgetResponse implements Built<ProjectBudgetResponse, ProjectBudgetResponseBuilder> {
@@ -45,8 +47,14 @@ abstract class ProjectBudgetResponse implements Built<ProjectBudgetResponse, Pro
   @BuiltValueField(wireName: r'committedAmount')
   double? get committedAmount;
 
+  @BuiltValueField(wireName: r'actualAmount')
+  double? get actualAmount;
+
   @BuiltValueField(wireName: r'availableBudget')
   double? get availableBudget;
+
+  @BuiltValueField(wireName: r'varianceAmount')
+  double? get varianceAmount;
 
   @BuiltValueField(wireName: r'lines')
   BuiltList<ProjectBudgetLineResponse>? get lines;
@@ -123,10 +131,24 @@ class _$ProjectBudgetResponseSerializer implements PrimitiveSerializer<ProjectBu
         specifiedType: const FullType(double),
       );
     }
+    if (object.actualAmount != null) {
+      yield r'actualAmount';
+      yield serializers.serialize(
+        object.actualAmount,
+        specifiedType: const FullType(double),
+      );
+    }
     if (object.availableBudget != null) {
       yield r'availableBudget';
       yield serializers.serialize(
         object.availableBudget,
+        specifiedType: const FullType.nullable(double),
+      );
+    }
+    if (object.varianceAmount != null) {
+      yield r'varianceAmount';
+      yield serializers.serialize(
+        object.varianceAmount,
         specifiedType: const FullType.nullable(double),
       );
     }
@@ -216,6 +238,14 @@ class _$ProjectBudgetResponseSerializer implements PrimitiveSerializer<ProjectBu
           if (valueDes == null) continue;
           result.committedAmount = valueDes;
           break;
+        case r'actualAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.actualAmount = valueDes;
+          break;
         case r'availableBudget':
           final valueDes = serializers.deserialize(
             value,
@@ -223,6 +253,14 @@ class _$ProjectBudgetResponseSerializer implements PrimitiveSerializer<ProjectBu
           ) as double?;
           if (valueDes == null) continue;
           result.availableBudget = valueDes;
+          break;
+        case r'varianceAmount':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(double),
+          ) as double?;
+          if (valueDes == null) continue;
+          result.varianceAmount = valueDes;
           break;
         case r'lines':
           final valueDes = serializers.deserialize(

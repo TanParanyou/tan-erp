@@ -23,6 +23,8 @@ class _$GoodsReceiptSummaryResponse extends GoodsReceiptSummaryResponse {
   final double? totalQuantity;
   @override
   final String? stockDocumentNumber;
+  @override
+  final BuiltList<GoodsReceiptLineResponse>? lines;
 
   factory _$GoodsReceiptSummaryResponse(
           [void Function(GoodsReceiptSummaryResponseBuilder)? updates]) =>
@@ -36,7 +38,8 @@ class _$GoodsReceiptSummaryResponse extends GoodsReceiptSummaryResponse {
       this.receivedBy,
       this.lineCount,
       this.totalQuantity,
-      this.stockDocumentNumber})
+      this.stockDocumentNumber,
+      this.lines})
       : super._();
   @override
   GoodsReceiptSummaryResponse rebuild(
@@ -58,7 +61,8 @@ class _$GoodsReceiptSummaryResponse extends GoodsReceiptSummaryResponse {
         receivedBy == other.receivedBy &&
         lineCount == other.lineCount &&
         totalQuantity == other.totalQuantity &&
-        stockDocumentNumber == other.stockDocumentNumber;
+        stockDocumentNumber == other.stockDocumentNumber &&
+        lines == other.lines;
   }
 
   @override
@@ -72,6 +76,7 @@ class _$GoodsReceiptSummaryResponse extends GoodsReceiptSummaryResponse {
     _$hash = $jc(_$hash, lineCount.hashCode);
     _$hash = $jc(_$hash, totalQuantity.hashCode);
     _$hash = $jc(_$hash, stockDocumentNumber.hashCode);
+    _$hash = $jc(_$hash, lines.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -86,7 +91,8 @@ class _$GoodsReceiptSummaryResponse extends GoodsReceiptSummaryResponse {
           ..add('receivedBy', receivedBy)
           ..add('lineCount', lineCount)
           ..add('totalQuantity', totalQuantity)
-          ..add('stockDocumentNumber', stockDocumentNumber))
+          ..add('stockDocumentNumber', stockDocumentNumber)
+          ..add('lines', lines))
         .toString();
   }
 }
@@ -134,6 +140,12 @@ class GoodsReceiptSummaryResponseBuilder
   set stockDocumentNumber(String? stockDocumentNumber) =>
       _$this._stockDocumentNumber = stockDocumentNumber;
 
+  ListBuilder<GoodsReceiptLineResponse>? _lines;
+  ListBuilder<GoodsReceiptLineResponse> get lines =>
+      _$this._lines ??= ListBuilder<GoodsReceiptLineResponse>();
+  set lines(ListBuilder<GoodsReceiptLineResponse>? lines) =>
+      _$this._lines = lines;
+
   GoodsReceiptSummaryResponseBuilder() {
     GoodsReceiptSummaryResponse._defaults(this);
   }
@@ -149,6 +161,7 @@ class GoodsReceiptSummaryResponseBuilder
       _lineCount = $v.lineCount;
       _totalQuantity = $v.totalQuantity;
       _stockDocumentNumber = $v.stockDocumentNumber;
+      _lines = $v.lines?.toBuilder();
       _$v = null;
     }
     return this;
@@ -180,12 +193,16 @@ class GoodsReceiptSummaryResponseBuilder
             lineCount: lineCount,
             totalQuantity: totalQuantity,
             stockDocumentNumber: stockDocumentNumber,
+            lines: _lines?.build(),
           );
     } catch (_) {
       late String _$failedField;
       try {
         _$failedField = 'receivedBy';
         _receivedBy?.build();
+
+        _$failedField = 'lines';
+        _lines?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'GoodsReceiptSummaryResponse', _$failedField, e.toString());

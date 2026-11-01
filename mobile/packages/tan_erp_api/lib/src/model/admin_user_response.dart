@@ -29,6 +29,10 @@ part 'admin_user_response.g.dart';
 /// * [avatar] 
 /// * [notes] 
 /// * [createdAtUtc] 
+/// * [hasPassword] 
+/// * [hasGoogleLinked] 
+/// * [isTotpEnabled] 
+/// * [requireTwoFactor] 
 @BuiltValue()
 abstract class AdminUserResponse implements Built<AdminUserResponse, AdminUserResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -69,6 +73,18 @@ abstract class AdminUserResponse implements Built<AdminUserResponse, AdminUserRe
 
   @BuiltValueField(wireName: r'createdAtUtc')
   DateTime? get createdAtUtc;
+
+  @BuiltValueField(wireName: r'hasPassword')
+  bool? get hasPassword;
+
+  @BuiltValueField(wireName: r'hasGoogleLinked')
+  bool? get hasGoogleLinked;
+
+  @BuiltValueField(wireName: r'isTotpEnabled')
+  bool? get isTotpEnabled;
+
+  @BuiltValueField(wireName: r'requireTwoFactor')
+  bool? get requireTwoFactor;
 
   AdminUserResponse._();
 
@@ -182,6 +198,34 @@ class _$AdminUserResponseSerializer implements PrimitiveSerializer<AdminUserResp
       yield serializers.serialize(
         object.createdAtUtc,
         specifiedType: const FullType.nullable(DateTime),
+      );
+    }
+    if (object.hasPassword != null) {
+      yield r'hasPassword';
+      yield serializers.serialize(
+        object.hasPassword,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.hasGoogleLinked != null) {
+      yield r'hasGoogleLinked';
+      yield serializers.serialize(
+        object.hasGoogleLinked,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.isTotpEnabled != null) {
+      yield r'isTotpEnabled';
+      yield serializers.serialize(
+        object.isTotpEnabled,
+        specifiedType: const FullType(bool),
+      );
+    }
+    if (object.requireTwoFactor != null) {
+      yield r'requireTwoFactor';
+      yield serializers.serialize(
+        object.requireTwoFactor,
+        specifiedType: const FullType(bool),
       );
     }
   }
@@ -310,6 +354,38 @@ class _$AdminUserResponseSerializer implements PrimitiveSerializer<AdminUserResp
           ) as DateTime?;
           if (valueDes == null) continue;
           result.createdAtUtc = valueDes;
+          break;
+        case r'hasPassword':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.hasPassword = valueDes;
+          break;
+        case r'hasGoogleLinked':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.hasGoogleLinked = valueDes;
+          break;
+        case r'isTotpEnabled':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.isTotpEnabled = valueDes;
+          break;
+        case r'requireTwoFactor':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(bool),
+          ) as bool?;
+          if (valueDes == null) continue;
+          result.requireTwoFactor = valueDes;
           break;
         default:
           unhandled.add(key);

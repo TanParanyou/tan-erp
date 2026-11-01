@@ -21,6 +21,10 @@ class _$SurveyDesignStyleResponse extends SurveyDesignStyleResponse {
   final bool? isActive;
   @override
   final DateTime? createdAtUtc;
+  @override
+  final String? imageFileId;
+  @override
+  final BuiltList<String>? imageFileIds;
 
   factory _$SurveyDesignStyleResponse(
           [void Function(SurveyDesignStyleResponseBuilder)? updates]) =>
@@ -33,7 +37,9 @@ class _$SurveyDesignStyleResponse extends SurveyDesignStyleResponse {
       this.description,
       this.sortOrder,
       this.isActive,
-      this.createdAtUtc})
+      this.createdAtUtc,
+      this.imageFileId,
+      this.imageFileIds})
       : super._();
   @override
   SurveyDesignStyleResponse rebuild(
@@ -54,7 +60,9 @@ class _$SurveyDesignStyleResponse extends SurveyDesignStyleResponse {
         description == other.description &&
         sortOrder == other.sortOrder &&
         isActive == other.isActive &&
-        createdAtUtc == other.createdAtUtc;
+        createdAtUtc == other.createdAtUtc &&
+        imageFileId == other.imageFileId &&
+        imageFileIds == other.imageFileIds;
   }
 
   @override
@@ -67,6 +75,8 @@ class _$SurveyDesignStyleResponse extends SurveyDesignStyleResponse {
     _$hash = $jc(_$hash, sortOrder.hashCode);
     _$hash = $jc(_$hash, isActive.hashCode);
     _$hash = $jc(_$hash, createdAtUtc.hashCode);
+    _$hash = $jc(_$hash, imageFileId.hashCode);
+    _$hash = $jc(_$hash, imageFileIds.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -80,7 +90,9 @@ class _$SurveyDesignStyleResponse extends SurveyDesignStyleResponse {
           ..add('description', description)
           ..add('sortOrder', sortOrder)
           ..add('isActive', isActive)
-          ..add('createdAtUtc', createdAtUtc))
+          ..add('createdAtUtc', createdAtUtc)
+          ..add('imageFileId', imageFileId)
+          ..add('imageFileIds', imageFileIds))
         .toString();
   }
 }
@@ -122,6 +134,16 @@ class SurveyDesignStyleResponseBuilder
   set createdAtUtc(DateTime? createdAtUtc) =>
       _$this._createdAtUtc = createdAtUtc;
 
+  String? _imageFileId;
+  String? get imageFileId => _$this._imageFileId;
+  set imageFileId(String? imageFileId) => _$this._imageFileId = imageFileId;
+
+  ListBuilder<String>? _imageFileIds;
+  ListBuilder<String> get imageFileIds =>
+      _$this._imageFileIds ??= ListBuilder<String>();
+  set imageFileIds(ListBuilder<String>? imageFileIds) =>
+      _$this._imageFileIds = imageFileIds;
+
   SurveyDesignStyleResponseBuilder() {
     SurveyDesignStyleResponse._defaults(this);
   }
@@ -136,6 +158,8 @@ class SurveyDesignStyleResponseBuilder
       _sortOrder = $v.sortOrder;
       _isActive = $v.isActive;
       _createdAtUtc = $v.createdAtUtc;
+      _imageFileId = $v.imageFileId;
+      _imageFileIds = $v.imageFileIds?.toBuilder();
       _$v = null;
     }
     return this;
@@ -166,6 +190,8 @@ class SurveyDesignStyleResponseBuilder
             sortOrder: sortOrder,
             isActive: isActive,
             createdAtUtc: createdAtUtc,
+            imageFileId: imageFileId,
+            imageFileIds: _imageFileIds?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -174,6 +200,9 @@ class SurveyDesignStyleResponseBuilder
         _name?.build();
         _$failedField = 'description';
         _description?.build();
+
+        _$failedField = 'imageFileIds';
+        _imageFileIds?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'SurveyDesignStyleResponse', _$failedField, e.toString());

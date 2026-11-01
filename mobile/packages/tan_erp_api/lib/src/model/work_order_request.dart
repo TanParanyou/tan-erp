@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/date.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -16,6 +17,8 @@ part 'work_order_request.g.dart';
 /// * [projectId] 
 /// * [plannedQuantity] 
 /// * [note] 
+/// * [plannedStartDate] 
+/// * [plannedEndDate] 
 @BuiltValue()
 abstract class WorkOrderRequest implements Built<WorkOrderRequest, WorkOrderRequestBuilder> {
   @BuiltValueField(wireName: r'itemId')
@@ -32,6 +35,12 @@ abstract class WorkOrderRequest implements Built<WorkOrderRequest, WorkOrderRequ
 
   @BuiltValueField(wireName: r'note')
   String? get note;
+
+  @BuiltValueField(wireName: r'plannedStartDate')
+  Date? get plannedStartDate;
+
+  @BuiltValueField(wireName: r'plannedEndDate')
+  Date? get plannedEndDate;
 
   WorkOrderRequest._();
 
@@ -89,6 +98,20 @@ class _$WorkOrderRequestSerializer implements PrimitiveSerializer<WorkOrderReque
       yield serializers.serialize(
         object.note,
         specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.plannedStartDate != null) {
+      yield r'plannedStartDate';
+      yield serializers.serialize(
+        object.plannedStartDate,
+        specifiedType: const FullType.nullable(Date),
+      );
+    }
+    if (object.plannedEndDate != null) {
+      yield r'plannedEndDate';
+      yield serializers.serialize(
+        object.plannedEndDate,
+        specifiedType: const FullType.nullable(Date),
       );
     }
   }
@@ -153,6 +176,22 @@ class _$WorkOrderRequestSerializer implements PrimitiveSerializer<WorkOrderReque
           ) as String?;
           if (valueDes == null) continue;
           result.note = valueDes;
+          break;
+        case r'plannedStartDate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.plannedStartDate = valueDes;
+          break;
+        case r'plannedEndDate':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(Date),
+          ) as Date?;
+          if (valueDes == null) continue;
+          result.plannedEndDate = valueDes;
           break;
         default:
           unhandled.add(key);

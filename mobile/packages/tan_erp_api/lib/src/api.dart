@@ -17,14 +17,17 @@ import 'package:tan_erp_api/src/api/admin_users_api.dart';
 import 'package:tan_erp_api/src/api/app_version_api.dart';
 import 'package:tan_erp_api/src/api/attachments_api.dart';
 import 'package:tan_erp_api/src/api/audit_events_api.dart';
+import 'package:tan_erp_api/src/api/auth_api.dart';
 import 'package:tan_erp_api/src/api/billings_api.dart';
 import 'package:tan_erp_api/src/api/boms_api.dart';
 import 'package:tan_erp_api/src/api/branch_rate_overrides_api.dart';
 import 'package:tan_erp_api/src/api/branches_api.dart';
+import 'package:tan_erp_api/src/api/calculation_policies_api.dart';
 import 'package:tan_erp_api/src/api/cost_records_api.dart';
 import 'package:tan_erp_api/src/api/cost_review_queue_api.dart';
 import 'package:tan_erp_api/src/api/cost_sources_api.dart';
 import 'package:tan_erp_api/src/api/current_user_api.dart';
+import 'package:tan_erp_api/src/api/current_user_security_api.dart';
 import 'package:tan_erp_api/src/api/customers_api.dart';
 import 'package:tan_erp_api/src/api/departments_api.dart';
 import 'package:tan_erp_api/src/api/document_sequences_api.dart';
@@ -52,13 +55,16 @@ import 'package:tan_erp_api/src/api/project_control_api.dart';
 import 'package:tan_erp_api/src/api/projects_api.dart';
 import 'package:tan_erp_api/src/api/public_quotation_acceptance_api.dart';
 import 'package:tan_erp_api/src/api/purchase_orders_api.dart';
+import 'package:tan_erp_api/src/api/purchase_requests_api.dart';
 import 'package:tan_erp_api/src/api/quick_estimates_api.dart';
 import 'package:tan_erp_api/src/api/quotation_acceptance_links_api.dart';
 import 'package:tan_erp_api/src/api/quotation_documents_api.dart';
 import 'package:tan_erp_api/src/api/quotation_lifecycle_api.dart';
+import 'package:tan_erp_api/src/api/reports_api.dart';
 import 'package:tan_erp_api/src/api/service_requests_api.dart';
 import 'package:tan_erp_api/src/api/site_surveys_api.dart';
 import 'package:tan_erp_api/src/api/sites_api.dart';
+import 'package:tan_erp_api/src/api/supplier_invoices_api.dart';
 import 'package:tan_erp_api/src/api/suppliers_api.dart';
 import 'package:tan_erp_api/src/api/survey_master_data_api.dart';
 import 'package:tan_erp_api/src/api/survey_template_versions_api.dart';
@@ -66,6 +72,7 @@ import 'package:tan_erp_api/src/api/unit_conversions_api.dart';
 import 'package:tan_erp_api/src/api/users_api.dart';
 import 'package:tan_erp_api/src/api/warehouses_api.dart';
 import 'package:tan_erp_api/src/api/warranties_api.dart';
+import 'package:tan_erp_api/src/api/work_centers_api.dart';
 import 'package:tan_erp_api/src/api/work_orders_api.dart';
 
 class TanErpApi {
@@ -210,6 +217,12 @@ class TanErpApi {
     return AuditEventsApi(dio, serializers);
   }
 
+  /// Get AuthApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  AuthApi getAuthApi() {
+    return AuthApi(dio, serializers);
+  }
+
   /// Get BillingsApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   BillingsApi getBillingsApi() {
@@ -234,6 +247,12 @@ class TanErpApi {
     return BranchesApi(dio, serializers);
   }
 
+  /// Get CalculationPoliciesApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  CalculationPoliciesApi getCalculationPoliciesApi() {
+    return CalculationPoliciesApi(dio, serializers);
+  }
+
   /// Get CostRecordsApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   CostRecordsApi getCostRecordsApi() {
@@ -256,6 +275,12 @@ class TanErpApi {
   /// by doing that all interceptors will not be executed
   CurrentUserApi getCurrentUserApi() {
     return CurrentUserApi(dio, serializers);
+  }
+
+  /// Get CurrentUserSecurityApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  CurrentUserSecurityApi getCurrentUserSecurityApi() {
+    return CurrentUserSecurityApi(dio, serializers);
   }
 
   /// Get CustomersApi instance, base route and serializer can be overridden by a given but be careful,
@@ -420,6 +445,12 @@ class TanErpApi {
     return PurchaseOrdersApi(dio, serializers);
   }
 
+  /// Get PurchaseRequestsApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  PurchaseRequestsApi getPurchaseRequestsApi() {
+    return PurchaseRequestsApi(dio, serializers);
+  }
+
   /// Get QuickEstimatesApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   QuickEstimatesApi getQuickEstimatesApi() {
@@ -444,6 +475,12 @@ class TanErpApi {
     return QuotationLifecycleApi(dio, serializers);
   }
 
+  /// Get ReportsApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ReportsApi getReportsApi() {
+    return ReportsApi(dio, serializers);
+  }
+
   /// Get ServiceRequestsApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   ServiceRequestsApi getServiceRequestsApi() {
@@ -460,6 +497,12 @@ class TanErpApi {
   /// by doing that all interceptors will not be executed
   SitesApi getSitesApi() {
     return SitesApi(dio, serializers);
+  }
+
+  /// Get SupplierInvoicesApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  SupplierInvoicesApi getSupplierInvoicesApi() {
+    return SupplierInvoicesApi(dio, serializers);
   }
 
   /// Get SuppliersApi instance, base route and serializer can be overridden by a given but be careful,
@@ -502,6 +545,12 @@ class TanErpApi {
   /// by doing that all interceptors will not be executed
   WarrantiesApi getWarrantiesApi() {
     return WarrantiesApi(dio, serializers);
+  }
+
+  /// Get WorkCentersApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  WorkCentersApi getWorkCentersApi() {
+    return WorkCentersApi(dio, serializers);
   }
 
   /// Get WorkOrdersApi instance, base route and serializer can be overridden by a given but be careful,

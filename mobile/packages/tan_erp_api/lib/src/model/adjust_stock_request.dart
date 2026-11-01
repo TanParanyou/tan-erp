@@ -16,6 +16,8 @@ part 'adjust_stock_request.g.dart';
 /// * [warehouseId] 
 /// * [reason] 
 /// * [lines] 
+/// * [locationId] 
+/// * [occurredAtUtc] 
 @BuiltValue()
 abstract class AdjustStockRequest implements Built<AdjustStockRequest, AdjustStockRequestBuilder> {
   @BuiltValueField(wireName: r'warehouseId')
@@ -26,6 +28,12 @@ abstract class AdjustStockRequest implements Built<AdjustStockRequest, AdjustSto
 
   @BuiltValueField(wireName: r'lines')
   BuiltList<AdjustmentLineRequest>? get lines;
+
+  @BuiltValueField(wireName: r'locationId')
+  String? get locationId;
+
+  @BuiltValueField(wireName: r'occurredAtUtc')
+  DateTime? get occurredAtUtc;
 
   AdjustStockRequest._();
 
@@ -69,6 +77,20 @@ class _$AdjustStockRequestSerializer implements PrimitiveSerializer<AdjustStockR
       yield serializers.serialize(
         object.lines,
         specifiedType: const FullType.nullable(BuiltList, [FullType(AdjustmentLineRequest)]),
+      );
+    }
+    if (object.locationId != null) {
+      yield r'locationId';
+      yield serializers.serialize(
+        object.locationId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.occurredAtUtc != null) {
+      yield r'occurredAtUtc';
+      yield serializers.serialize(
+        object.occurredAtUtc,
+        specifiedType: const FullType.nullable(DateTime),
       );
     }
   }
@@ -117,6 +139,22 @@ class _$AdjustStockRequestSerializer implements PrimitiveSerializer<AdjustStockR
           ) as BuiltList<AdjustmentLineRequest>?;
           if (valueDes == null) continue;
           result.lines.replace(valueDes);
+          break;
+        case r'locationId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.locationId = valueDes;
+          break;
+        case r'occurredAtUtc':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
+          result.occurredAtUtc = valueDes;
           break;
         default:
           unhandled.add(key);

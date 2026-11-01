@@ -47,6 +47,12 @@ class _$PurchaseOrderResponse extends PurchaseOrderResponse {
   final BuiltList<PurchaseOrderLineResponse>? lines;
   @override
   final BuiltList<GoodsReceiptSummaryResponse>? receipts;
+  @override
+  final BuiltList<SupplierReturnResponse>? returns;
+  @override
+  final BuiltList<PurchaseOrderInvoiceSummaryResponse>? invoices;
+  @override
+  final BuiltList<PurchaseOrderSourceRequestResponse>? sourcePurchaseRequests;
 
   factory _$PurchaseOrderResponse(
           [void Function(PurchaseOrderResponseBuilder)? updates]) =>
@@ -72,7 +78,10 @@ class _$PurchaseOrderResponse extends PurchaseOrderResponse {
       this.cancelReason,
       this.rowVersion,
       this.lines,
-      this.receipts})
+      this.receipts,
+      this.returns,
+      this.invoices,
+      this.sourcePurchaseRequests})
       : super._();
   @override
   PurchaseOrderResponse rebuild(
@@ -106,7 +115,10 @@ class _$PurchaseOrderResponse extends PurchaseOrderResponse {
         cancelReason == other.cancelReason &&
         rowVersion == other.rowVersion &&
         lines == other.lines &&
-        receipts == other.receipts;
+        receipts == other.receipts &&
+        returns == other.returns &&
+        invoices == other.invoices &&
+        sourcePurchaseRequests == other.sourcePurchaseRequests;
   }
 
   @override
@@ -132,6 +144,9 @@ class _$PurchaseOrderResponse extends PurchaseOrderResponse {
     _$hash = $jc(_$hash, rowVersion.hashCode);
     _$hash = $jc(_$hash, lines.hashCode);
     _$hash = $jc(_$hash, receipts.hashCode);
+    _$hash = $jc(_$hash, returns.hashCode);
+    _$hash = $jc(_$hash, invoices.hashCode);
+    _$hash = $jc(_$hash, sourcePurchaseRequests.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -158,7 +173,10 @@ class _$PurchaseOrderResponse extends PurchaseOrderResponse {
           ..add('cancelReason', cancelReason)
           ..add('rowVersion', rowVersion)
           ..add('lines', lines)
-          ..add('receipts', receipts))
+          ..add('receipts', receipts)
+          ..add('returns', returns)
+          ..add('invoices', invoices)
+          ..add('sourcePurchaseRequests', sourcePurchaseRequests))
         .toString();
   }
 }
@@ -263,6 +281,27 @@ class PurchaseOrderResponseBuilder
   set receipts(ListBuilder<GoodsReceiptSummaryResponse>? receipts) =>
       _$this._receipts = receipts;
 
+  ListBuilder<SupplierReturnResponse>? _returns;
+  ListBuilder<SupplierReturnResponse> get returns =>
+      _$this._returns ??= ListBuilder<SupplierReturnResponse>();
+  set returns(ListBuilder<SupplierReturnResponse>? returns) =>
+      _$this._returns = returns;
+
+  ListBuilder<PurchaseOrderInvoiceSummaryResponse>? _invoices;
+  ListBuilder<PurchaseOrderInvoiceSummaryResponse> get invoices =>
+      _$this._invoices ??= ListBuilder<PurchaseOrderInvoiceSummaryResponse>();
+  set invoices(ListBuilder<PurchaseOrderInvoiceSummaryResponse>? invoices) =>
+      _$this._invoices = invoices;
+
+  ListBuilder<PurchaseOrderSourceRequestResponse>? _sourcePurchaseRequests;
+  ListBuilder<PurchaseOrderSourceRequestResponse> get sourcePurchaseRequests =>
+      _$this._sourcePurchaseRequests ??=
+          ListBuilder<PurchaseOrderSourceRequestResponse>();
+  set sourcePurchaseRequests(
+          ListBuilder<PurchaseOrderSourceRequestResponse>?
+              sourcePurchaseRequests) =>
+      _$this._sourcePurchaseRequests = sourcePurchaseRequests;
+
   PurchaseOrderResponseBuilder() {
     PurchaseOrderResponse._defaults(this);
   }
@@ -290,6 +329,9 @@ class PurchaseOrderResponseBuilder
       _rowVersion = $v.rowVersion;
       _lines = $v.lines?.toBuilder();
       _receipts = $v.receipts?.toBuilder();
+      _returns = $v.returns?.toBuilder();
+      _invoices = $v.invoices?.toBuilder();
+      _sourcePurchaseRequests = $v.sourcePurchaseRequests?.toBuilder();
       _$v = null;
     }
     return this;
@@ -333,6 +375,9 @@ class PurchaseOrderResponseBuilder
             rowVersion: rowVersion,
             lines: _lines?.build(),
             receipts: _receipts?.build(),
+            returns: _returns?.build(),
+            invoices: _invoices?.build(),
+            sourcePurchaseRequests: _sourcePurchaseRequests?.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -351,6 +396,12 @@ class PurchaseOrderResponseBuilder
         _lines?.build();
         _$failedField = 'receipts';
         _receipts?.build();
+        _$failedField = 'returns';
+        _returns?.build();
+        _$failedField = 'invoices';
+        _invoices?.build();
+        _$failedField = 'sourcePurchaseRequests';
+        _sourcePurchaseRequests?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'PurchaseOrderResponse', _$failedField, e.toString());

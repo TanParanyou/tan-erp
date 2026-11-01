@@ -17,6 +17,10 @@ class _$ItemCapabilitiesInput extends ItemCapabilitiesInput {
   final bool? canStock;
   @override
   final bool? canProduce;
+  @override
+  final bool? trackLot;
+  @override
+  final bool? trackSerial;
 
   factory _$ItemCapabilitiesInput(
           [void Function(ItemCapabilitiesInputBuilder)? updates]) =>
@@ -27,7 +31,9 @@ class _$ItemCapabilitiesInput extends ItemCapabilitiesInput {
       this.canCost,
       this.canPurchase,
       this.canStock,
-      this.canProduce})
+      this.canProduce,
+      this.trackLot,
+      this.trackSerial})
       : super._();
   @override
   ItemCapabilitiesInput rebuild(
@@ -46,7 +52,9 @@ class _$ItemCapabilitiesInput extends ItemCapabilitiesInput {
         canCost == other.canCost &&
         canPurchase == other.canPurchase &&
         canStock == other.canStock &&
-        canProduce == other.canProduce;
+        canProduce == other.canProduce &&
+        trackLot == other.trackLot &&
+        trackSerial == other.trackSerial;
   }
 
   @override
@@ -57,6 +65,8 @@ class _$ItemCapabilitiesInput extends ItemCapabilitiesInput {
     _$hash = $jc(_$hash, canPurchase.hashCode);
     _$hash = $jc(_$hash, canStock.hashCode);
     _$hash = $jc(_$hash, canProduce.hashCode);
+    _$hash = $jc(_$hash, trackLot.hashCode);
+    _$hash = $jc(_$hash, trackSerial.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -68,7 +78,9 @@ class _$ItemCapabilitiesInput extends ItemCapabilitiesInput {
           ..add('canCost', canCost)
           ..add('canPurchase', canPurchase)
           ..add('canStock', canStock)
-          ..add('canProduce', canProduce))
+          ..add('canProduce', canProduce)
+          ..add('trackLot', trackLot)
+          ..add('trackSerial', trackSerial))
         .toString();
   }
 }
@@ -97,6 +109,14 @@ class ItemCapabilitiesInputBuilder
   bool? get canProduce => _$this._canProduce;
   set canProduce(bool? canProduce) => _$this._canProduce = canProduce;
 
+  bool? _trackLot;
+  bool? get trackLot => _$this._trackLot;
+  set trackLot(bool? trackLot) => _$this._trackLot = trackLot;
+
+  bool? _trackSerial;
+  bool? get trackSerial => _$this._trackSerial;
+  set trackSerial(bool? trackSerial) => _$this._trackSerial = trackSerial;
+
   ItemCapabilitiesInputBuilder() {
     ItemCapabilitiesInput._defaults(this);
   }
@@ -109,6 +129,8 @@ class ItemCapabilitiesInputBuilder
       _canPurchase = $v.canPurchase;
       _canStock = $v.canStock;
       _canProduce = $v.canProduce;
+      _trackLot = $v.trackLot;
+      _trackSerial = $v.trackSerial;
       _$v = null;
     }
     return this;
@@ -135,6 +157,8 @@ class ItemCapabilitiesInputBuilder
           canPurchase: canPurchase,
           canStock: canStock,
           canProduce: canProduce,
+          trackLot: trackLot,
+          trackSerial: trackSerial,
         );
     replace(_$result);
     return _$result;

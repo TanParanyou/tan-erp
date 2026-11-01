@@ -12,11 +12,17 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AcceptanceEvidenceResponse.serializer)
       ..add(AcceptanceLinkListResponse.serializer)
       ..add(AcceptanceLinkResponse.serializer)
+      ..add(AccountMappingListResponse.serializer)
+      ..add(AccountMappingRequest.serializer)
+      ..add(AccountMappingResponse.serializer)
+      ..add(ActiveSessionItemDto.serializer)
+      ..add(ActiveSessionListResponse.serializer)
       ..add(ActorSummaryResponse.serializer)
       ..add(AddAliasRequest.serializer)
       ..add(AddOnRequest.serializer)
       ..add(AddOnResponse.serializer)
       ..add(AddProjectMilestoneRequest.serializer)
+      ..add(AddProjectWbsNodeRequest.serializer)
       ..add(AddressSearchResponse.serializer)
       ..add(AddressSearchResultItem.serializer)
       ..add(AdjustStockRequest.serializer)
@@ -40,6 +46,11 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ApprovalLimitListResponse.serializer)
       ..add(ApprovalLimitOptionsResponse.serializer)
       ..add(ApprovalLimitResponse.serializer)
+      ..add(ArAgingCustomerBucketResponse.serializer)
+      ..add(ArAgingReportResponse.serializer)
+      ..add(ArAgingReportRowResponse.serializer)
+      ..add(ArAgingSummaryMetricsResponse.serializer)
+      ..add(ArAgingSummaryMetricsResponseReportSectionResponse.serializer)
       ..add(AssignAdminRoleRequest.serializer)
       ..add(AssignedSurveySyncItemResponse.serializer)
       ..add(AssignedSurveySyncListResponse.serializer)
@@ -53,8 +64,14 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AttachmentPersonResponse.serializer)
       ..add(AuditEventListResponse.serializer)
       ..add(AuditEventResponse.serializer)
+      ..add(AuthResultResponse.serializer)
+      ..add(AuthUserSummaryDto.serializer)
+      ..add(BillingAdjustmentNoteResponse.serializer)
+      ..add(BillingLineRequest.serializer)
+      ..add(BillingLineResponse.serializer)
       ..add(BillingListItemResponse.serializer)
       ..add(BillingListResponse.serializer)
+      ..add(BillingNoteRequest.serializer)
       ..add(BillingRequest.serializer)
       ..add(BillingResponse.serializer)
       ..add(BomDraftRequest.serializer)
@@ -65,6 +82,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(BomRequest.serializer)
       ..add(BomResponse.serializer)
       ..add(BomRevisionResponse.serializer)
+      ..add(BomRoutingStepRequest.serializer)
+      ..add(BomRoutingStepResponse.serializer)
       ..add(BranchBlockerResponse.serializer)
       ..add(BranchDeactivationCheckResponse.serializer)
       ..add(BranchDto.serializer)
@@ -78,6 +97,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(BrandSummaryResponse.serializer)
       ..add(CalculateEstimateRequest.serializer)
       ..add(CalculationLineResponse.serializer)
+      ..add(CalculationPolicyListResponse.serializer)
+      ..add(CalculationPolicyVersionResponse.serializer)
       ..add(CalculationResponse.serializer)
       ..add(CalculationSnapshotResponse.serializer)
       ..add(CancelEstimateRequest.serializer)
@@ -94,10 +115,13 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(CategoryAttributeTemplateDto.serializer)
       ..add(CategoryAttributeTemplateResponse.serializer)
       ..add(CategorySummaryResponse.serializer)
+      ..add(ChangeMyPasswordRequest.serializer)
+      ..add(ChargeServiceRequestRequest.serializer)
       ..add(ChecklistDoneRequest.serializer)
       ..add(ChecklistItemRequest.serializer)
       ..add(ChecklistItemResponse.serializer)
       ..add(CloneSurveyRevisionRequest.serializer)
+      ..add(CloseInventoryPeriodRequest.serializer)
       ..add(CommitItemImportRequest.serializer)
       ..add(CompleteUploadSessionResponse.serializer)
       ..add(CompletedFileResponse.serializer)
@@ -106,6 +130,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ConfirmRequest.serializer)
       ..add(ConversionRequest.serializer)
       ..add(ConversionResponse.serializer)
+      ..add(ConvertPurchaseRequestsRequest.serializer)
       ..add(CostRecordResponse.serializer)
       ..add(CostReviewPersonResponse.serializer)
       ..add(CostReviewQueueItemResponse.serializer)
@@ -117,6 +142,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(CreateAdminUserRequest.serializer)
       ..add(CreateApprovalLimitRequest.serializer)
       ..add(CreateBranchRequest.serializer)
+      ..add(CreateCalculationPolicyRequest.serializer)
       ..add(CreateCostRecordRequest.serializer)
       ..add(CreateCustomerAddressRequest.serializer)
       ..add(CreateCustomerRequest.serializer)
@@ -136,26 +162,35 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(CreatePrimaryContactRequest.serializer)
       ..add(CreateProjectChangeOrderRequest.serializer)
       ..add(CreateProjectFromHandoverRequest.serializer)
+      ..add(CreateProjectTimesheetRequest.serializer)
       ..add(CreateQuickEstimateRequest.serializer)
       ..add(CreateSiteImageRequest.serializer)
       ..add(CreateSiteRequest.serializer)
       ..add(CreateSiteSurveyRequest.serializer)
       ..add(CreateSurveyDesignStyleRequest.serializer)
       ..add(CreateSurveyMoodToneRequest.serializer)
+      ..add(CreateTechnicianAssignmentRequest.serializer)
       ..add(CreateUnitOfMeasureRequest.serializer)
       ..add(CreateUploadSessionRequest.serializer)
       ..add(CreateUploadSessionResponse.serializer)
+      ..add(CreateWarehouseLocationRequest.serializer)
+      ..add(CreateWorkCenterRequest.serializer)
       ..add(CreatedAcceptanceLinkResponse.serializer)
+      ..add(CreditOverrideListResponse.serializer)
+      ..add(CreditOverrideRequest.serializer)
+      ..add(CreditOverrideResponse.serializer)
       ..add(CurrentUserResponse.serializer)
       ..add(CustomerAddressListResponse.serializer)
       ..add(CustomerAddressResponse.serializer)
       ..add(CustomerContactDetailResponse.serializer)
       ..add(CustomerContactListResponse.serializer)
       ..add(CustomerContactResponse.serializer)
+      ..add(CustomerCreditExposureResponse.serializer)
       ..add(CustomerListItemResponse.serializer)
       ..add(CustomerListResponse.serializer)
       ..add(CustomerResponse.serializer)
       ..add(CustomerSummaryResponse.serializer)
+      ..add(DashboardSummaryResponse.serializer)
       ..add(DeactivateBranchRequest.serializer)
       ..add(DeactivateCustomerRequest.serializer)
       ..add(DeactivateItemRequest.serializer)
@@ -163,6 +198,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(DefectResponse.serializer)
       ..add(DepartmentResponse.serializer)
       ..add(DisableCostRecordRequest.serializer)
+      ..add(DisableTwoFactorRequest.serializer)
       ..add(DispatchResultResponse.serializer)
       ..add(DocumentSequenceResponse.serializer)
       ..add(DocumentTemplateResponse.serializer)
@@ -170,6 +206,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(EffectiveAddOnResponse.serializer)
       ..add(EffectiveOptionResponse.serializer)
       ..add(EffectiveTemplateResponse.serializer)
+      ..add(EnableTwoFactorRequest.serializer)
       ..add(EstimateCalculationSnapshotResponse.serializer)
       ..add(EstimateCatalogItemResponse.serializer)
       ..add(EstimateCatalogResponse.serializer)
@@ -205,8 +242,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(FinanceReconciliationResponse.serializer)
       ..add(FinanceReconciliationRowResponse.serializer)
       ..add(GoodsReceiptLineRequest.serializer)
+      ..add(GoodsReceiptLineResponse.serializer)
       ..add(GoodsReceiptRequest.serializer)
       ..add(GoodsReceiptSummaryResponse.serializer)
+      ..add(GoogleLoginRequest.serializer)
       ..add(GradeRequest.serializer)
       ..add(GradeResponse.serializer)
       ..add(HandoverRequest.serializer)
@@ -216,7 +255,11 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(InstallationResponse.serializer)
       ..add(InstallationsListResponse.serializer)
       ..add(InventoryItemRefResponse.serializer)
+      ..add(InventoryLocationRefResponse.serializer)
       ..add(InventoryPaginationResponse.serializer)
+      ..add(InventoryPeriodCloseLineResponse.serializer)
+      ..add(InventoryPeriodCloseListResponse.serializer)
+      ..add(InventoryPeriodCloseResponse.serializer)
       ..add(InventoryPersonResponse.serializer)
       ..add(InventoryWarehouseRefResponse.serializer)
       ..add(IssueQuotationRequest.serializer)
@@ -242,9 +285,16 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ItemTaxCategoryDetailResponse.serializer)
       ..add(ItemUnitConversionResponse.serializer)
       ..add(JobTitleResponse.serializer)
+      ..add(JournalExportLineResponse.serializer)
+      ..add(JournalExportRequest.serializer)
+      ..add(JournalExportResultResponse.serializer)
+      ..add(LaborRateResponse.serializer)
+      ..add(LaborTimesheetResponse.serializer)
       ..add(LocalizedTextDto.serializer)
       ..add(LocalizedTextInput.serializer)
       ..add(LocalizedTextResponse.serializer)
+      ..add(LoginRequest.serializer)
+      ..add(LogoutRequest.serializer)
       ..add(MarkAllReadResponse.serializer)
       ..add(MarkSurveyReadyRequest.serializer)
       ..add(MeasurementRequest.serializer)
@@ -256,6 +306,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(MrpItemResponse.serializer)
       ..add(MrpPaginationResponse.serializer)
       ..add(MrpPersonResponse.serializer)
+      ..add(MrpPlanningParameterListResponse.serializer)
+      ..add(MrpPlanningParameterRequest.serializer)
+      ..add(MrpPlanningParameterResponse.serializer)
       ..add(MrpReasonResponse.serializer)
       ..add(MrpRecommendationResponse.serializer)
       ..add(MrpRunListItemResponse.serializer)
@@ -263,6 +316,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(MrpRunRequest.serializer)
       ..add(MrpRunResponse.serializer)
       ..add(MrpSnapshotSummaryResponse.serializer)
+      ..add(MrpWarehouseResponse.serializer)
+      ..add(MySecurityStatusResponse.serializer)
       ..add(NoteRequest.serializer)
       ..add(NotificationListResponse.serializer)
       ..add(NotificationResponse.serializer)
@@ -288,6 +343,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PermissionCatalogEntryResponse.serializer)
       ..add(PermissionCatalogResponse.serializer)
       ..add(PermissionDto.serializer)
+      ..add(PipelineReportResponse.serializer)
+      ..add(PipelineStageMetricsResponse.serializer)
+      ..add(PipelineSummaryMetricsResponse.serializer)
+      ..add(PipelineSummaryMetricsResponseReportSectionResponse.serializer)
       ..add(PreviewDocumentSequenceRequest.serializer)
       ..add(PreviewDocumentSequenceResponse.serializer)
       ..add(PreviewItemImportRequest.serializer)
@@ -304,11 +363,16 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProjectBillingSummaryResponse.serializer)
       ..add(ProjectBudgetLineRequest.serializer)
       ..add(ProjectBudgetLineResponse.serializer)
+      ..add(ProjectBudgetReportResponse.serializer)
+      ..add(ProjectBudgetReportRowResponse.serializer)
       ..add(ProjectBudgetResponse.serializer)
+      ..add(ProjectBudgetSummaryMetricsResponse.serializer)
+      ..add(ProjectBudgetSummaryMetricsResponseReportSectionResponse.serializer)
       ..add(ProjectChangeOrderActionRequest.serializer)
       ..add(ProjectChangeOrderResponse.serializer)
       ..add(ProjectContractResponse.serializer)
       ..add(ProjectControlResponse.serializer)
+      ..add(ProjectCostLedgerEntryResponse.serializer)
       ..add(ProjectCustomerResponse.serializer)
       ..add(ProjectHandoverSourceResponse.serializer)
       ..add(ProjectListItemResponse.serializer)
@@ -322,6 +386,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ProjectResponse.serializer)
       ..add(ProjectSiteResponse.serializer)
       ..add(ProjectStatusHistoryResponse.serializer)
+      ..add(ProjectTimesheetActionRequest.serializer)
+      ..add(ProjectWbsCostSummaryResponse.serializer)
+      ..add(ProjectWbsNodeResponse.serializer)
+      ..add(ProjectWbsNodeVersionRequest.serializer)
       ..add(PublicAcceptRequest.serializer)
       ..add(PublicAcceptanceResponse.serializer)
       ..add(PublicAcceptanceViewResponse.serializer)
@@ -332,6 +400,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PublicQuotationPdfResponse.serializer)
       ..add(PublishSurveyTemplateVersionRequest.serializer)
       ..add(PurchaseOrderActionRequest.serializer)
+      ..add(PurchaseOrderInvoiceSummaryResponse.serializer)
       ..add(PurchaseOrderLineRequest.serializer)
       ..add(PurchaseOrderLineResponse.serializer)
       ..add(PurchaseOrderListItemResponse.serializer)
@@ -339,7 +408,17 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PurchaseOrderProjectResponse.serializer)
       ..add(PurchaseOrderRequest.serializer)
       ..add(PurchaseOrderResponse.serializer)
+      ..add(PurchaseOrderSourceRequestResponse.serializer)
       ..add(PurchaseOrderSupplierResponse.serializer)
+      ..add(PurchaseRequestActionRequest.serializer)
+      ..add(PurchaseRequestConvertedOrderResponse.serializer)
+      ..add(PurchaseRequestLineRequest.serializer)
+      ..add(PurchaseRequestLineResponse.serializer)
+      ..add(PurchaseRequestListItemResponse.serializer)
+      ..add(PurchaseRequestListResponse.serializer)
+      ..add(PurchaseRequestRequest.serializer)
+      ..add(PurchaseRequestResponse.serializer)
+      ..add(PurchaseRequestUnitPriceOverrideRequest.serializer)
       ..add(PushDeviceResponse.serializer)
       ..add(QePersonResponse.serializer)
       ..add(QuickEstimateDraftRequest.serializer)
@@ -356,27 +435,39 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(QuotationHistoryResponse.serializer)
       ..add(QuotationPersonResponse.serializer)
       ..add(QuotationReasonRequest.serializer)
+      ..add(QuotationReportResponse.serializer)
+      ..add(QuotationReportRowResponse.serializer)
       ..add(QuotationResponse.serializer)
       ..add(QuotationSectionResponse.serializer)
+      ..add(QuotationSummaryMetricsResponse.serializer)
+      ..add(QuotationSummaryMetricsResponseReportSectionResponse.serializer)
       ..add(QuotationTotalsResponse.serializer)
       ..add(QuotationWorkItemResponse.serializer)
       ..add(ReasonRequest.serializer)
       ..add(ReassignOpportunityOwnerRequest.serializer)
+      ..add(ReceiveGoodsReceiptLineRequest.serializer)
       ..add(ReceiveGoodsReceiptRequest.serializer)
       ..add(ReconciliationResponse.serializer)
       ..add(ReconciliationRowResponse.serializer)
+      ..add(RecordExportAuditRequest.serializer)
+      ..add(RefreshSessionRequest.serializer)
+      ..add(RegenerateBackupCodesRequest.serializer)
       ..add(RegisterPushDeviceRequest.serializer)
       ..add(ReleaseReservationRequest.serializer)
       ..add(RenameAdminUserRequest.serializer)
       ..add(ReorderItemImagesRequest.serializer)
       ..add(ReplaceProjectBudgetRequest.serializer)
+      ..add(ReportingArAgingResponse.serializer)
       ..add(ReservationListResponse.serializer)
       ..add(ReservationResponse.serializer)
       ..add(ReserveStockRequest.serializer)
       ..add(ReturnCostRecordRequest.serializer)
+      ..add(ReturnStockLineRequest.serializer)
+      ..add(ReturnStockRequest.serializer)
       ..add(ReviewDecisionRequest.serializer)
       ..add(ReviewEstimateRequest.serializer)
       ..add(ReviewResponse.serializer)
+      ..add(RevokeSessionsResponse.serializer)
       ..add(RoleChangeRequestListResponse.serializer)
       ..add(RoleChangeRequestResponse.serializer)
       ..add(RoleDefinitionListResponse.serializer)
@@ -394,8 +485,15 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ServiceRequestRequest.serializer)
       ..add(ServiceRequestResponse.serializer)
       ..add(ServiceRequestsListResponse.serializer)
+      ..add(ServiceSlaReportResponse.serializer)
+      ..add(ServiceSlaReportRowResponse.serializer)
+      ..add(ServiceSlaResponse.serializer)
+      ..add(ServiceSlaSummaryMetricsResponse.serializer)
+      ..add(ServiceSlaSummaryMetricsResponseReportSectionResponse.serializer)
+      ..add(SetAdminUserPasswordRequest.serializer)
       ..add(SetBranchAvailabilityRequest.serializer)
       ..add(SetCategoryAttributeTemplatesRequest.serializer)
+      ..add(SetProjectLaborRateRequest.serializer)
       ..add(SetProjectPlanRequest.serializer)
       ..add(ShareRequest.serializer)
       ..add(ShareResponse.serializer)
@@ -416,13 +514,33 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(StockBalanceResponse.serializer)
       ..add(StockDocumentResponse.serializer)
       ..add(StockLineRequest.serializer)
+      ..add(StockLocationBalanceListResponse.serializer)
+      ..add(StockLocationBalanceResponse.serializer)
       ..add(StockMovementListResponse.serializer)
       ..add(StockMovementResponse.serializer)
+      ..add(StockSerialListResponse.serializer)
+      ..add(StockSerialResponse.serializer)
+      ..add(StockValueReportResponse.serializer)
+      ..add(StockValueReportRowResponse.serializer)
+      ..add(StockValueSummaryMetricsResponse.serializer)
+      ..add(StockValueSummaryMetricsResponseReportSectionResponse.serializer)
       ..add(SubmitEstimateRequest.serializer)
       ..add(SubmitReviewRequest.serializer)
+      ..add(SupplierInvoiceActionRequest.serializer)
+      ..add(SupplierInvoiceLineRequest.serializer)
+      ..add(SupplierInvoiceLineResponse.serializer)
+      ..add(SupplierInvoiceListItemResponse.serializer)
+      ..add(SupplierInvoiceListResponse.serializer)
+      ..add(SupplierInvoiceOrderRefResponse.serializer)
+      ..add(SupplierInvoiceRequest.serializer)
+      ..add(SupplierInvoiceResponse.serializer)
       ..add(SupplierListResponse.serializer)
       ..add(SupplierRequest.serializer)
       ..add(SupplierResponse.serializer)
+      ..add(SupplierReturnLineRequest.serializer)
+      ..add(SupplierReturnLineResponse.serializer)
+      ..add(SupplierReturnRequest.serializer)
+      ..add(SupplierReturnResponse.serializer)
       ..add(SurveyCategoryOptionResponse.serializer)
       ..add(SurveyDesignStyleOptionResponse.serializer)
       ..add(SurveyDesignStyleResponse.serializer)
@@ -436,10 +554,14 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(SurveyTemplateVersionListResponse.serializer)
       ..add(SurveyTemplateVersionResponse.serializer)
       ..add(SurveyorSummaryResponse.serializer)
+      ..add(TechnicianAssignmentResponse.serializer)
+      ..add(TechnicianSchedulesListResponse.serializer)
       ..add(TemplateDecisionRequest.serializer)
+      ..add(TotpSetupPayloadDto.serializer)
       ..add(TransferStockRequest.serializer)
       ..add(TransitionOpportunityStageRequest.serializer)
       ..add(TransitionProjectRequest.serializer)
+      ..add(TwoFactorBackupCodesResponse.serializer)
       ..add(UnitConversionResponse.serializer)
       ..add(UnitOfMeasureDetailResponse.serializer)
       ..add(UnitSummaryResponse.serializer)
@@ -448,6 +570,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(UnregisterPushDeviceResponse.serializer)
       ..add(UpdateAdminMembershipRequest.serializer)
       ..add(UpdateAdminUserProfileRequest.serializer)
+      ..add(UpdateAdminUserTwoFactorPolicyRequest.serializer)
       ..add(UpdateApprovalLimitRequest.serializer)
       ..add(UpdateBranchRequest.serializer)
       ..add(UpdateCostRecordRequest.serializer)
@@ -471,6 +594,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(UpdateOrganizationBrandingRequest.serializer)
       ..add(UpdateOrganizationProfileRequest.serializer)
       ..add(UpdateProjectMilestoneRequest.serializer)
+      ..add(UpdateProjectWbsNodeRequest.serializer)
       ..add(UpdateRoleDefinitionResponse.serializer)
       ..add(UpdateSiteRequest.serializer)
       ..add(UpdateSurveyAreaRequest.serializer)
@@ -481,34 +605,60 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(UpdateSurveyMeasurementRequest.serializer)
       ..add(UpdateSurveyMoodToneRequest.serializer)
       ..add(UpdateUnitOfMeasureRequest.serializer)
+      ..add(UpdateWarehouseLocationRequest.serializer)
+      ..add(UpdateWorkCenterRequest.serializer)
       ..add(UploadSlotResponse.serializer)
       ..add(UserDto.serializer)
       ..add(UserListItemResponse.serializer)
       ..add(UserListResponse.serializer)
       ..add(UserPreferencesDto.serializer)
+      ..add(VerifyTwoFactorLoginRequest.serializer)
       ..add(VoidSurveyRevisionRequest.serializer)
       ..add(WarehouseListResponse.serializer)
+      ..add(WarehouseLocationListResponse.serializer)
+      ..add(WarehouseLocationResponse.serializer)
       ..add(WarehouseRequest.serializer)
       ..add(WarehouseResponse.serializer)
       ..add(WarrantiesListResponse.serializer)
       ..add(WarrantyRefResponse.serializer)
       ..add(WarrantyResponse.serializer)
+      ..add(WorkCenterCapacityRowResponse.serializer)
+      ..add(WorkCenterCapacityViewResponse.serializer)
+      ..add(WorkCenterDailyCapacityPointResponse.serializer)
+      ..add(WorkCenterListResponse.serializer)
+      ..add(WorkCenterRefResponse.serializer)
+      ..add(WorkCenterResponse.serializer)
       ..add(WorkImageUserSummaryResponse.serializer)
       ..add(WorkOrderActionRequest.serializer)
+      ..add(WorkOrderCompleteOperationRequest.serializer)
       ..add(WorkOrderCompleteRequest.serializer)
+      ..add(WorkOrderLaborEntryResponse.serializer)
       ..add(WorkOrderListItemResponse.serializer)
       ..add(WorkOrderListResponse.serializer)
       ..add(WorkOrderMaterialLineRequest.serializer)
       ..add(WorkOrderMaterialResponse.serializer)
       ..add(WorkOrderMaterialsRequest.serializer)
+      ..add(WorkOrderOperationResponse.serializer)
       ..add(WorkOrderRefResponse.serializer)
       ..add(WorkOrderRequest.serializer)
       ..add(WorkOrderResponse.serializer)
+      ..add(WorkOrderSubcontractOperationRequest.serializer)
       ..add(WorkOrderTransactionResponse.serializer)
+      ..add(WorkingCalendarHolidayListResponse.serializer)
+      ..add(WorkingCalendarHolidayRequest.serializer)
+      ..add(WorkingCalendarHolidayResponse.serializer)
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(AcceptanceLinkResponse)]),
           () => ListBuilder<AcceptanceLinkResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(AccountMappingResponse)]),
+          () => ListBuilder<AccountMappingResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ActiveSessionItemDto)]),
+          () => ListBuilder<ActiveSessionItemDto>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(AddressSearchResultItem)]),
@@ -555,6 +705,14 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(ApprovalLimitResponse)]),
           () => ListBuilder<ApprovalLimitResponse>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ArAgingCustomerBucketResponse)]),
+          () => ListBuilder<ArAgingCustomerBucketResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ArAgingReportRowResponse)]),
+          () => ListBuilder<ArAgingReportRowResponse>())
+      ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(AssignedSurveySyncItemResponse)]),
           () => ListBuilder<AssignedSurveySyncItemResponse>())
@@ -570,6 +728,9 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(AuditEventResponse)]),
           () => ListBuilder<AuditEventResponse>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(BillingLineRequest)]),
+          () => ListBuilder<BillingLineRequest>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(BillingListItemResponse)]),
           () => ListBuilder<BillingListItemResponse>())
@@ -577,11 +738,23 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(BomLineRequest)]),
           () => ListBuilder<BomLineRequest>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(BomRoutingStepRequest)]),
+          () => ListBuilder<BomRoutingStepRequest>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(BomLineRequest)]),
           () => ListBuilder<BomLineRequest>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(BomRoutingStepRequest)]),
+          () => ListBuilder<BomRoutingStepRequest>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(BomLineResponse)]),
           () => ListBuilder<BomLineResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(BomRoutingStepResponse)]),
+          () => ListBuilder<BomRoutingStepResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(BomListItemResponse)]),
@@ -598,6 +771,10 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(BranchRateOverrideResponse)]),
           () => ListBuilder<BranchRateOverrideResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(CalculationPolicyVersionResponse)]),
+          () => ListBuilder<CalculationPolicyVersionResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(CatalogFacetValueResponse)]),
@@ -649,6 +826,14 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(CreateSiteImageRequest)]),
           () => ListBuilder<CreateSiteImageRequest>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(CreditOverrideResponse)]),
+          () => ListBuilder<CreditOverrideResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(CreditOverrideResponse)]),
+          () => ListBuilder<CreditOverrideResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(CustomerAddressResponse)]),
@@ -739,6 +924,10 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(GoodsReceiptLineRequest)]),
           () => ListBuilder<GoodsReceiptLineRequest>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(GoodsReceiptLineResponse)]),
+          () => ListBuilder<GoodsReceiptLineResponse>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(GradeRequest)]),
           () => ListBuilder<GradeRequest>())
       ..addBuilderFactory(
@@ -773,6 +962,14 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(InstallationListItemResponse)]),
           () => ListBuilder<InstallationListItemResponse>())
       ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(InventoryPeriodCloseLineResponse)]),
+          () => ListBuilder<InventoryPeriodCloseLineResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(InventoryPeriodCloseResponse)]),
+          () => ListBuilder<InventoryPeriodCloseResponse>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(ItemImportJobRowResponse)]),
           () => ListBuilder<ItemImportJobRowResponse>())
@@ -792,11 +989,19 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(ItemResponse)]),
           () => ListBuilder<ItemResponse>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(JournalExportLineResponse)]),
+          () => ListBuilder<JournalExportLineResponse>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(MembershipDto)]),
           () => ListBuilder<MembershipDto>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(MrpDemandRequest)]),
           () => ListBuilder<MrpDemandRequest>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(MrpPlanningParameterResponse)]),
+          () => ListBuilder<MrpPlanningParameterResponse>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(MrpReasonResponse)]),
           () => ListBuilder<MrpReasonResponse>())
@@ -836,12 +1041,24 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(PaymentResponse)]),
           () => ListBuilder<PaymentResponse>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(BillingLineResponse)]),
+          () => ListBuilder<BillingLineResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(BillingAdjustmentNoteResponse)]),
+          () => ListBuilder<BillingAdjustmentNoteResponse>())
+      ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(PermissionCatalogEntryResponse)]),
           () => ListBuilder<PermissionCatalogEntryResponse>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(PermissionDto)]),
           () => ListBuilder<PermissionDto>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PipelineStageMetricsResponse)]),
+          () => ListBuilder<PipelineStageMetricsResponse>())
       ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(PricingTemplateListItemResponse)]),
@@ -855,9 +1072,32 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(ProjectBudgetLineResponse)]),
           () => ListBuilder<ProjectBudgetLineResponse>())
       ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ProjectBudgetReportRowResponse)]),
+          () => ListBuilder<ProjectBudgetReportRowResponse>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(ProjectListItemResponse)]),
           () => ListBuilder<ProjectListItemResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ProjectWbsNodeResponse)]),
+          () => ListBuilder<ProjectWbsNodeResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ProjectWbsCostSummaryResponse)]),
+          () => ListBuilder<ProjectWbsCostSummaryResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ProjectCostLedgerEntryResponse)]),
+          () => ListBuilder<ProjectCostLedgerEntryResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(LaborRateResponse)]),
+          () => ListBuilder<LaborRateResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(LaborTimesheetResponse)]),
+          () => ListBuilder<LaborTimesheetResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(ProjectMilestoneResponse)]),
@@ -884,8 +1124,32 @@ Serializers _$serializers = (Serializers().toBuilder()
           () => ListBuilder<GoodsReceiptSummaryResponse>())
       ..addBuilderFactory(
           const FullType(
+              BuiltList, const [const FullType(SupplierReturnResponse)]),
+          () => ListBuilder<SupplierReturnResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(PurchaseOrderInvoiceSummaryResponse)]),
+          () => ListBuilder<PurchaseOrderInvoiceSummaryResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(PurchaseOrderSourceRequestResponse)]),
+          () => ListBuilder<PurchaseOrderSourceRequestResponse>())
+      ..addBuilderFactory(
+          const FullType(
               BuiltList, const [const FullType(PurchaseOrderListItemResponse)]),
           () => ListBuilder<PurchaseOrderListItemResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PurchaseRequestLineRequest)]),
+          () => ListBuilder<PurchaseRequestLineRequest>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(PurchaseRequestLineResponse)]),
+          () => ListBuilder<PurchaseRequestLineResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(PurchaseRequestListItemResponse)]),
+          () => ListBuilder<PurchaseRequestListItemResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(QuickEstimateListItemResponse)]),
@@ -896,12 +1160,20 @@ Serializers _$serializers = (Serializers().toBuilder()
           () => ListBuilder<QuotationHistoryItemResponse>())
       ..addBuilderFactory(
           const FullType(
+              BuiltList, const [const FullType(QuotationReportRowResponse)]),
+          () => ListBuilder<QuotationReportRowResponse>())
+      ..addBuilderFactory(
+          const FullType(
               BuiltList, const [const FullType(QuotationSectionResponse)]),
           () => ListBuilder<QuotationSectionResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(QuotationWorkItemResponse)]),
           () => ListBuilder<QuotationWorkItemResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(ReceiveGoodsReceiptLineRequest)]),
+          () => ListBuilder<ReceiveGoodsReceiptLineRequest>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(ReconciliationRowResponse)]),
@@ -910,6 +1182,10 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltList, const [const FullType(ReservationResponse)]),
           () => ListBuilder<ReservationResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ReturnStockLineRequest)]),
+          () => ListBuilder<ReturnStockLineRequest>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(RoleChangeRequestResponse)]),
@@ -932,6 +1208,10 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList,
               const [const FullType(ServiceRequestListItemResponse)]),
           () => ListBuilder<ServiceRequestListItemResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ServiceSlaReportRowResponse)]),
+          () => ListBuilder<ServiceSlaReportRowResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(SignatureCaptureResponse)]),
@@ -958,12 +1238,57 @@ Serializers _$serializers = (Serializers().toBuilder()
           () => ListBuilder<StockLineRequest>())
       ..addBuilderFactory(
           const FullType(
+              BuiltList, const [const FullType(StockLocationBalanceResponse)]),
+          () => ListBuilder<StockLocationBalanceResponse>())
+      ..addBuilderFactory(
+          const FullType(
               BuiltList, const [const FullType(StockMovementResponse)]),
           () => ListBuilder<StockMovementResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(StockMovementResponse)]),
           () => ListBuilder<StockMovementResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(StockSerialResponse)]),
+          () => ListBuilder<StockSerialResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(StockValueReportRowResponse)]),
+          () => ListBuilder<StockValueReportRowResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
@@ -1038,6 +1363,13 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(
               BuiltMap, const [const FullType(String), const FullType(String)]),
           () => MapBuilder<String, String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(PurchaseRequestUnitPriceOverrideRequest)]),
+          () => ListBuilder<PurchaseRequestUnitPriceOverrideRequest>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => ListBuilder<String>())
@@ -1122,8 +1454,28 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltMap, const [const FullType(String), const FullType(String)]),
           () => MapBuilder<String, String>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(SupplierInvoiceLineRequest)]),
+          () => ListBuilder<SupplierInvoiceLineRequest>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(SupplierInvoiceLineResponse)]),
+          () => ListBuilder<SupplierInvoiceLineResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(SupplierInvoiceListItemResponse)]),
+          () => ListBuilder<SupplierInvoiceListItemResponse>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(SupplierResponse)]),
           () => ListBuilder<SupplierResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(SupplierReturnLineRequest)]),
+          () => ListBuilder<SupplierReturnLineRequest>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(SupplierReturnLineResponse)]),
+          () => ListBuilder<SupplierReturnLineResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(SurveyCategoryOptionResponse)]),
@@ -1149,6 +1501,10 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(SurveyTemplateVersionResponse)]),
           () => ListBuilder<SurveyTemplateVersionResponse>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(TechnicianAssignmentResponse)]),
+          () => ListBuilder<TechnicianAssignmentResponse>())
+      ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(UpdateEstimateCostComponentDto)]),
           () => ListBuilder<UpdateEstimateCostComponentDto>())
@@ -1172,11 +1528,26 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(UserListItemResponse)]),
           () => ListBuilder<UserListItemResponse>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(WarehouseLocationResponse)]),
+          () => ListBuilder<WarehouseLocationResponse>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(WarehouseResponse)]),
           () => ListBuilder<WarehouseResponse>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(WarrantyResponse)]),
           () => ListBuilder<WarrantyResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(WorkCenterCapacityRowResponse)]),
+          () => ListBuilder<WorkCenterCapacityRowResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(WorkCenterDailyCapacityPointResponse)]),
+          () => ListBuilder<WorkCenterDailyCapacityPointResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(WorkCenterResponse)]),
+          () => ListBuilder<WorkCenterResponse>())
       ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(WorkOrderListItemResponse)]),
@@ -1191,8 +1562,20 @@ Serializers _$serializers = (Serializers().toBuilder()
           () => ListBuilder<WorkOrderMaterialResponse>())
       ..addBuilderFactory(
           const FullType(
+              BuiltList, const [const FullType(WorkOrderOperationResponse)]),
+          () => ListBuilder<WorkOrderOperationResponse>())
+      ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(WorkOrderLaborEntryResponse)]),
+          () => ListBuilder<WorkOrderLaborEntryResponse>())
+      ..addBuilderFactory(
+          const FullType(
               BuiltList, const [const FullType(WorkOrderTransactionResponse)]),
           () => ListBuilder<WorkOrderTransactionResponse>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(WorkingCalendarHolidayResponse)]),
+          () => ListBuilder<WorkingCalendarHolidayResponse>())
       ..addBuilderFactory(
           const FullType(BuiltMap, const [
             const FullType(String),

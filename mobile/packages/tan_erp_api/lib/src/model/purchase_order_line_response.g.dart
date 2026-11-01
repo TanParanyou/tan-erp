@@ -31,6 +31,10 @@ class _$PurchaseOrderLineResponse extends PurchaseOrderLineResponse {
   final double? receivedQuantity;
   @override
   final double? remainingQuantity;
+  @override
+  final double? invoicedQuantity;
+  @override
+  final double? uninvoicedReceivedQuantity;
 
   factory _$PurchaseOrderLineResponse(
           [void Function(PurchaseOrderLineResponseBuilder)? updates]) =>
@@ -48,7 +52,9 @@ class _$PurchaseOrderLineResponse extends PurchaseOrderLineResponse {
       this.unitPrice,
       this.lineTotal,
       this.receivedQuantity,
-      this.remainingQuantity})
+      this.remainingQuantity,
+      this.invoicedQuantity,
+      this.uninvoicedReceivedQuantity})
       : super._();
   @override
   PurchaseOrderLineResponse rebuild(
@@ -74,7 +80,9 @@ class _$PurchaseOrderLineResponse extends PurchaseOrderLineResponse {
         unitPrice == other.unitPrice &&
         lineTotal == other.lineTotal &&
         receivedQuantity == other.receivedQuantity &&
-        remainingQuantity == other.remainingQuantity;
+        remainingQuantity == other.remainingQuantity &&
+        invoicedQuantity == other.invoicedQuantity &&
+        uninvoicedReceivedQuantity == other.uninvoicedReceivedQuantity;
   }
 
   @override
@@ -92,6 +100,8 @@ class _$PurchaseOrderLineResponse extends PurchaseOrderLineResponse {
     _$hash = $jc(_$hash, lineTotal.hashCode);
     _$hash = $jc(_$hash, receivedQuantity.hashCode);
     _$hash = $jc(_$hash, remainingQuantity.hashCode);
+    _$hash = $jc(_$hash, invoicedQuantity.hashCode);
+    _$hash = $jc(_$hash, uninvoicedReceivedQuantity.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -110,7 +120,9 @@ class _$PurchaseOrderLineResponse extends PurchaseOrderLineResponse {
           ..add('unitPrice', unitPrice)
           ..add('lineTotal', lineTotal)
           ..add('receivedQuantity', receivedQuantity)
-          ..add('remainingQuantity', remainingQuantity))
+          ..add('remainingQuantity', remainingQuantity)
+          ..add('invoicedQuantity', invoicedQuantity)
+          ..add('uninvoicedReceivedQuantity', uninvoicedReceivedQuantity))
         .toString();
   }
 }
@@ -170,6 +182,16 @@ class PurchaseOrderLineResponseBuilder
   set remainingQuantity(double? remainingQuantity) =>
       _$this._remainingQuantity = remainingQuantity;
 
+  double? _invoicedQuantity;
+  double? get invoicedQuantity => _$this._invoicedQuantity;
+  set invoicedQuantity(double? invoicedQuantity) =>
+      _$this._invoicedQuantity = invoicedQuantity;
+
+  double? _uninvoicedReceivedQuantity;
+  double? get uninvoicedReceivedQuantity => _$this._uninvoicedReceivedQuantity;
+  set uninvoicedReceivedQuantity(double? uninvoicedReceivedQuantity) =>
+      _$this._uninvoicedReceivedQuantity = uninvoicedReceivedQuantity;
+
   PurchaseOrderLineResponseBuilder() {
     PurchaseOrderLineResponse._defaults(this);
   }
@@ -189,6 +211,8 @@ class PurchaseOrderLineResponseBuilder
       _lineTotal = $v.lineTotal;
       _receivedQuantity = $v.receivedQuantity;
       _remainingQuantity = $v.remainingQuantity;
+      _invoicedQuantity = $v.invoicedQuantity;
+      _uninvoicedReceivedQuantity = $v.uninvoicedReceivedQuantity;
       _$v = null;
     }
     return this;
@@ -222,6 +246,8 @@ class PurchaseOrderLineResponseBuilder
           lineTotal: lineTotal,
           receivedQuantity: receivedQuantity,
           remainingQuantity: remainingQuantity,
+          invoicedQuantity: invoicedQuantity,
+          uninvoicedReceivedQuantity: uninvoicedReceivedQuantity,
         );
     replace(_$result);
     return _$result;

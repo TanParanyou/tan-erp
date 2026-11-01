@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
+import 'package:tan_erp_api/src/model/bom_routing_step_request.dart';
 import 'package:tan_erp_api/src/model/bom_line_request.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -17,6 +18,7 @@ part 'bom_request.g.dart';
 /// * [outputQuantity] 
 /// * [note] 
 /// * [lines] 
+/// * [routingSteps] 
 @BuiltValue()
 abstract class BomRequest implements Built<BomRequest, BomRequestBuilder> {
   @BuiltValueField(wireName: r'itemId')
@@ -30,6 +32,9 @@ abstract class BomRequest implements Built<BomRequest, BomRequestBuilder> {
 
   @BuiltValueField(wireName: r'lines')
   BuiltList<BomLineRequest>? get lines;
+
+  @BuiltValueField(wireName: r'routingSteps')
+  BuiltList<BomRoutingStepRequest>? get routingSteps;
 
   BomRequest._();
 
@@ -80,6 +85,13 @@ class _$BomRequestSerializer implements PrimitiveSerializer<BomRequest> {
       yield serializers.serialize(
         object.lines,
         specifiedType: const FullType.nullable(BuiltList, [FullType(BomLineRequest)]),
+      );
+    }
+    if (object.routingSteps != null) {
+      yield r'routingSteps';
+      yield serializers.serialize(
+        object.routingSteps,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(BomRoutingStepRequest)]),
       );
     }
   }
@@ -136,6 +148,14 @@ class _$BomRequestSerializer implements PrimitiveSerializer<BomRequest> {
           ) as BuiltList<BomLineRequest>?;
           if (valueDes == null) continue;
           result.lines.replace(valueDes);
+          break;
+        case r'routingSteps':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(BomRoutingStepRequest)]),
+          ) as BuiltList<BomRoutingStepRequest>?;
+          if (valueDes == null) continue;
+          result.routingSteps.replace(valueDes);
           break;
         default:
           unhandled.add(key);

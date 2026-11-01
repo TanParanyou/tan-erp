@@ -3,12 +3,15 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:tan_erp_api/src/model/purchase_order_source_request_response.dart';
 import 'package:tan_erp_api/src/model/purchase_order_supplier_response.dart';
 import 'package:tan_erp_api/src/model/purchase_order_project_response.dart';
 import 'package:tan_erp_api/src/model/procurement_person_response.dart';
+import 'package:tan_erp_api/src/model/supplier_return_response.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:tan_erp_api/src/model/goods_receipt_summary_response.dart';
 import 'package:tan_erp_api/src/model/date.dart';
+import 'package:tan_erp_api/src/model/purchase_order_invoice_summary_response.dart';
 import 'package:tan_erp_api/src/model/purchase_order_line_response.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -38,6 +41,9 @@ part 'purchase_order_response.g.dart';
 /// * [rowVersion] 
 /// * [lines] 
 /// * [receipts] 
+/// * [returns] 
+/// * [invoices] 
+/// * [sourcePurchaseRequests] 
 @BuiltValue()
 abstract class PurchaseOrderResponse implements Built<PurchaseOrderResponse, PurchaseOrderResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -99,6 +105,15 @@ abstract class PurchaseOrderResponse implements Built<PurchaseOrderResponse, Pur
 
   @BuiltValueField(wireName: r'receipts')
   BuiltList<GoodsReceiptSummaryResponse>? get receipts;
+
+  @BuiltValueField(wireName: r'returns')
+  BuiltList<SupplierReturnResponse>? get returns;
+
+  @BuiltValueField(wireName: r'invoices')
+  BuiltList<PurchaseOrderInvoiceSummaryResponse>? get invoices;
+
+  @BuiltValueField(wireName: r'sourcePurchaseRequests')
+  BuiltList<PurchaseOrderSourceRequestResponse>? get sourcePurchaseRequests;
 
   PurchaseOrderResponse._();
 
@@ -261,6 +276,27 @@ class _$PurchaseOrderResponseSerializer implements PrimitiveSerializer<PurchaseO
       yield serializers.serialize(
         object.receipts,
         specifiedType: const FullType.nullable(BuiltList, [FullType(GoodsReceiptSummaryResponse)]),
+      );
+    }
+    if (object.returns != null) {
+      yield r'returns';
+      yield serializers.serialize(
+        object.returns,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(SupplierReturnResponse)]),
+      );
+    }
+    if (object.invoices != null) {
+      yield r'invoices';
+      yield serializers.serialize(
+        object.invoices,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(PurchaseOrderInvoiceSummaryResponse)]),
+      );
+    }
+    if (object.sourcePurchaseRequests != null) {
+      yield r'sourcePurchaseRequests';
+      yield serializers.serialize(
+        object.sourcePurchaseRequests,
+        specifiedType: const FullType.nullable(BuiltList, [FullType(PurchaseOrderSourceRequestResponse)]),
       );
     }
   }
@@ -445,6 +481,30 @@ class _$PurchaseOrderResponseSerializer implements PrimitiveSerializer<PurchaseO
           ) as BuiltList<GoodsReceiptSummaryResponse>?;
           if (valueDes == null) continue;
           result.receipts.replace(valueDes);
+          break;
+        case r'returns':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(SupplierReturnResponse)]),
+          ) as BuiltList<SupplierReturnResponse>?;
+          if (valueDes == null) continue;
+          result.returns.replace(valueDes);
+          break;
+        case r'invoices':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(PurchaseOrderInvoiceSummaryResponse)]),
+          ) as BuiltList<PurchaseOrderInvoiceSummaryResponse>?;
+          if (valueDes == null) continue;
+          result.invoices.replace(valueDes);
+          break;
+        case r'sourcePurchaseRequests':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(BuiltList, [FullType(PurchaseOrderSourceRequestResponse)]),
+          ) as BuiltList<PurchaseOrderSourceRequestResponse>?;
+          if (valueDes == null) continue;
+          result.sourcePurchaseRequests.replace(valueDes);
           break;
         default:
           unhandled.add(key);

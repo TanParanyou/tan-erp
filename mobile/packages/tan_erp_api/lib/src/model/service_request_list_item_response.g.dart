@@ -22,6 +22,14 @@ class _$ServiceRequestListItemResponse extends ServiceRequestListItemResponse {
   @override
   final String? projectCode;
   @override
+  final ServiceSlaResponse? sla;
+  @override
+  final double? serviceChargeAmount;
+  @override
+  final String? billingDocumentId;
+  @override
+  final String? billingDocumentNumber;
+  @override
   final DateTime? createdAtUtc;
 
   factory _$ServiceRequestListItemResponse(
@@ -36,6 +44,10 @@ class _$ServiceRequestListItemResponse extends ServiceRequestListItemResponse {
       this.status,
       this.inWarranty,
       this.projectCode,
+      this.sla,
+      this.serviceChargeAmount,
+      this.billingDocumentId,
+      this.billingDocumentNumber,
       this.createdAtUtc})
       : super._();
   @override
@@ -58,6 +70,10 @@ class _$ServiceRequestListItemResponse extends ServiceRequestListItemResponse {
         status == other.status &&
         inWarranty == other.inWarranty &&
         projectCode == other.projectCode &&
+        sla == other.sla &&
+        serviceChargeAmount == other.serviceChargeAmount &&
+        billingDocumentId == other.billingDocumentId &&
+        billingDocumentNumber == other.billingDocumentNumber &&
         createdAtUtc == other.createdAtUtc;
   }
 
@@ -71,6 +87,10 @@ class _$ServiceRequestListItemResponse extends ServiceRequestListItemResponse {
     _$hash = $jc(_$hash, status.hashCode);
     _$hash = $jc(_$hash, inWarranty.hashCode);
     _$hash = $jc(_$hash, projectCode.hashCode);
+    _$hash = $jc(_$hash, sla.hashCode);
+    _$hash = $jc(_$hash, serviceChargeAmount.hashCode);
+    _$hash = $jc(_$hash, billingDocumentId.hashCode);
+    _$hash = $jc(_$hash, billingDocumentNumber.hashCode);
     _$hash = $jc(_$hash, createdAtUtc.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -86,6 +106,10 @@ class _$ServiceRequestListItemResponse extends ServiceRequestListItemResponse {
           ..add('status', status)
           ..add('inWarranty', inWarranty)
           ..add('projectCode', projectCode)
+          ..add('sla', sla)
+          ..add('serviceChargeAmount', serviceChargeAmount)
+          ..add('billingDocumentId', billingDocumentId)
+          ..add('billingDocumentNumber', billingDocumentNumber)
           ..add('createdAtUtc', createdAtUtc))
         .toString();
   }
@@ -125,6 +149,26 @@ class ServiceRequestListItemResponseBuilder
   String? get projectCode => _$this._projectCode;
   set projectCode(String? projectCode) => _$this._projectCode = projectCode;
 
+  ServiceSlaResponseBuilder? _sla;
+  ServiceSlaResponseBuilder get sla =>
+      _$this._sla ??= ServiceSlaResponseBuilder();
+  set sla(ServiceSlaResponseBuilder? sla) => _$this._sla = sla;
+
+  double? _serviceChargeAmount;
+  double? get serviceChargeAmount => _$this._serviceChargeAmount;
+  set serviceChargeAmount(double? serviceChargeAmount) =>
+      _$this._serviceChargeAmount = serviceChargeAmount;
+
+  String? _billingDocumentId;
+  String? get billingDocumentId => _$this._billingDocumentId;
+  set billingDocumentId(String? billingDocumentId) =>
+      _$this._billingDocumentId = billingDocumentId;
+
+  String? _billingDocumentNumber;
+  String? get billingDocumentNumber => _$this._billingDocumentNumber;
+  set billingDocumentNumber(String? billingDocumentNumber) =>
+      _$this._billingDocumentNumber = billingDocumentNumber;
+
   DateTime? _createdAtUtc;
   DateTime? get createdAtUtc => _$this._createdAtUtc;
   set createdAtUtc(DateTime? createdAtUtc) =>
@@ -144,6 +188,10 @@ class ServiceRequestListItemResponseBuilder
       _status = $v.status;
       _inWarranty = $v.inWarranty;
       _projectCode = $v.projectCode;
+      _sla = $v.sla?.toBuilder();
+      _serviceChargeAmount = $v.serviceChargeAmount;
+      _billingDocumentId = $v.billingDocumentId;
+      _billingDocumentNumber = $v.billingDocumentNumber;
       _createdAtUtc = $v.createdAtUtc;
       _$v = null;
     }
@@ -164,17 +212,34 @@ class ServiceRequestListItemResponseBuilder
   ServiceRequestListItemResponse build() => _build();
 
   _$ServiceRequestListItemResponse _build() {
-    final _$result = _$v ??
-        _$ServiceRequestListItemResponse._(
-          id: id,
-          number: number,
-          title: title,
-          priority: priority,
-          status: status,
-          inWarranty: inWarranty,
-          projectCode: projectCode,
-          createdAtUtc: createdAtUtc,
-        );
+    _$ServiceRequestListItemResponse _$result;
+    try {
+      _$result = _$v ??
+          _$ServiceRequestListItemResponse._(
+            id: id,
+            number: number,
+            title: title,
+            priority: priority,
+            status: status,
+            inWarranty: inWarranty,
+            projectCode: projectCode,
+            sla: _sla?.build(),
+            serviceChargeAmount: serviceChargeAmount,
+            billingDocumentId: billingDocumentId,
+            billingDocumentNumber: billingDocumentNumber,
+            createdAtUtc: createdAtUtc,
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'sla';
+        _sla?.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(
+            r'ServiceRequestListItemResponse', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }

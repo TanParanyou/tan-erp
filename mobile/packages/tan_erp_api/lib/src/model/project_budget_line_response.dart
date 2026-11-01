@@ -16,6 +16,9 @@ part 'project_budget_line_response.g.dart';
 /// * [description] 
 /// * [amount] 
 /// * [sortOrder] 
+/// * [wbsNodeId] 
+/// * [wbsCode] 
+/// * [wbsName] 
 @BuiltValue()
 abstract class ProjectBudgetLineResponse implements Built<ProjectBudgetLineResponse, ProjectBudgetLineResponseBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -32,6 +35,15 @@ abstract class ProjectBudgetLineResponse implements Built<ProjectBudgetLineRespo
 
   @BuiltValueField(wireName: r'sortOrder')
   int? get sortOrder;
+
+  @BuiltValueField(wireName: r'wbsNodeId')
+  String? get wbsNodeId;
+
+  @BuiltValueField(wireName: r'wbsCode')
+  String? get wbsCode;
+
+  @BuiltValueField(wireName: r'wbsName')
+  String? get wbsName;
 
   ProjectBudgetLineResponse._();
 
@@ -89,6 +101,27 @@ class _$ProjectBudgetLineResponseSerializer implements PrimitiveSerializer<Proje
       yield serializers.serialize(
         object.sortOrder,
         specifiedType: const FullType(int),
+      );
+    }
+    if (object.wbsNodeId != null) {
+      yield r'wbsNodeId';
+      yield serializers.serialize(
+        object.wbsNodeId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.wbsCode != null) {
+      yield r'wbsCode';
+      yield serializers.serialize(
+        object.wbsCode,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.wbsName != null) {
+      yield r'wbsName';
+      yield serializers.serialize(
+        object.wbsName,
+        specifiedType: const FullType.nullable(String),
       );
     }
   }
@@ -153,6 +186,30 @@ class _$ProjectBudgetLineResponseSerializer implements PrimitiveSerializer<Proje
           ) as int?;
           if (valueDes == null) continue;
           result.sortOrder = valueDes;
+          break;
+        case r'wbsNodeId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.wbsNodeId = valueDes;
+          break;
+        case r'wbsCode':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.wbsCode = valueDes;
+          break;
+        case r'wbsName':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.wbsName = valueDes;
           break;
         default:
           unhandled.add(key);

@@ -14,6 +14,7 @@ part 'project_budget_line_request.g.dart';
 /// * [category] 
 /// * [description] 
 /// * [amount] 
+/// * [wbsNodeId] 
 @BuiltValue()
 abstract class ProjectBudgetLineRequest implements Built<ProjectBudgetLineRequest, ProjectBudgetLineRequestBuilder> {
   @BuiltValueField(wireName: r'category')
@@ -24,6 +25,9 @@ abstract class ProjectBudgetLineRequest implements Built<ProjectBudgetLineReques
 
   @BuiltValueField(wireName: r'amount')
   double? get amount;
+
+  @BuiltValueField(wireName: r'wbsNodeId')
+  String? get wbsNodeId;
 
   ProjectBudgetLineRequest._();
 
@@ -67,6 +71,13 @@ class _$ProjectBudgetLineRequestSerializer implements PrimitiveSerializer<Projec
       yield serializers.serialize(
         object.amount,
         specifiedType: const FullType(double),
+      );
+    }
+    if (object.wbsNodeId != null) {
+      yield r'wbsNodeId';
+      yield serializers.serialize(
+        object.wbsNodeId,
+        specifiedType: const FullType.nullable(String),
       );
     }
   }
@@ -115,6 +126,14 @@ class _$ProjectBudgetLineRequestSerializer implements PrimitiveSerializer<Projec
           ) as double?;
           if (valueDes == null) continue;
           result.amount = valueDes;
+          break;
+        case r'wbsNodeId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.wbsNodeId = valueDes;
           break;
         default:
           unhandled.add(key);

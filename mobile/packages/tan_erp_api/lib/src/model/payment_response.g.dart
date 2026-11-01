@@ -29,6 +29,18 @@ class _$PaymentResponse extends PaymentResponse {
   final FinancePersonResponse? recordedBy;
   @override
   final DateTime? recordedAtUtc;
+  @override
+  final String? receiptNumber;
+  @override
+  final double? whtRate;
+  @override
+  final double? whtAmount;
+  @override
+  final double? netCashReceived;
+  @override
+  final String? whtType;
+  @override
+  final String? whtCertificateNumber;
 
   factory _$PaymentResponse([void Function(PaymentResponseBuilder)? updates]) =>
       (PaymentResponseBuilder()..update(updates))._build();
@@ -44,7 +56,13 @@ class _$PaymentResponse extends PaymentResponse {
       this.reversalReason,
       this.reversedAtUtc,
       this.recordedBy,
-      this.recordedAtUtc})
+      this.recordedAtUtc,
+      this.receiptNumber,
+      this.whtRate,
+      this.whtAmount,
+      this.netCashReceived,
+      this.whtType,
+      this.whtCertificateNumber})
       : super._();
   @override
   PaymentResponse rebuild(void Function(PaymentResponseBuilder) updates) =>
@@ -67,7 +85,13 @@ class _$PaymentResponse extends PaymentResponse {
         reversalReason == other.reversalReason &&
         reversedAtUtc == other.reversedAtUtc &&
         recordedBy == other.recordedBy &&
-        recordedAtUtc == other.recordedAtUtc;
+        recordedAtUtc == other.recordedAtUtc &&
+        receiptNumber == other.receiptNumber &&
+        whtRate == other.whtRate &&
+        whtAmount == other.whtAmount &&
+        netCashReceived == other.netCashReceived &&
+        whtType == other.whtType &&
+        whtCertificateNumber == other.whtCertificateNumber;
   }
 
   @override
@@ -84,6 +108,12 @@ class _$PaymentResponse extends PaymentResponse {
     _$hash = $jc(_$hash, reversedAtUtc.hashCode);
     _$hash = $jc(_$hash, recordedBy.hashCode);
     _$hash = $jc(_$hash, recordedAtUtc.hashCode);
+    _$hash = $jc(_$hash, receiptNumber.hashCode);
+    _$hash = $jc(_$hash, whtRate.hashCode);
+    _$hash = $jc(_$hash, whtAmount.hashCode);
+    _$hash = $jc(_$hash, netCashReceived.hashCode);
+    _$hash = $jc(_$hash, whtType.hashCode);
+    _$hash = $jc(_$hash, whtCertificateNumber.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -101,7 +131,13 @@ class _$PaymentResponse extends PaymentResponse {
           ..add('reversalReason', reversalReason)
           ..add('reversedAtUtc', reversedAtUtc)
           ..add('recordedBy', recordedBy)
-          ..add('recordedAtUtc', recordedAtUtc))
+          ..add('recordedAtUtc', recordedAtUtc)
+          ..add('receiptNumber', receiptNumber)
+          ..add('whtRate', whtRate)
+          ..add('whtAmount', whtAmount)
+          ..add('netCashReceived', netCashReceived)
+          ..add('whtType', whtType)
+          ..add('whtCertificateNumber', whtCertificateNumber))
         .toString();
   }
 }
@@ -159,6 +195,33 @@ class PaymentResponseBuilder
   set recordedAtUtc(DateTime? recordedAtUtc) =>
       _$this._recordedAtUtc = recordedAtUtc;
 
+  String? _receiptNumber;
+  String? get receiptNumber => _$this._receiptNumber;
+  set receiptNumber(String? receiptNumber) =>
+      _$this._receiptNumber = receiptNumber;
+
+  double? _whtRate;
+  double? get whtRate => _$this._whtRate;
+  set whtRate(double? whtRate) => _$this._whtRate = whtRate;
+
+  double? _whtAmount;
+  double? get whtAmount => _$this._whtAmount;
+  set whtAmount(double? whtAmount) => _$this._whtAmount = whtAmount;
+
+  double? _netCashReceived;
+  double? get netCashReceived => _$this._netCashReceived;
+  set netCashReceived(double? netCashReceived) =>
+      _$this._netCashReceived = netCashReceived;
+
+  String? _whtType;
+  String? get whtType => _$this._whtType;
+  set whtType(String? whtType) => _$this._whtType = whtType;
+
+  String? _whtCertificateNumber;
+  String? get whtCertificateNumber => _$this._whtCertificateNumber;
+  set whtCertificateNumber(String? whtCertificateNumber) =>
+      _$this._whtCertificateNumber = whtCertificateNumber;
+
   PaymentResponseBuilder() {
     PaymentResponse._defaults(this);
   }
@@ -177,6 +240,12 @@ class PaymentResponseBuilder
       _reversedAtUtc = $v.reversedAtUtc;
       _recordedBy = $v.recordedBy?.toBuilder();
       _recordedAtUtc = $v.recordedAtUtc;
+      _receiptNumber = $v.receiptNumber;
+      _whtRate = $v.whtRate;
+      _whtAmount = $v.whtAmount;
+      _netCashReceived = $v.netCashReceived;
+      _whtType = $v.whtType;
+      _whtCertificateNumber = $v.whtCertificateNumber;
       _$v = null;
     }
     return this;
@@ -211,6 +280,12 @@ class PaymentResponseBuilder
             reversedAtUtc: reversedAtUtc,
             recordedBy: _recordedBy?.build(),
             recordedAtUtc: recordedAtUtc,
+            receiptNumber: receiptNumber,
+            whtRate: whtRate,
+            whtAmount: whtAmount,
+            netCashReceived: netCashReceived,
+            whtType: whtType,
+            whtCertificateNumber: whtCertificateNumber,
           );
     } catch (_) {
       late String _$failedField;

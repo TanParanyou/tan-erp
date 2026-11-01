@@ -11,12 +11,27 @@ class _$StockLineRequest extends StockLineRequest {
   final String? itemId;
   @override
   final double? quantity;
+  @override
+  final String? locationId;
+  @override
+  final String? toLocationId;
+  @override
+  final String? lotNumber;
+  @override
+  final BuiltList<String>? serialNumbers;
 
   factory _$StockLineRequest(
           [void Function(StockLineRequestBuilder)? updates]) =>
       (StockLineRequestBuilder()..update(updates))._build();
 
-  _$StockLineRequest._({this.itemId, this.quantity}) : super._();
+  _$StockLineRequest._(
+      {this.itemId,
+      this.quantity,
+      this.locationId,
+      this.toLocationId,
+      this.lotNumber,
+      this.serialNumbers})
+      : super._();
   @override
   StockLineRequest rebuild(void Function(StockLineRequestBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -30,7 +45,11 @@ class _$StockLineRequest extends StockLineRequest {
     if (identical(other, this)) return true;
     return other is StockLineRequest &&
         itemId == other.itemId &&
-        quantity == other.quantity;
+        quantity == other.quantity &&
+        locationId == other.locationId &&
+        toLocationId == other.toLocationId &&
+        lotNumber == other.lotNumber &&
+        serialNumbers == other.serialNumbers;
   }
 
   @override
@@ -38,6 +57,10 @@ class _$StockLineRequest extends StockLineRequest {
     var _$hash = 0;
     _$hash = $jc(_$hash, itemId.hashCode);
     _$hash = $jc(_$hash, quantity.hashCode);
+    _$hash = $jc(_$hash, locationId.hashCode);
+    _$hash = $jc(_$hash, toLocationId.hashCode);
+    _$hash = $jc(_$hash, lotNumber.hashCode);
+    _$hash = $jc(_$hash, serialNumbers.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -46,7 +69,11 @@ class _$StockLineRequest extends StockLineRequest {
   String toString() {
     return (newBuiltValueToStringHelper(r'StockLineRequest')
           ..add('itemId', itemId)
-          ..add('quantity', quantity))
+          ..add('quantity', quantity)
+          ..add('locationId', locationId)
+          ..add('toLocationId', toLocationId)
+          ..add('lotNumber', lotNumber)
+          ..add('serialNumbers', serialNumbers))
         .toString();
   }
 }
@@ -63,6 +90,24 @@ class StockLineRequestBuilder
   double? get quantity => _$this._quantity;
   set quantity(double? quantity) => _$this._quantity = quantity;
 
+  String? _locationId;
+  String? get locationId => _$this._locationId;
+  set locationId(String? locationId) => _$this._locationId = locationId;
+
+  String? _toLocationId;
+  String? get toLocationId => _$this._toLocationId;
+  set toLocationId(String? toLocationId) => _$this._toLocationId = toLocationId;
+
+  String? _lotNumber;
+  String? get lotNumber => _$this._lotNumber;
+  set lotNumber(String? lotNumber) => _$this._lotNumber = lotNumber;
+
+  ListBuilder<String>? _serialNumbers;
+  ListBuilder<String> get serialNumbers =>
+      _$this._serialNumbers ??= ListBuilder<String>();
+  set serialNumbers(ListBuilder<String>? serialNumbers) =>
+      _$this._serialNumbers = serialNumbers;
+
   StockLineRequestBuilder() {
     StockLineRequest._defaults(this);
   }
@@ -72,6 +117,10 @@ class StockLineRequestBuilder
     if ($v != null) {
       _itemId = $v.itemId;
       _quantity = $v.quantity;
+      _locationId = $v.locationId;
+      _toLocationId = $v.toLocationId;
+      _lotNumber = $v.lotNumber;
+      _serialNumbers = $v.serialNumbers?.toBuilder();
       _$v = null;
     }
     return this;
@@ -91,11 +140,28 @@ class StockLineRequestBuilder
   StockLineRequest build() => _build();
 
   _$StockLineRequest _build() {
-    final _$result = _$v ??
-        _$StockLineRequest._(
-          itemId: itemId,
-          quantity: quantity,
-        );
+    _$StockLineRequest _$result;
+    try {
+      _$result = _$v ??
+          _$StockLineRequest._(
+            itemId: itemId,
+            quantity: quantity,
+            locationId: locationId,
+            toLocationId: toLocationId,
+            lotNumber: lotNumber,
+            serialNumbers: _serialNumbers?.build(),
+          );
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'serialNumbers';
+        _serialNumbers?.build();
+      } catch (e) {
+        throw BuiltValueNestedFieldError(
+            r'StockLineRequest', _$failedField, e.toString());
+      }
+      rethrow;
+    }
     replace(_$result);
     return _$result;
   }

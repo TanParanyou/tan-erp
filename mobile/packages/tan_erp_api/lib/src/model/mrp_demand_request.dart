@@ -16,6 +16,7 @@ part 'mrp_demand_request.g.dart';
 /// * [quantity] 
 /// * [needBy] 
 /// * [reference] 
+/// * [unitId] 
 @BuiltValue()
 abstract class MrpDemandRequest implements Built<MrpDemandRequest, MrpDemandRequestBuilder> {
   @BuiltValueField(wireName: r'itemId')
@@ -29,6 +30,9 @@ abstract class MrpDemandRequest implements Built<MrpDemandRequest, MrpDemandRequ
 
   @BuiltValueField(wireName: r'reference')
   String? get reference;
+
+  @BuiltValueField(wireName: r'unitId')
+  String? get unitId;
 
   MrpDemandRequest._();
 
@@ -78,6 +82,13 @@ class _$MrpDemandRequestSerializer implements PrimitiveSerializer<MrpDemandReque
       yield r'reference';
       yield serializers.serialize(
         object.reference,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.unitId != null) {
+      yield r'unitId';
+      yield serializers.serialize(
+        object.unitId,
         specifiedType: const FullType.nullable(String),
       );
     }
@@ -135,6 +146,14 @@ class _$MrpDemandRequestSerializer implements PrimitiveSerializer<MrpDemandReque
           ) as String?;
           if (valueDes == null) continue;
           result.reference = valueDes;
+          break;
+        case r'unitId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.unitId = valueDes;
           break;
         default:
           unhandled.add(key);

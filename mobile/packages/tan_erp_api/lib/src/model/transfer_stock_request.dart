@@ -17,6 +17,9 @@ part 'transfer_stock_request.g.dart';
 /// * [toWarehouseId] 
 /// * [reason] 
 /// * [lines] 
+/// * [fromLocationId] 
+/// * [toLocationId] 
+/// * [occurredAtUtc] 
 @BuiltValue()
 abstract class TransferStockRequest implements Built<TransferStockRequest, TransferStockRequestBuilder> {
   @BuiltValueField(wireName: r'fromWarehouseId')
@@ -30,6 +33,15 @@ abstract class TransferStockRequest implements Built<TransferStockRequest, Trans
 
   @BuiltValueField(wireName: r'lines')
   BuiltList<StockLineRequest>? get lines;
+
+  @BuiltValueField(wireName: r'fromLocationId')
+  String? get fromLocationId;
+
+  @BuiltValueField(wireName: r'toLocationId')
+  String? get toLocationId;
+
+  @BuiltValueField(wireName: r'occurredAtUtc')
+  DateTime? get occurredAtUtc;
 
   TransferStockRequest._();
 
@@ -80,6 +92,27 @@ class _$TransferStockRequestSerializer implements PrimitiveSerializer<TransferSt
       yield serializers.serialize(
         object.lines,
         specifiedType: const FullType.nullable(BuiltList, [FullType(StockLineRequest)]),
+      );
+    }
+    if (object.fromLocationId != null) {
+      yield r'fromLocationId';
+      yield serializers.serialize(
+        object.fromLocationId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.toLocationId != null) {
+      yield r'toLocationId';
+      yield serializers.serialize(
+        object.toLocationId,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.occurredAtUtc != null) {
+      yield r'occurredAtUtc';
+      yield serializers.serialize(
+        object.occurredAtUtc,
+        specifiedType: const FullType.nullable(DateTime),
       );
     }
   }
@@ -136,6 +169,30 @@ class _$TransferStockRequestSerializer implements PrimitiveSerializer<TransferSt
           ) as BuiltList<StockLineRequest>?;
           if (valueDes == null) continue;
           result.lines.replace(valueDes);
+          break;
+        case r'fromLocationId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.fromLocationId = valueDes;
+          break;
+        case r'toLocationId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.toLocationId = valueDes;
+          break;
+        case r'occurredAtUtc':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
+          result.occurredAtUtc = valueDes;
           break;
         default:
           unhandled.add(key);
