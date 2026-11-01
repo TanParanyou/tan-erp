@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import type { ItemImportJobResponse, ItemImportJobRowResponse } from "@/lib/api/api-client";
 import { ApiError } from "@/lib/api/api-error";
 import { useItemImportJobStatus, useStartItemImportJob } from "../api/item-master-queries";
+import { ItemImportErrorExportButton } from "./item-import-error-export-button";
 import {
   isItemImportErrorCode,
   isItemImportJobFailureCode,
@@ -157,7 +158,12 @@ export function ItemImportJobPanel({ content, kind, mode, describeField }: ItemI
           )}
           {job.errorRowCount > 0 && (
             <div className="space-y-2">
-              <Alert variant="warning">{t("job.rejectedNotice", { batches: job.rejectedBatches, rows: job.errorRowCount })}</Alert>
+              <Alert variant="warning">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span>{t("job.rejectedNotice", { batches: job.rejectedBatches, rows: job.errorRowCount })}</span>
+                  <ItemImportErrorExportButton sources={job.errors} />
+                </div>
+              </Alert>
               <div className="max-h-60 overflow-auto border border-erp-border">
                 <table className="w-full text-left text-xs">
                   <thead className="sticky top-0 bg-erp-surface-subtle">

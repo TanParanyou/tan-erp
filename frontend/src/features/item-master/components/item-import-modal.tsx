@@ -6,7 +6,11 @@ import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Select } from "@/components/ui/Select";
-import { IconDownload, IconUpload } from "@/components/common/Icons";
+import { Badge } from "@/components/ui/Badge";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { cn } from "@/lib/utils/cn";
+import { IconDownload, IconFileText } from "@/components/common/Icons";
 import { useToast } from "@/hooks/useToast";
 import { ApiError } from "@/lib/api/api-error";
 import type { ItemImportPreviewResponse, ItemImportRowResponse } from "@/lib/api/api-client";
@@ -14,20 +18,20 @@ import { useItemImport } from "../api/item-master-queries";
 import {
   buildCostImportTemplate,
   buildItemImportTemplate,
-  COST_IMPORT_COLUMNS,
   isItemImportErrorCode,
   isItemImportKind,
   isItemImportMode,
   isItemImportOutcome,
-  ITEM_IMPORT_COLUMNS,
   ITEM_IMPORT_JOB_MAX_FILE_BYTES,
   needsBackgroundJob,
-  type CostImportColumn,
-  type ItemImportColumn,
   type ItemImportKind,
   type ItemImportMode,
 } from "../item-import-constants";
 import { ItemImportJobPanel } from "./item-import-job-panel";
+import { ItemImportColumnGuide } from "./item-import-column-guide";
+import { ItemImportDropzone } from "./item-import-dropzone";
+import { ItemImportErrorExportButton, isImportField } from "./item-import-error-export-button";
+import { ItemImportStepper } from "./item-import-stepper";
 
 interface ItemImportModalProps {
   isOpen: boolean;
@@ -40,7 +44,23 @@ interface ItemImportModalProps {
   canUpsert?: boolean;
 }
 
-const MAX_VISIBLE_ROWS = 50;
+type RowFilter = "all" | "invalid" | "valid";
+
+function SummaryCard({ label, value, tone }: { label: string; value: number; tone: "neutral" | "success" | "danger" }) {
+  return (
+    <div
+      className={cn(
+        "border px-3 py-2",
+        tone === "neutral" && "border-erp-border bg-erp-surface-subtle",
+        tone === "success" && "border-erp-success-border bg-erp-success-bg text-erp-success-text",
+        tone === "danger" && "border-erp-danger-border bg-erp-danger-bg text-erp-danger",
+      )}
+    >
+      <p className="text-xs">{label}</p>
+      <p className="text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
 
 interface StrictPreview {
   contentSha256: string;
@@ -80,17 +100,6 @@ function toStrictPreview(response: ItemImportPreviewResponse): StrictPreview {
   };
 }
 
-type ImportField = ItemImportColumn | CostImportColumn | "capabilities" | "row";
-
-function isImportColumn(value: string | null | undefined): value is ImportField {
-  return (
-    value === "capabilities" ||
-    value === "row" ||
-    ITEM_IMPORT_COLUMNS.some((column) => column === value) ||
-    COST_IMPORT_COLUMNS.some((column) => column === value)
-  );
-}
-
 /**
  * Item CSV import: pick a file, preview per-row validation (nothing is written), then commit all rows at once.
  * Commit is only offered when every row is valid, mirroring the backend's all-or-nothing rule.
@@ -107,6 +116,7 @@ export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCost
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [kind, setKind] = useState<ItemImportKind>(canImportItems ? "items" : "costs");
   const [mode, setMode] = useState<ItemImportMode>("create");
+  const [rowFilter, setRowFilter] = useState<RowFilter>("all");
   // A file too big for the immediate preview is sent as a background job instead (no preview).
   const [isLargeFile, setIsLargeFile] = useState(false);
   // One idempotency key per previewed content, so a retried commit of the same file replays instead of duplicating.
@@ -128,6 +138,7 @@ export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCost
     setResult(null);
     setErrorMessage(null);
     setIsLargeFile(false);
+    setRowFilter("all");
     commitKeyRef.current = null;
     if (inputRef.current) inputRef.current.value = "";
   }
@@ -231,15 +242,24 @@ export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCost
   }
 
   function describeCell(field: string | null | undefined, code: string | null | undefined): string {
-    const fieldLabel = isImportColumn(field) ? t(`fields.${field}`) : "-";
+    const fieldLabel = isImportField(field) ? t(`fields.${field}`) : "-";
     const codeLabel = isItemImportErrorCode(code) ? t(`errors.${code}`) : "-";
     return `${fieldLabel}: ${codeLabel}`;
   }
 
   const rows = result?.rows ?? [];
   // Invalid rows first so the problems are visible without scrolling a long valid list.
-  const visibleRows = [...rows].sort((a, b) => Number(a.isValid) - Number(b.isValid)).slice(0, MAX_VISIBLE_ROWS);
+  const sortedRows = [...rows].sort((a, b) => Number(a.isValid) - Number(b.isValid));
+  const visibleRows = sortedRows.filter((row) => rowFilter === "all" || (rowFilter === "invalid" ? !row.isValid : row.isValid));
   const canCommit = Boolean(result && result.invalidRows === 0 && result.validRows > 0);
+  const currentStep = commit.isPending ? 3 : result || isLargeFile ? 2 : 1;
+  const filterOptions = result
+    ? [
+        { value: "all" as const, label: t("filterAll", { count: result.totalRows }) },
+        { value: "invalid" as const, label: t("filterInvalid", { count: result.invalidRows }) },
+        { value: "valid" as const, label: t("filterValid", { count: result.validRows }) },
+      ]
+    : [];
 
   const footerActions = (
     <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
@@ -281,7 +301,7 @@ export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCost
       footer={footerActions}
     >
       <div className="space-y-4">
-        <p className="text-xs text-erp-text-muted">{t("rules")}</p>
+        <ItemImportStepper ariaLabel={t("stepsLabel")} labels={[t("stepChoose"), t("stepReview"), t("stepConfirm")]} current={currentStep} />
 
         {(kindOptions.length > 1 || modeOptions.length > 1) && (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -296,25 +316,25 @@ export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCost
         {kind === "costs" && <p className="text-xs text-erp-text-muted">{t("costHint")}</p>}
         {mode === "upsert" && <p className="text-xs text-erp-text-muted">{t("upsertHint")}</p>}
 
+        <ItemImportDropzone
+          inputRef={inputRef}
+          disabled={isBusy}
+          isLoading={preview.isPending}
+          onFile={(file) => void handleFile(file)}
+          onReject={() => { reset(); setErrorMessage(t("notCsv")); }}
+        />
         <div className="flex flex-wrap items-center gap-3">
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="sr-only"
-            aria-label={t("chooseFile")}
-            data-testid="item-import-file"
-            disabled={isBusy}
-            onChange={(event) => void handleFile(event.currentTarget.files?.[0])}
-          />
-          <Button type="button" variant="secondary" icon={<IconUpload size={15} />} disabled={isBusy} isLoading={preview.isPending} onClick={() => inputRef.current?.click()} className="min-h-11">
-            {t("chooseFile")}
-          </Button>
-          <Button type="button" variant="outline" icon={<IconDownload size={15} />} onClick={downloadTemplate} className="min-h-11">
+          <Button type="button" variant="outline" size="sm" icon={<IconDownload size={14} />} onClick={downloadTemplate}>
             {t("downloadTemplate")}
           </Button>
-          {fileName && <span className="font-mono text-xs text-erp-text-muted">{fileName}</span>}
+          {fileName && (
+            <span className="inline-flex items-center gap-1.5 font-mono text-xs text-erp-text-muted">
+              <IconFileText size={14} />
+              {fileName}
+            </span>
+          )}
         </div>
+        <ItemImportColumnGuide kind={kind} />
 
         {errorMessage && <Alert variant="danger" onClose={() => setErrorMessage(null)}>{errorMessage}</Alert>}
 
@@ -324,52 +344,72 @@ export function ItemImportModal({ isOpen, onClose, canImportItems, canImportCost
 
         {result && (
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-erp-navy">
+            <p className="sr-only" aria-live="polite">
               {t("summary", { total: result.totalRows, valid: result.validRows, invalid: result.invalidRows })}
             </p>
+            <div className="grid grid-cols-3 gap-2">
+              <SummaryCard label={t("cardTotal")} value={result.totalRows} tone="neutral" />
+              <SummaryCard label={t("cardValid")} value={result.validRows} tone="success" />
+              <SummaryCard label={t("cardInvalid")} value={result.invalidRows} tone={result.invalidRows > 0 ? "danger" : "neutral"} />
+            </div>
             {(mode === "upsert" || kind === "costs") && result.invalidRows === 0 && (
               <p className="text-xs text-erp-text-muted">
                 {t("summaryOutcome", { created: result.createCount, updated: result.updateCount, unchanged: result.unchangedCount })}
               </p>
             )}
-            {result.invalidRows > 0 && <Alert variant="warning">{t("fixBeforeCommit")}</Alert>}
-            <div className="max-h-72 overflow-auto border border-erp-border">
-              <table className="w-full text-left text-xs">
-                <thead className="sticky top-0 bg-erp-surface-subtle">
-                  <tr>
-                    <th className="px-2 py-1.5">{t("columnRow")}</th>
-                    <th className="px-2 py-1.5">{t("columnCode")}</th>
-                    <th className="px-2 py-1.5">{t("columnName")}</th>
-                    <th className="px-2 py-1.5">{t("columnResult")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleRows.map((row) => (
-                    <tr key={row.rowNumber} className="border-t border-erp-border align-top">
-                      <td className="px-2 py-1.5 font-mono">{row.rowNumber}</td>
-                      <td className="px-2 py-1.5 font-mono">{row.code ?? "-"}</td>
-                      <td className="px-2 py-1.5">{row.nameTh ?? "-"}</td>
-                      <td className="px-2 py-1.5">
-                        {row.isValid ? (
-                          <span className="text-erp-success">
-                            {isItemImportOutcome(row.outcome) ? t(`outcome.${row.outcome}`) : t("rowValid")}
-                          </span>
-                        ) : (
-                          <ul className="space-y-0.5 text-erp-danger">
-                            {(row.errors ?? []).map((error) => (
-                              <li key={`${error.field}-${error.code}`}>{describeCell(error.field, error.code)}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {rows.length > MAX_VISIBLE_ROWS && (
-              <p className="text-xs text-erp-text-muted">{t("truncated", { shown: MAX_VISIBLE_ROWS, total: rows.length })}</p>
+            {mode === "upsert" && kind === "items" && result.invalidRows === 0 && result.updateCount > 0 && (
+              <Alert variant="info">{t("upsertImpact", { count: result.updateCount })}</Alert>
             )}
+            {result.invalidRows > 0 && (
+              <Alert variant="warning">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span>{t("fixBeforeCommit")}</span>
+                  <ItemImportErrorExportButton sources={rows.filter((row) => !row.isValid)} />
+                </div>
+              </Alert>
+            )}
+            <SegmentedControl aria-label={t("filterLabel")} value={rowFilter} onChange={setRowFilter} options={filterOptions} />
+            <Table wrapperClassName="max-h-72 overflow-auto border border-erp-border">
+              <TableHeader className="sticky top-0 bg-erp-surface-subtle">
+                <TableRow>
+                  <TableHead>{t("columnRow")}</TableHead>
+                  <TableHead>{t("columnCode")}</TableHead>
+                  <TableHead>{t("columnName")}</TableHead>
+                  <TableHead>{t("columnResult")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-xs text-erp-text-muted">{t("filterEmpty")}</TableCell>
+                  </TableRow>
+                ) : visibleRows.map((row) => (
+                  <TableRow key={row.rowNumber} className="align-top">
+                    <TableCell className="font-mono text-xs">{row.rowNumber}</TableCell>
+                    <TableCell className="font-mono text-xs">{row.code ?? "-"}</TableCell>
+                    <TableCell className="text-xs">{row.nameTh ?? "-"}</TableCell>
+                    <TableCell className="text-xs">
+                      {row.isValid ? (
+                        <Badge variant="success" size="sm">
+                          {isItemImportOutcome(row.outcome) ? t(`outcome.${row.outcome}`) : t("rowValid")}
+                        </Badge>
+                      ) : (
+                        <ul className="space-y-1 text-erp-danger">
+                          {(row.errors ?? []).map((error) => (
+                            <li key={`${error.field}-${error.code}`}>
+                              <span>{describeCell(error.field, error.code)}</span>
+                              {isItemImportErrorCode(error.code) && (
+                                <span className="block text-erp-text-muted">{t(`errorHints.${error.code}`)}</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
